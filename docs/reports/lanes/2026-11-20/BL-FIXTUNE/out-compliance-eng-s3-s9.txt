@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:38:09.569Z file_sha256=5f5dbb7282f58101fc238b5eba180e2e2e05dd496476b913e3c2ac432f8492a6 prompt_sha256=f34d813b9d419f3e4cf27c369d9708aa5605617884efc9dd0d5d6e18198e4f8c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-eng-s3-s9.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11130 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22541 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33928 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42518 chars, answer 3682 chars, 60s
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json:280 "like debounce_ms it is declared, not yet a registered logic variable with bounds" — the new stale time (a stale time in Rule 3's own list) and the wait time are declared as optional slice keys with `"minimum": 0` only: no registered logic variable, no upper bound, no on_invalid posture — task-378 lists "bounds/on_invalid for the new keys" as NOT in scope, so the gap is recorded rather than closed — register both keys with bounds and an on_invalid posture in a following increment, or cite the deferral in the lane report
+DEFER severity=MED — operator ruling task-372 "gate conversion factors are a pinned setting" — cannot see: scripts/seeds/logic_variables.json is not in the diff, while src/lib/massing/geometry.ts:34 "const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" reads it and src/tests/fix-tune.logic.test.ts asserts "default: 3.28084, min: 3.28084, max: 3.28084" for that row — compliance with the pinned-setting ruling rests on a seed row this material neither adds nor shows — include the parcels_m_to_ft seed row (or state it pre-exists with its sha) beside the diff
+DEFER severity=LOW — Spec 126 P4 "All tunables are data; zero thresholds in src/" — src/lib/massing/geometry.ts:31 "export const SHED_THRESHOLD_SQM = 20;" and src/lib/massing/geometry.ts:32 "export const GARAGE_MAX_SQM = 60;" — two thresholds remain typed in the same src module the change edits, so P4 is still unmet for that file after the fix — rationale: pre-existing, not named by task-378, so out of this card's scope and left for the card that owns them
+DEFER severity=LOW — task-378 D14 "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read" — mobile/src/hooks/useParcelLookup.ts:19 "import searchSlice from '@/generated/surfaces/mobile_parcel_search.json';" against mobile/__tests__/parcelScreens.golden.test.ts:205 "expect(/export const SEARCH_MIN_QUERY_LEN = SEARCH_SLICE\.config\.min_query_len/.test(src)).toBe(true);" — the existing slice values are read through one exported constant in mobile/src/constants/parcelSearch.ts, the new stale time gets a second read site inside the hook — read entitlement_stale_ms once in that constants module and import the constant, as debounce_ms is
+NIT — task-378 D14 "values unchanged" — mobile/__tests__/parcelScreens.golden.test.ts:208 "entitlement_stale_ms: 0 }); // FIX.TUNE (task-378)" — the value is pinned as a bare literal inside the test named 'one home for the config values (row 24, RG-14)', whose siblings reference SEARCH_DEBOUNCE_MS and SEARCH_MIN_QUERY_LEN — assert against the exported constant once the constant exists, so the "one home" test does not become a second home
+
+MET — operator ruling task-372 "gate conversion factors are a pinned setting" — src/lib/parcels/geometry.ts:7 "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — the typed 3.28084 is gone and both geometry modules read the pinned variable
+MET — task-378 D14 "Continue wait 60 s ... declare in the surface config" — mobile/src/lib/semiQuestion.ts:15 "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;" — value unchanged at 60000 and read from the generated slice, no typed number left
+MET — task-378 D14 "entitlement stale time 0 s" — mobile/src/hooks/useParcelLookup.ts:161 "staleTime: searchSlice.config.entitlement_stale_ms," — value unchanged at 0 and sourced from the slice config
+MET — task-378 D15 "semi out of the lookup response field_whitelist" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:174 "'basis', 'unsure'" — semi removed and the remaining 14 entries unchanged
+MET — task-378 D15 "entitlement contract cites the entitlement hook line" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:327 "mobile/src/hooks/useParcelLookup.ts:155" — call site now names the useParcelEntitlement hook, not the lookup call
+MET — Spec 126 P4 "All tunables are data; zero thresholds in src/" — src/lib/massing/geometry.ts:34 "const M_TO_FT: number = pinnedSetting(...'parcels_m_to_ft');" — the 3.28084 literal is removed from both src geometry modules named by the card
+
+REJECT — Spec 128 Rule 3 — adding the two config keys is an unregistered tuning surface — task-378 D14 names exactly this declaration and the debounce_ms precedent is the named pattern, so the declaration is the carded change
+REJECT — ES 9.6 "Pipeline metadata ... MUST be declared in scripts/manifest.json as the single source of truth" — scripts/surfaces/emit-mobile-surfaces.mjs "CONFIG_KEYS = ['debounce_ms', 'min_query_len', 'continue_wait_ms', 'entitlement_stale_ms'];" is hardcoded pipeline metadata — the emitter is a surface generator, not a chain definition or script path, so no manifest entry is implicated
+REJECT — ES 3.1, 3.2, 3.3, 9.1, 9.2, 9.3, 9.4, 9.5, 9.7 — no migrations, DB writes, batch inserts, fetchers or SDK code in the diff — none of these clauses has a surface in this material
+
+VERDICT: PASS
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  61771ms (61.8s)
+📊 Tokens — total: 24461, input: 11872, output: 12589, reasoning: 11127

@@ -1,0 +1,47 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:36:08.229Z file_sha256=20cc4ca88e6ced845f2950b531926c611bb27ba64eb4545a2a2ee5cbfbb61669 prompt_sha256=1a506d2a4c003f9d090747aacb7f03007e8698f7242114068f84bbcc4edeb98b
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-airtight-v2-122.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11419 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22415 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33799 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44635 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 52534 chars, answer 3780 chars, 75s
+BUG severity=HIGH — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "like debounce_ms it is declared, not yet a registered logic variable." — clause unmet: a NEW stale time ships as a bare 0 with no bounds and no on_invalid posture, and the diff's own prose states it is unregistered, so the named category "stale time" is knowingly left outside Rule 3 — register entitlement_stale_ms (and continue_wait_ms) with min/max and on_invalid in the same config, or if the operator's "bounds/on_invalid for the new keys" deferral is to hold, land no counter-claim in the descriptor that reads as compliance.
+
+BUG severity=HIGH — task-372 operator ruling "gate conversion factors are a pinned setting (Spec 136 fe.44, Spec 132 core.8)" — src/lib/massing/geometry.ts "const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — clause satisfied only if parcels_m_to_ft already exists and is pinned (min == max) in scripts/seeds/logic_variables.json, and the diff carries no seed hunk (the omitted-files note lists generated reports, golden fixtures, census shards, validate-descriptor.mjs, not the seed), so the pinned setting is cannot see and both geometry modules now throw at import if it is absent or unpinned — confirm the seed entry exists and is pinned, or include its diff.
+
+DEFER severity=MED — task-378 D14 "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read" — mobile/src/hooks/useParcelLookup.ts "staleTime: searchSlice.config.entitlement_stale_ms, // FIX.TUNE (task-378): the surface config, not a number typed here" — the named pattern reads through a named constant in mobile/src/constants/parcelSearch.ts (SEARCH_DEBOUNCE_MS = SEARCH_SLICE.config.debounce_ms), while the new key is read as a raw JSON field with no constant and no constants-file hunk, and mobile/__tests__/parcelScreens.golden.test.ts now asserts the literal "entitlement_stale_ms: 0" instead, diluting the one-home invariant for this key — add SEARCH_ENTITLEMENT_STALE_MS beside SEARCH_DEBOUNCE_MS and read that in the hook.
+
+DEFER severity=LOW — task-378 D15 "the entitlement contract cites the entitlement hook line" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json "\"mobile/src/hooks/useParcelLookup.ts:155\"" under consumers_verified — the new lock checks only sharing.surfaces and sharing.evidence against the computed line, so consumers_verified :155 is ungated, the same stale-line class D15 exists to correct — extend src/tests/fix-tune.logic.test.ts to assert consumers_verified equals the computed line too.
+
+DEFER severity=LOW — task-378 LEN "read from the pinned variable parcels_m_to_ft by the task-372 pattern" — src/tests/fix-tune.logic.test.ts "expect(SEED.parcels_m_to_ft).toMatchObject({ type: 'number', default: 3.28084, min: 3.28084, max: 3.28084 });" — the pinning contract (min == max, type number) for parcels_m_to_ft is asserted only by this new test, cannot see the seed line that supplies it, so nothing in the reviewed material shows the variable is pinned rather than merely present — quote the seed entry (with min/max) in the diff or the test's SPEC LINK.
+
+MET — task-378 D15 "semi out of the lookup response field_whitelist" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json — "semi" removed, the remaining list unchanged with "unsure" now last.
+MET — task-378 D14 "values unchanged" — src/lib/massing/geometry.ts and mobile/src/lib/semiQuestion.ts — continue wait is 60000 and entitlement stale is 0, same numbers as the removed "staleTime: 0" and "SEMI_CONTINUE_WAIT_MS = 60_000".
+MET — task-372 operator ruling "gate conversion factors are a pinned setting" — src/lib/parcels/geometry.ts "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — the typed 3.28084 is gone from both geometry modules and replaced by the same pinnedSetting reader SQM_TO_SQFT uses.
+MET — task-378 "the 60 s VALUE is an open operator item, not decided here" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json "\"continue_wait_ms\": 60000" — the value is moved, not chosen, and nothing in the diff introduces a new wait value.
+MET — task-378 "NOT in scope and left listed: phone area-factor copies, the retry count, the two 60_000 stale times" — mobile/src/hooks/useParcelLookup.ts — only "staleTime: 0" changed; no area factor, retry count or other 60_000 stale time is touched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  76008ms (76.0s)
+📊 Tokens — total: 28054, input: 13372, output: 14682, reasoning: 13407
+ariable parcels_m_to_ft by the task-372 pattern" — src/lib/parcels/geometry.ts "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — same reader as SQM_TO_SQFT, exported value 3.28084 unchanged.
+
+MET — Task-378 D15 "entitlement contract cites the entitlement hook line" — contract_parcels_entitlement.descriptor.json ""surfaces": [ "mobile/src/hooks/useParcelLookup.ts:155" ]" — the call site is now the useParcelEntitlement line and the lock computes that line from the hook file.
+
+MET — Task-378 out-of-scope list "phone area-factor copies, the retry count, the two 60_000 stale times, DB mirror migration, bounds/on_invalid for the new keys" — mobile/src/hooks/useParcelLookup.ts "retry: shouldRetryParcelLookup," — the excluded items are left untouched by the diff.
+
+REJECT — Spec 122 §6.6.1 (e) "The Phase 1 WITNESS gate (#44) must carry the exact string `R-BF WITNESS GATE (#44)`" — accused of not adding the witness marker — the diff touches no step capture, resolver or step-validate path, so the gate clause is not engaged by this change.
+
+REJECT — Task-378 D14 "the 60 s VALUE is an open operator item, not decided here" — accused of pinning the Continue value — it moves 60000 unchanged and its own descriptor text calls it an open operator timeframe.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  76191ms (76.2s)
+📊 Tokens — total: 28661, input: 13372, output: 15289, reasoning: 13646

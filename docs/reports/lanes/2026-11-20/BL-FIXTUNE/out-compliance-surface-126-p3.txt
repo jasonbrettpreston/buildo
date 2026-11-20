@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:26:52.379Z file_sha256=1d313d9dc70751eee2515f91be40ed17426e2653881792396b71b8eb3b1fded4 prompt_sha256=1ea931aedf6d135b01a850d44b412eee9c056d3ba9a348cc3f0a4fa58866c838
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11536 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22540 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33669 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44614 chars, answer 0 chars, 60s
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "+    \"entitlement_stale_ms\": 0" beside "answer": "none" — the new stale time is surface config data only, not a registered logic variable, with no bounds and no on_invalid posture, and the semi page's wait likewise; the pasted scope defers bounds/on_invalid for the new keys so this lands only as a listed gap — record the Rule 3 deferral for both keys, or register them with bounds and an on_invalid posture.
+
+DEFER severity=MED — operator 2026-11-20 "1. yes. add the tasks to incr 1b" — NONE — no queue, increment or backlog file appears in the material, so the ruling's action (task-378 filed under incr 1b) is not evidenced by this diff — paste the queue line or state that the increment edit lands outside this file set.
+
+DEFER severity=LOW — task-378 scope "the 60 s VALUE is an open operator item, not decided here" — src/tests/fix-tune.logic.test.ts "expect(json(SEMI).config.continue_wait_ms).toBe(60000);" — the lock freezes an operator-undecided value, so the eventual ruling must edit both descriptor and test, and the test proves the number rather than the wiring — assert slice equals descriptor and an integer, and leave 60000 to the descriptor alone.
+
+DEFER severity=LOW — task-378 scope "the typed metre-to-foot factor ... read from the pinned variable parcels_m_to_ft" — src/lib/massing/geometry.ts "const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — the seed row itself is not in the material, and the read runs at module load, so the clause's required pinned row is taken on faith — paste the scripts/seeds/logic_variables.json hunk showing parcels_m_to_ft at default/min/max 3.28084.
+
+DEFER severity=NIT — Spec 126 P4 "All tunables are data; zero thresholds in src/" — src/tests/fix-tune.logic.test.ts "expect(SEED.parcels_m_to_ft).toMatchObject({ type: 'number', default: 3.28084, min: 3.28084, max: 3.28084 });" — the one home for the factor is the seed, yet the same value is restated three times inside src/ in the lock — assert min equals max equals default from the seed object without retyping 3.28084.
+
+MET — D14 "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read" — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;" — the wait is declared in the descriptor (60000), carried by the generated slice and read from it.
+
+MET — D14 "entitlement stale time 0 s" — mobile/src/hooks/useParcelLookup.ts "staleTime: searchSlice.config.entitlement_stale_ms, // FIX.TUNE (task-378): the surface config, not a number typed here" — the zero is gone from the hook and read from the generated search slice.
+
+MET — D14 "values unchanged" — mobile/__tests__/parcelScreens.golden.test.ts "expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN, entitlement_stale_ms: 0 })" — both values survive the move (60000 and 0).
+
+MET — D15 "semi out of the lookup response field_whitelist" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "-      \"semi\"" — the request parameter is removed from the response whitelist and a lock asserts the trimmed list.
+
+MET — D15 "entitlement contract cites the entitlement hook line" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json "+      \"mobile/src/hooks/useParcelLookup.ts:155\"" — the :96 cite is replaced and the lock recomputes the line from the hook, refusing the old value.
+
+MET — task-372 ruling "gate conversion factors are a pinned setting" — src/lib/parcels/geometry.ts "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" and src/lib/massing/geometry.ts "-const M_TO_FT = 3.28084;" — both geometry modules now read the pinned variable and neither types the factor.
+
+REJECT — Spec 126 P4 — that adding continue_wait_ms and entitlement_stale_ms to the emitter CONFIG_KEYS types the tunables in code — those are key names, the values stay in the descriptors and reach the binding through the generated slice, which is exactly the declared-beside-debounce_ms shape D14 names.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  74764ms (74.8s)
+📊 Tokens — total: 37183, input: 22448, output: 14735, reasoning: 13530

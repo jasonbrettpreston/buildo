@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:22:01.905Z file_sha256=7c13bcbe9414dc8472373ebd2938216787129310995ba8c838864864a3a07cdd prompt_sha256=72bb9a721733a07cca3df248768c36b5bc7c80e460be53ac5f43fe746094e4f1
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-mobile-99.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11055 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23267 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 35099 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 46793 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 58232 chars, answer 0 chars, 75s
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "like debounce_ms it is declared, not yet a registered logic variable" — both new keys (entitlement_stale_ms, continue_wait_ms) are declared in surface config only, with no bounds and no on_invalid posture, so Rule 3 is met in part; task-378 records the deferral "NOT in scope and left listed: ... bounds/on_invalid for the new keys" — keep both on the open list and register them in the lane that wires bounds and on_invalid, so the deferral does not silently close.
+
+DEFER severity=LOW — Spec 128 Rule 3 "with bounds and an on_invalid posture" — scripts/surfaces/_schema/surface.schema.json "\"const\": \"UNRESEARCHED\"" — the schema admits the string UNRESEARCHED for both keys while both consumers type them as numbers (mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;"), so a later descriptor edit feeds a string into boundedWait or TanStack staleTime with no invalid-value branch — add an on_invalid fallback (constant plus report) or forbid UNRESEARCHED for these two keys.
+
+DEFER severity=NIT — Spec 126 P4 "All tunables are data; zero thresholds in src/" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "The two tunables this SEARCH surface has are now DECLARED here" against "\"entitlement_stale_ms\": 0" in the same config block — the descriptor prose now understates the surface config, which carries three declared keys, so the declaration record is untrue — reword to name the three keys.
+
+DEFER severity=NIT — Task-378 D14 "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read" — mobile/__tests__/parcelScreens.golden.test.ts "entitlement_stale_ms: 0" and mobile/src/hooks/useParcelLookup.ts "staleTime: searchSlice.config.entitlement_stale_ms" — debounce_ms reaches code through a named constant in mobile/src/constants/parcelSearch.ts, while the new key is a bare literal in the golden assertion and read inline in the hook, so it has no single declared home as debounce_ms does — export a named constant beside SEARCH_DEBOUNCE_MS and assert the slice config equals it.
+
+DEFER severity=LOW — Operator ruling (task-372) "gate conversion factors are a pinned setting" — src/tests/fix-tune.logic.test.ts "expect(SEED.parcels_m_to_ft).toMatchObject({ type: 'number', default: 3.28084, min: 3.28084, max: 3.28084 });" — the diff shows only the consumers of parcels_m_to_ft; the seed row itself is not in the diff (cannot see scripts/seeds/logic_variables.json), so the pin holds only if the row already exists at HEAD — confirm the seed row exists and is read by the pinned-settings reader before relying on the test.
+
+DEFER severity=LOW — Task-378 D15 "semi out of the lookup response field_whitelist" — src/tests/fix-tune.logic.test.ts "ConsumerParcelLookupQuerySchema[\s\S]{0,900}semi: z\.literal\('answered'\)" — the evidence proves semi is a request parameter but shows no lookup response schema or type line, so removal from the response whitelist rests on the grounder claim alone — cite the response schema (or its type) that omits semi in the same lane.
+
+MET — Task-378 D14 "Continue wait 60 s" — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;" — the wait is read from the generated slice and the value stays 60000.
+MET — Task-378 D14 "entitlement stale time 0 s" — mobile/src/hooks/useParcelLookup.ts "staleTime: searchSlice.config.entitlement_stale_ms" — the 0 s stale time is now read from the surface config, value unchanged.
+MET — Task-378 D15 "the entitlement contract cites the entitlement hook line" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json "mobile/src/hooks/useParcelLookup.ts:155" — evidence, surfaces and consumers_verified all moved off :96 and the new test recomputes the line from the hook.
+MET — Task-378 D15 "semi out of the lookup response field_whitelist" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "\"unsure\"" (with "semi" removed) — the whitelist no longer lists semi and the remaining 14 entries are asserted.
+MET — Operator ruling (task-372) "gate conversion factors are a pinned setting" — src/lib/parcels/geometry.ts "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — the factor is read from the pinned variable in both geometry modules, no literal left.
+MET — Task-378 out-of-scope list "NOT in scope and left listed: phone area-factor copies, the retry count" — the diff contains no hunk touching area factors, the retry count or the two 60_000 stale times.
+MET — Spec 99 §4 B1 query-key registry "['parcel-entitlement']" — no new query key or parameter is added, the existing row still describes the key.
+MET — Spec 99 §1 "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing useEffect requires either matching an existing pattern in §3-§5 or amending this spec" — no store, blob, bridge or routing effect is added by the diff.
+
+REJECT — Task-378 "the 60 s VALUE is an open operator item, not decided here" — the change is accused of settling the open 60 s timeframe — it moves 60000 unchanged into config and the descriptor labels it "60 s, an open operator timeframe", so no decision is taken.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  86962ms (87.0s)
+📊 Tokens — total: 50718, input: 32696, output: 18022, reasoning: 16543

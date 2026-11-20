@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:29:23.622Z file_sha256=3672dc01c0e02fef3d108184233aefbb8e324ec48bf3aff96328cdef14cc6200 prompt_sha256=ac494cf9bc9f6cab556e64ddb17867d277ca3d884023fc9e19660e9cd66fd4dc
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-surface-128.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11799 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23934 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 36298 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 47565 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 58807 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 69909 chars, answer 950 chars, 90s
+mobile_parcel_search.descriptor.json the same for entitlement_stale_ms, with `"logic_variables": []` unchanged) — two stale/wait tunables are declared as surface config only: no `logic_variables` seed row, no bounds, no `on_invalid`, so Rule 3 is unmet by the change's own admission — add the registry rows (bounds + `on_invalid`) for continue_wait_ms and entitlement_stale_ms, or a §5 register row naming the adjudicator and date before merge
+
+BUG severity=HIGH — Spec 128 §2 rule 3, same clause, applied to the factor — src/lib/massing/geometry.ts "const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" and src/lib/parcels/geometry.ts the same — the diff contains no change to `scripts/seeds/logic_variables.json` and no bounds/`on_invalid` for `parcels_m_to_ft`; if the seed row is absent the module-level read throws on import and the new test's own assertion cannot pass, cannot see the row in this diff — show the seed row with its bounds and posture in the same commit
+
+DEFER severity=MED — Spec 128 §4.5 "a ruling that only lives in a pilot report or a defect-ledger row has not yet reached policy." — task-378 scope line "NOT in scope and left listed: ... bounds/on_invalid for the new keys" — the Rule 3 deferral lives only in a task card, not in §5's register with a `Lock` cell and an id, so per §4.4 the deferral is not yet a rule — record the deferral as a §5 row (id, Amends cell, Lock path, Status) in this commit
+
+DEFER severity=MED — Spec 128 §2 Rule 3 "same registry, same presence/validity split (R-G)" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json "answer": "logic_variables" with the new key "continue_wait_ms": 60000, and mobile_parcel_search.descriptor.json "answer": "none" with three keys carrying values — the `config.answer` cell now contradicts the declared key set in both descriptors, so the presence half of the split is unreadable — state the answer per key or add a `deviations[]` row with adjudicator and date for the non-registered key
+
+DEFER severity=LOW — Spec 128 §6 ASK-22 "The fields are **required-but-may-be-`UNRESEARCHED`**, so an absent field is a build failure while an unfilled one is a counted state." — scripts/surfaces/_schema/surface.schema.json "\"continue_wait_ms\": { \"x-draft-optional\": true" (and entitlement_stale_ms) — both new keys are optional, so a future surface can omit its stale time entirely and no build fails, which is the omission Rule 3 exists to catch — either drop `x-draft-optional` for these keys or justify the optionality in the schema description
+
+DEFER severity=LOW — Spec 128 §3 Rule B2 "The cost is reported automatically by `surface-validate.mjs`'s footprint measure (descriptor bytes, notes bytes, `checks[]` row count, golden-pair byte size)" — the diff's own trailer "generated/derived files omitted from this diff: docs/reports/generated ... validate-descriptor.mjs" — the footprint delta for two added declarations plus two descriptor edits cannot be seen, so B2's stated-cost duty is unverified — land the regenerated footprint report in this commit
+
+DEFER severity=LOW — P4 as quoted in the relied-on rulings "All tunables are data; zero thresholds in src/" — src/lib/massing/geometry.ts "export const SHED_THRESHOLD_SQM = 20;" and "export const GARAGE_MAX_SQM = 60;" — the change externalises one constant in this file while two thresholds stay literal in the same file, and the task scope line does not list them as out of scope — add them to the task's listed residuals so the gap is recorded rather than silent
+
+MET — task-378 D15 — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "- \"unsure\",\n- \"semi\"" — `semi` is out of the response `field_whitelist`, and the new test pins the remaining list verbatim
+
+MET — task-378 D14 — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;" — the 60 s value is read from the generated slice, value unchanged
+
+MET — task-378 LEN (task-372 pinned-setting pattern) — src/lib/parcels/geometry.ts "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — both named geometry modules read the pinned variable, typing no factor
+
+MET — Spec 128 §2.2a Rule 19 — mobile/src/generated/surfaces/mobile_parcel_search.json "$comment": \"GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 5489315b7e1e0886)\"" — generated output re-emitted with a new input sha rather than hand-edited
+
+REJECT — Spec 128 §2 rule 3 (metre factor) — the change hardcodes a conversion factor in `src/` — not a real issue, the factor now comes from `parcels_m_to_ft` via `pinnedSetting`, only the registry row's presence is open
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  44535ms (44.5s)
+📊 Tokens — total: 40231, input: 31642, output: 8589, reasoning: 7202

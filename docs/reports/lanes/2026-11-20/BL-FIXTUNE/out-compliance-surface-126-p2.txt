@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:26:52.373Z file_sha256=54a367361b822d7e0b00dac4dd806433be49a4646f2cc2245b3558e2a62a6123 prompt_sha256=b66655e7bb71bb8d159870f7481d95336738872a0d0c52f534131e2df228f6d6
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10755 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22133 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33364 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44538 chars, answer 0 chars, 60s
+BUG severity=HIGH — task-378 scope, "the typed metre-to-foot factor (src/lib/parcels/geometry.ts, src/lib/massing/geometry.ts) read from the pinned variable parcels_m_to_ft by the task-372 pattern" — scripts/seeds/logic_variables.json NONE (the material contains no hunk for this file and it is not in the stated omitted list: "generated/derived files omitted from this diff: docs/reports/generated, golden fixtures (fingerprint hash values only), census shards..., validate-descriptor.mjs") — cannot see the pinned row the new `M_TO_FT` reads; the material's own assertion "expect(SEED.parcels_m_to_ft).toMatchObject({ type: 'number', default: 3.28084, min: 3.28084, max: 3.28084 })" requires it, and with no seed row `pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft')" has nothing to read and both geometry modules resolve undefined/throw at import — add the parcels_m_to_ft seed entry (type number, default=min=max=3.28084, on_invalid posture) in this same commit, or show the row if it already exists.
+
+DEFER severity=MED — Spec 128 Rule 3, "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "\"logic_variables\": []" with why text "like debounce_ms it is declared, not yet a registered logic variable" — the stale time is declared only as surface config, so Rule 3 is not satisfied by this change — acceptable to defer only because the card lists "bounds/on_invalid for the new keys" as left out; the follow-up must land before any claim that Rule 3 is closed.
+
+DEFER severity=LOW — task-378 D14, "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read" — mobile/src/hooks/useParcelLookup.ts "import searchSlice from '@/generated/surfaces/mobile_parcel_search.json';" and mobile/src/lib/semiQuestion.ts "import slice from '@/generated/surfaces/mobile_parcel_semi_question.json';" — the two new reads import the generated JSON directly, bypassing the constants module that is the SEARCH pattern the ruling names ("export const SEARCH_MIN_QUERY_LEN = SEARCH_SLICE.config.min_query_len"), so one slice now has two import sites — route both reads through the constants module (mobile/src/constants/parcelSearch.ts and its semi counterpart) so there is one home, as debounce_ms has.
+
+DEFER severity=LOW — Spec 126 P4, "All tunables are data; zero thresholds in src/" — src/lib/massing/geometry.ts "export const SHED_THRESHOLD_SQM = 20;" and "export const GARAGE_MAX_SQM = 60;" — the file is edited by this change and still carries typed thresholds, so P4 is only partly satisfied for that module — not blocking (the card names only the m to ft factor, and phone area-factor copies are listed out of scope), but keep these on the FIX.TUNE list so P4 is not read as closed.
+
+DEFER severity=LOW — task-378 D15, "semi out of the lookup response field_whitelist" — src/tests/fix-tune.logic.test.ts "expect(src('src/app/api/parcels/lookup/types.ts')).toMatch(/ConsumerParcelLookupQuerySchema[\s\S]{0,900}semi: z\.literal\('answered'\)/)" — the test only proves `semi` is a request parameter; it does not prove the response projection has no field named `semi`, so the premise of the removal is unproven and a response field of that name would now be stripped by the whitelist — assert the response schema/shape has no `semi` key (not just the query schema) before the entry is deleted.
+
+MET — task-378 D15, "entitlement contract cites the entitlement hook line" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json "mobile/src/hooks/useParcelLookup.ts:155" — all three fields updated and the line is re-derived from the hook in the test rather than typed ("const line = src(HOOK).split('\n').findIndex((l) => l.startsWith('export function useParcelEntitlement(')) + 1;").
+
+MET — Spec 126 §9, "AJV-validate the descriptor against surface.schema.json before anything renders ... An invalid descriptor refuses" — scripts/surfaces/_schema/surface.schema.json "\"continue_wait_ms\": { \"x-draft-optional\": true," and "\"entitlement_stale_ms\": {" — both keys are declared in the schema, so descriptors carrying them validate instead of being refused, and the generated d.ts mirrors them.
+
+MET — task-378 D14, "values unchanged; the 60 s VALUE is an open operator item" — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;" with descriptor "\"continue_wait_ms\": 60000" — the value stays 60 000 and the descriptor why records it as an open operator timeframe rather than a decision.
+
+MET — task-372, "gate conversion factors are a pinned setting (Spec 136 fe.44, Spec 132 core.8)" — src/lib/parcels/geometry.ts "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — the factor is read through the same pinned-setting reader as parcels_sqm_to_sqft, and src/tests/fix-tune.logic.test.ts "expect(M_TO_FT).toBe(3.28084);" locks the value.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 4
+
+---
+⏱  73590ms (73.6s)
+📊 Tokens — total: 37420, input: 23029, output: 14391, reasoning: 13026

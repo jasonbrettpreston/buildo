@@ -1,0 +1,284 @@
+{
+  "lists": [
+    {
+      "id": "mobile-90",
+      "file": "docs/specs/03-mobile/90_mobile_engineering_protocol.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files"
+      ]
+    },
+    {
+      "id": "mobile-98",
+      "file": "docs/specs/03-mobile/98_mobile_testing_protocol.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files"
+      ]
+    },
+    {
+      "id": "mobile-99",
+      "file": "docs/specs/03-mobile/99_mobile_state_architecture.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files"
+      ]
+    },
+    {
+      "id": "mobile-100",
+      "file": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files"
+      ]
+    },
+    {
+      "id": "mobile-96",
+      "file": "docs/specs/03-mobile/96_mobile_subscription.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files"
+      ]
+    },
+    {
+      "id": "surface-136",
+      "file": "docs/specs/02-web-admin/136_mcfrontend_handbook.md",
+      "sections": [
+        "2. Rules"
+      ],
+      "generated_by": "scripts/surfaces/generate-surface-handbook.mjs",
+      "rows": [
+        "mobile",
+        "surfaces"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files",
+        "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\")"
+      ]
+    },
+    {
+      "id": "surface-126",
+      "file": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile",
+        "surfaces"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files",
+        "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\")"
+      ]
+    },
+    {
+      "id": "surface-127",
+      "file": "docs/specs/02-web-admin/127_surface_conversion_procedure.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile",
+        "surfaces"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files",
+        "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\")"
+      ]
+    },
+    {
+      "id": "surface-128",
+      "file": "docs/specs/02-web-admin/128_surface_standard_policy.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile",
+        "surfaces"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files",
+        "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\")"
+      ]
+    },
+    {
+      "id": "surface-135",
+      "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile",
+        "surfaces"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files",
+        "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\")"
+      ]
+    },
+    {
+      "id": "step-132",
+      "file": "docs/specs/01-pipeline/132_step_standard_handbook.md",
+      "sections": [
+        "2. Every step",
+        "3. By archetype",
+        "4. Cross-cutting",
+        "6. Rules with no or partial machine check"
+      ],
+      "generated_by": "scripts/generate-step-handbook.mjs",
+      "rows": [
+        "step-pipeline"
+      ],
+      "why": [
+        "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9"
+      ]
+    },
+    {
+      "id": "airtight-124a",
+      "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md",
+      "sections": [
+        "Appendix §B10",
+        "Appendix §B12"
+      ],
+      "generated_by": "hand-written",
+      "rows": [
+        "step-pipeline"
+      ],
+      "why": [
+        "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9"
+      ]
+    },
+    {
+      "id": "airtight-v3-122",
+      "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+      "sections": [
+        "5.5 Condition 4"
+      ],
+      "generated_by": "hand-written",
+      "rows": [
+        "step-pipeline"
+      ],
+      "why": [
+        "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9"
+      ]
+    },
+    {
+      "id": "airtight-v2-122",
+      "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md",
+      "sections": [
+        "6.6.1 Registry and ledger truth"
+      ],
+      "generated_by": "hand-written",
+      "rows": [
+        "step-pipeline"
+      ],
+      "why": [
+        "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9"
+      ]
+    },
+    {
+      "id": "airtight-122a",
+      "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md",
+      "sections": [
+        "Appendix §A26",
+        "Appendix §A27"
+      ],
+      "generated_by": "hand-written",
+      "rows": [
+        "step-pipeline"
+      ],
+      "why": [
+        "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9"
+      ]
+    },
+    {
+      "id": "eng-s3-s9",
+      "file": "docs/specs/00_engineering_standards.md",
+      "sections": [
+        "3. Database Management",
+        "9. Pipeline & Script Safety"
+      ],
+      "generated_by": "hand-written",
+      "rows": [
+        "step-pipeline"
+      ],
+      "why": [
+        "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9"
+      ]
+    },
+    {
+      "id": "eng-s2-s4-s10-s11",
+      "file": "docs/specs/00_engineering_standards.md",
+      "sections": [
+        "2. Error Handling",
+        "4. Security & API Contracts",
+        "10. Frontend/Backend Boundary",
+        "11. Plan Compliance Checklist"
+      ],
+      "generated_by": "hand-written",
+      "rows": [
+        "api-lib"
+      ],
+      "why": [
+        "API routes and src/lib are governed by engineering standards sections 2, 4, 10 and 11"
+      ]
+    },
+    {
+      "id": "storage-doc16",
+      "file": "backlog/docs/doc-16 - McStorage-policy-v2.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "status": "draft, operator to confirm it binds",
+      "rows": [
+        "storage"
+      ],
+      "why": [
+        "a report computed or stored under src/lib/parcels, src/lib/report-projection or src/app/api/parcels is governed by the McStorage policy (doc-16; DRAFT, attached anyway: the operator confirms it binds)"
+      ]
+    },
+    {
+      "id": "eng-s5",
+      "file": "docs/specs/00_engineering_standards.md",
+      "sections": [
+        "5. Testing Standards"
+      ],
+      "generated_by": "hand-written",
+      "rows": [
+        "tests"
+      ],
+      "why": [
+        "ADDED by COMPLY.2 (not in the starting rows): test files are governed by engineering standards section 5 (testing)"
+      ]
+    },
+    {
+      "id": "inc-1",
+      "file": "backlog/docs/increments/doc-4 - Increment-1-requirements.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "increment"
+      ],
+      "why": [
+        "every task also gets the requirements document of its increment (the milestone group letter)"
+      ]
+    }
+  ],
+  "exempt": [],
+  "unmatched": []
+}

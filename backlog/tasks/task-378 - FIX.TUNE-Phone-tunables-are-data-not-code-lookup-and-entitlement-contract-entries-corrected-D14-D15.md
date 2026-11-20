@@ -7,11 +7,13 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXTUNE'
 created_date: '2026-11-20T14:00:00Z'
-updated_date: '2026-11-20T15:26:00Z'
+updated_date: '2026-11-20T15:41:00Z'
 labels:
   - McFix
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-FIXTUNE/REPORT.md
 type: build
 ordinal: 78012
 ---
@@ -43,10 +45,18 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+FIX.TUNE plan. D14: add optional config keys continue_wait_ms (semi surface, 60000) and entitlement_stale_ms (search surface, 0) to the surface schema, the generated type and the mobile emitter CONFIG_KEYS; regenerate slices; semiQuestion.ts and useParcelEntitlement read the slice (values unchanged). D15: drop semi from the lookup contract inputs.field_whitelist; entitlement contract cites the hook line. LEN: src/lib/parcels/geometry.ts and src/lib/massing/geometry.ts read pinned parcels_m_to_ft via pinnedSetting (task-372 pattern). Not done, listed: phone area-factor copies (no mobile read path for the seed; a new generated output needs a ruling), retry count and the two 60_000 stale times in useParcelLookup.ts, Rule 3 bounds/on_invalid for the new keys (debounce_ms precedent has none), DB mirror migration. Tests first: src/tests/fix-tune.logic.test.ts.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 added from the task-372 grounder: the length factor is still typed: src/lib/parcels/geometry.ts:6 M_TO_FT = 3.28084 (used at :20 and lot-size-entry.ts:170,174), src/lib/massing/geometry.ts:32; a pinned variable parcels_m_to_ft already exists (seed near :8212). Spec 136 fe.44 covers every area and length. Bring these under the registered variable in this task by the pattern task-372 used for SQM_TO_SQFT; the two phone copies of the area factor (mobile/src/lib/leadDetailFormat.ts:15, parcelCostFormat.ts:11) stay the dated baseline of gate B until fixed here or by its own task. Also owed from task-372: a DB mirror migration for maxbld_report_lot_size_implausible_min_sqm and _max_sqm (admin visibility only; nothing reads the DB rows; number claimed from the ID ledger; operator typed GO for any DB job).
 
 2026-11-20 taken on the board at lane launch (lane BL-FIXTUNE, worktree /Users/brettpreston_macmini/Buildo-wt-fixtune, branch wf1/inc1b-fixtune), RR-0240
+
+2026-11-20 BL-FIXTUNE: D14, D15 and the length factor fixed red-first; findings untriaged in docs/reports/lanes/2026-11-20/BL-FIXTUNE/FINDINGS.md, grounder owed. Left listed: phone area-factor copies, retry count, two staleTime 60_000, Rule 3 bounds for the new keys, DB mirror migration (ID ledger, operator typed GO). Phone-test green unproven until Mobile CI.
 <!-- SECTION:NOTES:END -->

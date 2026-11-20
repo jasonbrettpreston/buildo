@@ -426,7 +426,7 @@
   },
   "config": {
     "answer": "none",
-    "why": "The two tunables this SEARCH surface has are now DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.)",
+    "why": "The two tunables this SEARCH surface has are now DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.) FIX.TUNE (task-378): config.entitlement_stale_ms (0, the reports-left read stays fresh for 0 ms) is declared here too and read by useParcelEntitlement from the generated slice; like debounce_ms it is declared, not yet a registered logic variable.",
     "evidence": [
       "mobile/src/constants/parcelSearch.ts:19 — SEARCH_DEBOUNCE_MS, consumed at mobile/app/(app)/parcel-tool/index.tsx:72",
       "mobile/src/constants/parcelSearch.ts:26 — SEARCH_MIN_QUERY_LEN; the server floor is src/app/api/parcels/lookup/types.ts:42",
@@ -436,7 +436,8 @@
     "logic_variables": [],
     "retired": [],
     "debounce_ms": 400,
-    "min_query_len": 3
+    "min_query_len": 3,
+    "entitlement_stale_ms": 0
   },
   "sharing": {
     "answer": "shared",

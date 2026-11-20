@@ -1,0 +1,496 @@
+LIST airtight-v2-122 sha256:5c0962cfd5353738766502b198053b38c57a9c645378b9cbad4742b1e1c2b10b material sha256:53da1ccd31caf393f23bf8e3031041a57738d07ffcf60f0431d819f36bc9e96f part 1 of 1
+RULE LIST airtight-v2-122 (docs/specs/01-pipeline/122_pipeline_step_optimization.md, sections 6.6.1 Registry and ledger truth), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+#### 6.6.1 Registry and ledger truth — generated or witnessed, declared == observed (Spec 124 §5 R-BF, operator ruling 2026-09-30)
+
+**(a) Requirement.** **Name: McDonald's Airtight V2 (registry & cross-step).** V1 (Spec 124 R-BA, 2026-09-26) makes a step's FORM airtight — five words, each a closed-answer gate; it never checks that what a descriptor declares is what the step actually touches. V2 adds TRUTH: the step's own registry and the cross-step ledger are generated or witnessed, declared == observed. A step is V2-built when its captures run under the Phase 1 witness. For every sources-chain step (then every chain), the four-part step registry — FILES (the §4.1 set + owner spec), DATA (every table AND column read or written, each with its migration), CONSUMERS (every reader of the step's tables/columns and `records_meta` keys, across all chains and `src/`), TESTS — and the §6 cross-step ledger (each step's reads/writes and producer steps) are **100% mechanical**: generated from code/runtime or witnessed from executed SQL, never hand-authored; and **100% accurate**: declared == observed at column level, verified by a gate with closed answers, zero allowlist, strict zero (R-BC). This hardens LDG-10's table-edge class above: the "runtime lineage" it reconciles against must be observed, never the declaration re-emitted. R-BE already generates the Target Files blocks mechanically, but from the declarations — generated is not accurate until its sources are witnessed.
+
+**(b) Mechanism (designed, not built).** An executed-SQL witness during golden captures — every statement parsed with the real Postgres grammar (`libpg-query`), touched ≡ declared; a fixture-time guard; observed `pipeline_meta` published alongside declared; manifest `chain_args` generated from the descriptor; `inputs.reads.steps` derived. Queued plans: `.cursor/wf2_registry_truth_active_task.md` (three phases: WITNESS · DERIVE · WIRE OR DELETE) and `.cursor/wf3_link_parcels_full_mode_active_task.md` (the `chain_args` generator, Phase 2's prerequisite). The Phase 1 WITNESS gate (#44) must carry the exact string `R-BF WITNESS GATE (#44)` in `scripts/analysis/step-validate.mjs`; the R-BF lock in `src/tests/spec124-register-rulings.logic.test.ts` holds (c) at NOT MET while that marker is absent and requires MET once it is present — both directions RED.
+
+**(c) Status: NOT MET (measured 2026-09-30, tip `d3eb67c8`).** Descriptor `inputs.reads` are hand-authored and unverified. Runtime `pipeline_meta` for converted steps is `deriveMeta(descriptor)` (`scripts/lib/step/index.js:6126`), so the admin funnel and this ledger show the declaration, not observation — which also makes LDG-4's cross-check circular. The descriptor trust audit classes 75 field groups 26 G · 3 E · 16 P · 30 D (`.cursor/evidence/registry-truth-2026-09-30/trust-audit/audit.md`). Gate C (emits≡declared) passes only via 58 `pending_remediation` rows in `standard-gates-ledger.json`. **Until this programme lands, no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed.**
+
+**(d) Sequence (operator, amended 2026-10-01).** ~~After the remaining sources conversions and the by-law changes.~~ `load_wsib` ③ lands first (V1; witnessed with the converted fleet in Phase 1). The code for `load_heritage`, `enrich_centreline` and `load_zoning` is finished now, but their ①/② captures wait for Phase 1 WITNESS, so each capture also witnesses the step's reads — built under V2 once, never captured twice. The by-law changes are independent of this sequence.
+
+**(e) Phase 1 slice A — built (2026-10-01, branch `wf2/registry-truth-p1a`; status above stays NOT MET).** The witness exists: `scripts/lib/sql-witness/trace-preload.cjs` records every SQL statement a step runs (pass-through wrap of `pg.Client.prototype.query`, loaded only on a capture's run 1; the rerun proof is never traced); `scripts/lib/sql-witness/resolve.cjs` resolves each statement once with the real Postgres grammar (libpg-query) to tables/columns read and written; `scripts/analysis/capture-step-golden.js` writes the result as `docs/reports/witness/<slug>/<pre|post>/<invocation>.trace.json` — a separate tree, never beside the golden, because every golden-dir reader lists `*.json` — and a descriptor-less PRE now snapshots the tables its trace wrote instead of a hand-typed `--tables` list; `--trace-only` + `scripts/analysis/witness-chain.mjs` backfill missing/stale traces; both refuse a local posix-DSM target (the run-chain Phase 0 row, reused). Gate #44 (`scripts/analysis/gates/witness.mjs`, run per slug by `step-validate`) answers PASS | UNWITNESSED | FAIL:INPUT | FAIL:STALE | FAIL:WITNESS (a traced ⊆ declared, b writes, c write_inventory, d txn_scope, g PRE ⊆ POST) | FAIL:PRODUCER, hard-stopping only a pending slug; converted slugs are report-only until slice B fixes their known gaps. Not yet built (slice B): check (e) and the declared ⊆ witnessed half of (a), the fixture guard, the effective ledger, admin/API consumers (P1-C-src), and the C9 marker that flips (c) to MET. The admin funnel now labels `pipeline_meta` "Declared (descriptor)". **WF3 witness-unblock (2026-10-02, Spec 124 R-BG):** check (b) honours `written:"db_default"` in both directions, and PRODUCER is evaluated on comment-stripped text (C1; locks R1–R4, R17 in `src/tests/sql-witness-gate.logic.test.ts`). The resolver resolves every statement of a multi-statement text, binds CTE names through enclosing and sibling scopes, binds function-alias column lists (`unnest(...) AS g(geojson, ord)`, incl. UPDATE … FROM / DELETE … USING), and binds session temp tables per pid through `resolve.collectSessionTemps` (a temp shadowing a catalog table is FAIL:INPUT:temp-shadows) (C2/C2b/C2c; locks R5–R7, R14, R16, R20–R22, C-a–C-c in `src/tests/sql-witness-resolve.logic.test.ts` and `src/tests/sql-witness-assemble.logic.test.ts`). A prior-run baseline (`source-version.js` readPriorRunMeta and the ledger gate's own-last run) is status ∈ {completed, completed_with_warnings} — never completed_with_errors, never a run whose audit table carries `write_skipped_pre_write_warn` (a preserve-and-WARN run describes an empty source, not the loaded table); the ledger gate's upstream-activity FILTER deliberately stays `<> 'completed'` / `= 'completed'`, so any non-completed upstream run forces RUN (fail-safe) (C3; locks R8, R9, R15, R19 in `src/tests/source-version.logic.test.ts`, `src/tests/run-chain-defer.logic.test.ts`, `src/tests/db/source-version-ledger-gate.db.test.ts`). Checks (c) write_inventory and (d) txn_scope count only step writes — a write whose every target is runner-owned/excluded (a standalone run's own ledger row) is not one (2026-10-02, measured on load_heritage's standalone trace: 4 step writes + 2 ledger writes). The INGESTOR interrupted-retraction detector's own-last baseline (staleness.detectInterruptedRetraction, own_last_completed) admits the same set {completed, completed_with_warnings}; the LW-D20 own-run exclusion and the ('running','crashed') predicate are unchanged (C4; locks R10–R12, R18 in src/tests/db/staleness-interrupted-retraction.db.test.ts, R13 in src/tests/staleness.logic.test.ts). **Resolver scope rule (WF3 2026-10-03):** an unqualified column walks the scopes from innermost outward. It binds at the first scope where exactly one catalog table has it (with none, the write target's declared write columns may bind it), and two or more matches at any scope is an error. A lone innermost relation keeps its credit when it has no catalog row, or when no scope's catalog places the column (stale catalog, output alias). Statement kinds outside the handled set are `FAIL:INPUT:unsupported:<Kind>` (EXPLAIN, DO, CALL, MERGE, TRUNCATE, …; CREATE INDEX and REINDEX join the utility list). Locks R-A1–A4, R-B1–B7, R-C1, G-B1–G-B2 in `src/tests/sql-witness-resolve.logic.test.ts`. **src/ SQL ledger catalog membership (WF3 2026-10-04):** `scripts/analysis/src-sql-ledger.mjs --check`, run by `.husky/pre-commit`, fails on any column the ledger records as read or written on a table that `docs/reports/witness/_catalog.json` lists but whose column list lacks it; tables the catalog does not carry (matviews) are skipped and listed — enforced only for statically parsed `src/` SQL (not interpolated statements, `scripts/` SQL, or `ON CONFLICT … DO UPDATE SET` targets), and only as fresh as the committed catalog. Locks: the `catalogMembership` and `live:` catalog tests in `src/tests/src-sql-ledger.logic.test.ts`.
+
+**(f) FLEET-2 landing (Phases 2 + 3 as built; the status in (c) is unchanged; it flips only at P1-C9).** Enforced (each lock runs in the pre-push `npm run test`): the Phase 3 DELETE-row fields are gone from `step.schema.json` and every converted descriptor — `interpretation.entries`, externals `cache*`, writes `replay*`/`source_key_policy`, `outputs.cascades`/`publish`, `staleness.scope`/`checkpoint`/`interval`, `execution.budget`/`txn_budget`/`criticality`, network `egress`/`redact`, counter `scoped_by` (lock `src/tests/phase3-deletions.logic.test.ts`). The ≤ 12 prose cap is fast invariant #45 NOTES-CAP over each declaring notes file (`scripts/analysis/gates/notes-cap.mjs`, hard; `src/tests/gate-notes-cap.infra.test.ts`). #47 MODE-EMITS-TYPE is Spec 124 R-BH. `outputs.writes[].retract: "departed_mark"` soft-retires departed keys through a `retired_at` column (mark/unmark guarded; a mark above the `retire_max_pct_from_config` bound is suppressed with a FAIL `mass_retire_guard` row; `src/tests/fleet2-soft-retire{,-schema,-runner}.logic.test.ts`); every `address_points` reader filters `retired_at IS NULL` inline (`src/tests/address-points-active-readers.infra.test.ts`) and the `address_points_active` view has no reader (declared-only: no gate reds a new reader of the view). A LINK or MATCHER on `mode_select: "none"` re-derives every row on every run and writes only changes (`resolveLinkGate`; fake-pool locks, the live steady state is unmeasured; O4 locks `src/tests/steps/<slug>/o4-*.logic.test.ts`; Specs 54, 56, 60); gate #44 adds `full_rescan:arm` and `UNWITNESSED …:full_rescan` rows (`fullRescanItems`; `src/tests/fleet2-full-rescan-evidence.logic.test.ts`), report-only on converted slugs like the rest of #44. Report-only: #46 SCHEMA-HOMES (`checks[].reads`, `outputs.write_inventory.by_mode`; 0 of 25 descriptors declare either, measured at the FLEET-2 base `a7a60e30`).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+RULINGS AND TASK THE CHANGE RELIES ON (pasted; operator words only where marked)
+- Operator, 2026-11-20, verbatim: "1. yes. add the tasks to incr 1b" and "We just need complaint code - not building spaggetti code".
+- Operator ruling (task-372): gate conversion factors are a pinned setting (Spec 136 fe.44, Spec 132 core.8).
+- Task-378 scope: D14 (phone tunables typed in code: Continue wait 60 s, entitlement stale time 0 s: declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read; values unchanged; the 60 s VALUE is an open operator item, not decided here); D15 (two descriptor entries: semi out of the lookup response field_whitelist; entitlement contract cites the entitlement hook line); the typed metre-to-foot factor (src/lib/parcels/geometry.ts, src/lib/massing/geometry.ts) read from the pinned variable parcels_m_to_ft by the task-372 pattern. NOT in scope and left listed: phone area-factor copies, the retry count, the two 60_000 stale times, DB mirror migration, bounds/on_invalid for the new keys.
+- Spec 126 P4: "All tunables are data; zero thresholds in src/". Spec 128 Rule 3: "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture".
+- The diff follows. Mobile tests cannot run locally (phone-test green unproven until Mobile CI).
+=== DIFF ===
+diff --git a/mobile/__tests__/parcelScreens.golden.test.ts b/mobile/__tests__/parcelScreens.golden.test.ts
+index d72b37f0c..7fcbb98fb 100644
+
+diff --git a/mobile/__tests__/parcelScreens.golden.test.ts b/mobile/__tests__/parcelScreens.golden.test.ts
+index d72b37f0c..7fcbb98fb 100644
+--- a/mobile/__tests__/parcelScreens.golden.test.ts
++++ b/mobile/__tests__/parcelScreens.golden.test.ts
+@@ -205,7 +205,7 @@ describe('one home for the config values (row 24, RG-14)', () => {
+     expect(/export const SEARCH_MIN_QUERY_LEN = SEARCH_SLICE\.config\.min_query_len/.test(src)).toBe(true);
+   });
+   it('the slice config equals the constants, and the content strings that state them carry the same numbers', () => {
+-    expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN });
++    expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN, entitlement_stale_ms: 0 }); // FIX.TUNE (task-378): the entitlement stale time is declared beside them
+     expect(SEARCH_SLICE.content['search.prompt']).toContain(`at least ${SEARCH_MIN_QUERY_LEN} characters`);
+     expect(SEARCH_SLICE.content['search.input.hint']).toContain(`at least ${SEARCH_MIN_QUERY_LEN} characters`);
+     expect(SEARCH_SLICE.content['list.refine']).toContain(`More than ${SEARCH_CANDIDATE_LIMIT} lots`);
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_search.json b/mobile/src/generated/surfaces/mobile_parcel_search.json
+index aca01e334..ff7066b82 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_search.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_search.json
+@@ -1,9 +1,10 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 28c8b028f1ca78e7)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 5489315b7e1e0886)",
+   "surface": "mobile_parcel_search",
+   "config": {
+     "debounce_ms": 400,
+-    "min_query_len": 3
++    "min_query_len": 3,
++    "entitlement_stale_ms": 0
+   },
+   "content": {
+     "footer.copyright": "© MaxBLD",
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_semi_question.json b/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
+index b811aece8..53f1902a2 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
+@@ -1,7 +1,9 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 441b16cfaa9dd4a1)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 48076a030fb80cb1)",
+   "surface": "mobile_parcel_semi_question",
+-  "config": {},
++  "config": {
++    "continue_wait_ms": 60000
++  },
+   "content": {
+     "back.label": "Back to search",
+     "question.title": "Is this house one half of a semi-detached pair?",
+diff --git a/mobile/src/hooks/useParcelLookup.ts b/mobile/src/hooks/useParcelLookup.ts
+index 7e0c65dc4..6a82278c8 100644
+--- a/mobile/src/hooks/useParcelLookup.ts
++++ b/mobile/src/hooks/useParcelLookup.ts
+@@ -16,6 +16,7 @@ import { fetchWithAuth } from '@/lib/apiClient';
+ import { AccountDeletedError, ApiError, RateLimitError } from '@/lib/errors';
+ import { useAuthStore } from '@/store/authStore';
+ import { boundedWait, SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
++import searchSlice from '@/generated/surfaces/mobile_parcel_search.json';
+ import {
+   ConsumerParcelLookupResultSchema,
+   ParcelToolEntitlementSchema,
+@@ -157,7 +158,7 @@ export function useParcelEntitlement() {
+     queryKey: ['parcel-entitlement'],
+     queryFn: fetchParcelEntitlement,
+     enabled: !!accessToken,
+-    staleTime: 0,
++    staleTime: searchSlice.config.entitlement_stale_ms, // FIX.TUNE (task-378): the surface config, not a number typed here
+     retry: shouldRetryParcelLookup,
+   });
+ }
+diff --git a/mobile/src/lib/semiQuestion.ts b/mobile/src/lib/semiQuestion.ts
+index ce3dcebe7..8a3fc02e4 100644
+--- a/mobile/src/lib/semiQuestion.ts
++++ b/mobile/src/lib/semiQuestion.ts
+@@ -8,12 +8,13 @@
+ //   error     the search page's error classes                 redirect  the lot is NOT unsure (or an older server sent no block): the report
+ // It reads the SAME lookup entry the report reads (['parcel-lookup', parcelId]), so no extra request. The chosen answer opens the report through
+ // reportRouteAfterAnswer (lotForm.ts): the answer is lot_form_user_override, carried as a route param (O-12: no server store).
++import slice from '@/generated/surfaces/mobile_parcel_semi_question.json';
+ import type { ConsumerParcelLookupResult } from '@/lib/schemas';
+ import { classifyParcelSearchError, PARCEL_TAB_ROUTE, parcelSearchRoute, type ParcelSearchErrorClass } from '@/lib/parcelSearchMatch';
+ import { reportRouteAfterAnswer, SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
+ 
+-/** SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report). */
+-export const SEMI_CONTINUE_WAIT_MS = 60_000;
++/** SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report). FIX.TUNE (task-378): read from the surface config `continue_wait_ms` (the generated slice), not typed here. */
++export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;
+ 
+ class SemiContinueTimeoutError extends Error {
+   constructor() {
+diff --git a/scripts/surfaces/_schema/surface.schema.json b/scripts/surfaces/_schema/surface.schema.json
+index 7f76a6f43..7c509fe76 100644
+--- a/scripts/surfaces/_schema/surface.schema.json
++++ b/scripts/surfaces/_schema/surface.schema.json
+@@ -2627,6 +2627,34 @@
+               "minimum": 0
+             }
+           ]
++        },
++        "continue_wait_ms": {
++          "x-draft-optional": true,
++          "description": "FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long the semi question page Continue waits for the answered lookup, in milliseconds, before the page ends in its error state.",
++          "anyOf": [
++            {
++              "const": "UNRESEARCHED",
++              "description": "Nobody has researched this yet. Counted by the registry."
++            },
++            {
++              "type": "integer",
++              "minimum": 0
++            }
++          ]
++        },
++        "entitlement_stale_ms": {
++          "x-draft-optional": true,
++          "description": "FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long the reports-left entitlement read stays fresh, in milliseconds (0 = re-read on every focus).",
++          "anyOf": [
++            {
++              "const": "UNRESEARCHED",
++              "description": "Nobody has researched this yet. Counted by the registry."
++            },
++            {
++              "type": "integer",
++              "minimum": 0
++            }
++          ]
+         }
+       }
+     },
+diff --git a/scripts/surfaces/emit-mobile-surfaces.mjs b/scripts/surfaces/emit-mobile-surfaces.mjs
+index 7523af762..529cfd5c0 100644
+--- a/scripts/surfaces/emit-mobile-surfaces.mjs
++++ b/scripts/surfaces/emit-mobile-surfaces.mjs
+@@ -23,7 +23,7 @@ export const GOLDEN_COPY_DIR = 'mobile/__tests__/fixtures/surfaces';
+ const COMMENT = 'GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit';
+ const SHA_RE = /input_sha ([0-9a-f]{16})/;
+ // The descriptor config values a mobile binding may read (the SEARCH archetype's declared parameters, Spec 126 §3.1 row 4).
+-const CONFIG_KEYS = ['debounce_ms', 'min_query_len'];
++const CONFIG_KEYS = ['debounce_ms', 'min_query_len', 'continue_wait_ms', 'entitlement_stale_ms'];
+ 
+ const rj = (root, rel) => JSON.parse(fs.readFileSync(path.join(root, rel), 'utf8'));
+ const descriptorFile = (root, id) => {
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
+index 0c500e381..095ab0b8e 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
+@@ -426,7 +426,7 @@
+   },
+   "config": {
+     "answer": "none",
+-    "why": "The two tunables this SEARCH surface has are now DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.)",
++    "why": "The two tunables this SEARCH surface has are now DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.) FIX.TUNE (task-378): config.entitlement_stale_ms (0, the reports-left read stays fresh for 0 ms) is declared here too and read by useParcelEntitlement from the generated slice; like debounce_ms it is declared, not yet a registered logic variable.",
+     "evidence": [
+       "mobile/src/constants/parcelSearch.ts:19 — SEARCH_DEBOUNCE_MS, consumed at mobile/app/(app)/parcel-tool/index.tsx:72",
+       "mobile/src/constants/parcelSearch.ts:26 — SEARCH_MIN_QUERY_LEN; the server floor is src/app/api/parcels/lookup/types.ts:42",
+@@ -436,7 +436,8 @@
+     "logic_variables": [],
+     "retired": [],
+     "debounce_ms": 400,
+-    "min_query_len": 3
++    "min_query_len": 3,
++    "entitlement_stale_ms": 0
+   },
+   "sharing": {
+     "answer": "shared",
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
+index 9105fc611..71f69d9d8 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
+@@ -277,12 +277,13 @@
+   },
+   "config": {
+     "answer": "logic_variables",
+-    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page itself has no tunable and reads only the unsure flag.",
++    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; like debounce_ms it is declared, not yet a registered logic variable with bounds).",
+     "evidence": [
+       "migrations/320_parcel_lot_form_view.sql",
+       "migrations/323_semi_o4_zone_and_wall_asks.sql",
+       "scripts/seeds/logic_variables.json semi_doubt_enabled / semi_doubt_max_link_parcels / semi_doubt_min_shared_len_m",
+-      "scripts/seeds/logic_variables.json semi_auto_max_shared_len_m / semi_detect_zone_classes / semi_ask_two_parcel_zone_classes"
++      "scripts/seeds/logic_variables.json semi_auto_max_shared_len_m / semi_detect_zone_classes / semi_ask_two_parcel_zone_classes",
++      "mobile/src/lib/semiQuestion.ts — SEMI_CONTINUE_WAIT_MS reads config.continue_wait_ms from the generated slice"
+     ],
+     "logic_variables": [
+       {
+@@ -321,7 +322,8 @@
+         "why": "A missing, empty or out-of-vocabulary list reads as the seeded [RD] inside the view; the vocabulary is the closed list of five residential codes (R, RD, RS, RT, RM), non-empty and distinct."
+       }
+     ],
+-    "retired": []
++    "retired": [],
++    "continue_wait_ms": 60000
+   },
+   "sharing": {
+     "answer": "shared",
+diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
+index 7633fe700..62c575568 100644
+--- a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
+@@ -324,11 +324,11 @@
+     "answer": "sole",
+     "why": "Exactly one call site reads it today: the app search page line (SRCH.A6, task-320). Its web tree is inert until MAXBLD_WEB_LIVE flips (LS.12); MF-52 (Account) and MF-49 bind to it when they build.",
+     "evidence": [
+-      "mobile/src/hooks/useParcelLookup.ts:96",
++      "mobile/src/hooks/useParcelLookup.ts:155",
+       ".cursor/MCFRONTEND-QUEUE.md MF-45 row (dated note 2026-11-11)"
+     ],
+     "surfaces": [
+-      "mobile/src/hooks/useParcelLookup.ts:96"
++      "mobile/src/hooks/useParcelLookup.ts:155"
+     ]
+   },
+   "a11y": {
+@@ -364,7 +364,7 @@
+     ],
+     "writes_audit_row": false,
+     "consumers_verified": [
+-      "mobile/src/hooks/useParcelLookup.ts:96"
++      "mobile/src/hooks/useParcelLookup.ts:155"
+     ],
+     "auth_class_executed": "authenticated",
+     "locking_tests": [
+diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+index 0b4590b72..2784a0cef 100644
+--- a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+@@ -171,8 +171,7 @@
+       "lotForm",
+       "detected",
+       "basis",
+-      "unsure",
+-      "semi"
++      "unsure"
+     ],
+     "tables": [
+       {
+diff --git a/src/lib/massing/geometry.ts b/src/lib/massing/geometry.ts
+index 886177adf..509ad43fa 100644
+--- a/src/lib/massing/geometry.ts
++++ b/src/lib/massing/geometry.ts
+@@ -1,3 +1,5 @@
++import seed from '../../../scripts/seeds/logic_variables.json';
++import { pinnedSetting } from '@/lib/report-projection/pinned-settings';
+ import type { StructureType } from './types';
+ 
+ // ---------------------------------------------------------------------------
+@@ -29,7 +31,8 @@ export const SHED_THRESHOLD_SQM = 20;
+ /** 20–60 sqm accessory is classified as garage. */
+ export const GARAGE_MAX_SQM = 60;
+ 
+-const M_TO_FT = 3.28084;
++/** Feet per metre: the pinned logic variable parcels_m_to_ft (fe.44, core.8; FIX.TUNE task-378). */
++const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');
+ 
+ // ---------------------------------------------------------------------------
+ // Core functions
+diff --git a/src/lib/parcels/geometry.ts b/src/lib/parcels/geometry.ts
+index 1b743a29e..0485c852a 100644
+--- a/src/lib/parcels/geometry.ts
++++ b/src/lib/parcels/geometry.ts
+@@ -4,7 +4,8 @@ import type { LotDimensions } from './types';
+ 
+ /** Square feet per square metre: the pinned logic variable parcels_sqm_to_sqft (fe.44, core.8; one factor with the report projection). */
+ export const SQM_TO_SQFT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_sqm_to_sqft');
+-export const M_TO_FT = 3.28084;
++/** Feet per metre: the pinned logic variable parcels_m_to_ft (fe.44, core.8; same reader as SQM_TO_SQFT). */
++export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');
+ 
+ /**
+  * Convert square meters to square feet.
+diff --git a/src/lib/surfaces/generated/surface-descriptor.d.ts b/src/lib/surfaces/generated/surface-descriptor.d.ts
+index 0992ccbef..085251836 100644
+--- a/src/lib/surfaces/generated/surface-descriptor.d.ts
++++ b/src/lib/surfaces/generated/surface-descriptor.d.ts
+@@ -336,6 +336,10 @@ export type SurfaceDescriptor = {
+   retired?: Array<string>;
+   debounce_ms?: "UNRESEARCHED" | number;
+   min_query_len?: "UNRESEARCHED" | number;
++  /** FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long the semi question page Continue waits for the answered lookup, in milliseconds, before the page ends in its error state. */
++  continue_wait_ms?: "UNRESEARCHED" | number;
++  /** FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long the reports-left entitlement read stays fresh, in milliseconds (0 = re-read on every focus). */
++  entitlement_stale_ms?: "UNRESEARCHED" | number;
+ };
+   sharing: {
+   answer: "UNRESEARCHED" | "sole" | "shared" | "none";
+diff --git a/src/tests/fix-tune.logic.test.ts b/src/tests/fix-tune.logic.test.ts
+new file mode 100644
+index 000000000..32e036364
+--- /dev/null
++++ b/src/tests/fix-tune.logic.test.ts
+@@ -0,0 +1,86 @@
++// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md P4 (all tunables are data; zero thresholds in src/);
++//            docs/specs/02-web-admin/128_surface_standard_policy.md Rule 3 (every debounce, page size, stale time and rate limit is declared, with the SEARCH debounce_ms as the pattern);
++//            docs/specs/01-pipeline/132_step_standard_handbook.md core.8; docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.44 (the conversion factor is content/settings, never code).
++//
++// FIX.TUNE (task-378; grounder D14, D15 and the length factor owed from task-372): written FIRST, red before the fixes.
++//   D14  the phone's Continue wait (60 s) and entitlement stale time (0 s) are declared in the surface config and read from the generated slice; values unchanged.
++//   D15  two descriptor entries corrected (the request parameter `semi` is not a response field; the entitlement call site is the entitlement hook).
++//   LEN  the metre-to-foot factor is the registered pinned variable parcels_m_to_ft, read by pinnedSetting, in both geometry modules.
++import fs from 'node:fs';
++import path from 'node:path';
++import { describe, expect, it } from 'vitest';
++import seed from '../../scripts/seeds/logic_variables.json';
++import { M_TO_FT } from '@/lib/parcels/geometry';
++import { formatHeight } from '@/lib/massing/geometry';
++
++const ROOT = path.resolve(__dirname, '..', '..');
++const src = (p: string): string => fs.readFileSync(path.join(ROOT, p), 'utf8');
++// eslint-disable-next-line @typescript-eslint/no-explicit-any
++const json = (p: string): any => JSON.parse(src(p));
++const code = (p: string): string => src(p).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
++const SEED = seed as unknown as Record<string, { default: number; min: number; max: number; type: string }>;
++
++const SEMI = 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json';
++const SEARCH = 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json';
++const SEMI_SLICE = 'mobile/src/generated/surfaces/mobile_parcel_semi_question.json';
++const SEARCH_SLICE = 'mobile/src/generated/surfaces/mobile_parcel_search.json';
++const LOOKUP_CONTRACT = 'scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json';
++const ENTITLEMENT_CONTRACT = 'scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json';
++const HOOK = 'mobile/src/hooks/useParcelLookup.ts';
++
++describe('D14 the phone tunables are declared in the surface config, values unchanged', () => {
++  it('the semi surface declares config.continue_wait_ms = 60000 and the generated slice carries it', () => {
++    expect(json(SEMI).config.continue_wait_ms).toBe(60000);
++    expect(json(SEMI_SLICE).config.continue_wait_ms).toBe(60000);
++  });
++  it('the search surface declares config.entitlement_stale_ms = 0 and the generated slice carries it', () => {
++    expect(json(SEARCH).config.entitlement_stale_ms).toBe(0);
++    expect(json(SEARCH_SLICE).config.entitlement_stale_ms).toBe(0);
++  });
++  it('the schema and the generated type know both keys, and the emitter copies both', () => {
++    const props = json('scripts/surfaces/_schema/surface.schema.json').properties.config.properties;
++    expect(Object.keys(props)).toEqual(expect.arrayContaining(['continue_wait_ms', 'entitlement_stale_ms']));
++    expect(src('src/lib/surfaces/generated/surface-descriptor.d.ts')).toMatch(/continue_wait_ms\?/);
++    expect(src('src/lib/surfaces/generated/surface-descriptor.d.ts')).toMatch(/entitlement_stale_ms\?/);
++    expect(src('scripts/surfaces/emit-mobile-surfaces.mjs')).toMatch(/CONFIG_KEYS = \[[^\]]*continue_wait_ms[^\]]*entitlement_stale_ms/);
++  });
++  it('semiQuestion.ts types no wait number and reads the slice; the entitlement hook types no stale number and reads the slice', () => {
++    expect(code('mobile/src/lib/semiQuestion.ts')).not.toMatch(/60_?000/);
++    expect(code('mobile/src/lib/semiQuestion.ts')).toContain('continue_wait_ms');
++    const hook = code(HOOK);
++    const entitlement = hook.slice(hook.indexOf('export function useParcelEntitlement'));
++    expect(entitlement).not.toMatch(/staleTime:\s*0\b/);
++    expect(entitlement).toContain('entitlement_stale_ms');
++  });
++});
++
++describe('D15 the two descriptor entries are corrected', () => {
++  it('semi is a request parameter (the query schema), not a response field: it is out of the lookup contract field_whitelist and the rest of the list is unchanged', () => {
++    expect(src('src/app/api/parcels/lookup/types.ts')).toMatch(/ConsumerParcelLookupQuerySchema[\s\S]{0,900}semi: z\.literal\('answered'\)/);
++    const whitelist: string[] = json(LOOKUP_CONTRACT).inputs.field_whitelist;
++    expect(whitelist).not.toContain('semi');
++    expect(whitelist).toEqual(['match', 'candidates', 'warnings', 'parcel', 'footprint', 'slot', 'source', 'label', 'value', 'disclosure', 'lotForm', 'detected', 'basis', 'unsure']);
++  });
++  it('the entitlement contract names the line of useParcelEntitlement in the hook as its call site (found by reading the hook, not a typed number)', () => {
++    const line = src(HOOK).split('\n').findIndex((l) => l.startsWith('export function useParcelEntitlement(')) + 1;
++    expect(line).toBeGreaterThan(0);
++    const d = json(ENTITLEMENT_CONTRACT);
++    expect(d.sharing.surfaces).toEqual([`${HOOK}:${line}`]);
++    expect(d.sharing.evidence).toContain(`${HOOK}:${line}`);
++    expect(JSON.stringify(d.sharing)).not.toContain(`${HOOK}:96`);
++  });
++});
++
++describe('LEN the metre-to-foot factor is the registered pinned variable (fe.44, core.8)', () => {
++  it('parcels_m_to_ft is pinned in the seed at 3.28084 and both geometry modules read it, typing no factor', () => {
++    expect(SEED.parcels_m_to_ft).toMatchObject({ type: 'number', default: 3.28084, min: 3.28084, max: 3.28084 });
++    for (const p of ['src/lib/parcels/geometry.ts', 'src/lib/massing/geometry.ts']) {
++      expect(code(p), p).not.toMatch(/3\.28084/);
++      expect(code(p), p).toContain('parcels_m_to_ft');
++    }
++  });
++  it('values unchanged: the exported factor and the formatted height', () => {
++    expect(M_TO_FT).toBe(3.28084);
++    expect(formatHeight(10)).toBe('10.0 m (32.8 ft)');
++  });
++});
+(generated/derived files omitted from this diff: docs/reports/generated, golden fixtures (fingerprint hash values only), census shards (same text as the descriptors), validate-descriptor.mjs)
+diff --git a/src/tests/fix-tune.logic.test.ts b/src/tests/fix-tune.logic.test.ts
+new file mode 100644
+index 000000000..32e036364
+--- /dev/null
++++ b/src/tests/fix-tune.logic.test.ts
+@@ -0,0 +1,86 @@
++// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md P4 (all tunables are data; zero thresholds in src/);
++//            docs/specs/02-web-admin/128_surface_standard_policy.md Rule 3 (every debounce, page size, stale time and rate limit is declared, with the SEARCH debounce_ms as the pattern);
++//            docs/specs/01-pipeline/132_step_standard_handbook.md core.8; docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.44 (the conversion factor is content/settings, never code).
++//
++// FIX.TUNE (task-378; grounder D14, D15 and the length factor owed from task-372): written FIRST, red before the fixes.
++//   D14  the phone's Continue wait (60 s) and entitlement stale time (0 s) are declared in the surface config and read from the generated slice; values unchanged.
++//   D15  two descriptor entries corrected (the request parameter `semi` is not a response field; the entitlement call site is the entitlement hook).
++//   LEN  the metre-to-foot factor is the registered pinned variable parcels_m_to_ft, read by pinnedSetting, in both geometry modules.
++import fs from 'node:fs';
++import path from 'node:path';
++import { describe, expect, it } from 'vitest';
++import seed from '../../scripts/seeds/logic_variables.json';
++import { M_TO_FT } from '@/lib/parcels/geometry';
++import { formatHeight } from '@/lib/massing/geometry';
++
++const ROOT = path.resolve(__dirname, '..', '..');
++const src = (p: string): string => fs.readFileSync(path.join(ROOT, p), 'utf8');
++// eslint-disable-next-line @typescript-eslint/no-explicit-any
++const json = (p: string): any => JSON.parse(src(p));
++const code = (p: string): string => src(p).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
++const SEED = seed as unknown as Record<string, { default: number; min: number; max: number; type: string }>;
++
++const SEMI = 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json';
++const SEARCH = 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json';
++const SEMI_SLICE = 'mobile/src/generated/surfaces/mobile_parcel_semi_question.json';
++const SEARCH_SLICE = 'mobile/src/generated/surfaces/mobile_parcel_search.json';
++const LOOKUP_CONTRACT = 'scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json';
++const ENTITLEMENT_CONTRACT = 'scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json';
++const HOOK = 'mobile/src/hooks/useParcelLookup.ts';
++
++describe('D14 the phone tunables are declared in the surface config, values unchanged', () => {
++  it('the semi surface declares config.continue_wait_ms = 60000 and the generated slice carries it', () => {
++    expect(json(SEMI).config.continue_wait_ms).toBe(60000);
++    expect(json(SEMI_SLICE).config.continue_wait_ms).toBe(60000);
++  });
++  it('the search surface declares config.entitlement_stale_ms = 0 and the generated slice carries it', () => {
++    expect(json(SEARCH).config.entitlement_stale_ms).toBe(0);
++    expect(json(SEARCH_SLICE).config.entitlement_stale_ms).toBe(0);
++  });
++  it('the schema and the generated type know both keys, and the emitter copies both', () => {
++    const props = json('scripts/surfaces/_schema/surface.schema.json').properties.config.properties;
++    expect(Object.keys(props)).toEqual(expect.arrayContaining(['continue_wait_ms', 'entitlement_stale_ms']));
++    expect(src('src/lib/surfaces/generated/surface-descriptor.d.ts')).toMatch(/continue_wait_ms\?/);
++    expect(src('src/lib/surfaces/generated/surface-descriptor.d.ts')).toMatch(/entitlement_stale_ms\?/);
++    expect(src('scripts/surfaces/emit-mobile-surfaces.mjs')).toMatch(/CONFIG_KEYS = \[[^\]]*continue_wait_ms[^\]]*entitlement_stale_ms/);
++  });
++  it('semiQuestion.ts types no wait number and reads the slice; the entitlement hook types no stale number and reads the slice', () => {
++    expect(code('mobile/src/lib/semiQuestion.ts')).not.toMatch(/60_?000/);
++    expect(code('mobile/src/lib/semiQuestion.ts')).toContain('continue_wait_ms');
++    const hook = code(HOOK);
++    const entitlement = hook.slice(hook.indexOf('export function useParcelEntitlement'));
++    expect(entitlement).not.toMatch(/staleTime:\s*0\b/);
++    expect(entitlement).toContain('entitlement_stale_ms');
++  });
++});
++
++describe('D15 the two descriptor entries are corrected', () => {
++  it('semi is a request parameter (the query schema), not a response field: it is out of the lookup contract field_whitelist and the rest of the list is unchanged', () => {
++    expect(src('src/app/api/parcels/lookup/types.ts')).toMatch(/ConsumerParcelLookupQuerySchema[\s\S]{0,900}semi: z\.literal\('answered'\)/);
++    const whitelist: string[] = json(LOOKUP_CONTRACT).inputs.field_whitelist;
++    expect(whitelist).not.toContain('semi');
++    expect(whitelist).toEqual(['match', 'candidates', 'warnings', 'parcel', 'footprint', 'slot', 'source', 'label', 'value', 'disclosure', 'lotForm', 'detected', 'basis', 'unsure']);
++  });
++  it('the entitlement contract names the line of useParcelEntitlement in the hook as its call site (found by reading the hook, not a typed number)', () => {
++    const line = src(HOOK).split('\n').findIndex((l) => l.startsWith('export function useParcelEntitlement(')) + 1;
++    expect(line).toBeGreaterThan(0);
++    const d = json(ENTITLEMENT_CONTRACT);
++    expect(d.sharing.surfaces).toEqual([`${HOOK}:${line}`]);
++    expect(d.sharing.evidence).toContain(`${HOOK}:${line}`);
++    expect(JSON.stringify(d.sharing)).not.toContain(`${HOOK}:96`);
++  });
++});
++
++describe('LEN the metre-to-foot factor is the registered pinned variable (fe.44, core.8)', () => {
++  it('parcels_m_to_ft is pinned in the seed at 3.28084 and both geometry modules read it, typing no factor', () => {
++    expect(SEED.parcels_m_to_ft).toMatchObject({ type: 'number', default: 3.28084, min: 3.28084, max: 3.28084 });
++    for (const p of ['src/lib/parcels/geometry.ts', 'src/lib/massing/geometry.ts']) {
++      expect(code(p), p).not.toMatch(/3\.28084/);
++      expect(code(p), p).toContain('parcels_m_to_ft');
++    }
++  });
++  it('values unchanged: the exported factor and the formatted height', () => {
++    expect(M_TO_FT).toBe(3.28084);
++    expect(formatHeight(10)).toBe('10.0 m (32.8 ft)');
++  });
++});
+

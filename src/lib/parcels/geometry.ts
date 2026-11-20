@@ -4,7 +4,8 @@ import type { LotDimensions } from './types';
 
 /** Square feet per square metre: the pinned logic variable parcels_sqm_to_sqft (fe.44, core.8; one factor with the report projection). */
 export const SQM_TO_SQFT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_sqm_to_sqft');
-export const M_TO_FT = 3.28084;
+/** Feet per metre: the pinned logic variable parcels_m_to_ft (fe.44, core.8; same reader as SQM_TO_SQFT). */
+export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');
 
 /**
  * Convert square meters to square feet.

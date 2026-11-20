@@ -336,6 +336,10 @@ export type SurfaceDescriptor = {
   retired?: Array<string>;
   debounce_ms?: "UNRESEARCHED" | number;
   min_query_len?: "UNRESEARCHED" | number;
+  /** FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long the semi question page Continue waits for the answered lookup, in milliseconds, before the page ends in its error state. */
+  continue_wait_ms?: "UNRESEARCHED" | number;
+  /** FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long the reports-left entitlement read stays fresh, in milliseconds (0 = re-read on every focus). */
+  entitlement_stale_ms?: "UNRESEARCHED" | number;
 };
   sharing: {
   answer: "UNRESEARCHED" | "sole" | "shared" | "none";

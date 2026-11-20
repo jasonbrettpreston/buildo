@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:33:55.888Z file_sha256=1842dc8af61cad202a0967ccf8a4095a3df261bc14de798df86a28c46ef2817f prompt_sha256=243e1b5e5d0fcf55fa421efb6907fa543f52b548e988cdd70f6e2e6db9c5f542
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-airtight-124a.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10605 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21817 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32891 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44363 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 55677 chars, answer 0 chars, 75s
+BUG severity=HIGH — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:429 "config.entitlement_stale_ms (0, the reports-left read stays fresh for 0 ms) is declared here too ... like debounce_ms it is declared, not yet a registered logic variable" — entitlement_stale_ms (a stale time) and continue_wait_ms ("continue_wait_ms": 60000 in the semi descriptor) exist only as surface-config numbers: no logic_variables row, no bounds, no on_invalid, and the semi descriptor still answers "logic_variables" over a key that is not one — register both keys in scripts/seeds/logic_variables.json with min/max and on_invalid and cite them in config.logic_variables[], or amend Spec 128 Rule 3 with a dated row plus Operator-Ruling trailer before landing.
+
+DEFER severity=MED — task-378 "the typed metre-to-foot factor (src/lib/parcels/geometry.ts, src/lib/massing/geometry.ts) read from the pinned variable parcels_m_to_ft" — src/tests/fix-tune.logic.test.ts "expect(SEED.parcels_m_to_ft).toMatchObject({ type: 'number', default: 3.28084, min: 3.28084, max: 3.28084 });" — no change to scripts/seeds/logic_variables.json appears in the diff and that file is not in the omitted-file list, so the pinned row the new read depends on cannot be seen — include the seed row in the diff (or cite it as pre-existing at a stated line) so M_TO_FT is not undefined or throwing at import.
+
+DEFER severity=MED — operator 2026-11-20 "1. yes. add the tasks to incr 1b" — NONE — nothing in the diff shows the tasks added to incr 1b; only surface, schema, code and test changes are present — add the increment artifact or state where the incr 1b edit lives.
+
+DEFER severity=MED — task-378 "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read" — mobile/src/hooks/useParcelLookup.ts "staleTime: searchSlice.config.entitlement_stale_ms, // FIX.TUNE (task-378): the surface config, not a number typed here" — debounce_ms reaches code through the named constant SEARCH_DEBOUNCE_MS locked by "one home for the config values (row 24, RG-14)", while the new stale time is imported straight from the JSON into the hook, so the entitlement value has no constants-module home (semiQuestion.ts does keep its named constant) — add "export const ENTITLEMENT_STALE_MS = SEARCH_SLICE.config.entitlement_stale_ms" beside SEARCH_DEBOUNCE_MS in mobile/src/constants/parcelSearch.ts and read that in the hook.
+
+DEFER severity=LOW — Spec 126 P4 "All tunables are data; zero thresholds in src/" — src/lib/massing/geometry.ts "export const SHED_THRESHOLD_SQM = 20;" and "export const GARAGE_MAX_SQM = 60;" — the file this change now brings under a pinned-variable read still carries literal thresholds; not added here and not named in task-378 — keep them listed with the other owed items rather than letting the task close as threshold-free.
+
+MET — task-372 ruling "gate conversion factors are a pinned setting (Spec 136 fe.44, Spec 132 core.8)" — src/lib/parcels/geometry.ts "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — both geometry modules read the factor from the pinned variable and no 3.28084 literal remains.
+
+MET — task-378 D14 "Continue wait 60 s, entitlement stale time 0 s: declare in the surface config ... values unchanged" — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;" — 60000 is preserved in descriptor and generated slice and 0 is preserved for the entitlement staleTime.
+
+MET — task-378 D15 "semi out of the lookup response field_whitelist" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "- \"unsure\", - \"semi\"" — semi is dropped from the whitelist and the remaining entries are unchanged.
+
+MET — Spec 126 P4 "All tunables are data; zero thresholds in src/" — mobile/src/generated/surfaces/mobile_parcel_semi_question.json "\"continue_wait_ms\": 60000" — the Continue wait is data in the generated slice, not a number typed in the screen.
+
+REJECT — task-378 "the 60 s VALUE is an open operator item, not decided here" — accused of deciding the open 60 s value — the value stays 60000 in descriptor and slice and the diff only moves where it is read.
+
+REJECT — task-378 "NOT in scope and left listed: phone area-factor copies, the retry count, the two 60_000 stale times" — accused of scope creep — the diff leaves SQM_TO_SQFT, the retry counts and the other 60_000 times untouched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  81703ms (81.7s)
+📊 Tokens — total: 37753, input: 21619, output: 16134, reasoning: 14884

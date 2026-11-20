@@ -1,0 +1,624 @@
+LIST storage-doc16 sha256:8a8989cbefca7c47f4b44ee6da382911c3960c990f86823770793179b03adc2f material sha256:53da1ccd31caf393f23bf8e3031041a57738d07ffcf60f0431d819f36bc9e96f part 1 of 1
+RULE LIST storage-doc16 (backlog/docs/doc-16 - McStorage-policy-v2.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+---
+id: doc-16
+title: McStorage policy v2
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-20T14:00:00Z'
+---
+# McStorage policy v2 (STATUS 2026-11-20, task-90 ST.N1: LANDED IN PART in the commit "docs(69a_mcbylaw_register): McStorage policy v2 amendments landed, prior text kept (ST.N1)" of 2026-11-20 on wf1/inc1b-stn1 (commits are named by subject line and date, not sha, because a rebase renumbers shas). Landed, prior text kept, each as a dated M-246 note: A-ST5 with rules P1 to P12 and A-ST3 without its ceiling clause and A-ST6 (Spec 69a); A-ST4 and the O-6 note (Spec 78); A-FE39 without its cost sentence (Spec 135, Spec 136 regenerated); A-126 (Spec 126); A-MB38, A-MB75, A-MB76 and the MB-94 pointer (MCBYLAWS-QUEUE.md); A-MF62 and A-LAT corrected by the later rulings, and the MF-51 supersession (MCFRONTEND-QUEUE.md); the McStorage home (Spec 137 section 2). Three WAIT: the A-ST3 ceiling clause on open point 1, the cost wording (A-S88, rule P9, the A-FE39 cost sentence) on open point 3, and A-ST5b on open point 4; open point 2 was answered 2026-11-18 and is applied in the landed notes; the operator's "1,2,3 yes as recommended" of 2026-11-20 answers three other items (MORNING-DECISIONS.md:1298), not the open points. The body below is the 2026-11-18 draft, kept as written; where a later ruling beats it (purge after 90 days, tracked-lot refresh, no 1 s budget for an owner-input recompute, no 35 s cap) the landed notes say so.)
+Lane STORAGE-POLICY, 2026-11-18. Status line (Spec 137 rule 3): STORAGE-POLICY lane, PROTOCOL v2 steps A, B, C with the panel, read + DeepSeek only, scratch drafts only. Labels: MEASURED, ESTIMATE (arithmetic from a measured figure), GUESS (a plan figure), UNMEASURED.
+
+Operator ruling, verbatim (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:703 and :704): the answer was "yes.  we need to run a panel on the tasks this impacts and how to set-it up properly per increment. I want to see this and the ruling - per increment and overall as the McStroage policy.  This needs to be updated and conflicting rulings removed."
+
+How "removed" is done here: in this project a ruling is never deleted (M-246, dated amendment, prior text kept). A conflicting ruling is marked SUPERSEDED, names the rule that supersedes it, and keeps its text. That is what "conflicting rulings removed" means in section 3 and section 6. The files stay as they are until push 6 (~/Buildo-scratch/inc6-guard/RULES.md:8 "origin/wf1/mb-rulings must not move except by push 5 and push 6") and until you have read this.
+
+## 1. The policy in plain words (ten lines)
+1. When anyone opens a lot from the search page, the report numbers for that lot are worked out once, behind the 35 second loading screen. That covers the main page and See details together. **[SUPERSEDED 2026-11-20 by RR-0176, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785: no 35 s cap; the animation keeps its own length and the button shows when the report and See details are loaded; prior text kept]**
+2. The same happens when a user tracks a lot, or types in their own lot size, house or renovation inputs.
+3. The result is saved with its stamp (Layer 2 table_version, evaluator_version, settings sha), for that user and for everyone else who opens the lot later.
+4. When a saved result's stamp is not the current stamp, it is never shown. It is worked out again.
+5. Nothing is saved for a lot nobody opened or tracked. There is no all-lot fill (the 54 to 66 day job is gone).
+6. The saved result may be deleted at any time without harm, because a missing result is just worked out again. (Purging is a proposal, open point 1.) **[SUPERSEDED 2026-11-20 in part by "1. yes" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:719) and PRG-1 a (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738): the purge of untracked, un-owned records after 90 days is ruled (Spec 69a note at 69a:696); OPEN: are owner-input records purged; prior text kept]**
+7. The big per-field tables (the 309 long form) stay only for the 25 test lots, the 1,921 cohort and the proof set.
+8. Proof and testing use a sample of lots, never an all-lot table.
+9. Cost for the opened lot is the cost rate x escalation x adjustment x the lot's saved size, worked out each time the report opens (it is not saved, so a rate change never leaves a stale price).
+10. The first open can still take up to 33.6 s as built (median 10.9 s, MEASURED 20 lots), so task 5.11 (speed up the garden-suite split) stays and the screen setting rises to 35 s. The 1 s budget applies to reading a saved result. **[SUPERSEDED 2026-11-20 by RR-0176 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785): the setting does not rise to 35 s; the 1 s scope sentence is policy text, OPEN; prior text kept]**
+
+## 2. The overall policy (rules P1 to P12, new text of ST-5 and its companions)
+| Id | Rule | Cite |
+|---|---|---|
+| P1 | Compute on first open: the pure core (buildParcelRows, the whole report, all options in scope, main page and See details) runs once when a lot is first opened from the search page, behind the loading screen. | ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704 |
+| P2 | Triggers: first open, track, owner input. Each runs the same compute-and-store path. | ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704 |
+| P3 | Stamp: every stored record carries Layer 2 table_version, evaluator_version and the settings sha. | ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704 |
+| P4 | Read guard: a record whose stamp differs from the current stamp is never served and is recomputed; while it recomputes the report shows the loading screen or the "updating" state (the existing lifecycle `loading`, no new state); if the compute fails it shows the closed not_evaluated:<reason> (lifecycle `error`); never blank, 0 or the old number. | ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/mcbylaws/inc6/REVIEW-OPTIMIZED-RUN-20261116.md:19 "Layer 3 stays stale-stamped after INC6-NIGHT" |
+| P5 | No record for a lot nobody opened or tracked; no all-lot headline fill; MB-38 has no fill job. | ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704 |
+| P6 | Shared: ONE record per (parcel, option) (unique key (parcel, option); the stamp is a column, a recompute replaces the row), read by every user. Writes are idempotent: the compute is deterministic, so two simultaneous first opens write the same bytes (content_sha equal). | ~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:131 "They are deterministic from the stored Layer 2 row, the lot inputs and the stamped shas, and `content_sha` proves sameness." |
+| P7 | The stored record holds the values the main page and See details show, as canonical METRIC numbers and codes only (the page producer formats both units at read), one record per (parcel, option), with the ST-6 queryable columns (Spec 78 6.8 headline included); the trace and the per-field long form are NOT stored (ST-5's no per-field row stands). | ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:241 "1. Units, across the whole report: store METRIC only (DB fields, engine, by-law)." ; ~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:133 "No per-field Layer 3 row is written for all lots." |
+| P8 | Bounded cohorts keep the 309 long form: the 25, the MB-35 cohort, the MB-28 proof set. | ~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:132 "The migration-309 long form stays for bounded cohorts only: the 25, the MB-35 preview cohort and the MB-28 proof set." |
+| P9 | Cost: computed for the opened lot as rate x escalation x adjustment x size through Spec 88's one lineCost (exported, origin:scripts/lib/parcel-cost.js:578), on the record's size and the current Spec 88 rates, at each open (arithmetic, not stored), joined by (parcel, option). The price is NOT put into the Layer 3 record: M-67 stays (Layer 3 sizes only), and a stored price would go stale whenever a rate moves without a Layer 2 stamp. | ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:699-700; ~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md:228 "are computed when its report opens, by the same pure core" |
+| P10 | Fit: the ST-3 room check measures one record per lot (a 500-record write on the test stack, task L.5a) and projects it against a ceiling the operator names (open point 1). | ~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:92 (ST-3 "A projection that crosses 0.60 before MB-38 is raised to the operator one night early.") |
+| P11 | Proof: MB-38 shadow, MB-75, MB-76 and the McProof / McTest sweeps run on a sample or a stream; no stored all-lot table feeds them. | origin:.cursor/MCBYLAWS-QUEUE.md:731 "shadow on the 20,000-lot sample with `unexplained` = 0 and `layer3_defect` = 0, switch with source flags, recapture derived stores" |
+| P12 | Latency: the first open is covered by the loading screen (35 s); a read of a stored record is held to p95 <= 1 s (S-DETAIL-LATENCY, ruled); an owner-input recompute shows the "updating" state until done. | ~/Buildo-scratch/mctest/DECISIONS.md:95 "S-DETAIL-LATENCY budget: p95 <= 1 s (operator 2026-11-12, verbatim" | **[SUPERSEDED 2026-11-20 by RR-0176 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) for the 35 s, and by ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:719 for the owner-input recompute (no 1 s budget); the scope of the 1 s is policy text, OPEN; prior text kept]**
+
+## 3. Rule by rule (every McStorage rule and companion: KEEP, AMEND or SUPERSEDED)
+Verdict words: KEEP (unchanged), AMEND (new dated text, prior text kept), SUPERSEDED (replaced by the named rule; prior text kept, marked).
+| Rule | Verdict | Why (cite) | Exact new text |
+|---|---|---|---|
+| ST-1 table setting (toast_tuple_target 1624, 0.60 line held) | KEEP | Layer 2 only; unaffected: ~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:31 | none |
+| ST-2 third reserve T on M-483 | KEEP | Layer 2 only | none |
+| ST-3 night sizing: (1) exact G-STOR, (2) measured test write, 3 % gap, 0.60 raised early | KEEP for Layer 2 nights and cohort write nights; AMEND the Layer 3 sizing line and the room check (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:90) | no all-lot Layer 3 write night remains; the store grows per opened lot | A-ST3 below |
+| ST-4 owner rows (no row without input; computed by the same pure core) | AMEND | the owner input is now the third trigger of the same store-on-entry path; rows are stored with stamp for that lot (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:112 "When the owner enters the house, the rows are computed on demand by the same pure core and keep their `content_sha`.") | A-ST4 below |
+| ST-5 MB-38 Layer 3 form (headline persisted for all lots; detail on demand) | AMEND (the all-lot clause and the on-demand clause are SUPERSEDED by P1 to P7); the no-per-field-row clause, cohort clause and sameness key KEEP (the tester owner-row addition is the separate A-ST5b, pending open point 4) | operator ruling ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704 | A-ST5 below |
+| ST-6 headline field set | AMEND | still declared once (one list, three readers: record columns, report binding, MB-38 classifier); now the queryable columns of the stored record for an opened lot; the "citywide reader" clause is SUPERSEDED because the store is not citywide | A-ST6 below |
+| ST-7 held Layer 2 items land on first night with room | KEEP | Layer 2 only | none |
+| ST-8 no lz4 | KEEP | applies to the opened-lot store table too (a Layer 3 table) | note only, in A-ST5 |
+| FE-39 (Spec 135 register) "one stored headline per lot and option ... The detail is computed on demand." | AMEND | origin:docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 | A-FE39 below |
+| MB-38 queue row and its 2026-11-12 note (all-lot headline persisted; "recapture derived stores"; shadow on the 20,000-lot sample) | AMEND | shadow and switch-over by field group KEEP (on the sample); the all-lot persist, the fill and the recapture are SUPERSEDED by P5: origin:.cursor/MCBYLAWS-QUEUE.md:735 | A-MB38 below |
+| MB-75 coverage map ("reads the headline records only") | AMEND | the opened-lot store has no records for most lots; a sample is enough for "every catalogue row has an example"; no launch need: ~/Buildo-scratch/queues-20261113/MB-REVIEW-20261117.md:89 "Largest cost with no launch need: MB-43, MB-75, MB-76, MB-107." | A-MB75 below |
+| MB-76 city-wide reality check ("reads the headline records citywide") | AMEND | ~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:145; becomes a streamed pass or a sample, findings only; no launch need | A-MB76 below |
+| Spec 88 sections 2.3 / 2.4 and M-67 (cost prices STORED Layer 3 scenario areas) | AMEND | origin:scripts/lib/parcel-cost.js:385 "Spec 88 prices the STORED Layer 3 scenario areas (parcel_maxbld_scenarios);" ; Layer 3 stays sizes only, Spec 88 stays the one price formula | A-S88 below |
+| Spec 126 11a.3 closed status list | AMEND (note only, list unchanged) | the "updating" state is a display state of the report, not a status; a stale record is never shown | A-126 below |
+| MF-62 loading screen (client timer, fixed) | AMEND | ~/Buildo-scratch/mcfrontend/MF-62/followup-1111/plan.md:69 "After mount it starts one timer at `min_ms` and calls `router.push(href)`"; the operator's direction makes the screen wait for the numbers (plan tasks LOAD.1 to LOAD.3) | A-MF62 below |
+| S-DETAIL-LATENCY p95 <= 1 s (ruled, operator 2026-11-12) | KEEP the figure; AMEND what it applies to | applies to reading the stored record (See details loads with the main page); the first-open compute is held by the loading screen, not by the 1 s | A-LAT below |
+| The ALIGNMENT line "proposed: p95 <= 1 s" (~/Buildo-scratch/mcbylaws/McSTORAGE-ALIGNMENT.md:146) | SUPERSEDED by the ruling (mechanical refresh to "ruled") | ruled 2026-11-12 | none |
+| The stale-stamp guard (seat G's incident, REVIEW-OPTIMIZED-RUN-20261116.md:19) | KEEP as the standing guard; now P4 | an on-demand store can be stale after every Layer 2 night | in A-ST5 |
+| The 309 cohort long form | KEEP | ~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:132 | none |
+| Spec 78 O-6 dated note 2026-11-12 ("only the headline and per-scenario totals are persisted for all lots") | AMEND | read "for opened lots" | in A-ST5 |
+| ENGINE-INPUTS-PLAN section 4.0 ("a stored headline per lot and option, with the detail computed on demand", ALIGNMENT.md:133) | AMEND | follows FE-39 | in A-FE39 |
+| ALIGNMENT :145 S-STORAGE (reads Layer 2, parcel_maxbld_scenarios and the headline table) | AMEND | reads the record table's size and the sum against the room line | in A-ST3 |
+| ALIGNMENT :157 (bind size tile, status, reason, flags, units, CoA tier, cost and confidence to the stored per-option headline) | AMEND | binds to the record of an opened lot; cost joins at read | in A-FE39 |
+| ALIGNMENT :162 (lead and map surfaces may query only headline fields) | AMEND | no citywide store exists; a citywide filter is an operator request (no task today: grep of sequence.json for lead filter found none) | in A-ST6 |
+| ~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md:409 "MB-42/43/44 are unchanged" | KEEP | only the MB-38 all-lot recapture is dropped | in A-MB38 |
+| ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:694 reading "the screen is a client timer, not a compute gate" | SUPERSEDED | by the :696 and :700 direction (the screen waits for the numbers) | in A-MF62 |
+| MF-51 plan.v2 line 58 (Tracked Lots bind parcels.max_buildable_gfa_sqm) | SUPERSEDED | already barred by FE-38 ("no old (legacy) values ever reach users"); the list binds the record's two values (LS.4) | LS.4 title |
+| ALIGNMENT Q4 (MB-38 note), Q6 (MB-76 note), Q8 (D-1 b "all-lot load is MB-38 in headline form"), L3b sweep row (:143), "While loading, the sheet shows a loading state" (:158) | AMEND | follow the rows above; L3b becomes: open N sampled lots through the real path, assert a record with the current stamp, a second open reads an equal record (content_sha), and a record with an older stamp is recomputed | in A-MB38 |
+| Unlanded drafts: 2026-11-17 ST-5 note ("S-DETAIL-LATENCY remains a proposal"), 2026-11-17 ST-6 note, 2026-11-17 ST-4 note, 2026-11-18 ST-5 note ("ST-5 stands") and its prepared option-3 text | SUPERSEDED (the ST-5 notes) / AMEND (ST-6 and ST-4 notes) | none was landed; this policy's A-ST5, A-ST6, A-ST4 replace them; the two measured facts they carried (the "under a second" figure is the pure-rows time; the real path is 0.1 to 33.6 s; the p95 <= 1 s is ruled) are carried into A-ST5 and A-LAT | n/a |
+
+### Amendment texts (M-246 form, prior text kept; lands after push 6 and after you read this)
+A-ST5. Dated amendment 2026-11-18 (M-246, prior text kept; McStorage strategy ST-5; operator, verbatim: "yes.  we need to run a panel on the tasks this impacts and how to set-it up properly per increment. I want to see this and the ruling - per increment and overall as the McStroage policy.  This needs to be updated and conflicting rulings removed."; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:702-704): ST-5's "For all lots (MB-38), Layer 3 persists one headline record per (parcel, option)" is amended. A lot's report numbers (the main page and See details) are computed by the pure core when the lot is first opened from the search page, tracked, or given an owner input, and are then stored with their stamp (Layer 2 table_version, evaluator_version, settings sha), one record per (parcel, option), for that user and for others. A stored record whose stamp differs from the current stamp is never served; it is recomputed. No record is written for a lot nobody has opened or tracked, and no all-lot headline fill is run. ST-5's "the full per-field rows and the trace are computed on demand" is amended: the displayed values of the main page and See details are computed with the record and stored in it; the trace and the per-field long form are computed on demand and not stored. ST-5's "No per-field Layer 3 row is written for all lots" and the sameness key (content_sha) are unchanged. ST-5's cohort clause (the 25, the MB-35 cohort, the MB-28 proof set) is NOT changed here (a separate dated note A-ST5b, pending open point 4, would add tester owner rows). Stored values are metric numbers and codes only (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:241); the page producer formats both units. Spec 78 O-6's "only the headline and per-scenario totals are persisted for all lots" reads "for opened lots". ST-8 (no lz4) applies to the record table. Fact note: the "under a second" figure (strategy section 4 S2; ENGINE-INPUTS-PLAN section 4.0) is the pure-rows time of the golden-25 fixture (about 54 ms a lot); the step's own one-lot path, measured read-only on 20 random lots, takes 0.1 to 33.6 s (median 10.9 s; about 97 percent is the garden-suite split; 0.24 s without it), so the first open waits for it behind the loading screen and plan task 5.11 carries the speed-up.
+A-ST4. Dated amendment 2026-11-18 (M-246, prior text kept; McStorage strategy ST-4; operator ruling ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704): ST-4's "the rows are computed on demand by the same pure core and keep their content_sha" is amended: when the owner enters the house (or a lot size), the rows are computed for that lot on entry by the same pure core and stored with their stamp (the third trigger of ST-5); no row exists for a lot without the owner's input; an absent row still reads not_evaluated:no_existing_house. Until MB-38 the stored form is the 309 long form for that lot only if the operator approves A-ST5b (open point 4; about 304 KiB a lot, ESTIMATE, storage-outcome), otherwise owner rows wait for the MB-38 record; at MB-38 it is the record of ST-5 and the owner-input path (6c.6) is rewired to the producer ST.P1. While the recompute runs, the card shows the "updating" state (lifecycle `loading`).
+A-ST5b (pending open point 4, lands only if approved). Dated amendment 2026-11-18 (M-246, prior text kept; McStorage strategy ST-5, cohort clause): until MB-38, the owner-entered rows of a tester's own lot are stored in the 309 form (about 304 KiB a lot, ESTIMATE; one lot per tester entry; customers see no engine value before MB-44; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:594 "4 = ST-4 confirmed").
+A-ST6. Dated amendment 2026-11-18 (M-246, prior text kept; McStorage strategy ST-6): the headline field set is still declared once (one list, read by the record columns, the report binding and the MB-38 classifier). It now names the queryable columns of the stored record of an opened lot. The words "every field that a citywide reader queries: an MB-38 derived-store recapture, lead filters, MB-76 bounds" are SUPERSEDED: the store holds only opened or tracked lots, so no citywide reader can rely on it; a citywide filter on a max-build field is a request for the operator (no such task exists); ~/Buildo-scratch/mcbylaws/McSTORAGE-ALIGNMENT.md:162 ("Lead and map surfaces (citywide queries)") is amended to match. The Spec 78 6.8 headline (largest permitted total_gfa_sqm per tier, its id, the counters) stays in the record. The MB-38 card classifies each value the report face binds (size per option, the cost join key, CoA size, notes count, confidence, the garden-suite split outputs, the two Tracked Lots values) as a record column or a displayed value, and re-measures the record under ST-3 (A-ST3).
+A-ST3. Dated amendment 2026-11-18 (M-246, prior text kept; McStorage strategy ST-3; operator ruling ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704): the sentence "Layer 3 write nights (the MB-35 form) replace the avg pg_column_size x 1.18 estimate with (2) on 500 lots of the night's population, then check the room" applies to cohort write nights only; there is no all-lot Layer 3 write night. For the opened-lot store the MB-38 card measures one record per lot (ST-3 (2): 500 lots drawn from lots as opened, seed recorded), states the size per lot, and projects Layer 2 measured + the cohort long form measured + (size per lot x the ceiling lot count the operator rules) against the room line (1,650 MiB provisional until MB-111). The nightly S-STORAGE scenario (~/Buildo-scratch/mcbylaws/McSTORAGE-ALIGNMENT.md:145) reads the record table's size and the sum against the room line; a projection that crosses 0.60 is raised to the operator, as before.
+A-FE39. Dated amendment 2026-11-18 (M-246, prior text kept; Spec 135 FE-39; operator ruling ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704): "one stored headline per lot and option ... The detail is computed on demand" reads "one record per lot and option, computed on first open (or track, or owner input) and stored with its stamp; a record whose stamp differs is never served and is recomputed; the values of the main page and See details are in the record (metric numbers and codes); cost comes from the Spec 88 lineCost on the record's size and the current Spec 88 rates, joined by the producer at each open (M-67 kept: no price in the Layer 3 record)". ENGINE-INPUTS-PLAN section 4.0 and ~/Buildo-scratch/mcbylaws/McSTORAGE-ALIGNMENT.md:157 ("Bind the size tile, status, reason, flags, units, CoA tier, cost and confidence" to the stored per-option headline) follow.
+A-MB38. Dated amendment 2026-11-18 (M-246, prior text kept; MB-38 and its 2026-11-12 note): "all-lot Layer 3 persists the headline record per (parcel, option) only" and "recapture derived stores" are amended: MB-38 builds the record table and the producer, with no all-lot fill and no all-lot recapture job (MB-42, MB-43 and MB-44 are unchanged in their own scope, ~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md:409); a record is recomputed on open when its stamp differs. The shadow and the switch-over by field group stay, on the 20,000-lot sample streamed into the classifier (verdicts and findings only; no record is written to the record table for a sample lot, so P5 holds and the ST-3 size measure is not contaminated). The L3b sweep opens N sampled lots through the real path and asserts: a record with the current stamp exists, a second open reads an equal record (content_sha), and a record with an older stamp is recomputed.
+A-MB75. Dated amendment 2026-11-18 (M-246, prior text kept; MB-75): "reads the headline records only" is amended: the coverage map is built on a sample streamed through the pure core, writing findings only; no launch need.
+A-MB76. Dated amendment 2026-11-18 (M-246, prior text kept; MB-76): "reads the headline records citywide and streams the on-demand detail in batches" is amended: the city-wide reality check streams lots through the pure core in batches and writes findings only (about 440,093 x one-lot time, the cost of one pass, UNMEASURED after 5.11); no launch need; unscheduled.
+A-S88. Dated note 2026-11-18 (M-246, prior text kept; Spec 88 sections 2.3 and 2.4; Spec 69a M-67): for an opened lot the price is rate x escalation x adjustment x the lot's size, by the same exported lineCost, on the size in the lot's stored record and the current Spec 88 rates, worked out at each open and joined by (parcel, option); it is not stored in the Layer 3 record. M-67 stands unchanged: Layer 3 produces sizes only, the formula and the rates stay Spec 88's, and no Spec 88 file is edited by the Layer 3 work (the producer calls lineCost). The batch capture of the cohort (J10) stays for the bounded cohort and is the sameness check for the producer's price.
+A-126. Dated note 2026-11-18 (M-246, prior text kept; Spec 126 11a.3): the closed status list is unchanged. A report waiting for a first-open compute shows the loading screen, and a card waiting for an owner-input recompute shows an "updating" display state, which is the existing lifecycle `loading` (origin:docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:50 "valid only on the message node of a lifecycle tree (loading / miss / error)"); a failed compute is the lifecycle `error` with a closed not_evaluated:<reason>; none of these is a status and none is stored. A stored record whose stamp differs is never shown. Lots outside the engine keep not_evaluated:not_in_engine_population.
+A-MF62. Dated amendment 2026-11-18 (M-246, prior text kept; MF-62; it also supersedes the reading at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:694 that the screen is a client timer, not a compute gate): the loading screen starts the one-lot compute at the search pick, waits for the numbers up to the set maximum (35,000 ms, raised from the seed's 30,000 by task LOAD.3, origin:scripts/seeds/logic_variables.json:10495 "max": 30000) instead of a fixed timer, and still skips for a re-opened lot (its record is read). Where the numbers are not ready at the maximum, the report opens with the "updating" state, never an old number. **[SUPERSEDED 2026-11-20 by RR-0176 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785): no 35,000 ms maximum, LOAD.3 not needed; see the MF-62 note in .cursor/MCFRONTEND-QUEUE.md; prior text kept]**
+A-LAT. Dated note 2026-11-18 (M-246, prior text kept; S-DETAIL-LATENCY, operator 2026-11-12, "latency 1"; ~/Buildo-scratch/mcbylaws/inc5/WALKTHROUGH-20261112.md:268 "Detail latency, operator verbatim"): p95 <= 1 s applies to opening the report (main page and See details) from a stored record. A first open (no record, or a stale record) is covered by the loading screen. An owner-input recompute shows "updating"; its budget is the 1 s once 5.11 is measured (open point 2). McTest keeps the nightly S-DETAIL-LATENCY and S-STORAGE scenarios (task LS.9), re-pointed at the stored record and the record table. **[SUPERSEDED 2026-11-20 in part by ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:719: no 1 s budget for an owner-input recompute; the scope of the 1 s is policy text, OPEN; see the MF-80 note; prior text kept]**
+
+## 4. What the store holds and how it behaves
+| Question | Policy | Label / cite |
+|---|---|---|
+| Fields | Per (parcel, option): the ST-6 queryable columns (status, reason, size, units, flags, confidence when it exists, headline sha), the stamp, computed_at, and the metric values and codes the main page and See details show (setbacks, by-law rows, notes). Cost is NOT in the record (computed at each open by lineCost). The trace is computed on demand and not stored. The exact column list is the generated report-field inventory (the MF-80 sweep source), not this policy. | P7 |
+| Size per lot | Headline columns about 0.3 to 2.3 KB a lot (ESTIMATE: 125 to 870 MiB over 399,185 gate-null lots; 0.3 to 2.1 KB over all 440,093 stamped lots; storage-ondemand/REPORT.md S4). Displayed values: UNMEASURED; upper bound the read payload 99 to 240 KB of JSON a lot before compression (MEASURED, storage-ondemand/REPORT.md section 2). Cohort long form for scale: 391 KiB a lot (MEASURED). | ESTIMATE / MEASURED / UNMEASURED |
+| Growth | One record per opened or tracked lot; no more than the lot count. Headroom today under the provisional 1,650 line is about 217 to 218 MiB (MEASURED: Layer 2 698 MiB by this lane's read, 699.34 MiB in the night record, plus 734 MiB cohort long form; storage-ondemand/REPORT.md S3): at 99 to 240 KB a lot that is about 900 to 2,300 lots if records are NOT compressed (ESTIMATE, arithmetic; compression of the stored form UNMEASURED). So the ceiling and the purge are decisions, open point 1. | ESTIMATE |
+| Purge | A record can be deleted at any time because a missing record is recomputed. A purge of untracked, un-owned records not opened for N days is proposed (open point 1). Tracked-lot and owner-input records are kept. **[SUPERSEDED 2026-11-20 in part: N is 90 days (PRG-1 a, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738); "Tracked-lot and owner-input records are kept" stands as policy text; OPEN: are owner-input records purged; prior text kept]** | proposal |
+| Layer 2 or settings move | Every stored stamp differs after a Layer 2 night or a settings change, so each record is recomputed on the next open (no re-warm job for ordinary lots). Tracked lots: the list shows "updating" for a stale row and recomputes it in the background; a re-warm job is NOT proposed (T is 0.24 s without the split, and 5.11 aims for <= 1 s); open point 2. **[SUPERSEDED 2026-11-20 for tracked lots by TRK-1 a (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738): tracked lots are refreshed in the background when the stamp moves; "a re-warm job is NOT proposed" and "open point 2" no longer apply to them; prior text kept]** | P4; ~/Buildo-scratch/mcbylaws/inc6/REVIEW-OPTIMIZED-RUN-20261116.md:19 |
+| Tracked Lots | The two Tracked Lots values (classified at L.5) are stored when the lot is tracked (trigger 2); the list route and row bind the stored record (replacing the legacy columns at origin:mobile/src/components/parcel/TrackedLotRow.tsx:8), never a legacy column (FE-38; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:570 "Standing rule: no old (legacy) values ever reach users."). | LS.4 |
+| Concurrency / load | UNMEASURED. ESTIMATE from one-lot time T: one core serves 1/T first opens a second (5.5 a minute at T = 10.9 s, 250 a minute at T = 0.24 s). Reads: SQL median 154 ms, cold max 467 ms (MEASURED). Duplicate first opens write identical bytes. Platform limits of the customer route: UNVERIFIED. | storage-ondemand/REPORT.md section 2 |
+| Stale-stamp guard | Compare the stamp on every read; mismatch means recompute; test it red first (an older-stamp record is injected, the report must not show it). | P4; seat G's incident |
+| Proof | Sample, not table: 100-lot timing (5.11), 20,000-lot shadow stream, 500-lot ST-3 size draw, N-lot L3b sweep, 309 cohort long form for the proof set. | P11 |
+
+## 5. Per increment (set-up; detail in storage-by-group.json)
+| Group | What is stored for the scenario | When | Measured compute for one lot | Screen coverage | Proof uses | Tasks |
+|---|---|---|---|---|---|---|
+| S Search | nothing; the search hit starts the compute | pick on the search page | n/a | LOAD.1 to LOAD.3 | none | LOAD.1, LOAD.2, LOAD.3 |
+| 1 Detached (options 1, 2) | record: size, status, flags, notes, About this lot rows, See details values (the price is computed at open, not in the record) | first open / track | 28 to 67 ms for the type (MEASURED) | inside 35 s **[SUPERSEDED 2026-11-20 by RR-0176 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785): no 35 s cap; prior text kept]** | sample sweep | ST.P1, ST.P2, 1.3, L.7 |
+| 3 Houseplex | the houseplex option in the same record | same | 46 to 65 ms | same | same | same |
+| 4 House with a secondary suite | same; Suite Size (up to) = basement suite computed from the fitted house footprint (footprint_fit_m2), capped at 45 percent of the interior floor area (operator 2026-11-18, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:688-690) | same | 45 to 63 ms | same | same | GAP.14, 4.1 |
+| 5 Garden suites | same; split outputs suite_gfa_sqm, main_gfa_with_suite_sqm | same | 48 to 75 ms a type without the split; 0.1 to 33.6 s all as built (MEASURED) | 35 s covers the 20 measured lots; 5.11 needed **[SUPERSEDED 2026-11-20 by RR-0176 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785): no 35 s cap; prior text kept]** | 100-lot timing | 5.3, 5.6, 5.11 |
+| 6 / 6c Renovations | owner-entered rows stored for that lot on entry (309 form for that lot until MB-38, then the record) | owner input | proxy 28 to 75 ms a type (UNVERIFIED, rows not built) | no screen: "updating" | one-lot re-evaluation check | 6c.6, R6-CARD, R6-COST |
+| 7 Semi | owner-entered rows for the semi lot | owner input | not built (UNMEASURED) | "updating" | 7.26 measures it | 7.25, 7.26, GAP.12 |
+| 8 Sixplex | the houseplex option with units 5 to 6 and the route field | first open | not built; houseplex row 46 to 65 ms as a proxy (UNVERIFIED) | inside 35 s **[SUPERSEDED 2026-11-20 by RR-0176 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785): no 35 s cap; prior text kept]** | sample | 8.x, CO.S7 |
+| 9 CoA | CoA facts read at request time; no refill | n/a | reads coa_applications | n/a | impact map re-measure | 9.3b |
+| 10 Proof | 309 long form for the proof set only | proof draw | n/a | n/a | the 309 cohort | 10.2d |
+| L MB-38 | the record table and producer; no fill | build | n/a | n/a | 20,000-lot shadow stream | L.5, L.6, ST.P1 |
+| AL After launch | nothing | n/a | n/a | n/a | MB-75/76 streamed | AL.3, AL.4 |
+
+## 6. Rulings this supersedes (prior text kept, marked)
+1. ST-5 "For all lots (MB-38), Layer 3 persists one headline record per (parcel, option)" (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:130) and "computed on demand" (:131): superseded by P1 to P7 / A-ST5.
+2. ST-6 "every field that a citywide reader queries: an MB-38 derived-store recapture, lead filters, MB-76 bounds" (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:158): superseded by A-ST6.
+3. ST-3 "Layer 3 write nights ... 500 lots of the night's population" for an all-lot night (:90): superseded by A-ST3.
+4. FE-39 "one stored headline per lot and option" and "The detail is computed on demand." (Spec 135:61): superseded by A-FE39.
+5. MB-38 queue note 2026-11-12 "all-lot Layer 3 persists the headline record per (parcel, option) only" and "recapture derived stores" (origin:.cursor/MCBYLAWS-QUEUE.md:731 and :735): superseded by A-MB38.
+6. MB-75 note "reads the headline records only" (queue :366): superseded by A-MB75. MB-76 note "reads the headline records citywide" (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:145; ALIGNMENT Q6): superseded by A-MB76.
+7. Spec 88 / M-67 "Spec 88 prices the STORED Layer 3 scenario areas" (origin:scripts/lib/parcel-cost.js:385): amended by A-S88 for the opened lot.
+8. Spec 78 O-6 note "persisted for all lots": amended to "opened lots".
+9. ALIGNMENT Q4, Q6, Q8, the L3b sweep row (:143) and the S-DETAIL-LATENCY "proposed" wording (:146): superseded.
+10. The 2026-11-17 ST-5 note and the 2026-11-18 "ST-5 stands" note and prepared option-3 text (storage-outcome/OUTCOME.md section 7; storage-ondemand/REPORT.md section 6): superseded by A-ST5 (never landed).
+11. MF-62 fixed timer (followup-1111/plan.md:69): amended by A-MF62.
+12. ~/Buildo-scratch/mcbylaws/McSTORAGE-ALIGNMENT.md:145 (S-STORAGE), :157 (bind to the stored per-option headline), :162 (lead and map surfaces), ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:694 (client timer reading) and MF-51 plan.v2 line 58: amended or superseded as in section 3.
+13. Replan and outcome wording: ~/Buildo-scratch/lanes-20261117/replan/SCENARIO-SLICES.md:27 ("the all-lot headline table" built with MB-38 at the Launch gate), the finalplan problem line "All-lot headline fill not built (MB-38)" (finalplan.json:2315, already re-planned 2026-11-18), and ~/Buildo-scratch/lanes-20261117/storage-outcome/OUTCOME.md:56 and :57 (face = one stored headline per lot and option; See details on tap): superseded by P1 to P7 (See details loads with the main page, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700).
+14. Plan facts: task 5.11 "before the MB-38 headline fill" and task L.5b "fill and recapture" (sequence.json): see seq-patch.
+
+## 7. Open points for the operator (only what the record cannot answer; see SITTING.md)
+1. Ceiling and purge. The stored size of one record is UNMEASURED (the 500-record write at L.5a measures it). The read payload is 99 to 240 KB of JSON a lot before compression, and the headroom under 1,650 MiB is about 217 to 218 MiB, so about 900 to 2,300 lots if records are not compressed (ESTIMATE). Name the ceiling (lots or MiB) and approve purging untracked, un-owned records not opened for N days (a purged record is just recomputed on next open), or raise the room line.
+2. Waits with no screen: confirm that p95 <= 1 s also applies to an owner-input recompute once 5.11 is measured ("updating" until then), and that tracked lots recompute lazily on next open (no re-warm job). **[SUPERSEDED 2026-11-20 by ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:719 and :738: owner input has no 1 s budget; tracked lots are refreshed in the background (TRK-1 a); prior text kept]**
+3. Cost: confirm cost is computed at each open from the record's size (not stored), because M-67 keeps price out of Layer 3 and rates move without a Layer 2 stamp. (Your ruling says report numbers are stored; cost is arithmetic on a stored size.)
+4. Confirm A-ST5b, the bounded addition to ST-5's cohort clause: until MB-38, a tester's owner-entered rows are kept in the 309 form for that lot (about 304 KiB a lot, ESTIMATE). **[SUPERSEDED 2026-11-20 as a question: the operator answered "4. whatever is prudent" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:719), not a yes or no; covered by the OPEN list in the BL-STN1 REPORT.md (item 3, where owner rows are stored until the MB-38 record exists); prior text kept]**
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+RULINGS AND TASK THE CHANGE RELIES ON (pasted; operator words only where marked)
+- Operator, 2026-11-20, verbatim: "1. yes. add the tasks to incr 1b" and "We just need complaint code - not building spaggetti code".
+- Operator ruling (task-372): gate conversion factors are a pinned setting (Spec 136 fe.44, Spec 132 core.8).
+- Task-378 scope: D14 (phone tunables typed in code: Continue wait 60 s, entitlement stale time 0 s: declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read; values unchanged; the 60 s VALUE is an open operator item, not decided here); D15 (two descriptor entries: semi out of the lookup response field_whitelist; entitlement contract cites the entitlement hook line); the typed metre-to-foot factor (src/lib/parcels/geometry.ts, src/lib/massing/geometry.ts) read from the pinned variable parcels_m_to_ft by the task-372 pattern. NOT in scope and left listed: phone area-factor copies, the retry count, the two 60_000 stale times, DB mirror migration, bounds/on_invalid for the new keys.
+- Spec 126 P4: "All tunables are data; zero thresholds in src/". Spec 128 Rule 3: "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture".
+- The diff follows. Mobile tests cannot run locally (phone-test green unproven until Mobile CI).
+=== DIFF ===
+diff --git a/mobile/__tests__/parcelScreens.golden.test.ts b/mobile/__tests__/parcelScreens.golden.test.ts
+index d72b37f0c..7fcbb98fb 100644
+
+diff --git a/mobile/__tests__/parcelScreens.golden.test.ts b/mobile/__tests__/parcelScreens.golden.test.ts
+index d72b37f0c..7fcbb98fb 100644
+--- a/mobile/__tests__/parcelScreens.golden.test.ts
++++ b/mobile/__tests__/parcelScreens.golden.test.ts
+@@ -205,7 +205,7 @@ describe('one home for the config values (row 24, RG-14)', () => {
+     expect(/export const SEARCH_MIN_QUERY_LEN = SEARCH_SLICE\.config\.min_query_len/.test(src)).toBe(true);
+   });
+   it('the slice config equals the constants, and the content strings that state them carry the same numbers', () => {
+-    expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN });
++    expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN, entitlement_stale_ms: 0 }); // FIX.TUNE (task-378): the entitlement stale time is declared beside them
+     expect(SEARCH_SLICE.content['search.prompt']).toContain(`at least ${SEARCH_MIN_QUERY_LEN} characters`);
+     expect(SEARCH_SLICE.content['search.input.hint']).toContain(`at least ${SEARCH_MIN_QUERY_LEN} characters`);
+     expect(SEARCH_SLICE.content['list.refine']).toContain(`More than ${SEARCH_CANDIDATE_LIMIT} lots`);
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_search.json b/mobile/src/generated/surfaces/mobile_parcel_search.json
+index aca01e334..ff7066b82 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_search.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_search.json
+@@ -1,9 +1,10 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 28c8b028f1ca78e7)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 5489315b7e1e0886)",
+   "surface": "mobile_parcel_search",
+   "config": {
+     "debounce_ms": 400,
+-    "min_query_len": 3
++    "min_query_len": 3,
++    "entitlement_stale_ms": 0
+   },
+   "content": {
+     "footer.copyright": "© MaxBLD",
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_semi_question.json b/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
+index b811aece8..53f1902a2 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
+@@ -1,7 +1,9 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 441b16cfaa9dd4a1)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 48076a030fb80cb1)",
+   "surface": "mobile_parcel_semi_question",
+-  "config": {},
++  "config": {
++    "continue_wait_ms": 60000
++  },
+   "content": {
+     "back.label": "Back to search",
+     "question.title": "Is this house one half of a semi-detached pair?",
+diff --git a/mobile/src/hooks/useParcelLookup.ts b/mobile/src/hooks/useParcelLookup.ts
+index 7e0c65dc4..6a82278c8 100644
+--- a/mobile/src/hooks/useParcelLookup.ts
++++ b/mobile/src/hooks/useParcelLookup.ts
+@@ -16,6 +16,7 @@ import { fetchWithAuth } from '@/lib/apiClient';
+ import { AccountDeletedError, ApiError, RateLimitError } from '@/lib/errors';
+ import { useAuthStore } from '@/store/authStore';
+ import { boundedWait, SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
++import searchSlice from '@/generated/surfaces/mobile_parcel_search.json';
+ import {
+   ConsumerParcelLookupResultSchema,
+   ParcelToolEntitlementSchema,
+@@ -157,7 +158,7 @@ export function useParcelEntitlement() {
+     queryKey: ['parcel-entitlement'],
+     queryFn: fetchParcelEntitlement,
+     enabled: !!accessToken,
+-    staleTime: 0,
++    staleTime: searchSlice.config.entitlement_stale_ms, // FIX.TUNE (task-378): the surface config, not a number typed here
+     retry: shouldRetryParcelLookup,
+   });
+ }
+diff --git a/mobile/src/lib/semiQuestion.ts b/mobile/src/lib/semiQuestion.ts
+index ce3dcebe7..8a3fc02e4 100644
+--- a/mobile/src/lib/semiQuestion.ts
++++ b/mobile/src/lib/semiQuestion.ts
+@@ -8,12 +8,13 @@
+ //   error     the search page's error classes                 redirect  the lot is NOT unsure (or an older server sent no block): the report
+ // It reads the SAME lookup entry the report reads (['parcel-lookup', parcelId]), so no extra request. The chosen answer opens the report through
+ // reportRouteAfterAnswer (lotForm.ts): the answer is lot_form_user_override, carried as a route param (O-12: no server store).
++import slice from '@/generated/surfaces/mobile_parcel_semi_question.json';
+ import type { ConsumerParcelLookupResult } from '@/lib/schemas';
+ import { classifyParcelSearchError, PARCEL_TAB_ROUTE, parcelSearchRoute, type ParcelSearchErrorClass } from '@/lib/parcelSearchMatch';
+ import { reportRouteAfterAnswer, SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
+ 
+-/** SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report). */
+-export const SEMI_CONTINUE_WAIT_MS = 60_000;
++/** SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report). FIX.TUNE (task-378): read from the surface config `continue_wait_ms` (the generated slice), not typed here. */
++export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;
+ 
+ class SemiContinueTimeoutError extends Error {
+   constructor() {
+diff --git a/scripts/surfaces/_schema/surface.schema.json b/scripts/surfaces/_schema/surface.schema.json
+index 7f76a6f43..7c509fe76 100644
+--- a/scripts/surfaces/_schema/surface.schema.json
++++ b/scripts/surfaces/_schema/surface.schema.json
+@@ -2627,6 +2627,34 @@
+               "minimum": 0
+             }
+           ]
++        },
++        "continue_wait_ms": {
++          "x-draft-optional": true,
++          "description": "FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long the semi question page Continue waits for the answered lookup, in milliseconds, before the page ends in its error state.",
++          "anyOf": [
++            {
++              "const": "UNRESEARCHED",
++              "description": "Nobody has researched this yet. Counted by the registry."
++            },
++            {
++              "type": "integer",
++              "minimum": 0
++            }
++          ]
++        },
++        "entitlement_stale_ms": {
++          "x-draft-optional": true,
++          "description": "FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long the reports-left entitlement read stays fresh, in milliseconds (0 = re-read on every focus).",
++          "anyOf": [
++            {
++              "const": "UNRESEARCHED",
++              "description": "Nobody has researched this yet. Counted by the registry."
++            },
++            {
++              "type": "integer",
++              "minimum": 0
++            }
++          ]
+         }
+       }
+     },
+diff --git a/scripts/surfaces/emit-mobile-surfaces.mjs b/scripts/surfaces/emit-mobile-surfaces.mjs
+index 7523af762..529cfd5c0 100644
+--- a/scripts/surfaces/emit-mobile-surfaces.mjs
++++ b/scripts/surfaces/emit-mobile-surfaces.mjs
+@@ -23,7 +23,7 @@ export const GOLDEN_COPY_DIR = 'mobile/__tests__/fixtures/surfaces';
+ const COMMENT = 'GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit';
+ const SHA_RE = /input_sha ([0-9a-f]{16})/;
+ // The descriptor config values a mobile binding may read (the SEARCH archetype's declared parameters, Spec 126 §3.1 row 4).
+-const CONFIG_KEYS = ['debounce_ms', 'min_query_len'];
++const CONFIG_KEYS = ['debounce_ms', 'min_query_len', 'continue_wait_ms', 'entitlement_stale_ms'];
+ 
+ const rj = (root, rel) => JSON.parse(fs.readFileSync(path.join(root, rel), 'utf8'));
+ const descriptorFile = (root, id) => {
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
+index 0c500e381..095ab0b8e 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
+@@ -426,7 +426,7 @@
+   },
+   "config": {
+     "answer": "none",
+-    "why": "The two tunables this SEARCH surface has are now DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.)",
++    "why": "The two tunables this SEARCH surface has are now DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.) FIX.TUNE (task-378): config.entitlement_stale_ms (0, the reports-left read stays fresh for 0 ms) is declared here too and read by useParcelEntitlement from the generated slice; like debounce_ms it is declared, not yet a registered logic variable.",
+     "evidence": [
+       "mobile/src/constants/parcelSearch.ts:19 — SEARCH_DEBOUNCE_MS, consumed at mobile/app/(app)/parcel-tool/index.tsx:72",
+       "mobile/src/constants/parcelSearch.ts:26 — SEARCH_MIN_QUERY_LEN; the server floor is src/app/api/parcels/lookup/types.ts:42",
+@@ -436,7 +436,8 @@
+     "logic_variables": [],
+     "retired": [],
+     "debounce_ms": 400,
+-    "min_query_len": 3
++    "min_query_len": 3,
++    "entitlement_stale_ms": 0
+   },
+   "sharing": {
+     "answer": "shared",
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
+index 9105fc611..71f69d9d8 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
+@@ -277,12 +277,13 @@
+   },
+   "config": {
+     "answer": "logic_variables",
+-    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page itself has no tunable and reads only the unsure flag.",
++    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; like debounce_ms it is declared, not yet a registered logic variable with bounds).",
+     "evidence": [
+       "migrations/320_parcel_lot_form_view.sql",
+       "migrations/323_semi_o4_zone_and_wall_asks.sql",
+       "scripts/seeds/logic_variables.json semi_doubt_enabled / semi_doubt_max_link_parcels / semi_doubt_min_shared_len_m",
+-      "scripts/seeds/logic_variables.json semi_auto_max_shared_len_m / semi_detect_zone_classes / semi_ask_two_parcel_zone_classes"
++      "scripts/seeds/logic_variables.json semi_auto_max_shared_len_m / semi_detect_zone_classes / semi_ask_two_parcel_zone_classes",
++      "mobile/src/lib/semiQuestion.ts — SEMI_CONTINUE_WAIT_MS reads config.continue_wait_ms from the generated slice"
+     ],
+     "logic_variables": [
+       {
+@@ -321,7 +322,8 @@
+         "why": "A missing, empty or out-of-vocabulary list reads as the seeded [RD] inside the view; the vocabulary is the closed list of five residential codes (R, RD, RS, RT, RM), non-empty and distinct."
+       }
+     ],
+-    "retired": []
++    "retired": [],
++    "continue_wait_ms": 60000
+   },
+   "sharing": {
+     "answer": "shared",
+diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
+index 7633fe700..62c575568 100644
+--- a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
+@@ -324,11 +324,11 @@
+     "answer": "sole",
+     "why": "Exactly one call site reads it today: the app search page line (SRCH.A6, task-320). Its web tree is inert until MAXBLD_WEB_LIVE flips (LS.12); MF-52 (Account) and MF-49 bind to it when they build.",
+     "evidence": [
+-      "mobile/src/hooks/useParcelLookup.ts:96",
++      "mobile/src/hooks/useParcelLookup.ts:155",
+       ".cursor/MCFRONTEND-QUEUE.md MF-45 row (dated note 2026-11-11)"
+     ],
+     "surfaces": [
+-      "mobile/src/hooks/useParcelLookup.ts:96"
++      "mobile/src/hooks/useParcelLookup.ts:155"
+     ]
+   },
+   "a11y": {
+@@ -364,7 +364,7 @@
+     ],
+     "writes_audit_row": false,
+     "consumers_verified": [
+-      "mobile/src/hooks/useParcelLookup.ts:96"
++      "mobile/src/hooks/useParcelLookup.ts:155"
+     ],
+     "auth_class_executed": "authenticated",
+     "locking_tests": [
+diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+index 0b4590b72..2784a0cef 100644
+--- a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+@@ -171,8 +171,7 @@
+       "lotForm",
+       "detected",
+       "basis",
+-      "unsure",
+-      "semi"
++      "unsure"
+     ],
+     "tables": [
+       {
+diff --git a/src/lib/massing/geometry.ts b/src/lib/massing/geometry.ts
+index 886177adf..509ad43fa 100644
+--- a/src/lib/massing/geometry.ts
++++ b/src/lib/massing/geometry.ts
+@@ -1,3 +1,5 @@
++import seed from '../../../scripts/seeds/logic_variables.json';
++import { pinnedSetting } from '@/lib/report-projection/pinned-settings';
+ import type { StructureType } from './types';
+ 
+ // ---------------------------------------------------------------------------
+@@ -29,7 +31,8 @@ export const SHED_THRESHOLD_SQM = 20;
+ /** 20–60 sqm accessory is classified as garage. */
+ export const GARAGE_MAX_SQM = 60;
+ 
+-const M_TO_FT = 3.28084;
++/** Feet per metre: the pinned logic variable parcels_m_to_ft (fe.44, core.8; FIX.TUNE task-378). */
++const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');
+ 
+ // ---------------------------------------------------------------------------
+ // Core functions
+diff --git a/src/lib/parcels/geometry.ts b/src/lib/parcels/geometry.ts
+index 1b743a29e..0485c852a 100644
+--- a/src/lib/parcels/geometry.ts
++++ b/src/lib/parcels/geometry.ts
+@@ -4,7 +4,8 @@ import type { LotDimensions } from './types';
+ 
+ /** Square feet per square metre: the pinned logic variable parcels_sqm_to_sqft (fe.44, core.8; one factor with the report projection). */
+ export const SQM_TO_SQFT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_sqm_to_sqft');
+-export const M_TO_FT = 3.28084;
++/** Feet per metre: the pinned logic variable parcels_m_to_ft (fe.44, core.8; same reader as SQM_TO_SQFT). */
++export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');
+ 
+ /**
+  * Convert square meters to square feet.
+diff --git a/src/lib/surfaces/generated/surface-descriptor.d.ts b/src/lib/surfaces/generated/surface-descriptor.d.ts
+index 0992ccbef..085251836 100644
+--- a/src/lib/surfaces/generated/surface-descriptor.d.ts
++++ b/src/lib/surfaces/generated/surface-descriptor.d.ts
+@@ -336,6 +336,10 @@ export type SurfaceDescriptor = {
+   retired?: Array<string>;
+   debounce_ms?: "UNRESEARCHED" | number;
+   min_query_len?: "UNRESEARCHED" | number;
++  /** FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long the semi question page Continue waits for the answered lookup, in milliseconds, before the page ends in its error state. */
++  continue_wait_ms?: "UNRESEARCHED" | number;
++  /** FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long the reports-left entitlement read stays fresh, in milliseconds (0 = re-read on every focus). */
++  entitlement_stale_ms?: "UNRESEARCHED" | number;
+ };
+   sharing: {
+   answer: "UNRESEARCHED" | "sole" | "shared" | "none";
+diff --git a/src/tests/fix-tune.logic.test.ts b/src/tests/fix-tune.logic.test.ts
+new file mode 100644
+index 000000000..32e036364
+--- /dev/null
++++ b/src/tests/fix-tune.logic.test.ts
+@@ -0,0 +1,86 @@
++// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md P4 (all tunables are data; zero thresholds in src/);
++//            docs/specs/02-web-admin/128_surface_standard_policy.md Rule 3 (every debounce, page size, stale time and rate limit is declared, with the SEARCH debounce_ms as the pattern);
++//            docs/specs/01-pipeline/132_step_standard_handbook.md core.8; docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.44 (the conversion factor is content/settings, never code).
++//
++// FIX.TUNE (task-378; grounder D14, D15 and the length factor owed from task-372): written FIRST, red before the fixes.
++//   D14  the phone's Continue wait (60 s) and entitlement stale time (0 s) are declared in the surface config and read from the generated slice; values unchanged.
++//   D15  two descriptor entries corrected (the request parameter `semi` is not a response field; the entitlement call site is the entitlement hook).
++//   LEN  the metre-to-foot factor is the registered pinned variable parcels_m_to_ft, read by pinnedSetting, in both geometry modules.
++import fs from 'node:fs';
++import path from 'node:path';
++import { describe, expect, it } from 'vitest';
++import seed from '../../scripts/seeds/logic_variables.json';
++import { M_TO_FT } from '@/lib/parcels/geometry';
++import { formatHeight } from '@/lib/massing/geometry';
++
++const ROOT = path.resolve(__dirname, '..', '..');
++const src = (p: string): string => fs.readFileSync(path.join(ROOT, p), 'utf8');
++// eslint-disable-next-line @typescript-eslint/no-explicit-any
++const json = (p: string): any => JSON.parse(src(p));
++const code = (p: string): string => src(p).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
++const SEED = seed as unknown as Record<string, { default: number; min: number; max: number; type: string }>;
++
++const SEMI = 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json';
++const SEARCH = 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json';
++const SEMI_SLICE = 'mobile/src/generated/surfaces/mobile_parcel_semi_question.json';
++const SEARCH_SLICE = 'mobile/src/generated/surfaces/mobile_parcel_search.json';
++const LOOKUP_CONTRACT = 'scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json';
++const ENTITLEMENT_CONTRACT = 'scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json';
++const HOOK = 'mobile/src/hooks/useParcelLookup.ts';
++
++describe('D14 the phone tunables are declared in the surface config, values unchanged', () => {
++  it('the semi surface declares config.continue_wait_ms = 60000 and the generated slice carries it', () => {
++    expect(json(SEMI).config.continue_wait_ms).toBe(60000);
++    expect(json(SEMI_SLICE).config.continue_wait_ms).toBe(60000);
++  });
++  it('the search surface declares config.entitlement_stale_ms = 0 and the generated slice carries it', () => {
++    expect(json(SEARCH).config.entitlement_stale_ms).toBe(0);
++    expect(json(SEARCH_SLICE).config.entitlement_stale_ms).toBe(0);
++  });
++  it('the schema and the generated type know both keys, and the emitter copies both', () => {
++    const props = json('scripts/surfaces/_schema/surface.schema.json').properties.config.properties;
++    expect(Object.keys(props)).toEqual(expect.arrayContaining(['continue_wait_ms', 'entitlement_stale_ms']));
++    expect(src('src/lib/surfaces/generated/surface-descriptor.d.ts')).toMatch(/continue_wait_ms\?/);
++    expect(src('src/lib/surfaces/generated/surface-descriptor.d.ts')).toMatch(/entitlement_stale_ms\?/);
++    expect(src('scripts/surfaces/emit-mobile-surfaces.mjs')).toMatch(/CONFIG_KEYS = \[[^\]]*continue_wait_ms[^\]]*entitlement_stale_ms/);
++  });
++  it('semiQuestion.ts types no wait number and reads the slice; the entitlement hook types no stale number and reads the slice', () => {
++    expect(code('mobile/src/lib/semiQuestion.ts')).not.toMatch(/60_?000/);
++    expect(code('mobile/src/lib/semiQuestion.ts')).toContain('continue_wait_ms');
++    const hook = code(HOOK);
++    const entitlement = hook.slice(hook.indexOf('export function useParcelEntitlement'));
++    expect(entitlement).not.toMatch(/staleTime:\s*0\b/);
++    expect(entitlement).toContain('entitlement_stale_ms');
++  });
++});
++
++describe('D15 the two descriptor entries are corrected', () => {
++  it('semi is a request parameter (the query schema), not a response field: it is out of the lookup contract field_whitelist and the rest of the list is unchanged', () => {
++    expect(src('src/app/api/parcels/lookup/types.ts')).toMatch(/ConsumerParcelLookupQuerySchema[\s\S]{0,900}semi: z\.literal\('answered'\)/);
++    const whitelist: string[] = json(LOOKUP_CONTRACT).inputs.field_whitelist;
++    expect(whitelist).not.toContain('semi');
++    expect(whitelist).toEqual(['match', 'candidates', 'warnings', 'parcel', 'footprint', 'slot', 'source', 'label', 'value', 'disclosure', 'lotForm', 'detected', 'basis', 'unsure']);
++  });
++  it('the entitlement contract names the line of useParcelEntitlement in the hook as its call site (found by reading the hook, not a typed number)', () => {
++    const line = src(HOOK).split('\n').findIndex((l) => l.startsWith('export function useParcelEntitlement(')) + 1;
++    expect(line).toBeGreaterThan(0);
++    const d = json(ENTITLEMENT_CONTRACT);
++    expect(d.sharing.surfaces).toEqual([`${HOOK}:${line}`]);
++    expect(d.sharing.evidence).toContain(`${HOOK}:${line}`);
++    expect(JSON.stringify(d.sharing)).not.toContain(`${HOOK}:96`);
++  });
++});
++
++describe('LEN the metre-to-foot factor is the registered pinned variable (fe.44, core.8)', () => {
++  it('parcels_m_to_ft is pinned in the seed at 3.28084 and both geometry modules read it, typing no factor', () => {
++    expect(SEED.parcels_m_to_ft).toMatchObject({ type: 'number', default: 3.28084, min: 3.28084, max: 3.28084 });
++    for (const p of ['src/lib/parcels/geometry.ts', 'src/lib/massing/geometry.ts']) {
++      expect(code(p), p).not.toMatch(/3\.28084/);
++      expect(code(p), p).toContain('parcels_m_to_ft');
++    }
++  });
++  it('values unchanged: the exported factor and the formatted height', () => {
++    expect(M_TO_FT).toBe(3.28084);
++    expect(formatHeight(10)).toBe('10.0 m (32.8 ft)');
++  });
++});
+(generated/derived files omitted from this diff: docs/reports/generated, golden fixtures (fingerprint hash values only), census shards (same text as the descriptors), validate-descriptor.mjs)
+diff --git a/src/tests/fix-tune.logic.test.ts b/src/tests/fix-tune.logic.test.ts
+new file mode 100644
+index 000000000..32e036364
+--- /dev/null
++++ b/src/tests/fix-tune.logic.test.ts
+@@ -0,0 +1,86 @@
++// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md P4 (all tunables are data; zero thresholds in src/);
++//            docs/specs/02-web-admin/128_surface_standard_policy.md Rule 3 (every debounce, page size, stale time and rate limit is declared, with the SEARCH debounce_ms as the pattern);
++//            docs/specs/01-pipeline/132_step_standard_handbook.md core.8; docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.44 (the conversion factor is content/settings, never code).
++//
++// FIX.TUNE (task-378; grounder D14, D15 and the length factor owed from task-372): written FIRST, red before the fixes.
++//   D14  the phone's Continue wait (60 s) and entitlement stale time (0 s) are declared in the surface config and read from the generated slice; values unchanged.
++//   D15  two descriptor entries corrected (the request parameter `semi` is not a response field; the entitlement call site is the entitlement hook).
++//   LEN  the metre-to-foot factor is the registered pinned variable parcels_m_to_ft, read by pinnedSetting, in both geometry modules.
++import fs from 'node:fs';
++import path from 'node:path';
++import { describe, expect, it } from 'vitest';
++import seed from '../../scripts/seeds/logic_variables.json';
++import { M_TO_FT } from '@/lib/parcels/geometry';
++import { formatHeight } from '@/lib/massing/geometry';
++
++const ROOT = path.resolve(__dirname, '..', '..');
++const src = (p: string): string => fs.readFileSync(path.join(ROOT, p), 'utf8');
++// eslint-disable-next-line @typescript-eslint/no-explicit-any
++const json = (p: string): any => JSON.parse(src(p));
++const code = (p: string): string => src(p).replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
++const SEED = seed as unknown as Record<string, { default: number; min: number; max: number; type: string }>;
++
++const SEMI = 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json';
++const SEARCH = 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json';
++const SEMI_SLICE = 'mobile/src/generated/surfaces/mobile_parcel_semi_question.json';
++const SEARCH_SLICE = 'mobile/src/generated/surfaces/mobile_parcel_search.json';
++const LOOKUP_CONTRACT = 'scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json';
++const ENTITLEMENT_CONTRACT = 'scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json';
++const HOOK = 'mobile/src/hooks/useParcelLookup.ts';
++
++describe('D14 the phone tunables are declared in the surface config, values unchanged', () => {
++  it('the semi surface declares config.continue_wait_ms = 60000 and the generated slice carries it', () => {
++    expect(json(SEMI).config.continue_wait_ms).toBe(60000);
++    expect(json(SEMI_SLICE).config.continue_wait_ms).toBe(60000);
++  });
++  it('the search surface declares config.entitlement_stale_ms = 0 and the generated slice carries it', () => {
++    expect(json(SEARCH).config.entitlement_stale_ms).toBe(0);
++    expect(json(SEARCH_SLICE).config.entitlement_stale_ms).toBe(0);
++  });
++  it('the schema and the generated type know both keys, and the emitter copies both', () => {
++    const props = json('scripts/surfaces/_schema/surface.schema.json').properties.config.properties;
++    expect(Object.keys(props)).toEqual(expect.arrayContaining(['continue_wait_ms', 'entitlement_stale_ms']));
++    expect(src('src/lib/surfaces/generated/surface-descriptor.d.ts')).toMatch(/continue_wait_ms\?/);
++    expect(src('src/lib/surfaces/generated/surface-descriptor.d.ts')).toMatch(/entitlement_stale_ms\?/);
++    expect(src('scripts/surfaces/emit-mobile-surfaces.mjs')).toMatch(/CONFIG_KEYS = \[[^\]]*continue_wait_ms[^\]]*entitlement_stale_ms/);
++  });
++  it('semiQuestion.ts types no wait number and reads the slice; the entitlement hook types no stale number and reads the slice', () => {
++    expect(code('mobile/src/lib/semiQuestion.ts')).not.toMatch(/60_?000/);
++    expect(code('mobile/src/lib/semiQuestion.ts')).toContain('continue_wait_ms');
++    const hook = code(HOOK);
++    const entitlement = hook.slice(hook.indexOf('export function useParcelEntitlement'));
++    expect(entitlement).not.toMatch(/staleTime:\s*0\b/);
++    expect(entitlement).toContain('entitlement_stale_ms');
++  });
++});
++
++describe('D15 the two descriptor entries are corrected', () => {
++  it('semi is a request parameter (the query schema), not a response field: it is out of the lookup contract field_whitelist and the rest of the list is unchanged', () => {
++    expect(src('src/app/api/parcels/lookup/types.ts')).toMatch(/ConsumerParcelLookupQuerySchema[\s\S]{0,900}semi: z\.literal\('answered'\)/);
++    const whitelist: string[] = json(LOOKUP_CONTRACT).inputs.field_whitelist;
++    expect(whitelist).not.toContain('semi');
++    expect(whitelist).toEqual(['match', 'candidates', 'warnings', 'parcel', 'footprint', 'slot', 'source', 'label', 'value', 'disclosure', 'lotForm', 'detected', 'basis', 'unsure']);
++  });
++  it('the entitlement contract names the line of useParcelEntitlement in the hook as its call site (found by reading the hook, not a typed number)', () => {
++    const line = src(HOOK).split('\n').findIndex((l) => l.startsWith('export function useParcelEntitlement(')) + 1;
++    expect(line).toBeGreaterThan(0);
++    const d = json(ENTITLEMENT_CONTRACT);
++    expect(d.sharing.surfaces).toEqual([`${HOOK}:${line}`]);
++    expect(d.sharing.evidence).toContain(`${HOOK}:${line}`);
++    expect(JSON.stringify(d.sharing)).not.toContain(`${HOOK}:96`);
++  });
++});
++
++describe('LEN the metre-to-foot factor is the registered pinned variable (fe.44, core.8)', () => {
++  it('parcels_m_to_ft is pinned in the seed at 3.28084 and both geometry modules read it, typing no factor', () => {
++    expect(SEED.parcels_m_to_ft).toMatchObject({ type: 'number', default: 3.28084, min: 3.28084, max: 3.28084 });
++    for (const p of ['src/lib/parcels/geometry.ts', 'src/lib/massing/geometry.ts']) {
++      expect(code(p), p).not.toMatch(/3\.28084/);
++      expect(code(p), p).toContain('parcels_m_to_ft');
++    }
++  });
++  it('values unchanged: the exported factor and the formatted height', () => {
++    expect(M_TO_FT).toBe(3.28084);
++    expect(formatHeight(10)).toBe('10.0 m (32.8 ft)');
++  });
++});
+

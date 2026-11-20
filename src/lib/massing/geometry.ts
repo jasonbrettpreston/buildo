@@ -1,3 +1,5 @@
+import seed from '../../../scripts/seeds/logic_variables.json';
+import { pinnedSetting } from '@/lib/report-projection/pinned-settings';
 import type { StructureType } from './types';
 
 // ---------------------------------------------------------------------------
@@ -29,7 +31,8 @@ export const SHED_THRESHOLD_SQM = 20;
 /** 20–60 sqm accessory is classified as garage. */
 export const GARAGE_MAX_SQM = 60;
 
-const M_TO_FT = 3.28084;
+/** Feet per metre: the pinned logic variable parcels_m_to_ft (fe.44, core.8; FIX.TUNE task-378). */
+const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');
 
 // ---------------------------------------------------------------------------
 // Core functions

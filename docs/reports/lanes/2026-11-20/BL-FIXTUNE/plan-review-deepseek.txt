@@ -1,0 +1,94 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of docs/reports/reviews/task-378/context-2026-11-20.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10519 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21319 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 22354 chars, answer 9294 chars, 45s
+# Adversarial review — `docs/reports/reviews/task-378/context-2026-11-20.md`
+
+*Note on citations: this artifact is generated markdown with several extremely long unwrapped bullets, so the absolute line numbers below are approximate (≈). Section names + quoted fragments are the reliable anchors.*
+
+---
+
+### Blockers — the artifact cannot do the job it exists to do
+
+- **[CRITICAL]** (≈L7, Description ¶1): The task cites **Spec 126:189 P4** and **Spec 128:30 Rule 3** as the two governing rules, but neither spec appears in `## References` (which reads `- (none)`) nor in `## Documents` (also `- (none)`), nor in the milestone's `### Specs` list (which names only Spec 89 and Spec 126 — no line, no Spec 128 at all). Acceptance criterion #3 demands "Compliance lens once per governing rule list with the list whole and the rulings pasted." **The reviewer/agent literally does not have the text of either rule.** The lane will either guess or fabricate the rule text — which is precisely the failure mode RR-0208 names ("made-up responses and wrong reviewer context"). *Fix:* the generator must resolve spec citations parsed out of the task description into `## Document sections` blocks with the named line ranges, and fail the generation (not footnote it) if unresolvable.
+
+- **[CRITICAL]** (≈L8, Description ¶1): The source of the defect — `docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY-2.md` (task-368 second job) — is **not included anywhere**, and the D14/D15 identifiers used in the title are never defined in the file. The whole task is "implement what that verdict says"; the verdict is absent. A reviewer cannot tell whether D14 and D15 are correctly restated, whether there were D16+ items dropped, or whether "D14, D15" is the complete set. *Fix:* inline the verdict entries with their ids; add a Decisions/Findings block keyed by D-id.
+
+- **[CRITICAL]** (≈L8, Description ¶1): None of the six files the task will edit or must confirm against are present — `mobile/src/lib/semiQuestion.ts:16-17`, `mobile/src/hooks/useParcelLookup.ts:137`, `src/app/api/parcels/lookup/types.ts:44-45`, `SearchBinding.tsx:36`, and both `contract_*.descriptor.json` (lines 175 and 326-331). AC#1 is *"Each defect confirmed on the head before fixing, with file:line."* You cannot confirm a `field_whitelist` entry at `:175` if you never see `:175`. This converts AC#1 into an unverifiable checkbox — the exact class of failure AC#1 was written to prevent. *Fix:* every file:line named in the description becomes a 12 KB excerpt block.
+
+- **[HIGH]** (≈L8, Description ¶1; ≈L19): **No commit SHA anywhere in the file.** AC#1 says "confirmed on the head." The head is a moving ref; the context is dated `2026-11-20` but the milestone's checks are dated `2026-11-19` ("checked … 2026-11-19, R10"), so at least some content is a day stale already. Every line number cited (`:16-17`, `:137`, `:175`, `:96`, `:134`, `:326-331`) is drift-prone. *Fix:* stamp `git rev-parse HEAD`, branch, and worktree path in the header; re-verify offsets at generation time.
+
+---
+
+### Contradictions inside the artifact
+
+- **[HIGH]** (≈L21-L90 `## Decisions in force`, vs `## Milestone → ### Problems` ¶2): The doc declares the field is *"the ones this task names carry the operator's words"* yet lists **both RR-0174 (`report_check_min_ms = 35,000 ms … default and maximum`) and RR-0176 (`no 35 s cap … LOAD.3 not needed`) as in force**, with no supersession marker — even though the Problems section on the same page states RR-0176 *"supersedes RR-0174"*. An agent that scans `## Decisions in force` for the loading-screen rule has a 50/50 chance of implementing the retracted 35 s cap. *Fix:* superseded decisions must be removed from "in force" or rendered with an explicit `SUPERSEDED BY RR-0176` suffix; ordering must be by authority, not by RR number.
+
+- **[HIGH]** (≈`### Storage set-up` bullets 1-2): Same class, worse: the block still asserts *"behind the 35 s loading screen"* and *"waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3)"*. The Problems section explains this is a known-wrong leftover *"text left as found"*. Propagating text you have already flagged as wrong, behind a footnote three sections away, is worse than omitting it — the reader who scrolls to Storage set-up will act on it. *Fix:* fail generation on a known-stale block, or render it struck-through with the superseding ruling inline. "Disclosed" is not "corrected."
+
+- **[HIGH]** (≈`### Storage set-up` ¶1, and `### Register rulings of this group` — 4+ entries): These lines terminate with a literal **`"undefined"`** standing where an operator quote belongs (e.g. `… McSTORAGE-POLICY-v2.md) "undefined"`, `… mcfrontend/MF-62/plan.md:44) "undefined"`, and all four Register-ruling lines). RR-0190 is explicit: *"only operator words feed reviews as rulings … must cite file:line"*. A ruling presented with a fabricated placeholder quote is not a ruling; it is an unverifiable assertion. This is a live instance of the generator defect the milestone's own Problems section describes — i.e. **task-378's context was produced by the buggy generator that the backlog has a draft task against, and nothing blocked it.** *Fix:* hard-fail `backlog-brief.mjs` when a quote slot resolves empty; drop the ruling row rather than emit `undefined`.
+
+- **[MED]** (≈`### McStorage policy for this increment`): The link is `doc-16 - McStorage-policy-v2.md#L108-L108`, and line 108 is — per the milestone Problems section — the row that *"still reads LOAD.1 to LOAD.3."* So the one line the reviewer is pointed at is a line the same document declares wrong. Self-defeating anchor. *Fix:* pin the anchor to the corrected row, or annotate the anchor with the correction.
+
+---
+
+### Generator-level defect with sibling blast radius
+
+- **[HIGH]** (≈all three `### Requirements / McFrontend elements / McStorage policy` blocks → `not readable: ENOENT`): **100% of `## Document sections` failed to load.** The three paths all share the form `doc-N - Name-With-Dashes.md` — spaces plus a hyphen-space separator. That is the obvious root cause (unquoted/unsanitised path interpolation, or a `path.join` on a string containing ` - `), and it is a **sibling bug**, not a local one: every backlog doc following the same naming convention (`doc-2 - Increment-S-requirements.md`, `doc-16 - McStorage-policy-v2.md`, and by inspection the whole `doc-N - …` family) will silently ENOENT in every context generated this way. Worse, the "read it at" hint echoes the *same broken string* back, so the instruction is circular — there is no working way to retrieve the content. *Fix:* quote/escape paths; resolve against a real index; on ENOENT, glob for the nearest stem match and report the actual path found; and fail the build when zero document blocks load (currently 3/3 failed and the file was still emitted).
+
+- **[MED]** (≈`### Documents` list items): `#L27` and `#S` style fragments — `elements-by-inc.json#S` — are JSON fragment anchors that no renderer resolves. If the lane is expected to load JSON by fragment, the brief must define the mechanism or inline the JSON Pointer slice. *Fix:* inline the slice; stop emitting unresolvable fragments.
+
+---
+
+### Task specification is internally unworkable as written
+
+- **[HIGH]** (≈L12 `- #2 Tests red first, then green through the real hooks; no behaviour or value changes`): **This acceptance criterion is unachievable for both halves of the task.** (a) D14 is a pure literal relocation — `60_000` → a config entry read the way `SEARCH_SLICE.config.debounce_ms` is read; there is no observable behaviour difference to assert, so the only "red" test you can write asserts an implementation detail (a config key exists), which is exactly the brittle test you don't want. (b) D15 is edits to two **JSON descriptor files** — there are no hooks involved at all, so "green through the real hooks" is not expressible. The AC will be satisfied by a cosmetic test that proves nothing. *Fix:* split ACs per sub-task: for D14 assert *equivalence* (config-loaded value === previous constant, plus a schema test on bounds); for D15 assert the descriptor validates against its schema and that `semi` appears in `request` and not `response`.
+
+- **[HIGH]** (≈L8, Description ¶1, "declare both in the surface config the way mobile SearchBinding.tsx:36 reads SEARCH_SLICE.config.debounce_ms"): The task invokes **Spec 128 Rule 3** as its justification — *"every debounce, page size, stale time and rate limit is a registered logic variable **with bounds and an on_invalid posture**"* — and then specifies nothing about bounds or `on_invalid`. The fix as scoped therefore **does not satisfy the rule it cites**. Worse, the failure is asymmetric and silent:
+  - `staleTime: 0` → if the config read yields `undefined`, TanStack Query falls back to its own default (0), so the regression is invisible and the "on_invalid" posture is never exercised.
+  - `SEMI_CONTINUE_WAIT_MS = 60_000` → if the config read yields `undefined`, `setTimeout(undefined)` fires **immediately**; the 60 s wait silently becomes 0 s. That is a real behaviour change, shipped invisibly, in a task whose AC says "no behaviour or value changes."
+  *Fix:* the task must state bounds and posture explicitly for both — e.g. `waits[60_000, 0, 300_000]`, `stale_time[0, 0, 60_000]`, `on_invalid: clamp` (or `throw`) — and the D14 test must cover the `undefined`/out-of-bounds path, not just the happy path.
+
+- **[MED]** (≈L8 vs L4 title and L10-13 ACs): The retry item — *"the retry count in useParcelLookup.ts (failureCount < 3): confirm on the head whether Rule 3 binds it and include or list it"* — appears only inside the Description. It is absent from the task title (`FIX.TUNE … (D14, D15)`) and absent from all three ACs. That is an orphan requirement: it is in the lane's scope but has no acceptance gate and no defect id. Either authorise it as D16 or explicitly mark it out of scope. *Fix:* promote it to an AC with a definite outcome ("include" or "list and justify not bound"), or delete it from the description.
+
+- **[MED]** (≈L5 `status: RUNNING`, `labels: ` empty; `### Compliance codes in use: None named`): The task carries **no `comp:` label**, and the document itself confirms *"no 1·B task … carries a comp: label."* AC#3 requires a compliance lens "once per governing rule list." If the lens is triggered by the comp code, it will not fire; and if it is triggered by prose, there is no recorded rule list to iterate. Also, an empty `labels:` field in a generating pipeline generally means the label parser returned nothing — verify this is genuinely empty and not a serialisation bug. *Fix:* tag task-378 with the comp code(s) for Spec 126 P4 / Spec 128 Rule 3; make the absence of a comp code on a task that cites a governing rule a generation-time warning.
+
+- **[MED]** (≈L4, `task-378 (no plan id)` header, vs RR-0190 in `## Decisions in force`): RR-0190 states *"Lane launches need an authorized plan for any repo worktree they write."* This context explicitly records **no plan id**, and `## Dependencies` is `(none)` and `## Decisions naming this task` is `(none)` — while the task is already `RUNNING` on `@lane-BL-FIXTUNE` and proposes writes to four repo files across `mobile/` and `scripts/`. Either the plan id is a display bug, or the lane is writing to a worktree without the authorised plan RR-0190 requires. *Fix:* resolve the plan id and print it, or block RUNNING.
+
+---
+
+### Traceability / scoping gaps
+
+- **[MED]** (≈L21-`## Decisions` listing): 28 decisions are dumped at milestone granularity — *"whose Groups line names S or whose Tasks named line names a 1·B plan id"* — and the per-task mapping is empty. The reviewer must guess which of 28 bind a tunables-as-data refactor; the answer is probably none of them (this task is driven by Specc 126/128, not by any of these RRs). Yet AC#3 demands "the list whole." *Fix:* render the decision set with a `binds-this-task: yes/no/inferred` column, and explain why the non-binding majority is included.
+
+- **[MED]** (≈`## Prior reviews and lane reports` → `### task-378 (this task) → (none)`): The task is RUNNING with **zero** prior artifacts, yet AC#3 requires *"a separate grounder verdict on file."* There is no evidence trail at all, and no pointer to where the grounder verdict will be written. Also note the file's own source is a *second* pass ("on the second handbook pass") — meaning a first pass existed and its record is likewise absent. *Fix:* link the first-pass record and the expected output path for the grounder verdict.
+
+- **[MED]** (whole file): There is **no test/verification section** — no test runner, no file paths for the "real hooks" tests, no commands, no definition of "red." For a task whose AC#2 is entirely about tests, that omission guarantees the lane invents its own harness. *Fix:* add a `## Test surface` block naming the existing suites for `useParcelLookup` and `semiQuestion` and the exact command.
+
+- **[LOW]** (≈`## Decisions in force`): Nine entries — RR-0012, RR-0060, RR-0080, RR-0081, RR-0086, RR-0087, RR-0088, RR-0092, RR-0099 — carry **identical text** ("INC5 recapture commit 068a51af0, not push-ready"). RR-0005 and RR-0044 likewise duplicate ("page-level lot information in increme"). Duplicate ids over one decision is either an RR-id allocation bug or a failed dedupe; either way it inflates the "in force" list and makes "the list whole" meaningless. *Fix:* dedupe on normalised text, keep the earliest id, render the rest as aliases.
+
+- **[LOW]** (≈`## Decisions in force`): Every title is truncated mid-word — `"page-level lot information in increme"`. A fixed-width truncation without an ellipsis makes a truncated title indistinguishable from a complete one, and this list is explicitly labelled *"(titles; the ones this task names carry the operator's words)"* — i.e. titles are load-bearing here. *Fix:* truncate with `…` and a word boundary, or emit the full first clause.
+
+- **[LOW]** (≈`## Decisions in force`): `- RR-0014 McSTORAGE-RULINGS.md:5` is a bare citation with **no title and no date**, breaking the uniform `RR-nnnn <date> · <title>` shape of every sibling row. Whatever parses this list will either drop it or mis-key it. *Fix:* normalise or drop.
+
+- **[LOW]** (≈`## Document sections` cap paragraph): *"an omitted block costs its notice against the total"* is unparseable. Does a failed/omitted block consume 120 KB budget or 12 KB? Since 3/3 blocks failed here the accounting is moot, but the sentence will bite the first time a real doc is partially truncated. *Fix:* state the accounting rule as arithmetic, and print used/remaining.
+
+- **[NIT]** (≈`## Milestone → ### Objectives` vs `### Increment objectives`): The two blocks carry near-identical truncated operator quotes from `MORNING-DECISIONS.md:673`; the "Objectives" copy is additionally mangled (`"Operator, verbatim: "because we have…`) — nested quotes, double-escaped. Redundant and visibly corrupted. *Fix:* one objective block, unescaped.
+
+---
+
+### Process mismatch (from the attached template, not the document)
+
+- **[LOW]** (`## Additional context: .claude/review-templates/plan-review-deepseek.md`, "You are NOT responsible for: spec compliance, test coverage, or contract / API / boundary analysis"): The paired review template **explicitly excludes the three axes this task consists entirely of** — spec compliance (Spec 126 P4, Spec 128 Rule 3), contract analysis (`field_whitelist`, request-vs-response), and test coverage (AC#2). If this template was the one invoked for task-378, the two reviewers between them own nothing here. *Fix:* route tunables/contract tasks to the Gemini template, or add a `defect-class → template` mapping so the axes match the task's actual risk.
+
+---
+
+### Overall verdict
+
+This is a **generated context that fails closed on nothing and fails open on everything**. The single most important input — the grounder verdict that defines D14 and D15 — is absent; both governing specs are absent; every document block ENOENTed (3/3, almost certainly an unquoted-path bug that poisons the entire `doc-N - Name.md` family, not just this file); and not one of the six files under edit is included, which makes AC#1 ("confirmed on the head, with file:line") structurally unverifiable. Worse, the artifact *knows* it is wrong and says so in the mile-long Problems footnote while leaving the superseded RR-0174 35 s cap and the `"undefined"` ruling quotes sitting verbatim in `## Decisions in force` and `### Storage set-up`, where a lane agent will read them first and the footnote last. Layered on top, the task itself is under-specified in a way that will produce a false-green: it cites Spec 128 Rule 3 but specifies no bounds and no `on_invalid` posture, which means a missing config entry silently collapses the 60 s semi wait to 0 s (real behaviour change, in a task that swears to change no behaviour), and AC#2's "tests red first, then green through the real hooks" is literally unachievable for a constant relocation and meaningless for JSON descriptor edits. Do not launch this lane on this context: regenerate with the verdict, both specs, the six files, and a pinned HEAD; strip or strike the superseded rulings; hard-fail on `"undefined"` quote slots; and rewrite the ACs per sub-task around equivalence and schema validation rather than a red-first ritual.
+
+---
+⏱  56416ms (56.4s)
+📊 Tokens — total: 20504, input: 10581, output: 9923, reasoning: 5470

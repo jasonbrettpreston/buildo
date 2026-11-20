@@ -1,0 +1,42 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:24:13.701Z file_sha256=6edbf74577c614a50b85d66baec766d77da0be8b144d91bf63c2c159c84c682b prompt_sha256=091382816c4f38599285b95cc6278dc66867dc6604cf6d3aa6b6d01c3ed82708
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-mobile-96.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10224 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21349 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32141 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41908 chars, answer 0 chars, 60s
+BUG severity=CRIT — none
+
+Findings:
+
+MET — tack-378 D14 "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read; values unchanged" — mobile/src/lib/semiQuestion.ts:18 "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;" — the 60 s Continue wait is now read from the generated slice, descriptor "continue_wait_ms": 60000 and slice carry the same value, no number typed in code.
+
+MET — task-378 D14 "entitlement stale time 0 s" — mobile/src/hooks/useParcelLookup.ts:161 "staleTime: searchSlice.config.entitlement_stale_ms, // FIX.TUNE (task-378): the surface config, not a number typed here" — stale time is read from the search slice, value 0 in descriptor:440 "entitlement_stale_ms": 0 and in the generated slice.
+
+MET — task-378 D14 "the 60 s VALUE is an open operator item, not decided here" — mobile/src/generated/surfaces/mobile_parcel_semi_question.json:6 "continue_wait_ms": 60000 — the value is carried, not chosen; the descriptor lines say "60 s, an open operator timeframe".
+
+MET — task-378 D15 "semi out of the lookup response field_whitelist" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:174 "unsure" — "semi" is gone and the remaining field list is unchanged, and the new test pins the exact 14-field list.
+
+MET — task-378 LEN "the typed metre-to-foot factor ... read from the pinned variable parcels_m_to_ft" — src/lib/massing/geometry.ts:37 "const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" and src/lib/parcels/geometry.ts:9 export the same reader, no 3.28084 typed in either module.
+
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/_schema/surface.schema.json:2631 ""continue_wait_ms": { "x-draft-optional": true," with only "minimum": 0 — both new keys are declared with a zero floor only and no bounds or on_invalid posture, so Rule 3 is partly met — task-378 lists "bounds/on_invalid for the new keys" under "NOT in scope and left listed", so it is carried, not fixed here.
+
+DEFER severity=MED — task-378 LEN "read from the pinned variable parcels_m_to_ft by the task-372 pattern" — NONE, no scripts/seeds/logic_variables.json line in the diff (cannot see) — the seed row the new test asserts ("expect(SEED.parcels_m_to_ft).toMatchObject({ type: 'number', default: 3.28084, min: 3.28084, max: 3.28084 });") is not shown added anywhere, and pinnedSetting throws at module load if absent — confirm the row exists in scripts/seeds/logic_variables.json or add it.
+
+DEFER severity=LOW — Spec 126 P4 "All tunables are data; zero thresholds in src/" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:429 "The two tunables this SEARCH surface has are now DECLARED here" — the surface now declares three config tunables, so the why text contradicts the config it describes — change "two" to "three" and name entitlement_stale_ms in that sentence.
+
+REJECT — Spec 96 §11 "src/app/api/user-profile/route.ts — subscription_status read + trial initiation" — accused of touching the subscription gate or paywall surface — none of the six Spec 96 target files appears in the diff and no subscription status value or gate branch changes.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+
+---
+⏱  73240ms (73.2s)
+📊 Tokens — total: 34555, input: 20348, output: 14207, reasoning: 13277
+the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  73137ms (73.1s)
+📊 Tokens — total: 34478, input: 20348, output: 14130, reasoning: 13169

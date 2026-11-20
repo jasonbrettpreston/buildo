@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:18:45.528Z file_sha256=c4b0472991cbd02eae1fd2bdd8501b0b225064598538078d3c8e3cebfb363e25 prompt_sha256=b0e1d3a12ffa67f99b8fceb0c5a2ddc14ca976019a32b5a28196faaed4ce5099
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10715 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21580 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32446 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43148 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 54427 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 65556 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 73952 chars, answer 3338 chars, 105s
+DEFER severity=MED — task-372 "gate conversion factors are a pinned setting (Spec 136 fe.44, Spec 132 core.8)" — src/lib/massing/geometry.ts "const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — the pinned row parcels_m_to_ft itself is not in the material (cannot see scripts/seeds/logic_variables.json in the diff, and it is not named in the omitted-files note), so the setting the factor must read from is unverified; if the row is absent, pinnedSetting throws at module load in both geometry modules — add the seed entry to the diff (or cite its existing line in the lane report).
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/_schema/surface.schema.json "x-draft-optional": true" — entitlement_stale_ms and continue_wait_ms are declared but neither registered nor given bounds or an on_invalid posture, exactly the gap the rule names; a descriptor that omits them still validates, so nothing requires the value the code now reads — the operator scope line "NOT in scope and left listed: ... bounds/on_invalid for the new keys" allows this to stay listed, but it must stay listed and not be reported as closed.
+DEFER severity=MED — Spec 90 §10 "Unit Testing (Jest) ... Minimum 80% coverage threshold" — mobile/__tests__/parcelScreens.golden.test.ts "expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN, entitlement_stale_ms: 0 });" — neither changed mobile line has a mobile Jest assertion; the only proof is a source-text regex in src/tests/fix-tune.logic.test.ts, and the prompt itself states "phone-test green unproven until Mobile CI" — land a green Mobile CI run, or a mobile unit test asserting SEMI_CONTINUE_WAIT_MS === 60000, before merge.
+REJECT — Spec 90 §12 "Recommended: gcTime: 86400000 (24h) and staleTime: 300000 (5m) for the main feed" — accused of shipping a 0 ms stale time — the entitlement read is not the main feed query and the value is unchanged from the pre-diff line "staleTime: 0,".
+MET — Spec 126 P4 "All tunables are data; zero thresholds in src/" — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;" — the 60_000 literal is gone from mobile code and lives in the descriptor and the generated slice, with the emitter key list extended.
+MET — task-378 D15 "semi out of the lookup response field_whitelist" — contract_parcels_lookup.descriptor.json ""unsure"" — semi is removed and the rest of the whitelist is asserted intact.
+MET — task-378 D15 "entitlement contract cites the entitlement hook line" — contract_parcels_entitlement.descriptor.json "mobile/src/hooks/useParcelLookup.ts:155" — surfaces, evidence and consumers_verified all move together and the new test derives the line from the hook, so a stale number fails.
+MET — Spec 90 §7 "The Next.js `src/app/api/*` routes are the absolute source of truth" — mobile/src/hooks/useParcelLookup.ts "staleTime: searchSlice.config.entitlement_stale_ms" — only a client staleness knob moved; the entitlement value itself is still fetched from the route and Zod-parsed, no computed state is pushed onto the phone.
+MET — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI" — mobile/src/hooks/useParcelLookup.ts "enabled: !!accessToken," — no new fetch is added; the imported slice is a build artifact, not a network response, and fetchParcelEntitlement still ends in ParcelToolEntitlementSchema.
+MET — operator "We just need complaint code - not building spaggetti code" — mobile/src/generated/surfaces/mobile_parcel_semi_question.json ""continue_wait_ms": 60000" — the value is declared once in the descriptor and generated into the slice, not re-typed per call site.
+
+VERDICT: PASS on compliance with the pasted clauses (no CRIT/HIGH unmet; three items deferred)
+Clauses checked: 13   Unmet: 3
+
+---
+⏱  105831ms (105.8s)
+📊 Tokens — total: 34227, input: 14102, output: 20125, reasoning: 19081

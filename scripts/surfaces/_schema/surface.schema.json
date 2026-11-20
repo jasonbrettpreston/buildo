@@ -2627,6 +2627,34 @@
               "minimum": 0
             }
           ]
+        },
+        "continue_wait_ms": {
+          "x-draft-optional": true,
+          "description": "FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long the semi question page Continue waits for the answered lookup, in milliseconds, before the page ends in its error state.",
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ]
+        },
+        "entitlement_stale_ms": {
+          "x-draft-optional": true,
+          "description": "FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long the reports-left entitlement read stays fresh, in milliseconds (0 = re-read on every focus).",
+          "anyOf": [
+            {
+              "const": "UNRESEARCHED",
+              "description": "Nobody has researched this yet. Counted by the registry."
+            },
+            {
+              "type": "integer",
+              "minimum": 0
+            }
+          ]
         }
       }
     },

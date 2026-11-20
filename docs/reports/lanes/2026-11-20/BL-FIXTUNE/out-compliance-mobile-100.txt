@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:23:28.956Z file_sha256=3abb92421cd30045d17602c10541c7dd46377f34799663d2b1bee5820ddf4f23 prompt_sha256=6dda31feed71e5d1753399a2dbccdf24a436e7374337a36d5e0d77f61abcce52
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-mobile-100.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10951 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22221 chars, answer 0 chars, 30s
+BUG none.
+DEFER severity=MED — task-378 LEN "the typed metre-to-foot factor (...) read from the pinned variable parcels_m_to_ft by the task-372 pattern" — NONE (scripts/seeds/logic_variables.json is not in the diff and is not in the omitted-generated list) — cannot see the seed row `parcels_m_to_ft`; if absent, the module-scope `pinnedSetting(seed, 'parcels_m_to_ft')` throws on import of both geometry modules — include the seed row (or its existing hash) in the commit so the pinned value is evidenced, not asserted only by src/tests/fix-tune.logic.test.ts "SEED.parcels_m_to_ft".
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "like debounce_ms it is declared, not yet a registered logic variable" and mobile_parcel_semi_question.descriptor.json "declared, not yet a registered logic variable with bounds" — entitlement_stale_ms (a stale time by name) and continue_wait_ms are declared data only, with no registered variable, no bounds and no on_invalid posture — the change itself records the gap, carry it on the task-378 listed follow-up ("bounds/on_invalid for the new keys") with an owner, do not let it close with this card.
+DEFER severity=LOW — Spec 126 P4 "All tunables are data; zero thresholds in src/" — src/lib/massing/geometry.ts "export const SHED_THRESHOLD_SQM = 20;" — the module this change edits still holds numeric thresholds in src/ beside the now-pinned M_TO_FT — out of task-378's named scope, so log it as a follow-up line rather than expanding this card.
+DEFER severity=LOW — operator 2026-11-20 "1. yes. add the tasks to incr 1b" — NONE — no diff line touches an increment 1b task list (no queue file is in the material) — cannot see the queue edit; confirm the task rows land with the same commit rather than in a later one.
+MET — operator ruling (task-372) "gate conversion factors are a pinned setting (Spec 136 fe.44, Spec 132 core.8)" — src/lib/parcels/geometry.ts "-export const M_TO_FT = 3.28084;" — both modules now read `pinnedSetting(..., 'parcels_m_to_ft')`, no typed factor left.
+MET — task-378 D14 "Continue wait 60 s, entitlement stale time 0 s: declare in the surface config (...) values unchanged" — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;" and useParcelLookup.ts "staleTime: searchSlice.config.entitlement_stale_ms" — values 60000 and 0 move out of code into the declared config and slices, unchanged.
+MET — task-378 D15 "two descriptor entries: semi out of the lookup response field_whitelist" — contract_parcels_lookup.descriptor.json "-      \"semi\"" — `semi` removed, the remaining list unchanged, matching the §3.2/2026-11-13 `lotForm {detected, basis, unsure}` response shape.
+MET — task-378 D15 "entitlement contract cites the entitlement hook line" — contract_parcels_entitlement.descriptor.json "mobile/src/hooks/useParcelLookup.ts:155" — call site moved off the stale :96 to the `useParcelEntitlement` line.
+REJECT — dated note 2026-11-13 "the lookup response gains lotForm {detected, basis, unsure}" — accused of dropping a documented response field by removing `semi` — the pasted spec names no `semi` response field; `semi` is the request sentinel asserted by the new test ("semi: z.literal('answered')"), so removal aligns with the spec.
+REJECT — task-378 D14 "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read" — accused of putting entitlement_stale_ms on the wrong surface (search, not the entitlement contract) — D14 names the SEARCH slice config as the place and pattern for exactly this value.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+
+---
+⏱  44649ms (44.6s)
+📊 Tokens — total: 33134, input: 24341, output: 8793, reasoning: 7768
+when they build" — the shared entitlement hook now takes its freshness from the SEARCH surface's slice, so the two future surfaces have no owner for their own value — rationale: this placement is what D14 ordered today, so only the coupling needs recording in the entitlement descriptor before MF-52 lands.
+MET — task-378 D14 (continue_wait_ms) — mobile/src/generated/surfaces/mobile_parcel_semi_question.json "config": { "continue_wait_ms": 60000 } — declared in the descriptor, emitted to the slice, value unchanged.
+MET — task-378 D14 (entitlement_stale_ms) — mobile/src/hooks/useParcelLookup.ts "staleTime: searchSlice.config.entitlement_stale_ms" — read from the generated slice instead of a typed 0, value 0 unchanged.
+MET — task-372, Spec 136 fe.44, Spec 132 core.8 — src/lib/parcels/geometry.ts "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — the typed 3.28084 is gone from both geometry modules.
+MET — task-378 D15 (semi) — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "unsure" (with "semi" removed) — the request parameter leaves the response field_whitelist.
+MET — task-378 D15 (entitlement call site) — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json "mobile/src/hooks/useParcelLookup.ts:155" — the hook line is cited and recomputed by reading the hook, not typed.
+MET — Spec 100 §4 (MF-58 placement and lock) "locked by `mobile/__tests__/parcelScreens.golden.test.ts`" — mobile/__tests__/parcelScreens.golden.test.ts "expect(SEARCH_SLICE.config).toEqual({ ... entitlement_stale_ms: 0 })" — the content-string assertions are untouched, only the config tuple is extended.
+REJECT — task-378 "DB mirror migration" — that the metre-to-foot factor is read from the bundled seed rather than the database — the ruling names the task-372 pattern and puts the DB mirror out of scope, so the seed read is the ruled mechanism.
+REJECT — task-378 D14 "the 60 s VALUE is an open operator item, not decided here" — that pinning `toBe(60000)` decides the open value — the same ruling says "values unchanged", so pinning the current value is what was ordered.
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+
+---
+⏱  116533ms (116.5s)
+📊 Tokens — total: 48133, input: 24341, output: 23792, reasoning: 22287

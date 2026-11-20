@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:26:52.369Z file_sha256=09682beed1fce8f825881ecc9e8bf32bf2bdada3e45d8efa46a3509a9955172a prompt_sha256=335c9493fb9c2492f1543bf6805ffd1764eb387858b20dbfea3d8881a463f3b3
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10645 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21705 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32910 chars, answer 0 chars, 45s
+BUG severity=HIGH — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "like debounce_ms it is dec[deepseek-review] deepseek-reasoner working… reasoning 75952 chars, answer 2428 chars, 105s
+BUG severity=CRIT — none raised; see the DEFER lines.
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "like debounce_ms it is declared, not yet a registered logic variable" — a stale time lands as a bare config key with no bounds, no on_invalid and no registry row; the descriptor `why` is the only record that this diverges from Rule 3 — carry "bounds/on_invalid for the new keys" (operator scope, task-378) as a named increment 1b task so the gap is not left in one why string.
+DEFER severity=MED — Spec 126 §3.1 REPORT "`inputs.field_whitelist` (must equal the contract's)" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "-      \"semi\"" (whitelist now 14) — the diff changes one side of a MUST-equal pair and touches no consuming surface descriptor, and the REPORT surface's own whitelist cannot be seen here, so the equality is unproven — update the consuming surface's `inputs.field_whitelist` in the same commit or show the FAIL-severity equality check green.
+DEFER severity=MED — Spec 126 §0b item 2 "one full suite on the current origin tip before \"ready\"" — pasted material "Mobile tests cannot run locally (phone-test green unproven until Mobile CI)" — two mobile files change (mobile/src/hooks/useParcelLookup.ts, mobile/src/lib/semiQuestion.ts) with no green suite behind them — land the Mobile CI run before this is called ready.
+DEFER severity=LOW — Spec 126 §0b item 6 "cited by every commit, prereg and lock that relies on it" — src/tests/fix-tune.logic.test.ts "// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md P4" — the new lock relies on the 2026-11-20 operator words and the task-378 ruling but cites only spec sections, no dated ruling line or record path — add the Operator-Ruling line with date and record path.
+NIT — Spec 126 §4 category 18 config ("tunables as registered logic variables"), the `why` is the record of the answer — mobile_parcel_search.descriptor.json "The two tunables this SEARCH surface has are now DECLARED here" — the surface now declares three tunables, so the record under-counts its own surface — say three and name entitlement_stale_ms in that sentence.
+NIT — Spec 126 §3.1 "ONE home for the profiles." — scripts/surfaces/emit-mobile-surfaces.mjs "// The descriptor config values a mobile binding may read (the SEARCH archetype's declared parameters, Spec 126 §3.1 row 4)." — the list now carries a semi-question (non-SEARCH) key, so its comment no longer states what the list is or where the rule lives — restate the comment as an allow-list over `surface.schema.json` config properties, not "SEARCH row 4".
+MET — D14 values unchanged — mobile/src/generated/surfaces/mobile_parcel_semi_question.json "\"continue_wait_ms\": 60000" and mobile_parcel_search.json "\"entitlement_stale_ms\": 0" — both values moved unchanged from 60_000 and staleTime 0.
+MET — D14 read the slice, not typed — mobile/src/hooks/useParcelLookup.ts "staleTime: searchSlice.config.entitlement_stale_ms" and mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms".
+MET — D15 semi out of the response whitelist — contract_parcels_lookup.descriptor.json "\"unsure\"" with no "\"semi\"", locked by src/tests/fix-tune.logic.test.ts "expect(whitelist).not.toContain('semi')".
+MET — D15 entitlement call site is the hook line, derived not typed — src/tests/fix-tune.logic.test.ts "expect(d.sharing.surfaces).toEqual([`${HOOK}:${line}`])" with "not.toContain(`${HOOK}:96`)".
+MET — LEN, the metre-to-foot factor is the pinned variable — src/lib/parcels/geometry.ts and src/lib/massing/geometry.ts "pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft')" with no 3.28084 literal left and "expect(formatHeight(10)).toBe('10.0 m (32.8 ft)')".
+MET — Spec 126 P4, zero thresholds added in src/ — src/lib/massing/geometry.ts "-const M_TO_FT = 3.28084;" replaced by the seed read; no new numeric threshold is introduced.
+MET — §5.0 one-source, schema plus its fan-out move together — surface.schema.json "continue_wait_ms" / "entitlement_stale_ms", surface-descriptor.d.ts "continue_wait_ms?: \"UNRESEARCHED\" | number;", emit-mobile-surfaces.mjs "CONFIG_KEYS = ['debounce_ms', 'min_query_len', 'continue_wait_ms', 'entitlement_stale_ms']".
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+
+---
+⏱  107693ms (107.7s)
+📊 Tokens — total: 54281, input: 33553, output: 20728, reasoning: 19471
+e and type no factor.
+MET — task-378 "NOT in scope and left listed" — NONE — the diff touches neither the retry count nor the two 60_000 stale times, so the exclusion is respected.
+MET — Spec 126 §5.0 item 2 "A field the schema marks `x-draft-optional` may carry the literal `UNRESEARCHED`; nothing else may" — scripts/surfaces/_schema/surface.schema.json "const": "UNRESEARCHED"" with both descriptors carrying real integers — the new keys are optional-draft but not left unresearched.
+
+REJECT — Spec 126 §4 "\"none\" is a valid value, and it applies PER FIELD, not per category" — accused of answering config at category level ("answer": "none" on search) while three fields carry values — the answer/why/evidence/values block is the schema's pre-existing config shape, not introduced here, and the new key follows the debounce_ms precedent the pasted scope names, so it is recorded under the deviations finding, not as a second breach.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 21   Unmet: 4
+
+---
+⏱  59823ms (59.8s)
+📊 Tokens — total: 45227, input: 33553, output: 11674, reasoning: 10118

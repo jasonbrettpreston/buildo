@@ -205,7 +205,7 @@ describe('one home for the config values (row 24, RG-14)', () => {
     expect(/export const SEARCH_MIN_QUERY_LEN = SEARCH_SLICE\.config\.min_query_len/.test(src)).toBe(true);
   });
   it('the slice config equals the constants, and the content strings that state them carry the same numbers', () => {
-    expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN });
+    expect(SEARCH_SLICE.config).toEqual({ debounce_ms: SEARCH_DEBOUNCE_MS, min_query_len: SEARCH_MIN_QUERY_LEN, entitlement_stale_ms: 0 }); // FIX.TUNE (task-378): the entitlement stale time is declared beside them
     expect(SEARCH_SLICE.content['search.prompt']).toContain(`at least ${SEARCH_MIN_QUERY_LEN} characters`);
     expect(SEARCH_SLICE.content['search.input.hint']).toContain(`at least ${SEARCH_MIN_QUERY_LEN} characters`);
     expect(SEARCH_SLICE.content['list.refine']).toContain(`More than ${SEARCH_CANDIDATE_LIMIT} lots`);

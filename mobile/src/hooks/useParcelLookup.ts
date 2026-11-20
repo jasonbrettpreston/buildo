@@ -16,6 +16,7 @@ import { fetchWithAuth } from '@/lib/apiClient';
 import { AccountDeletedError, ApiError, RateLimitError } from '@/lib/errors';
 import { useAuthStore } from '@/store/authStore';
 import { boundedWait, SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
+import searchSlice from '@/generated/surfaces/mobile_parcel_search.json';
 import {
   ConsumerParcelLookupResultSchema,
   ParcelToolEntitlementSchema,
@@ -157,7 +158,7 @@ export function useParcelEntitlement() {
     queryKey: ['parcel-entitlement'],
     queryFn: fetchParcelEntitlement,
     enabled: !!accessToken,
-    staleTime: 0,
+    staleTime: searchSlice.config.entitlement_stale_ms, // FIX.TUNE (task-378): the surface config, not a number typed here
     retry: shouldRetryParcelLookup,
   });
 }

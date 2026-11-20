@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:26:52.384Z file_sha256=9c2c659c3027d3b0c1ecbe3159fd29f84be0cd9851507234911c03b812e448f8 prompt_sha256=348a17449497d83b5fb219506aad7bc9c714afece67e64e0aacb36010a77d4ba
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10369 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21789 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32831 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44333 chars, answer 0 chars, 60s
+BUG severity=HIGH — Task-378 D15 "the entitlement contract cites the entitlement hook line" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:327 "mobile/src/hooks/useParcelLookup.ts:155" — the cited line is stale by one: this same diff inserts a line above it (hunk "@@ -16,6 +16,7 @@" with "+import searchSlice from '@/generated/surfaces/mobile_parcel_search.json';"), so `export function useParcelEntitlement(` moves from 155 to 156 and the new lock's own derived assertion (`expect(d.sharing.surfaces).toEqual([`${HOOK}:${line}`])`) is red — re-derive the line after the import lands and cite 156 in `sharing.surfaces`, `sharing.evidence` and `consumers_verified`.
+
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:429 "like debounce_ms it is declared, not yet a registered logic variable" — the new entitlement stale time (and the 60 s Continue wait) is only a descriptor config constant, and the schema offers just `"minimum": 0` with no bounds pair and no on_invalid, so Rule 3 stays unmet in the tree although Spec 126 P4 cites it as the anchor — D14 scopes bounds/on_invalid and the DB mirror out, so record these as an open ASK with the row owed, not as closed.
+
+DEFER severity=MED — Spec 126 §11b.2 "The descriptor schema grows by this ruling through the Spec 128 §4 route" — scripts/surfaces/_schema/surface.schema.json:2630 ""continue_wait_ms": { "x-draft-optional": true," — the descriptor schema grows by two properties with only "Spec 126 P4, Spec 128 Rule 3" cited in the description and no Spec 128 §4 escalation or ASK id recorded (the ASK-24 precedent for the 409 class) — cite or record the §4 ruling that lets the schema grow.
+
+DEFER severity=LOW — Task-378 "read from the pinned variable parcels_m_to_ft by the task-372 pattern" — src/lib/massing/geometry.ts:1 "import seed from '../../../scripts/seeds/logic_variables.json';" — the seed row itself is not in this diff and scripts/seeds/logic_variables.json is not among the files listed as omitted, so the `{type: number, default: 3.28084, min: 3.28084, max: 3.28084}` row the new lock asserts is cannot see; if that row is absent, `pinnedSetting` throws at module load for both geometry modules — confirm the row exists on the branch before merge.
+
+MET — Task-378 D14 "declare in the surface config ... values unchanged" — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;" — the 60 s Continue wait now comes from the generated slice and is still 60000.
+
+MET — Task-378 D15 "semi out of the lookup response field_whitelist" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "-      \"semi\"" — removed and the remaining fourteen names are unchanged.
+
+MET — task-372 ruling "gate conversion factors are a pinned setting (Spec 136 fe.44, Spec 132 core.8)" — src/lib/parcels/geometry.ts "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — both geometry modules read the pinned setting and no 3.28084 literal remains in src/.
+
+REJECT — Spec 126 §11b.1 "Library imports are allowed only in the declared binding modules" — accused of importing scripts/ JSON into src/lib — the clause governs library component wrappers in binding modules, not a settings read, and pinnedSetting is the task-372 pattern.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 3
+
+---
+⏱  70928ms (70.9s)
+📊 Tokens — total: 47112, input: 33098, output: 14014, reasoning: 13045
+he two 60_000 stale times" — accused of editing an out-of-scope 60 s value (60000 added for continue_wait_ms) — D14 names that same 60 s Continue wait for declaration, so it is in scope and moved unchanged, not one of the left-listed stale times.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0 (Rule 3 registration arm deferred by the pasted task-378 scope, logged as the MED finding above)
+
+---
+⏱  102979ms (103.0s)
+📊 Tokens — total: 53150, input: 33098, output: 20052, reasoning: 18993

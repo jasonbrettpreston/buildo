@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:32:20.562Z file_sha256=eb047ff139ca9ef7bf8519607e02663b9726fc91695b041d62287acdee405b12 prompt_sha256=98fe90b166f6e77bd3ce8990a001fc9623a63c2cd9f2ee552e37806af5fcba82
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-step-132.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10708 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21162 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32770 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43536 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 54072 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 64414 chars, answer 0 chars, 90s
+BUG none found against the pasted clauses. Findings, deferrals and rejections below.
+
+DEFER severity=MED — task-378 D14 "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read" — mobile/src/hooks/useParcelLookup.ts:161 "staleTime: searchSlice.config.entitlement_stale_ms," — the stale time is read inline from the generated slice while the debounce precedent goes through a named constant (mobile/__tests__/parcelScreens.golden.test.ts:207 "export const SEARCH_MIN_QUERY_LEN = SEARCH_SLICE\.config\.min_query_len"), and the golden row now compares config to a bare literal — add `export const ENTITLEMENT_STALE_MS = SEARCH_SLICE.config.entitlement_stale_ms` in mobile/src/constants/parcelSearch.ts and read it in the hook and the golden test.
+
+DEFER severity=LOW — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json:280 "like debounce_ms it is declared, not yet a registered logic variable with bounds" — continue_wait_ms 60000 is now data but has no registry row, bounds or on_invalid, so the clause is met only in the "declared" half — register semi_continue_wait_ms (min = max = 60000, on_invalid fail) or name the register row that tracks it.
+
+DEFER severity=MED — core.8 "A missing `logic_variables` row fails the run" — src/lib/massing/geometry.ts:36 "const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — scripts/seeds/logic_variables.json is in neither the diff nor the omitted-files note, so the parcels_m_to_ft row cannot be seen; if it is absent the import throws at module load — include or confirm the seed row (type number, default/min/max 3.28084) in this commit.
+
+DEFER severity=LOW — "The diff follows. Mobile tests cannot run locally (phone-test green unproven until Mobile CI)." — src/tests/fix-tune.logic.test.ts:51 "expect(code('mobile/src/lib/semiQuestion.ts')).toContain('continue_wait_ms');" — the phone "values unchanged" half is proven only by source-text assertions in a node test, so the mobile golden that binds the values is unproven until Mobile CI — require phone-test green on parcelScreens.golden.test.ts as a merge condition.
+
+NIT — task-378 D14 "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:429 "The two tunables this SEARCH surface has are now DECLARED here" — the same config block now declares three (debounce_ms, min_query_len, entitlement_stale_ms), so the declaration prose miscounts itself — reword the sentence to three tunables in the same edit.
+
+REJECT — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — accused of leaving entitlement_stale_ms unregistered — 0 is an exact zero, which core.8 allows ("a registered logic variable or an exact zero"), and the pasted scope leaves "bounds/on_invalid for the new keys" out.
+
+REJECT — task-378 "NOT in scope and left listed: phone area-factor copies, the retry count, the two 60_000 stale times, DB mirror migration" — accused of leaving those numbers typed — the operator scope names them as untouched by this task, and the diff touches none of them.
+
+REJECT — operator 2026-11-20 "1. yes. add the tasks to incr 1b" — accused of not showing the incr 1b bookkeeping — no incr 1b file or task list is pasted, so nothing here can meet or breach it.
+
+MET — task-378 D15 "semi out of the lookup response field_whitelist" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:174 — "semi" removed from inputs.field_whitelist, rest of the list unchanged.
+MET — task-378 D15 "entitlement contract cites the entitlement hook line" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:327 — evidence, surfaces and consumers_verified all now "mobile/src/hooks/useParcelLookup.ts:155".
+MET — task-378 D14 "values unchanged" — mobile_parcel_semi_question.descriptor.json:325 "continue_wait_ms": 60000 and mobile_parcel_search.descriptor.json:439 "entitlement_stale_ms": 0 — same 60 s and 0 s as the code they replace, with the 60 s noted as an open operator item.
+MET — operator ruling task-372 "gate conversion factors are a pinned setting" — src/lib/parcels/geometry.ts:9 and src/lib/massing/geometry.ts:36 — both read parcels_m_to_ft through pinnedSetting and type no 3.28084.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  95242ms (95.2s)
+📊 Tokens — total: 42888, input: 24894, output: 17994, reasoning: 16754

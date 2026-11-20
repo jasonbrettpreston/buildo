@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:29:23.756Z file_sha256=48b8b0383db7006b4f0cefd482e1835354e9abf3f63cf243ac1d032a450b2f34 prompt_sha256=d3000af3516d3402f6130dcfd5f36fc6338ee77e909c550f8cbc73cdbef5edf9
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-inc-1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11062 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22017 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32480 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42635 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 51064 chars, answer 3772 chars, 75s
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/_schema/surface.schema.json:2630 ""x-draft-optional": true, ... "minimum": 0" (no maximum, no on_invalid; and mobile_parcel_semi_question.descriptor.json "like debounce_ms it is declared, not yet a registered logic variable with bounds") — both new keys are declared in surface config only, so the pasted absolute Rule 3 is unmet for continue_wait_ms and entitlement_stale_ms — register both as logic variables with bounds and an on_invalid posture on the owed list the card already carries.
+
+DEFER severity=MED — Spec 126 P4 "All tunables are data; zero thresholds in src/" — pasted card line "NOT in scope and left listed: phone area-factor copies, the retry count, the two 60_000 stale times" — after this diff src/ still holds typed thresholds (only the two named tunables moved), so P4 is not satisfied by the change as presented — keep the four remaining items as explicit owed rows rather than closing FIX.TUNE.
+
+DEFER severity=LOW — Spec 128 Rule 3 "with bounds and an on_invalid posture" — scripts/surfaces/_schema/surface.schema.json:2632 ""const": "UNRESEARCHED"" beside src/lib/... / mobile/src/lib/semiQuestion.ts:11 "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;" — a generated slice carrying the string is caught only by the type annotation at build, there is no runtime posture for either key — add the on_invalid read when the card's deferred item lands.
+
+DEFER severity=LOW — Operator 2026-11-20 "1. yes. add the tasks to incr 1b" — NONE (doc-4, pasted whole file, contains no increment 1b task list, and the diff edits no increment doc) — the ruling's instruction to record the tasks in increment 1b is not evidenced anywhere in the material — add the task-378 rows to the increment 1b list.
+
+DEFER severity=LOW — Task-378 D14 "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read" — mobile/src/hooks/useParcelLookup.ts:19 "import searchSlice from '@/generated/surfaces/mobile_parcel_search.json';" — the named pattern reads the slice once in the constants home ("one home for the config values (row 24, RG-14)"), while this diff adds two further direct slice imports (hook and semiQuestion) — route both reads through mobile/src/constants/parcelSearch.ts so the declared pattern is the one followed.
+
+DEFER severity=LOW — pasted caveat "Mobile tests cannot run locally (phone-test green unproven until Mobile CI)." — mobile/__tests__/parcelScreens.golden.test.ts:208 ""entitlement_stale_ms: 0"" — the mobile half of D14 (hook reads the slice, values unchanged) rests on an unrun golden, so its satisfaction is asserted, not shown — hold the mobile rows open until Mobile CI is green.
+
+MET — Task-378 D14 "Continue wait 60 s ... values unchanged" — mobile/src/lib/semiQuestion.ts:11 "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;" — 60000 declared in descriptor, carried in the generated slice, read from it, no literal left in code.
+MET — Task-378 D14 "entitlement stale time 0 s" — mobile/src/hooks/useParcelLookup.ts:161 "staleTime: searchSlice.config.entitlement_stale_ms," — 0 preserved and read from the slice.
+MET — Task-378 D15 "semi out of the lookup response field_whitelist" — contract_parcels_lookup.descriptor.json:174 ""unsure"" — "semi" removed, remainder of the list unchanged.
+MET — Task-378 D15 "entitlement contract cites the entitlement hook line" — contract_parcels_entitlement.descriptor.json:327 ""mobile/src/hooks/useParcelLookup.ts:155"" — the line is the useParcelEntitlement call site, and the test derives it from the hook rather than typing it.
+MET — Task-378 LEN "the typed metre-to-foot factor ... read from the pinned variable parcels_m_to_ft" — src/lib/parcels/geometry.ts:7 "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — both geometry modules read the pinned variable and hold no 3.28084 literal.
+MET — Operator task-372 "gate conversion factors are a pinned setting" — src/lib/massing/geometry.ts:35 same pinned read — the factor is gated through pinnedSetting, the named pattern.
+
+REJECT — Operator 2026-11-20 "We just need complaint code - not building spaggetti code" — accused of over-layering a 60 s constant across schema, descriptor, emitter, generated slice and module import, not a real issue, D14 and Spec 126 P4 require tunables be data and this is the existing debounce_ms path.
+REJECT — Spec 126 P4 "All tunables are data; zero thresholds in src/" — accused of putting a threshold in src by importing scripts/seeds/logic_variables.json into src/lib/massing/geometry.ts, not a real issue, the value lives in seed data and the module holds no number.
+REJECT — Task-378 D15 "semi out of the lookup response field_whitelist" — accused of under-declaring the response by removing semi, not a real issue here, whether the live response still carries it is ground truth, not this lens; the card states it is a request parameter and the diff executes the card.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+
+---
+⏱  76477ms (76.5s)
+📊 Tokens — total: 29355, input: 14772, output: 14583, reasoning: 13236

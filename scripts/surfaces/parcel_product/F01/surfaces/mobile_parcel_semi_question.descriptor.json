@@ -277,12 +277,13 @@
   },
   "config": {
     "answer": "logic_variables",
-    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page itself has no tunable and reads only the unsure flag.",
+    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; like debounce_ms it is declared, not yet a registered logic variable with bounds).",
     "evidence": [
       "migrations/320_parcel_lot_form_view.sql",
       "migrations/323_semi_o4_zone_and_wall_asks.sql",
       "scripts/seeds/logic_variables.json semi_doubt_enabled / semi_doubt_max_link_parcels / semi_doubt_min_shared_len_m",
-      "scripts/seeds/logic_variables.json semi_auto_max_shared_len_m / semi_detect_zone_classes / semi_ask_two_parcel_zone_classes"
+      "scripts/seeds/logic_variables.json semi_auto_max_shared_len_m / semi_detect_zone_classes / semi_ask_two_parcel_zone_classes",
+      "mobile/src/lib/semiQuestion.ts — SEMI_CONTINUE_WAIT_MS reads config.continue_wait_ms from the generated slice"
     ],
     "logic_variables": [
       {
@@ -321,7 +322,8 @@
         "why": "A missing, empty or out-of-vocabulary list reads as the seeded [RD] inside the view; the vocabulary is the closed list of five residential codes (R, RD, RS, RT, RM), non-empty and distinct."
       }
     ],
-    "retired": []
+    "retired": [],
+    "continue_wait_ms": 60000
   },
   "sharing": {
     "answer": "shared",

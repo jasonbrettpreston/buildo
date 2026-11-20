@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:25:27.021Z file_sha256=baeb1d1604f50ff70e910082d530a23ea3397bd8df1e1cbf1af3125e5c3d4d00 prompt_sha256=352b6c7b44115dba40e4497c236e78e0e8caf886ecaba1f9b5fa55b12295b541
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10996 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22288 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33214 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44604 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 55946 chars, answer 0 chars, 75s
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:429 "config.entitlement_stale_ms (0, the reports-left read stays fresh for 0 ms) is declared here too and read by useParcelEntitlement from the generated slice; like debounce_ms it is declared, not yet a registered logic variable." — a stale time now ships with no registration, no bounds and no on_invalid posture, the same gap as continue_wait_ms — keep the gap explicit and named (task-378 scope already lists "bounds/on_invalid for the new keys") so it lands as a queued row, not an unstated exception
+DEFER severity=MED — fe.03 "P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside." — NONE — "Mobile tests cannot run locally (phone-test green unproven until Mobile CI)." — the mobile half of this change (slice reads in mobile/src/lib/semiQuestion.ts and mobile/src/hooks/useParcelLookup.ts) is asserted only by tests that were not run, so the declaration is unproven at merge — gate the merge on Mobile CI running parcelScreens.golden.test.ts and fix-tune.logic.test.ts green
+DEFER severity=MED — fe.03 "both-directions locks" — src/tests/fix-tune.logic.test.ts:59 "expect(src('src/app/api/parcels/lookup/types.ts')).toMatch(/ConsumerParcelLookupQuerySchema[\s\S]{0,900}semi: z\.literal\('answered'\)/);" — the lock proves semi IS a request parameter, it never proves semi is ABSENT from the response projection, which is the fact that justifies removing it under fe.32 "the member must exist in that descriptor" — add one assertion that the lookup response schema/projection carries no semi member
+DEFER severity=LOW — operator, 2026-11-20, "1. yes. add the tasks to incr 1b" — NONE — no diff line adds any task row to increment 1b, the queue/plan edit is not in this material (cannot see it) — show the increment 1b row edit or state which commit carries it
+MET — fe.44 "the conversion factor is content/settings, never code" — src/lib/parcels/geometry.ts:8 "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — no literal factor remains, the reader is the same one SQM_TO_SQFT uses
+MET — task-372 ruling "gate conversion factors are a pinned setting (Spec 136 fe.44, Spec 132 core.8)" — src/lib/massing/geometry.ts:34 "const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — both geometry modules now read the one pinned variable, values unchanged per the 32.8 ft assertion
+MET — Spec 126 P4 "All tunables are data; zero thresholds in src/" (as scoped by task-378) — mobile/src/hooks/useParcelLookup.ts:161 "staleTime: searchSlice.config.entitlement_stale_ms, // FIX.TUNE (task-378): the surface config, not a number typed here" — both phone values moved to the descriptor config and read from the generated slice, 60000 and 0 unchanged
+REJECT — fe.02 "P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components." — the change is accused of coding the Continue wait into a mobile module — the value lives in the descriptor config and semiQuestion.ts only reads the generated slice, which is the pattern task-378 names ("declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read")
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  85261ms (85.3s)
+📊 Tokens — total: 30763, input: 14409, output: 16354, reasoning: 15423
+ mobile surface slices and mobile code is premature because surface paths are held — the change is a tunable correction inside already-built mobile surfaces, not the Phase 1 surface build that fe.01 holds.
+REJECT — fe.11 — that the change skips the report page first — it converts no surface and adds no admin view; it only moves two existing tunables into declared config.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 4
+
+---
+⏱  62285ms (62.3s)
+📊 Tokens — total: 26262, input: 14409, output: 11853, reasoning: 10781

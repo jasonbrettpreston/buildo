@@ -1,0 +1,46 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:39:11.417Z file_sha256=51d13d11f18117fa3907c221080044dfc3bbfabfdfc3180a95e29c22cb93c6bd prompt_sha256=3c428440ae29ea9bd19af03e63c7889269d20be1f04a2aade63c91b8c9510ff8
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-eng-s2-s4-s10-s11.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10308 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21759 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33381 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44319 chars, answer 0 chars, 60s
+BUG severity=HIGH — §10.2 "If a `src/lib/` module is imported by both API routes and frontend components, any modification requires `npx vitest related` to verify no API regression" — src/lib/parcels/geometry.ts:7 "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — both shared geometry modules are modified and the diff carries no evidence that `npx vitest related` was run, so API-consumer regression on the conversion factor is unproven — run `npx vitest related src/lib/parcels/geometry.ts src/lib/massing/geometry.ts` and attach the result to the change.
+
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json:280 "like debounce_ms it is declared, not yet a registered logic variable with bounds" — continue_wait_ms and entitlement_stale_ms are declared but not registered, the schema gives only `"minimum": 0` with no maximum, and a re-emit carrying the schema's allowed `"UNRESEARCHED"` would flow a string into mobile/src/lib/semiQuestion.ts:17 "export const SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms;" — card says bounds/on_invalid are out of scope, so register both keys with min/max and an on_invalid row in the named follow-up and record the non-number case there.
+
+DEFER severity=MED — Spec 126 P4 "All tunables are data; zero thresholds in src/" — src/lib/massing/geometry.ts:31 "export const SHED_THRESHOLD_SQM = 20;" — the file this change touches still types two thresholds in src and the card's "NOT in scope and left listed" accounting does not name them, so this P4 gap has no owner — add SHED_THRESHOLD_SQM and GARAGE_MAX_SQM to the left-listed set with a follow-up row, or move them here if the card permits.
+
+DEFER severity=LOW — task-378 LEN "the typed metre-to-foot factor (src/lib/parcels/geometry.ts, src/lib/massing/geometry.ts) read from the pinned variable parcels_m_to_ft" — src/tests/fix-tune.logic.test.ts:76 "expect(SEED.parcels_m_to_ft).toMatchObject({ type: 'number', default: 3.28084, min: 3.28084, max: 3.28084 });" — no seed edit for parcels_m_to_ft appears in the diff, so the LEN test depends on a row this change does not show — confirm the row already exists from task-372 or include it; without it the test cannot go green.
+
+DEFER severity=LOW — task-378 D14 "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json:279 "answer": "logic_variables" — the config block now mixes registered logic variables with a key the descriptor's own why calls not a registered logic variable, so the answer field no longer describes the block — set the answer field to match the declared state, or state in the why which key the answer covers.
+
+NIT severity=NIT — task-378 D14 "declare in the surface config" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:429 "The two tunables this SEARCH surface has are now DECLARED here" — the same paragraph now appends entitlement_stale_ms, so the count of two is stale — change two to three or drop the count.
+
+REJECT — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — modifying scripts/surfaces/_schema/surface.schema.json and scripts/surfaces/emit-mobile-surfaces.mjs — card D14 names declaring the value in the surface config, which lives under scripts/surfaces, and no pipeline ingestion or migration file is touched.
+
+MET — task-378 D14 "Continue wait 60 s" — mobile/src/lib/semiQuestion.ts:17 — reads slice.config.continue_wait_ms, descriptor and slice both carry 60000, and the test bars any 60_000 literal.
+MET — task-378 D14 "entitlement stale time 0 s" — mobile/src/hooks/useParcelLookup.ts:161 — "staleTime: searchSlice.config.entitlement_stale_ms", value 0 in descriptor and slice, unchanged.
+MET — task-378 D15 "semi out of the lookup response field_whitelist" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:174 — the list now ends at "unsure" and the test pins semi to the query schema instead.
+MET — task-378 D15 "entitlement contract cites the entitlement hook line" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:327 — surfaces and evidence both point at useParcelLookup.ts:155, resolved from the hook source rather than typed.
+MET — operator ruling task-372 "gate conversion factors are a pinned setting" — src/lib/parcels/geometry.ts:7 — M_TO_FT is read via pinnedSetting parcels_m_to_ft in both geometry modules and no 3.28084 literal remains in either.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  65676ms (65.7s)
+📊 Tokens — total: 26862, input: 13343, output: 13519, reasoning: 12221
+sponse field_whitelist and the remaining 14 fields are pinned unchanged (src/tests/fix-tune.logic.test.ts:65).
+MET — operator ruling 2026-11-20 "We just need complaint code - not building spaggetti code" — src/lib/parcels/geometry.ts:7 — the factor keeps the task-372 reader pattern already used by SQM_TO_SQFT, no new mechanism, no value change.
+MET — §4.3 "API routes must return only the fields the UI needs" — contract_parcels_lookup.descriptor.json:174 — the exposed field list is tightened by one entry and no `SELECT *` or new field is introduced.
+REJECT — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — accused of editing six files under scripts/surfaces/ including the schema and emitter — not a real issue: the pasted task-378 scope names the two descriptor entries and "declare in the surface config", which cannot be done without the schema property and the CONFIG_KEYS list, so the operator ruling authorises these specific edits.
+REJECT — §11 "Unhappy-path test cases listed: 400, 404, 500 (§2.1)" and §2.2 try-catch — accused of shipping route error handling debt — not a real issue: no file under src/app/api/ is modified in this diff; the lookup and entitlement edits are registry descriptors, not handler bodies.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 4
+
+---
+⏱  109714ms (109.7s)
+📊 Tokens — total: 35029, input: 13343, output: 21686, reasoning: 20100

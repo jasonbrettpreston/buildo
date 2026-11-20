@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:20:31.440Z file_sha256=55c20335ef87330dbd73c7e17ade26b29ba7dd721cae94a8c7330bcc7aa4a22c prompt_sha256=3e6115f9ce904d9f0ee68a0bf696021497a65000f7c406090166a538cf7a686d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 12316 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 25002 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 37201 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 49066 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 60782 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 69737 chars, answer 3661 chars, 90s
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json "like debounce_ms it is declared, not yet a registered logic variable with bounds" — the new keys continue_wait_ms and entitlement_stale_ms are only surface-config declarations with a schema `"minimum": 0` and no maximum/on_invalid, so the stale time and wait are not registered logic variables as the clause requires; the change's own descriptor text concedes this — register both with bounds and an on_invalid posture, or carry the owed debt explicitly (task-378 leaves bounds/on_invalid listed, so this is a tracked deferral, not a merge block)
+
+DEFER severity=LOW — task-378 LEN "the typed metre-to-foot factor (src/lib/parcels/geometry.ts, src/lib/massing/geometry.ts) read from the pinned variable parcels_m_to_ft by the task-372 pattern" — src/lib/massing/geometry.ts "const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — the diff reads parcels_m_to_ft but adds no entry to scripts/seeds/logic_variables.json (cannot see that file in the diff); if task-372 did not already register parcels_m_to_ft, pinnedSetting resolves undefined and every massing/parcel length becomes NaN — confirm parcels_m_to_ft exists in the seed at default 3.28084 (the new test asserts it) or add it
+
+MET — D14 continue_wait_ms "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read; values unchanged" — mobile/src/lib/semiQuestion.ts "SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms" and mobile_parcel_semi_question.json "continue_wait_ms": 60000 — declared in descriptor plus generated slice and read from the slice, value still 60000
+
+MET — D14 entitlement_stale_ms "entitlement stale time 0 s" — mobile/src/hooks/useParcelLookup.ts "staleTime: searchSlice.config.entitlement_stale_ms," — stale time declared in mobile_parcel_search config/slice and read from the generated slice, value still 0
+
+MET — D15 "semi out of the lookup response field_whitelist" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json field_whitelist now ends "...basis", "unsure"" — the "semi" entry is removed and the remaining list is unchanged
+
+MET — D15 "entitlement contract cites the entitlement hook line" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json "mobile/src/hooks/useParcelLookup.ts:155" — sharing.surfaces, sharing.evidence and consumers_verified all repointed from the old :96 to the useParcelEntitlement line
+
+MET — Spec 126 P4 "All tunables are data; zero thresholds in src/" and LEN "read from the pinned variable parcels_m_to_ft" — src/lib/parcels/geometry.ts "M_TO_FT: number = pinnedSetting(... 'parcels_m_to_ft')" and src/lib/massing/geometry.ts same — the literal 3.28084 is replaced by the pinned variable in both modules, and the test pins M_TO_FT=3.28084 / formatHeight(10)="10.0 m (32.8 ft)"
+
+REJECT — operator "We just need complaint code - not building spaggetti code" — reading an entitlement tunable from the SEARCH surface slice is not spaghetti — D14 itself prescribes "declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read", so the entitlement read living on mobile_parcel_search is the authorized pattern
+
+REJECT — Spec 126 P4 "zero thresholds in src/" — other literals such as SHED_THRESHOLD_SQM = 20 / GARAGE_MAX_SQM = 60 remain in src/lib/massing/geometry.ts — not raised against this change because task-378 scope names only the metre-to-foot factor and the two phone tunables, and those leftover thresholds are pre-existing and untouched
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 2 (both explicitly left listed by task-378 scope, tracked as DEFER)
+
+---
+⏱  90377ms (90.4s)
+📊 Tokens — total: 32441, input: 13433, output: 19008, reasoning: 17982
+ input: 13433, output: 26079, reasoning: 25078

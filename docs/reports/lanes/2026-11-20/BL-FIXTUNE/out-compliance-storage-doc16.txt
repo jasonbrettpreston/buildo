@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:40:17.171Z file_sha256=63425f5efb870e1b41d7efe81290b68f6b893d17cfad32a7139b873f8f3cb4a8 prompt_sha256=5a6673c2941551bb2b4c5545af3c647c06c507cedaa0a56d24d5ce5884540f37
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtune/lens/in-out-compliance-storage-doc16.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10256 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21846 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32742 chars, answer 0 chars, 45s
+=HIGH — NONE
+DEFER severity=MED — Spec 128 Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an on_invalid posture" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "like debounce_ms it is declared, not yet a registered logic variable." — the new stale time entitlement_stale_ms (and continue_wait_ms) is surface-config declared only, with no registration, bounds or on_invalid posture, so Rule 3 is not met by this change — the ruling does defer it ("NOT in scope and left listed: ... bounds/on_invalid for the new keys"), so close it when that registration lands, do not leave it unlisted
+DEFER severity=MED — task-372 ruling "gate conversion factors are a pinned setting (Spec 136 fe.44, Spec 132 core.8)" — src/lib/massing/geometry.ts "const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — cannot see the seed row registering parcels_m_to_ft in this material (scripts/seeds/logic_variables.json is not in the diff), while the new test asserts it is pinned min=max=3.28084 — confirm the registration exists in the tree; if absent, both geometry modules read a key that is not a pinned setting and the clause is unmet
+DEFER severity=LOW — task-378 D15 "the entitlement contract cites the entitlement hook line" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json ""why": "Exactly one call site reads it today: the app search page line (SRCH.A6, task-320)."" — surfaces, evidence and consumers_verified now cite the hook while the why text still names the search page line, so one descriptor entry disagrees with itself — update the why text to name useParcelEntitlement, or state why both the page and the hook are cited
+MET — task-378 D14 "Continue wait 60 s ... declare in the surface config ... values unchanged" — mobile/src/generated/surfaces/mobile_parcel_semi_question.json ""continue_wait_ms": 60000" and mobile/src/lib/semiQuestion.ts "SEMI_CONTINUE_WAIT_MS: number = slice.config.continue_wait_ms" — declared in config, read from the generated slice, value unchanged at 60000 and left as an open operator item
+MET — task-378 D14 "entitlement stale time 0 s: declare in the surface config the way SEARCH_SLICE.config.debounce_ms is read" — mobile/src/hooks/useParcelLookup.ts "staleTime: searchSlice.config.entitlement_stale_ms" — number typed in the hook is gone, read from the generated slice, value 0 unchanged
+MET — task-378 D15 "semi out of the lookup response field_whitelist" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json field_whitelist ends ""basis", "unsure"" — semi removed and the rest of the list unchanged
+MET — task-378 D15 "entitlement contract cites the entitlement hook line" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json "mobile/src/hooks/useParcelLookup.ts:155" — the call site, surfaces and consumers_verified entries all cite the useParcelEntitlement line
+MET — task-378 "the typed metre-to-foot factor (src/lib/parcels/geometry.ts, src/lib/massing/geometry.ts) read from the pinned variable parcels_m_to_ft by the task-372 pattern" — src/lib/parcels/geometry.ts "export const M_TO_FT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_m_to_ft');" — both named files read the pinned variable through pinnedSetting, no literal
+MET — Spec 126 P4 "All tunables are data; zero thresholds in src/" — src/lib/parcels/geometry.ts and src/lib/massing/geometry.ts no longer carry 3.28084, the value comes from the seed via pinnedSetting
+MET — task-378 "NOT in scope and left listed: phone area-factor copies, the retry count, the two 60_000 stale times, DB mirror migration, bounds/on_invalid for the new keys" — the diff touches none of them, only the two named tunables, the two descriptor entries and the two geometry modules
+REJECT — doc-16 (McStorage policy) P4/P5/P7 read guard, no-fill, stored fields — accused of serving or writing a stale-stamped Layer 3 record — the diff contains no Layer 3 record read or write path, only mobile surface config, descriptor entries and metre-to-foot factors, so no doc-16 storage clause is implicated
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  47342ms (47.3s)
+📊 Tokens — total: 31107, input: 22125, output: 8982, reasoning: 7855
