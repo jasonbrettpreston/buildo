@@ -6,10 +6,11 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-20T16:42:00Z'
+updated_date: '2026-11-20T17:12:00Z'
 labels:
   - McFix
   - McFix Z
+  - McFix V2
 milestone: m-1
 dependencies: []
 type: build

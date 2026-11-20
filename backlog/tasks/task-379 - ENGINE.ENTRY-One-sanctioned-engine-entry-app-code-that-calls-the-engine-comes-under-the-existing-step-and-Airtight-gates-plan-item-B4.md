@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T14:28:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-20T17:12:00Z'
 labels:
   - McFix
   - McFix C
@@ -48,4 +48,6 @@ Operator 2026-11-20 (verbatim): "I agree." to the recommendation "2. Rule that e
 
 <!-- SECTION:NOTES:BEGIN -->
 REWRITE OWED BEFORE LAUNCH (2026-11-20, plan grounder round 2, task-371; recorded in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md "Grounder verdict on the merged plan"): scope items (2) and (4) above (widening the five compute gates; the spec note on widened scope) are REJECTED as not realistic: compute-closure.mjs:56 has no .ts suffix, compute-literals.mjs:289 filters to .js, compute-shape.yml globs are .js only, purity G1-G8 read a step descriptor. Scope that stands: (1) Gate A wired with a closed reach list (task-367); (new) the one-importer lock src/tests/customer-report-compute.logic.test.ts:243 uses Gate A reach forms so a dynamic import is seen; (3) the C1 lock. Known bypasses to state, not close: computed specifier, a hop through another scripts/ file, child process. Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md section C.
+
+McFix V2 review 2026-11-20 (orchestrator recommendation, not a ruling; status not changed by hand): Recommend REDUCED: Gate A (task-367) now holds the one-importer lock, including the hop through scripts/. What remains is only the C1 lock (the engine core closure never reads run_at, descriptor or the clock): one test. The stale Files line must be rewritten before launch.
 <!-- SECTION:NOTES:END -->

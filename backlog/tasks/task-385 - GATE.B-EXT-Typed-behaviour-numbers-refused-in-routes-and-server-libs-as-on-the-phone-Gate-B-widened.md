@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-20T17:12:00Z'
 labels:
   - McFix
   - McFix C
@@ -35,3 +35,9 @@ Plan section C; after task-367 and task-378. Plan grounder: Gate B (scripts/anal
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+McFix V2 review 2026-11-20 (orchestrator recommendation, not a ruling; status not changed by hand): Recommend DROPPED: it extends Gate B, and the operator ruled the gates are accident guards with no further hardening (ruling "a", MORNING-DECISIONS.md:1449). Typed behaviour numbers are now caught by the compliance review with Spec 126 P4 and Spec 128 Rule 3 attached.
+<!-- SECTION:NOTES:END -->

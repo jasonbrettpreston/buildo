@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-20T17:12:00Z'
 labels:
   - McFix
   - McFix E
@@ -35,3 +35,9 @@ Plan section E1; after sections A, B, C. Every governing rule list whole (rule-l
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+McFix V2 review 2026-11-20 (orchestrator recommendation, not a ruling; status not changed by hand): Still relevant and moves AFTER McFix V2: the full pass runs with the definitive list (V2.LIST) and through the fold check, so it is the first whole-increment review with the right documents.
+<!-- SECTION:NOTES:END -->

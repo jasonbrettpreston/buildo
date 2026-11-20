@@ -4,6 +4,7 @@ title: FOLD.TABLE Rule-list rows for generated reports and the settings seed
 status: LATER
 assignee: []
 created_date: '2026-11-20T16:34:00Z'
+updated_date: '2026-11-20T17:12:00Z'
 labels:
   - McFix
   - McFix Z
@@ -32,3 +33,9 @@ Validated before writing by a separate read-only grounder (2026-11-20; verdict r
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+McFix V2 review 2026-11-20 (orchestrator recommendation, not a ruling; status not changed by hand): SUPERSEDED by V2.LIST (its rows are part 2 there). Recommend DROPPED once V2.LIST is on the board.
+<!-- SECTION:NOTES:END -->

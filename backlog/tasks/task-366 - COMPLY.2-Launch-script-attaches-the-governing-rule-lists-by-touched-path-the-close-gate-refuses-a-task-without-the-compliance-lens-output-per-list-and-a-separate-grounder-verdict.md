@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-COMPLY2'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-20T17:12:00Z'
 labels:
   - McFix
   - McFix D
@@ -83,4 +83,6 @@ Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, script
 2026-11-20 BL-COMPLY2: three rows (specs-docs, specs-mobile, specs-web-admin) so a task that edits spec files resolves (task-376); red6.out then green.
 
 2026-11-20 BL-COMPLY2: defect fixed: a --spec launch dropped the generated rule-list block (the given spec replaced the generated one); now a merged copy task.merged.json goes to brief.mjs. One Files reading (rule-lists.mjs filesEntries) used by the launch and check-task-files (inline form accepted). red7.out then green.
+
+McFix V2 review 2026-11-20 (orchestrator recommendation, not a ruling; status not changed by hand): Built; extended by McFix V2 (the same check asked at the fold). Closes with its grounder file under task-405.
 <!-- SECTION:NOTES:END -->
