@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/verifyc/parts/c3.md (model: deepseek-reasoner)
+
+BUG severity=CRIT — pasted hierarchy rule "Operator words rank above any spec text, mock or lane note. Rows marked READING are orchestrator or lane readings, not rulings." — plan C3.4 "RR-0003 (rulings-register.json, source "reading")" — the proposed dated note would set a READING (v8, source "reading") above Spec 100:144, which records operator words "16. yes critical - we should also have a legal not on the landing and search page", so the note is not a supersession this plan may write — Fix: no dated note, put the three placements to the operator under RR-0233 "I really only have expertise in the front-end, design of the app" with the mock frames.
+
+BUG severity=HIGH — Spec 100:144 "before the recent-search chips and every result block, in every state" — v8 search.html:281-282 "<h2 class=\"sec-h\">Recent</h2>" with the legal `<p class="legal">` at :282 — "take the design" moves the legal line below the recent chips in the recents state, which :144 forbids in every state, so the recommendation as written cannot be executed clause-clean — Fix: keep legal above the chips, or obtain operator words naming the change and rewrite :144 in the same commit.
+
+BUG severity=HIGH — Spec 100:146 "MF-58 placement unchanged: under the address input, before results" — plan C3.5 "None of these words fixes the order of legal against reports-left or against the chips." — :146 is a later operator-verbatim confirmation of placement and the plan finds no later operator words, so the recommendation has no authority to move the legal line below results — Fix: hold the built order and record the placement as owed to the operator, not as a note.
+
+BUG severity=HIGH — plan C3.2 "So no spec text places the reports-left line at all." — SearchBinding.tsx:232-237 "pill(s), / ...reportsLeft(s), / legal()," — the recommendation's note would freeze reports-left above the legal line, a placement no pasted clause or operator verbatim names (RR-0314 "yes." answers the notice question per C3.5), which is behaviour the ruling did not name — Fix: carry the reports-left placement as an explicit open question in the same card, not as an accepted order.
+
+DEFER severity=MED — RR-0307 "ensure it is compliant and the proper research is done" — plan C3.3 "The grounder's C3 states only the first" — the plan itself identifies three separate differences from v8 (reports-left above legal, legal below chips, notice before reports-left) while the recommendation names one action, so two differences ship unruled — Fix: enumerate all three with their spec status before any note lands.
+
+DEFER severity=MED — RR-0307 "ensure it is compliant and the proper research is done" — plan C3.7 "UNVERIFIED: the web SearchBinding order (src/components/surfaces/web/SearchBinding.tsx not read)" — the operator's :1062 ruling "the legal sentence shows ONCE on the web search page, in the footer" is a live clause and its target page was not read, so "proper research is done" is not shown — Fix: read the web search surface and state the once-in-footer rule holds before lock.
+
+DEFER severity=MED — operator 2026-11-20 "on the surface it looked like the tasks were being completed but the reality was it was an illusion - just short cuts ... Please verify" — plan C3.6 "Cost of the dated note alone (the recommendation): zero code" plus C3.4 "No operator words naming v8 search.html were found." — a zero-code note whose authority is an operator-absent reading is the shortcut pattern the operator asked to have verified — Fix: replace the note with an operator question and record the UNVERIFIED items as owed.
+
+MET — operator (:1061-1062) "the mobile page keeps its A.10 line under the box, which has no footer" — plan C3.3 — the recommendation leaves the mobile legal line present under the box and does not disturb the once-in-footer web rule.
+MET — RR-0314 "yes." — plan C3.5 — "the line stays directly under the box" for the reports-left line is preserved by the order the recommendation keeps.
+MET — Spec 00 section 14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — plan C3 "add a dated note to each spec" — note-only with no code, so no behaviour lands without its spec text.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 6
+
+---
+⏱  34218ms (34.2s)
+📊 Tokens — total: 19127, input: 13069, output: 6058, reasoning: 5028

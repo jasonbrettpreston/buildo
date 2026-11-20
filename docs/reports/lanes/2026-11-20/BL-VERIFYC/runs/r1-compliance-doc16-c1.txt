@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/verifyc/parts/c1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — 124a R-EH (c) "The pure export `materializeRows(sourceRows, {config, run_at, descriptor, lookups})` returns `{rows: {e<i>}, replace_keys: {e<i>}, matched}`" — report-compute.ts:96 "materializeRows([row], { config, lookups })" — the route's ctx carries two of the four declared keys and the recommendation accepts the gap instead of closing it, so R-EH (c) is unmet as written — fix: pass `run_at` and `descriptor` in the ENTRY ctx (plan alternative 3) before plan-lock, or make the parity check red until they exist.
+
+BUG severity=HIGH — 132 core.10 "Compute reads the `ctx` shape the runner's dispatch for its descriptor actually builds" — report-compute.ts:96 "materializeRows([row], { config, lookups })" against index.js:3472 "compute.materializeRows(batch, { config, run_at: clockNow, descriptor, lookups })" — the plan defers the clause with "core.10 is not yet bound (step is pending: compute_ported)", but the pasted core.10 sentence carries no conversion-stage qualifier, so the ctx-shape departure stands now — fix: state core.10 as a live unmet clause and require the parity check or the four-key ctx, not a deferral.
+
+BUG severity=HIGH — 132 core.9 "The runner owns every read set-up, write, transaction, session GUC (`execution.read_gucs`), catalog probe (`guards.requires` / `ctx.catalog`), calendar date (`ctx.clock` in `pipeline_timezone`) and the verdict." — report-compute.ts:90-93 "three separate pool.query calls ... no snapshot" — the route owns the read set-up (both lookup SELECTs and the batch statement) that core.9 assigns to the runner, and the plan itself records that option 2 "Does not satisfy core.9's ownership sentence" — fix: record core.9 as a dated open departure naming the task that retires it (ST.P1 or alternative 4), or route the reads through the runner's read path.
+
+BUG severity=HIGH — Memory rule (operator 2026-10-30) "no exception paths in step conversion; calcs as data, on/off switches, tests first" — C1.4 "A test that lists run_at and descriptor as allowed omissions is a closed exception list" and "The check needs a decision on run_at/descriptor (add them to the ENTRY's ctx, or declare them unused)" — the recommendation leaves "declare them unused" open, which is exactly the exception path the rule bans — fix: delete the declare-unused branch; the check must require the two keys or fail red.
+
+BUG severity=MED — 124a R-EH (b) "A read table with `role: "lookup"` (`unique_on`, `on_empty` fail|warn) is read ONCE before the loop; a duplicate key or a `"fail"` empty ends the run failed_missing_precondition" and "a `"warn"` empty is named in `matched.lookups_empty`." — report-compute.ts:33-34 "UNITS_SQL, TEXTS_SQL" with "no duplicate check, no on_empty (empty rows pass silently)" — the ENTRY drops the duplicate-key check and the warn-empty naming that DESC declares ("DESC says on_empty "warn" for both (DESC :47-56): the ENTRY drops the warn"), so R-EH (b) is unmet for this caller — fix: run the duplicate unique_on check and surface lookups_empty, or cite a dated clause exception.
+
+DEFER severity=MED — 124a R-EW (ii) "Every converted step's compute lock feeds compute a ctx built by the real dispatch path, or a fixture generated from it, never a hand-built shape" — C1.4 "It proves key-set equality and the lookup columns; it does not prove value equality (run_at)" — the recommended parity check compares key sets through a spy, so at conversion the ENTRY's hand-built two-key ctx is still not fed a dispatch-built ctx — fix: have the check build the ENTRY ctx from the captured runner fixture (config, run_at, descriptor, lookups) and feed it to materializeRows.
+
+MET — 124a R-EW (iii) "Compute-side only: no change to `scripts/lib/step/**`, so no RE-FREEZE and no `lib_fingerprint` move" — C1.4 "a one-batch read-only entry or a ctx builder) in scripts/lib/step/index.js, a RE-FREEZE-class file" — recommendation 2 touches no scripts/lib/step file.
+
+MET — Spec 00 §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — ENTRY header :3-4 and test C6 :222-248 — imports scripts/ code and modifies none.
+
+MET — RR-0271 "LOAD.1 carries the compute half for the app search page through that one slot (no write, no read-first)" — report-compute.ts:96 "materializeRows([row], { config, lookups })" — the compute half is carried and the ENTRY writes nothing.
+
+MET — 132 Table 1b :93 "pending: compute_ported" and x-stages.1 :336 "`red_suite` → `descriptor_only` → `compute_ported` → `runner_wired`" — converted.json:205-209 "stage": "compute_ported" — the change claims no conversion stage, so the ladder is not misdeclared.
+
+REJECT — 132 core.9 "Gate E purity codes PURITY-G0…PURITY-G13 must read zero for a new conversion" — accused of running compute outside Gate E — 132:93 "pending: compute_ported" shows the step is not a conversion, so the gate is not yet due.
+
+REJECT — doc-16 P1 "runs once when a lot is first opened from the search page" — accused of recomputing every request because the ENTRY has "No process cache" — RR-0271 "2. y" approves LOAD.1 as "no write, no read-first", so the "once" lands with ST.P1's record write, not with this compute half.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 5
+
+---
+⏱  81899ms (81.9s)
+📊 Tokens — total: 39396, input: 23298, output: 16098, reasoning: 14674

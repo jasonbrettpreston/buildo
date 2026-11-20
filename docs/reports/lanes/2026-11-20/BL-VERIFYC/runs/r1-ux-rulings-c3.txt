@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/verifyc/parts/c3.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — SearchBinding.tsx:237 "...notices(s)," vs design "v8 state 4 (outside Toronto) :304-308: notice before the reports-left line (:305-306), legal :308" — the person who types an address outside Toronto reads "6 of 10 reports left until 9 Dec 2026" and the estimate disclaimer first, and the notice answering the search they just made only arrives at the foot of the page, after the recent chips — render the outside-Toronto notice directly under the search box as the design draws it, and have the C3 dated note name this order too, since the grounder's C3 states only the reports-left difference.
+
+BUG severity=HIGH — v8 ":277-282: pill :278, reports-left :280 ... chips :281, legal :282" vs operator words Spec 100:144 "the search page shows the legal line ... directly under the address input, before the recent-search chips and every result block, in every state; never only in a modal or collapsible." — read as written, "take the design" moves the repeat visitor's legal line below the Recent heading and their own prior searches, away from the box where the operator ruled it critical — keep the legal line directly under the address input as built, and record in the note that operator words :144 supersede the v8 recents frame, not the reverse.
+
+DEFER severity=MED — mobile_parcel_search.content.json:23 "search.reports_left": "{left} of {allowance} reports left until {reset}" — at zero allowance the person reads a number and a reset date with no drawn next step among the pasted elements (box, reports-left, legal, chips, notices) — design silent beyond RR-0311 "a. show zero left", cannot see a control in the paste, so flag for the operator rather than fix.
+
+DEFER severity=MED — SearchBinding.tsx:232-237 "header(), / pill(s), / ...reportsLeft(s), / legal(), / ...chips(s), / ...notices(s)," — no loading element appears in the pasted render order, so a person who taps search on a slow connection sees nothing change between the tap and the result — the design draws states 1, 2 and 4 only (v8 :264-282, :304-308), so this is design silent and unverified; ask the operator with the mock frames.
+
+DEFER severity=MED — plan text "C3 and C4: take the design and add a dated note to each spec", resting on RR-0003 (rulings-register.json, source reading) and open-questions.md:1098 "Just looking at the small pages - love it!" — the note would date a layout the operator never saw as his authority for where he reads a legal disclaimer (v8 files written 2026-11-12 09:18-09:20, after his words; he reviewed v7.1, open-questions.md:1051-1052 "Small pages v7.1 review") — put the already-owed order question to him first (MORNING-DECISIONS.md:1252 "owed to the operator: ... legal line order") instead of dating a note on his behalf.
+
+REJECT — mobile_parcel_search.content.json:18 "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City." — looks long and heavy above the recent chips — matches v8 :269 and the wording recorded at Spec 100:146, so no person-facing departure.
+
+REJECT — SearchBinding.tsx:235 "...reportsLeft(s)," above legal() — reads like a count of remaining reports before the disclaimer, which looks backwards — matches v8 :267-269 (reports-left :267, legal :269) and the operator's "yes." at :1223 answering "the line stays directly under the box." (:1219), so it serves the person as designed.
+
+VERDICT: FAIL on the person's experience
+States checked: first view fresh install, repeat visit with recent searches, outside-Toronto notice, zero reports left, answered results (legal before result blocks, ok), loading after submit (not drawn), route 500 error (cannot see in paste), offline (cannot see in paste)   Dead ends found: 0 confirmed, 1 unverified (zero left)
+
+---
+⏱  52224ms (52.2s)
+📊 Tokens — total: 16700, input: 8166, output: 8534, reasoning: 7601

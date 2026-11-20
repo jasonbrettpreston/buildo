@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/verifyc/parts/c4.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — maxbldHelp.ts:24 "await WebBrowser.openBrowserAsync(helpUrl(topic, q));" vs design "B10: Help, Terms and Privacy open in an in-app browser sheet with Done" — the person on Android gets a Custom Tab with no Done, only the system back, so the design's stated control is absent on a whole platform — fix: the dated note must name the iOS Done and the Android system-back difference as the accepted departure under B10, not just "in-app sheet".
+
+BUG severity=HIGH — plan C4.4 "openHelp catches a rejecting openBrowserAsync and only logs (maxbldHelp.ts:26-28), so a failure shows the person nothing" — the person taps "Report incorrect address match", nothing opens, no message appears, and they believe the report was sent — fix: show an in-app message with a retry (or fall back to the system browser), or name it in the note as an open item before this lands.
+
+DEFER severity=MED — 126:990 "the app leaves for `MAXBLD_HELP_URL` (`mobile/src/lib/maxbldHelp.ts`, `Linking.openURL`" — this operative sentence keeps telling a reader the person leaves the app while the built app keeps them in a sheet — rationale: the dated note must say this sentence describes pre-task-362 behaviour, or the spec copy contradicts what the person sees.
+
+DEFER severity=MED — plan C4.4 "The note should name B10 and the 2026-11-11 words" — the 2026-11-11 words are only "1-12 yes" and what B10 contains is the orchestrator's record (plan C4.3), so the note would rest the sheet on words the operator never spoke about the help opener — rationale: quote DECISIONS.md:82 and the operator text and record that the opener itself has no operator words, so a later reader can judge.
+
+DEFER severity=LOW — design "(4) **Report incorrect address match** (P35-D18 a)" and no list markup pasted — cannot see the link's accessible name or touch target, so I cannot confirm the control is reachable by a screen reader or tappable at thumb size — rationale: design silent on the markup, no code line given.
+
+REJECT — plan C4.4 "3. Sheet for Help, and check Terms and Privacy on the account/footer paths for the same (B10 names all three). UNVERIFIED" — it looks like three surfaces are only partly done — this matches the design: C4.1 shows terms.tsx:146 and :162 already open TOS_URL and PRIVACY_URL via WebBrowser.openBrowserAsync, so Help is the remaining one.
+
+VERDICT: FAIL on the person's experience
+States checked: address list first view with the help link, tap to open, sheet open on iOS, sheet open on Android, return to the app by Done and by system back, open failure, offline (design silent), the spec and note copy a later reader sees   Dead ends found: 1
+
+---
+⏱  32953ms (33.0s)
+📊 Tokens — total: 12140, input: 6322, output: 5818, reasoning: 5162

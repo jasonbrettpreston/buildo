@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/verifyc/parts/c1.md (model: deepseek-reasoner)
+
+DEFER severity=MED — report-compute.ts:96 "materializeRows([row], { config, lookups })" — the ctx handed to the core is not the object the SQL was built from, because :83 passes `{ ...config, [POPULATION_SETTING]: [String(lot.id)] }` — two configs are live in one request; if the core ever reads the population setting from `c.config` it recomputes against the full list while the rows came from one lot — build one `effectiveConfig` const and pass the same object to both calls, or comment why the override is SQL-only.
+DEFER severity=MED — report-compute.ts:33-34 "two static statements (UNITS_SQL, TEXTS_SQL, report-compute.ts:33-34), no duplicate check, no on_empty (empty rows pass silently)" — the route's hand-built lookup reads drop the descriptor's `on_empty: "warn"` (DESC :47-56) and never read `matched.lookups_empty`, so an empty lookup table produces a page with no bylaw text and no log line — add the empty check plus a `console.error`/logger call on empty and a duplicate-key check on `unique_on`.
+DEFER severity=MED — report-compute.ts:94 "`Number(row.id) !== lot.id`" — the comparison coerces one side only, and strict `!==` never coerces the other, so a string (route param) or bigint lot.id rejects every valid row and the request fails closed — coerce and type both sides through one helper before comparing.
+DEFER severity=MED — pasted Spec 100:123 "a core or query error is the route's existing 500 with no page and no meter" — nothing in the material shows the raw error being logged server-side before the 500, which 00_engineering_standards.md:42-43 makes mandatory — confirm the handler's catch logs `error` (and the failing SQL step) before returning.
+DEFER severity=LOW — report-compute.ts:83 "buildSourceSql(descriptor, { ...config, [POPULATION_SETTING]: [String(lot.id)] }, {})" — the third argument is dead (`_opts`, L3CORE :512 ignores it) and is not the runner's `{ mode }` (index.js:3454), so a future mode read arrives undefined on the route with no test to catch it — pass the mode explicitly or omit the argument rather than an empty object.
+DEFER severity=LOW — L3CORE ":596-599, :620 lookupsFor memoises on object identity" — the cache can never hit from this caller because the route builds fresh `raw`/`config` objects per request, so `makeEnv` over the 7.4 MB Layer 1 input re-runs on every request and the memo is dead for the only production caller — key it on a stable id, or drop the memo for this path and document the per-request build.
+REJECT — report-compute.ts:83 "[POPULATION_SETTING]: [String(lot.id)]" — a one-element array where a scalar lot id looks expected — correct, `settingLiterals` (L3CORE :512-514) consumes setting values as literal lists, so the array is the declared shape.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- n/a (highest are DEFER MED: split config between SQL and core at report-compute.ts:83/96)
+- n/a (lookup reads drop the declared on_empty warn and its log)
+- n/a (single-side coercion in the row guard at report-compute.ts:94)
+
+---
+⏱  48411ms (48.4s)
+📊 Tokens — total: 21196, input: 13044, output: 8152, reasoning: 7361

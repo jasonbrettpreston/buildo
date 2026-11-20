@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/verifyc/parts/c2.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan C2.3 "SearchBinding.tsx:136-138 `search.error` = "Couldn’t reach the lot service. Check your connection and try again."" vs design "LOAD.4 TASK-317 ... exists for exactly "what the customer sees when a lot's report or See details fails to load"" with "LD-1 (the failure sentence ...)" still open at MORNING-DECISIONS.md:1267 — on a server compute error the searcher is told the fault is their own connection and handed a Retry that cannot clear it, because the same route at route.ts:127-155 runs the compute for the search call too — the search-side failure sentence must come from the operator's LD-1 answer in LOAD.4 and must not name the connection for a server fault.
+
+BUG severity=HIGH — plan C2.3 "LS.12 ... direct dependencies TASK-123, TASK-264, TASK-285, TASK-332" vs design "LOAD.4 TASK-317 (Increment 1·B, m-1, status WAITS, lane BL-LOAD4)" — the flip that makes any compute failure reachable does not depend on the task that owns the failure screen, so people can meet the built error frames while the sentence they read is still an open operator question, and "settle it with the storage build" sends it to m-13 instead — bind LOAD.4 or its LD-1 answer into LS.12 rather than to the storage build.
+
+BUG severity=HIGH — plan C2.3 "A deterministic compute error therefore reruns the one-lot compute up to 4 times (measured one-lot compute: median 9.7 s, max 15.9 s" vs design P4 "while it recomputes the report shows the loading screen or the "updating" state" and LOAD.4 open question "LD-2 (give-up time)" — a person can sit on a loading screen that does not change for up to roughly four times 10 to 16 seconds before any error frame appears, with no give-up time settled — settle LD-2's give-up time in LOAD.4 before the flip and bound the loading frame by it.
+
+BUG severity=HIGH — doc-16:33 "if the compute fails it shows the closed not_evaluated:<reason> (lifecycle `error`); never blank, 0 or the old number." vs design silence (no operator words on a failed compute; "LD-1 (the failure sentence ...)" still open at MORNING-DECISIONS.md:1267) — the text that lands with STN1 asks the person to read one of two things, an evaluated-looking page with an undefined <reason> or the lifecycle error frame, and no reason value exists for a compute error, so the copy is unwritten on the branch about to land — before STN1 lands, P4's failed-compute clause must state what the person actually reads, or move that half to L.13 where the closed reasons live.
+
+DEFER severity=MED — plan C2.3 "with Retry and Back (reportScreenState, :395-403)" and, for search, "with a Retry button" — the report error frame names a way back but the search error frame's only described exit is the Retry that cannot succeed, and I cannot see SearchBinding beyond lines 129-150 — confirm the search error frame offers the person a way forward other than Retry.
+
+DEFER severity=LOW — plan C2.3 "If it does not load, every lot fails: the 500 would be systematic, not per lot. UNVERIFIED" — if the core does not load in the runner image, every searcher in the product reads the same connection message and no state tells them the service itself is down — close the image load proof before the switch flips, since the pasted copy has no way to distinguish a whole-service outage from one person's connection.
+
+REJECT — plan C2.3 ""Never blank, 0 or the old number" holds on a 500: the app shows the error text, not a number" — a person seeing an error sentence instead of a stale or zero cost — this matches P4's "never blank, 0 or the old number", so keeping the 500 does not breach that design sentence.
+
+VERDICT: FAIL on the person's experience
+States checked: first view, loading, answered, error, empty, offline, back, repeat visit   Dead ends found: 1
+
+---
+⏱  39869ms (39.9s)
+📊 Tokens — total: 17431, input: 10342, output: 7089, reasoning: 6122

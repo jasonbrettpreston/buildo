@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/verifyc/parts/c4.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — 126:990 "(4) **Report incorrect address match** (P35-D18 a): ... the app leaves for `MAXBLD_HELP_URL` (`mobile/src/lib/maxbldHelp.ts`, `Linking.openURL` ...)"; "mobile/src/lib/maxbldHelp.ts:24" "await WebBrowser.openBrowserAsync(helpUrl(topic, q));"; the governing pasted text still names Linking.openURL and the plan only recommends a note, it drafts none, so the pasted clause is contradicted at plan-lock; fix, write the dated note text into the plan now (M-246, prior text kept, operator verbatim "1-12 yes" 2026-11-11 open-questions.md:1017, record small-pages-v8/DECISIONS.md:82 B10) and land it in the same commit as the opener.
+
+BUG severity=HIGH — Spec 00 section 14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit"; "126_maxbld_surface_standard.md:990 (dated note 2026-11-12, MF-46 follow-up)"; the opener change already shipped (task-362, aea5883ad) with no spec edit, and the plan's only grep is for sheet terms, "grep -rn -i "in-app browser|in-app sheet|browser sheet|openBrowserAsync|B10" over docs/specs", which never enumerates docs citing Linking.openURL or maxbldHelp, so the same-commit rule cannot be shown met; fix, grep the opener text and module path across docs/specs, backlog and runbooks and name each file the note's commit updates.
+
+BUG severity=HIGH — small-pages-v8/DECISIONS.md:82 "B10: Help, Terms and Privacy open in an in-app browser sheet with Done"; "on Android a Custom Tab has no Done button and the system back closes it (task-362 close-out)"; the "with Done" half of the operator-backed clause is unmet on Android and the plan records the gap without proposing anything; fix, either a sheet that carries its own Done/dismiss control or a dated note that narrows the Done affordance to iOS and names the Android dismissal.
+
+BUG severity=MED — small-pages-v8/DECISIONS.md:82 "B10: Help, Terms and Privacy open in an in-app browser sheet with Done"; "3. Sheet for Help, and check Terms and Privacy on the account/footer paths for the same (B10 names all three). UNVERIFIED which screens carry those links today."; the clause names all three surfaces but the plan leaves Terms and Privacy unverified while its own C4.1 already quotes "mobile/app/(onboarding)/terms.tsx:146 and :162 (TOS_URL, PRIVACY_URL via WebBrowser.openBrowserAsync)", and row A6 of 11b.7 lists "support, Terms, Privacy" on the account screen, so one of B10's three is unattested; fix, state per-screen status (A6 account, web footer) instead of UNVERIFIED.
+
+DEFER severity=MED — 126:990 "gains the content key `list.report` and the action `open_help {topic: address_match, q: {derived: input}}` on both targets (FE-07 parity)"; NONE; the plan evidences only the action wiring (index.tsx:117, disambiguate.tsx:51) and no content file carrying `list.report`, against 11b.2 "every user-visible string comes from a content file"; rationale, cannot see the label source, name the content file and key in the plan.
+
+DEFER severity=LOW — 126:990 "the web renders a real link to `/help#topic=address_match&q=...`"; NONE; the plan shows no web-side evidence and the note will be written into the sentence that carries both halves; rationale, the opener change is app-only, but the note must state prior text kept so the web half and the item (3) fragment rule survive the edit.
+
+DEFER severity=LOW — 11b.1 "Library imports are allowed only in the declared binding modules. A wrapper component anywhere else (`src/app`, `mobile/app`, `src/lib`, the vendor folder) fails."; "mobile/src/lib/maxbldHelp.ts:24" "await WebBrowser.openBrowserAsync(helpUrl(topic, q));"; a package import now sits in mobile/src/lib with no `libraries.mobile` entry or named exemption in the plan; rationale, expo-web-browser is not a 11b.4 library and four app files already import it (MF-48 D-3 precedent), so likely outside the clause, confirm rather than assume.
+
+MET — DECISIONS.md:82 B10 "in-app browser sheet" — mobile/src/lib/maxbldHelp.ts:24 — the built app opens the in-app sheet, matching B10 rather than the system browser.
+
+MET — 126:990 "on both targets (FE-07 parity)" — mobile/app/(app)/parcel-tool/index.tsx:117 and disambiguate.tsx:51 — both targets wire `open_help: openHelp`.
+
+MET — operator 2026-11-20 "the reality was it was an illusion ... Please verify" — plan C4.5 "Opened: maxbldHelp.ts whole; 126:990; DECISIONS.md:76-84 and :116-120" — the verification was performed and its gaps recorded rather than asserted closed.
+
+MET — operator 2026-11-11 "1-12 yes" as the basis for the sheet — open-questions.md:1017 quoted in C4.3 — the plan grounds the sheet in operator words and flags the orchestrator's reading, not in the v8 design alone.
+
+REJECT — 126:990 "(`mobile/src/lib/maxbldHelp.ts`, `Linking.openURL` ...)" — the change is accused of departing from the governing spec text — because the pasted ruling block states operator words rank above any spec text, mock or lane note, and records operator words 2026-11-11 "1-12 yes" with B10 "in an in-app browser sheet", so the sheet is the higher-ranked source and the note, not a revert, is the compliant repair.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+
+---
+⏱  54586ms (54.6s)
+📊 Tokens — total: 30215, input: 20143, output: 10072, reasoning: 8677

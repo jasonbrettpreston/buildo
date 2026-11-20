@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/verifyc/parts/c2.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — operator ruling MORNING-DECISIONS.md:704 "This needs to be updated and conflicting rulings removed." — "C2.5 alternative 1 ... Costs: leaves two dated notes contradicting; P4 stays unbound by the build." — the recommended option knowingly leaves two contradicting texts live, which is the one thing the cited ruling forbids — amend Spec 100:123 or P4's failure clause in the same commit that lands STN1, so only one text survives.
+
+BUG severity=HIGH — RR-0178 MORNING-DECISIONS.md:789 "1. it has to happen now - read the objectives" — "So the recommendation's "settle it with the storage build" skips the 1·B task that already owns the on-screen answer." — the recommendation defers to m-13 an operator-ruled now-item whose owner (LOAD.4, TASK-317, m-1) already exists — put the LD-1 failure sentence decision inside LOAD.4 and keep the 500 only as the route shape, not as the answer to what the phone draws.
+
+BUG severity=HIGH — Spec 00 engineering_standards.md §14 ":463" "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — "leaves Spec 100:123 and the Spec 126 A-126 note contradicting each other from the day STN1 lands." — the behavior clause (failed compute draws a closed reason) lands in Spec 126 without the corresponding Spec 100:123 edit in the same commit — edit docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:123 in the STN1 commit.
+
+BUG severity=HIGH — Spec 00 §5.2 table row "`*.infra.test.ts`" mandated "New API route / DB mutation (unhappy path first, §5.3)" — "Test C4 locks it: src/tests/customer-report-compute.logic.test.ts:192-210" — the only cited lock is a logic test proving the pure compute rejects, no infra test asserts the route's 500 envelope with no page and no meter — add an `.infra.test.ts` unhappy-path case calling GET /api/parcels/lookup with a compute that throws and asserting 500, `{error}`, no page, no meter.
+
+BUG severity=HIGH — operator MORNING-DECISIONS.md:1296 "I dont want to be bound with stale McStorage" — "The Spec 69a landed row on that branch contains P4 verbatim" — landing P4 as a landed policy row while the built route returns the 500 binds the operator to a clause the build does not satisfy, exactly the stale binding he rejected — hold P4's failure clause out of the landed rows or mark it explicitly unbuilt until L.13/TASK-264 ships, with the Lock line naming that dependency, not only task-272.
+
+DEFER severity=MED — Spec 00 §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — "[Lock: OWED task-272 (ST.P2: stale-stamp read guard, red first with an injected older stamp) and CHK.5 check (c), the stale-stamp test]" — the plan reports a landed clause whose lock is still owed and proposes no action on that gap — keep the row landed only as a locked-pending marker and name in the plan who runs the red test before STN1 merges.
+
+MET — Spec 00 §2.2 "The catch block MUST return { error: 'Human-readable message' } with an appropriate HTTP status (e.g., 500)" — route.ts:219-220 "return internalError(cause, { route: 'GET /api/parcels/lookup' })" — the recommended option keeps the standard shape and the plan confirms the throw exits before the meter chain.
+
+MET — operator 2026-11-20 "on the surface it looked like the tasks were being completed but the reality was it was an illusion ... Please verify" — "UNVERIFIED: the platform timeout; the image load proof; Spec 128 text; whether the web report render (not built) would draw a different failure frame." — the plan states what it did not open rather than asserting it, so the verification request is honored rather than papered over.
+
+REJECT — McStorage P4 doc-16:33 "if the compute fails it shows the closed not_evaluated:<reason>" — the recommendation is accused of shipping against a bound clause today — doc-16:9 still reads "McStorage policy v2 (DRAFT for the operator; nothing applied to any repo file)" on origin, and the plan itself establishes the STN1 branch is not an ancestor of origin, so nothing bound is violated as of today.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 5
+
+---
+⏱  32088ms (32.1s)
+📊 Tokens — total: 28080, input: 22209, output: 5871, reasoning: 4810

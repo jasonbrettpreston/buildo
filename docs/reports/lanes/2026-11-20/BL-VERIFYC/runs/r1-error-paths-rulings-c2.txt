@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/verifyc/parts/c2.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — useParcelLookup.ts:53-61 "shouldRetryParcelLookup retries any 5xx while failureCount < 3" — a deterministic compute failure (same lot, same core error) is retried as if transient, so one open runs the 9.7-15.9 s one-lot compute up to 4 times ("max 15.9 s", MORNING-DECISIONS.md:1259) before any error frame shows, roughly a minute of server work per attempt for a guaranteed failure — retry only transport errors and 502/503/504, or set 5xx retries to zero and show the error frame on the first failure.
+
+BUG severity=HIGH — "UNVERIFIED: react-query's default backoff delay between the tries; the platform request timeout." — nothing bounds the wait relative to the compute: with up to 4 sequential computes and no measured platform timeout, the request can be killed at the gateway before route.ts:219-220 `return internalError(cause, { route: 'GET /api/parcels/lookup' })` ever runs, so the raw error is never logged server-side (standard §2.2 requires it) and the person gets a transport failure, not the route's error body — measure the platform timeout, cap one attempt's compute inside it, and return a bounded 503 with logged cause when the compute cannot finish.
+
+BUG severity=MED — SearchBinding.tsx:136-138 "Couldn’t reach the lot service. Check your connection and try again." — a server compute 500 is reported to the person as a connectivity problem, which invites a manual Retry into the same deterministic failure and multiplies the retry cost above; state left consistent (no number shown), but the re-submit path is misdirected — show a server-error sentence distinct from the connectivity one, with one Retry and no automatic 5xx retry.
+
+BUG severity=MED — MORNING-DECISIONS.md:1267-1270 "LD-2 (give-up time)" — the give-up bound for a failed load is an open operator question, and the recommendation's "settle it with the storage build" pushes the on-screen failure answer past LOAD.4, so the 1·B failure path has no defined time-out or give-up time at all — keep LOAD.4 as the owner of the give-up time and land a bound (max attempts plus frame) with the 500 behaviour rather than deferring it.
+
+BUG severity=MED — route.ts:181-188 "the meter chain (route.ts:181-188) runs after the page build and a throw exits before it" — the failure path is safe, but the duplicate path is unnamed: a search call and a report call for the same lot, or a person pressing Retry on a page that did build, each reach the meter chain, and no dedup key (lot id, stamp, request id) is named anywhere in the pasted material (cannot see route.ts:181-188 body, so I cannot confirm it counts once) — name the meter's key explicitly and confirm a repeat for the same lot and stamp is a no-op.
+
+DEFER severity=MED — doc-16:33 "a record whose stamp differs from the current stamp is never served and is recomputed" — the deferred storage build is where the recompute write lands, and P4 names no compare-and-set key, so two concurrent readers seeing the same stale stamp both recompute and both write; the lock is OWED to task-272 (ST.P2) — make the write conditional on the observed stamp so the second writer is a no-op.
+
+DEFER severity=MED — doc-16:33 "if the compute fails it shows the closed not_evaluated:<reason>" — if the storage build lands this shape as a 200, a systematic failure (for example a core that does not load in the runner image, Dockerfile:29-33) reads as "not evaluated" for every lot, with no meter charge and no page error, so an outage is indistinguishable from a lot that genuinely cannot be evaluated — keep the 500 as the recommendation says, or require a counted reason metric before any 200 not_evaluated failure shape is built.
+
+REJECT — report-compute.ts / route.ts:181 "hasEvaluatedOption false -> meter not_evaluated, route.ts:181" — a failed compute could look like a chargeable page — it is handled: the meter is not reached on a throw and a not_evaluated page charges nothing, so the failure path is fail-closed on the count.
+
+VERDICT: FAIL on error-path safety
+Paths walked: network failure, 5xx compute error (search and report), empty/not-built gate, automatic retry, manual retry, platform time-out, duplicate request and meter count, deferred recompute write, degrade on dark gate and image load   Unguarded: 2
+
+---
+⏱  41703ms (41.7s)
+📊 Tokens — total: 17244, input: 10343, output: 6901, reasoning: 5853

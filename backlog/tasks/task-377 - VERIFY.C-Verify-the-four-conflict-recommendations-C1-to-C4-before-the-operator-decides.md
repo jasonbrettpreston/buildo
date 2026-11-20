@@ -7,10 +7,14 @@ status: RUNNING
 assignee:
   - '@lane-BL-VERIFYC'
 created_date: '2026-11-20T13:38:00Z'
-updated_date: '2026-11-20T13:39:00Z'
+updated_date: '2026-11-20T13:58:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md
+  - docs/reports/lanes/2026-11-20/BL-VERIFYC/FINDINGS.md
+  - docs/reports/lanes/2026-11-20/BL-VERIFYC/REPORT.md
 type: build
 ordinal: 77012
 ---
@@ -43,8 +47,16 @@ Operator 2026-11-20 (verbatim): "Please verify" on the orchestrator recommendati
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. AC1: per conflict C1-C4 gather sources verbatim file:line (rule lists, register, MORNING-DECISIONS, increments docs, task texts, code); check assumed facts (operator approval of v8 page; later rulings; who wrote Spec 100:123; what phone shows; C1 field-by-field ctx list). 2. AC2: run lens set (compliance per rule list, ux, error-paths, code-review as templates exist) with rule lists whole and rulings pasted; findings by id. 3. AC3: no verdict by lane; grounder owed. 4. AC4: docs commit only, nothing built.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-VERIFYC, worktree /Users/brettpreston_macmini/Buildo-wt-verifyc, branch wf1/inc1b-verifyc), RR-0240
+
+2026-11-20 lane BL-VERIFYC: evidence delivered, no verdict. VERIFY.md (C1 to C4 sources, assumed facts checked, alternatives, experience), FINDINGS.md (F-001 to F-102 by lens, untriaged), REPORT.md (four plain lines, C1 field list, UNVERIFIED). Task left RUNNING: grounder owed (AC3 not met by this lane; AC1 and AC2 evidence is in the files, to be checked by the grounder).
 <!-- SECTION:NOTES:END -->

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/verifyc/parts/c4.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126:990 "the app leaves for `MAXBLD_HELP_URL` (`mobile/src/lib/maxbldHelp.ts`, `Linking.openURL`" — mobile/src/lib/maxbldHelp.ts:24 "await WebBrowser.openBrowserAsync(helpUrl(topic, q));" — the governing contract text still names Linking.openURL while the code opens the sheet, and the plan under review only recommends "add the dated note" with no note text and no step that lands one — add a plan step carrying the exact note text to append at 126:990 (naming B10, DECISIONS.md:82 and open-questions.md:1017 "1-12 yes") and the commit that lands it.
+
+BUG severity=HIGH — 00_engineering_standards.md:463 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — C4.2 "I grepped MF-46/*.md and MF-35/*.md for "Linking|in-app|browser sheet|openURL"" — the cite search covers two ruling directories only, so the specs and runbooks that cite the opener are neither enumerated nor updated in the note's commit — add a step that greps docs/, runbooks and backlog for MAXBLD_HELP_URL, maxbldHelp and "Report incorrect address match" and updates every cite in the same commit as the note.
+
+DEFER severity=MED — DECISIONS.md:82 "B10: Help, Terms and Privacy open in an in-app browser sheet with Done" — C4.4 "UNVERIFIED which screens carry those links today" — the ruled clause names three surfaces, the plan closes only Help, and this contradicts its own C4.1 "Linking.openURL is no longer called anywhere under mobile/src or mobile/app" — add the step that lists every Terms and Privacy entry point and record the result instead of leaving it UNVERIFIED.
+
+DEFER severity=MED — DECISIONS.md:82 "Help, Terms and Privacy open in an in-app browser sheet with Done" — C4.4 "on Android a Custom Tab has no Done button and the system back closes it (task-362 close-out)" — the ruled text promises Done, the built Android path has none, and no step records it — have the dated note state the Android deviation explicitly, or add the close affordance.
+
+DEFER severity=MED — Spec 126:990 operator words "accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable" — C4.4 "openHelp catches a rejecting openBrowserAsync and only logs (maxbldHelp.ts:26-28), so a failure shows the person nothing" — the swallowed error is behaviour no pasted clause names and it defeats the "observable" the words require, with no plan step — add a step that makes a failed open visible (telemetry or a shown message) or records the acceptance with the operator.
+
+DEFER severity=LOW — open-questions.md:1017 "... Let's make those changes . 1-12 yes" — C4.3 "the reading of what B10 contains is the orchestrator's record; the item text is DECISIONS.md:82" — the recommendation rests on a reading of which B-list item the "yes" answered, and C4.5 still holds "UNVERIFIED: whether the operator saw the help.html and terms-privacy.html sheet frames before saying "1-12 yes"" — quote DECISIONS.md:82 verbatim inside the note so the answered item is visible, and close or carry that UNVERIFIED line in the note.
+
+MET — DECISIONS.md:82 "Help, Terms and Privacy open in an in-app browser sheet with Done" — mobile/src/lib/maxbldHelp.ts:24 — the built Help path is the in-app sheet the ruling names, not the system browser.
+MET — pasted rule "Operator words rank above any spec text, mock or lane note" — C4.3 — the plan anchors the sheet on the 2026-11-11 operator answer rather than on the task's lane note.
+MET — DECISIONS.md:82 Terms in an in-app browser sheet — mobile/app/(onboarding)/terms.tsx:146 — Terms already opens through WebBrowser.openBrowserAsync, matching the ruled surface.
+
+REJECT — Spec 136 "A new ruling is a new row in Spec 135, never a line here" — the change rests the sheet on a dated note in Spec 126 instead of a new register row — not a real issue: the operator-accepted disposition pasted for this lens is "C3 and C4: take the design and add a dated note to each spec", and that 136 line constrains Spec 136 itself, not Spec 126.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 5
+
+---
+⏱  54042ms (54.0s)
+📊 Tokens — total: 21261, input: 11225, output: 10036, reasoning: 8993

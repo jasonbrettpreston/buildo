@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/verifyc/parts/c2.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — A-126 (doc-16 dated note 2026-11-18) "a failed compute is the lifecycle `error` with a closed not_evaluated:<reason>; none of these is a status and none is stored." — ReportBinding.tsx:402 "lifecycle: q.isError ? 'error' : 'loading'" — keeping the 500 draws the generic frame "Could not load this report. Try again." (report-presentation.json:89) and no closed not_evaluated:<reason>, so A-126, which the plan says STN1 lands into Spec 126, is unmet the day STN1 lands — name and land the amendment before STN1 (C2 option 4) or return the closed reason from the route.
+BUG severity=HIGH — operator ruling MORNING-DECISIONS.md:704 "This needs to be updated and conflicting rulings removed." — doc-16:33 "if the compute fails it shows the closed not_evaluated:<reason> (lifecycle `error`); never blank, 0 or the old number." — the recommendation "keep the server error for now" names no SUPERSEDED marking or amendment, so P4's failure clause and Spec 100:123 "a core or query error is the route's existing 500 with no page and no meter." both stay in force, so "conflicting rulings removed" is unmet — put the amendment in the recommendation itself (option 3 or 4) so one text survives with a dated SUPERSEDED row.
+BUG severity=MED — operator 2026-11-20 MORNING-DECISIONS.md:1297 "yes to McStorage and 1,2,3 yes as recommended" with its item at :1298 "(3) task-90 (land the McStorage policy v2 amendments) ... pulled into Increment 1·B now" — C2.4 "The storage build (ST.P1 TASK-265 record writer, ST.P2 TASK-272 stamp check) is milestone m-13 (Launch gate [L])" — settling the failure clause with the storage build places it after 1·B, not "now", so the landed clause lands contradicted — settle the text inside 1·B (STN1) and leave only the route behavior to the storage build.
+BUG severity=MED — 00_engineering_standards.md:463 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — NONE — the recommendation defers reconciliation, so Spec 100:123 and the STN1-landed Spec 126 A-126 note will disagree in separate commits — land the two spec edits in one commit and cite both in it.
+DEFER severity=MED — operator ruling MORNING-DECISIONS.md:789 "2. Add it as a task using the othr mini pages as a template" — plan "LOAD.4 TASK-317 (Increment 1·B, m-1, status WAITS, lane BL-LOAD4)" — the recommendation routes the on-screen failure answer around the task the operator created and its open questions LD-1 to LD-5 (:1267-1270) — ask LD-1 inside LOAD.4 and record the answer against P4 — bounded, nothing is customer-visible until LS.12 flips.
+DEFER severity=LOW — A-126 "a failed compute is the lifecycle `error` with a closed not_evaluated:<reason>" — plan C2.5 "none exists for "compute error"; doc-16:33 names "<reason>" without a value" — the clause is unsatisfiable as written because no closed reason for a compute failure is named anywhere pasted — add the reason value to the closed list in the same amendment, or delete the closed-reason half of the clause — no code depends on it while the 500 stands.
+REJECT — Spec 100:123 — accused of being the operator-approved failure text that outranks P4 — the operator words are "1. once  -approved 2. y" (MORNING-DECISIONS.md:1061), which do not mention a failure, and the sentence arrived in commit b5d77c14b under the build lane.
+REJECT — P4 today — accused of binding the origin-tree behavior now — doc-16:9 "McStorage policy v2 (DRAFT for the operator; nothing applied to any repo file)" and MAXBLD_WEB_LIVE false (maxbld-web.ts:19) mean no compute failure is reachable before LS.12 flips.
+
+MET — Spec 100:123 — route.ts:138-140 — "A compute error throws to the catch below (500): no page, no meter." the recommendation keeps exactly this.
+MET — Spec 00 §2.2 (00_engineering_standards.md:42-43) — route.ts:219-220 — "return internalError(cause, { route: 'GET /api/parcels/lookup' })" the kept 500 is the mandated try-catch shape with the raw error logged server-side only.
+MET — P4 "never blank, 0 or the old number" — ReportBinding.tsx:402 — the throw exits before the meter chain (route.ts:181-188) and the error frame shows text, never a number.
+MET — P4 "while it recomputes the report shows the loading screen or the "updating" state" — ReportBinding.tsx:402 — "'loading'" is the unchanged branch and no new state is added.
+MET — A-126 "the closed status list is unchanged" — NONE — the recommendation adds no status and stores nothing.
+MET — A-ST5 "A stored record whose stamp differs from the current stamp is never served; it is recomputed." — NONE — the C2 recommendation changes no read path.
+MET — operator MORNING-DECISIONS.md:789 — plan "LOAD.4 TASK-317 ... exists for exactly" — the task the ruling asked for exists; only the vehicle choice is routed around (finding above).
+MET — operator MORNING-DECISIONS.md:1061 "1. once  -approved 2. y" — Spec 100:123 note retained — the LOAD.1 compute half the operator approved is unchanged by the recommendation.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 6
+
+---
+⏱  49852ms (49.9s)
+📊 Tokens — total: 29941, input: 20580, output: 9361, reasoning: 7986
