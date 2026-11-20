@@ -240,17 +240,16 @@ describe('MF-58 the legal line on the search page (ruling 2026-11-10 items 16 an
   it('the content key search.legal holds the ruled text verbatim', () => {
     expect(SEARCH_SLICE.content['search.legal']).toBe(LEGAL_TEXT);
   });
-  it('in every golden and every named case the line is the column child right after the address input, before any result block', () => {
+  // Dated 2026-11-20 (task-389; operator, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b), "5. Do the legal-line move (389) now as a small code change"; v8 search.html:267-269): the legal line is the LAST
+  // block of the column, after the chips, notices, address list and the tail; it replaces the 2026-11-10 placement under the input. The reports-left line stays right after the input.
+  it('in every golden and every named case the line is the last column child, drawn once', () => {
     for (const k of [...Object.values(goldens).map((g) => g.situation as string), ...NAMED_CASES]) {
       const t = searchProps(situations[k] as SearchSituation);
       const ks = keys(t);
-      // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): where the reports-left line is drawn (SRCH.A6, ace05ccee; small-pages-v8 search.html:267-269)
-      // it sits between the address input and the legal line; the legal line is still the next block after it, before any result block. Where it is not
-      // drawn the legal line is the column child right after the input, as before.
-      const after = ks.slice(ks.indexOf('pill') + 1);
-      const owed = ks.includes('reports-left') ? ['reports-left', 'legal'] : ['legal'];
-      expect([k, after.slice(0, owed.length)]).toEqual([k, owed]);
-      expect([k, ks.includes('reports-left')]).toEqual([k, k === 'reports_left']); // only the reports_left situation carries an entitlement (review r1 fold: the expectation does not follow the tree)
+      expect([k, ks.filter((x) => x === 'legal').length]).toEqual([k, 1]);
+      expect([k, ks[ks.length - 1]]).toEqual([k, 'legal']);
+      expect([k, ks.includes('reports-left')]).toEqual([k, k === 'reports_left']); // only the reports_left situation carries an entitlement
+      if (ks.includes('reports-left')) expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'reports-left']);
       const legal = column(t).children.find((c) => isNode(c) && c.props.key === 'legal') as PropsNode;
       expect([k, legal.component, legal.props.testID, legal.children]).toEqual([k, 'Text', 'parcel-search-legal', [{ content: 'search.legal' }]]);
     }
