@@ -29,7 +29,7 @@ Do not duplicate another lens. Quote file:line or the pasted line; a finding wit
 
 I am reviewing a change against ONE question only: What happens on each error, empty, retry, time-out and double-submit path, and does the change degrade safely and stay idempotent?
 
-**Plan file (plan mode only; in review mode this block reads {{PLAN}} and the material is the File block of the prompt):**
+**Plan file (plan mode only; in review mode this block holds the material under review, the file named on the command line):**
 ```
 {{PLAN}}
 ```

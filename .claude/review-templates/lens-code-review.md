@@ -29,7 +29,7 @@ Do not duplicate another lens. Quote file:line or the pasted line; a finding wit
 
 I am reviewing a change against ONE question only: Is the code correct, typed, are its errors handled and logged, and is it free of dead code?
 
-**Plan file (plan mode only; in review mode this block reads {{PLAN}} and the material is the File block of the prompt):**
+**Plan file (plan mode only; in review mode this block holds the material under review, the file named on the command line):**
 ```
 {{PLAN}}
 ```
