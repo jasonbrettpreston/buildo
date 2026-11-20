@@ -169,6 +169,8 @@ describe('V2.LIST round 7: golden snapshot files are exempt from the review mate
     const unnamed = (globs: string[], comment: string) => globs.filter((g) => !CHECKS.some((c) => new RegExp(esc(g) + '[^\\n]*proved by[^\\n]*' + esc(c)).test(comment)));
     expect(unnamed(golden, text)).toEqual([]);
     expect(unnamed([...golden, 'src/tests/fixtures/zzz/*.json'], text)).toEqual(['src/tests/fixtures/zzz/*.json']);
+  });
+});
 
 // task-384 STD.REPORT-OWN part two (operator 2026-11-20, MORNING-DECISIONS.md:1421-1422, item 3 "bring them under the existing checks"): the web report renderer is under the
 // McFrontend frontend list (mcbylaws/protected-paths.json), so the surfaces row of the table attaches Spec 136 section 2, 126, 127, 128 and 135 to its reviewers.
