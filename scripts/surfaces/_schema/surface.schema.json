@@ -2683,98 +2683,83 @@
               "minimum": 0
             }
           ]
-        },
-        "bounds": {
-          "x-draft-optional": true,
-          "description": "FIX.CONFIG-BOUNDS (task-395; Spec 128 Rule 3; operator 2026-11-20, verbatim: \"Let the grounder resolve them all as long as the result is compliant\", MORNING-DECISIONS.md:1476; the grounder chose option (b)): the bounds and the failure behaviour of every number this config holds, one entry per key. A number with no entry is refused by the rules below. min and max are inclusive; fail = a value outside them is an error, clamp = it reads as the nearest bound.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "min",
-              "max",
-              "on_invalid"
-            ],
-            "properties": {
-              "min": {
-                "type": "number"
-              },
-              "max": {
-                "type": "number"
-              },
-              "on_invalid": {
-                "oneOf": [
-                  {
-                    "const": "fail",
-                    "description": "A value outside the bounds is an error that names the key."
-                  },
-                  {
-                    "const": "clamp",
-                    "description": "A value outside the bounds reads as the nearest bound."
-                  }
-                ]
-              },
-              "why": {
-                "type": "string"
-              }
-            }
-          }
         }
       },
       "allOf": [
         {
-          "description": "FIX.CONFIG-BOUNDS (task-395): when debounce_ms holds a number, config.bounds holds its min, max and on_invalid.",
+          "description": "FIX.CONFIG-BOUNDS (task-395; Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): when debounce_ms holds a number above 0 (0 states that a binding module has no such setting; the SEARCH profile requires the key and has no none value), config.logic_variables names its registered logic variable maxbld_page_debounce_ms with min, max and on_invalid; the generator resolves the slice number from that seed row.",
           "if": {
             "required": [
               "debounce_ms"
             ],
             "properties": {
               "debounce_ms": {
-                "type": "integer"
+                "type": "integer",
+                "minimum": 1
               }
             }
           },
           "then": {
             "required": [
-              "bounds"
+              "logic_variables"
             ],
             "properties": {
-              "bounds": {
-                "required": [
-                  "debounce_ms"
-                ]
+              "logic_variables": {
+                "contains": {
+                  "required": [
+                    "name",
+                    "min",
+                    "max",
+                    "on_invalid"
+                  ],
+                  "properties": {
+                    "name": {
+                      "const": "maxbld_page_debounce_ms"
+                    }
+                  }
+                }
               }
             }
           }
         },
         {
-          "description": "FIX.CONFIG-BOUNDS (task-395): when min_query_len holds a number, config.bounds holds its min, max and on_invalid.",
+          "description": "FIX.CONFIG-BOUNDS (task-395; Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): when min_query_len holds a number above 0 (0 states that a binding module has no such setting; the SEARCH profile requires the key and has no none value), config.logic_variables names its registered logic variable maxbld_page_min_query_len with min, max and on_invalid; the generator resolves the slice number from that seed row.",
           "if": {
             "required": [
               "min_query_len"
             ],
             "properties": {
               "min_query_len": {
-                "type": "integer"
+                "type": "integer",
+                "minimum": 1
               }
             }
           },
           "then": {
             "required": [
-              "bounds"
+              "logic_variables"
             ],
             "properties": {
-              "bounds": {
-                "required": [
-                  "min_query_len"
-                ]
+              "logic_variables": {
+                "contains": {
+                  "required": [
+                    "name",
+                    "min",
+                    "max",
+                    "on_invalid"
+                  ],
+                  "properties": {
+                    "name": {
+                      "const": "maxbld_page_min_query_len"
+                    }
+                  }
+                }
               }
             }
           }
         },
         {
-          "description": "FIX.CONFIG-BOUNDS (task-395): when continue_wait_ms holds a number, config.bounds holds its min, max and on_invalid.",
+          "description": "FIX.CONFIG-BOUNDS (task-395; Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): when continue_wait_ms holds a number, config.logic_variables names its registered logic variable maxbld_page_continue_wait_ms with min, max and on_invalid; the generator resolves the slice number from that seed row.",
           "if": {
             "required": [
               "continue_wait_ms"
@@ -2787,19 +2772,29 @@
           },
           "then": {
             "required": [
-              "bounds"
+              "logic_variables"
             ],
             "properties": {
-              "bounds": {
-                "required": [
-                  "continue_wait_ms"
-                ]
+              "logic_variables": {
+                "contains": {
+                  "required": [
+                    "name",
+                    "min",
+                    "max",
+                    "on_invalid"
+                  ],
+                  "properties": {
+                    "name": {
+                      "const": "maxbld_page_continue_wait_ms"
+                    }
+                  }
+                }
               }
             }
           }
         },
         {
-          "description": "FIX.CONFIG-BOUNDS (task-395): when entitlement_stale_ms holds a number, config.bounds holds its min, max and on_invalid.",
+          "description": "FIX.CONFIG-BOUNDS (task-395; Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): when entitlement_stale_ms holds a number, config.logic_variables names its registered logic variable maxbld_page_entitlement_stale_ms with min, max and on_invalid; the generator resolves the slice number from that seed row.",
           "if": {
             "required": [
               "entitlement_stale_ms"
@@ -2812,19 +2807,29 @@
           },
           "then": {
             "required": [
-              "bounds"
+              "logic_variables"
             ],
             "properties": {
-              "bounds": {
-                "required": [
-                  "entitlement_stale_ms"
-                ]
+              "logic_variables": {
+                "contains": {
+                  "required": [
+                    "name",
+                    "min",
+                    "max",
+                    "on_invalid"
+                  ],
+                  "properties": {
+                    "name": {
+                      "const": "maxbld_page_entitlement_stale_ms"
+                    }
+                  }
+                }
               }
             }
           }
         },
         {
-          "description": "FIX.CONFIG-BOUNDS (task-395): when lookup_retry_max holds a number, config.bounds holds its min, max and on_invalid.",
+          "description": "FIX.CONFIG-BOUNDS (task-395; Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): when lookup_retry_max holds a number, config.logic_variables names its registered logic variable maxbld_page_lookup_retry_max with min, max and on_invalid; the generator resolves the slice number from that seed row.",
           "if": {
             "required": [
               "lookup_retry_max"
@@ -2837,19 +2842,29 @@
           },
           "then": {
             "required": [
-              "bounds"
+              "logic_variables"
             ],
             "properties": {
-              "bounds": {
-                "required": [
-                  "lookup_retry_max"
-                ]
+              "logic_variables": {
+                "contains": {
+                  "required": [
+                    "name",
+                    "min",
+                    "max",
+                    "on_invalid"
+                  ],
+                  "properties": {
+                    "name": {
+                      "const": "maxbld_page_lookup_retry_max"
+                    }
+                  }
+                }
               }
             }
           }
         },
         {
-          "description": "FIX.CONFIG-BOUNDS (task-395): when lookup_stale_ms holds a number, config.bounds holds its min, max and on_invalid.",
+          "description": "FIX.CONFIG-BOUNDS (task-395; Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"yes follow the rules register them.\", MORNING-DECISIONS.md:1494): when lookup_stale_ms holds a number, config.logic_variables names its registered logic variable maxbld_page_lookup_stale_ms with min, max and on_invalid; the generator resolves the slice number from that seed row.",
           "if": {
             "required": [
               "lookup_stale_ms"
@@ -2862,13 +2877,23 @@
           },
           "then": {
             "required": [
-              "bounds"
+              "logic_variables"
             ],
             "properties": {
-              "bounds": {
-                "required": [
-                  "lookup_stale_ms"
-                ]
+              "logic_variables": {
+                "contains": {
+                  "required": [
+                    "name",
+                    "min",
+                    "max",
+                    "on_invalid"
+                  ],
+                  "properties": {
+                    "name": {
+                      "const": "maxbld_page_lookup_stale_ms"
+                    }
+                  }
+                }
               }
             }
           }

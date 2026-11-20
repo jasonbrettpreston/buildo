@@ -344,8 +344,6 @@ export type SurfaceDescriptor = {
   lookup_retry_max?: "UNRESEARCHED" | number;
   /** FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): how long a lookup read (typeahead search or detail by parcel) stays fresh, in milliseconds. */
   lookup_stale_ms?: "UNRESEARCHED" | number;
-  /** FIX.CONFIG-BOUNDS (task-395; Spec 128 Rule 3; operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant", MORNING-DECISIONS.md:1476; the grounder chose option (b)): the bounds and the failure behav */
-  bounds?: Record<string, unknown>;
 };
   sharing: {
   answer: "UNRESEARCHED" | "sole" | "shared" | "none";

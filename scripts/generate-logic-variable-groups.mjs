@@ -1318,7 +1318,13 @@ const GROUP_ORDER = [
       "lotview_front_max_angle_deg",
       "lotview_front_dist_tol_m",
       "lotview_rear_max_angle_deg",
-      "lotview_run_max_turn_deg"
+      "lotview_run_max_turn_deg",
+      "maxbld_page_debounce_ms",
+      "maxbld_page_min_query_len",
+      "maxbld_page_entitlement_stale_ms",
+      "maxbld_page_lookup_retry_max",
+      "maxbld_page_lookup_stale_ms",
+      "maxbld_page_continue_wait_ms"
     ]
   },
   {

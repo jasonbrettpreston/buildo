@@ -1,0 +1,10 @@
+base 49052d29d (wf2/board merge-base); golden files changed: 32; fingerprint-only changes (the fingerprint object, and the input_sha in the generated phone copy, differ; every other byte equal): 32; other changes: 0
+32 files changed, 51 insertions(+), 51 deletions(-)
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json
+index 4b0d07294..eb2773756 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json
+@@ -310 +310 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "599db99a74a18b60"
+

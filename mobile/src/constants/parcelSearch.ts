@@ -11,14 +11,8 @@
 // Each constant carries the two sides of its truth: what the descriptor declares, and where the
 // behaviour is actually enforced. None of these is a free choice made here.
 
-// The debounce has no constant here: config.debounce_ms of the generated slice is its one home, read through the reader in SearchBinding.tsx (FIX.CONFIG-BOUNDS, task-395).
-
-/**
- * `config.min_query_len` — the shortest query that may reach the server.
- * Ground truth: `src/app/api/parcels/lookup/types.ts` — `q: z.string().trim().min(3)`. The server
- * 400s below this, so the client gate is a courtesy that must not drift ABOVE the server's floor.
- */
-export const SEARCH_MIN_QUERY_LEN = 3;
+// The debounce and the minimum query length have no constant here: config.debounce_ms and config.min_query_len of the generated slice are their one home (registered logic
+// variables maxbld_page_debounce_ms and maxbld_page_min_query_len), read through the reader in SearchBinding.tsx.
 
 /**
  * The candidate cap. Ground truth: `src/lib/admin/parcel-lookup.ts` slices the exact-match branch

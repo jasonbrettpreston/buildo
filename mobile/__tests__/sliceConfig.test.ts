@@ -14,14 +14,27 @@ describe('sliceNumber applies the declared bounds', () => {
     expect(sliceNumber(slice({ k: 0 }, b), 'k')).toBe(0);
     expect(sliceNumber(slice({ k: 10 }, b), 'k')).toBe(10);
   });
-  it('clamp: an out-of-range value reads as the nearest bound', () => {
+  it('clamp: an out-of-range value reads as the nearest bound, and the clamp warns naming the key and both values', () => {
     const b = { k: { min: 3, max: 10, on_invalid: 'clamp' } };
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
     expect(sliceNumber(slice({ k: 99 }, b), 'k')).toBe(10);
     expect(sliceNumber(slice({ k: -5 }, b), 'k')).toBe(3);
+    expect(warn).toHaveBeenCalledTimes(2);
+    expect(String(warn.mock.calls[0][0])).toMatch(/"k".*99.*10/);
+    warn.mockRestore();
+  });
+  it('an in-range value does not warn', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    sliceNumber(slice({ k: 5 }, { k: { min: 3, max: 10, on_invalid: 'clamp' } }), 'k');
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
   it('fail: an out-of-range value throws, naming the key', () => {
     const b = { k: { min: 0, max: 0, on_invalid: 'fail' } };
     expect(() => sliceNumber(slice({ k: 1 }, b), 'k')).toThrow(/"k"/);
+  });
+  it('a null bounds entry throws the key-named error, not a TypeError', () => {
+    expect(() => sliceNumber(slice({ k: 1 }, { k: null }), 'k')).toThrow(/"k" has no valid bounds/);
   });
   it('a key with no bounds entry, a slice with no bounds, a missing key and a non-finite or non-number value throw by key name', () => {
     const b = { k: { min: 0, max: 10, on_invalid: 'clamp' } };

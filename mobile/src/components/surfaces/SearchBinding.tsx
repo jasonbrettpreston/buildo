@@ -33,7 +33,7 @@ export const SEARCH_SLICE: { surface: string; config: Record<string, number>; bo
 
 // CR3-10 (OUTPUT fold LOW): the screen reads the debounce and the minimum length from the slice, i.e. from the descriptor's config.debounce_ms and
 // config.min_query_len (their one declared home), and the cap (not a descriptor config value) from the constants file, all through the binding.
-// FIX.CONFIG-BOUNDS (task-395): both numbers go through sliceNumber, which applies the bounds the slice carries. SEARCH_MIN_QUERY_LEN keeps a same-named constant for the non-binding readers; parcelScreens.golden.test.ts pins it equal to the slice. The debounce has no second copy.
+// FIX.CONFIG-BOUNDS (task-395): both numbers go through sliceNumber, which applies the registered bounds the slice carries (maxbld_page_debounce_ms, maxbld_page_min_query_len). They are the only copies: the typed constants in constants/parcelSearch.ts are gone.
 export const SEARCH_DEBOUNCE_MS = sliceNumber(SEARCH_SLICE, 'debounce_ms');
 export const SEARCH_MIN_QUERY_LEN = sliceNumber(SEARCH_SLICE, 'min_query_len');
 export { SEARCH_CANDIDATE_LIMIT };

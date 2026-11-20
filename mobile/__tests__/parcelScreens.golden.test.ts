@@ -11,8 +11,8 @@
 // SELECT is disabled with nothing checked; every component is in mapping.mobile.SEARCH; every child node carries a key (RG-15).
 import fs from 'node:fs';
 import path from 'node:path';
-import { DERIVED_NAMES, SEARCH_DEBOUNCE_MS, SEARCH_SLICE, searchProps, type PropsNode } from '@/components/surfaces/SearchBinding';
-import { SEARCH_CANDIDATE_LIMIT, SEARCH_MIN_QUERY_LEN } from '@/constants/parcelSearch';
+import { DERIVED_NAMES, SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LEN, SEARCH_SLICE, searchProps, type PropsNode } from '@/components/surfaces/SearchBinding';
+import { SEARCH_CANDIDATE_LIMIT } from '@/constants/parcelSearch';
 import type { SearchSituation } from '@/lib/parcelSearchMatch';
 
 type Json = Record<string, unknown>;
