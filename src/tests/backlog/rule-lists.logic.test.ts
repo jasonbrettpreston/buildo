@@ -578,3 +578,33 @@ describe('V2.WHOLE: lens-input splits a change that leaves no room for a list pa
     expect([...st.flatMap((s) => s.paths ?? [])].sort()).toEqual([...FILES].sort());
   });
 });
+
+// V2.WHOLE fix round (grounder 2026-11-20): F2 the diff flags, F5 a measured chunk room, F6 the refusal for a name git quotes.
+describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', () => {
+  it('F2: the shared diff flags include --text and --full-index (a .gitattributes -diff line cannot turn code into "Binary files differ")', async () => {
+    const m = (await import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs'))) as { DIFF_ARGS: string[] };
+    expect(m.DIFF_ARGS).toContain('--text');
+    expect(m.DIFF_ARGS).toContain('--full-index');
+  });
+  it('F5: a long path list in the chunk head is counted in the room: 300 files with no --list, every input inside the bound (the fixed 800 reserve refused this)', () => {
+    const f = fixture();
+    const names = Array.from({ length: 300 }, (_, i) => `src/some/deeper/folder/file-number-${String(i).padStart(3, '0')}-with-a-long-name.ts`);
+    const d = names.map((p) => dfile(p, 1)).join('');
+    const m = path.join(f.d, 'f5.material'); fs.writeFileSync(m, d);
+    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f5'), '--template', tpl, '--max', '40000']);
+    expect(r.status, r.stderr).toBe(0);
+    const files = r.stdout.split('\n').filter(Boolean);
+    const texts = files.map((x) => fs.readFileSync(x, 'utf8'));
+    for (const t of texts) expect(2 * t.length + 80).toBeLessThanOrEqual(40000); // TPL puts the input twice
+    expect([...texts.flatMap((t) => stampOf(t).paths ?? [])].sort()).toEqual([...names].sort());
+  });
+  it('F6: a name git quotes is refused with the header line and the remedy (core.quotepath, the brief command)', () => {
+    const f = fixture();
+    const d = 'diff --git "a/caf\\303\\251.ts" "b/caf\\303\\251.ts"\nindex 1..2 100644\n--- "a/caf\\303\\251.ts"\n+++ "b/caf\\303\\251.ts"\n@@ -1 +1 @@\n-a\n+b\n';
+    const l = lens(f, 'first', d, 20000);
+    expect(l.r.status).toBe(1);
+    expect(l.r.stderr).toContain('caf\\303\\251.ts');
+    expect(l.r.stderr).toContain('core.quotepath=false');
+  });
+});

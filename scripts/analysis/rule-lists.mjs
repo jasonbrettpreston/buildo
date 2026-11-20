@@ -28,7 +28,8 @@ const BOUND = 120000; // scripts/deepseek-review.js MAX_PROMPT_CHARS
 const RESERVE = 800; // stamp, header and separator of one lens input file
 const MARKER = '\n=== MATERIAL UNDER REVIEW (everything below this line) ===\n';
 /** V2.WHOLE (task-410): the one diff command the brief, the lens input and the close check share (every flag pinned, so the text is the same on every machine). */
-export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];
+// --text and --full-index (V2.WHOLE fix round): a .gitattributes line `*.ts -diff` makes git print "Binary files differ" for code; --text prints the text whatever the attributes say, --full-index fixes the index line length
+export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--text', '--full-index', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];
 /** A git diff cut at its file headers: [{path, text}] in order, or null when the text is not a diff (does not start at a header). Content lines carry a prefix, so a file whose own text says "diff --git" is never cut. */
 export function splitDiff(text) {
   const at = [...text.matchAll(/^diff --git /gm)].map((m) => m.index);
@@ -37,7 +38,7 @@ export function splitDiff(text) {
     const seg = text.slice(s, at[i + 1] ?? text.length);
     const rest = seg.split('\n', 1)[0].slice('diff --git a/'.length);
     const p = rest.slice(0, (rest.length - 3) / 2);
-    if (!seg.startsWith('diff --git a/') || `${p} b/${p}` !== rest) throw new Error(`cannot read the path of a diff file header (renames and quoted names are not supported; use the shared diff command): ${seg.split('\n', 1)[0].slice(0, 120)}`);
+    if (!seg.startsWith('diff --git a/') || `${p} b/${p}` !== rest) throw new Error(`cannot read the path in the diff file header "${seg.split('\n', 1)[0].slice(0, 160)}": git quotes names with non-ASCII characters, quotes or tabs and prints rename headers; make the diff with the command in the brief (git -c core.quotepath=false diff with DIFF_ARGS, which has --no-renames) and rename a file whose name has a quote or a tab`);
     return { path: p, text: seg };
   });
 }
@@ -303,6 +304,24 @@ function splitUnits(text, max, label, id) {
   }
   return out;
 }
+/** The text of one lens input file, exactly as lens-input writes it (the close check regenerates it from the stamped parts and compares). `list` null: no rule list. `paths` null: material that is not a diff. */
+export function renderLensInput({ id, list, part, i, n, material, paths, c, m }) {
+  const sel = list ? (list.whole ? 'whole file' : `sections ${list.sections.join('; ')}`) : '';
+  const mark = paths ? ` chunk ${c} of ${m}` : '';
+  const what = list ? `RULE LIST ${id} (${list.file}, ${sel}), part ${i} of ${n}. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.` : 'NO RULE LIST: the lens template alone judges the material under review.';
+  const head = `${what}${paths ? ` The material is chunk ${c} of ${m} of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ${JSON.stringify(paths)}` : ''}`;
+  const stamp = `LIST ${list ? id : 'none'} sha256:${sha256(Buffer.from(part))} material sha256:${sha256(Buffer.from(material))} part ${i} of ${n}${mark}`;
+  return `${stamp}\n${head}\n\n${part}${MARKER}${material}\n`;
+}
+/** The prompt hash the review tool writes in its REVIEW header: sha256 of JSON [system, user] for a lens template, the input file as {{PLAN}} and the context as {{SPECS}} (today the tool's placeholder string; a task that passes a real context file passes its text here). */
+export function lensPromptHash({ templateText, inputText, context = '(no pasted context provided)' }) {
+  const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
+  const split = rt.splitTemplate(templateText);
+  const system = split.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.";
+  const user = rt.substitutePlaceholders(split.userTemplate, { plan: inputText, specs: context, dataContext: '(no live-DB context provided)' });
+  return sha256(Buffer.from(JSON.stringify([system, user])));
+}
+
 /**
  * The lens input files for one list: [{suffix, text}]. The list part comes first, whole; the material follows. Throws when a part cannot fit (never trims).
  * V2.WHOLE (task-410): when the material leaves no room for a list part and is a git diff, the TOOL cuts it at file boundaries into chunks (packed in diff order, each at most the room
@@ -347,21 +366,21 @@ export function buildLensInputs({ id, list, root, material, templateFile, max = 
       if (avail - RESERVE - listRoom < big.text.length) throw new Error(`file ${big.path} is ${big.text.length} characters of diff and cannot be split inside a file: at most ${avail - RESERVE - listRoom} fit one input beside the rule list part of ${listRoom} (bound ${max}); report it to the orchestrator`);
       try { parts = partsFor(listRoom); break; } catch (x) { if (!x.room || !(x.size > listRoom)) throw x; listRoom = x.size; }
     }
-    const chunkRoom = avail - RESERVE - listRoom;
+    // the room of a chunk is MEASURED (V2.WHOLE fix round): the stamp, the head with the chunk's own path list and the marker are rendered for the longest list part and counted, so a long path list cannot push an input over the bound
+    const longest = parts.reduce((x, y) => (y.length > x.length ? y : x), '');
+    const promptOf = (paths, text) => sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: longest, i: 99999, n: 99999, material: text, paths, c: 99999, m: 99999 }), specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
     chunks = [];
     for (const s of segs) {
       const last = chunks[chunks.length - 1];
-      if (last && last.text.length + s.text.length <= chunkRoom) { last.text += s.text; last.paths.push(s.path); } else chunks.push({ text: s.text, paths: [s.path] });
+      if (last && promptOf([...last.paths, s.path], last.text + s.text) <= max) { last.text += s.text; last.paths.push(s.path); continue; }
+      const alone = promptOf([s.path], s.text);
+      if (alone > max) throw new Error(`file ${s.path} is ${s.text.length} characters of diff and cannot be split inside a file: with the rule list part (${longest.length} characters), the stamp and the head the input would be ${alone} characters, over the ${max} bound; report it to the orchestrator`);
+      chunks.push({ text: s.text, paths: [s.path] });
     }
   }
-  const sel = list ? (list.whole ? 'whole file' : `sections ${list.sections.join('; ')}`) : '';
   const files = [];
   chunks.forEach((ch, ci) => parts.forEach((p, i) => {
-    const mark = ch.paths ? ` chunk ${ci + 1} of ${chunks.length}` : '';
-    const what = list ? `RULE LIST ${id} (${list.file}, ${sel}), part ${i + 1} of ${parts.length}. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.` : 'NO RULE LIST: the lens template alone judges the material under review.';
-    const head = `${what}${ch.paths ? ` The material is chunk ${ci + 1} of ${chunks.length} of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ${JSON.stringify(ch.paths)}` : ''}`;
-    const stamp = `LIST ${list ? id : 'none'} sha256:${sha256(Buffer.from(p))} material sha256:${sha256(Buffer.from(ch.text))} part ${i + 1} of ${parts.length}${mark}`;
-    const text = `${stamp}\n${head}\n\n${p}${MARKER}${ch.text}\n`;
+    const text = renderLensInput({ id, list, part: p, i: i + 1, n: parts.length, material: ch.text, paths: ch.paths, c: ci + 1, m: chunks.length });
     const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
     if (prompt > max) throw new Error(`list ${id}: part ${i + 1} would be ${prompt} characters, over the ${max} bound`);
     const n = ci * parts.length + i + 1;
