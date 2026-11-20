@@ -132,3 +132,42 @@ describe('V2.LIST round 5: an in-scope census entry with no route file is skippe
     expect(unroutedContracts({ ...base, e: { identity: { id: 'contract_lead' }, programme: { scope: 'estate_other' }, evidence: { files: [] } } })).toEqual([]);
   });
 });
+
+// V2.LIST round 7 (task-406; operator, 2026-11-20, "you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y", MORNING-DECISIONS.md:1520, item 3 put to him as "3. Exempt generated snapshots from review material. My recommendation: yes."):
+// the table's own exempt key lists the golden snapshot files that one existing check validates. The review material is the task range minus matchesAny(exempt) (the close check and the launch brief); list resolution is NOT changed.
+describe('V2.LIST round 7: golden snapshot files are exempt from the review material, each glob names the check that proves it', () => {
+  const CHECKS = ['goldenProblems', 'screenArm', 'report-page-capture.ts --check'];
+  const raw = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { exempt: string[]; $comment: string[] };
+  const matcher = async () => (await import(path.join(ROOT, 'scripts/analysis/mcbylaws/paths.mjs'))) as { matchesAny: (globs: string[], p: string) => boolean };
+  it('a real golden file of each folder is exempt (the surface folders, the report folder, the report-page captures and their mobile views)', async () => {
+    const { matchesAny } = await matcher();
+    const ex = raw().exempt;
+    for (const p of ['src/tests/fixtures/surfaces/report/v21.web.json', 'src/tests/fixtures/surfaces/report/v21.pdf.json', 'src/tests/fixtures/surfaces/web_landing/static.web.json', 'src/tests/fixtures/surfaces/admin_media/hit.web.json', 'src/tests/fixtures/surfaces/mobile_parcel_search/hit.mobile.json', 'src/tests/fixtures/surfaces/admin_media/hit.admin.json', 'src/tests/fixtures/report-page/v21.mobile.json', 'src/tests/fixtures/report-page/entered.pdf.json', 'src/tests/fixtures/report-page/entered.web.json', 'src/tests/fixtures/report-page/v21.admin.json', 'src/tests/fixtures/report-page/props/error.mobile.json']) {
+      expect(matchesAny(ex, p), p).toBe(true);
+    }
+  });
+  it('a code file, the manifest, a script or a nested golden-looking file is NOT exempt', async () => {
+    const { matchesAny } = await matcher();
+    const ex = raw().exempt;
+    for (const p of ['src/tests/fixtures/surfaces/x/evil.ts', 'src/tests/fixtures/report-page/run.mjs', 'src/tests/fixtures/surfaces/report/states.json', 'src/tests/fixtures/surfaces/x/y/a.mobile.json', 'src/tests/fixtures/report-page/props/notes.json', 'src/tests/fixtures/report-page/props/x/a.mobile.json', 'scripts/surfaces/report-page-capture.ts']) {
+      expect(matchesAny(ex, p), p).toBe(false);
+    }
+  });
+  it('list resolution of a golden path is unchanged by the exempt globs (a row still matches it; exempt stays empty in resolve)', () => {
+    const r = script(CLI, ['resolve', '--files', 'src/tests/fixtures/surfaces/report/v21.web.json', '--type', 'record', '--letter', 'S']);
+    expect(r.status, r.stderr).toBe(0);
+    const j = JSON.parse(r.stdout) as { exempt: string[]; lists: { id: string }[] };
+    expect(j.exempt).toEqual([]);
+    expect(j.lists.map((l) => l.id)).toEqual(['surface-136', 'surface-126', 'surface-127', 'surface-128', 'surface-135', 'eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+  });
+  it('every exempt glob beyond the lane and review records names its proving check in $comment (planted defect: a glob with no named check fails)', () => {
+    const t = raw();
+    const text = t.$comment.join('\n');
+    const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const golden = t.exempt.filter((g) => !g.startsWith('docs/reports/'));
+    expect(golden.length).toBe(9);
+    const unnamed = (globs: string[], comment: string) => globs.filter((g) => !CHECKS.some((c) => new RegExp(esc(g) + '[^\\n]*proved by[^\\n]*' + esc(c)).test(comment)));
+    expect(unnamed(golden, text)).toEqual([]);
+    expect(unnamed([...golden, 'src/tests/fixtures/zzz/*.json'], text)).toEqual(['src/tests/fixtures/zzz/*.json']);
+  });
+});

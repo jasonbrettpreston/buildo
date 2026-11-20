@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LIST'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-20T20:14:00Z'
+updated_date: '2026-11-20T20:32:00Z'
 labels:
   - McFix
   - McFix V2
@@ -102,4 +102,6 @@ Step 4 audit by a separate grounder 2026-11-20 (file ~/Buildo-scratch/lanes-2026
 2026-11-20 BL-V2LIST round 6: skip stated by name in the drift test; pin attribution corrected (operator confirmed 33.2 s, MORNING-DECISIONS.md:1526).
 
 2026-11-20 BL-V2LIST round 6: pin attribution corrected in the seed, migration 334 and a 124a correcting note.
+
+2026-11-20 BL-V2LIST round 7: golden snapshot globs in the table's exempt key; material only, list resolution unchanged (operator 1-5 y, MORNING-DECISIONS.md:1520, item 3).
 <!-- SECTION:NOTES:END -->
