@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LAYOUT'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-20T17:52:00Z'
+updated_date: '2026-11-20T20:06:00Z'
 labels:
   - McFix
   - McFix V2
@@ -67,4 +67,6 @@ PRIORITY, operator 2026-11-20 verbatim: "I also need certainty within the tasks 
 2026-11-20 fold: brief text reworded (whole-change mechanism, plan-/out- output names, GROUNDER.md); task-358 pins at backlog-lane.logic.test.ts updated to the corrected text.
 
 2026-11-20 GROUNDER.md copied into docs/reports/lanes/2026-11-20/BL-V2LAYOUT (sha256 3a6f90348d75...).
+
+Step 4 audit by a separate grounder 2026-11-20 (file ~/Buildo-scratch/lanes-20261119/inc1b/retro/STEP4-LEDGER.md, sha256 d88e7548d70f…): of this task CONFIRMED and CONFLICT findings, 17: 11 fixed, 6 UNADDRESSED: the real BRIEF.md sentence never pasted into the task (plan-agents-s5-1to3#3, plan-eng-s5#5, plan-inc-S#1, plan-queue-137#5); the BL-FIXSPECS census claim not corrected (plan-agents-s7-s11#4); whether the BL-PAGETABLE, BL-GATES, BL-FIXSPECS files move to the read depth was never ruled (plan-review-deepseek#8). Not complete until each has an outcome.
 <!-- SECTION:NOTES:END -->

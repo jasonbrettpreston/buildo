@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LIST'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-20T18:52:00Z'
+updated_date: '2026-11-20T20:06:00Z'
 labels:
   - McFix
   - McFix V2
@@ -80,4 +80,6 @@ Operator 2026-11-20, verbatim (MORNING-DECISIONS.md:1494): "Correct this - Phone
 2026-11-20 BL-V2LIST: round 2 report count corrected (63 output findings).
 
 2026-11-20 BL-V2LIST: grounder file added; fold note in the report.
+
+Step 4 audit by a separate grounder 2026-11-20 (file ~/Buildo-scratch/lanes-20261119/inc1b/retro/STEP4-LEDGER.md, sha256 d88e7548d70f…): of this task CONFIRMED and CONFLICT findings, 46: 6 fixed on the branch only, 7 not fixed with a written reason, 2 owned elsewhere, 2 resolved by the operator, 29 UNADDRESSED (code: milestoneLetter outside the try; unwrapped renderPage and listBlocks; a catch that hides the message; the early return at check-lane-close.mjs:85; the resolveTask milestone gap; validate passes a table without kinds; check-tasks exits 0 on an empty board; plus test and spec nits, two CONFLICTs with no answer, and no keep/merge/drop list of McFix tasks). The ledger lists every id. Not complete until each has an outcome.
 <!-- SECTION:NOTES:END -->

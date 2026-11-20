@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-20T17:12:00Z'
+updated_date: '2026-11-20T20:06:00Z'
 labels:
   - McFix
   - McFix Z
@@ -41,4 +41,6 @@ Validated before writing by a separate read-only grounder (2026-11-20; verdict r
 
 <!-- SECTION:NOTES:BEGIN -->
 Added 2026-11-20 from the operator words (MORNING-DECISIONS.md, entry "Operator AGREES: compliance documents attached to every task"): "citing not only the decision but the compliance rules ... compliance rules broken is listed in the response the fold fails". So: a CONFIRMED verdict from a compliance output names the rule it breaks (the rule-list id from the output file name plus the rule id or heading the finding cites), and check-fold prints, on refusal, the list of broken rules with their dispositions missing: one line per rule, rule list id, rule, file:line.
+
+Grounder recommendation 2026-11-20 (STEP4-LEDGER.md PART C), to build AFTER task-410 folds and BEFORE task-375 (same function): this task already designs the per-finding disposition; three changes: (1) CONFLICT verdicts need an outcome too (only task: or ruling:, never wontfix:); (2) a task: outcome needs the named task's text to contain the finding id or the cited path; (3) the outcome lines live in the lane's TRIAGE.md (an existing form), one per id: '<id> fixed:<sha> <path>' (sha an ancestor of HEAD and not of the base, touching the path), '<id> task:task-N', '<id> ruling:RR-NNNN', '<id> wontfix:"<60+ chars>"' (LOW and NIT only). The close is refused naming every CONFIRMED or CONFLICT id without exactly one line. Measured need: 52 of 153 such findings on tasks 396, 407, 406, 387 had no change and no written reason.
 <!-- SECTION:NOTES:END -->
