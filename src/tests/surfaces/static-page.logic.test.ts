@@ -74,13 +74,14 @@ describe('T1 the page table against the contract', () => {
       ['a when that is an expression', (t) => { t.screens.mobile_parcel_semi_question.sections[1].when = 'loading && ask'; }],
       ['a when that is a negation', (t) => { t.screens.mobile_parcel_semi_question.sections[1].when = '!loading'; }],
       ['a when that is a list of flags', (t) => { t.screens.mobile_parcel_semi_question.sections[1].when = ['loading', 'ask']; }],
-      ['a target outside web and mobile', (t) => { t.screens.mobile_parcel_semi_question.sections[1].targets = ['tablet']; }],
+      ['a platform outside web and mobile', (t) => { t.screens.mobile_parcel_semi_question.sections[1].platforms = ['tablet']; }],
       ['a field the kind does not name', (t) => { t.screens.mobile_parcel_semi_question.sections[1].href = '/help'; }],
       ['a choices row with no payload key', (t) => { delete t.screens.mobile_parcel_semi_question.sections[6].arg; }],
       ['a choices payload key outside the list', (t) => { t.screens.mobile_parcel_semi_question.sections[6].arg = 'anything'; }],
       ['a screen with no binding', (t) => { delete t.screens.mobile_parcel_semi_question.binding; }],
       ['a screen binding outside the surfaces folder', (t) => { t.screens.mobile_parcel_semi_question.binding = '../x.tsx'; }],
-      ['a screen target outside web and mobile', (t) => { t.screens.mobile_parcel_semi_question.targets = ['tablet']; }],
+      ['a screen platform outside web and mobile', (t) => { t.screens.mobile_parcel_semi_question.platforms = ['tablet']; }],
+      ['the old field name targets', (t) => { t.screens.mobile_parcel_semi_question.targets = ['mobile']; }],
       ['a screen with no sections', (t) => { t.screens.mobile_parcel_semi_question.sections = []; }],
     ];
     for (const [why, f] of plants) { const t = clone(TABLE); f(t); expect([why, validate(t)]).toEqual([why, false]); }
@@ -105,7 +106,7 @@ describe('T9 the interactive screens (PAGE.TABLE, task-390)', () => {
     expect(Object.keys(SCREENS)).toEqual([ID]);
     const d = rj(`scripts/surfaces/parcel_product/F01/surfaces/${ID}.descriptor.json`);
     expect([MANIFEST.converted.includes(ID), d.identity.archetype, d.identity.platforms]).toEqual([true, 'LIST', ['mobile']]);
-    expect(SCREENS[ID].targets).toEqual(['mobile']);
+    expect([SCREENS[ID].platforms, SCREENS[ID].targets]).toEqual([['mobile'], undefined]);
     expect(SCREENS[ID].binding).toBe(BINDING);
     expect(rj(`mobile/src/generated/surfaces/${ID}.json`).page).toEqual(SCREENS[ID]);
   });

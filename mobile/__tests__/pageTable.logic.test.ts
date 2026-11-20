@@ -1,16 +1,18 @@
-// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §0a principle 1 and §11b.2 (page block order, texts, actions and which block shows under a
-//            named flag are DATA rows of the page table), docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-05, FE-18, FE-31.
+/** @jest-environment node */
+// SPEC LINK: docs/specs/03-mobile/98_mobile_testing_protocol.md (pure logic of a mobile module is a jest-node test under mobile/__tests__, lines 76-77),
+//            docs/specs/03-mobile/100_mobile_parcel_cost_tool.md (line 164), docs/specs/02-web-admin/126_maxbld_surface_standard.md §0a principle 1 and §11b.2,
+//            docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-05, FE-18, FE-31.
 //
-// PAGE.TABLE (task-390, Increment 1·B) · the phone rows-to-props-tree builder (mobile/src/components/surfaces/PageTableBinding.tsx, import-free, read by
+// PAGE.TABLE (task-390, Increment 1·B) · moved from src/tests/surfaces/page-table.logic.test.ts (task conflict (a), grounder 2026-11-20): red and green for these cases come from Mobile CI,
+// not the commit hook. The phone rows-to-props-tree builder (mobile/src/components/surfaces/PageTableBinding.tsx, import-free, read by
 // relative path as the other pure mobile helpers are). Cases, on a small planted screen with a plain style table:
 //   B1 a section shows only under its one positive flag; an unknown flag name throws (fail closed, never a blank page);
-//   B2 a section whose targets omit mobile is not drawn; no targets means both;
+//   B2 a section whose platforms omit mobile is not drawn; no platforms means both;
 //   B3 a button with a target value is disabled, idle-labelled and has no action while the value is null; it carries the value once set;
 //   B4 busy adds the busy class and the busy accessibility state; choices check only the selected answer; the bar draws before the scroll;
 //   B6 an unknown button target, choices select or screen target throws by name; the choices payload key is a row field;
 //   B5 a part inside a notice shows under its own flag; the redirect value joins the root only when set.
-import { describe, expect, it } from 'vitest';
-import { pageProps, type PageScreen, type PageStyles } from '../../../mobile/src/components/surfaces/PageTableBinding';
+import { pageProps, type PageScreen, type PageStyles } from '@/components/surfaces/PageTableBinding';
 
 const S: PageStyles = {
   screen: 's', scroll: 'sc', column: 'col', bottomPadding: 7, maxWidth: 9, bar: 'bar', back: 'back', backIconSize: 3, iconColor: '#000',
@@ -20,13 +22,13 @@ const S: PageStyles = {
   button: { default: { className: 'b', busyClassName: 'b busy', text: 'bt' }, outline: { className: 'o', busyClassName: 'o busy', text: 'ot' } },
 };
 const SCREEN: PageScreen = {
-  prefix: 'p', contract: 'c1', binding: 'mobile/src/components/surfaces/X.tsx', targets: ['mobile'],
+  prefix: 'p', contract: 'c1', binding: 'mobile/src/components/surfaces/X.tsx', platforms: ['mobile'],
   sections: [
     { kind: 'bar', id: 'header', parts: [{ role: 'back', icon: 'ChevronLeft', content: 'back.label', action: 'back' }] },
     { kind: 'status', id: 'loading', when: 'loading', content: 'state.loading' },
     { kind: 'text', id: 'question', when: 'ask', role: 'header', content: 'question.title' },
-    { kind: 'text', id: 'webonly', targets: ['web'], role: 'header', content: 'web.only' },
-    { kind: 'text', id: 'both', targets: ['web', 'mobile'], role: 'header', content: 'both.title' },
+    { kind: 'text', id: 'webonly', platforms: ['web'], role: 'header', content: 'web.only' },
+    { kind: 'text', id: 'both', platforms: ['web', 'mobile'], role: 'header', content: 'both.title' },
     { kind: 'choices', id: 'answer', when: 'ask', list: 'answers', select: 'selected', content: 'answer', action: 'select', arg: 'parcelId' },
     { kind: 'button', id: 'continue', when: 'ask', variant: 'default', label: 'select.label', content: 'select.go', idle: 'select.none', action: 'push', target: 'route', busy: 'busy' },
     { kind: 'notice', id: 'error', when: 'unexpected', tone: 'error', icon: 'AlertTriangle', parts: [
@@ -52,8 +54,8 @@ describe('B1 a section shows only under its one positive flag', () => {
   });
 });
 
-describe('B2 targets', () => {
-  it('a web-only section is not drawn on the phone; no targets and web+mobile are drawn', () => {
+describe('B2 platforms', () => {
+  it('a web-only section is not drawn on the phone; no platforms and web+mobile are drawn', () => {
     expect(keys(pageProps(SCREEN, FLAGS, VALUES, S))).not.toContain('webonly');
     expect(keys(pageProps(SCREEN, FLAGS, VALUES, S))).toContain('both');
     expect(keys(pageProps(SCREEN, { ...FLAGS, loading: true }, VALUES, S))).toContain('loading-text');
@@ -92,7 +94,7 @@ describe('B6 names the builder is given that no value supplies', () => {
     const ask = { ...FLAGS, ask: true };
     expect(() => pageProps(SCREEN, ask, { answers: [], navigate: null } as never, S)).toThrow(/selected/);
     expect(() => pageProps(SCREEN, ask, { answers: [], selected: null, navigate: null } as never, S)).toThrow(/route/);
-    expect(() => pageProps({ ...SCREEN, targets: ['web'] }, FLAGS, VALUES, S)).toThrow(/mobile/);
+    expect(() => pageProps({ ...SCREEN, platforms: ['web'] }, FLAGS, VALUES, S)).toThrow(/mobile/);
   });
   it('a null value is the legal disabled state, not an unknown name', () => {
     expect(() => pageProps(SCREEN, { ...FLAGS, ask: true }, { ...VALUES, answers: [] }, S)).not.toThrow();

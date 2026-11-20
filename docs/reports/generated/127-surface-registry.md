@@ -7254,7 +7254,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | 16 | `config` | `none` | No tunable of its own. The SEARCH profile requires debounce_ms and min_query_len, which have no "none" value: 0 states that the binding itself neither debounces nor gates on length. The consuming surface declares its own (mobile_parcel_search: 400 ms, 3 characters), and the screen applies them. — `mobile/src/components/surfaces/LotMapBinding.tsx — SEARCH_DEBOUNCE_MS and SEARCH_MIN_QUERY_LEN re-exported from the consumer slice`, `scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json — config.debounce_ms 400, config.min_query_len 3` |
 | 17 | `sharing` | `shared` | Every converted mobile surface (the parcel search page first). — `scripts/surfaces/_schema/bindings.json — modules` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 19 | `deviations` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 

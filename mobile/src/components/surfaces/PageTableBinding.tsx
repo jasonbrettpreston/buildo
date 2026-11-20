@@ -15,7 +15,7 @@ type Template = { text: Ref; vars: Record<string, Ref> };
 export type PageNode = { component: string; props: Record<string, unknown>; children: PageChild[] };
 type PageChild = PageNode | Ref | Template;
 
-type Gate = { when?: string; targets?: ReadonlyArray<'web' | 'mobile'> };
+type Gate = { when?: string; platforms?: ReadonlyArray<'web' | 'mobile'> };
 type BarPart = { role: 'back'; icon: string; content: string; action: string };
 type ButtonRow = { variant: 'default' | 'outline'; label: string; content: string; action: string; idle?: string; target?: string; busy?: string };
 type NoticePart = ({ role: 'text'; content: string; vars?: Record<string, string> } | ({ role: 'button'; id: string } & Omit<ButtonRow, 'idle' | 'target' | 'busy'>)) & { when?: string };
@@ -27,7 +27,7 @@ export type PageSection = Gate & (
   | { kind: 'choices'; id: string; list: string; select: string; content: string; action: string; arg: string }
   | ({ kind: 'button'; id: string } & ButtonRow)
 );
-export type PageScreen = { prefix: string; contract: string; binding: string; targets?: ReadonlyArray<'web' | 'mobile'>; sections: PageSection[] };
+export type PageScreen = { prefix: string; contract: string; binding: string; platforms?: ReadonlyArray<'web' | 'mobile'>; sections: PageSection[] };
 export type PageValues = Record<string, string | readonly string[] | null>;
 export type PageStyles = {
   screen: string; scroll: string; column: string; bottomPadding: number; maxWidth: number;
@@ -43,13 +43,13 @@ const content = (key: string): Ref => ({ content: key });
 
 /** The whole tree of one render. */
 export function pageProps(screen: PageScreen, flags: Readonly<Record<string, boolean>>, values: PageValues, styles: PageStyles): PageNode {
-  if (screen.targets !== undefined && !screen.targets.includes('mobile')) throw new Error('page table: the screen is not drawn on mobile');
+  if (screen.platforms !== undefined && !screen.platforms.includes('mobile')) throw new Error('page table: the screen is not drawn on mobile');
   const on = (name: string | undefined): boolean => {
     if (name === undefined) return true;
     if (!Object.hasOwn(flags, name)) throw new Error(`page table: the flag ${name} is not supplied`);
     return flags[name] === true;
   };
-  const drawn = (g: Gate): boolean => (g.targets === undefined || g.targets.includes('mobile')) && on(g.when);
+  const drawn = (g: Gate): boolean => (g.platforms === undefined || g.platforms.includes('mobile')) && on(g.when);
   // A name no value supplies throws by name (like a flag); a supplied null is the legal "disabled" state.
   const val = (name: string): PageValues[string] => {
     if (!Object.hasOwn(values, name)) throw new Error(`page table: the value ${name} is not supplied`);

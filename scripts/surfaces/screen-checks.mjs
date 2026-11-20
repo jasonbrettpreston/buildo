@@ -453,16 +453,31 @@ export function pageProblems(id, screen, supplied, content, contractIds) {
   return out;
 }
 const PAGE_BUILDER = 'mobile/src/components/surfaces/PageTableBinding.tsx';
+const SURFACES_DIR = 'mobile/src/components/surfaces';
+/** Source text with comments and string literals blanked, so a mention in prose or a string is never counted as a call. */
+export const codeOnly = (src) => String(src)
+  .replace(/\/\*[\s\S]*?\*\//g, ' ')
+  .replace(/(['"`])(?:\\.|(?!\1)[^\\\n])*\1/g, '""')
+  .replace(/\/\/[^\n]*/g, ' ');
+const callsBuilder = (root, rel) => { try { return /\bpageProps\(/.test(codeOnly(fs.readFileSync(path.join(root, rel), 'utf8'))); } catch { return false; } };
 /** The mobile binding modules (bindings.json) that call the page builder: one screen is expected for each. */
 export function pageCallers(ctx) {
   const mods = Array.isArray(ctx.bindings?.modules) ? ctx.bindings.modules : [];
   const paths = [...new Set(mods.filter((m) => m.platform === 'mobile' && m.path !== PAGE_BUILDER).map((m) => m.path))];
-  return paths.filter((p) => { try { return /\bpageProps\(/.test(fs.readFileSync(path.join(ctx.root, p), 'utf8')); } catch { return false; } });
+  return paths.filter((p) => callsBuilder(ctx.root, p));
+}
+/** Files under the surfaces component folder that call the builder but are not a bindings.json module. */
+export function pageStrays(ctx) {
+  const mods = new Set((Array.isArray(ctx.bindings?.modules) ? ctx.bindings.modules : []).map((m) => m.path));
+  let names = [];
+  try { names = fs.readdirSync(path.join(ctx.root, SURFACES_DIR)).filter((n) => /\.tsx?$/.test(n)).sort(); } catch { names = []; }
+  return names.map((n) => `${SURFACES_DIR}/${n}`).filter((p) => p !== PAGE_BUILDER && !mods.has(p) && callsBuilder(ctx.root, p));
 }
 export function pageArm(ctx) {
   const waits = waitsNote(ctx, 'S-page');
   const out = [];
   const expected = pageCallers(ctx).length;
+  for (const p of pageStrays(ctx)) out.push(`SV-PAGE ${p}: calls the page builder but is not a bindings.json module`);
   const table = ctx.ok ? tryJson(path.join(ctx.root, PAGE_TABLE)) : undefined;
   const screens = table?.screens && typeof table.screens === 'object' ? table.screens : {};
   const ids = Object.keys(screens);

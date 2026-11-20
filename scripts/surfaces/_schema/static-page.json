@@ -1207,7 +1207,7 @@
    "prefix": "parcel-semi",
    "contract": "contract_parcels_lookup",
    "binding": "mobile/src/components/surfaces/SemiQuestionBinding.tsx",
-   "targets": [
+   "platforms": [
     "mobile"
    ],
    "sections": [

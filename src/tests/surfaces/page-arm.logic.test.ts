@@ -104,6 +104,17 @@ describe('P4 the arm fails on an unreadable or empty table', () => {
     expect(pageArm(ctxOf(rootWith(JSON.stringify({ pages: {}, screens: {} })))).findings).toEqual(missing);
     expect(pageArm(ctxOf(rootWith(read(TABLE_PATH)), false)).findings).toEqual(missing);
   });
+  it('a comment-only or string-only mention of the builder does not count as a caller; a real call in a file that is not a bindings.json module is a finding naming the file', () => {
+    const root = rootWith(read(TABLE_PATH));
+    const c = ctxOf(root);
+    const mention = 'mobile/src/components/surfaces/MentionBinding.tsx';
+    fs.writeFileSync(path.join(root, mention), "// pageProps(a) is drawn elsewhere\n/* pageProps(b) */\nexport const note = 'pageProps(c)';\n");
+    c.bindings.modules.push({ path: mention, platform: 'mobile' });
+    expect(pageArm(c).findings).toEqual([]);
+    const stray = 'mobile/src/components/surfaces/StrayBinding.tsx';
+    fs.writeFileSync(path.join(root, stray), 'export const x = pageProps(a, b, c, d);\n');
+    expect(pageArm(c).findings).toEqual([`SV-PAGE ${stray}: calls the page builder but is not a bindings.json module`]);
+  });
   it('RED: a second caller of the builder with no screen in the table is a finding with both counts', () => {
     const root = rootWith(read(TABLE_PATH));
     const other = 'mobile/src/components/surfaces/OtherBinding.tsx';
