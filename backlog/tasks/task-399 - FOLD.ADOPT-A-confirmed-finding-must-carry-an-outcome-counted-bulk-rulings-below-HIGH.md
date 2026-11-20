@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T16:34:00Z'
+updated_date: '2026-11-20T16:42:00Z'
 labels:
   - McFix
   - McFix Z
@@ -34,3 +35,9 @@ Validated before writing by a separate read-only grounder (2026-11-20; verdict r
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Added 2026-11-20 from the operator words (MORNING-DECISIONS.md, entry "Operator AGREES: compliance documents attached to every task"): "citing not only the decision but the compliance rules ... compliance rules broken is listed in the response the fold fails". So: a CONFIRMED verdict from a compliance output names the rule it breaks (the rule-list id from the output file name plus the rule id or heading the finding cites), and check-fold prints, on refusal, the list of broken rules with their dispositions missing: one line per rule, rule list id, rule, file:line.
+<!-- SECTION:NOTES:END -->
