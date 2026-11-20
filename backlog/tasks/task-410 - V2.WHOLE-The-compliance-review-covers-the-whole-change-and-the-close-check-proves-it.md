@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T20:41:00Z'
+updated_date: '2026-11-20T20:44:00Z'
 labels:
   - McFix
   - McFix V2
@@ -82,4 +82,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 round 3 part 2: check-lane-close.mjs (F8 launch commit coverage, F9 no-list regenerate and lens prompt hashes, F10 table and templates from the range base, F11 type from the launch copy, F12 records only). Hook point for task-375: lensContexts().
 
 2026-11-20 round 3 part 3: backlog-lane.mjs brief (diff from the launch commit, Files pathspecs).
+
+2026-11-20 rebased onto wf2/board d17fc7499 (task-406 folded: nine golden exempt globs); item 3 test added; lists re-resolved: now also policy-124-s2-s5.
 <!-- SECTION:NOTES:END -->

@@ -622,3 +622,15 @@ describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', ()
     expect([...texts.flatMap((x) => stampOf(x).paths ?? [])].sort()).toEqual([...names].sort());
   });
 });
+
+// V2.WHOLE round 3, operator item 3 ("1-5 y"): the real table (task-406's fold) exempts a real golden from the review material and nothing that is not one.
+describe('V2.WHOLE: the real table exempts golden snapshots by their file shape only', () => {
+  it('a real golden is exempt; a code file in the golden folder, a stray runner and a nested golden are not', async () => {
+    const t = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { exempt: string[] };
+    const { matchesAny } = (await import(path.join(ROOT, 'scripts/analysis/mcbylaws/paths.mjs'))) as { matchesAny: (g: string[], p: string) => boolean };
+    const real = run('git', ['ls-files', 'src/tests/fixtures/surfaces/*/*.mobile.json'], { cwd: ROOT }).stdout.split('\n').filter(Boolean)[0] as string;
+    expect(real).toBeTruthy();
+    expect(matchesAny(t.exempt, real), real).toBe(true);
+    for (const p of ['src/tests/fixtures/surfaces/x/evil.ts', 'src/tests/fixtures/report-page/run.mjs', 'src/tests/fixtures/surfaces/x/y/a.mobile.json', 'src/lib/a.ts']) expect(matchesAny(t.exempt, p), p).toBe(false);
+  });
+});
