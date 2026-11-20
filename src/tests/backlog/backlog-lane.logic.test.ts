@@ -272,6 +272,18 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     expect(r.status, r.stderr).toBe(0);
     expect(inputs).toContain('137_mcqueue.md');
   });
+  it('ATTACK 11: --rule-lists with a table other than the repo one is refused unless the test env var is set; a Files line of only exempt paths for a build task is refused', () => {
+    const f = fixture();
+    const fake = path.join(f.base, 'fake-table.json');
+    fs.writeFileSync(fake, JSON.stringify({ contract_version: 1, lists: {}, rows: [{ id: 'all', globs: ['**'], lists: [], why: 'x' }], exempt: [], increment_docs: { F: 'none' } }));
+    const r = lane(f, ['--dry-run', '--rule-lists', fake]);
+    refused(r, /--rule-lists/);
+    console.log(`ATTACK 11: REFUSED: ${r.stderr.trim().slice(0, 200)}`);
+    const ok = run('node', [SCRIPT, ...f.args, '--dry-run', '--rule-lists', fake], { env: { ...ID, RULE_LISTS_ALLOW_OVERRIDE: '1' } });
+    expect(ok.stderr).not.toMatch(/--rule-lists/);
+    const e = fixture({ files: 'docs/reports/lanes/x/', type: 'build' });
+    refused(lane(e), /no rule list/);
+  });
   it('a milestone letter with no increment requirements document is refused naming the letter', () => {
     refused(lane(fixture({ letter: 'Q' })), /increment.*Q|Q.*increment/);
   });

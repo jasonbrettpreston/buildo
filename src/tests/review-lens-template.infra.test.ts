@@ -3,6 +3,7 @@
 // template's own System persona as the system message and its User prompt (file in {{PLAN}}, context in {{SPECS}}) as the user message,
 // so the strict one-line output format of the lens reaches the model instead of the generic adversarial prompt. Never reads .env.
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -103,5 +104,26 @@ describe('lens-compliance.md sends the material once (task-366)', () => {
     const file = tmpFile('m.txt', 'MARK_ONCE_MATERIAL\n');
     const m = dryRun([file, '--template', `${TEMPLATES}/lens-compliance.md`]);
     expect((m[1]!.content.match(/MARK_ONCE_MATERIAL/g) ?? []).length).toBe(1);
+  });
+});
+
+// task-366 (COMPLY.2, the close check binds a lens output to its input): in lens mode the review tool writes, among the first lines of its output, a REVIEW header
+// with the template name, the model id, a timestamp, the sha256 of the file under review and the sha256 of the prompt it sent.
+describe('review --template writes a REVIEW header (task-366)', () => {
+  it('REVIEW template=<name> model=<id> at=<iso> file_sha256=<hex> prompt_sha256=<hex> is in the first lines, and the hashes are of what was read and sent', () => {
+    const text = 'MARK_HEADER_MATERIAL\n';
+    const file = tmpFile('h.txt', text);
+    const stdout = execFileSync('node', [CLI, 'review', file, '--template', `${TEMPLATES}/lens-compliance.md`, '--dry-run'], { cwd: process.cwd(), env: { PATH: process.env.PATH, DEEPSEEK_API_KEY: 'test-key-not-real' } as unknown as NodeJS.ProcessEnv, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    const lines = stdout.split('\n');
+    const i = lines.findIndex((l) => l.startsWith('REVIEW '));
+    expect(i).toBeGreaterThanOrEqual(0);
+    expect(i).toBeLessThan(6);
+    const m = /^REVIEW template=(\S+) model=(\S+) at=(\S+) file_sha256=([0-9a-f]{64}) prompt_sha256=([0-9a-f]{64})$/.exec(lines[i] ?? '');
+    expect(m, lines[i]).not.toBeNull();
+    expect(m![1]).toBe('lens-compliance.md');
+    expect(Number.isNaN(Date.parse(m![3] as string))).toBe(false);
+    expect(m![4]).toBe(createHash('sha256').update(text).digest('hex'));
+    const msgs = (JSON.parse((lines.find((l) => l.startsWith('DRY-RUN ')) ?? '').slice('DRY-RUN '.length)) as { messages: { content: string }[] }).messages;
+    expect(m![5]).toBe(createHash('sha256').update(JSON.stringify([msgs[0]!.content, msgs[1]!.content])).digest('hex'));
   });
 });

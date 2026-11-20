@@ -6,6 +6,9 @@
     "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks get the queue lists). `increment_docs`: every task also gets the requirements document of its milestone group letter."
   ],
   "contract_version": 1,
+  "base_ref": "wf2/board",
+  "finished_statuses": ["BUILT", "DONE", "MERGED"],
+  "protected_paths": ["scripts/hooks/check-lane-close.mjs", "scripts/analysis/rule-lists.mjs", "scripts/analysis/rule-lists.json", "scripts/deepseek-review.js", ".husky/*"],
   "lists": {
     "step-132": { "file": "docs/specs/01-pipeline/132_step_standard_handbook.md", "sections": ["2. Every step", "3. By archetype", "4. Cross-cutting", "6. Rules with no or partial machine check"], "generated_by": "scripts/generate-step-handbook.mjs" },
     "airtight-124a": { "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md", "sections": ["Appendix §B10", "Appendix §B12"], "generated_by": "hand-written" },
@@ -13,6 +16,7 @@
     "airtight-v2-122": { "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md", "sections": ["6.6.1 Registry and ledger truth"], "generated_by": "hand-written" },
     "airtight-122a": { "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md", "sections": ["Appendix §A26", "Appendix §A27"], "generated_by": "hand-written" },
     "eng-s3-s9": { "file": "docs/specs/00_engineering_standards.md", "sections": ["3. Database Management", "9. Pipeline & Script Safety"], "generated_by": "hand-written" },
+    "eng-s1": { "file": "docs/specs/00_engineering_standards.md", "sections": ["1. Architecture & UI Standards"], "generated_by": "hand-written" },
     "eng-s2-s4-s10-s11": { "file": "docs/specs/00_engineering_standards.md", "sections": ["2. Error Handling", "4. Security & API Contracts", "10. Frontend/Backend Boundary", "11. Plan Compliance Checklist"], "generated_by": "hand-written" },
     "eng-s5-s9-s14": { "file": "docs/specs/00_engineering_standards.md", "sections": ["5. Testing Standards", "9. Pipeline & Script Safety", "14. The Prevention Loop"], "generated_by": "hand-written" },
     "eng-s5": { "file": "docs/specs/00_engineering_standards.md", "sections": ["5. Testing Standards"], "generated_by": "hand-written" },
@@ -66,6 +70,25 @@
       "globs": ["src/app/api/**", "src/lib/**"],
       "lists": ["eng-s2-s4-s10-s11"],
       "why": "API routes and src/lib are governed by engineering standards sections 2, 4, 10 and 11"
+    },
+    {
+      "id": "ui-app",
+      "globs": ["src/components/**", "src/app/**"],
+      "lists": ["eng-s1", "eng-s2-s4-s10-s11"],
+      "why": "ADDED by COMPLY.2 (real Files lines named these paths and no starting row matched): UI components and app pages are governed by engineering standards section 1 (architecture and UI), and sections 2, 4, 10 and 11 (errors, security, the front/back boundary, the plan checklist); the surface paths among them also match the surfaces row"
+    },
+    {
+      "id": "middleware-config",
+      "globs": ["src/middleware.ts", "package.json", ".github/**"],
+      "lists": ["eng-s2-s4-s10-s11", "eng-s5-s9-s14"],
+      "why": "ADDED by COMPLY.2: the request middleware (security and boundary), the dependency manifest and CI workflows are governed by engineering standards sections 2, 4, 10, 11 (errors, security, boundary) and 5, 9, 14 (testing, script safety, the prevention loop)"
+    },
+    {
+      "id": "surface-importers",
+      "globs": ["src/lib/**", "src/app/api/**"],
+      "imports_from": ["src/lib/surfaces", "scripts/surfaces"],
+      "lists": ["surface-126", "surface-128"],
+      "why": "ADDED by COMPLY.2: a library or API file that imports from src/lib/surfaces or scripts/surfaces (resolved module path, anchored) serves a McFrontend surface and is governed by the surface contract (Spec 126) and the surface policy (Spec 128)"
     },
     {
       "id": "storage",

@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-COMPLY2'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-20T14:01:00Z'
+updated_date: '2026-11-20T14:16:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -24,7 +24,7 @@ ordinal: 66012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." Record: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, entry "Operator: compliance tooling tasks into 1·B". Scope now: (1) a data table mapping path globs to rule lists, used whole: pipeline steps, compute and migrations -> Spec 132 handbook, the Airtight V1 to V3 sources, Spec 133 for by-law rows, engineering standards; src/app/api and src/lib -> engineering standards sections 2, 4, 10, 11, McStorage policy when a report is computed or stored, fe.38 and fe.39 on the lookup; scripts/surfaces, content, bindings -> Spec 136 (all 44 rules) and Spec 128; mobile/ -> Specs 90, 98, 99, 100, 96 and Spec 136; queue and records -> Spec 137 and Spec 08. (2) scripts/analysis/backlog-lane.mjs reads the task Files line, attaches the lists to the brief and the lens line; (3) the close refuses BUILT unless a compliance lens output exists per attached list and a grounder verdict file written by an agent that is not the lane; (4) reuse the existing rule maps where they already map file to rule (task-365 reports which do). No hand-picked clauses anywhere. Waits on: task-365 report.
 
-Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, scripts/hooks/check-lane-close.mjs, scripts/lib/review-template.js, .husky/commit-msg, src/tests/backlog/, src/tests/review-template.logic.test.ts, src/tests/hooks-composition.infra.test.ts, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, .claude/review-templates/lens-compliance.md, src/tests/review-lens-template.infra.test.ts
+Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, scripts/hooks/check-lane-close.mjs, scripts/lib/review-template.js, scripts/deepseek-review.js, .husky/commit-msg, src/tests/backlog/, src/tests/review-template.logic.test.ts, src/tests/hooks-composition.infra.test.ts, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, .claude/review-templates/lens-compliance.md, src/tests/review-lens-template.infra.test.ts
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -71,4 +71,6 @@ Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, script
 2026-11-20 BL-COMPLY2 round 1: output lenses run (compliance per list, code-review, error-paths); coordinator's grounder found the first close check satisfiable by shortcuts; hook rebuilt red-first (red3.out): lens set by type, Ruled sha256 and count per output, quote checked against the repo, grounder not the lane or any assignee, no exemption for code. Task stays RUNNING: grounder owed.
 
 2026-11-20 BL-COMPLY2 report in the repo: docs/reports/lanes/2026-11-20/BL-COMPLY2/ (REPORT.md, FINDINGS.md 128 findings by id, TRIAGE.md, plan and output lens outputs). Dogfood: closeErrors on this dir refuses only for the missing GROUNDER.md. STATUS ready, task RUNNING, grounder owed.
+
+2026-11-20 BL-COMPLY2 round 2 (grounder attacks, 13 got through): close check now runs for every staged task file that moves to a finished status (any trailer or none, the board job included); REVIEW header from the review tool bound to the committed input and the whole-list hash; TASK-scoped lane dir; Files against the diff; no-assignee and dropped-assignee refused; self-edit rule; grounder name clash, quote and reason minimums, loose finding count; launch: table override refused, exempt-only Files refused, rows for components, app, middleware, package.json, .github and surface importers. Red: red4.out. Task stays RUNNING: grounder owed.
 <!-- SECTION:NOTES:END -->

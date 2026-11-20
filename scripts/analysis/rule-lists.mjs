@@ -20,7 +20,8 @@ import { globToRegExp, matchesAny } from './mcbylaws/paths.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');
 const BOUND = 120000; // scripts/deepseek-review.js MAX_PROMPT_CHARS
-const RESERVE = 700; // header and separator of one lens input file
+const RESERVE = 800; // stamp, header and separator of one lens input file
+const MARKER = '\n=== MATERIAL UNDER REVIEW (everything below this line) ===\n';
 
 export const readTable = (file = DEFAULT_TABLE) => JSON.parse(fs.readFileSync(file, 'utf8'));
 export function trackedFiles(root) {
@@ -154,12 +155,21 @@ function candidates(entry, tracked) {
   }
   return [...out];
 }
+// The module paths a file imports, resolved to repo paths ('@/x' is src/x; a relative path against the file's directory; a bare package is skipped), comments removed. ANCHORED: a
+// path matches when it IS the named directory or is under it ("scripts/lib/compute" does not match "scripts/lib/compute-old"); a comment or a string is not an import.
+const resolveSpec = (file, spec) => (spec.startsWith('@/') ? `src/${spec.slice(2)}` : spec.startsWith('.') ? path.posix.normalize(path.posix.join(path.posix.dirname(file), spec)) : null);
 const importsFrom = (root, file, imps) => {
   const p = path.join(root, file);
   if (!fs.existsSync(p) || !fs.statSync(p).isFile()) return false;
-  const text = fs.readFileSync(p, 'utf8');
-  return imps.some((i) => new RegExp(`(?:from\\s*|require\\s*\\(\\s*|import\\s*\\(\\s*)['"][^'"]*${i.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(text));
+  const text = fs.readFileSync(p, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  for (const m of text.matchAll(/(?:\bfrom\s*|\brequire\s*\(\s*|\bimport\s*\(\s*|^\s*import\s*)['"]([^'"]+)['"]/gm)) {
+    const r = resolveSpec(file, m[1]);
+    if (r && imps.some((i) => r === i || r.startsWith(`${i}/`))) return true;
+  }
+  return false;
 };
+/** True when a changed path is covered by a Files entry (a path prefix on a directory boundary, or a glob), the grammar check-task-files.mjs reads. */
+export const coveredBy = (entries, p) => (entries ?? []).some((e0) => { const e = e0.replace(/^\.\//, '').replace(/\/+$/, ''); return /[*?]/.test(e) ? globToRegExp(e).test(p) : p === e || p.startsWith(`${e}/`); });
 
 /**
  * The lists a task attaches. `body`: the task text (the Files line is read from it); `type`: the task type; `letter`: the milestone group letter.
@@ -181,6 +191,7 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
   };
   const rows = table.rows.map((row) => ({ row, globs: rowGlobs(row, root) }));
   let entries = filesEntries(body);
+  let rowHits = 0;
   if (!entries) {
     const d = table.no_files_default;
     const row = d && d.types.map((x) => x.toLowerCase()).includes(String(type ?? '').toLowerCase()) ? table.rows.find((r) => r.id === d.row) : null;
@@ -191,10 +202,11 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
   for (const entry of entries) {
     const cands = candidates(entry, tracked);
     const hit = rows.filter(({ row, globs }) => cands.some((c) => matchesAny(globs, c) && (!row.imports_from || importsFrom(root, c, row.imports_from))));
-    if (hit.length) { for (const { row } of hit) for (const l of row.lists) add(l, row.id, row.why); continue; }
+    if (hit.length) { rowHits += 1; for (const { row } of hit) for (const l of row.lists) add(l, row.id, row.why); continue; }
     if (cands.some((c) => matchesAny(table.exempt ?? [], c))) result.exempt.push(entry); else result.unmatched.push(entry);
   }
   if (result.unmatched.length) return { error: `refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json: ${result.unmatched.join(', ')} (add a row to the table, or fix the Files line); no silent "no rules apply"` };
+  if (entries.length > 0 && rowHits === 0 && ['build', 'fix'].includes(String(type ?? '').toLowerCase())) return { error: `refused: the Files line of a ${type} task resolves to no rule list (only exempt paths: ${result.exempt.join(', ')}); a build or fix task must touch at least one governed path` };
   if (letter !== undefined) {
     const id = table.increment_docs?.[letter];
     if (!id) return { error: `refused: no increment requirements document for milestone group [${letter}] in increment_docs of scripts/analysis/rule-lists.json` };
@@ -204,6 +216,9 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
 }
 
 // ---- finding ids (shared with scripts/hooks/check-lane-close.mjs) ----
+/** A deliberately loose reading of a finding line (decoration, numbering, quotes, bold, a colon, any case). It must give the same count as the strict FINDING_LINE, else lines were altered. */
+const FINDING_LOOSE = /^[\s>*_`"'\-\d.):]*\b(bug|defer)\b[\s*_`"':]*\s*(severity|crit|high|med|low|nit)/i;
+export const looseFindingCount = (text) => text.split('\n').filter((ln) => FINDING_LOOSE.test(ln)).length;
 export const FINDING_LINE = /^\s*[-*]?\s*(BUG|DEFER)\s+severity=/;
 export const isLensOutput = (name) => /^(plan|out)-.+\.txt$/.test(name);
 /** [{id, line}] for BUG and DEFER lines of lens outputs [{name, text}]; id = <file stem>#<1-based ordinal among BUG and DEFER lines of that file>. */
@@ -254,13 +269,31 @@ export function buildLensInputs({ id, list, root, material, templateFile, max = 
   const sel = list.whole ? 'whole file' : `sections ${list.sections.join('; ')}`;
   const files = parts.map((p, i) => {
     const head = `RULE LIST ${id} (${list.file}, ${sel}), part ${i + 1} of ${parts.length}. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.`;
-    const text = `${head}\n\n${p}\n=== MATERIAL UNDER REVIEW (everything below this line) ===\n${material}\n`;
+    const stamp = `LIST ${id} sha256:${sha256(Buffer.from(p))} material sha256:${sha256(Buffer.from(material))} part ${i + 1} of ${parts.length}`;
+    const text = `${stamp}\n${head}\n\n${p}${MARKER}${material}\n`;
     const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
     if (prompt > max) throw new Error(`list ${id}: part ${i + 1} would be ${prompt} characters, over the ${max} bound`);
     return { suffix: parts.length === 1 ? '' : `-p${i + 1}`, text };
   });
   return files;
 }
+
+/**
+ * Read a lens input file back: {id, listSha, materialSha, part, parts, listPart, material} or null when it is not one. The close check recomputes the hashes from the text,
+ * and checks that the parts of a list together carry the WHOLE list (whitespace aside), so a list cannot be shortened or softened and re-stamped.
+ */
+export function parseLensInput(text) {
+  const m = /^LIST (\S+) sha256:([0-9a-f]{64}) material sha256:([0-9a-f]{64}) part (\d+) of (\d+)\n/.exec(text);
+  if (!m) return null;
+  const l1 = text.indexOf('\n', text.indexOf('\n') + 1);
+  const mi = text.indexOf(MARKER);
+  if (l1 < 0 || mi < 0) return null;
+  const listPart = text.slice(l1 + 2, mi);
+  const material = text.slice(mi + MARKER.length).replace(/\n$/, '');
+  return { id: m[1], listSha: m[2], materialSha: m[3], part: Number(m[4]), parts: Number(m[5]), listPart, material, ok: sha256(Buffer.from(listPart)) === m[2] && sha256(Buffer.from(material)) === m[3] };
+}
+/** The text of a whole list as the helper reads it (all blocks), for the whole-list comparison. */
+export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');
 
 // ---- CLI ----
 function cli() {

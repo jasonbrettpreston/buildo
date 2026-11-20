@@ -43,6 +43,15 @@ describe('the real table (AC #1: data, every listed rule file exists)', () => {
     expect(ids(res)).toContain('step-132');
     expect(ids(res)).toContain('airtight-v3-122');
   });
+  it('ATTACK 12: the real paths that matched no row now resolve (components, app pages, middleware, package.json, CI), and a surfaces importer gets Specs 126 and 128', () => {
+    for (const p of ['src/components/report/X.tsx', 'src/app/(maxbld)/page.tsx', 'src/middleware.ts', 'package.json', '.github/workflows/test.yml']) {
+      const r = script(CLI, ['resolve', '--files', p, '--type', 'build', '--letter', 'S']);
+      expect(r.status, `${p}: ${r.stderr}`).toBe(0);
+    }
+    const imp = JSON.parse(script(CLI, ['resolve', '--files', 'src/lib/parcels/lot-size-entry.ts', '--type', 'build', '--letter', 'S']).stdout) as Res;
+    expect(ids(imp)).toEqual(expect.arrayContaining(['surface-126', 'surface-128']));
+    console.log(`ATTACK 12: RESOLVES: src/components, src/app, src/middleware.ts, package.json, .github ; importer lists ${ids(imp).join(',')}`);
+  });
   it('an unmatched path is refused and named (exit 3)', () => {
     const r = script(CLI, ['resolve', '--files', 'zzz-unknown/dir/file.txt', '--type', 'build', '--letter', 'S']);
     expect(r.status).toBe(3);
@@ -59,8 +68,11 @@ function fixture() {
   w('docs/inc.md', '# Inc\n\nincrement requirements\n');
   w('docs/q.md', '# Q\n\nqueue rules\n');
   w('docs/e.md', '# E\n\n## 7. Rules\n\n' + 'rule line\n'.repeat(400) + '\n## 8. After\n\nafter\n');
-  w('src/one.ts', "import { x } from '../../scripts/lib/" + "compute/thing';\nexport const a = x;\n");
+  w('src/one.ts', "import { x } from '../scripts/lib/" + "compute/thing';\nexport const a = x;\n");
   w('src/two.ts', 'export const b = 2;\n');
+  w('src/four.ts', "import { s } from '@/lib/surfaces/x';\nexport const d = s;\n");
+  w('src/five.ts', "import { s } from '../scripts/lib/" + "compute-old/x';\nexport const e = s;\n");
+  w('src/six.ts', "// scripts/lib/" + "compute is only named in this comment\nconst text = 'from ../scripts/lib/" + "compute/x';\nexport const f = text;\n");
   w('mobile/m.tsx', 'export const m = 1;\n');
   w('scripts/lib/compute/thing.js', 'x\n');
   w('pol/protected.json', JSON.stringify({ frontend: ['mobile/**'] }));
@@ -78,6 +90,7 @@ function fixture() {
     rows: [
       { id: 'src-row', globs: ['src/**'], lists: ['first'], why: 'src' },
       { id: 'imp', globs: ['src/**/*.ts'], imports_from: ['scripts/lib/compute'], lists: ['whole'], why: 'imports compute' },
+      { id: 'surf', globs: ['src/**/*.ts'], imports_from: ['src/lib/surfaces'], lists: ['queue'], why: 'imports surfaces' },
       { id: 'mob', globs_from: { file: 'pol/protected.json', key: 'frontend' }, lists: ['big'], why: 'frontend' },
       { id: 'queue-records', globs: ['docs/*.md'], lists: ['queue'], why: 'records' },
     ],
@@ -111,14 +124,32 @@ describe('resolve on a fixture tree (AC #2)', () => {
     const f = fixture();
     expect(ids(JSON.parse(res(f, 'mobile/m.tsx', ['--type', 'build']).stdout) as Res)).toContain('big');
   });
-  it('an exempt entry resolves to no list and is flagged; exempt is not unmatched', () => {
+  it('an exempt entry beside a matched one resolves to no list and is flagged; exempt is not unmatched', () => {
     const f = fixture();
-    const r = res(f, 'docs/reports/lanes/x/', ['--type', 'build']);
+    const r = res(f, 'src/two.ts, docs/reports/lanes/x/', ['--type', 'build']);
     expect(r.status, r.stderr).toBe(0);
     const a = JSON.parse(r.stdout) as Res;
     expect(a.exempt).toEqual(['docs/reports/lanes/x/']);
     expect(a.unmatched).toEqual([]);
-    expect(ids(a)).toEqual(['inc-F']);
+    expect(ids(a).sort()).toEqual(['first', 'inc-F']);
+  });
+  it('ATTACK 11: a Files line of only exempt paths for a build or fix task is refused (a record-only task may keep it)', () => {
+    const f = fixture();
+    for (const type of ['build', 'fix']) {
+      const r = res(f, 'docs/reports/lanes/x/', ['--type', type]);
+      expect(r.status).toBe(3);
+      expect(r.stderr).toMatch(/no rule list/);
+      console.log(`ATTACK 11: REFUSED: ${r.stderr.trim().slice(0, 200)}`);
+    }
+    expect(res(f, 'docs/reports/lanes/x/', ['--type', 'record']).status).toBe(0);
+  });
+  it('the import row is anchored on the resolved module path: an alias, a relative path match; a longer sibling name, a comment and a string do not', () => {
+    const f = fixture();
+    const of = (p: string) => ids(JSON.parse(res(f, p, ['--type', 'build']).stdout) as Res);
+    expect(of('src/four.ts')).toContain('queue'); // '@/lib/surfaces/x' resolves to src/lib/surfaces/x
+    expect(of('src/one.ts')).toContain('whole'); // relative scripts/lib/compute/thing
+    expect(of('src/five.ts')).not.toContain('whole'); // scripts/lib/compute-old is another directory
+    expect(of('src/six.ts')).not.toContain('whole'); // only a comment and a string
   });
   it('an unmatched entry is refused with the path named, even beside matched ones', () => {
     const f = fixture();
@@ -240,6 +271,15 @@ describe('lens-input: list first, then the material, never trims', () => {
     const l = lens(f, 'first', 'MAT', 20000);
     expect(l.files.map((x) => path.basename(x))).toEqual(['o.txt']);
     expect(fs.existsSync(path.join(f.d, 'out/o-p2.txt'))).toBe(false);
+  });
+});
+
+describe('lens-input stamps what it wrote (the close check recomputes it)', () => {
+  it('the first line is LIST <id> sha256:<hex of the list part> material sha256:<hex of the material> part i of n', () => {
+    const f = fixture();
+    const l = lens(f, 'first', 'MAT', 20000);
+    expect(l.r.status, l.r.stderr).toBe(0);
+    expect(l.text[0]!.split('\n')[0]).toMatch(/^LIST first sha256:[0-9a-f]{64} material sha256:[0-9a-f]{64} part 1 of 1$/);
   });
 });
 

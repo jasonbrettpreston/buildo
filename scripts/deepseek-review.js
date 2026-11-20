@@ -23,6 +23,7 @@
 
 require('dotenv').config();
 const fs = require('fs');
+const crypto = require('crypto');
 const path = require('path');
 const OpenAI = require('openai');
 const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock } = require('./lib/review-template');
@@ -170,10 +171,13 @@ async function cmdReviewFile(filePath, contextPath = null, sections = [], { answ
     return;
   }
 
-  console.log(`🔍 Adversarial review of ${filePath} (model: ${MODEL})\n`);
   const code = readFileOrFail(filePath);
   const rawContext = contextPath ? readFileOrFail(contextPath) : null;
   const context = rawContext && sections.length ? extractSections(rawContext, sections) : rawContext;
+  // task-366 (COMPLY.2): in lens mode the first output line is a REVIEW header the close check reads: the template name, the model, a timestamp, the sha256 of the file under review and the
+  // sha256 of the exact prompt sent (JSON of [system, user]). A lens output without it was not made by this tool on that file.
+  const lensHeader = (systemInstruction, userPrompt) => `REVIEW template=${path.basename(templatePath)} model=${MODEL} at=${new Date().toISOString()} file_sha256=${crypto.createHash('sha256').update(code).digest('hex')} prompt_sha256=${crypto.createHash('sha256').update(JSON.stringify([systemInstruction, userPrompt])).digest('hex')}`;
+  if (!templatePath) console.log(`🔍 Adversarial review of ${filePath} (model: ${MODEL})\n`);
 
   // task-358 (REVIEW.LENSES) — lens mode: `--template <lens>` sends the lens template's own System persona and User prompt
   // ({{PLAN}} = the file under review, {{SPECS}} = the --context file) so its strict output format reaches the model.
@@ -185,6 +189,8 @@ async function cmdReviewFile(filePath, contextPath = null, sections = [], { answ
       specs: context ?? '(no pasted context provided)',
       dataContext: '(no live-DB context provided)',
     });
+    console.log(lensHeader(systemInstruction, userPrompt));
+    console.log(`🔍 Lens review of ${filePath} (model: ${MODEL})\n`);
     if (dryRun) {
       console.log(`DRY-RUN ${JSON.stringify({ messages: [{ role: 'system', content: systemInstruction }, { role: 'user', content: userPrompt }] })}`);
       return;
