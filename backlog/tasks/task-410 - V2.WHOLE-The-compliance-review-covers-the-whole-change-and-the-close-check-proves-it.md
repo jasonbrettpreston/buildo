@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T18:53:00Z'
+updated_date: '2026-11-20T18:56:00Z'
 labels:
   - McFix
   - McFix V2
@@ -38,6 +38,17 @@ Operator, 2026-11-20, verbatim: "I also need certainty within the tasks that a r
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+PLAN task-410 (V2.WHOLE). Rule: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1; PLAN-PROTOCOL.md:3 simple, no scope creep. Principles served: standardized, understandable, simple.
+Verified facts (opened): (1) check-lane-close.mjs compliance block checks the material only by its stamped hash; (2) scripts/deepseek-review.js:35 bound 120000, lens-input refuses a material that leaves no room (rule-lists.mjs buildLensInputs) and an unsplittable list block; (3) part (a) the four templates carry {{PLAN}} once each (lens-code-review/error-paths/ux/security.md line 34): DONE by task-406, not redone.
+(b) rule-lists.mjs lens-input: when buildLensInputs throws for room (material or unsplittable list block) and the material holds `diff --git` headers, the TOOL cuts the diff at those headers (file boundaries only) into chunks of at most the room left after the list part; each chunk gets every list part. Stamp: line 1 gains ` chunk c of m`, head line gains ` paths: <JSON array>`; files are -p1..-pN chunk-major (N = m x list parts). A single file over the room is refused with one line naming the file and its size. No --list (with --template of a non-compliance lens) writes the same chunk inputs with an empty list part: that is how code-review, error-paths, ux, security are split (same tool); the close check accepts out-<lens>-pN.txt for them, each with its committed in- input verified like a chunk.
+(c) check-lane-close.mjs: expected paths = git diff --name-only --no-renames merge-base..HEAD minus table exempt globs; for out-phase inputs: each chunk's stamped paths must equal the paths of its own material, every part of a chunk carries the same chunk and material, the union of the chunk path lists must be exactly the expected list with no path in two chunks, and each chunk material must equal git diff --no-renames merge-base HEAD -- <its paths>. An unchunked input is chunk 1 of 1 (its paths read from its diff headers). Empty expected list: nothing to cover. Limit stated: a path staged only in the closing commit is not in the range (the closing commit is records only).
+(d) backlog-lane.mjs brief sentence: says the diff is split by lens-input at file boundaries, the command to make the diff, chunk naming and the refusal for one file over the room; the review-files-go-here sentence kept.
+Tests first (red as failing assertions through the pre-commit related run): rule-lists.logic.test.ts (chunking, file over room, no-list mode, non-diff material still refused), check-lane-close.logic.test.ts (control passes; chunk set missing a changed file refused; chunk text differing from the diff refused; hand-edited stamp refused; non-compliance parts), backlog-lane.logic.test.ts (sentence). Each protected-path edit in its own commit, no status move. NOT built: the always-attached lists checked at plan phase only for build tasks (measured), lens-input pasted context (measured), generated-file exclusion, bound change, task size limit.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

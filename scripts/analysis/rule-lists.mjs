@@ -3,9 +3,12 @@
 // Used by scripts/analysis/backlog-lane.mjs (attach at launch), scripts/hooks/check-lane-close.mjs (require at close) and this file's own CLI:
 //   validate [--table f] [--root dir]                      every list file exists, every section selector names exactly one heading, every glob matches a tracked path
 //   resolve --files "<Files line>" [--type t] [--letter L]   the lists a Files line attaches (JSON); exit 3 with one line when refused
-//   lens-input --list id --material f --out prefix [--template f] [--max n]
+//   lens-input [--list id] --material f --out prefix [--template f] [--max n]
 //                                                           the compliance lens input: the list FIRST, then the material; split by the list's own headings when list +
-//                                                           material would pass the review tool bound; never trims; exit 1 when it cannot fit
+//                                                           material would pass the review tool bound; never trims; exit 1 when it cannot fit. V2.WHOLE (task-410): when the material is
+//                                                           a git diff that leaves no room for a list part, the TOOL splits it at FILE boundaries into chunks (each chunk against every list
+//                                                           part, stamped chunk c of m with its path list); one file alone over the room is refused naming it. No --list: the same chunks for
+//                                                           a non-compliance lens template (an empty list part)
 //   check-tasks [--table f] [--root dir]                    every open task of backlog/tasks: resolves (with the every_task and milestone lists verified) or is listed by id as not yet resolvable, with the reason
 //   page [--write|--check] [--table f] [--root dir]          the generated page docs/reports/generated/rule-lists-by-kind.md: per kind of work the documents, sizes and part counts
 //   findings --dir d                                        the finding ids of the lens outputs in d (<file stem>#<ordinal among BUG and DEFER lines>)
@@ -24,6 +27,21 @@ export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');
 const BOUND = 120000; // scripts/deepseek-review.js MAX_PROMPT_CHARS
 const RESERVE = 800; // stamp, header and separator of one lens input file
 const MARKER = '\n=== MATERIAL UNDER REVIEW (everything below this line) ===\n';
+/** V2.WHOLE (task-410): the one diff command the brief, the lens input and the close check share (every flag pinned, so the text is the same on every machine). */
+export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];
+/** A git diff cut at its file headers: [{path, text}] in order, or null when the text is not a diff (does not start at a header). Content lines carry a prefix, so a file whose own text says "diff --git" is never cut. */
+export function splitDiff(text) {
+  const at = [...text.matchAll(/^diff --git /gm)].map((m) => m.index);
+  if (at.length === 0 || at[0] !== 0) return null;
+  return at.map((s, i) => {
+    const seg = text.slice(s, at[i + 1] ?? text.length);
+    const rest = seg.split('\n', 1)[0].slice('diff --git a/'.length);
+    const p = rest.slice(0, (rest.length - 3) / 2);
+    if (!seg.startsWith('diff --git a/') || `${p} b/${p}` !== rest) throw new Error(`cannot read the path of a diff file header (renames and quoted names are not supported; use the shared diff command): ${seg.split('\n', 1)[0].slice(0, 120)}`);
+    return { path: p, text: seg };
+  });
+}
+export const diffPaths = (text) => (splitDiff(text) ?? []).map((s) => s.path);
 
 export const readTable = (file = DEFAULT_TABLE) => JSON.parse(fs.readFileSync(file, 'utf8'));
 export function trackedFiles(root) {
@@ -275,7 +293,7 @@ export function findingsIn(files) {
 function splitUnits(text, max, label, id) {
   if (text.length <= max) return [text];
   const subs = headings(text).filter((h) => h.offset > 0);
-  if (subs.length === 0) throw new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading to split at (room for list text in one file: ${max})`);
+  if (subs.length === 0) throw Object.assign(new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading to split at (room for list text in one file: ${max})`), { room: true, size: text.length });
   const level = Math.min(...subs.map((h) => h.level));
   const cuts = [0, ...subs.filter((h) => h.level === level).map((h) => h.offset), text.length];
   const out = [];
@@ -285,7 +303,13 @@ function splitUnits(text, max, label, id) {
   }
   return out;
 }
-/** The lens input files for one list: [{suffix, text}]. The list part comes first, whole; the material follows. Throws when a part cannot fit (never trims). */
+/**
+ * The lens input files for one list: [{suffix, text}]. The list part comes first, whole; the material follows. Throws when a part cannot fit (never trims).
+ * V2.WHOLE (task-410): when the material leaves no room for a list part and is a git diff, the TOOL cuts it at file boundaries into chunks (packed in diff order, each at most the room
+ * left beside the list part); every chunk goes against every list part, files are -p1..-pN chunk by chunk (N = chunks x list parts), and each input is stamped "chunk c of m" with
+ * its path list. One file alone over the room is refused naming the file and its size. A diff is always stamped (chunk 1 of 1 when it fits), so the close check reads paths from the stamp.
+ * `list` null (a non-compliance lens template): the same chunks with an empty list part, id "none".
+ */
 export function buildLensInputs({ id, list, root, material, templateFile, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {
   const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
   const split = rt.splitTemplate(fs.readFileSync(templateFile, 'utf8'));
@@ -293,26 +317,56 @@ export function buildLensInputs({ id, list, root, material, templateFile, max = 
   const k = (split.userTemplate.match(/\{\{PLAN\}\}/g) ?? []).length || 1;
   const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
   const avail = Math.floor((max - fixed - 200) / k);
-  const unitMax = avail - material.length - RESERVE;
-  if (unitMax < 200) throw new Error(`material is ${material.length} characters; with the lens template (${fixed} fixed characters, the plan placeholder used ${k}x) at most ${avail} characters fit one file, leaving ${unitMax} for the list: split the material (a list is never trimmed)`);
-  const units = listBlocks(list, root, id).flatMap((b) => splitUnits(b.text, unitMax, b.label, id));
-  const parts = [];
-  let cur = [];
-  let len = 0;
-  for (const u of units) {
-    if (cur.length && len + u.length + 1 > unitMax) { parts.push(cur.join('\n')); cur = []; len = 0; }
-    cur.push(u); len += u.length + 1;
+  const room = (msg, size) => Object.assign(new Error(msg), { room: true, size });
+  const partsFor = (unitMax) => {
+    if (!list) return [''];
+    const units = listBlocks(list, root, id).flatMap((b) => splitUnits(b.text, unitMax, b.label, id));
+    const parts = [];
+    let cur = [];
+    let len = 0;
+    for (const u of units) {
+      if (cur.length && len + u.length + 1 > unitMax) { parts.push(cur.join('\n')); cur = []; len = 0; }
+      cur.push(u); len += u.length + 1;
+    }
+    if (cur.length) parts.push(cur.join('\n'));
+    return parts;
+  };
+  const segs = splitDiff(material);
+  let chunks = [{ text: material, paths: segs ? segs.map((s) => s.path) : null }];
+  let parts;
+  try {
+    const unitMax = avail - material.length - RESERVE;
+    if (unitMax < (list ? 200 : 0)) throw room(`material is ${material.length} characters; with the lens template (${fixed} fixed characters, the plan placeholder used ${k}x) at most ${avail} characters fit one file, leaving ${unitMax} for the list: split the material (a list is never trimmed)`);
+    parts = partsFor(unitMax);
+  } catch (e) {
+    if (!e.room || !segs) throw e;
+    // the material is a diff: cut it at file boundaries. The list part gets half the room (more when one of its blocks cannot be split), never so much that the largest file cannot ride beside it.
+    const big = segs.reduce((x, y) => (y.text.length > x.text.length ? y : x));
+    let listRoom = list ? Math.max(0, Math.min(Math.floor(avail / 2), avail - RESERVE - big.text.length)) : 0;
+    for (;;) {
+      if (avail - RESERVE - listRoom < big.text.length) throw new Error(`file ${big.path} is ${big.text.length} characters of diff and cannot be split inside a file: at most ${avail - RESERVE - listRoom} fit one input beside the rule list part of ${listRoom} (bound ${max}); report it to the orchestrator`);
+      try { parts = partsFor(listRoom); break; } catch (x) { if (!x.room || !(x.size > listRoom)) throw x; listRoom = x.size; }
+    }
+    const chunkRoom = avail - RESERVE - listRoom;
+    chunks = [];
+    for (const s of segs) {
+      const last = chunks[chunks.length - 1];
+      if (last && last.text.length + s.text.length <= chunkRoom) { last.text += s.text; last.paths.push(s.path); } else chunks.push({ text: s.text, paths: [s.path] });
+    }
   }
-  if (cur.length) parts.push(cur.join('\n'));
-  const sel = list.whole ? 'whole file' : `sections ${list.sections.join('; ')}`;
-  const files = parts.map((p, i) => {
-    const head = `RULE LIST ${id} (${list.file}, ${sel}), part ${i + 1} of ${parts.length}. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.`;
-    const stamp = `LIST ${id} sha256:${sha256(Buffer.from(p))} material sha256:${sha256(Buffer.from(material))} part ${i + 1} of ${parts.length}`;
-    const text = `${stamp}\n${head}\n\n${p}${MARKER}${material}\n`;
+  const sel = list ? (list.whole ? 'whole file' : `sections ${list.sections.join('; ')}`) : '';
+  const files = [];
+  chunks.forEach((ch, ci) => parts.forEach((p, i) => {
+    const mark = ch.paths ? ` chunk ${ci + 1} of ${chunks.length}` : '';
+    const what = list ? `RULE LIST ${id} (${list.file}, ${sel}), part ${i + 1} of ${parts.length}. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.` : 'NO RULE LIST: the lens template alone judges the material under review.';
+    const head = `${what}${ch.paths ? ` The material is chunk ${ci + 1} of ${chunks.length} of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ${JSON.stringify(ch.paths)}` : ''}`;
+    const stamp = `LIST ${list ? id : 'none'} sha256:${sha256(Buffer.from(p))} material sha256:${sha256(Buffer.from(ch.text))} part ${i + 1} of ${parts.length}${mark}`;
+    const text = `${stamp}\n${head}\n\n${p}${MARKER}${ch.text}\n`;
     const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
     if (prompt > max) throw new Error(`list ${id}: part ${i + 1} would be ${prompt} characters, over the ${max} bound`);
-    return { suffix: parts.length === 1 ? '' : `-p${i + 1}`, text };
-  });
+    const n = ci * parts.length + i + 1;
+    files.push({ suffix: files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });
+  }));
   return files;
 }
 
@@ -321,14 +375,17 @@ export function buildLensInputs({ id, list, root, material, templateFile, max = 
  * and checks that the parts of a list together carry the WHOLE list (whitespace aside), so a list cannot be shortened or softened and re-stamped.
  */
 export function parseLensInput(text) {
-  const m = /^LIST (\S+) sha256:([0-9a-f]{64}) material sha256:([0-9a-f]{64}) part (\d+) of (\d+)\n/.exec(text);
+  const m = /^LIST (\S+) sha256:([0-9a-f]{64}) material sha256:([0-9a-f]{64}) part (\d+) of (\d+)(?: chunk (\d+) of (\d+))?\n/.exec(text);
   if (!m) return null;
   const l1 = text.indexOf('\n', text.indexOf('\n') + 1);
   const mi = text.indexOf(MARKER);
   if (l1 < 0 || mi < 0) return null;
   const listPart = text.slice(l1 + 2, mi);
   const material = text.slice(mi + MARKER.length).replace(/\n$/, '');
-  return { id: m[1], listSha: m[2], materialSha: m[3], part: Number(m[4]), parts: Number(m[5]), listPart, material, ok: sha256(Buffer.from(listPart)) === m[2] && sha256(Buffer.from(material)) === m[3] };
+  const pm = / paths: (\[.*\])$/.exec(text.slice(0, l1));
+  let paths = null;
+  try { paths = pm ? JSON.parse(pm[1]) : null; } catch { paths = null; }
+  return { id: m[1], listSha: m[2], materialSha: m[3], part: Number(m[4]), parts: Number(m[5]), chunk: m[6] === undefined ? undefined : Number(m[6]), chunks: m[7] === undefined ? undefined : Number(m[7]), paths, listPart, material, ok: sha256(Buffer.from(listPart)) === m[2] && sha256(Buffer.from(material)) === m[3] };
 }
 /** The text of a whole list as the helper reads it (all blocks), for the whole-list comparison. */
 export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');
@@ -412,10 +469,11 @@ function cli() {
     console.log(JSON.stringify(r, null, 2));
   } else if (cmd === 'lens-input') {
     const id = str('list', '');
-    const list = table.lists[id];
-    if (!list) die(1, `no list ${id} in ${tableFile}`);
+    const list = id ? table.lists[id] : null; // no --list: a non-compliance lens template, the chunks alone (V2.WHOLE)
+    if (id && !list) die(1, `no list ${id} in ${tableFile}`);
+    if (!id && !a.template) die(2, 'usage: lens-input needs --list <id>, or --template <lens file> alone to split the material for a non-compliance lens');
     const matFile = str('material', ''); const outPrefix = str('out', '');
-    if (!matFile || !outPrefix || !fs.existsSync(matFile)) die(2, 'usage: lens-input --list <id> --material <file> --out <prefix> [--template <lens file>] [--max <n>]');
+    if (!matFile || !outPrefix || !fs.existsSync(matFile)) die(2, 'usage: lens-input [--list <id>] --material <file> --out <prefix> [--template <lens file>] [--max <n>]');
     if (a.max !== undefined && !(Number.isFinite(Number(a.max)) && Number(a.max) > 0)) die(1, `--max must be a positive number (got ${a.max}); the bound has to be enforced`);
     let files;
     try { files = buildLensInputs({ id, list, root, material: fs.readFileSync(matFile, 'utf8'), templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }

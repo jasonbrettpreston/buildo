@@ -491,3 +491,90 @@ describe('V2.LIST round 2: the milestone guard', () => {
     expect(verifyResolved(t, good, undefined, 'record')).toEqual([]);
   });
 });
+
+// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries (the tool, never by hand), each chunk against every list part,
+// each input stamped "chunk c of m" with its path list; one file alone over the room is refused naming the file and its size. No --list (a non-compliance lens template) writes the same chunks.
+const dfile = (p: string, n: number) => `diff --git a/${p} b/${p}\nindex 1111111..2222222 100644\n--- a/${p}\n+++ b/${p}\n@@ -1 +1 @@\n-old\n${'+line of new text\n'.repeat(n)}`;
+const FILES = ['src/a.ts', 'src/b.ts', 'src/c.ts', 'src/d.ts', 'src/e.ts'];
+const BIGDIFF = FILES.map((p) => dfile(p, 50)).join('');
+const stampOf = (t: string) => {
+  const m = /^LIST (\S+) sha256:[0-9a-f]{64} material sha256:([0-9a-f]{64}) part (\d+) of (\d+)(?: chunk (\d+) of (\d+))?\n/.exec(t);
+  const pm = / paths: (\[.*\])\n/.exec(t.split('\n').slice(0, 3).join('\n') + '\n');
+  return { id: m?.[1], matSha: m?.[2], part: Number(m?.[3]), parts: Number(m?.[4]), chunk: m?.[5] === undefined ? undefined : Number(m[5]), chunks: m?.[6] === undefined ? undefined : Number(m[6]), paths: pm ? (JSON.parse(pm[1] as string) as string[]) : undefined };
+};
+const materialOf = (t: string) => t.slice(t.indexOf('=== MATERIAL UNDER REVIEW (everything below this line) ===\n') + '=== MATERIAL UNDER REVIEW (everything below this line) ===\n'.length).replace(/\n$/, '');
+describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries', () => {
+  it('a diff too large for one input becomes chunks: every changed path in exactly one chunk, chunk texts joined are the diff, every input within the bound, each stamped chunk c of m with its paths', () => {
+    const f = fixture();
+    const max = 12000;
+    const l = lens(f, 'first', BIGDIFF, max);
+    expect(l.r.status, l.r.stderr).toBe(0);
+    const st = l.text.map(stampOf);
+    const m = st[0]!.chunks;
+    expect(m, 'chunk stamp present').toBeGreaterThan(1);
+    expect(l.files.length).toBe((m as number) * st[0]!.parts);
+    for (const t of l.text) expect(t.length).toBeLessThanOrEqual(max);
+    const seen = st.flatMap((s) => s.paths ?? []);
+    expect([...seen].sort()).toEqual([...FILES].sort());
+    expect(new Set(seen).size).toBe(seen.length);
+    const byChunk = new Map<number, string>();
+    l.text.forEach((t, i) => byChunk.set(st[i]!.chunk as number, materialOf(t)));
+    expect([...byChunk.entries()].sort((a, b) => a[0] - b[0]).map((e) => e[1]).join('')).toBe(BIGDIFF);
+    expect(l.files.map((x) => path.basename(x))).toEqual(l.files.map((_, i) => `o-p${i + 1}.txt`));
+    for (const t of l.text) expect(t).toContain('first text');
+  });
+  it('a chunk is never cut inside a file: each chunk text starts at a diff header and holds whole files', () => {
+    const f = fixture();
+    const l = lens(f, 'first', BIGDIFF, 12000);
+    expect(l.r.status, l.r.stderr).toBe(0);
+    for (const t of l.text) {
+      const mat = materialOf(t);
+      expect(mat.startsWith('diff --git ')).toBe(true);
+      for (const p of stampOf(t).paths ?? []) expect(mat).toContain(dfile(p, 50).trimEnd());
+    }
+  });
+  it('a list block that cannot be split still gets every chunk: the list part is whole in each input', () => {
+    const f = fixture();
+    const d = FILES.map((p) => dfile(p, 30)).join('');
+    const l = lens(f, 'big', d, 12000);
+    expect(l.r.status, l.r.stderr).toBe(0);
+    expect(stampOf(l.text[0]!).chunks).toBeGreaterThan(1);
+    for (const t of l.text) expect(t).toContain('rule line');
+  });
+  it('one file alone over the room is refused with a line naming the file and its size', () => {
+    const f = fixture();
+    const d = dfile('src/a.ts', 5) + dfile('src/huge.ts', 400) + dfile('src/z.ts', 5);
+    const l = lens(f, 'first', d, 12000);
+    expect(l.r.status).toBe(1);
+    expect(l.r.stderr).toContain('src/huge.ts');
+    expect(l.r.stderr).toMatch(/src\/huge\.ts[^\n]*\b\d{4,}\b/);
+    expect(l.files).toEqual([]);
+  });
+  it('a material that is not a diff and does not fit is still refused, never trimmed (control)', () => {
+    const f = fixture();
+    const r = lens(f, 'first', 'plain text '.repeat(3000), 12000);
+    expect(r.r.status).toBe(1);
+    expect(r.r.stderr).toMatch(/material/);
+  });
+  it('a diff that fits is one input stamped chunk 1 of 1 with its paths (control: no split)', () => {
+    const f = fixture();
+    const l = lens(f, 'first', dfile('src/a.ts', 3) + dfile('src/b.ts', 3), 20000);
+    expect(l.r.status, l.r.stderr).toBe(0);
+    expect(l.files).toHaveLength(1);
+    const s = stampOf(l.text[0]!);
+    expect([s.chunk, s.chunks, s.paths]).toEqual([1, 1, ['src/a.ts', 'src/b.ts']]);
+  });
+  it('no --list with a lens template (code-review, error-paths, ux, security) writes the same chunk inputs with an empty list part', () => {
+    const f = fixture();
+    const m = path.join(f.d, 'nl.material'); fs.writeFileSync(m, BIGDIFF);
+    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/nl'), '--template', tpl, '--max', '9000']);
+    expect(r.status, r.stderr).toBe(0);
+    const files = r.stdout.split('\n').filter(Boolean);
+    const st = files.map((x) => stampOf(fs.readFileSync(x, 'utf8')));
+    expect(st[0]!.id).toBe('none');
+    expect(st[0]!.chunks).toBeGreaterThan(1);
+    expect(files.length).toBe(st[0]!.chunks);
+    expect([...st.flatMap((s) => s.paths ?? [])].sort()).toEqual([...FILES].sort());
+  });
+});
