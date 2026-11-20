@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T20:07:00Z'
+updated_date: '2026-11-20T20:08:00Z'
 labels:
   - McFix
   - McFix V2
@@ -70,4 +70,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 fix round part 2: check-lane-close.mjs (F1 qualified base ref and status read and empty range refused, F3 unsplit lens bound and prompt hash and regenerated inputs, F4 late-staged only for lane build or fix, F7 exempt and base_ref from the range base's table).
 
 2026-11-20 fix round part 3: backlog-lane.mjs brief (git -c core.quotepath=false, refs/heads base, glob exclusions from the table exempt).
+
+2026-11-20 operator ruling, verbatim (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, entry '2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)'): "1-5 y"; item 4 as put to him: "Keep the split for code review, error paths, UX and security" (the no-list split of lens-input stays; the four CONFLICT findings on that scope are settled by it). Item 3 as put to him: "Exempt generated snapshots from review material": existing lists found (table exempt = docs/reports/lanes/**, docs/reports/reviews/**; golden folders src/tests/fixtures/surfaces/<id>/<state>.<target>.json validated by report-checks.mjs goldenProblems and screen-checks.mjs screenArm; generated-docs gate list; no .gitattributes in the repo); NOT landed in the table: widening exempt in this lane is refused by the new base-table rule (F7), halted for the orchestrator.
 <!-- SECTION:NOTES:END -->
