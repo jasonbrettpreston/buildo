@@ -210,6 +210,17 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     expect(e).toMatch(/round 2/);
     expect(e).toContain('NEVER run one generic pass');
   });
+  // task-407 (V2.LAYOUT): the close check reads lens outputs only directly in docs/reports/lanes/<date>/<lane>/ (plan-/out-/in- names); two lanes filed in subfolders because the brief never said so.
+  it('every brief, build or record-only, states the one folder, the file names, the round-2 form and that the compliance lens reviews the whole change (split, never trimmed)', () => {
+    for (const e of [lensBrief('build', 'scripts/analysis/x.mjs, src/tests/'), lensBrief('record', 'docs/specs/00-architecture/08_agents.md')]) {
+      expect(e).toMatch(/REVIEW FILES GO IN ONE PLACE: docs\/reports\/lanes\/\d{4}-\d{2}-\d{2}\/\S+\/ directly \(no subfolders/);
+      expect(e).toContain('plan-<lens>[-<list id>][-pN].txt and out-<lens>[-<list id>][-pN].txt');
+      expect(e).toContain('in-<same name>');
+      expect(e).toContain('out-<lens>[-<list id>]-r2.txt');
+      expect(e).toContain('fix-*.txt');
+      expect(e).toMatch(/compliance lens reviews the WHOLE change: a diff over[^\n]*split into parts[^\n]*never trimmed to core files/);
+    }
+  });
   // task-375 FIX.TOOLS D11 (Spec 08 section 7 rule 4 dated note, 08_agents.md:338; scripts/deepseek-review.js:189 fills "(no pasted context provided)" when --context is absent):
   // every plan lens command carries --context, as the output lens commands do.
   it('every plan lens command carries --context, and the --context value is not a flag', () => {
