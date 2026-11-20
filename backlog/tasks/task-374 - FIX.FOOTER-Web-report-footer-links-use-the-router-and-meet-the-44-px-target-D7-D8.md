@@ -62,4 +62,6 @@ Left alone (operator items, listed): conflicts C1 to C5, the 48 or 44 px questio
 Grounder verdict 2026-11-20 (separate read-only agent, launched by the orchestrator): FOLD AFTER the width fix; D7 fixed; D8 report link fixed in height and, after commit 205f67424, width (min-w-11); the static footer part of D8 was not a defect (Mantine Button lg, 50 px). Folded onto wf2/board. Open note for the operator: committed under McFrontend row MF-91 using that row earlier prereg and panel records (defensible, disclosed). The lane report copy describes the height-only state: superseded by this note.
 
 2026-11-20 BL-FIXFOOT: D7 confirmed at ReportPage.tsx:251 (plain <a>), D8 confirmed at ReportPage.tsx:240 (no min-h); approved report mock B.html:222 draws the links at min-height:44px so D8 is a code fix. StaticBinding.tsx:90 is a Mantine Button size lg (50px, Button.css:5): not changed. Fix: next/link plus inline-flex min-h-11 items-center on REPORT_FOOTER_LAYOUT.link. Red: red.out (2 failed, 2 passed). Operator items left untouched: C1 to C5, 48 or 44 px, 60 s wait. Lens outputs and untriaged findings in docs/reports/lanes/2026-11-20/BL-FIXFOOT/; grounder owed.
+
+2026-11-20 grounder fold: D8 width. The footer link also gets min-w-11 and justify-center (standards 1.1: 44px x 44px, finding out-compliance-eng-s1#1).
 <!-- SECTION:NOTES:END -->

@@ -57,12 +57,12 @@ describe('D7 the report footer links are route links', () => {
 });
 
 describe('D8 the report footer links are drawn at the 44 px target', () => {
-  it('each link class carries min-h-11 (44 px), inline-flex and items-center, as the mock draws it', () => {
+  it('each link class carries min-h-11 and min-w-11 (44 x 44 px, standards 1.1), inline-flex, items-center and justify-center', () => {
     const links = reportLinks();
     expect(links).toHaveLength(HREFS.length);
     for (const a of links) {
       const cls = classesOf(a);
-      expect([a.getAttribute('href'), cls.includes('min-h-11'), cls.includes('items-center'), cls.includes('inline-flex')]).toEqual([a.getAttribute('href'), true, true, true]);
+      expect([a.getAttribute('href'), cls.includes('min-h-11'), cls.includes('min-w-11'), cls.includes('items-center'), cls.includes('justify-center'), cls.includes('inline-flex')]).toEqual([a.getAttribute('href'), true, true, true, true, true]);
     }
   });
   it('the links keep their other classes (colour, underline, focus ring): nothing else moves', () => {

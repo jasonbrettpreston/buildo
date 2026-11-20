@@ -238,7 +238,7 @@ const H2 = ({ p, id }: { p: Part; id: string }): ReactElement => <T p={p} as="h2
 // strings the caller supplies. The mobile binding keeps its own footer (mobile/src/components/surfaces/ReportBinding.tsx): its G4 part is unchanged.
 const REPORT_FOOTER_LAYOUT: FooterLayout = {
   footer: 'grid gap-2 border-t border-report-line pt-4 text-[14px]/[20px] text-report-soft', links: 'flex flex-wrap gap-x-4 gap-y-1',
-  link: 'inline-flex min-h-11 items-center text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber', line: '', legal: '', copyright: '',
+  link: 'inline-flex min-h-11 min-w-11 items-center justify-center text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber', line: '', legal: '', copyright: '',
 };
 const renderFooter = (n: FooterNode, text: (key: string) => string): ReactElement => {
   const kids = n.children.map((c) => ('content' in c ? text(c.content) : renderFooter(c, text)));
