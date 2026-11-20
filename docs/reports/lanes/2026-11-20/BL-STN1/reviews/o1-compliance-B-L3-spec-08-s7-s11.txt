@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/stn1/diff-B.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9575 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19855 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29932 chars, answer 0 chars, 45s
+BUG severity=HIGH — operator ruling 2026-11-18 "This needs to be updated and conflicting rulings removed." — .cursor/MCBYLAWS-QUEUE.md:369 "waits: MB-38 headline records" retained "stands as written", against the MB-38 note's "no all-lot fill and no all-lot recapture job" — MB-75 keeps waiting on MB-38 headline records that the same change cancels, so a conflicting ruling is left standing rather than removed — add a dated note on MB-75 naming the surviving wait (the on-open record write) or stating the row no longer waits.
+
+DEFER severity=MED — operator ruling 2026-11-18 "This needs to be updated and conflicting rulings removed." — .cursor/MCBYLAWS-QUEUE.md:369 "SUPERSEDED, prior text kept" — every conflicting ruling is kept verbatim in place and only prefixed, and the retention rests on Spec 137 rule 3, which is not pasted, so the "removed" half of the ruling is not delivered by this diff — either quote rule 3 with file:line in the note, or move superseded text into a superseded block so the removal is visible.
+
+DEFER severity=MED — §7 rule 10 dated note (C2) "a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha" — .cursor/MCBYLAWS-QUEUE.md:751 "Spec 137 rule 4 asks for the same day" (also "Spec 137 rule 3") — rule 3 and rule 4 are cited by number only, with no anchor or line, and their text is not in the pasted record, so the status-line and late-write compliance claims cannot be checked — cite them as (137; :<line> at <sha>) or paste both rules into the context.
+
+DEFER severity=MED — operator 2026-11-18 "we need to run a panel on the tasks this impacts and how to set-it up properly per increment. I want to see this and the ruling - per increment and overall as the McStroage policy." — NONE — no diff line lands the panel, the per-increment setup, or the overall McStorage ruling view; the diff only amends queue rows and spec notes — name the task and the docs/reports/reviews/<task>/ record that delivers the panel and the per-increment view, or state in the note that it lands outside this task.
+
+DEFER severity=MED — §11.1 "a line citation is read, not remembered" — docs/specs/00-architecture/137_mcqueue.md:55 "are dated-note rows in docs/specs/01-pipeline/69a_mcbylaw_register.md (the ST-5 row and the rules P1 to P12 with their Lock are new 2026-11-20)" — the homes the note points at (69a, 78, doc-16) are absent from this diff and the claimed new 2026-11-20 rows carry no line or sha, so the claim has no evidence in the material — cite the line and commit sha for the 69a and 78 rows, or land them in this change.
+
+DEFER severity=MED — §7 rule 10 dated note (RR-0232, RR-0235) "so a reference resolves from the board (measured at fa08e8f24: 162 task references pointed at lane REPORT.md files under ~/Buildo-scratch, outside the repo)" — .cursor/MCBYLAWS-QUEUE.md:751 "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:702-704" — every operator verbatim in every note resolves only to a file under ~/Buildo-scratch, so the ruling behind a queue row cannot be read from the repo — add the repo copy of the cited decision lines (docs/reports/reviews/task-90/) and point the notes at it.
+
+DEFER severity=LOW — §7 rule 10 dated note (C2) "a rule is cited by its id and anchor first" — .cursor/MCFRONTEND-QUEUE.md:391 "It was already barred by FE-38" — FE-38 carries no anchor or line, and neither do RR-0176, RR-0006, M-367, P5 or ST-3 in these notes — add the anchor and line hint for each cited id.
+
+MET — §11.9 TKT-2 "It never writes a queue status cell: the queue's own words (DONE, RUNNING, WAITS, OPERATOR, HELD, LATER...) stay as they are." — .cursor/MCFRONTEND-QUEUE.md:491 note on the DONE row — each note ends "The row's Status line is unchanged by this note", so no status cell is written, including on the DONE row.
+MET — operator 2026-11-20 "the McStroage policy was recently updated with the new direction - I just want to ensure the rules were updated as well." — .cursor/MCBYLAWS-QUEUE.md:751 "amendment A-MB38" — each note names the doc-16 policy amendment it lands, tying the queue rule to the policy.
+MET — operator 2026-11-20 "yes to McStorage and 1,2,3 yes as recommended" — docs/specs/00-architecture/137_mcqueue.md:55 "the policy is backlog/docs/doc-16 (McStorage policy v2)" — the McStorage rules are moved out of scratch into named repo homes.
+MET — Spec 126 section 11a.3 closed status list — docs/specs/02-web-admin/126_maxbld_surface_standard.md:810 "the closed status list is unchanged" — the added loading screen and updating display states are explicitly declared not statuses, so the closed list stands.
+
+REJECT — Spec 137 rule 4 "asks for the same day" — the change is accused of a late write (ruled 2026-11-18, written 2026-11-20) — rule 4 is not in the pasted context and the note discloses the date gap itself, so no finding can rest on it here.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+
+---
+⏱  59800ms (59.8s)
+📊 Tokens — total: 28021, input: 16854, output: 11167, reasoning: 9777

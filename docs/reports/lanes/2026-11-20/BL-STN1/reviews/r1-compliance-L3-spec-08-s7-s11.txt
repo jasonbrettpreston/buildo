@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/stn1/PLAN.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9655 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19648 chars, answer 0 chars, 30s
+BUG severity=HIGH — Spec 08 §7 rule 2 "Ground-truth gates Compliance (§5.1/§5.2): validate the spec against reality before checking code against the spec." — plan step 4/5 "4. Plan lenses (AC4): compliance lens once per rule list (doc-16 whole; Spec 137 whole; Spec 08 sections 7 and 11; the M-246 form) ... 5. Grounder (AC5): owed to a separate agent; task left RUNNING." — the compliance lens runs at step 4, before the grounder at step 5, so the spec is judged against the plan's own "Measured state" rather than gated by a grounder, and the plan says the grounder is still owed — reorder to put the grounder pass first and state that the compliance lens runs only on the grounder's returned map.
+
+BUG severity=HIGH — operator ruling "PRG-1 a (purge after 90 days unopened; tracked never purged while tracked) and TRK-1 a (background refresh of tracked lots)" — plan item a "Purge after 90 days unopened and tracked lots refreshed in the background (MD:738) replace doc-16 section 4 \"no re-warm job\" and \"N days\"." against the landing table row "| doc-16 header | backlog/docs/doc-16 | status line only |" and step 1 "doc-16 header" — the ruling requires doc-16 section 4's "no re-warm job" and "N days" text replaced, but no home row, step or expected move edits doc-16 section 4, only its status line — add a doc-16 section 4 dated-note row to the Homes table and to step 1's expected moves.
+
+BUG severity=HIGH — Spec 08 §11.3 "a lock that was never red against the defect it names is not a lock" — plan landing row "yes; Lock column names CHK.5 (policy-checks chk5, tables empty, prints WAITS) or OWED with the task" against step 2 "no new check or test is written (no script changes) ... AC2/AC6 read \"not applicable, no new check\"" — CHK.5 with empty tables that prints WAITS is a lock that cannot red, yet the plan offers it as the Lock for A-ST5/P1-P12 while declaring no red proof owed — either file the lock as OWED with the task (and drop CHK.5 from the Lock column) or write the chk5 rows plus their red in the plan.
+
+DEFER severity=MED — operator ruling "Loading: no 35 s cap (RR-0176, MD:785)" — plan item c "A-MF62 and P12 as drafted say wait up to 35,000 ms: corrected." against landing row "| A-ST5 + rules P1-P12 (the ST-5 repo home) | 69a: new separate dated-note rows after :695 ... | yes; Lock column names CHK.5 ... |" — only the MF-62 row records the RR-0176 correction; the P12 landing row is silent, so the 69a note can still land P12 with the superseded 35,000 ms figure — name P12's corrected wording in the A-ST5 landing row.
+
+DEFER severity=MED — Spec 08 §11.2 "Folds are read as a SET — the worst defects are collisions between corrections adopted separately" — plan steps 4 and 5 "4. Plan lenses (AC4)... 5. Grounder (AC5): owed to a separate agent" — items a-e are separately folded into the drafts and only a grounder is named, with no pairwise cross-read of the folded set, which is how item a's doc-16 removal and the "status line only" landing collided unnoticed — add a cross-read pass over items a-e before build.
+
+DEFER severity=MED — operator ruling "We need them linked with all the relevant data - beyond just the data references" (RR-0235) — plan "Later rulings beat the draft: MORNING-DECISIONS.md:718-722 ... :738 ... :785 ... :1298" — every ruling the plan relies on is cited as a bare line range with no path that resolves from the board (the 162-reference deficiency measured at fa08e8f24) — give the file's full path once and land the quoted ruling lines inside the 69a note so the reference resolves in the repo.
+
+DEFER severity=LOW — Spec 08 §11.9 TKT-1 "The first lines of every brief and prompt ... are: `Ticket: MB-nn · lane X · stage N` ... `Rule:` ... `Scope:` ... `Done-condition:` ... `max_fix_rounds:` a number" — plan header "# PLAN task-90 (ST.N1), lane BL-STN1, stage 1. Docs only: no product code, no push, no DB." — the header carries the task-N/lane/stage form but no Rule:, Done-condition: or max_fix_rounds: field and does not use the Ticket: word — add the four fields or state that backlog-brief.mjs supplies them for this task.
+
+MET — 2026-11-19 note "The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/`" — plan step 7 "REPORT, FINDINGS, review output copied to docs/reports/lanes/2026-11-20/BL-STN1/" — the repo-copy landing is in the plan.
+
+MET — M-246 dated-note form "Dated note 2026-11-19 (M-246, prior text kept; ...)" — plan landing table "each a dated M-246 note, prior text kept; no new M row, so the rule map does not move; no id claimed" — the note form and the no-id rule are honoured.
+
+MET — Spec 08 §11.1 "a census grep runs at the **full scope** its conclusion covers" — plan "The Spec 78 O-6 note of 2026-11-12 that the rulings file proposes is NOT in the repo (grep \"ST-5\" in Spec 78 finds nothing)" — the negative claim is stated at the scope it covers.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+
+---
+⏱  36696ms (36.7s)
+📊 Tokens — total: 16809, input: 9784, output: 7025, reasoning: 5603

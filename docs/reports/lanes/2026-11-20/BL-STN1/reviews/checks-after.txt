@@ -1,0 +1,16 @@
+## scripts/generate-bylaw-handbook.mjs --check
+[bylaw-handbook] docs/specs/01-pipeline/133_bylaw_handbook.md is up to date (546 rules)
+## scripts/analysis/decision-log.mjs --check
+[decision-log] clean — 137 log(s), 860 decision(s), 443 register row(s), 1446 citation(s), 0 owed by another lane, 16 no_ruling resting on an existing row; every approved decision has a register row o
+## scripts/analysis/gates/generated-docs.mjs
+PASS — 13 live doc(s)
+## scripts/analysis/spec-split-check.mjs --check
+[spec-split-check] clean — 43 move(s) verified, 11488 citations checked, 0 dangling, budgets held, 0 reader breaks, totality holds, every spec has a role.
+## scripts/analysis/generate-last-measured.mjs --check
+[generate-last-measured] CHECK: 18 descriptor(s); changed 0, unsourced 0, skipped 0, missing 0
+[generate-last-measured] baseline (R-GQ): 0 listed stale entries (REFREEZE-BUNDLE-1), 0 problem(s)
+## scripts/analysis/report-fields.mjs --check
+report-fields current (1 rendered fields); gates FAIL (report-only): RF-2, RF-4, RF-6, RF-7, RF-9
+## scripts/analysis/mcbylaws/gate.mjs --staged
+GATE OK
+[surface-handbook] docs/specs/02-web-admin/136_mcfrontend_handbook.md is up to date (44 rules)

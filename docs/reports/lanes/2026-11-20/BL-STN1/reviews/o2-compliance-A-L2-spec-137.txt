@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/stn1/diff2-A.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9321 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19830 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29861 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 40196 chars, answer 0 chars, 60s
+BUG severity=HIGH — Spec 137 §2 note "The ids `INC-n`, `AV3-*`, `ST-*` and `CARD-*` name rows whose status line sits in the home shown." — docs/specs/01-pipeline/69a_mcbylaw_register.md:696 "This row is its home. PRIOR TEXT, KEPT (McStorage strategy ST-5, ruled 2026-11-12, scratch ~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:127-133, the only home of the text until this note)" — clause unmet: §2 puts ST-5's status line in the LOCAL home and the diff names a second home in Spec 69a without amending §2, so one row now has two homes — fix: add the register row to Spec 137 §2 as the repo home (or drop "This row is its home") in the same commit.
+
+BUG severity=HIGH — Spec 137 §4 rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form" — backlog/docs/doc-16 - McStorage-policy-v2.md:8 "A-126 (Spec 126); A-MB38, A-MB75, A-MB76 (MCBYLAWS-QUEUE.md); A-MF62 and A-LAT corrected by the later rulings, and the MF-51 supersession (MCFRONTEND-QUEUE.md); the McStorage home (Spec 137 section 2)" and "A-FE39 without its cost sentence (Spec 135, Spec 136 regenerated)" — clause unmet: the header reports six landings (Spec 126, the two queue files, Spec 136, Spec 137 section 2) whose rows are absent from this diff, so those notes are not shown on their rows — fix: limit "LANDED IN PART in the commit titled ..." to the four files in this diff and list the rest as not in this commit.
+
+DEFER severity=MED — Spec 137 §4 rule 4 "A ruling is kept as a verbatim dated note on its row" — docs/specs/01-pipeline/69a_mcbylaw_register.md:699 "~/Buildo-scratch/mcbylaws/McSTORAGE-ALIGNMENT.md:162 (\"Lead and map surfaces (citywide queries)\") is amended to match" against "the scratch file is read-only to this lane" — claim: the note records an amendment to a scratch file this change does not make and the lane cannot make — rationale: mark :162 as OWED to the orchestrator with a task id rather than "amended", the same way the fee/cost waits are marked.
+
+DEFER severity=LOW — Spec 137 §4 rule 4 "`Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: \"<words>\")`" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 "OWED `src/tests/surfaces/engine-inputs-bind.logic.test.ts` Dated note 2026-11-20 (M-246, prior text kept; Spec 135 FE-39" — claim: this is the only one of the four notes spliced into a register cell with no separator, so the row's Lock value and its ruling note cannot be told apart — rationale: give FE-39 its own dated-note line under the row and leave the Lock cell as the OWED test.
+
+DEFER severity=LOW — Spec 137 §4 rule 4 "The orchestrator writes each ruling into the row's status line the same day." — docs/specs/01-pipeline/69a_mcbylaw_register.md:696 "late write: ruled 2026-11-18, written 2026-11-20 (Spec 137 rule 4 asks for the same day)" — claim: the same-day half of rule 4 is unmet on the face of the notes — rationale: no later commit can cure a past date and the note discloses it; keep the disclosure.
+
+MET — Spec 137 §4 rule 10 "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — docs/specs/01-pipeline/69a_mcbylaw_register.md:696 — the whole 2026-11-12 ST-5 text is quoted before "SUPERSEDED by this amendment (prior text kept above)", and the SS/O-6/FE-39 rows do the same.
+
+MET — Spec 137 §4 rule 4 note form `<row> · <queue> · lane X; operator, verbatim` — docs/specs/01-pipeline/78_optimal_lot_configuration.md:752 — "Dated note 2026-11-20 (M-246, prior text kept; McStorage strategy ST-4 (2026-11-12) · McBylaws queue · lane BL-STN1, task-90 (ST.N1); operator, verbatim:" carries date, row, queue, lane and the words.
+
+MET — Spec 137 §2 note "The storage rulings and the notes still owed to the registers." — docs/specs/01-pipeline/69a_mcbylaw_register.md:696-699, 78:752, 135:61 — the owed notes are written into the registers, which is what §2 says the registers receive.
+
+MET — Spec 137 §1 rule 3 "docs, spec, queue-row, backlog-only and merge commits are exempt" — the whole diff — every changed file is a spec or backlog doc, so no `Task:` trailer is owed.
+
+REJECT — doc-16 section 7 open point 4 as restated in the notes "A-ST5b (open point 4): until ruled, no tester owner rows are kept in the 309 form" — the change is accused of not landing A-ST5b — the open point is with the operator, so recording it as waiting is the compliant act.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  69944ms (69.9s)
+📊 Tokens — total: 43674, input: 30282, output: 13392, reasoning: 12033

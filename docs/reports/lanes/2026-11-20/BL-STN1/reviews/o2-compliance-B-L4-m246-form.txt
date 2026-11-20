@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/stn1/diff2-B.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9983 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21008 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31951 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42399 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53563 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 64084 chars, answer 0 chars, 90s
+BUG severity=HIGH — Rule 4 "The orchestrator writes each ruling into the row's status line the same day." — .cursor/MCBYLAWS-QUEUE.md:369 "late write: ruled 2026-11-18, written 2026-11-20 (Spec 137 rule 4 asks for the same day)" — the ruling was written two days after it was ruled and the lane hold cited is no exception in the pasted clause, so the same-day limb is unmet — land future rulings the same day and record the operator's dated acceptance of this late landing in the same row.
+
+BUG severity=HIGH — Rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form" and M-246 "a note appended to the row's status cell: it is dated, names its source, and keeps the prior status text as its prefix" — .cursor/MCBYLAWS-QUEUE.md:369 "The row's Status line is unchanged by this note (Spec 137 rule 3: the amendment lands no work on the row)." — the ruling is added as a separate bullet while the Status line is expressly left unchanged, so it is not written into the row's status line and the prior status text is not the note's prefix — append the note inside the row's Status cell, keeping the prior status text as its prefix.
+
+DEFER severity=MED — operator, verbatim "This needs to be updated and conflicting rulings removed." — .cursor/MCBYLAWS-QUEUE.md:750 "The cost wording of part (c) (cost per option from the scenario:* lines) is NOT amended: it waits for open point 3 of doc-16 section 7." — inside a row the operator ordered settled, part (c) is left unamended and no pasted clause authorizes the deferral — amend part (c) or record the operator's answer on doc-16 open point 3 in the same note.
+
+DEFER severity=MED — line 15 "the protocol in Spec 69's header (add a row or a dated note, in §1a below; an id is never reused)" — docs/specs/00-architecture/137_mcqueue.md:43 "ST-1, ST-2, ST-3 (M-516), ST-5, ST-6, ST-7 and ST-8 are dated-note rows in docs/specs/01-pipeline/69a_mcbylaw_register.md (the ST-5 row and the rules P1 to P12 with their Lock are new 2026-11-20)" — the diff records the rulings' new homes but carries no 69a change, so those rows' form under §1a cannot be seen — land the 69a dated-note rows in this change or cite the commit that carries them.
+
+DEFER severity=LOW — pasted operator words name no display rules — docs/specs/02-web-admin/126_maxbld_surface_standard.md:810 "A stored record whose stamp differs is never shown." — the note adds an "updating" state, an error mapping and a stamp rule whose stated backing is doc-16 amendment A-126, not pasted — cannot see A-126, verify these three sentences against it before merge.
+
+MET — M-246, dated, names source, no line added in a cell — docs/specs/00-architecture/137_mcqueue.md:43 — the note is appended inside the same cell after "The storage rulings and the notes still owed to the registers." and adds no line.
+
+MET — Rule 4, form — .cursor/MCBYLAWS-QUEUE.md:369 — "Dated note 2026-11-20 (M-246, prior text kept; MB-75 · McBylaws queue · lane BL-STN1, task-90 (ST.N1); operator, verbatim: ..." matches the mandated form.
+
+MET — M-246, prior text kept — .cursor/MCBYLAWS-QUEUE.md:369 — "SUPERSEDED, prior text kept: the MB-75 note of 2026-11-12 ..." keeps the prior note text.
+
+MET — M-169, condition no data can decide is not held and its impact is disclosed — .cursor/MCFRONTEND-QUEUE.md:544 — "this replaces the draft A-LAT sentence "its budget is the 1 s once 5.11 is measured"" drops the undecidable 5.11 condition and states the impact.
+
+REJECT — line 15 "an id is never reused" — the change is accused of reusing M-246 across five notes — Rule 4's own mandated form opens with "(M-246, prior text kept; ...", so M-246 is the form marker, not a new register id.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 2
+
+---
+⏱  94934ms (94.9s)
+📊 Tokens — total: 31654, input: 12970, output: 18684, reasoning: 17622

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-STN1'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-20T13:41:00Z'
+updated_date: '2026-11-20T13:46:00Z'
 due_date: '2026-11-26'
 labels:
   - '6'
@@ -18,6 +18,9 @@ dependencies:
 references:
   - docs/reports/plan-import/raw/2026-11-19/sequence.json#6/ST.N1
   - ~/Buildo-scratch/inc6-guard/RULES.md#L8 sha256=cb54de861a9b
+  - docs/reports/lanes/2026-11-20/BL-STN1/REPORT.md
+  - docs/reports/lanes/2026-11-20/BL-STN1/FINDINGS.md
+  - docs/reports/lanes/2026-11-20/BL-STN1/TRIAGE.md
 documentation:
   - backlog/docs/increments/doc-8 - Increment-6-requirements.md
 priority: low
@@ -42,9 +45,9 @@ who (plan text): McBylaws lane R (rulings text), operator reads first
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
+- [x] #1 Pre-register the expected moves, committed alone — "Pre-register the task's `rules[]` and expected moves" (.cursor/MCBYLAWS-QUEUE.md:109)
 - [ ] #2 Failing tests are written into the plan and reviewed at plan altitude — "are written INTO the plan and reviewed at PLAN altitude" (docs/specs/00-architecture/08_agents.md:465)
-- [ ] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
+- [x] #3 `write_scope` declared in the brief — "The brief file opens with a front-matter block" (docs/specs/00-architecture/08_agents.md:144)
 - [ ] #4 PLAN panel run with the lens set, never one generic pass — "NEVER run one generic pass" (docs/specs/00-architecture/08_agents.md:334)
 - [ ] #5 Fold validated by a grounder that re-executes every claim — "one grounder re-executes every claim in the fold" (docs/specs/00-architecture/08_agents.md:458)
 - [ ] #6 Built red first, then green, on the tip — "Red tests first, then the code, through the real hooks." (docs/specs/00-architecture/08_agents.md:490)
@@ -87,4 +90,6 @@ who (plan text): McBylaws lane R (rulings text), operator reads first
 2026-11-20 taken on the board at lane launch (lane BL-STN1, worktree /Users/brettpreston_macmini/Buildo-wt-stn1, branch wf1/inc1b-stn1), RR-0240
 
 Landing commit 2 (ST.N1): dated M-246 notes at 69a:696-699 (ST-5 first repo home, rules P1-P12 with Lock, ST-3 without ceiling clause, ST-6), Spec 78:752 and :754 (ST-4, O-6), Spec 135 FE-39, Spec 126 11a.3, Spec 137 section 2 McStorage row (in-cell), MCBYLAWS-QUEUE MB-38/MB-75/MB-76/MB-94, MCFRONTEND-QUEUE MF-51/MF-62/MF-80; Spec 133/136 regenerated; doc-16 header status line. Waiting: A-ST3 ceiling clause (open point 1), cost wording (open point 3), A-ST5b (open point 4). Plan round and output round compliance lens run once per rule list; triage in the lane TRIAGE.md. Grounder owed.
+
+AC1 evidence: pre-registration committed alone, 905741d7f. AC3: write_scope declared in the brief (lane dir and ~/Buildo-wt-stn1). Landing 587c98a50. AC2 and AC6 not applicable (no new check or test, no script changed); AC4 partial (compliance lens per rule list only); AC5 owed (separate grounder); AC7 repo copies in docs/reports/lanes/2026-11-20/BL-STN1; AC8 not applicable. Task left RUNNING: grounder owed.
 <!-- SECTION:NOTES:END -->

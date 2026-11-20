@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/stn1/diff2-A.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10111 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19811 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29307 chars, answer 0 chars, 45s
+BUG severity=HIGH — Rule 4 "The orchestrator writes each ruling into the row's status line the same day." — docs/specs/01-pipeline/69a_mcbylaw_register.md:696 "late write: ruled 2026-11-18, written 2026-11-20 (Spec 137 rule 4 asks for the same day)" and "RULED 2026-11-18 (operator); landed 2026-11-20 (task-90)" — every landed note (69a ST-5, P1 to P12, ST-3, ST-6; 78 ST-4 and O-6; 135 FE-39) is written two days after the ruling, so the same-day clause is unmet and the change says so itself — record the operator's waiver of the same-day rule inside each Dated note (or a single waiver line in the doc-16 STATUS), so the lapse is ruled rather than self-declared.
+
+DEFER severity=MED — M-246 "OBSERVABLE: the note is in the row it amends, with its date and source." — backlog/docs/doc-16 - McStorage-policy-v2.md:11 "# McStorage policy v2 (STATUS 2026-11-20, task-90 ST.N1: LANDED IN PART in the commit titled \"docs(69a_mcbylaw_register): McStorage policy v2 amendments landed, prior text kept (ST.N1)\" ... A-126 (Spec 126); A-MB38, A-MB75, A-MB76 (MCBYLAWS-QUEUE.md); A-MF62 and A-LAT corrected by the later rulings, and the MF-51 supersession (MCFRONTEND-QUEUE.md); the McStorage home (Spec 137 section 2)" — the STATUS asserts landings in Spec 126, Spec 136, Spec 137 section 2, MCBYLAWS-QUEUE.md and MCFRONTEND-QUEUE.md, but the pasted diff contains only doc-16, 69a, 78 and 135, and the cited commit title names 69a alone, so those landings are not observable here — add those file edits to this commit or drop them from the STATUS line.
+
+DEFER severity=LOW — Rule 4 "A ruling is kept as a verbatim dated note on its row" — docs/specs/01-pipeline/78_optimal_lot_configuration.md:752 "> *Dated note 2026-11-20 (M-246, prior text kept; McStorage strategy ST-4 (2026-11-12) ... ST-4 amended: the owner input is the third trigger of the store-on-entry path.*" — the ST-4 and O-6 rulings are added as free-standing blockquotes after :751 rather than appended to the ST-4 and O-6 rows; Spec 78's note anchoring is not pasted, so cannot see whether :752 is that row's status line — confirm the anchor is the ST-4/O-6 row, or move the notes onto them.
+
+DEFER severity=LOW — M-246 "the prior status text as its prefix" (the prior text is marked, not silently contradicted) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 "D pass (fields declared, not coded), P pass (locks owed, below), F pass (stored headline, detail on demand)" with the same row reading "The detail is computed on demand." — the panel cell and the row body still assert the pass and the sentence the appended note marks SUPERSEDED ("SUPERSEDED, prior text kept above: those two sentences as written"), so one row now carries both the old and the new rule with the pass flag unamended — add a supersession marker to the panel cell and to "The detail is computed on demand", as the 69a ST-5 row does inline.
+
+NIT severity=NIT — M-246 "keeps the prior status text as its prefix" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 "OWED `src/tests/surfaces/engine-inputs-bind.logic.test.ts` Dated note 2026-11-20 (M-246," — the note runs on from the prior status text with only a space, so the prior status and the note are not delimited in a cell that other tooling reads — separate them with a period or a semicolon.
+
+MET — M-246 (in-row status-cell form, prefix kept, no line-count change) — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 — the note is appended inside the status cell, prior text kept as prefix, and the file's line count is unchanged (line 61 replaced in place).
+
+MET — Rule 4 note form — docs/specs/01-pipeline/69a_mcbylaw_register.md:696 — "Dated note 2026-11-20 (M-246, prior text kept; McStorage strategy ST-5 (2026-11-12) · McBylaws queue · lane BL-STN1, task-90 (ST.N1); operator, verbatim: ..." follows the mandated parenthetical order (date, M-246, row, queue, lane, verbatim words).
+
+MET — 69a ST-5 row "Spec 78 O-6's fallback \"only the headline and per-scenario totals are persisted\" reads \"for opened lots\"" — docs/specs/01-pipeline/78_optimal_lot_configuration.md:752 "**O-6 reads \"for opened lots\".**" — the O-6 amendment the 69a row promises is landed beside the ST-4 note.
+
+REJECT — Spec 69 §1a "Rows and dated notes added after the move" — the change is accused of shifting later line citations by adding four lines at 69a:696 and 78:752 (the cost M-246's status-cell form avoids) — not a real issue, §1a declares added rows as the second permitted form, and the 78 additions sit after the cited :577.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+
+---
+⏱  56495ms (56.5s)
+📊 Tokens — total: 34342, input: 23630, output: 10712, reasoning: 9335

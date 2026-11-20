@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/stn1/PLAN.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10152 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20140 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30364 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 40321 chars, answer 36 chars, 60s
+BUG severity=HIGH — doc-16 §4 Layer 2 row "a re-warm job is NOT proposed (T is 0.24 s without the split, and 5.11 aims for <= 1 s); open point 2" and §4 Purge row "A purge of untracked, un-owned records not opened for N days is proposed (open point 1)" — PLAN task-90, Late rulings (a) "replace doc-16 section 4 "no re-warm job" and "N days"" against home table "doc-16 header | backlog/docs/doc-16 | status line only" — the 90-day purge and the tracked-lot background refresh have no home row in any repo file, so both rulings land nowhere while the pasted §4 text stays standing — add a home row landing PRG-1 a and TRK-1 a as dated notes in the 69a ST-5 note and name the doc-16 §4 sentences they supersede.
+
+BUG severity=HIGH — P12 "the first open is covered by the loading screen (35 s)" and A-MF62 "waits for the numbers up to the set maximum (35,000 ms, raised from the seed's 30,000 by task LOAD.3" and §1.10 "the screen setting rises to 35 s" — PLAN task-90, Late rulings (c) "A-MF62 and P12 as drafted say wait up to 35,000 ms: corrected" — the landed A-MF62 and P12 text removes the 35 s maximum the pasted clauses state, with no SUPERSEDED marking naming RR-0176 and no statement on the seed value at scripts/seeds/logic_variables.json:10495 "max": 30000 — land P12 and the MF-62 row as a dated M-246 supersede that names RR-0176 verbatim and states the seed max stays 30000.
+
+BUG severity=HIGH — P9 "The price is NOT put into the Layer 3 record: M-67 stays (Layer 3 sizes only)" — PLAN home table "A-FE39 | ... | yes, WITHOUT the cost clause (cost wording waits ST-OP3)" — the cost rule lands in 69a as part of P1-P12 while the identical wording is withheld from Spec 135 as unruled under open point 3, so one landed text says cost-at-open is settled and the other says it waits — either hold P9 out of the 69a landing alongside A-S88 and A-FE39, or land A-FE39 with the cost sentence and record open point 3 as answered.
+
+BUG severity=HIGH — doc-16 "a ruling is never deleted (M-246, dated amendment, prior text kept)" and A-ST5 "Spec 78 O-6's "only the headline and per-scenario totals are persisted for all lots" reads "for opened lots"" — PLAN measured state "The Spec 78 O-6 note of 2026-11-12 that the rulings file proposes is NOT in the repo (grep "ST-5" in Spec 78 finds nothing)" — the plan lands an amendment of a sentence its own measurement says is absent, so no prior text can be kept and the new note would assert a quote Spec 78 does not contain — land the O-6 note as new text stating the ruling read without quoting an absent O-6 line, and drop the O-6 item from the "Spec 78 +2 notes" move list.
+
+DEFER severity=MED — A-ST6 "~/Buildo-scratch/mcbylaws/McSTORAGE-ALIGNMENT.md:162 ("Lead and map surfaces (citywide queries)") is amended to match" and A-FE39 "McSTORAGE-ALIGNMENT.md:157 ("Bind the size tile, status, reason, flags, units, CoA tier, cost and confidence" to the stored per-option headline) follow" — PLAN home table, no ALIGNMENT row and no WAITS or OWED marker for McSTORAGE-ALIGNMENT.md — the five policy sentences that name ALIGNMENT lines (:143 L3b sweep, :145, :157, :158, :162) have neither a home nor an owed marker — add ALIGNMENT rows marked WAITS with the increment or task that owes each.
+
+DEFER severity=MED — doc-16 §4 "Stale-stamp guard | Compare the stamp on every read; mismatch means recompute; test it red first (an older-stamp record is injected, the report must not show it)" — PLAN step 2 "no new check or test is written (no script changes)" and Lock column "CHK.5 (policy-checks chk5, tables empty, prints WAITS)" — the red-first injected-older-stamp test the clause requires is owned by no task, and a check that prints WAITS is a placeholder under the walk rule — name in the Lock column the task and increment that owes the injected-older-stamp red test.
+
+DEFER severity=MED — A-LAT "its budget is the 1 s once 5.11 is measured (open point 2)" and "McTest keeps the nightly S-DETAIL-LATENCY and S-STORAGE scenarios (task LS.9), re-pointed at the stored record and the record table" — PLAN "A-LAT | MCFRONTEND-QUEUE.md MF-80 row (the row naming S-DETAIL-LATENCY) | yes, corrected by MD:720 ("2. no", owner input)" — the MF-80 landing row carries neither the LS.9 scenario re-point nor a closing of open point 2, and MD:720 is not pasted so the correction cannot be checked from this material — land the LS.9 sentence in the MF-80 note and quote the operator's "no" with its cite.
+
+DEFER severity=MED — A-ST3 "a projection that crosses 0.60 is raised to the operator, as before" and P10 "A projection that crosses 0.60 before MB-38 is raised to the operator one night early." — PLAN "yes, WITHOUT the ceiling clause; ceiling clause waits ST-OP1" — the plan does not say whether the 0.60 raise sentence lands with the rest of A-ST3 or is swept out with the ceiling clause, leaving the standing 0.60 line unassigned — state sentence by sentence which A-ST3 text lands and which waits ST-OP1.
+
+MET — A-ST5b — PLAN "A-ST5b | n/a | WAITS ST-OP4" — matches open point 4 "Confirm A-ST5b" and A-ST5's "pending open point 4".
+MET — A-S88 — PLAN "A-S88 (cost wording) | Spec 88 / 69a M-67 | WAITS ST-OP3; nothing edited" — matches open point 3 not yet answered by the pasted text.
+MET — A-ST4 — PLAN "A-ST4 | Spec 78 after the :750 note" — the measured state places ST-4 text at 78:750, so a dated note there has prior text to keep.
+MET — P8 — PLAN "the cohort clause ... is NOT changed here" with A-ST5b separate — matches "ST-5's cohort clause (the 25, the MB-35 cohort, the MB-28 proof set) is NOT changed here".
+MET — A-126 — PLAN "A-126 | Spec 126 section 11a.3" — matches "the closed status list is unchanged".
+REJECT — P10 — the plan withholds the ceiling lot count from A-ST3 — open point 1 makes the ceiling the operator's to name, so withholding it is correct, not a defect.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 42   Unmet: 4
+
+---
+⏱  66318ms (66.3s)
+📊 Tokens — total: 27459, input: 14218, output: 13241, reasoning: 11554

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/stn1/PLAN.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9924 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20289 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29522 chars, answer 1129 chars, 45s
+BUG severity=HIGH — M-246 "it is dated, names its source, and keeps the prior status text as its prefix" — plan line "| A-ST5 + rules P1-P12 (the ST-5 repo home) | 69a: new separate dated-note rows after :695 (form of Spec 69a section 1a, as ST-1..ST-8 notes) |" — every landing row in the table says "dated" only; no step requires the note to name its source, and Rule 4's form "A ruling is kept as a verbatim dated note on its row, in the M-246 form" is never declared as the template to be used — add one line to the homes table fixing the note text: date, source file:line (for A-ST5, McSTORAGE-RULINGS.md:130-133), row · queue · lane BL-STN1, operator verbatim words.
+BUG severity=HIGH — Spec 69 header "add a row or a dated note, in §1a below; an id is never reused" — plan "no new M row, so the rule map does not move; no id claimed" against "69a +3 dated-note rows" — the plan claims there are no new rows and also pre-registers three added rows, so whether these are §1a rows that need an id and move the rule map, or M-246 notes inside existing rows that move nothing, is undecidable and neither can be checked at build — declare each of the three as "note appended in an existing row's status cell, no line added" or claim the three ids and the rule-map move explicitly.
+BUG severity=HIGH — M-246 "A dated note may be appended inside a row's status cell" — plan "doc-16 header | backlog/docs/doc-16 | status line only" — a document header is not a row's status cell, so no pasted clause or ruling names this edit or its form — move the doc-16 edit under a pasted clause that covers it, or drop it from this change.
+DEFER severity=MED — Rule 4 "The orchestrator writes each ruling into the row's status line the same day" — plan "review output copied to docs/reports/lanes/2026-11-20/BL-STN1/" against "MORNING-DECISIONS.md:718-722 (operator answers to the four open points, 2026-11-18)" — the rulings being recorded are two days older than the lane and no step dates the notes to the ruling date or records the late write — state in each note the ruling date (2026-11-18) and one line disclosing the late same-day write.
+DEFER severity=MED — M-246 "keeps the prior status text as its prefix" — plan "doc-16 header | backlog/docs/doc-16 | status line only" against "a. Purge after 90 days unopened and tracked lots refreshed in the background (MD:738) replace doc-16 section 4 \"no re-warm job\" and \"N days\"" — the homes table limits doc-16 to a header status line while step 8a says section 4 body text is replaced, so whether prior text is kept cannot be verified — declare one doc-16 edit and, if section 4 text is superseded, write it as a dated note with the prior wording kept as prefix.
+DEFER severity=MED — M-169 "A condition no data can decide is taken as not holding, and its impact is disclosed" — plan "A-S88 (cost wording) | Spec 88 / 69a M-67 | WAITS ST-OP3; nothing edited" and "WAITS ST-OP4" — four clauses are deferred to operator points with the wait recorded but no statement of what does not hold meanwhile or what its impact is (the 309-form branch line is the only disclosure) — add one impact line beside each WAITS (ceiling, cost wording, A-ST5b, A-S88).
+DEFER severity=LOW — M-246 "SCALABLE: any row" — plan "A-MB75, A-MB76 | MCBYLAWS-QUEUE.md MB-75, MB-76 rows" — queue and spec rows are rows, so the form is admissible; noted only so the grounder does not read the out-of-register homes as a scope breach — no fix owed.
+MET — M-246 "keeps the prior status text as its prefix" — plan "each a dated M-246 note, prior text kept" — prefix preservation is declared for every landing row.
+MET — M-246 "§1a (the separate-row form): kept beside it" — plan "form of Spec 69a section 1a, as ST-1..ST-8 notes" — A-ST5 uses the declared separate-row form of §1a, not the status-cell form.
+MET — Spec 69 header "an id is never reused" — plan "no id claimed" — no existing M id is reused or reassigned anywhere in the table.
+MET — M-246 "It changes no line count, so no later line citation moves" — plan "Spec 135 FE-39 +1 note" — the appended-in-cell notes land as notes, not as rows, so those rows' line counts do not move.
+REJECT — M-246 "It changes no line count, so no later line citation moves" — change accused of shifting later 69a line citations by adding rows after :695 — the ruling keeps the §1a separate-row form beside the status-cell form, so a §1a row addition is not a breach of the append form's line-count guarantee.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 4
+
+---
+⏱  49634ms (49.6s)
+📊 Tokens — total: 13913, input: 4656, output: 9257, reasoning: 8016

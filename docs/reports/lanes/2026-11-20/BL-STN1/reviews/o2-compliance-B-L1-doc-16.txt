@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/stn1/diff2-B.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10107 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21113 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33425 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44559 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 56082 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 67451 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 79363 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 90425 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 101333 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 111068 chars, answer 3556 chars, 150s
+BUG severity=HIGH — A-MF62 "waits for the numbers up to the set maximum (35,000 ms, raised from the seed's 30,000 by task LOAD.3)" — .cursor/MCFRONTEND-QUEUE.md:491 "The 35,000 ms setting change (LOAD.3) is not needed and the seed max stays 30000" — the diff contradicts the pasted amendment and relies on RR-0176, which is not in the pasted context — restore the 35,000 ms setting or land RR-0176 as a dated amendment to A-MF62.
+BUG severity=HIGH — P12 "the first open is covered by the loading screen (35 s)" — .cursor/MCFRONTEND-QUEUE.md:491 "with no 35 s cap" and .cursor/MCFRONTEND-QUEUE.md:544 "covered by the loading screen (no 35 s cap, RR-0176)" — P12 and section 1 item 10 ("the screen setting rises to 35 s") are left unamended and in conflict, so the operator's "conflicting rulings removed" is unmet — add P12 and item 10 to the MF-62 superseded list or keep the 35 s cap.
+BUG severity=HIGH — doc-16 open point 2 "confirm that p95 <= 1 s also applies to an owner-input recompute once 5.11 is measured" — .cursor/MCFRONTEND-QUEUE.md:544 "the 1 s budget does NOT apply to it (operator 2026-11-18, "2. no it doesnt apply to the owner input ...")" — the note uses the earlier 2026-11-18 answer while itself quoting the later 2026-11-20 "yes to McStorage and 1,2,3 yes as recommended", so it contradicts the later ruling — reconcile the two and, if 1,2,3 are the open points, restore the 1 s after 5.11 or cite why the later yes does not cover open point 2.
+BUG severity=HIGH — doc-16 open point 3 "Cost: confirm cost is computed at each open from the record's size (not stored)" — .cursor/MCBYLAWS-QUEUE.md:750 "The cost wording of part (c) (cost per option from the scenario:* lines) is NOT amended: it waits for open point 3 of doc-16 section 7." — the later 2026-11-20 approval of 1,2,3 resolves open point 3, so the note leaves a stale stored-cost wording and a resolved open point open — amend the cost wording to A-S88/P9 or state that the later yes does not approve open point 3.
+BUG severity=HIGH — 137 note "ST-1, ST-2, ST-3 (M-516), ST-5, ST-6, ST-7 and ST-8 are dated-note rows in docs/specs/01-pipeline/69a_mcbylaw_register.md" — docs/specs/00-architecture/137_mcqueue.md:43 "the McStorage rules are no longer scratch only. ST-1, ST-2, ST-3 (M-516), ST-5, ST-6, ST-7 and ST-8 are dated-note rows in docs/specs/01-pipeline/69a_mcbylaw_register.md" — this diff contains no change to 69a or 78, so the rows are asserted only by a note and A-ST5, A-ST6, A-ST4, A-ST3 and A-FE39 are not landed — include the 69a/78 dated notes or mark the 137 note as pending.
+DEFER severity=MED — doc-16 header "DRAFT for the operator; nothing applied to any repo file" and status "scratch drafts only" — docs/specs/00-architecture/137_mcqueue.md:43 "The cell above is kept as written." — the cell says "LOCAL `~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md`" while the note says the rules are no longer scratch only, so the diff keeps a contradictory cell and a stale draft status — amend the cell and doc-16 status to point at 69a/78 as the home, or keep the note in scratch.
+DEFER severity=MED — doc-16 open point 1 "Ceiling and purge ... Name the ceiling (lots or MiB) and approve purging untracked, un-owned records not opened for N days" — .cursor/MCBYLAWS-QUEUE.md:750 "yes to McStorage and 1,2,3 yes as recommended" — no diff line names a ceiling or a purge rule, so the later approval of 1,2,3 is not landed — add the ceiling/purge note or state that 1,2,3 are not the open points.
+MET — A-MB75 — .cursor/MCBYLAWS-QUEUE.md:369 — the note matches A-MB75, sample streamed through the pure core, findings only, no launch need.
+MET — A-MB76 — .cursor/MCBYLAWS-QUEUE.md:378 — the note matches A-MB76, streamed batches, findings only, unscheduled.
+MET — A-MB38 — .cursor/MCBYLAWS-QUEUE.md:752 — the note matches A-MB38, no all-lot fill or recapture, L3b sweep with content_sha and stale-stamp recompute.
+MET — MF-51 — .cursor/MCFRONTEND-QUEUE.md:391 — the note binds the Tracked Lots values to the stored record, matching the MF-51 row.
+MET — A-126 — docs/specs/02-web-admin/126_maxbld_surface_standard.md:810 — the note is the A-126 text, closed status list unchanged, loading/updating/error not statuses.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 7
+
+---
+⏱  150765ms (150.8s)
+📊 Tokens — total: 55021, input: 22532, output: 32489, reasoning: 31165
