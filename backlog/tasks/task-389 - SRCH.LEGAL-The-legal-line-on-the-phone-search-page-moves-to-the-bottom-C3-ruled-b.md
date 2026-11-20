@@ -7,9 +7,10 @@ status: RUNNING
 assignee:
   - '@lane-BL-LEGAL'
 created_date: '2026-11-20T15:16:00Z'
-updated_date: '2026-11-20T15:41:00Z'
+updated_date: '2026-11-20T15:42:00Z'
 labels:
   - McFix
+  - McFix A
 milestone: m-1
 dependencies: []
 references:
@@ -21,7 +22,7 @@ ordinal: 89012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Operator rulings 2026-11-20, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b: the legal line on the phone search page goes at the bottom as in the later mock, ~/Buildo-scratch/mcfrontend/small-pages-v8/search.html:267-269; it sits under the search box today) and "Phone retires yes and web search yes" (the web search page legal line also goes at the bottom, the same as the phone, if the web page shows that line: confirm in the plan) and "5. Do the legal-line move (389) now as a small code change". Record: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20. Evidence: docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md (C3). Smallest change in the existing bindings and their goldens; text unchanged (content key); on the web the shared footer builder already carries a legal line: do not show the line twice, say what the web shows before and after. Files: mobile/src/components/surfaces/SearchBinding.tsx, src/components/surfaces/web/SearchBinding.tsx, mobile/__tests__/parcelScreens.golden.test.ts, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, src/tests/fixtures/surfaces/mobile_parcel_search/, mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json
+Operator rulings 2026-11-20, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b: the legal line on the phone search page goes at the bottom as in the later mock, ~/Buildo-scratch/mcfrontend/small-pages-v8/search.html:267-269; it sits under the search box today) and "Phone retires yes and web search yes" (the web search page legal line also goes at the bottom, the same as the phone, if the web page shows that line: confirm in the plan). Record: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20. Evidence: docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md (C3). Smallest change in the existing bindings and their goldens; text unchanged (content key); on the web the shared footer builder already carries a legal line: do not show the line twice, say what the web shows before and after. Timing: orchestrator recommendation item 5 ("Do the legal-line move (389) now as a small code change", MORNING-DECISIONS.md:1421), approved by the operator with "approved [the five items pasted] - remember the app is not beign used - we are in development" (:1422). [Corrected 2026-11-20: an earlier version of this description quoted item 5 as the operator own words; it was the orchestrator text.] Files: mobile/src/components/surfaces/SearchBinding.tsx, src/components/surfaces/web/SearchBinding.tsx, mobile/__tests__/parcelScreens.golden.test.ts, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, src/tests/fixtures/surfaces/mobile_parcel_search/, mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
