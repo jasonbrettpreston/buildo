@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXTOOLS'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-20T19:13:00Z'
 labels:
   - McFix
   - McFix A
@@ -79,4 +79,6 @@ check-lane-close.mjs, rule-lists.mjs, rule-lists.json; operator items C1-C5, 48/
 2026-11-20 taken on the board at lane launch (lane BL-FIXTOOLS, worktree /Users/brettpreston_macmini/Buildo-wt-fixtools, branch wf1/inc1b-fixtools), RR-0240
 
 Grounder verdict 2026-11-20 (separate read-only agent, launched by the orchestrator): SAFE TO FOLD as a PARTIAL fix; folded onto wf2/board. Fixed: D10 buffer (proof-slice.mjs reads tooling_spawn_max_buffer_mb). STILL OPEN, task not done: D10 timeout DEFAULT_TIMEOUT_MS = 120000 typed (needs a migration number from the ID ledger, seed row, registry doc; operator typed GO for the DB); D11b security lens terms for admin and PII at scripts/analysis/rule-lists.mjs:128; the plan-lens --context token is a placeholder, not a path. The commit subject "proof runner tunables registered" overstates: one existing variable is read, none registered.
+
+Retro review by a separate grounder 2026-11-20 (task-405), work as on the board: GROUNDER.md at ~/Buildo-scratch/lanes-20261119/inc1b/retro/BL-FIXTOOLS/GROUNDER.md (sha256 085db47ef2f6…, 67 findings: 26 CONFIRMED, 41 REJECTED). DEFECTS: (1) red.out and commit.out cited by the report are not in the repo; the recorded red is for the wrong reason. (2) D11a half fixed: the plan-lens --context value is the literal placeholder at scripts/analysis/backlog-lane.mjs:156 and its test pins the placeholder text; :177 passes a template as --context with no --template. (3) commit subject 'tunables registered' overstates: one existing variable read, none registered. (4) the seed tooling_spawn_max_buffer_mb description omits proof-slice.mjs; generated registry stale; no SPEC LINK. (5) a child cut at the ceiling reads 'killed by SIGTERM'; the ENOBUFS branch has no test. STILL OPEN, task stays RUNNING: D10b DEFAULT_TIMEOUT_MS = 120000 literal; D11b the security lens pattern in rule-lists.mjs misses admin and PII. Review tool (not this task): a timeout prints the partial answer twice; a trailing --template with no value silently degrades. Ten resolved lists have no output.
 <!-- SECTION:NOTES:END -->
