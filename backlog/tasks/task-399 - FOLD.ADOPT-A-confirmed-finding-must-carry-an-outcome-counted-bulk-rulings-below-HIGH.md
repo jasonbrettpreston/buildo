@@ -3,10 +3,11 @@ id: TASK-399
 title: >-
   FOLD.ADOPT A confirmed finding must carry an outcome; counted bulk rulings
   below HIGH
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-OUTCOME'
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-20T23:53:00Z'
+updated_date: '2026-11-20T23:55:00Z'
 labels:
   - McFix
   - McFix Z
@@ -279,4 +280,6 @@ Dated note 2026-11-20 (M-246, prior text kept; RR-0340 · task-399 · Backlog; o
 2026-11-20 PLAN-399-v3 GOVERNS (appended, prior text kept, M-246). On the operator orders recorded as RR-0337, RR-0338, RR-0339 and RR-0340 the approved FINAL BUILD NOTE above (NOTE-399.md, RR-0336) went through the Spec 08 plan panel (DeepSeek lens set, Integration, Reality-Check and Ground-truth seats), a separate grounder, a fold, a second pass (fold validation and cross-read) and one correction round. The result is the Implementation Plan field of this task (PLAN-399-v3, sha256 b23cbc4e06c040a33e3b3cfd59b396584da0e082ea08ea7a6e664a9f20c79e74). Where it differs from the approved note, the plan governs. Approved sentences it replaces: "Files line (unchanged)" two files becomes five files plus backlog-brief.mjs and its test; "Bulk form for MED, LOW and NIT" is deleted; wontfix "60+ characters" becomes the existing 30-character literal and stays LOW and NIT only; "refused naming every id with no line or with two lines" becomes the last line per id wins; "A CONFLICT id takes only task: or ruling:" becomes ruling or fixed; the ending "; not reviewed (exempt): <k> paths" is deleted; acceptance "35 CONFIRMED" is 36. New, from RR-0338 and RR-0340: a pile: form for LOW and NIT; outcome lines for CRITICAL, HIGH and MED on the task page; seat findings ruled in the grounder file and covered by the same check. Open operator items P1 to P5 are listed at the end of the plan; the plan is written on the recommended answers and names what is reverted on a no. Panel records: docs/reports/reviews/task-399/.
 
 2026-11-20 plan text corrected by one sentence (C1 of the round-3 grounder, docs/reports/reviews/task-399/GROUNDER-PANEL2.md): hand step 7 now states how the last round's fold is checked and that it is the last panel round. Plan sha256 now 60e3c08c3b85.
+
+2026-11-20 taken on the board at lane launch (lane BL-OUTCOME, worktree /Users/brettpreston_macmini/Buildo-wt-outcome, branch wf1/inc1b-outcome), RR-0240
 <!-- SECTION:NOTES:END -->
