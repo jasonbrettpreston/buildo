@@ -14,7 +14,9 @@ Tasks named: task-387
 
 ## Decision
 
-Operator, verbatim, 2026-11-20: "web search yes"
+ORCHESTRATOR READING (not the operator's words): the web search page legal line also goes at the bottom, the same as the phone (C3 b), if the web page shows that line, MORNING-DECISIONS.md:1410.
+
+The operator's words, verbatim, 2026-11-20 (his words only; the reading above is not part of them): "web search yes"
 
 Cite: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1409
 

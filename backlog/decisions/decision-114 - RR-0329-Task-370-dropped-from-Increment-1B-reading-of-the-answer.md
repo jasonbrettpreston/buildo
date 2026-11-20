@@ -14,7 +14,9 @@ Tasks named: task-387, task-370
 
 ## Decision
 
-Operator, verbatim, 2026-11-20: "Task 370 yes"
+ORCHESTRATOR READING (not the operator's words): drop task-370 from this increment (the recommendation put), MORNING-DECISIONS.md:1428.
+
+The operator's words, verbatim, 2026-11-20 (his words only; the reading above is not part of them): "Task 370 yes"
 
 Cite: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1427
 

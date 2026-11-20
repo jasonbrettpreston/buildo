@@ -14,7 +14,9 @@ Tasks named: task-387
 
 ## Decision
 
-Operator, verbatim, 2026-11-20: "Phone retires yes"
+ORCHESTRATOR READING (not the operator's words): keep the 3 retries before the error screen shows (the recommendation put), MORNING-DECISIONS.md:1410.
+
+The operator's words, verbatim, 2026-11-20 (his words only; the reading above is not part of them): "Phone retires yes"
 
 Cite: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1409
 

@@ -14,7 +14,9 @@ Tasks named: task-387, task-348
 
 ## Decision
 
-Operator, verbatim, 2026-11-20: ". approved"
+ORCHESTRATOR READING (not the operator's words): the six-row table as put (:1426) is approved, including that the C5 ruling of the same day answers task-348, MORNING-DECISIONS.md:1428.
+
+The operator's words, verbatim, 2026-11-20 (his words only; the reading above is not part of them): ". approved"
 
 Cite: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1427
 
