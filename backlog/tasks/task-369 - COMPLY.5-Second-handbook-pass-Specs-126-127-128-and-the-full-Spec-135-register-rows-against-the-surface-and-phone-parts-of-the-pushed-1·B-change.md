@@ -3,9 +3,11 @@ id: TASK-369
 title: >-
   COMPLY.5 Second handbook pass: Specs 126, 127, 128 and the full Spec 135
   register rows against the surface and phone parts of the pushed 1·B change
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-COMPLY3'
 created_date: '2026-11-20T13:23:00Z'
+updated_date: '2026-11-20T13:25:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -40,3 +42,9 @@ Operator 2026-11-20 (verbatim): "yes to McStorage and 1,2,3 yes as recommended".
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-20 taken on the board at lane launch (lane BL-COMPLY3, worktree /Users/brettpreston_macmini/Buildo-wt-comply3, branch wf1/inc1b-comply3), RR-0240
+<!-- SECTION:NOTES:END -->
