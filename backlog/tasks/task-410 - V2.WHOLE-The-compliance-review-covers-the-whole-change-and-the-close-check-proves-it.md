@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T20:47:00Z'
+updated_date: '2026-11-20T20:48:00Z'
 labels:
   - McFix
   - McFix V2
@@ -86,4 +86,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 rebased onto wf2/board d17fc7499 (task-406 folded: nine golden exempt globs); item 3 test added; lists re-resolved: now also policy-124-s2-s5.
 
 2026-11-20 KNOWN LIMITS (dated, owners named; grounder r2 findings recorded as task:task-410 in TRIAGE.md): (1) the reviewer context: a compliance or lens output made with a real --context is refused today because the check hashes the tool's no-context placeholder; task-375 builds the context option and the check's hook point is lensContexts() in scripts/hooks/check-lane-close.mjs (findings out-code-review#4, out-compliance-agents-s7-s11-p1#1, out-compliance-agents-s7-s11-p4#1, out-compliance-queue-137-p1#3, out-compliance-queue-137-p4#4, plan-compliance-inc-S#2, plan-compliance-inc-S#3, plan-compliance-orchestrator-doc17#5). (2) a hand-written output whose author computed the public hashes passes, and a board ref moved by a forbidden command (git update-ref) is refused by the lane guard, not by this check. (3) the head text rendered for every list says 'Judge the material under review against the rules in this part' including doc-17 whose body is readings (out-compliance-orchestrator-doc17-p1#1). (4) a list block that cannot be split makes the oversized-file refusal name the biggest file with a negative room figure (out-code-review#5, plan-error-paths#1). (5) a repo file over about 115,000 characters of diff, such as the golden before-images under docs/reports/golden, can never be reviewed: the operator-gated generated-file question beyond the nine golden globs (plan-error-paths#6, plan-plan-review-deepseek#4). (6) a clause spanning two files is judged in two chunk runs (plan-compliance-agents-s5-1to3#3). (7) the context file the brief generator writes lists reading rows as decisions and ends two rows with the word undefined: owner the backlog-brief generator (plan-compliance-orchestrator-doc17#1, #2, #3, #6). The plan-phase compliance gap stays with task-404.
+
+2026-11-20 round 3 landed: ac5884995 (F13), f5cc11a99 (F8-F12), ad487121f (brief), 54f15abe8 (item 3 test), 7d1ae7a6c (notes). Rebased onto wf2/board d17fc7499. Lens set re-run on the final range; TRIAGE.md in the lane report dir. Task stays RUNNING, grounder owed.
 <!-- SECTION:NOTES:END -->
