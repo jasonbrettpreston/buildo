@@ -191,6 +191,6 @@ docs/reports/generated/127-surface-registry.md: policy-124-s2-s5 ... surface-127
 - out-compliance-plan-protocol.txt sha256:c143d5040e5d findings:6
 - out-compliance-queue-137.txt sha256:7f33376dfda9 findings:5
 - out-error-paths.txt sha256:cfd515547ab2 findings:6
-(sha256 are the first 12 hex of each file; counts are BUG and DEFER lines; 69 findings in the 13 outputs, FINDINGS.md refreshed, untriaged.)
+(sha256 are the first 12 hex of each file; counts are BUG and DEFER lines; 63 findings in the 13 outputs, FINDINGS.md refreshed, untriaged.)
 
 STATUS: BL-V2LIST task-406 round 2 READY, task RUNNING, grounder owed again; commits a55976216, 8b0f3f994, 1e67bda61, 6285effe0 (+ reports commit); fix 4 halted (budget pin), policy-124-s2-s5 has no output (lens-input size refusal).
