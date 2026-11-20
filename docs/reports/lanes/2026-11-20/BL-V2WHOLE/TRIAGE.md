@@ -244,3 +244,45 @@ out-compliance-queue-137-p1#3 wontfix:"the record paths in the Rule 3 note are w
 out-error-paths-p1#2 fixed:a8a3ca2db scripts/analysis/rule-lists.mjs
 out-error-paths-p1#3 task:task-375
 out-error-paths-p1#4 wontfix:"no timeout on the spawned git; a killed child is a failing status and the close is refused (fail closed)"
+
+## ROUND 6 GROUNDER (file sha256 b3425b2c1d6c, 40 CONFIRMED findings; ids are those of the round-6 outputs, positional)
+plan-compliance-agents-s5-1to3#3 wontfix:"a clause over two files is judged per chunk by design; recorded as a known limit"
+plan-compliance-agents-s5-1to3#5 fixed:3852f74e9 docs/specs/00-architecture/08_agents.md
+plan-compliance-agents-s7-s11#6 wontfix:"process note: the validation seats are the grounders that ran after the build"
+plan-compliance-eng-all#2 wontfix:"the checklist is an in-response artifact, not stored"
+plan-compliance-eng-all#5 fixed:3852f74e9 docs/specs/00-architecture/08_agents.md
+plan-compliance-eng-all#6 wontfix:"the four templates hold the placeholder once each (line 34); pinning them is the template test of task-406"
+plan-compliance-eng-all#7 wontfix:"no property test for the packing arithmetic; the invariants are asserted on the 300 and 141 file cases"
+plan-compliance-inc-S#2 task:task-375
+plan-compliance-inc-S#3 task:task-375
+plan-compliance-orchestrator-doc17#1 task:task-375
+plan-compliance-orchestrator-doc17#2 task:task-375
+plan-compliance-orchestrator-doc17#3 task:task-375
+plan-compliance-orchestrator-doc17#5 task:task-375
+plan-compliance-orchestrator-doc17#6 task:task-375
+plan-compliance-plan-protocol#1 wontfix:"moot after the build: the commands are in the lane report"
+plan-compliance-plan-protocol#5 wontfix:"the measured call counts replace the estimate in the lane report"
+plan-error-paths#1 wontfix:"the estimate and the negative room figure only name the wrong cause in a refusal that is already a refusal (fail closed)"
+plan-error-paths#3 fixed:98c9f9a8e scripts/hooks/check-lane-close.mjs
+plan-error-paths#6 task:task-410
+plan-plan-review-deepseek#2 fixed:c94a13754 scripts/analysis/rule-lists.mjs
+plan-plan-review-deepseek#4 task:task-410
+plan-plan-review-deepseek#7 fixed:ac5884995 scripts/analysis/rule-lists.mjs
+plan-plan-review-deepseek#8 fixed:e028b1976 scripts/analysis/backlog-lane.mjs
+plan-plan-review-deepseek#11 fixed:0b1c432d5 scripts/hooks/check-lane-close.mjs
+out-code-review-p1#2 task:task-375
+out-code-review-p1#3 wontfix:"a commit that moves a task to a status outside the default finished set in a clone without the board is not refused; a clone without the board branch is outside the repo worktrees, and such a task is not a close of a finished status"
+out-code-review-p1#4 wontfix:"the measured-room estimate is a prompt-size count; harmless"
+out-compliance-agents-s5-1to3-p1#1 wontfix:"lens-input on a diff that fits is not the route for the unsplit lens runs: the brief runs the lens on the diff file itself"
+out-compliance-agents-s5-1to3-p1#2 wontfix:"changed docs/reports and backlog paths outside the Files line may sit in a chunk by design: their text is compared like any other chunk"
+out-compliance-agents-s5-1to3-p1#4 fixed:4de8fb86f scripts/hooks/check-lane-close.mjs
+out-compliance-agents-s7-s11-p1#2 task:task-375
+out-compliance-eng-all-p1#1 fixed:bb08d47b5 scripts/analysis/backlog-lane.mjs
+out-compliance-eng-all-p2#3 wontfix:"the chunk arithmetic is asserted on planted cases; no property test"
+out-compliance-plan-protocol-p1#2 wontfix:"the infra freeze lift for the V2 tasks is the operator approval of the McFix V2 launch quoted in the task; no hook requires a by-name line"
+out-compliance-policy-124-s2-s5-p4#6 task:task-375
+out-compliance-queue-137-p1#2 fixed:bb08d47b5 scripts/analysis/backlog-lane.mjs
+out-error-paths-p1#2 wontfix:"a launch search that returns nothing is refused by the check (fail closed); the brief command degrading to a working-tree diff only affects the lane that already cannot close"
+out-error-paths-p1#3 task:task-410
+out-error-paths-p1#4 wontfix:"round-2 files (out-<lens>-rN.txt) are read for findings only by design (the brief says so)"
+out-error-paths-p1#5 wontfix:"a broken prompt builder kills the hook with a nonzero exit, so the close is refused (fail closed)"

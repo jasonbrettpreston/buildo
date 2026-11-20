@@ -1,4 +1,4 @@
-Superseded by the round 6 re-run (2026-11-20), removed in the same commit as the new outputs:
+Superseded by the round 7 re-run (2026-11-20), removed in the same commit as the new outputs:
 DIFF.patch
 in-out-code-review-p1.txt
 in-out-code-review-p2.txt

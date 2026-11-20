@@ -1,4 +1,4 @@
-LIST policy-124-s2-s5 sha256:2e6d2f7a0c33bd5106e5396fe3c558cade78178a92ef4d3b5fe6c3a401544b81 material sha256:530d99d9f6d74d97124e6b6093ed8b3e57550ec47ad795bd790517a3aa5d1f5b part 2 of 2 chunk 2 of 3
+LIST policy-124-s2-s5 sha256:2e6d2f7a0c33bd5106e5396fe3c558cade78178a92ef4d3b5fe6c3a401544b81 material sha256:b355b3ac6a360b077119e57bb79b927e42bc5c6deba03f26c3523bfe7fc28110 part 2 of 2 chunk 2 of 3
 RULE LIST policy-124-s2-s5 (docs/specs/01-pipeline/124_step_standard_policy.md, sections 2. The rules; 5. Register of rulings), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts"]
 
 ## §5. Register of rulings
@@ -102,7 +102,7 @@ text and evidence. This table is live for anything estate-wide from here on.
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e9349bf4d1a 100644
+index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..449f30cf4ebc60669163cd94135c6c3478dfd0d8 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -15,6 +15,11 @@
@@ -305,7 +305,7 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e93
    const staged = git(['diff', '--cached', '--name-only', '--no-renames']).stdout.split('\n').filter(Boolean);
    const taskFiles = staged.filter((f) => /^backlog\/tasks\/task-\d+( -.*)?\.md$/i.test(f));
    const moves = [];
-@@ -230,30 +339,101 @@ function check(msgFile) {
+@@ -230,30 +339,114 @@ function check(msgFile) {
      moves.push({ f, now: now.stdout, fm, headFm, status });
    }
    if (moves.length === 0) return 0;
@@ -356,6 +356,8 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e93
 +    const boardFile = num ? git(['ls-tree', '--name-only', boardRef, 'backlog/tasks/']).stdout.split('\n').find((n) => new RegExp(`^backlog/tasks/task-0*${num}( -.*)?\\.md$`, 'i').test(n)) : null;
 +    const bx = boardFile ? git(['show', `${boardRef}:${boardFile}`]) : null;
 +    const boardFm = bx && bx.status === 0 ? parseFM(bx.stdout).fm : null;
++    // H10 (round 7): a close of a task number the board never held is refused, never a fallback to the lane's own copy (a renumbered, unassigned, retyped file would close unreviewed)
++    if (!boardFm) { errors.push(`${id}: the board (${boardRef}) holds no copy of this task file (task number ${num ?? '?'}): type and lane assignee are read from the board copy and a close has no fallback to the lane's own copy; a lane may not close a task number the board never held`); continue; }
 +    const boardLane = boardFm ? asList(boardFm.assignee).map(String).find((a) => /^@lane-/.test(a)) : undefined;
 +    const boardType = String(boardFm?.type ?? '').toLowerCase();
 +    const stagedLane = assignees.find((a) => /^@lane-/.test(a));
@@ -367,11 +369,11 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e93
 +    let L = null;
 +    let baseTask = null;
 +    if (laneAssign && full) {
-+      L = git(['log', full, '--first-parent', '--reverse', '--format=%H', `-S${laneAssign}`, '--', mv.f]).stdout.split('\n').filter(Boolean)[0] ?? null;
++      L = git(['log', full, '--first-parent', '--reverse', '--format=%H', `-S${laneAssign}`, '--', boardFile ?? mv.f]).stdout.split('\n').filter(Boolean)[0] ?? null;
 +      if (!L) { errors.push(`${id}: no launch commit found: \`git log ${full} --first-parent --reverse -S${laneAssign} -- ${mv.f}\` returns nothing, so the task's recorded launch (the take on the board for its lane) cannot be proved (fail closed)`); continue; }
 +      if (git(['merge-base', '--is-ancestor', L, 'HEAD']).status !== 0) { errors.push(`${id}: the launch commit ${L.slice(0, 9)} is not an ancestor of HEAD: this branch was not cut from the task's launch`); continue; }
-+      const bx = git(['show', `${L}:${mv.f}`]);
-+      baseTask = bx.status === 0 ? bx.stdout : null;
++      const lx = git(['show', `${L}:${boardFile ?? mv.f}`]);
++      baseTask = lx.status === 0 ? lx.stdout : null;
 +    }
 +    const baseFm = baseTask ? parseFM(baseTask).fm : null;
 +    const type = String(boardFm?.type ?? baseFm?.type ?? mv.fm.type ?? '').toLowerCase();
@@ -413,14 +415,25 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e93
 +    const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
 +    const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
 +    errors.push(...closeErrors({ id, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase }));
++  }
++  // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
++  const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
++  for (const lane of new Set(lanePaths.map((f) => f.split('/')).filter((p) => p.length === 6).map((p) => p[4]))) {
++    const hits = git(['grep', '-l', '--fixed-strings', '-e', `@lane-${lane}`, boardRef, '--', 'backlog/tasks/']).stdout.split('\n').filter(Boolean).map((l) => l.slice(boardRef.length + 1));
++    for (const bf of hits) {
++      const bm = git(['show', `${boardRef}:${bf}`]);
++      const fm = bm.status === 0 ? parseFM(bm.stdout).fm : {};
++      const n = /task-0*(\d+)/i.exec(path.basename(bf))?.[1];
++      if (['build', 'fix'].includes(String(fm.type ?? '').toLowerCase()) && asList(fm.assignee).map(String).includes(`@lane-${lane}`) && n && !idxNums.has(n)) errors.push(`this branch carries the lane directory of ${lane} but its tree has no task-${n} file: the board holds that task as a lane ${String(fm.type).toLowerCase()} task (${bf}); a branch that deletes or renumbers its task file cannot close anything`);
++    }
    }
    return errors.length ? fail(errors) : 0;
  }
 diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
-index 518a4dff34f49c63f1a3833971d15a616594d700..f4e434fc2f7f39d923b9142bd092b36a905d4e8b 100644
+index 518a4dff34f49c63f1a3833971d15a616594d700..d3a9ab087c1a99c8905b35915508573a4ccb5a58 100644
 --- a/src/tests/backlog/backlog-lane.logic.test.ts
 +++ b/src/tests/backlog/backlog-lane.logic.test.ts
-@@ -229,8 +229,20 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+@@ -229,8 +229,21 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
        expect(e).toContain('in-<same name>');
        expect(e).toContain('out-<lens>[-<list id>]-rN.txt');
        expect(e).toContain('fix-*.txt');
@@ -438,6 +451,7 @@ index 518a4dff34f49c63f1a3833971d15a616594d700..f4e434fc2f7f39d923b9142bd092b36a
 +      expect(e).toContain('out-<lens>-pN.txt');
 +      expect(e).toContain('one file alone over the room is refused naming the file and its size: report that to the orchestrator at once');
 +      expect(e).toContain('The close check recomputes the changed paths of the task range');
++      expect(e).toContain('closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane');
 +      expect(e).not.toMatch(/the diff is never split or trimmed to core files/);
 +      expect(e).not.toMatch(/puts the whole diff in every part/);
        expect(e).not.toMatch(/a diff over the review tool's bound is split/);

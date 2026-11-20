@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:39.945Z file_sha256=51f761913e7743665bf36519b61fb8b81ac20093a407bb2ea3c2142fec2d2ae3 prompt_sha256=e361a15562a462c703f31625c68cbdf358989216a5864f22d5cfa6be002c27df
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-queue-137-p3.txt (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> — none asserted; see DEFER lines below for the unverifiable and unnamed-behaviour items.
+
+DEFER severity=MED — Spec 137 §4 Rule 3 dated note 2026-11-20 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — src/tests/backlog/rule-lists.logic.test.ts:0 "diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts" — this chunk shows a `src/` file change and no backlog task file and no trailer; the commit message and chunks 1-2 cannot be seen, so G3 compliance is unverified — confirm the commit carries `Task: task-410` and that the task file is in the same commit (a different chunk of the same commit is fine, a different commit is not).
+
+DEFER severity=LOW — Spec 137 §4 Rule 12 dated note 2026-11-20 (task-366) "Which lists a task attaches is decided by `scripts/analysis/rule-lists.json` from the task's Files line" — src/tests/backlog/rule-lists.logic.test.ts:629 "const t = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { exempt: string[] };" — the pasted note gives rule-lists.json only the Files-line role; no pasted clause or ruling names a golden `exempt` list, and the ruling the test cites (operator "1-5 y" item 3, task-406's fold) is not pasted, so this assertion is judged against nothing — paste the item-3 ruling or the task-406 table text into the run, or state it is out of scope for this lens.
+
+DEFER severity=LOW — Spec 137 §4 Rule 12 dated note 2026-11-20 (task-410) "when a chunk, an input or an output hash does not match" — src/tests/backlog/rule-lists.logic.test.ts:638 "for (const a of ['--diff-algorithm=myers', '--indent-heuristic', '--inter-hunk-context=0']) expect(m.DIFF_ARGS, a).toContain(a);" — the diff-flag pins (F2, H9) and the core.quotepath refusal at :608 "expect(l.r.stderr).toContain('core.quotepath=false')" are behaviour no pasted clause or operator ruling names; the grounder round cited in the comment at :582 is not pasted — attach the grounder lines or the operator item text to the run before these can be judged.
+
+MET — Spec 137 §4 Rule 12 dated note 2026-11-20 (task-410) "when a file changed from the task's launch commit that its Files line covers is not in a review chunk" — src/tests/backlog/rule-lists.logic.test.ts:518 "expect([...seen].sort()).toEqual([...FILES].sort());" — the test asserts every changed path is stamped in exactly one chunk and the chunk texts join back to the whole diff.
+
+MET — Spec 137 §4 Rule 12 dated note 2026-11-20 (task-410) "when a chunk, an input or an output hash does not match" — src/tests/backlog/rule-lists.logic.test.ts:501 "const m = /^LIST (\S+) sha256:[0-9a-f]{64} material sha256:([0-9a-f]{64}) part (\d+) of (\d+)(?: chunk (\d+) of (\d+))?/" — the material hash stamp is parsed, so the stamp the closing check compares is exercised.
+
+MET — Spec 137 §1 dated note 2026-11-19 (RR-0205) "plan tasks link to them by id, not copies" and §4 Rule 2 "Every task is registered." — src/tests/backlog/rule-lists.logic.test.ts:495 "// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries" — the added tests name the registered task-410, the task the pasted task-410 notes already cite.
+
+MET — Spec 137 §5a Rule 13 "The board is a view; the row is the record." — src/tests/backlog/rule-lists.logic.test.ts:626 "// V2.WHOLE round 3, operator item 3 (\"1-5 y\")" — the change edits no queue file, no card and no status line; it only adds tests, so the row-is-the-record rule is untouched.
+
+REJECT — Spec 137 §5 "A procedure. No tool and no code." — the change accused of building a tool for the weekly snapshot — the material tests the review-input splitter (lens-input, DIFF_ARGS, rule-lists.json), not the §5 snapshot procedure, which stays procedural.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  60303ms (60.3s)
+📊 Tokens — total: 26732, input: 13369, output: 13363, reasoning: 12200

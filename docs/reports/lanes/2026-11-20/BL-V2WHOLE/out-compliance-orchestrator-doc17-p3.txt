@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:40.036Z file_sha256=f6f9cf203e72322bde0ef5ce7bff51cd1b48fac488da272d6efe4ae4e2c472ad prompt_sha256=2a2d752f43262e23b03db79ceea544cccbf0b65f70137a33107d9d44882717be
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-orchestrator-doc17-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)." — src/tests/backlog/rule-lists.logic.test.ts "// V2.WHOLE round 3, operator item 3 ("1-5 y"): the real table (task-406's fold) exempts a real golden from the review material and nothing that is not one." — the sole authority the change cites for the golden-exemption behaviour is an operator item the governing doc classes as a reading, so that behaviour stands on no ruling in the pasted context — cite the actual ruling id, or reword the comment to name task-406 and drop the operator-item claim.
+
+DEFER severity=MED — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling" — src/tests/backlog/rule-lists.logic.test.ts "describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries'" — no pasted clause or ruling names file-boundary chunking, the "chunk c of m" stamp with its path list, DIFF_ARGS pinning or the golden-shape exemption, so these assertions bind to no governing text and no governing text can fail them — paste the spec section that owns lens-input (or the card naming V2.WHOLE) before merge, or record that this run's governing doc is a readings register.
+
+DEFER severity=LOW — doc-17 "never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — src/tests/backlog/rule-lists.logic.test.ts "// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries (the tool, never by hand)" — an uncited comment states the tool's contract as settled fact, so the comment reads as the spec the assertions are judged against — add the clause reference to the comment so the rule is traceable to text.
+
+REJECT — RR-0185 "y and your not following the McQueue rules in how to provide information to deepseek and others standard rules" — the change is accused of fixing review-input rules outside the operator's McQueue information rules — that entry sits in doc-17's readings list, is not a ruling, and names no clause, so it cannot bind this diff.
+
+REJECT — RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit" — the change is accused of adding tooling under an infra freeze — the entry is a reading, not a ruling, and the diff adds tests over existing behaviour rather than an infra task.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 1   Unmet: 0
+
+---
+⏱  23359ms (23.4s)
+📊 Tokens — total: 19903, input: 15733, output: 4170, reasoning: 3534

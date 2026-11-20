@@ -1,5 +1,5 @@
-LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:0b56bd991b62172c4bcbc07359eac5b6d7fe81a8f5fa997bf64b20f3632ae295 part 1 of 1 chunk 2 of 2
-RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:5830586d7480d4d1e958c6f96425c62d3a3472a583786d3a083edd09edb486ef part 1 of 1 chunk 2 of 3
+RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts"]
 
 ---
 id: doc-17
@@ -169,7 +169,7 @@ Readings and register entries of the rulings register. They are NOT the operator
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e9349bf4d1a 100644
+index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..449f30cf4ebc60669163cd94135c6c3478dfd0d8 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -15,6 +15,11 @@
@@ -372,7 +372,7 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e93
    const staged = git(['diff', '--cached', '--name-only', '--no-renames']).stdout.split('\n').filter(Boolean);
    const taskFiles = staged.filter((f) => /^backlog\/tasks\/task-\d+( -.*)?\.md$/i.test(f));
    const moves = [];
-@@ -230,30 +339,101 @@ function check(msgFile) {
+@@ -230,30 +339,114 @@ function check(msgFile) {
      moves.push({ f, now: now.stdout, fm, headFm, status });
    }
    if (moves.length === 0) return 0;
@@ -423,6 +423,8 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e93
 +    const boardFile = num ? git(['ls-tree', '--name-only', boardRef, 'backlog/tasks/']).stdout.split('\n').find((n) => new RegExp(`^backlog/tasks/task-0*${num}( -.*)?\\.md$`, 'i').test(n)) : null;
 +    const bx = boardFile ? git(['show', `${boardRef}:${boardFile}`]) : null;
 +    const boardFm = bx && bx.status === 0 ? parseFM(bx.stdout).fm : null;
++    // H10 (round 7): a close of a task number the board never held is refused, never a fallback to the lane's own copy (a renumbered, unassigned, retyped file would close unreviewed)
++    if (!boardFm) { errors.push(`${id}: the board (${boardRef}) holds no copy of this task file (task number ${num ?? '?'}): type and lane assignee are read from the board copy and a close has no fallback to the lane's own copy; a lane may not close a task number the board never held`); continue; }
 +    const boardLane = boardFm ? asList(boardFm.assignee).map(String).find((a) => /^@lane-/.test(a)) : undefined;
 +    const boardType = String(boardFm?.type ?? '').toLowerCase();
 +    const stagedLane = assignees.find((a) => /^@lane-/.test(a));
@@ -434,11 +436,11 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e93
 +    let L = null;
 +    let baseTask = null;
 +    if (laneAssign && full) {
-+      L = git(['log', full, '--first-parent', '--reverse', '--format=%H', `-S${laneAssign}`, '--', mv.f]).stdout.split('\n').filter(Boolean)[0] ?? null;
++      L = git(['log', full, '--first-parent', '--reverse', '--format=%H', `-S${laneAssign}`, '--', boardFile ?? mv.f]).stdout.split('\n').filter(Boolean)[0] ?? null;
 +      if (!L) { errors.push(`${id}: no launch commit found: \`git log ${full} --first-parent --reverse -S${laneAssign} -- ${mv.f}\` returns nothing, so the task's recorded launch (the take on the board for its lane) cannot be proved (fail closed)`); continue; }
 +      if (git(['merge-base', '--is-ancestor', L, 'HEAD']).status !== 0) { errors.push(`${id}: the launch commit ${L.slice(0, 9)} is not an ancestor of HEAD: this branch was not cut from the task's launch`); continue; }
-+      const bx = git(['show', `${L}:${mv.f}`]);
-+      baseTask = bx.status === 0 ? bx.stdout : null;
++      const lx = git(['show', `${L}:${boardFile ?? mv.f}`]);
++      baseTask = lx.status === 0 ? lx.stdout : null;
 +    }
 +    const baseFm = baseTask ? parseFM(baseTask).fm : null;
 +    const type = String(boardFm?.type ?? baseFm?.type ?? mv.fm.type ?? '').toLowerCase();
@@ -480,14 +482,25 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e93
 +    const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
 +    const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
 +    errors.push(...closeErrors({ id, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase }));
++  }
++  // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
++  const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
++  for (const lane of new Set(lanePaths.map((f) => f.split('/')).filter((p) => p.length === 6).map((p) => p[4]))) {
++    const hits = git(['grep', '-l', '--fixed-strings', '-e', `@lane-${lane}`, boardRef, '--', 'backlog/tasks/']).stdout.split('\n').filter(Boolean).map((l) => l.slice(boardRef.length + 1));
++    for (const bf of hits) {
++      const bm = git(['show', `${boardRef}:${bf}`]);
++      const fm = bm.status === 0 ? parseFM(bm.stdout).fm : {};
++      const n = /task-0*(\d+)/i.exec(path.basename(bf))?.[1];
++      if (['build', 'fix'].includes(String(fm.type ?? '').toLowerCase()) && asList(fm.assignee).map(String).includes(`@lane-${lane}`) && n && !idxNums.has(n)) errors.push(`this branch carries the lane directory of ${lane} but its tree has no task-${n} file: the board holds that task as a lane ${String(fm.type).toLowerCase()} task (${bf}); a branch that deletes or renumbers its task file cannot close anything`);
++    }
    }
    return errors.length ? fail(errors) : 0;
  }
 diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
-index 518a4dff34f49c63f1a3833971d15a616594d700..f4e434fc2f7f39d923b9142bd092b36a905d4e8b 100644
+index 518a4dff34f49c63f1a3833971d15a616594d700..d3a9ab087c1a99c8905b35915508573a4ccb5a58 100644
 --- a/src/tests/backlog/backlog-lane.logic.test.ts
 +++ b/src/tests/backlog/backlog-lane.logic.test.ts
-@@ -229,8 +229,20 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+@@ -229,8 +229,21 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
        expect(e).toContain('in-<same name>');
        expect(e).toContain('out-<lens>[-<list id>]-rN.txt');
        expect(e).toContain('fix-*.txt');
@@ -505,13 +518,14 @@ index 518a4dff34f49c63f1a3833971d15a616594d700..f4e434fc2f7f39d923b9142bd092b36a
 +      expect(e).toContain('out-<lens>-pN.txt');
 +      expect(e).toContain('one file alone over the room is refused naming the file and its size: report that to the orchestrator at once');
 +      expect(e).toContain('The close check recomputes the changed paths of the task range');
++      expect(e).toContain('closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane');
 +      expect(e).not.toMatch(/the diff is never split or trimmed to core files/);
 +      expect(e).not.toMatch(/puts the whole diff in every part/);
        expect(e).not.toMatch(/a diff over the review tool's bound is split/);
      }
    });
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index 028a17e9375029fef36f87fd0958b6e9ba3a9027..03cbe35bc6dd4ae54dad8176dff2c3e58925e52d 100644
+index 028a17e9375029fef36f87fd0958b6e9ba3a9027..1957eaef9aa8b67ffabc3b60cd7b6a37a51fed47 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -9,15 +9,16 @@ import { describe, expect, it } from 'vitest';
@@ -558,11 +572,11 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..03cbe35bc6dd4ae54dad8176dff2c3e5
    status?: string; before?: string; type?: string; files?: string | null; assignees?: string[]; beforeAssignees?: string[]; trailer?: string | false; msg?: string; table?: 'keep' | 'delete' | 'never';
    tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
 +  split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
-+  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
++  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
    mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
  };
  function scenario(o: Opts = {}) {
-@@ -62,29 +75,55 @@ function scenario(o: Opts = {}) {
+@@ -62,29 +75,56 @@ function scenario(o: Opts = {}) {
    const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
    o.tableEdit?.(table);
    if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
@@ -572,15 +586,16 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..03cbe35bc6dd4ae54dad8176dff2c3e5
 +  w('src/a.ts', AFILE); w('src/long.ts', Array.from({ length: 40 }, (_, i) => `export const L${i} = ${i};`).join('\n') + '\n');
    w('backlog/milestones/m-0 - inc.md', '---\nid: m-0\ntitle: "Increment 1·A Foundations [F]"\n---\n');
 -  w(TASK, taskText({ status: o.before ?? 'RUNNING', type: o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees }));
-+  w(TASK, taskText({ status: o.before ?? 'RUNNING', type: o.beforeType ?? o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees }));
-   if (o.otherTask) w(OTHER, taskText({ id: 'TASK-8', status: 'RUNNING' }));
+-  if (o.otherTask) w(OTHER, taskText({ id: 'TASK-8', status: 'RUNNING' }));
 -  g('add', '-A'); g('commit', '-qm', 'base'); g('branch', 'lane-base');
 -  if (o.laneWork) { for (const [f, t] of Object.entries(o.laneWork)) w(f, t); g('add', '-A'); g('commit', '-qm', 'lane work'); }
++  w(TASK, taskText({ status: o.before ?? 'RUNNING', type: o.beforeType ?? o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees }));
++  if (o.otherTask) w(OTHER, taskText({ id: 'TASK-8', status: 'RUNNING', type: o.otherType, assignees: o.otherAssignees }));
 +  for (const [p, x] of LENS_TEMPLATES) w(p, x);
 +  g('add', '-A'); g('commit', '-qm', 'base'); g('branch', 'wf2/board');
 +  const baseSha = g('rev-parse', 'HEAD').stdout.trim();
 +  const laneWork = o.laneWork ?? { 'src/a.ts': `${AFILE}// lane work\n` };
-+  if (Object.keys(laneWork).length) { for (const [f, t] of Object.entries(laneWork)) w(f, t); g('add', '-A'); g('commit', '-qm', 'lane work'); }
++  if (Object.keys(laneWork).length || o.laneDelete) { for (const [f, t] of Object.entries(laneWork)) w(f, t); for (const p of o.laneDelete ?? []) fs.rmSync(path.join(d, p)); g('add', '-A'); g('commit', '-qm', 'lane work'); }
 +  if (o.tagAtHead) g('tag', o.tagAtHead);
 +  if (o.folded) g('branch', '-f', 'wf2/board', 'HEAD');
 +  if (o.noBoard) g('branch', '-D', 'wf2/board');
@@ -588,7 +603,8 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..03cbe35bc6dd4ae54dad8176dff2c3e5
    if (o.table === 'delete') fs.rmSync(path.join(d, 'scripts/analysis/rule-lists.json'));
    for (const [f, t] of Object.entries(o.staged ?? {})) w(f, t);
 -  if (!o.noTaskFile) w(TASK, o.taskFileText ?? `${taskText({ status: o.status ?? 'BUILT', type: o.type, files: o.files, assignees: o.assignees })}notes\n`);
-+  if (!o.noTaskFile) w(TASK, o.taskFileText ?? `${taskText({ status: o.status ?? 'BUILT', type: o.type, files: o.finalFiles ?? o.files, assignees: o.assignees, milestone: o.finalMilestone })}notes\n`);
++  if (o.finalTaskPath && fs.existsSync(path.join(d, TASK))) fs.rmSync(path.join(d, TASK));
++  if (!o.noTaskFile) w(o.finalTaskPath ?? TASK, o.taskFileText ?? `${taskText({ status: o.status ?? 'BUILT', type: o.type, files: o.finalFiles ?? o.files, assignees: o.assignees, milestone: o.finalMilestone })}notes\n`);
    // the lane report: inputs written by the real lens-input, outputs carrying the review tool's header
    const lane: Lane = { TASK: 'task-7\n' };
 -  fs.writeFileSync(path.join(d, '.git/material.txt'), 'MATERIAL UNDER REVIEW: a diff\n');
@@ -631,7 +647,7 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..03cbe35bc6dd4ae54dad8176dff2c3e5
    lane['plan-code-review.txt'] = body(false);
    let l = o.mutate ? o.mutate(lane, d) : lane;
    if (!('GROUNDER.md' in l)) l['GROUNDER.md'] = grounder(l, o.g);
-@@ -325,3 +364,195 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
+@@ -325,3 +365,211 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
      refused(scenario({ tableEdit: (t) => { t.milestone_docs = { Z: ['msf'] }; } }), /milestone_docs|milestone objectives/);
    });
  });
@@ -826,160 +842,21 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..03cbe35bc6dd4ae54dad8176dff2c3e5
 +    expect(ok.status, ok.stderr).toBe(0);
 +    refused(scenario({ tableEdit: xtra, files: 'src/a.ts, docs/x.md', finalFiles: 'src/a.ts', laneWork: lw, mutate: (l) => { const o = { ...l }; for (const k of Object.keys(o)) if (/xtra/.test(k)) o[k] = null; return o; } }), /list xtra/, 49);
 +  });
-+});
-diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
-index d4adce25156542d3a34f04204c9619c7f0217406..4fea028e03810a041655685eea7ef7cf478e765c 100644
---- a/src/tests/backlog/rule-lists.logic.test.ts
-+++ b/src/tests/backlog/rule-lists.logic.test.ts
-@@ -491,3 +491,150 @@ describe('V2.LIST round 2: the milestone guard', () => {
-     expect(verifyResolved(t, good, undefined, 'record')).toEqual([]);
-   });
- });
-+
-+// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries (the tool, never by hand), each chunk against every list part,
-+// each input stamped "chunk c of m" with its path list; one file alone over the room is refused naming the file and its size. No --list (a non-compliance lens template) writes the same chunks.
-+const dfile = (p: string, n: number) => `diff --git a/${p} b/${p}\nindex 1111111..2222222 100644\n--- a/${p}\n+++ b/${p}\n@@ -1 +1 @@\n-old\n${'+line of new text\n'.repeat(n)}`;
-+const FILES = ['src/a.ts', 'src/b.ts', 'src/c.ts', 'src/d.ts', 'src/e.ts'];
-+const BIGDIFF = FILES.map((p) => dfile(p, 50)).join('');
-+const stampOf = (t: string) => {
-+  const m = /^LIST (\S+) sha256:[0-9a-f]{64} material sha256:([0-9a-f]{64}) part (\d+) of (\d+)(?: chunk (\d+) of (\d+))?\n/.exec(t);
-+  const pm = / paths: (\[.*\])\n/.exec(t.split('\n').slice(0, 3).join('\n') + '\n');
-+  return { id: m?.[1], matSha: m?.[2], part: Number(m?.[3]), parts: Number(m?.[4]), chunk: m?.[5] === undefined ? undefined : Number(m[5]), chunks: m?.[6] === undefined ? undefined : Number(m[6]), paths: pm ? (JSON.parse(pm[1] as string) as string[]) : undefined };
-+};
-+const materialOf = (t: string) => t.slice(t.indexOf('=== MATERIAL UNDER REVIEW (everything below this line) ===\n') + '=== MATERIAL UNDER REVIEW (everything below this line) ===\n'.length).replace(/\n$/, '');
-+describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries', () => {
-+  it('a diff too large for one input becomes chunks: every changed path in exactly one chunk, chunk texts joined are the diff, every input within the bound, each stamped chunk c of m with its paths', () => {
-+    const f = fixture();
-+    const max = 12000;
-+    const l = lens(f, 'first', BIGDIFF, max);
-+    expect(l.r.status, l.r.stderr).toBe(0);
-+    const st = l.text.map(stampOf);
-+    const m = st[0]!.chunks;
-+    expect(m, 'chunk stamp present').toBeGreaterThan(1);
-+    expect(l.files.length).toBe((m as number) * st[0]!.parts);
-+    for (const t of l.text) expect(t.length).toBeLessThanOrEqual(max);
-+    const seen = st.flatMap((s) => s.paths ?? []);
-+    expect([...seen].sort()).toEqual([...FILES].sort());
-+    expect(new Set(seen).size).toBe(seen.length);
-+    const byChunk = new Map<number, string>();
-+    l.text.forEach((t, i) => byChunk.set(st[i]!.chunk as number, materialOf(t)));
-+    expect([...byChunk.entries()].sort((a, b) => a[0] - b[0]).map((e) => e[1]).join('')).toBe(BIGDIFF);
-+    expect(l.files.map((x) => path.basename(x))).toEqual(l.files.map((_, i) => `o-p${i + 1}.txt`));
-+    for (const t of l.text) expect(t).toContain('first text');
++  it('H10 PLANTED DEFECT: a task file renumbered to a number the board never held, unassigned and typed doc, closes nothing: refused in the closing commit and when the renumber came in two earlier commits', () => {
++    const lane = ['@lane-BL-COMPLY2'];
++    const doc9 = (status: string) => taskText({ id: 'TASK-9999', status, type: 'doc', assignees: [] });
++    refused(scenario({ beforeType: 'build', beforeAssignees: lane, type: 'doc', assignees: [], finalTaskPath: 'backlog/tasks/task-9999 - Lane work.md', taskFileText: `${doc9('BUILT')}notes\n` }), /holds no copy of this task file/, 50);
++    refused(scenario({ beforeType: 'build', beforeAssignees: lane, type: 'doc', assignees: [], laneWork: { 'src/a.ts': `${AFILE}// x\n`, 'backlog/tasks/task-9999 - Lane work.md': doc9('RUNNING') }, laneDelete: [TASK], finalTaskPath: 'backlog/tasks/task-9999 - Lane work.md', taskFileText: `${doc9('BUILT')}notes\n` }), /holds no copy of this task file/, 50);
 +  });
-+  it('a chunk is never cut inside a file: each chunk text starts at a diff header and holds whole files', () => {
-+    const f = fixture();
-+    const l = lens(f, 'first', BIGDIFF, 12000);
-+    expect(l.r.status, l.r.stderr).toBe(0);
-+    for (const t of l.text) {
-+      const mat = materialOf(t);
-+      expect(mat.startsWith('diff --git ')).toBe(true);
-+      for (const p of stampOf(t).paths ?? []) expect(mat).toContain(dfile(p, 50).trimEnd());
-+    }
++  it('H10 PLANTED DEFECT: a branch that deleted the lane task file closes nothing, even another task: refused; the same close with the file present passes (control)', () => {
++    const closeOther: Opts = { otherTask: true, beforeType: 'build', beforeAssignees: ['@lane-BL-COMPLY2'], otherType: 'record', otherAssignees: ['@human'], noTaskFile: true, type: 'record', assignees: ['@human'], staged: { [OTHER]: `${taskText({ id: 'TASK-8', status: 'BUILT', type: 'record', assignees: ['@human'] })}notes\n` } };
++    const ok = scenario({ ...closeOther });
++    expect(ok.status, ok.stderr).toBe(0);
++    refused(scenario({ ...closeOther, laneDelete: [TASK] }), /has no task-7 file/, 51);
 +  });
-+  it('a list block that cannot be split still gets every chunk: the list part is whole in each input', () => {
-+    const f = fixture();
-+    const d = FILES.map((p) => dfile(p, 30)).join('');
-+    const l = lens(f, 'big', d, 12000);
-+    expect(l.r.status, l.r.stderr).toBe(0);
-+    expect(stampOf(l.text[0]!).chunks).toBeGreaterThan(1);
-+    for (const t of l.text) expect(t).toContain('rule line');
-+  });
-+  it('one file alone over the room is refused with a line naming the file and its size', () => {
-+    const f = fixture();
-+    const d = dfile('src/a.ts', 5) + dfile('src/huge.ts', 400) + dfile('src/z.ts', 5);
-+    const l = lens(f, 'first', d, 12000);
-+    expect(l.r.status).toBe(1);
-+    expect(l.r.stderr).toContain('src/huge.ts');
-+    expect(l.r.stderr).toMatch(/src\/huge\.ts[^\n]*\b\d{4,}\b/);
-+    expect(l.files).toEqual([]);
-+  });
-+  it('a material that is not a diff and does not fit is still refused, never trimmed (control)', () => {
-+    const f = fixture();
-+    const r = lens(f, 'first', 'plain text '.repeat(3000), 12000);
-+    expect(r.r.status).toBe(1);
-+    expect(r.r.stderr).toMatch(/material/);
-+  });
-+  it('a diff that fits is one input stamped chunk 1 of 1 with its paths (control: no split)', () => {
-+    const f = fixture();
-+    const l = lens(f, 'first', dfile('src/a.ts', 3) + dfile('src/b.ts', 3), 20000);
-+    expect(l.r.status, l.r.stderr).toBe(0);
-+    expect(l.files).toHaveLength(1);
-+    const s = stampOf(l.text[0]!);
-+    expect([s.chunk, s.chunks, s.paths]).toEqual([1, 1, ['src/a.ts', 'src/b.ts']]);
-+  });
-+  it('no --list with a lens template (code-review, error-paths, ux, security) writes the same chunk inputs with an empty list part', () => {
-+    const f = fixture();
-+    const m = path.join(f.d, 'nl.material'); fs.writeFileSync(m, BIGDIFF);
-+    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
-+    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/nl'), '--template', tpl, '--max', '9000']);
-+    expect(r.status, r.stderr).toBe(0);
-+    const files = r.stdout.split('\n').filter(Boolean);
-+    const st = files.map((x) => stampOf(fs.readFileSync(x, 'utf8')));
-+    expect(st[0]!.id).toBe('none');
-+    expect(st[0]!.chunks).toBeGreaterThan(1);
-+    expect(files.length).toBe(st[0]!.chunks);
-+    expect([...st.flatMap((s) => s.paths ?? [])].sort()).toEqual([...FILES].sort());
-+  });
-+});
-+
-+// V2.WHOLE fix round (grounder 2026-11-20): F2 the diff flags, F5 a measured chunk room, F6 the refusal for a name git quotes.
-+describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', () => {
-+  it('F2: the shared diff flags include --text and --full-index (a .gitattributes -diff line cannot turn code into "Binary files differ")', async () => {
-+    const m = (await import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs'))) as { DIFF_ARGS: string[] };
-+    expect(m.DIFF_ARGS).toContain('--text');
-+    expect(m.DIFF_ARGS).toContain('--full-index');
-+  });
-+  it('F5: a long path list in the chunk head is counted in the room: 300 files with no --list, every input inside the bound (the fixed 800 reserve refused this)', () => {
-+    const f = fixture();
-+    const names = Array.from({ length: 300 }, (_, i) => `src/some/deeper/folder/file-number-${String(i).padStart(3, '0')}-with-a-long-name.ts`);
-+    const d = names.map((p) => dfile(p, 1)).join('');
-+    const m = path.join(f.d, 'f5.material'); fs.writeFileSync(m, d);
-+    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
-+    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f5'), '--template', tpl, '--max', '40000']);
-+    expect(r.status, r.stderr).toBe(0);
-+    const files = r.stdout.split('\n').filter(Boolean);
-+    const texts = files.map((x) => fs.readFileSync(x, 'utf8'));
-+    for (const t of texts) expect(2 * t.length + 80).toBeLessThanOrEqual(40000); // TPL puts the input twice
-+    expect([...texts.flatMap((t) => stampOf(t).paths ?? [])].sort()).toEqual([...names].sort());
-+  });
-+  it('F6: a name git quotes is refused with the header line and the remedy (core.quotepath, the brief command)', () => {
-+    const f = fixture();
-+    const d = 'diff --git "a/caf\\303\\251.ts" "b/caf\\303\\251.ts"\nindex 1..2 100644\n--- "a/caf\\303\\251.ts"\n+++ "b/caf\\303\\251.ts"\n@@ -1 +1 @@\n-a\n+b\n';
-+    const l = lens(f, 'first', d, 20000);
-+    expect(l.r.status).toBe(1);
-+    expect(l.r.stderr).toContain('caf\\303\\251.ts');
-+    expect(l.r.stderr).toContain('core.quotepath=false');
-+  });
-+  it('F13: a diff that passes the room estimate but whose rendered head (141 long paths) pushes the final prompt over the bound is chunked, not refused', () => {
-+    const f = fixture();
-+    const names = Array.from({ length: 141 }, (_, i) => `src/some/deeper/folder/file-number-${String(i).padStart(3, '0')}-with-a-long-name.ts`);
-+    const d = names.map((p) => dfile(p, 1)).join('');
-+    const m = path.join(f.d, 'f13.material'); fs.writeFileSync(m, d);
-+    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
-+    const max = 2 * (d.length + 900) + 300;
-+    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f13'), '--template', tpl, '--max', String(max)]);
-+    expect(r.status, r.stderr).toBe(0);
-+    const texts = r.stdout.split('\n').filter(Boolean).map((x) => fs.readFileSync(x, 'utf8'));
-+    expect(texts.length).toBeGreaterThan(1);
-+    for (const x of texts) expect(2 * x.length + 80).toBeLessThanOrEqual(max);
-+    expect([...texts.flatMap((x) => stampOf(x).paths ?? [])].sort()).toEqual([...names].sort());
-+  });
-+});
-+
-+// V2.WHOLE round 3, operator item 3 ("1-5 y"): the real table (task-406's fold) exempts a real golden from the review material and nothing that is not one.
-+describe('V2.WHOLE: the real table exempts golden snapshots by their file shape only', () => {
-+  it('a real golden is exempt; a code file in the golden folder, a stray runner and a nested golden are not', async () => {
-+    const t = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { exempt: string[] };
-+    const { matchesAny } = (await import(path.join(ROOT, 'scripts/analysis/mcbylaws/paths.mjs'))) as { matchesAny: (g: string[], p: string) => boolean };
-+    const real = run('git', ['ls-files', 'src/tests/fixtures/surfaces/*/*.mobile.json'], { cwd: ROOT }).stdout.split('\n').filter(Boolean)[0] as string;
-+    expect(real).toBeTruthy();
-+    expect(matchesAny(t.exempt, real), real).toBe(true);
-+    for (const p of ['src/tests/fixtures/surfaces/x/evil.ts', 'src/tests/fixtures/report-page/run.mjs', 'src/tests/fixtures/surfaces/x/y/a.mobile.json', 'src/lib/a.ts']) expect(matchesAny(t.exempt, p), p).toBe(false);
-+  });
-+  it('H9 round 6: the diff flags also pin the algorithm, the indent heuristic and the inter-hunk context (the three config keys that change the text of a diff)', async () => {
-+    const m = (await import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs'))) as { DIFF_ARGS: string[] };
-+    for (const a of ['--diff-algorithm=myers', '--indent-heuristic', '--inter-hunk-context=0']) expect(m.DIFF_ARGS, a).toContain(a);
++  it('H10 control: a same-number retitle of the task file is not refused (the task is found by its number, the launch commit by the board path)', () => {
++    const ok = scenario({ finalTaskPath: 'backlog/tasks/task-7 - Lane work retitled.md' });
++    expect(ok.status, ok.stderr).toBe(0);
 +  });
 +});
 

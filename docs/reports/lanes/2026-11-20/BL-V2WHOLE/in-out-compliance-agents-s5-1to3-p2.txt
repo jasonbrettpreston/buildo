@@ -1,4 +1,4 @@
-LIST agents-s5-1to3 sha256:a683bc14efef944967f4d8dab9af39fa96a70b2dc0bc1fefe0b948ec5c985ca6 material sha256:0e63887e27f3b827773aa9748b4a6013583237d508edf93971757b16ed4d5781 part 1 of 1 chunk 2 of 2
+LIST agents-s5-1to3 sha256:56726f1e8e2c1a3935426321609275da970041e9c086b2bda04cbb9a1354097d material sha256:a4b3c8ea32bc670a69f8e4a58b3f6ce5e15ab312f18bce07474e215398515209 part 1 of 1 chunk 2 of 2
 RULE LIST agents-s5-1to3 (docs/specs/00-architecture/08_agents.md, sections 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
 
 ### 5.1 Compliance (spec → code)
@@ -27,9 +27,11 @@ Dated note 2026-11-20 (M-246, prior text kept; second correction to the task-410
 
 Dated note 2026-11-20 (M-246, prior text kept; third correction to the task-410 notes above, grounder round 5; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentences above that the task type and the lane assignee are read from the launch copy, or from the staged or HEAD copy, were not true after a lane dropped its assignee in an earlier commit. What `scripts/hooks/check-lane-close.mjs` does now: the task type and the lane assignee are read from the BOARD copy of the task file (found by task id on `refs/heads/wf2/board`, the ref the launch commit is searched on); a close whose board copy is a lane build or fix task is refused unless the closing copy is that same lane's build or fix task, whatever earlier commits did to the lane's own copy. The task id is the file's task number (a differing front-matter id is refused); the milestone is the launch copy's; the rule lists resolve from the union of the launch Files line and the staged one, so narrowing the line cannot drop a list; the assignees a grounder must differ from are the staged, HEAD and board ones together. The shared diff flags also pin `--diff-algorithm=myers`, `--indent-heuristic` and `--inter-hunk-context=0`, so a lane machine's diff configuration cannot change the text that is recomputed.
 
+Dated note 2026-11-20 (M-246, prior text kept; fourth correction to the task-410 notes above, grounder round 6; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator ORDERS task-410 finished", put to him: "after this round, fold 410 as an omission guard, named as that, with the forgery routes recorded on tasks 401 and 402 — yes (recommended) or no?"; his words: "Finsih it!"; the entry marks the reading that this is a yes to the question as put as the orchestrator's, not his words): `scripts/hooks/check-lane-close.mjs` is an OMISSION GUARD. It refuses a skipped review, a skipped rule list, an unreviewed changed file, a trimmed or stale review input, and a close without a separate grounder's file. It does not stop a lane that sets out to forge: a hand-written output with the right hashes; an earlier-commit edit of the lane's own working-tree copy of the check script, `scripts/analysis/rule-lists.mjs`, `scripts/analysis/mcbylaws/paths.mjs` or the commit-msg hook (such an edit changes what runs); a moved board ref. Those routes are owned by the fold-time tasks task-401 and task-402 (grounder file sha256 b3425b2c1d6c…). Also stated: a task number the board never held is refused at close (the board holds no copy of the file: type and lane assignee are read from the board copy, with no fallback to the lane's own copy), and a branch whose tree lacks the task file of a lane build or fix task whose lane directory it carries cannot close anything.
+
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index 028a17e9375029fef36f87fd0958b6e9ba3a9027..03cbe35bc6dd4ae54dad8176dff2c3e58925e52d 100644
+index 028a17e9375029fef36f87fd0958b6e9ba3a9027..1957eaef9aa8b67ffabc3b60cd7b6a37a51fed47 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -9,15 +9,16 @@ import { describe, expect, it } from 'vitest';
@@ -76,11 +78,11 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..03cbe35bc6dd4ae54dad8176dff2c3e5
    status?: string; before?: string; type?: string; files?: string | null; assignees?: string[]; beforeAssignees?: string[]; trailer?: string | false; msg?: string; table?: 'keep' | 'delete' | 'never';
    tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
 +  split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
-+  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
++  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
    mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
  };
  function scenario(o: Opts = {}) {
-@@ -62,29 +75,55 @@ function scenario(o: Opts = {}) {
+@@ -62,29 +75,56 @@ function scenario(o: Opts = {}) {
    const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
    o.tableEdit?.(table);
    if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
@@ -90,15 +92,16 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..03cbe35bc6dd4ae54dad8176dff2c3e5
 +  w('src/a.ts', AFILE); w('src/long.ts', Array.from({ length: 40 }, (_, i) => `export const L${i} = ${i};`).join('\n') + '\n');
    w('backlog/milestones/m-0 - inc.md', '---\nid: m-0\ntitle: "Increment 1·A Foundations [F]"\n---\n');
 -  w(TASK, taskText({ status: o.before ?? 'RUNNING', type: o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees }));
-+  w(TASK, taskText({ status: o.before ?? 'RUNNING', type: o.beforeType ?? o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees }));
-   if (o.otherTask) w(OTHER, taskText({ id: 'TASK-8', status: 'RUNNING' }));
+-  if (o.otherTask) w(OTHER, taskText({ id: 'TASK-8', status: 'RUNNING' }));
 -  g('add', '-A'); g('commit', '-qm', 'base'); g('branch', 'lane-base');
 -  if (o.laneWork) { for (const [f, t] of Object.entries(o.laneWork)) w(f, t); g('add', '-A'); g('commit', '-qm', 'lane work'); }
++  w(TASK, taskText({ status: o.before ?? 'RUNNING', type: o.beforeType ?? o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees }));
++  if (o.otherTask) w(OTHER, taskText({ id: 'TASK-8', status: 'RUNNING', type: o.otherType, assignees: o.otherAssignees }));
 +  for (const [p, x] of LENS_TEMPLATES) w(p, x);
 +  g('add', '-A'); g('commit', '-qm', 'base'); g('branch', 'wf2/board');
 +  const baseSha = g('rev-parse', 'HEAD').stdout.trim();
 +  const laneWork = o.laneWork ?? { 'src/a.ts': `${AFILE}// lane work\n` };
-+  if (Object.keys(laneWork).length) { for (const [f, t] of Object.entries(laneWork)) w(f, t); g('add', '-A'); g('commit', '-qm', 'lane work'); }
++  if (Object.keys(laneWork).length || o.laneDelete) { for (const [f, t] of Object.entries(laneWork)) w(f, t); for (const p of o.laneDelete ?? []) fs.rmSync(path.join(d, p)); g('add', '-A'); g('commit', '-qm', 'lane work'); }
 +  if (o.tagAtHead) g('tag', o.tagAtHead);
 +  if (o.folded) g('branch', '-f', 'wf2/board', 'HEAD');
 +  if (o.noBoard) g('branch', '-D', 'wf2/board');
@@ -106,7 +109,8 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..03cbe35bc6dd4ae54dad8176dff2c3e5
    if (o.table === 'delete') fs.rmSync(path.join(d, 'scripts/analysis/rule-lists.json'));
    for (const [f, t] of Object.entries(o.staged ?? {})) w(f, t);
 -  if (!o.noTaskFile) w(TASK, o.taskFileText ?? `${taskText({ status: o.status ?? 'BUILT', type: o.type, files: o.files, assignees: o.assignees })}notes\n`);
-+  if (!o.noTaskFile) w(TASK, o.taskFileText ?? `${taskText({ status: o.status ?? 'BUILT', type: o.type, files: o.finalFiles ?? o.files, assignees: o.assignees, milestone: o.finalMilestone })}notes\n`);
++  if (o.finalTaskPath && fs.existsSync(path.join(d, TASK))) fs.rmSync(path.join(d, TASK));
++  if (!o.noTaskFile) w(o.finalTaskPath ?? TASK, o.taskFileText ?? `${taskText({ status: o.status ?? 'BUILT', type: o.type, files: o.finalFiles ?? o.files, assignees: o.assignees, milestone: o.finalMilestone })}notes\n`);
    // the lane report: inputs written by the real lens-input, outputs carrying the review tool's header
    const lane: Lane = { TASK: 'task-7\n' };
 -  fs.writeFileSync(path.join(d, '.git/material.txt'), 'MATERIAL UNDER REVIEW: a diff\n');
@@ -149,7 +153,7 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..03cbe35bc6dd4ae54dad8176dff2c3e5
    lane['plan-code-review.txt'] = body(false);
    let l = o.mutate ? o.mutate(lane, d) : lane;
    if (!('GROUNDER.md' in l)) l['GROUNDER.md'] = grounder(l, o.g);
-@@ -325,3 +364,195 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
+@@ -325,3 +365,211 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
      refused(scenario({ tableEdit: (t) => { t.milestone_docs = { Z: ['msf'] }; } }), /milestone_docs|milestone objectives/);
    });
  });
@@ -343,6 +347,22 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..03cbe35bc6dd4ae54dad8176dff2c3e5
 +    const ok = scenario({ tableEdit: xtra, files: 'src/a.ts, docs/x.md', laneWork: lw });
 +    expect(ok.status, ok.stderr).toBe(0);
 +    refused(scenario({ tableEdit: xtra, files: 'src/a.ts, docs/x.md', finalFiles: 'src/a.ts', laneWork: lw, mutate: (l) => { const o = { ...l }; for (const k of Object.keys(o)) if (/xtra/.test(k)) o[k] = null; return o; } }), /list xtra/, 49);
++  });
++  it('H10 PLANTED DEFECT: a task file renumbered to a number the board never held, unassigned and typed doc, closes nothing: refused in the closing commit and when the renumber came in two earlier commits', () => {
++    const lane = ['@lane-BL-COMPLY2'];
++    const doc9 = (status: string) => taskText({ id: 'TASK-9999', status, type: 'doc', assignees: [] });
++    refused(scenario({ beforeType: 'build', beforeAssignees: lane, type: 'doc', assignees: [], finalTaskPath: 'backlog/tasks/task-9999 - Lane work.md', taskFileText: `${doc9('BUILT')}notes\n` }), /holds no copy of this task file/, 50);
++    refused(scenario({ beforeType: 'build', beforeAssignees: lane, type: 'doc', assignees: [], laneWork: { 'src/a.ts': `${AFILE}// x\n`, 'backlog/tasks/task-9999 - Lane work.md': doc9('RUNNING') }, laneDelete: [TASK], finalTaskPath: 'backlog/tasks/task-9999 - Lane work.md', taskFileText: `${doc9('BUILT')}notes\n` }), /holds no copy of this task file/, 50);
++  });
++  it('H10 PLANTED DEFECT: a branch that deleted the lane task file closes nothing, even another task: refused; the same close with the file present passes (control)', () => {
++    const closeOther: Opts = { otherTask: true, beforeType: 'build', beforeAssignees: ['@lane-BL-COMPLY2'], otherType: 'record', otherAssignees: ['@human'], noTaskFile: true, type: 'record', assignees: ['@human'], staged: { [OTHER]: `${taskText({ id: 'TASK-8', status: 'BUILT', type: 'record', assignees: ['@human'] })}notes\n` } };
++    const ok = scenario({ ...closeOther });
++    expect(ok.status, ok.stderr).toBe(0);
++    refused(scenario({ ...closeOther, laneDelete: [TASK] }), /has no task-7 file/, 51);
++  });
++  it('H10 control: a same-number retitle of the task file is not refused (the task is found by its number, the launch commit by the board path)', () => {
++    const ok = scenario({ finalTaskPath: 'backlog/tasks/task-7 - Lane work retitled.md' });
++    expect(ok.status, ok.stderr).toBe(0);
 +  });
 +});
 diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts

@@ -1,4 +1,4 @@
-LIST ms-S sha256:88ee2c10fa967d62bb0523de27dbf207ca7b5fe36f2bf3616016f3b47b5c29bd material sha256:19a33e4459aa5404acef783511531e61d80c9423e2a57784a131595acac053ad part 1 of 1 chunk 1 of 2
+LIST ms-S sha256:88ee2c10fa967d62bb0523de27dbf207ca7b5fe36f2bf3616016f3b47b5c29bd material sha256:5e7aecd452f5151a4a7ef40195e46484af06ebcbd96c6129729eac6ba1286488 part 1 of 1 chunk 1 of 2
 RULE LIST ms-S (backlog/milestones/m-1 - increment-1·b-search-[s].md, sections Project objectives; Increment objectives; Objectives), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/backlog-lane.mjs","scripts/analysis/rule-lists.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts"]
 
 ## Project objectives
@@ -18,7 +18,7 @@ RULE LIST ms-S (backlog/milestones/m-1 - increment-1·b-search-[s].md, sections 
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
-index 763216acc64b9298fff7f6497128ad440234023c..da5ba7a4720a39c560a2ceda3917a243096fd087 100644
+index 763216acc64b9298fff7f6497128ad440234023c..6429c107d30b566b43f95f2acc7f3fbcf127099c 100644
 --- a/docs/reports/generated/rule-lists-by-kind.md
 +++ b/docs/reports/generated/rule-lists-by-kind.md
 @@ -17,10 +17,10 @@ Example Files line: `scripts/steps/_schema/converted.json, scripts/load-permits.
@@ -94,7 +94,7 @@ index 763216acc64b9298fff7f6497128ad440234023c..da5ba7a4720a39c560a2ceda3917a243
  | list | document | selection | characters | parts |
  | --- | --- | --- | ---: | ---: |
 -| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 4,727 | 1 |
-+| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 11,875 | 1 |
++| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 13,405 | 1 |
  | agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 27,384 | 1 |
 -| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 27,664 | 1 |
 +| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 29,969 | 1 |
@@ -106,7 +106,7 @@ index 763216acc64b9298fff7f6497128ad440234023c..da5ba7a4720a39c560a2ceda3917a243
  | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
  | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
 -| total | 9 lists | | 173,691 | 9 |
-+| total | 9 lists | | 184,444 | 9 |
++| total | 9 lists | | 185,974 | 9 |
  
  ## spec-only
  
@@ -127,10 +127,10 @@ index 763216acc64b9298fff7f6497128ad440234023c..da5ba7a4720a39c560a2ceda3917a243
 +| total | 7 lists | | 140,999 | 7 |
  
 diff --git a/docs/specs/00-architecture/08_agents.md b/docs/specs/00-architecture/08_agents.md
-index d7b586247fa56bfa5524a8afcc3896a44e8e0429..6ef1a01ae0902b338145b483929b31b8308631fb 100644
+index d7b586247fa56bfa5524a8afcc3896a44e8e0429..dd6063128e35ffcdb558af9fe7e9439a6fd0d4ec 100644
 --- a/docs/specs/00-architecture/08_agents.md
 +++ b/docs/specs/00-architecture/08_agents.md
-@@ -227,6 +227,14 @@ Deeper notes for the roles whose value, dependencies, or gating need spelling ou
+@@ -227,6 +227,16 @@ Deeper notes for the roles whose value, dependencies, or gating need spelling ou
  Not a new agent — a **mandatory second pass**. After the panel returns findings, run **DeepSeek + Integration against the *proposed findings/changes*** (not the code): for each finding, is the premise true, is the ruling already settled, does the fix cost less than the risk? This operationalizes manual §6.3 (⅓ false premises). Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8). Round-2 is cheap (DeepSeek) and catches the eager-fix (§8.4).
  
  Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2, lane BL-COMPLY2, Increment 1·B; the infra freeze is lifted for it by name; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the 2026-11-20 entries: "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." and "yes to McStorage and 1,2,3 yes as recommended" (the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table)): the mechanical half of section 7 rule 4 and section 5.3 is built in the repo. (1) `scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code, says which rule lists (whole files, or whole sections where the file itself separates rules from history) govern a touched path; it reuses the path maps of `mcbylaws/protected-paths.json` (`layer23`, `frontend`) instead of copying them. (2) `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through it, refuses a task with no Files line (a record-only task gets the queue lists) or an unmatched path with the path named, puts the governing lists into the brief (READ each whole before planning) and runs the compliance lens once per list with the list pasted whole ahead of the plan or diff (`scripts/analysis/rule-lists.mjs lens-input`; a list is split by its own headings when list plus material pass the review tool bound, never trimmed). (3) `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane) with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding of the lens outputs; presence and form only, the judgement stays with the grounder (rule 4: a separate grounder rules on every finding; this section: rejections carry reasons). The lane that wrote the work leaves the task RUNNING with "grounder owed".
@@ -142,6 +142,8 @@ index d7b586247fa56bfa5524a8afcc3896a44e8e0429..6ef1a01ae0902b338145b483929b31b8
 +Dated note 2026-11-20 (M-246, prior text kept; second correction to the task-410 notes above, grounder round 4; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentence above that the task type, the lane assignee and the milestone are read from the launch copy says more than the code did until this round. What `scripts/hooks/check-lane-close.mjs` does now: the lane assignee is the one on the staged task file, else the one on the HEAD copy, so dropping it or setting `@human` in the closing commit does not hide the lane; the task type, and the milestone, are read from the launch copy of the task file (the board commit that first holds that lane assignee on it), so retyping to doc or record in the closing commit does not skip the lens set; a lane build or fix task that drops its lane assignee at close is refused whatever type it then carries. A task close needs the board: the base, the deciding table keys and the launch commit come from `refs/heads/wf2/board` (else `refs/remotes/origin/wf2/board`), and a close in a clone with neither ref is refused with a clear line; a commit that moves no task does not read the board and is not refused for its absence.
 +
 +Dated note 2026-11-20 (M-246, prior text kept; third correction to the task-410 notes above, grounder round 5; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentences above that the task type and the lane assignee are read from the launch copy, or from the staged or HEAD copy, were not true after a lane dropped its assignee in an earlier commit. What `scripts/hooks/check-lane-close.mjs` does now: the task type and the lane assignee are read from the BOARD copy of the task file (found by task id on `refs/heads/wf2/board`, the ref the launch commit is searched on); a close whose board copy is a lane build or fix task is refused unless the closing copy is that same lane's build or fix task, whatever earlier commits did to the lane's own copy. The task id is the file's task number (a differing front-matter id is refused); the milestone is the launch copy's; the rule lists resolve from the union of the launch Files line and the staged one, so narrowing the line cannot drop a list; the assignees a grounder must differ from are the staged, HEAD and board ones together. The shared diff flags also pin `--diff-algorithm=myers`, `--indent-heuristic` and `--inter-hunk-context=0`, so a lane machine's diff configuration cannot change the text that is recomputed.
++
++Dated note 2026-11-20 (M-246, prior text kept; fourth correction to the task-410 notes above, grounder round 6; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator ORDERS task-410 finished", put to him: "after this round, fold 410 as an omission guard, named as that, with the forgery routes recorded on tasks 401 and 402 — yes (recommended) or no?"; his words: "Finsih it!"; the entry marks the reading that this is a yes to the question as put as the orchestrator's, not his words): `scripts/hooks/check-lane-close.mjs` is an OMISSION GUARD. It refuses a skipped review, a skipped rule list, an unreviewed changed file, a trimmed or stale review input, and a close without a separate grounder's file. It does not stop a lane that sets out to forge: a hand-written output with the right hashes; an earlier-commit edit of the lane's own working-tree copy of the check script, `scripts/analysis/rule-lists.mjs`, `scripts/analysis/mcbylaws/paths.mjs` or the commit-msg hook (such an edit changes what runs); a moved board ref. Those routes are owned by the fold-time tasks task-401 and task-402 (grounder file sha256 b3425b2c1d6c…). Also stated: a task number the board never held is refused at close (the board holds no copy of the file: type and lane assignee are read from the board copy, with no fallback to the lane's own copy), and a branch whose tree lacks the task file of a lane build or fix task whose lane directory it carries cannot close anything.
  
  ### 5.4 Schema-Fidelity
  **Question:** *Does every DB field this change reads/writes actually exist in the live schema with the assumed type, nullability, and constraints?* Cross-checks column existence, type, `NOT NULL` (+ default), `UNIQUE`/PK, FK, and `ON CONFLICT` arbiters against `docs/specs/00-architecture/01_database_schema.md` + the live `information_schema` + the generated `src/lib/db/generated/schema.ts`.
@@ -170,7 +172,7 @@ index 98bb50065b414b9400d81ee3c1a6e3046b57c588..0bd7422911ebb0776eabc751470e4384
  
  A procedure. No tool and no code.
 diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
-index 391e9f37ec2a8a056a5b56a77f96105b19df7a4c..748bbe18f7544bf8fa8ef00ca6fdd078ff8103be 100644
+index 391e9f37ec2a8a056a5b56a77f96105b19df7a4c..2f98237749756e1131c9a301efb1d148a843820f 100644
 --- a/scripts/analysis/backlog-lane.mjs
 +++ b/scripts/analysis/backlog-lane.mjs
 @@ -20,7 +20,7 @@ import fs from 'node:fs';
@@ -191,7 +193,7 @@ index 391e9f37ec2a8a056a5b56a77f96105b19df7a4c..748bbe18f7544bf8fa8ef00ca6fdd078
 +  const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed): for each list id L and each phase P (plan: material = ${ctx}; out: material = the diff file), \`node scripts/analysis/rule-lists.mjs lens-input --list L --material <material> --out <lane dir>/in-P-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md > P-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'plan-compliance-' + i + '.txt, out-compliance-' + i + '.txt').join('; ')}. Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list, an out-<lens>.txt for every other output lens named above, a plan-stage output (plan-<lens>.txt), and the grounder file below (scripts/hooks/check-lane-close.mjs).`;
    // task-407 (V2.LAYOUT): the one place the close check reads (scripts/hooks/check-lane-close.mjs: lane files at path depth 6, plan-*.txt / out-*.txt, in- beside them), said in every brief
 -  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; a later (fix) round (r2, r3, ...) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: lens-input splits the rule list at its headings into parts -p1..-pN and puts the whole diff in every part; the diff is never split or trimmed to core files; a diff too large for one part is refused by lens-input: report that to the orchestrator at once.`;
-+  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; a later (fix) round (r2, r3, ...) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with \`git -c core.quotepath=false diff ${DIFF_ARGS.join(' ')} $(git log ${baseFull} --first-parent --reverse --format=%H -S@lane-${lane} -- '${'backlog/tasks/' + path.basename(task.file)}' | head -1) HEAD -- ${filesText(task.body).split(',').map((s) => s.trim()).filter(Boolean).map((e) => (/[*?]/.test(e) ? `'${':(glob)'}${e}'` : `'${e}'`)).join(' ')} ${(ruleTable?.exempt ?? []).map((g) => `'${':(exclude,glob)'}${g}'`).join(' ')}\` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (\`lens-input --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md\`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited.`;
++  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; a later (fix) round (r2, r3, ...) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with \`git -c core.quotepath=false diff ${DIFF_ARGS.join(' ')} $(git log ${baseFull} --first-parent --reverse --format=%H -S@lane-${lane} -- '${'backlog/tasks/' + path.basename(task.file)}' | head -1) HEAD -- ${filesText(task.body).split(',').map((s) => s.trim()).filter(Boolean).map((e) => (/[*?]/.test(e) ? `'${':(glob)'}${e}'` : `'${e}'`)).join(' ')} ${(ruleTable?.exempt ?? []).map((g) => `'${':(exclude,glob)'}${g}'`).join(' ')}\` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (\`lens-input --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md\`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited.`;
    const grounder = ' Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy plan-*.txt, out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY plan-*.txt and out-*.txt (rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote on that line>" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it.';
    return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Plan review lenses: ${plan.map(f).join(', ')}, each \`${cmd} ${ctx} --template .claude/review-templates/<lens file> --context <pasted-context file>\` (the context file is the plan and its pasted rulings; the pasted-context file holds the spec clauses and rulings, the same file as for the output lenses; without --context a lens sees "(no pasted context provided)"). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> --context <pasted-context file>\`. ${per}${layout} Run the lenses of each review in parallel, one call each, outputs plan-<lens>.txt and out-<lens>.txt in the lane report dir; then a separate grounder rules every finding in GROUNDER.md (below).${grounder}`;
  };
@@ -393,7 +395,7 @@ index 88293741ff4abbc782341e33271cf592e0812b5e..90e9c71aa44d3cf554afa21cd384e5bd
      let files;
      try { files = buildLensInputs({ id, list, root, material: fs.readFileSync(matFile, 'utf8'), templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e9349bf4d1a 100644
+index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..449f30cf4ebc60669163cd94135c6c3478dfd0d8 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -15,6 +15,11 @@
@@ -596,7 +598,7 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e93
    const staged = git(['diff', '--cached', '--name-only', '--no-renames']).stdout.split('\n').filter(Boolean);
    const taskFiles = staged.filter((f) => /^backlog\/tasks\/task-\d+( -.*)?\.md$/i.test(f));
    const moves = [];
-@@ -230,30 +339,101 @@ function check(msgFile) {
+@@ -230,30 +339,114 @@ function check(msgFile) {
      moves.push({ f, now: now.stdout, fm, headFm, status });
    }
    if (moves.length === 0) return 0;
@@ -647,6 +649,8 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e93
 +    const boardFile = num ? git(['ls-tree', '--name-only', boardRef, 'backlog/tasks/']).stdout.split('\n').find((n) => new RegExp(`^backlog/tasks/task-0*${num}( -.*)?\\.md$`, 'i').test(n)) : null;
 +    const bx = boardFile ? git(['show', `${boardRef}:${boardFile}`]) : null;
 +    const boardFm = bx && bx.status === 0 ? parseFM(bx.stdout).fm : null;
++    // H10 (round 7): a close of a task number the board never held is refused, never a fallback to the lane's own copy (a renumbered, unassigned, retyped file would close unreviewed)
++    if (!boardFm) { errors.push(`${id}: the board (${boardRef}) holds no copy of this task file (task number ${num ?? '?'}): type and lane assignee are read from the board copy and a close has no fallback to the lane's own copy; a lane may not close a task number the board never held`); continue; }
 +    const boardLane = boardFm ? asList(boardFm.assignee).map(String).find((a) => /^@lane-/.test(a)) : undefined;
 +    const boardType = String(boardFm?.type ?? '').toLowerCase();
 +    const stagedLane = assignees.find((a) => /^@lane-/.test(a));
@@ -658,11 +662,11 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e93
 +    let L = null;
 +    let baseTask = null;
 +    if (laneAssign && full) {
-+      L = git(['log', full, '--first-parent', '--reverse', '--format=%H', `-S${laneAssign}`, '--', mv.f]).stdout.split('\n').filter(Boolean)[0] ?? null;
++      L = git(['log', full, '--first-parent', '--reverse', '--format=%H', `-S${laneAssign}`, '--', boardFile ?? mv.f]).stdout.split('\n').filter(Boolean)[0] ?? null;
 +      if (!L) { errors.push(`${id}: no launch commit found: \`git log ${full} --first-parent --reverse -S${laneAssign} -- ${mv.f}\` returns nothing, so the task's recorded launch (the take on the board for its lane) cannot be proved (fail closed)`); continue; }
 +      if (git(['merge-base', '--is-ancestor', L, 'HEAD']).status !== 0) { errors.push(`${id}: the launch commit ${L.slice(0, 9)} is not an ancestor of HEAD: this branch was not cut from the task's launch`); continue; }
-+      const bx = git(['show', `${L}:${mv.f}`]);
-+      baseTask = bx.status === 0 ? bx.stdout : null;
++      const lx = git(['show', `${L}:${boardFile ?? mv.f}`]);
++      baseTask = lx.status === 0 ? lx.stdout : null;
 +    }
 +    const baseFm = baseTask ? parseFM(baseTask).fm : null;
 +    const type = String(boardFm?.type ?? baseFm?.type ?? mv.fm.type ?? '').toLowerCase();
@@ -704,14 +708,25 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..c8f5d9c44eb4c1bfe160d27b30663e93
 +    const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
 +    const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
 +    errors.push(...closeErrors({ id, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase }));
++  }
++  // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
++  const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
++  for (const lane of new Set(lanePaths.map((f) => f.split('/')).filter((p) => p.length === 6).map((p) => p[4]))) {
++    const hits = git(['grep', '-l', '--fixed-strings', '-e', `@lane-${lane}`, boardRef, '--', 'backlog/tasks/']).stdout.split('\n').filter(Boolean).map((l) => l.slice(boardRef.length + 1));
++    for (const bf of hits) {
++      const bm = git(['show', `${boardRef}:${bf}`]);
++      const fm = bm.status === 0 ? parseFM(bm.stdout).fm : {};
++      const n = /task-0*(\d+)/i.exec(path.basename(bf))?.[1];
++      if (['build', 'fix'].includes(String(fm.type ?? '').toLowerCase()) && asList(fm.assignee).map(String).includes(`@lane-${lane}`) && n && !idxNums.has(n)) errors.push(`this branch carries the lane directory of ${lane} but its tree has no task-${n} file: the board holds that task as a lane ${String(fm.type).toLowerCase()} task (${bf}); a branch that deletes or renumbers its task file cannot close anything`);
++    }
    }
    return errors.length ? fail(errors) : 0;
  }
 diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
-index 518a4dff34f49c63f1a3833971d15a616594d700..f4e434fc2f7f39d923b9142bd092b36a905d4e8b 100644
+index 518a4dff34f49c63f1a3833971d15a616594d700..d3a9ab087c1a99c8905b35915508573a4ccb5a58 100644
 --- a/src/tests/backlog/backlog-lane.logic.test.ts
 +++ b/src/tests/backlog/backlog-lane.logic.test.ts
-@@ -229,8 +229,20 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+@@ -229,8 +229,21 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
        expect(e).toContain('in-<same name>');
        expect(e).toContain('out-<lens>[-<list id>]-rN.txt');
        expect(e).toContain('fix-*.txt');
@@ -729,6 +744,7 @@ index 518a4dff34f49c63f1a3833971d15a616594d700..f4e434fc2f7f39d923b9142bd092b36a
 +      expect(e).toContain('out-<lens>-pN.txt');
 +      expect(e).toContain('one file alone over the room is refused naming the file and its size: report that to the orchestrator at once');
 +      expect(e).toContain('The close check recomputes the changed paths of the task range');
++      expect(e).toContain('closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane');
 +      expect(e).not.toMatch(/the diff is never split or trimmed to core files/);
 +      expect(e).not.toMatch(/puts the whole diff in every part/);
        expect(e).not.toMatch(/a diff over the review tool's bound is split/);

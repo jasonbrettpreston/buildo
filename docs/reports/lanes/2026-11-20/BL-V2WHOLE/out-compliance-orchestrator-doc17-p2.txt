@@ -1,14 +1,18 @@
-◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:09:46.070Z file_sha256=11d25d7589c3ef8809d9dba2d10d1338be0ee7c454d35c5fdcaabaeeb2ecd61f prompt_sha256=c207034f04042d44e0ceeb9e693f10042e8c34860c4ebb7733d45097714beae9
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:40.035Z file_sha256=f46c051bb19eb0e80b79ab4e8285fddc3fbfbf85844fca77b9495c63f87457f8 prompt_sha256=70861f3d55f13549f118212ddb0cdc954bdc90867770c5a33da73ebbf5442197
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-orchestrator-doc17-p2.txt (model: deepseek-reasoner)
 
-MET — doc-17 "never feed a review as a ruling" — scripts/hooks/check-lane-close.mjs:40 "import { coveredBy, DIFF_ARGS, diffPaths, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';" — the added check logic reads the rule-list table, the git diff and the review templates, and cites no RR reading as a rule.
+BUG/DEFER/MET/REJECT lines only, one per line:
 
-REJECT — doc-17 — treating the RR- lines as governing clauses — doc-17 states "They are NOT the operator's words as a ruling and never feed a review as a ruling", so no RR entry can ground an unmet finding here.
+DEFER severity=LOW — doc-17 opening clause "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling" — scripts/hooks/check-lane-close.mjs "@@ -15,6 +15,11 @@ +//  * the WHOLE change (V2.WHOLE, task-410): the changed paths of the task range (merge-base with the table's base_ref to HEAD, minus the table's exempt paths) are recomputed here" — the new whole-change, chunk-stamp and board-ref checks are named by no clause or ruling in the pasted context (the task-410 card is not pasted), so their authorisation cannot be verified here — paste task-410 or the Spec 08/137 clauses the change cites in a later run; deferring is safe because the change only adds refusals.
+DEFER severity=LOW — doc-17 opening clause "The operator's rulings are the decisions" — src/tests/backlog/check-lane-close.logic.test.ts "// V2.WHOLE (task-410): the close check proves the review saw the WHOLE change. It recomputes the changed paths of the task range (merge-base to HEAD, minus the table's exempt paths), reads the" — the test suite asserts behaviour against V2.WHOLE, a label carried only in the card and the diff itself, never in a pasted rule, so no clause in this context tests it — not a blocker; the label is traceable to task-410 once that card is pasted.
+REJECT — doc-17 opening clause "never feed a review as a ruling" — accused of leaning on RR-0002 "lane tooling first" and RR-0106 "MF-51 and MF-59 are on the launch list" as authority for landing lane tooling now — the diff names no RR entry anywhere ("task-410", "task-406", "task-375", "Spec 08 section 7 rule 4", "Spec 137 Rule 3" only), so no reading is used as a ruling.
+REJECT — RR-0001 "Infra freeze lifted for the named list only; scratch-side parts now, repo checks after push 6" — accused of landing repo checks under a lifted freeze — this entry sits under Readings, which the document's own first line excludes from reviews, so it cannot be enforced here; the named list is also not pasted.
+MET — doc-17 opening clause — scripts/hooks/check-lane-close.mjs "@@ -31,7 +36,7 @@ import { coveredBy, DIFF_ARGS, diffPaths, lensPromptHash, renderLensInput, verifyResolved" — the change carries no RR id and does not present any reading as a decision, so the one rule the pasted document states about itself is not broken.
 
 VERDICT: PASS on compliance with the pasted clauses
 Clauses checked: 1   Unmet: 0
 
 ---
-⏱  64473ms (64.5s)
-📊 Tokens — total: 49828, input: 37742, output: 12086, reasoning: 11874
+⏱  19940ms (19.9s)
+📊 Tokens — total: 39193, input: 35459, output: 3734, reasoning: 3077

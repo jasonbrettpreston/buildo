@@ -1,20 +1,26 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:09:46.063Z file_sha256=595f4b095b237313b6cb270875d9aaa3f13e398875ecfd1ff21dbe40812f4e9e prompt_sha256=26d25626713a978d3ee2295f1574e9551b6cfbe15924d01bd3be81137a5913c8
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:40.036Z file_sha256=423b798b6da65729968cfc13fd8aece31b3363ef42dd683671a223030ea4d16f prompt_sha256=f4f8c1c2665ca7bcc9365272cea6fd6719d80714c7824a016841c7385942faf5
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling" — docs/specs/00-architecture/137_mcqueue.md added line "his words: \"agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close.\"" — cannot see the 2026-11-20 MORNING-DECISIONS.md entry in the pasted register (the register stops at RR-0218, 2026-11-19), so cannot confirm the Rule 3 amendment rests on a decision rather than on a register entry, which doc-17 bars as authority — cite the register row of that 2026-11-20 entry in the note, or hold the Rule 3 amendment until the entry is logged as a ruling.
+DEFER severity=LOW — doc-17 preamble "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — docs/specs/00-architecture/08_agents.md:231 "operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"" — the words every note in this chunk rests on live in MORNING-DECISIONS.md, which is not pasted, so this run can only take the quotes on trust (cannot see whether the entry text, date, and the reading/orator split are as stated) — attach the 2026-11-20 MORNING-DECISIONS entries to the next run's pasted context so the verbatim form can be checked rather than assumed.
 
-REJECT — doc-17 "never feed a review as a ruling" — accused: the change amends Spec 137 Rule 3 and Spec 08 section 5.3 text on quoted operator words, which doc-17 calls non-rulings — not a real issue on this list: no RR-#### reading id appears anywhere in the diff, and both notes quote the decision log verbatim, e.g. 08_agents.md added "operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`".
+REJECT — RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record)" — the change is accused of building new close-check and chunking machinery under an infra freeze — RR-0110 is a reading ("memory record"), and the pasted preamble says readings "never feed a review as a ruling", so it cannot bind; only operator words (which the task-366 note in the same file records as a lift "by name") decide the freeze.
 
-REJECT — doc-17 "The operator's rulings are the decisions" — accused: the 08_agents.md notes lean on the bare affirmative "1-5 y" as a ruling — not a real issue at this list level: a logged operator word is a decision-log quote, not one of the RR rows doc-17 prints, and whether that 2026-11-20 entry is filed as a decision cannot be seen from the pasted register.
+REJECT — operator rulings RR-0008, RR-0054, RR-0055, RR-0056, RR-0026, RR-0038 (storage on first open; Suite Size cap and one-line disclosure; report page parts; lot views draw the fitted house) — the change is accused of running past the report and storage rulings — none of those rulings names `scripts/analysis/rule-lists.mjs`, `scripts/analysis/backlog-lane.mjs`, `docs/specs/00-architecture/08_agents.md` or the generated rule-list page, so there is nothing in them for this diff to satisfy or break.
 
-MET — doc-17 "Readings and register entries of the rulings register" (the file is the whole gove rning list for this run) — docs/reports/generated/rule-lists-by-kind.md "| orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |" — the list stays whole-file with an unchanged size, so doc-17 is fed whole to the lens, not trimmed to its rulings-looking rows.
+REJECT — M-246 prior-text form ("Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: "<words>")") — docs/specs/00-architecture/137_mcqueue.md:126 "Rule 3 is unchanged: the status line moves in the commit that closes the task" is accused of contradicting the correction note below it — the form the file follows keeps prior text and records the correction as its own dated note, and the correction note names exactly that sentence, so this is the recorded shape, not an unmet clause.
 
-MET — doc-17 scope, no reading rewritten into authority — material paths "paths: [\"docs/reports/generated/rule-lists-by-kind.md\",\"docs/specs/00-architecture/08_agents.md\",\"docs/specs/00-architecture/137_mcqueue.md\",\"scripts/analysis/backlog-lane.mjs\",\"scripts/analysis/rule-lists.mjs\"]" — doc-17 itself is not edited by this change, so no reading in it is promoted, altered or re-stamped as a ruling by the diff.
+MET — doc-17 preamble "The operator's rulings are the decisions" — docs/specs/00-architecture/137_mcqueue.md:99 — authority for the Rule 3 amendment is recorded as operator words, not as a reading: "his words: "agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close."".
+
+MET — doc-17 preamble "Readings and register entries ... never feed a review as a ruling" — docs/specs/00-architecture/08_agents.md:235 — the one entry that is the orchestrator's reading is labelled as such and not presented as operator words: "the entry marks the reading that this is a yes to the question as put as the orchestrator's, not his words".
+
+MET — RR-0111 "Permit step conversion stays frozen (Spec 137 rule 11)" — docs/specs/00-architecture/137_mcqueue.md:99 and :135 — the change amends Rule 3 and adds notes under Rule 3 and the lane-close section only; rule 11 is not touched or renumbered.
+
+MET — operator ruling RR-0218 (register entry, specs updated with the new information) — docs/specs/00-architecture/137_mcqueue.md:102 and docs/specs/00-architecture/08_agents.md:231 — the two governing specs are updated in the same change as the tooling, and the generated rule-list page is regenerated: "| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | ... | 13,405 | 1 |".
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 2   Unmet: 0
+Clauses checked: 9   Unmet: 0
 
 ---
-⏱  31136ms (31.1s)
-📊 Tokens — total: 33051, input: 27494, output: 5557, reasoning: 4882
+⏱  63363ms (63.4s)
+📊 Tokens — total: 39558, input: 27988, output: 11570, reasoning: 10574

@@ -4,10 +4,10 @@ in-out-compliance-eng-all: 3 input file(s), chunk proof OK
 in-out-compliance-five-words: 2 input file(s), chunk proof OK
 in-out-compliance-inc-S: 2 input file(s), chunk proof OK
 in-out-compliance-ms-S: 2 input file(s), chunk proof OK
-in-out-compliance-orchestrator-doc17: 2 input file(s), chunk proof OK
+in-out-compliance-orchestrator-doc17: 3 input file(s), chunk proof OK
 in-out-compliance-plan-protocol: 2 input file(s), chunk proof OK
 in-out-compliance-policy-124-s2-s5: 6 input file(s), chunk proof OK
-in-out-compliance-queue-137: 2 input file(s), chunk proof OK
+in-out-compliance-queue-137: 3 input file(s), chunk proof OK
 in-out-code-review: 2 input file(s), chunk proof OK
 in-out-error-paths: 2 input file(s), chunk proof OK
-launch 455925ac2; expected paths 9; compliance families 10; input files 25; lens split parts 4; problems 0
+launch 455925ac2; expected paths 9; compliance families 10; input files 27; lens split parts 4; problems 0

@@ -1,23 +1,27 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T22:09:45.768Z file_sha256=abeae3021a085ef14a7af7a52209db71a2bcac4531a9f85809fff8587ce66c93 prompt_sha256=ac906781f883632d7d9121a50eb91bd5e14ab4c73ffad311465e0eb37943ef65
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T22:39:39.738Z file_sha256=4a1da306630dcbceaeb5d1f2bbce96cdc0d44aeebd576a7013966e27152ed93e prompt_sha256=f38e6752af8708eadbdf70c8aa0d34bc1f70ff23c6be5d438fa715aa08036778
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-code-review-p1.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — scripts/hooks/check-lane-close.mjs "rangeEmpty = cov.length === 0;" — a build/fix close whose whole range is exempt paths is not refused, and the out lens then falls into the "expected.length === 0" branch that accepts any REVIEW header with no diff binding, though the comment says such a task "is refused" — compute the empty test from the exempt-filtered set (expectedPaths.length === 0), or refuse when cov is non-empty but expected is empty.
+BUG severity=MED — scripts/hooks/check-lane-close.mjs (hunk `@@ -230,30 +339,114 @@`, the `cov` block) "rangeEmpty = cov.length === 0;" — the F1 comment claims "a build or fix task whose range holds no file outside the exempt paths ... is refused", but rangeEmpty is measured before the exempt filter, so an exempt-only range sets rangeEmpty false, expectedPaths empty, and then `ph === 'out' && expected.length` (plus the unsplit branch's `expected.length === 0` fallback) skips the chunk and whole-diff proof entirely, so the close passes with no diff-bound evidence — compute rangeEmpty from `cov.filter((p) => !matchesAny(exempt, p))` (or refuse when `expectedPaths.length === 0 && cov.length > 0`).
 
-DEFER severity=MED — scripts/analysis/rule-lists.mjs "export const lensContexts = () => [undefined];" — the brief tells lanes to run with "`--context <pasted-context file>`", but the recomputation only tries the placeholder context, so a lane that passes a real context file produces a prompt_sha256 that never matches and its lens output is refused — read the committed context file in lensContexts, or drop the --context instruction until task-375.
+BUG severity=MED — scripts/hooks/check-lane-close.mjs (hunk `@@ -230,30 +339,114 @@`, ownsTable line) "const ownsTable = coveredBy(filesEntries(baseTask ?? mv.now), 'scripts/analysis/rule-lists.json');" — the same diff guards the identical call elsewhere ("!coveredBy(filesEntries(baseTask) ?? [], p)"), so filesEntries is known to be nullable; here a task taken without a Files line hands null/undefined to coveredBy and the commit-msg hook dies with a TypeError instead of a refusal line — pass `filesEntries(baseTask ?? mv.now) ?? []` (cannot see coveredBy's null handling, the asymmetry inside one diff is the defect).
 
-DEFER severity=LOW — scripts/hooks/check-lane-close.mjs "if (moves.length === 0) return 0;" — this precedes the board-required failure, so in a clone with no board ref a task moved to a finished status outside the default BUILT/DONE/MERGED set is treated as "no move" and the hook exits 0, although the design says a close without the board is refused — read the board before deciding there is no move, or refuse when the board is absent and any task file changed.
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs (hunk `@@ -230,30 +339,114 @@`, H3 line) "if (git(['diff', '--quiet', base, 'HEAD', '--', p]).status === 1 && !coveredBy(filesEntries(baseTask) ?? [], p))" — a git error (status 128, bad path or ref) is neither 0 nor 1, so the check is silently skipped and the H3 guard fails open — refuse on any status other than 0 or 1.
 
-DEFER severity=LOW — scripts/analysis/rule-lists.mjs "const promptOf = (paths, text) => sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: longest, i: 99999, n: 99999, material: text, paths, c: 99999, m: 99999 }), ..." — the chunk room is measured with 5 digit sentinels, an upper bound, so a single file diff whose real prompt fits by a few characters is refused as unsplittable — measure with the actual chunk and part numbers instead of 99999.
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs (hunk `@@ -285,7 +304,31 @@`, lensPromptHash) "const system = split.systemInstruction ?? \"You are a focused reviewer. Follow the prompt's output format strictly.\";" — this is a second, independent reconstruction of the prompt the review tool builds, using `??` where buildLensInputs' own `sys` (unchanged line above the hunk) may use a different fallback; if they disagree every prompt_sha256 is rejected and no lane can close. Cannot see scripts/deepseek-review.js, so the grounder should confirm the tool builds [system, user] exactly this way.
 
-REJECT — scripts/analysis/rule-lists.mjs "const p = rest.slice(0, (rest.length - 3) / 2);" — the path looks sliced before the header is validated, so a quoted or renamed header could compute a truncated path — the next line throws unless seg starts with "diff --git a/" and `${p} b/${p}` equals rest, so no wrong path is ever returned (fail closed).
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs (hunk `@@ -46,25 +51,90 @@`, closeErrors JSDoc) "@param {{id:string, taskText:string, fm:object, ... expectedPaths?:string[], diffOf?:(paths:string[])=>string|null, readRepo:(p:string)=>string|null}} i" — the body also reads `i.rangeEmpty`, `i.optionalPaths` and `i.readBase`, which are undeclared in the only type annotation this .mjs file has — add the three fields to the JSDoc.
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs (import hunk / lensLine body) "const baseFull = /^refs\//.test(ruleTable?.base_ref ?? '') ? ruleTable.base_ref : `refs/heads/${ruleTable?.base_ref ?? 'wf2/board'}`;" — optional chaining does not protect an undeclared identifier; if `ruleTable` is not already a module-level binding in backlog-lane.mjs (cannot see the rest of the file) every launch throws ReferenceError before the brief is printed — grounder to confirm the binding exists.
+
+REJECT — scripts/analysis/rule-lists.mjs (hunk `@@ -24,6 +27,22 @@`, splitDiff) "const p = rest.slice(0, (rest.length - 3) / 2);" — looks like fragile length arithmetic on a diff header — the header body is exactly `a/<p> b/<p>` so |rest| = 2|p| + 3, and the following equality test `\`${p} b/${p}\` !== rest` turns any quoted or renamed header into a thrown error instead of a wrong path.
 
 VERDICT: FAIL on code correctness
 Top 3 defects (if FAIL):
-- rangeEmpty is computed before the exempt filter, so an all-exempt build/fix range skips the chunk/diff proof silently, contradicting the F1 comment
-- review prompt hashes are only recomputed with the placeholder context while the brief instructs lanes to pass --context, so genuine lens outputs can be refused
-- a boardless clone closing a task to a non-default finished status returns success, bypassing the close check the design says must refuse it
+- rangeEmpty is measured before the exempt filter, so an exempt-only range neither trips the F1 refusal nor gets any chunk or whole-diff coverage proof
+- unguarded `filesEntries(...)` at ownsTable, unlike every neighbouring call, can crash the commit-msg hook instead of refusing
+- the H3 prompt-builder guard treats a failed `git diff --quiet` (status 2/128) as "no difference" and fails open
 
 ---
-⏱  324417ms (324.4s)
-📊 Tokens — total: 92492, input: 27406, output: 65086, reasoning: 64410
+⏱  177920ms (177.9s)
+📊 Tokens — total: 63591, input: 28501, output: 35090, reasoning: 33977
