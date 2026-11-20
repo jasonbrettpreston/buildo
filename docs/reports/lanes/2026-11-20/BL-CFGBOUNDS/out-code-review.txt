@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T18:02:02.842Z file_sha256=cac35226baa3317dd53cff8504af3c8ded45d1a67e4cf57a579c11fe73d89d59 prompt_sha256=0fd068ce86a2abf6dfaf48d6d6513fd1ac326941943f443aca85e3316fa0cdd2
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/lens-material-code.diff (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/surfaces/emit-mobile-surfaces.mjs:73 "const bounds = Object.fromEntries(Object.keys(config).map((k) => [k, d.config.bounds[k]]));" — `d.config.bounds` is dereferenced unguarded, so a config holding only non-number values (the UNRESEARCHED state the schema and the C-10 test bless) with the optional `bounds` block omitted makes the generator throw a TypeError ("reading ... of undefined") instead of a named error, and a non-number key yields an `undefined` entry that flips `Object.keys(bounds).length > 0` to true even when every value is undefined — filter the map to entries whose value is a number and read `d.config?.bounds?.[k]`.
+
+DEFER severity=LOW — mobile/src/lib/sliceConfig.ts:18 "if (b === undefined || typeof b.min !== 'number' ...「 — a bounds entry that is `null` (or any non-object) passes the `b === undefined` test and then `b.min` throws a TypeError before the intended key-named error; the same gap exists in `configBoundsProblems` at "const b = bounds?.[k];" — add `b === null || typeof b !== 'object'` to the guard in both places.
+
+DEFER severity=LOW — mobile/src/components/surfaces/SearchBinding.tsx:37 "export const SEARCH_DEBOUNCE_MS = sliceNumber(SEARCH_SLICE, 'debounce_ms');" — its only in-diff consumer (parcelSearchMatch.test.ts) was just moved off this symbol and the neighbour comment says "The debounce has no second copy", so if no production reader remains this export is dead; cannot see the tree to confirm — grep imports of `SEARCH_DEBOUNCE_MS` and drop the export if only tests read it.
+
+DEFER severity=NIT — scripts/surfaces/emit-mobile-surfaces.mjs:26 "// FIX.CONFIG-BOUNDS (task-395): each number the slice copies is copied with its bounds (`bounds.<key>`), read by mobile/src/lib/sliceConfig.ts." and :28 "// FIX.CONFIG-BOUNDS (task-395): each number copied is copied with its bounds (`bounds.<key>`), which mobile/src/lib/sliceConfig.ts applies." — two near-identical comments added two lines apart; one is redundant — keep a single comment.
+
+REJECT — mobile/__tests__/sliceConfig.test.ts:10 "const slice = (config: Record<string, unknown>, bounds?: Record<string, unknown>): SliceNumbers => ({ config, bounds } as SliceNumbers);" — the unchecked `as` looks like it hides null, but the test exists precisely to feed malformed bounds entries the real `SliceNumbers` type forbids, and the cast is confined to the fixture builder, so it is correct.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none blocking (deferrals above; the generator's unguarded `d.config.bounds` deref is the one to fix before the next descriptor regenerates)
+
+---
+⏱  148640ms (148.6s)
+📊 Tokens — total: 47203, input: 18678, output: 28525, reasoning: 27845

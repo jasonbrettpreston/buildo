@@ -32,9 +32,9 @@ import {
 import { shouldHideAppTabBar } from '@/lib/appShell';
 import {
   SEARCH_CANDIDATE_LIMIT,
-  SEARCH_DEBOUNCE_MS,
   SEARCH_MIN_QUERY_LEN,
 } from '@/constants/parcelSearch';
+import searchSlice from '@/generated/surfaces/mobile_parcel_search.json';
 import type { ConsumerParcelLookupResult } from '@/lib/schemas';
 
 // A response shaped exactly like the server's whitelist envelope. `parcel` is irrelevant to the
@@ -64,7 +64,7 @@ describe('the SEARCH archetype parameters match the descriptor', () => {
   it('debounce_ms, min_query_len and the candidate cap are the declared values', () => {
     // These three are `config.debounce_ms`, `config.min_query_len` and the contract cap in
     // scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json.
-    expect(SEARCH_DEBOUNCE_MS).toBe(400);
+    expect(searchSlice.config.debounce_ms).toBe(400); // FIX.CONFIG-BOUNDS (task-395): the typed second copy is gone; the slice is the one home
     expect(SEARCH_MIN_QUERY_LEN).toBe(3);
     expect(SEARCH_CANDIDATE_LIMIT).toBe(10);
   });

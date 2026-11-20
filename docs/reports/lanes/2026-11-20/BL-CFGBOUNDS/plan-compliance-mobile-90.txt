@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:36:31.036Z file_sha256=34aa9d82746010cc07fc45cd3f5c69058f5284afd0044a51dbb4a41a41288d95 prompt_sha256=9b2926cf2a8b4f8e8015e52ba038355e36ac6a5f00f76338b5891b19468f1006
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-plan-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 90 §7 "Adding a new field, store, or bridge requires either matching an existing pattern in Spec 99 §3-§5 or a Spec 99 amendment." — plan step 1 "surface.schema.json config: new optional property `bounds`" — the change adds a new field to every generated slice and a new reader contract (sliceNumber takes the slice, all three callers re-pointed) with no Spec 99 §3-§5 pattern cited and no amendment named — cite the Spec 99 §3-§5 pattern the generated slice matches, or file the Spec 99 amendment, inside the plan before lock.
+
+BUG severity=HIGH — operator ruling "Let the grounder resolve them all as long as the result is compliant" — plan F6 "The area-factor part is therefore NOT built; it returns to the grounder/operator." — the task note places the phone area-factor copies "also in this task" inside the set the grounder resolved, so leaving that part unbuilt leaves "them all" unresolved — either build the generated-slice number resolved from the pinned seed row parcels_sqm_to_sqft, or paste a fresh grounder or operator ruling that drops it.
+
+DEFER severity=MED — operator ruling "Let the grounder resolve them all as long as the result is compliant" — plan step 7 "Bounds values are LANE PROPOSALS, flagged for the grounder" — the six numeric bound pairs the ruling hands to the grounder are locked as lane proposals with no grounder sign-off anywhere in the plan — record the grounder's verbatim acceptance of the six pairs in the plan before the values are locked.
+
+DEFER severity=MED — Spec 90 §10 "Unit Testing (Jest): Jest + React Native Testing Library for logic hooks. Minimum 80% coverage threshold." — plan "phone tests cannot run locally: phone-test green UNPROVEN until Mobile CI" — the reader every search screen calls changes while the mobile suite result is unproven and no coverage figure or CI gate is named — name the Mobile CI run that must go green and quote the sliceConfig.test.ts coverage before lock.
+
+DEFER severity=MED — Spec 90 §3 "It MUST NOT perform complex data mutation" and "All heavy computational lifting is handled entirely by the Next.js API Backend." — plan step 4 "out of range: on_invalid fail throws, clamp returns the nearest bound" — clamping makes the phone the place the effective tunable is computed, a fourth mobile responsibility, bounded to six keys — apply the clamp at generate time (the emitter already refuses out of range per step 3) and keep the reader fail-only unless the grounder ruled clamp per key.
+
+MET — Spec 90 §7 "The Next.js `src/app/api/*` routes are the absolute source of truth." — plan step 7 "3 = server floor src/app/api/parcels/lookup/types.ts:42, 120 = its max on the same line" — the query-length bounds are taken from the API route, not invented on the phone.
+
+MET — Spec 90 §7 "Three render-loop incidents in 2026-05-02 traced to dual-source-of-truth violations precipitated this requirement." — plan step 5 "Remove the dead second copy SEARCH_DEBOUNCE_MS = 400 in mobile/src/constants/parcelSearch.ts" — one tunable loses its second source and the two tests re-point to the slice.
+
+MET — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI" — plan step 3 "`config` stays byte-identical; no value changes" — no new runtime JSON response is introduced, the bounds ride inside the generated slice module.
+
+REJECT — Spec 90 §7 "Zod schemas are shared via a `packages/shared-types` monorepo workspace" — accused of not mirroring the new bounds schema to the phone through the shared workspace — the §4 amendment in the pasted rule list measures "There is no monorepo and no `packages/shared-types`", so no change in this lane can satisfy it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+
+---
+⏱  54068ms (54.1s)
+📊 Tokens — total: 18113, input: 7368, output: 10745, reasoning: 9840

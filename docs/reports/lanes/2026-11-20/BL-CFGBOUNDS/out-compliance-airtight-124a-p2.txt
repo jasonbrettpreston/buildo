@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:04:59.299Z file_sha256=cf42d0b96c891d508fd5b827167e9e64a0c4647972fc67a78879023d3d97be68 prompt_sha256=f8244577ac2afb7cd4b987bc2263ac3c31f81ae111c63feb0ef12a669f47b530
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-airtight-124a-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 128 Rule 3 and the 2026-11-20 operator verbatim, both cited by the change, are NOT in the pasted context (cannot see) — docs/specs/02-web-admin/128_surface_standard_policy.md:45 ""**Rule 3 on a surface (the phone and the web page config).** The words "registered logic variable with bounds and an `on_invalid` posture" are met..."" — no pasted clause names the added `config.bounds` behaviour, so the clause the change rests on is unjudged, not satisfied — paste Spec 128 Rule 3 and MORNING-DECISIONS.md:1476 into the context so the bounds machinery can be checked clause by clause.
+
+MET — R-CO — src/tests/fixtures/surfaces/mobile_parcel_search/static.web.json ""+++ b/src/tests/fixtures/surfaces/mobile_parcel_search/static.web.json"" — the touched test surfaces are fixtures and generated goldens; no path under `docs/reports/golden/<slug>/before-image/` is written, so the per-file sandbox clause is not engaged.
+
+MET — R-CP — mobile/__tests__/sliceConfig.test.ts:12 ""import { sliceNumber, type SliceNumbers } from '@/lib/sliceConfig';"" — every test added here is in-process, no spawn of `step-validate.mjs` or any long CLI, so the child-process-completion clause is not engaged.
+
+REJECT — R-CM — the change edits `config` blocks and adds `config.bounds` with no `ctx.config.$meta` stamp — R-CM governs the step library's `ctx.config.$meta` of declared logic-variable stamps, not a surface descriptor's `config.bounds` in `scripts/surfaces/_schema/surface.schema.json`, so the row does not reach these lines.
+
+REJECT — R-BZ / R-CA / R-CK (compute purity, G0–G13, `ctx.pool`, `ctx.exec`) — the change touches mobile/surface files, not compute — no line under review lives in a compute step or its `require` closure, so gate E and the write-seam rows do not reach this diff.
+
+REJECT — R-CC / R-CB (chain-run step status, seam status sets) — the change alters no `run-chain.js` status fold or `checkSeam` read — the touched tests (`fix-tune.logic.test.ts`, `surface-conformance.logic.test.ts`) assert surface bounds, not run history or seam statuses.
+
+VERDICT: PASS on compliance with the pasted clauses (none of the 17 pasted rows binds this surface-config change; the governing clause is not pasted and cannot see)
+Clauses checked: 17   Unmet: 0
+
+---
+⏱  17194ms (17.2s)
+📊 Tokens — total: 31910, input: 28943, output: 2967, reasoning: 2355

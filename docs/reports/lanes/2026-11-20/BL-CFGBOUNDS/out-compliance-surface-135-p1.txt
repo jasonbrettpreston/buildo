@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:56:39.405Z file_sha256=37c489291fd9f3d628df5662bfb40f3636712eba50cf6f3295397124a3f3acf5 prompt_sha256=ec4c44f93dc20cce5c458786f4e15cdf1ff3cd1cb7fba5635522e78f750434f3
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-surface-135-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 135 role + rule 2 "The live register of McFrontend rulings (`FE-nn` rows)" / "A rule without a lock is not yet a rule (Spec 124 section 4.4). ONE lock per row; the Lock is in the LAST cell with the status (arm C reads it)." — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "Dated note 2026-11-20 (M-246, prior text kept; FIX.CONFIG-BOUNDS · task-395 · lane BL-CFGBOUNDS; ... resolved by the separate grounder, option (b))" — a new McFrontend ruling (how a surface config number meets Rule 3) is recorded only as a Spec 128 policy note, so it has no FE row, no `RULED <date>` status word and no Lock cell, and rule 2's one-lock-per-row discipline is never applied to it — add an FE row to Spec 135 reading `RULED 2026-11-20` with the lock in the last cell, and leave the Spec 128 note as the policy mirror.
+
+DEFER severity=LOW — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — mobile/__tests__/sliceConfig.test.ts:6 "+import { sliceNumber, type SliceNumbers } from '@/lib/sliceConfig';" while the census still labels the numbers proposals, scripts/surfaces/_schema/census/mobile-product.json "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it." — if the FE row lands OWED (bounds numbers not yet adjudicated) its lock path may not be the mobile reader test, so the row as it would land does not fit rule 5's OWED lock form — either land the row RULED once the grounder confirms the numbers, or give the OWED row a `src/tests/surfaces/*.test.ts` lock path as rule 5 requires.
+
+DEFER severity=LOW — Spec 135 "Next free id: `FE-45`" — NONE — the ruling dated 2026-11-20 consumes no FE id, so the first value on the next-free-id line that the Spec 136 generator reads stays FE-45 while a new ruling has landed beside it — take FE-45 for the new row so the line advances to FE-46 in the same rule 3 form the other dated notes use.
+
+REJECT — Spec 135 land order "This file must be in HEAD in an EARLIER commit than the gate registers-array change (Spec 128 §4.11 item 1)." — the change is accused of racing the land order by touching Spec 128 — the hunk added is a dated note at line 45, not the §4.11 item 1 registers array, and it adds no id matcher, so the land order is not implicated by this diff.
+
+REJECT — Spec 135 rule 4 "`Six` cell: letters D P F S H E ... Applies to FE rows only." — the change is accused of shipping a ruling without a Six cell — the clause binds FE rows only and this diff adds no FE row, so there is no Six cell to fill here.
+
+REJECT — Spec 135 rule 5 "a `.db.test.ts` lock must be named in a CI step (test.yml)" — the change is accused of an unregistered database lock — no `.db.test.ts` file is added; the new locks are jest logic tests, so the CI step clause does not reach them.
+
+MET — Spec 135 rule 2 "A rule without a lock is not yet a rule" — mobile/__tests__/sliceConfig.test.ts:1 "new file mode 100644" — the reader behaviour the ruling names carries a built lock, so the ruling is not recorded lockless even though its register cell is missing.
+
+MET — Spec 135 rule 1 "A different party adjudicates." — scripts/surfaces/_schema/census/mobile-product.json "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it." — the lane proposes the bound values and a separate grounder adjudicates, which is the protocol rule 1 requires.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  51337ms (51.3s)
+📊 Tokens — total: 23820, input: 13970, output: 9850, reasoning: 8864

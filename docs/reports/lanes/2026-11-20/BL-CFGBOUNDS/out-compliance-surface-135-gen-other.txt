@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:56:39.191Z file_sha256=8606efcebf2d659bc515859d4e1bd4deb58ccadbaa7a8d8f1cbf89857b4ad5dd prompt_sha256=aaa9a9c13da4f0c02ba849e71290e5f1dfea17a576a7580738ee832dc2e3b97d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-surface-135-gen-other.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 135 FE-31 "descriptor valid with no `UNRESEARCHED` and no `golden: \"none\"`" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:442 "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it." — the bounds that now clamp five shipped phone tunables rest on a basis the material itself calls undecided ("for the grounder"), re-worded out of the closed `UNRESEARCHED` token so the SV-DESC arm (FE-13 note, SV-DESC incl. `UNRESEARCHED`) cannot flag it, behaviour shipped before the adjudication — land the grounder's ruling as a dated Spec 135 note and its lock before the bounds emit, or keep the closed token so the check fails closed.
+
+BUG severity=MED — Spec 135 FE-05 "Single source: the front end may show more, never derive differently (Spec 126 P2); every number comes from McBylaws; no maths in the UI." — mobile/src/generated/surfaces/mobile_parcel_search.json:11 "\"on_invalid\": \"clamp\"" — the phone silently rewrites a declared tunable (debounce_ms, min_query_len, lookup_retry_max) to a different effective value at runtime, which is a front-end derivation of a value the declaration fixed — emit the already-resolved value in the generated slice, or set `on_invalid` to fail on device, so the client stays glass.
+
+BUG severity=MED — Spec 135 FE-05 "Single source: the front end may show more, never derive differently" — docs/reports/generated/127-surface-registry.md:818 "read by the phone only from the generated slice, through the one reader (mobile/src/lib/sliceConfig.ts)" against the same entry's "mobile/src/constants/parcelSearch.ts:21 — SEARCH_MIN_QUERY_LEN" — the entry claims one reader for min_query_len while still naming a named constant as its home, so the gate can be read from two sources that drift — fold the constant into the slice read (or delete it) and drop the stale cite.
+
+BUG severity=MED — Spec 135 FE-05 "every number comes from McBylaws" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json:326 "\"min\": 1000" beside the kept sentence "60 s, an open operator timeframe" — an explicitly open operator timeframe is now fenced by a bound the operator has not ruled, so a ruled value below 1000 ms would be silently clamped rather than applied or reported — leave continue_wait_ms unbounded (fail outside a wide sanity range) until the timeframe is ruled, then record it as a dated note.
+
+DEFER severity=LOW — Spec 135 FE-31 "generated and vendored files pass `--check`/manifest" — src/lib/surfaces/generated/surface-descriptor.d.ts:348 "bounds?: Record<string, unknown>;" — a generated artifact is regenerated here into an untyped Record while no schema diff and no per-key rule is pasted, so the registry's cite of "config.bounds and the per-key rules (FIX.CONFIG-BOUNDS)" in surface.schema.json cannot be verified from the material — include the schema change in the diff, or cite the commit that carries it.
+
+DEFER severity=MED — Spec 135 FE-02 dated note "rulings verbatim and cited, pre-approved decisions logged and confirmed" — docs/reports/generated/127-surface-registry.md:818 "option (b): bounds in the surface schema, not a database row, because the phone reads only the slice" — a decision (five numeric bounds plus option (b)) is recorded only in a descriptor `why` and a generated doc, with no FE row and no dated note, so the authority register does not carry it — land one dated note in this register naming the ruling, its bounds and its lock path.
+
+MET — Spec 135 FE-31 "generated and vendored files pass `--check`/manifest" — mobile/src/generated/surfaces/mobile_parcel_search.json:2 "input_sha 12a6e4117f61281b" — the emitted slices were regenerated with a new input_sha rather than hand-edited, so the generated-copy rule holds.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+
+---
+⏱  69632ms (69.6s)
+📊 Tokens — total: 44070, input: 31523, output: 12547, reasoning: 11555

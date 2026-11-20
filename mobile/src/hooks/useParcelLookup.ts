@@ -52,10 +52,10 @@ export async function fetchParcelLookup(
 }
 
 // FIX.TUNE (task-378; Spec 126 P4, Spec 128 Rule 3): the retry count and the stale times are the search surface's declared config, read from its generated slice.
-const LOOKUP_RETRY_MAX = sliceNumber(searchSlice.config, 'lookup_retry_max');
-const LOOKUP_STALE_MS = sliceNumber(searchSlice.config, 'lookup_stale_ms');
-const ENTITLEMENT_STALE_MS = sliceNumber(searchSlice.config, 'entitlement_stale_ms');
-const LOOKUP_MIN_QUERY_LEN = sliceNumber(searchSlice.config, 'min_query_len');
+const LOOKUP_RETRY_MAX = sliceNumber(searchSlice, 'lookup_retry_max');
+const LOOKUP_STALE_MS = sliceNumber(searchSlice, 'lookup_stale_ms');
+const ENTITLEMENT_STALE_MS = sliceNumber(searchSlice, 'entitlement_stale_ms');
+const LOOKUP_MIN_QUERY_LEN = sliceNumber(searchSlice, 'min_query_len');
 
 // Skip retries for deterministic states: 400 (bad params), 403 (no subscription / deleted),
 // 429 (burning retries against the rate-limit compounds the throttle), schema-drift.

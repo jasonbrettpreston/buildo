@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:49:54.160Z file_sha256=11a4e657b6736db1ec0b99fa07c5c267de71b9c8ce2942887cb0f77752f8bb65 prompt_sha256=c88a275388e3c1a3023f8ee6680c34fdeee5495c2be6edae420f671b69a58601
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-mobile-100-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — no pasted clause (Spec 128 Rule 3 and the operator ruling "Let the grounder resolve them all as long as the result is compliant" are quoted only inside the diff, not in the pasted context) — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:443 "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it." — five of the six bounds (debounce 0..2000, entitlement 0..3600000, retry 0..5, stale 0..3600000, continue_wait 1000..300000) are lane proposals recorded "for the grounder", while the schema, the generator and the reader now hard-refuse on them, so the ruling the change invokes is met only if the grounder actually resolved them and the text says it has not — have the grounder resolve each bound, or mark them provisional and make SV-DESC and the emit-time refusal warn instead of fail until then.
+
+DEFER severity=MED — no pasted clause (Spec 100 §2 clause 6 "Errors are reserved for malformed input (400)" does not reach a client-side config reader) — scripts/surfaces/_schema/census/mobile-product.json:7968 "mobile/src/components/surfaces/SearchBinding.tsx:37 — SEARCH_DEBOUNCE_MS read from the slice through sliceNumber (bounds applied), consumed at mobile/app/(app)/parcel-tool/index.tsx:72" against the diff line "-export const SEARCH_DEBOUNCE_MS = 400;" — the cited consumer mobile/app/(app)/parcel-tool/index.tsx:72 is not in the diff and cannot be seen; the previous citation named constants/parcelSearch.ts as the constant's home, so that importer may still import an export this diff deletes — include the importer change in the diff, or re-export SEARCH_DEBOUNCE_MS from parcelSearch.ts so no external reader breaks.
+
+DEFER severity=LOW — the material's own claim that a non-numeric key needs no bounds — src/tests/surfaces/surface-conformance.logic.test.ts:961 "UNRESEARCHED stays a countable state and needs no bounds (a key that holds no number yet)" against scripts/surfaces/emit-mobile-surfaces.mjs:74 "const bounds = Object.fromEntries(Object.keys(config).map((k) => [k, d.config.bounds[k]]));" — the emitter copies a bounds entry for every config key including non-numeric ones, so an UNRESEARCHED key yields an undefined or empty bounds entry (and a TypeError when config.bounds is absent) rather than "no bounds", which is not the declared behaviour — restrict the copy to numeric keys the way configBoundsProblems does, or state the empty-entry behaviour in the ruling text.
+
+REJECT — Spec 100 §2 clause 1 "Presentation only. Pulls existing `parcels` columns + a nearby `coa_applications` list and organizes them. Creates, derives, and mutates nothing." — accused of deriving new values by clamping out-of-range config — the clause governs the parcel payload values; the clamped values are client tunables, and no parcels column or coa_applications row is created, derived or mutated by this diff.
+
+REJECT — Spec 100 §2 clause 5 "The Tier-1 payload MUST never go blank because a Tier-2 blob drifted." — accused of blanking a screen by throwing in sliceNumber at module load — clause 5 governs the handler's per-tier safeParse of pass-through JSONB, which no hunk here touches; the throwing reader is client config, and every live bound on mobile_parcel_search carries on_invalid "clamp".
+
+MET — Spec 100 amendment item 3 "§2 and §3.2 are deleted from prose only at the conversion commit, not before, and not by this amendment." — no hunk in the diff touches docs/specs/03-mobile/100_mobile_parcel_cost_tool.md — the §2 behavioural contract prose is retained untouched.
+
+MET — Spec 100 §1 "Zero writes; zero migrations; zero pipeline changes." — diff file list (scripts/surfaces/emit-mobile-surfaces.mjs, scripts/surfaces/_schema/surface.schema.json) — the only pipeline edited is surface codegen; no migration and no parcels/pipeline file appears.
+
+MET — Spec 126 §5.7 drift-source concern carried in the pasted amendment "a value declared in two places is a drift source" — mobile/src/constants/parcelSearch.ts:14 "The debounce has no constant here: config.debounce_ms of the generated slice is its one home" — the typed second copy of debounce_ms is removed, leaving one home read through sliceNumber.
+
+MET — the pasted amendment's measured-defect clause on `COST_LINE_ORDER` — no hunk touches mobile/src/lib/parcelCostFormat.ts — this change neither claims to fix nor disturbs that known defect.
+
+VERDICT: PASS on compliance with the pasted clauses (Spec 100 part 1 of 3). The change's actual governing text (Spec 128 Rule 3, the operator ruling of 2026-11-20, the surface census) is not in the pasted context, so its compliance is "cannot see" here and belongs to a run with that context.
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  53106ms (53.1s)
+📊 Tokens — total: 38334, input: 28381, output: 9953, reasoning: 8763

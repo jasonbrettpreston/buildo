@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:04:59.298Z file_sha256=9470f18061134629ecae65cd0ea1ac768f43663129922915d8964f1d4b7f350c prompt_sha256=1dae8cab8323181ff8f40ce47b4b0a6b3e20061bb2553bee1fb34048dd9b0917
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-airtight-124a-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — §B10/§B12 header "RULE LIST airtight-124a (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md, sections Appendix §B10; Appendix §B12), part 1 of 2" — NONE — §B12 is named as part of the governing list but its clause text is not in this part, so half the list cannot be checked against the diff — supply §B12's rows in the part-2 run before any compliance verdict on them.
+
+DEFER severity=LOW — R-BE "One home: a generated path hand-listed in any Target Files span is RED" — "docs/reports/generated/127-surface-registry.md:818" "The SEARCH tunables debounce_ms and min_query_len and the phone tunables entitlement_stale_ms, lookup_retry_max and lookup_stale_ms are DECLARED here" — a generated report is rewritten in place and the diff carries no generator invocation or `--check` result, so regeneration cannot be distinguished from a hand edit of the generated file — name the generator command and attach its clean `--check` output for 127-surface-registry.md in this commit.
+
+DEFER severity=LOW — R-BH "a descriptor value a machine can derive or check is gated; a value nothing checks is labelled declared-only" (analogue only, R-BH itself is scoped to step descriptors) — "src/tests/surfaces/surface-conformance.logic.test.ts:967" "a key added later without one is refused by this test" — the per-key refusal for a seventh number key rests on a vitest assertion, not on SV-DESC, because the six `allOf` rules hand-enumerate the keys, and per the walk rule a clause satisfied only by a test is unmet — add a schema-side guard (propertyNames/dependentRequired or a generated allOf) so the refusal is not test-only.
+
+REJECT — R-AX "a frozen `execution.*` POSTURE enum is `executed` only where a named executor or a NAMED DECLARED CHECK consumes it" — accused of not extending `execution-posture-disposition.json` — no `execution.*` field is touched anywhere in the diff; the surface `on_invalid` menu is a different registry, so R-AX does not bind this change.
+
+REJECT — R-AY "A step that produces a PRICED or MODELLED output declares the PRODUCT POPULATION" and R-AZ "A per-invocation ROW CAP (`--limit=N`) is NOT a step-standard override" — accused of introducing unbounded numbers / a carried cap — no producing step, descriptor or `chain_args` entry is in the diff; both rows govern pipeline steps, not surface config.
+
+REJECT — R-BB "A change set that appends a file to `converted.json` `converted[]` must stage every spec whose system-map Implementation cell names that file" and R-BC "a chain is complete only when (a)+(b)+(c)+(d) all hold" — accused of skipping the owner-spec diff and the chain gates — the diff appends no `converted[]` row and changes no `manifest.chains`, so neither gate is triggered.
+
+MET — R-AX "the `if/then` at `step.schema.json` (`on_row_error`/`on_row_error_max_pct`) used `properties` where its three siblings use `required`, so `skip`/`quarantine` with **no** bound at all validated" — "scripts/surfaces/_schema/surface.schema.json:2729" `"then": { "required": ["bounds"], "properties": { "bounds": { "required": ["debounce_ms"] } } }` — the new conditional requires the bounds block rather than merely describing it, so the F-1 failure shape is not repeated here.
+
+MET — R-BH "(ii) each golden POST `records_meta` value of a declared `emits[]` key matches its `type`" shape of generating/typing derived values rather than trusting prose — "src/lib/surfaces/generated/surface-descriptor.d.ts:347" `bounds?: Record<string, unknown>;` — the new field is emitted into the generated type so consumers see it, though the payload type stays `unknown` (typing strength is lens-code-review, not a pasted clause).
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  41935ms (41.9s)
+📊 Tokens — total: 40768, input: 32820, output: 7948, reasoning: 6976

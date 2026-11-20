@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:55:21.351Z file_sha256=d6e6d27fc09a80d2030cd2f8abd7a80d9745785568400c4ff8ae2f678bb258b2 prompt_sha256=6868c4c105277ca25057da62f485adb5de891fda7cfe2e4531a17a355450bd42
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-surface-128-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §4.3 "The ruling is recorded in **§5's Register of rulings** with an id, the statement, and what it amends." — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "> Dated note 2026-11-20 (M-246, prior text kept; FIX.CONFIG-BOUNDS · task-395 · lane BL-CFGBOUNDS; operator, verbatim:" — this is the diff's only spec change: the ruling lands as a dated note with no row id, no Amends cell and no Lock cell, so nothing is citable or mechanically resolvable — add a §5 register row carrying an id, a one-line statement, an Amends naming an outside deciding source, and Lock = the conformance test plus mobile/__tests__/sliceConfig.test.ts.
+
+BUG severity=HIGH — §4.2 "never the pass that discovered it" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:445 "\"why\": \"Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it.\"" — five of the six bound pairs are labelled the lane's own unruled proposals yet are enforced now (SV-DESC refuses a missing entry, sliceNumber clamps to them), contradicting the same note's "resolved by the separate grounder, option (b)" — record the grounder's per-key ruling in this commit, or until then enforce only the presence and shape of bounds and leave the numbers unenforced.
+
+DEFER severity=MED — §4.5 "If the ruling changes what §2 says generically (not just for one step), this spec is amended in the same commit as the lock" — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "The words \"registered logic variable with bounds and an `on_invalid` posture\" are met for a surface config number by declaring, per key, `config.bounds.<key>`" — the note reinterprets Rule 3 for every surface config while the Rule 3 text itself is untouched (the hunk at @@ -44,0 +45,2 @@ adds only the note) — amend Rule 3's own words in this commit, or scope the note to the one key it settles.
+
+DEFER severity=MED — §4.6 "until it is **expected to recur in another archetype**" — scripts/surfaces/_schema/surface.schema.json:2688 "the bounds and the failure behaviour of every number this config holds, one entry per key" — the ruling is applied estate-wide in the same commit (schema, every descriptor including the F14 bindings, the shared reader) with no recurrence statement and no pilot Defect Ledger id — name the recurrence expectation or the pilot row in the note before the schema applies it to every surface.
+
+DEFER severity=MED — operator verbatim "Let the grounder resolve them all as long as the result is compliant" — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "Not done here: the phone area factor (`10.7639`, `mobile/src/lib/leadDetailFormat.ts:15`, `mobile/src/lib/parcelCostFormat.ts:11`) still waits" — one item of the operator's "all" is deferred with no register row and no stated reason it is outside the ruling's scope, so the ruling is only partially discharged — record it as an OWED row naming the deciding source it returns to.
+
+DEFER severity=LOW — §4.1 "proposes a disposition, using the closed Intent Ledger vocabulary" — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "option (b): bounds in the surface schema, not a database row" — the disposition is not tagged with a closed-vocabulary token although it is plainly `encoded-as-descriptor-field` — add the token so the proposal is reclonable by the ledger rather than by prose.
+
+DEFER severity=LOW — §4.9 "A new FE row (Spec 135) is not RULED unless its `Six` cell answers six questions" — mobile/src/lib/sliceConfig.ts:21 "if (b.on_invalid === 'clamp') return Math.min(b.max, Math.max(b.min, v));" — the change alters phone-facing behaviour with no Spec 135 row, so the six-principle check is skipped entirely — when the row required by §4.3 is added, fill its Six cell.
+
+MET — §4.4 — src/tests/surfaces/surface-conformance.logic.test.ts:961 "RED: a numeric config key with no bounds block, with a bounds block that omits it, with a bound or on_invalid missing, or with on_invalid default, is refused" — the same commit adds the both-directions test (red on the old schema, green on the new) plus clamp/fail cases in mobile/__tests__/sliceConfig.test.ts.
+
+MET — §4.7a — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "operator, verbatim: \"Let the grounder resolve them all as long as the result is compliant\", `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476`" — the note names a deciding source outside this pass with a record path, so consequence 1 is met for the disposition.
+
+MET — operator verbatim "as long as the result is compliant" — src/tests/surfaces/surface-conformance.logic.test.ts:947 "toEqual({ debounce_ms: 400, min_query_len: 3, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000 })" — the values are pinned unchanged, so the ruling's compliance bar is not breached by a value change.
+
+REJECT — §4.7 — that deleting the SEARCH_DEBOUNCE_MS docblock and moving its text into the descriptor is a consolidation needing a line-set diff — R-I.4 covers documents this protocol moves; this is a code constant removed with its comment, not a document move.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  77757ms (77.8s)
+📊 Tokens — total: 45544, input: 29997, output: 15547, reasoning: 14168

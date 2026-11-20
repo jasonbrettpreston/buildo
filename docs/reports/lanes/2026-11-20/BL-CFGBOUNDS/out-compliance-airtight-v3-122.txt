@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:49:08.537Z file_sha256=60d27de82c6cfa7f0adf1a83e3b4b6b7ca60e91ddb5fdd4b28894ab51a866067 prompt_sha256=464413082ed68608b3f3152f4ff6d4c15383fd5d790f6a5fd6618016b667b745
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-airtight-v3-122.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — 122 §5.5 pasted list, part 1 of 1 "Enforced by `scripts/ast-grep-rules/compute-shape.yml` over `scripts/lib/compute/**` (driver: `scripts/hooks/check-step-shape.mjs`, always blocking" — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "Dated note 2026-11-20 (M-246, prior text kept; FIX.CONFIG-BOUNDS · task-395 · lane BL-CFGBOUNDS" — the only governing list pasted (122 §5.5 Condition 4) scopes to scripts/lib/compute/** and step files, none of which this diff touches, so no pasted clause authorises or tests any added config.bounds behaviour and compliance with the actually cited authority (Spec 128 Rule 3) is unverifiable — paste Spec 128 Rule 3 and MORNING-DECISIONS.md:1476, or confirm 122 §5.5 is the intended list for this card.
+
+DEFER severity=MED — operator ruling as quoted in the material "operator, verbatim: Let the grounder resolve them all as long as the result is compliant" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:442 "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it." — four of the five search bounds (2000, 3600000, 5, 0) are self-labelled lane proposals with no source in any pasted ruling, only min_query_len traces to a real bound (src/app/api/parcels/lookup/types.ts:42), so the "compliant" half of the ruling is unproven for the new policy numbers — record the grounder's ratification line per bound in the paste, or trace each number to a pasted source.
+
+DEFER severity=LOW — operator ruling as quoted in the material "Let the grounder resolve them all as long as the result is compliant" — docs/specs/02-web-admin/128_surface_standard_policy.md:47 "Not done here: the phone area factor (`10.7639`, `mobile/src/lib/leadDetailFormat.ts:15`, `mobile/src/lib/parcelCostFormat.ts:11`) still waits for a surface slice" — the change itself records one numeric tunable left hard-coded and returned to the grounder, so "them all" is not resolved on this diff — state in the paste whether the area factor is inside "them all", or externalise it here.
+
+DEFER severity=LOW — scripts/surfaces/_schema/surface.schema.json added rule "FIX.CONFIG-BOUNDS (task-395): when debounce_ms holds a number, config.bounds holds its min, max and on_invalid." — scripts/surfaces/_schema/surface.schema.json:2724 "if": { "required": [ "debounce_ms" ], "properties": { "debounce_ms": { "type": "integer" } } — the stated rule is "holds a number" but the guard fires only on integers, so a non-integer number is required-by-description and not required-by-rule; the generate-time configBoundsProblems catches it, surface-validate (SV-DESC) alone would not — widen the guard to "type": "number" or make the description say integer.
+
+MET — 122 §5.5 item 6 (every tunable through ctx.config) — no scripts/lib/compute/** file appears in the diff — nothing in the change reads or hard-codes a compute tunable, so the clause is untouched, not breached.
+
+MET — 122 §5.5 item 3 (I/O seams, banned bare fetch / Date.now / process.env) — the diff touches mobile/**, scripts/surfaces/** and docs only, per the file headers of every hunk — no banned call is added inside a compute module.
+
+MET — 122 §5.5 item 5 (policy stated as data, not only in a comment) — scripts/surfaces/_schema/census/mobile-product.json:7443 "bounds": { "continue_wait_ms": { "min": 1000, "max": 300000, "on_invalid": "clamp", "why": "Lane proposal" — each added bound carries its own why field in the descriptor data, not only a code comment.
+
+REJECT — 128 note "Values did not change" — accused of altering the measured tunables while adding bounds — src/tests/surfaces/surface-conformance.logic.test.ts "expect(s.config).toEqual({ debounce_ms: 400, min_query_len: 3, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000 })" shows the config values unchanged and only bounds added.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+```
+
+---
+⏱  57007ms (57.0s)
+📊 Tokens — total: 37062, input: 26714, output: 10348, reasoning: 9253

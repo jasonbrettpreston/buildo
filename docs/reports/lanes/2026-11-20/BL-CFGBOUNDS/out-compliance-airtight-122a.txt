@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:04:59.298Z file_sha256=7a4be2fb396d9079c2237667792c04c0ad06a366cc72cc24e8ef5ebf6210ec64 prompt_sha256=97f5a1bf344a1f355682aa87a99c3607843198a8bb1c096626b6df2525c77ec5
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-airtight-122a.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — ruling coverage "(no pasted context provided)" — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "operator, verbatim: \"Let the grounder resolve them all as long as the result is compliant\", `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476`" — the two authorities this change rests on (Spec 128 Rule 3 and MORNING-DECISIONS.md:1476 option (b)) are cited inside the diff but are not in the pasted context, so the bounds/on_invalid requirement cannot be judged clause by clause — paste Spec 128 Rule 3 and MORNING-DECISIONS.md:1476 verbatim into the next run.
+
+DEFER severity=LOW — Appendix §A26 code table (compute-only scope, G1, G13) "the codes judge the parse tree and the AST, never keyword-matched prose" — scripts/surfaces/emit-mobile-surfaces.mjs:31 "export function configBoundsProblems(config, bounds)" — the generate-time bounds refusal is behaviour no pasted A26 or A27 line names — confirm the task card (FIX.CONFIG-BOUNDS, task-395) names it, since the pasted list does not.
+
+MET — Appendix §A26 code table G0 "The purity codes run over compute **and its AST `require` closure**" — mobile/src/lib/sliceConfig.ts:8 — no compute step module or its require closure appears in the diff, so no purity code answers for this change.
+
+MET — Appendix §A27 item 13 "A test that needs Postgres is `*.db.test.ts`" — mobile/__tests__/sliceConfig.test.ts:1 "/** @jest-environment node */" — the new test needs no Postgres, so the .db.test.ts naming rule is not engaged.
+
+REJECT — Appendix §A26 "Proof of no runtime change" "The landing changes gates, ledger rows and specs only — no runtime code." — the change is accused of not showing an empty `git diff --stat` over scripts/lib and scripts/quality with an unchanged `computeLibFingerprint()` — that proof is scoped to the airtight-122a gate landing, and this diff is a surface-config change, so the proof clause does not apply.
+
+REJECT — Appendix §A27 item 1 "Net-new steps stay `pending` (Spec 124 R-CS). `cutover.mjs` also needs a pretty-printed census row and a `registers_at`" — accused of adding census rows without a registers_at — the census edits land on existing surface rows (scripts/surfaces/_schema/census/mobile-product.json:7443) for existing descriptors, no step is cut over, so the rule is not engaged.
+
+VERDICT: PASS on compliance with the pasted clauses (no pasted clause binds this change; the governing clause and operator ruling it cites are not pasted, so compliance there is cannot see)
+Clauses checked: 2   Unmet: 0
+
+---
+⏱  32568ms (32.6s)
+📊 Tokens — total: 34795, input: 28799, output: 5996, reasoning: 5338

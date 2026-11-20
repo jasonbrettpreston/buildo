@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T18:02:37.212Z file_sha256=9a5f51c050bd5d05bd2d8814deaee50223b3b707ab5350f7d52d610444d81ce5 prompt_sha256=f6f965061d9d30dd1b13ddc78195de7c7e8df0b1e98b50f690972586c0a5ecb6
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/lens-material-fixtures.diff (model: deepseek-reasoner)
+
+BUG none at CRIT or HIGH.
+
+DEFER severity=MED — mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json:2 "(input_sha 0adc505660d13843)" — cannot see emit-mobile-surfaces.mjs, so I cannot confirm a re-run is a no-op: if input_sha hashes the emitted output or a directory walk order, a second run emits yet another sha and a partial regeneration is indistinguishable from a real descriptor change — grounder confirms the emitter is a fixed point over descriptor inputs and adds a run-twice-assert-no-diff check.
+
+DEFER severity=MED — src/tests/fixtures/surfaces/mobile_parcel_semi_question/error.mobile.json:143 "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862" — the semi_question surface regenerated only mobile files (answered, ask, error, loading, rate_limited, redirect, schema_drift, unauthorized) with no .web.json counterpart for any of those states, while mobile_parcel_search regenerated both error.mobile.json:221 and error.web.json:257, so either the web error/empty/rate_limited states for semi_question are uncovered by any golden, or stale web fixtures exist that this diff did not touch and no test fails — grounder lists the directory and confirms whether .web.json variants exist and carry 5c71720ec1a5d862.
+
+DEFER severity=LOW — src/tests/fixtures/surfaces/mobile_parcel_search/error.mobile.json:221 "\"scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json\": \"bd2f67f4738fdcfd\"" — every error, empty, miss, loading, rate_limited, unauthorized, redirect and schema_drift fixture changed only on the embedded descriptor digest, so no golden exercises config.bounds on_invalid=fail or clamp, nor sliceNumber on a missing or out-of-range key, and the degrade posture of the phone reader is untested — add one fixture with an out-of-range bound and one with the config key absent, asserting the clamped or failed value.
+
+DEFER severity=LOW — mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json:1322 "\"scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json\": \"bd2f67f4738fdcfd\"" — the same digest literal is repeated in 11 places in one goldens file and across 21 search plus 8 semi_question fixtures, so a hand-edit or a half-finished regeneration is easy to leave behind with some sites updated and others not; nothing in this diff shows a check that all sites agree — name the key (descriptor path) and assert set-equality of the digest across all fixtures in one test.
+
+REJECT — src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json:310 "\"scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json\": \"bd2f67f4738fdcfd\"" — a stale digest could look like it passes silently — the digest sits inside the compared fixture payload and was updated at every site for both surfaces (c89c405a30cc0f2e to bd2f67f4738fdcfd, be6ea47edd8dde34 to 5c71720ec1a5d862) in this diff, so a descriptor edit without regeneration fails the golden rather than passing.
+
+VERDICT: PASS on error-path safety
+Paths walked: error, empty, miss, loading, rate_limited, unauthorized, redirect, schema_drift, static, ambiguous, reports_left, answered, ask   Unguarded: 0
+
+---
+⏱  24294ms (24.3s)
+📊 Tokens — total: 21683, input: 17555, output: 4128, reasoning: 3273

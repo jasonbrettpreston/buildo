@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:49:08.537Z file_sha256=20059fb4de12bb53cb0c768335afb52c7e0a7fb7726fe375371a4bd95d19b561 prompt_sha256=3ce2ec6827f91663a9d68b759f3424c2b6690cc39bcc956091454c147417a560
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-eng-s2-s4-s10-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — scripts/surfaces/emit-mobile-surfaces.mjs "export function configBoundsProblems(config, bounds) {" — the diff edits the surface schema, generator and descriptors under scripts/ for a phone (frontend) feature, which §10.2 forbids for frontend WFs — fix: split the schema/generator work into a separately classified tooling WF (or an approved exception) and keep the frontend WF to mobile/ and src/ only.
+
+BUG severity=HIGH — §11 Cross-Layer Contracts "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "min_query_len": { "min": 3, "max": 120 — the server query range 3 to 120 from src/app/api/parcels/lookup/types.ts:42 is duplicated as literals in the descriptor and the generated slice with no _contracts.json key — fix: add a contracts key for the lookup query length and have both the Zod schema and the surface bounds read it.
+
+BUG severity=MED — §11 "If a new threshold is introduced, a row is added to `src/tests/contracts.infra.test.ts` mapping the JSON key to its consumer file(s) so drift becomes a CI failure" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "debounce_ms": { "min": 0, "max": 2000, "on_invalid": "clamp" — new bounds thresholds are introduced across the schema and descriptors and the diff adds no row to src/tests/contracts.infra.test.ts (the file is not in the diff) — fix: add the mapping rows or document why each new bound is out of contract scope.
+
+DEFER severity=NIT — §2.3 "Before accessing nested object properties, explicitly check for `null` or `undefined`." — scripts/surfaces/emit-mobile-surfaces.mjs "const bounds = Object.fromEntries(Object.keys(config).map((k) => [k, d.config.bounds[k]]));" — d.config.bounds is dereferenced without optional chaining although the same file earlier reads d.config?.bounds, so a config with only non-numeric keys and no bounds block throws a TypeError — fix: reuse the resolved bounds or use (d.config.bounds ?? {}).
+
+DEFER severity=LOW — §10.3 "If a `src/lib/` module is imported by both API routes and frontend components, any modification requires `npx vitest related` to verify no API regression." — src/lib/surfaces/generated/surface-descriptor.d.ts "bounds?: Record<string, unknown>;" — a shared src/lib type is modified and the diff records no npx vitest related run; cannot see whether any API route imports it — fix: run and record npx vitest related, or state the type has no API-route consumer.
+
+DEFER severity=LOW — §11 "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests." — NONE — the material contains the diff and new tests but no pre-review PASS/FAIL checklist — fix: add the 5-10 item checklist to the response before the test run.
+
+MET — §2.3 — mobile/src/lib/sliceConfig.ts "const b = slice.bounds?.[key]; if (b === undefined || typeof b.min !== 'number' || typeof b.max !== 'number'" — optional chaining plus explicit undefined and type guards precede the use of min and max.
+
+MET — §11 "No API keys or secrets in `use client` components (§4.3)" — mobile/src/components/surfaces/SearchBinding.tsx "import { sliceNumber, type SliceBound } from '@/lib/sliceConfig';" — the change imports only the reader and the generated slice, no secret.
+
+MET — §11 "User-provided input escaped/sanitized before display (§4.3)" — mobile/src/components/surfaces/SearchBinding.tsx "export const SEARCH_DEBOUNCE_MS = sliceNumber(SEARCH_SLICE, 'debounce_ms');" — the change reads config numbers only and renders no user-provided input.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 3
+
+---
+⏱  94495ms (94.5s)
+📊 Tokens — total: 48189, input: 28161, output: 20028, reasoning: 19019

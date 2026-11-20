@@ -11,12 +11,7 @@
 // Each constant carries the two sides of its truth: what the descriptor declares, and where the
 // behaviour is actually enforced. None of these is a free choice made here.
 
-/**
- * `config.debounce_ms` — how long typing pauses before a query fires.
- * Ground truth: the pre-existing literal in this screen (Spec 100 fold #5) — exploratory typing
- * must not burn the 60/min bucket. This constant REPLACES that literal; there is no other copy.
- */
-export const SEARCH_DEBOUNCE_MS = 400;
+// The debounce has no constant here: config.debounce_ms of the generated slice is its one home, read through the reader in SearchBinding.tsx (FIX.CONFIG-BOUNDS, task-395).
 
 /**
  * `config.min_query_len` — the shortest query that may reach the server.

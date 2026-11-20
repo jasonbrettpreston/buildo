@@ -23,6 +23,7 @@ import os from 'node:os';
 import path from 'node:path';
 import ts from 'typescript';
 import { descArm, loadContext, queueProblems, sbindArm, screenArm, shapeProblems } from '../../../scripts/surfaces/screen-checks.mjs';
+import { configBoundsProblems } from '../../../scripts/surfaces/emit-mobile-surfaces.mjs';
 import { isFrontend } from '../../../scripts/analysis/mcbylaws/paths.mjs';
 import { validateDescriptor, unresearchedCount } from '../../lib/surfaces/generated/validate-descriptor.mjs';
 import { ARCHETYPES, buildFixture, convert, editDescriptor, rj } from './screen-fixture';
@@ -937,5 +938,60 @@ describe('C-12 the web report renderer files have a census owner (Spec 126 secti
     const file = path.join(REPO, 'scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json');
     expect(fs.readFileSync(file, 'utf8')).toBe(`${JSON.stringify(entry, null, 2)}\n`);
     for (const d of DESCRIPTORS.values()) if (d.identity.id !== 'binding_web_report') expect([d.identity.id, (d.identity.owns?.components ?? []).filter((c: string) => FILES.includes(c))]).toEqual([d.identity.id, []]);
+  });
+});
+
+// ---- C-10 FIX.CONFIG-BOUNDS (task-395): every number in a surface config carries bounds and a failure behaviour --------------------------------------
+// Spec 128 Rule 3 (every debounce, page size, stale time and rate limit has bounds and an on_invalid posture); operator, verbatim, 2026-11-20:
+// "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476); the grounder's option (b):
+// bounds declared in the surface schema, refused by the one descriptor validator that surface-validate runs (SV-DESC), refused again at generate time.
+describe('C-10 config bounds: declared per key, refused when absent (planted defects), values unchanged', () => {
+  const NUMBER_KEYS = ['debounce_ms', 'min_query_len', 'continue_wait_ms', 'entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms'];
+  const v = (d: Json): string[] => validateDescriptor(d).errors;
+  const search = (): Json => convert('SEARCH');
+  it('the real tree: every live descriptor validates; every number in a config has its bounds; the values are the values they were (400, 3, 0, 3, 60000, 60000; 60000)', () => {
+    const real = rj(path.join(REPO, 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json'));
+    expect(v(real)).toEqual([]);
+    expect(Object.fromEntries(NUMBER_KEYS.filter((k) => k in real.config).map((k) => [k, real.config[k]]))).toEqual({ debounce_ms: 400, min_query_len: 3, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000 });
+    for (const k of ['debounce_ms', 'min_query_len', 'entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms']) {
+      const b = real.config.bounds[k];
+      expect([k, typeof b.min, typeof b.max, ['fail', 'clamp'].includes(b.on_invalid), real.config[k] >= b.min && real.config[k] <= b.max]).toEqual([k, 'number', 'number', true, true]);
+    }
+    const semi = rj(path.join(REPO, 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json'));
+    expect([semi.config.continue_wait_ms, semi.config.bounds.continue_wait_ms.on_invalid]).toEqual([60000, 'clamp']);
+  });
+  it('RED: a numeric config key with no bounds block, with a bounds block that omits it, with a bound or on_invalid missing, or with on_invalid default, is refused', () => {
+    const d1 = search(); delete d1.config.bounds; expect(v(d1).length).toBeGreaterThan(0);
+    for (const k of NUMBER_KEYS) {
+      const d2 = search(); d2.config[k] = 1; d2.config.bounds ??= {}; delete d2.config.bounds[k]; expect([k, v(d2).length > 0]).toEqual([k, true]);
+    }
+    const d3 = search(); delete d3.config.bounds.debounce_ms.max; expect(v(d3).length).toBeGreaterThan(0);
+    const d4 = search(); delete d4.config.bounds.debounce_ms.on_invalid; expect(v(d4).length).toBeGreaterThan(0);
+    const d5 = search(); d5.config.bounds.debounce_ms.on_invalid = 'default'; expect(v(d5).length).toBeGreaterThan(0);
+  });
+  it('UNRESEARCHED stays a countable state and needs no bounds (a key that holds no number yet)', () => {
+    const d = search(); d.config.lookup_stale_ms = 'UNRESEARCHED'; delete d.config.bounds.lookup_stale_ms;
+    expect(v(d)).toEqual([]);
+  });
+  it('every number-typed property the schema lets a config hold carries its own rule, so a key added later without one is refused by this test', () => {
+    const cfg: Json = rj(path.join(REPO, SCHEMA, 'surface.schema.json')).properties.config;
+    const numberKeys = Object.entries(cfg.properties as Json).filter(([, p]) => JSON.stringify(p).includes('"integer"')).map(([k]) => k).sort();
+    expect(numberKeys).toEqual([...NUMBER_KEYS].sort());
+    const rules = JSON.stringify(cfg.allOf ?? []);
+    for (const k of numberKeys) expect([k, rules.includes(`"${k}"`)]).toEqual([k, true]);
+  });
+  it('the generator refuses, by key name, a value outside its bounds, a missing bounds entry and an inverted pair; a clean config gives no problem', () => {
+    const b = { debounce_ms: { min: 0, max: 2000, on_invalid: 'clamp' } };
+    expect(configBoundsProblems({ debounce_ms: 400 }, b)).toEqual([]);
+    expect(configBoundsProblems({ debounce_ms: 2001 }, b).join('|')).toContain('debounce_ms');
+    expect(configBoundsProblems({ debounce_ms: -1 }, b).join('|')).toContain('debounce_ms');
+    expect(configBoundsProblems({ debounce_ms: 400 }, {}).join('|')).toContain('debounce_ms');
+    expect(configBoundsProblems({ debounce_ms: 400 }, { debounce_ms: { min: 9, max: 1, on_invalid: 'fail' } }).join('|')).toContain('debounce_ms');
+  });
+  it('the generated slices carry the bounds beside an unchanged config', () => {
+    const s = rj(path.join(REPO, 'mobile/src/generated/surfaces/mobile_parcel_search.json'));
+    expect(s.config).toEqual({ debounce_ms: 400, min_query_len: 3, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000 });
+    expect(Object.keys(s.bounds).sort()).toEqual(['debounce_ms', 'entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms', 'min_query_len']);
+    expect(rj(path.join(REPO, 'mobile/src/generated/surfaces/mobile_parcel_semi_question.json')).bounds.continue_wait_ms).toMatchObject({ min: 1000, max: 300000, on_invalid: 'clamp' });
   });
 });

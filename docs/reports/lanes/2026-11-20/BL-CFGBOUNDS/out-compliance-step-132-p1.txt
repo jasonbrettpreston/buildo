@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:52:06.176Z file_sha256=8f0b9c205b5bbc5e93386704e668ef1121ddee89ea718eb6eeb8fd9e47952445 prompt_sha256=b0df0ce7ebfecfd5e9c15b8a90f0f040163829a100ff95fc04af8b94831c1bbb
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-step-132-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:429 "`answer` stays `none`: no admin logic-variable row is behind any of them." — five non-zero numbers the surface reads (400, 3, 0, 3, 60000) remain unregistered, and the change substitutes a new schema field `config.bounds` for the required registration rather than adding one logic-variable row or an adjudicated exemption — register the six numbers as logic variables with these bounds, or land the register row that names the exemption by id before the row keeps `answer: none`.
+
+BUG severity=HIGH — x-rulings.4 "every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`" — scripts/surfaces/_schema/surface.schema.json:2686 "operator 2026-11-20, verbatim: \"Let the grounder resolve them all as long as the result is compliant\", MORNING-DECISIONS.md:1476" — the ruling is cited by hand from a scratch path (`~/Buildo-scratch/queues-20261113/`), with no `docs/reports/decisions/<date>-<slug>.json` log and no register row, so `decision-log.mjs --check` cannot cover it and a hand-edited citation is invisible to the gate — commit the escaped log under `docs/reports/decisions/`, run `--write`, and cite `<stem>#<id>` in the note, the descriptors and the census why.
+
+BUG severity=MED — x-rulings.1 "a different party adjudicates, named and dated; the ruling gets a dated register row" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:442 "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it." — the numeric bounds (0 to 2000, 0 to 3600000, 0 to 5, 1000 to 300000) are the writing lane's own proposal, still owed to the grounder, yet the same diff amends Spec 128 as if the question were resolved; a clamp range nobody adjudicated now silently rewrites out-of-range values — have the named grounder adjudicate each key's min/max/on_invalid and record it, or mark the entries provisional/OWED in the desolate and do not present the note as a resolution.
+
+BUG severity=MED — core.8 "a literal in code is a setting nobody can see or change." — docs/reports/generated/127-surface-registry.md:818 "mobile/src/constants/parcelSearch.ts:21 — SEARCH_MIN_QUERY_LEN" beside "read by the phone only from the generated slice, through the one reader (mobile/src/lib/sliceConfig.ts)" — the row's own citation names a code constant as one home of `min_query_len` while the same row claims the value is read only from the slice, so there are two homes (the literal in parcelSearch.ts and `sliceNumber(SEARCH_SLICE, 'min_query_len')` in SearchBinding.tsx) and the "only from the slice" claim is false for that key — delete the literal in `mobile/src/constants/parcelSearch.ts` and route its readers through the slice reader, or correct the why and the citation to say the constant is still a second copy.
+
+MET — core.1 — scripts/surfaces/_schema/surface.schema.json:2686 — the new `bounds` property is a declared schema field with per-key allOf rules plus a generate-time check, so the new behaviour is not held only in code.
+
+MET — x-tooling.1 — scripts/surfaces/emit-mobile-surfaces.mjs:71 "const problems = configBoundsProblems(config, d.config?.bounds);" — the slice, its goldens, the census, the generated .d.ts and the 127 report are all regenerated together with new input_sha values, so the generator `--check` path stays consistent.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 3
+
+---
+⏱  52226ms (52.2s)
+📊 Tokens — total: 45949, input: 35867, output: 10082, reasoning: 9122

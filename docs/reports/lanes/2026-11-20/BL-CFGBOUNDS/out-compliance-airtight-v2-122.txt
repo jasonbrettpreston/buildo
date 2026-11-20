@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:04:59.298Z file_sha256=27e23bf868be821af68697e41f15a9bec43f296c4c11606ab5d143d2de336068 prompt_sha256=5c7616c4f6b9c538cedae975cbcd6257838279bc5a1932a27528ae5fa2c6078a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-airtight-v2-122.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — operator ruling quoted in the material, "Let the grounder resolve them all as long as the result is compliant" (docs/specs/02-web-admin/128_surface_standard_policy.md:45) — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:447 "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it." versus docs/specs/02-web-admin/128_surface_standard_policy.md:45 "resolved by the separate grounder, option (b)" — the spec note, the generated type comment and the C-10 test comment record the grounder's resolution as done while every declared bounds entry still calls itself a lane proposal awaiting the grounder, so the ruling's condition is asserted and not shown (the full ruling text is not pasted, only the words the change quotes) — pick one: paste the grounder's resolution and replace each "for the grounder" why, or soften the spec and test wording to "proposed, pending the grounder".
+
+DEFER severity=MED — 6.6.1(c) "no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed" — docs/reports/generated/127-surface-registry.md:818 "read by the phone only from the generated slice, through the one reader (mobile/src/lib/sliceConfig.ts)" — the bounds and value half of the row is enforced (schema allOf, configBoundsProblems, sliceNumber, C-10), but the consumer half ("only", "none of the six is a registered logic variable") is hand-authored census prose that no gate in this diff witnesses, so the row claims observed readers it never observed — add a reader-set check over these config keys or drop the "only"/"none" quantifiers and mark the row declared.
+
+DEFER severity=MED — 128 note "the schema refuses a descriptor whose number has no entry (SV-DESC, the one validator surface-validate runs)" (docs/specs/02-web-admin/128_surface_standard_policy.md:45) — src/tests/surfaces/surface-conformance.logic.test.ts:976 "Object.entries(cfg.properties as Json).filter(([, p]) => JSON.stringify(p).includes('\"integer\"'))" — the per-key allOf rules and the test's own completeness check are keyed on the integer type only, so a config property typed number (non-integer) would carry no bounds rule and would not be counted, which falsifies the test's stated guarantee "so a key added later without one is refused by this test" — key the allOf blocks and the test collection on number or integer, or assert no config property may be typed outside the six.
+
+DEFER severity=LOW — 6.6.1(c) "no registry or ledger row may be described as accurate" — docs/reports/generated/127-surface-registry.md:818 "are DECLARED here with their measured values" — the replacement text drops the three measured values the prior row carried ("entitlement_stale_ms (0), lookup_retry_max (3) and lookup_stale_ms (60000)"), so the row asserts measured values it no longer shows and declared equals observed cannot be read off it — keep the values in the row text; the C-10 test already pins them.
+
+MET — 6.6.1(e) "the R-BF lock in `src/tests/spec124-register-rulings.logic.test.ts` holds (c) at NOT MET while that marker is absent" — scripts/analysis/step-validate.mjs — untouched by the diff, so neither direction of that RED lock is disturbed.
+MET — 6.6.1(f) "the status in (c) is unchanged; it flips only at P1-C9" — docs/reports/generated/127-surface-registry.md:818 — nothing in the diff claims the registry-truth programme landed, and the registry it edits is the surface census, not the four-part step registry.
+
+REJECT — 6.6.1(a) "the four-part step registry, FILES ... DATA ... CONSUMERS ... TESTS" — accused of hand-authoring step-registry CONSUMERS for the search config keys — not a real issue: 127-surface-registry rows are the surface census emitted by scripts/surfaces/emit-mobile-surfaces.mjs, not the per-step registry that (a) governs; the clause that actually reaches the row is (c)'s accuracy sentence, cited above.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 4
+
+---
+⏱  73058ms (73.1s)
+📊 Tokens — total: 41813, input: 28190, output: 13623, reasoning: 12613

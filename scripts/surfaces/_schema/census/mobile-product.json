@@ -7394,7 +7394,7 @@
     },
     "config": {
       "answer": "logic_variables",
-      "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; like debounce_ms it is declared, not yet a registered logic variable with bounds).",
+      "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; FIX.CONFIG-BOUNDS (task-395): it carries its bounds and failure behaviour in config.bounds, read from the slice through the one reader).",
       "evidence": [
         "migrations/320_parcel_lot_form_view.sql",
         "migrations/323_semi_o4_zone_and_wall_asks.sql",
@@ -7440,7 +7440,15 @@
         }
       ],
       "retired": [],
-      "continue_wait_ms": 60000
+      "continue_wait_ms": 60000,
+      "bounds": {
+        "continue_wait_ms": {
+          "min": 1000,
+          "max": 300000,
+          "on_invalid": "clamp",
+          "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
+        }
+      }
     },
     "sharing": {
       "answer": "shared",
@@ -7955,12 +7963,12 @@
     },
     "config": {
       "answer": "none",
-      "why": "The SEARCH tunables debounce_ms and min_query_len are DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.) FIX.TUNE (task-378): three more phone tunables are declared here and read from the generated slice by mobile/src/hooks/useParcelLookup.ts: entitlement_stale_ms (0), lookup_retry_max (3) and lookup_stale_ms (60000); like debounce_ms they are declared, not yet registered logic variables with bounds.",
+      "why": "The SEARCH tunables debounce_ms and min_query_len and the phone tunables entitlement_stale_ms, lookup_retry_max and lookup_stale_ms are DECLARED here with their measured values and read by the phone only from the generated slice, through the one reader (mobile/src/lib/sliceConfig.ts). FIX.CONFIG-BOUNDS (task-395): each carries its bounds and failure behaviour in config.bounds (Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"Let the grounder resolve them all as long as the result is compliant\", MORNING-DECISIONS.md:1476; option (b): bounds in the surface schema, not a database row, because the phone reads only the slice). `answer` stays `none`: no admin logic-variable row is behind any of them.",
       "evidence": [
-        "mobile/src/constants/parcelSearch.ts:19 — SEARCH_DEBOUNCE_MS, consumed at mobile/app/(app)/parcel-tool/index.tsx:72",
-        "mobile/src/constants/parcelSearch.ts:26 — SEARCH_MIN_QUERY_LEN; the server floor is src/app/api/parcels/lookup/types.ts:42",
-        "scripts/surfaces/_schema/surface.schema.json:2335,2348 — config.debounce_ms / config.min_query_len DO exist",
-        "docs/reference/logic-variables-registry.md — neither is a registered logic variable"
+        "mobile/src/components/surfaces/SearchBinding.tsx:37 — SEARCH_DEBOUNCE_MS read from the slice through sliceNumber (bounds applied), consumed at mobile/app/(app)/parcel-tool/index.tsx:72",
+        "mobile/src/constants/parcelSearch.ts:21 — SEARCH_MIN_QUERY_LEN; the server range is src/app/api/parcels/lookup/types.ts:42",
+        "scripts/surfaces/_schema/surface.schema.json — config.bounds and the per-key rules (FIX.CONFIG-BOUNDS)",
+        "docs/reference/logic-variables-registry.md — none of the six is a registered logic variable"
       ],
       "logic_variables": [],
       "retired": [],
@@ -7968,7 +7976,39 @@
       "min_query_len": 3,
       "entitlement_stale_ms": 0,
       "lookup_retry_max": 3,
-      "lookup_stale_ms": 60000
+      "lookup_stale_ms": 60000,
+      "bounds": {
+        "debounce_ms": {
+          "min": 0,
+          "max": 2000,
+          "on_invalid": "clamp",
+          "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it. 0 is the schema minimum it always had."
+        },
+        "min_query_len": {
+          "min": 3,
+          "max": 120,
+          "on_invalid": "clamp",
+          "why": "The server accepts a query of 3 to 120 characters (src/app/api/parcels/lookup/types.ts:42: min(3) and max(120)); the phone gate must not sit outside that range."
+        },
+        "entitlement_stale_ms": {
+          "min": 0,
+          "max": 3600000,
+          "on_invalid": "clamp",
+          "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
+        },
+        "lookup_retry_max": {
+          "min": 0,
+          "max": 5,
+          "on_invalid": "clamp",
+          "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
+        },
+        "lookup_stale_ms": {
+          "min": 0,
+          "max": 3600000,
+          "on_invalid": "clamp",
+          "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
+        }
+      }
     },
     "sharing": {
       "answer": "shared",
@@ -14793,7 +14833,21 @@
         "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json — config.debounce_ms 400, config.min_query_len 3"
       ],
       "debounce_ms": 0,
-      "min_query_len": 0
+      "min_query_len": 0,
+      "bounds": {
+        "debounce_ms": {
+          "min": 0,
+          "max": 0,
+          "on_invalid": "fail",
+          "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
+        },
+        "min_query_len": {
+          "min": 0,
+          "max": 0,
+          "on_invalid": "fail",
+          "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
+        }
+      }
     },
     "sharing": {
       "answer": "shared",
@@ -15023,7 +15077,21 @@
         "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json — config.debounce_ms 400, config.min_query_len 3"
       ],
       "debounce_ms": 0,
-      "min_query_len": 0
+      "min_query_len": 0,
+      "bounds": {
+        "debounce_ms": {
+          "min": 0,
+          "max": 0,
+          "on_invalid": "fail",
+          "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
+        },
+        "min_query_len": {
+          "min": 0,
+          "max": 0,
+          "on_invalid": "fail",
+          "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
+        }
+      }
     },
     "sharing": {
       "answer": "shared",

@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:50:59.386Z file_sha256=1edd4a9261492491a7d80104a16938ef73ed4ec28e4e6694de7db40ddc4a40e6 prompt_sha256=ef7ac62693e5b857f359e1ffb916a85d64f61fe0c647f3a46180cf16e67e4b9e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none found.
+
+DEFER severity=LOW — AMENDMENT 2026-09-15 §2 boundary "Anything else computed on the client is a Spec 128 rule-2 violation needing a dated `deviations[]` row." — `mobile/src/lib/sliceConfig.ts` (hunk `@@ -10 +17,6 @@`) "if (b.on_invalid === 'clamp') return Math.min(b.max, Math.max(b.min, v));" — the clamp outcome is a decision computed on the phone and is none of the five items the amendment keeps client-side, and no dated `deviations[]` row appears in the diff (the authorising words exist only inside the diff's own `why` and comment text) — record bound application as part of the declared tunable in a dated `deviations[]` row, or state in the descriptor that the phone only executes a bound the server already declared.
+
+DEFER severity=LOW — AMENDMENT 2026-09-15 §3 row "Stays **normative**, and becomes **descriptor data**" — `scripts/surfaces/_schema/surface.schema.json` "`\"bounds\": { \"x-draft-optional\": true,`" — a new descriptor config key now feeds mobile reads, yet the pasted §3 carries no row or dated note for it, unlike the 2026-11-10 note that recorded `recentSearchesStore` — add a dated note under §3 recording `config.bounds` as read-only descriptor data with no Layer-3 mirror, no MMKV blob and no §B5 reset.
+
+REJECT — §3 "Adding a field to the mobile app requires adding a row here." — accused of adding `bounds` to mobile surface data with no ownership row — `bounds` is static generated config read by a pure function, with no Owner Layer, Canonical Writer or Bridge to declare, so §3 has nothing to own — not a real issue.
+
+REJECT — §1.2 goal 4 "for every field, exactly one function writes it." — accused of keeping two `min_query_len` constants (`SEARCH_MIN_QUERY_LEN` in `mobile/src/components/surfaces/SearchBinding.tsx:38`, `LOOKUP_MIN_QUERY_LEN` in `mobile/src/hooks/useParcelLookup.ts:58`) — both are reads through the single reader from the single slice, neither writes a value — not a real issue.
+
+MET — §1 "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec." — `mobile/src/lib/sliceConfig.ts`, `mobile/src/components/surfaces/SearchBinding.tsx:37` — no store, MMKV blob, bridge or routing effect is added; the change is a pure reader plus a regenerated slice.
+
+MET — §2.1 "Layer 3 (Zustand) NEVER mirrors a Layer 1 (server) field unless the Field Ownership Matrix §3 explicitly authorizes the mirror" — `mobile/src/generated/surfaces/mobile_parcel_search.json` "`\"bounds\"`" — tunables and their bounds are read from the build-time slice, no Zustand field is introduced.
+
+MET — §2.1 "Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`." — `mobile/src/hooks/useParcelLookup.ts:55-58` — values come from an imported JSON module, no MMKV open or `getString` is added.
+
+MET — AMENDMENT 2026-09-15 §2 "Layer 1 **grows** — canonical for the *projection*, not only the data." — `scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json` "bounds" — the bound and its failure posture are declared in the descriptor and only applied by the phone, which is the direction this clause states.
+
+MET — §1.2 goal 2 "for every field, exactly one store owns the canonical value." — `mobile/src/constants/parcelSearch.ts` "// The debounce has no constant here: config.debounce_ms of the generated slice is its one home" — the typed second copy of `SEARCH_DEBOUNCE_MS` is removed rather than duplicated.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  67599ms (67.6s)
+📊 Tokens — total: 45174, input: 31912, output: 13262, reasoning: 12278

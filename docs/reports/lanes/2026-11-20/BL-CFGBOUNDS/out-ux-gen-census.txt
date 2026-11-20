@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T18:02:02.847Z file_sha256=197c086720063fd5faa5367c80954da1ace6c0e975effb3681dc58649fea918b prompt_sha256=8a4e8ac6b7b5b4312ac0feaa73fb9cbd643b874bf9a2029719dab647a0510c25
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/lens-material-census.diff (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile/src/generated/surfaces/mobile_parcel_search.json:18 "The server accepts a query of 3 to 120 characters (src/app/api/parcels/lookup/types.ts:42: min(3) and max(120)); the phone gate must not sit outside that range." vs design "Values unchanged." — unlike the other five bound blocks this one never says the current value lies inside the range and the declared min_query_len is not visible in this part, so if the phone's measured gate is below 3 the clamp silently raises it and a person typing 1 or 2 characters now gets nothing where the old gate let them through — state the measured phone min_query_len and confirm it is at least 3, or set min to the measured value so the deployed gate cannot move.
+
+DEFER severity=MED — docs/reports/generated/127-surface-registry.md:980 "it carries its bounds and failure behaviour in config.bounds, read from the slice through the one reader" vs its own citation "mobile/src/lib/semiQuestion.ts — SEMI_CONTINUE_WAIT_MS reads config.continue_wait_ms from the generated slice" — the citation names no sliceNumber on the Continue path, so the claim that the bound is applied there is unshown and the person could sit in the loading state past the promised 1 to 300 s window — cite the sliceNumber call on that path or drop "bounds applied" from this entry; blast radius is bounded because the current value 60000 is inside the range.
+
+DEFER severity=LOW — src/lib/surfaces/generated/surface-descriptor.d.ts:347 "the bounds and the failure behav */" — the sentence is cut mid-word so whoever reads the type never learns the failure behaviour the design text says each key carries — complete the comment with the fail or clamp behaviour before the generated file is committed.
+
+DEFER severity=NIT — docs/reports/generated/127-surface-registry.md:818 "docs/reference/logic-variables-registry.md — none of the six is a registered logic variable" — this block declares five keys, the sixth (continue_wait_ms) lives in the other entry, so the count reads wrong to anyone checking the unregistered set — say "none of the five" here, or name the keys.
+
+REJECT — scripts/surfaces/platform_shared/F14/surfaces/binding_web_search.descriptor.json:169 "on_invalid": "fail" — a pinned 0 that errors on any other value looks like a trap for the person — binding modules expose no search field of their own, the value stays 0 unless the schema changes, and the design text puts the bounds in the schema, so it is harmless.
+
+VERDICT: FAIL on the person's experience
+States checked: first view, loading, answered, error, empty, offline, back, repeat visit; this change draws none of them, it only moves the bounds behind the search typing gate (below-floor query) and the semi-question Continue wait (loading)   Dead ends found: 0
+
+---
+⏱  31362ms (31.4s)
+📊 Tokens — total: 21558, input: 16214, output: 5344, reasoning: 4698

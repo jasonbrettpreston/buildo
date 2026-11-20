@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:37:50.521Z file_sha256=e0e30d73fda8e843dc2c251802e2e7bc611da9d361f488eaf84b94840a2b2969 prompt_sha256=d4ad5da0201ff4ce06a80437938c9039a380c78efa7b052591a172420b55a883
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-plan-compliance-surface-128.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 128 Rule 3 "is a registered logic variable with bounds and an `on_invalid` posture" — plan step 6 "6. Spec 128 dated note on Rule 3 (outside the generated markers), M-246 form, quoting :1476 exactly, naming option (b)" — the plan satisfies bounds+on_invalid but not "registered logic variable / same registry"; a note "naming option (b)" is neither a §5 register row (§4.3: id, statement, what it amends) nor a §2 amendment in the same commit as the lock (§4.5), so Rule 3 reads unmet — record a §5 register row and an explicit §2 amendment (with the lock, deciding source :1476) stating schema bounds supersede the registry for these keys.
+
+BUG severity=HIGH — operator "Let the grounder resolve them all as long as the result is compliant" and Spec 136 fe.44 "the conversion factor is content/settings, never code" — plan F6 "The area-factor part is therefore NOT built; it returns to the grounder/operator" — "resolve them all" is not met and 10.7639 stays typed in mobile/src/lib/leadDetailFormat.ts:15 and parcelCostFormat.ts:11, so fe.44 and Spec 126 P4 "zero thresholds in `src/`" remain violated after this change — either build the area factor through a slice-owning surface or record an operator/grounder ruling that accepts the partial resolution.
+
+DEFER severity=LOW — Spec 128 §4.8 "A row may not read `BUILT` unless its `Lock` resolves." — NONE — the dated note the plan proposes carries no resolvable Lock path (a test file or file:line), so the row cannot read beyond PARTIAL — name the test path (e.g. src/tests/surfaces/surface-conformance.logic.test.ts) in the note's Lock cell.
+
+MET — Spec 128 §4.4 "the same commit that records the ruling adds a both-directions test (red on the old behaviour, green on the new)" — plan Tests "planted defects (a descriptor with a numeric config key and no bounds refused by the compiled validator; bounds with no on_invalid refused... real tree clean, values unchanged)" — provides the both-directions lock.
+
+MET — Spec 128 Rule B4 "goldens refresh on fingerprint, never on request" — plan "only the fingerprint hash of the search and semi descriptors moves (explained); no state content moves" — recapture is triggered by descriptor fingerprint change, not on request.
+
+MET — Spec 128 Rule 3 "with bounds and an `on_invalid` posture" — plan "bounds (object; per key: min number, max number, on_invalid fail|clamp, all three required, optional why)" — per-key bounds and on_invalid posture declared.
+
+MET — Spec 128 §4.7a "Every `ACCEPTED` row names a deciding source outside this pass" — plan "quoting :1476 exactly" — names the operator words as the deciding source.
+
+REJECT — Spec 128 Rule B2 "a proposal to add a declaration carries its measured cost" — the `bounds` addition is accused of carrying no measured-cost line — Rule B2 states the cost is "reported automatically by `surface-validate.mjs`'s footprint measure... never hand-computed once and forgotten", so a hand-computed cost line is forbidden, not required.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  88666ms (88.7s)
+📊 Tokens — total: 43846, input: 24908, output: 18938, reasoning: 18166

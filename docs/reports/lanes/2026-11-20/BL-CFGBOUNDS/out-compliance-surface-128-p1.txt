@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:55:15.215Z file_sha256=9989ab84373f34b7f254247100bc1d58794c5d234ea4667a64c64b4adb0bf8dc prompt_sha256=e22669fb95a8a4670eb3d6464068622c2ed6eb28c361c97266c512a2e57c6f81
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-surface-128-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 128 §2 rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture" — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "The words \"registered logic variable with bounds and an `on_invalid` posture\" are met for a surface config number by declaring, per key, `config.bounds.<key>`" — the six tunables stay unregistered (the same note admits "`answer` stays `none`: no admin logic-variable row is behind any of them"), and the only pasted operator words are a conditional delegation ("Let the grounder resolve them all as long as the result is compliant"), so rule 3's presence leg is satisfied by a lane-authored comment only — paste the grounder's option (b) decision as the ruling text or record it as a dated deviation row naming the grounder as adjudicator, and stop asserting the mirrored words are met.
+
+BUG severity=MED — operator record in the same note "resolved by the separate grounder, option (b)" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:442 "\"why\": \"Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it.\"" — the spec says the grounder resolved the bounds while three search bounds plus continue_wait_ms say the numbers are still a lane proposal awaiting the grounder, and the new lock pins them green — obtain the ruling and drop "proposal/for the grounder" from every why, or mark the bounds pending and hold the lock.
+
+DEFER severity=MED — Spec 128 §3 B2 "a proposal to add a declaration carries its measured cost, and the operator rules" and "The cost is reported automatically by `surface-validate.mjs`'s footprint measure (descriptor bytes, notes bytes, `checks[]` row count, golden-pair byte size)" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:442 "+    \"bounds\": {" (five entries with why, plus census blocks, plus every emitted slice) — no footprint figure appears anywhere in the material — include the surface-validate footprint output for the five descriptors and the golden pair.
+
+DEFER severity=MED — note line "the schema refuses a descriptor whose number has no entry (SV-DESC, the one validator `surface-validate` runs)" — scripts/surfaces/_schema/surface.schema.json:2724 "\"debounce_ms\": { \"type\": \"integer\" }" and src/tests/surfaces/surface-conformance.logic.test.ts:985 "JSON.stringify(p).includes('\"integer\"')" — a fractional or `"type": "number"` config key bypasses both the schema `if` and the lock's completeness scan, so SV-DESC accepts a number with no bounds — widen the `if` to `"type": "number"` and derive the locked key set from number-or-integer.
+
+DEFER severity=LOW — Spec 128 §3 B4 "A descriptor, contract descriptor, archetype component or format-helper edit after capture forces a recapture. This is mechanical (`source_fingerprint` over `fingerprint_files[]`)" — scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json:184 "+    \"bounds\": {" with no golden or fingerprint line for this descriptor anywhere in the diff — three binding descriptors and the web-product census entry changed with no visible recapture (cannot see their golden pairs) — re-run the capture and include the fingerprint diff, or state in the material that bindings carry no golden pair.
+
+DEFER severity=LOW — Spec 128 §2 rule 7 "a step may not omit a category its archetype requires, and may not answer a category its archetype forbids" — scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json:184 "\"why\": \"A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error.\"" — the new per-key bounds rule does not vary by archetype, so binding descriptors now answer config.bounds for a tunable they declare they do not have — gate the bounds requirement on the archetype (config "none" for bindings) instead of encoding a non-tunable as a 0/0 bound.
+
+MET — rule about rules "the same commit that records a ruling adds a both-directions test, red on the old behaviour and green on the new" — src/tests/surfaces/surface-conformance.logic.test.ts:943 — C-10 plants an absent bounds block, an omitted key, missing max, missing on_invalid and on_invalid "default" and requires validateDescriptor errors, which is red on the pre-change schema.
+
+MET — Spec 128 §2 rule 6 "`\"none\"` is legal; silence is not" — scripts/surfaces/_schema/surface.schema.json:2686 — each bounds entry requires min, max and on_invalid, with additionalProperties false and a fail/clamp oneOf, so a partial entry is refused.
+
+MET — Spec 128 §2 rule 3 "an `on_invalid` posture" — mobile/src/lib/sliceConfig.ts:17 — fail throws by key name, clamp returns the nearest bound, unknown on_invalid and inverted pairs throw rather than guess.
+
+MET — Spec 128 §3 B4 (phone slices) — mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json:2 — input_sha and the descriptor fingerprint move together with the descriptor edit, and every state fixture for both slices carries the new fingerprint.
+
+MET — Spec 128 §2 rule 13 "ONE command generates the scorecard and the policy-coverage matrix from artifacts" — docs/reports/generated/127-surface-registry.md:818 — the registry and src/lib/surfaces/generated/surface-descriptor.d.ts are regenerated from the changed census, not hand-reworded.
+
+REJECT — Spec 128 §2.2a rule 16 "bans arithmetic BinaryExpression, `Math.*`, `reduce`" — the clamp adds Math.min and Math.max in mobile/src/lib/sliceConfig.ts — rule 16's scope is the REPORT archetype's projection dirs and named binding modules (MF-16 note), and sliceNumber clamps a declared tunable, not a displayed field value.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  88752ms (88.8s)
+📊 Tokens — total: 48090, input: 31191, output: 16899, reasoning: 15452

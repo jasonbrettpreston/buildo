@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:51:08.176Z file_sha256=4f65031893701d7702b6fb07be4107fd6a88ce3317eb2ac51d06b6a73902d028 prompt_sha256=d0c6b2eb905fa6ec6808fe50950839979ffb01ba79a3a9f3e4a15fe010cc09b3
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-mobile-99-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 128 Rule 3 (cited by the change itself, NOT in the pasted context) "The words 'registered logic variable with bounds and an `on_invalid` posture' are met for a surface config number by declaring, per key, `config.bounds.<key>` = `min`, `max`, `on_invalid`" — docs/specs/02-web-admin/128_surface_standard_policy.md:45 "Dated note 2026-11-20 (M-246, prior text kept; FIX.CONFIG-BOUNDS · task-395 ... operator, verbatim: 'Let the grounder resolve them all as long as the result is compliant'" — the only governing text pasted is Spec 99 part 2, and the clause this whole diff rests on is a note the diff adds to Spec 128 in the same commit, so the authority is authored by the change under review and cannot be checked — paste Spec 128 Rule 3 and MORNING-DECISIONS.md:1476 as context and re-run.
+
+DEFER severity=MED — no pasted clause or pasted ruling names any of this behaviour — scripts/surfaces/emit-mobile-surfaces.mjs:31 "export function configBoundsProblems(config, bounds)" — the diff adds a schema `bounds` object plus six `allOf` per-key rules, a generate-time refusal, a slice hand-off (`bounds` copied beside `config`) and a runtime throw/clamp reader, none of which any pasted clause (§4 B1-B6, §5, §6) asks for — obtain the card text (task-395) and the operator ruling in the context before merge.
+
+DEFER severity=LOW — no pasted clause names this pinning — scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json:184 "on_invalid": "fail", "min": 0, "max": 0 — binding surfaces that later carry any nonzero debounce_ms or min_query_len now stop at import through sliceNumber, a new consequence the pasted context neither names nor forbids — have the ruling that authorises option (b) state the 0/0 fail pinning explicitly.
+
+DEFER severity=LOW — claim in the diff, cannot see the evidence — mobile/src/constants/parcelSearch.ts:17 "The debounce has no constant here: config.debounce_ms of the generated slice is its one home, read through the reader in SearchBinding.tsx" — the diff also asserts consumption at mobile/app/(app)/parcel-tool/index.tsx:72 and at mobile/src/constants/parcelSearch.ts:21, but no importer of the removed constant appears in the material, so I cannot see whether an import of `SEARCH_DEBOUNCE_MS` from `@/constants/parcelSearch` is left dangling — add those importers to the material.
+
+REJECT — Spec 99 §4 B1 "Every server fetch MUST go through TanStack Query" — accused of introducing a second data path outside TanStack — the values now read are taken from a build-time generated JSON slice (`mobile/src/generated/surfaces/mobile_parcel_search.json`), not from the server; no query, mutation or query key is added, so no registry row is owed.
+
+REJECT — Spec 99 §6.6 "Object-valued store fields MUST be deep-compared before set" — accused of adding a composite field without `fast-deep-equal/es6` — `SliceBound` / `bounds` are module-level build artifacts read by `sliceNumber`, no Zustand field is added or written.
+
+REJECT — Spec 99 §6.1 "no whole-store reads, no object-returning selectors without `useShallow`" — accused of a non-atomic store read — SearchBinding.tsx adds two module-level `export const` calls to `sliceNumber`, no `useStore()` / `useFilterStore()` call site is touched.
+
+MET — Spec 99 §4 B1 "Adding a new server query requires a row here" — mobile/src/lib/sliceConfig.ts:12 "export type SliceNumbers = { readonly config: Readonly<Record<string, unknown>>; readonly bounds?: Readonly<Record<string, SliceBound>> }" — no server query or key is added, so the query-key registry needs no new row.
+
+MET — Spec 99 §6.5 "A render gate condition MUST evaluate to the same value across consecutive renders" — mobile/src/components/surfaces/SearchBinding.tsx:39 "export const SEARCH_DEBOUNCE_MS = sliceNumber(SEARCH_SLICE, 'debounce_ms')" — no `isLoading` / `isFetching` gate condition is added or altered anywhere in the diff.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 0 binding (Spec 99 §4 B1-B6, §5.1-5.4, §6.1-6.6 walked, none governs a build-time config-bounds change)   Unmet: 0
+
+---
+⏱  36267ms (36.3s)
+📊 Tokens — total: 39512, input: 32717, output: 6795, reasoning: 5705

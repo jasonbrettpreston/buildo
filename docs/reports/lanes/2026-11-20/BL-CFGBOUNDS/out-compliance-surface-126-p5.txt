@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:52:58.480Z file_sha256=8c05ee7fe762475719aaeebecd5bbcc035b360220ed2d4308667cc9aec2e8a97 prompt_sha256=c5ac410053b3063abefea55be01d622c9cbeb4df7b368f643a6f4717545d6e4a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-surface-126-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §9 Core Logic 1 "AJV-validate the descriptor against `surface.schema.json` **before** anything renders" — `mobile/src/lib/sliceConfig.ts` "if (b.on_invalid === 'clamp') return Math.min(b.max, Math.max(b.min, v));" — an out-of-range config value is silently replaced by the nearest bound at read time and produces no check row, so the rendered surface reports a number the slice never held while §9 item 7 "derive the verdict **from the resulting rows**, never a parallel boolean" has no row recording the substitution; the declared posture authors can ship is `clamp` for all six shipped keys — make the shipped default `fail`, or have the clamp path emit a FAIL check naming the key, so a corrected value is visible rather than silent.
+
+DEFER severity=MED — pasted context (none) "no pasted context provided" — `docs/specs/02-web-admin/128_surface_standard_policy.md` "+> Dated note 2026-11-20 (M-246, prior text kept; FIX.CONFIG-BOUNDS · task-395 ... operator, verbatim: "Let the grounder resolve them all as long as the result is compliant", `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476`" — the only authorities the change cites for the new bounds, clamp and fail behaviour (Spec 128 Rule 3 and the 2026-11-20 ruling) live inside the diff, not in the pasted clauses, so the change can be shown to violate no pasted clause and also to satisfy none — paste Spec 128 Rule 3 and the MORNING-DECISIONS.md:1476 ruling into the review context, or defer this diff until they are pasted.
+
+DEFER severity=LOW — §9 Core Logic 1 "An invalid descriptor **refuses**" — `scripts/surfaces/_schema/surface.schema.json` "\"min\": { \"type\": \"number\" }, \"max\": { \"type\": \"number\" }" — the schema refuses a missing bounds entry only; an inverted pair (min 9, max 1) or a value outside its declared bounds passes SV-DESC, and the value check exists only in `scripts/surfaces/emit-mobile-surfaces.mjs` and the phone reader, while `scripts/surfaces/platform_shared/F14/surfaces/binding_web_search.descriptor.json` now declares bounds with no web consumer in this diff — add the min <= max and in-range checks to the descriptor validator (SV-DESC) so a web descriptor with unusable bounds is refused, or state web parity is out of scope for this change.
+
+MET — §9 Core Logic 1 — `scripts/surfaces/_schema/surface.schema.json` "FIX.CONFIG-BOUNDS (task-395): when debounce_ms holds a number, config.bounds holds its min, max and on_invalid." — the refusal is expressed in the descriptor schema the one validator runs, not in a parallel script, and the planted-defect test `expect(v(d1).length).toBeGreaterThan(0)` pins it.
+
+MET — §9 Core Logic 4 "Assemble the projection **server-side**" — `mobile/src/lib/sliceConfig.ts` "The slice carries each number's bounds beside it (`bounds.<key>` = min, max, on_invalid)." — the bounds travel with the generated slice from the descriptor rather than being typed into the screens, and the typed second copy (`export const SEARCH_DEBOUNCE_MS = 400;`) is removed.
+
+REJECT — §10 "every column derived, nothing typed" — the generated `docs/reports/generated/127-surface-registry.md` rows are edited in this diff, which reads as hand-typed generated text — the edited `why` and evidence strings match the descriptor's new strings verbatim, consistent with regeneration from the descriptors.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  61662ms (61.7s)
+📊 Tokens — total: 44505, input: 33052, output: 11453, reasoning: 10570

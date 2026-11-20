@@ -2683,8 +2683,197 @@
               "minimum": 0
             }
           ]
+        },
+        "bounds": {
+          "x-draft-optional": true,
+          "description": "FIX.CONFIG-BOUNDS (task-395; Spec 128 Rule 3; operator 2026-11-20, verbatim: \"Let the grounder resolve them all as long as the result is compliant\", MORNING-DECISIONS.md:1476; the grounder chose option (b)): the bounds and the failure behaviour of every number this config holds, one entry per key. A number with no entry is refused by the rules below. min and max are inclusive; fail = a value outside them is an error, clamp = it reads as the nearest bound.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "min",
+              "max",
+              "on_invalid"
+            ],
+            "properties": {
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "on_invalid": {
+                "oneOf": [
+                  {
+                    "const": "fail",
+                    "description": "A value outside the bounds is an error that names the key."
+                  },
+                  {
+                    "const": "clamp",
+                    "description": "A value outside the bounds reads as the nearest bound."
+                  }
+                ]
+              },
+              "why": {
+                "type": "string"
+              }
+            }
+          }
         }
-      }
+      },
+      "allOf": [
+        {
+          "description": "FIX.CONFIG-BOUNDS (task-395): when debounce_ms holds a number, config.bounds holds its min, max and on_invalid.",
+          "if": {
+            "required": [
+              "debounce_ms"
+            ],
+            "properties": {
+              "debounce_ms": {
+                "type": "integer"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "bounds"
+            ],
+            "properties": {
+              "bounds": {
+                "required": [
+                  "debounce_ms"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "description": "FIX.CONFIG-BOUNDS (task-395): when min_query_len holds a number, config.bounds holds its min, max and on_invalid.",
+          "if": {
+            "required": [
+              "min_query_len"
+            ],
+            "properties": {
+              "min_query_len": {
+                "type": "integer"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "bounds"
+            ],
+            "properties": {
+              "bounds": {
+                "required": [
+                  "min_query_len"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "description": "FIX.CONFIG-BOUNDS (task-395): when continue_wait_ms holds a number, config.bounds holds its min, max and on_invalid.",
+          "if": {
+            "required": [
+              "continue_wait_ms"
+            ],
+            "properties": {
+              "continue_wait_ms": {
+                "type": "integer"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "bounds"
+            ],
+            "properties": {
+              "bounds": {
+                "required": [
+                  "continue_wait_ms"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "description": "FIX.CONFIG-BOUNDS (task-395): when entitlement_stale_ms holds a number, config.bounds holds its min, max and on_invalid.",
+          "if": {
+            "required": [
+              "entitlement_stale_ms"
+            ],
+            "properties": {
+              "entitlement_stale_ms": {
+                "type": "integer"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "bounds"
+            ],
+            "properties": {
+              "bounds": {
+                "required": [
+                  "entitlement_stale_ms"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "description": "FIX.CONFIG-BOUNDS (task-395): when lookup_retry_max holds a number, config.bounds holds its min, max and on_invalid.",
+          "if": {
+            "required": [
+              "lookup_retry_max"
+            ],
+            "properties": {
+              "lookup_retry_max": {
+                "type": "integer"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "bounds"
+            ],
+            "properties": {
+              "bounds": {
+                "required": [
+                  "lookup_retry_max"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "description": "FIX.CONFIG-BOUNDS (task-395): when lookup_stale_ms holds a number, config.bounds holds its min, max and on_invalid.",
+          "if": {
+            "required": [
+              "lookup_stale_ms"
+            ],
+            "properties": {
+              "lookup_stale_ms": {
+                "type": "integer"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "bounds"
+            ],
+            "properties": {
+              "bounds": {
+                "required": [
+                  "lookup_stale_ms"
+                ]
+              }
+            }
+          }
+        }
+      ]
     },
     "sharing": {
       "type": "object",

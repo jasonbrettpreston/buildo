@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:49:08.539Z file_sha256=2f0ae41142c658058a9b51fe7a048dc6a0973fe5e5c9f9f8ade72b95e1776690 prompt_sha256=97cec5f0cc3db90dedc91578436c4b653adad6217538ebf7afca56db8d7123c4
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §5.1 "You MUST always import typed factories from `src/tests/factories.ts`" — mobile/__tests__/sliceConfig.test.ts:8 "const slice = (config: Record<string, unknown>, bounds?: Record<string, unknown>): SliceNumbers => ({ config, bounds } as SliceNumbers);" — the new test fabricates its slice fixtures inline and force-casts them with `as SliceNumbers`, importing no typed factory — move the builder into src/tests/factories.ts as a typed `makeSurfaceSlice` and import it here.
+
+BUG severity=HIGH — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`)" — src/tests/fix-tune.logic.test.ts:65 "const sl = (config: Record<string, unknown>) => ({ config, bounds: { k: { min: 0, max: 1e9, on_invalid: 'fail' }, continue_wait_ms: { min: 0, max: 1e9, on_invalid: 'fail' } } });" — an existing test is edited to hand-build bounds literals inline, and the same pattern is added at src/tests/surfaces/surface-conformance.logic.test.ts "const b = { debounce_ms: { min: 0, max: 2000, on_invalid: 'clamp' } };" — both must use the typed factory instead.
+
+BUG severity=HIGH — §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — mobile/__tests__/sliceConfig.test.ts:1 "import { sliceNumber, type SliceNumbers } from '@/lib/sliceConfig';" — the file tests a pure derivation but its name carries no `.logic` segment, so it matches no row of the mandated pattern table — rename to mobile/__tests__/sliceConfig.logic.test.ts.
+
+BUG severity=HIGH — §5.5 "a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity" — mobile/src/constants/parcelSearch.ts:14 deleted line "-export const SEARCH_DEBOUNCE_MS = 400;" (its fence comment read "Ground truth: the pre-existing literal in this screen (Spec 100 fold #5)") — this diff adds a schema constraint (bounds in surface.schema.json allOf), a derivation (sliceNumber clamp/fail) and generated artifacts (mobile/src/generated/surfaces/*.json), yet no `*.regression.test.ts` fence is added for the retired constant or the fixed values — add a regression test pinning debounce_ms 400 / min_query_len 3 through the bounds reader.
+
+DEFER severity=MED — §5.2 "`*.ui.test.tsx` | React component rendering, interactions | Any new/changed component" — mobile/src/components/surfaces/SearchBinding.tsx:36 "export const SEARCH_MIN_QUERY_LEN = sliceNumber(SEARCH_SLICE, 'min_query_len');" — a changed `.tsx` component gets no `*.ui.test.tsx` anywhere in the material — add SearchBinding.ui.test.tsx covering the derived constants (in range, clamp, missing bounds) or record why this module renders nothing.
+
+DEFER severity=MED — §5.3 "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code." — mobile/src/lib/sliceConfig.ts:8 "export type SliceBound = { min: number; max: number; on_invalid: string };" — the reader, the generator refusal and the schema rule all land in the same diff as their tests, so the red-then-green order cannot be seen — attach the failing-run output for the sliceConfig derivation to the card.
+
+DEFER severity=LOW — §5.5 "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — mobile/src/generated/surfaces/mobile_parcel_search.json:11 "  \"bounds\": {" — the regenerated slice and its new bounds block are committed, but no regenerate-and-diff assertion covering `bounds` is visible in this material — confirm the existing drift guard fails on a hand-edited bounds block, or extend it.
+
+MET — §5.2 — src/tests/surfaces/surface-conformance.logic.test.ts:956 — the schema rule and generator refusal are proved in a `.logic.test.ts` with planted-defect unhappy paths.
+MET — §5.2 — src/tests/fix-tune.logic.test.ts:58 — the phone tunables reader behaviour stays pinned in a `.logic.test.ts`.
+MET — §5.4 — scripts/surfaces/_schema/surface.schema.json:2686 — bounds live in the descriptor schema, no DB state is set up, so no `scripts/seed-[scenario].js` is implicated.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 4
+
+---
+⏱  45579ms (45.6s)
+📊 Tokens — total: 35706, input: 26455, output: 9251, reasoning: 8149

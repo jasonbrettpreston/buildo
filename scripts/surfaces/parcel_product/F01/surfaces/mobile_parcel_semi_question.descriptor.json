@@ -277,7 +277,7 @@
   },
   "config": {
     "answer": "logic_variables",
-    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; like debounce_ms it is declared, not yet a registered logic variable with bounds).",
+    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; FIX.CONFIG-BOUNDS (task-395): it carries its bounds and failure behaviour in config.bounds, read from the slice through the one reader).",
     "evidence": [
       "migrations/320_parcel_lot_form_view.sql",
       "migrations/323_semi_o4_zone_and_wall_asks.sql",
@@ -323,7 +323,15 @@
       }
     ],
     "retired": [],
-    "continue_wait_ms": 60000
+    "continue_wait_ms": 60000,
+    "bounds": {
+      "continue_wait_ms": {
+        "min": 1000,
+        "max": 300000,
+        "on_invalid": "clamp",
+        "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
+      }
+    }
   },
   "sharing": {
     "answer": "shared",

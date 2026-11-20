@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:51:14.289Z file_sha256=9e6fa69f7a6c484519bc776b726c6afdb60d2990b1e7a7f2b48f4b1520d12f69 prompt_sha256=43cb370c5d9c13d1ea0849029366ff889e3269f5121517091b3ef919e8b2d0d7
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-cfgbounds/docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/in-out-compliance-mobile-99-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — scope per walk step 4 (no pasted clause names this behaviour) — "Let the grounder resolve them all as long as the result is compliant", MORNING-DECISIONS.md:1476 (quoted only inside the diff) — `scripts/surfaces/emit-mobile-surfaces.mjs:31` "+export function configBoundsProblems(config, bounds) {" — the bounds machinery (schema `config.bounds`, `configBoundsProblems`, `sliceNumber` bounds, census/descriptor edits, Spec 128 dated note) is authorized only by a ruling quoted inside the material itself and is named by no pasted Spec 99 clause, so whether the grounder's resolution is compliant cannot be judged here — paste MORNING-DECISIONS.md:1476 and the task-395 card as pasted context, or run this diff against the Spec 128 / FIX.CONFIG-BOUNDS list.
+DEFER severity=LOW — Spec 99 §7.2 "Every `queryClient.invalidateQueries` call MUST be paired with" and pasted §9.21 "§7.2 (`Sentry.addBreadcrumb({category:'query'})` paired with `invalidateQueries`) has zero implementation evidence at HEAD" — NONE (no `invalidateQueries` site appears anywhere in the diff) — the pairing stays unimplemented and this surface-config diff neither adds nor removes a site, so the mandate remains unmet at HEAD — keep the §9.21 `it.skip` pendingReason and wire the breadcrumb at the first site that lands, not by widening this change.
+REJECT — §10 "Authorized amendment process: any change to §3 (Field Ownership Matrix), §4 (Bridge Patterns), or §5 (Routing Authority Rules) requires a WF1 amendment with adversarial review" — accused of amending a governing policy without the WF1 adversarial gate — the pasted gate reaches only Spec 99 §3/§4/§5; the added note rewrites Spec 128 Rule 3 and does not touch Spec 99 §3, §4 or §5, so the gate does not apply.
+REJECT — §10 Out-of-Scope Files — accused of editing out-of-scope files — none of the listed paths (`mobile/src/store/*.ts`, `mobile/app/**/_layout.tsx`, `mobile/app/(onboarding)/*.tsx`, `mobile/src/hooks/useUserProfile.ts`, `mobile/src/lib/debug/stateDebug.ts`) has a hunk in this diff.
+REJECT — §7.6 "`email`, `phone_number`, `displayName`, etc. are NEVER passed to `track()`" — accused of widening the analytics payload — the diff adds no `track(` call; the new slice keys are `min`, `max`, `on_invalid`, `why`.
+MET — §10 "`mobile/src/lib/debug/stateDebug.ts` (renamed from `loopDetector.ts` in §9.5) — modify only via §9.5b structured-snapshot followup" — no hunk under `mobile/src/lib/debug/` — file untouched.
+MET — §10 "All `mobile/src/store/*.ts` — modified in §9.3 / §9.5 followups, not here" — no hunk under `mobile/src/store/` — untouched.
+MET — §10 "`mobile/src/hooks/useUserProfile.ts` — modified in §9.1 / §9.2 / §9.4" — "diff --git a/mobile/src/hooks/useParcelLookup.ts b/mobile/src/hooks/useParcelLookup.ts" is the only hooks hunk — useUserProfile.ts untouched.
+MET — §8.6 "parse the Zod object keys from `mobile/src/lib/userProfile.schema.ts` and the §3.1 markdown table, asserting setEqual" — no hunk touches `mobile/src/lib/userProfile.schema.ts` or §3.1 — the drift check stays satisfiable.
+MET — §7.1 "In production builds (`!__DEV__`), the hub is a no-op stub (zero overhead)" — "diff --git a/mobile/src/lib/sliceConfig.ts" is the only `mobile/src/lib/` module changed — stateDebug production path untouched.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+
+---
+⏱  51844ms (51.8s)
+📊 Tokens — total: 43732, input: 33494, output: 10238, reasoning: 9292

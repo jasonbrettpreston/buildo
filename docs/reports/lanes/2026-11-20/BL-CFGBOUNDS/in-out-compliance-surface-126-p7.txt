@@ -1,0 +1,1176 @@
+LIST surface-126 sha256:17a6ee344dabbdeaf81cf640190350cd456a198349ea754e5941715187e98aec material sha256:708a3e0c2e1f622dea9a0bdbf248aedce3fc00c8ac7734a1affc7457e8929125 part 7 of 9
+RULE LIST surface-126 (docs/specs/02-web-admin/126_maxbld_surface_standard.md, whole file), part 7 of 9. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+### 11b.2 The pipeline
+
+descriptor → content → generator → standard library component (through ONE binding per archetype per platform) → goldens → gate → locks → canaries.
+
+| Step | What it is | Ruled in |
+|---|---|---|
+| Descriptor | `surface.schema.json` gains `render.form` (a JSON Schema + uiSchema reference), `render.list.columns` and `render.wizard.steps` by one Spec 128 §4 escalation; the validator, types and registry regenerate. `UNRESEARCHED` fails the gate | Spec 128 §4; queue MF-42 |
+| Content | every user-visible string comes from a content file; library default strings (e.g. "No records") are overridden from content | §11a.1 `content`; FE-18 |
+| Generator | descriptor + content → the binding's input; regenerated, never hand-edited | FE-02 |
+| Binding | one per archetype per platform. A value binds only through the closed binding set (§11a.1) plus `contract`: a field of a declared CONTRACT descriptor's response projection | FE-18, FE-27, FE-32 |
+| Goldens | one props golden per reachable state per declared target at `src/tests/fixtures/surfaces/<surface_id>/<state>.<target>.json`, each `covers` a state; one render smoke per archetype per platform (web `renderToStaticMarkup` in root vitest; mobile jest-expo). Every declared state (error, unauthorized, offline, rate_limited) maps to a library state component. REPORT goldens are unchanged | FE-31 |
+| Gate | `surface-validate.mjs --check` gains the generic arms SV-DESC, SV-SCREEN, SV-SBIND; the REPORT arms and the success line are unchanged | FE-13 dated note 2026-11-09 |
+| Locks | conformance (FE-31), the `contract` binding kind (FE-32), generated-only incl. the vendored manifest (FE-02), no maths in bindings (FE-05), parity keyed by surface (FE-07) | Spec 135 |
+| Canaries | one planted defect per archetype in use, incl. a planted wrapper component; the arms print "examined N" | FE-31 |
+
+A converted-surfaces manifest has two-direction totality against the MaxBLD-scope descriptors marked converted; an empty manifest is a finding.
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): as ruled (P42-D1 a, D2 a, D5 a, D8): (1) `render.form` is a contract schema reference plus a closed field list, and the binding GENERATES the library uiSchema (no uiSchema file); (2) `render.wizard.steps` is deferred (no consumer); (3) the manifest is `scripts/surfaces/_schema/converted-surfaces.json`; an empty `converted` list is a finding except while `waits` names an open queue row (checked by the FE-31 lock); (4) the parked and report lists are declared data in that manifest, never derived; (5) "one render smoke per archetype per platform" is its own row, Spec 135 FE-33 (MF-37 web, MF-35 mobile). (6) `status: "generated"` also covers a surface converted in place to be rendered from descriptors (the schema's description reads "from its first commit"; the schema and the generated registry are unchanged).
+
+> Dated note 2026-11-10 (the binding standard; McFrontend MF-40 plan delta 1, option C, also unblocks MF-35; M-246, prior text kept; operator, verbatim: "y recommendation: C, with the four trims. approved"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-10: the shared binding standard (MF-40 plan delta 1, also unblocks MF-35)"; plan `~/Buildo-scratch/mcfrontend/MF-40/plan.delta-1.md` §3 with the §8 folds): one shared standard for binding array data and error details, built once before the MF-35 and MF-40 code. (1) **Contract paths (extends FE-32, same `contract` kind).** A ref is `<contract_id>.<seg>(.<seg>)*`: a name segment is the wire key as sent (letters, digits and `_`, not starting with a digit, so camelCase and a leading underscore such as `_debug` are kept; never mapped to snake case; one home, the response) and must be on that CONTRACT's `inputs.field_whitelist`; a numeric segment is an item index (`0` or a number without a leading zero; `01` is refused) and may only follow a name. The two-part form `<contract_id>.<field>` is unchanged. The whitelist is flat, so a path is checked by name only (accepted and stated). (2) **Error details.** The second segment `errors` is reserved: `<contract_id>.errors.<class>.<field>`, the class one of the contract's `errors.classes[]` and the field in that class's new optional `fields` list; the contract row says where each field comes from (for example the `Retry-After` header, in seconds). A field whitelist naming `errors` is an SV-DESC finding. (3) **Run-time select options.** A FORM select may carry `options_from {items, value, label}` (a contract path to an array and two item fields on the whitelist) in place of a static `enum`; the static-enum value rule `[a-z0-9_]+` stays; the option labels are data shown as sent, like LIST cells; the server still validates the value. (4) **The generic LIST.** `render.list` gains `id_field` (required by SV-DESC for a converted web LIST with columns), optional `rows` (a contract path to the row array; absent means the response is the rows, as for media), a column `display: "image"` with an `alt_field` (no sort), a column `values` list for `display: "enum"`, and `row_actions[]` of kind `delete`, `edit` or `toggle_active`, each with a content-key `label`. Keys are derived by convention from the surface id and the action kind (`<id>.col.actions`, `<id>.<kind>.title`, `<id>.<kind>.close`, `<id>.preview.unavailable`); boolean and enum cells show `<label>.option.<value>`; only `delete` is red; `delete` and `edit` open the Modal, `toggle_active` opens none. The default sort is the first column with a `sort_field` that is not an image, ascending; a LIST with no such column starts unsorted (for `admin_media` this is `kind`, the same column as before). A boolean or enum cell whose value is not a declared option throws at render and takes down the list, like a missing content key, so a column `values` list must track the DB enum; an image column without `alt_field` throws (SV-DESC already requires it on a converted descriptor). `admin_media` now declares its preview as the first column (image, alt `alt`), `id_field: asset_id` and one delete action, and its 7 goldens regenerate with identical props (fingerprint re-stamp only; evidence `docs/reports/red-evidence/MF-40/binding-standard-restamp-fingerprint-only.txt`). (5) **Component names** keep one home, `bindings.json mapping.<platform>.<archetype>` (D-23); the web bindings keep plain JSX and their names are unchanged by this note; the mobile table shape is MF-35's lock edit. (6) The golden builder covers every surface of the converted manifest (`src/tests/surfaces/surface-goldens.ts`). The descriptor schema grows by this ruling through the Spec 128 §4 route (Spec 135 FE-31 note (2)); locks: FE-31 (C-6 plant), FE-32 (path cases), with red evidence `docs/reports/red-evidence/MF-40/binding-standard-red.txt`.
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 OUTPUT panel fold, APPROVE WITH FOLDS, `~/Buildo-scratch/mcfrontend/MF-35/panel-out/output-panel.md`; operator, verbatim: "MF-35 a"; pre-approved D-27, `~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md`): MF-35 is the first mobile user of the note above. `bindings.json` `non_display_keys` is ONE list for every platform; MF-35 added the React Native prop names that carry no display text (edges, top, navigate, keyboardShouldPersistTaps, contentContainerStyle, style, maxWidth, paddingBottom, alignItems, returnKeyType, autoCapitalize, autoCorrect, placeholderTextColor, accessibilityRole, accessibilityState, checked, disabled, iconClassName, action, route, parcelId, onPress, onChangeText). A web golden that put display text under one of these names would not be judged by SV-SBIND, so a later web binding reuses a name only for non-display data. `ref_kinds` gains `derived` (P35-D14 a, a declared per-surface deviation with a closed name list, not a binding source). The promoted mobile binding entry `shared_mobile_surface_binding` is archetype SEARCH (operator "MF-35 a"), the archetype of the modules it owns.
+
+> Dated note 2026-11-10 (MF-54 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "MF-40 - yes an ad can run without an end date, b teh admin? c. yes d. doesnt matter", answer c; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator answers 2026-11-10: MF-40 OUTPUT panel questions"; plan `~/Buildo-scratch/mcfrontend/MF-54/plan.md`): the closed error-class list `errors.classes[].class` in `surface.schema.json` gains `409`, a conflict the client must reload for (for example a stale `updated_at`). The binding standard's error-detail segment (item (2) of the note above) may therefore name it: `<contract_id>.errors.409.<field>`, with the field on that contract's 409 row. `contract_admin_offer_upsert` (STALE_OFFER) and `contract_admin_advertiser_upsert` (ADVERTISER_ID_TAKEN) now declare their 409 in a 409 row; their 400 rows no longer carry it. The list stays closed: no other class is added, and an unknown class still fails the generated validator and SV-DESC. The growth is recorded through the Spec 128 §4 route as Spec 128 §6 ASK-24 (the ASK-20 precedent for 404). Types regenerated; the validator reads the schema at run time. Test `src/tests/surfaces/error-class-409.logic.test.ts` (not an FE lock), red evidence `docs/reports/red-evidence/MF-54/error-class-409-red.txt`.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-48 · McFrontend queue · lane E; operator, verbatim: "just to understand for the McFrontend and the web pages we are still using schema's and no code. except all recommendations"; record `~/Buildo-scratch/mcfrontend/MF-48/DECISIONS.md`, D-2 (a) and D-4 (a); plan `~/Buildo-scratch/mcfrontend/MF-48/plan.v2.md` §1): (1) **The mobile REPORT binding.** A new promoted census entry `binding_mobile_report` (platform_shared, archetype REPORT) owns `mobile/src/components/surfaces/ReportBinding.tsx` (pure: the v21 page view to a props tree, refs only) and `ReportPageHost.tsx` (the screen-local UI state and the bottom sheet). The ONE shared renderer `SurfaceRenderer.tsx` lists the archetypes SEARCH and REPORT and keeps its owner `shared_mobile_surface_binding`; the operator's "MF-35 a" (a promoted entry carries the one archetype of the modules it owns) is amended for the render half only. This one ruling also answers MF-51 D-B. `mapping.mobile.REPORT` is the renderer's closed REPORT list (a subset of the SEARCH parts, so the COMPONENTS table is unchanged) and `mapping.mobile.REPORT_HOST` the host's. (2) **The `part` ref kind.** `ref_kinds` gains `part`: `{"part": "<section id>.<part index>.<role>"}` names one part of the page view built by MF-57's landed core (`pageViewOf(buildPage(response), {target: "mobile"})`, `src/lib/surfaces/report/core.ts`), and an ad section's two shown texts are `{"part": "<id>.ad.value"}` and `{"part": "<id>.ad.disclosure"}`. The phone only looks the ref up; a missing section, index or a role mismatch throws. There is no second page resolver: the page is built and checked by the core, on the server in Stage B and by the golden capture in Stage A. The props goldens therefore hold structure only and every shown text stays a ref (FE-18, FE-32). They sit at `src/tests/fixtures/report-page/props/<state>.mobile.json`, beside MF-57's page goldens and outside the gate root until MF-57 D-D is ruled.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-53 · McFrontend queue · lane E; operator, verbatim: ""choose your lot" and "address issues" screens should be built now and we should only be using the new report obviosuly"; plan `~/Buildo-scratch/mcfrontend/MF-53/plan.v4.md` §3 and §8 items 1-2): the first mobile LIST binding, for S-071 `mobile_parcel_disambiguation_map` (`render.projection: map`). The props half is `mobile/src/components/surfaces/LotMapBinding.tsx` (owner: the new promoted entry `binding_mobile_list`, S-083); the render half stays the one shared renderer `SurfaceRenderer.tsx`, which now lists SEARCH, REPORT (MF-48) and LIST (the render-half amendment of MF-48 D-2 a). `bindings.json` `mapping.mobile.LIST` adds react-native-maps' own `MapView`, `Polygon` and `Marker` (configured by props; no hand-built part); react-native-maps (already a dependency, 1.20.1; §11b.4) is a C-8m part source, not a `libraries.mobile` entry, because two Buildo-app files import it (the MF-48 L-1 precedent). The map is hidden from screen readers (the lot cards are the accessible list) and never animates (`initialRegion` only). Client reshapes (GeoJSON to map coordinates, the start view to a region, lot letters, the reused dark map style) bind as `derived` names under the P35-D14 a deviation form. The map tiles are declared as a `deviations[]` entry on S-071 until MF-39 lands the `external_embed` file (operator item 3: "c ... fallback b").
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-76 · McFrontend queue · lane E; operator, verbatim: "Wow this looks great! 1. y 2. add not legal advice as well. 3. keep it 4. I think we need subscription boxes ..." (landing v9 rulings), "1 y 2 y 3 ? 4y 5 y 6 y 7 y - buildo doesnt exist - focus on MaxBLD 8. y" (D-1 a, D-2 a, D-5 a, D-6 a), "3 y" (D-3 a) and "you keep getting hung up on this... there will be more than 3 when we complete the increments we are building this for a future launch date - include all the build scenarios"; record `~/Buildo-scratch/mcfrontend/MF-46/DECISIONS.md` ("Operator round (2026-11-11 ~15:45)" and the rulings after it); plan `~/Buildo-scratch/mcfrontend/MF-46/plan.md` v3 (§3, §12, §13, §13a, §13b)). **The static page contract gains the landing kinds** (`scripts/surfaces/_schema/static-page.schema.json`, plan v3 §12 fold 18): `hero`, `figures`, `items` and `plans` join `prose` and `footer`, each with its closed roles. Still content keys only and never a number; a part may name `value`, a declared server read, whose content is then a template with one `{value}` slot filled on the server (Spec 128 §4 dated note of this date, FE-37); four roles carry no content key (`checked`: the report loading state's citywide lines; `demo`, `picture`, `scene`: the shared REPORT renderers); a link may carry one query parameter and one fragment. The binding (`src/components/surfaces/web/StaticBinding.tsx`) renders the new kinds with the same mapped Mantine parts and embeds the shared `ReportView`, its `Picture` and `ReportPage` by exact name and module (named exception of the FE-31 C-8 lock and of the MF-44 component fence; Spec 126 §11b.1 "REPORT keeps the landed renderer", FE-07). Goldens: `src/tests/fixtures/surfaces/web_landing/{static,degraded}.web.json`.
+
+
+### 11b.3 The pages (card §1.1, §1.2)
+
+| Descriptor | Archetype | Disposition | Queue |
+|---|---|---|---|
+| `mobile_parcel_detail` | REPORT | web: the landed renderer on a web route; mobile: a REPORT binding onto mobile library primitives | MF-44, MF-48 |
+| `overlay_sponsor_slot` | SLOT | through MF-20 | MF-20 |
+| `mobile_parcel_search`, `mobile_parcel_disambiguation_map` | SEARCH, LIST | mobile on the library; the `web` target is added later | MF-35, MF-44 |
+| `admin_media` (new) + its upload FORM | LIST, FORM | upload through `@mantine/dropzone` (dated note 2026-11-09, MF-37, Wave 1 decision batch item 3: not installed; the upload uses RJSF's built-in file input) | MF-37 |
+| `admin_placements` | FORM | on the library | MF-40 |
+| `admin_surface_registry`, `admin_drift_status` (then orphan, fan-out, role matrix) | LIST, DASHBOARD | registry and drift first | MF-30 |
+| `web_landing` | STATIC | the maxbld.ca landing, from content (D-9) | MF-46 |
+| `web_login` | existing, shared | existing literals exempt by listed path; new MaxBLD strings from content; on the MaxBLD host the persona picker is hidden (Spec 116 N4) and the post-login target is the MaxBLD search page, never `/dashboard` | MF-46 |
+| terms | FORM field | a checkbox in the sign-up form writing `tos_accepted_at` only, never `onboarding_complete` (D-10) | MF-46 |
+| `web_subscribe*` | hosted | Stripe-hosted Checkout and Customer Portal for `parcel_tool` | MF-47 |
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): measured at `ffb6b0610`, MF-20 is DONE (MF-20@7b152d7e1) and rendered the ad slots through the REPORT path, while the `overlay_sponsor_slot` descriptor stays `status: exists`. The converted manifest therefore lists it under `parked`, not under a DONE row, until a row converts it; operator confirmation owed (MF-42 hand-back). The manifest's parked list is therefore the eight non-REPORT surfaces of the list below plus `overlay_sponsor_slot`; `admin_ledger_visualiser`, parked below, is a REPORT archetype and sits in the manifest's `report` list (REPORT archetypes only), so the gate still counts 9 parked with different members.
+
+> Dated note 2026-11-09 (MF-42, push 15 stacking; M-246, prior text kept; operator, verbatim: "yes"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator answers 2026-11-09 (push 14/15 items)"): the "operator confirmation owed (MF-42 hand-back)" above is answered: the sponsor slot and the report ad slot are one slot. `overlay_sponsor_slot` stays parked. `mobile/src/components/parcel/SponsorSlot.tsx` (rendered at `mobile/app/(app)/parcel-tool/[parcelId].tsx:227`) is retired when the mobile parcel report screen converts to the report renderer, and the MF-20 ad slot replaces it there. No new row, no code.
+
+- **Parked (9, "left out, not faked"):** `mobile_tracked_lots`, `mobile_parcel_account`, `shell_parcel_tool_stack` (move with MF-49, convert on touch), `admin_parcel_cost`, `admin_advertiser_accounts`, `advertiser_self_metrics`, `admin_export_audit`, `admin_run_ledger`, `admin_ledger_visualiser`.
+- **OUT (fences unchanged):** scope D (§2.0; Spec 128 R-03); Buildo's onboarding, auth, paywall, tab shells and settings; the anonymous teaser, advertiser self-serve, PDF send, `usage_events`, `app_outputs`.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-44 · McFrontend queue · lane E; operator, verbatim: "Build Mf-44 on synthetic goldens" and "01-a 0-2 b as long as they are complaint"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md` (bottom) and `~/Buildo-scratch/mcfrontend/MF-44/DECISIONS.md`): the `web` target of `mobile_parcel_search` is added by MF-44 through the one web SEARCH binding (`src/components/surfaces/web/SearchBinding.tsx`, owner `binding_web_search`, the §11b.5 first-use cost), on the installed Mantine parts. W4/W5 web route `/parcel-tool` (the app's route name, §11b.7 A2), W6 `/parcel-tool/<lot>` (A4), under `src/app/(maxbld)/parcel-tool/` with its own layout, error and not-found pages; on the existing host, no root-layout move, no middleware change. W5 on the web is the inline address list of the search's ambiguous state; the map page stays MF-53. Until the live switch (`MAXBLD_WEB_LIVE` in `src/lib/surfaces/maxbld-web.ts`, flipped when MB-44 lands), the web search makes no lookup request (no report is charged) and the report route answers not found after the sign-in and plan check; `mobile_parcel_detail` gains its `web` target with the live switch. Locks: `src/tests/surfaces/search-parity.golden.test.ts`, `src/tests/surfaces/search-web-binding.ui.test.tsx`, `src/tests/maxbld-web-pages.logic.test.ts`.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-45 · McFrontend queue · lane E; operator, verbatim: "a" (D-1), "all five a" (D-2..D-6) and "y" (the MB-44 wait dropped, build starts); record `~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md` and `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-11 MF-45: operator \"y\""; plan `~/Buildo-scratch/mcfrontend/MF-45/plan.md` with its section 12 folds): the OUT fence is lifted for `usage_events` for the report meter only (D-1 a): signed-in rows only, one select-own policy, no `anon` insert, one event in use (`property_view`). Every other section 7 event, the `anon` offer-impression insert (MF-61), the anonymous teaser, advertiser self-serve, PDF send and `app_outputs` stay OUT. The fence line above is unchanged.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-46 · McFrontend queue · lane E; operator, verbatim: "Teh web address will just be maxbld.ca - is that okay?", "5. yes and yes recommend", "1 y 2 y 3 ? 4y 5 y 6 y 7 y - buildo doesnt exist - focus on MaxBLD 8. y" and "3 y"; record `~/Buildo-scratch/mcfrontend/MF-46/DECISIONS.md` and `DECISIONS-v1.md`, `DECISIONS-v2.md`; plan `~/Buildo-scratch/mcfrontend/MF-46/plan.md` v3 with `plan.v1.md`): (1) **Host.** maxbld.ca (apex only) serves exactly the rows of the host table `src/lib/auth/host-policy.ts` (the "host allow-list" of §11b.1); `src/middleware.ts` runs the fence first, before dev mode and classification; every other path there, scope D included, is an empty 404, never a redirect; every other host refuses the internal prefix `/parcel-tool` (MF-44's pages are no longer reachable on the existing host) and is otherwise unchanged. Lock: `src/tests/host-policy.logic.test.ts`. (2) **`web_login`.** The MaxBLD sign-in, sign-up, reset and set-new-password screens are the shared `LoginForm` with an optional `variant` (strings from `scripts/surfaces/platform_shared/F16/surfaces/web_login.content.json`), one mode per route under `src/app/(maxbld)/parcel-tool/` (maxbld.ca `/login`, `/signup`, `/reset-password`, `/set-password`), every move between them a real link (§0b item 11); without the variant the Buildo screen is unchanged (D-7: no Buildo-side work). The post-login target on MaxBLD is the search page through the MaxBLD branch of `src/lib/auth/safe-redirect.ts`, never `/dashboard`. (3) **terms.** The row above ("a checkbox in the sign-up form") is read under DECISIONS-v1 D-2 (b): email sign-up has no session until the address is confirmed and Google sign-up never sees a form, so the one checkbox is a step once after the first MaxBLD sign-in (`/terms-accept`), the server stamps the time, writes only while `tos_accepted_at` is empty, never `onboarding_complete` (D-10 unchanged); the page gate sends an entitled user without a record there first. Lock: `src/tests/maxbld-auth.logic.test.ts`. (4) **`web_landing`** moves to MF-76 (D-1 a). (5) **STATIC on the web (§11b.2, §11b.5 first use).** One static page contract, `scripts/surfaces/_schema/static-page.schema.json` with its data `static-page.json` (the FE-34 precedent of closed section kinds and roles: `prose` and `footer` for MF-46; MF-76 adds the landing kinds), every part a content key, a number refused; the first web STATIC binding `src/components/surfaces/web/StaticBinding.tsx` (owner `binding_web_static`, installed Mantine parts only, links as Next `Link`); the plain pages `web_help`, `web_terms`, `web_privacy` and the MaxBLD error/not-found `web_maxbld_error` under `src/app/(maxbld)/parcel-tool/(static)/` (maxbld.ca `/help`, `/terms`, `/privacy`), public, footer Terms of Service · Privacy Policy · Help & Support with the short legal line. Help & Support shows no contact channel until the one admin support-inbox setting exists (ruled 2026-11-11 item 6; no setting on the tip: owed). Locks: `src/tests/surfaces/static-page.logic.test.ts`, `src/tests/surfaces/static-web-binding.ui.test.tsx`. The table above is unchanged.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-46 · McFrontend queue · lane E; plan v1 fold 4; record `~/Buildo-scratch/mcfrontend/MF-46/DECISIONS.md`; OUTPUT panel `~/Buildo-scratch/mcfrontend/MF-46/panel-out/`): item (1) of the note above reads: a refused maxbld.ca PAGE path is rewritten to `/parcel-tool/refused`, which calls `notFound()` (a 404 with the MaxBLD not-found text); an API path stays an empty 404; never a redirect. The Supabase allow-list entry is `https://maxbld.ca/auth/callback**` (GoTrue matches the whole URL); set-new-password needs a recovery entry within the link lifetime.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-76 · McFrontend queue · lane E; operator, verbatim: "Wow this looks great! 1. y 2. add not legal advice as well. 3. keep it 4. I think we need subscription boxes ..." (landing v9 rulings), "1 y 2 y 3 ? 4y 5 y 6 y 7 y - buildo doesnt exist - focus on MaxBLD 8. y" (D-1 a, D-2 a, D-5 a, D-6 a), "3 y" (D-3 a) and "you keep getting hung up on this... there will be more than 3 when we complete the increments we are building this for a future launch date - include all the build scenarios"; record `~/Buildo-scratch/mcfrontend/MF-46/DECISIONS.md` ("Operator round (2026-11-11 ~15:45)" and the rulings after it); plan `~/Buildo-scratch/mcfrontend/MF-46/plan.md` v3 (§3, §12, §13, §13a, §13b)). **`web_landing` is the MaxBLD landing (W1), converted.** (1) The descriptor keeps its id, its ref S-005 and its parcel_product scope and is repointed to the internal page `src/app/(maxbld)/parcel-tool/(static)/home/page.tsx`; maxbld.ca `/` is a public host-table row rewritten there (`src/lib/auth/host-policy.ts`); buildo.com `/` is unchanged. (2) `src/app/page.tsx` (the Buildo lead-gen page) is byte-identical and keeps its measured knowledge (the checks, the limitations, the divergence note) under its own scope-D descriptor `web_buildo_landing` (S-091, estate_other F92; plan v3 §12 fold 15). (3) The page is descriptor + content (`web_landing.content.json`) + the web STATIC binding with the landing kinds hero, figures, items and plans and the plain pages' footer; states `static` and `degraded` (no stored citywide row). (4) Its values are declared server reads (Spec 128 §4 dated note of this date; FE-37): the five citywide lines through MF-62's producer and its own templates (one content home), the scenario count and the hero list from `web_landing.scenarios.json` (every launch scenario type of McBylaws increments 1-6, each naming its increments-table row), the cost sources from `web_landing.cost-sources.json` (the named sources of Spec 88 §3), the trial and Basic allowances from migration 303. (5) The processing demo is the shared REPORT loading state (`ReportView` over a loading view of the citywide group, MF-62 pacing, Skip and View report links to `/#sample`) and the sample is the shared `ReportPage` over one committed synthetic tree (`web_landing.sample.json`, rebuilt by `scripts/surfaces/report-page-capture.ts`), in a named, keyboard-reachable region that fades in by opacity when the demo ends; both embedded in the binding by exact name and module (a named exception of the FE-31 C-8 lock). (6) Not shown until their sources exist (no typed value, no setting created): the plan prices and the post-trial line (MF-47's Stripe price reader, D-3 a), the trial length (MF-47 `parcel_tool_trial_months`), the Pro allowance (MF-45), the process scene image (a media-library asset; the operator is choosing the mock) and the report pictures (the image URL signer). Locks: `src/tests/surfaces/web-landing.logic.test.ts`, `src/tests/surfaces/web-landing.ui.test.tsx`, `src/tests/host-policy.logic.test.ts`. The launch list (plan v3 §7) is unchanged and is not a build gate.
+
+> Dated note 2026-11-12 (M-246, prior text kept; MF-46 follow-up, Help & Support contact; operator, verbatim: "All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable. Ensure the least amount of code and use schema's" (2026-11-12); record `~/Buildo-scratch/mcfrontend/MF-46/DECISIONS-v1.md` D-6 (a) and `plan.v1.md` fold 8; queue MF-35 note P35-D18 a): (1) **the inbox setting.** The support inbox is the one logic variable `maxbld_support_inbox` (migration 314, a JSONB string seeded empty, the migration 219 precedent; written, applied by the operator's DB job). The address is never typed into a page, a content file, a spec or a test. `src/lib/surfaces/maxbld-support.ts` `readSupportInbox` reads it per request; unset, not a plain address, or a failed read gives no value (logged), never a 500. (2) **the mailto role.** `static-page.schema.json` gains the `prose` role `mailto`: its `content` is the visible label (also the mail subject), its `topic` one of the closed list general, address_match, lot_match, billing, enterprise, and its `value` the declared server read `support_inbox` (FE-37), never an href in the data. `StaticBinding.tsx` renders it as a real link (a Mantine Button as `a`, `mailto:<inbox>?subject=<encoded label>`, `data-topic`). A part whose value is absent is left out by the one value rule `keepValued` (`maxbld-static.ts`, MF-76's rule, now shared with the landing). `web_help` lists one mailto part per topic; each label is a content key in the goldens. (3) **the prefill.** The topic, query and lot travel in the URL fragment (`/help#topic=address_match&q=...`), never a query string; the island `help/HelpPrefill.tsx` turns CR, LF and every control character into spaces, caps each value, URI-encodes it and adds it as the body of the fragment topic's link only; nothing is written as HTML. (4) **Report incorrect address match** (P35-D18 a): `mobile_parcel_search` state `ambiguous` gains the content key `list.report` and the action `open_help {topic: address_match, q: {derived: input}}` on both targets (FE-07 parity): the app leaves for `MAXBLD_HELP_URL` (`mobile/src/lib/maxbldHelp.ts`, `Linking.openURL`; pinned equal to `MAXBLD_ORIGIN` + `/help` because the app cannot import `host-policy.ts`), the web renders a real link to `/help#topic=address_match&q=...`. The map page's "Report incorrect lot match" (MF-53, topic lot_match with the parcel) is not on the page yet and is not added here.
+
+> Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · C4, as verified in docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md section C4 (task-377); operator, verbatim, 2026-11-11: "Let's make those changes . 1-12 yes" (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1016), to the consolidated B list whose item B10 reads "Help, Terms and Privacy open in an in-app browser sheet with Done" (~/Buildo-scratch/mcfrontend/small-pages-v8/DECISIONS.md:82); that "1-12 yes" covers B10 is the record of that list in open-questions.md, which is the orchestrator's summary of it, and is not a separate ruling): the sentence of the 2026-11-12 MF-46 follow-up note above, item (4), that the app leaves for `MAXBLD_HELP_URL` through `Linking.openURL`, describes the code of 2026-11-12 and does not record an operator choice of that opener. The built app opens Help in the in-app browser sheet (`mobile/src/lib/maxbldHelp.ts:24`, `openBrowserAsync`). Residuals, not ruled: an Android Custom Tab has no Done button; a failed open is only logged (`maxbldHelp.ts:26-28`) and shows the person nothing. Not checked: whether the operator saw the sheet frames before "1-12 yes" (VERIFY.md C4.5).
+
+
+### 11b.4 The libraries
+
+Operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs" (record "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9").
+
+| Platform | Library | Ruled by |
+|---|---|---|
+| Web and admin | Mantine 9 + `@rjsf/mantine` (forms from JSON Schema + uiSchema, AJV 8) + `mantine-datatable` (+ `@mantine/dates`, `@mantine/carousel`, `@mantine/dropzone`; dated note 2026-11-09, MF-37, Wave 1 decision batch item 3: `@mantine/dropzone` not installed, the upload uses RJSF's built-in file input); Mantine CSS in `@layer mantine` beside Tailwind 4 (dated note 2026-11-09, MF-37; operator, verbatim: "a, 1-3 approved"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-37 blocker and owed items", item (a): the web library is Mantine 8.3 (`@mantine/core`, `hooks`, `dates` 8.3.18; `mantine-datatable` 8.3.13; `@rjsf/mantine` 6.11.1 unchanged), amending D-2's "Mantine 9", because Next 15.5.15 bundles its own React for the app router (`next/dist/compiled/react` 19.2.0-canary-0bdb9206-20250818), which does not export `useEffectEvent` or `Activity`; Mantine 9.8.0 imports both, so `next build` failed at compile (the MF-37 provider spike, `~/Buildo-scratch/mcfrontend/MF-37/output-panel/provider-spike.txt`)) | D-2; Spec 33 dated note 2026-11-09 |
+| Mobile | React Native Reusables per Spec 90 §6. The CLI output is vendored unmodified in `mobile/src/vendor/rnr/` under a closed, protected manifest that records the CLI version; an added or edited file fails (FE-02) | D-3; Spec 90 §6 dated note 2026-11-09 |
+| Auth | the existing sign-in, shared and declared | §11b.1 |
+| Subscription | Stripe-hosted Checkout and Customer Portal | D-0 (card §1.2); domain D-13 |
+
+The library theme is generated from the brand token source (Spec 117 §7 dated note 2026-11-09). The libraries come in under the named freeze lift (D-1).
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-35 · McFrontend queue · lane MF-35 build; P35-D8 a and P35-D9; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; batch `~/Buildo-scratch/mcfrontend/PROGRAMME/BATCH-W1-20261109.md` :102, :106; plan `~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md` §3): the vendored set in `mobile/src/vendor/rnr/` is the CLI output plus the documented `cn` helper. The CLI checks only that a `cn` helper exists; it is not a registry item. `lib/utils.ts` is copied verbatim from the Reusables manual-install page and listed in the manifest with `source: "docs"` and its sha256; it is never edited. The CLI pin does not pin the output (`@react-native-reusables/cli@0.7.1` runs `shadcn@latest`), so the manifest (`scripts/surfaces/_schema/vendor-rnr.manifest.json`) also records the resolved `shadcn_version` and each registry JSON's sha256; a re-run that yields other bytes is a manifest change with its own panel.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-48 · McFrontend queue · lane E; operator, verbatim: "just to understand for the McFrontend and the web pages we are still using schema's and no code. except all recommendations"; record `~/Buildo-scratch/mcfrontend/MF-48/DECISIONS.md`, D-3 (a); plan `~/Buildo-scratch/mcfrontend/MF-48/plan.v2.md` §1, §2 L-1): the report's "Add lot size" sheet uses the app's existing bottom sheet `@gorhom/bottom-sheet` (already a dependency, `mobile/package.json`; Specs 91, 93 and 94; the sign-in sheet pattern), not a vendored Reusables part and not a centred modal. It is held by the screen host `mobile/src/components/surfaces/ReportPageHost.tsx`, never by the shared renderer, so the SEARCH screens never load it. The FE-31 C-8m lock carries a host list: the host's COMPONENTS table may take parts from `@gorhom/bottom-sheet` and the shared renderer, and any other package fails. `bindings.json` `libraries.mobile` is NOT extended: `libraries` names the MaxBLD-new packages, and `@gorhom/bottom-sheet` is imported today by seven Buildo-app files (sign-in, sign-up, profession, AccountLinkingSheet, LeadFilterSheet, SearchPermitsSheet, NotificationPermissionModal), each of which would become a C-2 finding (measured, `docs/reports/red-evidence/MF-48/`). This is a lane finding against the decision's cost line and waits for the operator's nod; listing it would mean one entry plus seven exemptions.
+
+
+### 11b.5 Per-archetype infrastructure on first use
+
+The first consumer of an archetype on a platform adds its binding entry, golden shape, one planted-defect case, one render smoke and its `frontend` path globs; nothing else. The web binding lands with MF-37 (the first web FORM and LIST), the mobile binding with MF-35. R-PACE-1 applies per archetype (Spec 127 §4.4). The decision mechanism is unchanged: Spec 128 §4 rulings, Spec 08 PLAN and OUTPUT panels per row, McBylaws owner review on gate code.
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/reports/generated/127-surface-registry.md b/docs/reports/generated/127-surface-registry.md
+index e57001ac9..39e181152 100644
+--- a/docs/reports/generated/127-surface-registry.md
++++ b/docs/reports/generated/127-surface-registry.md
+@@ -818 +818 @@ _No table is reached by this entry — every value it shows arrives through a co
+-| 16 | `config` | `none` | The SEARCH tunables debounce_ms and min_query_len are DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.) FIX.TUNE (task-378): three more phone tunables are declared here and read from the generated slice by mobile/src/hooks/useParcelLookup.ts: entitlement_stale_ms (0), lookup_retry_max (3) and lookup_stale_ms (60000); like debounce_ms they are declared, not yet registered logic variables with bounds. — `mobile/src/constants/parcelSearch.ts:19 — SEARCH_DEBOUNCE_MS, consumed at mobile/app/(app)/parcel-tool/index.tsx:72`, `mobile/src/constants/parcelSearch.ts:26 — SEARCH_MIN_QUERY_LEN; the server floor is src/app/api/parcels/lookup/types.ts:42`, `scripts/surfaces/_schema/surface.schema.json:2335,2348 — config.debounce_ms / config.min_query_len DO exist`, `docs/reference/logic-variables-registry.md — neither is a registered logic variable` |
++| 16 | `config` | `none` | The SEARCH tunables debounce_ms and min_query_len and the phone tunables entitlement_stale_ms, lookup_retry_max and lookup_stale_ms are DECLARED here with their measured values and read by the phone only from the generated slice, through the one reader (mobile/src/lib/sliceConfig.ts). FIX.CONFIG-BOUNDS (task-395): each carries its bounds and failure behaviour in config.bounds (Spec 128 Rule 3; operator, verbatim, 2026-11-20: "Let the grounder resolve them all as long as the result is compliant", MORNING-DECISIONS.md:1476; option (b): bounds in the surface schema, not a database row, because the phone reads only the slice). `answer` stays `none`: no admin logic-variable row is behind any of them. — `mobile/src/components/surfaces/SearchBinding.tsx:37 — SEARCH_DEBOUNCE_MS read from the slice through sliceNumber (bounds applied), consumed at mobile/app/(app)/parcel-tool/index.tsx:72`, `mobile/src/constants/parcelSearch.ts:21 — SEARCH_MIN_QUERY_LEN; the server range is src/app/api/parcels/lookup/types.ts:42`, `scripts/surfaces/_schema/surface.schema.json — config.bounds and the per-key rules (FIX.CONFIG-BOUNDS)`, `docs/reference/logic-variables-registry.md — none of the six is a registered logic variable` |
+@@ -980 +980 @@ ICONS. The shelf was specified with @expo/vector-icons Ionicons (compass / bookm
+-| 16 | `config` | `logic_variables` | The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; like debounce_ms it is declared, not yet a registered logic variable with bounds). — `migrations/320_parcel_lot_form_view.sql`, `migrations/323_semi_o4_zone_and_wall_asks.sql`, `scripts/seeds/logic_variables.json semi_doubt_enabled / semi_doubt_max_link_parcels / semi_doubt_min_shared_len_m`, `scripts/seeds/logic_variables.json semi_auto_max_shared_len_m / semi_detect_zone_classes / semi_ask_two_parcel_zone_classes`, `mobile/src/lib/semiQuestion.ts — SEMI_CONTINUE_WAIT_MS reads config.continue_wait_ms from the generated slice` |
++| 16 | `config` | `logic_variables` | The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; FIX.CONFIG-BOUNDS (task-395): it carries its bounds and failure behaviour in config.bounds, read from the slice through the one reader). — `migrations/320_parcel_lot_form_view.sql`, `migrations/323_semi_o4_zone_and_wall_asks.sql`, `scripts/seeds/logic_variables.json semi_doubt_enabled / semi_doubt_max_link_parcels / semi_doubt_min_shared_len_m`, `scripts/seeds/logic_variables.json semi_auto_max_shared_len_m / semi_detect_zone_classes / semi_ask_two_parcel_zone_classes`, `mobile/src/lib/semiQuestion.ts — SEMI_CONTINUE_WAIT_MS reads config.continue_wait_ms from the generated slice` |
+diff --git a/docs/specs/02-web-admin/128_surface_standard_policy.md b/docs/specs/02-web-admin/128_surface_standard_policy.md
+index 9367b6395..62e96be82 100644
+--- a/docs/specs/02-web-admin/128_surface_standard_policy.md
++++ b/docs/specs/02-web-admin/128_surface_standard_policy.md
+@@ -44,0 +45,2 @@ Thirteen rules, mirrored from Spec 124 §2 by `node scripts/violations/generate-
++> Dated note 2026-11-20 (M-246, prior text kept; FIX.CONFIG-BOUNDS · task-395 · lane BL-CFGBOUNDS; operator, verbatim: "Let the grounder resolve them all as long as the result is compliant", `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476`; resolved by the separate grounder, option (b)). **Rule 3 on a surface (the phone and the web page config).** The words "registered logic variable with bounds and an `on_invalid` posture" are met for a surface config number by declaring, per key, `config.bounds.<key>` = `min`, `max`, `on_invalid` (`fail` or `clamp`) in the surface descriptor under `scripts/surfaces/_schema/surface.schema.json`; the schema refuses a descriptor whose number has no entry (SV-DESC, the one validator `surface-validate` runs), the mobile generator refuses a value outside its bounds, and the phone reader `mobile/src/lib/sliceConfig.ts` applies them (fail throws by key name, clamp returns the nearest bound). Not a database row: the phone reads only its generated slice, so a registered variable would be a control with no effect. Values did not change. Not done here: the phone area factor (`10.7639`, `mobile/src/lib/leadDetailFormat.ts:15`, `mobile/src/lib/parcelCostFormat.ts:11`) still waits for a surface slice to carry it from the pinned seed row `parcels_sqm_to_sqft` (neither screen has a converted surface); it returns to the grounder.
++
+diff --git a/mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json b/mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json
+index c5fbd899d..2439145db 100644
+--- a/mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json
++++ b/mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json
+@@ -2 +2 @@
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 2e119c8ad7492541)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 0adc505660d13843)",
+@@ -1322 +1322 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+@@ -1635 +1635 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+@@ -1859 +1859 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+@@ -2032 +2032 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+@@ -2224 +2224 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+@@ -2415 +2415 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+@@ -2625 +2625 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+@@ -2953 +2953 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+@@ -3137 +3137 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+@@ -3439 +3439 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+@@ -3623 +3623 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json b/mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json
+index 078955371..7bc2d4da8 100644
+--- a/mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json
++++ b/mobile/__tests__/fixtures/surfaces/mobile_parcel_semi_question.goldens.json
+@@ -2 +2 @@
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha b88b6819a6238cd7)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 494728933290c3f1)",
+@@ -301 +301 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+@@ -598 +598 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+@@ -744 +744 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+@@ -850 +850 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+@@ -973 +973 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+@@ -1065 +1065 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+@@ -1181 +1181 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+@@ -1297 +1297 @@
+-          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++          "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+diff --git a/mobile/__tests__/parcelScreens.golden.test.ts b/mobile/__tests__/parcelScreens.golden.test.ts
+index e7b3d5af3..a938fe09b 100644
+--- a/mobile/__tests__/parcelScreens.golden.test.ts
++++ b/mobile/__tests__/parcelScreens.golden.test.ts
+@@ -14,2 +14,2 @@ import path from 'node:path';
+-import { DERIVED_NAMES, SEARCH_SLICE, searchProps, type PropsNode } from '@/components/surfaces/SearchBinding';
+-import { SEARCH_CANDIDATE_LIMIT, SEARCH_DEBOUNCE_MS, SEARCH_MIN_QUERY_LEN } from '@/constants/parcelSearch';
++import { DERIVED_NAMES, SEARCH_DEBOUNCE_MS, SEARCH_SLICE, searchProps, type PropsNode } from '@/components/surfaces/SearchBinding';
++import { SEARCH_CANDIDATE_LIMIT, SEARCH_MIN_QUERY_LEN } from '@/constants/parcelSearch';
+@@ -204,2 +204,2 @@ describe('one home for the config values (row 24, RG-14)', () => {
+-    expect(/export const SEARCH_DEBOUNCE_MS = SEARCH_SLICE\.config\.debounce_ms/.test(src)).toBe(true);
+-    expect(/export const SEARCH_MIN_QUERY_LEN = SEARCH_SLICE\.config\.min_query_len/.test(src)).toBe(true);
++    expect(/export const SEARCH_DEBOUNCE_MS = sliceNumber\(SEARCH_SLICE, 'debounce_ms'\)/.test(src)).toBe(true);
++    expect(/export const SEARCH_MIN_QUERY_LEN = sliceNumber\(SEARCH_SLICE, 'min_query_len'\)/.test(src)).toBe(true);
+diff --git a/mobile/__tests__/parcelSearchMatch.test.ts b/mobile/__tests__/parcelSearchMatch.test.ts
+index 2540d1f9d..14598c1d9 100644
+--- a/mobile/__tests__/parcelSearchMatch.test.ts
++++ b/mobile/__tests__/parcelSearchMatch.test.ts
+@@ -35 +34,0 @@ import {
+-  SEARCH_DEBOUNCE_MS,
+@@ -37,0 +37 @@ import {
++import searchSlice from '@/generated/surfaces/mobile_parcel_search.json';
+@@ -67 +67 @@ describe('the SEARCH archetype parameters match the descriptor', () => {
+-    expect(SEARCH_DEBOUNCE_MS).toBe(400);
++    expect(searchSlice.config.debounce_ms).toBe(400); // FIX.CONFIG-BOUNDS (task-395): the typed second copy is gone; the slice is the one home
+diff --git a/mobile/__tests__/sliceConfig.test.ts b/mobile/__tests__/sliceConfig.test.ts
+new file mode 100644
+index 000000000..d02ebc3f1
+--- /dev/null
++++ b/mobile/__tests__/sliceConfig.test.ts
+@@ -0,0 +1,38 @@
++/** @jest-environment node */
++// SPEC LINK: docs/specs/02-web-admin/128_surface_standard_policy.md Rule 3 (bounds and an on_invalid posture per tunable); docs/specs/02-web-admin/126_maxbld_surface_standard.md P4.
++//
++// FIX.CONFIG-BOUNDS (task-395): sliceNumber reads a number from a generated slice and applies the bounds the slice carries: in range, the value; out of range, the
++// stated failure behaviour (fail throws by key name, clamp returns the nearest bound); no bounds entry, or a value that is not a finite number, throws by key name.
++import { sliceNumber, type SliceNumbers } from '@/lib/sliceConfig';
++
++const slice = (config: Record<string, unknown>, bounds?: Record<string, unknown>): SliceNumbers => ({ config, bounds } as SliceNumbers);
++
++describe('sliceNumber applies the declared bounds', () => {
++  it('returns an in-range value, including both bounds', () => {
++    const b = { k: { min: 0, max: 10, on_invalid: 'clamp' } };
++    expect(sliceNumber(slice({ k: 4 }, b), 'k')).toBe(4);
++    expect(sliceNumber(slice({ k: 0 }, b), 'k')).toBe(0);
++    expect(sliceNumber(slice({ k: 10 }, b), 'k')).toBe(10);
++  });
++  it('clamp: an out-of-range value reads as the nearest bound', () => {
++    const b = { k: { min: 3, max: 10, on_invalid: 'clamp' } };
++    expect(sliceNumber(slice({ k: 99 }, b), 'k')).toBe(10);
++    expect(sliceNumber(slice({ k: -5 }, b), 'k')).toBe(3);
++  });
++  it('fail: an out-of-range value throws, naming the key', () => {
++    const b = { k: { min: 0, max: 0, on_invalid: 'fail' } };
++    expect(() => sliceNumber(slice({ k: 1 }, b), 'k')).toThrow(/"k"/);
++  });
++  it('a key with no bounds entry, a slice with no bounds, a missing key and a non-finite or non-number value throw by key name', () => {
++    const b = { k: { min: 0, max: 10, on_invalid: 'clamp' } };
++    expect(() => sliceNumber(slice({ k: 1 }, {}), 'k')).toThrow(/"k"/);
++    expect(() => sliceNumber(slice({ k: 1 }), 'k')).toThrow(/"k"/);
++    expect(() => sliceNumber(slice({}, b), 'k')).toThrow(/"k"/);
++    expect(() => sliceNumber(slice({ k: Number.NaN }, b), 'k')).toThrow(/"k"/);
++    expect(() => sliceNumber(slice({ k: '4' }, b), 'k')).toThrow(/"k"/);
++  });
++  it('a bounds entry with an unknown on_invalid or an inverted pair throws rather than guessing', () => {
++    expect(() => sliceNumber(slice({ k: 4 }, { k: { min: 0, max: 10, on_invalid: 'default' } }), 'k')).toThrow(/"k"/);
++    expect(() => sliceNumber(slice({ k: 4 }, { k: { min: 9, max: 1, on_invalid: 'clamp' } }), 'k')).toThrow(/"k"/);
++  });
++});
+diff --git a/mobile/src/components/surfaces/SearchBinding.tsx b/mobile/src/components/surfaces/SearchBinding.tsx
+index f3c70a327..e86f5b618 100644
+--- a/mobile/src/components/surfaces/SearchBinding.tsx
++++ b/mobile/src/components/surfaces/SearchBinding.tsx
+@@ -18,0 +19 @@ import slice from '@/generated/surfaces/mobile_parcel_search.json';
++import { sliceNumber, type SliceBound } from '@/lib/sliceConfig';
+@@ -31 +32 @@ import { reportsLeftShown } from '@/lib/parcelSearchCore';
+-export const SEARCH_SLICE: { surface: string; config: Record<string, number>; content: Record<string, string> } = slice;
++export const SEARCH_SLICE: { surface: string; config: Record<string, number>; bounds: Record<string, SliceBound>; content: Record<string, string> } = slice;
+@@ -35,3 +36,3 @@ export const SEARCH_SLICE: { surface: string; config: Record<string, number>; co
+-// The constants of the same names stay for the non-binding readers; parcelScreens.golden.test.ts pins them equal to the slice.
+-export const SEARCH_DEBOUNCE_MS = SEARCH_SLICE.config.debounce_ms;
+-export const SEARCH_MIN_QUERY_LEN = SEARCH_SLICE.config.min_query_len;
++// FIX.CONFIG-BOUNDS (task-395): both numbers go through sliceNumber, which applies the bounds the slice carries. SEARCH_MIN_QUERY_LEN keeps a same-named constant for the non-binding readers; parcelScreens.golden.test.ts pins it equal to the slice. The debounce has no second copy.
++export const SEARCH_DEBOUNCE_MS = sliceNumber(SEARCH_SLICE, 'debounce_ms');
++export const SEARCH_MIN_QUERY_LEN = sliceNumber(SEARCH_SLICE, 'min_query_len');
+diff --git a/mobile/src/constants/parcelSearch.ts b/mobile/src/constants/parcelSearch.ts
+index 65b2e7c33..85161cdf1 100644
+--- a/mobile/src/constants/parcelSearch.ts
++++ b/mobile/src/constants/parcelSearch.ts
+@@ -14,6 +14 @@
+-/**
+- * `config.debounce_ms` — how long typing pauses before a query fires.
+- * Ground truth: the pre-existing literal in this screen (Spec 100 fold #5) — exploratory typing
+- * must not burn the 60/min bucket. This constant REPLACES that literal; there is no other copy.
+- */
+-export const SEARCH_DEBOUNCE_MS = 400;
++// The debounce has no constant here: config.debounce_ms of the generated slice is its one home, read through the reader in SearchBinding.tsx (FIX.CONFIG-BOUNDS, task-395).
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_search.json b/mobile/src/generated/surfaces/mobile_parcel_search.json
+index 5ae845a81..724f010b0 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_search.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_search.json
+@@ -2 +2 @@
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha cbc048a5824cca0f)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 12a6e4117f61281b)",
+@@ -10,0 +11,32 @@
++  "bounds": {
++    "debounce_ms": {
++      "min": 0,
++      "max": 2000,
++      "on_invalid": "clamp",
++      "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it. 0 is the schema minimum it always had."
++    },
++    "min_query_len": {
++      "min": 3,
++      "max": 120,
++      "on_invalid": "clamp",
++      "why": "The server accepts a query of 3 to 120 characters (src/app/api/parcels/lookup/types.ts:42: min(3) and max(120)); the phone gate must not sit outside that range."
++    },
++    "entitlement_stale_ms": {
++      "min": 0,
++      "max": 3600000,
++      "on_invalid": "clamp",
++      "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
++    },
++    "lookup_retry_max": {
++      "min": 0,
++      "max": 5,
++      "on_invalid": "clamp",
++      "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
++    },
++    "lookup_stale_ms": {
++      "min": 0,
++      "max": 3600000,
++      "on_invalid": "clamp",
++      "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
++    }
++  },
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_semi_question.json b/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
+index 53f1902a2..96d6e659d 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
+@@ -2 +2 @@
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 48076a030fb80cb1)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 76404ae25f1126b3)",
+@@ -6,0 +7,8 @@
++  "bounds": {
++    "continue_wait_ms": {
++      "min": 1000,
++      "max": 300000,
++      "on_invalid": "clamp",
++      "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
++    }
++  },
+diff --git a/mobile/src/hooks/useParcelLookup.ts b/mobile/src/hooks/useParcelLookup.ts
+index 0ea96d1cb..342af672f 100644
+--- a/mobile/src/hooks/useParcelLookup.ts
++++ b/mobile/src/hooks/useParcelLookup.ts
+@@ -55,4 +55,4 @@ export async function fetchParcelLookup(
+-const LOOKUP_RETRY_MAX = sliceNumber(searchSlice.config, 'lookup_retry_max');
+-const LOOKUP_STALE_MS = sliceNumber(searchSlice.config, 'lookup_stale_ms');
+-const ENTITLEMENT_STALE_MS = sliceNumber(searchSlice.config, 'entitlement_stale_ms');
+-const LOOKUP_MIN_QUERY_LEN = sliceNumber(searchSlice.config, 'min_query_len');
++const LOOKUP_RETRY_MAX = sliceNumber(searchSlice, 'lookup_retry_max');
++const LOOKUP_STALE_MS = sliceNumber(searchSlice, 'lookup_stale_ms');
++const ENTITLEMENT_STALE_MS = sliceNumber(searchSlice, 'entitlement_stale_ms');
++const LOOKUP_MIN_QUERY_LEN = sliceNumber(searchSlice, 'min_query_len');
+diff --git a/mobile/src/lib/semiQuestion.ts b/mobile/src/lib/semiQuestion.ts
+index ec9aafc81..1eba6b691 100644
+--- a/mobile/src/lib/semiQuestion.ts
++++ b/mobile/src/lib/semiQuestion.ts
+@@ -18 +18 @@ import { reportRouteAfterAnswer, SEMI_ANSWERS, type SemiAnswer } from '@/lib/lot
+-export const SEMI_CONTINUE_WAIT_MS: number = sliceNumber(slice.config, 'continue_wait_ms');
++export const SEMI_CONTINUE_WAIT_MS: number = sliceNumber(slice, 'continue_wait_ms');
+diff --git a/mobile/src/lib/sliceConfig.ts b/mobile/src/lib/sliceConfig.ts
+index 87fa1fd94..052ffb148 100644
+--- a/mobile/src/lib/sliceConfig.ts
++++ b/mobile/src/lib/sliceConfig.ts
+@@ -1 +1 @@
+-// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md P4 (tunables are data), docs/specs/02-web-admin/128_surface_standard_policy.md Rule 3
++// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md P4 (tunables are data), docs/specs/02-web-admin/128_surface_standard_policy.md Rule 3 (bounds and an on_invalid posture)
+@@ -3,2 +3,4 @@
+-// FIX.TUNE (task-378): the one reader of a number the phone takes from a generated surface slice (scripts/surfaces/emit-mobile-surfaces.mjs). A key that is
+-// missing or not a finite number throws, naming the key: a silent undefined would reach a timer or a query option and fail later and far from the cause.
++// FIX.TUNE (task-378) and FIX.CONFIG-BOUNDS (task-395): the one reader of a number the phone takes from a generated surface slice (scripts/surfaces/emit-mobile-surfaces.mjs).
++// The slice carries each number's bounds beside it (`bounds.<key>` = min, max, on_invalid). The reader applies them: in range, the value; out of range, the stated failure
++// behaviour (fail throws, clamp returns the nearest bound). A key that is missing, not a finite number, without a bounds entry, or whose entry is malformed throws,
++// naming the key: a silent undefined would reach a timer or a query option and fail later and far from the cause.
+@@ -6,3 +8,8 @@
+-/** The number at `key` of a slice's config; throws by key name when it is absent, not a number, or not finite. */
+-export function sliceNumber(config: Readonly<Record<string, unknown>>, key: string): number {
+-  const v = config[key];
++/** One key's bounds as the slice carries them; on_invalid is checked here, so the generated JSON (a plain string) fits. */
++export type SliceBound = { min: number; max: number; on_invalid: string };
++/** The part of a generated slice the reader needs. */
++export type SliceNumbers = { readonly config: Readonly<Record<string, unknown>>; readonly bounds?: Readonly<Record<string, SliceBound>> };
++
++/** The number at `key` of a slice's config, held to the bounds the slice declares for it. */
++export function sliceNumber(slice: SliceNumbers, key: string): number {
++  const v = slice.config[key];
+@@ -10 +17,6 @@ export function sliceNumber(config: Readonly<Record<string, unknown>>, key: stri
+-  return v;
++  const b = slice.bounds?.[key];
++  if (b === undefined || typeof b.min !== 'number' || typeof b.max !== 'number' || !(b.min <= b.max)) throw new Error(`surface config "${key}" has no valid bounds (min <= max) in its slice`);
++  if (b.on_invalid !== 'fail' && b.on_invalid !== 'clamp') throw new Error(`surface config "${key}" has an unknown on_invalid "${String(b.on_invalid)}"`);
++  if (v >= b.min && v <= b.max) return v;
++  if (b.on_invalid === 'clamp') return Math.min(b.max, Math.max(b.min, v));
++  throw new Error(`surface config "${key}" is ${v}, outside its bounds ${b.min} to ${b.max} (on_invalid fail)`);
+diff --git a/scripts/surfaces/_schema/census/mobile-product.json b/scripts/surfaces/_schema/census/mobile-product.json
+index 29d5ea17d..7737b7b3e 100644
+--- a/scripts/surfaces/_schema/census/mobile-product.json
++++ b/scripts/surfaces/_schema/census/mobile-product.json
+@@ -7397 +7397 @@
+-      "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; like debounce_ms it is declared, not yet a registered logic variable with bounds).",
++      "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; FIX.CONFIG-BOUNDS (task-395): it carries its bounds and failure behaviour in config.bounds, read from the slice through the one reader).",
+@@ -7443 +7443,9 @@
+-      "continue_wait_ms": 60000
++      "continue_wait_ms": 60000,
++      "bounds": {
++        "continue_wait_ms": {
++          "min": 1000,
++          "max": 300000,
++          "on_invalid": "clamp",
++          "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
++        }
++      }
+@@ -7958 +7966 @@
+-      "why": "The SEARCH tunables debounce_ms and min_query_len are DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.) FIX.TUNE (task-378): three more phone tunables are declared here and read from the generated slice by mobile/src/hooks/useParcelLookup.ts: entitlement_stale_ms (0), lookup_retry_max (3) and lookup_stale_ms (60000); like debounce_ms they are declared, not yet registered logic variables with bounds.",
++      "why": "The SEARCH tunables debounce_ms and min_query_len and the phone tunables entitlement_stale_ms, lookup_retry_max and lookup_stale_ms are DECLARED here with their measured values and read by the phone only from the generated slice, through the one reader (mobile/src/lib/sliceConfig.ts). FIX.CONFIG-BOUNDS (task-395): each carries its bounds and failure behaviour in config.bounds (Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"Let the grounder resolve them all as long as the result is compliant\", MORNING-DECISIONS.md:1476; option (b): bounds in the surface schema, not a database row, because the phone reads only the slice). `answer` stays `none`: no admin logic-variable row is behind any of them.",
+@@ -7960,4 +7968,4 @@
+-        "mobile/src/constants/parcelSearch.ts:19 — SEARCH_DEBOUNCE_MS, consumed at mobile/app/(app)/parcel-tool/index.tsx:72",
+-        "mobile/src/constants/parcelSearch.ts:26 — SEARCH_MIN_QUERY_LEN; the server floor is src/app/api/parcels/lookup/types.ts:42",
+-        "scripts/surfaces/_schema/surface.schema.json:2335,2348 — config.debounce_ms / config.min_query_len DO exist",
+-        "docs/reference/logic-variables-registry.md — neither is a registered logic variable"
++        "mobile/src/components/surfaces/SearchBinding.tsx:37 — SEARCH_DEBOUNCE_MS read from the slice through sliceNumber (bounds applied), consumed at mobile/app/(app)/parcel-tool/index.tsx:72",
++        "mobile/src/constants/parcelSearch.ts:21 — SEARCH_MIN_QUERY_LEN; the server range is src/app/api/parcels/lookup/types.ts:42",
++        "scripts/surfaces/_schema/surface.schema.json — config.bounds and the per-key rules (FIX.CONFIG-BOUNDS)",
++        "docs/reference/logic-variables-registry.md — none of the six is a registered logic variable"
+@@ -7971 +7979,33 @@
+-      "lookup_stale_ms": 60000
++      "lookup_stale_ms": 60000,
++      "bounds": {
++        "debounce_ms": {
++          "min": 0,
++          "max": 2000,
++          "on_invalid": "clamp",
++          "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it. 0 is the schema minimum it always had."
++        },
++        "min_query_len": {
++          "min": 3,
++          "max": 120,
++          "on_invalid": "clamp",
++          "why": "The server accepts a query of 3 to 120 characters (src/app/api/parcels/lookup/types.ts:42: min(3) and max(120)); the phone gate must not sit outside that range."
++        },
++        "entitlement_stale_ms": {
++          "min": 0,
++          "max": 3600000,
++          "on_invalid": "clamp",
++          "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
++        },
++        "lookup_retry_max": {
++          "min": 0,
++          "max": 5,
++          "on_invalid": "clamp",
++          "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
++        },
++        "lookup_stale_ms": {
++          "min": 0,
++          "max": 3600000,
++          "on_invalid": "clamp",
++          "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
++        }
++      }
+@@ -14796 +14836,15 @@
+-      "min_query_len": 0
++      "min_query_len": 0,
++      "bounds": {
++        "debounce_ms": {
++          "min": 0,
++          "max": 0,
++          "on_invalid": "fail",
++          "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
++        },
++        "min_query_len": {
++          "min": 0,
++          "max": 0,
++          "on_invalid": "fail",
++          "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
++        }
++      }
+@@ -15026 +15080,15 @@
+-      "min_query_len": 0
++      "min_query_len": 0,
++      "bounds": {
++        "debounce_ms": {
++          "min": 0,
++          "max": 0,
++          "on_invalid": "fail",
++          "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
++        },
++        "min_query_len": {
++          "min": 0,
++          "max": 0,
++          "on_invalid": "fail",
++          "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
++        }
++      }
+diff --git a/scripts/surfaces/_schema/census/web-product.json b/scripts/surfaces/_schema/census/web-product.json
+index 7d1f0fb42..ea969537c 100644
+--- a/scripts/surfaces/_schema/census/web-product.json
++++ b/scripts/surfaces/_schema/census/web-product.json
+@@ -4394 +4394,15 @@
+-      "min_query_len": 0
++      "min_query_len": 0,
++      "bounds": {
++        "debounce_ms": {
++          "min": 0,
++          "max": 0,
++          "on_invalid": "fail",
++          "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
++        },
++        "min_query_len": {
++          "min": 0,
++          "max": 0,
++          "on_invalid": "fail",
++          "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
++        }
++      }
+diff --git a/scripts/surfaces/_schema/surface.schema.json b/scripts/surfaces/_schema/surface.schema.json
+index dbd830ed0..8af2a7e41 100644
+--- a/scripts/surfaces/_schema/surface.schema.json
++++ b/scripts/surfaces/_schema/surface.schema.json
+@@ -2685,0 +2686,37 @@
++        },
++        "bounds": {
++          "x-draft-optional": true,
++          "description": "FIX.CONFIG-BOUNDS (task-395; Spec 128 Rule 3; operator 2026-11-20, verbatim: \"Let the grounder resolve them all as long as the result is compliant\", MORNING-DECISIONS.md:1476; the grounder chose option (b)): the bounds and the failure behaviour of every number this config holds, one entry per key. A number with no entry is refused by the rules below. min and max are inclusive; fail = a value outside them is an error, clamp = it reads as the nearest bound.",
++          "type": "object",
++          "additionalProperties": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "min",
++              "max",
++              "on_invalid"
++            ],
++            "properties": {
++              "min": {
++                "type": "number"
++              },
++              "max": {
++                "type": "number"
++              },
++              "on_invalid": {
++                "oneOf": [
++                  {
++                    "const": "fail",
++                    "description": "A value outside the bounds is an error that names the key."
++                  },
++                  {
++                    "const": "clamp",
++                    "description": "A value outside the bounds reads as the nearest bound."
++                  }
++                ]
++              },
++              "why": {
++                "type": "string"
++              }
++            }
++          }
+@@ -2687 +2724,153 @@
+-      }
++      },
++      "allOf": [
++        {
++          "description": "FIX.CONFIG-BOUNDS (task-395): when debounce_ms holds a number, config.bounds holds its min, max and on_invalid.",
++          "if": {
++            "required": [
++              "debounce_ms"
++            ],
++            "properties": {
++              "debounce_ms": {
++                "type": "integer"
++              }
++            }
++          },
++          "then": {
++            "required": [
++              "bounds"
++            ],
++            "properties": {
++              "bounds": {
++                "required": [
++                  "debounce_ms"
++                ]
++              }
++            }
++          }
++        },
++        {
++          "description": "FIX.CONFIG-BOUNDS (task-395): when min_query_len holds a number, config.bounds holds its min, max and on_invalid.",
++          "if": {
++            "required": [
++              "min_query_len"
++            ],
++            "properties": {
++              "min_query_len": {
++                "type": "integer"
++              }
++            }
++          },
++          "then": {
++            "required": [
++              "bounds"
++            ],
++            "properties": {
++              "bounds": {
++                "required": [
++                  "min_query_len"
++                ]
++              }
++            }
++          }
++        },
++        {
++          "description": "FIX.CONFIG-BOUNDS (task-395): when continue_wait_ms holds a number, config.bounds holds its min, max and on_invalid.",
++          "if": {
++            "required": [
++              "continue_wait_ms"
++            ],
++            "properties": {
++              "continue_wait_ms": {
++                "type": "integer"
++              }
++            }
++          },
++          "then": {
++            "required": [
++              "bounds"
++            ],
++            "properties": {
++              "bounds": {
++                "required": [
++                  "continue_wait_ms"
++                ]
++              }
++            }
++          }
++        },
++        {
++          "description": "FIX.CONFIG-BOUNDS (task-395): when entitlement_stale_ms holds a number, config.bounds holds its min, max and on_invalid.",
++          "if": {
++            "required": [
++              "entitlement_stale_ms"
++            ],
++            "properties": {
++              "entitlement_stale_ms": {
++                "type": "integer"
++              }
++            }
++          },
++          "then": {
++            "required": [
++              "bounds"
++            ],
++            "properties": {
++              "bounds": {
++                "required": [
++                  "entitlement_stale_ms"
++                ]
++              }
++            }
++          }
++        },
++        {
++          "description": "FIX.CONFIG-BOUNDS (task-395): when lookup_retry_max holds a number, config.bounds holds its min, max and on_invalid.",
++          "if": {
++            "required": [
++              "lookup_retry_max"
++            ],
++            "properties": {
++              "lookup_retry_max": {
++                "type": "integer"
++              }
++            }
++          },
++          "then": {
++            "required": [
++              "bounds"
++            ],
++            "properties": {
++              "bounds": {
++                "required": [
++                  "lookup_retry_max"
++                ]
++              }
++            }
++          }
++        },
++        {
++          "description": "FIX.CONFIG-BOUNDS (task-395): when lookup_stale_ms holds a number, config.bounds holds its min, max and on_invalid.",
++          "if": {
++            "required": [
++              "lookup_stale_ms"
++            ],
++            "properties": {
++              "lookup_stale_ms": {
++                "type": "integer"
++              }
++            }
++          },
++          "then": {
++            "required": [
++              "bounds"
++            ],
++            "properties": {
++              "bounds": {
++                "required": [
++                  "lookup_stale_ms"
++                ]
++              }
++            }
++          }
++        }
++      ]
+diff --git a/scripts/surfaces/emit-mobile-surfaces.mjs b/scripts/surfaces/emit-mobile-surfaces.mjs
+index af88e00af..704d3fb06 100644
+--- a/scripts/surfaces/emit-mobile-surfaces.mjs
++++ b/scripts/surfaces/emit-mobile-surfaces.mjs
+@@ -25,0 +26 @@ const SHA_RE = /input_sha ([0-9a-f]{16})/;
++// FIX.CONFIG-BOUNDS (task-395): each number the slice copies is copied with its bounds (`bounds.<key>`), read by mobile/src/lib/sliceConfig.ts.
+@@ -26,0 +28 @@ const SHA_RE = /input_sha ([0-9a-f]{16})/;
++// FIX.CONFIG-BOUNDS (task-395): each number copied is copied with its bounds (`bounds.<key>`), which mobile/src/lib/sliceConfig.ts applies.
+@@ -28,0 +31,17 @@ const CONFIG_KEYS = ['debounce_ms', 'min_query_len', 'continue_wait_ms', 'entitl
++/**
++ * FIX.CONFIG-BOUNDS (task-395; Spec 128 Rule 3): the problem lines of a config against its bounds: a number with no bounds entry, an entry that is not
++ * min <= max with on_invalid fail or clamp, a value outside its bounds. [] when clean. The schema refuses the first and the shape (SV-DESC); this is the value
++ * check, run at generate time, so a slice is never emitted holding a number outside its own declared bounds.
++ */
++export function configBoundsProblems(config, bounds) {
++  const out = [];
++  for (const [k, v] of Object.entries(config)) {
++    if (typeof v !== 'number') continue;
++    const b = bounds?.[k];
++    if (b === undefined) { out.push(`config.${k}: no bounds entry`); continue; }
++    if (!(typeof b.min === 'number' && typeof b.max === 'number' && b.min <= b.max) || !(b.on_invalid === 'fail' || b.on_invalid === 'clamp')) { out.push(`config.${k}: bounds must be min <= max with on_invalid fail or clamp`); continue; }
++    if (v < b.min || v > b.max) out.push(`config.${k}: ${v} is outside its bounds ${b.min} to ${b.max}`);
++  }
++  return out;
++}
++
+@@ -52 +71,4 @@ export function buildOutputs(root = REPO) {
+-    const slice = { surface: id, config, content };
++    const problems = configBoundsProblems(config, d.config?.bounds);
++    if (problems.length > 0) throw new Error(`emit-mobile-surfaces: ${id}: ${problems.join('; ')}`);
++    const bounds = Object.fromEntries(Object.keys(config).map((k) => [k, d.config.bounds[k]]));
++    const slice = { surface: id, config, ...(Object.keys(bounds).length > 0 ? { bounds } : {}), content };
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
+index cf7ada2af..6dad5c102 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
+@@ -429 +429 @@
+-    "why": "The SEARCH tunables debounce_ms and min_query_len are DECLARED here and externalised in the code as named constants (`mobile/src/constants/parcelSearch.ts`), but they are still not registered logic variables — there is no admin row behind either, so `answer` stays `none` while `debounce_ms` and `min_query_len` carry their measured values. (The previous text here claimed the schema had no `config.debounce_ms` / `config.min_query_len` property to declare them in. That was false: both properties exist and this block already carried them as `UNRESEARCHED`.) FIX.TUNE (task-378): three more phone tunables are declared here and read from the generated slice by mobile/src/hooks/useParcelLookup.ts: entitlement_stale_ms (0), lookup_retry_max (3) and lookup_stale_ms (60000); like debounce_ms they are declared, not yet registered logic variables with bounds.",
++    "why": "The SEARCH tunables debounce_ms and min_query_len and the phone tunables entitlement_stale_ms, lookup_retry_max and lookup_stale_ms are DECLARED here with their measured values and read by the phone only from the generated slice, through the one reader (mobile/src/lib/sliceConfig.ts). FIX.CONFIG-BOUNDS (task-395): each carries its bounds and failure behaviour in config.bounds (Spec 128 Rule 3; operator, verbatim, 2026-11-20: \"Let the grounder resolve them all as long as the result is compliant\", MORNING-DECISIONS.md:1476; option (b): bounds in the surface schema, not a database row, because the phone reads only the slice). `answer` stays `none`: no admin logic-variable row is behind any of them.",
+@@ -431,4 +431,4 @@
+-      "mobile/src/constants/parcelSearch.ts:19 — SEARCH_DEBOUNCE_MS, consumed at mobile/app/(app)/parcel-tool/index.tsx:72",
+-      "mobile/src/constants/parcelSearch.ts:26 — SEARCH_MIN_QUERY_LEN; the server floor is src/app/api/parcels/lookup/types.ts:42",
+-      "scripts/surfaces/_schema/surface.schema.json:2335,2348 — config.debounce_ms / config.min_query_len DO exist",
+-      "docs/reference/logic-variables-registry.md — neither is a registered logic variable"
++      "mobile/src/components/surfaces/SearchBinding.tsx:37 — SEARCH_DEBOUNCE_MS read from the slice through sliceNumber (bounds applied), consumed at mobile/app/(app)/parcel-tool/index.tsx:72",
++      "mobile/src/constants/parcelSearch.ts:21 — SEARCH_MIN_QUERY_LEN; the server range is src/app/api/parcels/lookup/types.ts:42",
++      "scripts/surfaces/_schema/surface.schema.json — config.bounds and the per-key rules (FIX.CONFIG-BOUNDS)",
++      "docs/reference/logic-variables-registry.md — none of the six is a registered logic variable"
+@@ -442 +442,33 @@
+-    "lookup_stale_ms": 60000
++    "lookup_stale_ms": 60000,
++    "bounds": {
++      "debounce_ms": {
++        "min": 0,
++        "max": 2000,
++        "on_invalid": "clamp",
++        "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it. 0 is the schema minimum it always had."
++      },
++      "min_query_len": {
++        "min": 3,
++        "max": 120,
++        "on_invalid": "clamp",
++        "why": "The server accepts a query of 3 to 120 characters (src/app/api/parcels/lookup/types.ts:42: min(3) and max(120)); the phone gate must not sit outside that range."
++      },
++      "entitlement_stale_ms": {
++        "min": 0,
++        "max": 3600000,
++        "on_invalid": "clamp",
++        "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
++      },
++      "lookup_retry_max": {
++        "min": 0,
++        "max": 5,
++        "on_invalid": "clamp",
++        "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
++      },
++      "lookup_stale_ms": {
++        "min": 0,
++        "max": 3600000,
++        "on_invalid": "clamp",
++        "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
++      }
++    }
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
+index 71f69d9d8..f4c90ac6c 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json
+@@ -280 +280 @@
+-    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; like debounce_ms it is declared, not yet a registered logic variable with bounds).",
++    "why": "The detector's cuts are admin-editable logic variables read by the view parcel_lot_form (migration 320); the page reads the unsure flag and one declared tunable, config.continue_wait_ms (how long Continue waits for the answered lookup; 60 s, an open operator timeframe, moved here unchanged by FIX.TUNE task-378; FIX.CONFIG-BOUNDS (task-395): it carries its bounds and failure behaviour in config.bounds, read from the slice through the one reader).",
+@@ -326 +326,9 @@
+-    "continue_wait_ms": 60000
++    "continue_wait_ms": 60000,
++    "bounds": {
++      "continue_wait_ms": {
++        "min": 1000,
++        "max": 300000,
++        "on_invalid": "clamp",
++        "why": "Lane proposal of FIX.CONFIG-BOUNDS (task-395), for the grounder; the current value lies inside it."
++      }
++    }
+diff --git a/scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json b/scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json
+index c291044ba..ba3205db1 100644
+--- a/scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json
++++ b/scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json
+@@ -184 +184,15 @@
+-    "min_query_len": 0
++    "min_query_len": 0,
++    "bounds": {
++      "debounce_ms": {
++        "min": 0,
++        "max": 0,
++        "on_invalid": "fail",
++        "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
++      },
++      "min_query_len": {
++        "min": 0,
++        "max": 0,
++        "on_invalid": "fail",
++        "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
++      }
++    }
+diff --git a/scripts/surfaces/platform_shared/F14/surfaces/binding_web_search.descriptor.json b/scripts/surfaces/platform_shared/F14/surfaces/binding_web_search.descriptor.json
+index 46d102c62..212b6f162 100644
+--- a/scripts/surfaces/platform_shared/F14/surfaces/binding_web_search.descriptor.json
++++ b/scripts/surfaces/platform_shared/F14/surfaces/binding_web_search.descriptor.json
+@@ -169 +169,15 @@
+-    "min_query_len": 0
++    "min_query_len": 0,
++    "bounds": {
++      "debounce_ms": {
++        "min": 0,
++        "max": 0,
++        "on_invalid": "fail",
++        "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
++      },
++      "min_query_len": {
++        "min": 0,
++        "max": 0,
++        "on_invalid": "fail",
++        "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
++      }
++    }
+diff --git a/scripts/surfaces/platform_shared/F14/surfaces/shared_mobile_surface_binding.descriptor.json b/scripts/surfaces/platform_shared/F14/surfaces/shared_mobile_surface_binding.descriptor.json
+index 5e27e476f..4c51eaac3 100644
+--- a/scripts/surfaces/platform_shared/F14/surfaces/shared_mobile_surface_binding.descriptor.json
++++ b/scripts/surfaces/platform_shared/F14/surfaces/shared_mobile_surface_binding.descriptor.json
+@@ -178 +178,15 @@
+-    "min_query_len": 0
++    "min_query_len": 0,
++    "bounds": {
++      "debounce_ms": {
++        "min": 0,
++        "max": 0,
++        "on_invalid": "fail",
++        "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
++      },
++      "min_query_len": {
++        "min": 0,
++        "max": 0,
++        "on_invalid": "fail",
++        "why": "A binding module holds no tunable of its own: 0 states that it neither debounces nor gates on length, so the pair is pinned at 0 and any other value is an error."
++      }
++    }
+diff --git a/src/lib/surfaces/generated/surface-descriptor.d.ts b/src/lib/surfaces/generated/surface-descriptor.d.ts
+index bcd19fcd0..5d7b4f848 100644
+--- a/src/lib/surfaces/generated/surface-descriptor.d.ts
++++ b/src/lib/surfaces/generated/surface-descriptor.d.ts
+@@ -346,0 +347,2 @@ export type SurfaceDescriptor = {
++  /** FIX.CONFIG-BOUNDS (task-395; Spec 128 Rule 3; operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant", MORNING-DECISIONS.md:1476; the grounder chose option (b)): the bounds and the failure behav */
++  bounds?: Record<string, unknown>;
+diff --git a/src/tests/fix-tune.logic.test.ts b/src/tests/fix-tune.logic.test.ts
+index 22c302e4c..f91ca3496 100644
+--- a/src/tests/fix-tune.logic.test.ts
++++ b/src/tests/fix-tune.logic.test.ts
+@@ -58,2 +58,2 @@ describe('D14 the phone tunables are declared in the surface config, values unch
+-    expect(hook).toMatch(/sliceNumber\(searchSlice\.config, 'min_query_len'\)/);
+-    for (const key of ['entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms']) expect(hook, key).toMatch(new RegExp(`sliceNumber\\(searchSlice\\.config, '${key}'\\)`));
++    expect(hook).toMatch(/sliceNumber\(searchSlice, 'min_query_len'\)/);
++    for (const key of ['entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms']) expect(hook, key).toMatch(new RegExp(`sliceNumber\\(searchSlice, '${key}'\\)`));
+@@ -62 +62 @@ describe('D14 the phone tunables are declared in the surface config, values unch
+-    expect(code('mobile/src/lib/semiQuestion.ts')).toMatch(/sliceNumber\(slice\.config, 'continue_wait_ms'\)/);
++    expect(code('mobile/src/lib/semiQuestion.ts')).toMatch(/sliceNumber\(slice, 'continue_wait_ms'\)/);
+@@ -65,2 +65,3 @@ describe('D14 the phone tunables are declared in the surface config, values unch
+-    expect(sliceNumber({ k: 60000 }, 'k')).toBe(60000);
+-    expect(sliceNumber({ k: 0 }, 'k')).toBe(0);
++    const sl = (config: Record<string, unknown>) => ({ config, bounds: { k: { min: 0, max: 1e9, on_invalid: 'fail' }, continue_wait_ms: { min: 0, max: 1e9, on_invalid: 'fail' } } }); // FIX.CONFIG-BOUNDS (task-395): the reader takes the slice
++    expect(sliceNumber(sl({ k: 60000 }), 'k')).toBe(60000);
++    expect(sliceNumber(sl({ k: 0 }), 'k')).toBe(0);
+@@ -68 +69 @@ describe('D14 the phone tunables are declared in the surface config, values unch
+-      expect(() => sliceNumber({ k: bad }, 'k'), String(bad)).toThrow(/"k"/);
++      expect(() => sliceNumber(sl({ k: bad }), 'k'), String(bad)).toThrow(/"k"/);
+@@ -70 +71 @@ describe('D14 the phone tunables are declared in the surface config, values unch
+-    expect(() => sliceNumber({}, 'continue_wait_ms')).toThrow(/continue_wait_ms/);
++    expect(() => sliceNumber(sl({}), 'continue_wait_ms')).toThrow(/continue_wait_ms/);
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.mobile.json
+index bc2b051c4..8400afdca 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.mobile.json
+@@ -1318 +1318 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.web.json b/src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.web.json
+index 85632bef2..b548d3e28 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.web.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/ambiguous.web.json
+@@ -1291 +1291 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json
+index 4b0d07294..e00dfe0b0 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json
+@@ -310 +310 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/empty.web.json b/src/tests/fixtures/surfaces/mobile_parcel_search/empty.web.json
+index c14fa7659..280d212dc 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/empty.web.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/empty.web.json
+@@ -340 +340 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/error.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/error.mobile.json
+index 27248e417..99c352409 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/error.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/error.mobile.json
+@@ -221 +221 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/error.web.json b/src/tests/fixtures/surfaces/mobile_parcel_search/error.web.json
+index a287f53a5..123473de4 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/error.web.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/error.web.json
+@@ -257 +257 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/loading.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/loading.mobile.json
+index 00ec02bb2..22812bd62 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/loading.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/loading.mobile.json
+@@ -170 +170 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/loading.web.json b/src/tests/fixtures/surfaces/mobile_parcel_search/loading.web.json
+index aca839dd3..5b5e60666 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/loading.web.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/loading.web.json
+@@ -224 +224 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/miss.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/miss.mobile.json
+index 91a1e1955..4d5498b74 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/miss.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/miss.mobile.json
+@@ -189 +189 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/miss.web.json b/src/tests/fixtures/surfaces/mobile_parcel_search/miss.web.json
+index 4b4346f0f..8d407755b 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/miss.web.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/miss.web.json
+@@ -224 +224 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/rate_limited.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/rate_limited.mobile.json
+index a8754d26a..f38d31e2c 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/rate_limited.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/rate_limited.mobile.json
+@@ -188 +188 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/rate_limited.web.json b/src/tests/fixtures/surfaces/mobile_parcel_search/rate_limited.web.json
+index 49f0ba97c..2cd5725d2 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/rate_limited.web.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/rate_limited.web.json
+@@ -242 +242 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/redirect.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/redirect.mobile.json
+index d3a87f8ab..68796e803 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/redirect.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/redirect.mobile.json
+@@ -207 +207 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/redirect.web.json b/src/tests/fixtures/surfaces/mobile_parcel_search/redirect.web.json
+index 4b245a570..c5e6a69d3 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/redirect.web.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/redirect.web.json
+@@ -252 +252 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json
+index 000a2eb72..9044fba81 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json
+@@ -325 +325 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.web.json b/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.web.json
+index a8e6d776c..2163d3420 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.web.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.web.json
+@@ -355 +355 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/schema_drift.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/schema_drift.mobile.json
+index bd78197aa..ccf6fa690 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/schema_drift.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/schema_drift.mobile.json
+@@ -181 +181 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/schema_drift.web.json b/src/tests/fixtures/surfaces/mobile_parcel_search/schema_drift.web.json
+index 166d293d4..c30fd95da 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/schema_drift.web.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/schema_drift.web.json
+@@ -235 +235 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/static.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/static.mobile.json
+index 91bb20ce0..4f6f94d6c 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/static.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/static.mobile.json
+@@ -299 +299 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/static.web.json b/src/tests/fixtures/surfaces/mobile_parcel_search/static.web.json
+index 2321b4661..63b74cca9 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/static.web.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/static.web.json
+@@ -329 +329 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/unauthorized.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/unauthorized.mobile.json
+index 1df34e518..9edceeb8d 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/unauthorized.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/unauthorized.mobile.json
+@@ -181 +181 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/unauthorized.web.json b/src/tests/fixtures/surfaces/mobile_parcel_search/unauthorized.web.json
+index 2059d824e..accba3eef 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/unauthorized.web.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/unauthorized.web.json
+@@ -235 +235 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "c89c405a30cc0f2e"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json": "bd2f67f4738fdcfd"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/answered.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/answered.mobile.json
+index 9534387c3..3ec49442e 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/answered.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/answered.mobile.json
+@@ -297 +297 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/ask.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/ask.mobile.json
+index 850d03e6a..aa0d7b43c 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/ask.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/ask.mobile.json
+@@ -294 +294 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/error.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/error.mobile.json
+index b4432975a..7e02d21a8 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/error.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/error.mobile.json
+@@ -143 +143 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/loading.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/loading.mobile.json
+index 2b33a00d6..352781f42 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/loading.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/loading.mobile.json
+@@ -103 +103 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/rate_limited.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/rate_limited.mobile.json
+index 8e39d85e7..b13e03093 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/rate_limited.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/rate_limited.mobile.json
+@@ -120 +120 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/redirect.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/redirect.mobile.json
+index db083c956..3b2d77b9e 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/redirect.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/redirect.mobile.json
+@@ -89 +89 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/schema_drift.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/schema_drift.mobile.json
+index 9699bf43a..48b70ff97 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/schema_drift.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/schema_drift.mobile.json
+@@ -113 +113 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/unauthorized.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/unauthorized.mobile.json
+index 3cf719621..cf8c583f4 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_semi_question/unauthorized.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_semi_question/unauthorized.mobile.json
+@@ -113 +113 @@
+-      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "be6ea47edd8dde34"
++      "scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json": "5c71720ec1a5d862"
+diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
+index 25ace9ba9..6d6d4a4a4 100644
+--- a/src/tests/surfaces/surface-conformance.logic.test.ts
++++ b/src/tests/surfaces/surface-conformance.logic.test.ts
+@@ -25,0 +26 @@ import { descArm, loadContext, queueProblems, sbindArm, screenArm, shapeProblems
++import { configBoundsProblems } from '../../../scripts/surfaces/emit-mobile-surfaces.mjs';
+@@ -941,0 +943,55 @@ describe('C-12 the web report renderer files have a census owner (Spec 126 secti
++
++// ---- C-10 FIX.CONFIG-BOUNDS (task-395): every number in a surface config carries bounds and a failure behaviour --------------------------------------
++// Spec 128 Rule 3 (every debounce, page size, stale time and rate limit has bounds and an on_invalid posture); operator, verbatim, 2026-11-20:
++// "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476); the grounder's option (b):
++// bounds declared in the surface schema, refused by the one descriptor validator that surface-validate runs (SV-DESC), refused again at generate time.
++describe('C-10 config bounds: declared per key, refused when absent (planted defects), values unchanged', () => {
++  const NUMBER_KEYS = ['debounce_ms', 'min_query_len', 'continue_wait_ms', 'entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms'];
++  const v = (d: Json): string[] => validateDescriptor(d).errors;
++  const search = (): Json => convert('SEARCH');
++  it('the real tree: every live descriptor validates; every number in a config has its bounds; the values are the values they were (400, 3, 0, 3, 60000, 60000; 60000)', () => {
++    const real = rj(path.join(REPO, 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json'));
++    expect(v(real)).toEqual([]);
++    expect(Object.fromEntries(NUMBER_KEYS.filter((k) => k in real.config).map((k) => [k, real.config[k]]))).toEqual({ debounce_ms: 400, min_query_len: 3, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000 });
++    for (const k of ['debounce_ms', 'min_query_len', 'entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms']) {
++      const b = real.config.bounds[k];
++      expect([k, typeof b.min, typeof b.max, ['fail', 'clamp'].includes(b.on_invalid), real.config[k] >= b.min && real.config[k] <= b.max]).toEqual([k, 'number', 'number', true, true]);
++    }
++    const semi = rj(path.join(REPO, 'scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.descriptor.json'));
++    expect([semi.config.continue_wait_ms, semi.config.bounds.continue_wait_ms.on_invalid]).toEqual([60000, 'clamp']);
++  });
++  it('RED: a numeric config key with no bounds block, with a bounds block that omits it, with a bound or on_invalid missing, or with on_invalid default, is refused', () => {
++    const d1 = search(); delete d1.config.bounds; expect(v(d1).length).toBeGreaterThan(0);
++    for (const k of NUMBER_KEYS) {
++      const d2 = search(); d2.config[k] = 1; d2.config.bounds ??= {}; delete d2.config.bounds[k]; expect([k, v(d2).length > 0]).toEqual([k, true]);
++    }
++    const d3 = search(); delete d3.config.bounds.debounce_ms.max; expect(v(d3).length).toBeGreaterThan(0);
++    const d4 = search(); delete d4.config.bounds.debounce_ms.on_invalid; expect(v(d4).length).toBeGreaterThan(0);
++    const d5 = search(); d5.config.bounds.debounce_ms.on_invalid = 'default'; expect(v(d5).length).toBeGreaterThan(0);
++  });
++  it('UNRESEARCHED stays a countable state and needs no bounds (a key that holds no number yet)', () => {
++    const d = search(); d.config.lookup_stale_ms = 'UNRESEARCHED'; delete d.config.bounds.lookup_stale_ms;
++    expect(v(d)).toEqual([]);
++  });
++  it('every number-typed property the schema lets a config hold carries its own rule, so a key added later without one is refused by this test', () => {
++    const cfg: Json = rj(path.join(REPO, SCHEMA, 'surface.schema.json')).properties.config;
++    const numberKeys = Object.entries(cfg.properties as Json).filter(([, p]) => JSON.stringify(p).includes('"integer"')).map(([k]) => k).sort();
++    expect(numberKeys).toEqual([...NUMBER_KEYS].sort());
++    const rules = JSON.stringify(cfg.allOf ?? []);
++    for (const k of numberKeys) expect([k, rules.includes(`"${k}"`)]).toEqual([k, true]);
++  });
++  it('the generator refuses, by key name, a value outside its bounds, a missing bounds entry and an inverted pair; a clean config gives no problem', () => {
++    const b = { debounce_ms: { min: 0, max: 2000, on_invalid: 'clamp' } };
++    expect(configBoundsProblems({ debounce_ms: 400 }, b)).toEqual([]);
++    expect(configBoundsProblems({ debounce_ms: 2001 }, b).join('|')).toContain('debounce_ms');
++    expect(configBoundsProblems({ debounce_ms: -1 }, b).join('|')).toContain('debounce_ms');
++    expect(configBoundsProblems({ debounce_ms: 400 }, {}).join('|')).toContain('debounce_ms');
++    expect(configBoundsProblems({ debounce_ms: 400 }, { debounce_ms: { min: 9, max: 1, on_invalid: 'fail' } }).join('|')).toContain('debounce_ms');
++  });
++  it('the generated slices carry the bounds beside an unchanged config', () => {
++    const s = rj(path.join(REPO, 'mobile/src/generated/surfaces/mobile_parcel_search.json'));
++    expect(s.config).toEqual({ debounce_ms: 400, min_query_len: 3, entitlement_stale_ms: 0, lookup_retry_max: 3, lookup_stale_ms: 60000 });
++    expect(Object.keys(s.bounds).sort()).toEqual(['debounce_ms', 'entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms', 'min_query_len']);
++    expect(rj(path.join(REPO, 'mobile/src/generated/surfaces/mobile_parcel_semi_question.json')).bounds.continue_wait_ms).toEqual({ min: 1000, max: 300000, on_invalid: 'clamp' });
++  });
++});
+
