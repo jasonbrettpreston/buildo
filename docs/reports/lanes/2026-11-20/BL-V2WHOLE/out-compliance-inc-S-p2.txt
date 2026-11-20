@@ -1,14 +1,15 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:51:19.030Z file_sha256=86be0accfcadbb445a0bc63081d941dad8691ad3d9867ba19658b569b3217a1e prompt_sha256=4dfe410314a3eb00017bb0a0bcb157c2cdce0f6da9d20ae81c2fdf9597997235
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:09:46.199Z file_sha256=b0aee493ee38577efac1c8c19b4a10ac3557c10a9af02fc5c00cb301404341ef prompt_sha256=daf087dd3fa50b8198db1814ccd8220608d9aeafd49e92f1a46391c1a27bcb38
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — doc-2 "## Built state" "The search pages are built on mobile (search page, choose-your-lot map page, semi question page)" — src/tests/backlog/rule-lists.logic.test.ts:494 "// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries (the tool, never by hand)" — no clause of doc-2 names lens-input chunking, chunk stamps, measured chunk room or DIFF_ARGS flags, so this added behaviour is authorised by nothing pasted here — paste the task-410 card and the operator items into the context, or route this chunk to the list that governs the lane tooling.
-
-DEFER severity=LOW — doc-2 "## Elements" (rows A.1 to G.6, all search-page surface) — src/tests/backlog/check-lane-close.logic.test.ts:368 "// V2.WHOLE (task-410): the close check proves the review saw the WHOLE change" — the close-check refusals (launch commit, retype, milestone move, prompt_sha256 recompute, exempt widening) and the operator rulings they cite ("1-5 y" item 3, grounder attacks e, f, g binary, h, k) are not pasted, and a test name or comment is not the ruling, so their satisfaction is UNMET for this review — paste those operator items alongside the spec so the clauses can be checked rather than asserted.
+```
+DEFER severity=LOW — doc-2 (Increment S requirements), scope "The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web" — src/tests/backlog/check-lane-close.logic.test.ts:365 "// V2.WHOLE (task-410): the close check proves the review saw the WHOLE change." — no clause anywhere in the pasted spec names the lane-close check, lens-input chunking, or chunk stamps, so the behaviour these two test files assert has no pasted authorization — trace task-410 to a pasted clause of the governing increment, or drop it from the run, before asserting compliance
+REJECT — doc-2 (Increment S requirements), elements A.1 through G.6 — the change is accused of not advancing or satisfying any search-page element in the table — the pasted spec governs product UI elements and statuses, this diff only adds backlog tooling tests under src/tests/backlog, so no pasted clause is broken by it
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 0 (none of doc-2's clauses binds a change under src/tests/backlog/**, so nothing in this chunk is unmet and nothing here can be shown satisfied)   Unmet: 0
+Clauses checked: 0   Unmet: 0
+```
 
 ---
-⏱  35776ms (35.8s)
-📊 Tokens — total: 27702, input: 20937, output: 6765, reasoning: 6377
+⏱  23004ms (23.0s)
+📊 Tokens — total: 24296, input: 22075, output: 2221, reasoning: 1964

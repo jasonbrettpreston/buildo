@@ -1,20 +1,14 @@
 ◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:51:18.896Z file_sha256=1b369a6055d4ee948c22e767d1d807ec28777b99ac0c222c5990f3bde94d5576 prompt_sha256=8f2134b9936c8b53089aa997c7fb6feffcb85e2dd80c643f92e1b406db7731a3
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:09:46.070Z file_sha256=11d25d7589c3ef8809d9dba2d10d1338be0ee7c454d35c5fdcaabaeeb2ecd61f prompt_sha256=c207034f04042d44e0ceeb9e693f10042e8c34860c4ebb7733d45097714beae9
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-orchestrator-doc17-p2.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — doc-17 "The operator's rulings are the decisions." — src/tests/backlog/backlog-lane.logic.test.ts:244 "expect(e).not.toMatch(/the diff is never split or trimmed to core files/);" — this test suite deletes the documented review-material contract that the diff is never split and installs file-boundary chunking, a launch-commit base and exclusion globs as the new brief text, and no pasted operator ruling or decision names any of that, the only authority cited is "task-410", which is not pasted, so the behaviour is unattested and the enforcement it tests lives in chunk 1, which cannot be seen here. Fix: paste the decision that authorises chunking and the launch-commit base, or restore the whole-diff brief in the test expectations.
+MET — doc-17 "never feed a review as a ruling" — scripts/hooks/check-lane-close.mjs:40 "import { coveredBy, DIFF_ARGS, diffPaths, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';" — the added check logic reads the rule-list table, the git diff and the review templates, and cites no RR reading as a rule.
 
-BUG severity=HIGH — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)." — src/tests/backlog/rule-lists.logic.test.ts:624 "// V2.WHOLE round 3, operator item 3 ("1-5 y"): the real table (task-406's fold) exempts a real golden from the review material" — the change grounds the golden exemption on operator words that appear nowhere in the pasted register, no entry between RR-0112 and RR-0218 says "1-5 y", which is the exact vice doc-17 names, operator words treated as a ruling without being logged. Fix: log the words with a register id and line, or drop the golden exemption until they are logged.
+REJECT — doc-17 — treating the RR- lines as governing clauses — doc-17 states "They are NOT the operator's words as a ruling and never feed a review as a ruling", so no RR entry can ground an unmet finding here.
 
-DEFER severity=MED — doc-17 "The operator's rulings are the decisions." — src/tests/backlog/check-lane-close.logic.test.ts:443 "refused(scenario({ beforeType: 'build', type: 'doc' }), /may not retype/, 36);" — the new close-check refusals, retyping at :443, moving the task to another milestone at :514, dropping the @lane assignee at :525 and "a task close needs the board" at :532, are new gating behaviour that no pasted ruling names. Fix: name the ruling behind each new refusal or defer the refusals out of this change.
-
-DEFER severity=MED — doc-17 "The operator's rulings are the decisions." — src/tests/backlog/rule-lists.logic.test.ts:631 "expect(matchesAny(t.exempt, real), real).toBe(true);" — this asserts real repo fixture paths are exempt from the review material, so those files are never seen by any lens on any later change, and no pasted ruling authorises an exemption of real repo paths. Fix: cite the ruling that exempts real fixtures, or keep them inside the material and bound the exemption to generated snapshots only.
-
-REJECT — RR-0002 "Operator: lane tooling first; independent agent reviews" — the change accused of breaking the lane-tooling-first reading or the infra freeze reading RR-0110 — doc-17 states "They are NOT the operator's words as a ruling and never feed a review as a ruling," so those readings cannot found a finding in this run.
-
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 3   Unmet: 2
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 1   Unmet: 0
 
 ---
-⏱  83961ms (84.0s)
-📊 Tokens — total: 45884, input: 26507, output: 19377, reasoning: 18643
+⏱  64473ms (64.5s)
+📊 Tokens — total: 49828, input: 37742, output: 12086, reasoning: 11874

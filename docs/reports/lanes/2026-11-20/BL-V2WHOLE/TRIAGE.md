@@ -65,11 +65,11 @@ plan-compliance-eng-all#6 wontfix:"the four templates hold the placeholder once 
 plan-compliance-eng-all#7 wontfix:"same as eng-all-p5#3"
 plan-compliance-inc-S#2 task:task-375
 plan-compliance-inc-S#3 task:task-375
-plan-compliance-orchestrator-doc17#1 task:task-410
-plan-compliance-orchestrator-doc17#2 task:task-410
-plan-compliance-orchestrator-doc17#3 task:task-410
+plan-compliance-orchestrator-doc17#1 task:task-375
+plan-compliance-orchestrator-doc17#2 task:task-375
+plan-compliance-orchestrator-doc17#3 task:task-375
 plan-compliance-orchestrator-doc17#5 task:task-375
-plan-compliance-orchestrator-doc17#6 task:task-410
+plan-compliance-orchestrator-doc17#6 task:task-375
 plan-compliance-plan-protocol#1 wontfix:"moot after the build: the commands are in the lane report"
 plan-compliance-plan-protocol#5 wontfix:"the measured call counts replace the estimate in the lane report"
 plan-error-paths#1 wontfix:"the estimate and the negative room figure only name the wrong cause in a refusal that is already a refusal (fail closed); no change of the whole-change proof depends on it"
@@ -118,11 +118,11 @@ plan-compliance-eng-all#6 wontfix:"the four templates hold the placeholder once 
 plan-compliance-eng-all#7 wontfix:"no property test for the packing arithmetic: the invariants are asserted on the 300 and 141 file cases"
 plan-compliance-inc-S#2 task:task-375
 plan-compliance-inc-S#3 task:task-375
-plan-compliance-orchestrator-doc17#1 task:task-410
-plan-compliance-orchestrator-doc17#2 task:task-410
-plan-compliance-orchestrator-doc17#3 task:task-410
+plan-compliance-orchestrator-doc17#1 task:task-375
+plan-compliance-orchestrator-doc17#2 task:task-375
+plan-compliance-orchestrator-doc17#3 task:task-375
 plan-compliance-orchestrator-doc17#5 task:task-375
-plan-compliance-orchestrator-doc17#6 task:task-410
+plan-compliance-orchestrator-doc17#6 task:task-375
 plan-compliance-plan-protocol#1 wontfix:"moot after the build: the commands are in the lane report"
 plan-compliance-plan-protocol#5 wontfix:"the measured call counts replace the estimate in the lane report"
 plan-error-paths#1 wontfix:"the estimate and the negative room figure only name the wrong cause in a refusal that is already a refusal (fail closed); no change of the whole-change proof depends on it"
@@ -144,11 +144,11 @@ plan-compliance-eng-all#6 wontfix:"the four templates hold the placeholder once 
 plan-compliance-eng-all#7 wontfix:"no property test for the packing arithmetic: the invariants are asserted on the 300 and 141 file cases"
 plan-compliance-inc-S#2 task:task-375
 plan-compliance-inc-S#3 task:task-375
-plan-compliance-orchestrator-doc17#1 task:task-410
-plan-compliance-orchestrator-doc17#2 task:task-410
-plan-compliance-orchestrator-doc17#3 task:task-410
+plan-compliance-orchestrator-doc17#1 task:task-375
+plan-compliance-orchestrator-doc17#2 task:task-375
+plan-compliance-orchestrator-doc17#3 task:task-375
 plan-compliance-orchestrator-doc17#5 task:task-375
-plan-compliance-orchestrator-doc17#6 task:task-410
+plan-compliance-orchestrator-doc17#6 task:task-375
 plan-compliance-plan-protocol#1 wontfix:"moot after the build: the commands are in the lane report"
 plan-compliance-plan-protocol#5 wontfix:"the measured call counts replace the estimate in the lane report"
 plan-error-paths#1 wontfix:"the estimate and the negative room figure only name the wrong cause in a refusal that is already a refusal (fail closed); no change of the whole-change proof depends on it"
@@ -170,7 +170,7 @@ out-compliance-agents-s5-1to3-p1#1 fixed:065f85a02 docs/specs/00-architecture/08
 out-compliance-agents-s5-1to3-p1#2 wontfix:"same as out-code-review-p1#2"
 out-compliance-agents-s7-s11-p1#1 fixed:7116dabbc scripts/hooks/check-lane-close.mjs
 out-compliance-agents-s7-s11-p1#2 task:task-410
-out-compliance-agents-s7-s11-p1#3 task:task-410
+out-compliance-agents-s7-s11-p1#3 fixed:a8a3ca2db scripts/analysis/rule-lists.mjs
 out-compliance-agents-s7-s11-p1#5 fixed:065f85a02 docs/specs/00-architecture/08_agents.md
 out-compliance-agents-s7-s11-p2#2 fixed:7116dabbc src/tests/backlog/check-lane-close.logic.test.ts
 out-compliance-agents-s7-s11-p2#3 wontfix:"the grounder checked all nine globs against git ls-files; the test samples one real golden and negatives by design"
@@ -184,7 +184,63 @@ out-compliance-orchestrator-doc17-p1#2 wontfix:"attaching doc-17 whole is the ru
 out-compliance-queue-137-p1#1 ruling:"agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close." (operator, MORNING-DECISIONS.md entry 2026-11-20 · Operator AGREES the Rule 3 amendment and RULES on material too large to review)
 out-compliance-queue-137-p1#5 task:task-375
 out-compliance-queue-137-p1#6 wontfix:"if a lane narrows its Files line the material omits a launch-covered file and the check refuses it (fail closed); the brief reads the current line by design"
-out-error-paths-p1#1 fixed:7116dabbc scripts/hooks/check-lane-close.mjs
+out-error-paths-p1#1 fixed:f6f8b5944 scripts/hooks/check-lane-close.mjs
 out-error-paths-p1#4 wontfix:"a failed git log gives no launch commit and the close is refused (fail closed); only the message wording is generic"
 out-error-paths-p1#5 wontfix:"the estimate and the negative room figure only name the wrong cause in a refusal that is already a refusal (fail closed); no change of the whole-change proof depends on it"
 out-error-paths-p1#6 wontfix:"a broken prompt builder kills the hook with a nonzero exit, so the close is refused (fail closed)"
+
+## ROUND 5 GROUNDER (file sha256 1afa92a8a037, 54 CONFIRMED findings; ids are those of the round-5 outputs, positional)
+plan-compliance-agents-s5-1to3#3 wontfix:"a clause over two files is judged per chunk by design; recorded as a known limit"
+plan-compliance-agents-s5-1to3#5 fixed:3852f74e9 docs/specs/00-architecture/08_agents.md
+plan-compliance-agents-s7-s11#6 wontfix:"process note: the validation seats are the grounders that ran after the build"
+plan-compliance-eng-all#2 wontfix:"the checklist is an in-response artifact, not stored"
+plan-compliance-eng-all#5 fixed:3852f74e9 docs/specs/00-architecture/08_agents.md
+plan-compliance-eng-all#6 wontfix:"the four templates hold the placeholder once each (line 34); pinning them is the template test of task-406"
+plan-compliance-eng-all#7 wontfix:"no property test for the packing arithmetic; the invariants are asserted on the 300 and 141 file cases"
+plan-compliance-inc-S#2 task:task-375
+plan-compliance-inc-S#3 task:task-375
+plan-compliance-orchestrator-doc17#1 task:task-375
+plan-compliance-orchestrator-doc17#2 task:task-375
+plan-compliance-orchestrator-doc17#3 task:task-375
+plan-compliance-orchestrator-doc17#5 task:task-375
+plan-compliance-orchestrator-doc17#6 task:task-375
+plan-compliance-plan-protocol#1 wontfix:"moot after the build: the commands are in the lane report"
+plan-compliance-plan-protocol#5 wontfix:"the measured call counts replace the estimate in the lane report"
+plan-error-paths#1 wontfix:"the estimate and the negative room figure only name the wrong cause in a refusal that is already a refusal (fail closed)"
+plan-error-paths#3 fixed:98c9f9a8e scripts/hooks/check-lane-close.mjs
+plan-error-paths#6 task:task-410
+plan-plan-review-deepseek#2 fixed:c94a13754 scripts/analysis/rule-lists.mjs
+plan-plan-review-deepseek#4 task:task-410
+plan-plan-review-deepseek#7 fixed:ac5884995 scripts/analysis/rule-lists.mjs
+plan-plan-review-deepseek#8 fixed:e028b1976 scripts/analysis/backlog-lane.mjs
+plan-plan-review-deepseek#11 fixed:0b1c432d5 scripts/hooks/check-lane-close.mjs
+out-code-review-p1#2 wontfix:"the estimate and the negative room figure only name the wrong cause in a refusal that is already a refusal (fail closed)"
+out-code-review-p1#4 task:task-375
+out-code-review-p1#5 wontfix:"the brief builds the diff from refs/heads/<base_ref> and the current Files line; the board branch is that local branch in every worktree and a narrowed Files line makes the check refuse the missing file (fail closed)"
+out-code-review-p2#1 wontfix:"test hygiene: the first test already asserts the stamped paths"
+out-code-review-p2#4 wontfix:"a test helper returning NaN for a missing stamp fails the assertions that read it"
+out-code-review-p2#5 wontfix:"test message text only"
+out-code-review-p2#6 wontfix:"a non-null assertion on the first input in a test whose earlier assertion proves it exists"
+out-compliance-agents-s5-1to3-p1#1 fixed:f6f8b5944 scripts/hooks/check-lane-close.mjs
+out-compliance-agents-s5-1to3-p1#2 fixed:f6f8b5944 scripts/hooks/check-lane-close.mjs
+out-compliance-agents-s5-1to3-p2#3 task:task-375
+out-compliance-agents-s7-s11-p1#4 fixed:f6f8b5944 scripts/hooks/check-lane-close.mjs
+out-compliance-eng-all-p1#2 wontfix:"the red outputs are in the lane scratch dir and their counts are in the lane report"
+out-compliance-eng-all-p1#3 wontfix:"the dated notes and the behaviour land in one fold of the same lane; no hook requires one commit"
+out-compliance-eng-all-p1#4 wontfix:"the brief builds the diff from refs/heads/<base_ref> and the current Files line; the board branch is that local branch in every worktree and a narrowed Files line makes the check refuse the missing file (fail closed)"
+out-compliance-eng-all-p2#1 wontfix:"the chunk arithmetic is asserted on planted cases; no property test"
+out-compliance-eng-all-p2#3 wontfix:"the chunk arithmetic is asserted on planted cases; no property test"
+out-compliance-eng-all-p3#1 wontfix:"non-null assertions in new tests mirror the neighbouring test style"
+out-compliance-eng-all-p3#2 wontfix:"no property test; the invariants are asserted on the 300 and 141 file cases"
+out-compliance-eng-all-p3#3 wontfix:"no property test; the invariants are asserted on the 300 and 141 file cases"
+out-compliance-five-words-p1#1 wontfix:"the brief builds the diff from refs/heads/<base_ref> and the current Files line; the board branch is that local branch in every worktree and a narrowed Files line makes the check refuse the missing file (fail closed)"
+out-compliance-five-words-p1#2 wontfix:"the brief builds the diff from refs/heads/<base_ref> and the current Files line; the board branch is that local branch in every worktree and a narrowed Files line makes the check refuse the missing file (fail closed)"
+out-compliance-orchestrator-doc17-p1#1 task:task-410
+out-compliance-orchestrator-doc17-p1#2 wontfix:"same as orchestrator-doc17-p1#1: the attached list is a table row owned by the list tasks"
+out-compliance-plan-protocol-p1#1 task:task-375
+out-compliance-plan-protocol-p1#3 wontfix:"the brief builds the diff from refs/heads/<base_ref> and the current Files line; the board branch is that local branch in every worktree and a narrowed Files line makes the check refuse the missing file (fail closed)"
+out-compliance-policy-124-s2-s5-p1#4 wontfix:"the correcting note directly follows the older sentence and says Rule 3 is amended for lane build and fix tasks"
+out-compliance-queue-137-p1#3 wontfix:"the record paths in the Rule 3 note are what the check enforces; the operator agreed the two-commit close"
+out-error-paths-p1#2 fixed:a8a3ca2db scripts/analysis/rule-lists.mjs
+out-error-paths-p1#3 task:task-375
+out-error-paths-p1#4 wontfix:"no timeout on the spawned git; a killed child is a failing status and the close is refused (fail closed)"

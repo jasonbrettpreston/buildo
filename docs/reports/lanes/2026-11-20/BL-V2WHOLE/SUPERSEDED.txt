@@ -1,4 +1,4 @@
-Superseded by the round 5 re-run (2026-11-20), removed in the same commit as the new outputs:
+Superseded by the round 6 re-run (2026-11-20), removed in the same commit as the new outputs:
 DIFF.patch
 in-out-code-review-p1.txt
 in-out-code-review-p2.txt
@@ -58,9 +58,4 @@ out-compliance-queue-137-p1.txt
 out-compliance-queue-137-p2.txt
 out-error-paths-p1.txt
 out-error-paths-p2.txt
-real-cfgbounds.txt
-real-pagetable.txt
-real-thinroute.txt
-real-v2list.txt
-real-v2whole.txt
 selfproof.txt

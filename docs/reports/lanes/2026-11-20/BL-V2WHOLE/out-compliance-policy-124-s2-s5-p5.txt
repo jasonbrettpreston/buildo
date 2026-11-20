@@ -1,20 +1,20 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:51:18.666Z file_sha256=dcb3f2e814b48c63108b69f7497941ed93019b6bd6c8c29457b5121b8bb68ed8 prompt_sha256=89463d6225addc3a4662abe902a3a132ee69cff9e8f8f42292a23005aa1e66af
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:09:45.822Z file_sha256=51fc6431d5f79fb2e2a517d5c0f7c8c5a9c74e4c8a3c040e00bb37405d51bab7 prompt_sha256=1694cddf48d008550219116a64269cb4e98a121d80168eea772e891940fa3de5
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-policy-124-s2-s5-p5.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — no pasted clause names the behaviour under test "Thirteen rules (Rule 13 added by R-R, 2026-08-29). Each is enforced today, or marked ⚠ GAP with the artifact that would close it." — src/tests/backlog/check-lane-close.logic.test.ts "// V2.WHOLE (task-410): the close check proves the review saw the WHOLE change." — the entire added behaviour (file-boundary chunking, chunk stamps, DIFF_ARGS, refusal messages, fold/base_ref/exempt recompute) is named only by task-410, which is not in the pasted context, so no pasted clause can confirm or deny it — paste the governing card or spec section for task-410/rule-lists next to Spec 124 §2
+DEFER severity=LOW — Spec 124 §2 "Thirteen rules (Rule 13 added by R-R, 2026-08-29)" names no lane-close or lens-input clause — src/tests/backlog/check-lane-close.logic.test.ts:367 "// V2.WHOLE (task-410): the close check proves the review saw the WHOLE change" — the rulings this suite claims to implement (task-410, operator "1-5 y" item 3, grounder attacks "e, f, g binary, h, k") are not pasted, so "cannot see" their clauses and cannot judge them — paste the task-410 card and the "1-5 y" item 3 ruling so this chunk is judgeable against its own governing words.
 
-REJECT — Spec 124 §2 Rule 3 "Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal" — accused of hard-coded bounds in the new tests, e.g. "const max = 2 * (d.length + 900) + 300;" — Rule 3's subject is a limit "a step consumes"; these files drive `scripts/analysis/rule-lists.mjs` (`lens-input`), which is not a step descriptor nor `scripts/lib/compute/**`, so the clause does not reach them
+REJECT — §2 Rule 1 "Nothing about a step's behaviour may live only in code — it is descriptor data, a declared check, a shape rule" — the diff puts the whole V2.WHOLE lane-close proof only in test code — Rule 1's subject is a step's descriptor and `checks`; `scripts/hooks/check-lane-close.mjs` and `scripts/analysis/rule-lists.mjs` are lane tooling with no `step.schema.json` descriptor, so no `checks[]` or `emits[]` is owed here.
 
-REJECT — Spec 124 §2 Rule 1 "Nothing about a step's behaviour may live only in code" — accused of putting the split/stamp contract only in code and tests: "// each input stamped \"chunk c of m\" with its path list" — Rule 1's subject is "a step's behaviour"; lens-input chunking is backlog tooling, not a step descriptor, declared check or shape rule
+REJECT — §2 Rule 3 "Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through ctx.config, never a literal" — the diff carries bare chunk sizes ("split: { max: 4000 }", "const max = 12000;", "2 * t.length + 80") — Rule 3 binds a converted step's compute reading `ctx.config`; these are test fixtures and a CLI `--max`, not a step consuming a tunable, and no `logic_variables` row is owed.
 
-REJECT — Spec 124 §2 Rule 10 "The verdict is always derived from the declared checks' rows — never a parallel boolean, never a hardcoded literal" — accused of a parallel verdict literal: "VERDICT: PASS on compliance\n" in `body()` — that string is a review-output fixture the close check parses, not a step verdict derivation; `deriveVerdict` governs runner code, not fixture text
+REJECT — §2 Rule 4 "A rule kept in compute rather than declared data must still be written down — as a check's why, not a comment" — the diff explains its rule in comments, e.g. "// the prompt hash of a compliance output is what the review tool writes: sha256 of JSON [system, user]" — Rule 4 governs compute under `scripts/lib/compute/**` feeding a step's `checks[].why`; `src/tests/**` is neither compute nor a step, and its enforcement line is "nothing machine-checked. Applied narratively in the Intent Ledger".
 
-REJECT — Spec 124 §2 Rule 13 "none — every archetype's descriptor is validated, shape-gated, and scored the same way." — accused of an unvalidated, hand-maintained test track, since the new suites sit outside `src/tests/steps/<slug>/` — no step is converted or descriptor touched by this diff, so the clause has no subject here
+MET — §2 Rule 5 "checks may never be "none"" — src/tests/backlog/rule-lists.logic.test.ts:492 — no descriptor, `checks[]` or `emits[]` appears in either file, so nothing here can declare an empty check set (nothing to satisfy).
 
 VERDICT: PASS on compliance with the pasted clauses
 Clauses checked: 13   Unmet: 0
 
 ---
-⏱  20165ms (20.2s)
-📊 Tokens — total: 28255, input: 24435, output: 3820, reasoning: 3213
+⏱  23938ms (23.9s)
+📊 Tokens — total: 29864, input: 25573, output: 4291, reasoning: 3649

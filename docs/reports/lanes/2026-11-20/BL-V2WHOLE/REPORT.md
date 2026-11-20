@@ -152,3 +152,32 @@ TRIAGE.md: round-2 and round-3 sections: the eight context-gap lines in each re-
 UNVERIFIED: the real hook entry end to end on this branch with a staged close (the grounder ran it in a scratch clone); a hand-written output with correct public hashes passes; phone-test green until Mobile CI.
 
 STATUS: round 5 ready, task-410 RUNNING, grounder owed, no fold, no push.
+
+# ROUND 6 (grounder r5: H9 and the diff config keys)
+
+Commits: a8a3ca2db rule-lists.mjs (DIFF_ARGS pins `--diff-algorithm=myers`, `--indent-heuristic`, `--inter-hunk-context=0`; own commit, with its test and the brief-string test), f6f8b5944 check-lane-close.mjs (H9; own commit), b808b371b third correcting dated note in 08_agents.md (+ regenerated page), 51cf49c9c task note, plus the lane files commit. No status move. Hook tails: commit6.out (GATE OK / POLICY CHECKS OK). Red: red6.out, one commit attempt with only the tests and the task file staged and both tools at HEAD text: `Tests  5 failed | 166 passed (171)` (H9 retype after an earlier drop, the id check, the config-pinned diff, the DIFF_ARGS pins, the brief string). Green: both tool commits landed through the real hooks. NOT red-proven: the Files-narrowing test (the grounder's list of fields) was added in the green commit and passed there; I did not run it against the old tool.
+
+Existing function look: the board copy is found with the same `git ls-tree`/`git show` on the board ref used for the table and the launch commit; `parseFM` and `asList` for the copy; no new helper.
+
+H9 (root fix): the task type and the lane assignee are read from the BOARD copy of the task file (found by task id on refs/heads/wf2/board); a close whose board copy is a lane build or fix task is refused unless the closing copy is that same lane's build or fix task (message: `the board copy of this task is a build task held by @lane-...; the closing copy has type ... a lane build or fix task closes only as that lane's build or fix task`). Planted: the assignee dropped in an EARLIER lane commit then closed as doc, and as record: each refused; the three same-commit forms (H8) still refused; the unchanged close passes.
+
+Every field the close reads from the lane's own copy of the task file, and where it comes from now:
+- status: the staged copy (that is the move itself; the finished set comes from the board table).
+- id: the file's task number; a front-matter id that differs is refused (the id scopes the lane report TASK file).
+- type: the board copy (then the launch copy, then the staged one only for a task that was never on the board).
+- assignee, lane name: the board copy's lane assignee (else the staged, else the HEAD copy's); the lane report directory is the one of that lane; the assignees a grounder must differ from are the staged, HEAD and board assignees together.
+- milestone: the launch copy (a moved milestone is refused).
+- Files line: the union of the launch copy and the staged copy, for the outside-Files check, the coverage set and the rule-list resolution (planted: a lane that narrows its Files line cannot drop a list: refused without that list's output).
+- everything else in the body or front matter (title, labels, plan, notes, dependencies, ordinal, references): not read by the close check.
+
+Diff config keys: the shared command now carries the three pins (and the brief's command, which joins DIFF_ARGS). Planted: a lane that makes its diff with diff.interHunkContext=30, diff.algorithm=patience and diff.indentHeuristic=false still matches the recompute and closes.
+
+Correcting dated note (08_agents.md, prior text kept) states what the code does after this round. TRIAGE: out-error-paths-p1#1 and the diff-keys finding re-pointed to the new fix shas; plan-doc17 #1, #2, #3, #6 re-pointed to `task:task-375` after reading its note on wf2/board (A.2 restricts the reviewer's context to five sections of the context file, so the brief generator's decision and storage rows the findings name no longer reach the reviewer: the note names that scope, not each defect: UNVERIFIED that task-375 will remove the generator's wrong labels themselves); plan-error-paths#6, plan-plan-review-deepseek#4 and agents-s7-s11-p1#2 left as they were.
+
+Lens set on the final range (launch 455925ac2 to HEAD, Files paths, 9 paths, 134,988 characters, brief command): 10 lists = 25 compliance input files; code-review and error-paths split (2 parts each): 29 outputs, all with VERDICT. selfproof.txt: `launch 455925ac2; expected paths 9; compliance families 10; input files 25; lens split parts 4; problems 0`. FINDINGS.md refreshed untriaged: 183 findings (68 plan, 115 out). Real-input measurements unchanged (the three pins equal git's defaults, so no diff text changed; not re-run).
+
+TRIAGE.md new section "ROUND 5 GROUNDER" (54 CONFIRMED findings of that file): fixed 11, task:task-375 11, task:task-410 3, wontfix 29 (LOW or NIT, and plan-compliance-agents-s5-1to3#3 as before). Earlier sections' re-points as listed.
+
+UNVERIFIED: the real hook entry end to end with a staged close on this branch (the grounder ran it in a scratch clone); the Files-narrowing test against the old tool; task-375 removing the generator's labelling defects; a hand-written output with correct public hashes passes; phone-test green until Mobile CI.
+
+STATUS: round 6 ready, task-410 RUNNING, grounder owed, no fold, no push.

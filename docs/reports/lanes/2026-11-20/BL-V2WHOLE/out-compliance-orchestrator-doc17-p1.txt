@@ -1,18 +1,20 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:51:18.897Z file_sha256=ef897bb3372948160cba46fa81c770c07bf3d463f3fdeb425adc106fe8ea23c1 prompt_sha256=9a114e744d61b214f7deee5ea46f08008188b9bdc25d8714366542623c461f5b
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:09:46.063Z file_sha256=595f4b095b237313b6cb270875d9aaa3f13e398875ecfd1ff21dbe40812f4e9e prompt_sha256=26d25626713a978d3ee2295f1574e9551b6cfbe15924d01bd3be81137a5913c8
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling" — docs/reports/generated/rule-lists-by-kind.md:101 "| orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |" with scripts/analysis/rule-lists.mjs:310 "RULE LIST ${id} (${list.file}, ${sel}), part ${i} of ${n}. Judge the material under review against the rules in this part" — the readings document is one of the 9 lists the tooling kind attaches for this very kind of path, so the compliance lens is instructed to judge against readings as rules, the thing this clause forbids — remove the orchestrator-doc17 row from scripts/analysis/rule-lists.json (or mark it reference-only, outside the lens set) and regenerate the page.
+DEFER severity=LOW — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling" — docs/specs/00-architecture/137_mcqueue.md added line "his words: \"agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close.\"" — cannot see the 2026-11-20 MORNING-DECISIONS.md entry in the pasted register (the register stops at RR-0218, 2026-11-19), so cannot confirm the Rule 3 amendment rests on a decision rather than on a register entry, which doc-17 bars as authority — cite the register row of that 2026-11-20 entry in the note, or hold the Rule 3 amendment until the entry is logged as a ruling.
 
-DEFER severity=MED — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling" — docs/specs/00-architecture/137_mcqueue.md:100 "operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator AGREES the Rule 3 amendment and RULES on material too large to review"" — the Rule 3 two-commit-close amendment, which scripts/hooks/check-lane-close.mjs now refuses closes on, rests on a MORNING-DECISIONS entry (kind entry, dated after the pasted register's 2026-11-19 coverage), so a register entry feeds reviews — cite the operator decision record under backlog/decisions as the note's authority, or mark the amendment provisional until that record holds it.
+REJECT — doc-17 "never feed a review as a ruling" — accused: the change amends Spec 137 Rule 3 and Spec 08 section 5.3 text on quoted operator words, which doc-17 calls non-rulings — not a real issue on this list: no RR-#### reading id appears anywhere in the diff, and both notes quote the decision log verbatim, e.g. 08_agents.md added "operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`".
 
-DEFER severity=LOW — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling" — docs/specs/00-architecture/08_agents.md:231 "the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y", item 4 as put to him" — the whole-change check spec text and the hook built from it are anchored to a bundled five-item answer in the register, not to a logged decision, which is the same defect as the Rule 3 note — name the decision record that carries item 4 in the note in place of the register line.
+REJECT — doc-17 "The operator's rulings are the decisions" — accused: the 08_agents.md notes lean on the bare affirmative "1-5 y" as a ruling — not a real issue at this list level: a logged operator word is a decision-log quote, not one of the RR rows doc-17 prints, and whether that 2026-11-20 entry is filed as a decision cannot be seen from the pasted register.
 
-MET — doc-17 "They are NOT the operator's words as a ruling" — scripts/analysis/rule-lists.mjs and scripts/hooks/check-lane-close.mjs (entire diff) — no RR-numbered reading id is cited anywhere in the diff as authority, so no individual reading is passed off as a ruling.
+MET — doc-17 "Readings and register entries of the rulings register" (the file is the whole gove rning list for this run) — docs/reports/generated/rule-lists-by-kind.md "| orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |" — the list stays whole-file with an unchanged size, so doc-17 is fed whole to the lens, not trimmed to its rulings-looking rows.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 2   Unmet: 2
+MET — doc-17 scope, no reading rewritten into authority — material paths "paths: [\"docs/reports/generated/rule-lists-by-kind.md\",\"docs/specs/00-architecture/08_agents.md\",\"docs/specs/00-architecture/137_mcqueue.md\",\"scripts/analysis/backlog-lane.mjs\",\"scripts/analysis/rule-lists.mjs\"]" — doc-17 itself is not edited by this change, so no reading in it is promoted, altered or re-stamped as a ruling by the diff.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 2   Unmet: 0
 
 ---
-⏱  47190ms (47.2s)
-📊 Tokens — total: 45854, input: 36466, output: 9388, reasoning: 8718
+⏱  31136ms (31.1s)
+📊 Tokens — total: 33051, input: 27494, output: 5557, reasoning: 4882

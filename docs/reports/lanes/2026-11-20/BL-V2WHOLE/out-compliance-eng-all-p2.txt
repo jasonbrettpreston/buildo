@@ -1,19 +1,32 @@
 ◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:51:18.855Z file_sha256=27c0a0164e8bf8e2af7c78eddbe6ef5bf890bfe831e36948017423d0dcb13e40 prompt_sha256=cead9eceed33e75f196db04139bfaa39748333f25c42f4e5b23c802b8220e55c
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:09:46.020Z file_sha256=65d1934d541c34708a7cff6d01cc5910e0eccaf26ecedde9803bf9c7f6135fbc prompt_sha256=190e6a6dd0c01d678cae33dc38a61ccdfdd1c855fe60d44a2f0d9381300ecafc
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-eng-all-p2.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/backlog/check-lane-close.logic.test.ts:369 "const TROW = { id: 'tbl', globs: ['scripts/analysis/**'], lists: ['first'], why: 'the table is governed like any file' };" — the new fixtures (TROW, withRow, gold, F5, the pushed rows) are untyped inline objects and nothing in the change imports from src/tests/factories.ts — add a typed table/row factory to src/tests/factories.ts and build TROW, F5 and the tableEdit rows from it.
-DEFER severity=MED — §8.2 "The project `tsconfig.json` targets **ES2017**." — src/tests/backlog/check-lane-close.logic.test.ts:367 "const F5 = Object.fromEntries(...)" — Object.fromEntries is an ES2019 lib member, so under the documented ES2017 target with the default lib `npm run typecheck` fails on this file unless `lib` is raised (tsconfig not in this chunk, cannot see) — build F5 with a reduce/Object.assign loop, or record the raised lib in tsconfig.
-DEFER severity=LOW — §12.12 "at least one `fast-check` property test asserting the invariant" — scripts/hooks/check-lane-close.mjs:88 "if ((it.k ?? 1) !== (c - 1) * p.parts + p.part)" — the new pure chunkErrors carries an index arithmetic invariant and a partition/union invariant, but only example tests exist — add src/tests/property/chunk-errors.property.test.ts asserting k === (c-1)*parts+part for all chunk/part grids and that any partition of the changed paths yields no missing and no extra path.
-MET — §8.2 "use `[\s\S]` instead" — src/tests/backlog/check-lane-close.logic.test.ts:480 "refused(scenario({ tableEdit: withRow, files: 'src/a.ts, scripts/analysis/rule-lists.json', laneWork: { 'scripts/analysis/rule-lists.json': trimmed, 'src/a.ts': `${AFILE}// x\n` }, mutate: (l) => ({ ...l, 'out-compliance-ev.txt': null, 'in-out-compliance-ev.txt': null }) }), /list ev[\s\S]*out-compliance-ev\.txt/, 40)" — the new regexes avoid the ES2018 s flag and use [\s\S].
-MET — §2.3 "Use TypeScript Optional Chaining (`?.`) or explicit type guards." — scripts/hooks/check-lane-close.mjs:323 "const finished = new Set((boardTable?.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));" — the new nested lookups (boardTable, baseFm, baseTask) use ?. with explicit null guards and the diff adds no non-null assertion.
-REJECT — §10.2 "Frontend WFs must NOT modify files in `scripts/`" — the change edits scripts/hooks/check-lane-close.mjs — not a real issue: this is the backlog close-check hook itself, not a frontend workflow reaching into pipeline entry points, and the clause is scoped to Frontend WFs.
-REJECT — §9.4, §6.1 (Pipeline SDK, logError mandate) — accused of DB access and logging outside the SDK/logger — not a real issue: the hook opens no Pool and writes no rows, so §9.4 (pipeline scripts that write to the database) and §6.1 (API routes and lib modules) do not reach it, and its silent catch of an unreadable table is reported as a refusal line, not swallowed.
-REJECT — §5.2 "When altering/deleting code the Regression Guardian flags as a fence" — accused of retiring the pinned assertion "the diff is never split or trimmed to core files" — not a real issue: the retirement is the change's stated purpose and the new planted-defect cases pin the replacement behaviour; no Guardian fence flag is pasted or visible in this chunk.
+BUG severity=HIGH — none raised (see DEFER below); no clause in the pasted standards is squarely violated by a diff line.
 
-VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 17   Unmet: 0
+DEFER severity=MED — §5.3 "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code." — scripts/hooks/check-lane-close.mjs "export function chunkErrors({ label, items, expected, diffOf = () => null, optional = [] }) {" — the only test change in this material is prose assertions on the brief, so neither a red test nor any `.logic.test.ts` case exercising the new refusal logic (chunkErrors, the split-lens branch, the missing/duplicate/foreign-path refusals) can be seen — add logic tests that compute expected refusal lines for chunkErrors (missing path, duplicated path, edited stamp, chunk gap) and for the split-lens branch, then point at them.
+
+DEFER severity=LOW — §12.12 "Pure functions with arithmetic invariants — scoring formulas, key normalizers, distance/unit conversions, cursor comparators — MUST have at least one `fast-check` property test asserting the invariant." — scripts/hooks/check-lane-close.mjs "if ((it.k ?? 1) !== (c - 1) * p.parts + p.part)" — the file-number derivation is arithmetic and un-pinned by any property test in this material — add a forAll over (c, part, parts) plus the partition invariant (a valid partition returns [], dropping one path returns a line).
+
+MET — §5.2 "*.logic.test.ts | Pure functions, scoring, classification" — src/tests/backlog/backlog-lane.logic.test.ts:232 — the changed brief/lens-set derivation is pinned in the logic layer, not a ui or infra file.
+
+MET — §5.1 "Never write untyped inline mocks" — src/tests/backlog/backlog-lane.logic.test.ts:236 — the added assertions compare literal strings, no inline object fixtures, so no factory import is required.
+
+MET — §2.3 "explicitly check for `null` or `undefined`" — scripts/hooks/check-lane-close.mjs "const prot = staged.filter((p) => matchesAny(boardTable.protected_paths ?? [], p));" — nested access is null-guarded and the diff introduces no non-null assertion (`!`).
+
+MET — §8.2 "Regex `s` flag (dotAll) requires ES2018+" — scripts/hooks/check-lane-close.mjs "const kOf = (name) => { const x = /-p(\d+)\.txt$/.exec(name);" — new regexes use no `s` flag and no dotAll, so the ES2017 target is respected.
+
+REJECT — §9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — the file is scripts/hooks/check-lane-close.mjs, a git close-check that writes no DB rows, so the SDK mandate does not reach it.
+
+REJECT — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — this material is the review/close gate itself, not a frontend WF, so that boundary clause is not engaged.
+
+REJECT — §12.11 "silent-catch-fallback — bans `try/catch { return [] / null / emptyResult() }`" — the only such catch is "const safePaths = (m) => { try { return diffPaths(m); } catch { return null; } }", whose null is turned into a refusal line by the caller, and the rule is scoped to src/features/leads and rule-by-rule src/lib, not scripts/hooks.
+
+REJECT — §5.2 "*.regression.test.ts | Pin a load-bearing behavior a diff must NOT retire" — the retired assertion "the diff is never split or trimmed to core files" is replaced in the same test by "expect(e).toContain('one file alone over the room is refused naming the file and its size...')", so the no-trim fence stays pinned.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 1
 
 ---
-⏱  94287ms (94.3s)
-📊 Tokens — total: 52528, input: 33320, output: 19208, reasoning: 18221
+⏱  176710ms (176.7s)
+📊 Tokens — total: 43166, input: 23958, output: 19208, reasoning: 18281

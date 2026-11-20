@@ -1,29 +1,23 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T21:51:18.600Z file_sha256=8b825997528e051807b332d1bc6ad5d17e82e4f21de224b2a1b991fb30f764dd prompt_sha256=6a0b5be218126e703ea3869201b9c829a757d06d7c9feec09031944be5a9a58e
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T22:09:45.768Z file_sha256=abeae3021a085ef14a7af7a52209db71a2bcac4531a9f85809fff8587ce66c93 prompt_sha256=ac906781f883632d7d9121a50eb91bd5e14ab4c73ffad311465e0eb37943ef65
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-code-review-p1.txt (model: deepseek-reasoner)
 
-BUG severity=CRIT — none found; findings below are MED or lower.
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs "rangeEmpty = cov.length === 0;" — a build/fix close whose whole range is exempt paths is not refused, and the out lens then falls into the "expected.length === 0" branch that accepts any REVIEW header with no diff binding, though the comment says such a task "is refused" — compute the empty test from the exempt-filtered set (expectedPaths.length === 0), or refuse when cov is non-empty but expected is empty.
 
-DEFER severity=MED — scripts/analysis/rule-lists.mjs buildLensInputs "if (avail - RESERVE - listRoom < big.text.length) throw new Error(`file ${big.path} is ${big.text.length} characters of diff and cannot be split inside a file" — this RESERVE based estimate throws before the measured check ("the room of a chunk is MEASURED (V2.WHOLE fix round)") is reached, so a largest file whose real prompt is between max-1000 and max (avail reserves RESERVE+200) is refused although `promptOf([s.path], s.text) <= max` — delete this estimate throw and let the measured `const alone = promptOf([s.path], s.text); if (alone > max) throw ...` line (which already names the file and the size) decide.
+DEFER severity=MED — scripts/analysis/rule-lists.mjs "export const lensContexts = () => [undefined];" — the brief tells lanes to run with "`--context <pasted-context file>`", but the recomputation only tries the placeholder context, so a lane that passes a real context file produces a prompt_sha256 that never matches and its lens output is refused — read the committed context file in lensContexts, or drop the --context instruction until task-375.
 
-DEFER severity=MED — scripts/hooks/check-lane-close.mjs check "const ownsTable = coveredBy(filesEntries(baseTask ?? mv.now), 'scripts/analysis/rule-lists.json');" — the two identical calls one line above are written `filesEntries(...) ?? []`, so filesEntries evidently can return null, and here it is passed straight into coveredBy before closeErrors/resolveTask can refuse the task; if coveredBy does `.some` this is a TypeError inside a commit-msg hook — pass `filesEntries(baseTask ?? mv.now) ?? []` as the guarded lines do.
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs "if (moves.length === 0) return 0;" — this precedes the board-required failure, so in a clone with no board ref a task moved to a finished status outside the default BUILT/DONE/MERGED set is treated as "no move" and the hook exits 0, although the design says a close without the board is refused — read the board before deciding there is no move, or refuse when the board is absent and any task file changed.
 
-DEFER severity=MED — scripts/hooks/check-lane-close.mjs "export const lensContexts = () => [undefined];" against the brief scripts/analysis/backlog-lane.mjs "each \`${cmd} <diff file> --template .claude/review-templates/<lens file> --context <pasted-context file>\`" — the compliance command in `per` passes no --context, but the out-lens command does, so a lane that follows the brief hashes a prompt containing the real context text while the check only tries the placeholder and refuses it as "an output not made by the tool on that input"; feed the committed context text into lensContexts (or drop --context from the brief until task-375 lands).
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "const promptOf = (paths, text) => sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: longest, i: 99999, n: 99999, material: text, paths, c: 99999, m: 99999 }), ..." — the chunk room is measured with 5 digit sentinels, an upper bound, so a single file diff whose real prompt fits by a few characters is refused as unsplittable — measure with the actual chunk and part numbers instead of 99999.
 
-DEFER severity=MED — scripts/analysis/backlog-lane.mjs "const baseFull = /^refs\//.test(ruleTable?.base_ref ?? '') ? ruleTable.base_ref : `refs/heads/${ruleTable?.base_ref ?? 'wf2/board'}`;" against scripts/hooks/check-lane-close.mjs "export const BOARD_REFS = ['refs/heads/wf2/board', 'refs/remotes/origin/wf2/board'];" — the lane is told to resolve its launch commit on refs/heads/<base_ref> while the hook falls back to origin when the local board ref is absent, so in a clone with only refs/remotes/origin/wf2/board the brief's `$(git log ...)` expands to nothing, the lane diffs the clean worktree and gets an empty material that the close then refuses; select the board ref in one exported place and use it in the brief.
-
-DEFER severity=LOW — scripts/hooks/check-lane-close.mjs check "rangeEmpty = cov.length === 0;" against "a build or fix task whose range holds no file outside the exempt paths ... is refused" — cov is computed before the exempt filter, so a build lane whose only covered change is an exempt path does not trip the refusal and, because `expectedPaths` then has length 0, also skips the chunk proof and the unsplit file_sha256 binding (`if (ph === 'out' && expected.length)`); set rangeEmpty from `expectedPaths.length === 0` after the filter.
-
-NIT — scripts/hooks/check-lane-close.mjs reviewErrors "if (opt.templateText === null) e.push(`${name}: the review template ${template} is not in the repo (index or HEAD), so prompt_sha256 cannot be recomputed (fail closed)`);" — the value comes from readBase, i.e. `git show ${base}:${p}`, never index or HEAD, so a lane debugging this refusal is sent to the wrong place; say "not at the range base".
-
-REJECT — scripts/hooks/check-lane-close.mjs "items: names.map((n, x) => ({ name: `in-${n}`, k: kOf(n), p: listParts[x] }))" — indexing listParts by the names index looks like it can misalign when an input fails to parse — it cannot: the call sits inside `if (!bad.length)` and every non-pushing branch of the loop pushes to `bad`, so listParts is exactly names in order with the same length.
+REJECT — scripts/analysis/rule-lists.mjs "const p = rest.slice(0, (rest.length - 3) / 2);" — the path looks sliced before the header is validated, so a quoted or renamed header could compute a truncated path — the next line throws unless seg starts with "diff --git a/" and `${p} b/${p}` equals rest, so no wrong path is ever returned (fail closed).
 
 VERDICT: FAIL on code correctness
 Top 3 defects (if FAIL):
-- The RESERVE estimate throw in buildLensInputs refuses a largest file whose measured prompt fits, contradicting the measured room check added in the same hunk.
-- `coveredBy(filesEntries(baseTask ?? mv.now), ...)` drops the `?? []` guard the same function uses elsewhere, so a task with an unreadable Files line can throw inside the hook instead of failing closed.
-- The prompt_sha256 recomputation only accepts the placeholder context while the brief tells the lane to run the out lenses with `--context`, so a lane following the brief is refused at close.
+- rangeEmpty is computed before the exempt filter, so an all-exempt build/fix range skips the chunk/diff proof silently, contradicting the F1 comment
+- review prompt hashes are only recomputed with the placeholder context while the brief instructs lanes to pass --context, so genuine lens outputs can be refused
+- a boardless clone closing a task to a non-default finished status returns success, bypassing the close check the design says must refuse it
 
 ---
-⏱  224588ms (224.6s)
-📊 Tokens — total: 72429, input: 26284, output: 46145, reasoning: 44954
+⏱  324417ms (324.4s)
+📊 Tokens — total: 92492, input: 27406, output: 65086, reasoning: 64410
