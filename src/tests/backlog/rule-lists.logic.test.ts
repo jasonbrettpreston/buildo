@@ -141,6 +141,21 @@ describe('resolve on a fixture tree (AC #2)', () => {
     expect(r.status).toBe(3);
     expect(r.stderr).toContain('Q');
   });
+  it('a row that names an undefined list, or a table with no rows, is refused with one named line, not a stack', () => {
+    const f = fixture();
+    const t = JSON.parse(fs.readFileSync(f.table, 'utf8'));
+    t.rows[0].lists = ['nope'];
+    fs.writeFileSync(f.table, JSON.stringify(t));
+    const r = res(f, 'src/two.ts', ['--type', 'build']);
+    expect(r.status).toBe(3);
+    expect(r.stderr).toContain('nope');
+    expect(r.stderr.trim().split('\n')).toHaveLength(1);
+    delete t.rows;
+    fs.writeFileSync(f.table, JSON.stringify(t));
+    const v = script(CLI, ['validate', '--root', f.d, '--table', f.table]);
+    expect(v.status).toBe(1);
+    expect(v.stderr).toMatch(/rows/);
+  });
   it('validate refuses a missing list file, a selector with no heading and a dead glob', () => {
     const f = fixture();
     const t = JSON.parse(fs.readFileSync(f.table, 'utf8'));
@@ -212,6 +227,12 @@ describe('lens-input: list first, then the material, never trims', () => {
     expect(l.text[0]).toContain('one line');
     expect(l.text[0]).not.toContain('two line');
   });
+  it('refuses a --max that is not a positive number (the bound must be enforced)', () => {
+    const f = fixture();
+    const l = lens(f, 'first', 'MAT', Number.NaN);
+    expect(l.r.status).toBe(1);
+    expect(l.r.stderr).toMatch(/--max/);
+  });
   it('removes its own earlier input files with the same prefix before writing', () => {
     const f = fixture();
     lens(f, 'whole', 'MAT', 3200);
@@ -229,6 +250,7 @@ describe('findings: ids are <file stem>#<ordinal among BUG and DEFER lines>', ()
     fs.writeFileSync(path.join(d, 'notes.txt'), 'BUG severity=HIGH — not a lens output\n');
     const r = script(CLI, ['findings', '--dir', d]);
     expect(r.status, r.stderr).toBe(0);
-    expect(r.stdout.split('\n').filter(Boolean).map((l) => l.split('\t')[0])).toEqual(['out-compliance-x#1', 'out-compliance-x#2']);
+    expect(r.stdout.split('\n').filter((l) => l.includes('\t')).map((l) => l.split('\t')[0])).toEqual(['out-compliance-x#1', 'out-compliance-x#2']);
+    expect(r.stdout).toMatch(/^Ruled: out-compliance-x\.txt sha256:[0-9a-f]{12} findings:2$/m);
   });
 });

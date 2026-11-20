@@ -14,7 +14,7 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { args, parseFM, REPO } from './backlog-lib.mjs';
+import { args, parseFM, REPO, sha256 } from './backlog-lib.mjs';
 import { globToRegExp, matchesAny } from './mcbylaws/paths.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -88,6 +88,7 @@ export function validateTable(table, root) {
     if (Boolean(l.whole) === Array.isArray(l.sections)) bad.push(`list ${id}: needs exactly one of whole or sections`);
     try { listBlocks(l, root, id); } catch (e) { bad.push(e.message); }
   }
+  if (!Array.isArray(table.rows)) bad.push('rows: missing');
   const seen = new Set();
   for (const row of table.rows ?? []) {
     if (seen.has(row.id)) bad.push(`row ${row.id}: duplicate id`); seen.add(row.id);
@@ -113,6 +114,25 @@ export function filesEntries(body) {
   const e = m ? m[1].split(',').map((s) => s.trim().replace(/^\.\//, '')).filter(Boolean) : [];
   return e.length ? e : null;
 }
+/** The raw text of the first `Files:` line (what the launch brief and the lens set read), '' when there is none. */
+export const filesText = (body) => /(?:^|\s)Files:[ \t]*(.*)$/m.exec(String(body))?.[1] ?? '';
+/**
+ * The lens set a task type calls for (Spec 08 section 7 rule 4, 08_agents.md:334; task-358): the compliance lens is separate (once per rule list).
+ * Plan and output lenses other than compliance, by task type and by the Files line. Shared by the launch brief and the close check.
+ */
+export function lensSet({ type, files }) {
+  const code = ['build', 'fix'].includes(String(type ?? '').toLowerCase());
+  const surface = /\bmobile\/|src\/app\/|src\/components\/|surfaces\//.test(files);
+  const sec = /entitlement|auth|stripe|metered/i.test(files);
+  return {
+    code,
+    plan: ['plan-review-deepseek', ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],
+    out: [...(code ? ['code-review'] : []), ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],
+  };
+}
+/** The line a grounder restates for every lens output it ruled on: name, sha256 (12 hex) and BUG/DEFER count. */
+export const ruledLine = (name, text) => `Ruled: ${name} sha256:${sha256(Buffer.from(text)).slice(0, 12)} findings:${findingsIn([{ name, text }]).length}`;
+
 /** The group letter of a milestone's title ("... [S]" gives "S"), read from backlog/milestones of `root`. */
 export function milestoneLetter(root, milestone) {
   const dir = path.join(root, 'backlog/milestones');
@@ -153,6 +173,7 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
     let l = byId.get(id);
     if (!l) {
       const d = table.lists[id];
+      if (!d) throw new Error(`row ${rowId}: list ${id} is not defined in the table`);
       l = { id, file: d.file, ...(d.whole ? { whole: true } : { sections: d.sections }), generated_by: d.generated_by, ...(d.status ? { status: d.status } : {}), rows: [], why: [] };
       byId.set(id, l); result.lists.push(l);
     }
@@ -257,7 +278,8 @@ function cli() {
     console.log(`rule-lists: ok ${Object.keys(table.lists).length} lists, ${table.rows.length} rows`);
   } else if (cmd === 'resolve') {
     const letter = a.letter && a.letter !== true ? String(a.letter) : undefined;
-    const r = resolveTask({ table, root, body: `Files: ${str('files', '')}`, type: str('type', ''), letter });
+    let r;
+    try { r = resolveTask({ table, root, body: `Files: ${str('files', '')}`, type: str('type', ''), letter }); } catch (e) { die(3, `cannot resolve: ${String(e.message).split('\n')[0]}`); }
     if (r.error) die(3, r.error);
     console.log(JSON.stringify(r, null, 2));
   } else if (cmd === 'lens-input') {
@@ -266,6 +288,7 @@ function cli() {
     if (!list) die(1, `no list ${id} in ${tableFile}`);
     const matFile = str('material', ''); const outPrefix = str('out', '');
     if (!matFile || !outPrefix || !fs.existsSync(matFile)) die(2, 'usage: lens-input --list <id> --material <file> --out <prefix> [--template <lens file>] [--max <n>]');
+    if (a.max !== undefined && !(Number.isFinite(Number(a.max)) && Number(a.max) > 0)) die(1, `--max must be a positive number (got ${a.max}); the bound has to be enforced`);
     let files;
     try { files = buildLensInputs({ id, list, root, material: fs.readFileSync(matFile, 'utf8'), templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }
     const dir = path.dirname(path.resolve(outPrefix)); const base = path.basename(outPrefix);
@@ -276,6 +299,7 @@ function cli() {
     const dir = str('dir', '');
     if (!dir || !fs.existsSync(dir)) die(2, 'usage: findings --dir <lane report dir>');
     const files = fs.readdirSync(dir).filter(isLensOutput).sort().map((name) => ({ name, text: fs.readFileSync(path.join(dir, name), 'utf8') }));
+    for (const f of files) console.log(ruledLine(f.name, f.text));
     for (const f of findingsIn(files)) console.log(`${f.id}\t${f.line}`);
   } else die(2, 'usage: rule-lists.mjs validate | resolve | lens-input | findings');
 }
