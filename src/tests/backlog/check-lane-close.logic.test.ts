@@ -15,10 +15,10 @@ import { ROOT, run, script, tmp } from './helpers';
 const TASK = 'backlog/tasks/task-7 - Lane work.md';
 const OTHER = 'backlog/tasks/task-8 - Other work.md';
 const LD = 'docs/reports/lanes/2026-11-20/BL-COMPLY2';
-const taskText = (o: { id?: string; status: string; type?: string | undefined; files?: string | null | undefined; assignees?: string[] | undefined }) =>
-  `---\nid: ${o.id ?? 'TASK-7'}\ntitle: Lane work\nstatus: ${o.status}\n${o.assignees && o.assignees.length === 0 ? 'assignee: []' : `assignee:\n${(o.assignees ?? ['@lane-BL-COMPLY2']).map((a) => `  - '${a}'`).join('\n')}`}\nmilestone: m-0\ntype: ${o.type ?? 'build'}\n---\n\n## Description\n\n<!-- SECTION:DESCRIPTION:BEGIN -->\nprose\n${o.files === null ? '' : `Files: ${o.files ?? 'src/a.ts'}\n`}<!-- SECTION:DESCRIPTION:END -->\n`;
+const taskText = (o: { milestone?: string | undefined; id?: string; status: string; type?: string | undefined; files?: string | null | undefined; assignees?: string[] | undefined }) =>
+  `---\nid: ${o.id ?? 'TASK-7'}\ntitle: Lane work\nstatus: ${o.status}\n${o.assignees && o.assignees.length === 0 ? 'assignee: []' : `assignee:\n${(o.assignees ?? ['@lane-BL-COMPLY2']).map((a) => `  - '${a}'`).join('\n')}`}\nmilestone: ${o.milestone ?? 'm-0'}\ntype: ${o.type ?? 'build'}\n---\n\n## Description\n\n<!-- SECTION:DESCRIPTION:BEGIN -->\nprose\n${o.files === null ? '' : `Files: ${o.files ?? 'src/a.ts'}\n`}<!-- SECTION:DESCRIPTION:END -->\n`;
 const TABLE = {
-  contract_version: 1, base_ref: 'lane-base', finished_statuses: ['BUILT', 'DONE', 'MERGED'], protected_paths: ['scripts/hooks/check-lane-close.mjs', 'scripts/analysis/rule-lists.*', '.husky/*'],
+  contract_version: 1, base_ref: 'wf2/board', finished_statuses: ['BUILT', 'DONE', 'MERGED'], protected_paths: ['scripts/hooks/check-lane-close.mjs', 'scripts/analysis/rule-lists.*', '.husky/*'],
   lists: { first: { file: 'docs/a.md', whole: true, generated_by: 'hand-written' }, 'inc-F': { file: 'docs/inc.md', whole: true, generated_by: 'hand-written' }, ev: { file: 'docs/ev.md', whole: true, generated_by: 'hand-written' }, msf: { file: 'docs/ms.md', whole: true, generated_by: 'hand-written' } },
   every_task: ['ev'], milestone_docs: { F: ['msf'] },
   rows: [{ id: 'src', globs: ['src/**'], lists: ['first'], why: 'src' }], exempt: ['docs/reports/lanes/**'], increment_docs: { F: 'inc-F' },
@@ -64,7 +64,7 @@ type Opts = {
   status?: string; before?: string; type?: string; files?: string | null; assignees?: string[]; beforeAssignees?: string[]; trailer?: string | false; msg?: string; table?: 'keep' | 'delete' | 'never';
   tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
   split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
-  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string;
+  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; finalMilestone?: string; finalFiles?: string;
   mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
 };
 function scenario(o: Opts = {}) {
@@ -75,22 +75,23 @@ function scenario(o: Opts = {}) {
   const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
   o.tableEdit?.(table);
   if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
+  w('scripts/lib/review-template.js', '// stub prompt builder\n'); w('scripts/deepseek-review.js', '// stub review tool\n');
   w('docs/a.md', '# A\nrule one text\nrule two text\n'); w('docs/ev.md', '# Ev\nthe five words and the plan protocol\n'); w('docs/ms.md', '# Ms\nthe milestone objectives\n'); w('docs/inc.md', '# Inc\nincrement text\n');
   w('src/a.ts', AFILE);
   w('backlog/milestones/m-0 - inc.md', '---\nid: m-0\ntitle: "Increment 1·A Foundations [F]"\n---\n');
   w(TASK, taskText({ status: o.before ?? 'RUNNING', type: o.beforeType ?? o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees }));
   if (o.otherTask) w(OTHER, taskText({ id: 'TASK-8', status: 'RUNNING' }));
   for (const [p, x] of LENS_TEMPLATES) w(p, x);
-  g('add', '-A'); g('commit', '-qm', 'base'); g('branch', 'lane-base');
+  g('add', '-A'); g('commit', '-qm', 'base'); g('branch', 'wf2/board');
   const baseSha = g('rev-parse', 'HEAD').stdout.trim();
   const laneWork = o.laneWork ?? { 'src/a.ts': `${AFILE}// lane work\n` };
   if (Object.keys(laneWork).length) { for (const [f, t] of Object.entries(laneWork)) w(f, t); g('add', '-A'); g('commit', '-qm', 'lane work'); }
   if (o.tagAtHead) g('tag', o.tagAtHead);
-  if (o.folded) g('branch', '-f', 'lane-base', 'HEAD');
+  if (o.folded) g('branch', '-f', 'wf2/board', 'HEAD');
   if (o.afterFold) { for (const [f2, t2] of Object.entries(o.afterFold)) w(f2, t2); g('add', '-A'); g('commit', '-qm', 'fix after the fold'); }
   if (o.table === 'delete') fs.rmSync(path.join(d, 'scripts/analysis/rule-lists.json'));
   for (const [f, t] of Object.entries(o.staged ?? {})) w(f, t);
-  if (!o.noTaskFile) w(TASK, o.taskFileText ?? `${taskText({ status: o.status ?? 'BUILT', type: o.type, files: o.files, assignees: o.assignees })}notes\n`);
+  if (!o.noTaskFile) w(TASK, o.taskFileText ?? `${taskText({ status: o.status ?? 'BUILT', type: o.type, files: o.finalFiles ?? o.files, assignees: o.assignees, milestone: o.finalMilestone })}notes\n`);
   // the lane report: inputs written by the real lens-input, outputs carrying the review tool's header
   const lane: Lane = { TASK: 'task-7\n' };
   // V2.WHOLE (task-410): the material is the REAL diff of the task range (the command the brief gives), so the close check's path and text recompute has something true to compare
@@ -426,7 +427,7 @@ describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () =>
     expect(r.status, r.stderr).toBe(0);
   });
   it('F1 (e) PLANTED DEFECT: a TAG with the base ref name cannot shadow the branch: a chunk set missing one file is still refused', () => {
-    refused(scenario({ ...SPLIT, tagAtHead: 'lane-base', split: { max: 4000, skip: 'src/f3.ts' } }), /src\/f3\.ts/, 24);
+    refused(scenario({ ...SPLIT, tagAtHead: 'wf2/board', split: { max: 4000, skip: 'src/f3.ts' } }), /src\/f3\.ts/, 24);
   });
   it('F8 PLANTED DEFECT: a lane folded into the base plus one fix commit is still covered whole (from its launch commit): a chunk set missing the pre-fold file is refused; the whole set closes (control)', () => {
     const fold = { files: 'src/', lensFinding: false, folded: true, afterFold: { 'src/fix.ts': 'export const fix = 1;\n' }, laneWork: { 'src/a.ts': `${AFILE}// lane work\n` } } as const;
@@ -499,5 +500,23 @@ describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () =>
     const real = scenario({ tableEdit: gold, files: 'src/', laneWork: { 'src/a.ts': `${AFILE}// x\n`, 'src/golden/s1/ok.web.json': '{"golden":true}\n' } });
     expect(real.status, real.stderr).toBe(0);
     refused(scenario({ tableEdit: gold, files: 'src/', laneWork: { 'src/a.ts': `${AFILE}// x\n`, 'src/golden/s1/helper.mjs': 'export const sneaky = 1;\n' }, split: { max: 100000, skip: 'src/golden/s1/helper.mjs' } }), /src\/golden\/s1\/helper\.mjs/, 33);
+  });
+  it('H1 PLANTED DEFECT: a lane commit that cuts finished_statuses in its own table is refused (the board list decides what is a finished status); the control closes (default scenario)', () => {
+    const cut = JSON.stringify({ ...TABLE, rows: [...TABLE.rows, TROW], finished_statuses: ['MERGED'] });
+    refused(scenario({ tableEdit: withRow, files: 'src/a.ts, scripts/analysis/rule-lists.json', laneWork: { 'scripts/analysis/rule-lists.json': cut, 'src/a.ts': `${AFILE}// x\n` } }), /finished_statuses of this branch's table/, 41);
+  });
+  it('H1 PLANTED DEFECT: a lane commit that repoints base_ref to its own branch and widens exempt in the same commit is refused', () => {
+    const own = JSON.stringify({ ...TABLE, rows: [...TABLE.rows, TROW], base_ref: 'master', exempt: ['docs/reports/lanes/**', 'src/**', 'scripts/**'] });
+    refused(scenario({ tableEdit: withRow, files: 'src/a.ts, scripts/analysis/rule-lists.json', laneWork: { 'scripts/analysis/rule-lists.json': own, 'src/a.ts': `${AFILE}// x\n` } }), /base_ref of this branch's table/, 42);
+  });
+  it('H4 PLANTED DEFECT: a lane that moves its task to another milestone is refused (the launch copy decides)', () => {
+    refused(scenario({ finalMilestone: 'm-9' }), /may not move its task to another milestone/, 43);
+  });
+  it('H3 PLANTED DEFECT: a change to the prompt builder that the launch Files line does not name is refused; named at launch it closes', () => {
+    const row = (x: Record<string, unknown>) => { (x.rows as unknown[]).push({ id: 'lib', globs: ['scripts/lib/**'], lists: ['first'], why: 't' }); };
+    const lw = { 'src/a.ts': `${AFILE}// x\n`, 'scripts/lib/review-template.js': '// changed prompt builder\n' };
+    refused(scenario({ tableEdit: row, files: 'src/a.ts', finalFiles: 'src/a.ts, scripts/lib/review-template.js', laneWork: lw }), /review-template\.js differs from the range base/, 44);
+    const ok = scenario({ tableEdit: row, files: 'src/a.ts, scripts/lib/review-template.js', laneWork: lw });
+    expect(ok.status, ok.stderr).toBe(0);
   });
 });

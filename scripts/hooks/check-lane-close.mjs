@@ -117,6 +117,8 @@ export function chunkErrors({ label, items, expected, diffOf = () => null, optio
   if (extra.length) e.push(`${label}: ${extra.length} path(s) in the chunks are not in the task range (or are exempt paths): ${extra.slice(0, 6).join(', ')}${extra.length > 6 ? ', ...' : ''}`);
   return e;
 }
+/** H1: the board ref the base, the launch commit and the deciding table keys are read from (a lane's table cannot name another). */
+export const BOARD_REFS = ['refs/heads/wf2/board', 'refs/remotes/origin/wf2/board'];
 const kOf = (name) => { const x = /-p(\d+)\.txt$/.exec(name); return x ? Number(x[1]) : null; };
 
 /**
@@ -316,7 +318,12 @@ function check(msgFile) {
   if (!fs.existsSync(tableFile) && !tableInHead) return 0; // a repo that never had the table is not held to it
   let table;
   try { table = readTable(tableFile); } catch (e) { return fail([`cannot read scripts/analysis/rule-lists.json${tableInHead ? ' (it is in HEAD: the close check fails closed; restore it)' : ''}: ${String(e.message).split('\n')[0]}`]); }
-  const finished = new Set((table.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
+  // H1 (V2.WHOLE round 4): the keys that decide what is checked (base_ref, finished_statuses, protected_paths, exempt) come from the BOARD ref, never from the lane's own table or from a ref the lane's table names
+  const boardRef = BOARD_REFS.find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0) ?? null;
+  let boardTable = null;
+  if (boardRef) { const bx = git(['show', `${boardRef}:scripts/analysis/rule-lists.json`]); try { boardTable = bx.status === 0 ? JSON.parse(bx.stdout) : null; } catch { boardTable = null; } }
+  if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: the keys that decide what is checked come from the board (fail closed)`]);
+  const finished = new Set((boardTable.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
   const staged = git(['diff', '--cached', '--name-only', '--no-renames']).stdout.split('\n').filter(Boolean);
   const taskFiles = staged.filter((f) => /^backlog\/tasks\/task-\d+( -.*)?\.md$/i.test(f));
   const moves = [];
@@ -334,36 +341,29 @@ function check(msgFile) {
   if (moves.length === 0) return 0;
   const errors = [];
   // self-edit: the check, its table, its helper, the review tool and the hooks may not change in a commit that also closes a task
-  const prot = staged.filter((p) => matchesAny(table.protected_paths ?? [], p));
+  const prot = staged.filter((p) => matchesAny(boardTable.protected_paths ?? [], p));
   if (prot.length) errors.push(`this commit changes protected path(s) (${prot.slice(0, 4).join(', ')}) and also moves ${moves.map((m) => path.basename(m.f).slice(0, 12)).join(', ')} to a finished status: land the check or hook change first, close the task in a later commit (self-edit rule, COMPLY.2)`);
   // the diff since the lane branch point, plus what is staged
-  const baseRef = table.base_ref;
   let changed = [];
-  let full = null;
+  const full = boardRef;
   let base = null;
   let baseTable = null;
-  if (!baseRef) errors.push('rule-lists.json has no base_ref: the lane branch point cannot be found (fail closed)');
-  else {
-    // V2.WHOLE fix round (F1): the base is a fully qualified ref (refs/heads/<name>, else refs/remotes/<name>), so a tag of the same name cannot shadow the branch
-    full = (baseRef.startsWith('refs/') ? [baseRef] : [`refs/heads/${baseRef}`, `refs/remotes/${baseRef}`]).find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0) ?? null;
-    const mb = full ? git(['merge-base', 'HEAD', full]) : { status: 1, stdout: '' };
-    if (mb.status !== 0) errors.push(`cannot find the lane branch point (git merge-base HEAD ${full ?? `refs/heads/${baseRef}`} failed or the ref does not exist): the Files line cannot be checked against the diff (fail closed)`);
+  for (const k of ['base_ref', 'finished_statuses', 'protected_paths', 'exempt']) if (JSON.stringify(table[k] ?? null) !== JSON.stringify(boardTable[k] ?? null)) errors.push(`the ${k} of this branch's table (${JSON.stringify(table[k] ?? null)}) differs from the board's (${JSON.stringify(boardTable[k] ?? null)}): a lane may not change what decides what is checked or what the review need not cover (the check uses the board's)`);
+  {
+    const mb = git(['merge-base', 'HEAD', full]);
+    if (mb.status !== 0) errors.push(`cannot find the lane branch point (git merge-base HEAD ${full} failed): the Files line cannot be checked against the diff (fail closed)`);
     else {
       base = mb.stdout.trim();
-      // F7 + F10: the WHOLE rule-list table (lists, rows, every_task, exempt, protected paths, base_ref) comes from the range base, so an earlier commit of the lane cannot trim or widen it and hide a review
+      // F10: the rest of the table (lists, rows, every_task) comes from the range base
       const bt = git(['show', `${base}:scripts/analysis/rule-lists.json`]);
       try { baseTable = bt.status === 0 ? JSON.parse(bt.stdout) : null; } catch { baseTable = null; }
       if (!baseTable) errors.push(`scripts/analysis/rule-lists.json cannot be read at the range base ${base.slice(0, 9)}: the table cannot be taken from the board's copy (fail closed)`);
-      else {
-        if (baseTable.base_ref !== table.base_ref) errors.push(`base_ref differs between the range base's table (${baseTable.base_ref}) and this branch's (${table.base_ref}): a lane may not move its own base`);
-        if (JSON.stringify(baseTable.exempt ?? []) !== JSON.stringify(table.exempt ?? [])) errors.push(`the exempt paths of this branch's table (${JSON.stringify(table.exempt ?? [])}) differ from the range base's (${JSON.stringify(baseTable.exempt ?? [])}): a lane may not widen what the review need not cover (the review uses the range base's list)`);
-      }
       const rr = git(['diff', '--name-only', '--no-renames', base, 'HEAD']);
       if (rr.status !== 0) errors.push(`git diff --name-only ${base.slice(0, 9)} HEAD failed (status ${rr.status}): the changed paths of the task range cannot be recomputed (fail closed)`);
       changed = [...new Set([...rr.stdout.split('\n').filter(Boolean), ...staged].filter(Boolean))];
     }
   }
-  const exempt = baseTable?.exempt ?? table.exempt ?? [];
+  const exempt = boardTable.exempt ?? [];
   const codeStaged = staged.filter((f) => /^(src|scripts|mobile|migrations)\//.test(f));
   const readRepo = (p) => { for (const ref of [`:${p}`, `HEAD:${p}`]) { const x = git(['show', ref]); if (x.status === 0) return x.stdout; } return null; };
   const readBase = (p) => { if (!base) return null; const x = git(['show', `${base}:${p}`]); return x.status === 0 ? x.stdout : null; }; // F10: lens templates from the range base
@@ -385,6 +385,9 @@ function check(msgFile) {
     }
     const baseFm = baseTask ? parseFM(baseTask).fm : null;
     const type = String(baseFm?.type ?? mv.fm.type ?? '').toLowerCase();
+    if (baseFm && String(baseFm.milestone ?? '') !== String(mv.fm.milestone ?? '')) errors.push(`${id}: the milestone is ${mv.fm.milestone} here but ${baseFm.milestone} at its launch: a lane may not move its task to another milestone (the milestone decides which objectives lists apply)`);
+    // H3: the prompt builder and the review tool decide what a recomputed prompt hash proves; they may not differ from the range base unless the task's launch Files line covers them
+    if (base && baseTask) for (const p of ['scripts/lib/review-template.js', 'scripts/deepseek-review.js']) if (git(['diff', '--quiet', base, 'HEAD', '--', p]).status === 1 && !coveredBy(filesEntries(baseTask) ?? [], p)) errors.push(`${id}: ${p} differs from the range base but the task's launch Files line does not name it: the recomputed prompt hash would only prove consistency with the lane's own prompt builder`);
     if (baseFm && String(mv.fm.type ?? '').toLowerCase() !== type) errors.push(`${id}: the task type is ${mv.fm.type} here but ${baseFm.type} at its launch: a lane may not retype its task`);
     if (!laneName && codeStaged.length && !(type === 'build' || type === 'fix' || type === 'check')) { errors.push(`${id} is set ${mv.status} by a commit that changes code (${codeStaged.slice(0, 3).join(', ')}) but has no @lane-* assignee: take it through the launch script (no exemption for code, COMPLY.2)`); continue; }
     const laneFiles = laneName ? lanePaths.filter((f) => { const p = f.split('/'); return p.length === 6 && p[4] === laneName; }).map((f) => ({ dir: path.dirname(f), name: path.basename(f), text: git(['show', `:${f}`]).stdout })) : [];
@@ -412,8 +415,9 @@ function check(msgFile) {
     }
     // F10: the table the task is judged by is the range base's; a task whose own Files line names the table is the one exception: it is judged by its branch table (so its own edit applies) with every field that decides what is reviewed (exempt, base_ref, finished_statuses, protected_paths, every_task) still the range base's
     const ownsTable = coveredBy(filesEntries(baseTask ?? mv.now), 'scripts/analysis/rule-lists.json');
-    const judge = !baseTable ? table : ownsTable ? { ...table, exempt: baseTable.exempt, base_ref: baseTable.base_ref, finished_statuses: baseTable.finished_statuses, protected_paths: baseTable.protected_paths, every_task: baseTable.every_task } : baseTable;
-    errors.push(...closeErrors({ id, taskText: mv.now, fm: mv.fm, assignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase }));
+    const pin = { exempt: boardTable.exempt, base_ref: boardTable.base_ref, finished_statuses: boardTable.finished_statuses, protected_paths: boardTable.protected_paths };
+    const judge = !baseTable ? { ...table, ...pin } : ownsTable ? { ...table, ...pin, every_task: baseTable.every_task } : { ...baseTable, ...pin };
+    errors.push(...closeErrors({ id, taskText: mv.now, fm: mv.fm, assignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase }));
   }
   return errors.length ? fail(errors) : 0;
 }
