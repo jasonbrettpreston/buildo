@@ -1,0 +1,54 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-20T17:31:54.963Z file_sha256=885065a8a18ca19b14266ac6dc08293cef412e1e2241650e2c582e4f5caff030 prompt_sha256=eff459557b6da8a0527a4b737e9a5be309d78be219ce7ba38a53928ed0a4aa13
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-plan-plan-review-deepseek.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — Plan step 4 (and top-line scope) — deletes SHED_THRESHOLD_SQM=20 and GARAGE_MAX_SQM=60 from src/lib/massing/geometry.ts with "no registration, no migration," while the task description requires them to become registered pinned settings and owes a DB mirror migration together with task-372's; if the seed has no shed/garage rows, the values cease to be data at all — verify the seed row values first (see unverified premises), then either register-and-delete in this task or open the follow-up migration task by id before step 3.
+
+BUG severity=HIGH — Plan step 4 — "retain the existing compute lock at link-massing.infra.test.ts:84-85 unchanged" directly contradicts the task description ("the existing locks … are updated only to follow the new source"), which implies :84-85 currently reads src — read `sed -n '80,92p' src/tests/link-massing.infra.test.ts` before step 3 and update the lock to the registered source if it isn't already there.
+
+BUG severity=HIGH — Plan step 5 — does not include "the settings seed file has no rule-list row today: the lane reports that, it does not skip the list," which the description gives as an owed deliverable — add an explicit FINDINGS.md/lane-report line naming the missing rule-list row.
+
+BUG severity=HIGH — Plan step 1 — grep scope is `src, mobile, scripts` only; the three names could also live in `e2e/`, `__snapshots__/`, `prisma/` seed comments, `packages/`, `apps/`, or a root-level `.snap` — run `git grep -nE '\b(classifyStructure|SHED_THRESHOLD_SQM|GARAGE_MAX_SQM)\b' -- . ':!node_modules' ':!dist' ':!build'` repo-wide.
+
+BUG severity=HIGH — Plan step 2 red test — the lock asserts *name absence* in geometry.ts, not *value absence*, so a renamed `MAX_GARAGE_SQM = 60` satisfies the lock while Spec 126 P4 remains violated — extend the lock (or add a sibling) asserting no `20` / `60` threshold constant remains in src/lib/massing, or at minimum document the coverage gap.
+
+BUG severity=HIGH — Plan step 3 — deleting the `classifyStructure` describe block in src/tests/massing.logic.test.ts:88-89 removes the only behavioural coverage of the 20/60 boundaries; the task says "never weakened," but the plan neither acknowledges the override (the pasted grounder note is not an operator-word ruling, it's a resolution) nor records a replacement assertion — state the clause explicitly in the plan and get the operator sign-off captured against this step before green.
+
+BUG severity=HIGH — Plan step 1 — no step confirms dependency task-378 has folded, yet description scope locks this task "after task-378 folds"; task-378's branch edits lookup/entitlement and may touch shared fixtures or pinned-settings.ts — add a first step that verifies `git log <task-378-branch> --name-only` does not overlap geometry.ts / massing tests, then rebases before red.
+
+BUG severity=HIGH — Plan step 4 — STORY_HEIGHT_M and STORY_HEIGHT_BY_USE_TYPE are the same class of src/ threshold, are still in src/lib/massing/geometry.ts after this plan, and are left "listed only," yet the operator quote says "resolve them all as long as the result is compliant"; verify their actual location and either register/delete-safe them or file the follow-up task with a lane owner before this one closes.
+
+BUG severity=HIGH — Plan step 1 — claims scripts/lib/compute/link-massing.js `classifyStructure` takes both thresholds "as arguments from the registered seed rows," but no check verifies the registered source has no default fallback; run `grep -nE '\?\?\s*(20|60)\b|=\s*(20|60)\b|SHED|GARAGE' scripts/lib/compute/link-massing.js` and the mobile equivalent — if any hardcoded default exists, the values still live in code and P4's intent is unmet.
+
+BUG severity=HIGH — Plan step 5 — task-378 dependency is listed as RUNNING with no final summary; if task-378 lands a length-factor registration in the same pinned-settings.ts this plan is told to mirror ("follow whatever task-378 lands"), the plan's "register nothing" conclusion may be based on a pre-fold state — confirm the current pinned-settings.ts does not already carry shed/garage keys, or fold the registration in.
+
+BUG severity=MED — Plan step 1 — the task description explicitly flags src/components/permits/BuildingMassing.tsx as a client component whose bundle must not receive the settings file; the plan never states whether the grep checked this file — record the finding (or "no match") for BuildingMassing.tsx in step 1's evidence.
+
+DEFER severity=MED — Plan step 4 — step 2 already adds the red test asserting geometry.ts has none of the names, then step 4 says "add the new src lock beside it"; ambiguous whether this is the same test or a second one — clarify so the reader doesn't leave a duplicate assertion or an unintentional rename.
+
+DEFER severity=MED — Plan step 3 — if `StructureType` is also *declared and exported* from geometry.ts (not just imported), deleting downstream imports breaks callers; grep `StructureType` for `from '.*massing/geometry'` before step 3 and confirm the plan only removes the import line.
+
+DEFER severity=MED — Plan step 4 — the rollback path (git revert of red.out + green commits) is trivial and should be stated as an explicit step, not left implied, so an R8 failure has a documented, ordered revert target.
+
+DEFER severity=LOW — Plan step 2 — a "file must not contain string X" test is brittle to legitimate future comments mentioning the deleted name in geometry.ts; scope the assertion to code-shaped lines (e.g. `^\s*(export\s+)?const\s+(SHED_THRESHOLD_SQM|GARAGE_MAX_SQM)`), not bare string search.
+
+DEFER severity=LOW — Plan step 3 — the deleted `classifyStructure` describe block may also be the only assert on the classification *branch semantics* (shed vs garage cut at 20/60); even if the boundary value test is deferred to the registered source, name where it moves so it isn't orphaned.
+
+REJECT — Plan step 5 "task left RUNNING" / milestone — the plan leaving milestone m-1 untouched is correct scope (orchestrator status changes only via launch script); not a failure mode.
+
+REJECT — Acceptance criteria empty — spec-compliance axis; companion reviewer's territory, not this panel's.
+
+VERDICT: FAIL on plan-readiness for implementation
+Top 3 operational blockers (if FAIL):
+- Plan step 4 retains link-massing.infra.test.ts:84-85 "unchanged" while the task description says both locks must follow the new source; if those lines currently read src, the green step breaks the suite — verify before step 3.
+- Plan step 4 drops registration and the owed DB mirror migration with no follow-up task id and no verification that the registered seed already carries 20/60; if it doesn't, the values leave data existence entirely and Spec 126 P4's intent is unmet while its letter is satisfied.
+- Plan step 1 starts work off a RUNNING dependency (task-378) with no fold-check or rebase step, and leaves sibling STORY_HEIGHT thresholds in src/lib/massing/geometry.ts despite the operator's "resolve them all" — both need a deliberate gate in the plan.
+
+Top 3 unverified data premises (regardless of verdict):
+- Premise: link-massing.infra.test.ts:84-85 already reads from the registered settings source, not src/lib/massing/geometry.ts — verify with `sed -n '80,92p' src/tests/link-massing.infra.test.ts`.
+- Premise: the registered seed carries shed_threshold_sqm=20 and garage_max_sqm=60 today — verify with `grep -rnE 'shed(_threshold)?_sqm|garage_max' prisma/ src/lib/report-projection/pinned-settings.ts docs/reports/plan-import/raw/` (or wherever task-372's lot-size seed row lives).
+- Premise: scripts/lib/compute/link-massing.js takes both thresholds as arguments with no hardcoded default — verify with `grep -nE '\?\?\s*(20|60)\b|=\s*(20|60)\b|SHED|GARAGE' scripts/lib/compute/link-massing.js` and the same grep against mobile/.
+
+---
+⏱  58827ms (58.8s)
+📊 Tokens — total: 30855, input: 20085, output: 10770, reasoning: 8846

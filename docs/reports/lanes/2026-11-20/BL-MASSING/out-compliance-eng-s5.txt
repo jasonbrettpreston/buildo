@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:36:06.723Z file_sha256=2b14281f7dbd1392ec71cfbcb4500733b1126eed3efbbba83efbdb0bc52d94dd prompt_sha256=c7366a71094e6f1081fef2210360ac53c1c280ecc4eff44e1414056e2fc7706d
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-out-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — spec §5.2 `*.logic.test.ts` row, "Pure functions, scoring, classification | Any pure/derivation logic" — src/tests/massing.logic.test.ts:63 "describe('classifyStructure', () => {" — the diff removes the entire classification suite and no pasted line adds a logic-layer test of the registered rows that replaced it, so the classification derivation goes unpinned (§5.5 "Un-pinned derivation logic silently changes value") — add a `.logic.test.ts` (or equivalent logic-layer) case set over the registered rows: largest = primary, solo = primary, <20 shed, 20-60 garage, >60 non-largest other, and paste it in the material.
+
+DEFER severity=MED — spec §5.2 `*.regression.test.ts` row, "Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence" — src/tests/massing.logic.test.ts:84 "it('classifies both as primary when two buildings have equal area', () => {" — two edge-case guards (equal-area = primary, solo = primary regardless of area) are deleted with no `.regression.test.ts` added, and the Guardian's fence flag is "cannot see", so a `>=` to `>` flip in the externalized rows would pass silently — author one regression test pinning equal-area and solo cases against the registered-row implementation.
+
+DEFER severity=MED — spec §5.5 parity battery row, "Parity battery ... seed JSON ↔ TS `LOGIC_VAR_DEFAULTS` | Any dual-surface" — src/tests/massing.logic.test.ts:88 "expect(SHED_THRESHOLD_SQM).toBe(20);" — the only positive pin on the 20 / 60 threshold values is deleted; the surviving assertion is a negative grep in link-massing.infra.test.ts:88 "expect(COMPUTE).not.toMatch(/shedThreshold\s*=\s*20|garageMax\s*=\s*60/);", which cannot catch a wrong default value — assert the register/`LOGIC_VAR_DEFAULTS` values equal 20 and 60 in the parity test.
+
+DEFER severity=LOW — spec §5.5, "Pick the layer that proves the claim; a green suite in the wrong layer is false confidence." — src/tests/link-massing.infra.test.ts:92 "const GEOMETRY = fs.readFileSync(path.resolve(__dirname, '../lib/massing/geometry.ts'), 'utf-8');" — a static source grep is placed in the infra layer whose §5.2 remit is "API routes, DB queries, external calls", so it proves a tombstone, not behavior; acceptable only if it is not counted toward the §5.2 logic pin — keep it as a tombstone and label it as such, and do not let it stand in for the deleted classification tests.
+
+DEFER severity=LOW — spec §5.3, "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code" — src/tests/link-massing.infra.test.ts:91 "it('the unused src copy is gone: src/lib/massing/geometry.ts holds none of the classification names" — the added test can be red-first (names present, then deleted), but the red run itself is "cannot see"; paste the failing-then-passing run for this test — rationale: without the log the ordering is unverifiable from a diff.
+
+DEFER severity=LOW — no pasted operator ruling or card names this removal, pasted context is "(no pasted context provided)" — src/tests/link-massing.infra.test.ts:91 "(FIX.MASSING, task-396; the registered rows are the one source)" — the removal of `classifyStructure` / `SHED_THRESHOLD_SQM` / `GARAGE_MAX_SQM` is authorized only by a test-name reference, no pasted clause or ruling names it, so the substantive mandate is "cannot see" — paste the card or ruling that authorizes retiring the src copy before merge.
+
+MET — spec §5.1, "Never write untyped inline mocks... always import typed factories from `src/tests/factories.ts`" — src/lib/massing/geometry.ts:1 — the diff adds no mocks or fixtures, only deletes an import and tests, so §5.1 is untouched.
+
+MET — spec §5.5 DB replay row, "Any migration touching schema/constraints/indexes (run before push)" — src/lib/massing/geometry.ts:55 "export function classifyStructure(" — the change touches no migration, constraint or index, so DB replay and seeding (§5.4) are not owed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 3
+
+---
+⏱  33254ms (33.3s)
+📊 Tokens — total: 9851, input: 3754, output: 6097, reasoning: 5041

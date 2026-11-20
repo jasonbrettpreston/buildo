@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T17:36:06.681Z file_sha256=498ad597c3707c4e44db1db4637a63f62d60e7882ef443faec2f3431dce6d77d prompt_sha256=720aa85c626e944333185e4343b2dafad97e4f493a0e6d4c22c80f4fdec2f207
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-out-error-paths.txt (model: deepseek-reasoner)
+
+REJECT — src/tests/link-massing.infra.test.ts "+    const GEOMETRY = fs.readFileSync(path.resolve(__dirname, '../lib/massing/geometry.ts'), 'utf-8');" — a missing or renamed geometry.ts looks like a silent pass for a `not.toMatch` guard — handled: readFileSync throws ENOENT, so the test errors instead of passing, the guard fails closed.
+REJECT — src/tests/link-massing.infra.test.ts "+    expect(GEOMETRY).not.toMatch(/classifyStructure|SHED_THRESHOLD_SQM|GARAGE_MAX_SQM/);" — a source file still importing the removed names looks like it could ship a wrong value — handled: a removed named export fails the TS build and, at runtime, throws TypeError at the call site, so no wrong classification is produced (fails closed, not open).
+REJECT — src/lib/massing/geometry.ts "-  const maxArea = Math.max(...allAreas);" — an empty `allAreas` made `Math.max(...)` return -Infinity in the dead function — handled: the whole function (and its `allAreas.length <= 1` guard) is deleted and no live caller remains, so that empty path cannot be reached.
+DEFER severity=LOW — src/tests/link-massing.infra.test.ts "+    expect(GEOMETRY).not.toMatch(/classifyStructure|SHED_THRESHOLD_SQM|GARAGE_MAX_SQM/);" — the guard locks file text only, not whether a barrel/index re-export still forwards the names — rationale: a stale re-export surfaces at build time (undefined export) so it is caught before merge, test coverage is not the load-bearing guard.
+
+VERDICT: PASS on error-path safety
+Paths walked: error (missing source file, removed named export), empty (allAreas length 0), retry/time-out (none present in diff), double-submit (no write or count in diff), degrade-safe (dead-code removal fails closed), idempotency (no write or counted event)   Unguarded: 0
+
+---
+⏱  15496ms (15.5s)
+📊 Tokens — total: 15880, input: 12932, output: 2948, reasoning: 2489

@@ -1,0 +1,146 @@
+LIST airtight-v2-122 sha256:5c0962cfd5353738766502b198053b38c57a9c645378b9cbad4742b1e1c2b10b material sha256:498ad597c3707c4e44db1db4637a63f62d60e7882ef443faec2f3431dce6d77d part 1 of 1
+RULE LIST airtight-v2-122 (docs/specs/01-pipeline/122_pipeline_step_optimization.md, sections 6.6.1 Registry and ledger truth), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+#### 6.6.1 Registry and ledger truth — generated or witnessed, declared == observed (Spec 124 §5 R-BF, operator ruling 2026-09-30)
+
+**(a) Requirement.** **Name: McDonald's Airtight V2 (registry & cross-step).** V1 (Spec 124 R-BA, 2026-09-26) makes a step's FORM airtight — five words, each a closed-answer gate; it never checks that what a descriptor declares is what the step actually touches. V2 adds TRUTH: the step's own registry and the cross-step ledger are generated or witnessed, declared == observed. A step is V2-built when its captures run under the Phase 1 witness. For every sources-chain step (then every chain), the four-part step registry — FILES (the §4.1 set + owner spec), DATA (every table AND column read or written, each with its migration), CONSUMERS (every reader of the step's tables/columns and `records_meta` keys, across all chains and `src/`), TESTS — and the §6 cross-step ledger (each step's reads/writes and producer steps) are **100% mechanical**: generated from code/runtime or witnessed from executed SQL, never hand-authored; and **100% accurate**: declared == observed at column level, verified by a gate with closed answers, zero allowlist, strict zero (R-BC). This hardens LDG-10's table-edge class above: the "runtime lineage" it reconciles against must be observed, never the declaration re-emitted. R-BE already generates the Target Files blocks mechanically, but from the declarations — generated is not accurate until its sources are witnessed.
+
+**(b) Mechanism (designed, not built).** An executed-SQL witness during golden captures — every statement parsed with the real Postgres grammar (`libpg-query`), touched ≡ declared; a fixture-time guard; observed `pipeline_meta` published alongside declared; manifest `chain_args` generated from the descriptor; `inputs.reads.steps` derived. Queued plans: `.cursor/wf2_registry_truth_active_task.md` (three phases: WITNESS · DERIVE · WIRE OR DELETE) and `.cursor/wf3_link_parcels_full_mode_active_task.md` (the `chain_args` generator, Phase 2's prerequisite). The Phase 1 WITNESS gate (#44) must carry the exact string `R-BF WITNESS GATE (#44)` in `scripts/analysis/step-validate.mjs`; the R-BF lock in `src/tests/spec124-register-rulings.logic.test.ts` holds (c) at NOT MET while that marker is absent and requires MET once it is present — both directions RED.
+
+**(c) Status: NOT MET (measured 2026-09-30, tip `d3eb67c8`).** Descriptor `inputs.reads` are hand-authored and unverified. Runtime `pipeline_meta` for converted steps is `deriveMeta(descriptor)` (`scripts/lib/step/index.js:6126`), so the admin funnel and this ledger show the declaration, not observation — which also makes LDG-4's cross-check circular. The descriptor trust audit classes 75 field groups 26 G · 3 E · 16 P · 30 D (`.cursor/evidence/registry-truth-2026-09-30/trust-audit/audit.md`). Gate C (emits≡declared) passes only via 58 `pending_remediation` rows in `standard-gates-ledger.json`. **Until this programme lands, no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed.**
+
+**(d) Sequence (operator, amended 2026-10-01).** ~~After the remaining sources conversions and the by-law changes.~~ `load_wsib` ③ lands first (V1; witnessed with the converted fleet in Phase 1). The code for `load_heritage`, `enrich_centreline` and `load_zoning` is finished now, but their ①/② captures wait for Phase 1 WITNESS, so each capture also witnesses the step's reads — built under V2 once, never captured twice. The by-law changes are independent of this sequence.
+
+**(e) Phase 1 slice A — built (2026-10-01, branch `wf2/registry-truth-p1a`; status above stays NOT MET).** The witness exists: `scripts/lib/sql-witness/trace-preload.cjs` records every SQL statement a step runs (pass-through wrap of `pg.Client.prototype.query`, loaded only on a capture's run 1; the rerun proof is never traced); `scripts/lib/sql-witness/resolve.cjs` resolves each statement once with the real Postgres grammar (libpg-query) to tables/columns read and written; `scripts/analysis/capture-step-golden.js` writes the result as `docs/reports/witness/<slug>/<pre|post>/<invocation>.trace.json` — a separate tree, never beside the golden, because every golden-dir reader lists `*.json` — and a descriptor-less PRE now snapshots the tables its trace wrote instead of a hand-typed `--tables` list; `--trace-only` + `scripts/analysis/witness-chain.mjs` backfill missing/stale traces; both refuse a local posix-DSM target (the run-chain Phase 0 row, reused). Gate #44 (`scripts/analysis/gates/witness.mjs`, run per slug by `step-validate`) answers PASS | UNWITNESSED | FAIL:INPUT | FAIL:STALE | FAIL:WITNESS (a traced ⊆ declared, b writes, c write_inventory, d txn_scope, g PRE ⊆ POST) | FAIL:PRODUCER, hard-stopping only a pending slug; converted slugs are report-only until slice B fixes their known gaps. Not yet built (slice B): check (e) and the declared ⊆ witnessed half of (a), the fixture guard, the effective ledger, admin/API consumers (P1-C-src), and the C9 marker that flips (c) to MET. The admin funnel now labels `pipeline_meta` "Declared (descriptor)". **WF3 witness-unblock (2026-10-02, Spec 124 R-BG):** check (b) honours `written:"db_default"` in both directions, and PRODUCER is evaluated on comment-stripped text (C1; locks R1–R4, R17 in `src/tests/sql-witness-gate.logic.test.ts`). The resolver resolves every statement of a multi-statement text, binds CTE names through enclosing and sibling scopes, binds function-alias column lists (`unnest(...) AS g(geojson, ord)`, incl. UPDATE … FROM / DELETE … USING), and binds session temp tables per pid through `resolve.collectSessionTemps` (a temp shadowing a catalog table is FAIL:INPUT:temp-shadows) (C2/C2b/C2c; locks R5–R7, R14, R16, R20–R22, C-a–C-c in `src/tests/sql-witness-resolve.logic.test.ts` and `src/tests/sql-witness-assemble.logic.test.ts`). A prior-run baseline (`source-version.js` readPriorRunMeta and the ledger gate's own-last run) is status ∈ {completed, completed_with_warnings} — never completed_with_errors, never a run whose audit table carries `write_skipped_pre_write_warn` (a preserve-and-WARN run describes an empty source, not the loaded table); the ledger gate's upstream-activity FILTER deliberately stays `<> 'completed'` / `= 'completed'`, so any non-completed upstream run forces RUN (fail-safe) (C3; locks R8, R9, R15, R19 in `src/tests/source-version.logic.test.ts`, `src/tests/run-chain-defer.logic.test.ts`, `src/tests/db/source-version-ledger-gate.db.test.ts`). Checks (c) write_inventory and (d) txn_scope count only step writes — a write whose every target is runner-owned/excluded (a standalone run's own ledger row) is not one (2026-10-02, measured on load_heritage's standalone trace: 4 step writes + 2 ledger writes). The INGESTOR interrupted-retraction detector's own-last baseline (staleness.detectInterruptedRetraction, own_last_completed) admits the same set {completed, completed_with_warnings}; the LW-D20 own-run exclusion and the ('running','crashed') predicate are unchanged (C4; locks R10–R12, R18 in src/tests/db/staleness-interrupted-retraction.db.test.ts, R13 in src/tests/staleness.logic.test.ts). **Resolver scope rule (WF3 2026-10-03):** an unqualified column walks the scopes from innermost outward. It binds at the first scope where exactly one catalog table has it (with none, the write target's declared write columns may bind it), and two or more matches at any scope is an error. A lone innermost relation keeps its credit when it has no catalog row, or when no scope's catalog places the column (stale catalog, output alias). Statement kinds outside the handled set are `FAIL:INPUT:unsupported:<Kind>` (EXPLAIN, DO, CALL, MERGE, TRUNCATE, …; CREATE INDEX and REINDEX join the utility list). Locks R-A1–A4, R-B1–B7, R-C1, G-B1–G-B2 in `src/tests/sql-witness-resolve.logic.test.ts`. **src/ SQL ledger catalog membership (WF3 2026-10-04):** `scripts/analysis/src-sql-ledger.mjs --check`, run by `.husky/pre-commit`, fails on any column the ledger records as read or written on a table that `docs/reports/witness/_catalog.json` lists but whose column list lacks it; tables the catalog does not carry (matviews) are skipped and listed — enforced only for statically parsed `src/` SQL (not interpolated statements, `scripts/` SQL, or `ON CONFLICT … DO UPDATE SET` targets), and only as fresh as the committed catalog. Locks: the `catalogMembership` and `live:` catalog tests in `src/tests/src-sql-ledger.logic.test.ts`.
+
+**(f) FLEET-2 landing (Phases 2 + 3 as built; the status in (c) is unchanged; it flips only at P1-C9).** Enforced (each lock runs in the pre-push `npm run test`): the Phase 3 DELETE-row fields are gone from `step.schema.json` and every converted descriptor — `interpretation.entries`, externals `cache*`, writes `replay*`/`source_key_policy`, `outputs.cascades`/`publish`, `staleness.scope`/`checkpoint`/`interval`, `execution.budget`/`txn_budget`/`criticality`, network `egress`/`redact`, counter `scoped_by` (lock `src/tests/phase3-deletions.logic.test.ts`). The ≤ 12 prose cap is fast invariant #45 NOTES-CAP over each declaring notes file (`scripts/analysis/gates/notes-cap.mjs`, hard; `src/tests/gate-notes-cap.infra.test.ts`). #47 MODE-EMITS-TYPE is Spec 124 R-BH. `outputs.writes[].retract: "departed_mark"` soft-retires departed keys through a `retired_at` column (mark/unmark guarded; a mark above the `retire_max_pct_from_config` bound is suppressed with a FAIL `mass_retire_guard` row; `src/tests/fleet2-soft-retire{,-schema,-runner}.logic.test.ts`); every `address_points` reader filters `retired_at IS NULL` inline (`src/tests/address-points-active-readers.infra.test.ts`) and the `address_points_active` view has no reader (declared-only: no gate reds a new reader of the view). A LINK or MATCHER on `mode_select: "none"` re-derives every row on every run and writes only changes (`resolveLinkGate`; fake-pool locks, the live steady state is unmeasured; O4 locks `src/tests/steps/<slug>/o4-*.logic.test.ts`; Specs 54, 56, 60); gate #44 adds `full_rescan:arm` and `UNWITNESSED …:full_rescan` rows (`fullRescanItems`; `src/tests/fleet2-full-rescan-evidence.logic.test.ts`), report-only on converted slugs like the rest of #44. Report-only: #46 SCHEMA-HOMES (`checks[].reads`, `outputs.write_inventory.by_mode`; 0 of 25 descriptors declare either, measured at the FLEET-2 base `a7a60e30`).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/lib/massing/geometry.ts b/src/lib/massing/geometry.ts
+index 37c5959f1..6a3fdd2f2 100644
+--- a/src/lib/massing/geometry.ts
++++ b/src/lib/massing/geometry.ts
+@@ -1,5 +1,3 @@
+-import type { StructureType } from './types';
+-
+ // ---------------------------------------------------------------------------
+ // Types
+ // ---------------------------------------------------------------------------
+@@ -23,12 +21,6 @@ export const STORY_HEIGHT_BY_USE_TYPE: Record<MassingUseType, number> = {
+   'mixed-use': 3.5,
+ };
+ 
+-/** Below this area (sqm), accessory is classified as shed. */
+-export const SHED_THRESHOLD_SQM = 20;
+-
+-/** 20–60 sqm accessory is classified as garage. */
+-export const GARAGE_MAX_SQM = 60;
+-
+ // ---------------------------------------------------------------------------
+ // Core functions
+ // ---------------------------------------------------------------------------
+@@ -42,28 +34,6 @@ export function estimateStories(maxHeightM: number | null | undefined): number |
+   return Math.max(1, Math.round(maxHeightM / STORY_HEIGHT_M));
+ }
+ 
+-/**
+- * Classify a building structure based on its footprint area relative to
+- * all other buildings on the same parcel.
+- *
+- * - The largest building is always classified as 'primary'.
+- * - A solo building is always 'primary'.
+- * - Accessory structures: <20 sqm = shed, 20–60 sqm = garage, else = other.
+- */
+-export function classifyStructure(
+-  areaSqm: number,
+-  allAreas: number[]
+-): StructureType {
+-  if (allAreas.length <= 1) return 'primary';
+-
+-  const maxArea = Math.max(...allAreas);
+-  if (areaSqm >= maxArea) return 'primary';
+-
+-  if (areaSqm < SHED_THRESHOLD_SQM) return 'shed';
+-  if (areaSqm <= GARAGE_MAX_SQM) return 'garage';
+-  return 'other';
+-}
+-
+ /**
+  * Ray-casting point-in-polygon test.
+  * Point is [lng, lat], ring is array of [lng, lat] (closed polygon).
+diff --git a/src/tests/link-massing.infra.test.ts b/src/tests/link-massing.infra.test.ts
+index 5cfc728bc..e229accbf 100644
+--- a/src/tests/link-massing.infra.test.ts
++++ b/src/tests/link-massing.infra.test.ts
+@@ -88,6 +88,11 @@ describe('link-massing.js — building-classification heuristic externalization
+     expect(COMPUTE).not.toMatch(/shedThreshold\s*=\s*20|garageMax\s*=\s*60/);
+   });
+ 
++  it('the unused src copy is gone: src/lib/massing/geometry.ts holds none of the classification names (FIX.MASSING, task-396; the registered rows are the one source)', () => {
++    const GEOMETRY = fs.readFileSync(path.resolve(__dirname, '../lib/massing/geometry.ts'), 'utf-8');
++    expect(GEOMETRY).not.toMatch(/classifyStructure|SHED_THRESHOLD_SQM|GARAGE_MAX_SQM/);
++  });
++
+   it('config validation is HOISTED ABOVE THE GATE (was: validateLogicVars inside the lock)', () => {
+     // §1.3 / A-5 / B-13 — the OPPOSITE of the pre-conversion order, declared as a diff.
+     // The step is SKIP-eligible (6 live lock-contention rows), and an invalid threshold
+diff --git a/src/tests/massing.logic.test.ts b/src/tests/massing.logic.test.ts
+index c60c92fd8..c9d493b71 100644
+--- a/src/tests/massing.logic.test.ts
++++ b/src/tests/massing.logic.test.ts
+@@ -6,7 +6,6 @@ import { M_TO_FT } from '@/lib/parcels/geometry';
+ import path from 'path';
+ import {
+   estimateStories,
+-  classifyStructure,
+   pointInPolygon,
+   computeFootprintArea,
+   formatHeight,
+@@ -18,8 +17,6 @@ import {
+   inferMassingUseType,
+   STORY_HEIGHT_M,
+   STORY_HEIGHT_BY_USE_TYPE,
+-  SHED_THRESHOLD_SQM,
+-  GARAGE_MAX_SQM,
+ } from '@/lib/massing/geometry';
+ 
+ describe('estimateStories', () => {
+@@ -60,37 +57,6 @@ describe('estimateStories', () => {
+   });
+ });
+ 
+-describe('classifyStructure', () => {
+-  it('classifies largest area as primary', () => {
+-    expect(classifyStructure(150, [150, 30, 10])).toBe('primary');
+-  });
+-
+-  it('classifies 20-60 sqm accessory as garage', () => {
+-    expect(classifyStructure(35, [150, 35])).toBe('garage');
+-  });
+-
+-  it('classifies < 20 sqm accessory as shed', () => {
+-    expect(classifyStructure(15, [150, 15])).toBe('shed');
+-  });
+-
+-  it('classifies solo building as primary regardless of area', () => {
+-    expect(classifyStructure(10, [10])).toBe('primary');
+-  });
+-
+-  it('classifies > 60 sqm non-largest as other', () => {
+-    expect(classifyStructure(80, [150, 80])).toBe('other');
+-  });
+-
+-  it('classifies both as primary when two buildings have equal area', () => {
+-    expect(classifyStructure(100, [100, 100])).toBe('primary');
+-  });
+-
+-  it('uses threshold constants correctly', () => {
+-    expect(SHED_THRESHOLD_SQM).toBe(20);
+-    expect(GARAGE_MAX_SQM).toBe(60);
+-  });
+-});
+-
+ describe('pointInPolygon', () => {
+   // A simple square polygon: 0,0 -> 1,0 -> 1,1 -> 0,1 -> 0,0
+   const square: [number, number][] = [
+

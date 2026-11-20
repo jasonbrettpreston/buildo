@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T17:31:54.964Z file_sha256=885065a8a18ca19b14266ac6dc08293cef412e1e2241650e2c582e4f5caff030 prompt_sha256=5c0c0ec82522bc537179b769c9d031224af0657fabb39058ed76f6f6c52bb3f8
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-plan-error-paths.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Task description: "The settings seed file has no rule-list row today: the lane reports that, it does not skip the list." — The plan deletes the typed 20 and 60 constants and says "No registration, no migration", but no test proves the run-time seed resolves those two values; on a missing or empty row the classifier gets no threshold and returns a wrong structure or throws. — Add a red test that the two seed rows resolve to 20 and 60 before deletion; if either row is absent, stop and register it, do not delete the constants.
+
+BUG severity=MED — Plan step 1: "Prove by git grep over src, mobile, scripts that nothing at run time calls or imports classifyStructure, SHED_THRESHOLD_SQM, GARAGE_MAX_SQM from src/lib/massing/geometry.ts" — A name grep misses a barrel re-export, a dynamic import, or a consumer outside those three trees; if one exists, the delete leaves the caller with undefined and it throws at first use. — Add `tsc --noEmit`, the production build and a bundle grep for the three names, and run the massing page test before deleting.
+
+DEFER severity=MED — Plan step 3: "delete the classifyStructure describe block and its three imports from src/tests/massing.logic.test.ts" — The plan does not list the cases in that block; if it covers exactly 20 and exactly 60, those boundary cases are deleted and the retained lock at link-massing.infra.test.ts:84-85 is described as a source lock, not a boundary test, so a boundary regression in the seed-driven classifier is silent. — List the block's cases first and port 0, 20, 20.0001, 60, 60.0001 and a null threshold to the scripts compute test before deleting it.
+
+VERDICT: FAIL on error-path safety
+Paths walked: error (module load / undefined export), empty (missing seed row), retry/timeout (none), double-submit (none), degrade-safety (missing threshold), idempotency (none)   Unguarded: 2
+
+---
+⏱  34699ms (34.7s)
+📊 Tokens — total: 34890, input: 28312, output: 6578, reasoning: 6120

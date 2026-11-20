@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:36:06.689Z file_sha256=38f0bafbc68bbeb135ea8da113b666b654b2e5dc5b7ef9d27da4bd52fcf62863 prompt_sha256=e2c8754c57fc0165e9b05974ff3a6d48cffa55104c127deba544fd06ac78a570
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-out-compliance-step-132.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — none applicable; see DEFER lines below — src/lib/massing/geometry.ts:26-29 — no CRIT/HIGH finding supported by the pasted clauses.
+DEFER severity=MED — x-rulings.1 "Cited ids must resolve." — src/tests/link-massing.infra.test.ts:91 "the unused src copy is gone: src/lib/massing/geometry.ts holds none of the classification names (FIX.MASSING, task-396; the registered rows are the one source)" — the two ids the change rests on, FIX.MASSING and task-396, resolve to nothing in the pasted context, so authorisation for deleting the classifier is cannot see — paste the task-396 ruling or its register row alongside the diff.
+DEFER severity=LOW — core.8 "A variable is retired by a `config.retired[]` declaration, never deleted." — src/lib/massing/geometry.ts:26-28 (deleted) "export const SHED_THRESHOLD_SQM = 20;" — two constants the new test itself calls registered logic variables are deleted with no logic_variables row id and no retirement declaration shown — name the surviving rows in the card, or add a `config.retired[]` entry if the rows go with the constants.
+DEFER severity=LOW — x-captures.5 "A class-A behaviour (Spec 123 risk class A) is proven by a both-directions lock, shown red then green" — src/tests/link-massing.infra.test.ts:91 "the unused src copy is gone" — the guard test lands in the same diff as the deletion it guards, so the material shows no red-then-green evidence for it — paste the red run against the parent tree, or state the guard is a grep ratchet and not a class-A lock.
+REJECT — x-captures.5 — that deleting the six classifyStructure cases in massing.logic.test.ts drops proof of the 20/60 shed/garage boundary — those cases assert the src copy's constants, not the registered rows, so they prove the shadow source the standard forbids, and the step's own externalization lock lives in link-massing.infra.test.ts.
+REJECT — core.8 "A variable is retired by a `config.retired[]` declaration, never deleted." — that removing SHED_THRESHOLD_SQM and GARAGE_MAX_SQM deletes an operator-tunable setting — the numbers remain reachable through the registered rows the change points to, and only the unused copy in src is removed, so no setting becomes invisible on the admin page.
+MET — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — src/lib/massing/geometry.ts:26-28 (deleted) — the duplicate 20/60 literals leave the tree, leaving the registered variables as the one source.
+MET — core.1 "Behaviour lives in descriptor data, a declared check, a shape rule or (last resort) a new schema field, never only in code" — src/lib/massing/geometry.ts:47-62 (deleted) — classification logic carried only in an unused code copy is removed instead of lingering as a second unwritten implementation.
+MET — core.2 "Declare at least one check." — src/tests/link-massing.infra.test.ts:91-93 — the removal is held by a named negative check on the file's contents rather than by a comment.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  32756ms (32.8s)
+📊 Tokens — total: 22849, input: 17011, output: 5838, reasoning: 5067

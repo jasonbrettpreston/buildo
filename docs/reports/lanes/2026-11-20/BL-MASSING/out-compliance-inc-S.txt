@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:36:06.720Z file_sha256=a4ef1821c8255f850d000872e6ca578c6105201203a21529a631ae428794a9f6 prompt_sha256=5d0d767acc7a185158fe3d1cd4a3bf797bb8f6bf90750090bf88cc81b9a1710f
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-2 whole-file rule "RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part." — src/lib/massing/geometry.ts (removed hunk) "export function classifyStructure(" — none of the pasted 65 elements (A.1 through G.6: search page, address confusion, lot map, semi question, web pages, landing, report hand-off) names massing structure classification, sheds, garages, or src/lib/massing/geometry.ts, so this deletion is a change the pasted card does not name — paste the massing clause or the ruling that authorises the removal, or split this diff out of the Increment S review
+DEFER severity=LOW — no pasted ruling in context — src/tests/link-massing.infra.test.ts "it('the unused src copy is gone: src/lib/massing/geometry.ts holds none of the classification names (FIX.MASSING, task-396; the registered rows are the one source)'" — the justification rests on FIX.MASSING/task-396, which is not pasted; by the walk rule a clause satisfied only by a test name is UNMET, and I cannot see the ruling text — supply the ruling verbatim in the review context
+DEFER severity=LOW — no pasted clause — src/tests/link-massing.infra.test.ts "the registered rows are the one source" — the diff shows the classifier gone from src but not present in link-massing.js (not in the diff), so the "one source" claim cannot be seen — include link-massing.js or the registered rows in the material under review
+REJECT — C.5 "Building footprint on each lot (or none), drawn on the map" — that removing classifyStructure breaks the map footprint element — C.5 is listed "NOT TRACED · MISSED by the sweep" with built "NOT BUILT" and concerns drawing footprints on the map, not primary/shed/garage typing, so the removal does not touch it
+REJECT — C.7 "Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back" — that the "has the house / no building" line loses its source — C.7 is "UNDESIGNED-DATA · MISSED by the sweep" and "NOT BUILT", and the diff touches no lot-card or data projection code
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 65   Unmet: 0
+
+---
+⏱  29093ms (29.1s)
+📊 Tokens — total: 14287, input: 8745, output: 5542, reasoning: 4969

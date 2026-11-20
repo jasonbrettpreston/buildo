@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:31:54.983Z file_sha256=6b3aee194545977b3537a7a4d8bc1444cb5c7a941ca79f67783db8764f23ba6e prompt_sha256=3002973a34e5c5dbdaea574c7c7597015d90a8d509889ada5f01819e84f3c25b
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 P4 :189 "All tunables are data; zero thresholds in src/" — Plan step 4 "Storey heights (STORY_HEIGHT_M, STORY_HEIGHT_BY_USE_TYPE) left alone, listed only" — P4's first clause covers all tunables, and the plan knowingly leaves two storey-height tunables in src with no pasted ruling naming them exempt — register them as data, or record a dated operator note or task that they are physical constants outside P4.
+
+DEFER severity=MED — card lock clause "the existing locks src/tests/massing.logic.test.ts:88-89 and src/tests/link-massing.infra.test.ts:84-85 are updated only to follow the new source, never weakened" — Plan step 3 "delete the classifyStructure describe block and its three imports from src/tests/massing.logic.test.ts" — the :88-89 lock is deleted rather than updated to follow a source, and no surviving test is named that still asserts the 20 and 60 values or the shed/garage boundary — quote the assertions in the retained link-massing.infra.test.ts:84-85 lock, or add the value assertions to the new lock.
+
+DEFER severity=MED — card "After task-378 folds." — Plan step 2 "Red = commit attempt with only that test and the task file staged (red.out)" with task-378 shown as "status: RUNNING" in Dependencies — the plan proceeds and commits with no fold trigger tied to task-378 — name the fold trigger and hold the fold until task-378 folds.
+
+DEFER severity=LOW — card "The settings seed file has no rule-list row today: the lane reports that, it does not skip the list." — Plan step 4 "No registration, no migration, milestone left alone" — no step reports the missing rule-list row or states it is discharged by the delete path — add the report line to the lane output.
+
+DEFER severity=LOW — card "Owed with it: the DB mirror migration for the new settings (number from the ID ledger; the operator's typed GO), together with the one owed from task-372." — Plan step 4 "No registration, no migration, milestone left alone" — the plan is silent on the task-372 owed DB mirror migration that the card keeps as a standing debt — record that the task-372 owed migration still stands, with its ID-ledger number.
+
+MET — Spec 126 P4 :189 "zero thresholds in src/" — Plan step 3 "delete the three names and the now-unused StructureType import from geometry.ts" — both threshold constants and the dead classifyStructure leave src.
+
+MET — Operator 2026-11-20 "Let the grounder resolve them all as long as the result is compliant" — Plan step 1 "Prove by git grep over src, mobile, scripts that nothing at run time calls or imports classifyStructure, SHED_THRESHOLD_SQM, GARAGE_MAX_SQM" — the deletion rests on a proven no-caller check and the values remain seed data, so the resolution is compliant.
+
+MET — grounder resolution "keep or replace the lock" — Plan step 4 "Retain the existing compute lock at link-massing.infra.test.ts:84-85 unchanged (it guards the registered source); add the new src lock beside it" — a lock is kept and a new one is added.
+
+MET — card "the settings file must NOT reach a browser bundle" — Plan step 4 "No registration, no migration, milestone left alone" — no settings file is created and BuildingMassing.tsx is untouched, so the bundle clause cannot be breached.
+
+REJECT — card "the two values become registered pinned settings read the way task-372 registered the lot-size window (src/lib/report-projection/pinned-settings.ts), values unchanged" — the plan registers nothing — not a real issue because MORNING-DECISIONS.md:1476 "Let the grounder resolve them all as long as the result is compliant" and the grounder resolution "register nothing; delete the unused src copy and its test block; keep or replace the lock" supersede the card's registration path.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 5
+
+---
+⏱  59935ms (59.9s)
+📊 Tokens — total: 29002, input: 16432, output: 12570, reasoning: 11654

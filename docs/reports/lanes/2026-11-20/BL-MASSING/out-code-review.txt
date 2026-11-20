@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T17:36:06.687Z file_sha256=498ad597c3707c4e44db1db4637a63f62d60e7882ef443faec2f3431dce6d77d prompt_sha256=530b1615254316feeb59bbaa25866a787f442845111fb23212e9fc4c74e45368
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-out-code-review.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/lib/massing/geometry.ts:1 "-import type { StructureType } from './types';" — after this removal nothing visible in the diff consumes `StructureType`, so the export in src/lib/massing/types.ts may now be dead code — grounder: list remaining importers of `StructureType` and delete it from types.ts if geometry.ts was the last one.
+
+DEFER severity=NIT — src/tests/link-massing.infra.test.ts:91 "expect(GEOMETRY).not.toMatch(/classifyStructure|SHED_THRESHOLD_SQM|GARAGE_MAX_SQM/);" — the bare-identifier regex also matches a comment or a string that merely names the old symbol, so a future doc comment mentioning it fails the lock for the wrong reason — either scope the pattern to identifier positions or state in the test name that any mention, including comments, is banned.
+
+REJECT — src/tests/massing.logic.test.ts:60 "describe('classifyStructure', () => {" — deleting the whole behaviour block looks like lost coverage of the 20/60 classification rules — it is correct because the function deleted in this same diff was its only subject, and the surviving registered source is locked textually at src/tests/link-massing.infra.test.ts:84-85.
+
+REJECT — src/tests/massing.logic.test.ts:88 "expect(SHED_THRESHOLD_SQM).toBe(20);" — losing the only assertion of the 20 and 60 values looks like an unguarded numeric change — it is correct because those values are no longer src constants; nothing in src can assert them without re-hardcoding them, which the adjacent infra lock forbids.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  15844ms (15.8s)
+📊 Tokens — total: 15487, input: 12915, output: 2572, reasoning: 2188

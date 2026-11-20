@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:36:06.710Z file_sha256=1b2be5392c9a55fab2c0676211025f32922aef328dfc1ea60fbeb4176088ef58 prompt_sha256=b173d951333846a98efc4abf1169d0996da85bb9900076cf6b0406eeb3b46abd
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-out-compliance-airtight-v2-122.txt (model: deepseek-reasoner)
+
+MET — 6.6.1(a) CONSUMERS "every reader of the step's tables/columns and `records_meta` keys, across all chains and `src/`" — src/lib/massing/geometry.ts:36 "-export function classifyStructure(" — the removed symbols are pure footprint/area helpers with no SQL, table, column or `records_meta` access, so no step's observed consumer set changes and no registry row goes stale
+
+MET — 6.6.1(e) "src/ SQL ledger catalog membership" — src/tests/massing.logic.test.ts:9 "} from '@/lib/massing/geometry';" — no SQL text is added or removed by the diff, so `src-sql-ledger.mjs --check` membership and the committed catalog are unaffected
+
+MET — 6.6.1(e)/(f) enumerated locks "Locks: the `catalogMembership` and `live:` catalog tests" — src/tests/link-massing.infra.test.ts:91 "const GEOMETRY = fs.readFileSync(...)" — the diff touches neither `src/tests/src-sql-ledger.logic.test.ts`, `phase3-deletions.logic.test.ts`, `gate-notes-cap.infra.test.ts`, nor any `sql-witness-*` / `fleet2-*` lock file named in the pasted clauses, so no clause-enumerated lock is removed
+
+DEFER severity=LOW — 6.6.1 intro "judge the material under review against the rules in this part" — src/tests/link-massing.infra.test.ts:91 "the unused src copy is gone: … (FIX.MASSING, task-396; the registered rows are the one source)" — the added guard enforces a card ("FIX.MASSING, task-396") that no pasted clause or operator ruling names, so its necessity is unjudgeable here — paste the FIX.MASSING card text with the diff if it carries binding clauses
+
+REJECT — 6.6.1(c) "no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed" — accused of asserting registry accuracy via the new test name "the registered rows are the one source" — the claim is about massing threshold config rows externalized in link-massing, not the §6.6.1 four-part step registry or the §6 cross-step ledger, so (c) does not reach it
+
+REJECT — 6.6.1(a) "TESTS … 100% mechanical: generated from code/runtime" — accused of hand-deleting the `classifyStructure` test block and thereby lowering TESTS coverage without a mechanical generation path — the mechanical-generation requirement binds the step registry and ledger, not the unit tests of a shared `src/` geometry module, and the removed assertions cover code that no longer exists
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  21636ms (21.6s)
+📊 Tokens — total: 9408, input: 5489, output: 3919, reasoning: 3277

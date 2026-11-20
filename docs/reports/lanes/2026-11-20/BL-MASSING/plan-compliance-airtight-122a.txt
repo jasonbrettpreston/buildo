@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:31:54.972Z file_sha256=70a9463d2613fe5458f655eb6fdefbdd8ee2512018554510d68b19906d523b7f prompt_sha256=f6f6c85300aecfa7cb3da699b55bebdafc055e05b8f30b2b9d251543c39b578b
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-plan-compliance-airtight-122a.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 P4 "All tunables are data; zero thresholds in src/" — plan step 4 "Storey heights (STORY_HEIGHT_M, STORY_HEIGHT_BY_USE_TYPE) left alone, listed only." — the plan removes the two named thresholds but leaves two tunable numeric constants in src/lib/massing/geometry.ts, so the result is not compliant with "all tunables are data" and fails the operator's "as long as the result is compliant" condition — register the storey heights as data or obtain and record an explicit operator ruling that they are constants, not tunables, before plan-lock.
+BUG severity=HIGH — task-396 "Owed with it: the DB mirror migration for the new settings (number from the ID ledger; the operator's typed GO), together with the one owed from task-372." — plan step 4 "No registration, no migration, milestone left alone." — the plan drops the owed DB mirror migration, including the one owed from task-372, and records neither the operator's typed GO nor a deferral — state where the owed migration is delivered or record an explicit, operator-authorized deferral with the typed GO.
+DEFER severity=MED — task-396 "After task-378 folds." — dependency "task-378 FIX.TUNE Phone tunables are data, not code; lookup and entitlement contract entries corrected (D14, D15) · status: RUNNING" — the plan proceeds while task-378 is still RUNNING and does not gate execution on it folding — add a gate or confirm task-378 has folded before capture or execution.
+MET — Spec 126 P4 "zero thresholds in src/" — src/lib/massing/geometry.ts:27,30 — plan step 3 deletes SHED_THRESHOLD_SQM and GARAGE_MAX_SQM from src/lib/massing/geometry.ts.
+MET — Operator 2026-11-20 "Let the grounder resolve them all as long as the result is compliant" — pasted operator ruling — the plan follows the grounder resolution "register nothing; delete the unused src copy and its test block; keep or replace the lock".
+MET — Grounder resolution "register nothing; delete the unused src copy and its test block; keep or replace the lock" — plan steps 2-4 — red test added, three names deleted, describe block deleted, compute lock retained, new src lock added.
+MET — task-396 "values unchanged" — src/tests/link-massing.infra.test.ts:84-85 — plan step 4 retains the existing compute lock unchanged, which guards the registered source.
+MET — A27 #13 "A test that needs Postgres is `*.db.test.ts`" — plan step 2 "in src/tests/link-massing.infra.test.ts add one test that src/lib/massing/geometry.ts holds none of the three names" — the new test reads a source file, needs no Postgres, and is not a per-file package.json list.
+MET — A26 G0 "The purity codes run over compute and its AST `require` closure" — plan step 1 "the scripts/lib/compute/link-massing.js classifyStructure is a separate function taking thresholds as arguments from the registered seed rows" — the plan records the compute function as separate and fed from seed rows, so the src deletion is outside the compute closure.
+REJECT — Spec 126 P4 "All tunables are data" — accused of not registering the two values as pinned settings — the operator ruling 2026-11-20 authorizes the grounder to register nothing, and plan step 1 records the values already come from registered seed rows.
+REJECT — task-396 "the existing locks src/tests/massing.logic.test.ts:88-89 and src/tests/link-massing.infra.test.ts:84-85 are updated only to follow the new source, never weakened" — accused of deleting the massing.logic.test.ts locks — the grounder resolution pasted in the material says "delete the unused src copy and its test block; keep or replace the lock", and the compute lock at link-massing.infra.test.ts:84-85 is retained unchanged.
+REJECT — A26 "Proof of no runtime change ... `git diff --stat <main> -- scripts/lib scripts/*.js scripts/quality/*.js scripts/steps/_schema/step.schema.json` is empty" — accused of editing runtime code — the clause's diff-stat covers scripts/lib, scripts/*.js, scripts/quality and step.schema.json, none of which the plan touches.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  147862ms (147.9s)
+📊 Tokens — total: 46003, input: 13785, output: 32218, reasoning: 31223

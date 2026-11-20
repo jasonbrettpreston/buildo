@@ -88,6 +88,11 @@ describe('link-massing.js — building-classification heuristic externalization 
     expect(COMPUTE).not.toMatch(/shedThreshold\s*=\s*20|garageMax\s*=\s*60/);
   });
 
+  it('the unused src copy is gone: src/lib/massing/geometry.ts holds none of the classification names (FIX.MASSING, task-396; the registered rows are the one source)', () => {
+    const GEOMETRY = fs.readFileSync(path.resolve(__dirname, '../lib/massing/geometry.ts'), 'utf-8');
+    expect(GEOMETRY).not.toMatch(/classifyStructure|SHED_THRESHOLD_SQM|GARAGE_MAX_SQM/);
+  });
+
   it('config validation is HOISTED ABOVE THE GATE (was: validateLogicVars inside the lock)', () => {
     // §1.3 / A-5 / B-13 — the OPPOSITE of the pre-conversion order, declared as a diff.
     // The step is SKIP-eligible (6 live lock-contention rows), and an invalid threshold

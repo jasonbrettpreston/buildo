@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:31:54.971Z file_sha256=6c6f628e466b3d27d418f68b9eb0e2b2d832b58a65e64216879efede73806f6d prompt_sha256=b56a03f7ec26f2465b8e3e36b2f47a158fbd682cc0f0ec307e4fed9971979dee
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-plan-compliance-airtight-v2-122.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card scope "After task-378 folds." — plan header "Plan (BL-MASSING lane, 2026-11-20)" and dependency block "task-378 FIX.TUNE ... · status: RUNNING" with "final summary: (none yet)" — steps 2 to 5 schedule the deletion and the red commit before the dependency the card names has folded, and no hold or fold is recorded — hold steps 2 and 3 until task-378 folds, and record the fold and the length-factor outcome in the lane report.
+
+DEFER severity=MED — card "values unchanged; the existing locks ... are updated only to follow the new source, never weakened" — plan step 3 "delete the classifyStructure describe block and its three imports from src/tests/massing.logic.test.ts" — the replacement lock only asserts the three names are absent, so the 20/60 boundary behaviour loses its src-side coverage and the plan never names a compute-side boundary test that holds it — name the test that holds the 20/60 boundary on scripts/lib/compute/link-massing.js before the block is deleted, or record the grounder's "delete the unused src copy and its test block" authorization in the lane report.
+
+DEFER severity=MED — card "values unchanged" — plan step 1 "the scripts/lib/compute/link-massing.js classifyStructure is a separate function taking thresholds as arguments from the registered seed rows" — the plan never reads or records that the registered seed rows actually hold 20 and 60, so "values unchanged" is assumed rather than proven — add a step that prints the seed row values and a lock asserting 20 and 60.
+
+DEFER severity=MED — card "Owed with it: the DB mirror migration for the new settings (number from the ID ledger; the operator's typed GO), together with the one owed from task-372." — plan step 4 "No registration, no migration, milestone left alone." — the migration owed from task-372 is dropped with no home, no ledger note and no owner — record it as still owed and give it an owning task or an explicit hold in the lane report.
+
+DEFER severity=MED — card "The settings seed file has no rule-list row today: the lane reports that, it does not skip the list." — plan step 5 "Lens set at plan and output, FINDINGS.md untriaged, grounder owed, task left RUNNING." — no step carries the rule-list row report the card orders — add a step: the lane report records that the settings seed file has no rule-list row.
+
+DEFER severity=MED — Spec 126 P4 "All tunables are data; zero thresholds in src/'." — plan step 4 "Storey heights (STORY_HEIGHT_M, STORY_HEIGHT_BY_USE_TYPE) left alone, listed only." — two tunables remain typed in src/lib/massing/geometry.ts with no data source and no owning task, so "All tunables are data" is unmet for them, and "listed only" is not a resolution — file the follow-up task for the storey heights with an owner in the same lane report, or register them.
+
+REJECT — card "the two values become registered pinned settings read the way task-372 registered the lot-size window" — plan registering nothing — operator 2026-11-20 "Let the grounder resolve them all as long as the result is compliant" plus the grounder resolution "register nothing; delete the unused src copy and its test block; keep or replace the lock" supersede the card's route, so the deletion is not the violation.
+
+REJECT — 6.6.1 (a) "For every sources-chain step (then every chain), the four-part step registry ... and the §6 cross-step ledger ... are 100% mechanical" — the massing constants are not witnessed or generated in a step registry — the clause governs pipeline step registries and the §6 cross-step ledger; this change adds or declares no step registry row or ledger row, and the grounder resolution registers nothing.
+
+MET — Spec 126 P4 "zero thresholds in src/'" — plan step 3 "delete the three names and the now-unused StructureType import from geometry.ts" — the two named thresholds leave src/ and the grep in step 1 proves nothing reads them.
+
+MET — card "the existing locks ... src/tests/link-massing.infra.test.ts:84-85" — plan step 4 "Retain the existing compute lock at link-massing.infra.test.ts:84-85 unchanged (it guards the registered source)" — the infra lock is kept, not rewritten.
+
+MET — card "the settings file must NOT reach a browser bundle (src/components/permits/BuildingMassing.tsx is a client component ...)" — plan step 1 "Prove by git grep over src, mobile, scripts that nothing at run time calls or imports classifyStructure, SHED_THRESHOLD_SQM, GARAGE_MAX_SQM from src/lib/massing/geometry.ts" — no settings file is created and the component under src/ is inside the grep.
+
+MET — card "Files: src/lib/massing/geometry.ts, src/tests/massing.logic.test.ts, src/tests/link-massing.infra.test.ts" — plan steps 2 to 4 — the plan touches exactly the three named files, no others.
+
+MET — card red-first discipline is not restated in the pasted card, and plan step 2 "Red = commit attempt with only that test and the task file staged (red.out)" — not counted as a clause, listed for completeness.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 6
+
+---
+⏱  45948ms (45.9s)
+📊 Tokens — total: 22448, input: 13176, output: 9272, reasoning: 8056

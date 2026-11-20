@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:36:06.707Z file_sha256=16ee72ce8d274dad783bae65512daed58fcbfc8defbc0119581c92a5831b9c83 prompt_sha256=92347b0135ad21ae596f57b1f3f6fdf60583fa813121049cc072f79e5c131c43
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-out-compliance-airtight-124a.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Appendix §B10 R-BA "An ORPHAN row (its violation since fixed) is RED (R-X closing-row posture) — the remediation commit that fixes a violation deletes its own row." — `src/tests/link-massing.infra.test.ts:91` "it('the unused src copy is gone: src/lib/massing/geometry.ts holds none of the classification names (FIX.MASSING, task-396; the registered rows are the one source)'" (no `scripts/steps/_schema/standard-gates-ledger.json` hunk anywhere in the diff) — this is the remediation commit for the duplicated `SHED_THRESHOLD_SQM = 20` / `GARAGE_MAX_SQM = 60` sites, yet it carries no deletion of the ledger row(s) that allowed them, so any such row survives as an ORPHAN and the gate is RED — delete the covering row(s) in this same commit, or state in the commit that no row exists for these sites (cannot see the ledger from the diff).
+
+DEFER severity=MED — Appendix §B10 R-BA "ACCURATE (gate G forced-nonzero capture + explained G8 diffs; gate K red-first proof is a committed vitest JSON artifact, never the bare word RED)" — `src/tests/link-massing.infra.test.ts:91` "+  it('the unused src copy is gone: src/lib/massing/geometry.ts holds none of the classification names (FIX.MASSING, task-396; ...)'" — a new lock for an in-development step lands with no committed vitest JSON red-first artifact, and `massing`'s exclusion list (#30/#31/#38-#41, G7/G8) does not cover gate K — land the red-first vitest JSON artifact for this lock or cite the existing gate-K proof for `link-massing`.
+
+DEFER severity=LOW — Appendix §B10 R-BA "STANDARDIZED (gate A closed check bounds; gate I registry coverage)" — `src/tests/massing.logic.test.ts` removed "-    expect(SHED_THRESHOLD_SQM).toBe(20);" and "-    expect(GARAGE_MAX_SQM).toBe(60);" — with the constants and their value assertions gone and the new lock asserting only that the names are absent, nothing in the material pins the 20/60 classification bounds that gate A requires be closed — add a lock asserting the registered rows' default bounds (shed 20, garage 60) in `src/tests/steps/` or the link-massing infra test.
+
+MET — R-BZ (Rules 2, 3) — `src/lib/massing/geometry.ts` hunk `@@ -23,12 +21,6 @@` "-export const GARAGE_MAX_SQM = 60;" — the literal thresholds that duplicated registered logic variables are gone from src, which is the Rule 3 direction.
+
+MET — R-CO "A test never writes a before-image into the real golden tree" — `src/tests/link-massing.infra.test.ts:92` "const GEOMETRY = fs.readFileSync(path.resolve(__dirname, '../lib/massing/geometry.ts'), 'utf-8');" — the new test only reads a src file, no golden-tree write path is touched.
+
+MET — R-CP "A test that spawns `step-validate.mjs` (or another long CLI) first proves the run finished" — `src/tests/link-massing.infra.test.ts:91` "the unused src copy is gone: ... holds none of the classification names" — the added test spawns no child process, so the completion-before-assert rule is not engaged.
+
+REJECT — R-BE "files = the `computeSourceFingerprint` inputs (`capture-step-golden.js` helpers) + `src/tests/steps/<slug>/`" — accused of hand-listing a step path outside the generated Target Files block — the file `src/lib/massing/geometry.ts` is not deleted, no Target Files span or `generated:*` block is edited, so no generated list drifts.
+
+REJECT — R-CN "A gate-E row carries `file`, the repo-relative posix path" — accused of leaving a gate-E row keyed to a now-clean file — that is the same question as the HIGH finding above and is recorded there, not as a second item; nothing in the diff shows an edited gate-E row.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 3
+
+---
+⏱  61827ms (61.8s)
+📊 Tokens — total: 25471, input: 13736, output: 11735, reasoning: 10747

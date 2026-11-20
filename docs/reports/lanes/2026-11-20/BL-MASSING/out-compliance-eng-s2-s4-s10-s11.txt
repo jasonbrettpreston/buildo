@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:36:06.692Z file_sha256=b138e97af5c1c5f23e864b77a49b2aa03a7f1eb28bc9571baa40bf4930cbf343 prompt_sha256=41e1ea3e9489fab3b59cc6d683fad22e7352fe016bff9114e8e6f8a09dd76f2b
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-out-compliance-eng-s2-s4-s10-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §10.2 "If a `src/lib/` module is imported by both API routes and frontend components, any modification requires `npx vitest related` to verify no API regression. Shared modules are the highest-risk cross-boundary files." — src/lib/massing/geometry.ts:40 "-export function classifyStructure(" — the diff deletes an exported symbol (`classifyStructure`) and two exported constants from a shared `src/lib/` module, and the material shows only two test files updated, with no `npx vitest related` run or consumer sweep — run `npx vitest related src/lib/massing/geometry.ts` and confirm in the diff that no API route or component still imports `classifyStructure`, `SHED_THRESHOLD_SQM`, `GARAGE_MAX_SQM`, or `StructureType` from this module
+
+DEFER severity=MED — §11 Cross-Layer Contracts "If a threshold is changed, EVERY consumer file listed in `contracts.infra.test.ts` is updated in the same commit" — src/lib/massing/geometry.ts:26 "-export const SHED_THRESHOLD_SQM = 20;" — the 20/60 thresholds are removed from one consumer file, but contracts.infra.test.ts is not in the diff (cannot see it), so a mapping row may still list this module as a consumer and fail CI on drift — verify and update the `_contracts.json` to consumer mapping rows in the same commit
+
+DEFER severity=MED — §11 Shared Logic Touched "All dual-code-path consumers identified (§7.1, §7.2)" — src/tests/link-massing.infra.test.ts:91 "+  it('the unused src copy is gone: src/lib/massing/geometry.ts holds none of the classification names (FIX.MASSING, task-396; the registered rows are the one source)'" — the dual-path claim ("the registered rows are the one source") rests only on a test name and a name-regex, with no listed inventory of the remaining TS/JS consumers — add the explicit consumer inventory (TS module, JS script, registered rows) to the change description or the test comment
+
+DEFER severity=LOW — §11 Pre-Review Self-Checklist "generate a 5-10 item self-skeptical checklist ... Walk each item against the ACTUAL diff. Output PASS/FAIL per item in the response BEFORE running tests" — "diff --git a/src/lib/massing/geometry.ts b/src/lib/massing/geometry.ts" — no PASS/FAIL self-skeptical checklist appears anywhere in the material — paste the 5-10 item checklist with per-item PASS/FAIL alongside this diff
+
+DEFER severity=LOW — §2.1 "When writing integration tests (`.infra.test.ts`), you MUST include tests for error paths and silent failures" — src/tests/link-massing.infra.test.ts:91 "+    const GEOMETRY = fs.readFileSync(" — the newly added `.infra.test.ts` assertion forces no failure in the call stack and asserts no recovery or safe-error behaviour — point to the existing forced-failure case in this file or state in the test comment why a static source scan needs none
+
+MET — §11 Cross-Layer Contracts "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)" — src/lib/massing/geometry.ts:29 — the duplicated TS literals 20 and 60 are deleted, leaving the registered rows as the single source
+
+MET — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — whole diff — no file under `scripts/`, `migrations/`, or `scripts/lib/` is touched
+
+MET — §2.2 "Every newly created API route ... MUST have an overarching `try-catch` block" — whole diff — no file under `src/app/api/` is created or modified, clause not triggered
+
+MET — §2.3 "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed" — whole diff — the change only deletes code and adds a `not.toMatch` assertion, no `!` introduced
+
+REJECT — §4.1 "The authoritative gate for every `/api/admin/**` route is `verifyAdminAuth(request)` as the FIRST statement of the handler" — change accused of leaving an admin route unguarded — no admin route file appears in the diff
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+
+---
+⏱  27746ms (27.7s)
+📊 Tokens — total: 10748, input: 5460, output: 5288, reasoning: 4286

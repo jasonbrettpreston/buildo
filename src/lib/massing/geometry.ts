@@ -1,5 +1,3 @@
-import type { StructureType } from './types';
-
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -23,12 +21,6 @@ export const STORY_HEIGHT_BY_USE_TYPE: Record<MassingUseType, number> = {
   'mixed-use': 3.5,
 };
 
-/** Below this area (sqm), accessory is classified as shed. */
-export const SHED_THRESHOLD_SQM = 20;
-
-/** 20–60 sqm accessory is classified as garage. */
-export const GARAGE_MAX_SQM = 60;
-
 // ---------------------------------------------------------------------------
 // Core functions
 // ---------------------------------------------------------------------------
@@ -40,28 +32,6 @@ export const GARAGE_MAX_SQM = 60;
 export function estimateStories(maxHeightM: number | null | undefined): number | null {
   if (maxHeightM == null || maxHeightM <= 0) return null;
   return Math.max(1, Math.round(maxHeightM / STORY_HEIGHT_M));
-}
-
-/**
- * Classify a building structure based on its footprint area relative to
- * all other buildings on the same parcel.
- *
- * - The largest building is always classified as 'primary'.
- * - A solo building is always 'primary'.
- * - Accessory structures: <20 sqm = shed, 20–60 sqm = garage, else = other.
- */
-export function classifyStructure(
-  areaSqm: number,
-  allAreas: number[]
-): StructureType {
-  if (allAreas.length <= 1) return 'primary';
-
-  const maxArea = Math.max(...allAreas);
-  if (areaSqm >= maxArea) return 'primary';
-
-  if (areaSqm < SHED_THRESHOLD_SQM) return 'shed';
-  if (areaSqm <= GARAGE_MAX_SQM) return 'garage';
-  return 'other';
 }
 
 /**

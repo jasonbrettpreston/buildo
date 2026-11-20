@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:31:54.969Z file_sha256=1216b8fe3c9a1b12a21771beeec8f2232ec8e265e7036c1af7a5050c8d48612b prompt_sha256=86f9221f2e81b40803aa23e9278656b2e34d3b1ffc60c20d7263326023d96455
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-plan-compliance-airtight-v3-122.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 126 P4 "All tunables are data; zero thresholds in src/'" — plan step 4 "Storey heights (STORY_HEIGHT_M, STORY_HEIGHT_BY_USE_TYPE) left alone, listed only. No registration, no migration" — the clause is met only for the two named constants; two other typed tunables stay in src with no registration and no dated deferral, so the operator condition "as long as the result is compliant" is not reached — add a step that registers the storey heights or files a dated ledger/deferral row naming both.
+
+DEFER severity=LOW — 5.5 cl.6 "Every tunable goes through `ctx.config`" and gate E "a finding is closed only by becoming a declared `config.logic_variables[]` entry ... or a dated `standard-gates-ledger.json` row" — plan step 1 "the scripts/lib/compute/link-massing.js classifyStructure is a separate function taking thresholds as arguments from the registered seed rows" — the plan accepts "registered seed rows" as the compliant source without naming the descriptor declaration, so the "declared ≡ the compute's `ctx.config.*` reads" surface behind the deletion is asserted, not shown — add a step confirming 20 and 60 appear in link-massing's declared config.logic_variables[].
+
+DEFER severity=LOW — task line "the settings file has no rule-list row today: the lane reports that, it does not skip the list" — plan step 5 "Lens set at plan and output, FINDINGS.md untriaged, grounder owed, task left RUNNING" — no plan step carries the rule-list report, and the register-nothing resolution does not say the report is moot — state in the lane output either the missing rule-list row or that no settings file is created.
+
+DEFER severity=LOW — task line "Owed with it: the DB mirror migration for the new settings (number from the ID ledger; the operator's typed GO), together with the one owed from task-372" — NONE — the plan drops this task's migration by registering nothing but never says where the owed task-372 mirror migration is carried — name its tracking row so the owed migration does not vanish with this task.
+
+MET — Spec 126 P4 "zero thresholds in src/'" — plan step 3 "Green: delete the three names and the now-unused StructureType import from geometry.ts" — the two thresholds leave src entirely rather than being re-typed or commented.
+
+MET — task clause "the settings file must NOT reach a browser bundle" — plan step 1 "Prove by git grep over src, mobile, scripts that nothing at run time calls or imports classifyStructure, SHED_THRESHOLD_SQM, GARAGE_MAX_SQM" — nothing remains in src to be pulled into BuildingMassing.tsx.
+
+MET — 5.5 cl.1-5 (dispatch table, ctx.report, seams, file order, why text) — plan step 4 "Retain the existing compute lock at link-massing.infra.test.ts:84-85 unchanged (it guards the registered source)" — the plan writes nothing under scripts/lib/compute/**, so those shape clauses are untouched by this change.
+
+REJECT — task scope "the two values become registered pinned settings ... values unchanged" and "the existing locks ... are updated only to follow the new source, never weakened" — accused of skipping registration and deleting the src lock block — the pasted grounder resolution says "register nothing; delete the unused src copy and its test block; keep or replace the lock", and the 20/60 values stay pinned by the retained link-massing.infra.test.ts:84-85 lock.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 1
+
+---
+⏱  39431ms (39.4s)
+📊 Tokens — total: 19253, input: 11700, output: 7553, reasoning: 6738

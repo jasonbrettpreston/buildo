@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:36:06.700Z file_sha256=88fa89fc24554fb32d97fef69f771e81a1df608a55ecb3d3a1cb5137008e472c prompt_sha256=2042a0595564c1db6dccda5049f917770cb1415b1a7875a59fdea8a55c70852e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-out-compliance-airtight-v3-122.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §5.5 enforcement scope "Enforced by `scripts/ast-grep-rules/compute-shape.yml` over `scripts/lib/compute/**`" — src/lib/massing/geometry.ts (deleted hunk @@ -23,12 +21,6 @@) "export const SHED_THRESHOLD_SQM = 20;" — every pasted clause binds `scripts/lib/compute/**` and its gates, while the whole diff edits `src/lib/massing/**` and `src/tests/**`, so compliance of this change with rules 1 through 6 cannot be established from the material — name the governing clause for `src/lib/**` (or the 122a §A26/§A27 row) in the card, or move the change under the pasted scope.
+
+DEFER severity=MED — §5.5 rule 6 "Every tunable goes through `ctx.config`" — src/lib/massing/geometry.ts (deleted hunk @@ -23,12 +21,6 @@) "export const GARAGE_MAX_SQM = 60;" — the diff removes the only visible declaration of the 20/60 sqm bounds and supplies no `config.logic_variables[]` row, no `ctx.config.*` read and no seed "CONSUMED by <slug>" entry, so nothing shows the tunable was externalized rather than deleted — paste the descriptor row plus the compute read that now owns the bound, or the dated ledger row that closes it.
+
+DEFER severity=MED — §5.5 "a finding is closed only by becoming a declared `config.logic_variables[]` entry (as gate A requires for descriptor-level bounds) or a dated `standard-gates-ledger.json` row" — src/tests/massing.logic.test.ts (deleted lines) "expect(SHED_THRESHOLD_SQM).toBe(20);" — the tests that pinned the literals are removed with no replacement assertion on the declared config row, so the literal-closure evidence the clause demands is absent from the material — add the assertion against the declared `config.logic_variables[]` entry (or ledger row) to the same test file.
+
+DEFER severity=LOW — §5.5 "and by `src/tests/step-conformance.infra.test.ts`; prove-red fixture: `scripts/steps/_schema/fixtures/compute/bad-compute-shape.js`" — src/tests/link-massing.infra.test.ts:91 (added) "the unused src copy is gone: src/lib/massing/geometry.ts holds none of the classification names" — the diff adds a new invariant outside the two pasted enforcement surfaces, and no pasted clause names a no-classification-names-in-src rule — cite the ruling or card line that authorizes the new invariant, or drop it.
+
+REJECT — §5.5 rule 1 "A dispatch table, `{ [checkId]: fn }` ... exported as `module.exports.checks`" — accused of breaking the check-dispatch contract by deleting `classifyStructure` — not a real issue: `src/lib/massing/geometry.ts` is a TypeScript lib module outside `scripts/lib/compute/**` and never exported `module.exports.checks`.
+
+MET — §5.5 rule 3 ban list "Banned outright: bare `fetch(`, `Date.now()`, `new Date(`, `process.env`" — src/lib/massing/geometry.ts (deleted hunk @@ -42,28 +34,6 @@) — the deletion introduces no bare fetch, clock or env access into any module.
+
+MET — §5.5 rule 2 "there is **no `console.*`**" — src/lib/massing/geometry.ts (deleted hunk @@ -42,28 +34,6 @@) — the removed block contained no narration call and the diff adds none.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  27959ms (28.0s)
+📊 Tokens — total: 9558, input: 4013, output: 5545, reasoning: 4694

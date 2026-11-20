@@ -1,0 +1,183 @@
+LIST airtight-v3-122 sha256:07ef696e6de34872a949a6c3dca93e9c8f6b394cb4813a4e51439f5f20586e55 material sha256:498ad597c3707c4e44db1db4637a63f62d60e7882ef443faec2f3431dce6d77d part 1 of 1
+RULE LIST airtight-v3-122 (docs/specs/01-pipeline/122_pipeline_step_optimization.md, sections 5.5 Condition 4), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+### 5.5 Condition 4 — the COMPUTE shape ✅ **RATIFIED — CORRECTED 2026-09-10 (measured): still "PROPOSED... ratify at C3" was stale.** `scripts/ast-grep-rules/compute-shape.yml` exists and is live (9 rules as of R-W, 2026-08-30); 9 pilots have shipped compute under it (`assert_schema` through `enrich_parcels`). The open condition this heading named is closed by measured practice, not a further ruling.
+
+§5.1 freezes the step FILE and says nothing about the module it delegates to, so a 606-line island can
+become a 7-line file plus a 606-line island one directory over. §5.5 closes that. Enforced by
+`scripts/ast-grep-rules/compute-shape.yml` over `scripts/lib/compute/**` (driver:
+`scripts/hooks/check-step-shape.mjs`, always blocking — the directory IS the scope, no `converted.json`
+entry needed) and by `src/tests/step-conformance.infra.test.ts`; prove-red fixture:
+`scripts/steps/_schema/fixtures/compute/bad-compute-shape.js`.
+
+**Conversion checklist line — McDonald's Airtight V3 (2026-10-11, Spec 124 R-BZ/R-CA):** every future and unconverted step passes the six-part V3 package incl. EXTERNALIZED (124 V3 row, R-DT): compute purity codes G0–G13 (122a §A26) with ZERO findings and no ledger allowance. `step-validate` prints `standard: V2|V3`; a step entering `converted[]` or `pending[]` with a purity finding is RED. Before the first capture, walk the trap list in 122a §A27.
+
+**Enforced (2026-09-26, Spec 124 §5 R-BA gate E):** the shape rule bans the commonest hiding places
+(console, bare fetch, wall clock, `process.env`, forbidden `require`s) but says nothing about a bare
+numeric or SQL literal deciding a check's outcome — a hard-coded `INTERVAL`/date/numeric bound or
+`UPPER_SNAKE` constant is Rule 3 (tunables externalized) violated from inside compute rather than the
+descriptor. `scripts/analysis/gates/compute-literals.mjs` scans every `scripts/lib/compute/**` module for
+that closed rule set (`step-validate.mjs` fast invariant #32) — a finding is closed only by becoming a
+declared `config.logic_variables[]` entry (as gate A requires for descriptor-level bounds) or a dated
+`standard-gates-ledger.json` row; 31 measured 2026-09-26 across 9 modules, deferred under the "McDonald's
+Airtight" scope ruling (R-BA), closing at "chain_sources conversion complete."
+
+1. **A dispatch table, `{ [checkId]: fn }`** — one named function per declared check, **function name ===
+   check id**, exported as `module.exports.checks` so a test can call one check without running the rest.
+   `compute(ctx)` iterates `ctx.checks` (the SELECTED ids, from the library) and does nothing else; the
+   loop is the error boundary, so a throw becomes `ctx.report(<id>, { error })` on that check's own row.
+2. **Every observation goes through `ctx.report()`**, and there is **no `console.*`** — narration uses the
+   `ctx.log` seam so a caller can silence, capture or assert on it.
+3. **Every I/O call goes through an injected seam** — `ctx.fetch` (default `globalThis.fetch`), `ctx.clock`
+   (default `Date.now`). Banned outright: bare `fetch(`, `Date.now()`, `new Date(`, `process.env`, and
+   `require()` of `pg` / `dotenv` / `fs` / `child_process` / `../pipeline` / `../step` / `../resolve-db`.
+4. **File order = descriptor check order**; everything reusable lives below a `// ---- helpers ----`
+   marker, the dispatch table below a `// ---- dispatch ----` one.
+5. **Policy text lives in `checks[].why`, not in comments** — a rule stated only in a comment is a rule
+   the audit table cannot show and the schema cannot validate.
+6. **Every tunable goes through `ctx.config`** (§1.2a P4 addendum, Pilot 1 P4 remediation 2026-08-25).
+   `scripts/lib/step/config.js` loads the descriptor's declared `config.logic_variables[]` via
+   `loadMarketplaceConfigs(pool, slug, { quiet: true })`, PROJECTS to the declared names, applies
+   `min`/`max` + `on_invalid` (`fail` throws pre-compute · `default` takes the seed default · `clamp`
+   takes the bound), freezes, and stamps the resolved values into `records_meta.config`
+   (~30 B/var, absent entirely for `config: "none"`). `hoisted_above_gate: true` resolves ABOVE the
+   advisory lock so an invalid threshold cannot hide behind a green SKIPPED summary; a declared name in
+   no registry throws. `validation: "strict"` is the projection itself — an undeclared name is
+   *unreachable*, not merely unvalidated. Statically enforced by `compute-no-literal-url-tunable` /
+   `-byte-window` / `-threshold` (allow-listing `limit=0`, CKAN's metadata-only sentinel) and by
+   `step-conformance.infra.test.ts`'s four-surface battery: declared ⊆ registry, declared ⊆ admin
+   GROUPS, declared ≡ the compute's `ctx.config.*` reads, and seed-`CONSUMED by <slug>` ⊆ declared —
+   each proven RED by dropping a var, declaring `"none"`, and adding an unregistered name.
+
+> **Why a shape rule and not a review checklist:** the same reason as §5.1. The moment one compute gets a
+> special case there are 27, and every one of them is invisible until something breaks in production.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/lib/massing/geometry.ts b/src/lib/massing/geometry.ts
+index 37c5959f1..6a3fdd2f2 100644
+--- a/src/lib/massing/geometry.ts
++++ b/src/lib/massing/geometry.ts
+@@ -1,5 +1,3 @@
+-import type { StructureType } from './types';
+-
+ // ---------------------------------------------------------------------------
+ // Types
+ // ---------------------------------------------------------------------------
+@@ -23,12 +21,6 @@ export const STORY_HEIGHT_BY_USE_TYPE: Record<MassingUseType, number> = {
+   'mixed-use': 3.5,
+ };
+ 
+-/** Below this area (sqm), accessory is classified as shed. */
+-export const SHED_THRESHOLD_SQM = 20;
+-
+-/** 20–60 sqm accessory is classified as garage. */
+-export const GARAGE_MAX_SQM = 60;
+-
+ // ---------------------------------------------------------------------------
+ // Core functions
+ // ---------------------------------------------------------------------------
+@@ -42,28 +34,6 @@ export function estimateStories(maxHeightM: number | null | undefined): number |
+   return Math.max(1, Math.round(maxHeightM / STORY_HEIGHT_M));
+ }
+ 
+-/**
+- * Classify a building structure based on its footprint area relative to
+- * all other buildings on the same parcel.
+- *
+- * - The largest building is always classified as 'primary'.
+- * - A solo building is always 'primary'.
+- * - Accessory structures: <20 sqm = shed, 20–60 sqm = garage, else = other.
+- */
+-export function classifyStructure(
+-  areaSqm: number,
+-  allAreas: number[]
+-): StructureType {
+-  if (allAreas.length <= 1) return 'primary';
+-
+-  const maxArea = Math.max(...allAreas);
+-  if (areaSqm >= maxArea) return 'primary';
+-
+-  if (areaSqm < SHED_THRESHOLD_SQM) return 'shed';
+-  if (areaSqm <= GARAGE_MAX_SQM) return 'garage';
+-  return 'other';
+-}
+-
+ /**
+  * Ray-casting point-in-polygon test.
+  * Point is [lng, lat], ring is array of [lng, lat] (closed polygon).
+diff --git a/src/tests/link-massing.infra.test.ts b/src/tests/link-massing.infra.test.ts
+index 5cfc728bc..e229accbf 100644
+--- a/src/tests/link-massing.infra.test.ts
++++ b/src/tests/link-massing.infra.test.ts
+@@ -88,6 +88,11 @@ describe('link-massing.js — building-classification heuristic externalization
+     expect(COMPUTE).not.toMatch(/shedThreshold\s*=\s*20|garageMax\s*=\s*60/);
+   });
+ 
++  it('the unused src copy is gone: src/lib/massing/geometry.ts holds none of the classification names (FIX.MASSING, task-396; the registered rows are the one source)', () => {
++    const GEOMETRY = fs.readFileSync(path.resolve(__dirname, '../lib/massing/geometry.ts'), 'utf-8');
++    expect(GEOMETRY).not.toMatch(/classifyStructure|SHED_THRESHOLD_SQM|GARAGE_MAX_SQM/);
++  });
++
+   it('config validation is HOISTED ABOVE THE GATE (was: validateLogicVars inside the lock)', () => {
+     // §1.3 / A-5 / B-13 — the OPPOSITE of the pre-conversion order, declared as a diff.
+     // The step is SKIP-eligible (6 live lock-contention rows), and an invalid threshold
+diff --git a/src/tests/massing.logic.test.ts b/src/tests/massing.logic.test.ts
+index c60c92fd8..c9d493b71 100644
+--- a/src/tests/massing.logic.test.ts
++++ b/src/tests/massing.logic.test.ts
+@@ -6,7 +6,6 @@ import { M_TO_FT } from '@/lib/parcels/geometry';
+ import path from 'path';
+ import {
+   estimateStories,
+-  classifyStructure,
+   pointInPolygon,
+   computeFootprintArea,
+   formatHeight,
+@@ -18,8 +17,6 @@ import {
+   inferMassingUseType,
+   STORY_HEIGHT_M,
+   STORY_HEIGHT_BY_USE_TYPE,
+-  SHED_THRESHOLD_SQM,
+-  GARAGE_MAX_SQM,
+ } from '@/lib/massing/geometry';
+ 
+ describe('estimateStories', () => {
+@@ -60,37 +57,6 @@ describe('estimateStories', () => {
+   });
+ });
+ 
+-describe('classifyStructure', () => {
+-  it('classifies largest area as primary', () => {
+-    expect(classifyStructure(150, [150, 30, 10])).toBe('primary');
+-  });
+-
+-  it('classifies 20-60 sqm accessory as garage', () => {
+-    expect(classifyStructure(35, [150, 35])).toBe('garage');
+-  });
+-
+-  it('classifies < 20 sqm accessory as shed', () => {
+-    expect(classifyStructure(15, [150, 15])).toBe('shed');
+-  });
+-
+-  it('classifies solo building as primary regardless of area', () => {
+-    expect(classifyStructure(10, [10])).toBe('primary');
+-  });
+-
+-  it('classifies > 60 sqm non-largest as other', () => {
+-    expect(classifyStructure(80, [150, 80])).toBe('other');
+-  });
+-
+-  it('classifies both as primary when two buildings have equal area', () => {
+-    expect(classifyStructure(100, [100, 100])).toBe('primary');
+-  });
+-
+-  it('uses threshold constants correctly', () => {
+-    expect(SHED_THRESHOLD_SQM).toBe(20);
+-    expect(GARAGE_MAX_SQM).toBe(60);
+-  });
+-});
+-
+ describe('pointInPolygon', () => {
+   // A simple square polygon: 0,0 -> 1,0 -> 1,1 -> 0,1 -> 0,0
+   const square: [number, number][] = [
+

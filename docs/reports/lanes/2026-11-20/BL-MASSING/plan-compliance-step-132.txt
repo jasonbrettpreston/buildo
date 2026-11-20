@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:31:54.962Z file_sha256=0b462284626418fa9b4ad035e296f2ed0248638bbe8ac3881ae5d1eb1366d99e prompt_sha256=0c0de3b53a6fbc0db6d254e6cfee8625cd401bf2c5172d4ec73efafe44e561f5
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-MASSING/in-plan-compliance-step-132.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 P4 "All tunables are data; zero thresholds in src/" — plan step 4 "Storey heights (STORY_HEIGHT_M, STORY_HEIGHT_BY_USE_TYPE) left alone, listed only." — two numeric constants stay in src with no data form and no ruling that they are definitional, so the "result is compliant" condition is not shown for them — register them as pinned settings, or record and cite a dated grounder ruling that they are definitional unit constants.
+
+DEFER severity=MED — task card "The settings seed file has no rule-list row today: the lane reports that, it does not skip the list." — plan step 5 "Lens set at plan and output, FINDINGS.md untriaged, grounder owed, task left RUNNING." — the required report of the missing rule-list row appears nowhere in the plan — add one plan line that reports the gap rather than skipping it.
+
+DEFER severity=MED — task card "Owed with it: the DB mirror migration for the new settings (number from the ID ledger; the operator's typed GO), together with the one owed from task-372." — plan step 4 "No registration, no migration, milestone left alone." — the migration owed from task-372 loses its named home when the plan drops migrations without saying where it goes — state in the plan where the task-372 owed mirror is carried, or record it as still owed on the task.
+
+DEFER severity=MED — plan step 1 "the scripts/lib/compute/link-massing.js classifyStructure is a separate function taking thresholds as arguments from the registered seed rows" — the registration of 20/60 is asserted, not evidenced, so if those seed rows do not exist the two values lose their data home when the src copies go — cite the seed rows or their registration, or keep registration in scope.
+
+DEFER severity=LOW — task card "After task-378 folds." — Dependencies "status: RUNNING" / "final summary: (none yet)" — the plan neither sequences after task-378 nor records that the dependency is moot under register-nothing — add one line stating the ordering or that the dependency no longer binds.
+
+MET — grounder ruling "register nothing; delete the unused src copy and its test block; keep or replace the lock." — plan step 3 "delete the three names and the now-unused StructureType import from geometry.ts, delete the classifyStructure describe block and its three imports from src/tests/massing.logic.test.ts" — the unused src copy and its test block are deleted and nothing is registered.
+
+MET — grounder ruling "keep or replace the lock" — plan step 4 "Retain the existing compute lock at link-massing.infra.test.ts:84-85 unchanged (it guards the registered source)" — the compute lock is kept.
+
+MET — Spec 126 P4 "zero thresholds in src/" for the two named values — plan step 3 "delete the three names and the now-unused StructureType import from geometry.ts" — SHED_THRESHOLD_SQM and GARAGE_MAX_SQM leave src.
+
+MET — operator "Let the grounder resolve them all as long as the result is compliant" — "Resolution of the separate grounder (task notes): register nothing; delete the unused src copy and its test block; keep or replace the lock." — the plan follows the grounder resolution the operator delegated.
+
+REJECT — task card "the existing locks src/tests/massing.logic.test.ts:88-89 and src/tests/link-massing.infra.test.ts:84-85 are updated only to follow the new source, never weakened" — accused of weakening by deleting the massing.logic.test.ts block — the pasted grounder ruling says "delete the unused src copy and its test block" and the operator delegated that resolution, and the src classifyStructure it tested is itself deleted.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+
+---
+⏱  48231ms (48.2s)
+📊 Tokens — total: 34598, input: 24698, output: 9900, reasoning: 9053

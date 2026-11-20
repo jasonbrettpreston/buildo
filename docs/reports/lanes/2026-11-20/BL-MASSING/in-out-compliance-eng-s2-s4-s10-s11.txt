@@ -1,0 +1,260 @@
+LIST eng-s2-s4-s10-s11 sha256:3229b9b071b889a6878b5ca1f2c36c9659d185106e3bca865d5ff5ceffaf382c material sha256:498ad597c3707c4e44db1db4637a63f62d60e7882ef443faec2f3431dce6d77d part 1 of 1
+RULE LIST eng-s2-s4-s10-s11 (docs/specs/00_engineering_standards.md, sections 2. Error Handling; 4. Security & API Contracts; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 🚨 2. Error Handling & Stability
+
+### 2.1 The "Unhappy Path" Test Mandate
+- **Rule:** When writing integration tests (`.infra.test.ts`), you MUST include tests for **error paths and silent failures**.
+- **Execution:** Do not merely test "Loading," "Success," and "Error" states. Force errors in the deepest layer of the call stack (e.g., forcing a database `ROLLBACK` to throw, or simulating a network timeout) and explicitly assert that the top layer recovers gracefully or returns a safe HTTP 500 without leaking the raw `.message`.
+
+### 2.2 The Try-Catch Boundary Rule
+- **Rule:** Every newly created API route (`export async function GET/POST/PUT/DELETE/PATCH` inside `src/app/api/`) MUST have an overarching `try-catch` block wrapping the entire handler body.
+- **Execution:** The catch block MUST return `{ error: 'Human-readable message' }` with an appropriate HTTP status (e.g., 500) and log the raw error server-side only. **Never expose `err.message` to clients.** The guardrail tests in `api.infra.test.ts` scan route files to enforce this.
+
+### 2.3 Assumption Documentation
+- **Rule:** Before accessing nested object properties, explicitly check for `null` or `undefined`.
+- **Execution:** Use TypeScript Optional Chaining (`?.`) or explicit type guards. Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment.
+
+---
+
+## 🔐 4. Security & API Contracts
+
+### 4.1 Route Guarding
+- **Rule:** All endpoints within `src/app/api/` must be analyzed for protection. Never leave administrative routes unprotected.
+- **Rule (amended 2026-09-15, WF3 SEC-1):** `src/middleware.ts` is a **presence-only pre-filter, not the gate**. Its admin/API arm performs no authorization: it passes any request carrying a non-empty `sb-*-auth-token` cookie (of any shape) OR any `x-admin-key` header value (the secret comparison lives solely in `verify-admin.ts` mode 2 — the P1-F4 break-glass transport decision, 2026-07-19), and Spec 13 §3.5 states plainly that middleware performs no cryptographic verification. The **authoritative gate for every `/api/admin/**` route is `verifyAdminAuth(request)` as the FIRST statement of the handler** (Spec 33 §8). Measured 2026-09-15: 11 of 29 admin routes relied on the middleware and had no guard at all — two of them said so in a header comment. Enforcement is locked by the source scan in `src/tests/api.infra.test.ts` (*"every /api/admin/** handler export calls verifyAdminAuth as its FIRST statement"*), plus an integration lock in `src/tests/admin-route-guard.infra.test.ts` proving an `x-admin-key: anything` request no longer reaches a handler. Route **classification** (`classifyRoute` returning `'admin'`) is a label; it enforces nothing.
+
+### 4.2 Parameterization
+- **Rule:** Raw SQL statements must utilize Drizzle parameterized queries to prevent SQL injection. String concatenation for dynamic queries (especially via `order by` or search terms) is forbidden unless rigorously validated against a static whitelist.
+
+### 4.3 Frontend Security
+- **Rule:** Never place API keys, admin SDK credentials, or database connection strings in `use client` components. Firebase client config (public keys) is the only exception.
+- **Rule:** Never use `dangerouslySetInnerHTML` without explicit sanitization. Prefer React JSX which escapes by default.
+- **Rule:** API routes must return only the fields the UI needs. Never `SELECT *` — always project specific columns. This limits exposure if an API route is accessed directly.
+- **Rule:** All authorization must be enforced server-side in API routes or middleware. Client-side route hiding (e.g., hiding an admin link) is cosmetic, not security. Both must exist.
+- **Rule:** User-provided input displayed in the UI (search terms, company names, addresses) must be treated as untrusted. Watch for reflected XSS in query params rendered into page content.
+
+### 4.4 API Design for Multi-App Consumption
+- **Rule:** API routes are the **contract boundary** between frontend and backend. They must be designed as stable, versioned interfaces that could serve multiple client apps.
+- **Response shape:** All API routes must return a consistent envelope: `{ data, error, meta }`. Never return raw arrays or ad-hoc shapes.
+- **No client assumptions:** API routes must not assume which frontend is calling. Do not embed UI-specific logic (pagination styles, component-shaped responses) in the API layer. Return normalized data; let each client transform it.
+- **Auth via tokens, not cookies (future):** Current cookie-based auth works for the Next.js app. When a second client app is added, migrate to Bearer token auth (Firebase ID tokens in `Authorization` header) so non-browser clients can authenticate.
+- **Rate limiting:** Public-facing API routes must include rate limiting before a second app is connected. Use middleware-level throttling, not per-route logic.
+- **CORS:** When a second app is added, configure explicit CORS origins in `next.config.js`. Never use `Access-Control-Allow-Origin: *` in production.
+
+---
+
+## 🧱 10. Frontend/Backend Boundary
+
+### 10.1 Data Flow Direction
+- **Rule:** The data flow is strictly one-directional: `[Pipelines] → [Database] → [API Routes] → [Frontend]`. Frontend components never write to pipeline tables. Pipelines never read frontend state. API routes are the only bridge.
+
+### 10.2 Boundary Rules During Frontend Phase
+- **Rule:** Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`. If a frontend feature needs data that doesn't exist, add an API route that queries and transforms existing tables — do not change how data enters the database.
+- **Rule:** Database schema is frozen during frontend work unless a feature genuinely requires a new column. Convenience columns ("I wish this was pre-computed") should be computed in the API layer instead.
+- **Rule:** If a `src/lib/` module is imported by both API routes and frontend components, any modification requires `npx vitest related` to verify no API regression. Shared modules are the highest-risk cross-boundary files.
+
+### 10.3 API Route Discipline
+- **Rule:** API routes must be thin — validate input, call a lib function, return the result. Business logic belongs in `src/lib/`, not in route handlers. This keeps logic testable and reusable across future apps.
+- **Rule:** New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route. This enables type-safe consumption by any client.
+- **Rule:** Avoid returning database column names directly. Map to a stable API field name (e.g., `est_const_cost` → `estimatedCost`). This decouples the API contract from the schema, so future DB refactors don't break clients.
+
+---
+
+## ✅ 11. Plan Compliance Checklist
+
+Before presenting "PLAN LOCKED", the plan MUST address each applicable item below. These are not optional — if the condition applies, the corresponding items must appear in the plan.
+
+### If Database Impact = YES:
+- [ ] UP + DOWN migration in `migrations/NNN_[feature].sql` (§3.2)
+- [ ] Backfill strategy for ALTER on 100K+ row tables (§3.1)
+- [ ] `src/tests/factories.ts` updated with new fields (§5.1)
+- [ ] `npm run typecheck` planned after `db:generate` (§8.2)
+
+### If API Route Created/Modified:
+- [ ] Request/Response TypeScript interface in `src/lib/[feature]/types.ts` (§10.3)
+- [ ] Consistent response envelope: `{ data, error, meta }` (§4.4)
+- [ ] Overarching try-catch with `logError(tag, err, context)` (§2.2, §6.1)
+- [ ] Unhappy-path test cases listed: 400, 404, 500 (§2.1)
+- [ ] Route guarded by `verifyAdminAuth(request)` as the handler's FIRST statement — middleware is a presence-only pre-filter, never the gate (§4.1, Spec 33 §8)
+- [ ] Every mutating admin export writes an `admin_audit_log` row inside the mutation's own transaction, and refuses the shared non-session sentinels with 403 (§4.1, Spec 33 §8.1, Spec 128 R-12)
+- [ ] No `.env` secrets exposed to client components (§4.3)
+- [ ] Returns projected fields only, not `SELECT *` (§4.3)
+- [ ] No client-specific assumptions in response shape (§4.4)
+
+### If UI Component Created/Modified:
+- [ ] Mobile-first layout: base classes = mobile, `md:`/`lg:` = desktop (§1.1)
+- [ ] Touch targets ≥ 44px (§1.1)
+- [ ] 375px viewport test in test plan
+- [ ] No API keys or secrets in `use client` components (§4.3)
+- [ ] User-provided input escaped/sanitized before display (§4.3)
+
+### If Shared Logic Touched (classification, scoring, scope):
+- [ ] All dual-code-path consumers identified (§7.1, §7.2)
+- [ ] Update plan covers both TS module and JS script
+- [ ] `npx vitest related` planned for cross-boundary validation (§10.2)
+
+### If Pipeline Script Created/Modified:
+- [ ] Uses Pipeline SDK: `pipeline.run`, `withTransaction`, `emitSummary` (§9.4)
+- [ ] Streaming ingestion for external API data (§9.5)
+
+### Frontend Boundary Check (all frontend WFs):
+- [ ] No modifications to `scripts/`, `migrations/`, or `scripts/lib/` (§10.2)
+- [ ] API route returns stable field names, not raw DB columns (§10.3)
+- [ ] Business logic in `src/lib/`, not in route handlers (§10.3)
+
+### Frontend Foundation Check (new code in `src/features/`):
+- [ ] Biome check passes (§12.1)
+- [ ] No `useEffect` for data fetching — TanStack Query only (§12.2)
+- [ ] No `useState` for form fields — React Hook Form + Zod (§12.3)
+- [ ] No React Context inside `src/features/leads/` — Zustand only (§12.4)
+- [ ] All `onClick`/`onSubmit` handlers call `captureEvent()` (§13.1)
+- [ ] Centered modals replaced with Shadcn `<Drawer>` on mobile (§12.5)
+- [ ] Lists >50 items wrapped in TanStack Virtual (§12.6)
+- [ ] Toast notifications via Sonner — no custom alert banners (§12.7)
+
+### Pre-Review Self-Checklist (always applies, every WF):
+- [ ] Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change (Behavioral Contract / API Endpoints / Operating Boundaries / §4 Edge Cases). Walk each item against the ACTUAL diff. Output PASS/FAIL per item in the response BEFORE running tests. See `CLAUDE.md` WF1/WF2/WF3 execution plans for the per-workflow phrasing.
+- [ ] WF3 variant: list 3-5 sibling bugs that could share the same root cause and verify the fix covers them (or document why each doesn't apply).
+
+### Cross-Layer Contracts Check (always applies):
+- [ ] Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)
+- [ ] If a new threshold is introduced, a row is added to `src/tests/contracts.infra.test.ts` mapping the JSON key to its consumer file(s) so drift becomes a CI failure
+- [ ] If a threshold is changed, EVERY consumer file listed in `contracts.infra.test.ts` is updated in the same commit
+
+### Database/Migration Check:
+- [ ] New migration has DOWN block (§3.2, §12.8)
+- [ ] SQLFluff lint passes for new migration files (§12.8)
+- [ ] `validate-migration.js` passes (no DROP without confirmation, no non-CONCURRENTLY indexes on tables >100K rows) (§12.8)
+- [ ] No raw SQL string concatenation — parameterized only (§4.2)
+
+---
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/lib/massing/geometry.ts b/src/lib/massing/geometry.ts
+index 37c5959f1..6a3fdd2f2 100644
+--- a/src/lib/massing/geometry.ts
++++ b/src/lib/massing/geometry.ts
+@@ -1,5 +1,3 @@
+-import type { StructureType } from './types';
+-
+ // ---------------------------------------------------------------------------
+ // Types
+ // ---------------------------------------------------------------------------
+@@ -23,12 +21,6 @@ export const STORY_HEIGHT_BY_USE_TYPE: Record<MassingUseType, number> = {
+   'mixed-use': 3.5,
+ };
+ 
+-/** Below this area (sqm), accessory is classified as shed. */
+-export const SHED_THRESHOLD_SQM = 20;
+-
+-/** 20–60 sqm accessory is classified as garage. */
+-export const GARAGE_MAX_SQM = 60;
+-
+ // ---------------------------------------------------------------------------
+ // Core functions
+ // ---------------------------------------------------------------------------
+@@ -42,28 +34,6 @@ export function estimateStories(maxHeightM: number | null | undefined): number |
+   return Math.max(1, Math.round(maxHeightM / STORY_HEIGHT_M));
+ }
+ 
+-/**
+- * Classify a building structure based on its footprint area relative to
+- * all other buildings on the same parcel.
+- *
+- * - The largest building is always classified as 'primary'.
+- * - A solo building is always 'primary'.
+- * - Accessory structures: <20 sqm = shed, 20–60 sqm = garage, else = other.
+- */
+-export function classifyStructure(
+-  areaSqm: number,
+-  allAreas: number[]
+-): StructureType {
+-  if (allAreas.length <= 1) return 'primary';
+-
+-  const maxArea = Math.max(...allAreas);
+-  if (areaSqm >= maxArea) return 'primary';
+-
+-  if (areaSqm < SHED_THRESHOLD_SQM) return 'shed';
+-  if (areaSqm <= GARAGE_MAX_SQM) return 'garage';
+-  return 'other';
+-}
+-
+ /**
+  * Ray-casting point-in-polygon test.
+  * Point is [lng, lat], ring is array of [lng, lat] (closed polygon).
+diff --git a/src/tests/link-massing.infra.test.ts b/src/tests/link-massing.infra.test.ts
+index 5cfc728bc..e229accbf 100644
+--- a/src/tests/link-massing.infra.test.ts
++++ b/src/tests/link-massing.infra.test.ts
+@@ -88,6 +88,11 @@ describe('link-massing.js — building-classification heuristic externalization
+     expect(COMPUTE).not.toMatch(/shedThreshold\s*=\s*20|garageMax\s*=\s*60/);
+   });
+ 
++  it('the unused src copy is gone: src/lib/massing/geometry.ts holds none of the classification names (FIX.MASSING, task-396; the registered rows are the one source)', () => {
++    const GEOMETRY = fs.readFileSync(path.resolve(__dirname, '../lib/massing/geometry.ts'), 'utf-8');
++    expect(GEOMETRY).not.toMatch(/classifyStructure|SHED_THRESHOLD_SQM|GARAGE_MAX_SQM/);
++  });
++
+   it('config validation is HOISTED ABOVE THE GATE (was: validateLogicVars inside the lock)', () => {
+     // §1.3 / A-5 / B-13 — the OPPOSITE of the pre-conversion order, declared as a diff.
+     // The step is SKIP-eligible (6 live lock-contention rows), and an invalid threshold
+diff --git a/src/tests/massing.logic.test.ts b/src/tests/massing.logic.test.ts
+index c60c92fd8..c9d493b71 100644
+--- a/src/tests/massing.logic.test.ts
++++ b/src/tests/massing.logic.test.ts
+@@ -6,7 +6,6 @@ import { M_TO_FT } from '@/lib/parcels/geometry';
+ import path from 'path';
+ import {
+   estimateStories,
+-  classifyStructure,
+   pointInPolygon,
+   computeFootprintArea,
+   formatHeight,
+@@ -18,8 +17,6 @@ import {
+   inferMassingUseType,
+   STORY_HEIGHT_M,
+   STORY_HEIGHT_BY_USE_TYPE,
+-  SHED_THRESHOLD_SQM,
+-  GARAGE_MAX_SQM,
+ } from '@/lib/massing/geometry';
+ 
+ describe('estimateStories', () => {
+@@ -60,37 +57,6 @@ describe('estimateStories', () => {
+   });
+ });
+ 
+-describe('classifyStructure', () => {
+-  it('classifies largest area as primary', () => {
+-    expect(classifyStructure(150, [150, 30, 10])).toBe('primary');
+-  });
+-
+-  it('classifies 20-60 sqm accessory as garage', () => {
+-    expect(classifyStructure(35, [150, 35])).toBe('garage');
+-  });
+-
+-  it('classifies < 20 sqm accessory as shed', () => {
+-    expect(classifyStructure(15, [150, 15])).toBe('shed');
+-  });
+-
+-  it('classifies solo building as primary regardless of area', () => {
+-    expect(classifyStructure(10, [10])).toBe('primary');
+-  });
+-
+-  it('classifies > 60 sqm non-largest as other', () => {
+-    expect(classifyStructure(80, [150, 80])).toBe('other');
+-  });
+-
+-  it('classifies both as primary when two buildings have equal area', () => {
+-    expect(classifyStructure(100, [100, 100])).toBe('primary');
+-  });
+-
+-  it('uses threshold constants correctly', () => {
+-    expect(SHED_THRESHOLD_SQM).toBe(20);
+-    expect(GARAGE_MAX_SQM).toBe(60);
+-  });
+-});
+-
+ describe('pointInPolygon', () => {
+   // A simple square polygon: 0,0 -> 1,0 -> 1,1 -> 0,1 -> 0,0
+   const square: [number, number][] = [
+

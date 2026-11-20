@@ -6,7 +6,6 @@ import { M_TO_FT } from '@/lib/parcels/geometry';
 import path from 'path';
 import {
   estimateStories,
-  classifyStructure,
   pointInPolygon,
   computeFootprintArea,
   formatHeight,
@@ -18,8 +17,6 @@ import {
   inferMassingUseType,
   STORY_HEIGHT_M,
   STORY_HEIGHT_BY_USE_TYPE,
-  SHED_THRESHOLD_SQM,
-  GARAGE_MAX_SQM,
 } from '@/lib/massing/geometry';
 
 describe('estimateStories', () => {
@@ -57,37 +54,6 @@ describe('estimateStories', () => {
 
   it('uses STORY_HEIGHT_M constant of 3.0', () => {
     expect(STORY_HEIGHT_M).toBe(3.0);
-  });
-});
-
-describe('classifyStructure', () => {
-  it('classifies largest area as primary', () => {
-    expect(classifyStructure(150, [150, 30, 10])).toBe('primary');
-  });
-
-  it('classifies 20-60 sqm accessory as garage', () => {
-    expect(classifyStructure(35, [150, 35])).toBe('garage');
-  });
-
-  it('classifies < 20 sqm accessory as shed', () => {
-    expect(classifyStructure(15, [150, 15])).toBe('shed');
-  });
-
-  it('classifies solo building as primary regardless of area', () => {
-    expect(classifyStructure(10, [10])).toBe('primary');
-  });
-
-  it('classifies > 60 sqm non-largest as other', () => {
-    expect(classifyStructure(80, [150, 80])).toBe('other');
-  });
-
-  it('classifies both as primary when two buildings have equal area', () => {
-    expect(classifyStructure(100, [100, 100])).toBe('primary');
-  });
-
-  it('uses threshold constants correctly', () => {
-    expect(SHED_THRESHOLD_SQM).toBe(20);
-    expect(GARAGE_MAX_SQM).toBe(60);
   });
 });
 

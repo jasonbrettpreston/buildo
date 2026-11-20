@@ -1,0 +1,171 @@
+LIST eng-s5 sha256:914c250fc1de0ccab97e1db24f7d323d1c6ff362f40063dbafc998ac84a39503 material sha256:498ad597c3707c4e44db1db4637a63f62d60e7882ef443faec2f3431dce6d77d part 1 of 1
+RULE LIST eng-s5 (docs/specs/00_engineering_standards.md, sections 5. Testing Standards), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 🧪 5. Testing Standards
+
+### 5.1 Typed Factories Only
+- **Rule:** Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`.
+
+### 5.2 Test File Pattern
+| Pattern | Tests | Mandated when | Example |
+|---------|-------|---------------|---------|
+| `*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic | `scoring.logic.test.ts` |
+| `*.ui.test.tsx` | React component rendering, interactions | Any new/changed component | `admin.ui.test.tsx` |
+| `*.infra.test.ts` | API routes, DB queries, external calls | New API route / DB mutation (unhappy path first, §5.3) | `api.infra.test.ts` |
+| `*.security.test.ts` | Negative/abuse — blocks malicious payloads and unauthorized users | Auth-guarded / externally-reachable surfaces | `auth.security.test.ts` |
+| DB replay (`*.db.test.ts` under `BUILDO_TEST_DB=1 npm run test:db`; Spec 124 R-DH) | Real Postgres: IMMUTABLE/NOT NULL/FK/length/index errors a SQL-string test misses | Any migration touching schema/constraints/indexes (run before push) | `assert-data-bounds.infra.test.ts` |
+| `*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence | `coa-cost-model.regression.test.ts` |
+| Parity battery (`*.infra.test.ts` / `*.logic.test.ts`) | Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator) | Any dual-surface or generated artifact (drift guard) | `control-panel.logic.test.ts`, `logic-vars-registry.infra.test.ts` |
+
+### 5.3 Red-Green Test Cycle (Golden Rule)
+- **Rule:** You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails.
+- **Execution:** For new API routes and database mutations, the failing test MUST be an `.infra.test.ts` that exercises the **unhappy path** (error responses, invalid input, missing auth). For pure logic, use `.logic.test.ts`. Run the test and confirm it fails — only then implement the code to make it pass (Green Light). This is the single strongest defense against hallucinated or untested code.
+
+### 5.4 Test Data Seeding
+- **Rule:** To set up specific DB scenarios for testing or demos, create `scripts/seed-[scenario].js`. Define a JSON state object, insert it, and verify DB contents.
+
+### 5.5 Test-Layer Map — which layer proves what
+The six layers of §5.2 are complementary, not interchangeable. Pick the layer that *proves the claim*; a green suite in the wrong layer is false confidence.
+
+| Layer | Proves | Runs in | Consequence of skipping |
+|-------|--------|---------|-------------------------|
+| `*.logic.test.ts` | The pure function computes the right value on happy + edge inputs. | `npm run test` (default) | Un-pinned derivation logic silently changes value. |
+| `*.ui.test.tsx` | The component renders each state + wires interactions. | `npm run test` | UI regressions ship unseen. |
+| `*.infra.test.ts` (no DB) | API envelope / query shape / error paths (§5.3 unhappy-path-first). | `npm run test` | Hallucinated/untested routes. |
+| DB replay — `BUILDO_TEST_DB=1 npm run test:db` | The migration/query survives **real Postgres**: IMMUTABLE, NOT NULL, FK, length, CHECK, index build. A SQL-string assertion does NOT catch these. | Local opt-in (Docker) / CI | A migration that passes string tests but throws on apply — caught only in production. **Run before pushing any schema change.** |
+| `*.regression.test.ts` | A load-bearing behavior (a documented fence — a past `fix(...)` carrying a Spec 05 §5 severity/lesson footer, an edge-case guard, a workaround) is preserved across a change. | `npm run test` | Chesterton's-Fence: a diff silently drops a behavior that existed for a reason. Authored whenever the Regression Guardian finds an unguarded fence. |
+| Parity battery | Two surfaces that MUST agree stay in lockstep: dual code paths (§7), seed JSON ↔ TS `LOGIC_VAR_DEFAULTS`, and **generated doc ↔ its generator** (the drift guard — regenerate to a buffer, diff the committed file). | `npm run test` | Silent divergence — exactly the doc-rot the generated AI-operator docs (Spec 47 §5, `docs/reference/*`) are gated against. |
+
+**Rule:** a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity — not just the one that is easiest to write.
+
+---
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/lib/massing/geometry.ts b/src/lib/massing/geometry.ts
+index 37c5959f1..6a3fdd2f2 100644
+--- a/src/lib/massing/geometry.ts
++++ b/src/lib/massing/geometry.ts
+@@ -1,5 +1,3 @@
+-import type { StructureType } from './types';
+-
+ // ---------------------------------------------------------------------------
+ // Types
+ // ---------------------------------------------------------------------------
+@@ -23,12 +21,6 @@ export const STORY_HEIGHT_BY_USE_TYPE: Record<MassingUseType, number> = {
+   'mixed-use': 3.5,
+ };
+ 
+-/** Below this area (sqm), accessory is classified as shed. */
+-export const SHED_THRESHOLD_SQM = 20;
+-
+-/** 20–60 sqm accessory is classified as garage. */
+-export const GARAGE_MAX_SQM = 60;
+-
+ // ---------------------------------------------------------------------------
+ // Core functions
+ // ---------------------------------------------------------------------------
+@@ -42,28 +34,6 @@ export function estimateStories(maxHeightM: number | null | undefined): number |
+   return Math.max(1, Math.round(maxHeightM / STORY_HEIGHT_M));
+ }
+ 
+-/**
+- * Classify a building structure based on its footprint area relative to
+- * all other buildings on the same parcel.
+- *
+- * - The largest building is always classified as 'primary'.
+- * - A solo building is always 'primary'.
+- * - Accessory structures: <20 sqm = shed, 20–60 sqm = garage, else = other.
+- */
+-export function classifyStructure(
+-  areaSqm: number,
+-  allAreas: number[]
+-): StructureType {
+-  if (allAreas.length <= 1) return 'primary';
+-
+-  const maxArea = Math.max(...allAreas);
+-  if (areaSqm >= maxArea) return 'primary';
+-
+-  if (areaSqm < SHED_THRESHOLD_SQM) return 'shed';
+-  if (areaSqm <= GARAGE_MAX_SQM) return 'garage';
+-  return 'other';
+-}
+-
+ /**
+  * Ray-casting point-in-polygon test.
+  * Point is [lng, lat], ring is array of [lng, lat] (closed polygon).
+diff --git a/src/tests/link-massing.infra.test.ts b/src/tests/link-massing.infra.test.ts
+index 5cfc728bc..e229accbf 100644
+--- a/src/tests/link-massing.infra.test.ts
++++ b/src/tests/link-massing.infra.test.ts
+@@ -88,6 +88,11 @@ describe('link-massing.js — building-classification heuristic externalization
+     expect(COMPUTE).not.toMatch(/shedThreshold\s*=\s*20|garageMax\s*=\s*60/);
+   });
+ 
++  it('the unused src copy is gone: src/lib/massing/geometry.ts holds none of the classification names (FIX.MASSING, task-396; the registered rows are the one source)', () => {
++    const GEOMETRY = fs.readFileSync(path.resolve(__dirname, '../lib/massing/geometry.ts'), 'utf-8');
++    expect(GEOMETRY).not.toMatch(/classifyStructure|SHED_THRESHOLD_SQM|GARAGE_MAX_SQM/);
++  });
++
+   it('config validation is HOISTED ABOVE THE GATE (was: validateLogicVars inside the lock)', () => {
+     // §1.3 / A-5 / B-13 — the OPPOSITE of the pre-conversion order, declared as a diff.
+     // The step is SKIP-eligible (6 live lock-contention rows), and an invalid threshold
+diff --git a/src/tests/massing.logic.test.ts b/src/tests/massing.logic.test.ts
+index c60c92fd8..c9d493b71 100644
+--- a/src/tests/massing.logic.test.ts
++++ b/src/tests/massing.logic.test.ts
+@@ -6,7 +6,6 @@ import { M_TO_FT } from '@/lib/parcels/geometry';
+ import path from 'path';
+ import {
+   estimateStories,
+-  classifyStructure,
+   pointInPolygon,
+   computeFootprintArea,
+   formatHeight,
+@@ -18,8 +17,6 @@ import {
+   inferMassingUseType,
+   STORY_HEIGHT_M,
+   STORY_HEIGHT_BY_USE_TYPE,
+-  SHED_THRESHOLD_SQM,
+-  GARAGE_MAX_SQM,
+ } from '@/lib/massing/geometry';
+ 
+ describe('estimateStories', () => {
+@@ -60,37 +57,6 @@ describe('estimateStories', () => {
+   });
+ });
+ 
+-describe('classifyStructure', () => {
+-  it('classifies largest area as primary', () => {
+-    expect(classifyStructure(150, [150, 30, 10])).toBe('primary');
+-  });
+-
+-  it('classifies 20-60 sqm accessory as garage', () => {
+-    expect(classifyStructure(35, [150, 35])).toBe('garage');
+-  });
+-
+-  it('classifies < 20 sqm accessory as shed', () => {
+-    expect(classifyStructure(15, [150, 15])).toBe('shed');
+-  });
+-
+-  it('classifies solo building as primary regardless of area', () => {
+-    expect(classifyStructure(10, [10])).toBe('primary');
+-  });
+-
+-  it('classifies > 60 sqm non-largest as other', () => {
+-    expect(classifyStructure(80, [150, 80])).toBe('other');
+-  });
+-
+-  it('classifies both as primary when two buildings have equal area', () => {
+-    expect(classifyStructure(100, [100, 100])).toBe('primary');
+-  });
+-
+-  it('uses threshold constants correctly', () => {
+-    expect(SHED_THRESHOLD_SQM).toBe(20);
+-    expect(GARAGE_MAX_SQM).toBe(60);
+-  });
+-});
+-
+ describe('pointInPolygon', () => {
+   // A simple square polygon: 0,0 -> 1,0 -> 1,1 -> 0,1 -> 0,0
+   const square: [number, number][] = [
+
