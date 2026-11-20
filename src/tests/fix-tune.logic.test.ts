@@ -54,6 +54,8 @@ describe('D14 the phone tunables are declared in the surface config, values unch
     const hook = code(HOOK);
     expect(hook).not.toMatch(/staleTime:\s*\d/);
     expect(hook).not.toMatch(/failureCount\s*<\s*\d/);
+    expect(hook).not.toMatch(/length\s*>=\s*\d/);
+    expect(hook).toMatch(/sliceNumber\(searchSlice\.config, 'min_query_len'\)/);
     for (const key of ['entitlement_stale_ms', 'lookup_retry_max', 'lookup_stale_ms']) expect(hook, key).toMatch(new RegExp(`sliceNumber\\(searchSlice\\.config, '${key}'\\)`));
   });
   it('both phone read sites use the one reader', () => {
@@ -89,7 +91,7 @@ describe('D15 the two descriptor entries are corrected', () => {
 });
 
 describe('LEN the metre-to-foot factor is the registered pinned variable (fe.44, core.8)', () => {
-  it('parcels_m_to_ft is pinned in the seed at 3.28084 and both geometry modules read it, typing no factor', () => {
+  it('parcels_m_to_ft is pinned in the seed at 3.28084; parcels/geometry.ts reads it and neither geometry module types the factor', () => {
     expect(SEED.parcels_m_to_ft).toMatchObject({ type: 'number', default: 3.28084, min: 3.28084, max: 3.28084 });
     expect(code('src/lib/parcels/geometry.ts')).not.toMatch(/3\.28084/);
     expect(code('src/lib/parcels/geometry.ts')).toContain('parcels_m_to_ft');
@@ -99,6 +101,8 @@ describe('LEN the metre-to-foot factor is the registered pinned variable (fe.44,
     expect(M_TO_FT).toBe(3.28084);
     expect(formatHeight(10, M_TO_FT)).toBe('10.0 m (32.8 ft)');
     expect(formatHeight(null, M_TO_FT)).toBe('N/A');
+    // an older payload without the served factor must never print NaN ft: the existing N/A form
+    for (const bad of [undefined, null, Number.NaN, Number.POSITIVE_INFINITY]) expect(formatHeight(9.5, bad as unknown as number), String(bad)).toBe('N/A');
   });
   it('B: massing/geometry.ts reads no seed; the permits route serves the registered factor; the display formats with the served factor', () => {
     expect(code('src/lib/massing/geometry.ts')).not.toMatch(/logic_variables|pinned-settings|pinnedSetting/);

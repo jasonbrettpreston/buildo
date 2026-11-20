@@ -130,7 +130,7 @@ describe('A.6 (e): the declarations agree and nothing is computed', () => {
     expect(s.inputs.contract_ref).toEqual(['/api/parcels/lookup', '/api/parcels/entitlement']);
     const c = rj(CONTRACT_DESCRIPTOR);
     expect(c.inputs.field_whitelist).toEqual(expect.arrayContaining(['reportsLeft', 'reportsLimit', 'resetsOn', 'resetsOnDisplay']));
-    expect(c.sharing.surfaces).toEqual(['mobile/src/hooks/useParcelLookup.ts:161']);
+    expect(c.sharing.surfaces).toEqual(['mobile/src/hooks/useParcelLookup.ts:162']);
     expect(c['x-draft'].consumers).toEqual(['mobile/src/hooks/useParcelLookup.ts']);
     expect(JSON.stringify(s.deviations)).not.toContain('reset_date');
   });

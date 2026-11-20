@@ -1,0 +1,40 @@
+
+Expected: "N/A"
+Received: "9.5 m (NaN ft)"
+
+ ❯ src/tests/massing.logic.test.ts:178:63
+    176| 
+    177|   it('returns N/A when the served factor is missing or not finite (an …
+    178|     expect(formatHeight(9.5, undefined as unknown as number)).toBe('N/…
+       |                                                               ^
+    179|     expect(formatHeight(9.5, Number.NaN)).toBe('N/A');
+    180|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/tests/surfaces/search-reports-left.logic.test.ts > A.6 (e): the declarations agree and nothing is computed > the surface descriptor names the entitlement route as a contract it reads; the contract descriptor lists the three fields and names the one caller
+AssertionError: expected [ Array(1) ] to deeply equal [ Array(1) ]
+
+- Expected
++ Received
+
+  Array [
+-   "mobile/src/hooks/useParcelLookup.ts:162",
++   "mobile/src/hooks/useParcelLookup.ts:161",
+  ]
+
+ ❯ src/tests/surfaces/search-reports-left.logic.test.ts:133:32
+    131|     const c = rj(CONTRACT_DESCRIPTOR);
+    132|     expect(c.inputs.field_whitelist).toEqual(expect.arrayContaining(['…
+    133|     expect(c.sharing.surfaces).toEqual(['mobile/src/hooks/useParcelLoo…
+       |                                ^
+    134|     expect(c['x-draft'].consumers).toEqual(['mobile/src/hooks/useParce…
+    135|     expect(JSON.stringify(s.deviations)).not.toContain('reset_date');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+ Test Files  3 failed (3)
+      Tests  4 failed | 107 passed (111)
+   Start at  11:04:48
+   Duration  2.88s (transform 3ms, setup 14ms, collect 61ms, tests 125ms, environment 0ms, prepare 60ms)
+

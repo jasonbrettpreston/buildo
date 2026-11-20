@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXTUNE'
 created_date: '2026-11-20T14:00:00Z'
-updated_date: '2026-11-20T15:58:00Z'
+updated_date: '2026-11-20T16:05:00Z'
 labels:
   - McFix
 milestone: m-1
@@ -61,4 +61,6 @@ FIX.TUNE plan. D14: add optional config keys continue_wait_ms (semi surface, 600
 2026-11-20 BL-FIXTUNE: D14, D15 and the length factor fixed red-first; findings untriaged in docs/reports/lanes/2026-11-20/BL-FIXTUNE/FINDINGS.md, grounder owed. Left listed: phone area-factor copies, retry count, two staleTime 60_000, Rule 3 bounds for the new keys, DB mirror migration (ID ledger, operator typed GO). Phone-test green unproven until Mobile CI.
 
 2026-11-20 fold round (coordinator grounder A to E): retry and both stale times in the search surface config, one slice reader, massing formatter takes the factor, cites :161; phone area-factor copies stopped (schema refuses a non-integer config value); new lens findings untriaged in FINDINGS.md.
+
+2026-11-20 fold round 2: formatHeight N/A guard, test retitled, min_query_len read through sliceNumber, cite :162; client-reach claim corrected in the report.
 <!-- SECTION:NOTES:END -->

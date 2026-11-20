@@ -55,6 +55,7 @@ export async function fetchParcelLookup(
 const LOOKUP_RETRY_MAX = sliceNumber(searchSlice.config, 'lookup_retry_max');
 const LOOKUP_STALE_MS = sliceNumber(searchSlice.config, 'lookup_stale_ms');
 const ENTITLEMENT_STALE_MS = sliceNumber(searchSlice.config, 'entitlement_stale_ms');
+const LOOKUP_MIN_QUERY_LEN = sliceNumber(searchSlice.config, 'min_query_len');
 
 // Skip retries for deterministic states: 400 (bad params), 403 (no subscription / deleted),
 // 429 (burning retries against the rate-limit compounds the throttle), schema-drift.
@@ -78,7 +79,7 @@ export function useParcelSearch(q: string) {
   return useQuery({
     queryKey: ['parcel-search', trimmed],
     queryFn: () => fetchParcelLookup({ q: trimmed }),
-    enabled: trimmed.length >= 3 && !!accessToken,
+    enabled: trimmed.length >= LOOKUP_MIN_QUERY_LEN && !!accessToken,
     staleTime: LOOKUP_STALE_MS,
     retry: shouldRetryParcelLookup,
   });

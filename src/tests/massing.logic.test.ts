@@ -174,6 +174,11 @@ describe('formatHeight', () => {
     expect(formatHeight(null, M_TO_FT)).toBe('N/A');
   });
 
+  it('returns N/A when the served factor is missing or not finite (an older payload), never NaN ft', () => {
+    expect(formatHeight(9.5, undefined as unknown as number)).toBe('N/A');
+    expect(formatHeight(9.5, Number.NaN)).toBe('N/A');
+  });
+
   it('returns N/A for undefined', () => {
     expect(formatHeight(undefined, M_TO_FT)).toBe('N/A');
   });

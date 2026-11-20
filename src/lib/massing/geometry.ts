@@ -144,7 +144,7 @@ export function computeFootprintArea(ring: [number, number][]): number | null {
  * the client bundle that imports it carries none; the task-372 formatPageRule pattern).
  */
 export function formatHeight(meters: number | null | undefined, feetPerMetre: number): string {
-  if (meters == null) return 'N/A';
+  if (meters == null || !Number.isFinite(feetPerMetre)) return 'N/A'; // a payload without the served factor reads as N/A, never NaN ft
   const ft = meters * feetPerMetre;
   return `${meters.toFixed(1)} m (${ft.toFixed(1)} ft)`;
 }
