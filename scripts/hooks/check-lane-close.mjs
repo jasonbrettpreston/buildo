@@ -372,8 +372,18 @@ function check(msgFile) {
   for (const mv of moves) {
     const id = String(mv.fm.id ?? mv.f).toLowerCase().replace(/^task-0*/, 'task-');
     const assignees = asList(mv.fm.assignee).map(String);
-    // H8: the lane assignee is the staged one, else the one the HEAD copy holds, so dropping it (or setting @human) in the closing commit cannot hide the lane
-    const laneAssign = assignees.find((a) => /^@lane-/.test(a)) ?? asList(mv.headFm.assignee).map(String).find((a) => /^@lane-/.test(a));
+    // H9 (round 6): type and lane assignee come from the BOARD copy of the task file (found by task id on the board ref the launch commit is searched on), never from the lane's own copy, whatever the lane did in earlier commits
+    const num = /task-0*(\d+)/i.exec(path.basename(mv.f))?.[1];
+    if (num && String(mv.fm.id ?? '').toLowerCase().replace(/^task-0*/, '') !== num) { errors.push(`${id}: the front matter id (${mv.fm.id}) is not the file's task number (${num}): the id scopes the lane report, a lane may not rename it`); continue; }
+    const boardFile = num ? git(['ls-tree', '--name-only', boardRef, 'backlog/tasks/']).stdout.split('\n').find((n) => new RegExp(`^backlog/tasks/task-0*${num}( -.*)?\\.md$`, 'i').test(n)) : null;
+    const bx = boardFile ? git(['show', `${boardRef}:${boardFile}`]) : null;
+    const boardFm = bx && bx.status === 0 ? parseFM(bx.stdout).fm : null;
+    const boardLane = boardFm ? asList(boardFm.assignee).map(String).find((a) => /^@lane-/.test(a)) : undefined;
+    const boardType = String(boardFm?.type ?? '').toLowerCase();
+    const stagedLane = assignees.find((a) => /^@lane-/.test(a));
+    if (boardLane && (boardType === 'build' || boardType === 'fix') && (stagedLane !== boardLane || !['build', 'fix'].includes(String(mv.fm.type ?? '').toLowerCase()))) { errors.push(`${id}: the board copy of this task is a ${boardType} task held by ${boardLane}; the closing copy has type ${mv.fm.type} and assignee ${assignees.join(', ') || '(none)'}: a lane build or fix task closes only as that lane's build or fix task (type and lane assignee are read from the board copy, not from the lane's own commits)`); continue; }
+    // the lane assignee: the board's, else the staged one, else the one the HEAD copy holds (H8)
+    const laneAssign = boardLane ?? stagedLane ?? asList(mv.headFm.assignee).map(String).find((a) => /^@lane-/.test(a));
     const laneName = assignees.map((a) => /^@lane-(.+)$/.exec(a)?.[1]).find(Boolean);
     // F8 + F11: the task as it was taken. L is the board commit that first holds the lane assignee on the task file (the lane cannot choose it); type, assignee and the Files line are read from that copy
     let L = null;
@@ -386,7 +396,7 @@ function check(msgFile) {
       baseTask = bx.status === 0 ? bx.stdout : null;
     }
     const baseFm = baseTask ? parseFM(baseTask).fm : null;
-    const type = String(baseFm?.type ?? mv.fm.type ?? '').toLowerCase();
+    const type = String(boardFm?.type ?? baseFm?.type ?? mv.fm.type ?? '').toLowerCase();
     if (baseFm && String(baseFm.milestone ?? '') !== String(mv.fm.milestone ?? '')) errors.push(`${id}: the milestone is ${mv.fm.milestone} here but ${baseFm.milestone} at its launch: a lane may not move its task to another milestone (the milestone decides which objectives lists apply)`);
     // H3: the prompt builder and the review tool decide what a recomputed prompt hash proves; they may not differ from the range base unless the task's launch Files line covers them
     if (base && baseTask) for (const p of ['scripts/lib/review-template.js', 'scripts/deepseek-review.js']) if (git(['diff', '--quiet', base, 'HEAD', '--', p]).status === 1 && !coveredBy(filesEntries(baseTask) ?? [], p)) errors.push(`${id}: ${p} differs from the range base but the task's launch Files line does not name it: the recomputed prompt hash would only prove consistency with the lane's own prompt builder`);
@@ -419,7 +429,11 @@ function check(msgFile) {
     const ownsTable = coveredBy(filesEntries(baseTask ?? mv.now), 'scripts/analysis/rule-lists.json');
     const pin = { exempt: boardTable.exempt, base_ref: boardTable.base_ref, finished_statuses: boardTable.finished_statuses, protected_paths: boardTable.protected_paths };
     const judge = !baseTable ? { ...table, ...pin } : ownsTable ? { ...table, ...pin, every_task: baseTable.every_task } : { ...baseTable, ...pin };
-    errors.push(...closeErrors({ id, taskText: mv.now, fm: mv.fm, assignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase }));
+    // fields read from the lane's own copy, each pinned (round 6): the Files line the rule lists resolve from is the UNION of the launch copy and the staged one (narrowing it cannot drop a list), and the assignees the grounder must differ from are the staged, HEAD and board ones together
+    const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];
+    const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
+    const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
+    errors.push(...closeErrors({ id, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase }));
   }
   return errors.length ? fail(errors) : 0;
 }

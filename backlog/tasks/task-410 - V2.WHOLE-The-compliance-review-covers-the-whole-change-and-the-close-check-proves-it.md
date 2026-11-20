@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T22:05:00Z'
+updated_date: '2026-11-20T22:06:00Z'
 labels:
   - McFix
   - McFix V2
@@ -114,4 +114,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 round 6 started (grounder r5: H9, diff config keys). Tests first.
 
 2026-11-20 round 6 part 1: rule-lists.mjs DIFF_ARGS pins --diff-algorithm=myers --indent-heuristic --inter-hunk-context=0.
+
+2026-11-20 round 6 part 2: check-lane-close.mjs reads type and lane assignee from the board copy of the task, the id from the file number, the rule lists from the union Files line, the grounder clash set from all assignees (H9).
 <!-- SECTION:NOTES:END -->

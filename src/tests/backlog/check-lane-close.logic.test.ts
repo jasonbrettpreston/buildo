@@ -64,7 +64,7 @@ type Opts = {
   status?: string; before?: string; type?: string; files?: string | null; assignees?: string[]; beforeAssignees?: string[]; trailer?: string | false; msg?: string; table?: 'keep' | 'delete' | 'never';
   tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
   split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
-  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalMilestone?: string; finalFiles?: string;
+  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
   mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
 };
 function scenario(o: Opts = {}) {
@@ -77,7 +77,7 @@ function scenario(o: Opts = {}) {
   if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
   w('scripts/lib/review-template.js', '// stub prompt builder\n'); w('scripts/deepseek-review.js', '// stub review tool\n');
   w('docs/a.md', '# A\nrule one text\nrule two text\n'); w('docs/ev.md', '# Ev\nthe five words and the plan protocol\n'); w('docs/ms.md', '# Ms\nthe milestone objectives\n'); w('docs/inc.md', '# Inc\nincrement text\n');
-  w('src/a.ts', AFILE);
+  w('src/a.ts', AFILE); w('src/long.ts', Array.from({ length: 40 }, (_, i) => `export const L${i} = ${i};`).join('\n') + '\n');
   w('backlog/milestones/m-0 - inc.md', '---\nid: m-0\ntitle: "Increment 1·A Foundations [F]"\n---\n');
   w(TASK, taskText({ status: o.before ?? 'RUNNING', type: o.beforeType ?? o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees }));
   if (o.otherTask) w(OTHER, taskText({ id: 'TASK-8', status: 'RUNNING' }));
@@ -96,14 +96,14 @@ function scenario(o: Opts = {}) {
   // the lane report: inputs written by the real lens-input, outputs carrying the review tool's header
   const lane: Lane = { TASK: 'task-7\n' };
   // V2.WHOLE (task-410): the material is the REAL diff of the task range (the command the brief gives), so the close check's path and text recompute has something true to compare
-  const dArgs = ['-c', 'core.quotepath=false', 'diff', ...(o.split?.plain ? ['--no-ext-diff', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'] : DIFF_FLAGS)];
+  const dArgs = ['-c', 'core.quotepath=false', ...(o.diffCfg ?? []), 'diff', ...(o.split?.plain ? ['--no-ext-diff', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'] : DIFF_FLAGS)];
   const mb = baseSha; // the launch commit (the board commit that took the task)
   const realDiff = g(...dArgs, mb, 'HEAD', '--', '.', ':(exclude)docs/reports/lanes', ':(exclude,glob)src/golden/**/*.web.json', ...(o.split?.skip ? [`:(exclude)${o.split.skip}`] : [])).stdout;
   const material = realDiff ? (o.split?.alter ? o.split.alter(realDiff) : realDiff) : 'MATERIAL UNDER REVIEW: a diff\n';
   fs.writeFileSync(path.join(d, '.git/material.txt'), material);
   fs.writeFileSync(path.join(d, '.git/tpl.md'), '## System persona\nsys\n\n## User prompt\nPLAN:\n{{PLAN}}\nSPECS:\n{{SPECS}}\n');
   const splitArgs = o.split ? ['--max', String(o.split.max), '--template', path.join(d, '.git/tpl.md')] : [];
-  for (const id of ['first', 'inc-F', ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
+  for (const id of ['first', 'inc-F', ...Object.keys(table.lists as object).filter((k) => k === 'xtra'), ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
     const out = path.join(d, LD, `in-out-compliance-${id}`);
     const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
@@ -440,7 +440,7 @@ describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () =>
     refused(scenario({ beforeAssignees: ['@human'] }), /no launch commit found/, 35);
   });
   it('F11 PLANTED DEFECT: a lane that retypes its task (build at launch, doc at close) is refused', () => {
-    refused(scenario({ beforeType: 'build', type: 'doc' }), /may not retype/, 36);
+    refused(scenario({ beforeType: 'build', type: 'doc' }), /may not retype|closes only as that lane/, 36);
   });
   it('F12 PLANTED DEFECT: a generated report staged in a lane build close is refused; the lane own report directory is not (control above)', () => {
     refused(scenario({ staged: { 'docs/reports/generated/x.md': 'x\n' } }), /docs\/reports\/generated\/x\.md/, 37);
@@ -530,5 +530,29 @@ describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () =>
     const plain = scenario({ noBoard: true, status: 'RUNNING', mutate: () => ({}) });
     expect(plain.status, plain.stderr).toBe(0);
     refused(scenario({ noBoard: true }), /a task close needs the board/, 46);
+  });
+  it('H9 PLANTED DEFECT: the lane assignee dropped in an EARLIER lane commit, then a retype to doc or record in the close, is refused: type and lane assignee come from the board copy', () => {
+    const dropped = taskText({ status: 'RUNNING', type: 'build', assignees: [] });
+    refused(scenario({ type: 'doc', assignees: [], beforeAssignees: ['@lane-BL-COMPLY2'], beforeType: 'build', laneWork: { 'src/a.ts': `${AFILE}// x\n`, [TASK]: dropped } }), /board copy of this task/, 47);
+    refused(scenario({ type: 'record', assignees: [], beforeAssignees: ['@lane-BL-COMPLY2'], beforeType: 'build', laneWork: { 'src/a.ts': `${AFILE}// x\n`, [TASK]: dropped } }), /board copy of this task/, 47);
+  });
+  it('H9 control: the three same-commit forms stay refused (see H8) and the unchanged close passes (default scenario)', () => {
+    const ok = scenario();
+    expect(ok.status, ok.stderr).toBe(0);
+  });
+  it('H9 PLANTED DEFECT: a task whose front matter id differs from its file number is refused (the id names the lane report scope)', () => {
+    refused(scenario({ taskFileText: `${taskText({ id: 'TASK-9', status: 'BUILT' })}notes\n` }), /front matter id/, 48);
+  });
+  it('H9 round 6: the diff text is pinned against the config keys: the lane made its diff with diff.interHunkContext set high and the recompute still matches', () => {
+    const lw = { 'src/long.ts': Array.from({ length: 40 }, (_, i) => (i === 4 || i === 34 ? `export const L${i} = ${i * 10};` : `export const L${i} = ${i};`)).join('\n') + '\n', 'src/a.ts': `${AFILE}// x\n` };
+    const ok = scenario({ files: 'src/', laneWork: lw, diffCfg: ['-c', 'diff.interHunkContext=30', '-c', 'diff.algorithm=patience', '-c', 'diff.indentHeuristic=false'] });
+    expect(ok.status, ok.stderr).toBe(0);
+  });
+  it('H9 PLANTED DEFECT: a lane that narrows its Files line at close cannot drop a rule list: the lists resolve from the union of the launch copy and the staged copy', () => {
+    const xtra = (x: Record<string, unknown>) => { (x.lists as Record<string, unknown>).xtra = { file: 'docs/ms.md', whole: true, generated_by: 'hand-written' }; (x.rows as unknown[]).push({ id: 'dx', globs: ['docs/x.md'], lists: ['xtra'], why: 't' }); };
+    const lw = { 'src/a.ts': `${AFILE}// x\n` };
+    const ok = scenario({ tableEdit: xtra, files: 'src/a.ts, docs/x.md', laneWork: lw });
+    expect(ok.status, ok.stderr).toBe(0);
+    refused(scenario({ tableEdit: xtra, files: 'src/a.ts, docs/x.md', finalFiles: 'src/a.ts', laneWork: lw, mutate: (l) => { const o = { ...l }; for (const k of Object.keys(o)) if (/xtra/.test(k)) o[k] = null; return o; } }), /list xtra/, 49);
   });
 });
