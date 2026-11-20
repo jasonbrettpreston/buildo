@@ -1,0 +1,18 @@
+== commit N (plan protocol notes) e46a54dc8
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 0 file(s)
+[wf1/inc1b-v2list e46a54dc8] docs(08_agents): dated notes on the plan protocol: Spec 137 supersedes line 8; the nine-seat roster binds the whole-increment review (V2.LIST round 3)
+ 3 files changed, 17 insertions(+), 13 deletions(-)
+exit 0
+== commit P (re-pin) ebe092fc0
+POLICY CHECKS OK (commit-msg): 1 file(s)
+[wf1/inc1b-v2list ebe092fc0] feat(124a_step_standard_policy_appendix): re-pin the pre-commit registry budget to the fresh dated measurement, 33.2 s (V2.LIST round 3)
+ 7 files changed, 30 insertions(+), 9 deletions(-)
+ create mode 100644 migrations/334_precommit_budget_registry_repin.sql
+exit 0
+== commit W (wiring) 76887a478
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 1 file(s)
+[wf1/inc1b-v2list 76887a478] feat(08_agents): wire rule-lists page --check into pre-commit with the other generator checks (V2.LIST round 3)
+ 4 files changed, 43 insertions(+), 33 deletions(-)
+exit 0

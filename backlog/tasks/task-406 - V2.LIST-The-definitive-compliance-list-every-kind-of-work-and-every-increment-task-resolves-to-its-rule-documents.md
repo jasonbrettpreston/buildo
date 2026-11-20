@@ -88,4 +88,6 @@ Step 4 audit by a separate grounder 2026-11-20 (file ~/Buildo-scratch/lanes-2026
 2026-11-20 BL-V2LIST round 3 (A): budget re-pin (seed + migration 334 + 124a dated note), then the pre-commit wiring.
 
 2026-11-20 BL-V2LIST round 3 (A): page --check wired into pre-commit; budget evidence re-measured (registry_s 33.19 s).
+
+2026-11-20 BL-V2LIST round 3 report.
 <!-- SECTION:NOTES:END -->
