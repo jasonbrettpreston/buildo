@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/load4/plan-under-review.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0176 "the animation keeps its own length, always runs to completion" — plan LD-3 "Option A: show the failure at once (the animation stops; Try again starts it again)." and "RR-0176 says the animation 'always runs to completion', about the success button" — the pasted ruling is unqualified and the plan re-scopes it to the success path on its own authority, recommending an option that stops the animation — drop the recommendation or make Option A wait for the animation to end, and put the scoping question to the operator as the item, not the answer.
+
+DEFER severity=MED — RR-0179 "2. Add it as a task using the othr mini pages as a template" — plan section 4 "so the frame uses View, Text, Button only" and IMPACT section 2 "defers the banner look to that ruling" — the 429, 403 and drift states are planned with the sibling strings but not the mini pages' banner template the ruling names, so the template clause is met for wording only — either add Alert/AlertDescription to mapping.mobile.REPORT for the refusal states or record the operator's acceptance of the plain line before plan-lock.
+
+DEFER severity=MED — design "const wwcBar = { back: 'Lookup', title: WWC_ADDR, cls: 'addr' };" — plan seam S2 "If LOAD.2 does not, LOAD.4 shows the address only where the response gave it (miss with a hit) and says so." — in the timed-out or network-error case the design's own second cause, the bar has no address at all under the fallback, so the design clause is unmet for that cause — make C5 (an address before the lookup answers) a hard dependency of the minimum rather than a fallback.
+
+DEFER severity=MED — design "stillImg('city', SCENE_ALT)" — plan seam S3 "otherwise the frame goes without it (delta 5 stays open, flagged)" — the approved failure screen draws the process still and the minimum ships without it, so delta 5 remains an open design gap at plan-lock — take LOAD.2's still or obtain the operator's acceptance of a still-less frame before stage 2.
+
+DEFER severity=MED — design "We couldn’t load this lot. Check your connection and try again." — plan LD-1 "Recommendation: A for the minimum (no word moves; the frame, address and buttons still follow v8)." — the recommended minimum does not follow v8 on the one sentence the design prints, and "follows v8" is not true of the words — recommend B, or record the operator's LD-1 ruling that supersedes build.mjs:816 before stage 2 starts.
+
+DEFER severity=LOW — design "note: 'The lookup failed or timed out.'" — plan R2 "view | loading | miss | error | timeout | rate_limited | entitlement | schema_drift" and 1b "NOT drawn anywhere in v8: ... a time-out distinct from a failure" — the plan declares and goldens a timeout state the design merges into one failure state, adding a state no pasted clause names — fold timeout into error in the declared states and goldens, or cite the ruling that makes it distinct.
+
+DEFER severity=LOW — design "<p class=\"err\" role=\"alert\">" — ReportBinding.tsx:372 "node('Text', { key: 'message', className: L.lifecycleText, accessibilityRole: 'text' }" — the design marks the failure line as an alert and no stage-2 step changes the message node's role — carry role="alert" on the failure message (accessibilityRole) in the green commit or state why the mapping forbids it.
+
+DEFER severity=MED — design silence recorded in the plan: "NOT drawn anywhere in v8: a miss screen" — plan LD-5 "Recommendation: B (one frame for every way a report is missing; one code path, no new component)." — the miss frame is behaviour no pasted clause or ruling names, proposed at operator scope with task-348 still open — build it only after the operator rules LD-5, and do not treat B as the plan's baseline.
+
+MET — RR-0176 "no 35 s cap" — plan section 4 "NOT built: ... any 35 s figure" — the change adds no cap on the success path.
+
+MET — design left axis, no centred block — plan 1c item 4 and green "(address in the top bar; hierarchy; left axis)" — the centred block is named for replacement.
+
+MET — design "Tab bar Lookup active" — plan 1b "Tab bar Lookup active (already provided by the shell, parcel-tool/_layout.tsx)" — no change needed, correctly left to the shell.
+
+REJECT — RR-0176 "no 35 s cap" — the change is accused of adding a 35 s timeout — the plan's LD-2 offers 60 s and section 4 states no 35 s figure is built.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 8
+
+---
+⏱  51861ms (51.9s)
+📊 Tokens — total: 31542, input: 22110, output: 9432, reasoning: 8313

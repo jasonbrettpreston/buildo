@@ -3,11 +3,11 @@ id: TASK-317
 title: >-
   LOAD.4 Load-failure page: what the customer sees when a lot's report or See
   details...
-status: RUNNING
+status: WAITS
 assignee:
   - '@lane-BL-LOAD4'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T23:44:00Z'
+updated_date: '2026-11-20T00:03:00Z'
 labels:
   - S
   - plan:LOAD.4
@@ -29,6 +29,10 @@ references:
     /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/readiness/READINESS.md
   - /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/fe-built/BUILT.md
   - .cursor/MCFRONTEND-QUEUE.md#L467
+  - docs/reports/lanes/2026-11-19/BL-LOAD4/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-LOAD4/PLAN.md
+  - docs/reports/lanes/2026-11-19/BL-LOAD4/IMPACT.md
+  - docs/reports/lanes/2026-11-19/BL-LOAD4/TRIAGE.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -47,6 +51,10 @@ Estimate: UNMEASURED
 
 Plan text at the snapshot: NEW (RR-0179): panel + build pass owed
 who (plan text): lane
+
+Stage 1 plan (2026-11-19, lane BL-LOAD4): docs/reports/lanes/2026-11-19/BL-LOAD4/PLAN.md and IMPACT.md. Smallest now: the report screen draws the small-page failure frame (address in the bar, one line, Try again only where it can help, a way back) for a failed, timed-out or refused lookup and for a miss; mobile only; the web report render is not built. Waits on task-267 stage 2 (address source) and operator answers LD-1, LD-2, LD-3, LD-5.
+
+Files: mobile/src/components/surfaces/ReportBinding.tsx, mobile/src/components/surfaces/ReportPageHost.tsx, mobile/app/(app)/parcel-tool/[parcelId].tsx, mobile/src/constants/reportPage.ts, mobile/src/hooks/useParcelLookup.ts, scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.content.json, scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json, mobile/src/generated/surfaces/mobile_parcel_detail.json, scripts/surfaces/report-page-capture.ts, src/tests/fixtures/report-page/props, src/tests/surfaces/report-mobile.logic.test.ts, src/tests/surfaces/report-failure.logic.test.ts, mobile/__tests__/reportScreens.golden.test.ts, mobile/__tests__/reportPage.behaviour.test.tsx, mobile/__tests__/reportScreen.mount.behaviour.test.tsx, docs/specs/02-web-admin/126_maxbld_surface_standard.md, .cursor/MCFRONTEND-QUEUE.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -75,6 +83,12 @@ who (plan text): lane
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Pre-register the expected moves alone (docs commit: MF-94 queue row claimed by mkdir in ~/Buildo-scratch/ids, prereg-MF-94-1.json), after task-267 stage 2 lands and LD-1, LD-2, LD-3, LD-5 are answered. 2. Failing tests written into the plan and reviewed at plan altitude: R1 report-mobile.logic (hook-run golden capture), R2 report-failure.logic (total state table), R3 content pin, R4 descriptor lock, R5 mobile jest (not hook-run); lens set r1 compliance, ux, error-paths, code-review done in stage 1 (TRIAGE.md). 3. write_scope declared in the brief (lane dir and ~/Buildo-wt-load4); stage 2 brief declares the Files line. 4. PLAN panel with the lens set, not one generic pass: done in stage 1, 31 lines adjudicated. 5. Grounder re-executes every claim: this lane opened each cited line (TRIAGE.md). 6. Build red first (R1 gives a hook-provable red), then green in one code commit, through the real hooks, on the tip after task-267. 7. OUTPUT panel record committed with the work (docs/reports/lanes/<date>/BL-LOAD4/). 8. McFrontend queue row first (MF-94, follow-up to MF-62), no work before it.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
@@ -89,4 +103,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-317 · Backlog; o
 2026-11-19 (task-359, UX-2) built state to replace: after a lot pick the report screen shows 'No report for this lot yet.' with Back only, no address and no reason (mobile/app/(app)/parcel-tool/[parcelId].tsx:34; ReportBinding.tsx:400-401; report-presentation.json:88-89). Until MB-44 W is live every lot shows it (task-348). The failure page must say which lot and why, built from the small pages.
 
 2026-11-19 taken on the board at lane launch (lane BL-LOAD4, worktree /Users/brettpreston_macmini/Buildo-wt-load4, branch wf1/inc1b-load4), RR-0240
+
+2026-11-19 (BL-LOAD4, stage 1, McIncrement 08_agents.md 11.8): stage 1 plan done; stage 2 build waits on the orchestrator. Measured on head 0bc76d829: today a failed or timed-out report shows a centred line with an outline Try again (ReportBinding.tsx:369-379), no address, no time bound, no refusal split; a miss shows the bare line and Back; the design draws one failure frame (small-pages-v8 build.mjs:803, 814-817). Delta list, contract, impact and decision drafts LD-1 (words), LD-2 (time-out figure), LD-3 (early failure vs animation), LD-5 (the miss), LD-6 (conditional still) in docs/reports/lanes/2026-11-19/BL-LOAD4/PLAN.md; D-1 and D-4 named, unruled, not decided. Smallest missing piece: task-267 stage 2 (the address source and the animation seam). Web: not buildable until the web report render (task-285 and task-287 chain).
 <!-- SECTION:NOTES:END -->

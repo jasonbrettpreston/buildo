@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/load4/plan-under-review.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — mobile/app/(app)/parcel-tool/[parcelId].tsx:37 "const onRetry = useCallback(() => void refetch(), [refetch]);" and R2 "from (data, error class, elapsed); Try again present only for error and timeout" — nothing resets the elapsed clock on refetch, so once the bound fires the state stays timeout on every re-render and the Try again tap redraws the same frame: a dead button — reset the bound timer inside onRetry (or key elapsed to dataUpdatedAt) and assert in R5 that the spinner returns after the tap.
+
+BUG severity=HIGH — plan: "grep timeout|abort|signal over mobile/src/lib/apiClient.ts and useParcelLookup.ts: 0 hits" and "it also re-runs a blocking synchronous compute 4 times per failed open (BL-LOAD1B REPORT.md line 4)"; [parcelId].tsx:37 "void refetch()" — Try again has no isFetching guard and the client has no abort signal, so two quick taps start two concurrent lookups for one parcel, each able to run the 9.7 to 15.9 s synchronous compute, and the plan states no dedup or meter key making the second a no-op — disable the button while isFetching and name the key (or state there is none) for a repeated lookup.
+
+DEFER severity=MED — LD-2 A "One wait would also cover the 3 automatic retries (about 46 s median, 71 s worst), so 60 s ends a slow failing ladder" — the bound is on the screen, not the request: attempt 4 keeps running past the frame and its late settle re-enters reportScreenState, which can flip the frame to view or, via the named "the in-flight no-flag lookup that can overwrite an answered entry with page null, BL-METER2 loose end 1", to a miss with no Try again — state that a settle after the bound is ignored, or cancel the query at the bound.
+
+DEFER severity=MED — R2 "view | loading | miss | error | timeout | rate_limited | entitlement | schema_drift" — no bucket is named for an error the classifier does not recognise (401 after a token refresh, AccountDeletedError, a transport TypeError), so the state function is not total and the fallback is decided by accident — name the fallback as error, retryable, in R2 and pin it with an unknown error instance.
+
+DEFER severity=MED — LD-5 B "no Try again because trying again cannot help" against the miss row "miss: switch off, no stamp, no batch row, engine cannot compute, dangling id" — a miss on a hit whose data has not landed yet (no batch row, engine cannot compute) is treated as terminal with no in-place retry, so the person must leave and re-enter the screen, while a dangling id (match null) is the only truly permanent case — allow the retry for a hit with page null and withhold it only for match null.
+
+DEFER severity=MED — section 3 "LOAD.4 owns what REPLACES it when the lookup settles without a page or fails" and LD-3 "Needed only when LOAD.2's animation exists on the phone (today the screen is a spinner, so A and B look the same)" — a failure that arrives mid-animation has no build line in either lane: LOAD.4 builds only the settled frame and LOAD.2 owns the animation, so LD-3's answer is recorded but unowned — assign the cut-short transition to LOAD.2's commit with a state test, or state that the frame waits and say what the person sees.
+
+DEFER severity=LOW — ReportBinding.tsx:400 "if (q.data?.page) return { view: q.data.page, lifecycle: 'loading' };" — a served page whose sections are empty is returned as view and renders a report with nothing in it, no miss, no error, no retry; the new state table has no empty bucket — add a zero-section check to the state table (empty page = miss) or state that the route can never send one (cannot see mobilePageView).
+
+REJECT — ReportBinding.tsx:396-398 "also from the persisted cache while a refetch fails (offline)" — a failed refetch with a cached page looks like an error path silently swallowed — it is handled: the cached page is the intended offline degrade and no count is recomputed from it, so nothing is charged twice.
+
+VERDICT: FAIL on error-path safety
+Paths walked: 500/network error, schema drift and 400, 401/403/429 refusals, empty page, miss (hit and dangling id), time-out bound, retry tap double-submit, automatic retry ladder, late settle, cached-page degrade, failure during animation   Unguarded: 7
+
+---
+⏱  54644ms (54.6s)
+📊 Tokens — total: 31650, input: 22074, output: 9576, reasoning: 8517
