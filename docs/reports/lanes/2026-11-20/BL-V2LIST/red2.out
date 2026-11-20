@@ -1,0 +1,81 @@
+RED attempt (round 2) 2026-11-20: commit with only the new and changed tests and the task file staged (real hooks); refused, exit 1. Tail:
+    },
+    {
+      "id": "plan-protocol",
+      "file": "docs/specs/00-architecture/plan-protocol.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "every-task"
+      ],
+      "why": [
+        "every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)"
+      ]
+    }
+  ],
+  "exempt": [],
+  "unmatched": []
+}
+: expected +0 to be 3 // Object.is equality
+
+- Expected
++ Received
+
+- 3
++ 0
+
+ ❯ src/tests/backlog/rule-lists.logic.test.ts:475:46
+    473|   it('resolve refuses a build or fix task with no milestone letter (on…
+    474|     const noLetter = script(CLI, ['resolve', '--files', 'scripts/analy…
+    475|     expect(noLetter.status, noLetter.stdout).toBe(3);
+       |                                              ^
+    476|     expect(noLetter.stderr).toMatch(/no milestone/);
+    477|     expect(script(CLI, ['resolve', '--files', 'scripts/analysis/rule-l…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/16]⎯
+
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST round 2: the milestone guard > verifyResolved: a table with no milestone_docs key, or no entry for the letter, names the missing milestone lists; a build task with no letter is named
+AssertionError: expected '' to match /milestone_docs/
+
+- Expected: 
+/milestone_docs/
+
++ Received: 
+""
+
+ ❯ src/tests/backlog/rule-lists.logic.test.ts:488:65
+    486|     const noKey = { ...t } as Table;
+    487|     delete noKey.milestone_docs;
+    488|     expect(verifyResolved(noKey, good, 'S', 'build').join('|')).toMatc…
+       |                                                                 ^
+    489|     expect(verifyResolved({ ...t, milestone_docs: { F: ['ms-F'] } }, g…
+    490|     expect(verifyResolved(t, good, undefined, 'build').join('|')).toMa…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/16]⎯
+
+ Test Files  6 failed (6)
+      Tests  16 failed | 161 passed (177)
+   Start at  13:31:06
+   Duration  26.38s (transform 8ms, setup 34ms, collect 21ms, tests 39.34s, environment 0ms, prepare 125ms)
+
+exit 1
+
+ FAIL  src/tests/backlog/backlog-lane.logic.test.ts > backlog-lane attaches the rule lists by touched path (task-366) > launch refuses a build task with no milestone, and a table whose every_task is empty; the control la
+ FAIL  src/tests/backlog/check-lane-close.logic.test.ts > close check: the milestone guard (V2.LIST round 2) > a table with no milestone_docs key, or none for the letter of the task, is refused as missing lists
+ FAIL  src/tests/backlog/review-templates.logic.test.ts > review lens templates: the plan placeholder appears once, so the material is sent once > lens-code-review.md has exactly one plan placeholder
+ FAIL  src/tests/backlog/review-templates.logic.test.ts > review lens templates: the plan placeholder appears once, so the material is sent once > lens-error-paths.md has exactly one plan placeholder
+ FAIL  src/tests/backlog/review-templates.logic.test.ts > review lens templates: the plan placeholder appears once, so the material is sent once > lens-security.md has exactly one plan placeholder
+ FAIL  src/tests/backlog/review-templates.logic.test.ts > review lens templates: the plan placeholder appears once, so the material is sent once > lens-ux.md has exactly one plan placeholder
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > V2.LIST round 2: the table rows > a generated report gets the Spec 124 list (Rule 13, R-GW) and not surface-127; a 127-* generated file keeps surface-127 and gets
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > V2.LIST round 2: the table rows > a panel record (docs/reports/panels/**) gets Specs 128, 126, 08 sections 7 and 11, and 137
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > V2.LIST round 2: the table rows > a phone file and a surface path that is not a descriptor get the engineering standards (eng-all)
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > V2.LIST round 2: the table rows > the policy report row says plainly that it has nearest lists and no governing spec: operator ruling owed
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > V2.LIST round 2: the table rows > the Spec 124 list block carries Rule 13 and the role banner rule R-GW
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST round 2: the milestone guard > resolve refuses a build or fix task with no milestone letter (one line naming the milestone); a record task and the control with 
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST round 2: the milestone guard > verifyResolved: a table with no milestone_docs key, or no entry for the letter, names the missing milestone lists; a build task w
+ FAIL  src/tests/hooks-composition.infra.test.ts > hooks-composition (R-AG gate J) — pre-commit generated-doc + system-map + J2 lib-suite gates > GREEN — runs all 19 chain-era generator --check arms once each, after the 
+ FAIL  src/tests/hooks-composition.infra.test.ts > hooks-composition (R-AG gate J) — pre-commit generated-doc + system-map + J2 lib-suite gates > RED — a tampered pre-commit with one chain-era --check stripped is caught 
+ FAIL  src/tests/hooks-composition.infra.test.ts > hooks-composition (R-AG gate J) — pre-commit generated-doc + system-map + J2 lib-suite gates > RED — a tampered pre-commit with the last_measured --check stripped is cau
+ACCURATE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13; findings 135
+report-fields current (1 rendered fields); gates FAIL (report-only): RF-2, RF-4, RF-6, RF-7, RF-9
+UNDERSTANDABLE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)

@@ -148,3 +148,49 @@ Question (one): wire `rule-lists.mjs page --check` into .husky/pre-commit (one l
 Gate: `gate.mjs gate --lane BL-V2LIST ... --allow-ref-move` printed "GATE PASS (BL-V2LIST)"; without --allow-ref-move it fails only on "ref moved since the snapshot" lines (this lane's own two commits and other lanes' worktrees), scope line "335 changed since snapshot; 335 in scope; 0 attributed to other lanes; 0 unexplained".
 
 STATUS: BL-V2LIST task-406 READY, task RUNNING, grounder owed; commits f9c638c93 and 0d25c5e46 (not pushed); findings 159 untriaged in FINDINGS.md; open item: close check reads only unsplit out-code-review.txt and out-error-paths.txt.
+
+# ROUND 2 (coordinator message after the grounder: 9 fixes)
+
+Rebased onto wf2/board first (git rebase; no checkout). Commits (real hooks, each protected path in its own commit, no task status move): a55976216 (templates), 8b0f3f994 (rule-lists.mjs milestone guard + launch), 1e67bda61 (rule-lists.json rows + page + plan-protocol pin test), 6285effe0 (check-lane-close.mjs). Red: red2.out (all new tests staged, refused, exit 1, 16 failed of 177). Green tails: commit2.out.
+
+- (1) DONE: eng-all on the mobile and surfaces rows.
+- (2) DONE: resolveTask refuses a build or fix task with no milestone; verifyResolved treats a missing milestone_docs key or entry as missing lists (and names a build task with no milestone); check-lane-close calls verifyResolved; launch (backlog-lane.mjs) passes the task type. Planted defects plus controls in rule-lists, backlog-lane and check-lane-close tests.
+- (3) DONE: rule-lists-table.logic.test.ts pins the bytes after the banner to d92940f4...e9942a.
+- (4) HALTED: wiring `page --check` into .husky/pre-commit makes hooks-composition R-EC refuse: the pre-commit budget evidence is keyed to the hook text, and a fresh `precommit-budget.mjs --measure` (run with an empty temporary index, GIT_INDEX_FILE outside the repo) gives registry_s 32.12 s and 31.84 s against the pinned tooling_precommit_budget_registry_s 27.5 s (the new stage itself costs 0.08 s; docs_only 21.83 s is inside 25.3). The earlier evidence (27.36 s, 2026-10-30) was already 0.14 s under the pin. Raising the pinned budget is an operator ruling (R-EB (b)); hook, test and evidence were restored to HEAD (nothing of the wiring landed). The CHAIN_ERA entry and 18 to 19 are ready to apply.
+- (5) DONE: launch refusal test of an incomplete resolved set (empty every_task table, build task with no milestone; control launches).
+- (6) DONE: row panel-records (docs/reports/panels/**): surface-128, surface-126, agents-s7-s11, queue-137 (Spec 128:182).
+- (7) DONE: list policy-124-s2-s5 = Spec 124 sections "2. The rules" (holds Rule 13) and "5. Register of rulings" (holds R-GW), the smallest sections that hold both (Rule 13 and R-GW are in different sections; section 2 has no deeper heading). generated-reports (not 127-*) gets it in place of surface-127; row generated-127 keeps surface-127 for 127-* files and adds it.
+- (8) DONE: row policy-reports says "nearest lists, no governing spec: operator ruling owed"; not presented as governing.
+- (9) DONE: the four lens templates fixed as lens-compliance.md; a test pins one placeholder per template.
+
+## Proof lines (resolve --type build --letter S)
+== resolve mobile/x.ts
+mobile-90 mobile-98 mobile-99 mobile-100 mobile-96 surface-136 surface-126 surface-127 surface-128 surface-135 eng-all five-words plan-protocol inc-S ms-S
+== resolve scripts/surfaces/_schema/static-page.json
+surface-136 surface-126 surface-127 surface-128 surface-135 eng-all five-words plan-protocol inc-S ms-S
+== resolve docs/reports/panels/MF-94.json
+surface-128 surface-126 agents-s7-s11 queue-137 five-words plan-protocol inc-S ms-S
+== resolve docs/reports/generated/x.md
+policy-124-s2-s5 agents-s5-1to3 agents-s7-s11 queue-137 eng-all orchestrator-doc17 five-words plan-protocol inc-S ms-S
+docs/reports/generated/127-surface-registry.md: policy-124-s2-s5 ... surface-127 (kept for 127-* files).
+
+## Re-run of the outputs (whole final diff: git diff -U0 wf2/board HEAD excluding docs/reports/lanes, docs/reports/reviews and backlog: 17 paths, 84,160 characters)
+- Including docs/reports/reviews (the generated context file, 34 KB) the diff is 118,162 characters (-U0): lens-input refuses ("material is 118112 characters; ... at most 115767 characters fit one file ... split the material"), so that file is left out of the material (it is review input, not a change under review); nothing else trimmed.
+- lens-input REFUSED for list policy-124-s2-s5: "section "2. The rules" is 34244 characters and has no deeper heading to split at (room for list text in one file: 30833)". The new Spec 124 list therefore has NO compliance output this round. To fix: a deeper heading in that section, a smaller section, or material parts (the close check has no name for a material part). Operator or orchestrator item; the close check will refuse until resolved.
+- 13 DeepSeek calls (11 compliance + code-review + error-paths, both unsplit now), all with VERDICT, no failure. Old round 1 out-* and in-out-* files (32) removed in the same commit, listed in SUPERSEDED.txt; plan-* files stay.
+- out-code-review.txt sha256:6ed508197eb8 findings:6
+- out-compliance-agents-s5-1to3.txt sha256:b86fd60d0f15 findings:5
+- out-compliance-agents-s7-s11.txt sha256:073020afd53a findings:5
+- out-compliance-eng-all-p1.txt sha256:6772bba6589e findings:4
+- out-compliance-eng-all-p2.txt sha256:0ab5775870a3 findings:4
+- out-compliance-five-words.txt sha256:dc8a87c87328 findings:5
+- out-compliance-inc-S.txt sha256:6ea0f696d2ba findings:3
+- out-compliance-ms-S.txt sha256:a4681afc2571 findings:5
+- out-compliance-orchestrator-doc17-p1.txt sha256:fefd1b60bff4 findings:4
+- out-compliance-orchestrator-doc17-p2.txt sha256:58cb9eeb9489 findings:5
+- out-compliance-plan-protocol.txt sha256:c143d5040e5d findings:6
+- out-compliance-queue-137.txt sha256:7f33376dfda9 findings:5
+- out-error-paths.txt sha256:cfd515547ab2 findings:6
+(sha256 are the first 12 hex of each file; counts are BUG and DEFER lines; 69 findings in the 13 outputs, FINDINGS.md refreshed, untriaged.)
+
+STATUS: BL-V2LIST task-406 round 2 READY, task RUNNING, grounder owed again; commits a55976216, 8b0f3f994, 1e67bda61, 6285effe0 (+ reports commit); fix 4 halted (budget pin), policy-124-s2-s5 has no output (lens-input size refusal).

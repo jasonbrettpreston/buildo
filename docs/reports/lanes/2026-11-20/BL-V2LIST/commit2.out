@@ -1,0 +1,28 @@
+== commit T (templates) a55976216
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 1 file(s)
+[wf1/inc1b-v2list a55976216] fix(08_agents): the lens templates send the material once (V2.LIST round 2)
+ 6 files changed, 24 insertions(+), 6 deletions(-)
+ create mode 100644 src/tests/backlog/review-templates.logic.test.ts
+exit 0
+== commit M (milestone guard) 8b0f3f994
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 4 file(s)
+[wf1/inc1b-v2list 8b0f3f994] feat(08_agents): the milestone guard: a build task with no milestone is refused; a missing milestone_docs entry is missing lists (V2.LIST round 2)
+ 5 files changed, 51 insertions(+), 8 deletions(-)
+exit 0
+== commit J (table rows) 1e67bda61
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 1 file(s)
+[wf1/inc1b-v2list 1e67bda61] feat(08_agents): engineering standards on the phone and surface rows; panel record, generated report and policy report rows (V2.LIST round 2)
+ 4 files changed, 92 insertions(+), 10 deletions(-)
+ create mode 100644 src/tests/backlog/rule-lists-table.logic.test.ts
+exit 0
+== commit C (close check) 6285effe0
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 2 file(s)
+[wf1/inc1b-v2list 6285effe0] feat(08_agents): the close check calls verifyResolved: the milestone guard at close (V2.LIST round 2)
+ 3 files changed, 31 insertions(+), 11 deletions(-)
+exit 0

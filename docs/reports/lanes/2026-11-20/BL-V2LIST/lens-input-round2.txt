@@ -1,0 +1,12 @@
+in-out-compliance-agents-s5-1to3.txt
+in-out-compliance-agents-s7-s11.txt
+in-out-compliance-queue-137.txt
+in-out-compliance-eng-all-p1.txt
+in-out-compliance-eng-all-p2.txt
+in-out-compliance-orchestrator-doc17-p1.txt
+in-out-compliance-orchestrator-doc17-p2.txt
+rule-lists: list policy-124-s2-s5: section "2. The rules" is 34244 characters and has no deeper heading to split at (room for list text in one file: 30833)
+in-out-compliance-five-words.txt
+in-out-compliance-plan-protocol.txt
+in-out-compliance-inc-S.txt
+in-out-compliance-ms-S.txt

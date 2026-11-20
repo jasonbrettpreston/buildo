@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T18:39:20.293Z file_sha256=c4a910075f1c739a07e36e1dade4831699e97d3995a969a910ccce3bd1aca536 prompt_sha256=773437fbadb94e2379542efd84826b76f003888329c94e2126280e655a702b8d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/v2list/diff-out2.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/analysis/backlog-lane.mjs:75 "const letterOf = milestoneLetter(board, t.fm.milestone);" — this call was previously inside the try that ends in refuse(); moved above it, a throw from milestoneLetter (unreadable or missing milestone file) now escapes as an uncaught stack trace instead of the one-line refusal — keep the call inside the try (or wrap it in its own try that refuses "cannot read the milestone of ${taskId}").
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:435 "const want = renderPage({ table, root });" — the sibling branch wraps checkTasks in try/catch and die(1, e.message), this one does not, so any throw from renderPage (undefined list def, missing document, unwritable path) prints a raw stack trace and skips the die() exit discipline — wrap renderPage in the same try/catch and die(1, e.message).
+
+DEFER severity=MED — scripts/analysis/rule-lists.json "ms-9": { "file": "backlog/milestones/m-11 - increment-9-merged-measure-(the-25,-coa-172,-4d)-[.md" — the path ends "-[.md" where the neighbours end "-[8].md" and "-[10].md", so it looks truncated; a task in milestone group [9] would fail to attach its objectives (cannot see the tree, the grounder should stat it) — confirm the on-disk file name and use the full path.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "try { p = buildLensInputs({ id: l.id, list: def, root, material: 'x'.repeat(NOMINAL), templateFile: tmpl }).length; } catch { p = 0; }" — the catch swallows the error and line "p || 'does not fit'" then mislabels any failure (missing or unreadable document) as "does not fit" with nothing logged — keep the label but push the caught message into the page, or rethrow for a missing document.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:85 "if (!Array.isArray(i.table.every_task) || i.table.every_task.length === 0) return [`${id}: the rule-list table has no every_task lists: ...`];" — verifyResolved already emits that same message into `missing`, so this early return is redundant and it drops any `errors` already accumulated for the task — delete the pre-check and let the loop push `missing` like every other list.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:232 "if (ms !== undefined) {" — asymmetric with every_task: an absent milestone_docs key resolves silently here while a present key with a missing letter entry refuses, so protection depends entirely on every caller also calling verifyResolved — make the absent key refuse in resolveTask too, as every_task's fail-closed check does.
+
+NIT severity=NIT — scripts/hooks/check-lane-close.mjs:34 "import { coveredBy, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';" — the neighbour list is alphabetical by imported name and verifyResolved is inserted second — move it after ruledLine.
+
+NIT severity=NIT — scripts/analysis/rule-lists.mjs "const numOf = (id) => Number(/(\d+)$/.exec(String(id))?.[1]);" — an id without a trailing number yields NaN and the comparator returns NaN, leaving the check-tasks listing unsorted — return a large finite number when there is no match (e.g. ?? Number.MAX_SAFE_INTEGER).
+
+VERDICT: PASS on code correctness
+
+---
+⏱  79025ms (79.0s)
+📊 Tokens — total: 43833, input: 28447, output: 15386, reasoning: 14525
