@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATES'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-20T15:26:00Z'
+updated_date: '2026-11-20T17:26:00Z'
 labels:
   - McFix
 milestone: m-1
@@ -62,4 +62,6 @@ Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze need
 2026-11-20 grounder verdict (separate read-only agent, on caa14e6cb): SAFE TO FOLD AS REPORT-ONLY; NOT safe to block. Must fix before any gate blocks: (1) compute-reach.mjs:142,155-156 strip the extension on the import spec, handle index barrels and the mobile @app alias; add a .js-caller test and a require-form test (G-001, G-023 residue); (2) ast-grep exit 1 with empty or unparsable output must fail closed (G-065, G-066); (3) print the scanned-file count, fail on a zero-file walk, stop skipping build/dist/coverage directories at depth (G-070); (4) mobile-never-do.mjs:61 shadowing is file-wide: one local named document hides every real use; the clean fixture bakes it in (G-002); namespace Image, export-from, useEffect(fetcher) gaps closed or documented; (5) main() needs a distinct error exit code (EP-1); 8 fixtures lack SPEC LINK (G-059); (6) mobile-literals.mjs matches seven exact strings only: 107639/10000, 1.0764e1 or a string form pass (G-040). CONFLICTS for the operator: G-029 the factor list held as strings to pass estate-literals against Spec 132 core.8 binding gate scripts; G-037/G-042 Spec 136 fe.01 and fe.13 timing against the operator's 2026-11-20 request. Stage 2 waits on the operator confirming the gate list.
 
 2026-11-20 operator (verbatim, MORNING-DECISIONS.md entry 'two gate answers'): '1 y 2. whate very you recommend'. Item 1 RULED: the gate conversion factors are registered as a pinned setting, not strings (G-029). Item 2 left to the orchestrator recommendation (a reading, not operator words): gates B and C may be built now under the 2026-11-20 request; the fe.01 / fe.13 dated note is owed in stage 2 for the operator to confirm. Still open with the operator: the gate list; whether Spec 90 covers the native icon package; whether core.8 binds the phone app.
+
+Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder's recommendation of 2026-11-20: migration 333: option (b): keep the seed row gate_unit_factor_tolerance, delete migrations/333_gate_unit_factor_tolerance.sql, release mig-333 in the ID ledger; npm run migrate already loads every seed key (scripts/seeds/apply-logic-variables.js; scripts/migrate.js near :324), and Spec 132 core.8 asks for a registered variable, not a migration. Fold order: this branch folds LAST, after the pilot, with the baseline at 3 rows.
 <!-- SECTION:NOTES:END -->

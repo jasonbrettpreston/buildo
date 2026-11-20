@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXPROJ'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-20T17:26:00Z'
 labels:
   - McFix
   - McFix A
@@ -62,4 +62,6 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 2026-11-20 taken on the board at lane launch (lane BL-FIXPROJ, worktree /Users/brettpreston_macmini/Buildo-wt-fixproj, branch wf1/inc1b-fixproj), RR-0240
 
 2026-11-20 fold round after the grounder ruling: lock restored, formatter imports nothing (factor passed in), geometry.ts SQM_TO_SQFT reads the same registered variable, pinnedWindow pair check tested. Owed: migration, number to be claimed by the orchestrator.
+
+Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder's recommendation of 2026-11-20: no DB mirror migration is owed for maxbld_report_lot_size_implausible_min_sqm and _max_sqm: the seed loader inserts them at the next npm run migrate. The two seed descriptions that say a migration is owed are corrected under task-367's fix round or task-343.
 <!-- SECTION:NOTES:END -->

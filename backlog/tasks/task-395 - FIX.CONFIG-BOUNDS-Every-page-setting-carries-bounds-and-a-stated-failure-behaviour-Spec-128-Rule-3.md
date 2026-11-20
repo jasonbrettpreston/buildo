@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:54:00Z'
-updated_date: '2026-11-20T16:06:00Z'
+updated_date: '2026-11-20T17:26:00Z'
 labels:
   - McFix
   - McFix A
@@ -41,4 +41,6 @@ Found by the separate grounder on task-378 (2026-11-20): Spec 128 Rule 3 (docs/s
 
 <!-- SECTION:NOTES:BEGIN -->
 Added 2026-11-20 after task-378 folded (second grounder): also in this task: the phone area-factor copies mobile/src/lib/leadDetailFormat.ts:15 and mobile/src/lib/parcelCostFormat.ts:11 (10.7639 typed): the surface config schema accepts integers only (surface.schema.json), so a number-typed key is part of the bounds decision the operator rules; and SEARCH_DEBOUNCE_MS = 400 in mobile/src/constants/parcelSearch.ts is a dead second copy imported only by two phone tests.
+
+Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder's recommendation of 2026-11-20: option (b): bounds and the failure behaviour declared per key in the surface schema, refused by surface-validate when absent, with a dated note on Spec 128 Rule 3 citing the words above (the phone reads only the generated slice, so a database-registered variable would be a control with no effect); the phone area factor reaches the phone as a generated-slice number resolved at generate time from the pinned seed row parcels_sqm_to_sqft (a number-typed key for pinned factors only). The lane verifies the grounder's facts before building and stops if one is false.
 <!-- SECTION:NOTES:END -->
