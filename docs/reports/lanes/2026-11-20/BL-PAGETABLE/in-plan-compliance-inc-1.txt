@@ -1,0 +1,142 @@
+LIST inc-1 sha256:d84eb7eabec3f6d97e52b1dabfe6cdb9620e0fe0becd25830aba54a30a3c0e34 material sha256:fefdf20f4c0a98e7ea60a15f92b9d96b0758289cead871f9e20b6a58c0995e65 part 1 of 1
+RULE LIST inc-1 (backlog/docs/increments/doc-4 - Increment-1-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+---
+id: doc-4
+title: Increment 1 requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Increment 1 requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The report page parts are built once and shared by every scenario: the REPORT core, the web v21 page (ReportPage, Daylight keys), the mobile binding and host, the summary, the See-details sheets, the lot-view drawing component, the picture and image selection, the ad slot, What we checked, Add lot size, the admin preview and the Daylight tokens. The two detached cards o1 and o2 bind the size, storeys, footprint and homes fields; every cost, CoA, neighbour, setback, coverage, FSI, height and wall-height part renders ruled pending text because no field is declared or served. The customer producer returns null for every lot until MB-44, so everything renders on goldens and the admin preview only. Not built: the gallery, the side view, summary photos, the units switch, the heart, share, the extra lot rows.
+counts: {"BUILT":29,"BUILT-NO-DATA":38,"NOT BUILT":11}
+
+- F-REPORT-CORE REPORT core: buildTree/assertTree/viewOf, buildPage/assertPage/pageViewOf, declaration and layout table: ON ORIGIN (origin/wf1/mb-rulings)
+- F-REPORT-WEB ReportPage (web v21 report page, Daylight keys) + ReportPageToggles client island: ON ORIGIN (origin/wf1/mb-rulings)
+- F-REPORT-MOBILE Mobile REPORT binding + host: reportProps, ReportPageHost (bottom sheet), lot route mount: ON ORIGIN (origin/wf1/mb-rulings); the customer producer answers null for every lot (miss text) until MB-44
+- F-REPORT-TREE ReportView (admin and pdf tree renderer: field list, Picture figure, ad Slot, What we checked): ON ORIGIN (origin/wf1/mb-rulings)
+- F-SUMMARY Options-at-a-glance summary (FE-41): heading + one linked item per option (label, title, Max build, value, unit): ON ORIGIN (origin/wf1/mb-rulings)
+- F-LOTVIEW Lot view panel "From above" (drawing part, server-built 0..1000 frame) + eligibility rule + one-lot reader: PARTLY: drawing component, rule and reader are ON ORIGIN; the reader is not wired into any response and the table parcel_lot_view is the pipeline task MB-109 (absent)
+- F-DETAILS-SHEET See details as a sheet with its own address (FE-43): Detail dialog, PanelLink, Back; layout key details_view: ON ORIGIN (origin/wf1/mb-rulings)
+- F-IMAGES Report image selection and the option picture (one image per option; no gallery): PARTLY: selection logic and figure are ON ORIGIN; "Not wired yet" (the server read of media sets is deferred, default images only); no image asset is drawn
+- F-ADSLOT Ad slot (R-17 disclosure, R-34 outside the card): root slots[], ad section, per-scenario slot key: PARTLY: slot and flat-roof section built; no live offers served; no houseplex slot
+- F-CHECKED What we checked (loading state): checked tree, paced lines, Skip, ready line: PARTLY: web and admin renderer built; the mobile binding maps lifecycle loading to its approved text only (no checked lines in ReportBinding)
+- F-LOTSIZE Add lot size: box C1, after-entry line C2, sheet H0 (width + depth, ft/m), POST /api/parcels/lot-size, FORM descriptors: ON ORIGIN, entry switch OFF (queue Status BUILT: the 324 DB job and the push are the next steps)
+- F-PREVIEW Admin report preview (/admin/report-preview) + internal preview producer (stored rows -> v21 page payload): ON ORIGIN (origin/wf1/mb-rulings) (admin only)
+- F-DAYLIGHT Daylight B tokens: named report-* keys on web (globals.css) and mobile (tailwind.config.js) + contrast test: ON ORIGIN (origin/wf1/mb-rulings)
+- F-LOOKUP Lookup route page hand-off: /api/parcels/lookup returns parcel payload + `page` view + meter; web report route: PARTLY: route, whitelist and meter ON ORIGIN; page = null for every customer lot; web report route answers not found while MAXBLD_WEB_LIVE is false
+
+## Scenario
+Detached house (Option 1 pitched roof, Option 2 flat roof)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| SUM | Summary item at the top, one per option: smaller photo + option name + Max build estimate | main | NOT-BUILT | MF-83 GAP.1 | BUILT-NO-DATA |
+| PIC | Main picture (fixed image chosen by scenario and lot type) | main | NOT-BUILT (GAP.2 READY) | MF-38 GAP.1 GAP.2 | BUILT-NO-DATA |
+| GAL | Concept photo gallery behind the main picture | main | NOT-BUILT (GAP.2 READY) | MF-83 MF-38 GAP.1 GAP.2 | NOT BUILT |
+| VIEW-A | From above (drawn from the real lot) | main | NOT-BUILT, STORED-NOT-SERVED, CONTENT-STATIC | L.12 MB-109 X:MB109-rehearse MB-88 MF-83 | BUILT-NO-DATA |
+| VIEW-S | From the side (fixed image per scenario, labels from data) | main | NOT-BUILT (GAP.2 READY) | MB-88 MF-83 GAP.1 GAP.2 | NOT BUILT |
+| B0 | Option card frame (one per visible option, fixed order) | main | text |  | BUILT |
+| B1 | Option label on the picture | main | NOT-BUILT | GAP.4 | BUILT-NO-DATA |
+| B2 | Option title on the picture | main | NOT-BOUND | MB-94 GAP.4 | BUILT-NO-DATA |
+| B3 | "Most space" tag (every option; a tie goes to the lowest option number) | main | NOT-BUILT | 1.3 GAP.11 | BUILT-NO-DATA |
+| B4 | Picture and its caption | main | not traced | MF-38 GAP.1 | BUILT-NO-DATA |
+| B5 | BY-LAW SPECIFICATIONS label | main | text |  | BUILT |
+| B6 | Max build size tile | main | STORED-NOT-SERVED, NOT-BUILT | 1.3 MB-44 MB-38 L.5b GAP.4 | BUILT |
+| B7 | Cost to build tile | main | NOT-BUILT | 1.3 MB-44 MB-86 MB-94 MB-38 | BUILT-NO-DATA |
+| B9 | Max build size details panel (opens from B6 "See details") | details | NOT-BUILT, STORED-NOT-SERVED, NOT-BOUND | 1.3 MB-44 6c.8a GAP.4 | BUILT |
+| B9.1 | Max build size | details | STORED-NOT-SERVED | 1.3 MB-44 | BUILT |
+| B9.2 | Storeys | details | STORED-NOT-SERVED | 1.3 MB-44 | BUILT |
+| B9.3 | Height | details | NOT-BOUND | 1.3 MB-44 | BUILT-NO-DATA |
+| B9.11 | Footprint (detached) | details | STORED-NOT-SERVED | 1.3 MB-44 | BUILT |
+| B9.12 | Lot coverage (detached) | details | NOT-BOUND | 1.3 MB-44 MB-88 | BUILT-NO-DATA |
+| B9.13 | Floor space index (detached) | details | NOT-BOUND | 1.3 MB-44 MB-88 | BUILT-NO-DATA |
+| B9.14 | Front setback (detached) | details | NOT-BOUND | 1.3 MB-44 | BUILT-NO-DATA |
+| B9.15 | Rear setback (detached) | details | NOT-BOUND | 1.3 MB-44 MB-88 | BUILT-NO-DATA |
+| B9.16 | Side setbacks (detached) | details | NOT-BOUND | 1.3 MB-44 MB-88 | BUILT-NO-DATA |
+| B9.17 | Building depth (detached) | details | NOT-BOUND | 1.3 MB-44 | BUILT-NO-DATA |
+| B9.18 | Main wall height (detached) | details | NOT-BOUND | 1.3 MB-44 MB-88 | BUILT-NO-DATA |
+| B9.19 | Homes (detached) | details | STORED-NOT-SERVED | 1.3 MB-44 | BUILT |
+| B10 | Cost to build details panel (opens from B7 "See details") | details | NOT-BUILT | 1.3 MB-44 MB-86 GAP.4 | BUILT-NO-DATA |
+| B10.1 | Cost to build | details | NOT-BUILT | 1.3 MB-44 MB-86 MB-94 | BUILT-NO-DATA |
+| B10.2 | Cost per sq ft | details | NOT-BUILT | 1.3 MB-44 MB-86 MB-94 | BUILT-NO-DATA |
+| B10.3 | Area priced | details | NOT-BUILT | 1.3 MB-44 MB-86 MB-94 | BUILT-NO-DATA |
+| B10.4 | Area based on | details | NOT-BUILT | 1.3 MB-44 MB-86 MB-94 | BUILT-NO-DATA |
+| B10.5 | Confidence | details | NOT-BUILT | 1.3 MB-44 MB-86 MB-94 | BUILT-NO-DATA |
+| B10.6 | Not included | details | text |  | BUILT-NO-DATA |
+| B11 | BY-LAW VARIANCES label | main | text |  | BUILT |
+| B12 | "Can you build bigger?" question | main | NOT-BUILT | 1.3 MB-44 MB-38 CO.S123 CO.2 CO.3 CO.6 MB-94 | BUILT-NO-DATA |
+| B13 | How? panel | details | text |  | BUILT-NO-DATA |
+| B14 | "Did the neighbours build bigger?" question | main | NOT-BUILT | 1.3 7.2a MF-71 GAP.7 | BUILT-NO-DATA |
+| B15 | MOST RECENT row and the project mini cards | main | NOT-BOUND | 1.3 GAP.7 | BUILT-NO-DATA |
+| B16 | Option 2 neighbours pointer | main | text |  | BUILT-NO-DATA |
+| R+18 | From above fallback line when the lot cannot be drawn (irregular shape, unclear edges, setbacks not evaluated) | main | ruled after the brief | MF-83 | BUILT |
+| A0 | Page frame (page, every scenario) | main | text |  | BUILT |
+| A1 | Page title (page, every scenario) | main | text |  | BUILT |
+| A2 | Address (page, every scenario) | main | NOT-BOUND | 1.3 | BUILT-NO-DATA |
+| C1 | Lot-size box (after the first visible option) (page, every scenario) | main | not traced | MF-19 | BUILT |
+| C2 | After-entry line (replaces C1 once a lot size is entered) (page, every scenario) | main | USER-INPUT | 6c.7 6c.6 | BUILT |
+| D1 | Ad after the flat-roof card (page, every scenario) | main | not traced | MF-61 MF-20 | BUILT-NO-DATA |
+| D2 | Ad after the houseplex card (page, every scenario) | main | not traced | MF-61 | NOT BUILT |
+| E1 | Coming soon (page, every scenario) | main | text |  | BUILT-NO-DATA |
+| F1 | About this lot (heading) (page, every scenario) | main | text |  | BUILT |
+| F2 | Lot size (page, every scenario) | main | AVAILABLE | 1.3 1.1 | BUILT |
+| F3 | Frontage × depth (page, every scenario) | main | NOT-BOUND | GAP.5 | BUILT-NO-DATA |
+| F4 | Zone (page, every scenario) | main | NOT-BOUND | GAP.5 | BUILT-NO-DATA |
+| F5 | Heritage (page, every scenario) | main | STORED-NOT-SERVED | GAP.5 | BUILT |
+| F6 | Ravine protection area (page, every scenario) | main | STORED-NOT-SERVED | GAP.5 | BUILT |
+| F7 | Corner lot (page, every scenario) | main | STORED-NOT-SERVED | GAP.5 | BUILT |
+| F8 | Backs onto a laneway (page, every scenario) | main | NOT-BOUND | GAP.5 | BUILT-NO-DATA |
+| G1 | Not-legal-advice line (page, every scenario) | main | text |  | BUILT |
+| G2 | Footer: sources and data date (page, every scenario) | main | NOT-BUILT | GAP.4 | BUILT-NO-DATA |
+| G3 | Footer: by-laws change line (page, every scenario) | main | text |  | BUILT |
+| G4 | Footer: copyright (page, every scenario) | main | text |  | BUILT-NO-DATA |
+| H0 | Add lot size sheet (page, every scenario) | main | AVAILABLE, NOT-BUILT | 1.3 6c.7 6c.6 1.1 | BUILT |
+| R+3 | Units switch (sq ft / m2 and ft / m), default imperial (page, every scenario) | main | ruled after the brief | MF-83 | NOT BUILT |
+| R+4 | See details opens as its own sheet with its own address; Back closes (page, every scenario) | details | ruled after the brief | MF-83 | BUILT |
+| R+5 | Processing screen before the report (thinking page) (page, every scenario) | main | ruled after the brief | MF-62 1.3 | BUILT |
+| R+6 | Page states: loading, error, not found, rate limited, miss (page, every scenario) | main | ruled after the brief | MF-12 MF-14 MF-74 | BUILT |
+| R+7 | Status word for a number with no row: "Not yet evaluated" (page, every scenario) | main | ruled after the brief | CO.3 | BUILT |
+| R+8 | Lot rows under About this lot: through lot, irregular, sixplex area, holding zone, exception, zoning ambiguous (page, every scenario) | main | ruled after the brief | GAP.5 | NOT BUILT |
+| R+9 | Lot rows: abuts a major street; neighbourhood details (page, every scenario) | main | ruled after the brief | GAP.5 | NOT BUILT |
+| R+11 | Heart on the option picture (favourite option) (page, every scenario) | main | ruled after the brief | MF-55 LS.4 | NOT BUILT |
+| R+12 | Share link button (page, every scenario) | main | ruled after the brief | MF-56 | NOT BUILT |
+| R+13 | FSI cap line in See details (options with headline below the by-law shape) (page, every scenario) | details | ruled after the brief | MB-88 MF-83 | NOT BUILT |
+| R+14 | See details opens with the settings note (page, every scenario) | details | ruled after the brief | MF-85 | BUILT |
+| R+15 | Heritage, ravine, corner and confidence parts and the not-evaluated reason in See details (page, every scenario) | details | ruled after the brief | MF-85 | BUILT |
+| R+16 | Gallery model slide carries no dimension labels (page, every scenario) | main | ruled after the brief |  | NOT BUILT |
+| R+17 | App chrome: bottom tab bar (Lookup, Tracked Lots, Account) and Save / Track this lot (page, every scenario) | main | ruled after the brief | LS.3 LS.4 MF-49 | BUILT-NO-DATA |
+| B9.20 | Storeys below the main walls | details | NOT-BUILT | 1.3 MB-44 |  |
+| B9.21 | Buildable width | details | NOT-BUILT | 1.3 MB-44 |  |
+| B9.22 | By-laws that apply (29): chips and clause rows | details | NOT-BUILT | 1.3 MB-44 |  |
+| B9.23 | Calculated date and by-law data version line (and Back to the report) | details | NOT-BUILT | GAP.4 |  |
+| RR.1 | Right rail (desktop, 1100 px and wider): summary list of the options | main | NOT-BUILT | MF-83 GAP.1 |  |
+| RR.2 | Right rail: "This lot" box | main | NOT-BUILT | MF-83 GAP.5 |  |
+| OS.1 | Options sheet (phone, route #options) | main | NOT-BUILT | MF-83 |  |
+| TB.1 | Phone top bar | main | NOT-BUILT | MF-83 |  |
+| TB.2 | Web top bar | main | NOT-BUILT | MF-83 LS.3 LS.4 |  |
+| G5 | Footer links | main | text |  |  |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+TASK: task-390 PAGE.TABLE (lane BL-PAGETABLE). Material under review: the plan below.
+
+Goal: the phone semi question page (mobile_parcel_semi_question) is drawn from rows of the page table (scripts/surfaces/_schema/static-page.json, schema static-page.schema.json) through the UNCHANGED mobile SurfaceRenderer.tsx; its 8 goldens (src/tests/fixtures/surfaces/mobile_parcel_semi_question/*.mobile.json) stay byte for byte. Nothing a person sees changes. STOP RULE: if a golden cannot be reproduced byte for byte, stop and report which bytes differ.
+
+Rule: Spec 126 section 0a principle 1 and 11b.2 (page structure is data; derivation, geometry, input state and fetch stay code; style class tables stay typed per platform); fe.02; operator 2026-11-20 "approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule ... remember the app is not being used - we are in development" (no migration or fallback code).
+
+Changes (smallest):
+1. static-page.schema.json: a new top-level `screens` (surface id -> {prefix, contract, sections[]}). Closed section kinds bar, status, text, notice, choices, button, each with the optional `when` (ONE positive flag name, a lowercase name: no expression, no negation, no list) and optional `targets` (subset of web, mobile; default both). Closed lists for action (back, retry, push, select) and icon (ChevronLeft, AlertTriangle, Info). Every shown text is a content key, never a typed value or number. `pages` and the static kinds are untouched.
+2. static-page.json: `screens.mobile_parcel_semi_question` = 8 sections: bar(back), status(loading), 3 notices (rate limit, entitlement, error with parts for plain error / schema drift / retry button), text(question), choices(answers), button(continue).
+3. mobile/src/components/surfaces/PageTableBinding.tsx (new, import-free, pure): pageProps(screen, flags, values, styles) builds the props tree the renderer already draws. Throws on a when naming no flag. Registered in bindings.json modules (LIST, binding_mobile_list). Style class tables stay typed in the binding that calls it (PageStyles argument).
+4. SemiQuestionBinding.tsx shrinks to: the declared closed flag list SEMI_QUESTION_FLAG_NAMES, the situation -> flags and values derivation, the typed PageStyles table (from the existing lotMap constants), semiQuestionProps = pageProps(slice.page, ...), semiQuestionData unchanged.
+5. emit-mobile-surfaces.mjs: copies the screen rows into the generated slice (`page`) for a surface that has a screen; --check covers it.
+6. Tests first: static-page.logic.test.ts T1 planted defects for screens + T9 (screen totality, flags in the declared list, content keys exist, slice equals table, binding keeps flags and values only); new page-table.logic.test.ts B1-B5 for the builder. Red through a commit attempt with only tests and the task file staged. Goldens proven by `tsx --tsconfig mobile/tsconfig.json scripts/surfaces/semi-question-golden-capture.ts --check` (the existing capture check); the mobile jest golden test is UNVERIFIED locally (Mobile CI).
+Out of scope: SurfaceRenderer.tsx, semiQuestion.ts (lane BL-FIXTUNE), the other three pages, the reports, the web, the Spec 126 dated note (task-388), any migration or compatibility code.
+Goldens expected to move: none.
+

@@ -68,4 +68,6 @@ Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the
 2026-11-20 build by lane BL-PAGETABLE: screens in static-page.json/.schema.json, PageTableBinding.tsx, SemiQuestionBinding.tsx shrunk, emit copies rows into the slice. Evidence: GOLDEN-PROOF.txt (8 goldens ok; old vs new binding 180 situations, 0 differ). Phone jest UNVERIFIED until Mobile CI. Findings untriaged: docs/reports/lanes/2026-11-20/BL-PAGETABLE/FINDINGS.md; grounder owed.
 
 2026-11-20 fix round 2 (grounder): S-page arm fails on an unreadable or empty table (expects one screen per builder caller); out-compliance-surface-126-p2 re-run; review files moved to the lane report root. Grounder re-ruling owed for p2. Evidence: docs/reports/lanes/2026-11-20/BL-PAGETABLE/REPORT.md.
+
+2026-11-20 the 46 lens inputs (in-plan-compliance-*, in-out-compliance-*) copied byte for byte beside their outputs in docs/reports/lanes/2026-11-20/BL-PAGETABLE/ for the close check.
 <!-- SECTION:NOTES:END -->

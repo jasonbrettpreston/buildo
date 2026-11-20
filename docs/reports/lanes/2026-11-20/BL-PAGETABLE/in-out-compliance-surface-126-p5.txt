@@ -1,0 +1,1436 @@
+LIST surface-126 sha256:20bb72f1e16bf089a659a70a548921d0a920629b52bfd27cf5a9af717afcd45f material sha256:15a7b3aba87352de2b5f2bbf0259e0a0c88578caba8da046bbab9ad49eb6023d part 5 of 11
+RULE LIST surface-126 (docs/specs/02-web-admin/126_maxbld_surface_standard.md, whole file), part 5 of 11. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+### 6.3 The tables the surfaces need
+
+Each row below is a **declaration to be authored**, not a schema shipped by this spec. Column lists are the recommended starting shape; the migration is written at the phase that needs it.
+
+| # | Table | Why it exists | Key shape | RLS posture | Indexes justified by |
+|---:|---|---|---|---|---|
+| 1 | **`app_outputs`** | the materialised projection — the **ONLY** seam the app reads (§6.3.1) | `PK (subject_kind, subject_key, projection, version)`; `payload JSONB NOT NULL`; `built_at`; `source_fingerprint`; `pipeline_run_id` | writes are service-role only (the pipeline step writes it, **no client insert/update**); reads: `anon` select only where the public flag is set (the teaser path), `user` select, `admin` select | the REPORT surface's declared read: exact match on `(subject_kind, subject_key, projection)`; plus a partial index on the public flag for the anon teaser |
+| 2 | **`usage_events`** | the one generic meter + observability spine (§7) | `PK (event_id)`; `user_id` **NULLABLE** alongside `session_id`; full shape and rationale in §7 | **Class A** on `user_id` for signed-in rows, plus **one** `anon` insert policy narrowed to `event = 'offer_impression'` (§7.1) | the quota read (`COUNT(*)` filtered by `user_id, product` over a computed period window) and the registry's 7-day usage column |
+| 3 | **`entitlements`** *(widened, not new)* | the product gate | existing `PK (user_id, product)`; the change is **one migration widening `chk_entitlements_product`** to admit **both** new keys, `'parcel_tool'` (R-01) and `'agent_reports'` (R-09), in one statement | unchanged — Class A, `entitlements_select_own` | unchanged |
+| 4 | **`advertisers`** | the advertiser principal — the membership row the `advertiser` role is scoped by | `PK (advertiser_id)`; `name`, `contact_user_id`, `active BOOLEAN` | **Class D** — `advertiser` select own (`advertiser_id = current_advertiser_id()`); `admin` select/insert/update; everyone else `none` | lookup by `advertiser_id` at policy-evaluation time |
+| 5 | **`placements`** | the closed placement vocabulary — where a SLOT may render | `PK (placement_key)`; `surface_archetype`, `max_slots`, `disclosure_required BOOLEAN NOT NULL` | `anon` / `user` / `advertiser` select; `admin` all | read by placement key at projection time |
+| 6 | **`offers`** | the inventory a SLOT renders — **a table, never a literal** | `PK (offer_id)`; `advertiser_id FK`, `placement_key FK`, `targeting JSONB`, `flight_start`, `flight_end`, `active BOOLEAN` | **Class D** — `advertiser` select/update own; `user` / `anon` select only active, in-flight rows; `admin` all | the targeting read declared by the SLOT surface: placement + active + flight window |
+| 7 | **`pdf_exports`** | one row per generated export, and the share model | `PK (export_id)`; `user_id`, `subject_kind`, `subject_key`, `storage_path`, `bytes`, `parity_fingerprint`, `expires_at`, `recipient` | **Class A** — `user` select own; `agent` (a `user` holding `agent_reports`) select rows where they are `recipient`; `admin` all; `anon` `none` | lookup by `export_id` for the share route; `user_id + created_at` for the user's own list |
+| 8 | **`surface_descriptors`** | the **seeded projection** of the git descriptors (§6.4) | `PK (surface_id)`; `archetype`, `platforms TEXT[]`, `descriptor JSONB`, `git_sha`, `seeded_at` | `admin` select; everyone else `none` — an admin registry, not product data | read by `surface_id`; listed by `archetype` for the registry page |
+| 9 | **`contract_descriptors`** | same, for CONTRACT — and its `descriptor->'consumers'` is where the fan-out graph's edges live | `PK (contract_id)`; `archetype`, `descriptor JSONB`, `git_sha`, `seeded_at` | as above | the fan-out and orphan joins, both derived from `consumers[]` |
+| 10 | **`archetype_registry`** | the closed archetype vocabulary, and which component renders it per platform | `PK (archetype, platform)`; `component_path` | `admin` select | the registry page; the unknown-archetype check (§3.5) |
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-40 · McFrontend queue · lane MF-40 build; operator, verbatim: "Mf-D1 - we will just input the ads via the admin" and "Mf-40 agreed"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-10: MF-40 D-1" and "Operator ruling 2026-11-10: MF-40 D-3, D-6, D-7"; plan `~/Buildo-scratch/mcfrontend/MF-40/plan.md` section 12): rows 4, 5 and 6 as MF-40 builds them (migration `302_admin_ads_placements.sql`, written; the operator's DB job applies it).
+> - Row 4 `advertisers`: the RLS posture is not Class D. Ads are entered by the admin only and no advertiser principal is planned, so the table carries the admin-read pattern (Spec 114 §2 dated notes 2026-11-09 and 2026-11-10): RLS on, `advertisers_select_admin`, no write policy; writes go through the admin API's owner connection. Minimal shape (D-3): `advertiser_id`, `name`, `contact_user_id` (nullable, unused for now, kept for this row's shape), `active`, `created_at`, `updated_at`. An advertiser is entered on the admin placements page; there is no advertiser LIST or DETAIL surface (`admin_advertiser_accounts` stays parked).
+> - Row 5 `placements`: Class E (Spec 114 §2 amendment (b)). The migration seeds exactly the slots of `scripts/surfaces/_schema/ad-contract.json` (`detail_footer`, `renovation_section`, `scenario_card`), `surface_archetype` `REPORT`, `max_slots` equal to `report-presentation.json` `ad_placements[].max_slots`. `disclosure_required` carries `CHECK (disclosure_required)` (R-17, R-34 (i)). The table is seed-only: no admin route writes it, so "admin all" is served by the migration, not by a form. `max_slots` keeps its one home in `ad_placements`; a drift lock joins the seed to it, and a new slot is a contract change plus a placement migration.
+> - Row 6 `offers`: the admin-read pattern, not Class D (as row 4). Added columns: `creative_text` (the text an offer shows; v1 creatives are text, `ad-contract.json`), a nullable `creative_asset_id` FK to `media_assets` (D-6; not rendered until ad contract v2), `created_at` and `updated_at` (the form's optimistic concurrency). `offer_id` is client-generated, so an upsert is idempotent. CHECKs: `flight_end >= flight_start` when both are set; `targeting` is a JSON object. The `user` / `anon` read of active, in-flight rows is not a policy: it belongs to the serving follow-up row (D-7), which also brings the targeting-read index. MF-40 is admin authoring and preview only.
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-40 · McFrontend queue · lane MF-40 build; operator, verbatim: "y recommendation: C, with the four trims. approved"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-10: the shared binding standard"; plan `~/Buildo-scratch/mcfrontend/MF-40/plan.delta-1.md` sections 5 and 8): rows 4 and 6 as the MF-40 admin page writes them. `offers.targeting` holds at most `building_type` and `design_option`, the keys each placement accepts in `report-presentation.json` `ad_placements[].targeting`; a `scenario_card` offer needs both, and the pair must be a key of `ad-contract.json` `scenario_fields`. `zone_class` targeting is not written until the serving row (D-7). `offers.active` is false on create and changes only through the list-row toggle; `offers.creative_asset_id` is not written until ad contract v2. `advertisers.active` is true on create and is not changed in v1.
+
+> Dated note 2026-11-10 (M-246, prior text kept; MF-40 OUTPUT panel · McFrontend queue · lane MF-40 build; operator, verbatim: "MF-40 - yes an ad can run without an end date, b teh admin? c. yes d. doesnt matter"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator answers 2026-11-10: MF-40 OUTPUT panel questions"; security and compliance seat M1, M3): two corrections to the 2026-11-10 notes above. (1) The home of `max_slots` is the `placements` table (Spec 128 R-34 (i)), not `report-presentation.json` `ad_placements`: `ad_placements[].max_slots` is the joined copy, and the drift lock (`src/tests/admin-placements-seed.logic.test.ts`, the DB test arm (d)) keeps the two equal. The over_cap read uses the table (`src/lib/placements/over-cap.ts`). The row-5 sentence "`max_slots` keeps its one home in `ad_placements`" is superseded by this note; no admin route edits `placements` yet. (2) An offer may run without an end date (`flight_end` is optional); `admin_placement_max_horizon_days` bounds only a given end.
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-45 · McFrontend queue · lane E; operator, verbatim: "a" (D-1), "all five a" (D-2..D-6) and "y" (the MB-44 wait dropped, build starts); record `~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md` and `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-11 MF-45: operator \"y\""; plan `~/Buildo-scratch/mcfrontend/MF-45/plan.md` with its section 12 folds): row 2 `usage_events` lands in the narrow form (D-1 a), in migration 303 (written by MF-45, applied by the operator's DB job): the section 7 shape verbatim, closed CHECKs on `product` (the four entitlement keys), `event` (the section 7 list) and `subject_kind` (R-04), the quota index `(user_id, product, event, subject_kind, occurred_at)`, RLS on with exactly one policy, `usage_events_select_own` (Class A, Spec 114 section 2 dated note 2026-11-11). The row's "plus **one** `anon` insert policy" is NOT built here: it lands with the row that serves offers (MF-61, section 7.1), the one row allowed to relax the no-anon lock. Rows are server-written through the owner connection (D1), so there is no insert policy for `authenticated` either. The one event written is `property_view` (product `parcel_tool`, subject_kind `parcel_ref`, subject_key the matched `parcels.parcel_id`, `meta` `{}`; the raw search text is never stored). Deletion follows the account: `user_id` cascades from `auth.users` (the migration 235 sweep). The quota read is `COUNT(DISTINCT subject_key)` over a period computed at query time (section 7); no partial unique index, because a per-period index needs a stored period, which section 7 forbids. The row text above is unchanged.
+
+**No `required_fields` column on `archetype_registry`** (R-27): the required-field profile has **one** home — the surface schema's `allOf` blocks, rendered into §3.1 by the generator. A copy in a table is a copy to keep in sync.
+
+**Ten rows — and the count is that enumeration, not a number typed beside it.** Nine are net-new, each verified absent from `migrations/`, `src/` and `scripts/`: `app_outputs` · `usage_events` · `advertisers` · `placements` · `offers` · `pdf_exports` · `surface_descriptors` · `contract_descriptors` · `archetype_registry`. The tenth, `entitlements`, exists and changes by one widened CHECK. Every one follows §6.1's five steps: declared in git, hand-migrated, introspected, drift-asserted. **Names are fixed here, before the first migration** (`ASK-09` closed): `placements`, not `offer_placements`; `pdf_exports`, not `exports`. `migrate.js` is filename-keyed and DOWN blocks are comment-only, so renaming a table after it ships costs a new migration plus a data move.
+
+#### 6.3.1 `app_outputs` — written by a converted pipeline step
+
+`app_outputs` is **not** written by an API route. It is a **materialised projection written by a converted pipeline step at the end of chain `sources`** — a new step under the Spec 122 standard, with its own descriptor, its own `checks[]`, its own golden capture, and `outputs.write_discipline` declared per target. That gives the projection everything a route could not: an AJV-validated declaration, a run ledger row, a verdict derived from its own audit rows, and a golden differential when its shape changes.
+
+Consequences, stated:
+- The app reads **one** table for a projection, so a REPORT surface's contract is an exact-match lookup rather than a multi-table assembly at request time. That is the strongest form of MAX-SERVER-SIDE available.
+- Freshness becomes a declared property: `app_outputs.built_at` plus the surface's `staleness` block, with a `checks[]` freshness entry — the pipeline's `checks[] { kind: "freshness" }`, reused.
+- **The chain-position ruling is load-bearing**: the step runs at the END of `sources`, after enrichment, so the projection is never built from a half-enriched corpus. Registering it in `scripts/manifest.json` `chains.sources` is a Backend/Pipeline change and is **out of scope for this spec's Target Files** — it is Phase 2 work under the pipeline programme's own slot.
+- Until that step exists, a REPORT surface reads its existing contract (`/api/parcels/lookup`) and declares `inputs.projection_source: "live"`; the cutover to `app_outputs` is a descriptor edit plus a recapture, which is exactly the property the golden fingerprint exists to force.
+
+
+### 6.4 The seeded-projection tables and their drift lock
+
+**Git is the source of truth; Supabase holds a projection. Nobody edits the table by hand.**
+
+The mechanism exists: `scripts/seeds/logic_variables.json` → `scripts/seeds/apply-logic-variables.js` → the `logic_variables` table, invoked at the end of `npm run migrate`. Copy it, and copy the two lessons it paid for:
+
+1. **LM-D15** (`2ced0763`) — a declared variable with no row now **throws**; the seed file is bootstrap only. Applied here: a descriptor with no `surface_descriptors` row fails the deploy gate.
+2. **The DO-NOTHING blind spot** (WF3 cloud-parity FIX 1) — `ON CONFLICT DO NOTHING` can only ever INSERT a genuinely new key; a pre-existing row holding the wrong value survives silently with the same success line. **Therefore `apply-surface-descriptors.js` does NOT use `DO NOTHING`.** Descriptors are machine-owned, not operator-tuned, so the seed is `ON CONFLICT (surface_id) DO UPDATE` keyed on `git_sha`, and it **logs every row whose `git_sha` changed** — a value diff, not a count.
+
+The drift lock is bidirectional, per §5.0: the table equals the committed files, and the committed files equal the table. A `surface_descriptors` row with no committed descriptor is as red as the reverse.
+
+
+### 6.5 Supabase Storage — the PDF bucket
+
+**Where the conventions live, measured:** Spec 113 (Supabase infrastructure) does **not** cover Storage — every occurrence is a service-name list, a topology sentence, a retired Firebase env var, or an off-Supabase backup target; the nearest thing to a convention is a *negative* (`:83`, "Supabase Storage bucket names are referenced per-call, not a global env var"). The conventions live in **Spec 114 §6** (`:310-344`), which states plainly at `:312`: *"**No Buildo feature uses Supabase Storage — or GCS signed URLs for user-facing file storage — today.**"* This spec is therefore the **first consumer** of Spec 114 §6, and it adopts that section's rules verbatim rather than inventing any:
+
+| Aspect | Declaration | Source |
+|---|---|---|
+| Bucket | one bucket per render target, `surface-exports`, created **private** (`public: false` stated explicitly) | Spec 114 §6 `:320` — *"every bucket is created **private** (never `public: true`)"* |
+| Creation | **via a tracked migration, never via the dashboard** — Spec 114 `:482-487` records dashboard creation as a named failure mode | Spec 114 §6 / D5 |
+| Path template | `{auth.uid()}/{subject_kind}/{subject_key}/{export_id}.pdf` — **owner-namespaced first segment**, matching Spec 114's `<bucket>/<auth.uid()>/<filename>` shape; declared in the EXPORT contract's `storage` block, never string-built at the call site | Spec 114 §6 `:320` |
+| Bucket policy | `bucket_id = 'surface-exports' AND (storage.foldername(name))[1] = auth.uid()::text` — Spec 114's template, unchanged | Spec 114 §6 `:325-336` |
+| Access | **signed URLs with a declared TTL**, issued by the EXPORT contract; the `pdf_exports` row is the authority on who may request one. A bucket policy alone is not the gate — the route is, and the row is its record. The recipient is a `user` holding the `agent_reports` entitlement (R-09), not a new DB role |
+| Retention | `expires_at` on the row + a SCHEDULED JOB that deletes expired objects and their rows; the JOB declares its `idempotency` and `audit_row` like any other |
+| Ledger | every issue and every download writes a `usage_events` row (`event: pdf_send` / `export`), so the share path is metered and observable on day one — the opposite of the dead-meter defect |
+| Parity | `pdf_exports.parity_fingerprint` is the golden fingerprint of the projection the PDF was rendered from. "100% data parity" is asserted by comparing it to the screen projection's fingerprint, not by discipline |
+
+> Dated note 2026-11-09 (M-246, prior text kept; MF-37 · McFrontend queue · lane W1-MF37; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (batch items 2, 4); record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: Wave 1 decision batch"; plan `~/Buildo-scratch/mcfrontend/MF-37/plan.v3.md`): a second bucket, `surface-media` (admin media library, MF-37), follows the same private-by-migration rule with an `admin` scope instead of the owner path (on an instance without the Storage tables the migration's Storage half skips itself with a NOTICE, and the db test fails unless that gap is named): path `<kind>/<asset_id>.<ext>`, three `surface_media_*_admin` policies, signed URLs minted by the admin list call with the TTL as a `logic_variables` row (Spec 114 §6 dated note 2026-11-09). Uploads arrive as a data URL in the RJSF form, cap at most 3 MB (item 2), stored as `media_upload_max_bytes`. Its ledger is deferred; user-facing signing is owed by MF-38 (item 4).
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-7, stale cites only, no rule change): at `0d90d92a7` Spec 114 §6 is 114:333-372. The 114 cites in this section map :310-344 → :333-372, :312 → :335, :320 → :343, :325-336 → :347-358, :482-487 → :505-510. R-31 is recorded on 114 §6 by its own dated note.
+
+**Measured caveat:** `@aws-sdk/client-s3` is already a dependency of this repo, so S3 is an alternative substrate. Supabase Storage is recommended because the auth model (`auth.uid()` in a bucket policy) is the same one every other table uses, which keeps one role vocabulary rather than two. This is `ASK-07`.
+
+
+### 6.6 Indexes — justified by a declared read, never by intuition
+
+Every index in §6.3 names the surface-declared read it serves. The rule is the pipeline's P3 discipline (*disk I/O is adjudicated with numbers, never assumed*) applied to the surface estate, including EP-D17's extension to **read** cost: a declared check's scan cost is part of its price, and that price is stated against the target it actually runs on — production scale, production heap state — never a local sample. An index proposed with no declared read is rejected; a declared read with no index is a `checks[]` WARN with a measured `duration_ms` and a retighten condition.
+
+
+## 7. The usage ledger — meter and observability spine
+
+**There is no working meter to extend.** `POST /api/leads/view` holds the repo's only one — an atomic CTE inserting `lead_view_events` and incrementing `user_profiles.lead_views_count`, triple-gated to `action='view'` AND `lead_type='permit'` AND `subscription_status='trial'`. Its table is `lead_view_events(user_id, permit_num, revision_num, viewed_at, PK(user_id, permit_num, revision_num))` and **it structurally cannot hold a parcel id** — the route's own comment says so. And it has **no caller**. So model the new meter on the *shape* that was designed correctly (ledger + PK dedup + CTE) and add the two things the old one lacked: **a live caller, and a registry column that makes its absence visible on day one.**
+
+**One generic table, not a second permit-shaped one:**
+
+```sql
+CREATE TABLE usage_events (
+  event_id     UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID            NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  session_id   TEXT            NULL,   -- anonymous principal; exactly one of user_id / session_id
+  product      TEXT        NOT NULL,   -- mirrors entitlements.product's CHECK vocabulary
+  event        TEXT        NOT NULL,   -- closed: property_view | pdf_send | offer_impression | offer_click | export | parcel_id_translated
+  subject_kind TEXT        NOT NULL,   -- closed: parcel_ref | parcel_pk | permit_rev | offer_id
+  subject_key  TEXT        NOT NULL,
+  occurred_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  meta         JSONB       NOT NULL DEFAULT '{}'::jsonb,
+  CONSTRAINT chk_usage_events_principal
+    CHECK ((user_id IS NULL) <> (session_id IS NULL))
+);
+```
+
+**Four properties earn their keep, each from a measured incident or a measured requirement:**
+
+- **`user_id` is NULLABLE, paired with `session_id`.** A SLOT impression is the one event that happens before anyone signs in — the marketing landing page and the public teaser path both render offers to `anon`. A `NOT NULL user_id` would make anonymous impressions unrecordable, which is how an advertiser's impression count silently becomes "signed-in users only". The CHECK makes the principal **exactly one of the two**, so a row is never ambiguous about who it belongs to.
+- **The PK is an event id, not a composite.** An earlier draft made the PK `(user_id, product, event, subject_kind, subject_key, period)` so a replay would write zero rows. That is right for a *view* and wrong for an *impression*: **impressions are counted per event**, and two impressions of the same offer by the same viewer in the same period are two facts, not one. A composite PK would silently collapse them and under-report what an advertiser is billed for. Dedup, where a given event needs it, is a **partial unique index scoped to that event kind**, declared per event in `seeds/usage-events.json` — not a property of the whole table.
+- **`period` is derived at query time, never stored.** Storing a billing bucket in the PK bakes one billing calendar into every historical row; a quota read is `COUNT(*)` over a computed window on `occurred_at` (`date_trunc`, or the period the entitlement declares). This is the same lesson as the derived counter, one level up: a denormalised bucket is a second source of truth about *when*, exactly as `lead_views_count` was a second source of truth about *how many*.
+- **`subject_kind` is required and closed** because this estate has two different things named `parcel_id`: `parcels.id` is `SERIAL` and `parcels.parcel_id` is `VARCHAR(20) UNIQUE` (the municipal id) — and the consumer API's `parcelId` is the *second* while `lead_parcels.parcel_id INTEGER REFERENCES parcels(id)` is the *first*. A bare `subject_key TEXT` would silently blend them. **R-04:** `parcel_ref` = the municipal string, `parcel_pk` = the serial.
+
+**And the counter stays derived** — `COUNT(*)` over the window, never a column — which is the `lead_views_count` lesson and the reason R-23 exists.
+
+### 7.1 The one `anon` write in the estate
+
+`usage_events` carries exactly one insert policy for `anon`, and it is **narrowed to `event = 'offer_impression'` with `session_id IS NOT NULL`**. Nothing else may be written unauthenticated. This is stated here rather than left implicit because an `anon` INSERT is the kind of policy that, granted broadly, becomes a write endpoint nobody remembers granting — and §4.2's rule is that a permissive answer must be written down where it is most dangerous.
+
+**Retire the dead meter.** `lead_view_events` / `user_profiles.lead_views_count` / `useLeadView` / `POST /api/leads/view` / the `PaywallScreen.tsx:153` branch are **one finding with two legal dispositions** — revive, or knowingly retire — and *neither has been chosen*, which is the defect. Under this spec the disposition is **knowingly-retired in favour of `usage_events`** (R-08), and per Spec 124 §4.2 a different party adjudicates it in its own WF3, with the paywall copy re-pointed at a `usage_events` count in the same commit.
+
+**Entitlement side, measured:** `migrations/228_entitlements.sql:32-33` declares `CONSTRAINT chk_entitlements_product CHECK (product IN ('lead_gen', 'flight_center'))`. **One migration widens it to four, adding `'parcel_tool'` (R-01) and `'agent_reports'` (R-09) together** — they land in the same statement because they are the same change and splitting them would mean two migrations against one CHECK. Each key then needs its `stripe_price_product_map` entry (a JSONB logic variable seeded `'{}'` at `228:45-49`) and its string in `docs/specs/_contracts.json`'s `entitlement_products` array, which `src/tests/contracts.infra.test.ts` grep-pins against `src/lib/entitlements/index.ts:39` `PRODUCTS`. **Three sites, all already mechanically locked.** That is the whole change; `src/lib/entitlements/index.ts:42-43`'s `DEFAULT_PRODUCT = 'lead_gen'` comment, which records OD5's superseded default, is corrected in the same commit.
+
+**The parcel gate today is not a meter:** `src/app/api/parcels/lookup/route.ts:46-59` is a boolean — `subscription_status ∉ {trial, active, past_due, admin_managed}` → 403, unlimited lookups otherwise, reading the *global* status rather than a per-product entitlement. Under R-01 it becomes an entitlement lookup **and** gains a meter.
+
+</architecture>
+
+---
+
+<security>
+
+
+## 8. Auth Matrix
+
+| Role | Access |
+|------|--------|
+| Anonymous (`anon`) | May render only surfaces declaring `guards.session: "none"` **with a stated `why`** and a `disclosure` block. May read `app_outputs` rows flagged public (the teaser path) and active in-flight `offers`. **May INSERT into `usage_events` for `event = 'offer_impression'` only** (§7.1), keyed by `session_id`, because a SLOT impression can precede sign-in. No other `usage_events` write, no read of anyone's rows, no `pdf_exports`, no descriptor tables. |
+| Authenticated (`user`) | Surfaces whose declared `guards.entitlement` matches a live `entitlements` row in an allowed status. Reads and inserts **own** `usage_events` rows; reads own `pdf_exports`. No descriptor tables. |
+| Agent | **Not a DB role** (R-09) — a `user` holding the `agent_reports` entitlement product, plus read access to `pdf_exports` rows where they are the declared `recipient`, via a signed URL with a declared TTL. |
+| Advertiser | **A real role, RLS class D** (R-10) — reads/updates own `offers`/`advertisers` rows scoped by `advertiser_id` (not `auth.uid()`); reads aggregate impression counts for own offers. No user-level `usage_events` rows. It is the first principal admitted to an admin-shaped surface (`advertiser_self_metrics`) **by RLS scope rather than by `is_admin`**. |
+| Admin | All tables, **through an `own_admin`/`admin`-scope RLS policy rather than around RLS**. "Admin" is the `profiles.is_admin` column flag checked in-predicate, not a Postgres role. Admin-only fields are excluded by the CONTRACT's response projection, not by a second table. |
+
+**The cross-check that does not exist today (§4.2):** `surface.guards.session` must agree with the auth class of every contract in `inputs.contract_ref[]`, as a `checks[]` entry at `severity: FAIL`. Measured live mismatch: `/builders` pages are `authenticated` by fail-closed while `/api/builders` is public.
+
+</security>
+
+---
+
+<behavior>
+
+
+## 9. Behavioral Contract
+
+- **Inputs:** a SURFACE descriptor, its referenced CONTRACT descriptors, the archetype registry, and (at request time) the projected payload.
+- **Core Logic:**
+  1. AJV-validate the descriptor against `surface.schema.json` **before** anything renders — `additionalProperties: false`, all categories required, archetype profile applied. An invalid descriptor **refuses**, the way `pipeline.step()` does.
+  2. Resolve `identity.archetype` in the registry for each declared platform; an unresolved archetype renders the declared fallback **and** raises a `checks[]` FAIL (§3.4).
+  3. Evaluate `guards` — session, entitlement, flag, permission, rate bucket — before any projection is assembled.
+  4. Assemble the projection **server-side** (RSC on web; a projection endpoint for mobile); apply `inputs.field_whitelist`, which must equal the contract's.
+  5. Render through the archetype component set. No business logic executes client-side beyond the five named exceptions (§5.3).
+  6. Write the declared `emits` — analytics events, breadcrumbs, and the `usage_events` ledger row where `metering` is declared.
+  7. Run the declared `checks[]`; derive the verdict **from the resulting rows**, never a parallel boolean.
+- **Outputs:** a rendered surface on each declared platform; a `usage_events` row where metered; a `surface_ledger` row; the golden PAIR when captured.
+- **Edge Cases:**
+  - *Unknown archetype* → fallback card + FAIL check (§3.4).
+  - *Schema drift* (payload fails the generated Zod mirror) → declared `schema_drift` state, an error class in `errors`, and a FAIL check; never a blank screen.
+  - *Entitlement missing* → the declared `on_missing` (402 \| 403 \| paywall), covering every value of the governing closed set.
+  - *Offline* → the MMKV projection renders; `states[]` must include `offline` on LIST.
+  - *Metered action replayed* → the `usage_events` PK absorbs it; zero rows written, no error.
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/src/components/surfaces/PageTableBinding.tsx b/mobile/src/components/surfaces/PageTableBinding.tsx
+new file mode 100644
+index 000000000..a78ded3e5
+--- /dev/null
++++ b/mobile/src/components/surfaces/PageTableBinding.tsx
+@@ -0,0 +1,136 @@
++// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §0a principle 1 and §11b.2 (the page structure is DATA rows of the page table, drawn by
++//            shared section-kind builders; derivation, geometry, input state and fetch stay code; style class tables stay typed per platform),
++//            docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-05 (no maths here), FE-18 (every text a content key), FE-31.
++//
++// PAGE.TABLE (task-390, Increment 1·B) · the phone rows-to-props-tree builder. Pure and import-free (read by relative path by the root tests, as
++// parcelSearchCore.ts is): `pageProps(screen, flags, values, styles)` turns the rows of one screen of scripts/surfaces/_schema/static-page.json
++// (`screens`, copied to the generated slice by scripts/surfaces/emit-mobile-surfaces.mjs) into the props tree the UNCHANGED SurfaceRenderer.tsx draws.
++//   flags   the situation's positive flags by name (the binding's closed list); a section or part with a `when` shows only when its flag is true;
++//           a `when` naming a flag the binding did not supply throws (fail closed, never a blank page);
++//   values  the values the rows name: `answers` (choices list), `selected`, `route` (a button target; null disables it), `navigate` (the redirect);
++//   styles  the typed per-platform class table of the calling binding (never in the rows).
++// The tree shape is the one SemiQuestionBinding drew before the table (same keys, same order of props), so its goldens are unchanged.
++type Ref = { content: string } | { contract: string } | { derived: string };
++type Template = { text: Ref; vars: Record<string, Ref> };
++export type PageNode = { component: string; props: Record<string, unknown>; children: PageChild[] };
++type PageChild = PageNode | Ref | Template;
++
++type Gate = { when?: string; targets?: ReadonlyArray<'web' | 'mobile'> };
++type BarPart = { role: 'back'; icon: string; content: string; action: string };
++type ButtonRow = { variant: 'default' | 'outline'; label: string; content: string; action: string; idle?: string; target?: string; busy?: string };
++type NoticePart = ({ role: 'text'; content: string; vars?: Record<string, string> } | ({ role: 'button'; id: string } & Omit<ButtonRow, 'idle' | 'target' | 'busy'>)) & { when?: string };
++export type PageSection = Gate & (
++  | { kind: 'bar'; id: string; parts: BarPart[] }
++  | { kind: 'status'; id: string; content: string }
++  | { kind: 'text'; id: string; role: 'header'; content: string }
++  | { kind: 'notice'; id: string; tone: 'error' | 'neutral'; icon: string; parts: NoticePart[] }
++  | { kind: 'choices'; id: string; list: string; select: string; content: string; action: string }
++  | ({ kind: 'button'; id: string } & ButtonRow)
++);
++export type PageScreen = { prefix: string; contract: string; sections: PageSection[] };
++export type PageValues = Record<string, string | readonly string[] | null>;
++export type PageStyles = {
++  screen: string; scroll: string; column: string; bottomPadding: number; maxWidth: number;
++  bar: string; back: string; backIconSize: number; iconColor: string;
++  status: string; heading: string;
++  notice: Record<'error' | 'neutral', { box: string; icon: string; text: string }>;
++  card: { idle: string; checked: string; row: string; dotIdle: string; dotChecked: string; text: string };
++  button: Record<'default' | 'outline', { className: string; busyClassName: string; text: string }>;
++};
++
++const node = (component: string, props: Record<string, unknown>, children: PageChild[] = []): PageNode => ({ component, props, children });
++const content = (key: string): Ref => ({ content: key });
++
++/** The whole tree of one render. */
++export function pageProps(screen: PageScreen, flags: Readonly<Record<string, boolean>>, values: PageValues, styles: PageStyles): PageNode {
++  const on = (name: string | undefined): boolean => {
++    if (name === undefined) return true;
++    if (!Object.hasOwn(flags, name)) throw new Error(`page table: the flag ${name} is not supplied`);
++    return flags[name] === true;
++  };
++  const drawn = (g: Gate): boolean => (g.targets === undefined || g.targets.includes('mobile')) && on(g.when);
++  const str = (name: string): string | null => {
++    const v = values[name];
++    return typeof v === 'string' ? v : null;
++  };
++  const testID = (id: string): string => `${screen.prefix}-${id}`;
++
++  const button = (id: string, b: ButtonRow): PageNode => {
++    const st = styles.button[b.variant];
++    const base = { key: id, testID: testID(id), variant: b.variant };
++    if (b.target === undefined) {
++      return node('Button', { ...base, className: st.className, accessibilityRole: 'button', accessibilityLabel: content(b.label), onPress: { action: b.action } },
++        [node('Text', { key: `${id}-text`, className: st.text }, [content(b.content)])]);
++    }
++    const target = str(b.target);
++    const busy = b.busy !== undefined && on(b.busy);
++    return node('Button', {
++      ...base,
++      className: busy ? st.busyClassName : st.className,
++      disabled: target === null,
++      accessibilityRole: 'button',
++      accessibilityState: busy ? { disabled: target === null, busy: true } : { disabled: target === null },
++      accessibilityLabel: content(b.label),
++      onPress: target === null ? null : { action: b.action, [b.target]: target },
++    }, [node('Text', { key: `${id}-text`, className: st.text }, [content(target === null ? (b.idle ?? b.content) : b.content)])]);
++  };
++
++  const section = (s: PageSection): PageNode[] => {
++    switch (s.kind) {
++      case 'bar':
++        return [node('View', { key: s.id, className: styles.bar }, s.parts.map((p) => node('Button', {
++          key: p.role, testID: testID(p.role), variant: 'ghost', size: 'icon', className: styles.back, accessibilityRole: 'button',
++          accessibilityLabel: content(p.content), onPress: { action: p.action },
++        }, [node('Icon', { key: `${p.role}-icon`, icon: p.icon, size: styles.backIconSize, color: styles.iconColor })])))];
++      case 'status':
++        return [node('Text', { key: `${s.id}-text`, testID: testID(s.id), className: styles.status, role: 'status' }, [content(s.content)])];
++      case 'text':
++        return [node('Text', { key: s.id, testID: testID(s.id), className: styles.heading, role: s.role }, [content(s.content)])];
++      case 'notice': {
++        const t = styles.notice[s.tone];
++        return [node('Alert', { key: s.id, testID: testID(s.id), icon: s.icon, iconClassName: t.icon, className: t.box }, s.parts.filter((p) => on(p.when)).map((p): PageNode => {
++          if (p.role === 'button') return button(p.id, p);
++          const child: PageChild = p.vars === undefined ? content(p.content)
++            : { text: content(p.content), vars: Object.fromEntries(Object.entries(p.vars).map(([k, path]) => [k, { contract: `${screen.contract}.${path}` }])) };
++          return node('AlertDescription', { key: `${s.id}-text`, className: t.text }, [child]);
++        }))];
++      }
++      case 'choices': {
++        const list = values[s.list];
++        if (!Array.isArray(list)) throw new Error(`page table: the list ${s.list} is not supplied`);
++        const selected = str(s.select);
++        return (list as readonly string[]).map((a, i) => {
++          const checked = a === selected;
++          return node('Button', {
++            key: `${s.id}-${a}`,
++            testID: testID(`${s.id}-${a}`),
++            variant: 'outline',
++            className: checked ? styles.card.checked : styles.card.idle,
++            role: 'radio',
++            accessibilityState: { checked },
++            accessibilityLabel: content(`${s.content}.${a}`),
++            onPress: { action: s.action, parcelId: { derived: `${s.id}.${i}` } },
++          }, [node('View', { key: 'card-row', className: styles.card.row }, [
++            node('View', { key: 'card-dot', className: checked ? styles.card.dotChecked : styles.card.dotIdle }),
++            node('Text', { key: 'card-title', className: styles.card.text }, [content(`${s.content}.${a}`)]),
++          ])]);
++        });
++      }
++      case 'button':
++        return [button(s.id, s)];
++    }
++  };
++
++  const shown = screen.sections.filter(drawn);
++  const navigate = str('navigate');
++  return node('SafeAreaView', { className: styles.screen, edges: { top: 'additive' }, testID: testID('screen'), ...(navigate !== null ? { navigate } : {}) }, [
++    ...shown.filter((s) => s.kind === 'bar').flatMap(section),
++    node('ScrollView', {
++      key: 'scroll',
++      className: styles.scroll,
++      contentContainerStyle: { paddingBottom: styles.bottomPadding, alignItems: 'center' },
++      keyboardShouldPersistTaps: 'handled',
++    }, [node('View', { key: 'column', testID: testID('column'), className: styles.column, style: { maxWidth: styles.maxWidth } },
++      shown.filter((s) => s.kind !== 'bar').flatMap(section))]),
++  ]);
++}
+diff --git a/mobile/src/components/surfaces/SemiQuestionBinding.tsx b/mobile/src/components/surfaces/SemiQuestionBinding.tsx
+index 0c5aea294..8595c947c 100644
+--- a/mobile/src/components/surfaces/SemiQuestionBinding.tsx
++++ b/mobile/src/components/surfaces/SemiQuestionBinding.tsx
+@@ -8,129 +8,67 @@
+ // the generated slice), {"contract": p} a 429 detail, {"derived": n} a value from the situation (the closed list SEMI_QUESTION_DERIVED_NAMES).
+ // The three answers are radio cards (the lot-card idiom), nothing selected at open, Continue disabled until one is chosen. Classes, hexes and numbers
+ // are the MF-53 layout table (mobile/src/constants/lotMap.ts); SRCH.SEMI stage 2 (task-319, MF-93) draws the approved mock with the semi-prefixed keys of that table.
++//
++// PAGE.TABLE (task-390): the page structure (block order, texts, actions, which block shows under a named flag) is the rows of `screens.mobile_parcel_semi_question`
++// in scripts/surfaces/_schema/static-page.json, copied into the slice (`page`) and drawn by pageProps (PageTableBinding.tsx). This file keeps what stays code:
++// the closed flag list, the situation -> flags and values derivation, and the typed class table.
+ import slice from '@/generated/surfaces/mobile_parcel_semi_question.json';
+ import { LOT_MAP_BOTTOM_PADDING, LOT_MAP_HEX as H, LOT_MAP_LAYOUT as L, LOT_MAP_SIZES as Z } from '@/constants/lotMap';
+ import { SEARCH_MAX_WIDTH } from '@/constants/parcelSearch';
+ import type { SemiQuestionSituation } from '@/lib/semiQuestion';
+-import type { Child, PropsNode, Ref } from '@/components/surfaces/SearchBinding';
++import type { PropsNode } from '@/components/surfaces/SearchBinding';
++import { pageProps, type PageScreen, type PageStyles } from '@/components/surfaces/PageTableBinding';
+ 
+-/** The generated slice: the content strings (scripts/surfaces/emit-mobile-surfaces.mjs). */
+-export const SEMI_QUESTION_SLICE: { surface: string; config: Record<string, number>; content: Record<string, string> } = slice;
++/** The generated slice: the content strings and the page rows (scripts/surfaces/emit-mobile-surfaces.mjs). */
++export const SEMI_QUESTION_SLICE: { surface: string; config: Record<string, number>; content: Record<string, string>; page: PageScreen } = slice as unknown as {
++  surface: string; config: Record<string, number>; content: Record<string, string>; page: PageScreen;
++};
+ 
+ /** The closed list of derived names (patterns), declared in the S-093 deviation entry. */
+ export const SEMI_QUESTION_DERIVED_NAMES = [/^answer\.(0|[1-9][0-9]*)$/];
+ 
+-const CONTRACT = 'contract_parcels_lookup';
+-const content = (key: string): Ref => ({ content: key });
+-const contract = (p: string): Ref => ({ contract: `${CONTRACT}.${p}` });
+-const derived = (name: string): Ref => ({ derived: name });
+-const node = (component: string, props: Record<string, unknown>, children: Child[] = []): PropsNode => ({ component, props, children });
+-
+-const header = (): PropsNode =>
+-  node('View', { key: 'header', className: L.semiTop }, [
+-    node('Button', {
+-      key: 'back',
+-      testID: 'parcel-semi-back',
+-      variant: 'ghost',
+-      size: 'icon',
+-      className: L.semiBack,
+-      accessibilityRole: 'button',
+-      accessibilityLabel: content('back.label'),
+-      onPress: { action: 'back' },
+-    }, [node('Icon', { key: 'back-icon', icon: 'ChevronLeft', size: Z.backIcon, color: H.icon })]),
+-  ]);
+-
+-const notice = (key: string, icon: string, iconClassName: string, children: Child[], className: string = L.notice): PropsNode =>
+-  node('Alert', { key, testID: `parcel-semi-${key}`, icon, iconClassName, className }, children as PropsNode[]);
+-
+-const errorNotices = (s: SemiQuestionSituation): PropsNode[] => [
+-  ...(s.errors.rateLimited
+-    ? [notice('ratelimit', 'AlertTriangle', L.noticeIcon, [node('AlertDescription', { key: 'ratelimit-text', className: L.noticeText }, [
+-      { text: content('state.ratelimit'), vars: { seconds: contract('errors.429.retryAfterSeconds') } },
+-    ])], L.noticeError)]
+-    : []),
+-  ...(s.errors.entitlement
+-    ? [notice('entitlement', 'Info', L.noticeIconNeutral, [node('AlertDescription', { key: 'entitlement-text', className: L.noticeTextNeutral }, [content('state.entitlement')])])]
+-    : []),
+-  ...(s.errors.unexpected
+-    ? [notice('error', 'AlertTriangle', L.noticeIcon, [
+-      node('AlertDescription', { key: 'error-text', className: L.noticeText }, [content(s.errors.schemaDrift ? 'state.schema_drift' : 'state.error')]),
+-      ...(s.errors.schemaDrift ? [] : [node('Button', {
+-        key: 'retry',
+-        testID: 'parcel-semi-retry',
+-        variant: 'outline',
+-        className: L.semiRetry,
+-        accessibilityRole: 'button',
+-        accessibilityLabel: content('retry.label'),
+-        onPress: { action: 'retry' },
+-      }, [node('Text', { key: 'retry-text', className: L.retryText }, [content('retry.text')])])]),
+-    ], L.noticeError)]
+-    : []),
+-];
++/** The closed list of flag names a `when` of the rows may name (static-page.logic.test.ts T9 checks the rows against it). */
++export const SEMI_QUESTION_FLAG_NAMES = ['loading', 'ask', 'rate_limited', 'entitlement', 'unexpected', 'plain_error', 'schema_drift', 'busy'] as const;
++type SemiQuestionFlags = Record<(typeof SEMI_QUESTION_FLAG_NAMES)[number], boolean>;
+ 
+-const cards = (s: SemiQuestionSituation): PropsNode[] =>
+-  s.answers.map((a, i) => {
+-    const checked = a === s.selected;
+-    return node('Button', {
+-      key: `answer-${a}`,
+-      testID: `parcel-semi-answer-${a}`,
+-      variant: 'outline',
+-      className: checked ? L.semiCardChecked : L.semiCard,
+-      role: 'radio',
+-      accessibilityState: { checked },
+-      accessibilityLabel: content(`answer.${a}`),
+-      onPress: { action: 'select', parcelId: derived(`answer.${i}`) },
+-    }, [node('View', { key: 'card-row', className: L.semiCardRow }, [
+-      node('View', { key: 'card-dot', className: checked ? L.semiDotChecked : L.semiDot }),
+-      node('Text', { key: 'card-title', className: L.semiCardText }, [content(`answer.${a}`)]),
+-    ])]);
+-  });
+-
+-// SRCH.SEMI-3 (task-361, UX-4): while the answered lookup runs Continue is busy: accessibilityState busy and the approved busy look, the rule the mock draws
+-// (semi-question.html:130 `.btn.p[aria-busy="true"] { opacity:.85; cursor:progress }`; v8 choose-lot.html:132). The mock draws no busy section and no busy text.
+-const continueButton = (s: SemiQuestionSituation): PropsNode =>
+-  node('Button', {
+-    key: 'continue',
+-    testID: 'parcel-semi-continue',
+-    variant: 'default',
+-    className: s.busy ? `${L.semiSelect} opacity-[0.85]` : L.semiSelect,
+-    disabled: s.route === null,
+-    accessibilityRole: 'button',
+-    accessibilityState: s.busy ? { disabled: s.route === null, busy: true } : { disabled: s.route === null },
+-    accessibilityLabel: content('select.label'),
+-    onPress: s.route === null ? null : { action: 'push', route: s.route },
+-  }, [node('Text', { key: 'continue-text', className: L.selectText }, [content(s.route === null ? 'select.none' : 'select.go')])]);
++const CONTRACT = 'contract_parcels_lookup';
+ 
+-const body = (s: SemiQuestionSituation): PropsNode[] => {
+-  switch (s.state) {
+-    case 'loading':
+-      return [node('Text', { key: 'loading-text', testID: 'parcel-semi-loading', className: L.semiLoadingText, role: 'status' }, [content('state.loading')])];
+-    case 'error':
+-      return errorNotices(s);
+-    case 'ask':
+-      return [
+-        node('Text', { key: 'question', testID: 'parcel-semi-question', className: L.semiHeading, role: 'header' }, [content('question.title')]),
+-        ...cards(s),
+-        continueButton(s),
+-      ];
+-    case 'redirect':
+-      return [];
+-  }
++/** The typed per-platform class table (the MF-53 layout table; the rows never carry a class). */
++const STYLES: PageStyles = {
++  screen: L.screen, scroll: L.scroll, column: L.column, bottomPadding: LOT_MAP_BOTTOM_PADDING, maxWidth: SEARCH_MAX_WIDTH,
++  bar: L.semiTop, back: L.semiBack, backIconSize: Z.backIcon, iconColor: H.icon,
++  status: L.semiLoadingText, heading: L.semiHeading,
++  notice: {
++    error: { box: L.noticeError, icon: L.noticeIcon, text: L.noticeText },
++    neutral: { box: L.notice, icon: L.noticeIconNeutral, text: L.noticeTextNeutral },
++  },
++  card: { idle: L.semiCard, checked: L.semiCardChecked, row: L.semiCardRow, dotIdle: L.semiDot, dotChecked: L.semiDotChecked, text: L.semiCardText },
++  // SRCH.SEMI-3 (task-361, UX-4): while the answered lookup runs Continue is busy: the approved busy look (semi-question.html:130 `.btn.p[aria-busy="true"] { opacity:.85 }`).
++  button: {
++    default: { className: L.semiSelect, busyClassName: `${L.semiSelect} opacity-[0.85]`, text: L.selectText },
++    outline: { className: L.semiRetry, busyClassName: L.semiRetry, text: L.retryText },
++  },
+ };
+ 
++/** The flags of one situation (derivation stays code): the notices show in the error state only; the schema-drift text and the retry are exclusive. */
++function flagsOf(s: SemiQuestionSituation): SemiQuestionFlags {
++  const error = s.state === 'error';
++  const unexpected = error && s.errors.unexpected;
++  return {
++    loading: s.state === 'loading',
++    ask: s.state === 'ask',
++    rate_limited: error && s.errors.rateLimited,
++    entitlement: error && s.errors.entitlement,
++    unexpected,
++    plain_error: unexpected && !s.errors.schemaDrift,
++    schema_drift: unexpected && s.errors.schemaDrift,
++    busy: s.busy,
++  };
++}
++
+ /** The props tree of one render. The redirect state adds `navigate` (the mount's effect replaces the route with it). */
+ export function semiQuestionProps(s: SemiQuestionSituation): PropsNode {
+-  return node('SafeAreaView', { className: L.screen, edges: { top: 'additive' }, testID: 'parcel-semi-screen', ...(s.navigate ? { navigate: s.navigate } : {}) }, [
+-    header(),
+-    node('ScrollView', {
+-      key: 'scroll',
+-      className: L.scroll,
+-      contentContainerStyle: { paddingBottom: LOT_MAP_BOTTOM_PADDING, alignItems: 'center' },
+-      keyboardShouldPersistTaps: 'handled',
+-    }, [node('View', { key: 'column', testID: 'parcel-semi-column', className: L.column, style: { maxWidth: SEARCH_MAX_WIDTH } }, [
+-      ...body(s),
+-    ])]),
+-  ]);
++  return pageProps(SEMI_QUESTION_SLICE.page, flagsOf(s), { answers: s.answers, selected: s.selected, route: s.route, navigate: s.navigate }, STYLES);
+ }
+ 
+ export type SemiQuestionBindingData = { contract: Record<string, unknown>; derived: Record<string, unknown> };
+diff --git a/mobile/src/generated/surfaces/mobile_parcel_semi_question.json b/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
+index b811aece8..dc1574710 100644
+--- a/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
++++ b/mobile/src/generated/surfaces/mobile_parcel_semi_question.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 441b16cfaa9dd4a1)",
++  "$comment": "GENERATED by scripts/surfaces/emit-mobile-surfaces.mjs — do not edit (input_sha 576c94512ad2c051)",
+   "surface": "mobile_parcel_semi_question",
+   "config": {},
+   "content": {
+@@ -18,5 +18,114 @@
+     "state.entitlement": "Your subscription doesn't include the parcel tool right now. This isn't a missing address — reactivate to search lots again.",
+     "retry.label": "Retry the search",
+     "retry.text": "Try again"
++  },
++  "page": {
++    "prefix": "parcel-semi",
++    "contract": "contract_parcels_lookup",
++    "sections": [
++      {
++        "kind": "bar",
++        "id": "header",
++        "parts": [
++          {
++            "role": "back",
++            "icon": "ChevronLeft",
++            "content": "back.label",
++            "action": "back"
++          }
++        ]
++      },
++      {
++        "kind": "status",
++        "id": "loading",
++        "when": "loading",
++        "content": "state.loading"
++      },
++      {
++        "kind": "notice",
++        "id": "ratelimit",
++        "when": "rate_limited",
++        "tone": "error",
++        "icon": "AlertTriangle",
++        "parts": [
++          {
++            "role": "text",
++            "content": "state.ratelimit",
++            "vars": {
++              "seconds": "errors.429.retryAfterSeconds"
++            }
++          }
++        ]
++      },
++      {
++        "kind": "notice",
++        "id": "entitlement",
++        "when": "entitlement",
++        "tone": "neutral",
++        "icon": "Info",
++        "parts": [
++          {
++            "role": "text",
++            "content": "state.entitlement"
++          }
++        ]
++      },
++      {
++        "kind": "notice",
++        "id": "error",
++        "when": "unexpected",
++        "tone": "error",
++        "icon": "AlertTriangle",
++        "parts": [
++          {
++            "role": "text",
++            "content": "state.error",
++            "when": "plain_error"
++          },
++          {
++            "role": "text",
++            "content": "state.schema_drift",
++            "when": "schema_drift"
++          },
++          {
++            "role": "button",
++            "id": "retry",
++            "variant": "outline",
++            "label": "retry.label",
++            "content": "retry.text",
++            "action": "retry",
++            "when": "plain_error"
++          }
++        ]
++      },
++      {
++        "kind": "text",
++        "id": "question",
++        "when": "ask",
++        "role": "header",
++        "content": "question.title"
++      },
++      {
++        "kind": "choices",
++        "id": "answer",
++        "when": "ask",
++        "list": "answers",
++        "select": "selected",
++        "content": "answer",
++        "action": "select"
++      },
++      {
++        "kind": "button",
++        "id": "continue",
++        "when": "ask",
++        "variant": "default",
++        "label": "select.label",
++        "content": "select.go",
++        "idle": "select.none",
++        "action": "push",
++        "target": "route",
++        "busy": "busy"
++      }
++    ]
+   }
+ }
+diff --git a/scripts/surfaces/_schema/bindings.json b/scripts/surfaces/_schema/bindings.json
+index 065cd3562..7a1ca6fe7 100644
+--- a/scripts/surfaces/_schema/bindings.json
++++ b/scripts/surfaces/_schema/bindings.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "MF-42 (FE-31; plan.min cut 5, P42-D9 a): the one data home of the binding boundary. libraries = the MaxBLD-new UI packages (one tier); they may be imported only by a listed binding module, a listed provider, a test file or the vendor dir. A converted surface's mount file (mounts[]) may import only a framework package (framework[]), a binding module or a project-internal path (mount_internal[], relative paths included), never a UI library or any other package. modules[] are exact .tsx files under the R-13 component roots, each owned by a promoted platform_shared census entry (promoted_entries[]). ref_kinds and non_display_keys judge golden props (SV-SBIND); widget_types judges render.form (SV-DESC). Shape: screen-data.schema.json#/definitions/bindings. Read by scripts/surfaces/screen-checks.mjs and the FE-31 and FE-05 locks. Dated note 2026-11-09 (MF-37; D-23, ~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md): mapping.web is the closed list of JSX element names each web binding module may render per archetype (FE-31 C-8); RJSF's Mantine theme renders FileInput, NumberInput, TextInput, Select and the submit Button itself, so those names document what a FORM shows rather than JSX in our modules. touch_targets.web lists the Mantine size values that reach 44 px (FE-31 C-9), measured from @mantine/core 9.8.0: inputs and Button lg 50 px, xl 60 px; CloseButton and ActionIcon lg 34 px, xl 44 px. ref_kinds gains contract (FE-32): a golden value {\"contract\": \"<contract_id>.<field>\"} names a field of a CONTRACT descriptor's inputs.field_whitelist. Dated note 2026-11-09 (MF-37; operator \"a, 1-3 approved\"): the web library is Mantine 8.3.18 / mantine-datatable 8.3.13; the touch_targets values were re-measured on @mantine/core 8.3.18 styles.css (--button-height-lg and --input-height-lg 3.125rem, xl 3.75rem; --cb-size-xl and --ai-size-xl 2.75rem = 44 px) and are unchanged. Dated note 2026-11-10 (MF-35; the binding standard, Spec 126 §11b.2 dated note 2026-11-10 item (5); plan ~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md §2): the first mobile binding. modules gains mobile/src/components/surfaces/SurfaceRenderer.tsx and SearchBinding.tsx (archetype SEARCH, owner shared_mobile_surface_binding, promoted); mounts gains the search screen; mount_internal gains @/hooks/ and @/store/ (the screen reads the lookup hook and the recent-searches store); edges is the safe-area EdgeRecord {top: additive}, equal to the legacy edges [top] (an array of strings under a non-display key reads as display text to SV-SBIND); ref_kinds gains derived (P35-D14 a: a declared deviation with a closed list of names, checked by the mobile golden test); non_display_keys gains the React Native prop names that carry no display text (measured with SV-SBIND on the goldens). mapping.mobile.SEARCH is the closed component table of SurfaceRenderer.tsx: its COMPONENTS literal has exactly these keys, each an imported library part (FE-31 C-8 mobile half). touch_targets.mobile names the className token that reaches 44 px on Button and Input: NativeWind's rem is 14 here, so min-h-11 is 38.5 px and only min-h-[44px] is 44 (plan v2 F-A; FE-31 C-9 mobile half). Dated note 2026-11-10 (MF-40; operator, verbatim: \"y recommendation: C, with the four trims. approved\"; plan delta 1 section 3 item 5 and S3): mapping.web.FORM gains Textarea and DateInput, which RJSF's Mantine theme renders for the offer form's textarea and date widgets (documentation of what a FORM shows, as for the other RJSF names; no Checkbox: trim 4). mounts gain the admin placements page files. MF-44 (dated 2026-11-11; operator \"01-a 0-2 b as long as they are complaint\"; Spec 126 §11b.5): + the web SEARCH module src/components/surfaces/web/SearchBinding.tsx (owner binding_web_search), mapping.web.SEARCH, the web search mounts (the page, its client mount, the not-found and error boundaries of src/app/(maxbld)/parcel-tool) and the parcel-tool provider layout. Dated note 2026-11-11 (MF-48; operator, verbatim: \"just to understand for the McFrontend and the web pages we are still using schema's and no code. except all recommendations\"; ~/Buildo-scratch/mcfrontend/MF-48/DECISIONS.md D-2 a, D-3 a, D-4 a; Spec 126 §11b.2 and §11b.4 dated notes 2026-11-11): the mobile REPORT binding. modules gains ReportBinding.tsx and ReportPageHost.tsx (archetype REPORT, owner binding_mobile_report, promoted); the shared renderer SurfaceRenderer.tsx lists SEARCH and REPORT (the one-archetype rule amended for the render half only). mapping.mobile.REPORT is the renderer's closed REPORT list (a subset of its SEARCH parts, so its COMPONENTS table is unchanged); mapping.mobile.REPORT_HOST is the host's table (FE-31 C-8m host list: the existing @gorhom/bottom-sheet and the shared renderer; libraries.mobile is not extended, a lane finding: seven Buildo-app files import the sheet). ref_kinds gains part ({\"part\": \"<section id>.<part index>.<role>\"} into MF-57's pageViewOf view; <id>.ad.value|disclosure). non_display_keys gains option and panel (the toggle_panel action's arguments) and pressBehavior (the sheet backdrop), measured on the MF-48 goldens and host. Dated note 2026-11-11 (MF-53; operator 2026-11-11, verbatim: \"\\\"choose your lot\\\" and \\\"address issues\\\" screens should be built now and we should only be using the new report obviosuly\"; plan ~/Buildo-scratch/mcfrontend/MF-53/plan.v4.md §3, §8 items 1-2): the first mobile LIST binding, for S-071 mobile_parcel_disambiguation_map (render.projection map). modules gains mobile/src/components/surfaces/LotMapBinding.tsx (archetype LIST, owner the new promoted entry binding_mobile_list, the MF-48 D-2 a form) and SurfaceRenderer.tsx (the render half, owner shared_mobile_surface_binding) renders SEARCH, REPORT and LIST; mapping.mobile.LIST is the closed table of the map page, adding react-native-maps' own MapView, Polygon and Marker (configured by props; no hand-built part). libraries.mobile is NOT extended with react-native-maps: two Buildo-app files import it (LeadMapPane.tsx, map.tsx), the MF-48 L-1 precedent; the renderer imports it as a layout part (FE-31 C-8m MOBILE_PARTS). mounts gains the map page; non_display_keys gains the react-native-maps prop names that carry no display text. Dated note 2026-11-11 (MF-19; operator D-1..D-8 \"all as recommmended\", D-4): mounts gain the admin lot-size page files (page, client mount, error boundary) of admin_lot_size_revert; report_lot_size_entry has no mount until the entry switch flips (D-6). Dated note 2026-11-11 (MF-46 stage C; operator D-2 (a) \"1 y 2 y ...\" 2026-11-11; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 12 fold 13; Spec 126 section 11b.5): + the first web STATIC module src/components/surfaces/web/StaticBinding.tsx (owner binding_web_static, promoted), mapping.web.STATIC (the closed list it renders: Stack, Group, Title, Text, List, ListItem and Button; a link is a Button rendered as the Next Link, a real route), and the mounts of the MaxBLD plain pages under src/app/(maxbld)/parcel-tool/(static)/ (Help & Support, Terms, Privacy, and the error and not-found boundaries of web_maxbld_error). No new library; non_display_keys unchanged. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\"; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 12 folds 12, 13): mounts gains the landing (web_landing, parcel-tool/(static)/home/page.tsx; its errors reach the plain pages' boundary, already mounted). mapping.web.STATIC is unchanged: the landing kinds render with the same Mantine parts; the two report regions are the shared REPORT renderers (ReportView, its Picture, ReportPage), embedded by exact name and module as a named exception of the FE-31 C-8 lock (Spec 126 section 11b.1: REPORT keeps the landed renderer; FE-07), never a mapping entry. Server values are {\"derived\": <read>} refs (the existing kind, a closed list: the landing's declared reads). non_display_keys gains tabIndex (the sample region's keyboard stop, 0). Dated note 2026-11-12 (MF-46 follow-up, Help & Support contact; operator \"All recommendations accepted ... Ensure the least amount of code and use schema's\"): non_display_keys gains topic (a mailto node's topic, one of the closed list in static-page.schema.json, never text); the mail address is a {\"derived\": \"support_inbox\"} ref (the existing kind). Dated note 2026-11-19 (task-353 SUITE.FIX-2): touch_targets.mobile.Button gains min-h-[48px] beside min-h-[44px] (Input stays min-h-[44px] only): the semi question page (SRCH.SEMI, task-319, MF-93) draws Continue and Try again at 48 px in the mock the operator approved (RR-0309, MORNING-DECISIONS.md:1199); the 44 px is a floor (Spec 126 line 351, Spec 128 line 265) and 48 reaches it; orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling). The check C-9m still requires exactly one min-h- token on the list; nothing under 44 is listed.",
++  "$comment": "MF-42 (FE-31; plan.min cut 5, P42-D9 a): the one data home of the binding boundary. libraries = the MaxBLD-new UI packages (one tier); they may be imported only by a listed binding module, a listed provider, a test file or the vendor dir. A converted surface's mount file (mounts[]) may import only a framework package (framework[]), a binding module or a project-internal path (mount_internal[], relative paths included), never a UI library or any other package. modules[] are exact .tsx files under the R-13 component roots, each owned by a promoted platform_shared census entry (promoted_entries[]). ref_kinds and non_display_keys judge golden props (SV-SBIND); widget_types judges render.form (SV-DESC). Shape: screen-data.schema.json#/definitions/bindings. Read by scripts/surfaces/screen-checks.mjs and the FE-31 and FE-05 locks. Dated note 2026-11-09 (MF-37; D-23, ~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md): mapping.web is the closed list of JSX element names each web binding module may render per archetype (FE-31 C-8); RJSF's Mantine theme renders FileInput, NumberInput, TextInput, Select and the submit Button itself, so those names document what a FORM shows rather than JSX in our modules. touch_targets.web lists the Mantine size values that reach 44 px (FE-31 C-9), measured from @mantine/core 9.8.0: inputs and Button lg 50 px, xl 60 px; CloseButton and ActionIcon lg 34 px, xl 44 px. ref_kinds gains contract (FE-32): a golden value {\"contract\": \"<contract_id>.<field>\"} names a field of a CONTRACT descriptor's inputs.field_whitelist. Dated note 2026-11-09 (MF-37; operator \"a, 1-3 approved\"): the web library is Mantine 8.3.18 / mantine-datatable 8.3.13; the touch_targets values were re-measured on @mantine/core 8.3.18 styles.css (--button-height-lg and --input-height-lg 3.125rem, xl 3.75rem; --cb-size-xl and --ai-size-xl 2.75rem = 44 px) and are unchanged. Dated note 2026-11-10 (MF-35; the binding standard, Spec 126 §11b.2 dated note 2026-11-10 item (5); plan ~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md §2): the first mobile binding. modules gains mobile/src/components/surfaces/SurfaceRenderer.tsx and SearchBinding.tsx (archetype SEARCH, owner shared_mobile_surface_binding, promoted); mounts gains the search screen; mount_internal gains @/hooks/ and @/store/ (the screen reads the lookup hook and the recent-searches store); edges is the safe-area EdgeRecord {top: additive}, equal to the legacy edges [top] (an array of strings under a non-display key reads as display text to SV-SBIND); ref_kinds gains derived (P35-D14 a: a declared deviation with a closed list of names, checked by the mobile golden test); non_display_keys gains the React Native prop names that carry no display text (measured with SV-SBIND on the goldens). mapping.mobile.SEARCH is the closed component table of SurfaceRenderer.tsx: its COMPONENTS literal has exactly these keys, each an imported library part (FE-31 C-8 mobile half). touch_targets.mobile names the className token that reaches 44 px on Button and Input: NativeWind's rem is 14 here, so min-h-11 is 38.5 px and only min-h-[44px] is 44 (plan v2 F-A; FE-31 C-9 mobile half). Dated note 2026-11-10 (MF-40; operator, verbatim: \"y recommendation: C, with the four trims. approved\"; plan delta 1 section 3 item 5 and S3): mapping.web.FORM gains Textarea and DateInput, which RJSF's Mantine theme renders for the offer form's textarea and date widgets (documentation of what a FORM shows, as for the other RJSF names; no Checkbox: trim 4). mounts gain the admin placements page files. MF-44 (dated 2026-11-11; operator \"01-a 0-2 b as long as they are complaint\"; Spec 126 §11b.5): + the web SEARCH module src/components/surfaces/web/SearchBinding.tsx (owner binding_web_search), mapping.web.SEARCH, the web search mounts (the page, its client mount, the not-found and error boundaries of src/app/(maxbld)/parcel-tool) and the parcel-tool provider layout. Dated note 2026-11-11 (MF-48; operator, verbatim: \"just to understand for the McFrontend and the web pages we are still using schema's and no code. except all recommendations\"; ~/Buildo-scratch/mcfrontend/MF-48/DECISIONS.md D-2 a, D-3 a, D-4 a; Spec 126 §11b.2 and §11b.4 dated notes 2026-11-11): the mobile REPORT binding. modules gains ReportBinding.tsx and ReportPageHost.tsx (archetype REPORT, owner binding_mobile_report, promoted); the shared renderer SurfaceRenderer.tsx lists SEARCH and REPORT (the one-archetype rule amended for the render half only). mapping.mobile.REPORT is the renderer's closed REPORT list (a subset of its SEARCH parts, so its COMPONENTS table is unchanged); mapping.mobile.REPORT_HOST is the host's table (FE-31 C-8m host list: the existing @gorhom/bottom-sheet and the shared renderer; libraries.mobile is not extended, a lane finding: seven Buildo-app files import the sheet). ref_kinds gains part ({\"part\": \"<section id>.<part index>.<role>\"} into MF-57's pageViewOf view; <id>.ad.value|disclosure). non_display_keys gains option and panel (the toggle_panel action's arguments) and pressBehavior (the sheet backdrop), measured on the MF-48 goldens and host. Dated note 2026-11-11 (MF-53; operator 2026-11-11, verbatim: \"\\\"choose your lot\\\" and \\\"address issues\\\" screens should be built now and we should only be using the new report obviosuly\"; plan ~/Buildo-scratch/mcfrontend/MF-53/plan.v4.md §3, §8 items 1-2): the first mobile LIST binding, for S-071 mobile_parcel_disambiguation_map (render.projection map). modules gains mobile/src/components/surfaces/LotMapBinding.tsx (archetype LIST, owner the new promoted entry binding_mobile_list, the MF-48 D-2 a form) and SurfaceRenderer.tsx (the render half, owner shared_mobile_surface_binding) renders SEARCH, REPORT and LIST; mapping.mobile.LIST is the closed table of the map page, adding react-native-maps' own MapView, Polygon and Marker (configured by props; no hand-built part). libraries.mobile is NOT extended with react-native-maps: two Buildo-app files import it (LeadMapPane.tsx, map.tsx), the MF-48 L-1 precedent; the renderer imports it as a layout part (FE-31 C-8m MOBILE_PARTS). mounts gains the map page; non_display_keys gains the react-native-maps prop names that carry no display text. Dated note 2026-11-11 (MF-19; operator D-1..D-8 \"all as recommmended\", D-4): mounts gain the admin lot-size page files (page, client mount, error boundary) of admin_lot_size_revert; report_lot_size_entry has no mount until the entry switch flips (D-6). Dated note 2026-11-11 (MF-46 stage C; operator D-2 (a) \"1 y 2 y ...\" 2026-11-11; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 12 fold 13; Spec 126 section 11b.5): + the first web STATIC module src/components/surfaces/web/StaticBinding.tsx (owner binding_web_static, promoted), mapping.web.STATIC (the closed list it renders: Stack, Group, Title, Text, List, ListItem and Button; a link is a Button rendered as the Next Link, a real route), and the mounts of the MaxBLD plain pages under src/app/(maxbld)/parcel-tool/(static)/ (Help & Support, Terms, Privacy, and the error and not-found boundaries of web_maxbld_error). No new library; non_display_keys unchanged. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\"; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 12 folds 12, 13): mounts gains the landing (web_landing, parcel-tool/(static)/home/page.tsx; its errors reach the plain pages' boundary, already mounted). mapping.web.STATIC is unchanged: the landing kinds render with the same Mantine parts; the two report regions are the shared REPORT renderers (ReportView, its Picture, ReportPage), embedded by exact name and module as a named exception of the FE-31 C-8 lock (Spec 126 section 11b.1: REPORT keeps the landed renderer; FE-07), never a mapping entry. Server values are {\"derived\": <read>} refs (the existing kind, a closed list: the landing's declared reads). non_display_keys gains tabIndex (the sample region's keyboard stop, 0). Dated note 2026-11-12 (MF-46 follow-up, Help & Support contact; operator \"All recommendations accepted ... Ensure the least amount of code and use schema's\"): non_display_keys gains topic (a mailto node's topic, one of the closed list in static-page.schema.json, never text); the mail address is a {\"derived\": \"support_inbox\"} ref (the existing kind). Dated note 2026-11-19 (task-353 SUITE.FIX-2): touch_targets.mobile.Button gains min-h-[48px] beside min-h-[44px] (Input stays min-h-[44px] only): the semi question page (SRCH.SEMI, task-319, MF-93) draws Continue and Try again at 48 px in the mock the operator approved (RR-0309, MORNING-DECISIONS.md:1199); the 44 px is a floor (Spec 126 line 351, Spec 128 line 265) and 48 reaches it; orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling). The check C-9m still requires exactly one min-h- token on the list; nothing under 44 is listed. Dated note 2026-11-20 (PAGE.TABLE, task-390; operator 2026-11-20 \"approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule\"): modules gains mobile/src/components/surfaces/PageTableBinding.tsx (archetype LIST, owner binding_mobile_list), the pure builder that draws the rows of a `screens` entry of static-page.json into the props tree SurfaceRenderer.tsx already draws; it renders only components of mapping.mobile.LIST and imports nothing. mapping, mounts and touch_targets are unchanged.",
+   "libraries": {
+     "web": ["@mantine/core", "@mantine/hooks", "@mantine/dates", "@mantine/dropzone", "@mantine/carousel", "mantine-datatable", "@rjsf/core", "@rjsf/mantine", "@rjsf/utils", "@rjsf/validator-ajv8"],
+     "mobile": ["@rn-primitives/*"]
+@@ -17,7 +17,8 @@
+     { "path": "mobile/src/components/surfaces/SurfaceRenderer.tsx", "platform": "mobile", "archetypes": ["SEARCH", "REPORT", "LIST"], "owner": "shared_mobile_surface_binding", "exports": ["COMPONENTS", "ICONS", "resolveValue", "SurfaceRenderer"] },
+     { "path": "mobile/src/components/surfaces/SearchBinding.tsx", "platform": "mobile", "archetypes": ["SEARCH"], "owner": "shared_mobile_surface_binding", "exports": ["SEARCH_SLICE", "DERIVED_NAMES", "searchProps", "searchData", "SEARCH_CANDIDATE_LIMIT", "SEARCH_DEBOUNCE_MS", "SEARCH_MIN_QUERY_LEN"] },
+     { "path": "mobile/src/components/surfaces/LotMapBinding.tsx", "platform": "mobile", "archetypes": ["LIST"], "owner": "binding_mobile_list", "exports": ["LOT_MAP_SLICE", "LOT_MAP_DERIVED_NAMES", "lotMapProps", "lotMapData"] },
+-    { "path": "mobile/src/components/surfaces/SemiQuestionBinding.tsx", "platform": "mobile", "archetypes": ["LIST"], "owner": "binding_mobile_list", "exports": ["SEMI_QUESTION_SLICE", "SEMI_QUESTION_DERIVED_NAMES", "semiQuestionProps", "semiQuestionData"] },
++    { "path": "mobile/src/components/surfaces/SemiQuestionBinding.tsx", "platform": "mobile", "archetypes": ["LIST"], "owner": "binding_mobile_list", "exports": ["SEMI_QUESTION_SLICE", "SEMI_QUESTION_DERIVED_NAMES", "SEMI_QUESTION_FLAG_NAMES", "semiQuestionProps", "semiQuestionData"] },
++    { "path": "mobile/src/components/surfaces/PageTableBinding.tsx", "platform": "mobile", "archetypes": ["LIST"], "owner": "binding_mobile_list", "exports": ["pageProps"] },
+     { "path": "mobile/src/components/surfaces/ReportBinding.tsx", "platform": "mobile", "archetypes": ["REPORT"], "owner": "binding_mobile_report", "exports": ["reportProps", "lifecycleProps", "REPORT_UI_CLOSED", "UNSHOWN", "LIFECYCLE_CONTENT_KEYS"] },
+     { "path": "mobile/src/components/surfaces/ReportPageHost.tsx", "platform": "mobile", "archetypes": ["REPORT"], "owner": "binding_mobile_report", "exports": ["ReportPageHost", "REPORT_UI"] }
+   ],
+diff --git a/scripts/surfaces/_schema/static-page.json b/scripts/surfaces/_schema/static-page.json
+index 4da84d58b..7ce53e25e 100644
+--- a/scripts/surfaces/_schema/static-page.json
++++ b/scripts/surfaces/_schema/static-page.json
+@@ -1,5 +1,5 @@
+ {
+- "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 folds 16, 18, 22; v1 section 3.2 and folds 4, 8): THE page table of the STATIC web pages, one page per surface per declared state, sections in screen order. Contract: static-page.schema.json (closed kinds prose and footer). Every part names a content key of the surface's own content file beside its descriptor (scripts/surfaces/parcel_product/F06/surfaces/<id>.content.json); a link names a same-origin path on the host table (src/lib/auth/host-policy.ts). The footer is the same on every page (Terms, Privacy, Help & Support, the short legal line, ruling L-R3 \"This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.\"), pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts. Help & Support has no mail link yet: the support inbox is ONE admin setting (Spec 126 section 11b.7 dated note 2026-11-11 item 3) that does not exist on the tip; the link lands with it. Read by src/lib/surfaces/maxbld-static.ts and the golden builder src/tests/surfaces/surface-goldens.ts. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\", D-6 (a) and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 sections 3.5, 12, 13a, 13b): web_landing, the MaxBLD landing on maxbld.ca /, in two states: static (the stored citywide row read) and degraded (it is missing, zero or its reader threw: the citywide figures and the processing demo are left out, never a 500). Value parts name the declared server reads of src/lib/surfaces/maxbld-landing.ts; a read that fails leaves its part out on the server. The plan prices, the trial length, the Pro allowance and the post-trial line are not in the page until their readers exist (MF-47 Stripe price reader and parcel_tool_trial_months, MF-45 Pro limit): no typed value. The footer is the plain pages' footer, the same section.",
++ "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 folds 16, 18, 22; v1 section 3.2 and folds 4, 8): THE page table of the STATIC web pages, one page per surface per declared state, sections in screen order. Contract: static-page.schema.json (closed kinds prose and footer). Every part names a content key of the surface's own content file beside its descriptor (scripts/surfaces/parcel_product/F06/surfaces/<id>.content.json); a link names a same-origin path on the host table (src/lib/auth/host-policy.ts). The footer is the same on every page (Terms, Privacy, Help & Support, the short legal line, ruling L-R3 \"This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.\"), pinned equal across the content files by src/tests/surfaces/static-page.logic.test.ts. Help & Support has no mail link yet: the support inbox is ONE admin setting (Spec 126 section 11b.7 dated note 2026-11-11 item 3) that does not exist on the tip; the link lands with it. Read by src/lib/surfaces/maxbld-static.ts and the golden builder src/tests/surfaces/surface-goldens.ts. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\", D-6 (a) and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 sections 3.5, 12, 13a, 13b): web_landing, the MaxBLD landing on maxbld.ca /, in two states: static (the stored citywide row read) and degraded (it is missing, zero or its reader threw: the citywide figures and the processing demo are left out, never a 500). Value parts name the declared server reads of src/lib/surfaces/maxbld-landing.ts; a read that fails leaves its part out on the server. The plan prices, the trial length, the Pro allowance and the post-trial line are not in the page until their readers exist (MF-47 Stripe price reader and parcel_tool_trial_months, MF-45 Pro limit): no typed value. The footer is the plain pages' footer, the same section. Dated note 2026-11-20 (PAGE.TABLE, task-390): `screens` holds the INTERACTIVE pages as rows (contract: static-page.schema.json, `screens`); the first is the phone semi question page. Rows name content keys of the surface's own content file; the `when` flags are the closed list SEMI_QUESTION_FLAG_NAMES of its binding.",
+  "pages": {
+   "web_help": {
+    "static": {
+@@ -1201,5 +1201,116 @@
+     ]
+    }
+   }
++ },
++ "screens": {
++  "mobile_parcel_semi_question": {
++   "prefix": "parcel-semi",
++   "contract": "contract_parcels_lookup",
++   "sections": [
++    {
++     "kind": "bar",
++     "id": "header",
++     "parts": [
++      {
++       "role": "back",
++       "icon": "ChevronLeft",
++       "content": "back.label",
++       "action": "back"
++      }
++     ]
++    },
++    {
++     "kind": "status",
++     "id": "loading",
++     "when": "loading",
++     "content": "state.loading"
++    },
++    {
++     "kind": "notice",
++     "id": "ratelimit",
++     "when": "rate_limited",
++     "tone": "error",
++     "icon": "AlertTriangle",
++     "parts": [
++      {
++       "role": "text",
++       "content": "state.ratelimit",
++       "vars": {
++        "seconds": "errors.429.retryAfterSeconds"
++       }
++      }
++     ]
++    },
++    {
++     "kind": "notice",
++     "id": "entitlement",
++     "when": "entitlement",
++     "tone": "neutral",
++     "icon": "Info",
++     "parts": [
++      {
++       "role": "text",
++       "content": "state.entitlement"
++      }
++     ]
++    },
++    {
++     "kind": "notice",
++     "id": "error",
++     "when": "unexpected",
++     "tone": "error",
++     "icon": "AlertTriangle",
++     "parts": [
++      {
++       "role": "text",
++       "content": "state.error",
++       "when": "plain_error"
++      },
++      {
++       "role": "text",
++       "content": "state.schema_drift",
++       "when": "schema_drift"
++      },
++      {
++       "role": "button",
++       "id": "retry",
++       "variant": "outline",
++       "label": "retry.label",
++       "content": "retry.text",
++       "action": "retry",
++       "when": "plain_error"
++      }
++     ]
++    },
++    {
++     "kind": "text",
++     "id": "question",
++     "when": "ask",
++     "role": "header",
++     "content": "question.title"
++    },
++    {
++     "kind": "choices",
++     "id": "answer",
++     "when": "ask",
++     "list": "answers",
++     "select": "selected",
++     "content": "answer",
++     "action": "select"
++    },
++    {
++     "kind": "button",
++     "id": "continue",
++     "when": "ask",
++     "variant": "default",
++     "label": "select.label",
++     "content": "select.go",
++     "idle": "select.none",
++     "action": "push",
++     "target": "route",
++     "busy": "busy"
++    }
++   ]
++  }
+  }
+ }
+diff --git a/scripts/surfaces/_schema/static-page.schema.json b/scripts/surfaces/_schema/static-page.schema.json
+index c627f5f2f..767516882 100644
+--- a/scripts/surfaces/_schema/static-page.schema.json
++++ b/scripts/surfaces/_schema/static-page.schema.json
+@@ -2,7 +2,7 @@
+   "$schema": "https://json-schema.org/draft/2020-12/schema",
+   "$id": "static-page.schema.json",
+   "title": "MaxBLD static page (archetype STATIC, web)",
+-  "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 fold 18; D-2 (a) operator \"1 y 2 y ...\" 2026-11-11). THE one home of the static page contract: the page table scripts/surfaces/_schema/static-page.json holds one page per STATIC surface per state, in screen order. CLOSED section kinds and part roles, mirroring report-page.schema.json (FE-34): MF-46 uses `prose` (a title, headings, paragraphs, list items and, on an error page, the one retry action) and `footer` (the links Terms, Privacy, Help & Support and the short legal line). The MaxBLD landing row (MF-76) adds hero, figures, items and plans by its own ruling. Every shown text is a content key of the surface's own content file (FE-18), never a value typed here and never a number (FE-05; a number fails this schema and throws in the binding). A link is a same-origin path (the host table decides where it leads). Read by src/components/surfaces/web/StaticBinding.tsx (the kinds and roles) and src/tests/surfaces/static-page.logic.test.ts (AJV over the table). Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a) and D-2 (a), round 2026-11-11 \"1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y\", then \"3 y\" and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2, section 12 fold 18, sections 13a and 13b): the landing kinds join the closed list: hero (nav and wordmark links, the tagline, the title and its accent, the sub line, the main link, the trial terms, the short legal line, the processing demo, the sample report region with its caption, and the process scene slot), figures (a heading, figures and the citywide group of the report loading state), items (a heading, a lede, then items: label, title, text and the one report picture) and plans (a heading, then boxes: name, price, per, tax, tick, note, link; a section foot). A part may name `value`, a declared server read of its surface: its content is then a template with exactly one {value} slot, filled on the server with a server-formatted string (FE-05; the FE-35 pattern; Spec 128 section 4 escalation of this date: a STATIC page may read declared stored values on the server). A price part is followed in its box by its per and tax parts (drip pricing, s.74.01(1.1)). Four roles carry no content key: checked (the citywide lines, MF-62 content, one home), demo (the shared loading state), picture (the report picture) and scene (a media-library image slot, nothing until an asset is set). A link may carry one query parameter and one fragment (/signup?plan=basic, /help#topic=enterprise, /#pricing); the host table still decides where it leads. Still content keys only, never a number. Dated note 2026-11-12 (MF-46 follow-up, Help & Support contact; operator \"All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable. Ensure the least amount of code and use schema's\"; DECISIONS-v1 D-6 (a), plan v1 fold 8): prose gains the role mailto, a mail link to the one support inbox. Its content is the visible label (also the mail subject); its topic is one of a closed list; its value is the declared server read support_inbox (FE-37, migration 314), never an address or an href in the data. The server leaves a mailto part out while the inbox is unset (the value mechanism of MF-76).",
++  "$comment": "MF-46 stage C (plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2 and section 12 fold 18; D-2 (a) operator \"1 y 2 y ...\" 2026-11-11). THE one home of the static page contract: the page table scripts/surfaces/_schema/static-page.json holds one page per STATIC surface per state, in screen order. CLOSED section kinds and part roles, mirroring report-page.schema.json (FE-34): MF-46 uses `prose` (a title, headings, paragraphs, list items and, on an error page, the one retry action) and `footer` (the links Terms, Privacy, Help & Support and the short legal line). The MaxBLD landing row (MF-76) adds hero, figures, items and plans by its own ruling. Every shown text is a content key of the surface's own content file (FE-18), never a value typed here and never a number (FE-05; a number fails this schema and throws in the binding). A link is a same-origin path (the host table decides where it leads). Read by src/components/surfaces/web/StaticBinding.tsx (the kinds and roles) and src/tests/surfaces/static-page.logic.test.ts (AJV over the table). Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a) and D-2 (a), round 2026-11-11 \"1 y 2 y 3 ? 4y 5 y 6 y 7 y ... 8. y\", then \"3 y\" and the all-scenarios ruling; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 3.2, section 12 fold 18, sections 13a and 13b): the landing kinds join the closed list: hero (nav and wordmark links, the tagline, the title and its accent, the sub line, the main link, the trial terms, the short legal line, the processing demo, the sample report region with its caption, and the process scene slot), figures (a heading, figures and the citywide group of the report loading state), items (a heading, a lede, then items: label, title, text and the one report picture) and plans (a heading, then boxes: name, price, per, tax, tick, note, link; a section foot). A part may name `value`, a declared server read of its surface: its content is then a template with exactly one {value} slot, filled on the server with a server-formatted string (FE-05; the FE-35 pattern; Spec 128 section 4 escalation of this date: a STATIC page may read declared stored values on the server). A price part is followed in its box by its per and tax parts (drip pricing, s.74.01(1.1)). Four roles carry no content key: checked (the citywide lines, MF-62 content, one home), demo (the shared loading state), picture (the report picture) and scene (a media-library image slot, nothing until an asset is set). A link may carry one query parameter and one fragment (/signup?plan=basic, /help#topic=enterprise, /#pricing); the host table still decides where it leads. Still content keys only, never a number. Dated note 2026-11-12 (MF-46 follow-up, Help & Support contact; operator \"All recommendations accepted as long as they are complaint and are standardized, observable, scalable, accurate and understandable ie simple and understandable. Ensure the least amount of code and use schema's\"; DECISIONS-v1 D-6 (a), plan v1 fold 8): prose gains the role mailto, a mail link to the one support inbox. Its content is the visible label (also the mail subject); its topic is one of a closed list; its value is the declared server read support_inbox (FE-37, migration 314), never an address or an href in the data. The server leaves a mailto part out while the inbox is unset (the value mechanism of MF-76). Dated note 2026-11-20 (PAGE.TABLE, task-390; operator 2026-11-20 \"approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule\"; Spec 126 section 0a principle 1 and section 11b.2): a top-level `screens` joins `pages`: one INTERACTIVE page per surface (surface id -> prefix, contract, sections), its block order, texts, actions and the block shown under a named flag are rows. CLOSED section kinds bar, status, text, notice, choices and button; a `when` is ONE positive flag name (a name, never an expression, a negation or a list) from the closed per-surface list the surface's binding declares (checked by static-page.logic.test.ts T9); `targets` is a subset of web and mobile (default both); action and icon are closed lists; every shown text is a content key, never a typed value or a number. Derivation (the flags and values), geometry, input state and fetch stay code; the class tables stay typed per platform. Read by mobile/src/components/surfaces/PageTableBinding.tsx through the generated slice (scripts/surfaces/emit-mobile-surfaces.mjs); the web static pages and `pages` are untouched.",
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+@@ -27,6 +27,15 @@
+           "$ref": "#/$defs/page"
+         }
+       }
++    },
++    "screens": {
++      "type": "object",
++      "propertyNames": {
++        "pattern": "^[a-z0-9_]+$"
++      },
++      "additionalProperties": {
++        "$ref": "#/$defs/screen"
++      }
+     }
+   },
+   "$defs": {
+@@ -502,6 +511,427 @@
+           }
+         }
+       }
++    },
++    "flag": {
++      "type": "string",
++      "pattern": "^[a-z0-9_]+$"
++    },
++    "contentKey": {
++      "type": "string",
++      "pattern": "^[a-z0-9_]+(\\.[a-z0-9_]+)+$"
++    },
++    "icon": {
++      "enum": [
++        "ChevronLeft",
++        "AlertTriangle",
++        "Info"
++      ]
++    },
++    "action": {
++      "enum": [
++        "back",
++        "retry",
++        "push",
++        "select"
++      ]
++    },
++    "screen": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "prefix",
++        "contract",
++        "sections"
++      ],
++      "properties": {
++        "prefix": {
++          "type": "string",
++          "pattern": "^[a-z0-9-]+$"
++        },
++        "contract": {
++          "type": "string",
++          "pattern": "^[a-z0-9_]+$"
++        },
++        "sections": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "oneOf": [
++              {
++                "$ref": "#/$defs/screen_bar"
++              },
++              {
++                "$ref": "#/$defs/screen_status"
++              },
++              {
++                "$ref": "#/$defs/screen_text"
++              },
++              {
++                "$ref": "#/$defs/screen_notice"
++              },
++              {
++                "$ref": "#/$defs/screen_choices"
++              },
++              {
++                "$ref": "#/$defs/screen_button"
++              }
++            ]
++          }
++        }
++      }
++    },
++    "screen_bar": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "kind",
++        "id",
++        "parts"
++      ],
++      "properties": {
++        "kind": {
++          "const": "bar"
++        },
++        "id": {
++          "$ref": "#/$defs/id"
++        },
++        "when": {
++          "$ref": "#/$defs/flag"
++        },
++        "targets": {
++          "type": "array",
++          "minItems": 1,
++          "uniqueItems": true,
++          "items": {
++            "enum": [
++              "web",
++              "mobile"
++            ]
++          }
++        },
++        "parts": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "type": "object",
++            "additionalProperties": false,
++            "required": [
++              "role",
++              "icon",
++              "content",
++              "action"
++            ],
++            "properties": {
++              "role": {
++                "const": "back"
++              },
++              "icon": {
++                "$ref": "#/$defs/icon"
++              },
++              "content": {
++                "$ref": "#/$defs/contentKey"
++              },
++              "action": {
++                "const": "back"
++              }
++            }
++          }
++        }
++      }
++    },
++    "screen_status": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "kind",
++        "id",
++        "content"
++      ],
++      "properties": {
++        "kind": {
++          "const": "status"
++        },
++        "id": {
++          "$ref": "#/$defs/id"
++        },
++        "when": {
++          "$ref": "#/$defs/flag"
++        },
++        "targets": {
++          "type": "array",
++          "minItems": 1,
++          "uniqueItems": true,
++          "items": {
++            "enum": [
++              "web",
++              "mobile"
++            ]
++          }
++        },
++        "content": {
++          "$ref": "#/$defs/contentKey"
++        }
++      }
++    },
++    "screen_text": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "kind",
++        "id",
++        "role",
++        "content"
++      ],
++      "properties": {
++        "kind": {
++          "const": "text"
++        },
++        "id": {
++          "$ref": "#/$defs/id"
++        },
++        "when": {
++          "$ref": "#/$defs/flag"
++        },
++        "targets": {
++          "type": "array",
++          "minItems": 1,
++          "uniqueItems": true,
++          "items": {
++            "enum": [
++              "web",
++              "mobile"
++            ]
++          }
++        },
++        "role": {
++          "const": "header"
++        },
++        "content": {
++          "$ref": "#/$defs/contentKey"
++        }
++      }
++    },
++    "screen_notice": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "kind",
++        "id",
++        "tone",
++        "icon",
++        "parts"
++      ],
++      "properties": {
++        "kind": {
++          "const": "notice"
++        },
++        "id": {
++          "$ref": "#/$defs/id"
++        },
++        "when": {
++          "$ref": "#/$defs/flag"
++        },
++        "targets": {
++          "type": "array",
++          "minItems": 1,
++          "uniqueItems": true,
++          "items": {
++            "enum": [
++              "web",
++              "mobile"
++            ]
++          }
++        },
++        "tone": {
++          "enum": [
++            "error",
++            "neutral"
++          ]
++        },
++        "icon": {
++          "$ref": "#/$defs/icon"
++        },
++        "parts": {
++          "type": "array",
++          "minItems": 1,
++          "items": {
++            "oneOf": [
++              {
++                "type": "object",
++                "additionalProperties": false,
++                "required": [
++                  "role",
++                  "content"
++                ],
++                "properties": {
++                  "role": {
++                    "const": "text"
++                  },
++                  "content": {
++                    "$ref": "#/$defs/contentKey"
++                  },
++                  "vars": {
++                    "type": "object",
++                    "minProperties": 1,
++                    "propertyNames": {
++                      "pattern": "^[a-z0-9_]+$"
++                    },
++                    "additionalProperties": {
++                      "type": "string",
++                      "pattern": "^[A-Za-z0-9_.]+$"
++                    }
++                  },
++                  "when": {
++                    "$ref": "#/$defs/flag"
++                  }
++                }
++              },
++              {
++                "type": "object",
++                "additionalProperties": false,
++                "required": [
++                  "role",
++                  "id",
++                  "variant",
++                  "label",
++                  "content",
++                  "action"
++                ],
++                "properties": {
++                  "role": {
++                    "const": "button"
++                  },
++                  "id": {
++                    "$ref": "#/$defs/id"
++                  },
++                  "variant": {
++                    "enum": [
++                      "default",
++                      "outline"
++                    ]
++                  },
++                  "label": {
++                    "$ref": "#/$defs/contentKey"
++                  },
++                  "content": {
++                    "$ref": "#/$defs/contentKey"
++                  },
++                  "action": {
++                    "$ref": "#/$defs/action"
++                  },
++                  "when": {
++                    "$ref": "#/$defs/flag"
++                  }
++                }
++              }
++            ]
++          }
++        }
++      }
++    },
++    "screen_choices": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "kind",
++        "id",
++        "list",
++        "select",
++        "content",
++        "action"
++      ],
++      "properties": {
++        "kind": {
++          "const": "choices"
++        },
++        "id": {
++          "$ref": "#/$defs/id"
++        },
++        "when": {
++          "$ref": "#/$defs/flag"
++        },
++        "targets": {
++          "type": "array",
++          "minItems": 1,
++          "uniqueItems": true,
++          "items": {
++            "enum": [
++              "web",
++              "mobile"
++            ]
++          }
++        },
++        "list": {
++          "$ref": "#/$defs/id"
++        },
++        "select": {
++          "$ref": "#/$defs/id"
++        },
++        "content": {
++          "$ref": "#/$defs/id"
++        },
++        "action": {
++          "const": "select"
++        }
++      }
++    },
++    "screen_button": {
++      "type": "object",
++      "additionalProperties": false,
++      "required": [
++        "kind",
++        "id",
++        "variant",
++        "label",
++        "content",
++        "action"
++      ],
++      "properties": {
++        "kind": {
++          "const": "button"
++        },
++        "id": {
++          "$ref": "#/$defs/id"
++        },
++        "when": {
++          "$ref": "#/$defs/flag"
++        },
++        "targets": {
++          "type": "array",
++          "minItems": 1,
++          "uniqueItems": true,
++          "items": {
++            "enum": [
++              "web",
++              "mobile"
++            ]
++          }
++        },
++        "variant": {
++          "enum": [
++            "default",
++            "outline"
++          ]
++        },
++        "label": {
++          "$ref": "#/$defs/contentKey"
++        },
++        "content": {
++          "$ref": "#/$defs/contentKey"
++        },
++        "action": {
++          "$ref": "#/$defs/action"
++        },
++        "idle": {
++          "$ref": "#/$defs/contentKey"
++        },
++        "target": {
++          "$ref": "#/$defs/id"
++        },
++        "busy": {
++          "$ref": "#/$defs/flag"
++        }
++      }
+     }
+   }
+ }
+diff --git a/scripts/surfaces/emit-mobile-surfaces.mjs b/scripts/surfaces/emit-mobile-surfaces.mjs
+index 7523af762..ba2c81263 100644
+--- a/scripts/surfaces/emit-mobile-surfaces.mjs
++++ b/scripts/surfaces/emit-mobile-surfaces.mjs
+@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
+ 
+ export const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+ const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
++const PAGE_TABLE = 'scripts/surfaces/_schema/static-page.json'; // PAGE.TABLE (task-390): `screens`, the rows of an interactive page
+ const PRESENTATION = 'scripts/surfaces/_schema/report-presentation.json'; // MF-48 Stage B: the REPORT lifecycle texts
+ const GOLDEN_ROOT = 'src/tests/fixtures/surfaces';
+ export const SLICE_DIR = 'mobile/src/generated/surfaces';
+@@ -42,13 +43,15 @@ const text = (v) => `${JSON.stringify(v, null, 2)}\n`;
+ /** Every output file (repo-relative) -> its exact text. */
+ export function buildOutputs(root = REPO) {
+   const out = new Map();
++  const screens = rj(root, PAGE_TABLE).screens ?? {};
+   for (const id of rj(root, MANIFEST).converted) {
+     const file = descriptorFile(root, id);
+     const d = rj(root, file);
+     if (!(d.identity?.platforms ?? []).includes('mobile')) continue;
+     const content = rj(root, path.posix.join(path.posix.dirname(file), `${id}.content.json`));
+     const config = Object.fromEntries(CONFIG_KEYS.filter((k) => d.config?.[k] !== undefined).map((k) => [k, d.config[k]]));
+-    const slice = { surface: id, config, content };
++    // PAGE.TABLE (task-390): a surface with a screen in the page table carries its rows in the slice (one source; the binding draws them).
++    const slice = { surface: id, config, content, ...(screens[id] === undefined ? {} : { page: screens[id] }) };
+     out.set(`${SLICE_DIR}/${id}.json`, text({ $comment: `${COMMENT} (input_sha ${sha(slice)})`, ...slice }));
+     const gdir = path.join(root, GOLDEN_ROOT, id);
+     const names = fs.existsSync(gdir) ? fs.readdirSync(gdir).filter((f) => f.endsWith('.mobile.json')).sort() : [];
+diff --git a/src/tests/surfaces/page-table.logic.test.ts b/src/tests/surfaces/page-table.logic.test.ts
+new file mode 100644
+index 000000000..367fb3566
+--- /dev/null
++++ b/src/tests/surfaces/page-table.logic.test.ts
+@@ -0,0 +1,100 @@
++// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §0a principle 1 and §11b.2 (page block order, texts, actions and which block shows under a
++//            named flag are DATA rows of the page table), docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-05, FE-18, FE-31.
++//
++// PAGE.TABLE (task-390, Increment 1·B) · the phone rows-to-props-tree builder (mobile/src/components/surfaces/PageTableBinding.tsx, import-free, read by
++// relative path as the other pure mobile helpers are). Cases, on a small planted screen with a plain style table:
++//   B1 a section shows only under its one positive flag; an unknown flag name throws (fail closed, never a blank page);
++//   B2 a section whose targets omit mobile is not drawn; no targets means both;
++//   B3 a button with a target value is disabled, idle-labelled and has no action while the value is null; it carries the value once set;
++//   B4 busy adds the busy class and the busy accessibility state; choices check only the selected answer; the bar draws before the scroll;
++//   B5 a part inside a notice shows under its own flag; the redirect value joins the root only when set.
++import { describe, expect, it } from 'vitest';
++import { pageProps, type PageScreen, type PageStyles } from '../../../mobile/src/components/surfaces/PageTableBinding';
++
++const S: PageStyles = {
++  screen: 's', scroll: 'sc', column: 'col', bottomPadding: 7, maxWidth: 9, bar: 'bar', back: 'back', backIconSize: 3, iconColor: '#000',
++  status: 'status', heading: 'head',
++  notice: { error: { box: 'eb', icon: 'ei', text: 'et' }, neutral: { box: 'nb', icon: 'ni', text: 'nt' } },
++  card: { idle: 'c', checked: 'cc', row: 'cr', dotIdle: 'd', dotChecked: 'dc', text: 'ct' },
++  button: { default: { className: 'b', busyClassName: 'b busy', text: 'bt' }, outline: { className: 'o', busyClassName: 'o busy', text: 'ot' } },
++};
++const SCREEN: PageScreen = {
++  prefix: 'p', contract: 'c1',
++  sections: [
++    { kind: 'bar', id: 'header', parts: [{ role: 'back', icon: 'ChevronLeft', content: 'back.label', action: 'back' }] },
++    { kind: 'status', id: 'loading', when: 'loading', content: 'state.loading' },
++    { kind: 'text', id: 'question', when: 'ask', role: 'header', content: 'question.title' },
++    { kind: 'text', id: 'webonly', targets: ['web'], role: 'header', content: 'web.only' },
++    { kind: 'text', id: 'both', targets: ['web', 'mobile'], role: 'header', content: 'both.title' },
++    { kind: 'choices', id: 'answer', when: 'ask', list: 'answers', select: 'selected', content: 'answer', action: 'select' },
++    { kind: 'button', id: 'continue', when: 'ask', variant: 'default', label: 'select.label', content: 'select.go', idle: 'select.none', action: 'push', target: 'route', busy: 'busy' },
++    { kind: 'notice', id: 'error', when: 'unexpected', tone: 'error', icon: 'AlertTriangle', parts: [
++      { role: 'text', content: 'state.error', when: 'plain' },
++      { role: 'text', content: 'state.drift', when: 'drift' },
++      { role: 'button', id: 'retry', variant: 'outline', label: 'retry.label', content: 'retry.text', action: 'retry', when: 'plain' },
++    ] },
++  ],
++};
++const FLAGS = { loading: false, ask: false, unexpected: false, plain: false, drift: false, busy: false };
++const VALUES = { answers: [] as string[], selected: null as string | null, route: null as string | null, navigate: null as string | null };
++type N = { component: string; props: Record<string, unknown>; children: unknown[] };
++const column = (t: unknown): N[] => (((t as N).children[1] as N).children[0] as N).children as N[];
++const keys = (t: unknown): unknown[] => column(t).map((n) => n.props.key);
++
++describe('B1 a section shows only under its one positive flag', () => {
++  it('flags off: only the sections with no when; flag on: that section, in row order', () => {
++    expect(keys(pageProps(SCREEN, FLAGS, VALUES, S))).toEqual(['both']);
++    expect(keys(pageProps(SCREEN, { ...FLAGS, loading: true }, VALUES, S))).toEqual(['loading-text', 'both']);
++  });
++  it('RED: a when naming no flag throws', () => {
++    expect(() => pageProps({ ...SCREEN, sections: [{ kind: 'status', id: 'x', when: 'nope', content: 'a.b' }] }, FLAGS, VALUES, S)).toThrow(/nope/);
++  });
++});
++
++describe('B2 targets', () => {
++  it('a web-only section is not drawn on the phone; no targets and web+mobile are drawn', () => {
++    expect(keys(pageProps(SCREEN, FLAGS, VALUES, S))).not.toContain('webonly');
++    expect(keys(pageProps(SCREEN, FLAGS, VALUES, S))).toContain('both');
++    expect(keys(pageProps(SCREEN, { ...FLAGS, loading: true }, VALUES, S))).toContain('loading-text');
++  });
++});
++
++describe('B3 and B4 buttons, busy, choices, bar', () => {
++  const ask = { ...FLAGS, ask: true };
++  const vals = { ...VALUES, answers: ['yes', 'no'], selected: 'no', route: '/r' };
++  const cont = (t: unknown): N => column(t).find((n) => n.props.key === 'continue')!;
++  it('a null target: disabled, idle label, no action', () => {
++    const c = cont(pageProps(SCREEN, ask, { ...vals, route: null }, S));
++    expect([c.props.disabled, c.props.onPress, c.props.accessibilityState]).toEqual([true, null, { disabled: true }]);
++    expect(c.children).toEqual([{ component: 'Text', props: { key: 'continue-text', className: 'bt' }, children: [{ content: 'select.none' }] }]);
++  });
++  it('a set target: enabled, the value in the action; busy adds the class and the state', () => {
++    const idle = cont(pageProps(SCREEN, ask, vals, S));
++    expect([idle.props.disabled, idle.props.onPress, idle.props.className, idle.props.accessibilityState]).toEqual([false, { action: 'push', route: '/r' }, 'b', { disabled: false }]);
++    const busy = cont(pageProps(SCREEN, { ...ask, busy: true }, vals, S));
++    expect([busy.props.className, busy.props.accessibilityState]).toEqual(['b busy', { disabled: false, busy: true }]);
++  });
++  it('choices: one card per answer, only the selected one checked, a derived ref per index; the bar is before the scroll', () => {
++    const t = pageProps(SCREEN, ask, vals, S) as N;
++    const cards = column(t).filter((n) => String(n.props.key).startsWith('answer-'));
++    expect(cards.map((n) => [n.props.key, (n.props.accessibilityState as { checked: boolean }).checked, n.props.onPress])).toEqual([
++      ['answer-yes', false, { action: 'select', parcelId: { derived: 'answer.0' } }],
++      ['answer-no', true, { action: 'select', parcelId: { derived: 'answer.1' } }],
++    ]);
++    expect((t.children[0] as N).props.key).toBe('header');
++    expect((t.children[1] as N).props.key).toBe('scroll');
++  });
++});
++
++describe('B5 notice parts and the redirect value', () => {
++  it('a part shows under its own flag', () => {
++    const n = column(pageProps(SCREEN, { ...FLAGS, unexpected: true, drift: true }, VALUES, S)).find((x) => x.props.key === 'error')!;
++    expect(n.children.map((c) => (c as N).props.key)).toEqual(['error-text']);
++    const m = column(pageProps(SCREEN, { ...FLAGS, unexpected: true, plain: true }, VALUES, S)).find((x) => x.props.key === 'error')!;
++    expect(m.children.map((c) => (c as N).props.key)).toEqual(['error-text', 'retry']);
++  });
++  it('navigate joins the root props only when set', () => {
++    expect('navigate' in (pageProps(SCREEN, FLAGS, VALUES, S) as N).props).toBe(false);
++    expect((pageProps(SCREEN, FLAGS, { ...VALUES, navigate: '/x' }, S) as N).props.navigate).toBe('/x');
++  });
++});
+diff --git a/src/tests/surfaces/static-page.logic.test.ts b/src/tests/surfaces/static-page.logic.test.ts
+index 757f54750..7cab40ef3 100644
+--- a/src/tests/surfaces/static-page.logic.test.ts
++++ b/src/tests/surfaces/static-page.logic.test.ts
+@@ -66,6 +66,17 @@ describe('T1 the page table against the contract', () => {
+       ['a mailto reading another value', (t) => { t.pages.web_help.static.sections[0].parts[2].value = 'other'; }],
+       ['a mailto with an href', (t) => { t.pages.web_help.static.sections[0].parts[2].href = '/help'; }],
+       ['a topic on a paragraph', (t) => { t.pages.web_help.static.sections[0].parts[1].topic = 'general'; }],
++      // PAGE.TABLE (task-390): the interactive screens; sections of mobile_parcel_semi_question: 0 bar, 1 status, 2-4 notices, 5 text, 6 choices, 7 button.
++      ['a screen section of an unknown kind', (t) => { t.screens.mobile_parcel_semi_question.sections[1].kind = 'banner'; }],
++      ['a number as screen content', (t) => { t.screens.mobile_parcel_semi_question.sections[1].content = 9.99; }],
++      ['an action outside the closed list', (t) => { t.screens.mobile_parcel_semi_question.sections[7].action = 'delete_all'; }],
++      ['an icon outside the closed list', (t) => { t.screens.mobile_parcel_semi_question.sections[0].parts[0].icon = 'Skull'; }],
++      ['a when that is an expression', (t) => { t.screens.mobile_parcel_semi_question.sections[1].when = 'loading && ask'; }],
++      ['a when that is a negation', (t) => { t.screens.mobile_parcel_semi_question.sections[1].when = '!loading'; }],
++      ['a when that is a list of flags', (t) => { t.screens.mobile_parcel_semi_question.sections[1].when = ['loading', 'ask']; }],
++      ['a target outside web and mobile', (t) => { t.screens.mobile_parcel_semi_question.sections[1].targets = ['tablet']; }],
++      ['a field the kind does not name', (t) => { t.screens.mobile_parcel_semi_question.sections[1].href = '/help'; }],
++      ['a screen with no sections', (t) => { t.screens.mobile_parcel_semi_question.sections = []; }],
+     ];
+     for (const [why, f] of plants) { const t = clone(TABLE); f(t); expect([why, validate(t)]).toEqual([why, false]); }
+   });
+@@ -80,6 +91,50 @@ describe('T2 totality: the table and the converted STATIC surfaces, both ways',
+   });
+ });
+ 
++describe('T9 the interactive screens (PAGE.TABLE, task-390)', () => {
++  const read = (p: string): string => fs.readFileSync(path.join(ROOT, p), 'utf8');
++  const BINDING = 'mobile/src/components/surfaces/SemiQuestionBinding.tsx';
++  const ID = 'mobile_parcel_semi_question';
++  const SCREENS = TABLE.screens as Json;
++  const names = (src: string, list: string): string[] => [...(new RegExp(`export const ${list} = \\[([^\\]]*)\\]`).exec(src)?.[1] ?? '').matchAll(/'([a-z0-9_]+)'/g)].map((m) => m[1] as string);
++  const flagsOf = (s: Json): string[] => [s.when, s.busy, ...(s.parts ?? []).flatMap((p: Json) => [p.when])].filter((x): x is string => typeof x === 'string');
++  const problems = (screens: Json, flagNames: string[], content: Record<string, string>): string[] => {
++    const out: string[] = [];
++    for (const [id, screen] of Object.entries(screens)) for (const s of (screen as Json).sections as Json[]) {
++      for (const f of flagsOf(s)) if (!flagNames.includes(f)) out.push(`${id} ${s.id}: flag ${f} is not in the declared list`);
++      const keys = [s.content, s.label, s.idle, ...(s.parts ?? []).flatMap((p: Json) => [p.content, p.label])].filter((x): x is string => typeof x === 'string');
++      for (const k of keys) if (!(k in content) && !Object.keys(content).some((c) => c.startsWith(`${k}.`))) out.push(`${id} ${s.id}: content key ${k} is not in the content file`);
++    }
++    return out;
++  };
++  const content = rj(`scripts/surfaces/parcel_product/F01/surfaces/${ID}.content.json`) as Record<string, string>;
++  it('every screen is a converted LIST surface of the phone, with its row set copied to the generated slice', () => {
++    expect(Object.keys(SCREENS)).toEqual([ID]);
++    const d = rj(`scripts/surfaces/parcel_product/F01/surfaces/${ID}.descriptor.json`);
++    expect([MANIFEST.converted.includes(ID), d.identity.archetype, d.identity.platforms]).toEqual([true, 'LIST', ['mobile']]);
++    expect(rj(`mobile/src/generated/surfaces/${ID}.json`).page).toEqual(SCREENS[ID]);
++  });
++  it('every flag a row names is in the closed list the binding declares; every content key is in the content file; none is a typed text', () => {
++    const flagNames = names(read(BINDING), 'SEMI_QUESTION_FLAG_NAMES');
++    expect(flagNames.length).toBeGreaterThan(0);
++    expect(problems(SCREENS, flagNames, content)).toEqual([]);
++  });
++  it('RED: an undeclared flag and a missing content key are caught', () => {
++    const t = clone(SCREENS) as Json;
++    t[ID].sections[1].when = 'nearest_lot';
++    t[ID].sections[1].content = 'state.nothing';
++    expect(problems(t, names(read(BINDING), 'SEMI_QUESTION_FLAG_NAMES'), content)).toEqual([
++      `${ID} loading: flag nearest_lot is not in the declared list`,
++      `${ID} loading: content key state.nothing is not in the content file`,
++    ]);
++  });
++  it('the binding keeps flags and values only: no JSX element names and no content key typed in it', () => {
++    const b = read(BINDING);
++    expect(b).not.toMatch(/node\('(Button|Alert|AlertDescription|Text|View)'/);
++    expect(b).not.toMatch(/content\('[a-z]+\./);
++  });
++});
++
+ describe('T3 one footer, one legal line', () => {
+   const footerTexts = (c: Record<string, string>): Json => Object.fromEntries(Object.entries(c).filter(([k]) => k.startsWith('footer.')));
+   const problems = (contents: Record<string, Record<string, string>>): string[] => {
+
