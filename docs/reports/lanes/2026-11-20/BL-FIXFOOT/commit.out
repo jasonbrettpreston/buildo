@@ -1,0 +1,40 @@
+
+./src/tests/update-tracked-projects.infra.test.ts
+348:11  Warning: 'txEnd' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/write-class-disposition.infra.test.ts
+88:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+331:78  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/write-set-null-unless.logic.test.ts
+68:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-fixfoot
+
+ ✓ src/tests/report-preview-guard.security.test.ts (18 tests) 39ms
+ ✓ src/tests/surfaces/site-footer.logic.test.ts (10 tests) 12ms
+ ✓ src/tests/surfaces/web-landing.logic.test.ts (28 tests) 84ms
+ ✓ src/tests/surfaces/admin-media.golden.test.ts (9 tests) 111ms
+ ✓ src/tests/surfaces/static-web-binding.ui.test.tsx (9 tests) 93ms
+ ✓ src/tests/surfaces/report-page.ui.test.tsx (37 tests) 560ms
+ ✓ src/tests/surfaces/site-footer.ui.test.tsx (5 tests) 237ms
+ ✓ src/tests/surfaces/web-landing.ui.test.tsx (8 tests) 189ms
+ ✓ src/tests/surfaces/report-sheet-a11y.ui.test.tsx (8 tests) 181ms
+ ✓ src/tests/report-preview.ui.test.tsx (4 tests) 125ms
+ ✓ src/tests/surfaces/site-footer-route.ui.test.tsx (4 tests) 109ms
+
+ Test Files  11 passed (11)
+      Tests  140 passed (140)
+   Start at  10:23:53
+   Duration  4.56s (transform 243ms, setup 81ms, collect 2.44s, tests 1.74s, environment 935ms, prepare 253ms)
+
+check-task-files: WARN task-374 has no "Files:" line, so its scope is not checked. Add one line "Files: path, dir/, glob" to the task description.
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stam
+POLICY CHECKS OK (commit-msg): 2 file(s)
+[wf1/inc1b-fixfoot 032ed06] fix(136_mcfrontend_handbook): footer links are route links at 44 px (FIX.FOOTER)
+ 3 files changed, 90 insertions(+), 3 deletions(-)
+ create mode 100644 src/tests/surfaces/site-footer-route.ui.test.tsx

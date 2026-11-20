@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:14:00.258Z file_sha256=8d6d02e89107a4852ef1d4651d0f63ae54affb6d2ae12493fa65f29a94bec07a prompt_sha256=0a6fff1f8cb0220630e6746920d049b81a7375d6d080ff328dd7e2b3895816c5
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-plan-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+BUG severity=MED — AC #4 "The shared footer builder and its three users stay in parity (the existing parity tests pass)" — plan "StaticBinding.tsx:90 (WEB_STATIC_LAYOUT.link) is a Mantine Button size lg (StaticBinding.tsx:141), whose height is 50px (node_modules/@mantine/core/styles/Button.css:5), so it is not below 44 px: no change there." — the plan enforces 44 px in one user of the shared builder while knowingly leaving a sibling at 50 px and never measuring the third (SearchBinding), so the three users are not in parity on the standard being enforced and no test is named that proves the parity claim — fix: measure the search and static footer link heights against the 44 px rule and either align them in the same commit or record the difference as a named operator item.
+
+BUG severity=MED — §11b.2 Goldens "one props golden per reachable state ... one render smoke per archetype per platform (web `renderToStaticMarkup` in root vitest) ... REPORT goldens are unchanged" — plan "The builder footerNode.ts, the other two users, all goldens and stored values do not move." — the change adds class names to the footer link markup, so the web REPORT render smoke markup necessarily changes; the plan asserts goldens do not move and names no step to run or regenerate that smoke — fix: name the REPORT web render smoke in the plan, run it, and regenerate its snapshot in the same commit, stating that props goldens stay unchanged.
+
+DEFER severity=LOW — D8 "add min-h and padding, UNLESS the approved v8 design draws them small" — plan "REPORT_FOOTER_LAYOUT.link gains "inline-flex min-h-11 items-center"" — the padding half of the ruled fix is dropped and no deviation is recorded — the cited mock (small-pages-v8/search.html:174) declares only min-height:44px and align-items:center, so the 44 px target is still met; record the padding omission and its mock cite instead of leaving it silent.
+
+DEFER severity=LOW — AC #3 "Compliance lens run once per governing rule list with the list whole; a separate grounder verdict on file" — plan "Left alone (operator items, listed): conflicts C1 to C5, the 48 or 44 px question, the 60 s wait value." — the plan names no artifact path for the separate grounder verdict on this fix — add the verdict file path to the plan and the task so the criterion is evidenced, not implied.
+
+DEFER severity=LOW — §13 "UI: `*.ui.test.tsx` — every archetype renderer against its golden rendered-tree snapshot, per declared state" — plan "every report footer link is a next/link and carries min-h-11 + items-center" — the new test asserts class strings and anchor types rather than the rendered-tree/per-state form the mandate names, so the 44 px result is only asserted as text — keep the anchor-type assertion as one case and prove the rendered tree through the declared REPORT golden path.
+
+REJECT — §11b.1 "Our code is limited to ... the landed web REPORT renderer" — the change is accused of hand-editing a MaxBLD page — the edited file is exactly the declared landed web REPORT renderer the MF-76 note embeds "by exact name and module", and the clause names it as allowed code.
+
+REJECT — §11b.1 "Library imports are allowed only in the declared binding modules" — the change is accused of importing next/link outside a binding module — the clause fences §11b.4 library imports, next/link is not a §11b.4 library, and the MF-46 note already has the web bindings render "links as Next `Link`".
+
+MET — D7 "the footer links are plain anchors (Spec 136 fe.36 navigation is a route: web Link): render through next/link" — plan "(1) ReportPage.tsx imports Link from next/link and renderFooter case 'Button' returns <Link key href className>" — the footer link is rendered through next/link on the web report.
+
+MET — D8 44 px target — plan "REPORT_FOOTER_LAYOUT.link gains "inline-flex min-h-11 items-center" (the class pair already used at ReportPage.tsx:56 and :68)" — Tailwind min-h-11 is 2.75rem, exactly the 44 px the engineering standard requires.
+
+MET — D8 "check the mock first" — plan "small-pages-v8/search.html:174 ".foot a, .wfoot a { display:inline-flex; align-items:center; min-height:44px }"" — the approved design was read before choosing a code fix over an operator draft.
+
+MET — AC #1 "Each defect is confirmed on the head before fixing, with file:line" — plan "D7 src/components/report/ReportPage.tsx:251 ... D8 ReportPage.tsx:240" — both defects are cited at head file:line before the fix.
+
+MET — AC #2 "Tests red first, then green through the real hooks" — plan "Red = commit attempt with only the test and task file staged." — a red-first step exists ahead of the two-line fix.
+
+MET — §11b.2 "REPORT keeps the landed renderer (§11a; Spec 135 FE-24)" — plan "The builder footerNode.ts, the other two users, all goldens and stored values do not move." — the change stays in the renderer's footer rendering and does not move the descriptor, the content or the shared builder.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  64404ms (64.4s)
+📊 Tokens — total: 44921, input: 32529, output: 12392, reasoning: 11157

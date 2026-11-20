@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:18:09.678Z file_sha256=63ab4ed7db52773465e467e7af65b23628861ab4176a31344916a7c487495bd7 prompt_sha256=4a961c1289166a0615ed50ff2b72d59b45fb8735532da622f93741e3419e7c3a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-out-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=LOW — §5.3 "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — src/components/report/ReportPage.tsx "+    case 'Button': return <Link key={key} href={String(p.href)} className={cls}>{kids}</Link>;" — the fix and its test ship in one diff with no pasted red run, so the ordering the clause mandates is unverified this run — attach the failing run output (pre-change, data-next-link and min-h-11 absent) to the card
+DEFER severity=NIT — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`)." — src/tests/surfaces/site-footer-route.ui.test.tsx:41 "Object.defineProperty(window, 'matchMedia', { writable: true, value: (q: string) => ({ matches: false, media: q, onchange: null, ..." — browser-API stubs are written inline rather than imported from src/tests/factories.ts — move the matchMedia and ResizeObserver stubs into a shared typed jsdom setup helper, since factories.ts cannot express environment stubs
+DEFER severity=LOW — not pasted, cannot see: the clauses the behaviour itself rests on — src/tests/surfaces/site-footer-route.ui.test.tsx:2 "SPEC LINK: docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.36 (navigation is a route: web <Link>), docs/specs/00_engineering_standards.md section 1.1 (a link has a 44 px tappable area), docs/specs/02-web-admin/126_maxbld_surface_standard.md section 11b.2" — the change's D7 (router link) and D8 (44 px) obligations are cited only in a test comment, so I cannot judge the behaviour against them in this run — paste fe.36, §1.1 and §11b.2 into the context so the next run can rule on the behaviour, not just the test layer
+MET — §5.2 "`*.ui.test.tsx` | React component rendering, interactions | Any new/changed component" — src/tests/surfaces/site-footer-route.ui.test.tsx — the changed component (ReportPage.tsx footer render) is covered by a `.ui.test.tsx` at the mandated pattern and extension
+MET — §5.5 "`*.ui.test.tsx` | The component renders each state + wires interactions." — src/tests/surfaces/site-footer-route.ui.test.tsx — the claims proven here (footer links rendered as router links, class set preserved) are render/wiring claims, so the layer chosen is the one the map assigns to them
+MET — §5.3 "For new API routes and database mutations, the failing test MUST be an `.infra.test.ts`" — src/components/report/ReportPage.tsx — this diff adds no API route and no DB mutation, so the unhappy-path `.infra.test.ts` mandate does not bind, and the chosen `.ui.test.tsx` is the layer §5.3 assigns to component work
+REJECT — §5.2 parity battery "Two parallel implementations stay in sync" — the change is accused of needing a parity battery because the report footer now matches the search footer's router-link rendering — no second implementation is introduced, and the test renders the search footer as an explicit control in the same file, so no drift guard is owed
+```
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  38747ms (38.7s)
+📊 Tokens — total: 11943, input: 4625, output: 7318, reasoning: 6505

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:13:24.886Z file_sha256=dce86e117939544523ff1950c772f0ceef3481912fde305622c0bedec85216ea prompt_sha256=dd5ccecc73f4b59caf06356c2d5a55998665d4e106c40c5acccc69792a3c8529
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-plan-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-374 AC#3 "Compliance lens run once per governing rule list with the list whole; a separate grounder verdict on file" — plan "Red = commit attempt with only the test and task file staged." (no compliance-lens or grounder step anywhere in the plan) — the plan's whole verification path is one red test attempt plus a two-line edit; nothing runs the compliance lens per rule list and nothing files a grounder verdict, which is the operator's stated reason for the approach ("essential we have a non compliance build again - the entire reason for this approach") — add two steps: run the compliance lens once per governing rule list with the list whole, and commit the grounder verdict under docs/reports/lanes/2026-11-20/BL-FIXFOOT/.
+
+DEFER severity=MED — task-374 AC#4 "The shared footer builder and its three users stay in parity (the existing parity tests pass)" — plan "The builder footerNode.ts, the other two users, all goldens and stored values do not move." — parity is asserted, not verified: no existing parity test is named and no step runs it, while REPORT_FOOTER_LAYOUT.link's class attribute does change, so any golden over report footer markup moves — name the parity test file(s) and add their green run to the step list.
+
+DEFER severity=MED — D8 "UNLESS the approved v8 design draws them small: check the mock first" — plan "small-pages-v8/search.html:174 \".foot a, .wfoot a { display:inline-flex; align-items:center; min-height:44px }\"" — the mock check is done against the search page's footer selector, while the report's design line is "report (B v3: summary + concept gallery)", so the citation may be the wrong design source, and D8's alternative disposition is an operator draft — either cite the report footer's own mock rule or record that RR-0273's shared footer makes search.html authoritative for both.
+
+DEFER severity=LOW — task-374 AC#2 "Tests red first, then green through the real hooks" — plan "Red = commit attempt with only the test and task file staged." — only the red leg is specified through the real hooks; the green leg is left as a bare test call — state that green also goes through .husky/pre-commit (or npm run verify), not a direct vitest invocation.
+
+REJECT — D8 "add min-h and padding" — accused of adding no padding — the same clause makes the mock the design authority and the mock's rule is min-height 44px with align-items:center and no padding, which the plan adopts as "inline-flex min-h-11 items-center".
+
+REJECT — Spec 126 §9 "Render through the archetype component set. No business logic executes client-side beyond the five named exceptions (§5.3)." — accused of changing render output outside a declared archetype rule — the component type of a footer link is navigation, not business logic, and §9 names no rule about link components.
+
+REJECT — Spec 126 §6.1-§6.6, §7, §7.1, §8, §10, §11 (declare-and-assert, RLS matrix, seeded projection, storage, indexes, usage ledger, auth matrix, registry page) — accused of breaching them — none of these clauses names a component, a link or a route; the change touches no table, policy, metered event or registry column.
+
+MET — D7 "navigation is a route: web Link" — ReportPage.tsx:251 — the plain `<a href>` case returns `<Link key href className>` imported from next/link, matching SearchBinding.tsx:384 and StaticBinding.tsx:429.
+
+MET — D8 "add min-h" — ReportPage.tsx:240 — "inline-flex min-h-11 items-center" gives a 44 px minimum with a centred label, the same class pair already used at :56 and :68.
+
+MET — task-374 AC#1 "Each defect is confirmed on the head before fixing, with file:line" — ReportPage.tsx:251 and ReportPage.tsx:240 — both defects are located with file:line before any edit.
+
+MET — "nothing added that the card or ruling did not name" — StaticBinding.tsx:90 — the third user is measured (Button size lg, 50 px) and left untouched, so no unnamed scope is added.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6 (plus Spec 126 part 2 sections 6 to 11, none binding this change)   Unmet: 1
+
+---
+⏱  47459ms (47.5s)
+📊 Tokens — total: 31600, input: 22460, output: 9140, reasoning: 8142

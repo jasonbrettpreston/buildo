@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:12:31.940Z file_sha256=587b02acc1902121f8b3a53a9925f17d3c18c520e8ff3a814a153801d3736f67 prompt_sha256=fe0e20108570ee0aef86e5f48cd63024c1950803ac9e7ed9a0896408be23b444
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-plan-compliance-eng-s1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — D8 "add min-h and padding, UNLESS the approved v8 design draws them small" — plan "(2) REPORT_FOOTER_LAYOUT.link gains "inline-flex min-h-11 items-center" (the class pair already used at ReportPage.tsx:56 and :68)" — the fix supplies height only and no padding, so 1.1's "minimum tappable area of 44px x 44px. Use min-h-[44px] min-w-[44px] or equivalent padding" is met on one axis only, width left to whatever the label happens to be — add "px-2" or "min-w-11" beside min-h-11 so the horizontal target reaches 44px, as D8's "min-h and padding" asks.
+
+BUG severity=MED — D8 "UNLESS the approved v8 design draws them small: check the mock first; if it does, stop on D8 and bring it as an operator draft" — plan "The approved v8 mock draws the footer link as 44 px (small-pages-v8/search.html:174 ".foot a, .wfoot a { display:inline-flex; align-items:center; min-height:44px }")" — the mock cited for the report-footer defect at ReportPage.tsx:240 is the search-page footer file; no report footer mock line is quoted, so the D8 stop condition was not checked against the design that governs the report footer — cite the report footer's own line in the approved report mock (or record that .wfoot is the shared web footer rule) before treating D8 as a code fix.
+
+DEFER severity=MED — acceptance "#2 Tests red first, then green through the real hooks" — plan "new src/tests/surfaces/site-footer-route.ui.test.tsx (jsdom; next/link mocked to mark its anchors)" — the assertion lands on a mock of the very component being introduced, so green proves the mock marks anchors, not that next/link renders one with these props through the real router — keep the mock for the control footers but assert one report footer case against the real next/link render (href plus the min-h-11 class).
+
+DEFER severity=MED — 1.1 "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of 44px x 44px" — plan "StaticBinding.tsx:90 (WEB_STATIC_LAYOUT.link) is a Mantine Button size lg (StaticBinding.tsx:141), whose height is 50px ... so it is not below 44 px: no change there" — height is confirmed for one of the three users only; SearchBinding.tsx:384, the third user the plan itself names, has no quoted size or height, so its 44px is unconfirmed while the plan claims parity — quote SearchBinding's button size/height or add the same min-h guard there.
+
+DEFER severity=LOW — 1.1 "Card and row layouts MUST stack vertically on mobile and flow horizontally on desktop. Use `flex flex-col md:flex-row` (not `flex` alone). Dense metadata rows MUST use `flex-wrap`." — plan "REPORT_FOOTER_LAYOUT.link gains "inline-flex min-h-11 items-center"" — only the link itself is restyled; the footer row container is not named, so whether a multi-link footer row wraps or stacks on a 375px viewport is not shown — state or fix the footer container class (flex flex-col md:flex-row, flex-wrap) in the same two-line change.
+
+MET — D7 "render through next/link" — plan "(1) ReportPage.tsx imports Link from next/link and renderFooter case 'Button' returns <Link key href className>" — the plain <a href> at the confirmed line :251 is replaced by the routed link, matching SearchBinding.tsx:384 and StaticBinding.tsx:429.
+
+MET — acceptance "#1 Each defect is confirmed on the head before fixing, with file:line" — plan "D7 src/components/report/ReportPage.tsx:251" and "D8 ReportPage.tsx:240" — both defects carry a confirming file:line on the head before the change.
+
+MET — 1.2 "Shared UI components (`src/components/ui/`) must remain pure and stateless" — plan "src/components/report/ReportPage.tsx" — the touched file is not under src/components/ui/ and no fetch or global context is added by the change.
+
+MET — acceptance "#4 The shared footer builder and its three users stay in parity (the existing parity tests pass)" — plan "The builder footerNode.ts, the other two users, all goldens and stored values do not move" — the layout constant edited is the report-local one at :240, so builder output and the parity tests are untouched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  45303ms (45.3s)
+📊 Tokens — total: 19468, input: 10694, output: 8774, reasoning: 7709

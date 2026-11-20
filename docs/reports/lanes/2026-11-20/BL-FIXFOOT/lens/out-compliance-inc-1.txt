@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:18:09.686Z file_sha256=7ac1d9e16fa8db4cbf2e200da32610f93e079f403ef59fc381194469bb24fb37 prompt_sha256=7d491db5d05aecf1d2e46eb6fe984bbbeea51cd9cf42de909827f7dbaf9af3fe
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-out-compliance-inc-1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — doc-4 G5 "| G5 | Footer links | main | text |  |" — src/components/report/ReportPage.tsx:252 "case 'Button': return <Link key={key} href={String(p.href)} className={cls}>{kids}</Link>;" — no pasted clause names router navigation or a tap-target size for these links: G5 carries no deliverer, no status, no built value, and the three specs the change rests on (136 fe.36, standards 1.1, 126 11b.2) appear only inside the new test's own comment, so the added behaviour is named by nothing in the governing context — paste those clauses and the operator ruling into the context, or hold the footer change until they are pasted
+
+DEFER severity=MED — operator 2026-11-20 (quoted only inside the material) "essential we have a non compliance build again - the entire reason for this approach" — src/tests/surfaces/site-footer-route.ui.test.tsx:6 "operator 2026-11-20: "essential we have a non compliance build again - the entire" — the ruling authorising D7/D8 is pasted nowhere in the governing context and is self-attested by the diff; its words also name no footer link, router, or size, so by rule 3 the requirement is satisfied only by a comment — supply the ruling verbatim in the pasted context
+
+DEFER severity=LOW — F-REPORT-WEB "ReportPage (web v21 report page, Daylight keys) + ReportPageToggles client island: ON ORIGIN" — src/components/report/ReportPage.tsx:10 "import Link from 'next/link';" — the clause and the file's own note ("The one client island is ReportPageToggles (UI state only)") enumerate one client island; next/link is a client component, so this adds a second boundary the clause does not name — record the added client boundary in the part's note, or route via the server-supplied href
+
+MET — F-DAYLIGHT — src/components/report/ReportPage.tsx:243 — the link class adds only geometry utilities and keeps the named report-* keys (text-report-soft, focus-visible:outline-report-amber), no new colour key
+
+MET — F-REPORT-MOBILE "Mobile REPORT binding + host" — src/tests/surfaces/site-footer-route.ui.test.tsx:1 — the change is web-only; no mobile file is touched, the mobile footer stays as built
+
+MET — Built state "The report page parts are built once and shared by every scenario" — src/components/report/ReportPage.tsx:241 — the edit is in the shared REPORT_FOOTER_LAYOUT table, not per scenario or per binding
+
+MET — G4 "Footer: copyright | main | text | | BUILT-NO-DATA" — src/components/report/ReportPage.tsx:243 "line: '', legal: '', copyright: ''" — the G4 keys stay empty, so the copyright part's drawing is unchanged
+
+REJECT — F-REPORT-TREE "ReportView (admin and pdf tree renderer: field list, Picture figure, ad Slot, What we checked)" — that next/link leaks into the admin and pdf tree path — the pasted clause names ReportView as that renderer, and renderFooter in ReportPage.tsx is not that path
+
+REJECT — G5 — that the links hard-code routes /terms, /privacy, /help — the diff sets no href; it still renders the caller-supplied p.href from the footer tree, only the element changes
+
+REJECT — 126 11b.2 tap target — that the test asserts the class string min-h-11 rather than a computed 44 px — no pasted clause sets a tap-target size; 11b.2 is not in the pasted context, so the assertion strength is not mine to rule on
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 1
+
+---
+⏱  42974ms (43.0s)
+📊 Tokens — total: 16131, input: 7760, output: 8371, reasoning: 7490

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T15:20:31.541Z file_sha256=6e4124c0cc07666160c6bfdbb9eafb7a528963c28098976f29bfdce3a70a1f08 prompt_sha256=58727c8e31c74b58c495950468df4bbaaa207dae594b00471b7452c48b10fb9a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/out-diff.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — src/components/report/ReportPage.tsx:241 "inline-flex min-h-11 items-center text-report-soft underline ..." vs pasted standard "docs/specs/00_engineering_standards.md section 1.1 (a link has a 44 px tappable area)" — the target is 44 px tall but only as wide as the word, so "Help" gives the thumb roughly 30 px of width, not a 44 px area — the mock line quoted in the test fixes height only ("min-height:44px"), which is design silent on width; add horizontal padding or confirm the mock governs width.
+
+DEFER severity=LOW — src/tests/surfaces/site-footer-route.ui.test.tsx:19 "vi.mock('next/link', () => ({" — every assertion is made against a stand-in anchor, so nothing pasted shows the person's real link rendering or routing; cannot see the real render path (the page comment says "The one client island is ReportPageToggles") — keep one unmocked render or a preview check so a real failure is not hidden behind the mock.
+
+DEFER severity=LOW — src/components/report/ReportPage.tsx:252 "case 'Button': return <Link key={key} href={String(p.href)} className={cls}>" vs src/components/report/ReportPage.tsx:7 "a pending part shows the ruled pending text in its own slot in one muted style (data-pending)" — a pending footer button is drawn as a live, fully styled link with no pending marker, so the person cannot tell that footer text is still pending while the text parts next to it are muted — carry data-pending onto the Button case the way the Text case does (cannot see whether footer Buttons are ever pending).
+
+DEFER severity=LOW — src/components/report/ReportPage.tsx:238 "The mobile binding keeps its own footer (mobile/src/components/surfaces/ReportBinding.tsx): its G4 part is unchanged." — the person on a phone tapping the same Terms, Privacy, Help gets whatever that binding gives today, so the 44 px rule may hold on web only — cannot see mobile/src/components/surfaces/ReportBinding.tsx; verify the mobile footer target before calling the defect closed.
+
+REJECT — src/components/report/ReportPage.tsx:241 "min-h-11" — the footer link row grows from a 20 px line to 44 px, so the footer looks padded out — this matches the approved mock quoted in the test, "min-height:44px", inline-flex, items centred, so it is the drawn height, not a regression.
+
+REJECT — src/components/report/ReportPage.tsx:252 "<Link key={key} href={String(p.href)}" replacing the plain anchor — looks like footer navigation changes behaviour for the person — matches the pasted chain "docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.36 (navigation is a route: web <Link>)", the same path the search footer already uses, and the href is still rendered so the link still resolves without JS.
+
+VERDICT: PASS on the person's experience
+States checked: first view (footer rendered with three links), answered (route navigation on click), keyboard focus (focus-visible ring kept), tap on narrow viewport (44 px height, width unverified), footer pending state (no pending marker on buttons), back/repeat visit after client navigation, offline (not drawn by this diff), empty/error/loading (footer is static, not drawn)   Dead ends found: 0
+
+---
+⏱  47390ms (47.4s)
+📊 Tokens — total: 14115, input: 5563, output: 8552, reasoning: 7785

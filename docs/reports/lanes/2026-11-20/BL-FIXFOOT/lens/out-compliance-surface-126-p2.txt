@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:18:48.472Z file_sha256=160744208108449b9785862c5ad62258a3cb25b4c0069c13a8dbcb09e64a12a5 prompt_sha256=dce02a2ca5ab8c89832d30826ea4f885d7d8132cbb2549e18734662d008c19b0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — (<clause not pasted: the diff cites 136 FE.36, standards §1.1, 126 §11b.2) — src/tests/surfaces/site-footer-route.ui.test.tsx:2 "docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.36 (navigation is a route: web <Link>)" — every clause this change is actually built against is absent from the pasted context, so D7 (route link) and D8 (44 px target) compliance cannot be judged in this run; the pasted 126 material ends at 11a.10 and §11b.2 is not among it — paste part 3 of 126 (§11b) plus 136 FE.36 and standards §1.1 before re-running.
+DEFER severity=LOW — §9 Core Logic 5 "No business logic executes client-side beyond the five named exceptions (§5.3)" — src/components/report/ReportPage.tsx:252 "<Link key={key} href={String(p.href)} className={cls}>{kids}</Link>" — the swap moves the footer onto the platform router (client-side navigation/prefetch), a behaviour that is not among the five exceptions and §5.3 is not pasted, so it cannot be shown to fit — name router navigation in §5.3's exception list, or paste §5.3 so the fit is checkable.
+DEFER severity=LOW — §11a.7 MF-14 note (2) "no per-field or per-state entry" — src/components/report/ReportPage.tsx:241 "link: 'inline-flex min-h-11 items-center text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber'" — a per-target link height (44 px) is now added to a code-side class map that the pasted closed layout table has no key to declare, and the mobile footer binding is explicitly left unchanged, so the resulting target difference is declared nowhere in the pasted closed set — declare the link height as a layout-table or ruled exception entry rather than only a class string.
+REJECT — §11a.7 MF-12 note (5) "S-parity: the four target files of a state agree" — accused of breaking parity because the web footer now differs from mobile — not a real issue: S-parity binds the four golden tree files of a state, and no golden tree or states file is touched by this diff.
+MET — §11a.1 "The schema references the field and nothing else: no old engine names, no older-rule text, no code" — src/components/report/ReportPage.tsx:252 "href={String(p.href)}" — the href is still read off the footer part, no route literal is introduced in the renderer, so the link keeps binding to its declared field.
+MET — §9 Core Logic 5 "Render through the archetype component set" — src/components/report/ReportPage.tsx:252 "case 'Button': return <Link ...>" — the footer Button still renders through the mapped component (`Link` emits an anchor), so the component-set mapping is preserved.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  32657ms (32.7s)
+📊 Tokens — total: 34092, input: 27979, output: 6113, reasoning: 5397

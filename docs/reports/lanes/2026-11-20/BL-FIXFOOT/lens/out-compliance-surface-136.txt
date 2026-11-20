@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:19:33.699Z file_sha256=9bef939404fb000a9c329035c1260a119c2ff9a52616d3c1a3fb314fba2f89a0 prompt_sha256=80b350b1ff2a077a5ee0922ce29e3081930073e37e9666143af7b3a299595244
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.07 "parity compares each target's real output" — src/components/report/ReportPage.tsx:242 "link: 'inline-flex min-h-11 items-center text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber'" — the shared footer render path changes on web only, while the comment above it still holds "The mobile binding keeps its own footer (mobile/src/components/surfaces/ReportBinding.tsx): its G4 part is unchanged", and no parity assertion is added for the new footer output — fix: extend the parity lock to assert the footer declaration renders on mobile, web, admin and PDF, or rule the web-only tap-target divergence explicitly.
+
+DEFER severity=LOW — fe.36 "a control that moves the user uses the platform router (web <Link>, redirect(), router.push/replace after an action" — src/tests/surfaces/site-footer-route.ui.test.tsx:3 "docs/specs/00_engineering_standards.md section 1.1 (a link has a 44 px tappable area)" — the second half of the change (D8, min-h-11 / items-center / inline-flex) is authorised only by text that is not pasted (00_engineering_standards §1.1 and report-themes/pub/B.html:222), so the pasted clauses cover the Link half only — rationale: bounded, presentation-only, the routing half is satisfied by fe.36.
+
+DEFER severity=LOW — fe.33 "(web renderToStaticMarkup in the root suite; mobile jest-expo)" — src/tests/surfaces/site-footer-route.ui.test.tsx:1 "// @vitest-environment jsdom" — the only new web render proof for the footer runs in jsdom via Testing Library, not the ruled renderToStaticMarkup form, so the diff adds an unruled render path alongside the smoke — fix: assert the footer links' classes in the existing renderToStaticMarkup smoke as well.
+
+MET — fe.36 — src/components/report/ReportPage.tsx:252 "case 'Button': return <Link key={key} href={String(p.href)} className={cls}>{kids}</Link>;" — the footer link that moves the user now goes through the platform router on web.
+
+MET — fe.02 — src/components/report/ReportPage.tsx:252 — the change is inside the shared archetype renderer, no per-screen code and no descriptor change.
+
+REJECT — fe.05 "no maths in the UI" / "the FE-05 lock bans number literals here" — the change adds the token min-h-11 in the renderer, which could be read as a number literal in a UI file — it is a class token inside the class string, not a numeric literal, and no derived value or maths is added.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  30564ms (30.6s)
+📊 Tokens — total: 13127, input: 7397, output: 5730, reasoning: 5081

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:19:21.172Z file_sha256=57c02f2297fd9df43bcfcddaaaf13891c3b4e2191f259461e17e1d31aee341d5 prompt_sha256=b1d5812e4327d5b93a704b16ba5751917de3cc39d03c8646754b9b9ba7be2017
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-out-compliance-surface-128.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §3 Rule B4 "A descriptor, contract descriptor, archetype component or format-helper edit after capture forces a recapture. This is mechanical (`source_fingerprint` over `fingerprint_files[]`), not a reviewer's judgment." — src/tests/surfaces/site-footer-route.ui.test.tsx:31 "pageViewOf(JSON.parse(fs.readFileSync(path.join(ROOT, PAGE_GOLDEN_DIR, `v21.${t}.json`), 'utf8')).rendered_tree" — the lock hard-pins golden version v21, so the recapture B4 makes mandatory on the next fingerprint change either leaves this test asserting a stale tree or fails it outright — resolve the current capture version the way the other report locks do, and land the recapture with this change if `src/components/report/ReportPage.tsx` is in `fingerprint_files[]` (cannot see that list).
+
+DEFER severity=MED — §4.11 item 3 "a cite of an OWED FE row is refused unless its lock lands with red evidence in the same commit." — src/tests/surfaces/site-footer-route.ui.test.tsx:2 "// SPEC LINK: docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.36 (navigation is a route: web <Link>)," — the test cites an FE row and the diff adds no `docs/reports/red-evidence/` artifact for it, and no Spec 135 row update (cannot see Spec 135, so the fe.36 status is unverified) — either land the red evidence with the cite or cite only a RULED row.
+
+DEFER severity=LOW — §2 rule 1 "no surface behaviour lives only in a component — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field, in that order." with ASK-19 "A measured value **below 44 is a FINDING, not a setting**" — src/components/report/ReportPage.tsx:241 "link: 'inline-flex min-h-11 items-center text-report-soft underline ...'" — the 44 px floor now lives only in a class string plus a test assertion; no pasted clause names a class string as the declared home, while ASK-19 makes the touch target a declared value — state where the report surface's touch-target value is declared, or record why the class string is that declaration.
+
+REJECT — §2.2a Rule 15 "compare what each target actually emits ... each normalised to `{field, label, value, status, confidence, provenance, disclosures}`" — accused of breaking render-target parity by changing only the web footer element and geometry — class strings and element type are outside the normalised field set the comparator uses, so no parity claim is broken and the mobile binding's own footer is untouched per the diff's own comment.
+
+MET — §2.2a Rule 16 "bans arithmetic BinaryExpression, `Math.*`, `reduce`, `Number()`/`parseFloat` on field values, numeric literals other than 0 and 1 outside the formatter" — src/components/report/ReportPage.tsx:241 — the only added digit is inside a class string, so the projection dir gains no arithmetic and no numeric literal.
+
+MET — §2.2a Rule 17 "The renderer throws on an unknown field or status." — src/components/report/ReportPage.tsx:253 "default: throw new Error(`ReportPage footer: unmapped component \"${n.component}\"`);" — the footer switch stays fail-closed after the Button case is swapped.
+
+MET — §4.4 "the same commit that records the ruling adds a both-directions test (red on the old behaviour, green on the new)" — src/tests/surfaces/site-footer-route.ui.test.tsx:44-50 "expect(links.map((a) => [a.getAttribute('href'), a.getAttribute('data-next-link')])).toEqual(HREFS.map((x) => [x, 'true']))" — the same diff adds the lock, which is red on the old plain `<a>` (no marker, no `min-h-11`) and green on the new.
+
+MET — §2.1 item 5 "Navigation position — which route is mounted; `expo-router` owns it." — src/components/report/ReportPage.tsx:252 "case 'Button': return <Link key={key} href={String(p.href)} className={cls}>{kids}</Link>;" — routing is one of the five declared client-side exceptions, so next/link stays inside the closed menu.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 2
+
+---
+⏱  70465ms (70.5s)
+📊 Tokens — total: 38497, input: 24630, output: 13867, reasoning: 12843

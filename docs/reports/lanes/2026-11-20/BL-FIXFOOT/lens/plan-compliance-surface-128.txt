@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:14:12.394Z file_sha256=da320123df342dbebbcd27accda090300b94f8d44bdf70cb54c2ec2de248f3ba prompt_sha256=97442fb504cbffb0fb9d1411ea0a6a66d7a969d6104aae09d31f968da9e67733
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-plan-compliance-surface-128.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 128 rule B4 "goldens refresh on fingerprint, never on request. A descriptor, contract descriptor, archetype component or format-helper edit after capture forces a recapture. This is mechanical (source_fingerprint over fingerprint_files[]), not a reviewer's judgment." — plan "The builder footerNode.ts, the other two users, all goldens and stored values do not move." — the plan clears the goldens by judgement and names no fingerprint read or recapture run after editing an archetype component (ReportPage.tsx) — add a step that reads each report golden's source_fingerprint over fingerprint_files[] and recaptures where ReportPage.tsx is listed.
+
+BUG severity=MED — D8 task clause "add min-h and padding, UNLESS the approved v8 design draws them small: check the mock first; if it does, stop on D8 and bring it as an operator draft." — plan "(2) REPORT_FOOTER_LAYOUT.link gains" (inline-flex min-h-11 items-center) — half of the operator's prescribed fix is dropped, no padding class is added and no reason is stated — add the padding class, or record that the mock's own rule (min-height only) governs and padding is deliberately omitted.
+
+BUG severity=MED — D8 clause "the approved v8 design draws them small: check the mock first" — plan small-pages-v8/search.html:174 ".foot a, .wfoot a { display:inline-flex; align-items:center; min-height:44px }" — the mock checked is the search page, not the report footer's approved v8 mock, so D8's stop condition was not tested against the artefact it names — quote the report footer's own approved mock line, or state that this one mock governs every web footer.
+
+BUG severity=MED — Spec 128 rule 1 "no surface behaviour lives only in a component" plus ASK-19 "a11y.touch_target_min_px · touch_target_why" and "A measured value below 44 is a FINDING, not a setting" — plan "D8 ReportPage.tsx:240 REPORT_FOOTER_LAYOUT.link has no min-h" — the 44 px floor lands only as a Tailwind class inside the component, with no declared a11y.touch_target_min_px and no declared check — declare the value in the report surface's a11y block (or state where it is already declared) in the same change.
+
+DEFER severity=MED — acceptance #3 "Compliance lens run once per governing rule list with the list whole; a separate grounder verdict on file" — plan NONE — the plan lists no step for the whole-list compliance run and no separate grounder verdict — add both as plan steps with their artefacts.
+
+DEFER severity=LOW — rule 16 "an AST scan of EVERY file under the projection dirs AND the generator" (scope per MF-16 note: src/lib/surfaces/report/, src/components/report/, src/app/admin/report-preview/) — plan NONE — the edited file is inside a scanned dir and the plan names no run of report-no-maths.logic.test.ts — name that lock among the tests that must stay green.
+
+DEFER severity=LOW — rule 15 "proves its projections equal on the shared field set, by golden comparison" and acceptance #4 "the existing parity tests pass" — plan "the search and static footers keep their Link anchors (control)" — the new test controls only search and static, and parity.golden.test.ts is never named — run the parity golden lock (web, mobile, pdf, admin) as part of green.
+
+MET — D7 "the footer links are plain anchors ... render through next/link." — plan "renderFooter case 'Button' returns <Link key href className>" — the anchor is replaced by a next/link route.
+MET — Spec 128 §2.1 item 5 "which route is mounted; expo-router owns it" — plan same line — a route link is the named navigation exception, not client computation.
+MET — Spec 128 §4.4 "the same commit that records a ruling adds a both-directions test, red on the old behaviour and green on the new." — plan "new src/tests/surfaces/site-footer-route.ui.test.tsx ... Red = commit attempt with only the test and task file staged." — both arms and the red-first mechanism are declared in the same commit.
+MET — acceptance #1 "Each defect is confirmed on the head before fixing, with file:line" — plan "D7 src/components/report/ReportPage.tsx:251 ... D8 ReportPage.tsx:240" — both defects are confirmed on the head with file:line.
+
+REJECT — Spec 128 §2.1 item 5 "which route is mounted" — accused of moving client behaviour into a component — a rendered route link is the named navigation exception and adds no computation.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+
+---
+⏱  56077ms (56.1s)
+📊 Tokens — total: 42265, input: 31073, output: 11192, reasoning: 10115

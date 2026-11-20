@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T15:15:08.516Z file_sha256=ad695b57e43b1e05689179c984a4f35db210f40e8316d6e356f5ce24da073944 prompt_sha256=5236105fdf23cabd82a81016135552bcfd693a9f26cc43238b5c1d2f05347daa
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/plan-material.md (model: deepseek-reasoner)
+
+DEFER severity=MED — SearchBinding.tsx:384 "already render footer links as Mantine Button component={Link}" — the person on the search page can still get a footer link shorter than 44 px, because the plan checks the Button size only for the static footer (StaticBinding.tsx:141, size lg, 50 px) and states no size for the search footer Button — give the search footer link the same min-h-11 items-center or record its computed height against the mock before this is called done.
+
+DEFER severity=MED — Plan task-374 "REPORT_FOOTER_LAYOUT.link gains "inline-flex min-h-11 items-center"" vs task scope "add min-h and padding" — the report footer link now has 44 px of height but no horizontal padding or min width, so a short label such as Help leaves the person a tap target under 44 px wide — add horizontal padding (or a min width) to the same link class and state the resulting width.
+
+DEFER severity=LOW — StaticBinding.tsx:141 "is a Mantine Button size lg" — a footer link on a static page is 50 px tall while the same link on the report is 44 px and on search is size-dependent, so the person sees the site footer change height from page to page — align all three footer users to one stated link height under the one rule the mock gives.
+
+DEFER severity=LOW — Plan task-374 "small-pages-v8/search.html:174" ".foot a, .wfoot a { display:inline-flex; align-items:center; min-height:44px }" — the 44 px authority for the report footer is a search page mock; the report's own approved design (report B v3, open-questions.md:1100) is not pasted, so I cannot see whether the report footer is drawn at 44 px — paste the report footer design line beside the size change.
+
+REJECT — Plan task-374 "REPORT_FOOTER_LAYOUT.link gains "inline-flex min-h-11 items-center"" — the person sees a taller, vertically centred footer link written as Tailwind classes rather than design values — min-h-11 is 44 px and inline-flex with items-center is exactly the mock's display:inline-flex, align-items:center, min-height:44px, so it is a faithful implementation and harmless.
+
+VERDICT: PASS on the person's experience
+States checked: report page footer first view, report footer tap target (mobile), report footer keyboard focus (cannot see), search page footer as control, static page footer as control, return to previous page after a footer link; loading, answered, empty, error, offline and repeat visit are not drawn by this change   Dead ends found: 0
+
+---
+⏱  29203ms (29.2s)
+📊 Tokens — total: 23388, input: 18457, output: 4931, reasoning: 4348

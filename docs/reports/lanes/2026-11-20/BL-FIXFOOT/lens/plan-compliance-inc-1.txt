@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:12:31.947Z file_sha256=b0588b6bb279dfe14fa8be15c37bb219b7cfcf1416e0656f98e74f4d019dc4b1 prompt_sha256=b8381037e313729e0dde9934a0cf6126ffb4439e967cdf4655c6a84e1058f489
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-plan-compliance-inc-1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC#3 "Compliance lens run once per governing rule list with the list whole; a separate grounder verdict on file" — NONE — the plan names no compliance lens run and no grounder verdict file, so criterion 3 is unmet by the plan itself — add both as plan steps, one lens run over the rule list whole plus a grounder verdict written to file.
+
+BUG severity=HIGH — D8 "UNLESS the approved v8 design draws them small: check the mock first; if it does, stop on D8 and bring it as an operator draft" — plan "The approved v8 mock draws the footer link as 44 px (small-pages-v8/search.html:174" — the stop-or-fix gate is closed on the small-pages search footer mock, while the report footer's governing design is doc-4 "F-REPORT-WEB ReportPage (web v21 report page, Daylight keys)", so the mock named by the clause was not the one checked — cite the approved report mock for the footer link height, or raise D8 as an operator draft.
+
+DEFER severity=MED — operator words "essential we have a non compliance build again - the entire reason for this approach" — plan "Left alone (operator items, listed): conflicts C1 to C5" — the plan closes D7 and D8 but knowingly leaves five confirmed compliance conflicts on the operator list, which is the outcome the operator objected to unless each conflict carries its own task id — name the task id that carries C1 to C5 in the plan, or resolve them here.
+
+DEFER severity=MED — AC#4 "The shared footer builder and its three users stay in parity (the existing parity tests pass)" — plan "The builder footerNode.ts, the other two users, all goldens and stored values do not move." — parity is asserted, not evidenced; no run of the existing parity tests is named — add the existing parity suite to the test step.
+
+DEFER severity=MED — AC#2 "Tests red first, then green through the real hooks" — plan "new src/tests/surfaces/site-footer-route.ui.test.tsx (jsdom; next/link mocked to mark its anchors)" — the green run passes through a mocked next/link, not the real hook the criterion names — render the real Link, or add one integration assertion, so the router path is what goes green.
+
+DEFER severity=MED — D7 "the footer links are plain anchors (Spec 136 fe.36 navigation is a route: web Link): render through next/link" — plan "case 'Button' returns a plain <a href>" — only one renderer case is confirmed as an anchor; whether the other footer cases (sources, by-laws, copyright) also emit plain anchors cannot be seen from the plan — list every footer renderer case with file:line and convert each anchor found.
+
+DEFER severity=LOW — D8 "add min-h and padding" — plan "REPORT_FOOTER_LAYOUT.link gains "inline-flex min-h-11 items-center"" — padding is not added, only min-height — min-h-11 meets the 44 px target so the omission is bounded, note it in the change record or add the padding the clause names.
+
+MET — AC#1 "Each defect is confirmed on the head before fixing, with file:line" — plan "D7 src/components/report/ReportPage.tsx:251 ... D8 ReportPage.tsx:240" — both defects are confirmed on the head with file:line.
+MET — Spec 136 fe.36 as quoted by the plan "web navigation is a route, <Link>" — plan "renderFooter case 'Button' returns <Link key href className>" — the footer button renders through next/link.
+MET — engineering standards 1.1 as quoted by the plan "00_engineering_standards.md:14, 44px" — plan "min-h-11" — the 44 px floor is added to the footer link.
+MET — milestone principles "keep it simple; no scope creep" — plan "Change (two lines, one file)" — the change stays on the two named defects in the one named file.
+
+REJECT — doc-4 F-REPORT-WEB "ReportPage (web v21 report page, Daylight keys): ON ORIGIN" — that the change edits a page the requirements doc reports ON ORIGIN — that row records built state on origin, it does not bar a defect fix in a worktree.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+
+---
+⏱  52859ms (52.9s)
+📊 Tokens — total: 24715, input: 14203, output: 10512, reasoning: 9536

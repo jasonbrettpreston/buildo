@@ -1,0 +1,243 @@
+LIST eng-s2-s4-s10-s11 sha256:3229b9b071b889a6878b5ca1f2c36c9659d185106e3bca865d5ff5ceffaf382c material sha256:6e4124c0cc07666160c6bfdbb9eafb7a528963c28098976f29bfdce3a70a1f08 part 1 of 1
+RULE LIST eng-s2-s4-s10-s11 (docs/specs/00_engineering_standards.md, sections 2. Error Handling; 4. Security & API Contracts; 10. Frontend/Backend Boundary; 11. Plan Compliance Checklist), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 🚨 2. Error Handling & Stability
+
+### 2.1 The "Unhappy Path" Test Mandate
+- **Rule:** When writing integration tests (`.infra.test.ts`), you MUST include tests for **error paths and silent failures**.
+- **Execution:** Do not merely test "Loading," "Success," and "Error" states. Force errors in the deepest layer of the call stack (e.g., forcing a database `ROLLBACK` to throw, or simulating a network timeout) and explicitly assert that the top layer recovers gracefully or returns a safe HTTP 500 without leaking the raw `.message`.
+
+### 2.2 The Try-Catch Boundary Rule
+- **Rule:** Every newly created API route (`export async function GET/POST/PUT/DELETE/PATCH` inside `src/app/api/`) MUST have an overarching `try-catch` block wrapping the entire handler body.
+- **Execution:** The catch block MUST return `{ error: 'Human-readable message' }` with an appropriate HTTP status (e.g., 500) and log the raw error server-side only. **Never expose `err.message` to clients.** The guardrail tests in `api.infra.test.ts` scan route files to enforce this.
+
+### 2.3 Assumption Documentation
+- **Rule:** Before accessing nested object properties, explicitly check for `null` or `undefined`.
+- **Execution:** Use TypeScript Optional Chaining (`?.`) or explicit type guards. Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment.
+
+---
+
+## 🔐 4. Security & API Contracts
+
+### 4.1 Route Guarding
+- **Rule:** All endpoints within `src/app/api/` must be analyzed for protection. Never leave administrative routes unprotected.
+- **Rule (amended 2026-09-15, WF3 SEC-1):** `src/middleware.ts` is a **presence-only pre-filter, not the gate**. Its admin/API arm performs no authorization: it passes any request carrying a non-empty `sb-*-auth-token` cookie (of any shape) OR any `x-admin-key` header value (the secret comparison lives solely in `verify-admin.ts` mode 2 — the P1-F4 break-glass transport decision, 2026-07-19), and Spec 13 §3.5 states plainly that middleware performs no cryptographic verification. The **authoritative gate for every `/api/admin/**` route is `verifyAdminAuth(request)` as the FIRST statement of the handler** (Spec 33 §8). Measured 2026-09-15: 11 of 29 admin routes relied on the middleware and had no guard at all — two of them said so in a header comment. Enforcement is locked by the source scan in `src/tests/api.infra.test.ts` (*"every /api/admin/** handler export calls verifyAdminAuth as its FIRST statement"*), plus an integration lock in `src/tests/admin-route-guard.infra.test.ts` proving an `x-admin-key: anything` request no longer reaches a handler. Route **classification** (`classifyRoute` returning `'admin'`) is a label; it enforces nothing.
+
+### 4.2 Parameterization
+- **Rule:** Raw SQL statements must utilize Drizzle parameterized queries to prevent SQL injection. String concatenation for dynamic queries (especially via `order by` or search terms) is forbidden unless rigorously validated against a static whitelist.
+
+### 4.3 Frontend Security
+- **Rule:** Never place API keys, admin SDK credentials, or database connection strings in `use client` components. Firebase client config (public keys) is the only exception.
+- **Rule:** Never use `dangerouslySetInnerHTML` without explicit sanitization. Prefer React JSX which escapes by default.
+- **Rule:** API routes must return only the fields the UI needs. Never `SELECT *` — always project specific columns. This limits exposure if an API route is accessed directly.
+- **Rule:** All authorization must be enforced server-side in API routes or middleware. Client-side route hiding (e.g., hiding an admin link) is cosmetic, not security. Both must exist.
+- **Rule:** User-provided input displayed in the UI (search terms, company names, addresses) must be treated as untrusted. Watch for reflected XSS in query params rendered into page content.
+
+### 4.4 API Design for Multi-App Consumption
+- **Rule:** API routes are the **contract boundary** between frontend and backend. They must be designed as stable, versioned interfaces that could serve multiple client apps.
+- **Response shape:** All API routes must return a consistent envelope: `{ data, error, meta }`. Never return raw arrays or ad-hoc shapes.
+- **No client assumptions:** API routes must not assume which frontend is calling. Do not embed UI-specific logic (pagination styles, component-shaped responses) in the API layer. Return normalized data; let each client transform it.
+- **Auth via tokens, not cookies (future):** Current cookie-based auth works for the Next.js app. When a second client app is added, migrate to Bearer token auth (Firebase ID tokens in `Authorization` header) so non-browser clients can authenticate.
+- **Rate limiting:** Public-facing API routes must include rate limiting before a second app is connected. Use middleware-level throttling, not per-route logic.
+- **CORS:** When a second app is added, configure explicit CORS origins in `next.config.js`. Never use `Access-Control-Allow-Origin: *` in production.
+
+---
+
+## 🧱 10. Frontend/Backend Boundary
+
+### 10.1 Data Flow Direction
+- **Rule:** The data flow is strictly one-directional: `[Pipelines] → [Database] → [API Routes] → [Frontend]`. Frontend components never write to pipeline tables. Pipelines never read frontend state. API routes are the only bridge.
+
+### 10.2 Boundary Rules During Frontend Phase
+- **Rule:** Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`. If a frontend feature needs data that doesn't exist, add an API route that queries and transforms existing tables — do not change how data enters the database.
+- **Rule:** Database schema is frozen during frontend work unless a feature genuinely requires a new column. Convenience columns ("I wish this was pre-computed") should be computed in the API layer instead.
+- **Rule:** If a `src/lib/` module is imported by both API routes and frontend components, any modification requires `npx vitest related` to verify no API regression. Shared modules are the highest-risk cross-boundary files.
+
+### 10.3 API Route Discipline
+- **Rule:** API routes must be thin — validate input, call a lib function, return the result. Business logic belongs in `src/lib/`, not in route handlers. This keeps logic testable and reusable across future apps.
+- **Rule:** New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route. This enables type-safe consumption by any client.
+- **Rule:** Avoid returning database column names directly. Map to a stable API field name (e.g., `est_const_cost` → `estimatedCost`). This decouples the API contract from the schema, so future DB refactors don't break clients.
+
+---
+
+## ✅ 11. Plan Compliance Checklist
+
+Before presenting "PLAN LOCKED", the plan MUST address each applicable item below. These are not optional — if the condition applies, the corresponding items must appear in the plan.
+
+### If Database Impact = YES:
+- [ ] UP + DOWN migration in `migrations/NNN_[feature].sql` (§3.2)
+- [ ] Backfill strategy for ALTER on 100K+ row tables (§3.1)
+- [ ] `src/tests/factories.ts` updated with new fields (§5.1)
+- [ ] `npm run typecheck` planned after `db:generate` (§8.2)
+
+### If API Route Created/Modified:
+- [ ] Request/Response TypeScript interface in `src/lib/[feature]/types.ts` (§10.3)
+- [ ] Consistent response envelope: `{ data, error, meta }` (§4.4)
+- [ ] Overarching try-catch with `logError(tag, err, context)` (§2.2, §6.1)
+- [ ] Unhappy-path test cases listed: 400, 404, 500 (§2.1)
+- [ ] Route guarded by `verifyAdminAuth(request)` as the handler's FIRST statement — middleware is a presence-only pre-filter, never the gate (§4.1, Spec 33 §8)
+- [ ] Every mutating admin export writes an `admin_audit_log` row inside the mutation's own transaction, and refuses the shared non-session sentinels with 403 (§4.1, Spec 33 §8.1, Spec 128 R-12)
+- [ ] No `.env` secrets exposed to client components (§4.3)
+- [ ] Returns projected fields only, not `SELECT *` (§4.3)
+- [ ] No client-specific assumptions in response shape (§4.4)
+
+### If UI Component Created/Modified:
+- [ ] Mobile-first layout: base classes = mobile, `md:`/`lg:` = desktop (§1.1)
+- [ ] Touch targets ≥ 44px (§1.1)
+- [ ] 375px viewport test in test plan
+- [ ] No API keys or secrets in `use client` components (§4.3)
+- [ ] User-provided input escaped/sanitized before display (§4.3)
+
+### If Shared Logic Touched (classification, scoring, scope):
+- [ ] All dual-code-path consumers identified (§7.1, §7.2)
+- [ ] Update plan covers both TS module and JS script
+- [ ] `npx vitest related` planned for cross-boundary validation (§10.2)
+
+### If Pipeline Script Created/Modified:
+- [ ] Uses Pipeline SDK: `pipeline.run`, `withTransaction`, `emitSummary` (§9.4)
+- [ ] Streaming ingestion for external API data (§9.5)
+
+### Frontend Boundary Check (all frontend WFs):
+- [ ] No modifications to `scripts/`, `migrations/`, or `scripts/lib/` (§10.2)
+- [ ] API route returns stable field names, not raw DB columns (§10.3)
+- [ ] Business logic in `src/lib/`, not in route handlers (§10.3)
+
+### Frontend Foundation Check (new code in `src/features/`):
+- [ ] Biome check passes (§12.1)
+- [ ] No `useEffect` for data fetching — TanStack Query only (§12.2)
+- [ ] No `useState` for form fields — React Hook Form + Zod (§12.3)
+- [ ] No React Context inside `src/features/leads/` — Zustand only (§12.4)
+- [ ] All `onClick`/`onSubmit` handlers call `captureEvent()` (§13.1)
+- [ ] Centered modals replaced with Shadcn `<Drawer>` on mobile (§12.5)
+- [ ] Lists >50 items wrapped in TanStack Virtual (§12.6)
+- [ ] Toast notifications via Sonner — no custom alert banners (§12.7)
+
+### Pre-Review Self-Checklist (always applies, every WF):
+- [ ] Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change (Behavioral Contract / API Endpoints / Operating Boundaries / §4 Edge Cases). Walk each item against the ACTUAL diff. Output PASS/FAIL per item in the response BEFORE running tests. See `CLAUDE.md` WF1/WF2/WF3 execution plans for the per-workflow phrasing.
+- [ ] WF3 variant: list 3-5 sibling bugs that could share the same root cause and verify the fix covers them (or document why each doesn't apply).
+
+### Cross-Layer Contracts Check (always applies):
+- [ ] Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)
+- [ ] If a new threshold is introduced, a row is added to `src/tests/contracts.infra.test.ts` mapping the JSON key to its consumer file(s) so drift becomes a CI failure
+- [ ] If a threshold is changed, EVERY consumer file listed in `contracts.infra.test.ts` is updated in the same commit
+
+### Database/Migration Check:
+- [ ] New migration has DOWN block (§3.2, §12.8)
+- [ ] SQLFluff lint passes for new migration files (§12.8)
+- [ ] `validate-migration.js` passes (no DROP without confirmation, no non-CONCURRENTLY indexes on tables >100K rows) (§12.8)
+- [ ] No raw SQL string concatenation — parameterized only (§4.2)
+
+---
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/components/report/ReportPage.tsx b/src/components/report/ReportPage.tsx
+index 081699668..92e63d49b 100644
+--- a/src/components/report/ReportPage.tsx
++++ b/src/components/report/ReportPage.tsx
+@@ -7,6 +7,7 @@
+ // (`details: collapsed`) or open without them (`expanded`). Every text is a part's text as built on the server; a pending part shows the ruled
+ // pending text in its own slot in one muted style (data-pending). Colours are the named report-* theme colours (ruling 1 a); geometry is in
+ // class strings (the FE-05 lock bans number literals here). The one client island is ReportPageToggles (UI state only).
++import Link from 'next/link';
+ import type { ReactElement } from 'react';
+ import type { PagePart, PageSection, PageView, ViewImage } from '../../lib/surfaces/report/core';
+ import { ReportPageToggles } from './ReportPageToggles';
+@@ -237,7 +238,7 @@ const H2 = ({ p, id }: { p: Part; id: string }): ReactElement => <T p={p} as="h2
+ // strings the caller supplies. The mobile binding keeps its own footer (mobile/src/components/surfaces/ReportBinding.tsx): its G4 part is unchanged.
+ const REPORT_FOOTER_LAYOUT: FooterLayout = {
+   footer: 'grid gap-2 border-t border-report-line pt-4 text-[14px]/[20px] text-report-soft', links: 'flex flex-wrap gap-x-4 gap-y-1',
+-  link: 'text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber', line: '', legal: '', copyright: '',
++  link: 'inline-flex min-h-11 items-center text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber', line: '', legal: '', copyright: '',
+ };
+ const renderFooter = (n: FooterNode, text: (key: string) => string): ReactElement => {
+   const kids = n.children.map((c) => ('content' in c ? text(c.content) : renderFooter(c, text)));
+@@ -248,7 +249,7 @@ const renderFooter = (n: FooterNode, text: (key: string) => string): ReactElemen
+     case 'Stack': return <footer key={key} data-section="footer" className={cls}>{kids}</footer>;
+     case 'Group': return <div key={key} className={cls}>{kids}</div>;
+     case 'Text': return <span key={key} data-pending={p.pending === true ? 'true' : undefined} className={p.pending === true ? `${cls} ${PENDING}` : cls}>{kids}</span>;
+-    case 'Button': return <a key={key} href={String(p.href)} className={cls}>{kids}</a>;
++    case 'Button': return <Link key={key} href={String(p.href)} className={cls}>{kids}</Link>;
+     default: throw new Error(`ReportPage footer: unmapped component "${n.component}"`);
+   }
+ };
+diff --git a/src/tests/surfaces/site-footer-route.ui.test.tsx b/src/tests/surfaces/site-footer-route.ui.test.tsx
+new file mode 100644
+index 000000000..71b67b93f
+--- /dev/null
++++ b/src/tests/surfaces/site-footer-route.ui.test.tsx
+@@ -0,0 +1,74 @@
++// @vitest-environment jsdom
++// SPEC LINK: docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.36 (navigation is a route: web <Link>),
++//            docs/specs/00_engineering_standards.md section 1.1 (a link has a 44 px tappable area),
++//            docs/specs/02-web-admin/126_maxbld_surface_standard.md section 11b.2 (one footer tree, a render per binding).
++//
++// task-374 (FIX.FOOTER, defects D7 and D8 of the BL-GROUND handbook pass; operator 2026-11-20: "essential we have a non compliance build again - the entire
++// reason for this approach") · the web report footer's three links (Terms, Privacy, Help):
++//   D7 each is a next/link (the platform router), as the search and static footers already are, not a plain anchor that reloads the page;
++//   D8 each is drawn at the 44 px the approved mock draws (report-themes/pub/B.html:222, "min-height:44px", inline-flex, items centred): min-h-11 and items-center.
++// next/link is replaced by a marker anchor so a render shows WHICH links went through the router; the search footer is the control.
++import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
++import fs from 'node:fs';
++import path from 'node:path';
++import { createElement as h, type ReactNode } from 'react';
++import { cleanup, render } from '@testing-library/react';
++
++vi.mock('next/link', () => ({
++  default: ({ href, children, ...p }: { href: string; children: ReactNode }) => h('a', { href, 'data-next-link': 'true', ...p }, children),
++}));
++
++import { AdminMantineProvider } from '../../components/surfaces/web/AdminMantineProvider';
++import { SearchBinding, searchWebData, searchWebTree, type WebSituation } from '../../components/surfaces/web/SearchBinding';
++import { pickFooterText } from '../../components/surfaces/web/footerNode';
++import { ReportPage } from '../../components/report/ReportPage';
++import { pageViewOf, type PageView } from '../../lib/surfaces/report/core';
++import { reportCtx } from '../../lib/surfaces/report/data';
++import { SEARCH_CONTENT as C, WEB_STATIC_SITUATION } from '../../lib/surfaces/maxbld-web';
++import { PAGE_GOLDEN_DIR } from '../../../scripts/surfaces/report-page-capture';
++
++const ROOT = process.cwd();
++const view = (t: string): PageView => pageViewOf(JSON.parse(fs.readFileSync(path.join(ROOT, PAGE_GOLDEN_DIR, `v21.${t}.json`), 'utf8')).rendered_tree, { target: t }, reportCtx) as PageView;
++const FOOTER = pickFooterText(C);
++const HREFS = ['/terms', '/privacy', '/help'];
++const reportLinks = (): HTMLAnchorElement[] => {
++  const { container } = render(h(ReportPage, { view: view('web'), footer: FOOTER }));
++  return [...(container.querySelector('footer[data-section="footer"]') as HTMLElement).querySelectorAll('a')];
++};
++const classesOf = (a: Element): string[] => (a.getAttribute('class') ?? '').split(/\s+/);
++
++beforeAll(() => {
++  Object.defineProperty(window, 'matchMedia', { writable: true, value: (q: string) => ({ matches: false, media: q, onchange: null, addListener: () => undefined, removeListener: () => undefined, addEventListener: () => undefined, removeEventListener: () => undefined, dispatchEvent: () => false }) });
++  if (!('ResizeObserver' in globalThis)) Object.defineProperty(globalThis, 'ResizeObserver', { writable: true, value: class { observe(): void { /* jsdom stub */ } unobserve(): void { /* jsdom stub */ } disconnect(): void { /* jsdom stub */ } } });
++});
++afterEach(cleanup);
++
++describe('D7 the report footer links are route links', () => {
++  it('each of the three links goes through next/link and keeps its href', () => {
++    const links = reportLinks();
++    expect(links.map((a) => [a.getAttribute('href'), a.getAttribute('data-next-link')])).toEqual(HREFS.map((x) => [x, 'true']));
++  });
++  it('control: the search footer links go through next/link (the render path the report now shares)', () => {
++    const s = WEB_STATIC_SITUATION as WebSituation;
++    const { container } = render(h(AdminMantineProvider, { scheme: 'dark', children: h(SearchBinding, { tree: searchWebTree(s), content: C, data: searchWebData(s), runtime: { disabled: false } }) }));
++    const links = [...(container.querySelector('footer') as HTMLElement).querySelectorAll('a')];
++    expect(links.map((a) => [a.getAttribute('href'), a.getAttribute('data-next-link')])).toEqual(HREFS.map((x) => [x, 'true']));
++  });
++});
++
++describe('D8 the report footer links are drawn at the 44 px target', () => {
++  it('each link class carries min-h-11 (44 px), inline-flex and items-center, as the mock draws it', () => {
++    const links = reportLinks();
++    expect(links).toHaveLength(HREFS.length);
++    for (const a of links) {
++      const cls = classesOf(a);
++      expect([a.getAttribute('href'), cls.includes('min-h-11'), cls.includes('items-center'), cls.includes('inline-flex')]).toEqual([a.getAttribute('href'), true, true, true]);
++    }
++  });
++  it('the links keep their other classes (colour, underline, focus ring): nothing else moves', () => {
++    for (const a of reportLinks()) {
++      const cls = classesOf(a);
++      expect([cls.includes('text-report-soft'), cls.includes('underline'), cls.includes('focus-visible:outline-report-amber')]).toEqual([true, true, true]);
++    }
++  });
++});
+

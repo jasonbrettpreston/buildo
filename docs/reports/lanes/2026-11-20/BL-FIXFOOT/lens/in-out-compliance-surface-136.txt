@@ -1,0 +1,249 @@
+LIST surface-136 sha256:6a81c5fb427bc91e43eca5539fedef4d55b696ad8c17f4cb88bdd2acbed51b97 material sha256:6e4124c0cc07666160c6bfdbb9eafb7a528963c28098976f29bfdce3a70a1f08 part 1 of 1
+RULE LIST surface-136 (docs/specs/02-web-admin/136_mcfrontend_handbook.md, sections 2. Rules), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 2. Rules
+
+- **fe.01** McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name; scope mobile, web, admin and PDF. Surface paths are held (pending globs) until Phase 1 opens.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-status.infra.test.ts · +4 dated notes
+
+- **fe.02** P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generated-only.infra.test.ts · +2 dated notes
+
+- **fe.03** P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-validate.infra.test.ts · +1 dated note
+
+- **fe.04** P3 Fast: a REPORT performance budget (load, payload); a new field ships in hours. Payload is mechanical; load time and "hours" are PROSE-ONLY. Numbers are measured first, then ruled (Q-MF5).
+  Status: OWED · lock owed: src/tests/surfaces/budget.infra.test.ts
+
+- **fe.05** P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-no-maths.logic.test.ts · +1 dated note
+
+- **fe.06** P5 Honest display: disclosures, confidence, "at least", not_evaluated, not_modelled always shown; closed status list; oracle = catalogue flags.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.07** P6 Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/parity.golden.test.ts · +2 dated notes
+
+- **fe.08** Doc set: specs in docs/specs/02-web-admin; 135 = decisions register; 136 = generated handbook.
+  Status: RULED 2026-11-04
+
+- **fe.09** A separate decisions spec, 124a/69a form, with a Lock column that resolves.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/register-locks-resolve.infra.test.ts · +1 dated note
+
+- **fe.10** The generator lives in the spec: the REPORT section of Spec 126.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/handbook-rule-map.logic.test.ts · +1 dated note
+
+- **fe.11** The product (report page) goes first; the admin converts on touch, with no fixed admin pilot; /admin/surfaces is built when the admin next needs that view.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +2 dated notes
+
+- **fe.12** Admin market-metrics is DASHBOARD (126:207, :717); its descriptor's REPORT is an error fixed at conversion.
+  Status: OWED · lock owed: src/tests/surfaces/dashboard-not-report.logic.test.ts
+
+- **fe.13** surface-validate.mjs (MF-15) is the first gate McFrontend builds, part of the build after increment 2. Focus stays on McBylaws.
+  Status: RULED 2026-11-04 · Enforced by: src/tests/surfaces/surface-validate.logic.test.ts · +3 dated notes
+
+- **fe.14** LEAN: the report page converts first (generator, one REPORT renderer, goldens, locks); reuse the back-end machinery; other screens convert on touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +2 dated notes
+
+- **fe.15** "How we know it works": the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfront-proof.infra.test.ts · +2 dated notes
+
+- **fe.16** Q-MF1: all McFrontend specs in docs/specs/02-web-admin; 135 = register; 136 = handbook. No tooling change.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/spec-paths.infra.test.ts · +1 dated note
+
+- **fe.17** Q-MF2: one card per building type, variants[] inside (roof form flat/pitched A/pitched B; unit class houseplex 2-4 at 4, 6 not_modelled), generated from the catalogue; headline flag emitted by the generator; ad slots outside the card list.
+  Status: OWED · lock owed: src/tests/surfaces/report-variants.logic.test.ts
+
+- **fe.18** Q-MF3 binding rule (core premise): every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot (and external_embed, the fifth source, by FE-21); the schema references the field only (no old engine names, no older-rule text, no code). Labels, help text and…
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts · +2 dated notes
+
+- **fe.19** User inputs are shared, not private: an entered fact updates the shared database, raises that lot's confidence for every viewer, and keeps provenance (source user, entered_at). Confidence by source: estimated low, user medium, verified high. McBylaws re-evaluates (increment 6); McFrontend declares…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-input-provenance.logic.test.ts · +2 dated notes
+
+- **fe.20** Conflict rule for user entries: verified permit/plan facts outrank user entries; the newest user entry is shown; earlier entries are kept in history so a bad entry can be reverted.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-entry-precedence.logic.test.ts · +2 dated notes
+
+- **fe.21** external_embed (map tiles, payment checkout, analytics) is the fifth binding source: each embed declared, never coded.
+  Status: OWED · lock owed: src/tests/surfaces/report-binding-embed.logic.test.ts
+
+- **fe.22** Ad targeting only on declared database keys; never on user-entered facts without consent.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-targeting-keys.logic.test.ts · +1 dated note
+
+- **fe.23** Ad slots: own source (ad_slot) and disclosure (R-17), never inside a card (R-34), outside variants[] and the card list.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-slot.golden.test.ts · +1 dated note
+
+- **fe.24** A new catalogue row reaches mobile, web, admin and PDF with zero front-end code; the renderer throws on an unknown field or status.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/new-row-zero-code.golden.test.ts · +4 dated notes
+
+- **fe.25** The 25 golden lots render end to end the McBylaws answer-key numbers on every target. Runs as a db-type test in a named CI step.
+  Status: OWED · lock owed: src/tests/surfaces/answer-key-e2e.db.test.ts
+
+- **fe.26** In-product error count and budget breach are shown on admin, through the real writer and reader. The on-screen part is a manual operator check (PROSE-ONLY).
+  Status: OWED · lock owed: src/tests/surfaces/error-count.db.test.ts
+
+- **fe.27** parcels is a source in the closed binding set: a field bound to a column of the parcels table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist). A column that is not in the migrations, or a path not on the whitelist, fails.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts
+
+- **fe.28** none is a closed status value, "no reading on this node", valid only on the message node of a lifecycle tree (loading / miss / error); the tree carries lifecycle, closed loading | miss | error. Omission of status stays a build failure; every node carries one.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts
+
+- **fe.29** The report node contract has ONE home, scripts/surfaces/_schema/report-tree.schema.json (draft 2020-12, additionalProperties false): a tree is lifecycle? (loading | miss | error) plus nodes[]; each node requires field, source, label, value (string or null), status (the 11a.3 forms plus none),…
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +1 dated note
+
+- **fe.30** Report fields are generated from the catalogue, one home per fact. (1) Every effective-ON catalogue row (its switch ON and its building type ON) is a report field, automatically; off yields none; retirement is the switchboard row OFF, never a retired-rows list. (2)…
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generator-fields.logic.test.ts · +1 dated note
+
+- **fe.31** Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema: descriptor valid with no UNRESEARCHED and no golden: "none"; in the converted manifest (two-direction totality); one props golden per reachable state per declared target,…
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-conformance.logic.test.ts · +5 dated notes
+
+- **fe.32** contract is a binding kind: a displayed value may bind to a field of a declared CONTRACT descriptor's response projection; the member must exist in that descriptor; any other value fails.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/contract-binding.logic.test.ts · +2 dated notes
+
+- **fe.33** One render smoke per archetype per platform: each binding renders its archetype's goldens on each platform (web renderToStaticMarkup in the root suite; mobile jest-expo), and every displayed string, library default strings and form error messages included, comes from content.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/render-smoke.logic.test.ts · +2 dated notes
+
+- **fe.34** The v21 report PAGE tree has ONE contract, scripts/surfaces/_schema/report-page.schema.json, beside the node contract (FE-29; an ad section reuses its $defs/slot): the sections of the page table scripts/surfaces/_schema/report-page.json in screen order; each part is one shown text bound to a…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.35** The REPORT loading state "What we checked" (MF-62): a lifecycle: loading tree may carry ONE root-only checked object (never a node, never on miss, error or a reading tree; the one-message-node rule unchanged): the title, the citywide and per-lot groups and the data dates, each line a content…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-checked.logic.test.ts
+
+- **fe.36** Navigation is a route: a control that moves the user uses the platform router (web <Link>, redirect(), router.push/replace after an action; mobile expo-router with canGoBack() before back()); a view is never swapped by local state; local state is disclosure only; a navigating pressable has a role…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/nav-by-route.logic.test.ts
+
+- **fe.37** A STATIC page may read declared stored values on the server: its values are content templates with one {value} slot filled on the server with a server-formatted string, each from a read declared in the page table and the page's server module; a failed read leaves its part out (never a 500, never a…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/web-landing.logic.test.ts
+
+- **fe.38** Legacy values are neither sent nor shown on the live app (EI-D1). /api/parcels/lookup sends the legacy Spec 88 cost menu and the 12 cost scalars as null. It sends the legacy size headlines as null (keys kept for installed apps and declarations; CONSUMER_WITHHELD_LEGACY_COLS): opt_aor_*, opt_coa_*,…
+  Status: RULED 2026-11-12 · Enforced by: src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts · +1 dated note
+
+- **fe.39** Engine inputs bind (EI-D2..EI-D8). The report and its producer bind the final engine fields: one stored headline per lot and option. Size, status, reason and the CoA size come from Layer 3; cost comes from the Spec 88 scenario lines, joined by the producer (M-67 kept, EI-D8). The detail is…
+  Status: OWED · lock owed: src/tests/surfaces/engine-inputs-bind.logic.test.ts · +1 dated note
+
+- **fe.40** McTest: the real app is proven wired by layers run against a separate local test stack, never the dev DB (API journeys, a dead-wire crawler, a lot sweep, stress, failure drills, phone runs). The cases are rows of one catalogue, tests/e2e/scenarios.json (data; no test code names a case). Every row…
+  Status: RULED 2026-11-12 · Enforced by: src/tests/mctest/catalogue.infra.test.ts
+
+- **fe.41** The REPORT page table gains the section kind summary (options at a glance, Daylight B): no data of its own; every item is a reference (ref, FE-18, FE-32 part kind) to a part of the option's BUILT section, never a copied value. A hidden option is in neither the list nor the count; a not-evaluated…
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.42** The REPORT page table gains the part kind drawing (lot views, From above): the server sends the drawing already built in a fixed 0..1000 frame (state, outline, one class per edge as explicit lines, envelope and footprints when it has them); the client only draws it (inline SVG on web,…
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.43** See details opens as its own sheet on web and mobile, by a second CLOSED layout key details_view (inline or sheet) in report-layout.json: web and mobile sheet, admin and pdf inline. No existing details value changes: the six readers of details: collapsed (report-page.logic.test.ts,…
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.44** Units across the whole report: store METRIC only. The page producer sends each number pre-formatted in both units; the client only switches which is shown, with no maths (Spec 128 Rule 16, FE-18); the conversion factor is content/settings, never code; one toggle covers every area and length and is…
+  Status: OWED · lock owed: src/tests/surfaces/report-units.logic.test.ts
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/components/report/ReportPage.tsx b/src/components/report/ReportPage.tsx
+index 081699668..92e63d49b 100644
+--- a/src/components/report/ReportPage.tsx
++++ b/src/components/report/ReportPage.tsx
+@@ -7,6 +7,7 @@
+ // (`details: collapsed`) or open without them (`expanded`). Every text is a part's text as built on the server; a pending part shows the ruled
+ // pending text in its own slot in one muted style (data-pending). Colours are the named report-* theme colours (ruling 1 a); geometry is in
+ // class strings (the FE-05 lock bans number literals here). The one client island is ReportPageToggles (UI state only).
++import Link from 'next/link';
+ import type { ReactElement } from 'react';
+ import type { PagePart, PageSection, PageView, ViewImage } from '../../lib/surfaces/report/core';
+ import { ReportPageToggles } from './ReportPageToggles';
+@@ -237,7 +238,7 @@ const H2 = ({ p, id }: { p: Part; id: string }): ReactElement => <T p={p} as="h2
+ // strings the caller supplies. The mobile binding keeps its own footer (mobile/src/components/surfaces/ReportBinding.tsx): its G4 part is unchanged.
+ const REPORT_FOOTER_LAYOUT: FooterLayout = {
+   footer: 'grid gap-2 border-t border-report-line pt-4 text-[14px]/[20px] text-report-soft', links: 'flex flex-wrap gap-x-4 gap-y-1',
+-  link: 'text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber', line: '', legal: '', copyright: '',
++  link: 'inline-flex min-h-11 items-center text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber', line: '', legal: '', copyright: '',
+ };
+ const renderFooter = (n: FooterNode, text: (key: string) => string): ReactElement => {
+   const kids = n.children.map((c) => ('content' in c ? text(c.content) : renderFooter(c, text)));
+@@ -248,7 +249,7 @@ const renderFooter = (n: FooterNode, text: (key: string) => string): ReactElemen
+     case 'Stack': return <footer key={key} data-section="footer" className={cls}>{kids}</footer>;
+     case 'Group': return <div key={key} className={cls}>{kids}</div>;
+     case 'Text': return <span key={key} data-pending={p.pending === true ? 'true' : undefined} className={p.pending === true ? `${cls} ${PENDING}` : cls}>{kids}</span>;
+-    case 'Button': return <a key={key} href={String(p.href)} className={cls}>{kids}</a>;
++    case 'Button': return <Link key={key} href={String(p.href)} className={cls}>{kids}</Link>;
+     default: throw new Error(`ReportPage footer: unmapped component "${n.component}"`);
+   }
+ };
+diff --git a/src/tests/surfaces/site-footer-route.ui.test.tsx b/src/tests/surfaces/site-footer-route.ui.test.tsx
+new file mode 100644
+index 000000000..71b67b93f
+--- /dev/null
++++ b/src/tests/surfaces/site-footer-route.ui.test.tsx
+@@ -0,0 +1,74 @@
++// @vitest-environment jsdom
++// SPEC LINK: docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.36 (navigation is a route: web <Link>),
++//            docs/specs/00_engineering_standards.md section 1.1 (a link has a 44 px tappable area),
++//            docs/specs/02-web-admin/126_maxbld_surface_standard.md section 11b.2 (one footer tree, a render per binding).
++//
++// task-374 (FIX.FOOTER, defects D7 and D8 of the BL-GROUND handbook pass; operator 2026-11-20: "essential we have a non compliance build again - the entire
++// reason for this approach") · the web report footer's three links (Terms, Privacy, Help):
++//   D7 each is a next/link (the platform router), as the search and static footers already are, not a plain anchor that reloads the page;
++//   D8 each is drawn at the 44 px the approved mock draws (report-themes/pub/B.html:222, "min-height:44px", inline-flex, items centred): min-h-11 and items-center.
++// next/link is replaced by a marker anchor so a render shows WHICH links went through the router; the search footer is the control.
++import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
++import fs from 'node:fs';
++import path from 'node:path';
++import { createElement as h, type ReactNode } from 'react';
++import { cleanup, render } from '@testing-library/react';
++
++vi.mock('next/link', () => ({
++  default: ({ href, children, ...p }: { href: string; children: ReactNode }) => h('a', { href, 'data-next-link': 'true', ...p }, children),
++}));
++
++import { AdminMantineProvider } from '../../components/surfaces/web/AdminMantineProvider';
++import { SearchBinding, searchWebData, searchWebTree, type WebSituation } from '../../components/surfaces/web/SearchBinding';
++import { pickFooterText } from '../../components/surfaces/web/footerNode';
++import { ReportPage } from '../../components/report/ReportPage';
++import { pageViewOf, type PageView } from '../../lib/surfaces/report/core';
++import { reportCtx } from '../../lib/surfaces/report/data';
++import { SEARCH_CONTENT as C, WEB_STATIC_SITUATION } from '../../lib/surfaces/maxbld-web';
++import { PAGE_GOLDEN_DIR } from '../../../scripts/surfaces/report-page-capture';
++
++const ROOT = process.cwd();
++const view = (t: string): PageView => pageViewOf(JSON.parse(fs.readFileSync(path.join(ROOT, PAGE_GOLDEN_DIR, `v21.${t}.json`), 'utf8')).rendered_tree, { target: t }, reportCtx) as PageView;
++const FOOTER = pickFooterText(C);
++const HREFS = ['/terms', '/privacy', '/help'];
++const reportLinks = (): HTMLAnchorElement[] => {
++  const { container } = render(h(ReportPage, { view: view('web'), footer: FOOTER }));
++  return [...(container.querySelector('footer[data-section="footer"]') as HTMLElement).querySelectorAll('a')];
++};
++const classesOf = (a: Element): string[] => (a.getAttribute('class') ?? '').split(/\s+/);
++
++beforeAll(() => {
++  Object.defineProperty(window, 'matchMedia', { writable: true, value: (q: string) => ({ matches: false, media: q, onchange: null, addListener: () => undefined, removeListener: () => undefined, addEventListener: () => undefined, removeEventListener: () => undefined, dispatchEvent: () => false }) });
++  if (!('ResizeObserver' in globalThis)) Object.defineProperty(globalThis, 'ResizeObserver', { writable: true, value: class { observe(): void { /* jsdom stub */ } unobserve(): void { /* jsdom stub */ } disconnect(): void { /* jsdom stub */ } } });
++});
++afterEach(cleanup);
++
++describe('D7 the report footer links are route links', () => {
++  it('each of the three links goes through next/link and keeps its href', () => {
++    const links = reportLinks();
++    expect(links.map((a) => [a.getAttribute('href'), a.getAttribute('data-next-link')])).toEqual(HREFS.map((x) => [x, 'true']));
++  });
++  it('control: the search footer links go through next/link (the render path the report now shares)', () => {
++    const s = WEB_STATIC_SITUATION as WebSituation;
++    const { container } = render(h(AdminMantineProvider, { scheme: 'dark', children: h(SearchBinding, { tree: searchWebTree(s), content: C, data: searchWebData(s), runtime: { disabled: false } }) }));
++    const links = [...(container.querySelector('footer') as HTMLElement).querySelectorAll('a')];
++    expect(links.map((a) => [a.getAttribute('href'), a.getAttribute('data-next-link')])).toEqual(HREFS.map((x) => [x, 'true']));
++  });
++});
++
++describe('D8 the report footer links are drawn at the 44 px target', () => {
++  it('each link class carries min-h-11 (44 px), inline-flex and items-center, as the mock draws it', () => {
++    const links = reportLinks();
++    expect(links).toHaveLength(HREFS.length);
++    for (const a of links) {
++      const cls = classesOf(a);
++      expect([a.getAttribute('href'), cls.includes('min-h-11'), cls.includes('items-center'), cls.includes('inline-flex')]).toEqual([a.getAttribute('href'), true, true, true]);
++    }
++  });
++  it('the links keep their other classes (colour, underline, focus ring): nothing else moves', () => {
++    for (const a of reportLinks()) {
++      const cls = classesOf(a);
++      expect([cls.includes('text-report-soft'), cls.includes('underline'), cls.includes('focus-visible:outline-report-amber')]).toEqual([true, true, true]);
++    }
++  });
++});
+

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-20T15:15:05.904Z file_sha256=ad695b57e43b1e05689179c984a4f35db210f40e8316d6e356f5ce24da073944 prompt_sha256=e09c23fbde76f121541ddd49071e9909d357c11e799cfda64c47a47ba49abe89
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/plan-material.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Plan Change (2) — `min-h-11` compiles to `min-height:2.75rem`, which equals 44px only if the app root font-size is 16px, whereas the mock specifies literal `44px` (`small-pages-v8/search.html:174`); a 15px/18px/62.5% root makes the target wrong — use `min-h-[44px]`, or verify `html{font-size}` and the Tailwind spacing scale before locking.
+BUG severity=HIGH — Plan D8 evidence (small-pages-v8/search.html:174) — the 44px justification is read from the **search** mock footer (`.foot a, .wfoot a`), not the report footer's own v8 mock, but the task's gate is "check the mock first; if it draws them small, stop on D8 and bring it as an operator draft" — open the report-footer v8 mock and read its link height before implementing, or the code-fix-vs-operator-draft call may be made against the wrong surface.
+BUG severity=HIGH — Plan Change (1) (ReportPage.tsx:251) — swapping `<a href>`→`<Link href>` assumes every footer entry href is an internal route; an external (`https://`, `mailto:`) or `undefined` href breaks/throws under `next/link` — enumerate the actual footer entry hrefs (footerNode.ts → ReportPage renderFooter case 'Button') and confirm all internal before converting.
+BUG severity=HIGH — Plan Change (2) vs task words "add min-h and padding" — plan adds `min-h-11 + items-center` but omits the horizontal padding the task requires; a short label ("Home", "Top") then renders narrower than 44px and the 44px touch target is not actually met — add horizontal padding (px-3+) or `min-w-11`.
+DEFER severity=MED — Plan Change (1) (ReportPage.tsx:251) — the new `<Link key href className>` drops any `target`, `rel` or `aria-*` attributes on the current anchor; if the footer link opens a new tab or carries a11y attributes, behaviour/a11y regresses — diff the current `<a>` props at :251 and preserve them on `<Link>`.
+DEFER severity=MED — Plan "the builder footerNode.ts, the other two users, all goldens and stored values do not move" — asserted, not verified; a golden/snapshot that captures the report-footer DOM changes when `<a>`→`<Link>` renders, contradicting the claim — `grep -rln "footerNode\|ReportPage" **/*.snap src/tests` before claiming no-move.
+DEFER severity=MED — Plan AC #4 "the existing parity tests pass" — asserted without running against the change; a parity test asserting identical element structure across the three users is broken by `<a>`→`<Link>` (and by 44px report vs 50px static) — run the parity suite on a branch with the change staged before lock.
+DEFER severity=MED — Plan "static/search footers keep their Link anchors (control)" + StaticBinding 50px (Button.css:5) — after the fix the three footers render 44px (report, `min-h-11`) vs 50px (static, size lg) vs Mantine Button+Link (search); both are ≥44 so compliant, but the three footers diverge visually — confirm that divergence is acceptable or normalise heights.
+DEFER severity=MED — Plan "tests red first" (jsdom, mocked next/link) — the test asserts class-string presence, not computed height; jsdom has no layout, so `min-h-11`→44px is never actually proven by the suite — add a computed-style/Playwright assertion or a manual 44px measurement.
+DEFER severity=MED — sibling root cause (plain `<a>` for internal nav) — other internal anchors in `src/` likely share D7's root cause beyond the report footer — `grep -rn '<a href="/' src` and file follow-ups for any internal route rendered as a bare anchor.
+DEFER severity=LOW — Plan "Red = commit attempt with only the test and task file staged" — staging a red-only commit to the head can leave the branch/CI red and trip push-station or sibling-lane gates — do the red run locally or on a throwaway branch, keep head green.
+DEFER severity=LOW — Plan Change (1) — `<Link>` enables Next prefetch on viewport/hover; if any footer target is the compute-heavy report route it doubles server work — confirm footer targets are cheap pages (home/search/legal), otherwise set `prefetch={false}`.
+REJECT — Plan (rollback) — implies a rollback concern from the one-file, two-line change — a `git revert` of two lines in `ReportPage.tsx` is trivial and blast radius is report-footer navigation only; no mitigation needed.
+
+VERDICT: FAIL on plan-readiness for implementation
+Top 3 operational blockers (if FAIL):
+- `min-h-11` (2.75rem) ≠ literal 44px unless root font-size is 16px — D8 may silently miss the target.
+- The "check the mock first" gate was satisfied against the **search** mock (`search.html:174`), not the report-footer's own v8 mock — wrong-surface justification for a code fix vs operator draft.
+- `<a href>`→`<Link>` may break external/`undefined` footer hrefs and drops existing `target`/`rel`/`aria-*` attributes.
+Top 3 unverified data premises (if any, regardless of verdict):
+- `min-h-11` = 44px: `grep -rn "font-size" src/**/globals.css src/styles` and inspect `tailwind.config.*` spacing key `11`; confirm the elements at `ReportPage.tsx:56`/`:68` actually render 44px.
+- All footer hrefs internal: `grep -n "href\|http\|mailto\|target" src/components/report/footerNode.ts` and the ReportPage `renderFooter` case 'Button'.
+- Report-footer 44px design: open the report-footer v8 mock (not `small-pages-v8/search.html`) and read its `.foot a` / link height rule.
+- No golden captures the report footer: `grep -rln "footerNode\|ReportPage" src/tests **/*.snap` returns no footer DOM snapshot.
+
+---
+⏱  55693ms (55.7s)
+📊 Tokens — total: 20777, input: 10604, output: 10173, reasoning: 8757

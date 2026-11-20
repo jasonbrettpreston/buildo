@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:18:09.676Z file_sha256=243f5c7bb5ea636b0fc3fea72566ce6f1a698e657ebf2e5d8083ac5a9f946e08 prompt_sha256=5558a3b8f2263cbec1d4ff13c45114d355188aaf7af6bcd2ca4d7e8d78198f83
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-out-compliance-eng-s1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §1.1 Touch Targets "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of 44px x 44px. Use min-h-[44px] min-w-[44px] or equivalent padding." — src/components/report/ReportPage.tsx:242 "link: 'inline-flex min-h-11 items-center text-report-soft underline focus-visible:outline-2 ...'" — only the vertical axis is pinned; there is no min-w and no horizontal padding, so short labels (Help, Terms) stay narrower than 44px and the 44x44 clause is unmet — add min-w-11 (or horizontal padding that brings every label to 44px) to the same link class.
+
+DEFER severity=LOW — §1.1 Touch Targets "MUST have a minimum tappable area of 44px x 44px" — src/tests/surfaces/site-footer-route.ui.test.tsx:60 "it('each link class carries min-h-11 (44 px), inline-flex and items-center, as the mock draws it'" — the lock asserts height, display and alignment but never width or padding, so a shrink below 44px width still passes — assert min-w-11 (or the chosen padding) in the same loop.
+
+DEFER severity=LOW — no pasted clause names router navigation; the change adds next/link behaviour justified only by material not in the pasted context "// SPEC LINK: docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.36 (navigation is a route: web <Link>)," — src/components/report/ReportPage.tsx:252 "case 'Button': return <Link key={key} href={String(p.href)} className={cls}>{kids}</Link>;" — an anchor-to-router swap enters the diff with no pasted clause authorising it, and the 44px mock it cites (126 §11b.2, B.html:222) is not pasted, so I cannot confirm the shape it claims — state the governing clause verbatim in the pasted context at the next run, or split the router change out of the 44px change.
+
+MET — §1.1 Mobile-first "The base (unprefixed) utility classes must dictate the layout for mobile screens (<=640px)" — src/components/report/ReportPage.tsx:242 — the added classes are unprefixed (inline-flex min-h-11 items-center), no desktop-first base to retrofit.
+
+MET — §1.1 Responsive Layout "Dense metadata rows MUST use flex-wrap" — src/components/report/ReportPage.tsx:241 — the links container keeps "flex flex-wrap gap-x-4 gap-y-1", unchanged by the diff.
+
+MET — §1.2 Component Isolation "Shared UI components (src/components/ui/) must remain pure and stateless" — src/components/report/ReportPage.tsx:252 — the swap lands in src/components/report/ and adds no fetch or global context.
+
+MET — §1.3 Design System Fidelity "font-mono is reserved strictly for data values" — src/components/report/ReportPage.tsx:242 — the new link class adds no font-mono to human-readable link text.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 1
+
+---
+⏱  31766ms (31.8s)
+📊 Tokens — total: 10836, input: 4251, output: 6585, reasoning: 5863

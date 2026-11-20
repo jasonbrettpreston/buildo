@@ -1,0 +1,60 @@
+
+  Array [
+    Array [
+      "/terms",
+-     "true",
++     null,
+    ],
+    Array [
+      "/privacy",
+-     "true",
++     null,
+    ],
+    Array [
+      "/help",
+-     "true",
++     null,
+    ],
+  ]
+
+ ❯ src/tests/surfaces/site-footer-route.ui.test.tsx:49:90
+     47|   it('each of the three links goes through next/link and keeps its hre…
+     48|     const links = reportLinks();
+     49|     expect(links.map((a) => [a.getAttribute('href'), a.getAttribute('d…
+       |                                                                                          ^
+     50|   });
+     51|   it('control: the search footer links go through next/link (the rende…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/tests/surfaces/site-footer-route.ui.test.tsx > D8 the report footer links are drawn at the 44 px target > each link class carries min-h-11 (44 px), inline-flex and items-center, as the mock draws it
+AssertionError: expected [ '/terms', false, false, false ] to deeply equal [ '/terms', true, true, true ]
+
+- Expected
++ Received
+
+  Array [
+    "/terms",
+-   true,
+-   true,
+-   true,
++   false,
++   false,
++   false,
+  ]
+
+ ❯ src/tests/surfaces/site-footer-route.ui.test.tsx:65:125
+     63|     for (const a of links) {
+     64|       const cls = classesOf(a);
+     65|       expect([a.getAttribute('href'), cls.includes('min-h-11'), cls.in…
+       |                                                                                                                             ^
+     66|     }
+     67|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  10:17:56
+   Duration  3.93s (transform 56ms, setup 9ms, collect 365ms, tests 107ms, environment 206ms, prepare 20ms)
+

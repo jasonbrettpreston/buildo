@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T15:20:31.681Z file_sha256=6e4124c0cc07666160c6bfdbb9eafb7a528963c28098976f29bfdce3a70a1f08 prompt_sha256=8435fe8c6018c75ccf804f27b02bac3f333057f95348d2ca9bd38de7a66724d3
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/out-diff.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — src/components/report/ReportPage.tsx:252 "case 'Button': return <Link key={key} href={String(p.href)} className={cls}>{kids}</Link>;" — the empty/missing href path is now handed to the router unguarded: a Button part arriving without href becomes href="undefined" and an empty string goes straight into Link, so a malformed server part is presented as a real route instead of degrading to an inert slot — compute href once and render a plain non-navigating element (or omit the link) when it is not a non-empty string.
+
+DEFER severity=MED — src/tests/surfaces/site-footer-route.ui.test.tsx:18 "default: ({ href, children, ...p }: { href: string; children: ReactNode }) => h('a', { href, 'data-next-link': 'true', ...p }, children)," — the mock Link accepts any href and performs no href validation, so the empty and malformed href paths pass the suite while the real Link may reject or re-resolve them — add a case that renders a footer Button part with an absent href and asserts exactly what is emitted.
+
+DEFER severity=LOW — src/tests/surfaces/site-footer-route.ui.test.tsx:36 "return [...(container.querySelector('footer[data-section=\"footer\"]') as HTMLElement).querySelectorAll('a')];" — if the footer tree is empty or the selector misses, querySelector returns null and the cast hides it, so the empty path surfaces as "Cannot read properties of null" rather than a named assertion — assert the footer element exists before querying its anchors.
+
+DEFER severity=NIT — src/tests/surfaces/site-footer-route.ui.test.tsx:31 "const view = (t: string): PageView => pageViewOf(JSON.parse(fs.readFileSync(path.join(ROOT, PAGE_GOLDEN_DIR, `v21.${t}.json`), 'utf8')).rendered_tree, { target: t }, reportCtx) as PageView;" — a missing or truncated golden file throws ENOENT/SyntaxError inside each test body, so all four cases fail with an error that does not name the fixture — assert the file exists and parses before the suite runs.
+
+REJECT — src/components/report/ReportPage.tsx:252 "case 'Button': return <Link key={key} href={String(p.href)} className={cls}>{kids}</Link>;" — looks like a double-submit risk (two taps, two tabs) — a route link is an idempotent GET to the same path, nothing is written or counted, a second tap just re-navigates.
+
+REJECT — src/components/report/ReportPage.tsx:10 "import Link from 'next/link';" — looked like a new timeout/retry surface (route prefetch) — no fetch or deadline is added by this code, prefetch failure is absorbed inside next/link and falls back to a normal navigation, and the render has no retry to bound.
+
+VERDICT: PASS on error-path safety
+Paths walked: empty/missing footer href, malformed href through the router, double-tap on a route link, prefetch/no-timeout navigation, empty footer tree in the test, missing golden fixture   Unguarded: 2
+
+---
+⏱  29322ms (29.3s)
+📊 Tokens — total: 11016, input: 5564, output: 5452, reasoning: 4738

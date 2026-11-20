@@ -1,0 +1,154 @@
+LIST eng-s5 sha256:914c250fc1de0ccab97e1db24f7d323d1c6ff362f40063dbafc998ac84a39503 material sha256:6e4124c0cc07666160c6bfdbb9eafb7a528963c28098976f29bfdce3a70a1f08 part 1 of 1
+RULE LIST eng-s5 (docs/specs/00_engineering_standards.md, sections 5. Testing Standards), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 🧪 5. Testing Standards
+
+### 5.1 Typed Factories Only
+- **Rule:** Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`.
+
+### 5.2 Test File Pattern
+| Pattern | Tests | Mandated when | Example |
+|---------|-------|---------------|---------|
+| `*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic | `scoring.logic.test.ts` |
+| `*.ui.test.tsx` | React component rendering, interactions | Any new/changed component | `admin.ui.test.tsx` |
+| `*.infra.test.ts` | API routes, DB queries, external calls | New API route / DB mutation (unhappy path first, §5.3) | `api.infra.test.ts` |
+| `*.security.test.ts` | Negative/abuse — blocks malicious payloads and unauthorized users | Auth-guarded / externally-reachable surfaces | `auth.security.test.ts` |
+| DB replay (`*.db.test.ts` under `BUILDO_TEST_DB=1 npm run test:db`; Spec 124 R-DH) | Real Postgres: IMMUTABLE/NOT NULL/FK/length/index errors a SQL-string test misses | Any migration touching schema/constraints/indexes (run before push) | `assert-data-bounds.infra.test.ts` |
+| `*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence | `coa-cost-model.regression.test.ts` |
+| Parity battery (`*.infra.test.ts` / `*.logic.test.ts`) | Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator) | Any dual-surface or generated artifact (drift guard) | `control-panel.logic.test.ts`, `logic-vars-registry.infra.test.ts` |
+
+### 5.3 Red-Green Test Cycle (Golden Rule)
+- **Rule:** You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails.
+- **Execution:** For new API routes and database mutations, the failing test MUST be an `.infra.test.ts` that exercises the **unhappy path** (error responses, invalid input, missing auth). For pure logic, use `.logic.test.ts`. Run the test and confirm it fails — only then implement the code to make it pass (Green Light). This is the single strongest defense against hallucinated or untested code.
+
+### 5.4 Test Data Seeding
+- **Rule:** To set up specific DB scenarios for testing or demos, create `scripts/seed-[scenario].js`. Define a JSON state object, insert it, and verify DB contents.
+
+### 5.5 Test-Layer Map — which layer proves what
+The six layers of §5.2 are complementary, not interchangeable. Pick the layer that *proves the claim*; a green suite in the wrong layer is false confidence.
+
+| Layer | Proves | Runs in | Consequence of skipping |
+|-------|--------|---------|-------------------------|
+| `*.logic.test.ts` | The pure function computes the right value on happy + edge inputs. | `npm run test` (default) | Un-pinned derivation logic silently changes value. |
+| `*.ui.test.tsx` | The component renders each state + wires interactions. | `npm run test` | UI regressions ship unseen. |
+| `*.infra.test.ts` (no DB) | API envelope / query shape / error paths (§5.3 unhappy-path-first). | `npm run test` | Hallucinated/untested routes. |
+| DB replay — `BUILDO_TEST_DB=1 npm run test:db` | The migration/query survives **real Postgres**: IMMUTABLE, NOT NULL, FK, length, CHECK, index build. A SQL-string assertion does NOT catch these. | Local opt-in (Docker) / CI | A migration that passes string tests but throws on apply — caught only in production. **Run before pushing any schema change.** |
+| `*.regression.test.ts` | A load-bearing behavior (a documented fence — a past `fix(...)` carrying a Spec 05 §5 severity/lesson footer, an edge-case guard, a workaround) is preserved across a change. | `npm run test` | Chesterton's-Fence: a diff silently drops a behavior that existed for a reason. Authored whenever the Regression Guardian finds an unguarded fence. |
+| Parity battery | Two surfaces that MUST agree stay in lockstep: dual code paths (§7), seed JSON ↔ TS `LOGIC_VAR_DEFAULTS`, and **generated doc ↔ its generator** (the drift guard — regenerate to a buffer, diff the committed file). | `npm run test` | Silent divergence — exactly the doc-rot the generated AI-operator docs (Spec 47 §5, `docs/reference/*`) are gated against. |
+
+**Rule:** a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity — not just the one that is easiest to write.
+
+---
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/components/report/ReportPage.tsx b/src/components/report/ReportPage.tsx
+index 081699668..92e63d49b 100644
+--- a/src/components/report/ReportPage.tsx
++++ b/src/components/report/ReportPage.tsx
+@@ -7,6 +7,7 @@
+ // (`details: collapsed`) or open without them (`expanded`). Every text is a part's text as built on the server; a pending part shows the ruled
+ // pending text in its own slot in one muted style (data-pending). Colours are the named report-* theme colours (ruling 1 a); geometry is in
+ // class strings (the FE-05 lock bans number literals here). The one client island is ReportPageToggles (UI state only).
++import Link from 'next/link';
+ import type { ReactElement } from 'react';
+ import type { PagePart, PageSection, PageView, ViewImage } from '../../lib/surfaces/report/core';
+ import { ReportPageToggles } from './ReportPageToggles';
+@@ -237,7 +238,7 @@ const H2 = ({ p, id }: { p: Part; id: string }): ReactElement => <T p={p} as="h2
+ // strings the caller supplies. The mobile binding keeps its own footer (mobile/src/components/surfaces/ReportBinding.tsx): its G4 part is unchanged.
+ const REPORT_FOOTER_LAYOUT: FooterLayout = {
+   footer: 'grid gap-2 border-t border-report-line pt-4 text-[14px]/[20px] text-report-soft', links: 'flex flex-wrap gap-x-4 gap-y-1',
+-  link: 'text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber', line: '', legal: '', copyright: '',
++  link: 'inline-flex min-h-11 items-center text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber', line: '', legal: '', copyright: '',
+ };
+ const renderFooter = (n: FooterNode, text: (key: string) => string): ReactElement => {
+   const kids = n.children.map((c) => ('content' in c ? text(c.content) : renderFooter(c, text)));
+@@ -248,7 +249,7 @@ const renderFooter = (n: FooterNode, text: (key: string) => string): ReactElemen
+     case 'Stack': return <footer key={key} data-section="footer" className={cls}>{kids}</footer>;
+     case 'Group': return <div key={key} className={cls}>{kids}</div>;
+     case 'Text': return <span key={key} data-pending={p.pending === true ? 'true' : undefined} className={p.pending === true ? `${cls} ${PENDING}` : cls}>{kids}</span>;
+-    case 'Button': return <a key={key} href={String(p.href)} className={cls}>{kids}</a>;
++    case 'Button': return <Link key={key} href={String(p.href)} className={cls}>{kids}</Link>;
+     default: throw new Error(`ReportPage footer: unmapped component "${n.component}"`);
+   }
+ };
+diff --git a/src/tests/surfaces/site-footer-route.ui.test.tsx b/src/tests/surfaces/site-footer-route.ui.test.tsx
+new file mode 100644
+index 000000000..71b67b93f
+--- /dev/null
++++ b/src/tests/surfaces/site-footer-route.ui.test.tsx
+@@ -0,0 +1,74 @@
++// @vitest-environment jsdom
++// SPEC LINK: docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.36 (navigation is a route: web <Link>),
++//            docs/specs/00_engineering_standards.md section 1.1 (a link has a 44 px tappable area),
++//            docs/specs/02-web-admin/126_maxbld_surface_standard.md section 11b.2 (one footer tree, a render per binding).
++//
++// task-374 (FIX.FOOTER, defects D7 and D8 of the BL-GROUND handbook pass; operator 2026-11-20: "essential we have a non compliance build again - the entire
++// reason for this approach") · the web report footer's three links (Terms, Privacy, Help):
++//   D7 each is a next/link (the platform router), as the search and static footers already are, not a plain anchor that reloads the page;
++//   D8 each is drawn at the 44 px the approved mock draws (report-themes/pub/B.html:222, "min-height:44px", inline-flex, items centred): min-h-11 and items-center.
++// next/link is replaced by a marker anchor so a render shows WHICH links went through the router; the search footer is the control.
++import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
++import fs from 'node:fs';
++import path from 'node:path';
++import { createElement as h, type ReactNode } from 'react';
++import { cleanup, render } from '@testing-library/react';
++
++vi.mock('next/link', () => ({
++  default: ({ href, children, ...p }: { href: string; children: ReactNode }) => h('a', { href, 'data-next-link': 'true', ...p }, children),
++}));
++
++import { AdminMantineProvider } from '../../components/surfaces/web/AdminMantineProvider';
++import { SearchBinding, searchWebData, searchWebTree, type WebSituation } from '../../components/surfaces/web/SearchBinding';
++import { pickFooterText } from '../../components/surfaces/web/footerNode';
++import { ReportPage } from '../../components/report/ReportPage';
++import { pageViewOf, type PageView } from '../../lib/surfaces/report/core';
++import { reportCtx } from '../../lib/surfaces/report/data';
++import { SEARCH_CONTENT as C, WEB_STATIC_SITUATION } from '../../lib/surfaces/maxbld-web';
++import { PAGE_GOLDEN_DIR } from '../../../scripts/surfaces/report-page-capture';
++
++const ROOT = process.cwd();
++const view = (t: string): PageView => pageViewOf(JSON.parse(fs.readFileSync(path.join(ROOT, PAGE_GOLDEN_DIR, `v21.${t}.json`), 'utf8')).rendered_tree, { target: t }, reportCtx) as PageView;
++const FOOTER = pickFooterText(C);
++const HREFS = ['/terms', '/privacy', '/help'];
++const reportLinks = (): HTMLAnchorElement[] => {
++  const { container } = render(h(ReportPage, { view: view('web'), footer: FOOTER }));
++  return [...(container.querySelector('footer[data-section="footer"]') as HTMLElement).querySelectorAll('a')];
++};
++const classesOf = (a: Element): string[] => (a.getAttribute('class') ?? '').split(/\s+/);
++
++beforeAll(() => {
++  Object.defineProperty(window, 'matchMedia', { writable: true, value: (q: string) => ({ matches: false, media: q, onchange: null, addListener: () => undefined, removeListener: () => undefined, addEventListener: () => undefined, removeEventListener: () => undefined, dispatchEvent: () => false }) });
++  if (!('ResizeObserver' in globalThis)) Object.defineProperty(globalThis, 'ResizeObserver', { writable: true, value: class { observe(): void { /* jsdom stub */ } unobserve(): void { /* jsdom stub */ } disconnect(): void { /* jsdom stub */ } } });
++});
++afterEach(cleanup);
++
++describe('D7 the report footer links are route links', () => {
++  it('each of the three links goes through next/link and keeps its href', () => {
++    const links = reportLinks();
++    expect(links.map((a) => [a.getAttribute('href'), a.getAttribute('data-next-link')])).toEqual(HREFS.map((x) => [x, 'true']));
++  });
++  it('control: the search footer links go through next/link (the render path the report now shares)', () => {
++    const s = WEB_STATIC_SITUATION as WebSituation;
++    const { container } = render(h(AdminMantineProvider, { scheme: 'dark', children: h(SearchBinding, { tree: searchWebTree(s), content: C, data: searchWebData(s), runtime: { disabled: false } }) }));
++    const links = [...(container.querySelector('footer') as HTMLElement).querySelectorAll('a')];
++    expect(links.map((a) => [a.getAttribute('href'), a.getAttribute('data-next-link')])).toEqual(HREFS.map((x) => [x, 'true']));
++  });
++});
++
++describe('D8 the report footer links are drawn at the 44 px target', () => {
++  it('each link class carries min-h-11 (44 px), inline-flex and items-center, as the mock draws it', () => {
++    const links = reportLinks();
++    expect(links).toHaveLength(HREFS.length);
++    for (const a of links) {
++      const cls = classesOf(a);
++      expect([a.getAttribute('href'), cls.includes('min-h-11'), cls.includes('items-center'), cls.includes('inline-flex')]).toEqual([a.getAttribute('href'), true, true, true]);
++    }
++  });
++  it('the links keep their other classes (colour, underline, focus ring): nothing else moves', () => {
++    for (const a of reportLinks()) {
++      const cls = classesOf(a);
++      expect([cls.includes('text-report-soft'), cls.includes('underline'), cls.includes('focus-visible:outline-report-amber')]).toEqual([true, true, true]);
++    }
++  });
++});
+

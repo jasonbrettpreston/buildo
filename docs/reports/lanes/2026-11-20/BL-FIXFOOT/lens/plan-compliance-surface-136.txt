@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:15:04.720Z file_sha256=d71dd7fc2fb1625998b89348d6fa5d120bbe1502f2b23695c635a6901dc1e448 prompt_sha256=49daedb4e489ad858f768b6e83532449821ab9c8d261ebe4934b5b91fe14d6f3
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-plan-compliance-surface-136.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.33 "each binding renders its archetype's goldens on each platform (web renderToStaticMarkup in the root suite; mobile jest-expo)" — "new src/tests/surfaces/site-footer-route.ui.test.tsx (jsdom; next/link mocked to mark its anchors)" — the only new proof mocks next/link, so the web render smoke fe.33 requires (renderToStaticMarkup in the root suite) is neither re-run nor shown to survive next/link's router context, while the plan simply asserts "all goldens and stored values do not move" — add a step that runs the existing web render-smoke goldens for the report footer through the real next/link in an app-router context, and demote the mocked jsdom test to a secondary check.
+
+BUG severity=MED — fe.36 "mobile expo-router with canGoBack() before back()" — "D7 src/components/report/ReportPage.tsx:251 the footer links are plain anchors" — the plan fixes only the web half of the navigation clause and no step shows the mobile report footer control routes through expo-router — confirm on the head the mobile footer nav element and its router call with file:line, or record the mobile side as out of scope with a reason.
+
+DEFER severity=LOW — card AC "#4 The shared footer builder and its three users stay in parity (the existing parity tests pass)" — "StaticBinding.tsx:90 (WEB_STATIC_LAYOUT.link) is a Mantine Button size lg (StaticBinding.tsx:141), whose height is 50px" — after the change the report footer link is 44 px min-height while the other two users stay at 50 px, and no parity test file is named to prove AC #4 — name the existing parity test by file:line in the plan and add the min-height to a token all three users read, or record the intended difference.
+
+DEFER severity=LOW — card D8 "add min-h and padding, UNLESS the approved v8 design draws them small: check the mock first" — "The approved v8 mock draws the footer link as 44 px (small-pages-v8/search.html:174 ...)" — the mock checked is the search small page, not the report page's own approved design, and the card's "padding" is replaced by items-center without a note — record which approved design fixes the report footer link's size and note the padding substitution, so the D8 branch (code fix vs operator draft) rests on the right mock.
+
+MET — fe.36 — "case 'Button' returns <Link key href className>" — the report footer link now moves the user through next/link on web, as the web part of the clause requires.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 2
+
+---
+⏱  49513ms (49.5s)
+📊 Tokens — total: 23218, input: 13840, output: 9378, reasoning: 8768

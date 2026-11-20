@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:12:31.946Z file_sha256=4473d27bfb6fd4151ca62691a8794157020ad50417a168eaa576ad6e789a97cc prompt_sha256=a4e434ac9eaf0d3aeb22dcb9b9e8299fadf555ee5f78bc2ad99d00b1d021dd45
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-plan-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §5.3 "Run the test and confirm it fails" — plan "Red = commit attempt with only the test and task file staged." — the plan defines red as a staged commit attempt, not a run and confirmed failure of the new UI test, and it records no green run after the two-line change, so the golden rule is not demonstrably satisfied — add explicit red and green commands: run the new ui test against the unmodified ReportPage, record the D7/D8 assertion failures, then rerun after the change.
+MET — §5.2 — plan "new src/tests/surfaces/site-footer-route.ui.test.tsx" — the changed ReportPage component gets the mandated `*.ui.test.tsx` layer.
+MET — §5.3 — plan "Tests red first" — the test is ordered before the "Change (two lines, one file)" step.
+MET — §5.2 — plan "the existing parity tests pass" — the shared footer builder and its three users retain their existing parity battery.
+MET — §5.5 — plan "jsdom; next/link mocked to mark its anchors" — the UI layer proves component rendering and link wiring for the changed component.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 1
+
+---
+⏱  97645ms (97.6s)
+📊 Tokens — total: 29258, input: 11068, output: 18190, reasoning: 17908

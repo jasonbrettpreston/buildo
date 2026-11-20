@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T15:20:04.312Z file_sha256=6e4124c0cc07666160c6bfdbb9eafb7a528963c28098976f29bfdce3a70a1f08 prompt_sha256=8cf8a0dfc0602ca464227ff52cc8834c8f7e03fe73e8365066d64c1ac98d4377
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/out-diff.patch (model: deepseek-reasoner)
+
+BUG none found at CRIT/HIGH. Findings below are bounded type-safety and silent-error issues in the touched lines.
+
+DEFER severity=MED — src/tests/surfaces/site-footer-route.ui.test.tsx:36 "return [...(container.querySelector('footer[data-section="footer"]') as HTMLElement).querySelectorAll('a')];" — the `as HTMLElement` cast erases a possible null, so a missing footer surfaces as an opaque TypeError inside querySelectorAll rather than a clear assertion — assert the element non-null (expect(footer).not.toBeNull()) before querying, so the failure names the missing footer.
+
+DEFER severity=LOW — src/tests/surfaces/site-footer-route.ui.test.tsx:31 "const view = (t: string): PageView => pageViewOf(JSON.parse(...).rendered_tree, { target: t }, reportCtx) as PageView;" — the `as PageView` cast is either redundant (if pageViewOf already returns PageView, it is dead) or it hides a real shape mismatch; the diff cannot show which — drop the cast if pageViewOf is typed, else type pageViewOf's return so the checked path is what the test relies on.
+
+DEFER severity=LOW — src/tests/surfaces/site-footer-route.ui.test.tsx:52 "const s = WEB_STATIC_SITUATION as WebSituation;" — unchecked cast silences any drift between WEB_STATIC_SITUATION and WebSituation, so a stale fixture would compile and pass silently — type WEB_STATIC_SITUATION as WebSituation at its definition instead of casting here.
+
+DEFER severity=LOW — src/components/report/ReportPage.tsx:252 "case 'Button': return <Link key={key} href={String(p.href)} className={cls}>{kids}</Link>;" — String(p.href) turns an absent href into the literal route "undefined" with no error logged, so a malformed footer Button silently links nowhere — guard with a throw when p.href is nullish, matching the neighbouring `default: throw new Error(...)` pattern.
+
+DEFER severity=NIT — src/components/report/ReportPage.tsx head "The one client island is ReportPageToggles (UI state only)." — now that the footer renders next/link, that header line is stale and contradicts the file — update the comment to note the footer's router link so a later reader is not misled.
+
+REJECT — src/components/report/ReportPage.tsx:241 "link: 'inline-flex min-h-11 items-center text-report-soft underline ...'" — min-h-11 looks like a nonstandard value against the spec's "min-height:44px" — Tailwind min-h-11 is 2.75rem = 44px at the default 16 px root, and items-center with inline-flex matches the mock, so the 44 px target is correct.
+
+REJECT — src/tests/surfaces/site-footer-route.ui.test.tsx:17 "vi.mock('next/link', () => ({" — mocking next/link for the whole file looks like it would make the search-footer "control" test prove nothing — a component still receives the marker only if it truly renders next/link, so the control still distinguishes plain anchors from router links.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  49260ms (49.3s)
+📊 Tokens — total: 14939, input: 5547, output: 9392, reasoning: 8662

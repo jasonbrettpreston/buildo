@@ -1,0 +1,4 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:13:26.430Z file_sha256=44f82e58ff788c2c760f6a32f0c0ad0e1d586d0793400f30a2d6e31058e2f75c prompt_sha256=9fba438eb447c420a3db4ff91e49f040108c8ba5f71da31415d7fda1625678d7
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-plan-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+

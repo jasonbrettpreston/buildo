@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T15:15:25.557Z file_sha256=ad695b57e43b1e05689179c984a4f35db210f40e8316d6e356f5ce24da073944 prompt_sha256=6cc0fd2a6710a66bed962187182887a1a0092ec3b622b0e9ca5904816b10337b
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/plan-material.md (model: deepseek-reasoner)
+
+```
+BUG severity=MED — src/components/report/ReportPage.tsx:251 "renderFooter case 'Button' returns <Link key href className>" — a footer node that arrives with no href (builder emits a text-only or optional-target node) now reaches next/link with href undefined, which throws during render and blanks the whole report, where the plain record anchor degraded to an inert link; no local boundary is visible — before returning Link, branch on `!href` and render `<span key className>{label}</span>`, with a red test that renders an href-less node.
+BUG severity=MED — src/components/report/ReportPage.tsx:251 "renderFooter case 'Button' returns <Link key href className>" — keying by href means two footer nodes with the same target (or two href-less ones) emit duplicate React keys, so on any re-render React reconciles by key and can pair a label with the wrong route, a footer link that navigates somewhere it does not say — key by `${type}-${index}` (or the label) instead of href.
+DEFER severity=LOW — src/components/report/ReportPage.tsx:251 "renderFooter case 'Button' returns <Link key href className>" — two taps on a footer link whose href is the current route can push one history entry per tap, so Back needs N presses to leave the report; the Next version in this repo cannot be seen — add a test that two taps on a same-route footer link leave exactly one history entry.
+DEFER severity=LOW — src/components/report/ReportPage.tsx:240 "REPORT_FOOTER_LAYOUT.link gains "inline-flex min-h-11 items-center"" — the planned test asserts the class strings ("carries min-h-11 + items-center"), not a computed height, so if min-h-11 is dropped from the build or beaten by a more specific rule the test stays green while the link is still under 44 px — assert the class on the rendered element plus one test that the pair is emitted by the built stylesheet, or assert offsetHeight with a stubbed layout.
+REJECT — src/components/report/ReportPage.tsx:251 "renderFooter case 'Button' returns <Link key href className>" — looks like absolute, mailto or external footer targets would be dragged through the client router — next/link skips prefetch and interception for non-local URLs and lets the browser do a full navigation, so those nodes behave as before.
+REJECT — "The builder footerNode.ts, the other two users, all goldens and stored values do not move." — looks like a double-submit on the footer link — this path performs no write and counts no event, only a route navigation, so a repeat is a no-op beyond the history entry noted above.
+
+VERDICT: PASS on error-path safety
+Paths walked: href-less/empty footer node, duplicate key, external and mailto href, same-route double tap, prefetch failure or time-out, no-write/no-count path, absent error boundary   Unguarded: 2
+```
+
+---
+⏱  31578ms (31.6s)
+📊 Tokens — total: 23421, input: 18458, output: 4963, reasoning: 4317

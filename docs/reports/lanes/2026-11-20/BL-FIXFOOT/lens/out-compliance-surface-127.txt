@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:18:52.707Z file_sha256=731fb118a15866e7aabdc41c3f8b2b22fa897c194b4c3292e7a2f137bcbab0ae prompt_sha256=f97d7655889254f27952ce24a5bbad397ff36a17663bd8160ae77cb72ae2078e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixfoot/lens/in-out-compliance-surface-127.txt (model: deepseek-reasoner)
+
+MET — Spec 127 §3 S-shape "no inline `router.push` string where a declared navigation event belongs" — src/components/report/ReportPage.tsx:252 — the footer target is now `next/link` and the destination is read from node data, `"<Link key={key} href={String(p.href)} className={cls}>{kids}</Link>"`, so no route string is hand-written in the client.
+
+MET — Spec 127 §12 §2 PH-0 step 2 idiom rule "both idioms: a hook import *and* a literal `fetchWithAuth('/api/…')`" — src/components/report/ReportPage.tsx:252 — the change adds no contract call, so the boundary freeze's contract enumeration is unaffected.
+
+REJECT — Spec 127 §4.3 "The fingerprint spans descriptor + contract descriptor + the archetype component + the format helpers, so any of those changing forces a recapture" — accused of owing a golden restamp — the pasted FP_FILES set (binding-sources.json, report-presentation.json, report-tree.schema.json, report-v2.decl.json, ad-contract.json) does not contain `ReportPage.tsx`, so nothing in the fingerprint moved.
+
+REJECT — Spec 127 §3.2a "S-golden … Exit: states x 4 targets = golden files; every `source_fingerprint` matches" — accused of needing a golden per state per target for the class change — the report `rendered_tree` nodes are `{field, source, label, value, status, confidence, provenance, disclosures[]}` and carry no class or geometry, and both `<a>` and next/link render an anchor, so no golden bytes change.
+
+DEFER severity=LOW — Spec 127 §6 item 3 "every declared lock is proven **both directions** — red on the old shape, green on the new, red landing at the *designed* assertion" — src/tests/surfaces/site-footer-route.ui.test.tsx:52 "it('each of the three links goes through next/link and keeps its href', () => {" — the diff ships green-only evidence, no red-on-the-plain-anchor artefact is pasted — harmless for a defect fix, but if D7/D8 are treated as locks the RED run must be recorded rather than asserted in the file header comment.
+
+DEFER severity=LOW — Spec 127 §8.5 "A conversion that does not move its registry row has not been recorded." — src/components/report/ReportPage.tsx:241 "link: 'inline-flex min-h-11 items-center text-report-soft underline focus-visible:outline-2 …'" — no census/registry row moves in this diff — acceptable if task-374 is a post-conversion fix, otherwise the footer's tappable-area decision stays outside the report surface's descriptor.
+
+DEFER severity=LOW — Spec 127 §6 item 8 "the cutover commit registers the surface, deletes its `pending` entry, retires the hand-written constants, and commits the generated scorecard — all in the same commit" — NONE — cannot see any registry, pending or scorecard change in the pasted diff — out of scope for a footer defect fix, stated so the absence is recorded rather than assumed.
+
+DEFER severity=NIT — Spec 127 §4.1 "A different party adjudicates than the one that discovered." — src/tests/surfaces/site-footer-route.ui.test.tsx:2 "SPEC LINK: docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.36 (navigation is a route: web <Link>)," — the requirements the change actually satisfies (Spec 136 fe.36, standards §1.1 44 px, Spec 126 §11b.2) are not in the pasted context, so they are not assessed here — route those clauses into the next run's context or the compliance verdict rests on Spec 127 alone.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  38490ms (38.5s)
+📊 Tokens — total: 24333, input: 16935, output: 7398, reasoning: 6523
