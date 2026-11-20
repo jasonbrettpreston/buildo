@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:07:54.263Z file_sha256=27fab7ece1e1b13fa91777f6551fdac145d89e9f0ca9b2eaaac6c773b06f0cbe prompt_sha256=040ec30d042f352b032071e9730091527c90062eb9e80f92a37158869634ca52
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-out-compliance-airtight-v3-122.txt (model: deepseek-reasoner)
+
+REJECT — airtight-v3-122 §5.5 clause 1 and clause 2 "a dispatch table, `{ [checkId]: fn }`" / "Every observation goes through `ctx.report()`" — the material is accused of shipping code without the per-check dispatch table, the `module.exports.checks` export and the report seam — the diff touches no file under `scripts/lib/compute/**` and no step descriptor, so §5.5's shape rules do not reach it — `REPORT_RENDERER_PIN` in `src/tests/surfaces/surface-conformance.logic.test.ts` is a test baseline, not a step compute module.
+
+REJECT — airtight-v3-122 §5.5 clause 2 "there is **no `console.*`**" — the change is accused of console narration — the only `console.*` in the material is a test-harness line, `src/tests/surfaces/surface-conformance.logic.test.ts` "console.log(`C-2b: ${files.length} files`);", and clause 2 governs compute modules under the §5.5 scope, not surface-conformance tests.
+
+REJECT — airtight-v3-122 §5.5 clause 5 "**Policy text lives in `checks[].why`, not in comments**" — the change is accused of stating rules only in comments — it adds comments such as `src/components/report/ReportView.tsx` "// task-384 STD.REPORT-OWN: the two fixed labels are content ... (FE-31 C-2b)." and `scripts/surfaces/_schema/bindings.json` dated `$comment` notes — clause 5 binds `checks[]` of step descriptors under `scripts/lib/compute/**`; no step descriptor is in the diff.
+
+REJECT — airtight-v3-122 §5.5 clause 6 "Every tunable goes through `ctx.config`" and clause 3 "Banned outright: bare `fetch(`, `Date.now()`, `new Date(`, `process.env`" — the material is accused of a bare literal tunable and banned globals — `mcbylaws/protected-paths.json` "src/components/report/**" and `scripts/surfaces/_schema/report-presentation.json` "confidence: {confidence} · provenance: {provenance}" are policy data and content strings, neither a compute module nor a `ctx.config` read.
+
+DEFER severity=LOW — pasted context block "(no pasted context provided)" — NONE — the operator words the diff leans on (MORNING-DECISIONS.md:1421-1422 "3. Leave the reports as components, and bring them under the existing checks (task 384)." and :1476) are quoted inside the material, not pasted as a ruling, so their authority is cannot see — compliance with them is undecidable from this prompt and belongs to the run that pastes those rulings.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 0   Unmet: 0
+
+---
+⏱  14969ms (15.0s)
+📊 Tokens — total: 31752, input: 28757, output: 2995, reasoning: 2336

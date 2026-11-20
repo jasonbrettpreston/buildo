@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:06:21.391Z file_sha256=4b24dddad538d42425be5354cff590b3bbb1008953ddd3666e5ecfae7f4fa294 prompt_sha256=5d92d1d492c077e3992abf4a3a268ee64acadc7a0efb76de4e652d069712fa80
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-out-compliance-surface-127-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — operator ruling 2026-11-20 item 3 "3. Leave the reports as components, and bring them under the existing checks (task 384)." — src/tests/surfaces/surface-conformance.logic.test.ts:335 "const files = [...B.mounts.map((m: Json) => m.path), ...B.modules.map((m: Json) => m.path)].filter((f: string) => !Object.hasOwn(REPORT_RENDERER_PIN, f)); // the pinned renderer files are judged in C-12" — the existing C-2b and C-8 real-tree checks exclude the three report files, so the ruling's "existing checks" do not judge them; a new C-12 with a pinned baseline is not the existing checks — remove the filters and let C-2b and C-8 judge the files, or obtain an explicit operator ruling for the pinned baseline.
+
+BUG severity=HIGH — Spec 127 §9.1 "a stale one fails `--check`" — scripts/surfaces/_schema/census/web-product.json:5577 "\"reduced_motion\": \"honoured\"" — the census row changed but docs/reports/generated/127-surface-review-queue.md is absent from the diff, so the drift-locked review queue is stale — regenerate the queue with generate-surface-registry.mjs and include it.
+
+MET — Spec 127 §8.5 "A conversion that does not move its registry row has not been recorded." — scripts/surfaces/_schema/census/web-product.json:5396 — the census row's under_126, sharing.evidence, checks.why, limitations and notes are updated and the registry entry is regenerated with the same text.
+
+MET — Spec 127 §8.4 "fails on registry drift and on descriptor drift, in both directions" — src/tests/surfaces/surface-conformance.logic.test.ts:948 — the descriptor is asserted byte-equal to the census entry and bindingsProblems is asserted clean.
+
+MET — Spec 127 §8.3 "Where a sweep could not determine a fact, the cell says `_unmeasured_`." — scripts/surfaces/_schema/census/web-product.json:5577 — reduced_motion is changed to honoured with cited evidence src/app/globals.css:182-185 and report-checked.logic.test.ts C5.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  98747ms (98.7s)
+📊 Tokens — total: 53030, input: 30623, output: 22407, reasoning: 21873

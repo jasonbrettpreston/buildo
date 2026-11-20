@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:06:21.391Z file_sha256=bd617abfe991db945230913a28358edf839126d9fcd2b8ae603af7b82c82f876 prompt_sha256=67ae307b2da6c914c1f4010f9768430fce1cb8ad05731fb8985674036b43653d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-out-compliance-eng-all-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — eng-all §5.2 test-file pattern "| `*.ui.test.tsx` | React component rendering, interactions | Any new/changed component | `admin.ui.test.tsx` |" — src/components/report/ReportView.tsx:24 "{n.showMeta ? <dd data-meta-line className="font-mono text-xs text-gray-500">{metaLine(n)}</dd> : null}" — the diff changes a React component's rendered text and adds no `*.ui.test.tsx` for it, only logic tests — add ReportView.ui.test.tsx asserting the summary label and the meta line read from presentation.states.view, red first.
+
+BUG severity=MED — eng-all §1.3 design system fidelity "`font-mono` is reserved strictly for data values (permit numbers, distances, currency amounts, timestamps). It must never be applied to human-readable labels, headings, or button text." — src/components/report/ReportView.tsx:24 "<dd data-meta-line className=\"font-mono text-xs text-gray-500\">{metaLine(n)}</dd>" — the string the diff moves to content is a human-readable label sentence ("confidence: {confidence} · provenance: {provenance}") now rendered wholly inside font-mono — render the label words in the body font and keep font-mono on the two values only.
+
+BUG severity=MED — eng-all §1.1 mobile-first UI mandate "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of **44px x 44px**." — src/components/report/ReportView.tsx:126 "<summary className=\"cursor-pointer text-sm text-gray-600\">{UI.details}</summary>" — the details toggle the diff rewrites carries no 44 px target, and the plan's "Not done" list excuses only C-9, not this clause — add min-h-[44px] min-w-[44px] (or equivalent padding) to the summary while the line is open.
+
+DEFER severity=MED — eng-all §5.2 parity battery "| Parity battery (`*.infra.test.ts` / `*.logic.test.ts`) | Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator) | Any dual-surface or generated artifact (drift guard) |" — scripts/surfaces/_schema/report-presentation.json:143 "\"view\": { \"details\": \"Details\", \"meta\": \"confidence: {confidence} · provenance: {provenance}\" }" — the new strings are hand-added beside their generator, scripts/surfaces/_schema/seed-report-v2.mjs:622 "view: { details: 'Details', meta: 'confidence: {confidence} · provenance: {provenance}' },", and no regenerate-and-diff lock is added or cited — add the drift test or name the existing one in the task notes.
+
+DEFER severity=MED — eng-all §5.1 typed factories only "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/surfaces/surface-conformance.logic.test.ts "b.modules.push({ path: 'src/components/report/Extra.tsx', platform: 'web', archetypes: ['REPORT'], owner: 'binding_web_report', exports: ['X'] });" — new inline untyped bindings fixture — import a typed factory or clone a real module entry.
+
+DEFER severity=LOW — eng-all §10.2 frontend boundary "**Rule:** Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — scripts/surfaces/_schema/report-presentation.json:143 and scripts/surfaces/_schema/seed-report-v2.mjs:622 are modified by a lane whose deliverable is the web renderer change — confirm the lane is not a frontend WF, or that editing scripts/surfaces is inside its remit.
+
+DEFER severity=LOW — eng-all §5.3 red-green cycle "**Rule:** You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — the diff carries src/components/report/ReportView.tsx:24, scripts/surfaces/_schema/bindings.json and report-presentation.json:143 together with the tests, and no red run artifact is shown — cite red.out (named in the plan, not visible here) in the task notes so the sequence is reviewable.
+
+DEFER severity=LOW — operator ruling (not pasted) — the plan rests on "3. Leave the reports as components, and bring them under the existing checks (task 384)." at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1421 — NONE — the pasted context contains no operator ruling, so the authorization and scope cannot be checked from this seat — paste the ruling block into the lens input.
+
+MET — eng-all §5.2 parity battery (census entry ↔ descriptor) — src/tests/surfaces/surface-conformance.logic.test.ts "expect(fs.readFileSync(file, 'utf8')).toBe(`${JSON.stringify(entry, null, 2)}\n`)" — the edited descriptor stays byte-equal to its census entry and is locked by a test.
+MET — eng-all §5.2 test-file pattern (logic layer) — src/tests/surfaces/surface-conformance.logic.test.ts "export const reportListingProblems = (b: Json): string[]" — the new derivation logic sits in a `*.logic.test.ts` with planted defects and a passing control.
+MET — eng-all §1.2 component isolation — src/components/report/ReportView.tsx:13 "const UI = presentation.states.view;" — the component stays pure and stateless, it imports content and fetches nothing.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 7
+
+---
+⏱  64765ms (64.8s)
+📊 Tokens — total: 47030, input: 33067, output: 13963, reasoning: 12644

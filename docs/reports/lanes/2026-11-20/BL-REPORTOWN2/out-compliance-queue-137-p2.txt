@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:09:00.128Z file_sha256=16e29ab40fe223e16d24ae8a4fd6921a65fe72ba1273a7bbd8c2841b7ee31b8b prompt_sha256=dbc60e7e870d755dfe377c84ee5e87542f8be3f624d219dcf676bd4fcff2a869
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-out-compliance-queue-137-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 137 §5a dated note 2026-11-19 "an open decision reaches the operator as a Backlog task in status OPERATOR carrying two lines, `Grounded:` (the issue verified against its sources, cite) and `Recommendation:` (the answer recommended, verified by a repo review round or marked UNVERIFIED)" — backlog/tasks/task-384 "...md:7 "status: RUNNING" plus the plan line "Not done (named): the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision" — the open decision the plan itself names reaches the operator nowhere: task-384 stays RUNNING and no Backlog task in status OPERATOR carrying a cited `Grounded:` and a `Recommendation:` line is added anywhere in the diff — add the OPERATOR card for the landing embed exception with both lines (Recommendation marked UNVERIFIED until the grounder runs), the lane's own task file is not that card.
+
+BUG severity=HIGH — 137 §5a dated note 2026-11-19 "every other decision reaches the operator only with a verified recommendation" — src/tests/surfaces/surface-conformance.logic.test.ts "export const REPORT_RENDERER_PIN ... 'src/components/report/ReportPage.tsx': { 'C-2b': 92, 'C-8': 171 }" with scripts/surfaces/_schema/census/web-product.json "C-2b 105 and C-8 213 structural findings pinned ... display text 0", against the deleted plan line "This pin is the baseline: it is the one exemption, listed for the operator with each count and the reason" — the lane decides by itself that 318 structural findings stand as a permanent pinned baseline (the checks the operator asked to apply can never fail on the current tree), with no operator ruling and no verified recommendation, and the promise to list the exemption for the operator with the counts is dropped from the plan without replacement — put the pin to the operator as an OPERATOR task carrying the per-file counts and a recommendation (or marked UNVERIFIED) before merge, or obtain the ruling that the baseline stands.
+
+MET — 137 §5a Rule 13 "Nobody edits the board. A change on the board changes nothing" — no board file, BOARecord or BOARD-STATUS.txt appears in the diff; the one edited record is the card backlog/tasks/task-384 ("upddated_date ... 20:04:00Z"), i.e. its own row.
+
+MET — 137 §5a dated note 2026-11-16 "the board reads two queue files plus the cards" — no queue file (.cursor/MCBYLAWS-QUEUE.md or the McFrontend queue) is added or changed; the change reaches the board as a card only.
+
+MET — 137 §6 "A commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling ... is not built now." — the added tests (src/tests/backlog/rule-lists-table.logic.test.ts, the C-12 planted-defect cases) test the listing, the pin and the lens input; no status/expiry/DROPPED commit check is added.
+
+MET — 137 §6 "the generated index is built now as a read-only board outside the repo (§5a)" — docs/reports/generated/rule-lists-by-kind.md and docs/reports/generated/127-surface-registry.md are the pre-existing rule-list and surface report pages; no generated index across queues is built in the repo.
+
+REJECT — 137 §5a Rule 13 "A change on the board changes nothing; a status changes only on its row (rules 1, 3, 4)" — the change is accused of leaving the queue row untouched — rules 1, 3 and 4 are not in this pasted part, so the queue-row duty is not mine to judge here.
+
+REJECT — 137 §5a Rule 14 "The orchestrator reads the board's status at the start of every session ... and reads the board before giving any queue status or next step" — the change is accused of giving next steps with no board read or WARN report — the material is a lane plan and a diff, not an orchestrator session report, and it states no queue status.
+
+REJECT — 137 §6 "Backlog.md as the source of truth (\"part 2\"). Not adopted." — the change is accused of making the Backlog task the record — the pasted 2026-11-19 note itself routes decisions through Backlog tasks in status OPERATOR, so card use is the adopted channel; the governing data (bindings.json, census, protected-paths.json) stays in the repo files.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+
+---
+⏱  53610ms (53.6s)
+📊 Tokens — total: 39732, input: 28521, output: 11211, reasoning: 10163

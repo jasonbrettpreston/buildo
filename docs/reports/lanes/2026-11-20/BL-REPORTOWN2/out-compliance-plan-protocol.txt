@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:09:53.820Z file_sha256=33ccc4f87e08844e6b833e78f5ff366585a71cf3fdea5d8359584e675baf119b prompt_sha256=b9f149226761138ddbccdf83df7eee8c71e224d87ee4e5e0d543ccbc9cd1f9f0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan-protocol §4 "Per increment: 1. ADD the slice tasks (section 2 step A) and REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict)" and §2 step C gate "check.mjs, check-cites, check-quotes PASS" — diff line "+green through the real hooks (commit.out); output lenses on the whole diff; FINDINGS.md untriaged; lane report; task left RUNNING, grounder owed." — the change is built and ready to push while the review panel is explicitly still owed, so no per-task verdict or PASS lines exist at build time — run seats R,C,I,D,G,O,W,X then F on this change and record the PASS lines before any push or merge.
+
+BUG severity=MED — plan-protocol §5.2 "LAUNCH-SHARED home: work that serves the finished product but no single scenario (...) lives in increment \"1-2 shared\" or the Launch gate, from the gap register and the launch list only." — diff line "+Rule the task rests on: the approved item 3 at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1421 "3. Leave the reports as components, and bring them under the existing checks (task 384)."" — this McFrontend report-ownership work is sourced from a decisions queue and placed in "incr 1b" (task description), neither the gap register nor the launch list nor a named increment — add the task to increment "1-2 shared" or the Launch gate with a gap-register/REGISTER.md or MCFRONTEND-QUEUE.md source line, and state where in sequence.json it lands.
+
+DEFER severity=LOW — plan-protocol §5.5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — NONE (no estimate field in the task file diff) — task-384 carries no estimate, so the critical path in §5.5 cannot include it — add a MEASURED or GUESS estimate to the task.
+
+DEFER severity=LOW — plan-protocol §3 "Rulings: only when a search of the record finds none; the search is quoted." — diff line "+export const REPORT_RENDERER_PIN: Readonly<Record<string, { 'C-2b': number; 'C-8': number }>> = {" with "+'src/components/report/ReportPage.tsx': { 'C-2b': 92, 'C-8': 171 }," — the pin is a new exemption baseline (105 C-2b and 213 C-8 structural findings accepted) reached via a grounder delegation, and no quoted search of the record is shown for it — quote the search that found no ruling, or record the operator approving these pin counts, before lock.
+
+DEFER severity=LOW — plan-protocol §0 "The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board)." — NONE in the material — the diff is a build commit for task-384 and shows no sequence.json entry, so whether this work is a sourced task in the one plan cannot be verified from the pasted material — show the task's sequence.json (or board) entry and its source so the one-plan requirement is evidenced.
+
+MET — plan-protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)" — task file plan line "+Rule the task rests on: the approved item 3 at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1421 ... resolution by a separate grounder under the delegation at :1476" — the task cites its ruling source with file:line.
+
+MET — plan-protocol §0 "Every existing task stays until a step below removes it with a cited reason" — diff header "diff --git a/backlog/tasks/task-384 ..." — task-384 is kept and extended, no existing task removed.
+
+REJECT — plan-protocol §3 "Rulings: only when a search of the record finds none; the search is quoted" — accused of making a new ruling for the C-12/listing/bindings checks without a quoted search — not a real issue: the operator already ruled at MORNING-DECISIONS.md:1421 item 3 (a cited existing ruling), so the check and listing changes rest on that ruling; only the separate pin (DEFER above) is a new policy.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 4
+
+---
+⏱  76255ms (76.3s)
+📊 Tokens — total: 45507, input: 29238, output: 16269, reasoning: 15257

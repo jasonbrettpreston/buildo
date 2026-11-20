@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T20:11:25.388Z file_sha256=579bb3a416989a7f128f1607f163fd83eb35d7e17b999b04c05a480bae9a107b prompt_sha256=9ca4b0ec7b6f6d7dd789b90f28db8fb388803b52bf50500fb708f2491be62a4e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown2/diff-task-384-no-goldens.patch (model: deepseek-reasoner)
+
+BUG severity=MED — src/components/report/ReportView.tsx:14 "const metaLine = (n: ViewNode): string => UI.meta.replace('{confidence}', n.confidence).replace('{provenance}', n.provenance);" — replace() requires a string, so a numeric or optional confidence/provenance is either a compile error (cannot see ViewNode) or renders the literal "undefined" where the old JSX interpolation rendered nothing, and a value containing "$&"/"$'" is expanded as a replacement pattern — coerce and use function replacers, `UI.meta.replace('{confidence}', () => String(n.confidence ?? '')).replace('{provenance}', () => String(n.provenance ?? ''))`.
+
+BUG severity=MED — src/tests/surfaces/surface-conformance.logic.test.ts:936 "const isDisplayText = (line: string): boolean => /: (JSX text|string child) \"/.test(line) && !/: string child \"\s*\"$/.test(line); // a blank spacer child is structural" — textProblems also emits "display attribute name=\"value\"" lines and isDisplayText classes every one of them as structural, so real words placed in a JSX attribute (an existing `as`/`title` value swapped for "Details") keep the pinned count and pass, contradicting the "display text in the three files has no pin and must be 0" claim — extend the display-text matcher to display attributes, or name the tolerated attribute findings explicitly in the pin.
+
+BUG severity=MED — src/tests/surfaces/surface-conformance.logic.test.ts:949 "if (text === undefined) { out.push(`C-12 ${f}: not read`); continue; }" — the parameter is declared `texts: Record<string, string>`, so this branch is unreachable by type (ts(2367) when noUncheckedIndexedAccess is off) and the only test that exercises it needs `undefined as unknown as string`, a double cast that hides the contradiction — type the parameter `Record<string, string | undefined>` and drop the cast.
+
+DEFER severity=LOW — src/tests/surfaces/surface-conformance.logic.test.ts:939 "export const reportListingProblems = (b: Json): string[]" (and "reportRendererProblems(texts: Record<string, string>, pin: Json = REPORT_RENDERER_PIN)") — pin typed Json erases the "Readonly<Record<string, { 'C-2b': number; 'C-8': number }>>" shape, so a malformed pin (string count, missing kind) compares silently instead of failing to compile — type the parameter `typeof REPORT_RENDERER_PIN`.
+
+DEFER severity=LOW — src/tests/surfaces/surface-conformance.logic.test.ts:941 "expect(bindingsProblems({ b: B, exists: (p) => fs.existsSync(path.join(REPO, p)), descriptor: realDescriptor, policy: POLICY, rootsTexts, converted: B_CONVERTED })).toEqual([]);" — realDescriptor, B_CONVERTED and a `rootsTexts` parameter taking two file texts appear nowhere in the pasted diff, so I cannot see that this call type-checks or that C-3 is meant to read two root texts now — grounder to confirm signature and intent.
+
+DEFER severity=LOW — docs/reports/generated/rule-lists-by-kind.md:32 "+| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |" — the five step and airtight rows moved below the surface rows even though no generator file is in the diff, so the committed page carries an unexplained reorder — regenerate from the committed generator and confirm the ordering is real output, not a hand edit.
+
+DEFER severity=NIT — src/tests/backlog/rule-lists-table.logic.test.ts:82 "expect(without).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);" — the exact-set lock turns red when any unrelated row of rule-lists.json starts matching a src path, a failure the planted defect does not name — keep the per-SURFACE not.toContain loop and pin the count instead of the exact five ids.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- ReportView.tsx:14 replace() assumes string fields and stringifies missing values, plus "$" replacement-pattern expansion in provenance/confidence
+- isDisplayText counts every display attribute as structural, so the "display text is 0" guarantee is only count-pinned and can be defeated
+- reportRendererProblems guards `text === undefined` against a `Record<string, string>` type, masked by an `as unknown as string` cast in its test
+
+---
+⏱  129083ms (129.1s)
+📊 Tokens — total: 55541, input: 29652, output: 25889, reasoning: 24818

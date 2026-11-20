@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:08:40.549Z file_sha256=5e5bbddcf5ac307fedc8b8b162a581cdf2dcba591ef75bfdd429127329c7c441 prompt_sha256=f52dec49de4f42f11ac4d692303d3dead9929956f2ce51de7379a0f3c9cef648
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-out-compliance-queue-137-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §4 rule 10 "A ruling enters a row as a verbatim dated note. The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — mcbylaws/protected-paths.json "$comment" "his words at :1422, verbatim: 'approved [the five items pasted] - remember the app is not beign used - we are in development'" — the bracketed insertion sits inside the operator's quoted words, so the quote is not an exact copy and cannot be the text at the cite — quote the words exactly and put the substitution outside the quotation marks.
+
+BUG severity=HIGH — Spec 137 §1 (dated note 2026-11-19, rule 4) "rulings for plan tasks are entered through `scripts/analysis/backlog-decision.mjs` (gate G2): a verbatim quote and a cite file:line that exists and contains the quote, or it refuses" — backlog/tasks/task-384 "Rule the task rests on: the approved item 3 at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1421 ... his word at :1422 'approved [the five items pasted]'" — the ruling is pasted as prose in the plan section and the bracketed words are not at :1422, so G2 refuses it and no M-246 dated note lands on the row — enter the item through backlog-decision.mjs with the exact words and let the note land on the task.
+
+BUG severity=HIGH — Spec 137 §4 rule 4 "The orchestrator writes each ruling into the row's status line the same day." — src/tests/surfaces/surface-conformance.logic.test.ts "export const REPORT_RENDERER_PIN ... 'src/components/report/ReportPage.tsx': { 'C-2b': 92, 'C-8': 171 }" with "-    const files = [...B.mounts.map((m: Json) => m.path), ...B.modules.map((m: Json) => m.path)];" now ".filter((f: string) => !Object.hasOwn(REPORT_RENDERER_PIN, f))" — the three files are taken out of the real-tree C-2b and C-8 cases and 318 findings are pinned as an exemption that no pasted ruling names and that the row's status line does not record — put the exemption to the operator as its own item, record it through G2 on the row, or leave the checks failing.
+
+BUG severity=MED — Spec 137 §4 rule 3 "When work lands for a row, the commit that lands it edits that row's status line." — backlog/tasks/task-384 "status: RUNNING" with only "-updated_date: '2026-11-20T19:43:00Z'" and "+updated_date: '2026-11-20T20:04:00Z'" — the commit lands mcbylaws/, scripts/ and src/ work and the status line is untouched, so `since` (the author date of the last commit that changed its status: line) stays stale — edit the status line in this commit, for example RUNNING (unverified 2026-11-20).
+
+BUG severity=MED — Spec 137 §4 rule 7 "Each open row carries an opened date and an expiry 7 days later." — backlog/tasks/task-384 "ordinal: 84012" followed by the next line "## Description" — the front matter shown closes at ordinal with created_date and updated_date and no expires or due field, and this diff adds none for an open RUNNING row — add the expiry rule 7 requires, or the operator-set date written on the row.
+
+BUG severity=MED — Spec 137 §4 (dated note 2026-11-20, task-366) "a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding" — mcbylaws/protected-paths.json "$comment" "resolved by a separate grounder under the delegation at :1476, record docs/reports/lanes/2026-11-20/BL-REPORTOWN2" against task-384 "FINDINGS.md untriaged; lane report; task left RUNNING, grounder owed" — the note asserts a grounder record the same diff says is still owed and that the diff does not contain — land GROUNDER.md and the compliance lens outputs in the lane report before the note claims the resolution.
+
+BUG severity=MED — Spec 137 §4 rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form: `Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: "<words>")`" — scripts/surfaces/_schema/bindings.json "$comment" "Dated note 2026-11-20 (task-384 STD.REPORT-OWN, lane BL-REPORTOWN2; ...)" — the note omits the M-246 marker and the queue name the form requires, in both bindings.json and protected-paths.json — rewrite both notes in the M-246 form with row, queue and lane named.
+
+DEFER severity=LOW — Spec 137 §1 item 1 "Tasks stay in their homes (§2). McQueue does not move them, copy them or keep an index of them." (scope: nothing added the ruling did not name) — scripts/surfaces/_schema/census/web-product.json "-      \"reduced_motion\": \"none\"," and "+      \"reduced_motion\": \"honoured\"," — a census value and its descriptor are flipped under a ruling quoted only for bringing the files under the checks — split it out or cite the ruling that names it.
+
+MET — Spec 137 §1 (dated note 2026-11-19, rule 3) "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — backlog/tasks/task-384 file — the task file rides in the same diff as the src/ and scripts/ edits (the trailer is in the commit message, cannot see it here).
+
+MET — Spec 137 §4 (dated note 2026-11-20, task-366) "Which lists a task attaches is decided by `scripts/analysis/rule-lists.json` from the task's Files line" — task-384 Description "Files: ..., mcbylaws/protected-paths.json, src/tests/backlog/rule-lists-table.logic.test.ts, ..." — the Files line is extended rather than dropped, so the task still resolves rows.
+
+MET — Spec 137 §4 rule 2 "One task, one row, in one home." — task-384 file — the work is recorded on the existing task-384 row, no new row and no copy of a queue row is made.
+
+MET — Spec 137 §1 (dated note 2026-11-19, rule 2) "A queue-row task: the queue row stays the record and the Backlog task mirrors it by hand under rule 3 (no synchroniser)." — scripts/surfaces/_schema/bindings.json — the listing is plain data plus a hookless test, no synchroniser is added.
+
+REJECT — Spec 137 §1 item 1 "McQueue does not move them, copy them or keep an index of them." — accused of adding a task index — the change lists source files in the surface schema, not tasks, so the clause is not touched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 6
+
+---
+⏱  79391ms (79.4s)
+📊 Tokens — total: 51067, input: 34091, output: 16976, reasoning: 15274

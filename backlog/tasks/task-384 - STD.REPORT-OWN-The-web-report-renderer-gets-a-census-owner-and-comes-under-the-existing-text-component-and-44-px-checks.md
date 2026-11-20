@@ -16,6 +16,8 @@ dependencies: []
 references:
   - docs/reports/lanes/2026-11-20/BL-REPORTOWN/REPORT.md
   - docs/reports/lanes/2026-11-20/BL-REPORTOWN/FINDINGS.md
+  - docs/reports/lanes/2026-11-20/BL-REPORTOWN2/REPORT.md
+  - docs/reports/lanes/2026-11-20/BL-REPORTOWN2/FINDINGS.md
 type: build
 ordinal: 84012
 ---
@@ -25,6 +27,14 @@ ordinal: 84012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Plan section B4. Page-by-page check: src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx are owned by no surface (docs/reports/generated/127-surface-registry.md section 5; src/tests/surface-registry.infra.test.ts:198 it.fails) and are in no bindings.json list, so C-2b, C-8 and C-9 never run on them (defect D8 sat there). Census owner entry plus listing; findings the checks then raise are fixed or brought to the operator. The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/components/report/ReportPage.tsx, src/components/report/ReportView.tsx, src/components/report/ReportPageToggles.tsx, scripts/surfaces/_schema/bindings.json, src/tests/surfaces/surface-conformance.logic.test.ts, scripts/surfaces/_schema/census/web-product.json, scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json, docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, src/tests/surface-registry.infra.test.ts, mcbylaws/protected-paths.json, src/tests/backlog/rule-lists-table.logic.test.ts, scripts/surfaces/_schema/seed-report-v2.mjs, scripts/surfaces/_schema/report-presentation.json, docs/reports/generated/rule-lists-by-kind.md, src/tests/fixtures/surfaces/report/**, src/tests/fixtures/report-page/**, scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 node scripts/analysis/rule-lists.mjs resolve --files src/components/report/ReportPage.tsx --type build --letter S lists surface-136, surface-126, surface-127, surface-128 and surface-135 (also for ReportView.tsx and ReportPageToggles.tsx); pinned by src/tests/backlog/rule-lists-table.logic.test.ts (planted: glob removed, lists vanish)
+- [ ] #2 The three report files are listed web REPORT modules in bindings.json and C-2b and C-8 judge them: display text 0, structural findings pinned per file and kind in both directions (src/tests/surfaces/surface-conformance.logic.test.ts C-12, planted cases red)
+- [ ] #3 The three display strings of ReportView.tsx are content (report-presentation.json states.view); the 105 goldens that carry the presentation fingerprint moved by that one line
+- [ ] #4 The push gate asks the operator y on the protected paths mcbylaws/protected-paths.json and scripts/surfaces/_schema/bindings.json
+<!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
@@ -85,6 +95,8 @@ Retro review by a separate grounder 2026-11-20 (task-405), work as on the board:
 2026-11-20 released by the launch script's own undo command (backlog-lane.mjs:87) on the operator's word (MORNING-DECISIONS.md entry 'Operator ALLOWS the release and relaunch of tasks 384 and 375'): the BL-REPORTOWN lane ended with part two unbuilt; relaunched as BL-REPORTOWN2.
 
 2026-11-20 taken on the board at lane launch (lane BL-REPORTOWN2, worktree /Users/brettpreston_macmini/Buildo-wt-reportown2, branch wf1/inc1b-reportown2), RR-0240
+
+2026-11-20 BL-REPORTOWN2 part two built, commit b1fff68cd (STD.REPORT-OWN): src/components/report/** in the frontend list (dated note quoting MORNING-DECISIONS.md:1421-1422), the three files listed as web REPORT modules, C-2b and C-8 judge them with a shrink-only two-direction pin (C-2b 92/13/0, C-8 171/41/1; display text 0), 3 display strings moved to content (report-presentation.json states.view), census entry and descriptor corrected, outside C-9 stated. Before: resolve lists eng-all five-words plan-protocol inc-S ms-S; after: plus surface-136, 126, 127, 128, 135 for all three files; surface-136 lens input holds fe.01 to fe.44 (44 ids). 105 goldens moved by one fingerprint line. Output lens inputs: the whole diff was refused by lens-input (175,357 characters), so the outputs judge a diff without those 105 golden lines; 5 lists (surface-126, surface-128, surface-135, airtight-124a, policy-124-s2-s5) still refuse: no out compliance output for them. Operator y owed at the push gate on mcbylaws/protected-paths.json and bindings.json. Grounder owed; findings untriaged: docs/reports/lanes/2026-11-20/BL-REPORTOWN2/FINDINGS.md.
 
 Grounder read of part two 2026-11-20 (branch wf1/inc1b-reportown2, b1fff68cd; read check before a fold, not a ruling): purpose HOLDS by the grounder's own runs (the three report files resolve to surface-136, 126, 127, 128, 135; 44 fe ids in a real input); three strings render byte-identical; 105 goldens differ only in the fingerprint line. NOT COMPLETE, owed before a close: (1) the shrink-only pin has three holes: it compares counts, so removing one attribute and adding aria-label words passes; text inside a ternary or template literal is not seen; a library component also counts, so the pin can shrink only by deleting elements (total 318, not 317); (2) five lists have no output review because the list itself exceeds the room: surface-126, surface-128, surface-135, airtight-124a, policy-124-s2-s5; the output lenses ran on a hand-reduced diff; (3) trailer MF-57 chosen under RR-0332 (MORNING-DECISIONS.md:1432) though ReportView.tsx was built under MF-14: orchestrator reading, not ruled; (4) no test asserts the Details text; (5) wf1/inc1b-areafactor restamped the same 105 goldens: the second branch to land rebases and regenerates with the capture tools, no hand merge. Fold HELD by the orchestrator until the task-410 grounder rules how a folded task closes.
 <!-- SECTION:NOTES:END -->

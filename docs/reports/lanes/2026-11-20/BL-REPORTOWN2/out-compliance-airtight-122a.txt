@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:08:02.151Z file_sha256=a74613650b8d86f5f7a5d4370ad8ed47bc6d8c604aa40cd4a92f4c3b8b5d486d prompt_sha256=3204a9897546a7985cd2139d42d912624334bdb6739b5914083b932c1448249e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-out-compliance-airtight-122a.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Appendix §A26 "Per Spec 124a R-T, a cross-cutting promise is declared data, generated and gated" — docs/reports/generated/127-surface-registry.md "**OWNER ENTRY AND LISTED MODULES** (task-384 STD.REPORT-OWN, dated 2026-11-20)" — cannot see from the diff whether this generated block was emitted by the registry generator or hand-edited to match the census — re-run generate-surface-registry.mjs (and the rule-lists render) and paste the empty second diff in the lane report
+
+REJECT — Appendix §A26 G0 through G13 (R-BZ, R-CA purity codes) — accused of leaving compute purity sites unjudged — the codes judge "compute **and its AST `require` closure**" only, and no file in the diff is a compute module, an AST require of one, or SQL text
+REJECT — Appendix §A26 "Site counts are never written in a spec" — accused of writing pinned site counts into governed text — the pinned counts (92/171, 13/41, 0/1) live in src/tests/surfaces/surface-conformance.logic.test.ts and a census limitations field, not in a spec file, and they are surface-check counts, not purity sites
+REJECT — Appendix §A26 "Proof of no runtime change" — accused of touching runtime code — the diff touches no scripts/lib, scripts/*.js, scripts/quality/*.js or step.schema.json path; src/components/report/ReportView.tsx is a web component outside the quoted paths
+REJECT — Appendix §A27 conversion traps 1 through 13 — accused of skipping a capture/conversion checklist — A27 binds "Every new step and every conversion", and the plan states "They stay a component; nothing is converted" (Spec 126 section 11b.1), so no capture, source_fingerprint, recapture or target is created
+MET — Appendix §A26 "Proof of no runtime change ... `git diff --stat <main> -- scripts/lib scripts/*.js scripts/quality/*.js scripts/steps/_schema/step.schema.json` is empty" — src/components/report/ReportView.tsx (the only product file in the diff) — no changed path matches any path in that quoted set
+MET — Appendix §A27 preamble "Every new step and every conversion walks this list before its first capture" — mcbylaws/protected-paths.json, scripts/surfaces/_schema/bindings.json — no step is created or converted; the change only lists existing web renderer files as modules, so no A27 trap is reachable
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  22596ms (22.6s)
+📊 Tokens — total: 35477, input: 30842, output: 4635, reasoning: 4032

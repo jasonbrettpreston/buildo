@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:07:26.240Z file_sha256=79d4f2539cdb9c8e4f0ee8064cce3fa4bf1a93dcc30664e41ceac6789df11a31 prompt_sha256=61b4461147c32dc37d602f5ca59dd3281652575dd1c18b54a413261d5e6d5f69
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-out-compliance-step-132-p1.txt (model: deepseek-reasoner)
+
+REJECT — step-132 part 1 (sections 2 and 3, core.1 to core.18 plus the archetype lines) — accused of leaving this diff non-compliant — these clauses govern a pipeline step's three files, descriptor vocabulary, logic variables, compute purity and check rows, and the material touches only web surface census data, bindings.json, mcbylaws/protected-paths.json, report presentation JSON and surface tests, so none of the 40 pasted clauses is engaged.
+
+BUG severity=HIGH — operator ruling quoted in the material, "the item put to the operator at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1421, \"3. Leave the reports as components, and bring them under the existing checks (task 384).\"" (source not pasted, cannot see) — src/tests/surfaces/surface-conformance.logic.test.ts:938 "export const REPORT_RENDERER_PIN ... 'src/components/report/ReportPage.tsx': { 'C-2b': 92, 'C-8': 171 }" — 318 structural findings stay unfixed and go to nobody: the lane authors and accepts the exemption itself, while the card says "findings the checks then raise are fixed or brought to the operator" and this diff deletes the earlier plan's words "listed for the operator with each count and the reason" — put REPORT_RENDERER_PIN to the operator as a dated decision with the per-file counts, or fix the findings.
+
+BUG severity=HIGH — same ruling, "bring them under the existing checks (task 384)", together with the new census claim "so the FE-31 text check (C-2b) and component check (C-8) judge them" — src/tests/surfaces/surface-conformance.logic.test.ts:976 "'C-8': mappingProblems(text, f, [], B.libraries.web, {}).length" — C-8's closed component table is never consulted for the three files (allowed list empty, shared set empty), so the "check" is a JSX element count: swapping one unlisted library part for one intrinsic element keeps the count and goes green, and no mapping.web.REPORT list exists to make C-8 real, so C-8 does not judge them and the census says it does — declare a mapping.web.REPORT closed list and pass allowedFor/sharedFor so the pin classifies findings, or write in the census limitations that C-8 does not reach these files.
+
+DEFER severity=MED — the plan's own authority claim "as StaticBinding.tsx:41 imports it directly (precedent for a binding module)" (StaticBinding.tsx is not in the diff, cannot see) — src/components/report/ReportView.tsx:10 "import presentation from '../../../scripts/surfaces/_schema/report-presentation.json';" — the renderer now imports build-time generator output across the src/scripts boundary, a shape no pasted clause or ruling names and resting on a precedent the material does not show — paste the StaticBinding.tsx:41 precedent, or emit the strings to a path src already owns.
+
+DEFER severity=LOW — no clause or ruling in the material names a reorder of the rule-list table — docs/reports/generated/rule-lists-by-kind.md:37 "| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |" now sits below the five surface rows, with airtight-124a, airtight-v3-122, airtight-v2-122 and airtight-122a moved with it in a change whose only table effect is one frontend glob — name the generator sort that moved these rows, or restore the order; cannot see the generator to confirm it is regenerated rather than hand-edited.
+
+REJECT — step-132 core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero" — accused of leaving unregistered literals ([13, 8, 25], 92/171/13/41/0/1, 44) in a gate — core.8's pinning duty runs through pipeline logic_variables rows for step, runner and gate code, and the FE-31 C-2b/C-8 cases are surface conformance tests, not pipeline gates; no pasted clause extends it to these tests.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 41   Unmet: 1
+
+---
+⏱  73705ms (73.7s)
+📊 Tokens — total: 48056, input: 32921, output: 15135, reasoning: 14132

@@ -1,0 +1,72 @@
+{
+  "lists": [
+    {
+      "id": "eng-all",
+      "file": "docs/specs/00_engineering_standards.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "ui-app"
+      ],
+      "why": [
+        "ADDED by COMPLY.2 (real Files lines named these paths and no starting row matched): UI components and app pages are governed by engineering standards section 1 (architecture and UI), and sections 2, 4, 10 and 11 (errors, security, the front/back boundary, the plan checklist); the surface paths among them also match the surfaces row. V2.LIST (task-406): also src/features (unmatched); the engineering standards are attached whole (eng-all)"
+      ]
+    },
+    {
+      "id": "five-words",
+      "file": "docs/specs/01-pipeline/132_step_standard_handbook.md",
+      "sections": [
+        "Glossary"
+      ],
+      "generated_by": "scripts/generate-step-handbook.mjs",
+      "rows": [
+        "every-task"
+      ],
+      "why": [
+        "every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)"
+      ]
+    },
+    {
+      "id": "plan-protocol",
+      "file": "docs/specs/00-architecture/plan-protocol.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "every-task"
+      ],
+      "why": [
+        "every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)"
+      ]
+    },
+    {
+      "id": "inc-S",
+      "file": "backlog/docs/increments/doc-2 - Increment-S-requirements.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "increment"
+      ],
+      "why": [
+        "every task also gets the requirements document of its increment (the milestone group letter)"
+      ]
+    },
+    {
+      "id": "ms-S",
+      "file": "backlog/milestones/m-1 - increment-1·b-search-[s].md",
+      "sections": [
+        "Project objectives",
+        "Increment objectives",
+        "Objectives"
+      ],
+      "generated_by": "hand-written",
+      "rows": [
+        "milestone"
+      ],
+      "why": [
+        "every task also gets the objectives sections of its milestone (the milestone group letter)"
+      ]
+    }
+  ],
+  "exempt": [],
+  "unmatched": []
+}

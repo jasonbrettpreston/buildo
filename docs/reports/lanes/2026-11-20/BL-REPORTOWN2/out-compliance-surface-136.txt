@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:06:21.391Z file_sha256=9e2cb7dbbadbace6dddb7b221d3511b352a04ce511f9616d88b95e287da85567 prompt_sha256=3323bb2865f2c476ed66288e19fc4f81de9011d6d80cbe9332c0d009d9c31112
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.02 "P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components." — src/tests/surfaces/surface-conformance.logic.test.ts:40 "'src/components/report/ReportPage.tsx': { 'C-2b': 92, 'C-8': 171 }" — the web REPORT screen stays hand-built code (318 pinned C-2b/C-8 findings across the three files) and the diff only renames it a listed binding module owned by binding_web_report, so "the only code is the shared archetype components" is not satisfied and no step moves the page toward a descriptor, the clause is met only by a pinned baseline — either record the pin as an operator-visible exemption before merge, or make the listing conditional on the page table driving its parts (fe.34) so the pinned counts fall toward zero.
+
+DEFER severity=MED — fe.33 "One render smoke per archetype per platform: each binding renders its archetype's goldens on each platform (web renderToStaticMarkup in the root suite; mobile jest-expo), and every displayed string, library default strings and form error messages included, comes from content." — scripts/surfaces/_schema/bindings.json:22 "{ \"path\": \"src/components/report/ReportPage.tsx\", \"platform\": \"web\", \"archetypes\": [\"REPORT\"], \"owner\": \"binding_web_report\"" — the three files become a listed web REPORT binding and the plan states "No view type or golden changes.", so no render smoke or props golden is added or named for this new binding — add the web REPORT render smoke (root-suite renderToStaticMarkup of the binding on its goldens) to the diff or name the existing one inside C-12.
+
+DEFER severity=LOW — fe.15 "\"How we know it works\": the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria." — task-384 plan "Order: plan lenses (plan review before any code); red (tests only + task file, red.out); build; checks before and after; green through the real hooks (commit.out)" — cannot see the Definition of Done in the diff, and the plan text names no canaries a-f; step 7 only says "acceptance criteria added", so the clause rests on a process sentence — name canaries a-f in the task acceptance criteria with the planted-copy non-zero and clean-copy zero results.
+
+MET — fe.03 — src/tests/surfaces/surface-conformance.logic.test.ts:40 REPORT_RENDERER_PIN — exact per-file, per-kind counts checked in both directions (planted new finding and planted fixed finding each turn it red), which is the both-directions lock the clause names.
+
+MET — fe.33 — src/components/report/ReportView.tsx:126 "{UI.details}" — the fixed labels now come from report-presentation.json states.view, so displayed strings in the renderer come from content.
+
+MET — fe.06 — src/components/report/ReportView.tsx:24 "{metaLine(n)}" — the confidence and provenance line is still emitted for every node with showMeta, so confidence is not dropped by the move.
+
+MET — fe.05 — src/components/report/ReportView.tsx:14 "UI.meta.replace('{confidence}', n.confidence)" — no maths and no second derivation are added; node values are substituted into a content string.
+
+REJECT — fe.01 — adding src/components/report/** to the frontend list while the clause says surface paths are held (pending globs) until Phase 1 opens — not a real issue: the same pasted file records earlier McFrontend globs that left pending_globs and stayed in frontend (the 2026-11-09, 2026-11-10 and 2026-11-13 notes), so the hold has already been exercised and released on this record.
+
+REJECT — fe.37 — filling a two-slot content template ("confidence: {confidence} · provenance: {provenance}") in the client instead of one {value} slot on the server — fe.37 is scoped to "A STATIC page", the web report page is a REPORT surface, so the clause does not bind this renderer.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 1
+
+---
+⏱  100715ms (100.7s)
+📊 Tokens — total: 51838, input: 31272, output: 20566, reasoning: 19594

@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:19.414Z file_sha256=0054a2e19e7355cd62d62672af742fe629934d2c5520b69c89db5d277e3412ce prompt_sha256=c73af48aa97809ad684850f9b87dea97652399ff4165ac85ac2c180f7fe1b283
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan Changes step 4 (material under review) "C-2b and C-8 real-tree cases judge every listed module; the three report files are judged with a pin REPORT_RENDERER_PIN per file and per kind (C-2b structural, C-8)" — src/tests/surfaces/surface-conformance.logic.test.ts (C-2b real-tree case, hunk @@ -324,7 +332,7) "…].filter((f: string) => !Object.hasOwn(REPORT_RENDERER_PIN, f)); // the pinned renderer files are judged in C-12" and (C-8 case, hunk @@ -584,7 +592,7) "const mods = B.modules.filter((m: Json) => m.platform === 'web' && !Object.hasOwn(REPORT_RENDERER_PIN, m.path))" — the diff does the opposite of the plan step it claims to serve: the three files are removed from C-2b and C-8 and judged by a re-implementation in C-12, while the census/registry assert "the FE-31 text check (C-2b) and component check (C-8) judge them" — either judge them inside C-2b/C-8 with the pin, or rewrite the plan step and the two census strings to say C-12 only.
+
+BUG severity=HIGH — task Description (card under review) "findings the checks then raise are fixed or brought to the operator" — src/tests/surfaces/surface-conformance.logic.test.ts REPORT_RENDERER_PIN "src/components/report/ReportPage.tsx': { 'C-2b': 92, 'C-8': 171 }" (105 C-2b + 213 C-8 = 318 findings) — the card requires fix or operator; the plan names the fix "Not done" and instead encodes all 318 as expected counts with no operator exemption line ("FINDINGS.md untriaged; lane report; grounder owed") — fix the findings or list each pinned count and reason as an operator decision item, the form used for the 48 px ruling, and cite it in the pin comment.
+
+DEFER severity=MED — plan Changes step 4 "display text in the three files has no pin and must be 0" — src/tests/surfaces/surface-conformance.logic.test.ts "const isDisplayText = (line: string): boolean => /: (JSX text|string child) \"/.test(line); // a blank spacer child is structural" — the display/structural split is inferred by regex over textProblems message text, so any display-text form not spelled exactly "JSX text"/"string child" (an attribute label, a template literal) counts as structural and is silently absorbed by the pin — pass the finding kind through from textProblems instead of parsing its message, and plant one attribute-text defect to lock it.
+
+DEFER severity=MED — mcbylaws/protected-paths.json $comment (the file the diff edits) "Edited by MB-67's lane only." — mcbylaws/protected-paths.json dated note "MB-67 owner commit, built in lane BL-REPORTOWN2, task-384 STD.REPORT-OWN" — the file's own edit rule names MB-67's lane; the diff states the edit was built in BL-REPORTOWN2 and only claims MB-67 ownership in prose, nothing pasted shows the two are the same lane — attach the MB-67 lane commit reference to this edit or route the glob through the MB-67 lane as the notes of 2026-11-09/10/11/13 did.
+
+DEFER severity=LOW — plan-protocol.md:3 "keep it simple; no scope creep" — mcbylaws/protected-paths.json note "src/components/report/** joins frontend … and the McFrontend lists reach their reviewers (scripts/analysis/rule-lists.json row surfaces)" — the cardinality change is not confined to the report files: every file under src/components/report/** now resolves surface-136/126/127/128/135, a review-scope expansion the task card and the milestone objectives do not name — scope the join or record it as its own approved item.
+
+MET — Project objectives "the database is created to service the existing report and details … This includes the search page" — docs/reports/generated/127-surface-registry.md "REPORT keeps the landed renderer" — the change touches the designed report renderer, keeps it a component, and adds no behaviour to the report itself besides moving three strings to content.
+
+MET — Project objectives "standardization" — scripts/surfaces/_schema/bindings.json "module_roots": [… "src/components/report/"] with modules 13 and promoted_entries 8 matching the lock surfaces-conformance.logic.test.ts "[13, 8, 25]" — the counts and the listing agree.
+
+MET — Project objectives "A task that serves neither a designed element nor a supporting function is most likely not relevant" — census binding_web_report "Every web REPORT surface (the MaxBLD report page)" — the work serves a designed element, not old code.
+
+REJECT — Increment objectives "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — accused of not advancing the search page, address confusion or lot confusion — not a real issue: the pasted Project objectives name the designed report as what the database exists to service, and this change is confined to that report's renderer, so it violates no pasted clause.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  65887ms (65.9s)
+📊 Tokens — total: 41032, input: 28035, output: 12997, reasoning: 11760

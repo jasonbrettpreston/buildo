@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:08:00.181Z file_sha256=c39ef048521e21b728c6bae70299c10cac7499a7f924b55e7756128a0dcceeb4 prompt_sha256=aee8c4a87ac223c4bafa86cc592917e737781c2a10af6a2b3bf953205fff134a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-out-compliance-airtight-v2-122.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — airtight-v2-122 §6.6.1(c) "no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed." — scripts/surfaces/_schema/census/web-product.json "reduced_motion": "honoured", evidence "src/app/globals.css:182-185, locked by report-checked.logic.test.ts C5" — the field flips from "none" to a positive accuracy claim on a citation that is neither in the diff nor in the pasted context, so the row is described as accurate without a generated or witnessed source in the material (cannot see report-checked.logic.test.ts C5) — land the C5 lock line in the same change (or drop the flip) so the row's accuracy is enforced by something in the diff.
+DEFER severity=LOW — airtight-v2-122 §6.6.1(c) "no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed." — scripts/surfaces/_schema/census/web-product.json "so the FE-31 text check (C-2b) and component check (C-8) judge them" versus src/tests/surfaces/surface-conformance.logic.test.ts "const mods = B.modules.filter((m: Json) => m.platform === 'web' && !Object.hasOwn(REPORT_RENDERER_PIN, m.path)); // the pinned renderer files are judged in C-12" — the registry sentence names C-8 as the judging check while the change removes these files from C-8's real-tree loop, so the observed judge is C-12 re-running mappingProblems with an empty allowed table and empty shared props, a different declared check from the observed one — either keep the files in the C-8 loop with the pin applied there or word the census row as judged by the C-12 pin.
+MET — airtight-v2-122 §6.6.1(c) "no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed." — src/tests/surfaces/surface-conformance.logic.test.ts — the listing, the per file pins and the "display text is 0" claim are each asserted against the real files in both directions ("expect(reportListingProblems(B)).toEqual([])", "expect(reportRendererProblems(realTexts())).toEqual([])"), so those registry claims are enforced rather than hand-declared.
+MET — airtight-v2-122 §6.6.1(a) "generated from code/runtime or witnessed" — scripts/surfaces/_schema/seed-report-v2.mjs "view: { details: 'Details', meta: 'confidence: {confidence} · provenance: {provenance}' }" with src/components/report/ReportView.tsx "const UI = presentation.states.view;" — the three display strings become generated content and are read from it, matching the declared "display text 0".
+REJECT — airtight-v2-122 §6.6.1(a) "zero allowlist, strict zero (R-BC)" — accused of keeping 318 structural findings (ReportPage 92/171, ReportView 13/41, ReportPageToggles 0/1) as a nonzero baseline REPORT_RENDERER_PIN — the clause governs the four-part step registry and the §6 cross-step ledger only, not the surface checks C-2b/C-8, so it is not this change's clause to enforce.
+REJECT — airtight-v2-122 §6.6.1(b) "The Phase 1 WITNESS gate (#44) must carry the exact string `R-BF WITNESS GATE (#44)` in `scripts/analysis/step-validate.mjs`" — accused of not adding the marker or touching scripts/lib/sql-witness — the clause binds the pipeline step witness, and this change touches no step, descriptor of a step, or witness code, so the marker is out of scope here.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+```
+
+---
+⏱  59866ms (59.9s)
+📊 Tokens — total: 42193, input: 30233, output: 11960, reasoning: 11082

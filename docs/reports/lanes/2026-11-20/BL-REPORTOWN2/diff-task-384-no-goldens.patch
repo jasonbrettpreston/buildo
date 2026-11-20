@@ -1,0 +1,581 @@
+diff --git a/backlog/tasks/task-384 - STD.REPORT-OWN-The-web-report-renderer-gets-a-census-owner-and-comes-under-the-existing-text-component-and-44-px-checks.md b/backlog/tasks/task-384 - STD.REPORT-OWN-The-web-report-renderer-gets-a-census-owner-and-comes-under-the-existing-text-component-and-44-px-checks.md
+index 79a0b6f64..002949bd6 100644
+--- a/backlog/tasks/task-384 - STD.REPORT-OWN-The-web-report-renderer-gets-a-census-owner-and-comes-under-the-existing-text-component-and-44-px-checks.md	
++++ b/backlog/tasks/task-384 - STD.REPORT-OWN-The-web-report-renderer-gets-a-census-owner-and-comes-under-the-existing-text-component-and-44-px-checks.md	
+@@ -7,7 +7,7 @@ status: RUNNING
+ assignee:
+   - '@lane-BL-REPORTOWN2'
+ created_date: '2026-11-20T15:08:00Z'
+-updated_date: '2026-11-20T19:43:00Z'
++updated_date: '2026-11-20T20:04:00Z'
+ labels:
+   - McFix
+   - McFix B
+@@ -23,7 +23,7 @@ ordinal: 84012
+ ## Description
+ 
+ <!-- SECTION:DESCRIPTION:BEGIN -->
+-Plan section B4. Page-by-page check: src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx are owned by no surface (docs/reports/generated/127-surface-registry.md section 5; src/tests/surface-registry.infra.test.ts:198 it.fails) and are in no bindings.json list, so C-2b, C-8 and C-9 never run on them (defect D8 sat there). Census owner entry plus listing; findings the checks then raise are fixed or brought to the operator. The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/components/report/ReportPage.tsx, src/components/report/ReportView.tsx, src/components/report/ReportPageToggles.tsx, scripts/surfaces/_schema/bindings.json, src/tests/surfaces/surface-conformance.logic.test.ts, scripts/surfaces/_schema/census/web-product.json, scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json, docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, src/tests/surface-registry.infra.test.ts
++Plan section B4. Page-by-page check: src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx are owned by no surface (docs/reports/generated/127-surface-registry.md section 5; src/tests/surface-registry.infra.test.ts:198 it.fails) and are in no bindings.json list, so C-2b, C-8 and C-9 never run on them (defect D8 sat there). Census owner entry plus listing; findings the checks then raise are fixed or brought to the operator. The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/components/report/ReportPage.tsx, src/components/report/ReportView.tsx, src/components/report/ReportPageToggles.tsx, scripts/surfaces/_schema/bindings.json, src/tests/surfaces/surface-conformance.logic.test.ts, scripts/surfaces/_schema/census/web-product.json, scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json, docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, src/tests/surface-registry.infra.test.ts, mcbylaws/protected-paths.json, src/tests/backlog/rule-lists-table.logic.test.ts, scripts/surfaces/_schema/seed-report-v2.mjs, scripts/surfaces/_schema/report-presentation.json, docs/reports/generated/rule-lists-by-kind.md, src/tests/fixtures/surfaces/report/**, src/tests/fixtures/report-page/**, scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json
+ <!-- SECTION:DESCRIPTION:END -->
+ 
+ ## Definition of Done
+@@ -43,26 +43,32 @@ Plan section B4. Page-by-page check: src/components/report/ReportPage.tsx, Repor
+ ## Implementation Plan
+ 
+ <!-- SECTION:PLAN:BEGIN -->
+-## Lane plan (BL-REPORTOWN, task-384, STD.REPORT-OWN)
++## Lane plan (BL-REPORTOWN2, task-384, STD.REPORT-OWN part two)
+ 
+-Goal: the three web report renderer files (src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx) get a census owner and join the checked set, in the same form as the phone REPORT modules. They stay a component; nothing is converted (Spec 126 section 11b.1, docs/specs/02-web-admin/126_maxbld_surface_standard.md:923: "REPORT keeps the landed renderer (§11a; Spec 135 FE-24)"; :924 "the landed web REPORT renderer" is on the list of our code).
++Goal: the three web report renderer files (src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx) come under the existing surface checks C-2b (no display text) and C-8 (closed component table), with the structural findings pinned as a shrink-only baseline, and the McFrontend handbook reaches their reviewers. They stay a component; nothing is converted (Spec 126 :925 "REPORT keeps the landed renderer", :926 "the landed web REPORT renderer" is on the list of our code).
+ 
+-Measured before any edit (lane measure script, a transpile of the real test file functions; ~/Buildo-scratch/lanes-20261119/inc1b/reportown/measure/measure-before.txt): with the three files treated as web REPORT modules, C-2b raises 108 findings (ReportPage 92, ReportView 16, ReportPageToggles 0) and C-8 raises 213 (171, 41, 1). Only 3 of the C-2b findings are display text (ReportView.tsx:19 twice, :121); the rest are structural attributes (as, data-*, aria-*). C-8 findings are intrinsic elements and local components: the renderer is hand-built by design. C-9 judges golden nodes (component + props.size), not source files, so no data edit puts the three files under it.
++Rule the task rests on: the approved item 3 at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1421 "3. Leave the reports as components, and bring them under the existing checks (task 384)." with the operator's word at :1422 "approved [the five items pasted] - remember the app is not beign used - we are in development"; resolution by a separate grounder under the delegation at :1476 "Let the grounder resolve them all as long as the result is compliant" (task notes: option 2, strings fixed).
+ 
+-Smallest data edit, following the phone form (bindings.json modules[] + one promoted platform_shared census entry that owns them, as binding_mobile_report does, scripts/surfaces/_schema/census/mobile-product.json:15071-15267 and bindings.json:21-22):
+-1. census web-product.json: one new entry binding_web_report (archetype REPORT, platform web, scope platform_shared) with identity.owns.components = the three files; its descriptor file emitted beside it (same text as the census entry, as binding_web_static).
+-2. bindings.json: module_roots += src/components/report/; modules += the three files (platform web, archetypes REPORT, owner binding_web_report); promoted_entries += binding_web_report. mapping.web gets NO REPORT list (the renderer is not a library binding).
+-3. Regenerate the two generated registry docs; the registry section 5 falls from 14 to 11 unowned files; the it.fails at src/tests/surface-registry.infra.test.ts:198 stays (red for the other 11).
++Facts the resolution rests on, each opened before building:
++1. mcbylaws/protected-paths.json `frontend` has no src/components/report glob (file read); scripts/analysis/rule-lists.json:123-124 row `surfaces` reads that list (globs_from), so the surface lists attach to a path only when it is in `frontend`. Before: `rule-lists.mjs resolve` on ReportPage.tsx lists eng-all five-words plan-protocol inc-S ms-S only (resolve-before.txt).
++2. bindings.json lists none of the three files; census binding_web_report (web-product.json:5411) owns them (part one). C-3 (surface-conformance.logic.test.ts:164-168) needs module_roots to be under COMPONENT_ROOTS and frontend globs in the policy, so the glob must come first.
++3. Treated as web REPORT modules the real functions raise C-2b 108 (ReportPage 92, ReportView 16, ReportPageToggles 0) and C-8 213 (171, 41, 1) (measure/measure-before.txt, reproduced). Display text is exactly three findings: ReportView.tsx:19 "confidence:" and "· provenance:", :121 "Details". ReportPage.tsx string children are the blank spacer " " (5) and `label=` values are key names, not text: structural.
++4. FE-05 (report-no-maths.logic.test.ts DIRS) already scans src/components/report, so the listing adds no new no-maths exposure.
++5. Content home: scripts/surfaces/_schema/report-presentation.json (generated by scripts/surfaces/_schema/seed-report-v2.mjs, `states` block) is the registry of report strings; StaticBinding.tsx:41 imports it directly (precedent for a binding module).
+ 
+-Tests (red first through the real hooks; commit attempt with only tests + task file staged):
+-- C-12 (new, surface-conformance.logic.test.ts): the three files are listed web REPORT modules owned by binding_web_report in the census; listed set equals exactly the three; bindingsProblems clean.
+-- The real-tree C-2b and C-8 cases judge the three files with the measured findings PINNED per file and per check (exact count, both directions: a new finding or a fixed one turns it red). This pin is a baseline: it is the one exemption, listed for the operator with each count and the reason (no one-line fix exists; renderer kept by 11b.1). No existing check is weakened for any other file.
+-- surface-registry.infra.test.ts: the three files are not in the unowned set, and the unowned set is exactly the other 11 (so the it.fails stays honest: it cannot pass or be dropped silently).
+-- Count lock in the conformance test [10,7,25] becomes [13,8,25].
++Changes (smallest, existing mechanisms only):
++1. mcbylaws/protected-paths.json: frontend += "src/components/report/**"; a dated note in $comment in the form of the earlier notes (MB-67 owner commit; the approved item quoted from MORNING-DECISIONS.md:1421-1422). The note says the report files join frontend so the surface checks and handbook reach them; it does not say the operator ruled an exemption. Protected path: the push gate asks the operator y.
++2. scripts/surfaces/_schema/bindings.json: module_roots += src/components/report/; modules += the three files (web, REPORT, owner binding_web_report, exports); promoted_entries += binding_web_report; a dated note in $comment. mapping.web gets no REPORT list (the renderer is not a library binding).
++3. Move the three display strings of ReportView.tsx to content: seed-report-v2.mjs `states.view` (details, meta line template), regenerated into report-presentation.json by the generator; ReportView reads them by import as StaticBinding does. No view type or golden changes.
++4. surface-conformance.logic.test.ts: C-2b and C-8 real-tree cases judge every listed module; the three report files are judged with a pin REPORT_RENDERER_PIN per file and per kind (C-2b structural, C-8): exact counts, both directions (a new finding or a fixed one turns it red), shrink-only (lowered by editing the pin with the fix); display text in the three files has no pin and must be 0. C-3 count lock [10,7,25] becomes [13,8,25]. C-12 gains: listed set is exactly the three, owner binding_web_report, bindingsProblems clean, plus planted defects (a file dropped from modules, a wrong owner, the pin one up and one down) and a passing control.
++5. rule-lists-table.logic.test.ts: for the three files, resolve lists surface-136, surface-126, surface-127, surface-128, surface-135; planted defect: a temp copy of protected-paths without the glob, the lists vanish; passing control; and the real lens-input for surface-136 holds fe.01 to fe.44 (44 distinct ids).
++6. Census binding_web_report entry and its descriptor: limitations say the files are judged by C-2b and C-8 with the baseline, and are outside C-9 (it judges golden nodes, not files); checks.why, notes, sharing.evidence now true (bindings.json modules lists the three); reduced_motion honoured (globals.css:182-185, report-checked.logic.test.ts C5); stale Spec 126 line cites fixed (:925-926). Regenerate the two 127 registry docs and descriptor with generate-surface-registry.mjs; regenerate the rule-lists page if it drifts.
++7. Task file through the backlog CLI: Files line extended (protected-paths.json, rule-lists-table test, seed-report-v2.mjs, report-presentation.json, and whatever the checks force), acceptance criteria added, notes.
+ 
+-Not done, left for the operator: the landing embed exception (C-8 SHARED_REPORT_RENDERERS, surface-conformance.logic.test.ts:532) stays as is, written up as a question; C-9 reach (needs a rule on what to judge in a hand-built renderer); the 3 display-text findings and the structural attributes.
+-Files beyond the task Files line that must be touched: census/web-product.json, the descriptor file, docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md, src/tests/surface-registry.infra.test.ts, and any test count lock the new entry moves; the Files line is extended through the backlog CLI.
+-Rules served: Spec 126 section 0a principle 1 and 11b.2; 128 R-13; standardized, understandable, simple.
++Order: plan lenses (plan review before any code); red (tests only + task file, red.out); build; checks before and after; green through the real hooks (commit.out); output lenses on the whole diff; FINDINGS.md untriaged; lane report; task left RUNNING, grounder owed.
++
++Not done (named): the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision; C-9 reach (needs a rule on what to judge in a hand-built renderer); fixing the structural attributes (renderer is hand-built by design).
++Rules served: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and 11.1; PLAN-PROTOCOL.md:3 simple, no scope creep; standardized, understandable, simple.
+ <!-- SECTION:PLAN:END -->
+ 
+ ## Implementation Notes
+diff --git a/docs/reports/generated/127-surface-registry.md b/docs/reports/generated/127-surface-registry.md
+index e57001ac9..cd5a36060 100644
+--- a/docs/reports/generated/127-surface-registry.md
++++ b/docs/reports/generated/127-surface-registry.md
+@@ -7274,7 +7274,7 @@ _No table is reached by this entry — every value it shows arrives through a co
+ 
+ **What it reads and writes.** It reads nothing itself: the page passes the page view (built and checked on the server by buildPage / pageViewOf) and the content strings.
+ 
+-**Under Spec 126.** **OWNER ENTRY** (task-384 STD.REPORT-OWN, dated 2026-11-20): a platform_shared census entry that owns the web REPORT renderer files so R-13 totality holds for them. The files stay a component (Spec 126 section 11b.1, :923). They are not yet listed in bindings.json modules, so the FE-31 text (C-2b) and component (C-8) checks do not judge them: C-3 needs their module root to be a frontend glob in mcbylaws/protected-paths.json (operator question).
++**Under Spec 126.** **OWNER ENTRY AND LISTED MODULES** (task-384 STD.REPORT-OWN, dated 2026-11-20): a platform_shared census entry that owns the web REPORT renderer files so R-13 totality holds for them; the files are listed web REPORT modules of bindings.json, so the FE-31 text check (C-2b) and component check (C-8) judge them. The files stay a component (Spec 126 section 11b.1, :925-926: REPORT keeps the landed renderer). Their structural findings are pinned per file and per kind (REPORT_RENDERER_PIN, shrink-only, both directions); display text is 0. Outside C-9 (it judges golden nodes, not files).
+ 
+ **kind** SURFACE · **archetype** `REPORT` · **platforms** `web` · **status** new · **shard** `web-product` · **unresearched fields: 4**
+ 
+@@ -7294,7 +7294,7 @@ _No table is reached by this entry — every value it shows arrives through a co
+ 
+ | Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
+ |---|---|
+-| `files` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 (:923-924)` |
++| `files` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 (:925-926)` |
+ | `contracts` | — |
+ | `tables` | — |
+ | `gate` | — |
+@@ -7322,7 +7322,7 @@ _No table is reached by this entry — every value it shows arrives through a co
+ | 14 | `offers` | `none` | It renders the ad sections the server placed (their Sponsored disclosure as sent); it decides no placement. — `src/components/report/ReportPage.tsx — the ad section case` |
+ | 15 | `metering` | `none` | Rendering is not a metered product action. — `src/components/report/ReportPage.tsx`, `src/components/report/ReportView.tsx` |
+ | 16 | `config` | `none` | No tunable of its own: the binding consumes no registered logic variable; the layout row (report-layout.json) is read by the server projection, not here. — `src/components/report/ReportPage.tsx — no config read` |
+-| 17 | `sharing` | `shared` | Every web REPORT surface (the MaxBLD report page). — `scripts/surfaces/_schema/bindings.json — modules` |
++| 17 | `sharing` | `shared` | Every web REPORT surface (the MaxBLD report page). — `scripts/surfaces/_schema/bindings.json — modules lists the three files (owner binding_web_report)` |
+ | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
+ | 19 | `deviations` | **UNRESEARCHED** | _to be researched — see the closed vocabulary for `deviations` in [the schema](../../../scripts/surfaces/_schema/surface.schema.json)_ |
+ | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
+@@ -7332,7 +7332,7 @@ _No table is reached by this entry — every value it shows arrives through a co
+ 
+ **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/components/report/ReportPage.tsx` · `src/components/report/ReportView.tsx` · `src/components/report/ReportPageToggles.tsx`
+ 
+-> ⚠️ task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): limitations states the three files are outside C-2b, C-8 and C-9; deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here).
++> ⚠️ task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here). Dated note 2026-11-20 (BL-REPORTOWN2, part two): the three files are listed in bindings.json modules and src/components/report/** is a frontend glob; reduced_motion is honoured (src/app/globals.css:182-185, locked by report-checked.logic.test.ts C5); the three display strings of ReportView.tsx moved to content (report-presentation.json states.view).
+ 
+ <a id="c-027"></a>
+ 
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+index 763216acc..f2ae8ac24 100644
+--- a/docs/reports/generated/rule-lists-by-kind.md
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -29,16 +29,16 @@ Example Files line: `src/components/report/, scripts/surfaces/parcel_product/F02
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+-| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
+-| airtight-124a | docs/specs/01-pipeline/124a_step_standard_policy_appendix.md | Appendix §B10; Appendix §B12 | 38,138 | 1 |
+-| airtight-v3-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 5.5 Condition 4 | 5,017 | 1 |
+-| airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
+-| airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
+ | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 13,783 | 1 |
+ | surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |
+ | surface-127 | docs/specs/02-web-admin/127_surface_conversion_procedure.md | whole file | 50,606 | 1 |
+ | surface-128 | docs/specs/02-web-admin/128_surface_standard_policy.md | whole file | 77,169 | 1 |
+ | surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file | 84,215 | 1 |
++| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
++| airtight-124a | docs/specs/01-pipeline/124a_step_standard_policy_appendix.md | Appendix §B10; Appendix §B12 | 38,138 | 1 |
++| airtight-v3-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 5.5 Condition 4 | 5,017 | 1 |
++| airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
++| airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 7,525 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+diff --git a/mcbylaws/protected-paths.json b/mcbylaws/protected-paths.json
+index f5586ba5d..93eb7487b 100644
+--- a/mcbylaws/protected-paths.json
++++ b/mcbylaws/protected-paths.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "McBylaws gate policy (MB-67; R-KP, R-LD, R-LA, R-LF). No code here. The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it. Edited by MB-67's lane only. frontend (D-2 b, MF-17 item 6, 2026-11-06): the McFrontend surface paths; arms H, C, P and Q read it, the loop gate does not. Dated note 2026-11-09 (MB-67 owner commit, built in the MF-37 lane; operator, verbatim: \"a, 1-3 approved\"; record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"Operator ruling 2026-11-09: MF-37 blocker and owed items\", item 1): src/components/surfaces/** and src/app/(maxbld)/** leave pending_globs because MF-37 landed the first tracked files under both (the binding modules and the admin media pages); both stay in frontend. Dated note 2026-11-10 (MB-67 owner commit, built in the MF-35 lane; operator, verbatim: \"approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show\" (Wave 1 decision batch, P35-D12: each MF-35 code commit is followed by the MB-67 pending-glob commit in the same push); record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"Operator ruling 2026-11-09: Wave 1 decision batch\"): mobile/src/vendor/rnr/** and mobile/components.json leave pending_globs because the MF-35 library commit tracked the vendored Reusables parts and the CLI config; both stay in frontend, and the vendor dir stays protected. Dated note 2026-11-10 (MB-67 owner commit, built in the MF-35 lane, after the MF-35 conversion commit; operator, verbatim: \"approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show\" (Wave 1 decision batch, P35-D12); record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"Operator ruling 2026-11-09: Wave 1 decision batch\"): mobile/src/components/surfaces/** leaves pending_globs because the conversion commit tracked the two mobile binding modules; it stays in frontend. No McFrontend glob is pending now. Dated note 2026-11-11 (MB-67 owner commit, built in the MF-46 lane; operator, verbatim: \"Teh web address will just be maxbld.ca - is that okay?\" and \"5. yes and yes recommend\" (MF-46 DECISIONS-v2 D-3); record ~/Buildo-scratch/mcfrontend/MF-46/DECISIONS-v2.md): src/middleware.ts, src/lib/auth/host-policy.ts (the maxbld.ca host table) and src/lib/auth/safe-redirect.ts (the one same-origin redirect guard) join protected, so every later edit to the host fence, its table or the guard needs the owner y at push. Dated note 2026-11-13 (MB-67 owner commit, built in lane MB67-LIT; operator \"all recommendations accepted\", review-20261113 HOLISTIC-RECOMMENDATION K3 + Q3): the two zero-match pending globs (scripts/lib/compute/bylaw-*.js, maxbld-*.js) are replaced by the real by-law code paths in layer23 and literal_scope, scripts/analysis/bylaw-validation/** joins the literal scan, and pending_globs is empty so a zero-match glob fails the gate (L10). Today's literals are baselined in literal-allow.json (shrink-only); none moved out of code.",
++  "$comment": "McBylaws gate policy (MB-67; R-KP, R-LD, R-LA, R-LF). No code here. The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it. Edited by MB-67's lane only. frontend (D-2 b, MF-17 item 6, 2026-11-06): the McFrontend surface paths; arms H, C, P and Q read it, the loop gate does not. Dated note 2026-11-09 (MB-67 owner commit, built in the MF-37 lane; operator, verbatim: \"a, 1-3 approved\"; record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"Operator ruling 2026-11-09: MF-37 blocker and owed items\", item 1): src/components/surfaces/** and src/app/(maxbld)/** leave pending_globs because MF-37 landed the first tracked files under both (the binding modules and the admin media pages); both stay in frontend. Dated note 2026-11-10 (MB-67 owner commit, built in the MF-35 lane; operator, verbatim: \"approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show\" (Wave 1 decision batch, P35-D12: each MF-35 code commit is followed by the MB-67 pending-glob commit in the same push); record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"Operator ruling 2026-11-09: Wave 1 decision batch\"): mobile/src/vendor/rnr/** and mobile/components.json leave pending_globs because the MF-35 library commit tracked the vendored Reusables parts and the CLI config; both stay in frontend, and the vendor dir stays protected. Dated note 2026-11-10 (MB-67 owner commit, built in the MF-35 lane, after the MF-35 conversion commit; operator, verbatim: \"approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show\" (Wave 1 decision batch, P35-D12); record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, \"Operator ruling 2026-11-09: Wave 1 decision batch\"): mobile/src/components/surfaces/** leaves pending_globs because the conversion commit tracked the two mobile binding modules; it stays in frontend. No McFrontend glob is pending now. Dated note 2026-11-11 (MB-67 owner commit, built in the MF-46 lane; operator, verbatim: \"Teh web address will just be maxbld.ca - is that okay?\" and \"5. yes and yes recommend\" (MF-46 DECISIONS-v2 D-3); record ~/Buildo-scratch/mcfrontend/MF-46/DECISIONS-v2.md): src/middleware.ts, src/lib/auth/host-policy.ts (the maxbld.ca host table) and src/lib/auth/safe-redirect.ts (the one same-origin redirect guard) join protected, so every later edit to the host fence, its table or the guard needs the owner y at push. Dated note 2026-11-13 (MB-67 owner commit, built in lane MB67-LIT; operator \"all recommendations accepted\", review-20261113 HOLISTIC-RECOMMENDATION K3 + Q3): the two zero-match pending globs (scripts/lib/compute/bylaw-*.js, maxbld-*.js) are replaced by the real by-law code paths in layer23 and literal_scope, scripts/analysis/bylaw-validation/** joins the literal scan, and pending_globs is empty so a zero-match glob fails the gate (L10). Today's literals are baselined in literal-allow.json (shrink-only); none moved out of code. Dated note 2026-11-20 (MB-67 owner commit, built in lane BL-REPORTOWN2, task-384 STD.REPORT-OWN; the item put to the operator at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1421, \"3. Leave the reports as components, and bring them under the existing checks (task 384).\", and his words at :1422, verbatim: \"approved [the five items pasted] - remember the app is not beign used - we are in development\"; resolved by a separate grounder under the delegation at :1476, record docs/reports/lanes/2026-11-20/BL-REPORTOWN2): src/components/report/** joins frontend, so the three web report renderer files come under the surface checks (the bindings.json modules list: FE-31 C-2b and C-8) and the McFrontend lists reach their reviewers (scripts/analysis/rule-lists.json row surfaces). Spec 126 section 11b.1 stands: REPORT keeps the landed renderer, a component. Every later edit under that path needs a McFrontend-Task trailer and panel record, like any frontend path.",
+   "pending_globs": [],
+   "layer23": [
+     "scripts/analysis/bylaw/**",
+@@ -26,7 +26,8 @@
+     "mobile/src/components/surfaces/**",
+     "mobile/src/vendor/rnr/**",
+     "mobile/components.json",
+-    "src/app/(maxbld)/**"
++    "src/app/(maxbld)/**",
++    "src/components/report/**"
+   ],
+   "protected": [
+     "scripts/seeds/bylaw/layer3-catalogue.json",
+diff --git a/scripts/surfaces/_schema/bindings.json b/scripts/surfaces/_schema/bindings.json
+index 24282e17d..28d303242 100644
+--- a/scripts/surfaces/_schema/bindings.json
++++ b/scripts/surfaces/_schema/bindings.json
+@@ -1,5 +1,5 @@
+ {
+-  "$comment": "MF-42 (FE-31; plan.min cut 5, P42-D9 a): the one data home of the binding boundary. libraries = the MaxBLD-new UI packages (one tier); they may be imported only by a listed binding module, a listed provider, a test file or the vendor dir. A converted surface's mount file (mounts[]) may import only a framework package (framework[]), a binding module or a project-internal path (mount_internal[], relative paths included), never a UI library or any other package. modules[] are exact .tsx files under the R-13 component roots, each owned by a promoted platform_shared census entry (promoted_entries[]). ref_kinds and non_display_keys judge golden props (SV-SBIND); widget_types judges render.form (SV-DESC). Shape: screen-data.schema.json#/definitions/bindings. Read by scripts/surfaces/screen-checks.mjs and the FE-31 and FE-05 locks. Dated note 2026-11-09 (MF-37; D-23, ~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md): mapping.web is the closed list of JSX element names each web binding module may render per archetype (FE-31 C-8); RJSF's Mantine theme renders FileInput, NumberInput, TextInput, Select and the submit Button itself, so those names document what a FORM shows rather than JSX in our modules. touch_targets.web lists the Mantine size values that reach 44 px (FE-31 C-9), measured from @mantine/core 9.8.0: inputs and Button lg 50 px, xl 60 px; CloseButton and ActionIcon lg 34 px, xl 44 px. ref_kinds gains contract (FE-32): a golden value {\"contract\": \"<contract_id>.<field>\"} names a field of a CONTRACT descriptor's inputs.field_whitelist. Dated note 2026-11-09 (MF-37; operator \"a, 1-3 approved\"): the web library is Mantine 8.3.18 / mantine-datatable 8.3.13; the touch_targets values were re-measured on @mantine/core 8.3.18 styles.css (--button-height-lg and --input-height-lg 3.125rem, xl 3.75rem; --cb-size-xl and --ai-size-xl 2.75rem = 44 px) and are unchanged. Dated note 2026-11-10 (MF-35; the binding standard, Spec 126 §11b.2 dated note 2026-11-10 item (5); plan ~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md §2): the first mobile binding. modules gains mobile/src/components/surfaces/SurfaceRenderer.tsx and SearchBinding.tsx (archetype SEARCH, owner shared_mobile_surface_binding, promoted); mounts gains the search screen; mount_internal gains @/hooks/ and @/store/ (the screen reads the lookup hook and the recent-searches store); edges is the safe-area EdgeRecord {top: additive}, equal to the legacy edges [top] (an array of strings under a non-display key reads as display text to SV-SBIND); ref_kinds gains derived (P35-D14 a: a declared deviation with a closed list of names, checked by the mobile golden test); non_display_keys gains the React Native prop names that carry no display text (measured with SV-SBIND on the goldens). mapping.mobile.SEARCH is the closed component table of SurfaceRenderer.tsx: its COMPONENTS literal has exactly these keys, each an imported library part (FE-31 C-8 mobile half). touch_targets.mobile names the className token that reaches 44 px on Button and Input: NativeWind's rem is 14 here, so min-h-11 is 38.5 px and only min-h-[44px] is 44 (plan v2 F-A; FE-31 C-9 mobile half). Dated note 2026-11-10 (MF-40; operator, verbatim: \"y recommendation: C, with the four trims. approved\"; plan delta 1 section 3 item 5 and S3): mapping.web.FORM gains Textarea and DateInput, which RJSF's Mantine theme renders for the offer form's textarea and date widgets (documentation of what a FORM shows, as for the other RJSF names; no Checkbox: trim 4). mounts gain the admin placements page files. MF-44 (dated 2026-11-11; operator \"01-a 0-2 b as long as they are complaint\"; Spec 126 §11b.5): + the web SEARCH module src/components/surfaces/web/SearchBinding.tsx (owner binding_web_search), mapping.web.SEARCH, the web search mounts (the page, its client mount, the not-found and error boundaries of src/app/(maxbld)/parcel-tool) and the parcel-tool provider layout. Dated note 2026-11-11 (MF-48; operator, verbatim: \"just to understand for the McFrontend and the web pages we are still using schema's and no code. except all recommendations\"; ~/Buildo-scratch/mcfrontend/MF-48/DECISIONS.md D-2 a, D-3 a, D-4 a; Spec 126 §11b.2 and §11b.4 dated notes 2026-11-11): the mobile REPORT binding. modules gains ReportBinding.tsx and ReportPageHost.tsx (archetype REPORT, owner binding_mobile_report, promoted); the shared renderer SurfaceRenderer.tsx lists SEARCH and REPORT (the one-archetype rule amended for the render half only). mapping.mobile.REPORT is the renderer's closed REPORT list (a subset of its SEARCH parts, so its COMPONENTS table is unchanged); mapping.mobile.REPORT_HOST is the host's table (FE-31 C-8m host list: the existing @gorhom/bottom-sheet and the shared renderer; libraries.mobile is not extended, a lane finding: seven Buildo-app files import the sheet). ref_kinds gains part ({\"part\": \"<section id>.<part index>.<role>\"} into MF-57's pageViewOf view; <id>.ad.value|disclosure). non_display_keys gains option and panel (the toggle_panel action's arguments) and pressBehavior (the sheet backdrop), measured on the MF-48 goldens and host. Dated note 2026-11-11 (MF-53; operator 2026-11-11, verbatim: \"\\\"choose your lot\\\" and \\\"address issues\\\" screens should be built now and we should only be using the new report obviosuly\"; plan ~/Buildo-scratch/mcfrontend/MF-53/plan.v4.md §3, §8 items 1-2): the first mobile LIST binding, for S-071 mobile_parcel_disambiguation_map (render.projection map). modules gains mobile/src/components/surfaces/LotMapBinding.tsx (archetype LIST, owner the new promoted entry binding_mobile_list, the MF-48 D-2 a form) and SurfaceRenderer.tsx (the render half, owner shared_mobile_surface_binding) renders SEARCH, REPORT and LIST; mapping.mobile.LIST is the closed table of the map page, adding react-native-maps' own MapView, Polygon and Marker (configured by props; no hand-built part). libraries.mobile is NOT extended with react-native-maps: two Buildo-app files import it (LeadMapPane.tsx, map.tsx), the MF-48 L-1 precedent; the renderer imports it as a layout part (FE-31 C-8m MOBILE_PARTS). mounts gains the map page; non_display_keys gains the react-native-maps prop names that carry no display text. Dated note 2026-11-11 (MF-19; operator D-1..D-8 \"all as recommmended\", D-4): mounts gain the admin lot-size page files (page, client mount, error boundary) of admin_lot_size_revert; report_lot_size_entry has no mount until the entry switch flips (D-6). Dated note 2026-11-11 (MF-46 stage C; operator D-2 (a) \"1 y 2 y ...\" 2026-11-11; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 12 fold 13; Spec 126 section 11b.5): + the first web STATIC module src/components/surfaces/web/StaticBinding.tsx (owner binding_web_static, promoted), mapping.web.STATIC (the closed list it renders: Stack, Group, Title, Text, List, ListItem and Button; a link is a Button rendered as the Next Link, a real route), and the mounts of the MaxBLD plain pages under src/app/(maxbld)/parcel-tool/(static)/ (Help & Support, Terms, Privacy, and the error and not-found boundaries of web_maxbld_error). No new library; non_display_keys unchanged. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\"; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 12 folds 12, 13): mounts gains the landing (web_landing, parcel-tool/(static)/home/page.tsx; its errors reach the plain pages' boundary, already mounted). mapping.web.STATIC is unchanged: the landing kinds render with the same Mantine parts; the two report regions are the shared REPORT renderers (ReportView, its Picture, ReportPage), embedded by exact name and module as a named exception of the FE-31 C-8 lock (Spec 126 section 11b.1: REPORT keeps the landed renderer; FE-07), never a mapping entry. Server values are {\"derived\": <read>} refs (the existing kind, a closed list: the landing's declared reads). non_display_keys gains tabIndex (the sample region's keyboard stop, 0). Dated note 2026-11-12 (MF-46 follow-up, Help & Support contact; operator \"All recommendations accepted ... Ensure the least amount of code and use schema's\"): non_display_keys gains topic (a mailto node's topic, one of the closed list in static-page.schema.json, never text); the mail address is a {\"derived\": \"support_inbox\"} ref (the existing kind). Dated note 2026-11-19 (task-353 SUITE.FIX-2): touch_targets.mobile.Button gains min-h-[48px] beside min-h-[44px] (Input stays min-h-[44px] only): the semi question page (SRCH.SEMI, task-319, MF-93) draws Continue and Try again at 48 px in the mock the operator approved (RR-0309, MORNING-DECISIONS.md:1199); the 44 px is a floor (Spec 126 line 351, Spec 128 line 265) and 48 reaches it; orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling). The check C-9m still requires exactly one min-h- token on the list; nothing under 44 is listed. Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · D13; operator, verbatim: \"3 a\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1399, RR-0321), his answer to option (a), 48 px as built, of the table put to him at :1398): the 48 px of Continue and Try again on the semi page is now the operator's ruling. The words \"orchestrator decision under the pre-approved criteria ... (not an operator ruling)\" in the 2026-11-19 note above were true when written and are superseded by this ruling for the 48 px; they are kept as written. No value of the list changes.",
++  "$comment": "MF-42 (FE-31; plan.min cut 5, P42-D9 a): the one data home of the binding boundary. libraries = the MaxBLD-new UI packages (one tier); they may be imported only by a listed binding module, a listed provider, a test file or the vendor dir. A converted surface's mount file (mounts[]) may import only a framework package (framework[]), a binding module or a project-internal path (mount_internal[], relative paths included), never a UI library or any other package. modules[] are exact .tsx files under the R-13 component roots, each owned by a promoted platform_shared census entry (promoted_entries[]). ref_kinds and non_display_keys judge golden props (SV-SBIND); widget_types judges render.form (SV-DESC). Shape: screen-data.schema.json#/definitions/bindings. Read by scripts/surfaces/screen-checks.mjs and the FE-31 and FE-05 locks. Dated note 2026-11-09 (MF-37; D-23, ~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md): mapping.web is the closed list of JSX element names each web binding module may render per archetype (FE-31 C-8); RJSF's Mantine theme renders FileInput, NumberInput, TextInput, Select and the submit Button itself, so those names document what a FORM shows rather than JSX in our modules. touch_targets.web lists the Mantine size values that reach 44 px (FE-31 C-9), measured from @mantine/core 9.8.0: inputs and Button lg 50 px, xl 60 px; CloseButton and ActionIcon lg 34 px, xl 44 px. ref_kinds gains contract (FE-32): a golden value {\"contract\": \"<contract_id>.<field>\"} names a field of a CONTRACT descriptor's inputs.field_whitelist. Dated note 2026-11-09 (MF-37; operator \"a, 1-3 approved\"): the web library is Mantine 8.3.18 / mantine-datatable 8.3.13; the touch_targets values were re-measured on @mantine/core 8.3.18 styles.css (--button-height-lg and --input-height-lg 3.125rem, xl 3.75rem; --cb-size-xl and --ai-size-xl 2.75rem = 44 px) and are unchanged. Dated note 2026-11-10 (MF-35; the binding standard, Spec 126 §11b.2 dated note 2026-11-10 item (5); plan ~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md §2): the first mobile binding. modules gains mobile/src/components/surfaces/SurfaceRenderer.tsx and SearchBinding.tsx (archetype SEARCH, owner shared_mobile_surface_binding, promoted); mounts gains the search screen; mount_internal gains @/hooks/ and @/store/ (the screen reads the lookup hook and the recent-searches store); edges is the safe-area EdgeRecord {top: additive}, equal to the legacy edges [top] (an array of strings under a non-display key reads as display text to SV-SBIND); ref_kinds gains derived (P35-D14 a: a declared deviation with a closed list of names, checked by the mobile golden test); non_display_keys gains the React Native prop names that carry no display text (measured with SV-SBIND on the goldens). mapping.mobile.SEARCH is the closed component table of SurfaceRenderer.tsx: its COMPONENTS literal has exactly these keys, each an imported library part (FE-31 C-8 mobile half). touch_targets.mobile names the className token that reaches 44 px on Button and Input: NativeWind's rem is 14 here, so min-h-11 is 38.5 px and only min-h-[44px] is 44 (plan v2 F-A; FE-31 C-9 mobile half). Dated note 2026-11-10 (MF-40; operator, verbatim: \"y recommendation: C, with the four trims. approved\"; plan delta 1 section 3 item 5 and S3): mapping.web.FORM gains Textarea and DateInput, which RJSF's Mantine theme renders for the offer form's textarea and date widgets (documentation of what a FORM shows, as for the other RJSF names; no Checkbox: trim 4). mounts gain the admin placements page files. MF-44 (dated 2026-11-11; operator \"01-a 0-2 b as long as they are complaint\"; Spec 126 §11b.5): + the web SEARCH module src/components/surfaces/web/SearchBinding.tsx (owner binding_web_search), mapping.web.SEARCH, the web search mounts (the page, its client mount, the not-found and error boundaries of src/app/(maxbld)/parcel-tool) and the parcel-tool provider layout. Dated note 2026-11-11 (MF-48; operator, verbatim: \"just to understand for the McFrontend and the web pages we are still using schema's and no code. except all recommendations\"; ~/Buildo-scratch/mcfrontend/MF-48/DECISIONS.md D-2 a, D-3 a, D-4 a; Spec 126 §11b.2 and §11b.4 dated notes 2026-11-11): the mobile REPORT binding. modules gains ReportBinding.tsx and ReportPageHost.tsx (archetype REPORT, owner binding_mobile_report, promoted); the shared renderer SurfaceRenderer.tsx lists SEARCH and REPORT (the one-archetype rule amended for the render half only). mapping.mobile.REPORT is the renderer's closed REPORT list (a subset of its SEARCH parts, so its COMPONENTS table is unchanged); mapping.mobile.REPORT_HOST is the host's table (FE-31 C-8m host list: the existing @gorhom/bottom-sheet and the shared renderer; libraries.mobile is not extended, a lane finding: seven Buildo-app files import the sheet). ref_kinds gains part ({\"part\": \"<section id>.<part index>.<role>\"} into MF-57's pageViewOf view; <id>.ad.value|disclosure). non_display_keys gains option and panel (the toggle_panel action's arguments) and pressBehavior (the sheet backdrop), measured on the MF-48 goldens and host. Dated note 2026-11-11 (MF-53; operator 2026-11-11, verbatim: \"\\\"choose your lot\\\" and \\\"address issues\\\" screens should be built now and we should only be using the new report obviosuly\"; plan ~/Buildo-scratch/mcfrontend/MF-53/plan.v4.md §3, §8 items 1-2): the first mobile LIST binding, for S-071 mobile_parcel_disambiguation_map (render.projection map). modules gains mobile/src/components/surfaces/LotMapBinding.tsx (archetype LIST, owner the new promoted entry binding_mobile_list, the MF-48 D-2 a form) and SurfaceRenderer.tsx (the render half, owner shared_mobile_surface_binding) renders SEARCH, REPORT and LIST; mapping.mobile.LIST is the closed table of the map page, adding react-native-maps' own MapView, Polygon and Marker (configured by props; no hand-built part). libraries.mobile is NOT extended with react-native-maps: two Buildo-app files import it (LeadMapPane.tsx, map.tsx), the MF-48 L-1 precedent; the renderer imports it as a layout part (FE-31 C-8m MOBILE_PARTS). mounts gains the map page; non_display_keys gains the react-native-maps prop names that carry no display text. Dated note 2026-11-11 (MF-19; operator D-1..D-8 \"all as recommmended\", D-4): mounts gain the admin lot-size page files (page, client mount, error boundary) of admin_lot_size_revert; report_lot_size_entry has no mount until the entry switch flips (D-6). Dated note 2026-11-11 (MF-46 stage C; operator D-2 (a) \"1 y 2 y ...\" 2026-11-11; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 12 fold 13; Spec 126 section 11b.5): + the first web STATIC module src/components/surfaces/web/StaticBinding.tsx (owner binding_web_static, promoted), mapping.web.STATIC (the closed list it renders: Stack, Group, Title, Text, List, ListItem and Button; a link is a Button rendered as the Next Link, a real route), and the mounts of the MaxBLD plain pages under src/app/(maxbld)/parcel-tool/(static)/ (Help & Support, Terms, Privacy, and the error and not-found boundaries of web_maxbld_error). No new library; non_display_keys unchanged. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\"; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 12 folds 12, 13): mounts gains the landing (web_landing, parcel-tool/(static)/home/page.tsx; its errors reach the plain pages' boundary, already mounted). mapping.web.STATIC is unchanged: the landing kinds render with the same Mantine parts; the two report regions are the shared REPORT renderers (ReportView, its Picture, ReportPage), embedded by exact name and module as a named exception of the FE-31 C-8 lock (Spec 126 section 11b.1: REPORT keeps the landed renderer; FE-07), never a mapping entry. Server values are {\"derived\": <read>} refs (the existing kind, a closed list: the landing's declared reads). non_display_keys gains tabIndex (the sample region's keyboard stop, 0). Dated note 2026-11-12 (MF-46 follow-up, Help & Support contact; operator \"All recommendations accepted ... Ensure the least amount of code and use schema's\"): non_display_keys gains topic (a mailto node's topic, one of the closed list in static-page.schema.json, never text); the mail address is a {\"derived\": \"support_inbox\"} ref (the existing kind). Dated note 2026-11-19 (task-353 SUITE.FIX-2): touch_targets.mobile.Button gains min-h-[48px] beside min-h-[44px] (Input stays min-h-[44px] only): the semi question page (SRCH.SEMI, task-319, MF-93) draws Continue and Try again at 48 px in the mock the operator approved (RR-0309, MORNING-DECISIONS.md:1199); the 44 px is a floor (Spec 126 line 351, Spec 128 line 265) and 48 reaches it; orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling). The check C-9m still requires exactly one min-h- token on the list; nothing under 44 is listed. Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · D13; operator, verbatim: \"3 a\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1399, RR-0321), his answer to option (a), 48 px as built, of the table put to him at :1398): the 48 px of Continue and Try again on the semi page is now the operator's ruling. The words \"orchestrator decision under the pre-approved criteria ... (not an operator ruling)\" in the 2026-11-19 note above were true when written and are superseded by this ruling for the 48 px; they are kept as written. No value of the list changes. Dated note 2026-11-20 (task-384 STD.REPORT-OWN, lane BL-REPORTOWN2; the item put to the operator at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1421, \"3. Leave the reports as components, and bring them under the existing checks (task 384).\", and his words at :1422, verbatim: \"approved [the five items pasted] - remember the app is not beign used - we are in development\"; resolved by a separate grounder under the delegation at :1476): module_roots gains src/components/report/ (a frontend glob, mcbylaws/protected-paths.json dated note of this date); modules gains ReportPage.tsx, ReportView.tsx and ReportPageToggles.tsx (archetype REPORT, owner the promoted entry binding_web_report), so FE-31 C-2b and C-8 judge the web REPORT renderer. It stays a component (Spec 126 section 11b.1: REPORT keeps the landed renderer): mapping.web gets no REPORT list, so its structural C-2b and C-8 findings are pinned per file and per kind in src/tests/surfaces/surface-conformance.logic.test.ts (REPORT_RENDERER_PIN, shrink-only, both directions). C-9 judges golden nodes, not files, and does not reach these three files.",
+   "libraries": {
+     "web": ["@mantine/core", "@mantine/hooks", "@mantine/dates", "@mantine/dropzone", "@mantine/carousel", "mantine-datatable", "@rjsf/core", "@rjsf/mantine", "@rjsf/utils", "@rjsf/validator-ajv8"],
+     "mobile": ["@rn-primitives/*"]
+@@ -8,7 +8,7 @@
+   "vendor_manifest": "scripts/surfaces/_schema/vendor-rnr.manifest.json",
+   "framework": ["react", "react-dom", "next", "next/*", "expo-router"],
+   "mount_internal": ["@/lib/", "@/components/surfaces/", "@/hooks/", "@/store/"],
+-  "module_roots": ["src/components/surfaces/web/", "mobile/src/components/surfaces/"],
++  "module_roots": ["src/components/surfaces/web/", "mobile/src/components/surfaces/", "src/components/report/"],
+   "modules": [
+     { "path": "src/components/surfaces/web/FormBinding.tsx", "platform": "web", "archetypes": ["FORM"], "owner": "binding_web_form", "exports": ["formTree", "formProps", "errorTransformer", "FormBinding"] },
+     { "path": "src/components/surfaces/web/ListBinding.tsx", "platform": "web", "archetypes": ["LIST"], "owner": "binding_web_list", "exports": ["listTree", "listProps", "compareBy", "ListBinding"] },
+@@ -19,7 +19,10 @@
+     { "path": "mobile/src/components/surfaces/LotMapBinding.tsx", "platform": "mobile", "archetypes": ["LIST"], "owner": "binding_mobile_list", "exports": ["LOT_MAP_SLICE", "LOT_MAP_DERIVED_NAMES", "lotMapProps", "lotMapData"] },
+     { "path": "mobile/src/components/surfaces/SemiQuestionBinding.tsx", "platform": "mobile", "archetypes": ["LIST"], "owner": "binding_mobile_list", "exports": ["SEMI_QUESTION_SLICE", "SEMI_QUESTION_DERIVED_NAMES", "semiQuestionProps", "semiQuestionData"] },
+     { "path": "mobile/src/components/surfaces/ReportBinding.tsx", "platform": "mobile", "archetypes": ["REPORT"], "owner": "binding_mobile_report", "exports": ["reportProps", "lifecycleProps", "REPORT_UI_CLOSED", "UNSHOWN", "LIFECYCLE_CONTENT_KEYS"] },
+-    { "path": "mobile/src/components/surfaces/ReportPageHost.tsx", "platform": "mobile", "archetypes": ["REPORT"], "owner": "binding_mobile_report", "exports": ["ReportPageHost", "REPORT_UI"] }
++    { "path": "mobile/src/components/surfaces/ReportPageHost.tsx", "platform": "mobile", "archetypes": ["REPORT"], "owner": "binding_mobile_report", "exports": ["ReportPageHost", "REPORT_UI"] },
++    { "path": "src/components/report/ReportPage.tsx", "platform": "web", "archetypes": ["REPORT"], "owner": "binding_web_report", "exports": ["ReportPage"] },
++    { "path": "src/components/report/ReportView.tsx", "platform": "web", "archetypes": ["REPORT"], "owner": "binding_web_report", "exports": ["ReportView", "Picture"] },
++    { "path": "src/components/report/ReportPageToggles.tsx", "platform": "web", "archetypes": ["REPORT"], "owner": "binding_web_report", "exports": ["ReportPageToggles"] }
+   ],
+   "mounts": [
+     { "surface": "admin_media", "path": "src/app/(maxbld)/admin/media/page.tsx" },
+@@ -49,7 +52,7 @@
+     { "surface": "web_landing", "path": "src/app/(maxbld)/parcel-tool/(static)/home/page.tsx" }
+   ],
+   "providers": ["src/components/surfaces/web/AdminMantineProvider.tsx", "src/app/(maxbld)/admin/layout.tsx", "src/app/(maxbld)/parcel-tool/layout.tsx"],
+-  "promoted_entries": ["binding_web_form", "binding_web_list", "binding_web_search", "shared_mobile_surface_binding", "binding_mobile_report", "binding_mobile_list", "binding_web_static"],
++  "promoted_entries": ["binding_web_form", "binding_web_list", "binding_web_search", "shared_mobile_surface_binding", "binding_mobile_report", "binding_mobile_list", "binding_web_static", "binding_web_report"],
+   "mapping": {
+     "web": {
+       "FORM": ["Stack", "Alert", "Form", "FileInput", "NumberInput", "TextInput", "Select", "Button", "Textarea", "DateInput"],
+diff --git a/scripts/surfaces/_schema/census/web-product.json b/scripts/surfaces/_schema/census/web-product.json
+index 7d1f0fb42..a867bf0b5 100644
+--- a/scripts/surfaces/_schema/census/web-product.json
++++ b/scripts/surfaces/_schema/census/web-product.json
+@@ -5393,11 +5393,11 @@
+     "docs": {
+       "purpose": "The web REPORT renderer: ReportPage.tsx draws the v21 report page view (sections, parts, the detail sheet, the footer) for the MaxBLD report page; ReportView.tsx draws the earlier report view and the Picture; ReportPageToggles.tsx is the client toggle script of the page. It is the landed renderer Spec 126 section 11b.1 keeps (\"REPORT keeps the landed renderer\"); it is a component, not a library binding.",
+       "data_story": "It reads nothing itself: the page passes the page view (built and checked on the server by buildPage / pageViewOf) and the content strings.",
+-      "under_126": "**OWNER ENTRY** (task-384 STD.REPORT-OWN, dated 2026-11-20): a platform_shared census entry that owns the web REPORT renderer files so R-13 totality holds for them. The files stay a component (Spec 126 section 11b.1, :923). They are not yet listed in bindings.json modules, so the FE-31 text (C-2b) and component (C-8) checks do not judge them: C-3 needs their module root to be a frontend glob in mcbylaws/protected-paths.json (operator question)."
++      "under_126": "**OWNER ENTRY AND LISTED MODULES** (task-384 STD.REPORT-OWN, dated 2026-11-20): a platform_shared census entry that owns the web REPORT renderer files so R-13 totality holds for them; the files are listed web REPORT modules of bindings.json, so the FE-31 text check (C-2b) and component check (C-8) judge them. The files stay a component (Spec 126 section 11b.1, :925-926: REPORT keeps the landed renderer). Their structural findings are pinned per file and per kind (REPORT_RENDERER_PIN, shrink-only, both directions); display text is 0. Outside C-9 (it judges golden nodes, not files)."
+     },
+     "evidence": {
+       "files": [
+-        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 (:923-924)"
++        "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 (:925-926)"
+       ],
+       "contracts": [],
+       "tables": [],
+@@ -5430,7 +5430,7 @@
+         "answer": "none",
+         "why": "The renderer has no wire contract of its own: its input is the page view (report-page.schema.json) and its output is markup. A change shows up as a golden or render-smoke failure.",
+         "evidence": [
+-          "src/tests/surfaces/surface-conformance.logic.test.ts — C-12 holds the ownership"
++          "src/tests/surfaces/surface-conformance.logic.test.ts — C-12 holds the ownership, the listing and the pinned findings"
+         ]
+       },
+       "ref": "S-095"
+@@ -5510,7 +5510,7 @@
+         "severity": "FAIL",
+         "blocking": true,
+         "when": "pre",
+-        "why": "The three files are owned by this entry (Spec 128 R-13 totality); listing them in bindings.json modules is owed (see docs)."
++        "why": "The three files are owned by this entry (Spec 128 R-13 totality) and listed as web REPORT modules in bindings.json (FE-31 C-3); C-2b and C-8 judge them against the pin in C-12."
+       }
+     ],
+     "invariants": "none",
+@@ -5565,7 +5565,7 @@
+       "answer": "shared",
+       "why": "Every web REPORT surface (the MaxBLD report page).",
+       "evidence": [
+-        "scripts/surfaces/_schema/bindings.json — modules"
++        "scripts/surfaces/_schema/bindings.json — modules lists the three files (owner binding_web_report)"
+       ],
+       "surfaces": [],
+       "varies_by_surface": "Only the page view and content passed in."
+@@ -5574,20 +5574,20 @@
+       "touch_target_min_px": "UNRESEARCHED",
+       "labels": "UNRESEARCHED",
+       "dark_mode": "UNRESEARCHED",
+-      "reduced_motion": "none",
++      "reduced_motion": "honoured",
+       "i18n": "none",
+       "safe_area": "none"
+     },
+     "deviations": "UNRESEARCHED",
+     "limitations": [
+       {
+-        "what": "The three owned files (src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx) are outside the FE-31 text check C-2b, the component check C-8 and the 44 px check C-9: none of them reads these files. C-2b and C-8 read only the files listed in bindings.json mounts and modules, and these three are not listed (owed: C-3 needs src/components/report/ as a frontend glob in mcbylaws/protected-paths.json, an operator item). C-9 reads golden nodes, not source files.",
+-        "measured": "Ownership only (Spec 128 R-13). Treated as web REPORT modules, a lane measure run raised 108 C-2b and 213 C-8 findings (docs/reports/lanes/2026-11-20/BL-REPORTOWN/measure-before.txt); no 44 px measure exists.",
++        "what": "The three owned files (src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx) are judged by the FE-31 text check C-2b and the component check C-8 (listed web REPORT modules of bindings.json), but they are hand-built by design (Spec 126 section 11b.1), so their structural findings are a pinned baseline, not zero: C-2b attributes (as, data-*, aria-*) and C-8 intrinsic elements and local components. They are outside the 44 px check C-9: it judges golden nodes (component and size), not source files.",
++        "measured": "C-2b 105 and C-8 213 structural findings pinned (ReportPage 92 and 171, ReportView 13 and 41, ReportPageToggles 0 and 1) in src/tests/surfaces/surface-conformance.logic.test.ts REPORT_RENDERER_PIN; display text 0. No 44 px measure exists.",
+         "check_id": "C-2b, C-8, C-9"
+       }
+     ],
+     "interpretation": "none",
+-    "notes": "task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): limitations states the three files are outside C-2b, C-8 and C-9; deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here).",
++    "notes": "task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here). Dated note 2026-11-20 (BL-REPORTOWN2, part two): the three files are listed in bindings.json modules and src/components/report/** is a frontend glob; reduced_motion is honoured (src/app/globals.css:182-185, locked by report-checked.logic.test.ts C5); the three display strings of ReportView.tsx moved to content (report-presentation.json states.view).",
+     "x-draft": {
+       "shard": "web-product",
+       "files": [
+diff --git a/scripts/surfaces/_schema/report-presentation.json b/scripts/surfaces/_schema/report-presentation.json
+index 09c058b63..13006484d 100644
+--- a/scripts/surfaces/_schema/report-presentation.json
++++ b/scripts/surfaces/_schema/report-presentation.json
+@@ -140,6 +140,10 @@
+       "open": "View report",
+       "summary": "Your report is ready."
+     },
++    "view": {
++      "details": "Details",
++      "meta": "confidence: {confidence} · provenance: {provenance}"
++    },
+     "semi_needs_input": "This lot looks like half of a semi-detached house. Tell us about your house to see what you can add.",
+     "semi_correction": "This isn't a semi — it's detached",
+     "note": "Spec 78 §6.6 rules 1, 5, 8: hidden states are counted, never shown as cards; null renders \"—\", never 0 or \"no\""
+diff --git a/scripts/surfaces/_schema/seed-report-v2.mjs b/scripts/surfaces/_schema/seed-report-v2.mjs
+index b5c57326a..662b3ccd5 100644
+--- a/scripts/surfaces/_schema/seed-report-v2.mjs
++++ b/scripts/surfaces/_schema/seed-report-v2.mjs
+@@ -619,6 +619,8 @@ const pres = {
+     lifecycle: { loading: 'Loading the report…', miss: 'No report for this lot yet.', error: 'Could not load this report. Try again.' },
+     // MF-62 (FE-35; operator 2026-11-11 "Mf-62 - yes"): the labels of the loading state "What we checked" (report-v2-seed/checked-text.json); numbers never here
+     checked: JSON.parse(fs.readFileSync(path.join(SEED_DIR, 'checked-text.json'), 'utf8')).checked,
++    // task-384 STD.REPORT-OWN (2026-11-20): the two fixed labels ReportView.tsx draws (the details summary and the confidence and provenance line; placeholders filled from the view), moved out of the component so FE-31 C-2b finds no display text in it
++    view: { details: 'Details', meta: 'confidence: {confidence} · provenance: {provenance}' },
+     semi_needs_input: 'This lot looks like half of a semi-detached house. Tell us about your house to see what you can add.',
+     semi_correction: "This isn't a semi — it's detached",
+     note: 'Spec 78 §6.6 rules 1, 5, 8: hidden states are counted, never shown as cards; null renders "—", never 0 or "no"',
+diff --git a/scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json b/scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json
+index a7cb6e033..ef05a2ac2 100644
+--- a/scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json
++++ b/scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json
+@@ -4,11 +4,11 @@
+   "docs": {
+     "purpose": "The web REPORT renderer: ReportPage.tsx draws the v21 report page view (sections, parts, the detail sheet, the footer) for the MaxBLD report page; ReportView.tsx draws the earlier report view and the Picture; ReportPageToggles.tsx is the client toggle script of the page. It is the landed renderer Spec 126 section 11b.1 keeps (\"REPORT keeps the landed renderer\"); it is a component, not a library binding.",
+     "data_story": "It reads nothing itself: the page passes the page view (built and checked on the server by buildPage / pageViewOf) and the content strings.",
+-    "under_126": "**OWNER ENTRY** (task-384 STD.REPORT-OWN, dated 2026-11-20): a platform_shared census entry that owns the web REPORT renderer files so R-13 totality holds for them. The files stay a component (Spec 126 section 11b.1, :923). They are not yet listed in bindings.json modules, so the FE-31 text (C-2b) and component (C-8) checks do not judge them: C-3 needs their module root to be a frontend glob in mcbylaws/protected-paths.json (operator question)."
++    "under_126": "**OWNER ENTRY AND LISTED MODULES** (task-384 STD.REPORT-OWN, dated 2026-11-20): a platform_shared census entry that owns the web REPORT renderer files so R-13 totality holds for them; the files are listed web REPORT modules of bindings.json, so the FE-31 text check (C-2b) and component check (C-8) judge them. The files stay a component (Spec 126 section 11b.1, :925-926: REPORT keeps the landed renderer). Their structural findings are pinned per file and per kind (REPORT_RENDERER_PIN, shrink-only, both directions); display text is 0. Outside C-9 (it judges golden nodes, not files)."
+   },
+   "evidence": {
+     "files": [
+-      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 (:923-924)"
++      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 (:925-926)"
+     ],
+     "contracts": [],
+     "tables": [],
+@@ -41,7 +41,7 @@
+       "answer": "none",
+       "why": "The renderer has no wire contract of its own: its input is the page view (report-page.schema.json) and its output is markup. A change shows up as a golden or render-smoke failure.",
+       "evidence": [
+-        "src/tests/surfaces/surface-conformance.logic.test.ts — C-12 holds the ownership"
++        "src/tests/surfaces/surface-conformance.logic.test.ts — C-12 holds the ownership, the listing and the pinned findings"
+       ]
+     },
+     "ref": "S-095"
+@@ -121,7 +121,7 @@
+       "severity": "FAIL",
+       "blocking": true,
+       "when": "pre",
+-      "why": "The three files are owned by this entry (Spec 128 R-13 totality); listing them in bindings.json modules is owed (see docs)."
++      "why": "The three files are owned by this entry (Spec 128 R-13 totality) and listed as web REPORT modules in bindings.json (FE-31 C-3); C-2b and C-8 judge them against the pin in C-12."
+     }
+   ],
+   "invariants": "none",
+@@ -176,7 +176,7 @@
+     "answer": "shared",
+     "why": "Every web REPORT surface (the MaxBLD report page).",
+     "evidence": [
+-      "scripts/surfaces/_schema/bindings.json — modules"
++      "scripts/surfaces/_schema/bindings.json — modules lists the three files (owner binding_web_report)"
+     ],
+     "surfaces": [],
+     "varies_by_surface": "Only the page view and content passed in."
+@@ -185,20 +185,20 @@
+     "touch_target_min_px": "UNRESEARCHED",
+     "labels": "UNRESEARCHED",
+     "dark_mode": "UNRESEARCHED",
+-    "reduced_motion": "none",
++    "reduced_motion": "honoured",
+     "i18n": "none",
+     "safe_area": "none"
+   },
+   "deviations": "UNRESEARCHED",
+   "limitations": [
+     {
+-      "what": "The three owned files (src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx) are outside the FE-31 text check C-2b, the component check C-8 and the 44 px check C-9: none of them reads these files. C-2b and C-8 read only the files listed in bindings.json mounts and modules, and these three are not listed (owed: C-3 needs src/components/report/ as a frontend glob in mcbylaws/protected-paths.json, an operator item). C-9 reads golden nodes, not source files.",
+-      "measured": "Ownership only (Spec 128 R-13). Treated as web REPORT modules, a lane measure run raised 108 C-2b and 213 C-8 findings (docs/reports/lanes/2026-11-20/BL-REPORTOWN/measure-before.txt); no 44 px measure exists.",
++      "what": "The three owned files (src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx) are judged by the FE-31 text check C-2b and the component check C-8 (listed web REPORT modules of bindings.json), but they are hand-built by design (Spec 126 section 11b.1), so their structural findings are a pinned baseline, not zero: C-2b attributes (as, data-*, aria-*) and C-8 intrinsic elements and local components. They are outside the 44 px check C-9: it judges golden nodes (component and size), not source files.",
++      "measured": "C-2b 105 and C-8 213 structural findings pinned (ReportPage 92 and 171, ReportView 13 and 41, ReportPageToggles 0 and 1) in src/tests/surfaces/surface-conformance.logic.test.ts REPORT_RENDERER_PIN; display text 0. No 44 px measure exists.",
+       "check_id": "C-2b, C-8, C-9"
+     }
+   ],
+   "interpretation": "none",
+-  "notes": "task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): limitations states the three files are outside C-2b, C-8 and C-9; deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here).",
++  "notes": "task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here). Dated note 2026-11-20 (BL-REPORTOWN2, part two): the three files are listed in bindings.json modules and src/components/report/** is a frontend glob; reduced_motion is honoured (src/app/globals.css:182-185, locked by report-checked.logic.test.ts C5); the three display strings of ReportView.tsx moved to content (report-presentation.json states.view).",
+   "x-draft": {
+     "shard": "web-product",
+     "files": [
+diff --git a/src/components/report/ReportView.tsx b/src/components/report/ReportView.tsx
+index 6eaee91b5..ce1cdb010 100644
+--- a/src/components/report/ReportView.tsx
++++ b/src/components/report/ReportView.tsx
+@@ -7,6 +7,11 @@
+ // natively toggled <details>, so the component is safe in a server component.
+ import type { ReactElement } from 'react';
+ import type { ReportView as View, ViewChecked, ViewImage, ViewNode, ViewSlot } from '../../lib/surfaces/report/core';
++import presentation from '../../../scripts/surfaces/_schema/report-presentation.json';
++
++// task-384 STD.REPORT-OWN: the two fixed labels are content (report-presentation.json states.view, generated by seed-report-v2.mjs), not text written here (FE-31 C-2b).
++const UI = presentation.states.view;
++const metaLine = (n: ViewNode): string => UI.meta.replace('{confidence}', n.confidence).replace('{provenance}', n.provenance);
+ 
+ const Item = ({ n }: { n: ViewNode }): ReactElement => (
+   <div data-field={n.field} data-status={n.status} data-unavailable={n.unavailable ? 'true' : 'false'} className="py-1">
+@@ -16,7 +21,7 @@ const Item = ({ n }: { n: ViewNode }): ReactElement => (
+     </dt>
+     <dd className="text-base font-medium">{n.text}</dd>
+     {n.disclosures.map((d) => <dd key={d} data-disclosure className="text-sm text-gray-700">{d}</dd>)}
+-    {n.showMeta ? <dd data-meta-line className="font-mono text-xs text-gray-500">confidence: {n.confidence} · provenance: {n.provenance}</dd> : null}
++    {n.showMeta ? <dd data-meta-line className="font-mono text-xs text-gray-500">{metaLine(n)}</dd> : null}
+   </div>
+ );
+ 
+@@ -118,7 +123,7 @@ export function ReportView({ view }: { view: View }): ReactElement {
+           {hasDetail ? (
+             collapsed ? (
+               <details data-block="details-wrap" className={layout.page_break === 'after_headline' ? 'break-before-page' : ''}>
+-                <summary className="cursor-pointer text-sm text-gray-600">Details</summary>
++                <summary className="cursor-pointer text-sm text-gray-600">{UI.details}</summary>
+                 <Block name="detail" nodes={view.detail} columns={layout.columns} />
+               </details>
+             ) : (
+diff --git a/src/tests/backlog/rule-lists-table.logic.test.ts b/src/tests/backlog/rule-lists-table.logic.test.ts
+index 7a98dd5c9..39f7c3697 100644
+--- a/src/tests/backlog/rule-lists-table.logic.test.ts
++++ b/src/tests/backlog/rule-lists-table.logic.test.ts
+@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
+ import * as crypto from 'node:crypto';
+ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+-import { ROOT, script, tmp } from './helpers';
++import { ROOT, run, script, tmp } from './helpers';
+ 
+ const CLI = 'scripts/analysis/rule-lists.mjs';
+ type Res = { lists: { id: string; rows: string[] }[] };
+@@ -57,3 +57,42 @@ describe('V2.LIST round 2: the repo copy of the plan protocol', () => {
+     expect(crypto.createHash('sha256').update(body).digest('hex')).toBe('d92940f479c51d30b0622b2b6236a0286cb5c9124add4c778d3c173e27d9942a');
+   });
+ });
++
++// task-384 STD.REPORT-OWN part two (operator 2026-11-20, MORNING-DECISIONS.md:1421-1422, item 3 "bring them under the existing checks"): the web report renderer is under the
++// McFrontend frontend list (mcbylaws/protected-paths.json), so the surfaces row of the table attaches Spec 136 section 2, 126, 127, 128 and 135 to its reviewers.
++describe('task-384: the McFrontend handbook reaches the reviewer of the web report renderer', () => {
++  const FILES = ['src/components/report/ReportPage.tsx', 'src/components/report/ReportView.tsx', 'src/components/report/ReportPageToggles.tsx'];
++  const SURFACE = ['surface-136', 'surface-126', 'surface-127', 'surface-128', 'surface-135'];
++  const glob = 'src/components/report/**';
++  const resolveIn = (frontend: string[], file: string): string[] => {
++    const d = tmp('rep');
++    const pol = JSON.parse(fs.readFileSync(path.join(ROOT, 'mcbylaws/protected-paths.json'), 'utf8')) as { frontend: string[] };
++    fs.mkdirSync(path.join(d, 'mcbylaws'));
++    fs.writeFileSync(path.join(d, 'mcbylaws/protected-paths.json'), JSON.stringify({ ...pol, frontend }));
++    fs.copyFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), path.join(d, 'table.json'));
++    run('git', ['init', '-q', '.'], { cwd: d });
++    run('git', ['add', '-A'], { cwd: d });
++    run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'x'], { cwd: d });
++    const r = script(CLI, ['resolve', '--root', d, '--table', path.join(d, 'table.json'), '--files', file, '--type', 'build', '--letter', 'S']);
++    expect(r.status, r.stderr).toBe(0);
++    return (JSON.parse(r.stdout) as Res).lists.map((l) => l.id);
++  };
++  it('the real tree: each of the three files resolves Spec 136, 126, 127, 128 and 135 (before the change: eng-all five-words plan-protocol inc-S ms-S only)', () => {
++    expect(JSON.parse(fs.readFileSync(path.join(ROOT, 'mcbylaws/protected-paths.json'), 'utf8')).frontend).toContain(glob);
++    for (const f of FILES) expect([f, lists(f)]).toEqual([f, expect.arrayContaining(SURFACE)]);
++  });
++  it('RED (planted): the glob removed from the frontend list, the surface lists vanish; the real list with the glob is the control', () => {
++    const real = (JSON.parse(fs.readFileSync(path.join(ROOT, 'mcbylaws/protected-paths.json'), 'utf8')) as { frontend: string[] }).frontend;
++    expect(resolveIn(real, FILES[0] as string)).toEqual(expect.arrayContaining(SURFACE));
++    const without = resolveIn(real.filter((g) => g !== glob), FILES[0] as string);
++    for (const id of SURFACE) expect(without).not.toContain(id);
++    expect(without).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
++  });
++  it('the surface-136 lens input generated for the change holds fe.01 to fe.44 (44 distinct ids)', () => {
++    const r = script(CLI, ['lens-input', '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
++    expect(r.status, r.stderr).toBe(0);
++    const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
++    const ids = new Set(text.match(/\bfe\.\d\d\b/g));
++    expect([...ids].sort()).toEqual(Array.from({ length: 44 }, (_, i) => `fe.${String(i + 1).padStart(2, '0')}`));
++  });
++});
+diff --git a/src/tests/surfaces/surface-conformance.logic.test.ts b/src/tests/surfaces/surface-conformance.logic.test.ts
+index 25ace9ba9..075655cbd 100644
+--- a/src/tests/surfaces/surface-conformance.logic.test.ts
++++ b/src/tests/surfaces/surface-conformance.logic.test.ts
+@@ -32,6 +32,14 @@ const REPO = process.cwd();
+ const SCHEMA = 'scripts/surfaces/_schema';
+ const B: Json = rj(path.join(REPO, SCHEMA, 'bindings.json'));
+ const POLICY: Json = rj(path.join(REPO, 'mcbylaws/protected-paths.json'));
++// task-384 STD.REPORT-OWN part two (dated 2026-11-20): the three web report renderer files are listed web REPORT modules, so C-2b and C-8 judge them. The renderer is hand-built by
++// design (Spec 126 section 11b.1: REPORT keeps the landed renderer), so its STRUCTURAL findings are pinned here per file and per kind: exact counts in both directions (a new
++// finding turns it red; a fixed one turns it red until the pin is lowered), shrink-only. Display text has no pin: it must be 0. C-9 judges golden nodes, not files, and does not reach them.
++export const REPORT_RENDERER_PIN: Readonly<Record<string, { 'C-2b': number; 'C-8': number }>> = {
++  'src/components/report/ReportPage.tsx': { 'C-2b': 92, 'C-8': 171 },
++  'src/components/report/ReportView.tsx': { 'C-2b': 13, 'C-8': 41 },
++  'src/components/report/ReportPageToggles.tsx': { 'C-2b': 0, 'C-8': 1 },
++};
+ const roots: string[] = [];
+ afterAll(() => { for (const r of roots) fs.rmSync(r, { recursive: true, force: true }); });
+ const tmp = (): string => { const r = fs.mkdtempSync(path.join(os.tmpdir(), 'mf42-c-')); roots.push(r); return r; };
+@@ -324,7 +332,7 @@ describe('C-2 the import boundary (one tier: libraries only in binding modules,
+ 
+ describe('C-2b no display text in mount files and binding modules (the exempt list: tests, the vendor dir, non_display_keys attributes)', () => {
+   it('the real tree: the mount files and binding modules bindings.json lists hold no display text (MF-37: 4 mounts, 2 modules)', () => {
+-    const files = [...B.mounts.map((m: Json) => m.path), ...B.modules.map((m: Json) => m.path)];
++    const files = [...B.mounts.map((m: Json) => m.path), ...B.modules.map((m: Json) => m.path)].filter((f: string) => !Object.hasOwn(REPORT_RENDERER_PIN, f)); // the pinned renderer files are judged in C-12
+     const lines = files.flatMap((f: string) => textProblems(fs.readFileSync(path.join(REPO, f), 'utf8'), f, B.non_display_keys));
+     console.log(`C-2b: ${files.length} files`);
+     expect(files.length).toBeGreaterThan(0);
+@@ -380,7 +388,7 @@ describe('C-3 bindings.json integrity', () => {
+     // MF-48 (dated 2026-11-11; D-2 a): + ReportBinding.tsx and ReportPageHost.tsx and their promoted entry binding_mobile_report; no mount (Stage A).
+     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
+     // MF-76 (dated 2026-11-11; plan v3 §12 fold 13): + the landing mount (19 -> 20 mounts).
+-    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([10, 7, 25]); // SEMI-B (dated 2026-11-13): + SemiQuestionBinding.tsx and the question page mount; MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary); MF-19: +3 (the admin lot-size page, client mount, error boundary)
++    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([13, 8, 25]); // task-384 STD.REPORT-OWN (dated 2026-11-20): + the three web report renderer files and their promoted entry binding_web_report. SEMI-B (dated 2026-11-13): + SemiQuestionBinding.tsx and the question page mount; MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary); MF-19: +3 (the admin lot-size page, client mount, error boundary)
+   });
+   it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
+     const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
+@@ -584,7 +592,7 @@ const sharedFor = (m: Json): Record<string, string> => Object.assign({}, ...m.ar
+ 
+ describe('C-8 the web closed mapping (every JSX element of a web binding module is a listed library component)', () => {
+   it('the real tree: each web module renders only mapping.web names for its archetypes', () => {
+-    const mods = B.modules.filter((m: Json) => m.platform === 'web');
++    const mods = B.modules.filter((m: Json) => m.platform === 'web' && !Object.hasOwn(REPORT_RENDERER_PIN, m.path)); // the pinned renderer files are judged in C-12
+     console.log(`C-8: ${mods.length} web modules`);
+     expect(mods.length).toBeGreaterThan(0);
+     for (const m of mods) expect([m.path, mappingProblems(fs.readFileSync(path.join(REPO, m.path), 'utf8'), m.path, allowedFor(m), B.libraries.web, sharedFor(m))]).toEqual([m.path, []]);
+@@ -924,18 +932,72 @@ describe('C-9m the mobile 44 px case (MF-35; min-h-[44px] or another listed size
+ });
+ 
+ // ---- C-12 (task-384 STD.REPORT-OWN; dated 2026-11-20) ---------------------------------------------------------------------------------------------
+-// The web report renderer files have a census owner (R-13). Listing them as bindings.json modules (so C-2b and C-8 judge them) is BLOCKED: C-3 needs
+-// their module root to be a frontend glob in mcbylaws/protected-paths.json, a protected policy file this lane does not edit (operator question in the lane report).
+-describe('C-12 the web report renderer files have a census owner (Spec 126 section 11b.1: kept as a component, not converted)', () => {
+-  const FILES = ['src/components/report/ReportPage.tsx', 'src/components/report/ReportView.tsx', 'src/components/report/ReportPageToggles.tsx'];
++// The web report renderer files have a census owner (R-13), are listed web REPORT modules of bindings.json (C-3 needs their root to be a frontend glob in
++// mcbylaws/protected-paths.json), and are judged by C-2b and C-8 with the structural findings pinned (REPORT_RENDERER_PIN). Outside C-9: it judges golden nodes.
++const REPORT_FILES = Object.keys(REPORT_RENDERER_PIN);
++const isDisplayText = (line: string): boolean => /: (JSX text|string child) "/.test(line) && !/: string child "\s*"$/.test(line); // a blank spacer child is structural
++/** The listing: exactly the three files are web REPORT modules, owned by binding_web_report, which is promoted. */
++export const reportListingProblems = (b: Json): string[] => {
++  const out: string[] = [];
++  const listed = (b.modules as Json[]).filter((m) => m.platform === 'web' && m.archetypes.includes('REPORT')).map((m) => m.path);
++  if (JSON.stringify(listed) !== JSON.stringify(REPORT_FILES)) out.push(`C-12 listed web REPORT modules ${JSON.stringify(listed)}, expected ${JSON.stringify(REPORT_FILES)}`);
++  for (const m of (b.modules as Json[]).filter((x) => REPORT_FILES.includes(x.path))) if (m.owner !== 'binding_web_report') out.push(`C-12 ${m.path}: owner ${m.owner}, expected binding_web_report`);
++  if (!(b.promoted_entries as string[]).includes('binding_web_report')) out.push('C-12 binding_web_report is not a promoted entry');
++  return out;
++};
++/** C-2b and C-8 on the renderer files: display text is 0; the structural counts equal the pin exactly (both directions). */
++export const reportRendererProblems = (texts: Record<string, string>, pin: Json = REPORT_RENDERER_PIN): string[] => {
++  const out: string[] = [];
++  for (const [f, want] of Object.entries(pin)) {
++    const text = texts[f];
++    if (text === undefined) { out.push(`C-12 ${f}: not read`); continue; }
++    const c2b = textProblems(text, f, B.non_display_keys);
++    for (const l of c2b.filter(isDisplayText)) out.push(l);
++    const got = { 'C-2b': c2b.filter((l) => !isDisplayText(l)).length, 'C-8': mappingProblems(text, f, [], B.libraries.web, {}).length };
++    for (const k of ['C-2b', 'C-8'] as const) if (got[k] !== want[k]) out.push(`C-12 ${f}: ${k} structural findings ${got[k]}, pinned ${want[k]} (${got[k] > want[k] ? 'a new finding' : 'fewer: lower the pin'})`);
++  }
++  return out;
++};
++describe('C-12 the web report renderer files have a census owner and are judged by C-2b and C-8 (Spec 126 section 11b.1: kept as a component, not converted)', () => {
++  const realTexts = (): Record<string, string> => Object.fromEntries(REPORT_FILES.map((f) => [f, fs.readFileSync(path.join(REPO, f), 'utf8')]));
++  const rootsTexts = ['src/tests/surface-registry.infra.test.ts', 'scripts/violations/generate-surface-registry.mjs'].map((p) => fs.readFileSync(path.join(REPO, p), 'utf8'));
+   it('the census entry owns exactly the three files, its descriptor file is byte-equal to it, and no other surface owns them', () => {
+     const shard = rj(path.join(REPO, SCHEMA, 'census/web-product.json')) as Json[];
+     const entry = shard.find((r) => r.identity.id === 'binding_web_report');
+     expect(entry).toBeDefined();
+-    expect(entry?.identity.owns.components).toEqual(FILES);
++    expect(entry?.identity.owns.components).toEqual(REPORT_FILES);
+     expect(entry?.programme.scope).toBe('platform_shared');
+     const file = path.join(REPO, 'scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json');
+     expect(fs.readFileSync(file, 'utf8')).toBe(`${JSON.stringify(entry, null, 2)}\n`);
+-    for (const d of DESCRIPTORS.values()) if (d.identity.id !== 'binding_web_report') expect([d.identity.id, (d.identity.owns?.components ?? []).filter((c: string) => FILES.includes(c))]).toEqual([d.identity.id, []]);
++    for (const d of DESCRIPTORS.values()) if (d.identity.id !== 'binding_web_report') expect([d.identity.id, (d.identity.owns?.components ?? []).filter((c: string) => REPORT_FILES.includes(c))]).toEqual([d.identity.id, []]);
++  });
++  it('the real tree: the three files are the listed web REPORT modules, bindings.json is clean, and src/components/report/ is a frontend glob', () => {
++    expect(reportListingProblems(B)).toEqual([]);
++    expect(bindingsProblems({ b: B, exists: (p) => fs.existsSync(path.join(REPO, p)), descriptor: realDescriptor, policy: POLICY, rootsTexts, converted: B_CONVERTED })).toEqual([]);
++    expect(isFrontend(POLICY, 'src/components/report/ReportPage.tsx')).toBe(true);
++    expect(B.module_roots).toContain('src/components/report/');
++    expect(B.mapping.web.REPORT).toBeUndefined(); // the renderer is not a library binding
++  });
++  it('the real tree: C-2b and C-8 judge the three files; display text is 0 and the structural counts equal the pin', () => {
++    expect(reportRendererProblems(realTexts())).toEqual([]);
++  });
++  it('RED (in memory): a file dropped from modules, a wrong owner, an extra file and a missing promoted entry fail the listing; the real listing is the control', () => {
++    expect(reportListingProblems(B)).toEqual([]);
++    const edit = (f: (b: Json) => void): Json => { const b = structuredClone(B); f(b); return b; };
++    expect(reportListingProblems(edit((b) => { b.modules = b.modules.filter((m: Json) => m.path !== REPORT_FILES[1]); }))).toHaveLength(1);
++    expect(reportListingProblems(edit((b) => { b.modules.find((m: Json) => m.path === REPORT_FILES[0]).owner = 'binding_web_static'; }))).toEqual(['C-12 src/components/report/ReportPage.tsx: owner binding_web_static, expected binding_web_report']);
++    expect(reportListingProblems(edit((b) => { b.modules.push({ path: 'src/components/report/Extra.tsx', platform: 'web', archetypes: ['REPORT'], owner: 'binding_web_report', exports: ['X'] }); }))).toHaveLength(1);
++    expect(reportListingProblems(edit((b) => { b.promoted_entries = b.promoted_entries.filter((e: string) => e !== 'binding_web_report'); }))).toEqual(['C-12 binding_web_report is not a promoted entry']);
++  });
++  it('RED (in memory): planted display text, a new intrinsic element, a fixed finding and a missing file each fail; the real texts are the control', () => {
++    const texts = realTexts();
++    expect(reportRendererProblems(texts)).toEqual([]);
++    const view = REPORT_FILES[1] as string;
++    const planted = { ...texts, [view]: `${texts[view]}\nexport const Planted = () => <p>Hello</p>;\n` };
++    const got = reportRendererProblems(planted);
++    expect(got.some((l) => /JSX text "Hello"/.test(l))).toBe(true);
++    expect(got.some((l) => /C-8 structural findings 42, pinned 41 \(a new finding\)/.test(l))).toBe(true);
++    expect(reportRendererProblems(texts, { ...REPORT_RENDERER_PIN, [view]: { 'C-2b': 14, 'C-8': 41 } })).toEqual([`C-12 ${view}: C-2b structural findings 13, pinned 14 (fewer: lower the pin)`]);
++    expect(reportRendererProblems({ ...texts, [view]: undefined as unknown as string })).toEqual([`C-12 ${view}: not read`]);
+   });
+ });

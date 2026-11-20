@@ -1,0 +1,26 @@
+## node scripts/violations/generate-surface-registry.mjs --check
+[surface-registry] clean — no drift (172 rows, 172 descriptors)
+rc=0
+## node scripts/surfaces/_schema/seed-report-v2.mjs --check
+labels owed: reno_basement_new_m2
+labels owed: reno_basement_finish_m2
+labels owed: reno_basement_underpinned_m2
+rc=0
+## node scripts/analysis/report-schema.mjs --check
+report-schema current; RS-0 PASS · RS-1 PASS · RS-2 PASS · RS-3 PASS · RS-4 PASS · RS-5 PASS · RS-6 PASS · RS-7 PASS · RS-8 PASS · RS-9 PASS · RS-11 PASS
+rc=0
+## node scripts/analysis/report-fields.mjs --check
+report-fields current (1 rendered fields); gates FAIL (report-only): RF-2, RF-4, RF-6, RF-7, RF-9
+rc=0
+## node scripts/analysis/rule-lists.mjs page --check
+rule-lists: docs/reports/generated/rule-lists-by-kind.md is current
+rc=0
+## node scripts/analysis/rule-lists.mjs validate
+rule-lists: ok 55 lists, 20 rows
+rc=0
+## node scripts/analysis/gates/generated-docs.mjs
+PASS — 14 live doc(s)
+rc=0
+## node scripts/surfaces/surface-validate.mjs --check
+surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, p
+rc=0
