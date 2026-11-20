@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T13:33:00Z'
+updated_date: '2026-11-20T14:00:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -40,3 +41,9 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-20 grounder second job (docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY-2.md) extends D3: the footer ruling MF-91 / SRCH.FOOTER is in no spec (git grep finds nothing under docs/specs); Spec 126 11a.7 still names one cause of a null page; contract_parcels_lookup.descriptor.json:6 still says 'It reads no table today and changes no meter.' Add to scope: dated notes (M-246 form) in Spec 126 11a.7 and Spec 135, and correct the false descriptor sentence. Rule: Spec 126:77 section 0b item 6.
+<!-- SECTION:NOTES:END -->
