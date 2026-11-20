@@ -284,7 +284,7 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
   });
   it('the lens line runs the compliance lens once per list through the helper, other lenses stay, and the separate-grounder rule is written in', () => {
     const { extra } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' });
-    for (const l of ['mobile-98', 'eng-s2-s4-s10-s11', 'storage-doc16', 'inc-F']) {
+    for (const l of ['mobile-98', 'eng-all', 'storage-doc16', 'inc-F']) {
       expect(extra).toContain('plan-compliance-' + l);
       expect(extra).toContain('out-compliance-' + l);
     }

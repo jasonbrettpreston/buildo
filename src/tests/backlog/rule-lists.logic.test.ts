@@ -55,11 +55,11 @@ describe('the real table (AC #1: data, every listed rule file exists)', () => {
   it('task-376: a task that edits spec files resolves; a mobile or web-admin spec also gets that surface\'s own lists', () => {
     const lists = (files: string) => { const r = script(CLI, ['resolve', '--files', files, '--type', 'build', '--letter', '1']); expect(r.status, r.stderr).toBe(0); return ids(JSON.parse(r.stdout) as Res); };
     const mobile = lists('docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json');
-    for (const l of ['eng-s5-s9-s14', 'agents-s7-s11', 'queue-137', 'mobile-100', 'mobile-90', 'surface-136']) expect(mobile).toContain(l);
+    for (const l of ['eng-all', 'agents-s7-s11', 'queue-137', 'mobile-100', 'mobile-90', 'surface-136']) expect(mobile).toContain(l);
     const web = lists('docs/specs/02-web-admin/128_surface_standard_policy.md');
-    for (const l of ['eng-s5-s9-s14', 'agents-s7-s11', 'queue-137', 'surface-128', 'surface-135']) expect(web).toContain(l);
+    for (const l of ['eng-all', 'agents-s7-s11', 'queue-137', 'surface-128', 'surface-135']) expect(web).toContain(l);
     const pipe = lists('docs/specs/01-pipeline/132_step_standard_handbook.md');
-    for (const l of ['eng-s5-s9-s14', 'agents-s7-s11', 'queue-137']) expect(pipe).toContain(l);
+    for (const l of ['eng-all', 'agents-s7-s11', 'queue-137']) expect(pipe).toContain(l);
     expect(pipe).not.toContain('mobile-100');
     expect(lists('backlog/docs/doc-16 - McStorage-policy-v2.md')).toContain('queue-137');
   });
@@ -313,5 +313,157 @@ describe('findings: ids are <file stem>#<ordinal among BUG and DEFER lines>', ()
     expect(r.status, r.stderr).toBe(0);
     expect(r.stdout.split('\n').filter((l) => l.includes('\t')).map((l) => l.split('\t')[0])).toEqual(['out-compliance-x#1', 'out-compliance-x#2']);
     expect(r.stdout).toMatch(/^Ruled: out-compliance-x\.txt sha256:[0-9a-f]{12} findings:2$/m);
+  });
+});
+
+// ---- V2.LIST (task-406, McFix V2 step 1): the lists every compliance review receives; the check over every open task; the generated page ----
+// Rule: Spec 126 section 0a principle 1 and section 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1; PLAN-PROTOCOL.md:3 (docs/specs/00-architecture/plan-protocol.md) simple, no scope creep.
+type Table = { every_task?: string[]; milestone_docs?: Record<string, string[]>; increment_docs: Record<string, string>; lists: Record<string, { file: string; sections?: string[]; whole?: boolean }>; rows: { id: string; lists: string[]; globs?: string[] }[]; kinds?: { id: string }[] };
+const real = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as Table;
+const mod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<{ verifyResolved: (t: Table, r: { lists: { id: string }[] }, letter?: string) => string[] }>;
+
+describe('V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick)', () => {
+  it('the table names every_task = five-words (Spec 132 Glossary) and plan-protocol (the repo copy), and no removed engineering list id is left anywhere', () => {
+    const t = real();
+    expect(t.every_task).toEqual(['five-words', 'plan-protocol']);
+    expect(t.lists['five-words']).toMatchObject({ file: 'docs/specs/01-pipeline/132_step_standard_handbook.md', sections: ['Glossary'] });
+    expect(t.lists['plan-protocol']).toMatchObject({ file: 'docs/specs/00-architecture/plan-protocol.md', whole: true });
+    const text = JSON.stringify(t);
+    for (const gone of ['"eng-s1"', 'eng-s2-s4-s10-s11', 'eng-s3-s9', 'eng-s5-s9-s14', '"eng-s5"']) expect(text, gone).not.toContain(gone);
+    expect(t.lists['eng-all']).toMatchObject({ file: 'docs/specs/00_engineering_standards.md', whole: true });
+  });
+  it('the Glossary block of Spec 132 carries the five words statement, and the repo plan protocol carries the five principles line', () => {
+    const r = script(CLI, ['lens-input', '--list', 'five-words', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fw'), 'in-x')]);
+    expect(r.status, r.stderr).toBe(0);
+    const text = fs.readFileSync(r.stdout.trim().split('\n')[0] as string, 'utf8');
+    expect(text).toContain('STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE');
+    expect(fs.readFileSync(path.join(ROOT, 'docs/specs/00-architecture/plan-protocol.md'), 'utf8')).toContain('standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep');
+  });
+  it('milestone_docs gives every increment letter its own milestone list (objectives sections), and the table validates', () => {
+    const t = real();
+    for (const k of Object.keys(t.increment_docs)) {
+      const lids = t.milestone_docs?.[k] ?? [];
+      expect(lids.length, `letter ${k}`).toBeGreaterThan(0);
+      for (const id of lids) expect(t.lists[id]?.file, `${k}: ${id}`).toMatch(/^backlog\/milestones\/m-\d+ - /);
+    }
+    expect(script(CLI, ['validate']).status).toBe(0);
+  });
+  it('a real task of each kind resolves with the every_task lists and its milestone list (pipeline, web, phone, storage, tooling, spec-only)', () => {
+    const kinds: Record<string, string> = {
+      pipeline: 'scripts/steps/_schema/converted.json, scripts/load-permits.js', web: 'src/app/(maxbld)/page.tsx, src/features/x.ts', phone: 'mobile/src/app/x.tsx',
+      storage: 'src/lib/parcels/report-compute.ts', tooling: 'scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/board/x.mjs', spec: 'docs/specs/00-architecture/08_agents.md',
+    };
+    for (const [k, files] of Object.entries(kinds)) {
+      const r = script(CLI, ['resolve', '--files', files, '--type', 'build', '--letter', 'S']);
+      expect(r.status, `${k}: ${r.stderr}`).toBe(0);
+      expect(ids(JSON.parse(r.stdout) as Res), k).toEqual(expect.arrayContaining(['five-words', 'plan-protocol', 'ms-S', 'inc-S']));
+    }
+  });
+  it('the paths that matched no row on 2026-11-20 now resolve (tasks 376, 378, 384, 372, 401, 408 and the paths of the coverage review)', () => {
+    for (const p of ['docs/reports/generated/rule-lists-by-kind.md', 'docs/reports/policy/x.md', 'scripts/seeds/logic_variables.json', 'scripts/board/x.mjs', 'scripts/steps/_schema/converted.json', 'scripts/lib/step-x/y.js', 'scripts/ast-grep-rules/x.yml', 'src/features/x.ts', 'tests/x.ts', 'scripts/tests/x.mjs', 'supabase/tests/x.sql', 'CLAUDE.md', 'mcbylaws/protected-paths.json', 'tsconfig.json', 'eslint.config.mjs', 'biome.json', 'knip.json', 'next.config.ts', '.sqlfluff']) {
+      const r = script(CLI, ['resolve', '--files', p, '--type', 'build', '--letter', 'S']);
+      expect(r.status, `${p}: ${r.stderr}`).toBe(0);
+    }
+  });
+  it('verifyResolved (what validate and check-tasks run): a resolved set that lacks an every_task list or the milestone list is named; the real resolution passes', async () => {
+    const { verifyResolved } = await mod();
+    const t = real();
+    const good = JSON.parse(script(CLI, ['resolve', '--files', 'scripts/analysis/rule-lists.mjs', '--type', 'build', '--letter', 'S']).stdout) as Res;
+    expect(verifyResolved(t, good, 'S')).toEqual([]);
+    const planted = { lists: good.lists.filter((l) => l.id !== 'five-words' && l.id !== 'ms-S') };
+    expect(verifyResolved(t, planted, 'S').join('|')).toMatch(/five-words/);
+    expect(verifyResolved(t, planted, 'S').join('|')).toMatch(/ms-S/);
+    expect(verifyResolved({ ...t, every_task: [] }, good, 'S').join('|')).toMatch(/every_task/);
+  });
+});
+
+describe('V2.LIST: validate refuses a table that switches the always-attached lists off', () => {
+  const edit = (fn: (t: Record<string, unknown>) => void) => {
+    const f = fixture();
+    const t = JSON.parse(fs.readFileSync(f.table, 'utf8')) as Record<string, unknown>;
+    fn(t);
+    fs.writeFileSync(f.table, JSON.stringify(t));
+    return script(CLI, ['validate', '--root', f.d, '--table', f.table]);
+  };
+  it('control: the fixture with every_task and milestone_docs validates', () => {
+    const r = edit((t) => { t.every_task = ['queue']; t.milestone_docs = { F: ['queue'] }; });
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+  });
+  it('no every_task key, an empty one, or one naming an undefined list is refused', () => {
+    expect(edit((t) => { t.milestone_docs = { F: ['queue'] }; }).stderr).toMatch(/every_task/);
+    expect(edit((t) => { t.every_task = []; t.milestone_docs = { F: ['queue'] }; }).stderr).toMatch(/every_task/);
+    expect(edit((t) => { t.every_task = ['nope']; t.milestone_docs = { F: ['queue'] }; }).stderr).toMatch(/every_task.*nope/);
+  });
+  it('an increment letter with no milestone_docs entry, or an entry naming an undefined list, is refused', () => {
+    expect(edit((t) => { t.every_task = ['queue']; }).stderr).toMatch(/milestone_docs.*F/);
+    expect(edit((t) => { t.every_task = ['queue']; t.milestone_docs = { F: ['nope'] }; }).stderr).toMatch(/milestone_docs F.*nope/);
+  });
+  it('resolution attaches every_task and the milestone list to a matched task, and an unmatched path is still refused (never a vacuous resolve)', () => {
+    const f = fixture();
+    const t = JSON.parse(fs.readFileSync(f.table, 'utf8')) as Record<string, unknown>;
+    t.every_task = ['queue']; t.milestone_docs = { F: ['crlf'] };
+    fs.writeFileSync(f.table, JSON.stringify(t));
+    const ok = JSON.parse(res(f, 'src/two.ts', ['--type', 'build']).stdout) as Res;
+    expect(ids(ok)).toEqual(expect.arrayContaining(['queue', 'crlf', 'first', 'inc-F']));
+    expect(ids(ok).filter((x) => x === 'queue')).toHaveLength(1);
+    const bad = res(f, 'zzz/none.txt', ['--type', 'build']);
+    expect(bad.status).toBe(3);
+    expect(bad.stderr).toContain('zzz/none.txt');
+  });
+});
+
+describe('V2.LIST: check-tasks lists every open task as resolving or not yet resolvable, by id, with the reason', () => {
+  it('a fixture board: a resolving task, a task with no Files line, a task whose path matches no row (listed first), a finished task (skipped)', () => {
+    const f = fixture();
+    const t = JSON.parse(fs.readFileSync(f.table, 'utf8')) as Record<string, unknown>;
+    t.every_task = ['queue']; t.milestone_docs = { F: ['crlf'] };
+    fs.writeFileSync(f.table, JSON.stringify(t));
+    const w = (n: string, status: string, body: string) => { const p = path.join(f.d, `backlog/tasks/task-${n} - x.md`); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, `---\nid: TASK-${n}\ntitle: x\nstatus: ${status}\ntype: build\nmilestone: m-0\n---\n\n## Description\n\n${body}\n`); };
+    w('1', 'WAITS', 'Files: src/two.ts'); w('2', 'WAITS', 'no files here'); w('3', 'WAITS', 'Files: zzz/none.txt'); w('4', 'DONE', 'Files: zzz/none.txt');
+    fs.mkdirSync(path.join(f.d, 'backlog/milestones'), { recursive: true });
+    fs.writeFileSync(path.join(f.d, 'backlog/milestones/m-0 - a.md'), '---\nid: m-0\ntitle: "A [F]"\n---\n');
+    const r = script(CLI, ['check-tasks', '--root', f.d, '--table', f.table]);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    expect(r.stdout).toMatch(/open 3: resolve 1, not yet resolvable 2/);
+    expect(r.stdout.indexOf('task-3')).toBeGreaterThan(-1);
+    expect(r.stdout.indexOf('task-3')).toBeLessThan(r.stdout.indexOf('task-2'));
+    expect(r.stdout).toMatch(/task-3[^\n]*matches no row[^\n]*zzz\/none\.txt/);
+    expect(r.stdout).toMatch(/task-2[^\n]*no Files line/);
+    expect(r.stdout).not.toContain('task-4');
+  });
+  it('the real board: every open task that resolves carries the every_task lists (exit 0), and the count line is printed', () => {
+    const r = script(CLI, ['check-tasks']);
+    expect(r.status, r.stdout.slice(-600) + r.stderr).toBe(0);
+    expect(r.stdout).toMatch(/open \d+: resolve \d+, not yet resolvable \d+/);
+  });
+});
+
+describe('V2.LIST: the generated page of what each kind of work receives', () => {
+  it('the real page is current (page --check), names each kind with documents, sizes and part counts, and is a registered generated doc (gate J)', () => {
+    const c = script(CLI, ['page', '--check']);
+    expect(c.status, c.stdout + c.stderr).toBe(0);
+    const page = fs.readFileSync(path.join(ROOT, 'docs/reports/generated/rule-lists-by-kind.md'), 'utf8');
+    for (const k of ['pipeline step', 'McFrontend web', 'phone', 'storage', 'tooling', 'spec-only']) expect(page, k).toContain(k);
+    expect(page).toMatch(/five-words[^\n]*\|\s*[\d,]+\s*\|\s*\d+\s*\|/);
+    expect(page).toContain('plan-protocol');
+    const g = run('node', ['scripts/analysis/gates/generated-docs.mjs'], { cwd: ROOT });
+    expect(g.status, g.stdout + g.stderr).toBe(0);
+    expect(fs.readFileSync(path.join(ROOT, 'scripts/analysis/gates/generated-docs.mjs'), 'utf8')).toContain("file: 'rule-lists-by-kind.md'");
+  });
+  it('fixture: --write makes the page, --check passes, and a shrunken document or a hand edit makes --check fail naming the page', () => {
+    const f = fixture();
+    const t = JSON.parse(fs.readFileSync(f.table, 'utf8')) as Record<string, unknown>;
+    t.every_task = ['queue']; t.milestone_docs = { F: ['crlf'] };
+    t.kinds = [{ id: 'k1', label: 'kind one', files: 'src/two.ts', type: 'build', letter: 'F' }];
+    fs.writeFileSync(f.table, JSON.stringify(t));
+    const w = script(CLI, ['page', '--write', '--root', f.d, '--table', f.table]);
+    expect(w.status, w.stderr).toBe(0);
+    const page = path.join(f.d, 'docs/reports/generated/rule-lists-by-kind.md');
+    expect(fs.readFileSync(page, 'utf8')).toMatch(/kind one[\s\S]*queue/);
+    expect(script(CLI, ['page', '--check', '--root', f.d, '--table', f.table]).status).toBe(0);
+    fs.appendFileSync(path.join(f.d, 'docs/q.md'), 'one more rule line\n');
+    const stale = script(CLI, ['page', '--check', '--root', f.d, '--table', f.table]);
+    expect(stale.status).toBe(1);
+    expect(stale.stderr).toContain('rule-lists-by-kind.md');
   });
 });

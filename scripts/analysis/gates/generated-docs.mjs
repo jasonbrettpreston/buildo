@@ -50,6 +50,8 @@ export const GENERATED_DOCS = [
     proposed: 'keep', note: '--check exits 1 on drift.' },
   { file: 'envelope-answer-tracker.md', generator: 'scripts/analysis/bylaw/generate-answer-tracker.mjs', has_check: true,
     proposed: 'keep', note: '--check exits 1 on drift (Spec 78 P5.15 INV-25); wired 2026-10-18 with the max-build trace tooling.' },
+  { file: 'rule-lists-by-kind.md', generator: 'scripts/analysis/rule-lists.mjs', has_check: true,
+    proposed: 'keep', note: 'task-406 (V2.LIST): `page --check` exits 1 on drift (a list document or the table changed); what each kind of work receives, with sizes and part counts.' },
   { file: '127-surface-review-queue.md', generator: 'scripts/violations/generate-surface-registry.mjs', has_check: true,
     proposed: 'keep', note: 'same generator + --check arm as the registry; written together.' },
   // --- explicitly retired 2026-09-26 (orchestrator ruling, gate J closing

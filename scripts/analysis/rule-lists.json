@@ -3,24 +3,23 @@
     "COMPLY.2 (task-366): the path to rule-list table. DATA, not code, decides which rule lists govern a task: scripts/analysis/backlog-lane.mjs resolves a task's `Files:` line through it at launch, scripts/hooks/check-lane-close.mjs resolves it again at close. Operator, verbatim, 2026-11-20: \"Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort.\" (record ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, the 2026-11-20 entries).",
     "A list is used WHOLE: `whole` = the file, `sections` = whole sections picked by heading (a heading text is matched at its start, after leading emoji and punctuation; the section runs to the next heading of the same or a higher level); a section is allowed only where the file itself separates rules from history or narrative. Never a hand-picked clause.",
     "A row maps path globs to lists. `globs` are literal; `globs_from` REUSES an existing path map (mcbylaws/protected-paths.json keys layer23 = by-law code and frontend = McFrontend surface paths; Spec 133 R-KP / R-LD, Spec 128 section 4.11) instead of copying it; `imports_from` makes the row fire only for a file that imports from that path. Several rows may match: the lists are the union.",
-    "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks get the queue lists). `increment_docs`: every task also gets the requirements document of its milestone group letter."
+    "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks get the queue lists). `increment_docs`: every task also gets the requirements document of its milestone group letter.",
+    "V2.LIST (task-406, McFix V2 step 1; operator 2026-11-20, see the task text): `every_task` lists are attached to EVERY task whatever its Files line (the five words in the step handbook Glossary, and the plan protocol as a repo document); `milestone_docs` attaches to a task the objectives sections of its own milestone, beside `increment_docs`; `kinds` are the examples the generated page docs/reports/generated/rule-lists-by-kind.md prints (what each kind of work receives). `rule-lists.mjs validate` refuses a table with none of them."
   ],
   "contract_version": 1,
   "base_ref": "wf2/board",
   "finished_statuses": ["BUILT", "DONE", "MERGED"],
   "protected_paths": ["scripts/hooks/check-lane-close.mjs", "scripts/analysis/rule-lists.mjs", "scripts/analysis/rule-lists.json", "scripts/deepseek-review.js", ".husky/*"],
   "lists": {
+    "five-words": { "file": "docs/specs/01-pipeline/132_step_standard_handbook.md", "sections": ["Glossary"], "generated_by": "scripts/generate-step-handbook.mjs" },
+    "plan-protocol": { "file": "docs/specs/00-architecture/plan-protocol.md", "whole": true, "generated_by": "hand-written" },
     "step-132": { "file": "docs/specs/01-pipeline/132_step_standard_handbook.md", "sections": ["2. Every step", "3. By archetype", "4. Cross-cutting", "6. Rules with no or partial machine check"], "generated_by": "scripts/generate-step-handbook.mjs" },
     "airtight-124a": { "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md", "sections": ["Appendix §B10", "Appendix §B12"], "generated_by": "hand-written" },
     "airtight-v3-122": { "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md", "sections": ["5.5 Condition 4"], "generated_by": "hand-written" },
     "airtight-v2-122": { "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md", "sections": ["6.6.1 Registry and ledger truth"], "generated_by": "hand-written" },
     "airtight-122a": { "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md", "sections": ["Appendix §A26", "Appendix §A27"], "generated_by": "hand-written" },
-    "eng-s3-s9": { "file": "docs/specs/00_engineering_standards.md", "sections": ["3. Database Management", "9. Pipeline & Script Safety"], "generated_by": "hand-written" },
-    "eng-s1": { "file": "docs/specs/00_engineering_standards.md", "sections": ["1. Architecture & UI Standards"], "generated_by": "hand-written" },
-    "eng-s2-s4-s10-s11": { "file": "docs/specs/00_engineering_standards.md", "sections": ["2. Error Handling", "4. Security & API Contracts", "10. Frontend/Backend Boundary", "11. Plan Compliance Checklist"], "generated_by": "hand-written" },
-    "eng-s5-s9-s14": { "file": "docs/specs/00_engineering_standards.md", "sections": ["5. Testing Standards", "9. Pipeline & Script Safety", "14. The Prevention Loop"], "generated_by": "hand-written" },
-    "eng-s5": { "file": "docs/specs/00_engineering_standards.md", "sections": ["5. Testing Standards"], "generated_by": "hand-written" },
-    "bylaw-133": { "file": "docs/specs/01-pipeline/133_bylaw_handbook.md", "sections": ["2. Rules by provision family"], "generated_by": "scripts/generate-bylaw-handbook.mjs" },
+    "eng-all": { "file": "docs/specs/00_engineering_standards.md", "whole": true, "generated_by": "hand-written" },
+    "bylaw-133": { "file": "docs/specs/01-pipeline/133_bylaw_handbook.md", "sections": ["2. Rules by provision family", "3. Rows with an OWED marker"], "generated_by": "scripts/generate-bylaw-handbook.mjs" },
     "storage-doc16": { "file": "backlog/docs/doc-16 - McStorage-policy-v2.md", "whole": true, "generated_by": "hand-written", "status": "draft, operator to confirm it binds" },
     "surface-136": { "file": "docs/specs/02-web-admin/136_mcfrontend_handbook.md", "sections": ["2. Rules"], "generated_by": "scripts/surfaces/generate-surface-handbook.mjs" },
     "surface-126": { "file": "docs/specs/02-web-admin/126_maxbld_surface_standard.md", "whole": true, "generated_by": "hand-written" },
@@ -50,15 +49,30 @@
     "inc-9": { "file": "backlog/docs/increments/doc-12 - Increment-9-requirements.md", "whole": true, "generated_by": "hand-written" },
     "inc-10": { "file": "backlog/docs/increments/doc-13 - Increment-10-requirements.md", "whole": true, "generated_by": "hand-written" },
     "inc-L": { "file": "backlog/docs/increments/doc-14 - Increment-L-requirements.md", "whole": true, "generated_by": "hand-written" },
-    "inc-AL": { "file": "backlog/docs/increments/doc-15 - Increment-AL-requirements.md", "whole": true, "generated_by": "hand-written" }
+    "inc-AL": { "file": "backlog/docs/increments/doc-15 - Increment-AL-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "ms-F": { "file": "backlog/milestones/m-0 - increment-1·a-foundations-[f].md", "sections": ["Objectives"], "generated_by": "hand-written" },
+    "ms-S": { "file": "backlog/milestones/m-1 - increment-1·b-search-[s].md", "sections": ["Project objectives", "Increment objectives", "Objectives"], "generated_by": "hand-written" },
+    "ms-1-2": { "file": "backlog/milestones/m-2 - increment-1·c-launch-shared-parts-[1-2].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
+    "ms-1": { "file": "backlog/milestones/m-3 - increment-1·d-detached-house-+-shared-report-page-.md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
+    "ms-3": { "file": "backlog/milestones/m-4 - increment-3-detached-houseplex-(2-4-units)-[3].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
+    "ms-4": { "file": "backlog/milestones/m-5 - increment-4-house-with-a-secondary-suite-[4].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
+    "ms-5": { "file": "backlog/milestones/m-6 - increment-5-garden-suite-add-on-[5].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
+    "ms-6": { "file": "backlog/milestones/m-7 - increment-6-renovations-finish-[6].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
+    "ms-6c": { "file": "backlog/milestones/m-8 - increment-6c-owner-inputs-[6c].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
+    "ms-7": { "file": "backlog/milestones/m-9 - increment-7-semi-detached-(renovation-only)-[7].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
+    "ms-8": { "file": "backlog/milestones/m-10 - increment-8-sixplex-(houseplex-5-6-units)-[8].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
+    "ms-9": { "file": "backlog/milestones/m-11 - increment-9-merged-measure-(the-25,-coa-172,-4d)-[.md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
+    "ms-10": { "file": "backlog/milestones/m-12 - increment-10-mcproof-proof-set-[10].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
+    "ms-L": { "file": "backlog/milestones/m-13 - launch-gate-[l].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
+    "ms-AL": { "file": "backlog/milestones/m-14 - after-launch-[al].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" }
   },
   "rows": [
     {
       "id": "step-pipeline",
-      "globs": ["scripts/*.js", "scripts/**/*.descriptor.json", "scripts/lib/compute/**", "scripts/lib/step/**", "scripts/quality/**", "migrations/**"],
-      "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js"],
-      "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a", "eng-s3-s9"],
-      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9"
+      "globs": ["scripts/*.js", "scripts/**/*.descriptor.json", "scripts/lib/compute/**", "scripts/lib/step/**", "scripts/quality/**", "migrations/**", "scripts/steps/**", "scripts/lib/**", "scripts/seeds/**", "scripts/ast-grep-rules/**"],
+      "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js"],
+      "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a", "eng-all"],
+      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9. V2.LIST (task-406, coverage review 2026-11-20): also scripts/steps, scripts/lib (the lane review helper scripts/lib/review-template.js excepted: lane-tools), scripts/seeds and scripts/ast-grep-rules, which the step handbook and the Airtight sources govern (the paths RUNNING tasks 376, 378, 384 and tasks 345, 372, 379, 401, 408 named and no row matched); the engineering standards are attached whole (eng-all)"
     },
     {
       "id": "bylaw",
@@ -69,20 +83,20 @@
     {
       "id": "api-lib",
       "globs": ["src/app/api/**", "src/lib/**"],
-      "lists": ["eng-s2-s4-s10-s11"],
-      "why": "API routes and src/lib are governed by engineering standards sections 2, 4, 10 and 11"
+      "lists": ["eng-all"],
+      "why": "API routes and src/lib are governed by engineering standards sections 2, 4, 10 and 11. V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists"
     },
     {
       "id": "ui-app",
-      "globs": ["src/components/**", "src/app/**"],
-      "lists": ["eng-s1", "eng-s2-s4-s10-s11"],
-      "why": "ADDED by COMPLY.2 (real Files lines named these paths and no starting row matched): UI components and app pages are governed by engineering standards section 1 (architecture and UI), and sections 2, 4, 10 and 11 (errors, security, the front/back boundary, the plan checklist); the surface paths among them also match the surfaces row"
+      "globs": ["src/components/**", "src/app/**", "src/features/**"],
+      "lists": ["eng-all"],
+      "why": "ADDED by COMPLY.2 (real Files lines named these paths and no starting row matched): UI components and app pages are governed by engineering standards section 1 (architecture and UI), and sections 2, 4, 10 and 11 (errors, security, the front/back boundary, the plan checklist); the surface paths among them also match the surfaces row. V2.LIST (task-406): also src/features (unmatched); the engineering standards are attached whole (eng-all)"
     },
     {
       "id": "middleware-config",
-      "globs": ["src/middleware.ts", "package.json", ".github/**"],
-      "lists": ["eng-s2-s4-s10-s11", "eng-s5-s9-s14"],
-      "why": "ADDED by COMPLY.2: the request middleware (security and boundary), the dependency manifest and CI workflows are governed by engineering standards sections 2, 4, 10, 11 (errors, security, boundary) and 5, 9, 14 (testing, script safety, the prevention loop)"
+      "globs": ["src/middleware.ts", "package.json", ".github/**", "tsconfig*.json", "eslint.config.mjs", "biome.json", "knip.json", "next.config.ts", ".sqlfluff"],
+      "lists": ["eng-all"],
+      "why": "ADDED by COMPLY.2: the request middleware (security and boundary), the dependency manifest and CI workflows are governed by engineering standards sections 2, 4, 10, 11 (errors, security, boundary) and 5, 9, 14 (testing, script safety, the prevention loop). V2.LIST (task-406): also the TypeScript, lint, biome, knip, Next and sqlfluff configuration files (unmatched); the engineering standards are attached whole (eng-all)"
     },
     {
       "id": "surface-importers",
@@ -124,15 +138,21 @@
     },
     {
       "id": "lane-tools",
-      "globs": ["scripts/analysis/**", "scripts/hooks/**", "scripts/deepseek-review.js", "scripts/lib/review-template.js", ".husky/**", ".claude/**"],
-      "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-s5-s9-s14", "orchestrator-doc17"],
-      "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings)"
+      "globs": ["scripts/analysis/**", "scripts/hooks/**", "scripts/deepseek-review.js", "scripts/lib/review-template.js", ".husky/**", ".claude/**", "scripts/board/**", "CLAUDE.md", "mcbylaws/*.json"],
+      "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
+      "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings). V2.LIST (task-406): also scripts/board, CLAUDE.md and the mcbylaws/*.json path maps (coverage review 2026-11-20: unmatched); the engineering standards are attached whole (eng-all)"
+    },
+    {
+      "id": "generated-reports",
+      "globs": ["docs/reports/generated/**", "docs/reports/policy/**"],
+      "lists": ["surface-127", "agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
+      "why": "V2.LIST (task-406, coverage review 2026-11-20): generated reports (docs/reports/generated) are governed by the surface conversion procedure (Spec 127: surface-127); docs/reports/policy has no governing spec found, so the lane-tools lists are attached as the nearest (to verify); both were unmatched"
     },
     {
       "id": "specs-docs",
       "globs": ["docs/specs/**"],
-      "lists": ["eng-s5-s9-s14", "agents-s7-s11", "queue-137"],
-      "why": "ADDED by COMPLY.2 (task-376: a real Files line named a spec and no row matched): a task that edits spec files is governed by engineering standards sections 14 (a behaviour-changing ruling updates all cited specs in the same commit), 9 and 5 (the list the table already names for them), Spec 08 sections 7 and 11 and Spec 137; backlog/docs/** is already matched by queue-records (backlog/**)"
+      "lists": ["eng-all", "agents-s7-s11", "queue-137"],
+      "why": "ADDED by COMPLY.2 (task-376: a real Files line named a spec and no row matched): a task that edits spec files is governed by engineering standards sections 14 (a behaviour-changing ruling updates all cited specs in the same commit), 9 and 5 (the list the table already names for them), Spec 08 sections 7 and 11 and Spec 137; backlog/docs/** is already matched by queue-records (backlog/**). V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists"
     },
     {
       "id": "specs-mobile",
@@ -148,9 +168,9 @@
     },
     {
       "id": "tests",
-      "globs": ["src/tests/**"],
-      "lists": ["eng-s5"],
-      "why": "ADDED by COMPLY.2 (not in the starting rows): test files are governed by engineering standards section 5 (testing)"
+      "globs": ["src/tests/**", "tests/**", "scripts/tests/**", "supabase/tests/**"],
+      "lists": ["eng-all"],
+      "why": "ADDED by COMPLY.2 (not in the starting rows): test files are governed by the engineering standards (testing, section 5). V2.LIST (task-406): the standards are attached whole (eng-all); also tests/**, scripts/tests/** and supabase/tests/** (coverage review 2026-11-20: unmatched)"
     }
   ],
   "exempt": ["docs/reports/lanes/**", "docs/reports/reviews/**"],
@@ -158,5 +178,31 @@
   "increment_docs": {
     "F": "inc-F", "S": "inc-S", "1-2": "inc-1-2", "1": "inc-1", "3": "inc-3", "4": "inc-4", "5": "inc-5", "6": "inc-6",
     "6c": "inc-6c", "7": "inc-7", "8": "inc-8", "9": "inc-9", "10": "inc-10", "L": "inc-L", "AL": "inc-AL"
-  }
+  },
+  "every_task": ["five-words", "plan-protocol"],
+  "milestone_docs": {
+    "1": ["ms-1"],
+    "3": ["ms-3"],
+    "4": ["ms-4"],
+    "5": ["ms-5"],
+    "6": ["ms-6"],
+    "7": ["ms-7"],
+    "8": ["ms-8"],
+    "9": ["ms-9"],
+    "10": ["ms-10"],
+    "F": ["ms-F"],
+    "S": ["ms-S"],
+    "1-2": ["ms-1-2"],
+    "6c": ["ms-6c"],
+    "L": ["ms-L"],
+    "AL": ["ms-AL"]
+  },
+  "kinds": [
+    { "id": "pipeline", "label": "pipeline step", "files": "scripts/steps/_schema/converted.json, scripts/load-permits.js", "type": "build", "letter": "S" },
+    { "id": "web", "label": "McFrontend web", "files": "src/components/report/, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json", "type": "build", "letter": "S" },
+    { "id": "phone", "label": "phone", "files": "mobile/src/app/", "type": "build", "letter": "S" },
+    { "id": "storage", "label": "storage", "files": "src/lib/parcels/report-compute.ts", "type": "build", "letter": "S" },
+    { "id": "tooling", "label": "tooling", "files": "scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs", "type": "build", "letter": "S" },
+    { "id": "spec", "label": "spec-only", "files": "docs/specs/00-architecture/08_agents.md", "type": "build", "letter": "S" }
+  ]
 }

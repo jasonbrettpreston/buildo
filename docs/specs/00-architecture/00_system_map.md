@@ -21,6 +21,7 @@
 | 117 | `00-architecture/117_maxbld_brand.md` | MaxBLD Brand Identity | `src/app/globals.css` | — | DECIDED 2026-07-18 (5 enumerated open items carry recommended defaults; none block current build work) |
 | 137 | `00-architecture/137_mcqueue.md` | McQueue | — | — | DRAFT |
 | 13 | `00-architecture/13_authentication.md` | Authentication | `src/lib/auth/config.ts`, `src/lib/auth/types.ts`, `src/lib/auth/route-guard.ts`, `src/lib/auth/get-user.ts`, `src/lib/auth/verify-admin.ts`, `src/lib/auth/get-user-context.ts`, `src/lib/supabase/`, `src/app/login/page.tsx`, `src/components/auth/LoginForm.tsx`, `src/middleware.ts` | `src/tests/auth.logic.test.ts`, `src/tests/auth-get-user.logic.test.ts`, `src/tests/middleware.logic.test.ts` | Done |
+| 99 | `00-architecture/plan-protocol.md` | Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00) | — | — | Done |
 | 99 | `00-architecture/two_client_architecture.md` | Two-Client Architecture | — | — | Active |
 
 ## Pipeline (Data Engineering)

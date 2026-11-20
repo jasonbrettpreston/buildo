@@ -6,6 +6,8 @@
 //   lens-input --list id --material f --out prefix [--template f] [--max n]
 //                                                           the compliance lens input: the list FIRST, then the material; split by the list's own headings when list +
 //                                                           material would pass the review tool bound; never trims; exit 1 when it cannot fit
+//   check-tasks [--table f] [--root dir]                    every open task of backlog/tasks: resolves (with the every_task and milestone lists verified) or is listed by id as not yet resolvable, with the reason
+//   page [--write|--check] [--table f] [--root dir]          the generated page docs/reports/generated/rule-lists-by-kind.md: per kind of work the documents, sizes and part counts
 //   findings --dir d                                        the finding ids of the lens outputs in d (<file stem>#<ordinal among BUG and DEFER lines>)
 // Rules: Spec 08 section 7 rule 4 and section 5.3 (08_agents.md), 00_engineering_standards.md section 14, operator 2026-11-20 (see the table's $comment); PLAN-PROTOCOL.md:3 simple.
 // Reused, not rebuilt: the glob matcher of scripts/analysis/mcbylaws/paths.mjs, the path maps of mcbylaws/protected-paths.json (globs_from), the Files grammar of check-task-files.mjs.
@@ -14,7 +16,7 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { args, parseFM, REPO, sha256 } from './backlog-lib.mjs';
+import { args, parseFM, readItems, REPO, sha256 } from './backlog-lib.mjs';
 import { globToRegExp, matchesAny } from './mcbylaws/paths.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -106,6 +108,18 @@ export function validateTable(table, root) {
   const d = table.no_files_default;
   if (d && !(table.rows ?? []).some((r) => r.id === d.row)) bad.push(`no_files_default: row ${d.row} is not defined`);
   for (const [k, id] of Object.entries(table.increment_docs ?? {})) if (!table.lists?.[id]) bad.push(`increment_docs ${k}: list ${id} is not defined`);
+  // V2.LIST (task-406): the always-attached lists cannot be switched off by leaving the keys out
+  if (!Array.isArray(table.every_task) || table.every_task.length === 0) bad.push('every_task: missing or empty (the lists every task gets: the five words and the plan protocol)');
+  else for (const id of table.every_task) if (!table.lists?.[id]) bad.push(`every_task: list ${id} is not defined`);
+  for (const k of Object.keys(table.increment_docs ?? {})) {
+    const m = table.milestone_docs?.[k];
+    if (!Array.isArray(m) || m.length === 0) bad.push(`milestone_docs: increment letter ${k} has no milestone list`);
+    else for (const id of m) if (!table.lists?.[id]) bad.push(`milestone_docs ${k}: list ${id} is not defined`);
+  }
+  for (const k of table.kinds ?? []) {
+    if (!k.id || !k.label || !k.files) bad.push(`kinds: ${k.id ?? '?'} needs id, label and files`);
+    else { try { const r = resolveTask({ table, root, body: `Files: ${k.files}`, type: k.type ?? 'build', letter: k.letter, tracked }); if (r.error) bad.push(`kinds ${k.id}: ${r.error}`); else { const miss = verifyResolved(table, r, k.letter); if (miss.length) bad.push(`kinds ${k.id}: ${miss.join('; ')}`); } } catch (e) { bad.push(`kinds ${k.id}: ${String(e.message).split('\n')[0]}`); } }
+  }
   return bad;
 }
 
@@ -208,12 +222,31 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
   }
   if (result.unmatched.length) return { error: `refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json: ${result.unmatched.join(', ')} (add a row to the table, or fix the Files line); no silent "no rules apply"` };
   if (entries.length > 0 && rowHits === 0 && ['build', 'fix'].includes(String(type ?? '').toLowerCase())) return { error: `refused: the Files line of a ${type} task resolves to no rule list (only exempt paths: ${result.exempt.join(', ')}); a build or fix task must touch at least one governed path` };
+  for (const id of table.every_task ?? []) add(id, 'every-task', 'every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)');
   if (letter !== undefined) {
     const id = table.increment_docs?.[letter];
     if (!id) return { error: `refused: no increment requirements document for milestone group [${letter}] in increment_docs of scripts/analysis/rule-lists.json` };
     add(id, 'increment', 'every task also gets the requirements document of its increment (the milestone group letter)');
+    const ms = table.milestone_docs;
+    if (ms !== undefined) {
+      if (!Array.isArray(ms[letter]) || ms[letter].length === 0) return { error: `refused: no milestone objectives list for milestone group [${letter}] in milestone_docs of scripts/analysis/rule-lists.json` };
+      for (const id of ms[letter]) add(id, 'milestone', 'every task also gets the objectives sections of its milestone (the milestone group letter)');
+    }
   }
   return result;
+}
+
+/**
+ * What a resolved set is missing: the every_task lists and the milestone lists of the letter (task-406). [] when complete; the table's own every_task key being empty is a problem too.
+ * Shared by validate, check-tasks and the close check, so the always-attached lists cannot be skipped by one of them.
+ */
+export function verifyResolved(table, result, letter) {
+  const have = new Set((result?.lists ?? []).map((l) => l.id));
+  const out = [];
+  if (!Array.isArray(table.every_task) || table.every_task.length === 0) out.push('the table has no every_task lists (the five words and the plan protocol must be attached to every task)');
+  for (const id of table.every_task ?? []) if (!have.has(id)) out.push(`every_task list ${id} is not attached`);
+  if (letter !== undefined && table.milestone_docs !== undefined) for (const id of table.milestone_docs[letter] ?? []) if (!have.has(id)) out.push(`milestone list ${id} is not attached`);
+  return out;
 }
 
 // ---- finding ids (shared with scripts/hooks/check-lane-close.mjs) ----
@@ -296,6 +329,63 @@ export function parseLensInput(text) {
 /** The text of a whole list as the helper reads it (all blocks), for the whole-list comparison. */
 export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');
 
+// ---- the check over every open task, and the generated page (task-406, V2.LIST) ----
+/** Every open task (not finished, not DROPPED) of root's backlog/tasks: {resolve: [ids], notYet: [{id, cls, reason}], bad: [lines]}. A task with a Files line that resolves must carry the every_task and milestone lists. */
+export function checkTasks({ table, root }) {
+  const tracked = trackedFiles(root);
+  const done = new Set([...(table.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']), 'DROPPED'].map((s) => s.toUpperCase()));
+  const out = { resolve: [], notYet: [], bad: [] };
+  for (const t of readItems(root)) {
+    if (done.has(String(t.fm.status ?? '').toUpperCase())) continue;
+    const letter = milestoneLetter(root, t.fm.milestone);
+    let r;
+    try { r = resolveTask({ table, root, body: t.body, type: String(t.fm.type ?? ''), letter, tracked }); } catch (e) { out.bad.push(`${t.id}: cannot resolve: ${String(e.message).split('\n')[0]}`); continue; }
+    if (!r.error) {
+      const miss = verifyResolved(table, r, letter);
+      if (miss.length) out.bad.push(`${t.id}: resolves but ${miss.join('; ')}`); else out.resolve.push(t.id);
+      continue;
+    }
+    const m = /matched by no row[^:]*: (.*?) \(add a row/.exec(r.error);
+    if (m) out.notYet.push({ id: t.id, cls: 0, reason: `a Files path matches no row: ${m[1]}` });
+    else if (/no Files: line/.test(r.error)) out.notYet.push({ id: t.id, cls: 2, reason: 'no Files line' });
+    else out.notYet.push({ id: t.id, cls: 1, reason: r.error.replace(/^refused: /, '') });
+  }
+  out.notYet.sort((a, b) => a.cls - b.cls || numOf(a.id) - numOf(b.id));
+  return out;
+}
+const numOf = (id) => Number(/(\d+)$/.exec(String(id))?.[1]);
+
+const PAGE = 'docs/reports/generated/rule-lists-by-kind.md';
+const NOMINAL = 30000; // characters of material per review (the plan context file of a task is about this size)
+const fmtN = (n) => n.toLocaleString('en-US');
+/** The generated page: per kind of work (table key kinds) the documents its compliance review receives, with characters and lens-input part counts at a nominal material size. */
+export function renderPage({ table, root }) {
+  const tracked = trackedFiles(root);
+  const tmpl = path.join(REPO, '.claude/review-templates/lens-compliance.md');
+  const o = [];
+  o.push('<!-- GENERATED by scripts/analysis/rule-lists.mjs page --write from scripts/analysis/rule-lists.json and the documents it names. Do not edit; regenerate. -->', '');
+  o.push('# What each kind of work receives: the compliance review documents', '');
+  o.push('Every task gets the every_task lists (the five words in the step handbook Glossary, and the plan protocol) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of ' + fmtN(NOMINAL) + ' characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.', '');
+  for (const k of table.kinds ?? []) {
+    const r = resolveTask({ table, root, body: `Files: ${k.files}`, type: k.type ?? 'build', letter: k.letter, tracked });
+    o.push(`## ${k.label}`, '');
+    if (r.error) { o.push(`Not resolvable: ${r.error}`, ''); continue; }
+    o.push(`Example Files line: \`${k.files}\`; type ${k.type ?? 'build'}; milestone group [${k.letter ?? 'none'}].`, '');
+    o.push('| list | document | selection | characters | parts |', '| --- | --- | --- | ---: | ---: |');
+    let chars = 0; let parts = 0;
+    for (const l of r.lists) {
+      const def = table.lists[l.id];
+      const c = listBlocks(def, root, l.id).reduce((n, b) => n + b.text.length, 0);
+      let p;
+      try { p = buildLensInputs({ id: l.id, list: def, root, material: 'x'.repeat(NOMINAL), templateFile: tmpl }).length; } catch { p = 0; }
+      chars += c; parts += p;
+      o.push(`| ${l.id} | ${l.file} | ${def.whole ? 'whole file' : def.sections.join('; ')} | ${fmtN(c)} | ${p || 'does not fit'} |`);
+    }
+    o.push(`| total | ${r.lists.length} lists | | ${fmtN(chars)} | ${parts} |`, '');
+  }
+  return o.join('\n') + '\n';
+}
+
 // ---- CLI ----
 function cli() {
   const [cmd] = process.argv.slice(2);
@@ -329,12 +419,28 @@ function cli() {
     fs.mkdirSync(dir, { recursive: true });
     for (const f of fs.readdirSync(dir)) if (f === `${base}.txt` || new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-p\\d+\\.txt$`).test(f)) fs.rmSync(path.join(dir, f));
     for (const f of files) { const p = path.join(dir, `${base}${f.suffix}.txt`); fs.writeFileSync(p, f.text); console.log(p); }
+  } else if (cmd === 'check-tasks') {
+    let c;
+    try { c = checkTasks({ table, root }); } catch (e) { die(1, e.message); }
+    console.log(`check-tasks: open ${c.resolve.length + c.notYet.length + c.bad.length}: resolve ${c.resolve.length}, not yet resolvable ${c.notYet.length}${c.bad.length ? `, FAILED ${c.bad.length}` : ''}`);
+    const heads = ['a Files path matches no row (a governance gap: add a row or fix the Files line)', 'other reason', 'no Files line (the author adds one before launch)'];
+    for (let cls = 0; cls < 3; cls++) { const g = c.notYet.filter((x) => x.cls === cls); if (g.length) { console.log(`not yet resolvable, ${heads[cls]}: ${g.length}`); for (const x of g) console.log(`  ${x.id}: ${x.reason}`); } }
+    if (c.bad.length) { for (const b of c.bad) console.log(`FAILED ${b}`); die(1, `${c.bad.length} open task(s) resolve without the every_task or milestone lists`); }
+  } else if (cmd === 'page') {
+    const file = path.join(root, PAGE);
+    const want = renderPage({ table, root });
+    if (a.write) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, want); console.log(`rule-lists: wrote ${PAGE}`); }
+    else if (a.check) {
+      const have = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
+      if (have !== want) die(1, `${PAGE} is ${have === null ? 'missing' : 'out of date'}: regenerate with node scripts/analysis/rule-lists.mjs page --write (a document or the table changed)`);
+      console.log(`rule-lists: ${PAGE} is current`);
+    } else die(2, 'usage: page --write | --check');
   } else if (cmd === 'findings') {
     const dir = str('dir', '');
     if (!dir || !fs.existsSync(dir)) die(2, 'usage: findings --dir <lane report dir>');
     const files = fs.readdirSync(dir).filter(isLensOutput).sort().map((name) => ({ name, text: fs.readFileSync(path.join(dir, name), 'utf8') }));
     for (const f of files) console.log(ruledLine(f.name, f.text));
     for (const f of findingsIn(files)) console.log(`${f.id}\t${f.line}`);
-  } else die(2, 'usage: rule-lists.mjs validate | resolve | lens-input | findings');
+  } else die(2, 'usage: rule-lists.mjs validate | resolve | lens-input | check-tasks | page | findings');
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) cli();

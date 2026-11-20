@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { args, asList, descriptionOf, home, parseFM, readItems, REPO, sha256, today } from './backlog-lib.mjs';
-import { DEFAULT_TABLE, filesText, lensSet, milestoneLetter, readTable, resolveTask } from './rule-lists.mjs';
+import { DEFAULT_TABLE, filesText, lensSet, milestoneLetter, readTable, resolveTask, verifyResolved } from './rule-lists.mjs';
 
 const a = args();
 const str = (k, d) => (a[k] && a[k] !== true ? String(a[k]) : d);
@@ -71,8 +71,12 @@ if (git('show-ref', '--verify', '--quiet', `refs/heads/${branch}`).status === 0)
 const rlOpt = str('rule-lists', '');
 if (rlOpt && path.resolve(home(rlOpt)) !== path.resolve(DEFAULT_TABLE) && process.env.RULE_LISTS_ALLOW_OVERRIDE !== '1') refuse(`--rule-lists ${rlOpt} is not the repo table (${DEFAULT_TABLE}): a different table would decide which rule lists apply, so it is refused (the tests set RULE_LISTS_ALLOW_OVERRIDE=1)`);
 let resolved;
-try { resolved = resolveTask({ table: readTable(path.resolve(home(str('rule-lists', DEFAULT_TABLE)))), root: board, body: t.body, type: String(t.fm.type ?? ''), letter: milestoneLetter(board, t.fm.milestone) }); } catch (e) { refuse(`${taskId}: cannot read the rule-list table or one of its path maps under ${board}: ${String(e.message).split('\n')[0]}`); }
+let ruleTable;
+const letterOf = milestoneLetter(board, t.fm.milestone);
+try { ruleTable = readTable(path.resolve(home(str('rule-lists', DEFAULT_TABLE)))); resolved = resolveTask({ table: ruleTable, root: board, body: t.body, type: String(t.fm.type ?? ''), letter: letterOf }); } catch (e) { refuse(`${taskId}: cannot read the rule-list table or one of its path maps under ${board}: ${String(e.message).split('\n')[0]}`); }
 if (resolved.error) refuse(`${taskId}: ${resolved.error.replace(/^refused: /, '')}`);
+const missingLists = verifyResolved(ruleTable, resolved, letterOf); // V2.LIST (task-406): a launch whose lists lack the five words, the plan protocol or the milestone objectives is refused
+if (missingLists.length) refuse(`${taskId}: the resolved rule lists are incomplete: ${missingLists.join('; ')}`);
 const st = git('status', '--porcelain');
 if (st.status !== 0) refuse(`git status failed on ${board}: ${st.stderr.trim().split('\n')[0]}`);
 const dirty = st.stdout.split('\n').filter(Boolean).map((l) => l.slice(3).replace(/^.* -> /, '').replace(/^"(.*)"$/, '$1')).filter((p) => !p.startsWith('backlog/') && !/(^|\/)node_modules\/?$/.test(p)); // the node_modules links of a worktree are untracked (the .gitignore pattern has a trailing slash and a link is not a directory)
