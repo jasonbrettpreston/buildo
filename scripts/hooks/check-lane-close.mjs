@@ -87,9 +87,11 @@ export function closeErrors(i) {
   // the lane report, scoped by its TASK file
   const dirs = new Map();
   for (const f of i.laneFiles) { if (!dirs.has(f.dir)) dirs.set(f.dir, []); dirs.get(f.dir).push(f); }
-  const mine = [...dirs.entries()].filter(([, fs_]) => fs_.some((f) => f.name === 'TASK' && f.text.trim().toLowerCase() === id));
   const dirNote = `docs/reports/lanes/<date>/${laneName}/`;
-  if (mine.length === 0) return [...errors, `${id}: no ${dirNote} holds a TASK file naming exactly ${id} (a lane report dir is scoped to one task: write the task id in TASK; a dir used for another task does not count)`];
+  // task-407 (V2.LAYOUT): the one place the check reads, named in every refusal that says a file is missing
+  const layout = `put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK directly in ${dirNote}: a file in a subfolder (lens-out/, stage2/) or named fix-*.txt is never read; a later round is out-<lens>[-<list id>]-r2.txt`;
+  const mine = [...dirs.entries()].filter(([, fs_]) => fs_.some((f) => f.name === 'TASK' && f.text.trim().toLowerCase() === id));
+  if (mine.length === 0) return [...errors, `${id}: no ${dirNote} holds a TASK file naming exactly ${id} (a lane report dir is scoped to one task: write the task id in TASK; a dir used for another task does not count); ${layout}`];
   const files = mine.flatMap(([, fs_]) => fs_);
   const textOf = (n) => files.find((f) => f.name === n)?.text;
 
@@ -127,7 +129,7 @@ export function closeErrors(i) {
       if (bad.length) { why.push(bad.join('; ')); continue; }
       ok = true;
     }
-    if (!ok) errors.push(`${id}: list ${l.id} (${l.file}) has no valid compliance lens output in ${dirNote}: write ${phases.join(' or ')}-compliance-${l.id}.txt${why.length ? ` (${why.join('; ')})` : ''}`);
+    if (!ok) errors.push(`${id}: list ${l.id} (${l.file}) has no valid compliance lens output in ${dirNote}: write ${phases.join(' or ')}-compliance-${l.id}.txt${why.length ? ` (${why.join('; ')})` : ''}; ${layout}`);
   }
   // (a') the rest of the lens set a build or fix task calls for, and a plan-stage output
   if (build) {
@@ -135,10 +137,10 @@ export function closeErrors(i) {
     for (const lens of set.out) {
       const n = `out-${lens}.txt`;
       const t = textOf(n);
-      if (t === undefined) errors.push(`${id}: the lens set of a ${type} task needs ${n} in ${dirNote} (Spec 08 section 7 rule 4: never one generic pass)`);
+      if (t === undefined) errors.push(`${id}: the lens set of a ${type} task needs ${n} in ${dirNote} (Spec 08 section 7 rule 4: never one generic pass); ${layout}`);
       else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, null).map((x) => `${id}: ${x}`));
     }
-    if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7)`);
+    if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7); ${layout}`);
   }
 
   // finding lines: a loose reading must count the same as the strict one

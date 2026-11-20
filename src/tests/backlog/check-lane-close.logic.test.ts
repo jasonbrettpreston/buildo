@@ -213,6 +213,43 @@ describe('close check: the lens outputs are the review tool\'s, on the committed
   });
 });
 
+// task-407 (V2.LAYOUT; McFix V2 step 2): the check reads lane files only directly in docs/reports/lanes/<date>/<lane>/ (path depth 6) and only plan-*.txt / out-*.txt (+ in-). Lanes that filed
+// their outputs in a subfolder (lens-out/, stage2/) were told nothing; the refusal now names the layout, and the brief (backlog-lane.mjs) states the same sentence. What the check requires is unchanged.
+describe('close check: where the lane report files go (task-407 V2.LAYOUT)', () => {
+  const into = (dir: string, names: string[]) => (l: Lane): Lane => {
+    const o: Lane = {};
+    for (const [n, t] of Object.entries(l)) o[names.includes(n) ? `${dir}/${n}` : n] = t;
+    return o;
+  };
+  const LAYOUT = /directly in docs\/reports\/lanes\/<date>\/BL-COMPLY2\/[^\n]*subfolder/;
+  const outputs = ['out-compliance-first.txt', 'in-out-compliance-first.txt', 'out-compliance-inc-F.txt', 'in-out-compliance-inc-F.txt', 'out-code-review.txt', 'out-error-paths.txt', 'plan-code-review.txt'];
+  it('PLANTED DEFECT: every output in a subfolder of the lane dir is refused, and the refusal names the layout (the lane dir itself, no subfolder, plan-/out-/in- names)', () => {
+    const r = scenario({ mutate: into('lens-out', outputs) });
+    refused(r, LAYOUT, 11);
+    expect(r.stderr).toMatch(/plan-<lens>|out-<lens>/);
+    expect(r.stderr).toMatch(/in-/);
+  });
+  it('each missing-file refusal carries the layout: compliance output, a lens of the set, the plan-stage output, the TASK file', () => {
+    refused(scenario({ mutate: into('lens-out', ['out-compliance-first.txt', 'in-out-compliance-first.txt']) }), /list first[\s\S]*out-compliance-first\.txt[\s\S]*subfolder/);
+    refused(scenario({ mutate: into('stage2', ['out-code-review.txt']) }), /needs out-code-review\.txt[^\n]*subfolder/);
+    refused(scenario({ mutate: into('lens-plan', ['plan-code-review.txt']) }), /no plan-stage lens output[^\n]*subfolder/);
+    refused(scenario({ mutate: (l) => into('x', ['TASK'])(l) }), /no docs\/reports\/lanes\/<date>\/BL-COMPLY2\/ holds a TASK file[^\n]*subfolder/);
+  });
+  it('the same files directly in the lane dir pass (the layout the message names is the one the check reads)', () => {
+    expect(scenario().status).toBe(0);
+  });
+  // the form the brief gives for a later round: out-<lens>[-<list id>]-r2.txt beside the round-1 file (green-both: it holds before and after this task's edit; it pins what the brief now promises)
+  it('SURVIVE-THE-FIX: a round-2 file out-<lens>-r2.txt is read like any out- file: its finding needs a verdict (refused by id), and with the verdict the lane passes; round 1 is not replaced', () => {
+    const r2 = (l: Lane): Lane => ({ ...l, 'out-code-review-r2.txt': hdr('lens-code-review.md', null) + body(true), 'in-out-code-review-r2.txt': 'input of the round-2 review\n', 'out-compliance-first-r2.txt': hdr('lens-compliance.md', l['in-out-compliance-first.txt'] as string) + body(true), 'in-out-compliance-first-r2.txt': l['in-out-compliance-first.txt'] as string });
+    expect(scenario({ mutate: r2 }).status).toBe(0);
+    refused(scenario({ mutate: r2, g: { verdict: (id, k) => (id.includes('-r2#') ? null : `CONFIRMED src/a.ts:${k} "${quoteAt(k)}"`) } }), /out-code-review-r2#1[^\n]*no complete verdict/);
+    refused(scenario({ mutate: (l) => ({ ...r2(l), 'out-code-review.txt': null }) }), /needs out-code-review\.txt/);
+  });
+  it('SURVIVE-THE-FIX: a fix-*.txt output is never read (a finding in it needs no verdict and counts as no review)', () => {
+    expect(scenario({ mutate: (l) => ({ ...l, 'fix-code-review.txt': hdr('lens-code-review.md', null) + body(true) }) }).status).toBe(0);
+  });
+});
+
 describe('close check: scope of the lane report, the diff and who may close', () => {
   it('ATTACK 1: every finished status triggers the check (MERGED as well as BUILT and DONE)', () => {
     refused(scenario({ status: 'MERGED', g: { headers: false } }), /Grounder:/, 1);

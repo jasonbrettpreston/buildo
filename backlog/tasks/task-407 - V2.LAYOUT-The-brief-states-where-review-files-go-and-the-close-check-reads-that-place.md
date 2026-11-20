@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LAYOUT'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-20T17:23:00Z'
+updated_date: '2026-11-20T17:26:00Z'
 labels:
   - McFix
   - McFix V2
@@ -36,6 +36,20 @@ Operator, 2026-11-20, verbatim: "That works. Let;s this - the 10th plan today on
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+PLAN task-407 V2.LAYOUT (lane BL-V2LAYOUT). Rule: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3, 4 and section 11.1; PLAN-PROTOCOL.md:3 simple, no scope creep.
+Facts read (scripts/hooks/check-lane-close.mjs): the check takes lane files only at path depth 6 (docs/reports/lanes/<date>/<lane>/<file>, check():lanePaths filter p.length === 6), requires out-compliance-<list>.txt or -pN parts, out-<lens>.txt, at least one plan-*.txt, and reads EVERY plan-*.txt / out-*.txt (isLensOutput, rule-lists.mjs:224) for findings, needing a Ruled line and a verdict per finding. A name outside plan-/out- (fix-*.txt, r1-*.txt) is never read; a subfolder is never read.
+Smallest form for a later round: out-<lens>[-<list id>]-r2.txt with in-<same name> beside it. The check ALREADY reads it for findings (no check change needed to read it), it does not replace the round-1 file. No new reading rule.
+Steps (tests first through the real hooks):
+1. Test commit A (red then green, own commit, no status move): in src/tests/backlog/check-lane-close.logic.test.ts (a) planted defect: lane dir has TASK plus outputs only in a subfolder (lens-out/) -> refused and the message names the layout (directly in the lane dir, no subfolder, plan-/out-/in- names); (b) an out-<lens>-r2.txt with a finding and no verdict is refused by id (proves the brief's round-2 form is read). 
+2. scripts/hooks/check-lane-close.mjs (protected path): append one layout clause to the three refusal messages that say a file is missing (no compliance output, no lens output, no plan output) and the TASK message. Text only; what the check requires does not change.
+3. scripts/analysis/backlog-lane.mjs lensLine: add one sentence to the lens-set text: exact folder, names plan-/out-/in- with -pN and -r2, no subfolder, fix-*.txt never read, compliance reviews the WHOLE change (split into parts, never trimmed). One test in src/tests/backlog/backlog-lane.logic.test.ts pins the sentence (Files line of the task extended through the CLI for that test file).
+4. Proof: --dry-run on a real LATER task pasted; git ls-tree of BL-PAGETABLE and BL-GATES lane dirs, read-only, list what the check reads and does not.
+Not done: no change to what the check requires; no move of other lanes' files; no verdicts, no grounder file.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
