@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXSEMI'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-20T18:46:00Z'
 labels:
   - McFix
   - McFix A
@@ -62,4 +62,6 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 BL-FIXSEMI: D5 mutation useAnswerParcelLookup, D4 registry row, D12 gate test built; typecheck mobile 16 before (13 env) / 14 after (13 env + new test file module line); phone tests unproven until Mobile CI; grounder owed; task left RUNNING.
 
 Residual for the operator to accept (grounder ruling): the mount-gated storeLookup stays in the page on purpose (D5 named it at semi-question.tsx:74). Moving it into onSuccess would let an unmounted page store the result, which the existing case 'leaving the page while the lookup runs opens nothing' forbids. Grounder gap closed: useAnswerParcelLookup.hook.test.tsx asserts retry 0, networkMode always, mutationFn through a real QueryClient mutation cache; unrun until Mobile CI.
+
+Retro review by a separate grounder 2026-11-20 (task-405; file ~/Buildo-scratch/lanes-20261119/inc1b/retro/BL-FIXPROJ/RETRO-372-373.md), code as on the board: DEFECTS before a push: (1) mobile/app/(app)/parcel-tool/semi-question.tsx:76 storeLookup(id, result) is still a hand cache write in the page (D5 named it; the 'grounder ruling' accepting it exists only as a message): move the write into the mutation or record a ruling: this is also what FE-45 (confirmed by the operator 2026-11-20) forbids. (2) the Files line does not cover three phone test files. No lens output carries a REVIEW header; mobile-96, mobile-98, surface-126/127/128/135, agents, queue-137, inc-S and ux were never run. Phone tests read: none would plainly fail. The pilot branch rewrites this page as table rows and keeps the fix.
 <!-- SECTION:NOTES:END -->

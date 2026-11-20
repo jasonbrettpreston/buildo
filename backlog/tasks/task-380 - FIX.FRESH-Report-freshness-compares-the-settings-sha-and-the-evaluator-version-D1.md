@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-20T18:46:00Z'
 labels:
   - McFix
   - McFix A
@@ -40,4 +40,6 @@ Plan section A. Confirmed defect D1 (docs/reports/lanes/2026-11-20/BL-GROUND/VER
 
 <!-- SECTION:NOTES:BEGIN -->
 Operator ruling 2026-11-20, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (the six decisions; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entry "Operator RULES on the six decisions"). D1 RULED (c): leave the freshness compare until stored records exist; this task WAITS on the storage record write (ST.P1). Option (b) is not ruled.
+
+Retro review by a separate grounder 2026-11-20 (task-405; file ~/Buildo-scratch/lanes-20261119/inc1b/retro/BL-FIXPROJ/RETRO-372-373.md), code as on the board: D1 is confirmed still open on the board (project.ts:185-187). The earlier stop reason ('no existing source') is contested: report-compute.ts:84 already calls resolveConfig and the maxbld core derives settings_sha. A grounder recommendation on the D1 option is owed before launch; UNVERIFIED whether evaluator_version is recoverable from stored rows.
 <!-- SECTION:NOTES:END -->

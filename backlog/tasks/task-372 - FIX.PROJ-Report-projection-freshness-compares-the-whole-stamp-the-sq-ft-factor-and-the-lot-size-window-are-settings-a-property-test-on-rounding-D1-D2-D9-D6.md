@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXPROJ'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T17:26:00Z'
+updated_date: '2026-11-20T18:46:00Z'
 labels:
   - McFix
   - McFix A
@@ -64,4 +64,6 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 2026-11-20 fold round after the grounder ruling: lock restored, formatter imports nothing (factor passed in), geometry.ts SQM_TO_SQFT reads the same registered variable, pinnedWindow pair check tested. Owed: migration, number to be claimed by the orchestrator.
 
 Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder's recommendation of 2026-11-20: no DB mirror migration is owed for maxbld_report_lot_size_implausible_min_sqm and _max_sqm: the seed loader inserts them at the next npm run migrate. The two seed descriptions that say a migration is owed are corrected under task-367's fix round or task-343.
+
+Retro review by a separate grounder 2026-11-20 (task-405; file ~/Buildo-scratch/lanes-20261119/inc1b/retro/BL-FIXPROJ/RETRO-372-373.md), code as on the board: DEFECTS before a push: (1) D1 is NOT fixed: src/lib/report-projection/project.ts:185-187 compares table_version, catalogue_sha, switchboard_sha only; a record with an older settings or evaluator stamp reads current (owner: task-380 FIX.FRESH). (2) scripts/seeds/logic_variables.json:8197 and :8207 still say a migration is owed (none is: resolution on task-367); the same text in the generated registry doc and src/tests/control-panel.logic.test.ts:268. (3) the same seed lines and src/tests/report-projection-settings.logic.test.ts:3 cite MORNING-DECISIONS.md:738 for the 50 / 5,000 words; that line holds only 'ONE-13 a': cite backlog/decisions decision-37 (RR-0167). (4) twelve changed paths are outside the Files line. (5) src/components/admin/lead-inspector/CoaClassificationPanel.tsx:280 still types 10.764 (not listed anywhere). No lens output of this lane carries a REVIEW header: the whole lens set is owed through the review tool. D2, D9 hold; no golden moved.
 <!-- SECTION:NOTES:END -->
