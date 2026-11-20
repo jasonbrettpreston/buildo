@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:46:45.007Z file_sha256=42ee0a016690daa77b64ca4273020bff9d834a5a312670bd4bc40c37d900783b prompt_sha256=e6b0432d3a43de7317927e63fa0a8bb7420f685d332bd2f7b37244cbaa693916
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-mobile-96.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — pasted authority gap, Spec 136 fe.44 and MORNING-DECISIONS.md:241 are not in the pasted context — task-411 plan line "Rule: operator ruling MORNING-DECISIONS.md:241 'The conversion factor lives in content/settings, never in code'; Spec 136 fe.44" — the only pasted governing spec is 96 (subscription/paywall), which names none of the rules the diff is built to satisfy (fe.44, MORNING-DECISIONS.md:241, Spec 83 section 2, Spec 91 section 4.3), so compliance with the rule the change actually serves cannot be judged — paste Spec 136 fe.44 and the MORNING-DECISIONS.md:241 line into the review context before merge.
+
+DEFER severity=MED — no pasted clause names the new field, "no pasted context provided" — src/lib/leads/lead-detail-query.ts "modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm))," — the diff adds a new API response field plus a new optional phone schema field and deletes both typed factors, and no clause in the pasted Spec 96 authorises or forbids any of it — supply the clause or operator ruling that names cost.modeled_gfa_sqft, or record it on the card.
+
+DEFER severity=LOW — Spec 96 dated note 2026-11-11 "Nothing in this spec's Buildo trial, paywall or lead-gen gate changes." — mobile/app/(app)/[lead].tsx "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — the file sits inside the (app) group whose layout is the Spec 96 subscription gate, yet the diff asserts nothing about the gate and no pasted line shows the gate still reads the profile status after this edit — note in the task that (app)/_layout.tsx is untouched so the paywall gate is unchanged.
+
+MET — Spec 96 section 11 target files — no hunk header names src/app/api/user-profile/route.ts, src/app/api/webhooks/stripe/route.ts, src/app/api/subscribe/session/route.ts, mobile/app/(app)/_layout.tsx, mobile/src/components/paywall/PaywallScreen.tsx or mobile/src/store/paywallStore.ts — none of the six gated files is touched, so the subscription surface is intact.
+
+MET — Spec 96 section 2 "increment on each unique lead viewed" — mobile/app/(app)/[lead].tsx hunk covers only the sqftLabel line — no lead-view counting line is removed or reordered by the change.
+
+MET — Spec 96 section 10 Step 4 subscription_status write ownership — the diff touches src/app/api/leads/detail/[id]/types.ts and src/lib/leads/lead-detail-query.ts only, not the user-profile PATCH/GET handlers — no subscription_status write path is altered.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  22441ms (22.4s)
+📊 Tokens — total: 22927, input: 19025, output: 3902, reasoning: 3216

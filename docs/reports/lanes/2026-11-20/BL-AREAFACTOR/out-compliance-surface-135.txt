@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:46:45.043Z file_sha256=ab58239bac4ad3e627c751ca17c0316abb829fa7e482ec84044ab41b4e6e1aaf prompt_sha256=0a2270a0a5b757ca4b410097d1a0ea33071d15edae71854b714f05b40753c6b8
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-surface-135.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 135 FE-44 "The page producer sends each number pre-formatted in both units; the client only switches which is shown, with no maths" — src/lib/leads/lead-detail-query.ts:179 "modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm))," with mobile/src/lib/leadDetailFormat.ts:18 "return `${Math.round(sqft).toLocaleString()} sq ft`;" — the producer sends a raw double in one unit only and the phone rounds and formats it, so the register's chosen mechanism (pre-formatted strings, both units) is not the mechanism used and no dated note scopes the lead feed out of it — serve the two pre-formatted strings and let the helper select one, or add the scoping note to FE-44's row.
+
+DEFER severity=MED — Spec 135 FE-44 "the conversion factor is content/settings, never code" — src/lib/leads/lead-detail-query.ts:15 "import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — src/lib/parcels/geometry.ts is not in the diff, so whether SQM_TO_SQFT at :6 is a read of the pinned setting parcels_sqm_to_sqft or a typed constant is cannot see, and a typed constant would satisfy the clause only by relocating the defect one layer down — include geometry.ts lines 1-10 in the diff and a test showing the served value follows the setting.
+
+DEFER severity=MED — Spec 135 FE-05 "the front end may show more, never derive differently ... every number comes from McBylaws; no maths in the UI" — mobile/src/lib/parcelCostFormat.ts:84 "Kept exported because the report presentation registry names it as the alt formatter of formats.area (scripts/analysis/report-schema.mjs RS-4)." — the export keeps its name and registry role but now takes square feet, and the RS-4 consumer is not in the diff (cannot see), so a report path still passing metric would print the metric number labelled sq ft — show the RS-4 call site in the diff or give the sqft formatter a distinct name and update the registry.
+
+DEFER severity=MED — Spec 135 FE-44 status cell "OWED `src/tests/surfaces/report-units.logic.test.ts`" — task-411 file "Phone tests cannot run locally: phone-test green is unproven until Mobile CI." — the landed half of an OWED row's rule has no lock at the ruled path and its only proof is a suite that cannot run, so compliance with fe.44 is asserted rather than shown — land a root-suite assertion at the ruled path or record the partial landing in FE-44's own row until Mobile CI is green.
+
+DEFER severity=LOW — Spec 135 FE-44 "one toggle covers every area and length and is remembered per user; the default is imperial" — mobile/src/lib/leadDetailFormat.ts:15 "export function formatSqft(sqft: number | null | undefined): string | null {" — the lead feed always shows sq ft with no toggle or metric alternative and no note excludes it from the toggle clause — serve both forms and reuse the report's unit switch, or note the exclusion in the row.
+
+MET — Spec 135 FE-44 "store METRIC only" — src/lib/leads/lead-detail-query.ts:179 — the square feet is computed on read from the stored metric area and nothing new is persisted.
+
+MET — Spec 135 FE-05 "the front end may show more, never derive differently" — mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — the screen now renders the served value instead of multiplying by a phone constant.
+
+MET — Spec 135 rule 3 "A ruled row whose lock is not built reads `OWED` with the lock path" — the diff does not flip FE-44 to RULED, so the OWED-with-lock-path form arm C reads is preserved.
+
+REJECT — Spec 135 FE-07 "Same everywhere: mobile, web, admin and PDF render the same declaration; parity is a test (Spec 128 Rule 15)" — accused of dropping the mobile-helper comparison in src/tests/admin-report-preview-live.logic.test.ts — the ruled parity is between a declaration's declared targets' real output (FE-31 lock for non-REPORT surfaces), not between a web formatter and a phone helper, so the removed check was not a ruled parity lock.
+
+REJECT — Spec 135 Operating Boundaries "this register (documents only; no code lands with it)" — accused of landing code against a documents-only spec — that clause governs what may land with a register edit, and this diff does not touch the register.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 5
+
+---
+⏱  77798ms (77.8s)
+📊 Tokens — total: 48932, input: 34396, output: 14536, reasoning: 13443

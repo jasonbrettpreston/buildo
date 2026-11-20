@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:46:44.963Z file_sha256=cde3316fa2d7480d48521e38d1dbf872444888c1d21e9c438bab7da4be44b350 prompt_sha256=496825ccca99e52b22269a703bc0bc10f1a218c6ddc319e6f625e912844702ce
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — §7 "Adding a new field, store, or bridge requires either matching an existing pattern in Spec 99 §3-§5 or a Spec 99 amendment." — src/app/api/leads/detail/[id]/types.ts "modeled_gfa_sqft?: number | null;" — a new field enters the lead-detail query payload (the shape the phone caches) with no Spec 99 §3-§5 pattern cited in the plan or notes, and Spec 99 is not pasted so conformity with the added-field clause is not shown — add one plan line naming the Spec 99 pattern this leaf mirrors (it repeats the modeled_gfa_sqm leaf of the same cost block) or record the Spec 99 amendment.
+DEFER severity=MED — §10 "Unit Testing (Jest): Jest + React Native Testing Library for logic hooks. Minimum 80% coverage threshold." — task-411 implementation notes "phone tests cannot run locally, phone-test green is UNVERIFIED until Mobile CI." — the phone-side coverage and green obligation for the four changed mobile files is unproven at the point this material is reviewed — paste the Mobile CI run reference onto the card before grounder sign-off.
+DEFER severity=LOW — §12 "The MMKV persister requires `@tanstack/query-async-storage-persister`" — mobile/app/(app)/[lead].tsx "formatSqft(cost?.modeled_gfa_sqft ?? null)" — a persisted detail payload written before this deploy carries modeled_gfa_sqm but no modeled_gfa_sqft, and the phone no longer converts, so the area line is dropped on rehydration until refetch (the persister key/version is not in this diff, cannot see) — bump the persister cache version or keep a null-safe area line.
+REJECT — §7 "Zod schemas are shared via a `packages/shared-types` monorepo workspace to guarantee the mobile app and Next.js backend are never out of sync." — accused of hand-transcribing the new field into both trees — the dated amendment sitting above that same clause already rules transcription-per-tree as today's measured state and assigns closure to Spec 126 §5.2, so this change follows the standing pattern instead of breaching a rule of its own (optional nullable on both sides).
+REJECT — §2 "NativeWind `dark:` variants are required for all UI components." — accused of rendering the touched label in a component with no dark: variant — the dated note on that clause records that zero .tsx files under mobile/src or mobile/app comply today and leaves the carrier mechanism to MF-35, so this change neither creates nor uniquely carries that gap.
+MET — §3 "All heavy computational lifting is handled entirely by the Next.js API Backend." — src/lib/leads/lead-detail-query.ts "return sqm === null ? null : sqm * SQM_TO_SQFT;" — the factor now multiplies only on the server, both toCost and toCoaCost, and the phone formats only.
+MET — §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI" — mobile/src/lib/schemas.ts "modeled_gfa_sqft: z.number().nullable().optional()," — the served field is inside LeadDetailCostSchema before [lead].tsx reads it.
+MET — §5 "Never fetch API data inside a `useEffect`. Always use TanStack Query." — mobile/app/(app)/[lead].tsx "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — the new field feeds the existing query hook, no new fetch path or DOM API was added on the phone.
+MET — §7 "The Next.js `src/app/api/*` routes are the absolute source of truth." — src/app/api/leads/detail/[id]/types.ts "modeled_gfa_sqft?: number | null;" — the field is declared on the API type and produced in the query lib the detail route calls, so the served value is the single authority.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 3
+```
+
+---
+⏱  70491ms (70.5s)
+📊 Tokens — total: 25638, input: 12779, output: 12859, reasoning: 11953

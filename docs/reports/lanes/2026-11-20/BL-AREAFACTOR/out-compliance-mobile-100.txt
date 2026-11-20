@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:46:44.976Z file_sha256=15f053bcbfabc78615b55185ff9543f05935f5452c3cfccfec3abc3339979889 prompt_sha256=938cef7a3a5876126b3eb10f061de7351ee73271f6b00b1f6175301f9acd8063
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-mobile-100.txt (model: deepseek-reasoner)
+
+BUG severity=none found; findings below are DEFER-level only.
+
+DEFER severity=MED — 2026-09-15 amendment "`mobile/src/lib/parcelCostFormat.ts:14 COST_LINE_ORDER` transcribes `scripts/lib/parcel-cost.js:77 PARCEL_COST_LINES` with a different order and **no lock** ... **the mobile side is today in exactly the pre-fix state.**" — mobile/src/lib/parcelCostFormat.ts "const SQM_TO_SQFT = 10.7639;" (deleted) — the diff edits this exact file and adds a source-scan lock for the factor, but adds no ordering lock, so the spec's stated measured defect (wrong key order, three lines "n/a — not computable") is untouched at the moment the file is open — add the PARCEL_COST_LINES order lock (same shape as src/tests/parcel-cost-line-keys.logic.test.ts) in this pass over parcelCostFormat.ts.
+
+DEFER severity=MED — dated note 2026-11-12 "`parcelCostFormat.ts` stays: the report generators cite it." — mobile/src/lib/parcelCostFormat.ts "Kept exported because the report presentation registry names it as the alt formatter of formats.area" — formatSqft's input unit silently changes from m² to ft² while the registry-declared consumer is neither updated nor locked; a caller passing m² now renders 10.76x high and the registry file is not pasted, so the caller cannot be verified — lock the RS-4 area-formatter call site to an ft² input, or expose a distinctly named ft²-only helper so the unit contract is unambiguous.
+
+MET — §6 "Mobile Jest (`mobile/__tests__/`, jest-node — no render tree per Spec 98): ... the pure presentation helpers (`parcelCostFormat.ts` ... FSI/area formatting)" — mobile/__tests__/parcelCostFormat.test.ts "it('formatSqft takes square feet already converted and only formats..." — area formatting remains behaviour-tested, no render tree added.
+
+MET — §3.2 dated note 2026-11-10 "The response contract and its whitelist (§3.2) do not change" — no hunk touches src/app/api/parcels/lookup/, consumer-lookup.ts or CONSUMER_*_COLS — the parcel lookup payload and its allow-list are untouched by this diff.
+
+MET — Operating Boundaries "Out-of-Scope Files: ALL of `scripts/`, `migrations/`" — no scripts/ or migrations/ hunk appears in the material — no out-of-scope file changed.
+
+MET — dated note 2026-11-12 "`parcelCostFormat.ts` stays: the report generators cite it." — mobile/src/lib/parcelCostFormat.ts "Kept exported because the report presentation registry names it" — the cited export is retained rather than deleted, so the file-level clause holds.
+
+REJECT — Spec 136 fe.44 / MORNING-DECISIONS.md:241 — the change is accused of moving the conversion factor out of code — fe.44 and the 2026-11-20 ruling are cited inside the diff and are not pasted in this context, so they are not mine to judge.
+
+REJECT — no pasted clause covers GET /api/leads/detail/:id — the change is accused of adding cost.modeled_gfa_sqft to a wire contract no pasted clause names — Spec 100 governs /api/parcels/lookup and the parcel tool only; no pasted ruling reaches the leads route.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  49612ms (49.6s)
+📊 Tokens — total: 34104, input: 24793, output: 9311, reasoning: 8504

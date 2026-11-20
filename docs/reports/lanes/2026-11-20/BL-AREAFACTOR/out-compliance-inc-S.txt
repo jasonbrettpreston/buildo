@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:46:44.955Z file_sha256=d30d1aeae34cd81b83bfc0532c27ca8798ce63aeb9b3cedaae2095bbd11cfe83 prompt_sha256=b0d89db3c3288606f86ab05cd96001ce2b4318ecb450ff56a881ff0c54f9d9d0
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+REJECT — Spec 136 fe.44 (quoted only inside the material, not in the pasted context) — the change imports the conversion factor into server code ("import { SQM_TO_SQFT } from '@/lib/parcels/geometry';", src/lib/leads/lead-detail-query.ts:15) where fe.44's "the conversion factor is content/settings, never code" might be read to forbid it — fe.44 is not pasted in the governing context, so it is not a clause this lens may rule on; the geometry.ts read ("SQM_TO_SQFT is read from the pinned setting at src/lib/parcels/geometry.ts:6") is outside my pasted clauses.
+
+REJECT — operator ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" — the change deletes both typed copies ("const SQM_TO_SQFT = 10.7639;" removed, mobile/src/lib/parcelCostFormat.ts) and relies on this ruling as its authority — the ruling text appears only as a self-quote inside the plan and diff description, never in the pasted context block, so I cannot check the change against it.
+
+MET — none — no pasted clause is touched by this change.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 0   Unmet: 0
+
+Note (outside the format, unavoidable): the pasted context block reads "(no pasted context provided)". The only pasted rule list is Increment S requirements (doc-2), whose elements A.1 through G.6 govern the mobile/web search pages, the lot map, the semi question page, the landing page and the report hand-off; none of them names the lead-detail cost envelope, GET /api/leads/detail/:id, mobile leadDetailFormat.ts, parcelCostFormat.ts or modeled_gfa_sqm/sqft, so no pasted clause binds this diff. Whether the change is compliant with fe.44 or MORNING-DECISIONS.md:241 cannot be judged here and must be run with those clauses pasted.
+
+---
+⏱  13824ms (13.8s)
+📊 Tokens — total: 17670, input: 15305, output: 2365, reasoning: 1907

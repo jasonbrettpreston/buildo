@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:46:44.955Z file_sha256=474ef1bd1660f71c24f7acd47b796183108d85cfae16ac3ed6a9144e2fe9fa85 prompt_sha256=4a45581fc6f8d9656a5c196b06a89fec5adcebcbf3eb60e4add363fd8fbb3046
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-eng-s2-s4-s10-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §11 "Walk each item against the ACTUAL diff. Output PASS/FAIL per item in the response BEFORE running tests" — task-411 PLAN step 2 "parcelCostFormat.ts loses the factor and its unused formatSqft (no screen uses it)" — mobile/src/lib/parcelCostFormat.ts:87 "export function formatSqft(sqft: number | string | null | undefined): string | null {" — the plan states the export is deleted while the diff keeps it and silently redefines its input from m² to ft², so the plan does not describe the shipped surface and the registry consumer it cites (report-schema.mjs RS-4, cannot see) would get a number 10.7639x too small if it still passes m² — either delete the export as planned or amend the plan and every cited consumer to the new ft² input contract.
+
+BUG severity=HIGH — §11 "Pre-Review Self-Checklist (always applies, every WF)" "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change" and "WF3 variant: list 3-5 sibling bugs that could share the same root cause" — task-411 PLAN step 3 "Checks the hooks run for the touched slices before and after; lens set at plan and output; FINDINGS.md untriaged; leave RUNNING, grounder owed." — the plan carries no 5-10 item PASS/FAIL checklist, and the description names only one sibling ("the permits route serves feet_per_metre (route.ts:267)"), not 3-5 — add the self-skeptical checklist and the full 3-5 sibling list (or a documented non-applicability line each) before lock.
+
+DEFER severity=MED — §2.1 "you MUST include tests for error paths and silent failures. ... Force errors in the deepest layer of the call stack" — src/tests/leads-detail.infra.test.ts:124 "it('serves the area already converted: cost.modeled_gfa_sqft is modeled_gfa_sqm times the pinned factor (FIX.AREA-FACTOR, fe.44); null when the area is null'" — the new integration tests cover only success and null-area, with no forced throw asserting a safe HTTP 500 that does not leak the raw .message — add one case that makes the query or the conversion throw and asserts status 500 plus an error envelope with no err.message.
+
+DEFER severity=MED — §4.4 "Do not embed UI-specific logic ... in the API layer. Return normalized data; let each client transform it." — src/lib/leads/lead-detail-query.ts:179 "modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm))," — the API bakes a North-American display unit into the contract and now ships two representations of the same area, so a metric client receives an unused field — record in the plan that this departure from §4.4 is authorised by the cited ruling (fe.44, not pasted here), otherwise serve the area once and let each client transform.
+
+DEFER severity=MED — §10.3 "Avoid returning database column names directly. Map to a stable API field name (e.g., est_const_cost → estimatedCost)." — src/app/api/leads/detail/[id]/types.ts:15 "modeled_gfa_sqft?: number | null;" — the new contract field copies the schema's column naming rather than a stable client name, and it is still free to name because no client has shipped against it — name it e.g. areaSqft in types.ts, mobile/src/lib/schemas.ts, the query mapper and [lead].tsx.
+
+DEFER severity=LOW — §11 Cross-Layer Contracts "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from docs/specs/_contracts.json, not duplicated as a literal across files" — src/tests/leads-detail.infra.test.ts:129 "expect(body.data.cost.modeled_gfa_sqft).toBeCloseTo(1533.85575, 5); // 142.5 m2 at the pinned 10.7639" — the pinned factor is re-derived as a literal in two test files and the plan adds no contracts.infra.test.ts consumer row for src/lib/leads/lead-detail-query.ts — add the consumer row (or import SQM_TO_SQFT in the tests) so a pin change fails in one registered place.
+
+DEFER severity=LOW — §2.3 "Before accessing nested object properties, explicitly check for null or undefined. Use TypeScript Optional Chaining (?.) or explicit type guards." — src/tests/leads-detail.infra.test.ts:128 "const body = (await readJson(res)) as { data: { cost: { modeled_gfa_sqft: number } } };" then "body.data.cost.modeled_gfa_sqft" — a cast asserts cost is non-null and the nested read is unguarded, the same hazard the rule forbids for `!` without documented proof — assert cost is non-null first, or read body.data.cost?.modeled_gfa_sqft.
+
+REJECT — Spec 136 fe.44 and MORNING-DECISIONS.md:241 — the change is accused of moving the conversion server-side against "The conversion factor lives in content/settings, never in code" — those rulings appear only inside the material under review, the pasted context block reads "(no pasted context provided)", so their satisfaction is not mine to judge in this run.
+
+MET — §10.1 "The data flow is strictly one-directional: [Pipelines] → [Database] → [API Routes] → [Frontend]" — src/lib/leads/lead-detail-query.ts:155 — the conversion is computed in the server query layer from the DB row, with no frontend write and no pipeline read.
+MET — §10.2 "Frontend WFs must NOT modify files in scripts/, migrations/, or scripts/lib/" — diff file list — no file under scripts/, migrations/ or scripts/lib/ is touched.
+MET — §2.2 "Every newly created API route ... MUST have an overarching try-catch block" — src/app/api/leads/detail/[id]/route.ts — no handler is added or edited (plan "route.ts itself needs no edit"), so the clause is not triggered.
+MET — §4.1 "The authoritative gate for every /api/admin/** route is verifyAdminAuth(request) as the FIRST statement" — diff file list — no /api/admin/** handler and no guard file is touched.
+MET — §4.2 "Raw SQL statements must utilize Drizzle parameterized queries" — src/lib/leads/lead-detail-query.ts — LEAD_DETAIL_SQL and its bound parameters are unchanged; only the mapper gained a field.
+MET — §2.3 non-null assertion ban — mobile/app/(app)/[lead].tsx:81 "formatSqft(cost?.modeled_gfa_sqft ?? null)" — optional chaining plus null coalescing, no `!`.
+MET — §10.3 "Business logic belongs in src/lib/, not in route handlers" — src/lib/leads/lead-detail-query.ts:155 — the conversion sits in the lib mapper and the route stays thin.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 7
+
+---
+⏱  87101ms (87.1s)
+📊 Tokens — total: 29308, input: 12020, output: 17288, reasoning: 15665
