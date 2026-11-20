@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T20:02:00Z'
+updated_date: '2026-11-20T20:03:00Z'
 labels:
   - McFix
   - McFix V2
@@ -66,4 +66,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 fix round started after the grounder (attacks e, f, g binary, h, k; findings F1-F7). Tests first.
 
 2026-11-20 fix round part 1: rule-lists.mjs (DIFF_ARGS --text --full-index, measured chunk room, renderLensInput, lensPromptHash, name refusal).
+
+2026-11-20 fix round part 2: check-lane-close.mjs (F1 qualified base ref and status read and empty range refused, F3 unsplit lens bound and prompt hash and regenerated inputs, F4 late-staged only for lane build or fix, F7 exempt and base_ref from the range base's table).
 <!-- SECTION:NOTES:END -->

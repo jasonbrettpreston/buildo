@@ -36,7 +36,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { asList, parseFM } from '../analysis/backlog-lib.mjs';
-import { coveredBy, DIFF_ARGS, diffPaths, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
+import { coveredBy, DIFF_ARGS, diffPaths, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
 import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
 
 const git = (a) => { const r = spawnSync('git', ['-c', 'core.quotepath=false', ...a], { encoding: 'utf8', maxBuffer: 1 << 28 }); return { status: r.status ?? 1, stdout: r.stdout ?? '' }; };
@@ -51,14 +51,19 @@ const VERDICT = /^\s*[-*]?\s*(\S+)\s+(CONFIRMED|REJECTED|CONFLICT)\s+(\S+?):(\d+
 const REVIEW = /^REVIEW template=(\S+) model=(\S+) at=(\S+) file_sha256=([0-9a-f]{64}) prompt_sha256=([0-9a-f]{64})\s*$/m;
 
 /** The REVIEW header problems of one required lens output ([] when fine); `inputText` (or null) is the committed input it must have been run on. */
-function reviewErrors(name, text, template, inputText) {
+function reviewErrors(name, text, template, inputText, opt = {}) {
   const head = text.split('\n').slice(0, 15).join('\n');
   const m = REVIEW.exec(head);
   if (!m) return [`${name}: no REVIEW header in its first lines (the review tool writes it: template, model, timestamp, file_sha256, prompt_sha256); a body with only a VERDICT line is not a lens output`];
   const e = [];
   if (m[1] !== template) e.push(`${name}: the REVIEW header names template ${m[1]}, expected ${template}`);
   if (Number.isNaN(Date.parse(m[3]))) e.push(`${name}: the REVIEW header timestamp ${m[3]} is not a date`);
-  if (inputText !== null && m[4] !== sha(inputText)) e.push(`${name}: the REVIEW header file_sha256 is not the sha256 of the committed input in-${name} (the output was not produced from that input)`);
+  if (inputText !== null && m[4] !== sha(inputText)) e.push(`${name}: the REVIEW header file_sha256 is not the sha256 of ${opt.what ?? `the committed input in-${name}`} (the output was not produced from that file)`);
+  // F3: the prompt hash is recomputed from the repo template, the committed input and the context value the tool used; an arbitrary or hand-written value does not match
+  if (opt.templateText !== undefined && inputText !== null) {
+    if (opt.templateText === null) e.push(`${name}: the review template ${template} is not in the repo (index or HEAD), so prompt_sha256 cannot be recomputed (fail closed)`);
+    else if (m[5] !== lensPromptHash({ templateText: opt.templateText, inputText, context: opt.context })) e.push(`${name}: the REVIEW header prompt_sha256 is not the hash of the prompt the review tool builds from ${template}, the committed input and the context (an output not made by the tool on that input, or an edited input)`);
+  }
   if (!/^VERDICT:/m.test(text)) e.push(`${name}: no VERDICT line (a failed run is not a lens output)`);
   return e;
 }
@@ -133,6 +138,8 @@ export function closeErrors(i) {
   if (r.error) return [`${id}: ${r.error.replace(/^refused: /, '')}`];
   const errors = [];
   const expected = i.expectedPaths ?? []; // V2.WHOLE: the changed paths of the task range minus the exempt ones (check() computes them)
+  // F1: the proof is never skipped silently: a build or fix task whose range holds no file outside the exempt paths (the lane was folded into the base already, or the base is wrong) is refused
+  if (build && expected.length === 0) return [`${id}: the task range (merge-base with the base ref to HEAD) changes no file outside the exempt paths, so the review cannot be proved to cover the change: close the task on the lane branch before it is folded into the base (a close made after a fold is refused), or fix the base ref`];
   // V2.LIST (task-406): the every_task lists (the five words, the plan protocol) and the milestone lists are required of every task like any list; verifyResolved is the one reading shared with validate, check-tasks and the launch.
   // A table with no every_task is refused (fails closed: nobody switches the lists off by leaving the key out); a missing milestone_docs key or entry counts as missing lists; a build task with no milestone is refused by resolveTask above.
   const missing = verifyResolved(i.table, r, i.letter, type);
@@ -174,11 +181,12 @@ export function closeErrors(i) {
       for (const n of names) {
         const input = textOf(`in-${n}`);
         if (input === undefined) { bad.push(`${n}: the input in-${n} that the review tool read is not committed beside it`); continue; }
-        bad.push(...reviewErrors(n, textOf(n) ?? '', 'lens-compliance.md', input));
+        bad.push(...reviewErrors(n, textOf(n) ?? '', 'lens-compliance.md', input, { templateText: readRepo('.claude/review-templates/lens-compliance.md') }));
         const p = parseLensInput(input);
         if (!p) bad.push(`in-${n}: first line is not "LIST <id> sha256:<hex> material sha256:<hex> part i of n" (rule-lists.mjs lens-input writes it)`);
         else if (p.id !== l.id) bad.push(`in-${n}: stamped for list ${p.id}, expected ${l.id}`);
         else if (!p.ok) bad.push(`in-${n}: the stamped sha256 does not match the list text or the material in the file (the input was edited)`);
+        else if (renderLensInput({ id: p.id, list: i.table.lists[p.id], part: p.listPart, i: p.part, n: p.parts, material: p.material, paths: p.chunk === undefined ? null : p.paths, c: p.chunk, m: p.chunks }) !== input) bad.push(`in-${n}: not what lens-input writes for its own stamp (the head line, the paths or the text around the list part or the material was edited)`);
         else listParts.push(p);
       }
       if (!bad.length) {
@@ -219,8 +227,14 @@ export function closeErrors(i) {
         if (items.length === lparts.length && expected.length) errors.push(...chunkErrors({ label: `out-${lens}`, items, expected, diffOf: i.diffOf }).map((y) => `${id}: ${y}`));
         continue;
       }
+      if (t !== undefined && lparts.length) { errors.push(`${id}: ${n} and out-${lens}-pN.txt both exist (one file, or -p1..-pK): an unsplit file does not stand in for split parts`); continue; }
       if (t === undefined) errors.push(`${id}: the lens set of a ${type} task needs ${n} in ${dirNote} (Spec 08 section 7 rule 4: never one generic pass); ${layout}`);
-      else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, null).map((x) => `${id}: ${x}`));
+      else {
+        // F3: an unsplit lens output is bound to the whole range: its file_sha256 must be the sha256 of the recomputed diff text of every changed path (the file the lens read)
+        const whole = expected.length && i.diffOf ? i.diffOf(expected) : null;
+        if (whole === null || whole === '') errors.push(`${id}: ${n}: the whole-range diff text cannot be recomputed, so the file the lens read cannot be proved`);
+        else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, whole, { what: 'the recomputed diff of the whole task range (the diff file the lens must have read, made with the command in the brief)' }).map((x) => `${id}: ${x}`));
+      }
     }
     if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7); ${layout}`);
   }
@@ -315,19 +329,36 @@ function check(msgFile) {
   let changed = [];
   let expectedPaths = [];
   let diffOf = () => null;
+  let exempt = table.exempt ?? [];
   if (!baseRef) errors.push('rule-lists.json has no base_ref: the lane branch point cannot be found (fail closed)');
   else {
-    const mb = git(['merge-base', 'HEAD', baseRef]);
-    if (mb.status !== 0) errors.push(`cannot find the lane branch point (git merge-base HEAD ${baseRef} failed): the Files line cannot be checked against the diff (fail closed)`);
+    // V2.WHOLE fix round (F1): the base is a fully qualified ref (refs/heads/<name>, else refs/remotes/<name>), so a tag of the same name cannot shadow the branch
+    const full = (baseRef.startsWith('refs/') ? [baseRef] : [`refs/heads/${baseRef}`, `refs/remotes/${baseRef}`]).find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0);
+    const mb = full ? git(['merge-base', 'HEAD', full]) : { status: 1, stdout: '' };
+    if (mb.status !== 0) errors.push(`cannot find the lane branch point (git merge-base HEAD ${full ?? `refs/heads/${baseRef}`} failed or the ref does not exist): the Files line cannot be checked against the diff (fail closed)`);
     else {
       const base = mb.stdout.trim();
-      const range = git(['diff', '--name-only', '--no-renames', base, 'HEAD']).stdout.split('\n').filter(Boolean);
+      // F7: the exempt paths and the base ref come from the table AS IT WAS at the range base, so an earlier commit of the lane cannot widen them and hide files from the review
+      const bt = git(['show', `${base}:scripts/analysis/rule-lists.json`]);
+      let baseTable = null;
+      try { baseTable = bt.status === 0 ? JSON.parse(bt.stdout) : null; } catch { baseTable = null; }
+      if (!baseTable) errors.push(`scripts/analysis/rule-lists.json cannot be read at the range base ${base.slice(0, 9)}: the exempt paths cannot be taken from the board's copy (fail closed)`);
+      else {
+        if (baseTable.base_ref !== table.base_ref) errors.push(`base_ref differs between the range base's table (${baseTable.base_ref}) and this branch's (${table.base_ref}): a lane may not move its own base`);
+        if (JSON.stringify(baseTable.exempt ?? []) !== JSON.stringify(table.exempt ?? [])) errors.push(`the exempt paths of this branch's table (${JSON.stringify(table.exempt ?? [])}) differ from the range base's (${JSON.stringify(baseTable.exempt ?? [])}): a lane may not widen what the review need not cover (the review uses the range base's list)`);
+        exempt = baseTable.exempt ?? [];
+      }
+      const rr = git(['diff', '--name-only', '--no-renames', base, 'HEAD']);
+      if (rr.status !== 0) errors.push(`git diff --name-only ${base.slice(0, 9)} HEAD failed (status ${rr.status}): the changed paths of the task range cannot be recomputed (fail closed)`);
+      const range = rr.stdout.split('\n').filter(Boolean);
       changed = [...new Set([...range, ...staged].filter(Boolean))];
       // V2.WHOLE: what the review must have seen = the range minus the exempt paths; the text for any set of its paths is what the one shared command prints
-      expectedPaths = range.filter((p) => !matchesAny(table.exempt ?? [], p));
+      expectedPaths = range.filter((p) => !matchesAny(exempt, p));
       diffOf = (paths) => { const r = git(['diff', ...DIFF_ARGS, base, 'HEAD', '--', ...paths]); return r.status === 0 ? r.stdout : null; };
-      const late = staged.filter((p) => !matchesAny(table.exempt ?? [], p) && !p.startsWith('docs/reports/') && !p.startsWith('backlog/'));
-      if (late.length) errors.push(`the closing commit stages ${late.length} path(s) outside the reviewed task range: ${late.slice(0, 6).join(', ')}${late.length > 6 ? ', ...' : ''} (the closing commit holds records only; commit the work first so the review covers it)`);
+      // F4: only a lane build or fix close is held to "records only"; a doc close or a queue-row edit that moves another task is not
+      const laneBuild = moves.some((mv) => ['build', 'fix'].includes(String(mv.fm.type ?? '').toLowerCase()) && asList(mv.fm.assignee).some((x) => /^@lane-/.test(String(x))));
+      const late = laneBuild ? staged.filter((p) => !matchesAny(exempt, p) && !p.startsWith('docs/reports/') && !p.startsWith('backlog/')) : [];
+      if (late.length) errors.push(`the closing commit stages ${late.length} path(s) outside the reviewed task range: ${late.slice(0, 6).join(', ')}${late.length > 6 ? ', ...' : ''} (the closing commit of a lane build or fix task holds records only; commit the work first so the review covers it)`);
     }
   }
   const codeStaged = staged.filter((f) => /^(src|scripts|mobile|migrations)\//.test(f));
