@@ -7,6 +7,7 @@
 // (`details: collapsed`) or open without them (`expanded`). Every text is a part's text as built on the server; a pending part shows the ruled
 // pending text in its own slot in one muted style (data-pending). Colours are the named report-* theme colours (ruling 1 a); geometry is in
 // class strings (the FE-05 lock bans number literals here). The one client island is ReportPageToggles (UI state only).
+import Link from 'next/link';
 import type { ReactElement } from 'react';
 import type { PagePart, PageSection, PageView, ViewImage } from '../../lib/surfaces/report/core';
 import { ReportPageToggles } from './ReportPageToggles';
@@ -237,7 +238,7 @@ const H2 = ({ p, id }: { p: Part; id: string }): ReactElement => <T p={p} as="h2
 // strings the caller supplies. The mobile binding keeps its own footer (mobile/src/components/surfaces/ReportBinding.tsx): its G4 part is unchanged.
 const REPORT_FOOTER_LAYOUT: FooterLayout = {
   footer: 'grid gap-2 border-t border-report-line pt-4 text-[14px]/[20px] text-report-soft', links: 'flex flex-wrap gap-x-4 gap-y-1',
-  link: 'text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber', line: '', legal: '', copyright: '',
+  link: 'inline-flex min-h-11 items-center text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber', line: '', legal: '', copyright: '',
 };
 const renderFooter = (n: FooterNode, text: (key: string) => string): ReactElement => {
   const kids = n.children.map((c) => ('content' in c ? text(c.content) : renderFooter(c, text)));
@@ -248,7 +249,7 @@ const renderFooter = (n: FooterNode, text: (key: string) => string): ReactElemen
     case 'Stack': return <footer key={key} data-section="footer" className={cls}>{kids}</footer>;
     case 'Group': return <div key={key} className={cls}>{kids}</div>;
     case 'Text': return <span key={key} data-pending={p.pending === true ? 'true' : undefined} className={p.pending === true ? `${cls} ${PENDING}` : cls}>{kids}</span>;
-    case 'Button': return <a key={key} href={String(p.href)} className={cls}>{kids}</a>;
+    case 'Button': return <Link key={key} href={String(p.href)} className={cls}>{kids}</Link>;
     default: throw new Error(`ReportPage footer: unmapped component "${n.component}"`);
   }
 };
