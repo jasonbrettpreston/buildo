@@ -82,8 +82,8 @@ export function formatFsi(v: number | string | null | undefined): string | null 
 }
 
 // Square feet arrive already converted by the API (fe.44: the factor is the pinned setting parcels_sqm_to_sqft, never typed here); this only formats.
-// Kept exported because the report presentation registry names it as the alt formatter of formats.area (scripts/analysis/report-schema.mjs RS-4).
-export function formatSqft(sqft: number | string | null | undefined): string | null {
+// Kept exported because the report presentation registry names it as the alt formatter of formats.area (scripts/analysis/report-schema.mjs RS-4). The name carries its unit: the input is square feet as served, never square metres (formatSqm takes square metres).
+export function formatServedSqft(sqft: number | string | null | undefined): string | null {
   if (sqft == null) return null;
   const n = typeof sqft === 'string' ? Number(sqft) : sqft;
   if (!Number.isFinite(n)) return null;

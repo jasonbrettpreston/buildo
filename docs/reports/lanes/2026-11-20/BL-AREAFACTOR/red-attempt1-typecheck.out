@@ -1,0 +1,129 @@
+GATE OK
+[step-churn-complexity] clean — no drift at window_end=b87f62d
+[generate-template-freeze] clean — no drift, R-E consistent, FREEZE-1 honest
+src-sql-ledger: fresh, 94 file(s) (62 static, 30 interpolated, 2 not_postgres), closed set holds, every column is in the catalog (uncatalogued, skipped: mv_monthly_permit_stats, parcel_lot_view)
+STANDARDIZED: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+OBSERVABLE: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13; snapshot_age_days 43)
+ACCURATE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13; findings 135 (ii 0 · iv unmapped 135); eval_mismatches_adjudicated 0; expert_rulings_against 0; agreement_rate n/a agreement≠correctness; code_linkage=declared-only)
+UNDERSTANDABLE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+SCALABLE: PASS (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
+PHASE 1: NOT_DONE
+  report-only docs/reference/bylaw-code-findings.md STALE (never a blocker; --write refreshes it)
+  report-only twins: groups 106 · differ 52 (value 1 · label 51; 191 units) — never a blocker
+render docs/reference/bylaw-provisions.json sha256 34cc3f789d202679287ae84989dedbf8801d5add1a16f32921ed5b49cf05ec57
+render docs/reference/bylaw-provisions.md sha256 0dc9cf5a2674d9db69335cf883adf4b0b6434898b4388382a22922fccaa50178
+generate-ingest-batch: 11 ingestor batch values, 0 drifted
+generate-sharing-phase: 40 phase maps, 0 drifted
+✔ src/features/admin-controls/generated/logic-variable-groups.json is up to date
+✔ docs/reference/logic-variables-registry.md is up to date
+[generate-assert-schema-probe-lists] clean — no drift (337 declared names)
+[generate-assert-parcel-sanity-descriptor] clean — no drift (46 checks, 1 invariants, 8 plausibility, 38 logic_variables)
+[generate-assert-global-coverage-descriptor] clean — no drift (305 checks, 25 logic_variables, 25 read tables)
+[generate-assert-data-bounds-descriptor] clean — no drift (52 checks, 33 logic_variables, 16 read tables)
+[generate-last-measured] CHECK: 18 descriptor(s); changed 0, unsourced 0, skipped 0, missing 0
+[generate-last-measured] baseline (R-GQ): 0 listed stale entries (REFREEZE-BUNDLE-1), 0 problem(s)
+report-fields current (1 rendered fields); gates FAIL (report-only): RF-2, RF-4, RF-6, RF-7, RF-9
+[generate-conversion-roadmap] clean — no drift
+[generate-programme-backlog] clean — no drift
+[surface-registry] clean — no drift (172 rows, 172 descriptors)
+[step-handbook] docs/specs/01-pipeline/132_step_standard_handbook.md is up to date
+[bylaw-handbook] docs/specs/01-pipeline/133_bylaw_handbook.md is up to date (546 rules)
+[decision-log] clean — 137 log(s), 860 decision(s), 443 register row(s), 1446 citation(s), 0 owed by another lane, 16 no_ruling resting on an existing row; every approved decision has a register row or is owed, and every log matches its raw record
+report-schema current; RS-0 PASS · RS-1 PASS · RS-2 PASS · RS-3 PASS · RS-4 PASS · RS-5 PASS · RS-6 PASS · RS-7 PASS · RS-8 PASS · RS-9 PASS · RS-11 PASS
+[bylaw-layer2-input] clean — docs/reference/bylaw-layer2-input.json current (table_version 70bcf4259d2d, 1937 input files)
+[spec-split-check] clean — 43 move(s) verified, 11515 citations checked, 0 dangling, budgets held, 0 reader breaks, totality holds, every spec has a role.
+SELF-TEST PASSED — 7 known-bad fixtures fired, 1 negative control clean, 4 marker assertions.
+No drift — 533 field rows across 20 categories.
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-areafactor
+
+ ✓ src/tests/system-map.infra.test.ts (13 tests) 298ms
+
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  13:40:56
+   Duration  526ms (transform 32ms, setup 7ms, collect 8ms, tests 298ms, environment 0ms, prepare 28ms)
+
+PASS — 13 live doc(s)
+[step-validate] programme: blocks batching: 0 (scripts/steps/_schema/programme-items.json; npm run programme-backlog for the full table)
+[step-validate] #43 (commit) PASS OWNER-SPEC-DIFF: 0 file(s) appended to converted[] (index vs HEAD) — nothing to check
+[step-validate] --staged: no converted/pending step touched by this commit — nothing to validate, exiting clean.
+→ lint-staged could not find any staged files matching configured tasks.
+footgun[multi-transaction] (info): scripts/backfill-realtor-permit-trades.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/classify-lifecycle-phase.js has 6 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/classify-permits.js has 5 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/classify-scope.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/close-stale-permits.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-cost-estimates.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-opportunity-scores.js has 9 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-phase-calibration.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-storey-norms.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-timing-calibration-v2.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/compute-trade-forecasts.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/dispatch-notifications.js has 6 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/enrich-wsib.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/link-coa.js has 7 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/load-permits.js has 2 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/migrate-to-lead-id.js has 3 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+footgun[multi-transaction] (info): scripts/update-tracked-projects.js has 5 withTransaction calls. Multiple transactions risk partial writes — review whether they should be merged into one atomic block (§47 §R9).
+note: compute-purity: no declared set for scripts/lib/address-normalizers.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/address-points-csv-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/address.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/archetypes.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-data-bounds-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-global-coverage-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/assert-parcel-sanity-fields.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/build-norms.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/bylaw-lot-row.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/bylaw-materialize.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/bylaw-resolution.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-cost-model.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-link-sql.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-notices/aic-values.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-notices/parse-values.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-scope-classifier.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/coa-trade-classifier.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/assert-schema.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/catalogue.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/disclosures.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/layer2-cells.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/neighbour-facts.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/renovation.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/rows.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/split.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/compute/maxbld/two-structure.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/dead-tuple-ratio.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/lifecycle-phase.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/max-build.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/optimal-config-cols.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/optimal-config.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcel-cost-cols.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcel-cost.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/parcels-csv-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/safe-math.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/tag-product-matrix.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/units.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/vocab-coverage.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/zoning-attr-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/zoning-precedence.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for src/features/leads/lib/archetype-cost-map.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for src/features/leads/lib/cost-model-shared.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+footgun[step-shape] (info): 29/37 unconverted manifest step files violate the frozen shape (Spec 122 §5.1). This is the expected pre-conversion state and does NOT gate — see scripts/steps/_schema/converted.json.
+footgun[step-shape] (info): scripts/load-coa.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/quality/assert-coa-freshness.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/link-coa-to-parcels.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/enrich-coa-zoning.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/classify-coa-scope.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/classify-coa-trades.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/compute-coa-cost-estimates.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/load-coa-notices.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+✅ Step-shape gate clean (29 converted step file(s) enforced; 42 compute module(s) enforced against scripts/ast-grep-rules/compute-shape.yml; 1 compute-purity site(s), all ledger-allowed).
+✅ Footgun gate clean (silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary, direct-advisory-lock, bare-mutation, multi-transaction, sql-now, loop-query, unbounded-push-in-stream, step-shape)
+
+> buildo@0.1.0 typecheck
+> tsc --noEmit
+
+src/tests/lead-detail-query.coa.infra.test.ts(164,48): error TS2551: Property 'modeled_gfa_sqft' does not exist on type 'LeadDetailCost'. Did you mean 'modeled_gfa_sqm'?
+src/tests/lead-detail-query.coa.infra.test.ts(166,25): error TS2551: Property 'modeled_gfa_sqft' does not exist on type 'LeadDetailCost'. Did you mean 'modeled_gfa_sqm'?
+EXIT 1

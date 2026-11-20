@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.817Z file_sha256=ffb49a3b29009f7bffdce347edea83e27caa68eb0b51706aa1164ed456296ea1 prompt_sha256=ac50532c486792650713a50844de8effb650a609831a769de13aa7b7bfb24916
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Objectives "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — task PLAN "No new surface, no slice" against src/app/api/leads/detail/[id]/types.ts "modeled_gfa_sqft: number | null;" and scripts/surfaces/_schema/census/mobile-product.json "cost.modeled_gfa_sqft", — the diff adds a field to the served contract and registers it as a surface field while the plan claims no new surface, so the no-scope-creep case rests on a self-contradicting claim — amend the plan to say the details payload and the census gain one field, or drop the "No new surface" line — LOW-risk fix, bounded to the card text.
+
+DEFER severity=LOW — Objectives "we need one plan - we can only execute one plan" — task PLAN step 1 "parity test uses literal expected strings (no import of the phone file)" against src/tests/admin-report-preview-live.logic.test.ts "const { formatSqm, formatServedSqft } = (await import(MOBILE))", — the plan describes two different parity oracles in step 1 and step 2 and the built one is step 2, so the plan as written is not the single plan that was executed — rewrite step 1 to the built oracle (literals plus one web-to-phone assertion).
+
+DEFER severity=LOW — Objectives "standardization ... understandability" — docs/specs/03-mobile/91_mobile_lead_feed.md "`cost: { estimated, tier, range_low, range_high, modeled_gfa_sqm, modeled_gfa_sqft } | null`" against mobile/src/lib/schemas.ts "modeled_gfa_sqft: z.number().nullable().optional()", — the documented LeadDetail contract shows the field as unconditional while the phone parses it as optional and nullable, so the spec text understates what a client must tolerate — add "| null | undefined (older responses)" to the Spec 91 line.
+
+MET — Project objectives "the database is created to service the existing report and details as clairfied in the McFrontend" — src/lib/leads/lead-detail-query.ts "modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm))," — the converted value is served inside the existing details payload, no new screen or consumer introduced.
+
+MET — Project objectives "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant" — mobile/app/(app)/[lead].tsx "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — the work is a supporting function of the designed details view (its square footage section), so it clears the relevance clause.
+
+MET — Objectives "Search comes before increment 1 ... most of it is already built" (search portion) — src/tests/leads-detail.infra.test.ts "expect(body.data.cost.modeled_gfa_sqft).toBeCloseTo(1533.85575, 5); // 142.5 m2 at the pinned 10.7639" — the change adds no search element and takes no search scope, it repairs the already-built details payload.
+
+MET — Objectives "keep it simple; no scope creep" — mobile/src/lib/parcelCostFormat.ts "export function formatServedSqft(sqft: number | string | null | undefined): string | null {" — the factor is removed and the surviving export is the one named consumer, not an extra mechanism.
+
+MET — Objectives "we need one plan - we can only execute one plan" — task file "PLAN task-411 (lane BL-AREAFACTOR)." — the card carries exactly one plan section and no competing plan.
+
+MET — Increment objectives "| id | element | where | status | deliverers | built |" — mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx "expect(screen.getByText('1,534 sq ft')).toBeTruthy();" — the delivered element is proven by a named test rather than by a comment or TODO.
+
+REJECT — Objectives "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — the change is increment-1 lane work that is not the search page — task-411 is labelled McFix and repairs the existing details payload's area display, a supporting function under MORNING-DECISIONS.md:635, so it neither pre-empts nor delivers search scope.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  46267ms (46.3s)
+📊 Tokens — total: 22220, input: 13533, output: 8687, reasoning: 7659

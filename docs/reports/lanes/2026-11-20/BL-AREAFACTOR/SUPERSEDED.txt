@@ -1,0 +1,23 @@
+Superseded by the fix round 2026-11-20 (output lenses re-run on the new whole diff; same names where the name still applies, removed where the rule list or its part split changed because the Files line grew). Old file name and its sha256 prefix:
+out-code-review.txt sha256:b256f40ced12
+out-compliance-eng-s1.txt sha256:cc243741545e
+out-compliance-eng-s2-s4-s10-s11.txt sha256:13eb3ba2008f
+out-compliance-eng-s5.txt sha256:1e9a71c54c68
+out-compliance-inc-S.txt sha256:050e0f8c932f
+out-compliance-mobile-100.txt sha256:36b6e4900093
+out-compliance-mobile-90.txt sha256:adade0366a7d
+out-compliance-mobile-96.txt sha256:fbf60b3f9143
+out-compliance-mobile-98.txt sha256:466c72ec479b
+out-compliance-mobile-99.txt sha256:aabc4e6dbe23
+out-compliance-surface-126-p1.txt sha256:5e171e28a986
+out-compliance-surface-126-p2.txt sha256:d7eb8d662a62
+out-compliance-surface-126-p3.txt sha256:c9f10267ee99
+out-compliance-surface-126-p4.txt sha256:667e63debc80
+out-compliance-surface-127.txt sha256:e6c944ec6171
+out-compliance-surface-128.txt sha256:5239ccfedf13
+out-compliance-surface-135.txt sha256:a665bca7ba46
+out-compliance-surface-136.txt sha256:00b8b9521dbd
+out-error-paths.txt sha256:1c8695812ef7
+out-ux.txt sha256:f02f73b358fd
+
+Removed outright (list no longer attached, replaced by eng-all): out-compliance-eng-s1.txt, out-compliance-eng-s2-s4-s10-s11.txt, out-compliance-eng-s5.txt, with their in-out- inputs. Part split changed: mobile-99 (single -> p1,p2), surface-135 (single -> p1,p2,p3), surface-126 (p1-p4 -> p1-p5). New lists attached by the extended Files line: step-132, airtight-124a, airtight-v3-122, airtight-v2-122, airtight-122a, agents-s7-s11, queue-137, five-words, plan-protocol, ms-S.

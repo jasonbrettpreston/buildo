@@ -20,3 +20,26 @@
 - Not done by design: no push, no DB, no suite, task left RUNNING, grounder owed.
 
 STATUS: BL-AREAFACTOR lane · task-411 (Increment 1·B, McFix A) built and committed c4b2ec894 through the real hooks, left RUNNING, grounder owed, phone tests UNVERIFIED until Mobile CI · Spec 137 rule 3.
+
+## Addendum A (glob slip, round 1)
+The follow-up docs commit of round 1 removed a stray file named literally out-compliance-*.txt with a glob and so deleted all 17 real out-compliance-*.txt files too; the next commit restored them byte for byte from the work commit (git diff --name-status showed only REPORT.md added and the stray file deleted). Cause: an unquoted glob in a git rm pathspec expands in git. No output was edited. The earlier red attempts are kept beside this file: red.out (round 1 red: 2 server tests failed), red-attempt1-typecheck.out (first red, typecheck TS2551), red-round2.out (round 2 red).
+
+## Addendum B (fix round 2026-11-20, coordinator items 1-8)
+- Deploy order: server first. A new phone on an old server, or on a cached lead-detail response from before the change, receives no cost.modeled_gfa_sqft; the schema accepts that (optional) and the screen omits the Square Footage section (the phone does not convert modeled_gfa_sqm). Rolling the server back does the same. No data is lost; the section returns when the server serves the field.
+- Phone-only tests (leadDetailFormat, parcelCostFormat, useLeadDetail, leadDetailScreen.sqft.behaviour) run only in Mobile CI; green is UNVERIFIED until then.
+
+### PASS/FAIL checklist
+1. PASS: kept export renamed formatServedSqft (parcelCostFormat.ts, its test, scripts/surfaces/_schema/seed-report-v2.mjs and report-presentation.json together); report-schema --check RS-4 PASS; plan step 2 amended through the CLI.
+2. PASS: web-to-phone parity assertion restored in src/tests/admin-report-preview-live.logic.test.ts (formatServedSqft of the pinned-factor product equals the web fmt('area_sqft') string); red then green.
+3. PASS: modeled_gfa_sqft added to the mobile_lead_detail descriptor (cost fields), the mobile-product census and Spec 91 section 4.3; the hook --check scripts ran (see commit output).
+4. PASS: modeled_gfa_sqft required on the server type (types.ts); phone zod unchanged (nullable, optional).
+5. PASS (written, UNVERIFIED to run): mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx, field present, null, absent; Mobile CI only.
+6. PASS: stale comment at mobile/maestro/lead-detail.yaml corrected.
+7. PASS: red.out, red-attempt1-typecheck.out, red-round2.out and this addendum copied into the repo lane dir; GROUNDER.md not copied.
+8. PASS: output lens set re-run on the new whole diff (docs/reports/reviews/task-411/diff-2026-11-20.txt, base merge-base with wf2/board, 37687 chars, nothing trimmed); superseded outputs removed and listed in SUPERSEDED.txt; FINDINGS.md refreshed, untriaged.
+Note: extending the Files line (descriptor, census, registry, Spec 91, maestro) attached 22 rule lists instead of 14 (data decides); output compliance now runs per those lists.
+
+### Siblings of the same fe.44 strain (not fixed here, listed)
+- src/components/.../CoaClassificationPanel.tsx:280 (client-side area conversion, to be located by the grounder; not opened in this lane: UNVERIFIED).
+- permits route feet_per_metre (src/app/api/permits route.ts:267) served for client maths.
+- the fe.44 pre-formatted-string half (the phone still picks the unit word): operator question, not mine.

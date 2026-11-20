@@ -45,7 +45,7 @@
     },
     "area": {
       "formatter": "formatSqm",
-      "alt_formatter": "formatSqft",
+      "alt_formatter": "formatServedSqft",
       "file": "mobile/src/lib/parcelCostFormat.ts"
     },
     "length": {

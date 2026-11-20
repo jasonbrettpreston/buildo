@@ -10,7 +10,7 @@ import {
   isEnvelopeFallback,
   formatCurrency,
   formatFsi,
-  formatSqft,
+  formatServedSqft,
   formatSqm,
   COST_LINE_ORDER,
 } from '@/lib/parcelCostFormat';
@@ -68,9 +68,9 @@ describe('formatters', () => {
     expect(formatFsi('0.9')).toBe('0.90');
     expect(formatFsi(null)).toBeNull();
   });
-  it('formatSqft takes square feet already converted and only formats; formatSqm; no typed factor here (FIX.AREA-FACTOR, fe.44)', () => {
-    expect(formatSqft(1076.39)).toBe('1,076 sq ft');
-    expect(formatSqft(null)).toBeNull();
+  it('formatServedSqft takes served square feet and only formats; formatSqm; no typed factor here (FIX.AREA-FACTOR, fe.44)', () => {
+    expect(formatServedSqft(1076.39)).toBe('1,076 sq ft');
+    expect(formatServedSqft(null)).toBeNull();
     expect(formatSqm(400)).toBe('400 m²');
     const src = fs.readFileSync(path.join(__dirname, '../src/lib/parcelCostFormat.ts'), 'utf8');
     expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/);

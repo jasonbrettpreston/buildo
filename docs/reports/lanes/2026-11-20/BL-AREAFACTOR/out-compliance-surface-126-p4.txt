@@ -1,26 +1,24 @@
-◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:46:45.051Z file_sha256=8f4698c20a9ff96c3d25322838303badd5d13c1a9baa4887881154af5851e9fb prompt_sha256=8deee923bf3f62133646d0b8884f7c28461372323de92dc186255c52d595d3d2
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.910Z file_sha256=dc339223a9d521496a3927421de1cd801a739fb6634fee0d751f5e0872e76f84 prompt_sha256=169144e34970269012e2cae24a47cccb9ca5c9b1b9fe9797e7aaedf6dca72518
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-surface-126-p4.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — Spec 126 §11b.6 (Accuracy) "values only through the closed binding set; no maths in bindings; conformance and parity locks" — src/tests/admin-report-preview-live.logic.test.ts:127 "-    for (const m of [0, 1, 9.29, 99.96, 120, 248.05, 284, 395.6, 1000, 5000, 92903.04]) {" — the digit-for-digit parity assertion between the server area formatter (`fmt('area_sqft', m)`) and the phone helper is deleted and replaced by hand-typed literals, so nothing in the diff now compares the two formatters and they can drift silently — re-add one cross-check that feeds the server's converted value into the phone helper, beside the new literal table.
+DEFER severity=MED — §11b.2 "REPORT goldens are unchanged" — scripts/surfaces/_schema/report-presentation.json:48 "\"alt_formatter\": \"formatServedSqft\"" — the presentation registry now names a formatter whose input is square feet, replacing one that took square metres (mobile/src/lib/parcelCostFormat.ts:84 "export function formatServedSqft(sqft: number | string | null | undefined)"), and the diff updates no caller and no REPORT golden, so any REPORT surface feeding formats.area.alt_formatter a square-metre value now prints a number 10.7639 times too small — confirm the only consumers pass served square feet, or update them and re-stamp the REPORT goldens.
 
-DEFER severity=LOW — this task file's own plan step 2 "parcelCostFormat.ts loses the factor and its unused formatSqft (no screen uses it)" — mobile/src/lib/parcelCostFormat.ts:84 "+export function formatSqft(sqft: number | string | null | undefined): string | null {" — the planned deletion of the unused export is not made; it is kept on the strength of a comment naming `scripts/analysis/report-schema.mjs RS-4`, a consumer nothing in this diff exercises or asserts — either perform the planned deletion or record the RS-4 consumer as a checked fact in the notes.
+DEFER severity=LOW — operator ruling quoted in the material, "The conversion factor lives in content/settings, never in code" — src/tests/leads-detail.infra.test.ts:128 "toBeCloseTo(1533.85575, 5); // 142.5 m2 at the pinned 10.7639" — the factor is typed again in two test expectations and one parity test multiplies by SQM_TO_SQFT (src/tests/admin-report-preview-live.logic.test.ts:127 "formatServedSqft(m * SQM_TO_SQFT)"), so the invariant is held by copied literals rather than derived from the pinned setting — acceptable for red evidence, but note the literal will drift if parcels_sqm_to_sqft is ever changed in admin.
 
-DEFER severity=LOW — Spec 126 §11b.2 (Binding) "A value binds only through the closed binding set (§11a.1) plus `contract`: a field of a declared CONTRACT descriptor's response projection" — NONE — §11a.1 and the closed binding set are part 3 of 4 and are not pasted, so whether a served square-footage value may bind, and whether the lead-detail projection is declared, cannot be checked in this run — re-run this material against part 3, or record that the affected screen is outside the MaxBLD set.
+MET — §11b.1 Import boundary "Library imports are allowed only in the declared binding modules" — src/lib/leads/lead-detail-query.ts:15 "import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — an internal first-party module import, not a library import, so the import boundary is untouched.
 
-REJECT — Spec 126 §11b.2 (Binding, `contract` response projection) — the change adds `modeled_gfa_sqft` to an API response with no descriptor change — §11b.7 lists the affected screen outside the MaxBLD set, "mobile lead feed `/(app)/` (index), lead detail `/(app)/[lead]?id=`", so no descriptor binding applies to it.
+MET — §11b.1 "No hand-built standard component" — the whole diff — no component, archetype, binding or wrapper is added; two phone helpers already existed and are shrunk.
 
-REJECT — Spec 126 §11b.1 (import boundary, no hand-built standard component) — the new helper `sqmToSqftOrNull` is accused of being hand-written standard code sitting in `src/lib` — the clause governs library wrapper components on MaxBLD pages, and this is a query-projection helper on a Buildo lead-gen route §11b.7 declares outside the set.
+REJECT — §11b.7 "Outside the MaxBLD set. Buildo's lead-gen pages are not MaxBLD pages and are not listed above: ... lead detail /(app)/[lead]?id=" — that the change edits a Buildo lead-gen screen and its descriptor — the pasted text says these pages are outside the MaxBLD set; it lists them as not-listed, it does not fence them, and the fences that would apply (scope D, Spec 128 R-03) are not pasted.
 
-MET — Spec 126 §11b.6 (Accuracy) "no maths in bindings" — mobile/src/lib/leadDetailFormat.ts:18 "return `${Math.round(sqft).toLocaleString()} sq ft`;" — the phone helper now only formats a value the server served.
+REJECT — §11b.2 Content "every user-visible string comes from a content file" — that mobile/src/lib/leadDetailFormat.ts:18 types " sq ft" in code — this clause binds MaxBLD pages (§11b.3 pages of the parcel product), and the pasted context states lead detail is not a MaxBLD page, so the clause does not reach it.
 
-MET — Spec 126 §11b.6 (Accuracy) "values only through the closed binding set" — src/lib/leads/lead-detail-query.ts:13 "import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — the factor is taken from the one pinned location instead of a second typed constant.
-
-MET — Spec 126 §11b.2 (Locks) "no maths in bindings (FE-05)" — mobile/__tests__/leadDetailFormat.test.ts:37 "expect(src).not.toMatch(/10\.76|SQM_TO_SQFT/);" — a source lock proves the typed factor is gone from the phone helper.
+REJECT — §11b.2 Locks "no maths in bindings (FE-05)" / §11b.6 "no maths in bindings" — that the diff moves a multiplication around — the diff moves the maths to the server and removes it from the phone (mobile/src/lib/leadDetailFormat.ts, parcelCostFormat.ts), and neither phone helper is a declared binding for a MaxBLD descriptor.
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 8   Unmet: 0
+Clauses checked: 6   Unmet: 0
 
 ---
-⏱  69334ms (69.3s)
-📊 Tokens — total: 44785, input: 32149, output: 12636, reasoning: 11769
+⏱  28855ms (28.9s)
+📊 Tokens — total: 40029, input: 34437, output: 5592, reasoning: 4830

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.910Z file_sha256=8aeee1b37310ea3c1812d471f2418a570761d75ae3fe8c32ec62c2c168ee7470 prompt_sha256=bd12899418b62b401d47d96f14de28e1d6f592110fd2b28086c9346b57d0eb4e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-surface-135-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — FE-44 "the conversion factor is content/settings, never code" — src/lib/leads/lead-detail-query.ts:15 "import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — cannot see src/lib/parcels/geometry.ts:6, and src/tests/lead-detail-query.coa.infra.test.ts "24.5 m2 at the pinned 10.7639" multiplies it as a bare literal in a pure logic test, so the factor may still be a typed 10.7639 in code rather than a setting read, i.e. the clause met only by a comment — confirm geometry.ts reads setting parcels_sqm_to_sqft, or record the residual.
+
+DEFER severity=MED — FE-44 "The page producer sends each number pre-formatted in both units; the client only switches which is shown, with no maths" — src/lib/leads/lead-detail-query.ts "return sqm === null ? null : sqm * SQM_TO_SQFT;" plus mobile/src/lib/leadDetailFormat.ts "return `${Math.round(sqft).toLocaleString()} sq ft`;" — the producer sends a raw second number and the phone formats and rounds it, not the pre-formatted strings the clause names; scope (lead detail vs report page) is not stated, so the named form is unimplemented — pre-format the imperial string on the server (client only switches), or record why this producer is outside FE-44.
+
+DEFER severity=LOW — FE-18 "every displayed field binds to a source in the closed set `catalogue` / `content` / `user_input` / `ad_slot`" — scripts/surfaces/estate_other/F90/surfaces/mobile_lead_detail.descriptor.json "cost.modeled_gfa_sqft" — a server-derived value added to the displayed-field list; the closed set has no derived source, so it can only bind via FE-32 `contract`, and no such binding is shown — declare the contract binding (or a derived kind) for the new field.
+
+DEFER severity=LOW — FE-31 "every value through a binding kind" — scripts/surfaces/_schema/census/mobile-product.json "cost.modeled_gfa_sqft" — the census and descriptor now list a computed value, but the binding kind for it is not visible in the diff — show the field routes through a declared binding kind.
+
+MET — FE-44 "store METRIC only" — src/lib/leads/lead-detail-query.ts "modeled_gfa_sqm: toNumberOrNull(row.modeled_gfa_sqm)" — the stored field stays metric and sq ft is derived in the API, nothing imperial is stored.
+
+MET — FE-05 "every number from McBylaws; no maths in the UI" — mobile/src/lib/leadDetailFormat.ts "return `${Math.round(sqft).toLocaleString()} sq ft`;" — the conversion moved to the server and the phone only rounds for display.
+
+REJECT — FE-44 — the change is accused of adding an unruled API field `cost.modeled_gfa_sqft` — not a real issue: FE-44's own "conversion factor is content/settings, never code" and FE-05 single-source name the server as the place to convert, so centralising the factor and serving the converted value is the ruled direction.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  104759ms (104.8s)
+📊 Tokens — total: 57730, input: 35871, output: 21859, reasoning: 21094

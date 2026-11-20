@@ -1,30 +1,19 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:46:44.995Z file_sha256=91f7a69c85e04f14ffd92fe9e9f7fa57005d64b7351f8c464b68e4b5ae144db5 prompt_sha256=b872f5a81dcbb3c358d44e555f5479a232920aaebc0e55934326f973e4017c7c
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.802Z file_sha256=8f2379879c025857953a3a58f03bb878d920722c91159a5cb7379855ee669ca8 prompt_sha256=0d718eaaa79a9adc41f70fed85eee6f9ff8bd9b5106ebbd14927b7b5b8f6b0d8
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-mobile-98.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — operator ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" — src/tests/admin-report-preview-live.logic.test.ts:129 "const SQFT: Array<[number, string]> = [[0, '0'], [1, '11'], [9.29, '100'], [99.96, '1,076'], ... [92903.04, '999,999']]" — the pinned factor is now frozen into expected literals, so re-pinning parcels_sqm_to_sqft fails this suite although the code is compliant, i.e. the factor still lives in code — derive the expected strings at test time from the pinned setting (read SQM_TO_SQFT, compute Math.round(m * factor)) and keep at most one literal anchor.
-
-DEFER severity=MED — operator ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" — src/tests/leads-detail.infra.test.ts:129 "expect(body.data.cost.modeled_gfa_sqft).toBeCloseTo(1533.85575, 5); // 142.5 m2 at the pinned 10.7639" — the server and phone tests paste hand-converted values instead of computing them (same pattern at src/tests/lead-detail-query.coa.infra.test.ts "toBeCloseTo(263.71555, 5)" and mobile/__tests__/useLeadDetail.test.ts "modeled_gfa_sqft: 1533.85575") — compute each expectation as sqm * SQM_TO_SQFT inside the test so a re-pin does not read as a regression.
-
-DEFER severity=MED — plan step 2 "parcelCostFormat.ts loses the factor and its unused formatSqft (no screen uses it)" — mobile/src/lib/parcelCostFormat.ts:85 "Kept exported because the report presentation registry names it as the alt formatter of formats.area (scripts/analysis/report-schema.mjs RS-4)." — the export survives while its input unit flips from m² to ft², so a registry caller still passing m² prints an area about 10.76x too small; the RS-4 call sites cannot see from the diff — open scripts/analysis/report-schema.mjs and either convert there from the pinned setting or rename the helper formatSqftFromSqft so the unit contract is explicit.
-
-DEFER severity=LOW — Spec 98 §5 "npm run typecheck (TypeScript compiler), npm run lint (ESLint), npm run test (Jest unit tests)" — task-411 plan "Phone tests cannot run locally: phone-test green is unproven until Mobile CI." — the mobile half of the §5 PR gate is unproven in the material under review — record the Mobile CI typecheck, lint and Jest outcome for leadDetailFormat, parcelCostFormat and useLeadDetail before merge.
-
-MET — Spec 98 §4 "Location: `mobile/__tests__/`" — mobile/__tests__/leadDetailFormat.test.ts, mobile/__tests__/parcelCostFormat.test.ts, mobile/__tests__/useLeadDetail.test.ts — the changed and added phone tests sit in the mandated directory and run on Jest.
-
-MET — Spec 98 §4.1 (Parcel Cost Tool) "parcelCostFormat.test.ts: ... currency/FSI/area formatters" — mobile/__tests__/parcelCostFormat.test.ts "expect(formatSqft(1076.39)).toBe('1,076 sq ft');" — the area formatter assertions stay in the named file and are re-pointed, not dropped.
-
-MET — Spec 98 §3.1 "Every Maestro YAML file must explicitly define its state expectations using `clearState`" — NONE — no YAML flow is added or edited in this diff, so no clearState declaration is owed.
-
-MET — Spec 98 §4.1 mandates §8.1 and §8.3 (store fan-out, no isFetching render gate) — mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — only a formatter argument changes, no store reset path and no new render gate is introduced.
-
-MET — operator ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" — src/lib/leads/lead-detail-query.ts "import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — the conversion is sourced from the module that reads the pinned setting, and both phone-side constants are deleted.
-
-REJECT — operator ruling MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" — the change is accused of adding an unnamed API surface, cost.modeled_gfa_sqft — the card names it verbatim ("the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT") and it replaces code-side conversion rather than adding new behaviour beyond the card.
+DEFER severity=MED — Spec 98 §5 "`npm run typecheck` (TypeScript compiler)" — mobile/src/lib/parcelCostFormat.ts "export function formatSqft(sqm: number | string | null | undefined): string | null {" together with scripts/surfaces/_schema/seed-report-v2.mjs:606 "note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130'" — the export this diff deletes is named by the diff's own retained registry line as one the parcel screen calls, [parcelId].tsx is absent from the Files line, so either typecheck fails on a dead import or the screen silently prints m² as sq ft — read mobile/app/(app)/[parcelId].tsx:128-130 and migrate it to modeled_gfa_sqft (or keep the conversion at that call site) inside this change.
+DEFER severity=LOW — no pasted clause names a presentation formatter registry (walk step 4) — scripts/surfaces/_schema/report-presentation.json:48 "\"alt_formatter\": \"formatServedSqft\"" — formats.area now pairs the m² formatter formatSqm with an alt formatter whose input unit is served ft², a contract change no pasted clause authorizes and no pasted test pins — either move the ft² view to its own key carrying its unit, or state the new input unit on the registry entry.
+MET — Spec 98 §4 "UI component snapshot testing is deliberately excluded" — mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx:58 — assertions are getByTestId/getByText only, no snapshot file.
+MET — Spec 98 §4.1 "`parcelCostFormat.test.ts`: envelope-fallback label ... currency/FSI/area formatters" — mobile/__tests__/parcelCostFormat.test.ts:71 — area formatters still asserted after the rename (formatServedSqft, formatSqm).
+MET — Spec 98 §4.1 "§8.5 ... every `create<*Store>(` in `mobile/src/store/*.ts`" — no path under mobile/src/store/ appears in the diff, so the enumeration test's count is untouched.
+MET — Spec 98 §4 dated note "adds it as a dev dependency (`@testing-library/react-native` 13.3.3 with `react-test-renderer` 19.1.0)" — mobile/__tests__/leadDetailScreen.sqft.behaviour.test.tsx:8 "import { render, screen } from '@testing-library/react-native';" — the new screen test uses the tool the ruling names.
+REJECT — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — that the new [lead].tsx test is a forbidden UI test duplicating Maestro's lead-detail.yaml sqft assertion — the 2026-11-10 ruling in §4 says "a render smoke ... and a screen-behaviour test are not snapshots", and the test pins the null and absent field cases the Maestro flow cannot express.
+REJECT — Spec 98 §4.1 "every implementation MUST satisfy" §8.1-§8.5 — that the diff ships no idempotency, router-arm, gate-stability or store-reset tests — the change touches no bridge, no AuthGate arm, no render gate and no store, and the §8 text itself is not pasted.
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 10   Unmet: 0
+Clauses checked: 8   Unmet: 0
 
 ---
-⏱  74507ms (74.5s)
-📊 Tokens — total: 26662, input: 12110, output: 14552, reasoning: 13398
+⏱  66272ms (66.3s)
+📊 Tokens — total: 28949, input: 15792, output: 13157, reasoning: 12364

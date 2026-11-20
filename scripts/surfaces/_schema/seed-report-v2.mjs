@@ -604,7 +604,7 @@ const pres = {
   disclosure_texts: { generated_from: 'spec78.P5.12', note: 'code → {template, slots, importance, mandatory} parsed from Spec 78 P5.12 by the generator; filled server-side from disclosure_params', importance_default: 'normal' },
   formats: {
     area_unit: { default: 'm²', options: ['m²', 'ft²'], note: 'today the screen mixes formatSqm (lot) and formatSqft (GFA), [parcelId].tsx:128-130' },
-    area: { formatter: 'formatSqm', alt_formatter: 'formatSqft', file: 'mobile/src/lib/parcelCostFormat.ts' },
+    area: { formatter: 'formatSqm', alt_formatter: 'formatServedSqft', file: 'mobile/src/lib/parcelCostFormat.ts' },
     length: { formatter: null, pattern: '{v} m', note: 'no formatter yet' },
     fsi: { formatter: 'formatFsi', file: 'mobile/src/lib/parcelCostFormat.ts' },
     currency: { formatter: 'formatCurrency', file: 'mobile/src/lib/parcelCostFormat.ts' },

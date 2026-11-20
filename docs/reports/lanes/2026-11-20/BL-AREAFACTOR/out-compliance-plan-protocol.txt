@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.813Z file_sha256=71f3dc586b43a6f0f0cebb4fc1c7cb508411d0c24f4e12b0703fe2551a9fd7cb prompt_sha256=78b8210b01b7f786fb3b190b5f09e93509a39db2102ca6a855fbf4259c9fd2bb
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan-protocol §4 "Per increment: 1. ADD the slice tasks (section 2 step A) and REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict)" — task-411 notes "Lens set run (plan and output); findings untriaged in docs/reports/lanes/2026-11-20/BL-AREAFACTOR/FINDINGS.md" — no seat verdict (R,C,I,D,G,O,W,X,F) is recorded for the task and the findings are left untriaged, so the mandated review has no verdict to apply — record one verdict line per seat plus F and close or assign every finding.
+
+BUG severity=HIGH — plan-protocol §2 step D "Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines" and §4 "BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step)" — task-411 plan "3. Checks the hooks run for the touched slices before and after; lens set at plan and output; FINDINGS.md untriaged; leave RUNNING, grounder owed." — no exact commands, no PASS lines, and no push review (contents, suite, gates, commit-msg trailers, ids, operator tty step) are recorded anywhere in the material — add the commands actually run with their PASS lines and the advance push review block.
+
+BUG severity=HIGH — plan-protocol §5.5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — NONE — the card frontmatter (milestone, ordinal, dependencies, references) and the new Implementation Plan carry no estimate field at all, so the integration pass cannot show the critical path — add one estimate line, MEASURED with its source or explicitly labelled GUESS.
+
+BUG severity=HIGH — plan-protocol §1 "(9) measured check on the page" — task-411 notes "Phone tests cannot run locally: phone-test green is unproven until Mobile CI." — the on-page check for the sqft section exists only as a test file and a maestro assert (mobile/maestro/lead-detail.yaml "id: \"lead-detail-sqft\""), never as a measurement, so part (9) of the slice is named not met — record the Mobile CI run result for leadDetailScreen.sqft.behaviour and maestro, or hold the slice open with that run as its gate.
+
+DEFER severity=MED — plan-protocol §4 "Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason) + SITTING.md + PASS lines. The orchestrator applies each patch to sequence.json after checking" — task-411 references "docs/reports/lanes/2026-11-20/BL-AREAFACTOR/REPORT.md" — the lane's output is a lane report, not the increment delta, so nothing lands in the one plan — emit the same facts as seq-patch.json plus SITTING.md at the named path.
+
+DEFER severity=MED — plan-protocol §3 "Every step reports: tasks before, added (with source), removed-candidate, after. The count must not grow without a source per task." — task-411 notes "the Files line was extended through the CLI (lead-detail-query.ts, [id]/types.ts, mobile schemas.ts, [lead].tsx, three mobile tests, two server tests)" — the Files line grew to 18 entries with a source cited only for the registry pair (report-presentation.json / seed-report-v2.mjs); the census, F90 descriptor, Spec 91 and maestro edits carry no source line and no before/after count is reported — report the counts and one source line per added file.
+
+MET — plan-protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — task-411 Implementation Plan — each rule and fact carries a file:line: "operator ruling MORNING-DECISIONS.md:241", "Spec 136 fe.44 (docs/specs/02-web-admin/136_mcfrontend_handbook.md:163)", "SQM_TO_SQFT is read from the pinned setting at src/lib/parcels/geometry.ts:6".
+
+MET — plan-protocol §1 "(7) CoA per option" — src/tests/lead-detail-query.coa.infra.test.ts "serves modeled_gfa_sqft converted from the pinned factor, null when the area is null" — the CoA producer serves the converted field and a test pins it.
+
+MET — plan-protocol §5.1 "shared-piece ids from increment 1-2 used consistently" — scripts/surfaces/_schema/report-presentation.json "\"alt_formatter\": \"formatServedSqft\"" and scripts/surfaces/_schema/seed-report-v2.mjs "alt_formatter: 'formatServedSqft'" — the shared registry id is renamed in seed and JSON together, so the shared piece stays consistent.
+
+MET — plan-protocol §2 step D "red-first tests named" — task-411 notes "Red proven by a refused commit attempt (2 server tests failed)" — red was observed before green and the red-first tests are named in plan step 1.
+
+REJECT — plan-protocol §2 step E "nothing new added here" — the change is accused of adding the registry rename at optimisation time — the rename has a cited cause (report-schema RS-4 refusal) and is a consequence of deleting the typed factor, not a new task.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 6
+
+---
+⏱  49137ms (49.1s)
+📊 Tokens — total: 20980, input: 14736, output: 6244, reasoning: 4963

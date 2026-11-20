@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.801Z file_sha256=bb3b16606b1b63ac53e9150e1deedaa986fbc962399990386b3ed06551d5c591 prompt_sha256=f9bc08defd240188162ffe205efda24bf836a07a5963c13df55b5a8429b93b9e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+BUG severity=<none> — none
+
+DEFER severity=MED — fe.44 ruling "The conversion factor lives in content/settings, never in code" — src/lib/leads/lead-detail-query.ts:15 "import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — server-side compliance of this change rests on a file not present in the diff: cannot see that SQM_TO_SQFT is the pinned setting parcels_sqm_to_sqft rather than a typed literal, so the ruling is satisfied only by the plan's assertion — paste src/lib/parcels/geometry.ts:1-12 into the review or add an infra test asserting SQM_TO_SQFT equals the seeded parcels_sqm_to_sqft value
+
+DEFER severity=MED — plan step "parity test uses literal expected strings (no import of the phone file)" — src/tests/admin-report-preview-live.logic.test.ts:128 "const { formatSqm, formatServedSqft } = (await import(MOBILE)) as { formatSqm: (m: number) => string | null; formatServedSqft: (sqft: number) => string | null };" — the diff still imports the phone helper, so the plan's own step 1 is unmet, and step 2 ("literal sq ft strings plus one web-to-phone assertion") contradicts step 1 — amend step 1 to state the import is retained for the single web-to-phone assertion, or drop that loop
+
+DEFER severity=LOW — fe.44 "never in code" — src/tests/admin-report-preview-live.logic.test.ts:22 "import { pageBindings, pageOptions, projectStoredPage, SQFT_PER_M2, type StoredRow, type LotStamp } from '@/lib/report-projection/project';" — the new assertion "expect(formatServedSqft(m * SQM_TO_SQFT)).toBe(`${fmt('area_sqft', m)} sq ft`)" compares the phone against a web-side factor held in project.ts, which cannot see, and unlike feet_per_metre this strain is not recorded in the task notes — confirm project.ts reads the pinned setting, or add this second strain to the NOTES line beside the feet_per_metre note
+
+DEFER severity=LOW — Spec 99 §3 "Adding a field to the mobile app requires adding a row here" — mobile/src/lib/schemas.ts:204 "+  modeled_gfa_sqft: z.number().nullable().optional()," — a new mobile-consumed field with no §3 row and no Spec 99 amendment — add a one-line §3 note that lead-detail projection fields are declared in the surface descriptor, not the matrix (its sibling modeled_gfa_sqm has no row either)
+
+MET — §4 B1 "Validation: every response MUST be parsed through a Zod schema before TanStack stores it (Spec 90 §13 Zod Boundary)" — mobile/src/lib/schemas.ts:204 — the served field is added to LeadDetailCostSchema, and mobile/__tests__/useLeadDetail.test.ts:69 keeps it through parse
+
+MET — §2.1 "Layer 3 (Zustand) NEVER mirrors a Layer 1 (server) field unless the Field Ownership Matrix §3 explicitly authorizes the mirror" — mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — read straight from the TanStack query, no Zustand store, mirror, or MMKV blob added
+
+MET — §2 amendment 2026-09-15 "Layer 1 grows, canonical for the projection, not only the data" — src/lib/leads/lead-detail-query.ts:181 "modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm))," — the server produces the converted area for both producers, the phone only formats
+
+MET — §1 "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing useEffect requires either matching an existing pattern in §3-§5 or amending this spec" — the diff adds none of the four; no store, blob, bridge, or routing effect appears in it
+
+MET — §4 B1 "Adding a new server query requires a row here" — mobile/__tests__/useLeadDetail.test.ts:69 — no new query key; the existing ['lead-detail', id] entry is reused and only its payload changes
+
+REJECT — Spec 99 §3 new-field row (raised as a defect above) — that omitting a §3 row for cost.modeled_gfa_sqft breaks the matrix — the matrix rows enumerate server-authoritative profile and auth fields (§3.1 "Server-Authoritative Profile Fields (Spec 95 §6)"), and modeled_gfa_sqm, the sibling already served and rendered, has no row; no Layer-3 mirror is created, so §2.1's mirror rule is not engaged
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  43895ms (43.9s)
+📊 Tokens — total: 38886, input: 30094, output: 8792, reasoning: 7675

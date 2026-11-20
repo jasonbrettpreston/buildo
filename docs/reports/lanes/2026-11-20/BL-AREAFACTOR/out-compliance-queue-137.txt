@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:14:53.867Z file_sha256=96d60619e781885a2830cbc28c7ff14272f4e91f8e18015f1621a5d077c1ca5e prompt_sha256=44d87587eb33384d5515204550dd0c536d84a5492665bbdd9cfb54109998e57e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §4 Rule 3 "The status line changes in the same commit as the work. When work lands for a row, the commit that lands it edits that row's status line." — backlog/tasks/task-411 (FIX.AREA-FACTOR…).md:7 "status: RUNNING" — this commit lands the task's src/, mobile/ and scripts/ work and leaves the status word RUNNING; only updated_date, references, the plan and the notes move, so the landing commit edits the row but not its status line — add the close artefacts (one compliance lens output per attached rule list plus GROUNDER.md under docs/reports/lanes/2026-11-20/BL-AREAFACTOR/) and set status: BUILT in this same commit.
+
+DEFER severity=MED — Spec 137 §4 Rule 12 "A row that waits on a named event takes that event as its expiry. The `expires` field reads `when <event>`, not a date 7 days out." and the closed word list entry WAITS "Waiting on a named task, lane or event." — backlog/tasks/task-411…md "dependencies: []" and notes "Task left RUNNING: grounder owed." — the row has built and now waits on the grounder (task-395) yet reads RUNNING with no expiry, which §5 step 6 lists as "no expiry" — set the word WAITS and the expiry `when <the grounder ruling is entered>` on the row, or an operator-set date.
+
+DEFER severity=MED — Spec 137 §3 Rule 1 "A row not yet verified against what landed reads `<WORD> (unverified <date>)`" and §1 "`(unverified <date>)` is the label `unverified`" — backlog/tasks/task-411…md labels "  - McFix" / "  - McFix A" with notes "phone tests cannot run locally, phone-test green is UNVERIFIED until Mobile CI" — the row records phone work as unproven and carries no `unverified` label — add the `unverified` label with the 2026-11-20 date until Mobile CI is green.
+
+DEFER severity=MED — Spec 137 §1 Rule 4 "rulings for plan tasks are entered through `scripts/analysis/backlog-decision.mjs` (gate G2): a verbatim quote and a cite file:line that exists and contains the quote, or it refuses" and §4 Rule 10 "A ruling enters a row as a verbatim dated note." — plan line "operator ruling MORNING-DECISIONS.md:241 'The conversion factor lives in content/settings, never in code'" — the ruling that governs this build is written into the PLAN and NOTES prose and no `Dated note` line was appended to task-411 by G2 — run backlog-decision.mjs with the :241 (and :1476) cite so the M-246 dated note lands on the task.
+
+MET — Spec 137 §4 Rule 2 "Every task is registered. A card, or a claimed id, gets a status line too." — backlog/tasks/task-411…md — the task's Backlog file is its row and is edited in this same diff.
+
+MET — Spec 137 §1 Rule 2 "a plan task that is not a queue row: its Backlog file is its row" — backlog/tasks/task-411…md — the task is not labelled `queue-row` and its row is the Backlog file in this diff.
+
+MET — Spec 137 §1 Rule 3 "that task or draft file is in the same diff; docs, spec, queue-row, backlog-only and merge commits are exempt" — the diff carries src/, mobile/ and scripts/ changes with backlog/tasks/task-411 in the same diff.
+
+MET — Spec 137 §3 Rule 1 closed word list (nine words) — backlog/tasks/task-411…md:7 "status: RUNNING" — RUNNING is one of the nine words.
+
+MET — operator ruling RR-0219 pasted at §1 "ensure that all the relevant specs are updated" — docs/specs/03-mobile/91_mobile_lead_feed.md:206 "cost: { estimated, tier, range_low, range_high, modeled_gfa_sqm, modeled_gfa_sqft } | null" — the spec that names the response shape is updated with the new field.
+
+MET — operator ruling RR-0205 pasted at §1 "the increment plan lives in Backlog.md in the repo" — the task lives at backlog/tasks/ and is edited there, not copied into a queue file.
+
+REJECT — Spec 137 §1 Rule 3 "carries a `Task: task-N` trailer" — the commit is missing the trailer — the trailer is commit metadata, not in the diff, cannot see.
+
+REJECT — Spec 136 fe.44 (quoted only inside the material: "the conversion factor is content/settings, never code") — that the diff's conversion changes are wrong or incomplete against fe.44 — fe.44 is not in the pasted rule list, so it is not mine to judge.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 4
+
+---
+⏱  80817ms (80.8s)
+📊 Tokens — total: 37684, input: 20765, output: 16919, reasoning: 15769
