@@ -95,6 +95,7 @@ export function validateTable(table, root) {
     if (seen.has(row.id)) bad.push(`row ${row.id}: duplicate id`); seen.add(row.id);
     for (const l of row.lists ?? []) if (!table.lists?.[l]) bad.push(`row ${row.id}: list ${l} is not defined`);
     if (!row.why) bad.push(`row ${row.id}: why missing`);
+    if (row.not !== undefined && !(Array.isArray(row.not) && row.not.every((s) => typeof s === 'string' && s))) bad.push(`row ${row.id}: not must be a list of globs`);
     if (row.imports_from !== undefined && !(Array.isArray(row.imports_from) && row.imports_from.every((s) => typeof s === 'string' && s))) bad.push(`row ${row.id}: imports_from must be a list of paths`);
     let globs = [];
     try { globs = rowGlobs(row, root); } catch (e) { bad.push(e.message); continue; }
@@ -201,7 +202,7 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
   }
   for (const entry of entries) {
     const cands = candidates(entry, tracked);
-    const hit = rows.filter(({ row, globs }) => cands.some((c) => matchesAny(globs, c) && (!row.imports_from || importsFrom(root, c, row.imports_from))));
+    const hit = rows.filter(({ row, globs }) => cands.some((c) => matchesAny(globs, c) && !matchesAny(row.not ?? [], c) && (!row.imports_from || importsFrom(root, c, row.imports_from))));
     if (hit.length) { rowHits += 1; for (const { row } of hit) for (const l of row.lists) add(l, row.id, row.why); continue; }
     if (cands.some((c) => matchesAny(table.exempt ?? [], c))) result.exempt.push(entry); else result.unmatched.push(entry);
   }

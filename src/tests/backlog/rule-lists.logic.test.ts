@@ -92,6 +92,7 @@ function fixture() {
       { id: 'imp', globs: ['src/**/*.ts'], imports_from: ['scripts/lib/compute'], lists: ['whole'], why: 'imports compute' },
       { id: 'surf', globs: ['src/**/*.ts'], imports_from: ['src/lib/surfaces'], lists: ['queue'], why: 'imports surfaces' },
       { id: 'mob', globs_from: { file: 'pol/protected.json', key: 'frontend' }, lists: ['big'], why: 'frontend' },
+      { id: 'nr', globs: ['docs/*.md'], not: ['docs/q.md'], lists: ['crlf'], why: 'a row with an exclusion' },
       { id: 'queue-records', globs: ['docs/*.md'], lists: ['queue'], why: 'records' },
     ],
     exempt: ['docs/reports/lanes/**'],
@@ -113,6 +114,15 @@ describe('resolve on a fixture tree (AC #2)', () => {
     const b = JSON.parse(res(f, 'src/one.ts', ['--type', 'build']).stdout) as Res;
     expect(ids(b).sort()).toEqual(['first', 'inc-F', 'whole']);
     expect(b.lists.find((l) => l.id === 'whole')!.rows).toEqual(['imp']);
+  });
+  it('a row may exclude paths (not): the review tool CLI is not a step shell', () => {
+    const f = fixture();
+    expect(ids(JSON.parse(res(f, 'docs/c.md', ['--type', 'build']).stdout) as Res)).toContain('crlf');
+    expect(ids(JSON.parse(res(f, 'docs/q.md', ['--type', 'build']).stdout) as Res)).not.toContain('crlf');
+    const real = JSON.parse(script(CLI, ['resolve', '--files', 'scripts/deepseek-review.js', '--type', 'build', '--letter', 'S']).stdout) as Res;
+    expect(ids(real)).not.toContain('step-132');
+    expect(ids(real)).toContain('agents-s5-1to3');
+    expect(JSON.parse(script(CLI, ['resolve', '--files', 'scripts/load-permits.js', '--type', 'build', '--letter', 'S']).stdout) as Res).toMatchObject({ lists: expect.arrayContaining([expect.objectContaining({ id: 'step-132' })]) });
   });
   it('a dir entry and a glob entry match through tracked files; a new file in a new dir matches by probe', () => {
     const f = fixture();

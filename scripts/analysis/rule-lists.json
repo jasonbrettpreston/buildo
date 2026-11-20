@@ -56,8 +56,9 @@
     {
       "id": "step-pipeline",
       "globs": ["scripts/*.js", "scripts/**/*.descriptor.json", "scripts/lib/compute/**", "scripts/lib/step/**", "scripts/quality/**", "migrations/**"],
+      "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js"],
       "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a", "eng-s3-s9"],
-      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9"
+      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9"
     },
     {
       "id": "bylaw",
