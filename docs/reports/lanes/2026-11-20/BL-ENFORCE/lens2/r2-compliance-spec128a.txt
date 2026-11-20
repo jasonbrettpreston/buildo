@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens2/material2.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10696 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21963 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32271 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43444 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 50525 chars, answer 4403 chars, 75s
+BUG severity=HIGH — Spec 128 §4.4 "A rule without a lock is not yet a rule - the same commit that records the ruling adds a both-directions test (red on the old behaviour, green on the new)" — PLAN-2-MERGED.md Part B (B6) "A NEW file there is refused at commit unless the list is extended with a named reason and the operator's ruling id" — none of B4, B5, B6, B7 names a both-directions test; the plan's only test is the one-way attack in the Acceptance standard ("attempts to get past it are all refused and the refusal lines are pasted"), so four proposed refusals are rules with no lock — attach to each task the named RED fixture that is red on today's tree and green after the refusal, in the same commit.
+
+BUG severity=HIGH — Spec 128 §2 rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture" — PLAN-2-MERGED.md Part B (B5) "a numeric literal in a timing, retry, stale-time, page-size or limit position in bindings, phone hooks and routes is refused at commit" — B5 refuses only the literal, so a tunable read from config with no registry row, no bounds and no on_invalid posture passes; the presence/validity split rule 3 names is unenforced — B5 must also refuse a consumed tunable with no registered logic-variable row, or a row with no bounds or on_invalid.
+
+BUG severity=HIGH — Operator ruling "no fasades" and governing list "# GOVERNING RULE LIST: Spec 128 (128_surface_standard_policy.md) sections 1 to 4, whole" — PLAN-2-MERGED.md Part B (B6) "Existing rule: memory 'build with existing components: new ones need a named reason and a ruling'; Spec 136 (existing components only)" — the cap on hand-written files rests on a memory entry, which FACTS-2 F8 records as "not a repo rule", and on Spec 136, which is not in the pasted governing list; no pasted clause or ruling names a file cap, so B6 adds a refusal nothing pasted authorises — either cite a pasted clause (Spec 128 §2 rule 1 is the nearest) or drop B6 and let B7(c) carry the duplication rule.
+
+BUG severity=HIGH — Spec 128 §2 rule 13 "ONE command generates the scorecard and the policy-coverage matrix from artifacts; a hand-written scorecard is not evidence" — PLAN-2-MERGED.md "New machine refusals: 8 rules (A2) plus what B4, B5, B6, B7 add (to be counted by the review)" — the plan's whole coverage figure is a hand count ("by-laws at most 426 (count soft)"), which rule 13 says is not evidence — add a task that derives the refusal and coverage counts from the gates' own artifacts by one command, with a test pinning the count.
+
+BUG severity=HIGH — QUESTION FOR THIS LENS (the operator's) "would it have refused the 1·B defects D1 to D15?" — PLAN-2-MERGED.md Part B (B1) "for each confirmed defect which kind of file it sits in. If the reading fails, B4 to B7 are withdrawn" — no task states which refusal catches any one of D1 to D15; B1 only classifies file kinds, and on a failed reading the plan leaves every named defect with no refusal at all — add a D1 to D15 row per defect naming the refusing task and the replay fixture that reproduces the defect and goes red without the fix.
+
+DEFER severity=MED — Spec 128 §3 B6 (pre-batch rule) "An unaudited admin mutation blocks conversion of the surface that calls it. Measured: 9 of the 15 mutating admin routes write no `admin_audit_log` row ... Status: ACCEPTED at R-12" — PLAN-2-MERGED.md Part C (C4) "remaining 1·B builds (LOAD.2, LOAD.4, the no-plan page, PROOF.S and the rest) one at a time under A1, B2, B4 to B7" — no task refuses conversion of a surface that calls an unaudited mutating admin route, so C4 can convert under a rule already ACCEPTED at R-12 — add the pre-batch check to the C4 gate list (or name the closed set of 9 routes as a blocking list).
+
+DEFER severity=MED — RR-0150/RR-0149 "infra tooling is built in the Buildo repo under its hooks, suite and history, not in scratch or a separate repo" — PLAN-2-MERGED.md Part B (B3) "The user-level lane guard refuses a build brief with no rule-list block from the launch script. Minimal in-place edit; operator typed go." — a refusal living in a user-level guard sits outside the repo's hooks, suite and history, so it cannot carry the lock §4.4 requires and cannot be attacked by the suite — land the launch check in the repo (hooks plus a test) and keep the user-level file as a pointer only.
+
+DEFER severity=MED — Spec 128 §4.7a "Every `ACCEPTED` row names a **deciding source outside this pass** ... A row that cannot name one is `PROPOSED`, however obviously right it looks" — PLAN-2-MERGED.md Part B (B5) "Rule already written: Spec 126 P4 'All tunables are data; zero thresholds in src/', Spec 128 Rule 3" — B5's only grounds are Specs 126 and 128, both from the one WF1 pass, with no operator ruling, executed code fact or existing lock named — either name the outside deciding source (the retired anti-pattern in F8, the operator's "if its not enforced it doesnt get done") or state B5 as PROPOSED rather than as a rule.
+
+MET — Spec 128 §4.2 "A different party adjudicates - never the pass that discovered it" — PLAN-2-MERGED.md Part B (B2) "Also refuses a verdict file committed on the lane's own branch (the lane never judges itself)" — the self-judging route is closed at the push gate and restated in the Acceptance standard.
+MET — Operator ruling "no fasades" — PLAN-2-MERGED.md "## Dropped (grounder ruled them a facade: BL-ENFORCE grounder verdict in task-371 notes)" — the three facade fields are named and removed rather than reworded.
+MET — Operator ruling "If you can trick the gate - whats the point" — PLAN-2-MERGED.md "A refusal is accepted only when a separate agent's attempts to get past it are all refused and the refusal lines are pasted. A way past that works is reported as STILL OPEN." — acceptance is by attack, not by the author's claim.
+MET — Operator ruling "modularization - teh footer for example - this should be a seperate module or component (we use preexisting components)" — PLAN-2-MERGED.md Part B (B7a) "the footer is the first case (task-374; the shared footer builder and its parity tests exist: verify)" — the footer is named as the first shared part with its existing builder, before any new one is built.
+MET — Spec 128 §3 B4 "goldens refresh on fingerprint, never on request" — FACTS-2 F1 "SV-SCREEN (:245-298) ... a fingerprint stale (:295)" — the recapture is already mechanical and refused; the plan does not re-open it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 33   Unmet: 8
+
+---
+⏱  77437ms (77.4s)
+📊 Tokens — total: 38686, input: 23796, output: 14890, reasoning: 13173

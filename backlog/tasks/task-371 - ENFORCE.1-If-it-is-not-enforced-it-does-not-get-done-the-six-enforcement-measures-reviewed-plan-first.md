@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-ENFORCE'
 created_date: '2026-11-20T13:31:00Z'
-updated_date: '2026-11-20T13:52:00Z'
+updated_date: '2026-11-20T14:33:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -15,6 +15,9 @@ references:
   - docs/reports/lanes/2026-11-20/BL-ENFORCE/PLAN.md
   - docs/reports/lanes/2026-11-20/BL-ENFORCE/FINDINGS.md
   - docs/reports/lanes/2026-11-20/BL-ENFORCE/REPORT.md
+  - docs/reports/lanes/2026-11-20/BL-ENFORCE/PLAN-2-MERGED.md
+  - docs/reports/lanes/2026-11-20/BL-ENFORCE/FACTS-2.md
+  - docs/reports/lanes/2026-11-20/BL-ENFORCE/FINDINGS-2.md
 type: build
 ordinal: 71012
 ---
@@ -63,4 +66,6 @@ Operator 2026-11-20 (verbatim): "Essentially if its not enforced it doesnt get d
 2026-11-20 grounder verdict on the stage-1 plan (separate read-only agent, on 84259e14f): 37 HIGH/CRIT lens findings: 27 CONFIRMED, 9 REJECTED, 1 CONFLICT (R-BA 132:505 against a new 'advice' state). The plan is NOT buildable as written. MINIMUM SET that gives 'no close and no push without rule lists and a separate grounder': (a) task-366 close check landed and hardened; (b) one push-range arm on the existing scripts/analysis/mcbylaws/gate.mjs --push (pre-push:41) calling the same functions, also refusing a code commit with no Task trailer; (c) a minimal in-place edit of the user-level lane-guard hook for the rule-list block, operator typed go; NOT a repo copy (a lane-writable import, fails open). FACADE RISKS named: measure 1 ('check' means a file exists; 'advice' is lane-gameable; ceilings are today's count; 30 partial rules counted as checked: true fully checked step count is 334 not 364), measure 4 (any existing file passes), measure 5 (displays counts, refuses nothing; the board status line it would write never runs on the WARN branch; board checkout is stuck WARN uncommitted backlog changes), measure 3 real but the tip is already red (18 phone tests) and the custom cache is unproven: use the existing scripts. Park measures 1, 4, 5. Prune candidates verified true: R1, R2, R5, R8, R9; drop R7; R10 three of six. D-3 already ruled by RR-0149/0150; D-4 recommendation not supported. Nothing built; stage 2 waits on the operator.
 
 2026-11-20 operator RULED (verbatim: 'yes. you are making a mess. What a diaster?  Show me you can fix this without just creating a fasade?'; MORNING-DECISIONS.md entry 'cut the enforcement work to the three refusals'): scope cut to the push-range arm on the existing push gate (after task-366 lands) and the lane-guard rule-list refusal (operator typed go). Measures 1, 4, 5 and the lane-guard repo copy are PARKED; no build. Each refusal is accepted only after a separate agent's bypass attempts are shown refused.
+
+2026-11-20 second job: merged plan (PLAN-2-MERGED.md, orchestrator draft, copied unchanged), FACTS-2.md, lens round on it (96 findings, FINDINGS-2.md, untriaged); task stays RUNNING: grounder owed.
 <!-- SECTION:NOTES:END -->

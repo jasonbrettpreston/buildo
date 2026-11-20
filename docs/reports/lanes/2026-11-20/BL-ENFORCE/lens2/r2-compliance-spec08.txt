@@ -1,0 +1,44 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens2/material2.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11189 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21755 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31525 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41733 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 52536 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 64337 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 77015 chars, answer 0 chars, 105s
+BUG severity=HIGH — Spec 08 §5.11 "what standing rule would have prevented this whole CLASS" and §7 rule 10(a) "No recommendation goes to the operator without its rule quoted with file:line" — PLAN B6 "a closed, dated list of the code files that exist today under the routes, server surface libs, per-page bindings and phone hooks" and "Existing rule: memory 'build with existing components: new ones need a named reason and a ruling'" — the cap's class omits src/components/report (F2: "src/components/report/ReportPage.tsx ... get C-2's library rule only", where D8 sits) and its cited rule is a memory (F8: "the memory rule 'build with existing components' is not a repo rule"), so neither the class nor the citation is closed — add src/components/report, src/app/admin/report-preview and every hand-written file outside the surfaces manifest to the list, and cite 126_maxbld_surface_standard.md:75 instead of the memory.
+
+BUG severity=HIGH — Spec 08 §11.4 "are written INTO the plan and reviewed at PLAN altitude" — PLAN "A refusal is accepted only when a separate agent's attempts to get past it are all refused and the refusal lines are pasted." — no failing test, fixture, red/green expectation or invocation mode is written into the plan for B2, B3, B4, B5, B6, B7(b), B7(c) or B8, so §11.3's "a lock that was never red against the defect it names is not a lock" cannot be run at plan altitude — write each refusal's red case, tied to a named D1 to D15 defect, into the plan before lock.
+
+BUG severity=HIGH — Spec 08 §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — PLAN B4 "the existing compute gates (shape, literals, purity, closure, estate literals) widen their scan to every file on that list, so the step and Airtight rules bind it" — F6(e) says "applying them to a route-side file would flag by design (UNVERIFIED: not run)" and F6(a) to (d) name 21 ast-grep globs, three .js-only readers, the closure resolver and four gate test files that must move, none carried as an MCINC-2 impact map — run the widened gates on src/lib/parcels/report-compute.ts and the lookup route now, and fold the measured impact map before B4 is locked.
+
+BUG severity=HIGH — Spec 08 §5.1 "Compliance is only meaningful if the spec is TRUE. Run Ground-truth (§5.2) FIRST" and §5.2 "a standing periodic Ground-truth sweep" — PLAN Coverage "Forced review: about 250 unchecked rules plus Specs 90, 96, 98, 99, 100, 126, 127, 128, the engineering standards and Spec 08, through A1 and B2." — A1 and B2 enforce rule lists with no ground-truth pass ahead of them and the plan schedules no standing sweep, while B9 itself lists rules F8 shows stale, so the review checks code against a text nobody has tested — put one ground-truth pass at the head of Part A gating A1 and B2, and name the sweep's cadence and its review_followups.md writer.
+
+BUG severity=HIGH — Spec 08 §11.2 "one cross-read adversary checks the folded decisions PAIRWISE and walks every checklist line for staleness against the fold" — PLAN title "Compliance plan for Increment 1·B, merged (orchestrator draft)" with "the orchestrator launches the grounder" — this plan is itself the fold of the five-step plan, the five recommendations and modularization, and carries only per-refusal attack, so pairwise collisions (B6 against B7(b); A2 gate B against B5's reinstated blocking classes; B5 against B7(c)) go unpriced — add a named cross-read adversary pass over this merged draft before Part B locks.
+
+BUG severity=HIGH — operator, 2026-11-20 "If you can trick the gate - whats the point" — PLAN B2 "covers skipped hooks" — a .husky/pre-push arm is client-side, so git push --no-verify or a push from another clone passes it, and the plan states the coverage as a property rather than a STILL OPEN — name the server-side or CI arm that refuses the same commit range, or mark skipped-hook coverage STILL OPEN in the plan.
+
+BUG severity=HIGH — operator, 2026-11-20 "the footer for example - this should be a seperate module or component (we use preexisting components) how do we also ensure this is happening?" and "we just do half measures" — F4 "the phone has its own footer case in mobile ReportBinding.tsx:290 (a separate render path; no shared builder across platforms)" against PLAN B7 "(c) Refusal 2: a duplicate check at commit: the same node structure or the same content keys defined in two surfaces without going through a shared part is refused" — B7(a) closes on the web-only builder and B7(c) carries no baseline for F5's 7 live duplicates including "one 4214-character dictionary defined in TWO files", so the duplicate refusal either reds on day one or is baselined away — define the footer part once on both platforms and give B7(c) a dated shrink-only baseline in B5's form with detection named per F5 case.
+
+DEFER severity=MED — Spec 08 MCINC-8 "The orchestrator runs the ledger check node ~/Buildo-scratch/ids/check.mjs <worktree> before every push command; a failure means no push command" — PLAN C3 "full suite on the final head through the station; the operator's y; Mobile CI green before any other work." — the push sequence C1 to C3 carries the suite and Mobile CI but not the ledger check, so the held set can go out with unclaimed numbers — insert the ledger check into C1 and C3 ahead of every push command.
+
+MET — Spec 08 §5.3 "Rejected findings are written to the plan with reasons" — PLAN "Dropped (grounder ruled them a facade: BL-ENFORCE grounder verdict in task-371 notes)" — the per-rule check field, the ruling-records-its-check field and the board number are dropped with the grounder's reason recorded.
+
+MET — Spec 08 §11.9 TKT-1 "A code commit names its task by the trailer Task: task-N" — PLAN B2 "refuses a code commit with no Task trailer" — the trailer rule becomes a refusal over every commit in the pushed range.
+
+MET — Spec 08 MCINC-4 "the full suite runs on the current origin tip before ready" — PLAN C3 "full suite on the final head through the station" — the suite runs on the head before the push.
+
+MET — operator, 2026-11-20 "the footer ... should be a seperate module or component" (web half) — src/components/surfaces/web/footerNode.ts:38 "footerNode(section, layout, prefix)" and src/tests/surfaces/site-footer.logic.test.ts:38-40 T1 "footerNode defined in one module; no other file builds component: 'footer'" — the web footer is one module with a lock that names it, so B7(a)'s web case needs verification, not a build.
+
+MET — Spec 08 §11.1 (the plan's own reading) — PLAN B1 "If the reading fails, B4 to B7 are withdrawn." — the load-bearing reading is put behind a read-only grounder before any of B4 to B7 is built.
+
+REJECT — Spec 08 §7 rule 7 "The roster is a MENU, not a checklist" — that the plan runs too few lens seats for a change of this size — the rule makes a small named lens set compliant, so seat count is not a finding.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 8
+
+---
+⏱  111566ms (111.6s)
+📊 Tokens — total: 47277, input: 25086, output: 22191, reasoning: 20399

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens2/material2.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9929 chars, answer 0 chars, 15s
+BUG severity=HIGH — PLAN-2-MERGED B4 "the existing compute gates (shape, literals, purity, closure, estate literals) widen their scan to every file on that list, so the step and Airtight rules bind it." — the plan applies the purity gates unchanged to route-side files, and FACTS-2 F6(e) records "the purity rules are step-specific (G1-G8 name step ledger tables and `ctx`): applying them to a route-side file would flag by design (UNVERIFIED: not run)", so the widened gate would refuse correct code — fix: name the gate set per file class (shape and literals widened, purity G1-G8 excluded or re-scoped) and pin that carve-out in a test before B4 lands.
+
+BUG severity=HIGH — FACTS-2 F6 (compute-closure.mjs:56) "RESOLVE_SUFFIXES `['', '.js', '.cjs', '.mjs', '.json', '/index.js']` (no .ts, no .tsx)" — B4 widens the closure gate over .ts/.tsx entries while the resolver cannot resolve a single `@/` import, so the closure walk would return a short (or empty) set and the gate would pass silently, a false negative rather than a refusal — fix: B4 must state the resolver change ("closure's resolver gains `.ts` and path-alias (`@/`) resolution", F6(c)) plus a red test that one unresolved import fails the closure.
+
+BUG severity=HIGH — PLAN-2-MERGED B5 "the informational classes removed from gate B return as blocking, with a dated shrink-only baseline" — there are no such classes to return: F9 records "A gate for a numeric literal in bindings, phone hooks or routes: estate-literals covers scripts/ only", and F6 puts every numeric-literal detector on COMPUTE_DIR (`compute-literals.mjs:34`), so B5 describes a widening of a detector that does not exist for those paths — fix: B5 must name the new detector (a second ast-grep rule file with its own `files:` globs per F6(a)) and drop the "return as blocking" phrasing.
+
+BUG severity=HIGH — PLAN-2-MERGED B7 (c) "the same node structure or the same content keys defined in two surfaces without going through a shared part is refused" — no baseline is stated, and F5.1 already measures 7 copies of the footer section in static-page.json ("the footer section `{"id":"footer","kind":"footer","parts":[terms,privacy,help,...]}` appears 7 times") and F5.3 one 4214-character dictionary in two files, so the gate refuses the current tree on its first commit — fix: give B7(c) the same dated shrink-only baseline B5 carries, or land it report-only until the count is zero.
+
+DEFER severity=MED — PLAN-2-MERGED B6 "a closed, dated list of the code files that exist today under the routes, server surface libs, per-page bindings and phone hooks" — the four named directories do not include `src/lib/parcels`, which is 16 of the 71 files in F7 and holds "src/lib/parcels/report-compute.ts 105" lines, the stated home of the server-projection defects, so the cap as written may not cover the first defect site — fix: enumerate the exact directories from F7 in B6 rather than categories.
+
+DEFER severity=MED — PLAN-2-MERGED B7 (b) "Refusal 1: a new component or binding file not on the B6 list is refused." — this restates B6's own refusal ("A NEW file there is refused at commit unless the list is extended with a named reason and the operator's ruling id"), so whichever lands second ships as dead code guarding a condition already guarded — fix: delete B7(b) and let B6 own the refusal, or state which file classes B6 does not cover.
+
+DEFER severity=LOW — PLAN-2-MERGED B7 (d) "Every schema node type must resolve to a registered renderer component (verify whether surface-validate already refuses an unknown type)." — the runtime already refuses it ("the renderer throws on an unknown field or status", Spec 136 fe.24) and C-7 (§483) closes the vocabulary, so a new check would duplicate existing enforcement unless it asserts on the schema-to-renderer mapping static-side — fix: state the artifact the new test reads (schema node kinds against mapping.mobile and the web library list) or drop the item.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- B4 widens the step-specific purity gates (G1-G8 naming `ctx`) onto route code, which flags correct code by design
+- B4 relies on a closure resolver that has no `.ts`/`.tsx` or `@/` resolution, so the widened closure returns a short set and passes silently
+- B5 and B7(c) both describe gates with no mechanism or no baseline: no numeric-literal detector exists outside COMPUTE_DIR, and the duplicate check would refuse the seven existing footer sections on day one
+
+---
+⏱  28492ms (28.5s)
+📊 Tokens — total: 27137, input: 21905, output: 5232, reasoning: 4112

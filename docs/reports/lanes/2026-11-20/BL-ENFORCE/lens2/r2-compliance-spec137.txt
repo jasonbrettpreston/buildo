@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens2/material2.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9715 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19913 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30979 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41275 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 49447 chars, answer 3250 chars, 75s
+BUG severity=HIGH — Spec 137 §4 Rule 2 "Every task is registered. ... A task with no row does not exist." — PLAN-2-MERGED.md Part B "### Part B: new tasks proposed" — B1 to B9 carry no task id, no row and no status line, and the operator's "Add the tasks to incr 1b" is answered with a proposed list, so under Rule 2 none of them exists and none can be attacked or accepted — load B1 to C4 as Backlog tasks in the 1·B milestone with Status: lines before any is worked.
+
+BUG severity=HIGH — Spec 137 §4 Rule 4 "The orchestrator writes each ruling into the row's status line the same day." and Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue" — PLAN-2-MERGED.md header 'Operator, same day: "If you can trick the gate - whats the point"' — the 2026-11-20 rulings that the whole plan rests on sit only in the plan header, with no row id, no queue and no cite file:line, which §1's G2 rule ("a verbatim quote and a cite file:line that exists and contains the quote, or it refuses") would refuse — enter each ruling through backlog-decision.mjs with its cite before the first task is built.
+
+BUG severity=HIGH — operator "If you can trick the gate - whats the point" — PLAN-2-MERGED.md B4 "the existing compute gates (shape, literals, purity, closure, estate literals) widen their scan to every file on that list" versus FACTS-2 F6 "scripts/analysis/gates/compute-literals.mjs:34 COMPUTE_DIR the same; :289 `.js` filter" and "compute-closure.mjs:56 RESOLVE_SUFFIXES ['', '.js', '.cjs', '.mjs', '.json', '/index.js'] (no .ts, no .tsx)" — a .ts entry on the list is skipped by the literals gate and its `@/` imports cannot be followed by closure, so the widened gates pass over the code they claim to bind — B4 must name the readers' change to an explicit list plus `.ts` and alias resolution, and F6(e) "the purity rules are step-specific ... applying them to a route-side file would flag by design", with an attack, before it is called a refusal.
+
+BUG severity=CRIT — operator "we just do half measures to create the impression we are solving the problem", "no fasades", and the operator modularization question "this should be a seperate module or component ... how do we also ensure this is happening?" — PLAN-2-MERGED.md B7 "(c) Refusal 2: a duplicate check at commit ... must be verified before anything is built: extend, do not duplicate" and "(d) ... (verify whether surface-validate already refuses an unknown type)" — the central modularization case has no refusal of its own: FACTS-2 F5 says "No existing check refuses 1 to 5", the site-footer lock "names the footer by NAME: it binds only the footer", and FACTS-2 F4 shows "the phone has its own footer case in mobile ReportBinding.tsx:290 (a separate render path; no shared builder across platforms)", so a second footer or part defined inside an already-listed file passes B6, passes B7(b) and passes every named lock — B7(c) must become a built, named duplicate-structure check with its own attack before C4, and B7(a) must cover the phone footer.
+
+BUG severity=HIGH — operator "Essentially if its not enforced it doesnt get done is my view." — PLAN-2-MERGED.md B1 "If the reading fails, B4 to B7 are withdrawn." — the plan states no consequence for a failed B1 while C4 "one at a time under A1, B2, B4 to B7" continues the remaining 1·B builds, so a failed reading silently leaves the hand-written code the reading named with no refusal at all — state that a failed B1 stops C4 or name the replacement refusals in the same task.
+
+BUG severity=HIGH — RR-0150/RR-0149 "infra tooling is built in the Buildo repo under its hooks, suite and history, not in scratch or a separate repo." — PLAN-2-MERGED.md B3 "The user-level lane guard refuses a build brief with no rule-list block from the launch script. Minimal in-place edit; operator typed go." — a user-level guard sits outside the repo's hooks, suite and history, so it is unpushed, unversioned and outside the suite, which is the bypass the plan refuses for B2 — B3 must be a repo hook or launch check committed under the repo, or cite the operator ruling that permits user-level.
+
+DEFER severity=MED — Spec 137 §6 "A commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling. ... carded for the infra-freeze lift and is not built now." with operator "the infa freeze needs to be lifted again" — PLAN-2-MERGED.md B2 "refuses a code commit with no Task trailer; covers skipped hooks" — B2 adds no status-line or expiry check even though the lift that held them has happened and the plan itself creates rows with no status lines, so the trailer alone cannot catch an unregistered or unexpired task — add the three §6 conditions to B2's push arm, or state on the task why they stay deferred.
+
+MET — Spec 137 §4 Rule 3 note (G3) "a commit that changes src/ ... carries a Task: task-N trailer" — PLAN-2-MERGED.md B2 "refuses a code commit with no Task trailer; covers skipped hooks" — the trailer check is kept and extended over the pushed range.
+MET — RR-0233/RR-0232 "the operator decides front end, app design, storage, timeframes, priorities" — PLAN-2-MERGED.md C3 "the operator's y" and A4 "owed with operator input" — landing and storage decisions are left to him rather than ruled by the plan.
+MET — operator "Let's have them reviewed with a view to enforcement." — PLAN-2-MERGED.md "Acceptance standard for every refusal in this plan ... refused and the refusal lines are pasted" — refusals are accepted only on a separate agent's attack evidence.
+MET — operator "we just do half measures to create the impression we are solving the problem" (facade test) — PLAN-2-MERGED.md "Dropped (grounder ruled them a facade ...) The per-rule check field, the ruling-records-its-check field, the board number." — the grounder-ruled facades are removed rather than kept as evidence.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 7
+
+---
+⏱  78158ms (78.2s)
+📊 Tokens — total: 35164, input: 20877, output: 14287, reasoning: 12765

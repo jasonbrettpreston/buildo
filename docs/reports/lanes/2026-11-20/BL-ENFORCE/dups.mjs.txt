@@ -1,0 +1,14 @@
+import fs from 'node:fs'; import path from 'node:path'; import { execSync } from 'node:child_process';
+const files = execSync("git ls-files 'scripts/surfaces/**/*.json' 'scripts/surfaces/*.json'", { encoding: 'utf8' }).split('\n').filter(f => f && !/golden|fixtures|census|vendor|schema\.json$|descriptor\.json$/.test(f));
+const seen = new Map();
+const canon = v => JSON.stringify(v, (k, x) => x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().map(kk => [kk, x[kk]])) : x);
+for (const f of files) {
+  let j; try { j = JSON.parse(fs.readFileSync(f, 'utf8')); } catch { continue; }
+  (function w(o, p) { if (o && typeof o === 'object') { const s = canon(o); if (s.length >= 140) { const e = seen.get(s) || { n: 0, at: [] , len: s.length}; e.n++; e.at.push(f + ':' + p.slice(0, 60)); seen.set(s, e); } for (const k of Object.keys(o)) w(o[k], p + '/' + k); } })(j, '');
+}
+const rows = [...seen.entries()].filter(([, e]) => e.n >= 2).map(([s, e]) => ({ n: e.n, len: e.len, files: [...new Set(e.at.map(x => x.split(':')[0]))].length, sample: s.slice(0, 90), at: e.at.slice(0, 3) }));
+// drop subtrees fully contained in a bigger repeated subtree with same count
+rows.sort((a, b) => b.len * b.n - a.len * a.n);
+const keep = []; for (const r of rows) { if (!keep.some(k => k.n === r.n && k.at[0].split(':')[0] === r.at[0].split(':')[0] && k.len > r.len && k.sample.length)) keep.push(r); }
+console.log('files scanned', files.length, 'repeated subtrees', rows.length);
+for (const r of keep.slice(0, 22)) console.log(`${r.n}x len ${r.len} in ${r.files} file(s) :: ${r.sample} :: ${r.at.join(' | ')}`);

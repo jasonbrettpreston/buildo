@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens2/material2.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9330 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19657 chars, answer 0 chars, 30s
+BUG severity=HIGH — compute-closure.mjs:56 "RESOLVE_SUFFIXES `['', '.js', '.cjs', '.mjs', '.json', '/index.js']` (no .ts, no .tsx)" — B4 points the closure walk at .ts entry files the resolver cannot resolve, and an unresolved or `@/` import truncates the graph, so B4's "a test that the engine core's closure never reads the runner-only context keys" passes over an empty or short set and the gate fails open — make an unresolved import a refusal that prints the specifier, and add a closure-size floor assertion to the C1 test.
+
+BUG severity=HIGH — FACTS-2 F6 "the purity rules are step-specific (G1-G8 name step ledger tables and `ctx`): applying them to a route-side file would flag by design (UNVERIFIED: not run)" — B4's widening is red on every listed file on day one, so the only routes to green are a blanket exemption or switching the arm off, which is the facade the operator forbade — dry-run the widened gates over the B6 list before B4 is built and record a per-file expected-finding baseline, refusing any finding not on it.
+
+BUG severity=HIGH — B7 "(c) Refusal 2: a duplicate check at commit: the same node structure or the same content keys defined in two surfaces without going through a shared part is refused" — the check meets data that FACTS-2 F5 records as "No existing check refuses 1 to 5" (footer section 7x, the 4214-character dictionary in two files, the pricing section 2x), so its first run refuses every commit and will be baselined wholesale — name in the task, before build, the dated baseline of the five existing clusters and the F5.6 evidence-boilerplate exclusion.
+
+BUG severity=HIGH — B8 "Until then the push sequence waits for Mobile CI green." — no timeout on the wait, no bound on re-runs and no rule for a flaky red or a dead shared mobile install, so one unrelated failure parks the 29-commit push with no exit — state the wait bound, that a timeout or a failed install refuses the push, and who authorises a re-run.
+
+REJECT — A1 "State: 24 of 37 attacks refused; 13 holes sent back. Accept on a clean re-attack." — looks like the builder grading its own retry — handled by the acceptance standard "The lane never runs or writes its own verdict: the orchestrator launches the grounder", so the second attempt is independent.
+
+DEFER severity=MED — A4 "a DB mirror migration for two new settings (operator typed GO)" — the only write in the plan and no idempotency key is stated, so a re-run after a mid-job failure can double-insert or die on a duplicate key — name the conflict key and the on-conflict update, and what a half-run leaves behind.
+
+DEFER severity=MED — B3 "The user-level lane guard refuses a build brief with no rule-list block from the launch script. Minimal in-place edit" — the empty path is unguarded, a present but empty or placeholder block passes the "has a block" test, and a second launch of the same brief is not described — refuse an empty or placeholder block and refuse a second launch for a brief that already carries one.
+
+DEFER severity=MED — B6 "A NEW file there is refused at commit unless the list is extended with a named reason and the operator's ruling id" — the read path is unstated, so a missing or unparsable list file has no posture and a renamed file (new path plus deleted path) is refused as NEW, blocking a legitimate refactor — refuse on a missing list and match by content path with an explicit rename allowance.
+
+VERDICT: FAIL on error-path safety
+Paths walked: widened closure and purity gates on .ts entry files (B4), duplicate-check first run against existing data (B7c), push wait and re-run on phone tests (B8), migration re-run and partial failure (A4), launch guard empty block and second launch (B3), closed-list read and rename (B6), close-check re-attack (A1)   Unguarded: 4
+
+---
+⏱  44032ms (44.0s)
+📊 Tokens — total: 29725, input: 21922, output: 7803, reasoning: 6888

@@ -1,0 +1,8 @@
+# OPERATOR WORDS AND RULINGS IN FORCE FOR THIS PLAN (verbatim; supplied so no finding says "not pasted")
+- Operator, 2026-11-20, verbatim: "I agree. teh other question is about modularization - teh footer for example - this should be a seperate module or component (we use preexisting components) how do we also ensure this is happening? okay so let's merge this [the five-step 1·B plan] with this [the five recommendations] plus modularization. Let's see the task list for this - full plan of your reocmmendations. Let's have them reviewed with a view to enforcement. Whether this will work?"
+- Operator, same day, verbatim: "If you can trick the gate - whats the point"; "we just do half measures to create the impression we are solving the problem"; "no fasades".
+- Operator, 2026-11-20: "Essentially if its not enforced it doesnt get done is my view. ... We spend so much time making rules and recording decisions but we dont follow them.  Same lesson over ans over".
+- Operator, 2026-11-20: "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." The infra freeze is lifted for compliance tooling by name.
+- RR-0233 / RR-0232: the operator decides front end, app design, storage, timeframes, priorities; everything else is decided by the orchestrator, repo review and gates under the six-criteria rule.
+- RR-0150/RR-0149: infra tooling is built in the Buildo repo under its hooks, suite and history, not in scratch or a separate repo.
+- The material under review is a PLAN (nothing built). A separate grounder rules on findings. The facts sheet appended to the material (FACTS-2) was written by opening files in the tree; it is not a ruling.

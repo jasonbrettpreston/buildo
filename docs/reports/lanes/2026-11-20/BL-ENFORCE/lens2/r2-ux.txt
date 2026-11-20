@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens2/material2.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9446 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19438 chars, answer 0 chars, 30s
+```
+BUG severity=HIGH — PLAN-2-MERGED.md A4 "A4 owed with operator input: D1 freshness compare (design decision drafted in BL-FIXPROJ/D1-OPERATOR-DRAFT.md)" vs design "a stale record is never served and is recomputed" — the returning visitor can be served numbers the approved design forbids serving, and no task in Part A to C refuses it — make D1's answer a precondition of C3 and name the gate that refuses a stale-served record
+BUG severity=HIGH — Milestone Storage set-up "Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3)" vs ruling "no 35 s cap" and "the 35,000 ms setting change (LOAD.3) is not needed now" — a builder following the approved text sizes the loading state and the button reveal on a superseded rule, so the person waits on a number the operator removed, and B9's stale list "Spec 90 :46 Firebase, :71 shared-types; 08_agents :343, :19/:28; doc-16 body now marked" does not name these two lines — add these two Storage set-up lines to B9 before lock
+DEFER severity=MED — PLAN A3 "task-374 footer links (router link, 44 px)" with FACTS-2 F2 "UNVERIFIED whether any test checks C-9's 44 px on ReportPage.tsx tags (D8 sat there)" — the person on a phone tapping the footer links on the report page has no check between them and a target under 44 px, because task-374 is a one-off fix and C-9 stops at listed modules — extend C-9 to ReportPage.tsx under B7, or state that it is out of scope
+DEFER severity=MED — PLAN C4 "C4 remaining 1·B builds (LOAD.2, LOAD.4, the no-plan page, PROOF.S and the rest)" vs "RR-0312 No plan: an error page with a way to sign up" — the one state where a searched Toronto address leads nowhere is listed last with no refusal attached, so nothing refuses a release without it — name it in C3 as a precondition of the operator's y
+DEFER severity=MED — PLAN C4 "C4 remaining 1·B builds (LOAD.2, LOAD.4, the no-plan page, PROOF.S and the rest)" vs "A load-failure page is a task, built from the other small pages (RR-0179)" — the state a person reaches when the report or See details fails to load is not named anywhere in the plan, so it can fall into "the rest" unnoticed — name it in C4 by name
+DEFER severity=LOW — FACTS-2 F8 "Every server fetch MUST go through TanStack Query - never raw fetch() in components" — nothing in B4 to B7 refuses a raw fetch in a component, so the loading, empty and error states a person sees on fetch-driven UI are ungoverned — attach Spec 99:219 to the rule lists at A1 and A3 launch
+REJECT — mobile/src/components/surfaces/SurfaceRenderer.tsx "An unmapped component, icon, content key or action throws" vs "the renderer throws on an unknown field or status" — a person reaching an unmapped field sees a thrown screen rather than a fallback line — the approved design text requires exactly this throw, so it is not a departure
+
+VERDICT: FAIL on the person's experience
+States checked: first view (search page), loading, answered (report), empty/no plan, error (load failure), repeat visit (stale record), touch/assistive (44 px footer links), offline: cannot see (plan silent)   Dead ends found: 2
+```
+
+---
+⏱  44610ms (44.6s)
+📊 Tokens — total: 30049, input: 21921, output: 8128, reasoning: 7299

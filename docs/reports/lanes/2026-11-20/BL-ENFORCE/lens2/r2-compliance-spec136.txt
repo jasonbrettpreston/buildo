@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens2/material2.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9524 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19096 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29111 chars, answer 0 chars, 45s
+BUG severity=CRIT — fe.15 "the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria" — plan line "A refusal is accepted only when a separate agent's attempts to get past it are all refused and the refusal lines are pasted" — the acceptance standard carries no planted-defect canary and no clean-copy zero-exit, so a gate that refuses every input passes the standard, and nothing proves any refusal would have caught D1 to D15 — add to A2, B2, B4, B5, B6, B7 a canary that replays each confirmed defect in a temp copy expecting non-zero exit, plus a clean-copy zero exit, pasted beside the attack lines.
+
+BUG severity=HIGH — fe.02 "Declared, not coded: a screen is a descriptor; the only code is the shared archetype components" and fe.34 "The v21 report PAGE tree has ONE contract, scripts/surfaces/_schema/report-page.schema.json" — B6 "A closed, dated list of the code files that exist today under the routes, server surface libs, per-page bindings and phone hooks" with FACTS-2 F3 "including src/components/report/ReportPage.tsx" — B6 makes permanent the hand-written page renderers the clauses require to come from the declared page table, and no task gives them a conversion obligation — make each B6 entry shrink-only, each paired to a named page table and a dated task that removes it.
+
+BUG severity=HIGH — operator ruling "this should be a seperate module or component (we use preexisting components) how do we also ensure this is happening?" and fe.07 "Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output" — B7(a) "the shared footer builder and its parity tests exist: verify" with FACTS-2 F4 "the phone has its own footer case in mobile ReportBinding.tsx:290 (a separate render path; no shared builder across platforms)" — B7(a) is a verify, not a refusal; the second footer render path on mobile and the four footer strings defined in 7 content files (F5 item 7) are refused by nothing — add a refusal that one builder serves web and mobile and that the four keys resolve to one content home.
+
+BUG severity=HIGH — operator "we just do half measures to create the impression we are solving the problem" and "no fasades" — B4 "the existing compute gates (shape, literals, purity, closure, estate literals) widen their scan to every file on that list" with FACTS-2 F6 "(b) the three `.js`-only directory readers change to accept an explicit list and `.ts`; (c) closure's resolver gains `.ts` and path-alias (`@/`) resolution" and F6 "(e) the purity rules are step-specific ... applying them to a route-side file would flag by design" — no task covers blockers (b), (c) or (e), so the stated refusal cannot be built as written and is a facade until it is — split B4 into the reader and resolver changes with one attack test each, and withhold purity from the widened set until (e) is ruled.
+
+DEFER severity=MED — fe.30 "Report fields are generated from the catalogue, one home per fact" — B7(c) "the same node structure or the same content keys defined in two surfaces without going through a shared part is refused" with FACTS-2 F5 "the footer section ... appears 7 times" and "one 4214-character dictionary defined in TWO files" — the refusal is scoped to across-surface duplication, so the measured duplicates inside one file and between the two seed text files are refused by nothing — widen the check to repeated subtrees within and across the schema and content files, not only across surfaces.
+
+DEFER severity=MED — fe.44 "the conversion factor is content/settings, never code; one toggle covers every area and length" with "Status: OWED · lock owed: src/tests/surfaces/report-units.logic.test.ts" — A3 "task-378 phone tunables into surface config, contract entries, the length factor" — the length factor is touched but the owed fe.44 lock is named in no task while C4 opens further 1·B builds — attach the owed lock to task-378 as its acceptance.
+
+MET — fe.36 — A3 "task-374 footer links (router link, 44 px)" — footer navigation moves through the platform router, which is what fe.36 requires.
+
+MET — fe.24 — FACTS-2 F2 "C-7 :483 'the closed render vocabulary grows only by the 128 section 4 route'" and "SurfaceRenderer.tsx header: 'An unmapped component, icon, content key or action throws'" — unknown field and status are already refused, so B7(d) must verify, not rebuild.
+
+MET — fe.33 — B8 "The station runs the phone tests on the commit and refuses the push on a failure" — a per-platform render smoke is required before a push, which is fe.33's per-platform obligation.
+
+REJECT — Spec 136 "existing components only" cited by B6 — accused of resting on a clause that does not exist in the pasted fe list — not a real issue: the pasted operator ruling in force says "we use preexisting components", so the authority is the ruling, not Spec 136; B6 should cite the ruling id instead.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 5
+
+---
+⏱  56476ms (56.5s)
+📊 Tokens — total: 27396, input: 17511, output: 9885, reasoning: 8658
