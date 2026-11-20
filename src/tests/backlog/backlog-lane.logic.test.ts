@@ -241,6 +241,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
       expect(e).toContain('out-<lens>-pN.txt');
       expect(e).toContain('one file alone over the room is refused naming the file and its size: report that to the orchestrator at once');
       expect(e).toContain('The close check recomputes the changed paths of the task range');
+      expect(e).toContain('closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane');
       expect(e).not.toMatch(/the diff is never split or trimmed to core files/);
       expect(e).not.toMatch(/puts the whole diff in every part/);
       expect(e).not.toMatch(/a diff over the review tool's bound is split/);
