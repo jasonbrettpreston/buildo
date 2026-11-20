@@ -231,7 +231,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
       expect(e).toContain('fix-*.txt');
       // V2.WHOLE (task-410): lens-input splits the rule list at its headings AND, when the diff leaves no room for a list part, the DIFF at file boundaries (the tool, never by hand)
       expect(e).toContain('The compliance lens reviews the WHOLE change');
-      expect(e).toContain('git -c core.quotepath=false diff --no-ext-diff --no-textconv --text --full-index --no-color --no-renames --src-prefix=a/ --dst-prefix=b/ -U3');
+      expect(e).toContain('git -c core.quotepath=false diff --no-ext-diff --no-textconv --text --full-index --diff-algorithm=myers --indent-heuristic --inter-hunk-context=0 --no-color --no-renames --src-prefix=a/ --dst-prefix=b/ -U3');
       expect(e).toMatch(/\$\(git log refs\/heads\/\S+ --first-parent --reverse --format=%H -S@lane-\S+ -- 'backlog\/tasks\/[^']+' \| head -1\) HEAD -- /);
       expect(e).toContain('the base is the task\'s launch commit on the board');
       expect(e).toContain("':(exclude,glob)docs/reports/lanes/**' ':(exclude,glob)docs/reports/reviews/**'");

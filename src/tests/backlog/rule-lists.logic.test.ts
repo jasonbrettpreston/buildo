@@ -633,4 +633,8 @@ describe('V2.WHOLE: the real table exempts golden snapshots by their file shape 
     expect(matchesAny(t.exempt, real), real).toBe(true);
     for (const p of ['src/tests/fixtures/surfaces/x/evil.ts', 'src/tests/fixtures/report-page/run.mjs', 'src/tests/fixtures/surfaces/x/y/a.mobile.json', 'src/lib/a.ts']) expect(matchesAny(t.exempt, p), p).toBe(false);
   });
+  it('H9 round 6: the diff flags also pin the algorithm, the indent heuristic and the inter-hunk context (the three config keys that change the text of a diff)', async () => {
+    const m = (await import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs'))) as { DIFF_ARGS: string[] };
+    for (const a of ['--diff-algorithm=myers', '--indent-heuristic', '--inter-hunk-context=0']) expect(m.DIFF_ARGS, a).toContain(a);
+  });
 });

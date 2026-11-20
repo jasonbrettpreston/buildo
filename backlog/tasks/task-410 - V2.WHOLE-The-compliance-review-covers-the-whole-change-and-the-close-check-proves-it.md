@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T21:50:00Z'
+updated_date: '2026-11-20T22:05:00Z'
 labels:
   - McFix
   - McFix V2
@@ -110,4 +110,8 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 operator ruling on the CONFLICT, verbatim (MORNING-DECISIONS.md entry '2026-11-20 · Operator AGREES the Rule 3 amendment and RULES on material too large to review'): put to him "amend Spec 137 Rule 3 so a lane task closes in a separate commit after its code — yes (recommended) or no?"; "agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close." Dated notes added in 137_mcqueue.md (Rule 3 and a correction of this task's earlier note). The material-too-large half of his sentence is not built here.
 
 2026-11-20 round 5 final: 7116dabbc, 065f85a02, 13dd26b45 (Rule 3 note). Lens set re-run on the final range.
+
+2026-11-20 round 6 started (grounder r5: H9, diff config keys). Tests first.
+
+2026-11-20 round 6 part 1: rule-lists.mjs DIFF_ARGS pins --diff-algorithm=myers --indent-heuristic --inter-hunk-context=0.
 <!-- SECTION:NOTES:END -->

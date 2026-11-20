@@ -29,7 +29,7 @@ const RESERVE = 800; // stamp, header and separator of one lens input file
 const MARKER = '\n=== MATERIAL UNDER REVIEW (everything below this line) ===\n';
 /** V2.WHOLE (task-410): the one diff command the brief, the lens input and the close check share (every flag pinned, so the text is the same on every machine). */
 // --text and --full-index (V2.WHOLE fix round): a .gitattributes line `*.ts -diff` makes git print "Binary files differ" for code; --text prints the text whatever the attributes say, --full-index fixes the index line length
-export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--text', '--full-index', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];
+export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--text', '--full-index', '--diff-algorithm=myers', '--indent-heuristic', '--inter-hunk-context=0', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];
 /** A git diff cut at its file headers: [{path, text}] in order, or null when the text is not a diff (does not start at a header). Content lines carry a prefix, so a file whose own text says "diff --git" is never cut. */
 export function splitDiff(text) {
   const at = [...text.matchAll(/^diff --git /gm)].map((m) => m.index);
