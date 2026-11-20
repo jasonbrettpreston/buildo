@@ -1,0 +1,541 @@
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:2f74bc5d37d84a358e5e700929a1c7609ee563536d5cfd2b01b47d9681bd718a part 1 of 1
+RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+---
+id: doc-17
+title: Orchestrator readings (not rulings)
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Orchestrator readings (not rulings)
+
+Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18). The operator's rulings are the decisions.
+
+## Readings
+- RR-0001 2026-11-18 2026-11-18 · RULED: automatic policy checks and evidence-based task st: Infra freeze lifted for the named list only; scratch-side parts now, repo checks after push 6 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:725)
+- RR-0002 2026-11-18 2026-11-18 · Operator: lane tooling first; independent agent reviews: Lane tooling first (run-panel, guard, generated briefs, results gate, lane registry and pack cache, Spec 08 seat-K note draft) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:716)
+- RR-0003 undated open-questions.md:1100: Daylight is the product standard: small pages v8, landing v10+ (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1100)
+- RR-0004 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Web follows the same designed choose-lot pages and states; recent-search chips on web and phone (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0006 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : Loading screen setting is 35 s (LOAD.3: max raised to 35,000 ms) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0007 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : See details is computed together with the main page, behind the loading screen from the search pick (not on tap) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0008 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: RULED: a lot's numbers are computed on first open, track or owner input, then stored with their stamp for that user and others; no record for lots nobody opened; no all-lot headline fill (amends ST-5, FE-39, ST-6, MB-38) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704)
+- RR-0009 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Storage ruling confirmed by the operator ("1y 2y") (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0010 undated ONE-SITTING.md:22: Open question 12 (ONE-SITTING.md): Gap Q1 (1.4): fix the two search-parser defects (street direction guard, unit-token strip) before launch? (a) yes, with (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:22)
+- RR-0011 undated ONE-SITTING.md:65: Open question 35 (ONE-SITTING.md): Gap Q2 (LS.11): W5 (choose your parcel) on the web: (b) defer until the web has a map ruling and keep the web live switc (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:65)
+- RR-0013 2026-11-17 2026-11-17 ~08:40 · Operator rulings on MB-REVIEW-20261117 section 6: Launch means users on the live customer report, not tester preview (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:568)
+- RR-0015 undated plan.md:219: Colour ruling D-1 (2026-11-14): the built report must look like the Daylight B mock; this is a colour ruling, not a whole-layout approval (~/Buildo-scratch/mcfrontend/MF-83/plan.md:219)
+- RR-0016 undated open-questions.md:866: Earlier approval: dark mock v21 (2026-11-10); superseded for colour, summary, gallery, lot views and See details sheets by the later theme and rulings (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:866)
+- RR-0017 undated open-questions.md:1094: Theme ruled: Daylight B (light) with the summary at the top (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0018 undated DELTA.md:10: Report base confirmed by the operator: Report Theme B · Daylight model, identical to pub/B.html (report-delta/DELTA.md:10); the later rulings are applied on top (CHANGES.md) (~/Buildo-scratch/lanes-20261117/report-delta/DELTA.md:10)
+- RR-0019 undated CHANGES.md:1: Page-level rulings after the brief (theme, brand, summary, units switch, one lot-size box, one disclaimer) are in CHANGES.md (~/Buildo-scratch/lanes-20261117/req-rulings/CHANGES.md:1)
+- RR-0020 undated open-questions.md:1094: Theme: Daylight B (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0021 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word for a number with no stored row: Not yet estimated (amends the earlier label) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0022 undated open-questions.md:1073: One short disclaimer everywhere (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1073)
+- RR-0023 undated ONE-SITTING.md:64: Open question 34 (ONE-SITTING.md): Storage D1 and D2 with gap Q12: name the wait a user may have on See details and after typing the house in (only (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:64)
+- RR-0024 undated ONE-SITTING.md:15: Open question 5 (ONE-SITTING.md): MB-44 order and the three dated notes W needs (RESOLVE R10, R11, R12), plus wiring What-we-checked into the route (gap Q (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:15)
+- RR-0025 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Word for a number with no row yet: "Not yet evaluated" (the mock); never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0026 2026-11-18 2026-11-18 · Operator direction: page-level lot information in increme: The report page parts every scenario shares (header, summary at the top, About this lot rows and details, lot-size box, footer) are listed under increment 1 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:674)
+- RR-0027 undated MCBYLAWS-QUEUE.md:88: Increment 2 adds the main-wall share caps only (2026-11-03, Q1 option a); street-side yard and front-yard averaging were already in (origin:.cursor/MCBYLAWS-QUEUE.md:88)
+- RR-0029 undated open-questions.md:1124: Can you build bigger shows Not yet evaluated until MB-38/MB-44; no feeding of the legacy variance model (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0030 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word where no row is stored: Not yet estimated; never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0031 undated open-questions.md:1145: FSI cap line stays in See details (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1145)
+- RR-0032 undated ONE-SITTING.md:23: Open question 13 (ONE-SITTING.md): Gap Q3 (1.1): customer rule for lots under 50 m2 or over 5,000 m2: (a) show the not-evaluated state with one closed reas (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:23)
+- RR-0033 undated ONE-SITTING.md:27: Open question 17 (ONE-SITTING.md): Gap Q8 + Q11 (1.5, and the permits.storeys chain 7.7, 7.8, 7.9, 7.23): serve null for storeys 0 (key kept, Spec 100 Tier (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:27)
+- RR-0034 undated ONE-SITTING.md:35: Open question 20 (ONE-SITTING.md): Q-COA and Q-COAN (CO.1, CO.2: on the critical path): (a) status-only CoA rows land in the increment 8 seed window and nu (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:35)
+- RR-0035 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Every option has a summary item at the top: a smaller summary photo + its Max Build estimate (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0036 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: On "see concepts" a smaller copy of the main image stays above the gallery (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0037 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Neighbours reach is per scenario; the houseplex reach is larger (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0038 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Lot views draw the FITTED house (storeys_fit, footprint_fit_m2, depth_fit_m, height_fit_m), not the by-law maximums (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0039 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Concept photos: 3 per scenario, chosen by scenario, lot shape and lot size (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0040 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Concept photos per lot-size band small / medium / large (band limits are settings, values owed), with lot shape (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0041 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Image hold R-IMG1..3 is LIFTED: the image tasks (GAP.2) are ready (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0042 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: "Most space": the tag goes on every option that has the most space; a tie goes to the lowest option number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0043 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: The cost panel "Calculated <date>" line is dropped (costs are updated regularly) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0045 undated MCBYLAWS-QUEUE.md:89: M-344 moves from increment 3 to the sixplex increment (2026-11-03, Q5 b) (origin:.cursor/MCBYLAWS-QUEUE.md:89)
+- RR-0046 undated 78_optimal_lot_configuration.md:848: Minimum units is 2 (gap Q4 closed) (origin:docs/specs/01-pipeline/78_optimal_lot_configuration.md:848)
+- RR-0047 undated open-questions.md:1150: From the side: the houseplex is drawn with its units (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1150)
+- RR-0048 undated open-questions.md:1124: Houseplex Can you build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0049 undated ONE-SITTING.md:24: Open question 14 (ONE-SITTING.md): Gap Q5 (3.2): hold the houseplex roof rows B9.8, B9.9, B9.10 out of v1 (payload_only)? (a) yes; (b) show them. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:24)
+- RR-0050 undated MCBYLAWS-QUEUE.md:90: Increment 4 decision list ruled 2026-11-11 (record mcbylaws/inc4/DECISIONS-v2.md) (origin:.cursor/MCBYLAWS-QUEUE.md:90)
+- RR-0051 undated open-questions.md:805: One lot-size box recalculates every option; no per-card Improve accuracy button (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0052 undated open-questions.md:1124: Build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0053 undated ONE-SITTING.md:26: Open question 16 (ONE-SITTING.md): Gap Q7 (4.1): fold the six small report items into the existing What lists (MB-94 c, MF-85) instead of new rows; and are (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:26)
+- RR-0054 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) is a BASEMENT secondary suite computed from the fitted house; the by-law maximum (150.10.40.40(1), 45 percent of the interior floor area) is disclosed in See details (closes Q-GAP-4) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:686)
+- RR-0055 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) = min(basement suite size, 45% of the house's interior floor area per 150.10.40.40(1)); the cap is applied to the number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:688)
+- RR-0056 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: The basement suite size is computed from the fitted house footprint (footprint_fit_m2), then capped at 45% of the interior floor area (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:690)
+- RR-0057 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Suite Size See details disclosure is the one-line version: "Basement suite, inside the walls. Toronto limits a secondary suite to 45% of the house's interior floor area: {X} m² on this lot." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0058 undated Operator 2026-11-14 (verbatim: "This is not very good. We need the bui: Garden-suite face = two size and cost pairs, gain not on the card (2026-11-14) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:235)
+- RR-0059 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Operator direction 2026-11-17: fix the garden-suite card with MF-ADDON as its design (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:641)
+- RR-0061 2026-11-17 2026-11-17 ~11:50 · Decisions 2-4 after the exact-wording panel (lane : The 80,682 addon_cand rows question (Q2 (a)); the restore ruling is open (q7) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:614)
+- RR-0062 undated ONE-SITTING.md:14: Open question 4 (ONE-SITTING.md): 5.11: add the garden-suite split speed-up (same outputs, byte-identical, measured on 100 lots) before the MB-38 fill, an (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:14)
+- RR-0063 undated ONE-SITTING.md:16: Open question 6 (ONE-SITTING.md): Garden-suite card and binding (RESOLVE R2, R3, R4, R9): A1a classes and texts as written; split outputs bind by the new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:16)
+- RR-0064 undated ONE-SITTING.md:17: Open question 7 (ONE-SITTING.md): Stop storing the 14 addon_cand working rows (RESOLVE R5, R6, R7): new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:17)
+- RR-0065 undated ONE-SITTING.md:18: Open question 8 (ONE-SITTING.md): RESOLVE R8 (offered extra): also stop storing the 26 further internal rows read by nothing? y / n. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:18)
+- RR-0066 undated ONE-SITTING.md:36: Open question 21 (ONE-SITTING.md): Q-5-COST (5.6): what prices the House tile on a garden-suite card? (a) the house type's existing cost line on main_gfa_w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:36)
+- RR-0067 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: All 59 increment 6 recommendations approved (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0068 2026-11-17 2026-11-17 ~11:20 · Operator ruling: D7 once (decisions/DECISIONS-2026: The D7 recapture runs once, on the test stack; no dev run (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:602)
+- RR-0069 2026-11-16 2026-11-16 operator literal ruling: Renovation card carries the lawfully existing owner question (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:470)
+- RR-0070 undated open-questions.md:805: No per-card Improve accuracy button on renovation cards (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0071 undated ONE-SITTING.md:25: Open question 15 (ONE-SITTING.md): Renovation (gap Q6, inc 6 R2, R3): add the two dated notes naming RE and RF on the increments table row 6 and on LC-16, (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:25)
+- RR-0072 undated ONE-SITTING.md:37: Open question 22 (ONE-SITTING.md): Renovation cost line (inc 6 R1, R6-COST; also the semi page 7.25): (a) priced inside the on-demand one-lot path; (b) pri (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:37)
+- RR-0073 undated ONE-SITTING.md:13: Open question 3 (ONE-SITTING.md): Storage (ST-4, ST-5, ST-6): keep as ruled and record the three corrected-fact notes after push 6? y / change. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:13)
+- RR-0074 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Increment 6 list approved, 6c items included (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0075 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: MB-90 cost-rate sub-points R-1..R-4 are not in the plan now (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:637)
+- RR-0076 undated ONE-SITTING.md:19: Open question 9 (ONE-SITTING.md): Increment 6c groups 1-7 and call-out A: approve all seven group lines, with the 6c notes joining the push-6 records comm (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:19)
+- RR-0077 undated ONE-SITTING.md:20: Open question 10 (ONE-SITTING.md): O-15 (e) (6c.4): is the keyed Drive set a candidate pool for the proof draw? (i) yes, with the three held map commits' l (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:20)
+- RR-0078 undated ONE-SITTING.md:21: Open question 11 (ONE-SITTING.md): Refresh lines (6c.23, 6c.24, 6c.26): six rows get status wording (MF-86, MF-66, MB-109, MF-87, MF-69, MB-74 read LATER w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:21)
+- RR-0079 undated ONE-SITTING.md:11: Open question 1 (ONE-SITTING.md): AL.9 (new, integration pass): fix the one rehearsal-script defect (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:11)
+- RR-0082 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: The increment 7 ON word comes before the single Layer 3 recapture (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:628)
+- RR-0083 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: J3 reach-settings migration is required (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:634)
+- RR-0084 undated ONE-SITTING.md:12: Open question 2 (ONE-SITTING.md): J4 (MB-90 cost-rate refresh, staged migration 331 with the 106.2 index rebase): run it now, or move J4 and MB-90 later w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:12)
+- RR-0085 undated MCFRONTEND-QUEUE.md:639: A coa_required sixplex card has no as-of-right headline; its figure shows in the CoA tier only (origin:.cursor/MCFRONTEND-QUEUE.md:639)
+- RR-0089 undated ONE-SITTING.md:33: Open question 18 (ONE-SITTING.md): Increment 8 rulings 8.15a, 8.17, 8.18: (A) the sixplex ON edit lands in push 9a before the J7 rehearsal; (A) the five MB (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:33)
+- RR-0090 undated ONE-SITTING.md:34: Open question 19 (ONE-SITTING.md): Q-S7FACE: what does a coa_required sixplex card show besides the badge? (a) badge only, no figure, no cost (amends :639) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:34)
+- RR-0091 undated ONE-SITTING.md:66: Open question 36 (ONE-SITTING.md): Gap Q10 and the J9 copy-forward form (8.25) and prereg numbering (8.3): record the plausibility verdicts (Q10 a); copy-f (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:66)
+- RR-0093 2026-11-15 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready: Primary measure by building: suite-only cases score the suite against the suite max (2026-11-15) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:340)
+- RR-0094 undated ONE-SITTING.md:44: Open question 24 (ONE-SITTING.md): Increment 9 R1: one dated M-362 amendment with three sub-rulings: (F2) a type with no stored same-type class leaves the (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:44)
+- RR-0095 undated ONE-SITTING.md:45: Open question 25 (ONE-SITTING.md): Increment 9 R3: how is the CoA route scored? (a) by approval; (b) by need (coa_required correct iff the notice cites a p (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:45)
+- RR-0096 undated ONE-SITTING.md:46: Open question 26 (ONE-SITTING.md): Increment 9 D-11 (9.0a): the CoA building column is filled (a) by the loader from the clause-family table; (b) loaded fr (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:46)
+- RR-0097 undated ONE-SITTING.md:47: Open question 27 (ONE-SITTING.md): Increment 9 R2 (ask after the O-15 (e) row above): record the closeness-threshold RULE now (median and p25 of the 25 on (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:47)
+- RR-0098 undated ONE-SITTING.md:38: Open question 23 (ONE-SITTING.md): Group approve lines under rulings already given: increment 8 groups A-H and the removal of 8.7 and 8.24; increment 9 gro (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:38)
+- RR-0100 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 compression runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0101 undated ONE-SITTING.md:53: Open question 28 (ONE-SITTING.md): O-15 (a) draw form c2, (b) floor 3 per modelled stratum with N as D-10 item 2, (c) you type the seed, (f) one re-key: y (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:53)
+- RR-0102 undated ONE-SITTING.md:54: Open question 29 (ONE-SITTING.md): Push 11: one landing set or two? (i) two windows, storage set first (10.3, the MB-111 migration, the 10.6 note), proof s (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:54)
+- RR-0103 undated ONE-SITTING.md:55: Open question 30 (ONE-SITTING.md): D-4 and D-10 (asked once, at the 9.3 sitting): maxima for the drawn proof lots by (A) a read-only snapshot file, or (B) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:55)
+- RR-0104 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0105 undated McSTORAGE-RULINGS.md:130: All-lot store is one headline record per parcel and option (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:130)
+- RR-0106 undated MCFRONTEND-QUEUE.md:498: MF-51 and MF-59 are on the launch list (origin:.cursor/MCFRONTEND-QUEUE.md:498)
+- RR-0107 undated ONE-SITTING.md:61: Open question 31 (ONE-SITTING.md): MB-109 lot views (L.1, L.2, L.3): are lot views in the live layout at launch? If yes: the dated M-465 (7) amendment nami (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:61)
+- RR-0108 undated ONE-SITTING.md:62: Open question 32 (ONE-SITTING.md): MB-100 launch call (L.4): the 39,267 lots gated whole-lot as exception_not_authored: accept and disclose, or build first (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:62)
+- RR-0109 undated ONE-SITTING.md:63: Open question 33 (ONE-SITTING.md): CoA fit and cost (Q-UNFREEZE, Q-UBOUND, Q-COACOST, Q-CORERUN): (a) unfreeze no AV3 rows; store u = 1.00 for multiplex (r (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:63)
+- RR-0110 undated infra-freeze-project-first.md:12: Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record) (~/.claude/projects/-Users-brettpreston-macmini/memory/infra-freeze-project-first.md:12)
+- RR-0111 undated 137_mcqueue.md:112: Permit step conversion stays frozen (Spec 137 rule 11) (origin:docs/specs/00-architecture/137_mcqueue.md:112)
+
+## Register entries (operator words as logged, kind entry)
+- RR-0112 2026-11-17: "let's do your recommendation - what a mess - please resolve..." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:640)
+- RR-0113 2026-11-17: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:642)
+- RR-0114 2026-11-17: "Each increment represents a scenario for the report? ... We are computing each result on demand - this is also new to me. In the context of " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:643)
+- RR-0115 2026-11-17: "D7 fix if you grounded this in reality and its complaint" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:645)
+- RR-0116 2026-11-17: "We may need to make different choices about storage based on teh best user outcome? Clearly, you fogot about what we were trying to achieve " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:646)
+- RR-0117 2026-11-17: "I am open to this plan - re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:648)
+- RR-0118 2026-11-17: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integratio" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:650)
+- RR-0119 2026-11-17: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652)
+- RR-0120 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:654)
+- RR-0121 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:660)
+- RR-0122 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:664)
+- RR-0123 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:668)
+- RR-0124 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:672)
+- RR-0125 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:676)
+- RR-0126 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:680)
+- RR-0127 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:684)
+- RR-0128 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:692)
+- RR-0129 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:698)
+- RR-0130 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:702)
+- RR-0131 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:709)
+- RR-0132 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:714)
+- RR-0133 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:718)
+- RR-0134 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:723)
+- RR-0135 2026-11-18: "What do we call the lane policy - so you actually follow the policies? Let's start increment 1a - with the panels on all the tasks, build pa" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:728)
+- RR-0138 2026-11-18: "1. let's push it 2. yes resort 3. add open decision to the artifact where I can answer them.  4. y  - Is there another approach to my pushes" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:732)
+- RR-0142 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:737)
+- RR-0148 2026-11-18: "Are yo confident you can do this? Why do you want your own repo now? Let's just build them right way - what's wrong with that? something tha" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:742)
+- RR-0151 2026-11-18: "Of course, yes to re-use obviosouly, yes drop - run the panel as always" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:749)
+- RR-0153 2026-11-18: "yes and it should pull the next task as something completes or move to the next task if a question remains" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:753)
+- RR-0155 2026-11-18: "Panel decides" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:757)
+- RR-0158 2026-11-18: "y - what a mess - why is the panel revisting every task - we are rebuilding the weird scratch tooling proposal into gates? this was the focu" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:763)
+- RR-0160 2026-11-18: "you added the question about selecting the new or open tasks within the increment - normally you just stop and never thinkg about it.  Queue" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:767)
+- RR-0171 2026-11-18: "wait for what numbers" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:772)
+- RR-0173 2026-11-18: "Even if the load completes quicker the animation still needs to be complete.. the button shows when its ready - anytime after the animation " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:778)
+- RR-0175 2026-11-18: "so right now the animation takes 23 seconds - this goes to completion - the buttononly appears when the load is done - that would be at 36 s" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:782)
+- RR-0177 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:788)
+- RR-0181 2026-11-18: "yes these need to be built 2. teh search needs to idenfity if its an address with two parcels etc or mis address or its potentially a semi l" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:795)
+- RR-0183 2026-11-18: "Let's see the update incra 1b - with the new rulings and the new tasks - also need a semi question page similar to a min page" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:800)
+- RR-0185 2026-11-18: "y and your not following the McQueue rules in how to provide information to deepseek and others standard rules - which i kow you dont like t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:804)
+- RR-0187 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:808)
+- RR-0189 2026-11-18: "close the gap.  fix teh register - for your own messages you never cite any rulings or say its unveridied thats just lip service" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:812)
+- RR-0191 2026-11-18: "McRecommendations I don't think this is enough - the recommendation should be framed with an explanation that speaks to what I know the fron" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:816)
+- RR-0194 2026-11-18: "Push them.  We need to make some progress" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:822)
+- RR-0197 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:828)
+- RR-0199 2026-11-18: "run a review on this and install backlog - we also use docker - this wouldn't be a big deal either - how do we differentiate between recomme" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:832)
+- RR-0201 2026-11-18: "yes move it - I need to be able to see the board and the categories and the decisions and the research ids for each" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:836)
+- RR-0204 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:842)
+- RR-0206 2026-11-19: "we need to use all of this.  Please add.  You should also review the project itself and the current process.  The current queue is represent" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:846)
+- RR-0209 2026-11-19: "Let's stick with McLane for a name." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:851)
+- RR-0211 2026-11-19: "as you may have learned one of the is understandability - this has two parts simple and no scope creep.  How large is this build now? Are yo" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:865)
+- RR-0213 2026-11-19: "Opus thought this plan replaced all of Incra-1a and we could move to Incr-1b is this true - you may need to also on the board after the move" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:856)
+- RR-0216 2026-11-19: "As a second image task can you create New build professional concept images for each scenario we need three each - but for the detached hous" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:860)
+- RR-0218 2026-11-19: "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:870)
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+# Review context for task-384 (no plan id) written 2026-11-20 by backlog-brief.mjs
+
+## Task
+task-384 STD.REPORT-OWN The web report renderer gets a census owner and comes under the existing text, component and 44 px checks
+status: RUNNING · milestone: m-1 · assignee: @lane-BL-REPORTOWN2 · labels: McFix, McFix B
+
+## Description
+Plan section B4. Page-by-page check: src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx are owned by no surface (docs/reports/generated/127-surface-registry.md section 5; src/tests/surface-registry.infra.test.ts:198 it.fails) and are in no bindings.json list, so C-2b, C-8 and C-9 never run on them (defect D8 sat there). Census owner entry plus listing; findings the checks then raise are fixed or brought to the operator. The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/components/report/ReportPage.tsx, src/components/report/ReportView.tsx, src/components/report/ReportPageToggles.tsx, scripts/surfaces/_schema/bindings.json, src/tests/surfaces/surface-conformance.logic.test.ts, scripts/surfaces/_schema/census/web-product.json, scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json, docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, src/tests/surface-registry.infra.test.ts
+
+## Acceptance criteria
+
+## References
+- docs/reports/lanes/2026-11-20/BL-REPORTOWN/REPORT.md
+- docs/reports/lanes/2026-11-20/BL-REPORTOWN/FINDINGS.md
+
+## Documents
+- (none)
+
+## Decisions in force (titles; the ones this task names carry the operator's words)
+- RR-0005 2026-11-18 · Operator direction: page-level lot information in increme
+- RR-0087 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0315 Plan: go on sections A and B; tasks added to Increment 1B
+- RR-0316 Plan: close check folded as built
+- RR-0317 Plan: review enforcement only
+- RR-0318 Plan: section E accepted
+- RR-0319 C2 failed compute: error screen with Try again, not counted
+- RR-0320 C3 legal line at the bottom of the phone search page
+- RR-0321 D13 semi page buttons 48 px is the operator ruling
+- RR-0322 C5 engine numbers to every paying user at once
+- RR-0323 D1 freshness compare left until stored records exist
+- RR-0324 Semi page cache write accepted as built
+- RR-0088 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0325 Phone keeps its 3 retries (reading)
+- RR-0326 Web search legal line at the bottom (reading)
+- RR-0327 Page structure to table-driven pages: the five items go ahead
+- RR-0328 The app is not in use, in development
+- RR-0329 Task 370 dropped from Increment 1B (reading of the answer)
+- RR-0330 Six-row table as put, including task-348 answered (reading)
+- RR-0331 Report meter stays in the lookup route
+- RR-0332 A McFix task may file under the McFrontend row that built what it fixes
+- RR-0092 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0099 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0136 Operator: start Increment 1·A
+- RR-0137 Operator: completeness, holistic and per-increment optimisation
+- RR-0139 Operator: push 6, re-sort, answer page
+- RR-0140 Operator: faster pushes and GOs asked
+- RR-0141 Operator: Q-LT-1
+- RR-0143 Operator answer IMG-1: six lot-size bands
+- RR-0012 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0144 Operator answer PRG-1: purge rule
+- RR-0145 Operator answer TRK-1: tracked lots refresh
+- RR-0146 Operator answer PG-1: pushes and GOs
+- RR-0147 Operator answer NAME-1
+- RR-0149 Increment 1·A tooling location
+- RR-0150 Infra freeze named list
+- RR-0152 Increment 1·A re-use and drops
+- RR-0154 Work pulling
+- RR-0156 Push 6 literal test
+- RR-0157 Push 6 R-MD
+- RR-0014 McSTORAGE-RULINGS.md:5
+- RR-0159 Push 6 recapture; 1·A panel scope
+- RR-0161 Work pulling
+- RR-0162 Answer ONE-1
+- RR-0163 Answer ONE-2
+- RR-0164 Answer ONE-4
+- RR-0165 Answer ONE-5
+- RR-0166 Answer ONE-12
+- RR-0167 Answer ONE-13
+- RR-0168 Answer ONE-21
+- RR-0169 Answer ONE-22
+- RR-0028 open-questions.md:1088
+- RR-0170 Answer ONE-35
+- RR-0172 Search lot map street name
+- RR-0174 Loading screen
+- RR-0176 Loading screen
+- RR-0178 MB-44 W timing
+- RR-0179 Load-failure page
+- RR-0180 Web recent-search chips
+- RR-0182 Search identification and semi wiring
+- RR-0184 Semi question page design
+- RR-0186 Inc6 protection window
+- RR-0044 2026-11-18 · Operator direction: page-level lot information in increme
+- RR-0188 Push 6 recapture
+- RR-0190 Enforcement
+- RR-0192 Operator oversight scope
+- RR-0193 McRecommendations
+- RR-0195 Push CHK.5/CHK.3
+- RR-0196 Push CHK.5/CHK.3
+- RR-0198 Push 6 recapture
+- RR-0200 Recommendation tracking tools
+- RR-0202 Backlog working board
+- RR-0203 Backlog working board
+- RR-0060 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0205 Backlog home of the plan
+- RR-0207 Backlog: use all features, bring content and process over, ensure use
+- RR-0208 Gates: assess necessity; Backlog to make the process followed and reviews validated
+- RR-0210 McLane is the lane policy name
+- RR-0212 Backlog plan v8 scope: loader + three gates
+- RR-0214 1·A not replaced; relevancy pass after the move
+- RR-0215 Images round 4 directions
+- RR-0217 Concept gallery scope
+- RR-0219 Backlog plan v8 approved
+- 2026-11-18 re-use ruling: drop INFRA.2 guard.mjs and CHK.4 (operator words)
+- RR-0080 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- Q-H2 drop the J5 storeys backfill chain (7.7-7.9, 7.23)
+- RR-0232 Open decisions: grounding and verified recommendation
+- RR-0233 Operator expertise scope
+- RR-0235 McLane brief: full context from milestone, reviews and decisions
+- RR-0242 One-command lane launch
+- RR-0248 Increment 1·A parallel lanes
+- RR-0264 Semi page placeholder in 1·B
+- RR-0270 Web search footer: once, approved
+- RR-0273 Shared footer component
+- RR-0271 LOAD.1 drives the report now, ST.P1 split
+- RR-0081 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0277 Search fuzzy matching reuses the permit address spec
+- RR-0278 Report meter counts on report production only
+- RR-0281 No clear-search button (A.11 not required)
+- RR-0282 Daylight restyle token substitutions stay as built
+- RR-0284 Lot map: two data reads allowed (C.5 footprint, C.7 card line)
+- RR-0299 SRCH.C12 support address is a placeholder until launch
+- RR-0300 1·B blockers as OPERATOR tasks
+- RR-0298 Status changes only by the launch script
+- RR-0301 task-341 approved: run tasks 121, 122, 123 now, then LOAD.1, LOAD.2, LOAD.4
+- RR-0302 Loose ends task per milestone
+- RR-0086 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0303 design-elements file: produce now if not a big job
+- RR-0306 task-342 answered: the proof tool does not wait for the design-fit check
+- RR-0307 task-340 answered: A.6 is built now from the existing entitlement read, compliant and researched first
+- RR-0308 Semi question mock approved (task-319)
+- RR-0309 Regenerated semi mock approved (task-319 stage 2)
+- RR-0310 A.6 reset date served as a Toronto-time label (task-320)
+- RR-0311 A.6 zero reports left still shows the line (task-352 question 1)
+- RR-0312 No plan: an error page with a way to sign up (task-352 question 2)
+- RR-0313 Search box says Enter a Toronto address (task-352 question 3)
+- RR-0314 Outside-Toronto notice stays
+
+## Milestone
+m-1 Increment 1·B Search [S]
+
+### Description
+
+Increment S (re-opened, scenario slice)
+
+### Problems
+- None named in the S brief (docs/reports/plan-import/raw/2026-11-19/search-brief.json carries inc, deliverable and specs only).
+- Found by the R10 validation pass (task-316, 2026-11-19), text left as found: the first two Storage set-up lines below still say a 35 s loading screen and LOAD.3; RR-0176 (decision-43, supersedes RR-0174) rules no 35 s cap and LOAD.3 dropped (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- Found by the R10 validation pass: two Storage set-up lines and four Register rulings lines end with the word undefined where a quote belongs (generator defect, draft task on backlog-brief.mjs); doc-16 section 5 row S still reads LOAD.1 to LOAD.3 (backlog/docs/doc-16 - McStorage-policy-v2.md:108)
+
+### Project objectives
+- Objective: finish a completed project, a database that works and is ready (operator 2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "our objective is to finish a completed project ie a database that works and is ready"
+- The database exists to service the designed report, details and search page (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page"
+- A task that serves neither a designed element nor a supporting function is most likely not relevant (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code"
+- Five principles, keep it simple, no scope creep (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep"
+- One plan only (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "we need one plan - we can only execute one plan"
+
+### Increment objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion (docs/reports/plan-import/raw/2026-11-19/search-brief.json inc; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report; the semi calculation stays in Increment 7 (7.25) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report) (backlog/docs/increments/doc-2 - Increment-S-requirements.md:27) "| id | element | where | status | deliverers | built |"
+
+### Objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+
+### Deliverable
+- A user types any Toronto address, resolves address or lot confusion through the designed pages (choose your lot, and the three states: intersection, no lot linked, many lots), and lands on the report (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682) "Readings: (1) Q-GAP-0 image hold R-IMG1..3 LIFTED (dated note owed, M-246 form). (2) Q-GAP-2 "Most space": every option, a tie goes to the l"
+- The search pages follow the Daylight product standard (small pages v8); today they are still old dark on origin (mobile/src/constants/parcelSearch.ts:58) (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1100) "R-D1 Daylight is the product standard: small pages (v8), landing (v10+), report (B v3: summary + concept gallery), demo "
+
+### Specs
+- Spec 89 parcel cost model tool (search parser rules): origin:docs/specs/02-web-admin/89_parcel_cost_model_tool.md
+- Spec 126 MaxBLD surface standard: origin:docs/specs/02-web-admin/126_maxbld_surface_standard.md
+- Current search (latest rendering + later rulings): ~/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md
+- MORNING-DECISIONS.md: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md
+- McFrontend phase1 open-questions.md (search and small-pages rulings): ~/Buildo-scratch/mcfrontend/phase1/open-questions.md
+- PROTOCOL.md: ~/Buildo-scratch/panel-tools/PROTOCOL.md
+
+### Rulings
+- Search pages come first in the plan, before increment 1 (RR-0005) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "the search pages should be even before the increment 1"
+- Search parser: fix the street direction guard and the unit-token strip before launch (RR-0166) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-12 a"
+- W5 choose your parcel on the web is deferred and the web live switch stays off (RR-0170) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-35 b"
+- Lot map: the street name on the road comes from the map's own road labels (RR-0172) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:775) "Map's road labels (Recommended)"
+- The 'faces the street' rule question was withdrawn by the operator (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:774) "why does this matter? do you not know how to do the lookup?"
+- Loading screen: the animation keeps its own length and always runs to completion; the button waits for the report AND See details; LOAD.3 not needed (RR-0176, supersedes RR-0174 which said 35,000 ms) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- The customer read module W (1.3) is built now in Increment 1 (RR-0178) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "1. it has to happen now - read the objectives"
+- A load-failure page is a task, built from the other small pages (RR-0179) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "2. Add it as a task using the othr mini pages as a template"
+- Web recent-search chips (E.6) stay deferred (RR-0180) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "3. This can stay defferred for now"
+- 1·B builds A.6 and C.12 as their own tasks and identifies the semi lot; the semi calculation stays in 7.25 (RR-0182) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- The semi question page is designed like the other small pages: a v8 mock for approval, then built (RR-0184) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:801) "also need a semi question page similar to a min page"
+- Small pages: Daylight ("modern") is the product standard (R-D1) (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1098) "Just looking at the small pages - love it! Let's go with modern."
+- Increment 1·B starts as a validation pass of its tasks, the semi page placeholder, the McFrontend fields and page tasks, dependencies and the prior panel records (RR-0257) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1019) "This work has been done - just validation."
+
+### Storage set-up
+- McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md) "undefined"
+- Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3); skipped for a re-opened lot (its record is read); no screen for owner input or the Tracked Lots list (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696; ~/Buildo-scratch/mcfrontend/MF-62/plan.md:44) "undefined"
+- Search shows addresses only; the pick (lookup hit) starts the one-lot compute (LOAD.1) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696) "undefined"
+- ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts) (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126) "undefined"
+
+### Register rulings of this group (operator words)
+- RR-0005 2026-11-18: Search pages first in the plan, before increment 1 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- RR-0137 2026-11-18: For increments 1b-10: all tasks present to fulfil each increment's objectives and deliverables (rulings most relevant, McStorage policy, compliance, project objectives; ensure relevancy); tasks optimised holistically, then within each increment, updated in the plan (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:729) "ensure all tasks are present to fufill the increments objectives and deliverables"
+- RR-0144 2026-11-18: Stored lot records are purged after 90 days unopened (operator answer PRG-1 a); tracked lots are never purged while tracked (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "PRG-1 a (purge after 90 days unopened)"
+- RR-0145 2026-11-18: Tracked lots are refreshed in the background when the stamp moves (operator answer TRK-1 a) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "TRK-1 a (background refresh of tracked lots when the stamp moves)"
+- RR-0154 2026-11-18: When a task completes the next ready task starts at once; a task blocked on an operator question goes to the answer page and work moves to the next unblocked task; nothing waits idle. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:754) "it should pull the next task as something completes or move to the next task if a question remains"
+- RR-0166 2026-11-18: Search parser (1.4): fix the two defects before launch (street direction guard, unit-token strip), with two labels and one dated note on Spec 89 line 33 (ONE-12 a) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-12 a"
+- RR-0170 2026-11-18: W5 (choose your parcel) on the web: deferred; the web live switch stays off (ONE-35 b) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-35 b"
+- RR-0172 2026-11-18: Lot map: the street name on the road comes from the map's own road labels; no new data read or drawing code. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:775) "Map's road labels (Recommended)"
+- RR-0174 2026-11-18: Loading screen: the animation always runs its full set length (report_check_min_ms = 35,000 ms, default and maximum); the button to open the report shows when the lot's numbers are ready, at any time after the animation completes. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:779) "the animation still needs to be complete.. the button shows when its ready - anytime after the animation completes"
+- RR-0176 2026-11-18: Loading screen: the animation keeps its own length (23 s today, may change later) and always runs to completion; the button to open the report shows only when the report AND See details are loaded, however long that takes (no 35 s cap); the 35,000 ms setting change (LOAD.3) is not needed now. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- RR-0178 2026-11-18: MB-44: T now, per-increment checks now, and the customer read module W (1.3) built NOW in Increment 1 (not after J9 in increment 8), because McStorage policy v2 computes at the search pick (MD:704). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "1. it has to happen now - read the objectives"
+- RR-0179 2026-11-18: New task: the load-failure page shown when a lot's report or See details fails to load, built from the other small pages (small-pages-v8) as its template. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "2. Add it as a task using the othr mini pages as a template"
+- RR-0180 2026-11-18: Web recent-search chips (E.6) stay deferred. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "3. This can stay defferred for now"
+- RR-0182 2026-11-18: Increment 1·B builds A.6 (reports-left line, app search page) and C.12 (help link) as their own tasks; the search identifies two-or-more parcels, a mis-typed address, or a possible semi lot; the search portion and the semi question page are done now with the wiring (link) to the report; the semi calculation stays in Increment 7 (7.25). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- RR-0184 2026-11-18: The semi question page is designed like the other small pages (small-pages-v8 Daylight): a mock from the v8 template for operator approval, then built (SRCH.SEMI). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:801) "also need a semi question page similar to a min page"
+- RR-0186 2026-11-18: Increment-6 protection rules 1, 3, 7 and 9 are closed (D7 done); suites and pushes only through the push station and the operator; DB jobs only on the operator typed GO; rules 2, 4, 5, 6, 8, 10, 11 stay until push 6 lands. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:805) "y and your not following the McQueue rules"
+- RR-0190 2026-11-18: Lane launches need an authorized plan for any repo worktree they write; every register row is marked operator words or orchestrator reading and only operator words feed reviews as rulings; orchestrator replies that recommend or name a ruling must cite file:line, an RR id or UNVERIFIED (enforced by hooks). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:813) "close the gap.  fix teh register"
+- RR-0192 2026-11-18: Questions come to the operator only on database structure, the frontend, the user experience and storage; everything else is decided under the six-criteria rule, reviewed and logged as a McRecommendation card for audit. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:819) "I dont provide oversight on questions beyond the databse strcuture, the frontend the user experience and storage"
+- RR-0193 2026-11-18: McRecommendations: every recommendation is a card in the repo decision log with customer / UX / space / DB-logic framing, options, rulings (operator words only), sources, research kept separate from the recommendation status (judgment only, reviewed, proven), five principles, what it serves, computed confidence and outcome. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:817) "the recommendation should be framed with an explanation that speaks to what I know"
+- RR-0202 2026-11-18: The increment plan moves into the repo queue rows (Spec 137); the Backlog board generated from them is the working board, showing per task its increment, decisions and research (review/run) IDs. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:837) "I need to be able to see the board and the categories and the decisions and the research ids for each"
+- RR-0203 2026-11-18: The move of the increment plan into the repo queues is done by a committed generator with --check, from a committed raw snapshot; nothing hand-copied. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:839) "use a generator"
+- RR-0205 2026-11-18: The increment plan lives in Backlog.md in the repo (milestones = increments, assignees = lanes, priority/ordinal, dependencies, decision and research refs per task); the operator organises on the board; queue rows stay and are linked by id; loaded once by an import script. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:843) "yes of course"
+- RR-0207 2026-11-19: Backlog: every feature is used; each increment's objectives, rulings, citations and storage objectives move over; the existing process (handbooks, Spec 08) is carried over; process documents are updated; the move is structured so the system is actually used. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:847) "Make sure opus actually uses the system"
+- RR-0208 2026-11-19: The board data exists in the artifact and the procedures in Spec 08; the failure is scratch work, made-up responses and wrong reviewer context; hence the gates and full Backlog use. Each new gate is assessed as necessary or not, with how to do it right. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:848) "determine if the new gates etc are necessary and how to do this right"
+- RR-0210 2026-11-19: The lane policy is named McLane in the Spec 08 and Spec 137 dated notes of the Backlog-home plan; McDecision is not adopted. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:852) "Let's stick with McLane for a name."
+- RR-0212 2026-11-19: The Backlog-home plan is the loader plus the three enforcement pieces, with Backlog's own browser as the board; the v7 board job, mirror synchroniser, import verifier and structural gate are dropped (simple, no scope creep). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:867) "we needd the loader and the three gates"
+- RR-0214 2026-11-19: Increment 1·A is not replaced by the Backlog plan; after the move every task on the board is re-checked for relevancy against the plan (kept / merged / changed) before 1·B starts. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:857) "ensure the tasks are updated and relevancy determined in light of the plan"
+- RR-0219 2026-11-19: Backlog-home plan v8 is authorized (PLAN LOCKED): loader + three gates + Backlog's browser; D1-D5, D7-D10 as recommended; every relevant spec note lands; every imported task carries all available information; the 1·A tasks are updated or removed against the plan through the panel. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:871) "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the tasks"
+
+### Compliance codes in use
+- None named: no 1·B task (task-12, 13, 14, 68, 69, 266, 267, 268, and the promoted and created task-317 to task-325) carries a comp: label (checked on the task files, 2026-11-19).
+
+### Decisions
+Every file in backlog/decisions whose Groups line names S or whose Tasks named line names a 1·B plan id (checked 2026-11-19, R10):
+- decision-1: RR-0005 2026-11-18 · Operator direction: page-level lot information in increme
+- decision-15: RR-0137 Operator: completeness, holistic and per-increment optimisation
+- decision-20: RR-0144 Operator answer PRG-1: purge rule
+- decision-21: RR-0145 Operator answer TRK-1: tracked lots refresh
+- decision-27: RR-0154 Work pulling
+- decision-36: RR-0166 Answer ONE-12
+- decision-40: RR-0170 Answer ONE-35
+- decision-41: RR-0172 Search lot map street name
+- decision-42: RR-0174 Loading screen
+- decision-43: RR-0176 Loading screen
+- decision-44: RR-0178 MB-44 W timing
+- decision-45: RR-0179 Load-failure page
+- decision-46: RR-0180 Web recent-search chips
+- decision-47: RR-0182 Search identification and semi wiring
+- decision-48: RR-0184 Semi question page design
+- decision-49: RR-0186 Inc6 protection window
+- decision-51: RR-0190 Enforcement
+- decision-52: RR-0192 Operator oversight scope
+- decision-53: RR-0193 McRecommendations
+- decision-58: RR-0202 Backlog working board
+- decision-59: RR-0203 Backlog working board
+- decision-60: RR-0205 Backlog home of the plan
+- decision-61: RR-0207 Backlog: use all features, bring content and process over, ensure use
+- decision-62: RR-0208 Gates: assess necessity; Backlog to make the process followed and reviews validated
+- decision-63: RR-0210 McLane is the lane policy name
+- decision-64: RR-0212 Backlog plan v8 scope: loader + three gates
+- decision-65: RR-0214 1·A not replaced; relevancy pass after the move
+- decision-68: RR-0219 Backlog plan v8 approved
+
+### Documents
+- Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md
+- McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md#L27) and docs/reports/plan-import/raw/2026-11-19/elements-by-inc.json#S
+- McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md#L108-L108 and docs/reports/plan-import/raw/2026-11-19/storage-by-group.json#S
+
+## Document sections
+Cap: 120 KB in total, 12 KB per block (document blocks below; an omitted block costs its notice against the total); a block that would pass the total is listed as omitted. Sections named in a link (#L<n>-<m> or a section title) are read; with none named, the first 12 KB.
+
+### Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md (not readable: ENOENT; read it at Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md)
+
+### McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md (not readable: ENOENT; read it at McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md)
+
+### McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md (not readable: ENOENT; read it at McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md)
+
+## Decisions naming this task
+- RR-0327 Page structure to table-driven pages: the five items go ahead (names task-384) — "approved" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1422)
+
+## Prior reviews and lane reports
+### task-384 (this task)
+- docs/reports/lanes/2026-11-20/BL-REPORTOWN/REPORT.md (lane report naming task-384)
+- docs/reports/lanes/2026-11-20/BL-V2LIST/REPORT.md (lane report naming task-384)
+
+## Dependencies
+- (none)
+
+## Lane plan of BL-REPORTOWN2 (this is the plan under review)
+## Lane plan (BL-REPORTOWN2, task-384, STD.REPORT-OWN part two)
+
+Goal: the three web report renderer files (src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx) come under the existing surface checks C-2b (no display text) and C-8 (closed component table), with the structural findings pinned as a shrink-only baseline, and the McFrontend handbook reaches their reviewers. They stay a component; nothing is converted (Spec 126 :925 "REPORT keeps the landed renderer", :926 "the landed web REPORT renderer" is on the list of our code).
+
+Rule the task rests on: the approved item 3 at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1421 "3. Leave the reports as components, and bring them under the existing checks (task 384)." with the operator's word at :1422 "approved [the five items pasted] - remember the app is not beign used - we are in development"; resolution by a separate grounder under the delegation at :1476 "Let the grounder resolve them all as long as the result is compliant" (task notes: option 2, strings fixed).
+
+Facts the resolution rests on, each opened before building:
+1. mcbylaws/protected-paths.json `frontend` has no src/components/report glob (file read); scripts/analysis/rule-lists.json:123-124 row `surfaces` reads that list (globs_from), so the surface lists attach to a path only when it is in `frontend`. Before: `rule-lists.mjs resolve` on ReportPage.tsx lists eng-all five-words plan-protocol inc-S ms-S only (resolve-before.txt).
+2. bindings.json lists none of the three files; census binding_web_report (web-product.json:5411) owns them (part one). C-3 (surface-conformance.logic.test.ts:164-168) needs module_roots to be under COMPONENT_ROOTS and frontend globs in the policy, so the glob must come first.
+3. Treated as web REPORT modules the real functions raise C-2b 108 (ReportPage 92, ReportView 16, ReportPageToggles 0) and C-8 213 (171, 41, 1) (measure/measure-before.txt, reproduced). Display text is exactly three findings: ReportView.tsx:19 "confidence:" and "· provenance:", :121 "Details". ReportPage.tsx string children are the blank spacer " " (5) and `label=` values are key names, not text: structural.
+4. FE-05 (report-no-maths.logic.test.ts DIRS) already scans src/components/report, so the listing adds no new no-maths exposure.
+5. Content home: scripts/surfaces/_schema/report-presentation.json (generated by scripts/surfaces/_schema/seed-report-v2.mjs, `states` block) is the registry of report strings; StaticBinding.tsx:41 imports it directly (precedent for a binding module).
+
+Changes (smallest, existing mechanisms only):
+1. mcbylaws/protected-paths.json: frontend += "src/components/report/**"; a dated note in $comment in the form of the earlier notes (MB-67 owner commit; the approved item quoted from MORNING-DECISIONS.md:1421-1422). The note says the report files join frontend so the surface checks and handbook reach them; it does not say the operator ruled an exemption. Protected path: the push gate asks the operator y.
+2. scripts/surfaces/_schema/bindings.json: module_roots += src/components/report/; modules += the three files (web, REPORT, owner binding_web_report, exports); promoted_entries += binding_web_report; a dated note in $comment. mapping.web gets no REPORT list (the renderer is not a library binding).
+3. Move the three display strings of ReportView.tsx to content: seed-report-v2.mjs `states.view` (details, meta line template), regenerated into report-presentation.json by the generator; ReportView reads them by import as StaticBinding does. No view type or golden changes.
+4. surface-conformance.logic.test.ts: C-2b and C-8 real-tree cases judge every listed module; the three report files are judged with a pin REPORT_RENDERER_PIN per file and per kind (C-2b structural, C-8): exact counts, both directions (a new finding or a fixed one turns it red), shrink-only (lowered by editing the pin with the fix); display text in the three files has no pin and must be 0. C-3 count lock [10,7,25] becomes [13,8,25]. C-12 gains: listed set is exactly the three, owner binding_web_report, bindingsProblems clean, plus planted defects (a file dropped from modules, a wrong owner, the pin one up and one down) and a passing control.
+5. rule-lists-table.logic.test.ts: for the three files, resolve lists surface-136, surface-126, surface-127, surface-128, surface-135; planted defect: a temp copy of protected-paths without the glob, the lists vanish; passing control; and the real lens-input for surface-136 holds fe.01 to fe.44 (44 distinct ids).
+6. Census binding_web_report entry and its descriptor: limitations say the files are judged by C-2b and C-8 with the baseline, and are outside C-9 (it judges golden nodes, not files); checks.why, notes, sharing.evidence now true (bindings.json modules lists the three); reduced_motion honoured (globals.css:182-185, report-checked.logic.test.ts C5); stale Spec 126 line cites fixed (:925-926). Regenerate the two 127 registry docs and descriptor with generate-surface-registry.mjs; regenerate the rule-lists page if it drifts.
+7. Task file through the backlog CLI: Files line extended (protected-paths.json, rule-lists-table test, seed-report-v2.mjs, report-presentation.json, and whatever the checks force), acceptance criteria added, notes.
+
+Order: plan lenses (plan review before any code); red (tests only + task file, red.out); build; checks before and after; green through the real hooks (commit.out); output lenses on the whole diff; FINDINGS.md untriaged; lane report; task left RUNNING, grounder owed.
+
+Not done (named): the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision; C-9 reach (needs a rule on what to judge in a hand-built renderer); fixing the structural attributes (renderer is hand-built by design).
+Rules served: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and 11.1; PLAN-PROTOCOL.md:3 simple, no scope creep; standardized, understandable, simple.
+
+# Pasted clauses and rulings for task-384 reviews (BL-REPORTOWN2)
+
+## Operator words (checked against source lines)
+- MORNING-DECISIONS.md:1421: Put to him (orchestrator recommendation, unreviewed): "1. Go on the schema extension plus the semi pilot, with the stop rule. 2. Convert the other three pages only after the pilot passes. 3. Leave the reports as components, and bring them under the existing checks (task 384). 4. Hold the three unbuilt pages until the pilot result. 5. Do the legal-line move (389) now as a small code change, not after the search conversion, so your ruling is not delayed."
+- MORNING-DECISIONS.md:1422: Operator, verbatim: "approved [the five items pasted] - remember the app is not beign used - we are in development"
+- MORNING-DECISIONS.md:1476: Operator, verbatim: "Let the grounder resolve them all as long as the result is compliant"
+
+## Spec 126 section 11b.1 (docs/specs/02-web-admin/126_maxbld_surface_standard.md:924-926)
+- **Every MaxBLD page = descriptor + content + standard library components configured by schema.** MaxBLD is the parcel product (`parcel_tool`, Spec 128 R-01) and a separate app (Spec 116 §1 dated note 2026-11-09). "Every MaxBLD page" = the pages of §11b.3: the parcel product and parcel admin surfaces, plus the minimal web login, subscription and onboarding.
+- **No hand-built standard component.** Archetypes (FORM, LIST, SEARCH, DASHBOARD, auth, subscription, onboarding) use the libraries of §11b.4 or hosted components, configured by descriptors, never written by us. REPORT keeps the landed renderer (§11a; Spec 135 FE-24). DETAIL is not used: the report's details section is REPORT (D-6).
+- **Our code is limited to** the descriptor → library binding (one per archetype per platform, thin config), the generators, the gates and the landed web REPORT renderer. Per-feature code is named in its queue row: CONTRACT routes for writes, migrations, product gates, the entitlement read contract, the host allow-list.
+
+## Spec 136 section 2 fe.31 (docs/specs/02-web-admin/136_mcfrontend_handbook.md:124)
+- **fe.31** Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema: descriptor valid with no UNRESEARCHED and no golden: "none"; in the converted manifest (two-direction totality); one props golden per reachable state per declared target,…
+
+## mcbylaws/protected-paths.json $comment (the edit rule and the earlier dated notes)
+McBylaws gate policy (MB-67; R-KP, R-LD, R-LA, R-LF). No code here. The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it. Edited by MB-67's lane only. frontend (D-2 b, MF-17 item 6, 2026-11-06): the McFrontend surface paths; arms H, C, P and Q read it, the loop gate does not. Dated note 2026-11-09 (MB-67 owner commit, built in the MF-37 lane; operator, verbatim: "a, 1-3 approved"; record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, "Operator ruling 2026-11-09: MF-37 blocker and owed items", item 1): src/components/surfaces/** and src/app/(maxbld)/** leave pending_globs because MF-37 landed the first tracked files under both (the binding modules and the admin media pages); both stay in frontend. Dated note 2026-11-10 (MB-67 owner commit, built in the MF-35 lane; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (Wave 1 decision batch, P35-D12: each MF-35 code commit is followed by the MB-67 pending-glob commit in the same push); record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, "Operator ruling 2026-11-09: Wave 1 decision batch"): mobile/src/vendor/rnr/** and mobile/components.json leave pending_globs because the MF-35 library commit tracked the vendored Reusables parts and the CLI config; both stay in frontend, and the vendor dir stays protected. Dated note 2026-11-10 (MB-67 owner commit, built in the MF-35 lane, after the MF-35 conversion commit; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (Wave 1 decision batch, P35-D12); record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, "Operator ruling 2026-11-09: Wave 1 decision batch"): mobile/src/components/surfaces/** leaves pending_globs because the conversion commit tracked the two mobile binding modules; it stays in frontend. No McFrontend glob is pending now. Dated note 2026-11-11 (MB-67 owner commit, built in the MF-46 lane; operator, verbatim: "Teh web address will just be maxbld.ca - is that okay?" and "5. yes and yes recommend" (MF-46 DECISIONS-v2 D-3); record ~/Buildo-scratch/mcfrontend/MF-46/DECISIONS-v2.md): src/middleware.ts, src/lib/auth/host-policy.ts (the maxbld.ca host table) and src/lib/auth/safe-redirect.ts (the one same-origin redirect guard) join protected, so every later edit to the host fence, its table or the guard needs the owner y at push. Dated note 2026-11-13 (MB-67 owner commit, built in lane MB67-LIT; operator "all recommendations accepted", review-20261113 HOLISTIC-RECOMMENDATION K3 + Q3): the two zero-match pending globs (scripts/lib/compute/bylaw-*.js, maxbld-*.js) are replaced by the real by-law code paths in layer23 and literal_scope, scripts/analysis/bylaw-validation/** joins the literal scan, and pending_globs is empty so a zero-match glob fails the gate (L10). Today's literals are baselined in literal-allow.json (shrink-only); none moved out of code.
+
+## rule-lists.json surfaces row (lines 122-127)
+    {
+      "id": "surfaces",
+      "globs_from": { "file": "mcbylaws/protected-paths.json", "key": "frontend" },
+      "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135", "eng-all"],
+      "why": "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\"). V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a surface path that is not a descriptor had none"
+    },
+
+## C-2b and C-8 as built (surface-conformance.logic.test.ts:124-137, 566-575)
+/** C-2b: display text written in a mount file or binding module (JSX text, a string child, a string display attribute). */
+export const textProblems = (text: string, file: string, nonDisplay: string[]): string[] => {
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const out: string[] = [];
+  const at = (n: ts.Node): number => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
+  const visit = (n: ts.Node): void => {
+    if (ts.isJsxText(n) && n.text.trim() !== '') out.push(`C-2b ${file}:${at(n)}: JSX text "${n.text.trim()}"`);
+    else if (ts.isJsxExpression(n) && n.expression && ts.isStringLiteralLike(n.expression) && !ts.isJsxAttribute(n.parent)) out.push(`C-2b ${file}:${at(n)}: string child "${n.expression.text}"`);
+    else if (ts.isJsxAttribute(n) && n.initializer && !nonDisplay.includes(n.name.getText(sf))) {
+      const v = ts.isStringLiteral(n.initializer) ? n.initializer : ts.isJsxExpression(n.initializer) && n.initializer.expression && ts.isStringLiteralLike(n.initializer.expression) ? n.initializer.expression : null;
+      if (v) out.push(`C-2b ${file}:${at(n)}: display attribute ${n.name.getText(sf)}="${v.text}"`);
+    }
+    ts.forEachChild(n, visit);
+  };
+  };
+  const visit = (n: ts.Node): void => {
+    if (ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) {
+      const name = tagOf(n.tagName);
+      if (ts.isIdentifier(n.tagName) && Object.hasOwn(shared, name) && fromSpec.get(n.tagName.text) === shared[name]) { ts.forEachChild(n, visit); return; }
+      if (name.startsWith('local:')) out.push(`C-8 ${file}:${at(n)}: hand-built component ${name.slice(6)}`);
+      else if (/^[a-z]/.test(name)) out.push(`C-8 ${file}:${at(n)}: intrinsic element <${name}>`);
+      else if (!allowed.includes(name)) out.push(`C-8 ${file}:${at(n)}: ${name} is not in mapping.web`);
+      else if (ts.isIdentifier(n.tagName) && libOf(fromSpec.get(n.tagName.text) ?? '', libs) === undefined) out.push(`C-8 ${file}:${at(n)}: ${name} is imported from ${fromSpec.get(n.tagName.text) ?? 'nowhere'}, not a UI library`);
+    }
+    if (ts.isCallExpression(n)) {
+      const e = n.expression;
+      const callee = ts.isIdentifier(e) ? imported.get(e.text) ?? e.text : ts.isPropertyAccessExpression(e) ? e.name.text : '';
+      if (callee === 'createElement' || callee === 'jsx' || callee === 'jsxs') out.push(`C-8 ${file}:${at(n)}: ${callee}() call (JSX only, so the mapping can judge it)`);
+    }
+

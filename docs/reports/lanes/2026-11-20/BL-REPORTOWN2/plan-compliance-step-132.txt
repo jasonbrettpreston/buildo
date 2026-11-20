@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:53:29.531Z file_sha256=195efde05355e2f853ad0055a30d0095168117b2d82d5e9e7f5e6dce7a051b2d prompt_sha256=c37c32a57efc362c1ccdaa91c3112879a4b744ee0c0dc416932f1c316b5313d8
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-plan-compliance-step-132.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — mcbylaws/protected-paths.json $comment "Edited by MB-67's lane only." — plan step 1 "mcbylaws/protected-paths.json: frontend += "src/components/report/**"; a dated note in $comment in the form of the earlier notes (MB-67 owner commit; the approved item quoted from MORNING-DECISIONS.md:1421-1422)" — the edit is authored in lane BL-REPORTOWN2 while the file's own edit rule reserves it to MB-67's lane, and the note is formed as an MB-67 owner commit, which would falsely attribute it — route the glob addition and its dated note through the MB-67 owner lane, with this lane supplying only the quoted MORNING-DECISIONS.md:1421-1422 text.
+
+BUG severity=HIGH — rule-lists.json surfaces row "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135", "eng-all"] — plan step 5 "for the three files, resolve lists surface-136, surface-126, surface-127, surface-128, surface-135" — the expected resolve set drops eng-all, which the pasted row attaches to the same paths and which plan fact 1 already sees resolving on ReportPage.tsx, so the test as planned is either red or asserts the wrong set — assert all six lists including eng-all.
+
+BUG severity=HIGH — task Files list "src/tests/surface-registry.infra.test.ts" and task text "src/tests/surface-registry.infra.test.ts:198 it.fails" — plan changes 1 to 7 — NONE — no step names that it.fails, the witness that passes the moment the three files gain an owner (step 6 adds the owner entry and regenerates the docs), so the suite goes red or a fixed defect stays asserted as failing — add a step that flips :198 to a plain passing test with its own planted-defect control before the green run.
+
+DEFER severity=MED — operator MORNING-DECISIONS.md:1421 "3. Leave the reports as components, and bring them under the existing checks (task 384)." — plan "are outside C-9 (it judges golden nodes, not files)" — C-9, named by the task as one of the checks that never ran on these files, is excluded with no recorded decision, so the ruling is met for two of the three checks only — put the C-9 non-reach to the operator as its own decision, the same treatment "Not done (named)" gives the landing embed exception.
+
+DEFER severity=MED — rule-lists.json surfaces row "the paths the McBylaws gate already lists as frontend ... are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126" paired with Spec 126 :925 "REPORT keeps the landed renderer" — plan step 1 "It does not say the operator ruled an exemption." — adding the frontend glob attaches every McFrontend rule to files the contract exempts from the hand-built rule, and the plan scopes only C-2b and C-8 with pins, so surface-136 and surface-126 arrive as standing findings with no declared scope — declare in the census limitations, or a listed exemption, which surface-136 and surface-126 rows do not apply to a REPORT renderer.
+
+DEFER severity=LOW — operator MORNING-DECISIONS.md:1422 "approved [the five items pasted] - remember the app is not beign used - we are in development" — plan goal "with the structural findings pinned as a shrink-only baseline" — 108 C-2b and 213 C-8 findings are accepted as a baseline rather than fixed or escalated, and no decision row records the baseline — cite the REPORT_RENDERER_PIN to a decision-log row so the baseline has an owner before it lands.
+
+MET — Spec 126 :925 "REPORT keeps the landed renderer" — plan Goal "They stay a component; nothing is converted" — no conversion is attempted and mapping.web gets no REPORT list.
+
+MET — Spec 136 section 2 fe.31 "a converted non-REPORT surface" — plan step 2 "the renderer is not a library binding" — REPORT is carved out of fe.31 by its own text, so descriptor plus library components are not imposed.
+
+MET — operator MORNING-DECISIONS.md:1421 item 3 "bring them under the existing checks" — plan step 2 "modules += the three files (web, REPORT, owner binding_web_report, exports)" — C-2b and C-8 now judge the three files at all, which was the defect.
+
+MET — mcbylaws/protected-paths.json $comment "The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it." — plan step 1 note form — the edit tightens the list and the plan does not depend on a same-commit loosening.
+
+REJECT — operator MORNING-DECISIONS.md:1421 "3. Leave the reports as components" — accused of converting the report renderer into a surface binding — not a real issue, bindings.json modules plus promoted_entries is a listing and step 2 adds no mapping.web REPORT list, so no library binding is created.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 6
+
+---
+⏱  62001ms (62.0s)
+📊 Tokens — total: 41011, input: 28593, output: 12418, reasoning: 11236

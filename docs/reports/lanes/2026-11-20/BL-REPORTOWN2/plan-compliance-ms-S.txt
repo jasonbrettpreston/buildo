@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:56:05.723Z file_sha256=4b99e3be0cdea72cc5b61d23f19cdbfd2294577093d531812f76c5c0ce5e09e2 prompt_sha256=170bf590dd62329c796a19e9a6ff47394c5385b392735ca4e60bca80a056edac
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-384 description "so C-2b, C-8 and C-9 never run on them (defect D8 sat there)" — plan line "Not done (named): ... C-9 reach (needs a rule on what to judge in a hand-built renderer)" — third named check C-9 is left off the files with no operator ruling, only a lane-side "needs a rule", so the ruling to bring them under the existing checks is only one third met — put the C-9 scope question to the operator on the answer page before lock, or list the files under C-9 with a stated node set
+
+BUG severity=HIGH — mcbylaws/protected-paths.json $comment "Edited by MB-67's lane only." — plan change 1 "mcbylaws/protected-paths.json: frontend += \"src/components/report/**\"" — lane BL-REPORTOWN2 is not MB-67's lane and protected-paths.json is absent from the task Files list, which change 7 rewrites to include it — land the frontend glob as an MB-67 owner commit under the existing dated-note form, and drop protected-paths.json from this lane's Files line
+
+BUG severity=HIGH — task-384 description "findings the checks then raise are fixed or brought to the operator" — plan "the structural findings pinned as a shrink-only baseline" and "fixing the structural attributes (renderer is hand-built by design)" — 321 findings (C-2b 108, C-8 213) are accepted by a lane-authored pin in REPORT_RENDERER_PIN, neither fixed nor brought to the operator, so the rejection is the lane's own — put the baseline to the operator as its own decision, in the same form as the landing embed exception, before plan-lock, or fix the findings
+
+DEFER severity=MED — MORNING-DECISIONS.md:1476 "Let the grounder resolve them all as long as the result is compliant" — plan "resolution by a separate grounder under the delegation at :1476 ... (task notes: option 2, strings fixed)" — the plan states the grounder's outcome (option 2, strings fixed, remainder pinned) before the grounder has run ("grounder owed"), so the compliance of the result is asserted not established — mark the pin and the C-9 omission as pending the grounder's written compliant finding, not as resolved in the plan
+
+DEFER severity=MED — mcbylaws/protected-paths.json $comment note form "operator, verbatim: \"a, 1-3 approved\"" — plan change 1 "the approved item quoted from MORNING-DECISIONS.md:1421-1422" — :1421 reads "Put to him (orchestrator recommendation, unreviewed)", so a note quoting it as the operator's words misattributes orchestrator text, which the earlier in-material row RR-0315/RR-0190 form forbids — quote only :1422 "approved [the five items pasted] - remember the app is not beign used - we are in development" in the dated note and cite :1421 as the orchestrator recommendation
+
+DEFER severity=MED — task-384 description "The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision" — plan "the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision" — the plan records it as an outstanding operator decision but nothing shows the question was actually put, and it is due with this task — raise the landing embed exception as a dated operator question and cite it, or state it as not yet raised rather than decided
+
+DEFER severity=LOW — mcbylaws/protected-paths.json $comment "frontend (D-2 b, MF-17 item 6, 2026-11-06): the McFrontend surface paths; arms H, C, P and Q read it, the loop gate does not." — plan change 1 "the note says the report files join frontend so the surface checks and handbook reach them" — the plan assesses only the surface lists and handbook, not the other arms that read frontend, so the reach of the glob is wider than stated — name in the dated note which arms now read the report files and their effect, or state why they are unaffected
+
+MET — MORNING-DECISIONS.md:1421 item 3 "3. Leave the reports as components, and bring them under the existing checks (task 384)." — plan goal "They stay a component; nothing is converted" with change 4 listing — the files stay components and C-2b and C-8 real-tree cases now judge them
+
+MET — Spec 126 section 11b.1 "REPORT keeps the landed renderer" — plan goal "REPORT keeps the landed renderer" quoted at :925 — no conversion, descriptor rewrite or replacement of ReportPage, ReportView or ReportPageToggles is proposed
+
+MET — task-384 description "Each gate or scan: a committed planted-defect test, red first through the real hooks" — plan change 4 "plus planted defects (a file dropped from modules, a wrong owner, the pin one up and one down) and a passing control" and Order "red (tests only + task file, red.out)" — planted defects, both directions and a red-first run are in the plan
+
+REJECT — Spec 136 section 2 fe.31 "Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema" — the plan could be accused of not giving the report a descriptor plus props golden — not a real issue: fe.31 is scoped to a converted non-REPORT surface and Spec 126 :925 "REPORT keeps the landed renderer" keeps the report out of conversion
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 5
+
+---
+⏱  38860ms (38.9s)
+📊 Tokens — total: 22527, input: 14873, output: 7654, reasoning: 6357

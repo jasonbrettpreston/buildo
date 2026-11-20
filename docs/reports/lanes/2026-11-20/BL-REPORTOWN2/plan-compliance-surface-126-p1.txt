@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:51:30.946Z file_sha256=5ebc457436422f181070024524d0b29248faf72f523feef1cca85fd607aa10ae prompt_sha256=76c61e032c67b969b48863039fc0c4adac65af23082dea4ab303231ef233eb60
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-plan-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — operator 2026-11-20 item 3 "Leave the reports as components, and bring them under the existing checks (task 384)." with task-384 title "comes under the existing text, component and 44 px checks" — plan item 6 "limitations say the files are judged by C-2b and C-8 with the baseline, and are outside C-9 (it judges golden nodes, not files)" and plan "Not done (named): ... C-9 reach (needs a rule on what to judge in a hand-built renderer)" — C-9, the 44 px check, is excluded, so one of the three checks the task names still never runs on the three files — add a C-9 file-level case for the three files, or put the C-9 scope question to the operator as a recorded decision before plan-lock.
+
+DEFER severity=MED — operator item 3 "bring them under the existing checks (task 384)" and C-8 as built "out.push(`C-8 ${file}:${at(n)}: ${name} is not in mapping.web`)" — plan item 2 "mapping.web gets no REPORT list (the renderer is not a library binding)" and item 4 "the three report files are judged with a pin REPORT_RENDERER_PIN per file and per kind (C-2b structural, C-8)" — C-8's closed component table is not extended to the report, all 213 C-8 findings are baselined, so the component check can only report and never enforce — add the report's components to mapping.web, or record the baseline as an operator decision.
+
+DEFER severity=MED — task-384 Description "findings the checks then raise are fixed or brought to the operator" — plan goal "with the structural findings pinned as a shrink-only baseline" and plan "Not done (named): ... fixing the structural attributes (renderer is hand-built by design)" — the C-2b 108 and C-8 213 structural findings are neither fixed nor brought to the operator, a shrink-only pin is a silent baseline — put the baseline to the operator as a decision, or fix the display and structure items the checks name.
+
+DEFER severity=MED — task-384 Description "The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision." — plan "Not done (named): the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision" — the plan names the exception as owed but has no step that puts it to the operator — add the decision to the plan's operator decision list and record the answer.
+
+DEFER severity=LOW — MORNING-DECISIONS.md:1421 "(orchestrator recommendation, unreviewed)" and protected-paths $comment "operator, verbatim" — plan item 1 "a dated note in $comment in the form of the earlier notes (MB-67 owner commit; the approved item quoted from MORNING-DECISIONS.md:1421-1422)" — the note risks presenting the unreviewed orchestrator recommendation as the operator's words, only :1422 "approved" is operator verbatim — quote :1422 as the operator words and cite :1421 only as the item approved.
+
+DEFER severity=LOW — rule-lists.json surfaces row "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135", "eng-all"] — plan item 5 "resolve lists surface-136, surface-126, surface-127, surface-128, surface-135" — the expected set omits eng-all, so the test will not prove the engineering standards remain attached (the row's why: "the engineering standards are attached whole (eng-all)") — assert all six lists including eng-all.
+
+MET — Spec 126 §11b.1 "REPORT keeps the landed renderer (§11a; Spec 135 FE-24)" — plan goal "They stay a component; nothing is converted (Spec 126 :925 ... :926 ...)".
+MET — Spec 126 §11b.1 "Our code is limited to ... the gates and the landed web REPORT renderer" — plan changes are tests, bindings, content and census only, no new page code.
+MET — MORNING-DECISIONS.md:1476 "Let the grounder resolve them all as long as the result is compliant" — plan "resolution by a separate grounder under the delegation at :1476".
+MET — rule-lists.json surfaces row "globs_from ... frontend" — plan fact 1 and item 1 add "src/components/report/**" to frontend so the surface lists attach.
+MET — protected-paths $comment "The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it" — the change adds a glob (tightens), it does not loosen.
+
+REJECT — Spec 136 fe.31 "Every MaxBLD page (a converted non-REPORT surface)" — accused of leaving the report without descriptor and hand-built components — the clause scopes to converted non-REPORT surfaces and the report stays the landed REPORT renderer per 126 §11b.1.
+REJECT — Spec 126 §11b.1 "Every MaxBLD page = descriptor + content + standard library components configured by schema." — accused of keeping a hand-built component — the same §11b.1 says "REPORT keeps the landed renderer" and operator item 3 says "Leave the reports as components".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 4
+
+---
+⏱  173309ms (173.3s)
+📊 Tokens — total: 70517, input: 33850, output: 36667, reasoning: 35445

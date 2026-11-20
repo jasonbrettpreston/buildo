@@ -1,0 +1,42 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:53:36.626Z file_sha256=78d8e71bc4b0947b0e6c8313e91e2429fa714daaa5876d9549913072614d0047 prompt_sha256=1ee65a502900de0ecddf24abe81f5862f2e2f96c9a515770c3ddf15d6e73917a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-plan-compliance-airtight-124a.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task card title "The web report renderer gets a census owner and comes under the existing text, component and 44 px checks" — plan goal "come under the existing surface checks C-2b (no display text) and C-8 (closed component table)" — the 44 px check the card names reaches the three files nowhere in the plan, so one of the three check families the card requires is unmet — add the 44 px check (rule id, pass/fail line, pin or fix) to step 4, or put its exclusion to the operator as its own decision like the landing embed.
+
+BUG severity=HIGH — operator ":1421 ... 3. Leave the reports as components, and bring them under the existing checks (task 384)" with the card "so C-2b, C-8 and C-9 never run on them (defect D8 sat there)" — plan "Not done (named): ... C-9 reach (needs a rule on what to judge in a hand-built renderer)" and "are outside C-9 (it judges golden nodes, not files)" — C-9 is excluded on the lane's own reasoning, no pasted clause gives C-9 that scope and C-9's definition is not pasted, so "the existing checks" is met for two of three; cannot see the basis for the exclusion — run C-9 over the three files, or put the C-9 exclusion to the operator as its own decision with the grounder answer cited.
+
+BUG severity=HIGH — task card "findings the checks then raise are fixed or brought to the operator" — plan "the three report files are judged with a pin REPORT_RENDERER_PIN per file and per kind (C-2b structural, C-8): exact counts, both directions (a new finding or a fixed one turns it red), shrink-only" plus fact 3 "`label=` values are key names, not text: structural" — the 108 C-2b and 213 C-8 findings are frozen by the lane's own baseline and adjudicated structural by the lane, none fixed and none brought to the operator — bring the pinned set to the operator as one decision with the per-file counts, then pin only what the operator accepts.
+
+BUG severity=HIGH — task card "a separate agent attacks it, results reported as refused or STILL OPEN" — plan "Order: plan lenses (plan review before any code); red (tests only + task file, red.out); build; checks before and after; green through the real hooks (commit.out); output lenses on the whole diff; FINDINGS.md untriaged; lane report; task left RUNNING, grounder owed" — no attack pass on any new gate appears in the order or anywhere else in the plan — add the per-gate attack (C-12 pin both directions, rule-lists-table glob defect, 44 px, C-9) with each result recorded as refused or STILL OPEN before the lane report.
+
+DEFER severity=MED — task card "The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision" — plan "Not done (named): the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision" — naming it as the operator's decision is not putting it: no operator ask, no RR id and no answer page entry is recorded on this task — file the ask now with the C-8 SHARED_REPORT_RENDERERS evidence and keep those hits inside the pin pending the answer.
+
+DEFER severity=MED — protected-paths $comment "Edited by MB-67's lane only." — plan "mcbylaws/protected-paths.json: frontend += "src/components/report/**"; a dated note in $comment in the form of the earlier notes (MB-67 owner commit; the approved item quoted from MORNING-DECISIONS.md:1421-1422)" — the plan states the note's form, never that the MB-67 owner makes the commit, while the pasted edit rule reserves the file to that lane — assign this commit to the MB-67 owner and quote the operator words for this specific glob widening, as every earlier dated note does.
+
+DEFER severity=MED — task card "src/tests/surface-registry.infra.test.ts:198 it.fails" (and the Files list for this task) — plan step 6 "Regenerate the two 127 registry docs and descriptor with generate-surface-registry.mjs; regenerate the rule-lists page if it drifts" — the inverted test asserting the three files have no surface owner is never named, so the listing lands green only if an unnamed edit flips it — name surface-registry.infra.test.ts in step 6 and flip the it.fails to an it asserting owner binding_web_report.
+
+DEFER severity=LOW — rule-lists.json surfaces row "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135", "eng-all"] — plan step 5 "for the three files, resolve lists surface-136, surface-126, surface-127, surface-128, surface-135" — the new glob also attaches eng-all (the plan's own fact 1 shows eng-all on ReportPage.tsx today), yet step 5 neither measures it nor records how step-standard engineering rules apply to a TSX renderer — add eng-all to step 5's resolved list and record its outcome (cited, not applicable, or addressed) beside the other five.
+
+MET — operator ":1421 ... Leave the reports as components" (component half) — plan goal "They stay a component; nothing is converted (Spec 126 :925 "REPORT keeps the landed renderer")" — no descriptor, no conversion, the renderer stays.
+
+MET — Spec 126 §11b.1 "REPORT keeps the landed renderer (§11a; Spec 135 FE-24)" — plan goal citing :925-926 — the landed renderer is kept and nothing new is hand-built beyond fixes to existing strings.
+
+MET — task card "Census owner entry plus listing" — plan step 2 "modules += the three files (web, REPORT, owner binding_web_report, exports); promoted_entries += binding_web_report" and step 6 census limitations — owner and listing both named with generated registry docs regenerated.
+
+MET — task card "Each gate or scan: a committed planted-defect test" (planted-defect half) — plan step 4 "planted defects (a file dropped from modules, a wrong owner, the pin one up and one down) and a passing control" and step 5 "planted defect: a temp copy of protected-paths without the glob, the lists vanish; passing control" — a red arm and a control per new assertion.
+
+MET — operator ":1476 Let the grounder resolve them all as long as the result is compliant" — plan "resolution by a separate grounder under the delegation at :1476 ... task left RUNNING, grounder owed" — the lane does not launch the grounder itself.
+
+REJECT — R-BA "every gate is a HARD STOP — no ledger rows permitted" — accused of letting REPORT_RENDERER_PIN act as an allowlist past a hard stop — not a real issue, R-BA governs the step-standard gates (step-validate per slug, standard-gates-ledger.json) and a surface-conformance test pin is not a step gate row.
+
+REJECT — Spec 136 fe.31 "Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema" — accused of applying the 136 page standard to a hand-built REPORT renderer — not a real issue, fe.31 excludes REPORT and Spec 126 requires the landed renderer be kept, so resolving the surface-136 list is not a conversion claim.
+
+REJECT — R-BE "a generated path hand-listed in any Target Files span is RED" — accused of hand-listing files in step 7 — not a real issue, R-BE governs generated Target Files blocks in sources owner specs, not the backlog task file's Files line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 8
+
+---
+⏱  80700ms (80.7s)
+📊 Tokens — total: 42594, input: 25318, output: 17276, reasoning: 15506

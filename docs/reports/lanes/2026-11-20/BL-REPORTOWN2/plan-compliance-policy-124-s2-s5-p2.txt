@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:54:44.847Z file_sha256=a99f2dd66beb9b0daa3a955a340dd44eae9bc2bfcc17543faac67f56f998c0bf prompt_sha256=35f451ef3f4cc6e898b8a9bf8d98f0987b5402d73b50637fa910821eb650677b
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-plan-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — mcbylaws/protected-paths.json $comment 'Edited by MB-67's lane only.' — NONE (plan change 1) "mcbylaws/protected-paths.json: frontend += 'src/components/report/**'; a dated note in $comment in the form of the earlier notes (MB-67 owner commit; the approved item quoted from MORNING-DECISIONS.md:1421-1422)" — no MB-67 owner commit is named anywhere in the plan, so lane BL-REPORTOWN2 edits a file the pasted rule reserves to MB-67's lane and merely copies the note wording — name the MB-67 lane owner commit that lands change 1 and sequence the other changes after it, or route change 1 to that lane.
+
+BUG severity=HIGH — MORNING-DECISIONS.md:1421 "3. Leave the reports as components, and bring them under the existing checks (task 384)." — NONE (plan, Not done) "C-9 reach (needs a rule on what to judge in a hand-built renderer)" and change 6 "are outside C-9 (it judges golden nodes, not files)" — the task card counts three existing checks that never run on the files (C-2b, C-8, C-9; "src/tests/surface-registry.infra.test.ts:198 it.fails") and the plan brings only two, recording the third as out of reach with no operator ruling, so item 3 is met in part — bring C-9 to bear on the three files, or put the C-9 deferral to the operator as its own decision before build.
+
+DEFER severity=MED — task card "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN." — NONE (plan order) "green through the real hooks (commit.out); output lenses on the whole diff; FINDINGS.md untriaged; lane report" — no separate attacking agent and no refused/STILL OPEN reporting is scheduled for either gate — add the attack pass and its refused or STILL OPEN result to the order, for the C-2b/C-8 pin and for the rule-lists lock.
+
+DEFER severity=MED — task card "The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision." — NONE (plan, Not done) "the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision" — the plan records the exception but never puts it to the operator in the order, so the decision the card requires is never made — name the question and the point in the order where it goes to the operator, before the C-8 pin is set.
+
+DEFER severity=MED — surface-conformance.logic.test.ts:124 "/** C-2b: display text written in a mount file or binding module (JSX text, a string child, a string display attribute). */" — NONE (plan fact 3) "ReportPage.tsx string children are the blank spacer ' ' (5) and label= values are key names, not text: structural" — the zero-display-text lock is measured by a structural/display split C-2b does not make, so the 105 C-2b findings the check itself labels JSX text, string child or display attribute (108 minus the 3 fixed) stay pinned while reviewers are told display text is 0 — put the key-only attribute names into C-2b's own nonDisplay list, or declare those findings display text in the pin and bring them to the operator.
+
+DEFER severity=MED — rule-lists.json:125 "\"lists\": [\"surface-136\", \"surface-126\", \"surface-127\", \"surface-128\", \"surface-135\", \"eng-all\"]" with "the engineering standards are attached whole (eng-all)" — NONE (plan change 5) "for the three files, resolve lists surface-136, surface-126, surface-127, surface-128, surface-135" — the resolve lock enumerates five of the row's six lists and drops eng-all, so it can pass with the engineering standards detached from the report paths — assert eng-all in the same lock with its own planted defect.
+
+DEFER severity=LOW — mcbylaws/protected-paths.json $comment "The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it." — NONE (plan change 1) "Protected path: the push gate asks the operator y." — the plan does not state that the new frontend glob binds the McBylaws gate only from the commit after it lands, the same commit's gate reading the pre-edit base, so the check reach it claims for this landing is one commit early — record the base-copy timing in change 1 and in the order.
+
+MET — Spec 126 :925 "REPORT keeps the landed renderer" — plan Goal "They stay a component; nothing is converted" — the renderer is kept, not converted.
+MET — Spec 126 :924 "Every MaxBLD page = descriptor + content + standard library components configured by schema." — plan change 3 "seed-report-v2.mjs `states.view` (details, meta line template), regenerated into report-presentation.json" — the three display strings move to content.
+MET — mcbylaws/protected-paths.json $comment "No code here." — plan change 1 adds a glob and a dated note only.
+MET — rule-lists.json:123 "\"globs_from\": { \"file\": \"mcbylaws/protected-paths.json\", \"key\": \"frontend\" }" — plan fact 1 and change 1 put the glob on the key the surfaces row reads.
+MET — MORNING-DECISIONS.md:1476 "Let the grounder resolve them all as long as the result is compliant" — plan "resolution by a separate grounder under the delegation at :1476 (task notes: option 2, strings fixed)" — the resolution is put to a separate grounder, not the lane.
+
+REJECT — Spec 136 fe.31 "Every MaxBLD page (a converted non-REPORT surface)" — accused of not meeting fe.31 for the three report files — fe.31 scope is a converted non-REPORT surface, nothing here is converted and Spec 126 :925 keeps the landed REPORT renderer, so the clause does not bind this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 6
+
+---
+⏱  79857ms (79.9s)
+📊 Tokens — total: 48403, input: 31923, output: 16480, reasoning: 15043

@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:54:57.373Z file_sha256=936af6a1eb42ceac074dcb9f9863b5962e6523497674e764ef8e5c299cc50e1e prompt_sha256=74ca41d9e0a00474b0a39faf58463ab81367587642ea7ac66723fa24fa4e075b
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — MORNING-DECISIONS.md:1421 item 3 "Leave the reports as components, and bring them under the existing checks (task 384)." — lane plan, Changes 4 "the three report files are judged with a pin REPORT_RENDERER_PIN per file and per kind (C-2b structural, C-8): exact counts" — clause unmet: the pin freezes 108 C-2b and 213 C-8 findings as a shrink-only baseline, so the files are listed but no finding is fixed and none is brought to the operator (the plan only writes "Not done (named): fixing the structural attributes (renderer is hand-built by design)"), which is not being under the checks — fix: fix the findings, or put the baseline waiver to the operator as its own decision, as the plan already does for the SHARED_REPORT_RENDERERS exception.
+
+BUG severity=HIGH — Spec 136 section 2 fe.31 "Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema" — lane plan, Changes 5 "for the three files, resolve lists surface-136, surface-126, surface-127, surface-128, surface-135" — clause unmet: attaching surface-136 puts the REPORT renderer under fe.31, which by its own words covers only a converted non-REPORT surface, and the plan supplies neither fe.31's descriptor, converted-manifest entry and per-reachable-state props goldens nor a note that fe.31 does not apply — fix: record in the plan, the protected-paths note and the census limitations that fe.31 does not reach the REPORT renderer, quoting its non-REPORT scope, exactly as the plan does for C-9.
+
+DEFER severity=MED — rule-lists.json surfaces row "lists": 'surface-136, surface-126, surface-127, surface-128, surface-135, eng-all' — lane plan, Changes 5 "resolve lists surface-136, surface-126, surface-127, surface-128, surface-135" — the expected resolve set omits eng-all, which the pasted row attaches to every frontend path and which the plan's own fact 1 shows resolving today, so the exact-set assertion and its passing control red for the wrong reason — fix: expect all six lists, eng-all included.
+
+DEFER severity=MED — C-2b as built "export const textProblems = (text: string, file: string, nonDisplay: string[]): string[]" with "else if (ts.isJsxExpression(n) && n.expression && ts.isStringLiteralLike(n.expression) && !ts.isJsxAttribute(n.parent)) out.push" — lane plan, facts 3 "the real functions raise C-2b 108 (ReportPage 92, ReportView 16, ReportPageToggles 0)" against Changes 4 "display text in the three files has no pin and must be 0" — the pasted C-2b returns one flat list with no structural/display split, the 108 includes the three display findings that Change 3 removes, and the post-move pin numbers are never stated (ReportView 13, total 105) — fix: state the post-move pin per file and the exact filter the test uses to separate display text from structural findings.
+
+DEFER severity=MED — task-384 description "are owned by no surface (docs/reports/generated/127-surface-registry.md section 5; src/tests/surface-registry.infra.test.ts:198 it.fails)" — lane plan, Changes 6 "Regenerate the two 127 registry docs and descriptor with generate-surface-registry.mjs" with no line for that test — once the census owner entry and the listing land the it.fails assertion passes, and vitest reports a passing it.fails as a failure, so the plan's "green through the real hooks (commit.out)" cannot hold — fix: add flipping src/tests/surface-registry.infra.test.ts:198 from it.fails to it to the change set, red first.
+
+MET — Spec 126 section 11b.1 "REPORT keeps the landed renderer" — lane plan, Goal "They stay a component; nothing is converted" — the renderer is kept as a component and no descriptor conversion is attempted.
+
+MET — Spec 126 section 11b.1 "Our code is limited to the descriptor → library binding ..., the generators, the gates and the landed web REPORT renderer" — lane plan, Changes 3 "seed-report-v2.mjs states.view ... regenerated into report-presentation.json by the generator" — the content move stays inside the named code limit (generator plus content, renderer untouched in kind).
+
+MET — mcbylaws/protected-paths.json $comment dated-note form "operator, verbatim ... record" — lane plan, Changes 1 "a dated note in $comment in the form of the earlier notes (MB-67 owner commit; the approved item quoted from MORNING-DECISIONS.md:1421-1422)" — the note carries the owner-commit attribution and the operator words the earlier notes carry.
+
+MET — rule-lists.json surfaces row "globs_from": {"file": "mcbylaws/protected-paths.json", "key": "frontend"} — lane plan, Changes 1 "frontend += src/components/report/**" placed first, with fact 2 "the glob must come first" — the lists attach through the mechanism the pasted row names.
+
+MET — task-384 description "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it" — lane plan, Changes 4 "plus planted defects (a file dropped from modules, a wrong owner, the pin one up and one down) and a passing control" and Order "red (tests only + task file, red.out)" — planted-defect red-first tests are in the change set.
+
+REJECT — mcbylaws/protected-paths.json $comment "Edited by MB-67's lane only." — the change is accused of having a non-MB-67 lane edit a file reserved to MB-67 — every earlier note is the same form, "MB-67 owner commit, built in the MF-37 lane", and Changes 1 requires that same owner-commit form, so the reservation is honoured.
+
+REJECT — Spec 126 section 11b.1 "No hand-built standard component." — the change is accused of keeping a hand-built renderer — the same clause reads "REPORT keeps the landed renderer (§11a; Spec 135 FE-24)" and lists "the landed web REPORT renderer" among our code, so keeping it is the compliant reading.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+
+---
+⏱  79783ms (79.8s)
+📊 Tokens — total: 37676, input: 21740, output: 15936, reasoning: 14461

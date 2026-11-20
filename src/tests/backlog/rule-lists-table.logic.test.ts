@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { ROOT, script, tmp } from './helpers';
+import { ROOT, run, script, tmp } from './helpers';
 
 const CLI = 'scripts/analysis/rule-lists.mjs';
 type Res = { lists: { id: string; rows: string[] }[] };
@@ -169,5 +169,42 @@ describe('V2.LIST round 7: golden snapshot files are exempt from the review mate
     const unnamed = (globs: string[], comment: string) => globs.filter((g) => !CHECKS.some((c) => new RegExp(esc(g) + '[^\\n]*proved by[^\\n]*' + esc(c)).test(comment)));
     expect(unnamed(golden, text)).toEqual([]);
     expect(unnamed([...golden, 'src/tests/fixtures/zzz/*.json'], text)).toEqual(['src/tests/fixtures/zzz/*.json']);
+
+// task-384 STD.REPORT-OWN part two (operator 2026-11-20, MORNING-DECISIONS.md:1421-1422, item 3 "bring them under the existing checks"): the web report renderer is under the
+// McFrontend frontend list (mcbylaws/protected-paths.json), so the surfaces row of the table attaches Spec 136 section 2, 126, 127, 128 and 135 to its reviewers.
+describe('task-384: the McFrontend handbook reaches the reviewer of the web report renderer', () => {
+  const FILES = ['src/components/report/ReportPage.tsx', 'src/components/report/ReportView.tsx', 'src/components/report/ReportPageToggles.tsx'];
+  const SURFACE = ['surface-136', 'surface-126', 'surface-127', 'surface-128', 'surface-135'];
+  const glob = 'src/components/report/**';
+  const resolveIn = (frontend: string[], file: string): string[] => {
+    const d = tmp('rep');
+    const pol = JSON.parse(fs.readFileSync(path.join(ROOT, 'mcbylaws/protected-paths.json'), 'utf8')) as { frontend: string[] };
+    fs.mkdirSync(path.join(d, 'mcbylaws'));
+    fs.writeFileSync(path.join(d, 'mcbylaws/protected-paths.json'), JSON.stringify({ ...pol, frontend }));
+    fs.copyFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), path.join(d, 'table.json'));
+    run('git', ['init', '-q', '.'], { cwd: d });
+    run('git', ['add', '-A'], { cwd: d });
+    run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'x'], { cwd: d });
+    const r = script(CLI, ['resolve', '--root', d, '--table', path.join(d, 'table.json'), '--files', file, '--type', 'build', '--letter', 'S']);
+    expect(r.status, r.stderr).toBe(0);
+    return (JSON.parse(r.stdout) as Res).lists.map((l) => l.id);
+  };
+  it('the real tree: each of the three files resolves Spec 136, 126, 127, 128 and 135 (before the change: eng-all five-words plan-protocol inc-S ms-S only)', () => {
+    expect(JSON.parse(fs.readFileSync(path.join(ROOT, 'mcbylaws/protected-paths.json'), 'utf8')).frontend).toContain(glob);
+    for (const f of FILES) expect([f, lists(f)]).toEqual([f, expect.arrayContaining(SURFACE)]);
+  });
+  it('RED (planted): the glob removed from the frontend list, the surface lists vanish; the real list with the glob is the control', () => {
+    const real = (JSON.parse(fs.readFileSync(path.join(ROOT, 'mcbylaws/protected-paths.json'), 'utf8')) as { frontend: string[] }).frontend;
+    expect(resolveIn(real, FILES[0] as string)).toEqual(expect.arrayContaining(SURFACE));
+    const without = resolveIn(real.filter((g) => g !== glob), FILES[0] as string);
+    for (const id of SURFACE) expect(without).not.toContain(id);
+    expect(without).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+  });
+  it('the surface-136 lens input generated for the change holds fe.01 to fe.44 (44 distinct ids)', () => {
+    const r = script(CLI, ['lens-input', '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
+    expect(r.status, r.stderr).toBe(0);
+    const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+    const ids = new Set(text.match(/\bfe\.\d\d\b/g));
+    expect([...ids].sort()).toEqual(Array.from({ length: 44 }, (_, i) => `fe.${String(i + 1).padStart(2, '0')}`));
   });
 });

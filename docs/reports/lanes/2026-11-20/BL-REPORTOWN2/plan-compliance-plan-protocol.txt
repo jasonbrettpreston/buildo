@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:55:36.416Z file_sha256=40859c5ff25a64eb299981542848667d005ca78ba8da073d96f89f9fe13d217a prompt_sha256=642348434394cf3d69240b1f2055fde5a5cdd6b07cac4b33fd3868e3c7402a6a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — protected-paths.json $comment "Edited by MB-67's lane only." — plan change 1 "mcbylaws/protected-paths.json: frontend += \"src/components/report/**\"; a dated note in $comment" written under "Lane plan (BL-REPORTOWN2, task-384, STD.REPORT-OWN part two)" — the governing file's own edit rule reserves it to MB-67's lane, so this lane cannot make the edit it plans, and "the push gate asks the operator y" does not cure that — route the glob change and its dated note through MB-67's lane as its own commit (P35-D12 pattern), with BL-REPORTOWN2 only preparing the note text and citing it.
+
+BUG severity=HIGH — :1421 item 3 "Leave the reports as components, and bring them under the existing checks (task 384)." — plan "Not done (named): ... C-9 reach (needs a rule on what to judge in a hand-built renderer)" while the card names "C-2b, C-8 and C-9 never run on them" — two of the three named checks are brought to bear and the third is excluded with no operator ruling, so "the existing checks" is only partly met — either bring C-9 to the three files under a recorded rule, or put the C-9 exclusion to the operator as a ruling and quote it before plan-lock.
+
+DEFER severity=MED — Spec 136 section 2 fe.31 "Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema" — plan change 5 "for the three files, resolve lists surface-136, surface-126, surface-127, surface-128, surface-135" — attaching surface-136 to the hand-built report renderer makes fe.31 and fe.01 to fe.44 demand a descriptor and goldens from a surface the clause excludes by its own parenthetical, so the panel will raise rules this plan has ruled out meeting — record REPORT's out-of-scope status for fe.31 in the same dated note, or resolve the list with fe.31 excluded and quote the reason.
+
+DEFER severity=MED — task-384 "The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision." — plan "Not done (named): the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision", with no ask anywhere in "Order: plan lenses ...; red ...; build" — the exception is named as an operator decision but never actually put to the operator, so it stays open and the shared branch is absorbed into the pin instead — add the question to the answer page and to the lane report's owed list.
+
+DEFER severity=MED — plan-protocol section 4 "REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict)" — plan "Order: plan lenses (plan review before any code); ... output lenses on the whole diff" — "plan lenses" and "output lenses" name no seat and no F verdict, so the protocol's review cannot be shown to have run per seat — name R,C,I,D,G,O,W,X then F in the order and put one verdict line per seat in the lane report.
+
+DEFER severity=LOW — plan-protocol section 5 "TIME: every task carries an estimate (MEASURED with source, or GUESS labelled)" — plan "Order: plan lenses ..., red (tests only + task file, red.out); build; checks before and after" — no estimate line for the task or for any step — add one MEASURED or GUESS-labelled estimate.
+
+MET — Spec 126 section 11b.1 "REPORT keeps the landed renderer" — plan Goal "They stay a component; nothing is converted" and "Not done (named): ... fixing the structural attributes (renderer is hand-built by design)" — no conversion, renderer kept.
+
+MET — Spec 126 section 11b.1 "Our code is limited to ... the landed web REPORT renderer" — plan change 2 "modules += the three files (web, REPORT, owner binding_web_report, exports)" — the listing treats them as the named report code, not as a new archetype.
+
+MET — :1476 "Let the grounder resolve them all as long as the result is compliant" — plan "resolution by a separate grounder under the delegation at :1476" and "task left RUNNING, grounder owed" — the resolution is delegated to the grounder, not self-issued by the lane.
+
+MET — C-2b as built "string child" / "display attribute" — plan change 3 "Move the three display strings of ReportView.tsx to content" with change 4 "display text in the three files has no pin and must be 0" — the three named strings are fixed, not pinned.
+
+REJECT — Spec 126 section 11b.1 "No hand-built standard component." — accused of leaving a hand-built renderer in place — the following sentence carves it out: "REPORT keeps the landed renderer".
+
+REJECT — :1421 item 3 "bring them under the existing checks" — accused of pinning the 108 C-2b and 213 C-8 findings instead of fixing them — the ruling asks that the checks run on the files; the shrink-only pin is that mechanism and the actual display text is moved out to content.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 6
+
+---
+⏱  38730ms (38.7s)
+📊 Tokens — total: 24109, input: 16076, output: 8033, reasoning: 6813

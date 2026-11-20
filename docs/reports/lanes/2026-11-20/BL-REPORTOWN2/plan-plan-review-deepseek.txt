@@ -1,0 +1,41 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-20T19:57:31.481Z file_sha256=2f74bc5d37d84a358e5e700929a1c7609ee563536d5cfd2b01b47d9681bd718a prompt_sha256=e6e2b5647adc68ede6a87ef7dc10a1161757bfe838a049fc838b94450f043432
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown2/material-plan.md (model: deepseek-reasoner)
+
+BUG severity=CRIT — Fact 3 + Changes step 3/4 — `textProblems` is the display-text checker (it emits only `JSX text` / `string child` / `display attribute`), so "C-2b 108 (92/16/0) pinned as structural" and "display text in the three files has no pin and must be 0" cannot both be true: the 92/16 are display-attribute findings (label=/title= etc.) by the checker's own code, and step 3 removes 3 of the 16, taking ReportView C-2b to 13 while the pin says 16. — Fix: print every C-2b finding with its message class, exclude the label=/attr findings via a named nonDisplay/structural classifier, and set the pin from the post-step-3 measurement (ReportView 13, not 16).
+
+BUG severity=HIGH — Fact 1 / Changes step 1 — `frontend` is read by the McBylaws arms H, C, P and Q (protected-paths.json $comment) as well as the rule-lists `surfaces` row; the plan verified only the rule-lists consumer, so adding `src/components/report/**` can newly fire arm C/P/H/Q (e.g. a descriptor or golden requirement a kept-as-component renderer cannot meet) and red the gate on first push. — Fix: enumerate every reader of `key:"frontend"` and dry-run the McBylaws gate on a scratch branch carrying the glob before plan-lock.
+
+BUG severity=HIGH — Changes step 1 rollback — no rollback is named; once the three files join `frontend` they are protected and the gate reads the BASE copy ("a commit cannot loosen the rules that judge it"), so a revert needs owner y and is itself judged by the pre-revert base — a two-commit, operator-gated rollback. — Fix: name the rollback path explicitly, or land the glob behind an approved MB-67 owner commit in the same push so a single revert is clean.
+
+BUG severity=HIGH — Fact 3 scope (Axis-3 sibling) — the plan covers exactly ReportPage/ReportView/ReportPageToggles, but ReportPage's own props reference `ReportCompany` and other components (pasted snippet), and `src/components/report/` may hold more unowned files; any of them stay orphans with zero coverage exactly like D8. — Fix: `git ls-files src/components/report/` and assert every file in the dir is either in bindings.json modules or explicitly deferred with a reason.
+
+DEFER severity=MED — Changes step 3 — moving "confidence:"/"· provenance:"/"Details" into `states.view` as a "meta line template" assumes an interpolation mechanism (middot spacing, colon-space, format) that reproduces byte-identical render, yet the plan states "No view type or golden changes", so a silent UI-text regression is untested. — Fix: add a render-string equality assertion for the meta line before locking, or accept the risk knowingly.
+
+BUG severity=MED — Changes step 4 — C-3 lock `[10,7,25] → [13,8,25]`: +3 modules explains dim1, but dim2 +1 (7→8) is unexplained and unmeasured; if the real triad differs the lock reds on the first green run. — Fix: re-measure all three dimensions post-change and derive the lock from the measurement, not a hand increment.
+
+BUG severity=MED — Changes step 5 — the resolve-after set for the three files is the pre-existing {eng-all, five-words, plan-protocol, inc-S, ms-S} ∪ {surface-136,126,127,128,135,eng-all}; step 5 lists only the five surface lists, and the planted-defect "lists vanish" cannot hold for `eng-all` (it comes from another row pre-existing per Fact 1). — Fix: assert (a) the exactly-added surface-* set and (b) that the pre-existing set is unchanged, as two separate assertions.
+
+BUG severity=MED — Changes step 2/6 concurrency — depends on "part one" (BL-REPORTOWN's `binding_web_report` at web-product.json:5411) having landed and no other lane touching `bindings.json`/census concurrently; the plan lists no dependency on part one, and a lane report from BL-V2LIST also names task-384. — Fix: confirm the part-one commit hash is on the base before step 2/6, or serialize the lanes.
+
+BUG severity=MED — Changes step 4 (C-12) — "bindingsProblems clean" and "listed set is exactly the three" assume adding three modules (with an `exports` list that must match real exports and any fe.31 converted-manifest totality) raises no binding problem; if exports mismatch or a manifest entry is required, C-12 reds unexpectedly. — Fix: run bindingsProblems over the three modules pre-lock and capture the clean result as the pin.
+
+DEFER severity=LOW — Changes step 7 — Files line "and whatever the checks force" leaves the task file's file set unbounded, so task-file totality cannot be confirmed at plan-lock; a forced file outside the declared set fails the check. — Fix: bound the set at lock or make the extension a follow-up.
+
+DEFER severity=NIT — Fact 3 — "string children are the blank spacer ' ' (5)" relies on `trim()!==''`; a later change of " " to `\u00A0` fires C-2b and silently reds the pin with no note. — Fix: record the trim/nbsp dependency in the pin note.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- C-2b numbers (92/16/0) vs "display text must be 0" are mutually contradictory under the pasted `textProblems` code, and step 3 makes ReportView 13 not 16 — the pin the lane will write cannot pass.
+- `frontend` has four unenumerated McBylaws consumers (arms H/C/P/Q); the glob may fire checks a component-only renderer cannot satisfy.
+- No rollback path for the protected-paths glob change (protected + base-copy read = operator-gated two-commit revert).
+
+Top 3 unverified data premises (regardless of verdict):
+- C-2b finding breakdown by message class — verify: run the real `textProblems` over the three files and print each finding; confirm the 92/16/0 are not genuine display attributes requiring a content move (`node -e "…textProblems(readFileSync(…))"`).
+- C-3 triad `[13,8,25]` — verify: re-measure the three dimensions after adding the 3 modules and diff against the proposed lock.
+- bindingsProblems clean + part-one census present — verify: `git show HEAD:scripts/surfaces/_schema/census/web-product.json | grep -n binding_web_report` and run `bindingsProblems` over the new modules before locking.
+
+---
+⏱  66505ms (66.5s)
+📊 Tokens — total: 28993, input: 17392, output: 11601, reasoning: 10068

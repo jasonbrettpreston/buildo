@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:52:28.000Z file_sha256=d5ebc25e34dcace6fa4368dacaddc0b963179d811ae5ae1a0b36eb59b9ae8e8f prompt_sha256=970577ce88f5cd24c81388a11405daa9f437540403afde12eecf3c67b2fd0ce0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-plan-compliance-surface-126-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-384 card, three checks named: "The web report renderer gets a census owner and comes under the existing text, component and 44 px checks" and "so C-2b, C-8 and C-9 never run on them (defect D8 sat there)" — NONE (lane plan, "Not done (named): the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision; C-9 reach (needs a rule on what to judge in a hand-built renderer); fixing the structural attributes") — the third named check (C-9, 44 px) is dropped from the three files on a design rationale, with no step that runs it and no operator answer, so the card's "text, component and 44 px" is delivered as two — add a C-9 step over the three files using the same pin mechanism, or file the C-9 exclusion as its own operator decision before claiming the card met.
+
+BUG severity=HIGH — task-384 card: "The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision" — NONE (lane plan, "Not done (named): the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision") — the card requires it be put to the operator, the plan only names it as not done and no step files the question, so the action the card names is unmet — add the operator question (answer-page entry quoting the card line) to the order, ahead of freezing the C-8 pin count that the answer can move.
+
+DEFER severity=MED — protected-paths.json $comment: "The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it. Edited by MB-67's lane only." and the earlier notes form "MB-67 owner commit, built in the MF-37 lane" — lane plan, "1. mcbylaws/protected-paths.json: frontend += "src/components/report/**"; a dated note in $comment in the form of the earlier notes (MB-67 owner commit; the approved item quoted from MORNING-DECISIONS.md:1421-1422)" — the edit sits in this lane's change list with MB-67 named only inside the note's form, not as the editor — state explicitly that change 1 lands as the MB-67 owner commit, or hand change 1 to MB-67's lane.
+
+DEFER severity=MED — task-384 card: "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN" — NONE (lane plan, "Order: plan lenses (plan review before any code); red (tests only + task file, red.out); build; checks before and after; green through the real hooks (commit.out); output lenses on the whole diff; FINDINGS.md untriaged; lane report; task left RUNNING, grounder owed") — the order has no separate attack step and no refused or STILL OPEN record for the new C-2b and C-8 pins and the rule-lists case — insert the attack step after green and record each new gate's verdict as refused or STILL OPEN.
+
+DEFER severity=LOW — rule-lists.json surfaces row: "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135", "eng-all"] — lane plan, "5. rule-lists-table.logic.test.ts: for the three files, resolve lists surface-136, surface-126, surface-127, surface-128, surface-135" — the assert set leaves out eng-all, which the pasted row attaches to the same frontend globs the plan's own fact 1 measures on these files, so an exact-set case written from this step is red or locks an incomplete set — assert all six ids including eng-all.
+
+DEFER severity=LOW — task-384 card file list names "src/tests/surface-registry.infra.test.ts" (the ":198 it.fails" census lock) — NONE (lane plan changes 1 to 7; step 6 reads "Census binding_web_report entry and its descriptor ... sharing.evidence now true (bindings.json modules lists the three)") — the plan never says whether that it.fails is retired by part one or flipped here, so "green through the real hooks" has an unnamed dependency — state in the plan whether :198 is already retired or is converted here, with its RED canary named.
+
+MET — Spec 126 §11b.1:925 "REPORT keeps the landed renderer (§11a; Spec 135 FE-24)" — lane plan, "They stay a component; nothing is converted" — the renderer is kept, not rewritten to a descriptor.
+
+MET — MORNING-DECISIONS.md:1421 item 3 "Leave the reports as components, and bring them under the existing checks (task 384)" — lane plan changes 2 and 4, "module_roots += src/components/report/; modules += the three files" and "the three report files are judged with a pin REPORT_RENDERER_PIN per file and per kind" — the files stay components and are judged by the existing C-2b and C-8 cases.
+
+MET — Spec 126 §11b.1:926 "the landed web REPORT renderer" is listed as our code — lane plan, "Census binding_web_report entry and its descriptor" with "owner binding_web_report" — the renderer is declared as our code under a census owner, not mislabelled as a library binding.
+
+REJECT — Spec 136 §2 fe.31 "Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema" — accused of requiring a descriptor, props golden and two-direction totality for the report files — fe.31 scopes itself to a converted non-REPORT surface and the plan converts nothing, so the clause does not reach these three files.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 4
+
+---
+⏱  61487ms (61.5s)
+📊 Tokens — total: 30389, input: 17493, output: 12896, reasoning: 11551

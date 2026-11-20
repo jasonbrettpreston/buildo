@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:52:45.749Z file_sha256=e236b5667fa14b9d8cda03627f45b052c4e0f986a3d92709dde2bb54c6b215ff prompt_sha256=cb43cc5815e195ed18bd5ad9b52ef25519ba90d0c4b2718f9b17d769b6a9480e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-plan-compliance-surface-128-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-384 title "The web report renderer gets a census owner and comes under the existing text, component and 44 px checks" — plan file "come under the existing surface checks C-2b (no display text) and C-8 (closed component table)" — the 44 px check is never named or applied to the three files, so one of the three named checks in the task is unmet — add the 44 px check to the listed modules with its own pin and planted defect, or put its exclusion to the operator as its own decision before plan lock.
+
+BUG severity=HIGH — task-384 description "so C-2b, C-8 and C-9 never run on them (defect D8 sat there)" — plan file "are outside C-9 (it judges golden nodes, not files)" and "Not done (named): ... C-9 reach (needs a rule on what to judge in a hand-built renderer)" — one of the three named checks still never runs on the files, so the ruling is executed for two of three — define the C-9 judgement for a hand-built renderer file set in this change, or bring the C-9 exclusion to the operator as its own decision.
+
+BUG severity=HIGH — task-384 description "findings the checks then raise are fixed or brought to the operator" — plan file "the structural findings pinned as a shrink-only baseline" and "the real functions raise C-2b 108 (ReportPage 92, ReportView 16, ReportPageToggles 0) and C-8 213 (171, 41, 1)" — 321 findings are baselined, so they are neither fixed nor brought to the operator, and a pinned baseline does not put the files under the checks — put the baseline decision to the operator as a decision record (frontend falls inside RR-0192's oversight scope) or fix the findings.
+
+DEFER severity=MED — Spec 136 section 2 fe.31 "Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema" — plan file change 5 "the real lens-input for surface-136 holds fe.01 to fe.44 (44 distinct ids)" — the report files now resolve to surface-136 and a reviewer will apply a row whose own text excludes a REPORT renderer, which Spec 126 section 11b.1 keeps — add a scoped note to the rule-lists row (or the lane rule note) that fe.31 does not apply to src/components/report, or exclude surface-136 for those globs.
+
+DEFER severity=MED — mcbylaws/protected-paths.json $comment "Edited by MB-67's lane only" — plan file change 1 "mcbylaws/protected-paths.json: frontend += src/components/report/**; a dated note in $comment in the form of the earlier notes (MB-67 owner commit ...)" with "Protected path: the push gate asks the operator y." — the edit is proposed from the BL-REPORTOWN2 lane and no MB-67 owner authority is named for the dated note — name the MB-67 owner approval in the note with operator words, as the earlier notes do, or land the glob as an MB-67 owner commit.
+
+DEFER severity=MED — Spec 128 section 2.2a MF-16 dated note "If a generator ever produces a displayed value, it joins the scan" — plan file change 3 "Move the three display strings of ReportView.tsx to content: seed-report-v2.mjs states.view (details, meta line template)" — displayed strings are moved into a generator the MF-16 ruling declares outside the Rule 16 scan, and the plan never addresses the boundary — record the position in the plan and lane report (content declarations, not displayed values) or add scripts/surfaces/seed-report-v2.mjs to the FE-05 scan list.
+
+DEFER severity=LOW — task-384 description "The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision" — plan file "Not done (named): the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision" — the exception is labelled as owed, not put to the operator — file the operator question with its options so the decision exists before the land.
+
+MET — operator MORNING-DECISIONS.md:1421 item 3 "Leave the reports as components" — plan file "They stay a component; nothing is converted" — the leave-as-components half is honoured.
+
+MET — Spec 126 section 11b.1 "REPORT keeps the landed renderer" — plan file change 2 "module_roots += src/components/report/; modules += the three files (web, REPORT, owner binding_web_report, exports)" — the renderer stays landed and is declared under its existing owner rather than rebuilt.
+
+MET — Spec 126 section 11b.1 "Our code is limited to ... the landed web REPORT renderer" — plan file "They stay a component; nothing is converted" — no new code category is added beyond the existing renderer.
+
+MET — operator MORNING-DECISIONS.md:1476 "Let the grounder resolve them all as long as the result is compliant" — plan file "resolution by a separate grounder under the delegation at :1476" — the resolution is delegated to a grounder, not taken by the lane.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 3
+
+---
+⏱  70582ms (70.6s)
+📊 Tokens — total: 46496, input: 31843, output: 14653, reasoning: 13453

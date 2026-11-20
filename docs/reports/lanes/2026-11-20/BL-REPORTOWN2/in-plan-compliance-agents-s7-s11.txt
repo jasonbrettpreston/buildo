@@ -1,0 +1,457 @@
+LIST agents-s7-s11 sha256:b0fd6aac813d999266f716af347dca9e4f48774014e4e8f65b2a61fa0bd25b4f material sha256:2f74bc5d37d84a358e5e700929a1c7609ee563536d5cfd2b01b47d9681bd718a part 1 of 1
+RULE LIST agents-s7-s11 (docs/specs/00-architecture/08_agents.md, sections 7. Rules & economics; 11. Grounded Verification Protocol), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 7. Rules & economics
+
+1. **Two altitudes, same roles — both mandatory per WF (§6.4).** *Plan review* points agents at `.cursor/active_task.md` + the live tree/DB (grounders query reality; CLIs read the plan text) — hunts completeness/consistency/factual-correctness BEFORE code. *Output review* points them at the diff + re-run values. The two are COMPLEMENTARY: the reality-grounders (RC/SF/GT/Integration) earn their keep at BOTH — RC caught the $105.24M gut-line and the $159.9M T3 tail at PLAN altitude (`review_followups.md` 25/2510). WF3 runs a LEAN plan roster (premise-verifiers only); it is no longer output-only.
+2. **Ground-truth gates Compliance** (§5.1/§5.2): validate the spec against reality before checking code against the spec.
+3. **Round-2 always** for money/pipeline-critical work (§5.3): panel → DeepSeek+Integration adjudicate the findings → fold survivors, file rejections with reasons.
+4. **Cost-tiering — DeepSeek as multi-pass breadth at BOTH altitudes.** DeepSeek is ~free and a distinct lineage. NEVER run one generic pass — run the LENS SET in parallel, each a narrow prompt: (1) `spec` = the Compliance (A10) substrate, (2) security, (3) idempotency/dedup, (4) error-paths/degrade-safety. Run the set at plan AND output for WF1/WF2; at output for WF3. Every DeepSeek finding is adjudicated by a tool-having grounder before folding (§9 CLI blind spots — the 25E cursor-leak HIGH was a false premise refuted by `streamQuery` try/finally). Reserve the pricier Claude Task agents for the tool-needing roles (Integration/Guardian/Reality-Check/Schema-Fidelity/Ground-truth — they read the tree, git, or the DB; a CLI can't).
+   Dated note 2026-11-19 (M-246, prior text kept; task-358 REVIEW.LENSES, lane BL-LENSES; operator, verbatim, 2026-11-19, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry 'Operator: the review protocol': "I believe deepseek does the compliance seat" and "Deepseek is respoonsible for many of these seats - too many tokens to run all claude ones"): the repo lens set is five narrow DeepSeek templates in `.claude/review-templates/`: `lens-compliance.md` (A10), `lens-code-review.md` (A3), `lens-ux.md` (A11), `lens-error-paths.md` (A2 lens 4), `lens-security.md` (A12, money/auth/PII only), plus `plan-review-deepseek.md` as the failure-modes lens; run with `scripts/deepseek-review.js review <file> --template <lens> --context <pasted context>`; the lane brief written by `backlog-lane.mjs` names the lenses by task type; one Claude grounder adjudicates every finding as round 2. Table: `.claude/review-templates/README.md`.
+5. **Panel sizing scales to stakes.** "quick check" → a couple of lenses, single-vote. "thoroughly audit / money code / pipeline data" → full domain roster + round-2 (manual: scale to what's asked).
+6. **Findings triage** (WF6): BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons.
+7. **The roster is a MENU, not a checklist.** Never run all ~12 roles on one change. Compose the **smallest DIVERSE panel that covers this change's actual risks** (typically 5–8 lenses) + round-2. Lens-diversity beats agent-count (manual §6.2): running the whole menu floods you with the ⅓-false-premise noise (§9) it takes longer to triage than the bugs are worth. Security fires only on money/auth/PII/admin; Op-Model Compliance only at WF6; Reality-Check/Schema-Fidelity/Ground-truth only when values/DB-fields/spec-claims are in play.
+8. **Spend on reality-touching agents; economize on file-readers.** Empirically (§7b), the agents that verify against reality — Reality-Check (runs code / queries the live DB), Integration, Schema-Fidelity, Ground-truth — catch the subtlest, highest-severity bugs and carry the lowest false-premise rate, because they don't guess. The file-only CLIs (Gemini/DeepSeek) are cheap breadth, not ground truth (§9 CLI blind spots). Budget accordingly: a FEW reality-touching Claude agents + a couple of cheap DeepSeek lens-passes beats a large panel of file-readers.
+9. **Substrate economics.** DeepSeek handles execution and static reviews at low cost; spend tool-bearing Claude only when live tree / DB / git tools are strictly required. The execution half is `PLANNED` (SUB-ENG-1) — until it ships, execution is Claude. Rule 8 ("spend on reality-touching agents") is unchanged and takes precedence: cheap breadth never substitutes for a grounder.
+   Dated note 2026-11-06 (MB-85, M-246, prior text kept; E2, revised form): the orchestrator does short mechanical steps itself; anything over about a minute runs in the background; a multi-step build goes to the owning lane, on Sonnet, which reports with a STATUS line (§11.9 TKT-2), so the operator conversation is not held behind a build or a suite. Operator, verbatim: "E2a".
+10. **Claims and briefs are checked before they leave the orchestrator.** (a) No recommendation goes to the operator without its rule quoted with `file:line` (`card-cite-check.mjs`, to be built by MB-67). (b) A DeepSeek brief names only checks runnable through `bash_allow` (§C.4); otherwise provider `claude` with the reason logged (§B). Recorded as Spec 124a R-KO (`2026-10-30-batch-aj#CHAT-211.G10`).
+    Dated note 2026-11-06 (MB-85, M-246, prior text kept; C2 and C3): (C2) a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`); the id governs and the verbatim-quote check of arm D is unchanged. This amends the cite form of M-381 by a dated note. (C3) every answered card ends with one four-line compliance block: (1) the rule quoted, with id and anchor; (2) compliant yes or no; (3) the five-principle test, one clause each; (4) the condition, or none. Operator, verbatim: "C1-C4" (source `~/Buildo-scratch/mcbylaws/MB-85/cite-review.md`, proposals 1-4; C5 not taken, infra frozen).
+    Dated note 2026-11-19 (M-246, prior text kept; RR-0232 (c), RR-0235; task-308 R8c · lane BL-R8c · stage 8; operator, verbatim, RR-0232 (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`:925): "recommendation approved - however the open decisions need to provide whether it has been grounded (the issue) and the recommendation (verified)."; RR-0235 (:931): "We need them linked with all the relevant data - beyond just the data references"): the review records of rule 10 (a) stay in `docs/reports/reviews/<task>/`; lane reports join them in the repo. The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit, and the task's references point at that repo copy, so a reference resolves from the board (measured at fa08e8f24: 162 task references pointed at lane `REPORT.md` files under `~/Buildo-scratch`, outside the repo). The 2026-11-19 reports of BL-R6, BL-R7a and BL-R7b are copied as the first set.
+
+## 11. Grounded Verification Protocol — execute claims, validate folds (ratified by operator 2026-08-13)
+
+> **Calibration scope:** this section is EVIDENCE-BASED FOR BACKEND/PIPELINE (DB/SQL/chain) work — the Phase A C1–C7 ledger below is its provenance. The general form that transfers to every domain: **execute what's executable; ground what's groundable; judge the rest.** See §11.5 for the frontend nuance (operator-ruled: this may not be the case for front-end work — do not port the roster mechanics there uncritically).
+
+### 11.1 No unexecuted executable claim
+A plan or fold may not contain a claim that COULD be executed but wasn't: a data claim carries its query **run** (host + `current_database()` printed — lessons `:83`); a SQL shape is **parse-tested** against a real DB before any reviewer approves it; a census grep runs at the **full scope its conclusion covers**; a line citation is **read**, not remembered. "Approved on paper" is not a verification state.
+*Incidents:* C2's "397 permits" premise — one missing column (`permit_type`) survived four review rounds (2026-08-12) · C7's `$16` CASE — THREE review passes approved SQL that Postgres rejects (`inconsistent types deduced`); Case C2's red caught it by executing (2026-08-13) · C7's Q1 census — the plan's recorded query could not reproduce the plan's own fourth-writer finding (fold-validation #1).
+
+### 11.2 Fold-validation is a STEP, not a courtesy
+After folding any review round, and BEFORE implementation: **one grounder re-executes every claim in the fold** + **one cross-read adversary checks the folded decisions PAIRWISE and walks every checklist line for staleness**. Folds are read as a SET — the worst defects are collisions between corrections adopted separately (`tasks/lessons.md:117`). Sub-rules with incident bodies: **a fold must be exercised in every execution mode the file has** (the C4 `!pool` guard redded plain-Husky mode — cross-reading could not catch it, only running could) · **an expanded edit set kills every restated scope claim** ("the three SET terms. Nothing else." survived one fold past its own falsification).
+*Yield:* C4 fold-validation — 2 blocking (four-chain watchdog scope; the dropped `PIPELINE_CHAIN` harness line). C7 fold-validation — 10 defects incl. an unwritten fourth SQL expression and a falsified census query. Orchestrator folds averaged ~5 defects each across the session; the validation pass caught every one at the cost of two agents.
+
+### 11.3 Red-first mechanics
+Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed — a lock that was never red against the defect it names is not a lock (the 2026-08-13 envelope regex matched nothing; its "red" was the not-found branch). Red must land at the DESIGNED assertion; red-for-the-wrong-reason is a test defect found NOW. Survive-the-fix locks (green-both) are stated as such per case.
+
+### 11.4 Tests live in the plan; the plan panel reviews them
+The failing tests — cases, fixtures, red/green expectations, invocation mode — are written INTO the plan and reviewed at PLAN altitude, collapsing the separate test-panel round. *Incident:* C7 Case B's hash-guard vacuity was caught by three blind reviewers BEFORE the test file existed; the authored test then enforced the corrected design.
+
+### 11.5 Roster consequences (Backend/Pipeline) + the frontend nuance
+* **Lean grounder-first PLAN panel (3–4 seats):** Integration (main tree, live DB — the session's highest hit-rate seat: refuted C2's premise, found the live fourth writer, ruled the `--file` harness) · **Idempotency lens** (agent charter — owns replay/transaction/collision classes: F18, the backup-atomicity race, the stuck-interim-accretion collision) · **Regression Guardian, ALWAYS provisioned with shell+git** (fence archaeology: `f238b814`, the `c6bf9f1d` founding-intent ruling, Spec 41's fiction-from-birth, the inverted runSync-history claim) · + Reality-Check when derived values change (subject-matter trigger, §10.3).
+* **Cross-read Adversary is a NAMED role** (spawn: *"Hunt collisions between the plan's separately-folded decisions — pairwise, mechanically, with zero deference; walk every checklist line for staleness against the fold; verify the tests still cohere as a suite."*).
+* **CLI models (Gemini/DeepSeek raw) are DEMOTED to whole-file audit generators.** Their yield files to `review_followups.md`, never folds into a diff review. Evidence 2026-08-13: two CLI diff reviews produced ZERO diff findings; one produced a critical-sounding verdict phrase that did not reproduce and matched no line finding; DeepSeek re-raised the C1-refuted `PG_HOST` claim verbatim. Their pre-existing-defect inventories remain genuinely valuable (the close-stale safety-guard bundle) — that is their job now. Always grounder-adjudicated (§9).
+* **Lean OUTPUT panel: Guardian + one grounded reviewer.** The C7 five-seat output round produced exactly two novel catches, both reachable by that pair.
+* **§11.5-FE (operator nuance, 2026-08-13):** for Admin/Expo/frontend work, §11.1 applies to the domain's executable surface — typecheck, UI-regression suites (`*.ui.test.tsx`), render tests, a running app — but visual/UX/interaction-quality claims are NOT executable; reviewer judgment, the non-pipeline 3-reviewer panel, and the Spec 33/99 conventions carry the weight there. Fold-validation is recommended-lean (one validator) for multi-round frontend folds and mandatory only where a fold asserts executable facts. Do not demand queries of a design decision.
+
+### 11.6 Why this is the EFFICIENT shape, not just the safe one
+Grounding first means the plan panel argues about a true map instead of discovering the territory mid-round; tests-in-plan merges two panel rounds into one; fold-validation replaces "another full round" (historically low-yield — eight reviewers missed what one cross-read caught) with two targeted agents (which caught everything). C7 ran ~11 agent passes plan-to-ship under the old shape; this protocol's shape is ~7 for the same defect coverage. Reviewer METHOD diversity beats reviewer count.
+
+### 11.7 Validation panels for calculation answer keys (McProof; operator 2026-10-31)
+McProof is the validation standard for every Phase 3 increment (MB-77; `~/Buildo-scratch/mcbylaws/MB-77/MCPROOF.md`). Its rows are in Spec 69a, M-436 to M-447 and the dated note on M-358 (batch `2026-10-31-batch-an`); the two seat rules below live here because this spec governs seats and panels (operator, `CARD-mcproof-1-7` item 7).
+1. (MCPROOF-3, M-438) Independence. The author of an example never reviews its own example. The blind check withholds the answer, the working and all evidence. The calculation recheck does its own sums before it sees the key. A different seat or model family runs stage 3 from stage 4.
+2. (MCPROOF-13, M-447) Gemini tie-break and parking. Gemini runs when the blind value differs from the key or stage 4 says change; its answer is recorded in the blind stage; agreeing with DeepSeek sends the example back to stage 4 once; a three-way split goes to the operator; after `max_fix_rounds` the example is parked with an operator card. Scope: disagreements about worked-example ANSWERS only; keying of law and formula rows stays under M-17 and M-62 (operator adjudicates every disagreement), see `conflicts.md`. Gemini runs when the blind answer (stage 3) differs from the key or the Claude check (stage 4) recommends a change (card decision 3); two fix rounds, then the example is parked and goes to the operator (card decision 5). MCPROOF-13 covers worked-example answers only. M-17 and M-62 disagreements stay with the operator. (The clause "its answer is recorded ... goes to the operator" was drafted by lane R and confirmed by the operator at O-27, CARD-o27-foot18: "0-27 confirm all if in compliance with handbook, foot 18 keet it as pending"; handbook compliance checked in ~/Buildo-scratch/mcbylaws/MB-78/verify.md.)
+Dated note 2026-11-06 (MB-85, M-246, prior text kept; operator, `CARD-ticket-status.md`): MCPROOF-3 and MCPROOF-13 gain the answer-first and empty-or-truncated rules of §11.9 (TKT-3, TKT-4). The text above stands.
+Dated note 2026-11-13 (M-246, prior text kept; operator Q4 b, verbatim: "Q4 b"; record `~/Buildo-scratch/review-20261113/HOLISTIC-RECOMMENDATION.md` Q4 and the ruling section, verbatim: "all recommendations accepted. proceed with the plan"; seat-4 finding F5, `~/Buildo-scratch/review-20261113/seat4-process.md`): item 2's Gemini tie-break is not run. McProof runs Claude and DeepSeek only, no Gemini (increments 5 and 6; Gemini was unavailable in increments 3 and 5). Every disagreement about a worked-example answer goes to the operator, so the three-way split of item 2 becomes a two-way split to the operator. The text above stands. Missing mandatory stages (MCPROOF stages 3-5, or the independent seat of item 1) are listed as named, accepted gaps in each increment's decision list D-0 (MCINC-3), never silently.
+
+### 11.8 The McIncrement recipe (MCINC; operator 2026-11-06)
+Every Phase 3 increment runs the same six steps, starting with increment 3 (card MCINC, `~/Buildo-scratch/mcbylaws/inc2/CARD-mcincrement-recipe.md`; operator "a) now, so increment 3 uses the recipe from day one, and (b) with DR-5 when the freeze lifts."). Its rows are in Spec 69a, M-488 to M-493 (batch `2026-11-06-batch-bb`); the dated note on the McBylaws queue increments table points every later increment here. Enforcement (a), now: the existing loop gate, prereg checker and door already refuse any move that no ruling names; the recipe moves those catches to step 2. Added check: none. The second-seat check on each increment's plan verifies the impact map exists and was measured on the tip. Enforcement (b) is OWED to card DR-5: the prereg names its impact-map file, and the prereg checker fails if a moved test, golden or version is missing from that file. It extends the checker that exists, with no new gate; it is infra work, so it waits for the freeze lift by name (operator rule, 2026-11-02).
+1. (MCINC-1, M-488) Scope and answer key (McProof first). The increment's targets and the 25-case answer key are hand-derived from the by-law text under McProof (§11.7, M-436..M-447). The operator walks the disputed items one at a time. Nothing is built before this.
+2. (MCINC-2, M-489) One impact map, measured on the current origin tip. Use a throwaway sandbox worktree with the work applied and the affected tests run. It lists every file, assertion, worked example, golden and oracle file that moves; every version and pin that moves; whether a Layer 2 night is needed; every disclosure the increment produces. Anything not measured is marked UNVERIFIED.
+Dated note 2026-11-13 (M-246, prior text kept; operator, verbatim: "all recommendations accepted. proceed with the plan"; record `~/Buildo-scratch/review-20261113/HOLISTIC-RECOMMENDATION.md` K5; seat-4 finding F7): the impact-map form gains a "Map defects" heading. Every stop the map missed (step 3) is listed under it, and the increment's close note counts them. Text only; the map's other contents are unchanged.
+3. (MCINC-3, M-490) One decision list. Every ruling the map needs goes to the operator at once. For each: the rule quoted, compliant options only, a recommendation. The answers are recorded verbatim. A stop during the build that the map missed is a map defect: it is recorded and added to the map template.
+4. (MCINC-4, M-491) Build on the tip. Red tests first, then the code, through the real hooks. The full suite runs on the current origin tip before "ready" (existing memory rule). Never port a stale draft: re-cut it on the tip.
+5. (MCINC-5, M-492) At most one Layer 2 night per increment, from the standard checklist. The night uses the night-checklist-axis.v2 form: dry run, prereg, go, C1-C6, the night record.
+6. (MCINC-6, M-493) Close. The increment is green in the loop: every case passes or is a named, accepted finding. Every owed item has a card and a lock, and the disclosure lock is green (L3-DISC). One push per landing set.
+
+Dated note 2026-11-12 (M-246, prior text kept; card MCINC, "Amendment 2026-11-12: MCINC-7 and MCINC-8"): the recipe gains steps 7 and 8. Operator, verbatim: "1 and 2" and "the rules need to be written into the recipe and followed - not just memory". Their rows are in Spec 69a, M-514 and M-515 (batch `2026-11-12-batch-bf`). They apply to every lane and every DB job, not only Phase 3 increments. Why: on 2026-11-12 one DB job (MB-35) needed five night attempts, each a stop found live (a shell path bug, row-level security text, a composite-key retract, a JSON type, 22 retired settings rows), then a witness hard stop at commit; separately three numbers collided across lanes (MF-77, FE-38, migration 313). Enforcement: two scratch tools named in each step (no repo tool or code; infra freeze, operator rule 2026-11-02).
+7. (MCINC-7, M-514) Rehearse every DB job before the go. The job runs end to end first on the local test stack (`~/Buildo-teststack`, project `buildo-mctest`, ports 55320-55329, env `~/Buildo-scratch/mctest/teststack.env`, whose values are never printed). The target is a setting of the job (`JOB_TARGET=teststack`), never an edited copy of its blocks. Then the real commit hooks run on the rehearsal captures: `node scripts/analysis/step-validate.mjs --staged` and `node scripts/analysis/mcbylaws/gate.mjs --ci --base <origin tip>`. OPERATOR-GO is asked only after both pass. Enforcement: the rehearsal gate `~/Buildo-scratch/rarms/night-tools/rehearsal-gate.zsh`, sourced in each job's first block, refuses the dev target (127.0.0.1:54322) unless the job's `REHEARSAL.pass` names the job's current BLOCKS.sha256 digest and records hooks rc=0 from a test-stack run.
+8. (MCINC-8, M-515) One ID ledger. Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere: `mkdir ~/Buildo-scratch/ids/<kind>-<n>` (atomic) with an `owner` file naming the lane and branch. If mkdir fails, the number is taken: take the next one. The orchestrator runs the ledger check `node ~/Buildo-scratch/ids/check.mjs <worktree>` before every push command; a failure means no push command.
+
+Dated note 2026-11-17 (M-246, prior text kept; MCINC-4 above; McBylaws queue · lane INC6-RECORDS; operator 2026-11-06, "P3" (memory note ready-means-hooks-and-suite-on-tip, "Amended 2026-11-06 (operator P3: "P3")"); panel record `~/Buildo-scratch/plan-gen/data/rule-conflicts.md`, row 1): MCINC-4 reads "the current origin tip"; under the operator's P3 the base is the current mb-rul tip once that tip is suite-green and push-ready, and need not be on origin. The suite runs locally on your commits stacked on the latest suite-green tip, in a clean worktree, and the push is made from a clean worktree at the pushed commit (the pre-push suite tests the working tree). GitHub is not a substitute. Applies the spec; no new decision.
+
+Dated note 2026-11-17 (M-246, prior text kept; MCINC-7 above; McBylaws queue lanes row D · lane INC6-RECORDS; operator, verbatim: "y to all" (2026-11-16, DBJ-FIX (b)); record `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`:456): the test-stack guard checks the target database only; dev keeps the global match. (b) is the standing rule.
+
+### 11.9 Ticket header and closed reply status (TKT; operator 2026-11-06, MB-85)
+Operator, verbatim: "push complete - let's take the 1-4 as you suggested can will also apply any learnings ie status to the non deepseek part of our queue system as well." Items 1 and 2 apply to every seat and lane agent, Claude and DeepSeek (Sonnet seats, lane agents, panel seats, lane reports). Items 3 and 4 apply to McProof (§11.7). Added check: none; no tool or code change.
+1. (TKT-1) Ticket header. The first lines of every brief and prompt (after any front-matter block) are: `Ticket: MB-nn · lane X · stage N` (queue Process 11); `Rule:` the rule quoted with file:line; `Scope:` the files or targets; `Done-condition:`; `max_fix_rounds:` a number; when the header omits it the default is 2 (D6 B). Wider scope than the header is a new MB item, not a longer brief.
+   Dated note 2026-11-19 (M-246, prior text kept; task-1 BL.0 · McIncrement plan · lane BL-R4 · stage R4; operator, verbatim, RR-0205 (`~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`:843-844): "yes of course"; RR-0212 (:864-867): "we needd the loader and the three gates"): for a lane working a plan task the header form is `Ticket: task-N (<MB-nn | MF-nn | plan id>) · lane X · stage N`; `Rule:`, `Scope:`, `Done-condition:` (the task's acceptance criteria) and `max_fix_rounds:` come from the task and are generated by `scripts/analysis/backlog-brief.mjs`. A lane cut before the import may still carry `Ticket: MB-nn · lane X · stage N`. The review context file for a task is written by the same tool to `docs/reports/reviews/<task>/context-<date>.md`, so the rule quoted with file:line (§7 rule 10 (a)) comes from the task's decisions and acceptance criteria, not from scratch. A code commit names its task by the trailer `Task: task-N` (Spec 137 §4 rule 3, gate G3). MCINC-4 (§11.8): a lane's base is the programme tip that carries the import (`backlog/`), so its `Task:` trailer and the task file are in the same commit.
+2. (TKT-2) Closed reply status. Every reply ends with one line `STATUS: ready|blocked|failed|dropped` and carries at most one question. ready: the done-condition is met and the evidence is in the reply. blocked: a ruling, card or input is missing; the question names it. failed: the work did not complete, or the reply is empty or truncated (TKT-4). dropped: the ticket is withdrawn or superseded; the reason is one line. This is a reply-level word. It never writes a queue status cell: the queue's own words (DONE, RUNNING, WAITS, OPERATOR, HELD, LATER; stage 10 is set by the checker) stay as they are.
+3. (TKT-3) McProof answer-first. A McProof reply puts its answers first, in the answer table the code already requires (`scripts/analysis/mcproof/prompts.mjs:10`, one row per example id: a number with an optional unit, a closed status, or `cannot decide`); the working follows the table. Rows outside the table are not read.
+4. (TKT-4) Empty or truncated is failed. An empty or truncated reply is `failed`, never a verdict and never a pass. One concise rerun is allowed; a second empty or truncated reply parks the ticket with an operator card (MCPROOF-13). McProof stage runs keep the configured retry count (`scripts/analysis/mcproof/mcproof.config.json:69`, `max_retries_per_stage` = 2) until that value is moved by a ruling (OWED, infra, frozen): this rule changes no config and no code. Output-cap and stop-reason logging are infra and frozen.
+5. (TKT-5, E1) No agent teams; lane-to-lane facts go through the orchestrator. A fact one lane needs from another goes through the orchestrator as a note of at most 100 words that cites file:line and grants no authority. Claude Code agent teams are not enabled (a harness setting is infra, frozen until lifted by name). Source (verbatim, operator 2026-11-06): "E1 a" ("E1 a, E2 who will do the build? Another opus ? how many more tokens will this consume? E3 not sure this is important E4 a will this work with our queue update - board merge e5 a ( ineed you to evaluate them). In a ticket system - arent incompleted or cards not respondend to - wait on the list with a date for expiry").
+Operator source lines for this section (verbatim): "E2a, E4 as long as this isnt a big infa creation E7 E7 7 days. Does this get us to a better place? I also find me doing all the pushes slows us down and in some cases we slow the lanes to do the push. can we optimize this in anyway?" "P3 Mb-86 D1-D7. Teh final quesstion is the rules citation and compaince check - has this been optimized as well?" Rulings: D1 B, D2 A, D3 A, D4 A, D5 A, D6 B, D7 A (MB-85 DECISIONS.md); TKT-1 carries D6 (default `max_fix_rounds` 2) and D7 (header in the body); TKT-3 is D2 A; TKT-4 is D3 A; TKT-2 is D5 A.
+
+Dated note 2026-11-14 (M-246, prior text kept; McQueue · lane MQ; operator, verbatim: "a - let's do it but it needs to properly point to the tasks - it was too much work to bring them into a central location"): where every queue lives, the one-line status form and the queue rules (7-day expiry, DB lane, dated-note rulings, the weekly snapshot) are in Spec 137 (`docs/specs/00-architecture/137_mcqueue.md`). Nothing in §11.8 or §11.9 changes.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+# Review context for task-384 (no plan id) written 2026-11-20 by backlog-brief.mjs
+
+## Task
+task-384 STD.REPORT-OWN The web report renderer gets a census owner and comes under the existing text, component and 44 px checks
+status: RUNNING · milestone: m-1 · assignee: @lane-BL-REPORTOWN2 · labels: McFix, McFix B
+
+## Description
+Plan section B4. Page-by-page check: src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx are owned by no surface (docs/reports/generated/127-surface-registry.md section 5; src/tests/surface-registry.infra.test.ts:198 it.fails) and are in no bindings.json list, so C-2b, C-8 and C-9 never run on them (defect D8 sat there). Census owner entry plus listing; findings the checks then raise are fixed or brought to the operator. The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/components/report/ReportPage.tsx, src/components/report/ReportView.tsx, src/components/report/ReportPageToggles.tsx, scripts/surfaces/_schema/bindings.json, src/tests/surfaces/surface-conformance.logic.test.ts, scripts/surfaces/_schema/census/web-product.json, scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json, docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, src/tests/surface-registry.infra.test.ts
+
+## Acceptance criteria
+
+## References
+- docs/reports/lanes/2026-11-20/BL-REPORTOWN/REPORT.md
+- docs/reports/lanes/2026-11-20/BL-REPORTOWN/FINDINGS.md
+
+## Documents
+- (none)
+
+## Decisions in force (titles; the ones this task names carry the operator's words)
+- RR-0005 2026-11-18 · Operator direction: page-level lot information in increme
+- RR-0087 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0315 Plan: go on sections A and B; tasks added to Increment 1B
+- RR-0316 Plan: close check folded as built
+- RR-0317 Plan: review enforcement only
+- RR-0318 Plan: section E accepted
+- RR-0319 C2 failed compute: error screen with Try again, not counted
+- RR-0320 C3 legal line at the bottom of the phone search page
+- RR-0321 D13 semi page buttons 48 px is the operator ruling
+- RR-0322 C5 engine numbers to every paying user at once
+- RR-0323 D1 freshness compare left until stored records exist
+- RR-0324 Semi page cache write accepted as built
+- RR-0088 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0325 Phone keeps its 3 retries (reading)
+- RR-0326 Web search legal line at the bottom (reading)
+- RR-0327 Page structure to table-driven pages: the five items go ahead
+- RR-0328 The app is not in use, in development
+- RR-0329 Task 370 dropped from Increment 1B (reading of the answer)
+- RR-0330 Six-row table as put, including task-348 answered (reading)
+- RR-0331 Report meter stays in the lookup route
+- RR-0332 A McFix task may file under the McFrontend row that built what it fixes
+- RR-0092 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0099 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0136 Operator: start Increment 1·A
+- RR-0137 Operator: completeness, holistic and per-increment optimisation
+- RR-0139 Operator: push 6, re-sort, answer page
+- RR-0140 Operator: faster pushes and GOs asked
+- RR-0141 Operator: Q-LT-1
+- RR-0143 Operator answer IMG-1: six lot-size bands
+- RR-0012 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0144 Operator answer PRG-1: purge rule
+- RR-0145 Operator answer TRK-1: tracked lots refresh
+- RR-0146 Operator answer PG-1: pushes and GOs
+- RR-0147 Operator answer NAME-1
+- RR-0149 Increment 1·A tooling location
+- RR-0150 Infra freeze named list
+- RR-0152 Increment 1·A re-use and drops
+- RR-0154 Work pulling
+- RR-0156 Push 6 literal test
+- RR-0157 Push 6 R-MD
+- RR-0014 McSTORAGE-RULINGS.md:5
+- RR-0159 Push 6 recapture; 1·A panel scope
+- RR-0161 Work pulling
+- RR-0162 Answer ONE-1
+- RR-0163 Answer ONE-2
+- RR-0164 Answer ONE-4
+- RR-0165 Answer ONE-5
+- RR-0166 Answer ONE-12
+- RR-0167 Answer ONE-13
+- RR-0168 Answer ONE-21
+- RR-0169 Answer ONE-22
+- RR-0028 open-questions.md:1088
+- RR-0170 Answer ONE-35
+- RR-0172 Search lot map street name
+- RR-0174 Loading screen
+- RR-0176 Loading screen
+- RR-0178 MB-44 W timing
+- RR-0179 Load-failure page
+- RR-0180 Web recent-search chips
+- RR-0182 Search identification and semi wiring
+- RR-0184 Semi question page design
+- RR-0186 Inc6 protection window
+- RR-0044 2026-11-18 · Operator direction: page-level lot information in increme
+- RR-0188 Push 6 recapture
+- RR-0190 Enforcement
+- RR-0192 Operator oversight scope
+- RR-0193 McRecommendations
+- RR-0195 Push CHK.5/CHK.3
+- RR-0196 Push CHK.5/CHK.3
+- RR-0198 Push 6 recapture
+- RR-0200 Recommendation tracking tools
+- RR-0202 Backlog working board
+- RR-0203 Backlog working board
+- RR-0060 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0205 Backlog home of the plan
+- RR-0207 Backlog: use all features, bring content and process over, ensure use
+- RR-0208 Gates: assess necessity; Backlog to make the process followed and reviews validated
+- RR-0210 McLane is the lane policy name
+- RR-0212 Backlog plan v8 scope: loader + three gates
+- RR-0214 1·A not replaced; relevancy pass after the move
+- RR-0215 Images round 4 directions
+- RR-0217 Concept gallery scope
+- RR-0219 Backlog plan v8 approved
+- 2026-11-18 re-use ruling: drop INFRA.2 guard.mjs and CHK.4 (operator words)
+- RR-0080 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- Q-H2 drop the J5 storeys backfill chain (7.7-7.9, 7.23)
+- RR-0232 Open decisions: grounding and verified recommendation
+- RR-0233 Operator expertise scope
+- RR-0235 McLane brief: full context from milestone, reviews and decisions
+- RR-0242 One-command lane launch
+- RR-0248 Increment 1·A parallel lanes
+- RR-0264 Semi page placeholder in 1·B
+- RR-0270 Web search footer: once, approved
+- RR-0273 Shared footer component
+- RR-0271 LOAD.1 drives the report now, ST.P1 split
+- RR-0081 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0277 Search fuzzy matching reuses the permit address spec
+- RR-0278 Report meter counts on report production only
+- RR-0281 No clear-search button (A.11 not required)
+- RR-0282 Daylight restyle token substitutions stay as built
+- RR-0284 Lot map: two data reads allowed (C.5 footprint, C.7 card line)
+- RR-0299 SRCH.C12 support address is a placeholder until launch
+- RR-0300 1·B blockers as OPERATOR tasks
+- RR-0298 Status changes only by the launch script
+- RR-0301 task-341 approved: run tasks 121, 122, 123 now, then LOAD.1, LOAD.2, LOAD.4
+- RR-0302 Loose ends task per milestone
+- RR-0086 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0303 design-elements file: produce now if not a big job
+- RR-0306 task-342 answered: the proof tool does not wait for the design-fit check
+- RR-0307 task-340 answered: A.6 is built now from the existing entitlement read, compliant and researched first
+- RR-0308 Semi question mock approved (task-319)
+- RR-0309 Regenerated semi mock approved (task-319 stage 2)
+- RR-0310 A.6 reset date served as a Toronto-time label (task-320)
+- RR-0311 A.6 zero reports left still shows the line (task-352 question 1)
+- RR-0312 No plan: an error page with a way to sign up (task-352 question 2)
+- RR-0313 Search box says Enter a Toronto address (task-352 question 3)
+- RR-0314 Outside-Toronto notice stays
+
+## Milestone
+m-1 Increment 1·B Search [S]
+
+### Description
+
+Increment S (re-opened, scenario slice)
+
+### Problems
+- None named in the S brief (docs/reports/plan-import/raw/2026-11-19/search-brief.json carries inc, deliverable and specs only).
+- Found by the R10 validation pass (task-316, 2026-11-19), text left as found: the first two Storage set-up lines below still say a 35 s loading screen and LOAD.3; RR-0176 (decision-43, supersedes RR-0174) rules no 35 s cap and LOAD.3 dropped (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- Found by the R10 validation pass: two Storage set-up lines and four Register rulings lines end with the word undefined where a quote belongs (generator defect, draft task on backlog-brief.mjs); doc-16 section 5 row S still reads LOAD.1 to LOAD.3 (backlog/docs/doc-16 - McStorage-policy-v2.md:108)
+
+### Project objectives
+- Objective: finish a completed project, a database that works and is ready (operator 2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "our objective is to finish a completed project ie a database that works and is ready"
+- The database exists to service the designed report, details and search page (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page"
+- A task that serves neither a designed element nor a supporting function is most likely not relevant (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code"
+- Five principles, keep it simple, no scope creep (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep"
+- One plan only (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "we need one plan - we can only execute one plan"
+
+### Increment objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion (docs/reports/plan-import/raw/2026-11-19/search-brief.json inc; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report; the semi calculation stays in Increment 7 (7.25) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report) (backlog/docs/increments/doc-2 - Increment-S-requirements.md:27) "| id | element | where | status | deliverers | built |"
+
+### Objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+
+### Deliverable
+- A user types any Toronto address, resolves address or lot confusion through the designed pages (choose your lot, and the three states: intersection, no lot linked, many lots), and lands on the report (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682) "Readings: (1) Q-GAP-0 image hold R-IMG1..3 LIFTED (dated note owed, M-246 form). (2) Q-GAP-2 "Most space": every option, a tie goes to the l"
+- The search pages follow the Daylight product standard (small pages v8); today they are still old dark on origin (mobile/src/constants/parcelSearch.ts:58) (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1100) "R-D1 Daylight is the product standard: small pages (v8), landing (v10+), report (B v3: summary + concept gallery), demo "
+
+### Specs
+- Spec 89 parcel cost model tool (search parser rules): origin:docs/specs/02-web-admin/89_parcel_cost_model_tool.md
+- Spec 126 MaxBLD surface standard: origin:docs/specs/02-web-admin/126_maxbld_surface_standard.md
+- Current search (latest rendering + later rulings): ~/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md
+- MORNING-DECISIONS.md: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md
+- McFrontend phase1 open-questions.md (search and small-pages rulings): ~/Buildo-scratch/mcfrontend/phase1/open-questions.md
+- PROTOCOL.md: ~/Buildo-scratch/panel-tools/PROTOCOL.md
+
+### Rulings
+- Search pages come first in the plan, before increment 1 (RR-0005) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "the search pages should be even before the increment 1"
+- Search parser: fix the street direction guard and the unit-token strip before launch (RR-0166) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-12 a"
+- W5 choose your parcel on the web is deferred and the web live switch stays off (RR-0170) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-35 b"
+- Lot map: the street name on the road comes from the map's own road labels (RR-0172) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:775) "Map's road labels (Recommended)"
+- The 'faces the street' rule question was withdrawn by the operator (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:774) "why does this matter? do you not know how to do the lookup?"
+- Loading screen: the animation keeps its own length and always runs to completion; the button waits for the report AND See details; LOAD.3 not needed (RR-0176, supersedes RR-0174 which said 35,000 ms) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- The customer read module W (1.3) is built now in Increment 1 (RR-0178) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "1. it has to happen now - read the objectives"
+- A load-failure page is a task, built from the other small pages (RR-0179) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "2. Add it as a task using the othr mini pages as a template"
+- Web recent-search chips (E.6) stay deferred (RR-0180) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "3. This can stay defferred for now"
+- 1·B builds A.6 and C.12 as their own tasks and identifies the semi lot; the semi calculation stays in 7.25 (RR-0182) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- The semi question page is designed like the other small pages: a v8 mock for approval, then built (RR-0184) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:801) "also need a semi question page similar to a min page"
+- Small pages: Daylight ("modern") is the product standard (R-D1) (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1098) "Just looking at the small pages - love it! Let's go with modern."
+- Increment 1·B starts as a validation pass of its tasks, the semi page placeholder, the McFrontend fields and page tasks, dependencies and the prior panel records (RR-0257) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1019) "This work has been done - just validation."
+
+### Storage set-up
+- McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md) "undefined"
+- Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3); skipped for a re-opened lot (its record is read); no screen for owner input or the Tracked Lots list (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696; ~/Buildo-scratch/mcfrontend/MF-62/plan.md:44) "undefined"
+- Search shows addresses only; the pick (lookup hit) starts the one-lot compute (LOAD.1) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696) "undefined"
+- ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts) (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126) "undefined"
+
+### Register rulings of this group (operator words)
+- RR-0005 2026-11-18: Search pages first in the plan, before increment 1 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- RR-0137 2026-11-18: For increments 1b-10: all tasks present to fulfil each increment's objectives and deliverables (rulings most relevant, McStorage policy, compliance, project objectives; ensure relevancy); tasks optimised holistically, then within each increment, updated in the plan (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:729) "ensure all tasks are present to fufill the increments objectives and deliverables"
+- RR-0144 2026-11-18: Stored lot records are purged after 90 days unopened (operator answer PRG-1 a); tracked lots are never purged while tracked (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "PRG-1 a (purge after 90 days unopened)"
+- RR-0145 2026-11-18: Tracked lots are refreshed in the background when the stamp moves (operator answer TRK-1 a) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "TRK-1 a (background refresh of tracked lots when the stamp moves)"
+- RR-0154 2026-11-18: When a task completes the next ready task starts at once; a task blocked on an operator question goes to the answer page and work moves to the next unblocked task; nothing waits idle. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:754) "it should pull the next task as something completes or move to the next task if a question remains"
+- RR-0166 2026-11-18: Search parser (1.4): fix the two defects before launch (street direction guard, unit-token strip), with two labels and one dated note on Spec 89 line 33 (ONE-12 a) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-12 a"
+- RR-0170 2026-11-18: W5 (choose your parcel) on the web: deferred; the web live switch stays off (ONE-35 b) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-35 b"
+- RR-0172 2026-11-18: Lot map: the street name on the road comes from the map's own road labels; no new data read or drawing code. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:775) "Map's road labels (Recommended)"
+- RR-0174 2026-11-18: Loading screen: the animation always runs its full set length (report_check_min_ms = 35,000 ms, default and maximum); the button to open the report shows when the lot's numbers are ready, at any time after the animation completes. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:779) "the animation still needs to be complete.. the button shows when its ready - anytime after the animation completes"
+- RR-0176 2026-11-18: Loading screen: the animation keeps its own length (23 s today, may change later) and always runs to completion; the button to open the report shows only when the report AND See details are loaded, however long that takes (no 35 s cap); the 35,000 ms setting change (LOAD.3) is not needed now. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- RR-0178 2026-11-18: MB-44: T now, per-increment checks now, and the customer read module W (1.3) built NOW in Increment 1 (not after J9 in increment 8), because McStorage policy v2 computes at the search pick (MD:704). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "1. it has to happen now - read the objectives"
+- RR-0179 2026-11-18: New task: the load-failure page shown when a lot's report or See details fails to load, built from the other small pages (small-pages-v8) as its template. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "2. Add it as a task using the othr mini pages as a template"
+- RR-0180 2026-11-18: Web recent-search chips (E.6) stay deferred. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "3. This can stay defferred for now"
+- RR-0182 2026-11-18: Increment 1·B builds A.6 (reports-left line, app search page) and C.12 (help link) as their own tasks; the search identifies two-or-more parcels, a mis-typed address, or a possible semi lot; the search portion and the semi question page are done now with the wiring (link) to the report; the semi calculation stays in Increment 7 (7.25). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- RR-0184 2026-11-18: The semi question page is designed like the other small pages (small-pages-v8 Daylight): a mock from the v8 template for operator approval, then built (SRCH.SEMI). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:801) "also need a semi question page similar to a min page"
+- RR-0186 2026-11-18: Increment-6 protection rules 1, 3, 7 and 9 are closed (D7 done); suites and pushes only through the push station and the operator; DB jobs only on the operator typed GO; rules 2, 4, 5, 6, 8, 10, 11 stay until push 6 lands. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:805) "y and your not following the McQueue rules"
+- RR-0190 2026-11-18: Lane launches need an authorized plan for any repo worktree they write; every register row is marked operator words or orchestrator reading and only operator words feed reviews as rulings; orchestrator replies that recommend or name a ruling must cite file:line, an RR id or UNVERIFIED (enforced by hooks). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:813) "close the gap.  fix teh register"
+- RR-0192 2026-11-18: Questions come to the operator only on database structure, the frontend, the user experience and storage; everything else is decided under the six-criteria rule, reviewed and logged as a McRecommendation card for audit. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:819) "I dont provide oversight on questions beyond the databse strcuture, the frontend the user experience and storage"
+- RR-0193 2026-11-18: McRecommendations: every recommendation is a card in the repo decision log with customer / UX / space / DB-logic framing, options, rulings (operator words only), sources, research kept separate from the recommendation status (judgment only, reviewed, proven), five principles, what it serves, computed confidence and outcome. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:817) "the recommendation should be framed with an explanation that speaks to what I know"
+- RR-0202 2026-11-18: The increment plan moves into the repo queue rows (Spec 137); the Backlog board generated from them is the working board, showing per task its increment, decisions and research (review/run) IDs. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:837) "I need to be able to see the board and the categories and the decisions and the research ids for each"
+- RR-0203 2026-11-18: The move of the increment plan into the repo queues is done by a committed generator with --check, from a committed raw snapshot; nothing hand-copied. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:839) "use a generator"
+- RR-0205 2026-11-18: The increment plan lives in Backlog.md in the repo (milestones = increments, assignees = lanes, priority/ordinal, dependencies, decision and research refs per task); the operator organises on the board; queue rows stay and are linked by id; loaded once by an import script. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:843) "yes of course"
+- RR-0207 2026-11-19: Backlog: every feature is used; each increment's objectives, rulings, citations and storage objectives move over; the existing process (handbooks, Spec 08) is carried over; process documents are updated; the move is structured so the system is actually used. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:847) "Make sure opus actually uses the system"
+- RR-0208 2026-11-19: The board data exists in the artifact and the procedures in Spec 08; the failure is scratch work, made-up responses and wrong reviewer context; hence the gates and full Backlog use. Each new gate is assessed as necessary or not, with how to do it right. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:848) "determine if the new gates etc are necessary and how to do this right"
+- RR-0210 2026-11-19: The lane policy is named McLane in the Spec 08 and Spec 137 dated notes of the Backlog-home plan; McDecision is not adopted. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:852) "Let's stick with McLane for a name."
+- RR-0212 2026-11-19: The Backlog-home plan is the loader plus the three enforcement pieces, with Backlog's own browser as the board; the v7 board job, mirror synchroniser, import verifier and structural gate are dropped (simple, no scope creep). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:867) "we needd the loader and the three gates"
+- RR-0214 2026-11-19: Increment 1·A is not replaced by the Backlog plan; after the move every task on the board is re-checked for relevancy against the plan (kept / merged / changed) before 1·B starts. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:857) "ensure the tasks are updated and relevancy determined in light of the plan"
+- RR-0219 2026-11-19: Backlog-home plan v8 is authorized (PLAN LOCKED): loader + three gates + Backlog's browser; D1-D5, D7-D10 as recommended; every relevant spec note lands; every imported task carries all available information; the 1·A tasks are updated or removed against the plan through the panel. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:871) "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the tasks"
+
+### Compliance codes in use
+- None named: no 1·B task (task-12, 13, 14, 68, 69, 266, 267, 268, and the promoted and created task-317 to task-325) carries a comp: label (checked on the task files, 2026-11-19).
+
+### Decisions
+Every file in backlog/decisions whose Groups line names S or whose Tasks named line names a 1·B plan id (checked 2026-11-19, R10):
+- decision-1: RR-0005 2026-11-18 · Operator direction: page-level lot information in increme
+- decision-15: RR-0137 Operator: completeness, holistic and per-increment optimisation
+- decision-20: RR-0144 Operator answer PRG-1: purge rule
+- decision-21: RR-0145 Operator answer TRK-1: tracked lots refresh
+- decision-27: RR-0154 Work pulling
+- decision-36: RR-0166 Answer ONE-12
+- decision-40: RR-0170 Answer ONE-35
+- decision-41: RR-0172 Search lot map street name
+- decision-42: RR-0174 Loading screen
+- decision-43: RR-0176 Loading screen
+- decision-44: RR-0178 MB-44 W timing
+- decision-45: RR-0179 Load-failure page
+- decision-46: RR-0180 Web recent-search chips
+- decision-47: RR-0182 Search identification and semi wiring
+- decision-48: RR-0184 Semi question page design
+- decision-49: RR-0186 Inc6 protection window
+- decision-51: RR-0190 Enforcement
+- decision-52: RR-0192 Operator oversight scope
+- decision-53: RR-0193 McRecommendations
+- decision-58: RR-0202 Backlog working board
+- decision-59: RR-0203 Backlog working board
+- decision-60: RR-0205 Backlog home of the plan
+- decision-61: RR-0207 Backlog: use all features, bring content and process over, ensure use
+- decision-62: RR-0208 Gates: assess necessity; Backlog to make the process followed and reviews validated
+- decision-63: RR-0210 McLane is the lane policy name
+- decision-64: RR-0212 Backlog plan v8 scope: loader + three gates
+- decision-65: RR-0214 1·A not replaced; relevancy pass after the move
+- decision-68: RR-0219 Backlog plan v8 approved
+
+### Documents
+- Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md
+- McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md#L27) and docs/reports/plan-import/raw/2026-11-19/elements-by-inc.json#S
+- McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md#L108-L108 and docs/reports/plan-import/raw/2026-11-19/storage-by-group.json#S
+
+## Document sections
+Cap: 120 KB in total, 12 KB per block (document blocks below; an omitted block costs its notice against the total); a block that would pass the total is listed as omitted. Sections named in a link (#L<n>-<m> or a section title) are read; with none named, the first 12 KB.
+
+### Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md (not readable: ENOENT; read it at Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md)
+
+### McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md (not readable: ENOENT; read it at McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md)
+
+### McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md (not readable: ENOENT; read it at McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md)
+
+## Decisions naming this task
+- RR-0327 Page structure to table-driven pages: the five items go ahead (names task-384) — "approved" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1422)
+
+## Prior reviews and lane reports
+### task-384 (this task)
+- docs/reports/lanes/2026-11-20/BL-REPORTOWN/REPORT.md (lane report naming task-384)
+- docs/reports/lanes/2026-11-20/BL-V2LIST/REPORT.md (lane report naming task-384)
+
+## Dependencies
+- (none)
+
+## Lane plan of BL-REPORTOWN2 (this is the plan under review)
+## Lane plan (BL-REPORTOWN2, task-384, STD.REPORT-OWN part two)
+
+Goal: the three web report renderer files (src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx) come under the existing surface checks C-2b (no display text) and C-8 (closed component table), with the structural findings pinned as a shrink-only baseline, and the McFrontend handbook reaches their reviewers. They stay a component; nothing is converted (Spec 126 :925 "REPORT keeps the landed renderer", :926 "the landed web REPORT renderer" is on the list of our code).
+
+Rule the task rests on: the approved item 3 at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1421 "3. Leave the reports as components, and bring them under the existing checks (task 384)." with the operator's word at :1422 "approved [the five items pasted] - remember the app is not beign used - we are in development"; resolution by a separate grounder under the delegation at :1476 "Let the grounder resolve them all as long as the result is compliant" (task notes: option 2, strings fixed).
+
+Facts the resolution rests on, each opened before building:
+1. mcbylaws/protected-paths.json `frontend` has no src/components/report glob (file read); scripts/analysis/rule-lists.json:123-124 row `surfaces` reads that list (globs_from), so the surface lists attach to a path only when it is in `frontend`. Before: `rule-lists.mjs resolve` on ReportPage.tsx lists eng-all five-words plan-protocol inc-S ms-S only (resolve-before.txt).
+2. bindings.json lists none of the three files; census binding_web_report (web-product.json:5411) owns them (part one). C-3 (surface-conformance.logic.test.ts:164-168) needs module_roots to be under COMPONENT_ROOTS and frontend globs in the policy, so the glob must come first.
+3. Treated as web REPORT modules the real functions raise C-2b 108 (ReportPage 92, ReportView 16, ReportPageToggles 0) and C-8 213 (171, 41, 1) (measure/measure-before.txt, reproduced). Display text is exactly three findings: ReportView.tsx:19 "confidence:" and "· provenance:", :121 "Details". ReportPage.tsx string children are the blank spacer " " (5) and `label=` values are key names, not text: structural.
+4. FE-05 (report-no-maths.logic.test.ts DIRS) already scans src/components/report, so the listing adds no new no-maths exposure.
+5. Content home: scripts/surfaces/_schema/report-presentation.json (generated by scripts/surfaces/_schema/seed-report-v2.mjs, `states` block) is the registry of report strings; StaticBinding.tsx:41 imports it directly (precedent for a binding module).
+
+Changes (smallest, existing mechanisms only):
+1. mcbylaws/protected-paths.json: frontend += "src/components/report/**"; a dated note in $comment in the form of the earlier notes (MB-67 owner commit; the approved item quoted from MORNING-DECISIONS.md:1421-1422). The note says the report files join frontend so the surface checks and handbook reach them; it does not say the operator ruled an exemption. Protected path: the push gate asks the operator y.
+2. scripts/surfaces/_schema/bindings.json: module_roots += src/components/report/; modules += the three files (web, REPORT, owner binding_web_report, exports); promoted_entries += binding_web_report; a dated note in $comment. mapping.web gets no REPORT list (the renderer is not a library binding).
+3. Move the three display strings of ReportView.tsx to content: seed-report-v2.mjs `states.view` (details, meta line template), regenerated into report-presentation.json by the generator; ReportView reads them by import as StaticBinding does. No view type or golden changes.
+4. surface-conformance.logic.test.ts: C-2b and C-8 real-tree cases judge every listed module; the three report files are judged with a pin REPORT_RENDERER_PIN per file and per kind (C-2b structural, C-8): exact counts, both directions (a new finding or a fixed one turns it red), shrink-only (lowered by editing the pin with the fix); display text in the three files has no pin and must be 0. C-3 count lock [10,7,25] becomes [13,8,25]. C-12 gains: listed set is exactly the three, owner binding_web_report, bindingsProblems clean, plus planted defects (a file dropped from modules, a wrong owner, the pin one up and one down) and a passing control.
+5. rule-lists-table.logic.test.ts: for the three files, resolve lists surface-136, surface-126, surface-127, surface-128, surface-135; planted defect: a temp copy of protected-paths without the glob, the lists vanish; passing control; and the real lens-input for surface-136 holds fe.01 to fe.44 (44 distinct ids).
+6. Census binding_web_report entry and its descriptor: limitations say the files are judged by C-2b and C-8 with the baseline, and are outside C-9 (it judges golden nodes, not files); checks.why, notes, sharing.evidence now true (bindings.json modules lists the three); reduced_motion honoured (globals.css:182-185, report-checked.logic.test.ts C5); stale Spec 126 line cites fixed (:925-926). Regenerate the two 127 registry docs and descriptor with generate-surface-registry.mjs; regenerate the rule-lists page if it drifts.
+7. Task file through the backlog CLI: Files line extended (protected-paths.json, rule-lists-table test, seed-report-v2.mjs, report-presentation.json, and whatever the checks force), acceptance criteria added, notes.
+
+Order: plan lenses (plan review before any code); red (tests only + task file, red.out); build; checks before and after; green through the real hooks (commit.out); output lenses on the whole diff; FINDINGS.md untriaged; lane report; task left RUNNING, grounder owed.
+
+Not done (named): the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision; C-9 reach (needs a rule on what to judge in a hand-built renderer); fixing the structural attributes (renderer is hand-built by design).
+Rules served: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and 11.1; PLAN-PROTOCOL.md:3 simple, no scope creep; standardized, understandable, simple.
+
+# Pasted clauses and rulings for task-384 reviews (BL-REPORTOWN2)
+
+## Operator words (checked against source lines)
+- MORNING-DECISIONS.md:1421: Put to him (orchestrator recommendation, unreviewed): "1. Go on the schema extension plus the semi pilot, with the stop rule. 2. Convert the other three pages only after the pilot passes. 3. Leave the reports as components, and bring them under the existing checks (task 384). 4. Hold the three unbuilt pages until the pilot result. 5. Do the legal-line move (389) now as a small code change, not after the search conversion, so your ruling is not delayed."
+- MORNING-DECISIONS.md:1422: Operator, verbatim: "approved [the five items pasted] - remember the app is not beign used - we are in development"
+- MORNING-DECISIONS.md:1476: Operator, verbatim: "Let the grounder resolve them all as long as the result is compliant"
+
+## Spec 126 section 11b.1 (docs/specs/02-web-admin/126_maxbld_surface_standard.md:924-926)
+- **Every MaxBLD page = descriptor + content + standard library components configured by schema.** MaxBLD is the parcel product (`parcel_tool`, Spec 128 R-01) and a separate app (Spec 116 §1 dated note 2026-11-09). "Every MaxBLD page" = the pages of §11b.3: the parcel product and parcel admin surfaces, plus the minimal web login, subscription and onboarding.
+- **No hand-built standard component.** Archetypes (FORM, LIST, SEARCH, DASHBOARD, auth, subscription, onboarding) use the libraries of §11b.4 or hosted components, configured by descriptors, never written by us. REPORT keeps the landed renderer (§11a; Spec 135 FE-24). DETAIL is not used: the report's details section is REPORT (D-6).
+- **Our code is limited to** the descriptor → library binding (one per archetype per platform, thin config), the generators, the gates and the landed web REPORT renderer. Per-feature code is named in its queue row: CONTRACT routes for writes, migrations, product gates, the entitlement read contract, the host allow-list.
+
+## Spec 136 section 2 fe.31 (docs/specs/02-web-admin/136_mcfrontend_handbook.md:124)
+- **fe.31** Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema: descriptor valid with no UNRESEARCHED and no golden: "none"; in the converted manifest (two-direction totality); one props golden per reachable state per declared target,…
+
+## mcbylaws/protected-paths.json $comment (the edit rule and the earlier dated notes)
+McBylaws gate policy (MB-67; R-KP, R-LD, R-LA, R-LF). No code here. The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it. Edited by MB-67's lane only. frontend (D-2 b, MF-17 item 6, 2026-11-06): the McFrontend surface paths; arms H, C, P and Q read it, the loop gate does not. Dated note 2026-11-09 (MB-67 owner commit, built in the MF-37 lane; operator, verbatim: "a, 1-3 approved"; record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, "Operator ruling 2026-11-09: MF-37 blocker and owed items", item 1): src/components/surfaces/** and src/app/(maxbld)/** leave pending_globs because MF-37 landed the first tracked files under both (the binding modules and the admin media pages); both stay in frontend. Dated note 2026-11-10 (MB-67 owner commit, built in the MF-35 lane; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (Wave 1 decision batch, P35-D12: each MF-35 code commit is followed by the MB-67 pending-glob commit in the same push); record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, "Operator ruling 2026-11-09: Wave 1 decision batch"): mobile/src/vendor/rnr/** and mobile/components.json leave pending_globs because the MF-35 library commit tracked the vendored Reusables parts and the CLI config; both stay in frontend, and the vendor dir stays protected. Dated note 2026-11-10 (MB-67 owner commit, built in the MF-35 lane, after the MF-35 conversion commit; operator, verbatim: "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (Wave 1 decision batch, P35-D12); record ~/Buildo-scratch/mcfrontend/phase1/open-questions.md, "Operator ruling 2026-11-09: Wave 1 decision batch"): mobile/src/components/surfaces/** leaves pending_globs because the conversion commit tracked the two mobile binding modules; it stays in frontend. No McFrontend glob is pending now. Dated note 2026-11-11 (MB-67 owner commit, built in the MF-46 lane; operator, verbatim: "Teh web address will just be maxbld.ca - is that okay?" and "5. yes and yes recommend" (MF-46 DECISIONS-v2 D-3); record ~/Buildo-scratch/mcfrontend/MF-46/DECISIONS-v2.md): src/middleware.ts, src/lib/auth/host-policy.ts (the maxbld.ca host table) and src/lib/auth/safe-redirect.ts (the one same-origin redirect guard) join protected, so every later edit to the host fence, its table or the guard needs the owner y at push. Dated note 2026-11-13 (MB-67 owner commit, built in lane MB67-LIT; operator "all recommendations accepted", review-20261113 HOLISTIC-RECOMMENDATION K3 + Q3): the two zero-match pending globs (scripts/lib/compute/bylaw-*.js, maxbld-*.js) are replaced by the real by-law code paths in layer23 and literal_scope, scripts/analysis/bylaw-validation/** joins the literal scan, and pending_globs is empty so a zero-match glob fails the gate (L10). Today's literals are baselined in literal-allow.json (shrink-only); none moved out of code.
+
+## rule-lists.json surfaces row (lines 122-127)
+    {
+      "id": "surfaces",
+      "globs_from": { "file": "mcbylaws/protected-paths.json", "key": "frontend" },
+      "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135", "eng-all"],
+      "why": "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\"). V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a surface path that is not a descriptor had none"
+    },
+
+## C-2b and C-8 as built (surface-conformance.logic.test.ts:124-137, 566-575)
+/** C-2b: display text written in a mount file or binding module (JSX text, a string child, a string display attribute). */
+export const textProblems = (text: string, file: string, nonDisplay: string[]): string[] => {
+  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  const out: string[] = [];
+  const at = (n: ts.Node): number => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
+  const visit = (n: ts.Node): void => {
+    if (ts.isJsxText(n) && n.text.trim() !== '') out.push(`C-2b ${file}:${at(n)}: JSX text "${n.text.trim()}"`);
+    else if (ts.isJsxExpression(n) && n.expression && ts.isStringLiteralLike(n.expression) && !ts.isJsxAttribute(n.parent)) out.push(`C-2b ${file}:${at(n)}: string child "${n.expression.text}"`);
+    else if (ts.isJsxAttribute(n) && n.initializer && !nonDisplay.includes(n.name.getText(sf))) {
+      const v = ts.isStringLiteral(n.initializer) ? n.initializer : ts.isJsxExpression(n.initializer) && n.initializer.expression && ts.isStringLiteralLike(n.initializer.expression) ? n.initializer.expression : null;
+      if (v) out.push(`C-2b ${file}:${at(n)}: display attribute ${n.name.getText(sf)}="${v.text}"`);
+    }
+    ts.forEachChild(n, visit);
+  };
+  };
+  const visit = (n: ts.Node): void => {
+    if (ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) {
+      const name = tagOf(n.tagName);
+      if (ts.isIdentifier(n.tagName) && Object.hasOwn(shared, name) && fromSpec.get(n.tagName.text) === shared[name]) { ts.forEachChild(n, visit); return; }
+      if (name.startsWith('local:')) out.push(`C-8 ${file}:${at(n)}: hand-built component ${name.slice(6)}`);
+      else if (/^[a-z]/.test(name)) out.push(`C-8 ${file}:${at(n)}: intrinsic element <${name}>`);
+      else if (!allowed.includes(name)) out.push(`C-8 ${file}:${at(n)}: ${name} is not in mapping.web`);
+      else if (ts.isIdentifier(n.tagName) && libOf(fromSpec.get(n.tagName.text) ?? '', libs) === undefined) out.push(`C-8 ${file}:${at(n)}: ${name} is imported from ${fromSpec.get(n.tagName.text) ?? 'nowhere'}, not a UI library`);
+    }
+    if (ts.isCallExpression(n)) {
+      const e = n.expression;
+      const callee = ts.isIdentifier(e) ? imported.get(e.text) ?? e.text : ts.isPropertyAccessExpression(e) ? e.name.text : '';
+      if (callee === 'createElement' || callee === 'jsx' || callee === 'jsxs') out.push(`C-8 ${file}:${at(n)}: ${callee}() call (JSX only, so the mapping can judge it)`);
+    }
+

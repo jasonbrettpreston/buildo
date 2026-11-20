@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:54:31.579Z file_sha256=8c3c61fe9d64aaca2bba716a53be6306e1c9846841cf759bb562c0347a45f074 prompt_sha256=5f42d1df622818d0ca6e436414c8584e4d791b5d543accba1b98ef675915ac28
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-plan-compliance-policy-124-s2-s5-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — protected-paths.json $comment "Edited by MB-67's lane only." — plan step 1 "1. mcbylaws/protected-paths.json: frontend += \"src/components/report/**\"" — the edit is assigned to lane BL-REPORTOWN2, so the owner-lane clause for this file is unmet — route the frontend glob as an MB-67 owner commit (the paired pending-glob commit in the same push, as the earlier dated notes record) or have MB-67's lane own step 1.
+
+BUG severity=HIGH — C-2b as built "out.push(`C-2b ${file}:${at(n)}: string child \"${n.expression.text}\"`)" and "display attribute ${n.name.getText(sf)}=\"${v.text}\"" — plan step 4 "the three report files are judged with a pin REPORT_RENDERER_PIN per file and per kind (C-2b structural, C-8)" together with "display text in the three files has no pin and must be 0" — every finding the pasted C-2b emits is a display-text finding (JSX text, string child, display attribute), so the 108 C-2b findings cannot be pinned as "structural" while display text is declared zero; the check as built has no structural class — either clear the 92 ReportPage findings (blank spacer children, key-name label values) by content move or by a declared `nonDisplay`/why, or state the pin as covering display text and put that waiver to the operator.
+
+BUG severity=HIGH — MORNING-DECISIONS.md:1421 "3. Leave the reports as components, and bring them under the existing checks (task 384)." — plan "Not done (named): ... C-9 reach (needs a rule on what to judge in a hand-built renderer)" — C-9, one of the three checks the card says never run on these files, is left off and no pasted ruling exempts it — bring the three files under C-9 or put the C-9 scope question to the operator as its own decision row before lock.
+
+DEFER severity=MED — task-384 "The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision." — plan "the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision" — the plan restates the deferral but names no owner, date or answer-page/McRecommendation row that actually puts it — name the row and the lane that files it in step 7.
+
+DEFER severity=MED — protected-paths.json $comment "frontend (D-2 b, MF-17 item 6, 2026-11-06): the McFrontend surface paths; arms H, C, P and Q read it" — plan step 1 "The note says the report files join frontend so the surface checks and handbook reach them" — the glob also makes the three renderer files protected paths under arms H/C/P/Q with an operator y at push, a consequence item 3 ("bring them under the existing checks") does not name and the note as described does not record — state the protection consequence in the dated note with the operator words, or reach the files through a narrower surfaces list.
+
+DEFER severity=LOW — rule-lists.json surfaces row "\"lists\": [\"surface-136\", \"surface-126\", \"surface-127\", \"surface-128\", \"surface-135\", \"eng-all\"]" — plan step 5 "resolve lists surface-136, surface-126, surface-127, surface-128, surface-135" — the expected set omits eng-all, which the pasted row attaches to every frontend path, so an exact-set assertion cannot hold — add eng-all to the expected set or assert the five as a subset.
+
+MET — Spec 126 §11b.1 "REPORT keeps the landed renderer" — plan "They stay a component; nothing is converted" — REPORT stays on the §11a landed-renderer side, no conversion claimed.
+MET — Spec 136 §2 fe.31 "Every MaxBLD page (a converted non-REPORT surface)" — plan "nothing is converted (Spec 126 :925 \"REPORT keeps the landed renderer\")" — the three files sit outside fe.31's converted non-REPORT scope.
+MET — rule-lists.json surfaces row "globs_from ... key: frontend" — plan step 5 "planted defect: a temp copy of protected-paths without the glob, the lists vanish" — the attachment through the glob is proven in the direction the row states.
+MET — task-384 "Census owner entry plus listing" — plan step 2 "modules += the three files (web, REPORT, owner binding_web_report, exports); promoted_entries += binding_web_report" — census owner and bindings listing both added.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 6
+
+---
+⏱  45274ms (45.3s)
+📊 Tokens — total: 33084, input: 23825, output: 9259, reasoning: 8164

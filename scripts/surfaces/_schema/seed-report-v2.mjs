@@ -619,6 +619,8 @@ const pres = {
     lifecycle: { loading: 'Loading the report…', miss: 'No report for this lot yet.', error: 'Could not load this report. Try again.' },
     // MF-62 (FE-35; operator 2026-11-11 "Mf-62 - yes"): the labels of the loading state "What we checked" (report-v2-seed/checked-text.json); numbers never here
     checked: JSON.parse(fs.readFileSync(path.join(SEED_DIR, 'checked-text.json'), 'utf8')).checked,
+    // task-384 STD.REPORT-OWN (2026-11-20): the two fixed labels ReportView.tsx draws (the details summary and the confidence and provenance line; placeholders filled from the view), moved out of the component so FE-31 C-2b finds no display text in it
+    view: { details: 'Details', meta: 'confidence: {confidence} · provenance: {provenance}' },
     semi_needs_input: 'This lot looks like half of a semi-detached house. Tell us about your house to see what you can add.',
     semi_correction: "This isn't a semi — it's detached",
     note: 'Spec 78 §6.6 rules 1, 5, 8: hidden states are counted, never shown as cards; null renders "—", never 0 or "no"',

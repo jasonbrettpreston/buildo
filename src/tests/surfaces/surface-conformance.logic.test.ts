@@ -32,6 +32,14 @@ const REPO = process.cwd();
 const SCHEMA = 'scripts/surfaces/_schema';
 const B: Json = rj(path.join(REPO, SCHEMA, 'bindings.json'));
 const POLICY: Json = rj(path.join(REPO, 'mcbylaws/protected-paths.json'));
+// task-384 STD.REPORT-OWN part two (dated 2026-11-20): the three web report renderer files are listed web REPORT modules, so C-2b and C-8 judge them. The renderer is hand-built by
+// design (Spec 126 section 11b.1: REPORT keeps the landed renderer), so its STRUCTURAL findings are pinned here per file and per kind: exact counts in both directions (a new
+// finding turns it red; a fixed one turns it red until the pin is lowered), shrink-only. Display text has no pin: it must be 0. C-9 judges golden nodes, not files, and does not reach them.
+export const REPORT_RENDERER_PIN: Readonly<Record<string, { 'C-2b': number; 'C-8': number }>> = {
+  'src/components/report/ReportPage.tsx': { 'C-2b': 92, 'C-8': 171 },
+  'src/components/report/ReportView.tsx': { 'C-2b': 13, 'C-8': 41 },
+  'src/components/report/ReportPageToggles.tsx': { 'C-2b': 0, 'C-8': 1 },
+};
 const roots: string[] = [];
 afterAll(() => { for (const r of roots) fs.rmSync(r, { recursive: true, force: true }); });
 const tmp = (): string => { const r = fs.mkdtempSync(path.join(os.tmpdir(), 'mf42-c-')); roots.push(r); return r; };
@@ -324,7 +332,7 @@ describe('C-2 the import boundary (one tier: libraries only in binding modules, 
 
 describe('C-2b no display text in mount files and binding modules (the exempt list: tests, the vendor dir, non_display_keys attributes)', () => {
   it('the real tree: the mount files and binding modules bindings.json lists hold no display text (MF-37: 4 mounts, 2 modules)', () => {
-    const files = [...B.mounts.map((m: Json) => m.path), ...B.modules.map((m: Json) => m.path)];
+    const files = [...B.mounts.map((m: Json) => m.path), ...B.modules.map((m: Json) => m.path)].filter((f: string) => !Object.hasOwn(REPORT_RENDERER_PIN, f)); // the pinned renderer files are judged in C-12
     const lines = files.flatMap((f: string) => textProblems(fs.readFileSync(path.join(REPO, f), 'utf8'), f, B.non_display_keys));
     console.log(`C-2b: ${files.length} files`);
     expect(files.length).toBeGreaterThan(0);
@@ -380,7 +388,7 @@ describe('C-3 bindings.json integrity', () => {
     // MF-48 (dated 2026-11-11; D-2 a): + ReportBinding.tsx and ReportPageHost.tsx and their promoted entry binding_mobile_report; no mount (Stage A).
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
     // MF-76 (dated 2026-11-11; plan v3 §12 fold 13): + the landing mount (19 -> 20 mounts).
-    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([10, 7, 25]); // SEMI-B (dated 2026-11-13): + SemiQuestionBinding.tsx and the question page mount; MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary); MF-19: +3 (the admin lot-size page, client mount, error boundary)
+    expect([B.modules.length, B.promoted_entries.length, B.mounts.length]).toEqual([13, 8, 25]); // task-384 STD.REPORT-OWN (dated 2026-11-20): + the three web report renderer files and their promoted entry binding_web_report. SEMI-B (dated 2026-11-13): + SemiQuestionBinding.tsx and the question page mount; MF-53: + LotMapBinding.tsx, binding_mobile_list, the map page mount; // MF-40: +5 mounts (the placements page, client mount, error boundary); MF-19: +3 (the admin lot-size page, client mount, error boundary)
   });
   it('RED (in memory): a glob as a path, a .ts module, a module under src/lib, an owner that does not own it, a promoted entry outside platform_shared', () => {
     const owner = { identity: { owns: { components: [] } }, programme: { scope: 'parcel_admin' } };
@@ -584,7 +592,7 @@ const sharedFor = (m: Json): Record<string, string> => Object.assign({}, ...m.ar
 
 describe('C-8 the web closed mapping (every JSX element of a web binding module is a listed library component)', () => {
   it('the real tree: each web module renders only mapping.web names for its archetypes', () => {
-    const mods = B.modules.filter((m: Json) => m.platform === 'web');
+    const mods = B.modules.filter((m: Json) => m.platform === 'web' && !Object.hasOwn(REPORT_RENDERER_PIN, m.path)); // the pinned renderer files are judged in C-12
     console.log(`C-8: ${mods.length} web modules`);
     expect(mods.length).toBeGreaterThan(0);
     for (const m of mods) expect([m.path, mappingProblems(fs.readFileSync(path.join(REPO, m.path), 'utf8'), m.path, allowedFor(m), B.libraries.web, sharedFor(m))]).toEqual([m.path, []]);
@@ -924,18 +932,72 @@ describe('C-9m the mobile 44 px case (MF-35; min-h-[44px] or another listed size
 });
 
 // ---- C-12 (task-384 STD.REPORT-OWN; dated 2026-11-20) ---------------------------------------------------------------------------------------------
-// The web report renderer files have a census owner (R-13). Listing them as bindings.json modules (so C-2b and C-8 judge them) is BLOCKED: C-3 needs
-// their module root to be a frontend glob in mcbylaws/protected-paths.json, a protected policy file this lane does not edit (operator question in the lane report).
-describe('C-12 the web report renderer files have a census owner (Spec 126 section 11b.1: kept as a component, not converted)', () => {
-  const FILES = ['src/components/report/ReportPage.tsx', 'src/components/report/ReportView.tsx', 'src/components/report/ReportPageToggles.tsx'];
+// The web report renderer files have a census owner (R-13), are listed web REPORT modules of bindings.json (C-3 needs their root to be a frontend glob in
+// mcbylaws/protected-paths.json), and are judged by C-2b and C-8 with the structural findings pinned (REPORT_RENDERER_PIN). Outside C-9: it judges golden nodes.
+const REPORT_FILES = Object.keys(REPORT_RENDERER_PIN);
+const isDisplayText = (line: string): boolean => /: (JSX text|string child) "/.test(line) && !/: string child "\s*"$/.test(line); // a blank spacer child is structural
+/** The listing: exactly the three files are web REPORT modules, owned by binding_web_report, which is promoted. */
+export const reportListingProblems = (b: Json): string[] => {
+  const out: string[] = [];
+  const listed = (b.modules as Json[]).filter((m) => m.platform === 'web' && m.archetypes.includes('REPORT')).map((m) => m.path);
+  if (JSON.stringify(listed) !== JSON.stringify(REPORT_FILES)) out.push(`C-12 listed web REPORT modules ${JSON.stringify(listed)}, expected ${JSON.stringify(REPORT_FILES)}`);
+  for (const m of (b.modules as Json[]).filter((x) => REPORT_FILES.includes(x.path))) if (m.owner !== 'binding_web_report') out.push(`C-12 ${m.path}: owner ${m.owner}, expected binding_web_report`);
+  if (!(b.promoted_entries as string[]).includes('binding_web_report')) out.push('C-12 binding_web_report is not a promoted entry');
+  return out;
+};
+/** C-2b and C-8 on the renderer files: display text is 0; the structural counts equal the pin exactly (both directions). */
+export const reportRendererProblems = (texts: Record<string, string>, pin: Json = REPORT_RENDERER_PIN): string[] => {
+  const out: string[] = [];
+  for (const [f, want] of Object.entries(pin)) {
+    const text = texts[f];
+    if (text === undefined) { out.push(`C-12 ${f}: not read`); continue; }
+    const c2b = textProblems(text, f, B.non_display_keys);
+    for (const l of c2b.filter(isDisplayText)) out.push(l);
+    const got = { 'C-2b': c2b.filter((l) => !isDisplayText(l)).length, 'C-8': mappingProblems(text, f, [], B.libraries.web, {}).length };
+    for (const k of ['C-2b', 'C-8'] as const) if (got[k] !== want[k]) out.push(`C-12 ${f}: ${k} structural findings ${got[k]}, pinned ${want[k]} (${got[k] > want[k] ? 'a new finding' : 'fewer: lower the pin'})`);
+  }
+  return out;
+};
+describe('C-12 the web report renderer files have a census owner and are judged by C-2b and C-8 (Spec 126 section 11b.1: kept as a component, not converted)', () => {
+  const realTexts = (): Record<string, string> => Object.fromEntries(REPORT_FILES.map((f) => [f, fs.readFileSync(path.join(REPO, f), 'utf8')]));
+  const rootsTexts = ['src/tests/surface-registry.infra.test.ts', 'scripts/violations/generate-surface-registry.mjs'].map((p) => fs.readFileSync(path.join(REPO, p), 'utf8'));
   it('the census entry owns exactly the three files, its descriptor file is byte-equal to it, and no other surface owns them', () => {
     const shard = rj(path.join(REPO, SCHEMA, 'census/web-product.json')) as Json[];
     const entry = shard.find((r) => r.identity.id === 'binding_web_report');
     expect(entry).toBeDefined();
-    expect(entry?.identity.owns.components).toEqual(FILES);
+    expect(entry?.identity.owns.components).toEqual(REPORT_FILES);
     expect(entry?.programme.scope).toBe('platform_shared');
     const file = path.join(REPO, 'scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json');
     expect(fs.readFileSync(file, 'utf8')).toBe(`${JSON.stringify(entry, null, 2)}\n`);
-    for (const d of DESCRIPTORS.values()) if (d.identity.id !== 'binding_web_report') expect([d.identity.id, (d.identity.owns?.components ?? []).filter((c: string) => FILES.includes(c))]).toEqual([d.identity.id, []]);
+    for (const d of DESCRIPTORS.values()) if (d.identity.id !== 'binding_web_report') expect([d.identity.id, (d.identity.owns?.components ?? []).filter((c: string) => REPORT_FILES.includes(c))]).toEqual([d.identity.id, []]);
+  });
+  it('the real tree: the three files are the listed web REPORT modules, bindings.json is clean, and src/components/report/ is a frontend glob', () => {
+    expect(reportListingProblems(B)).toEqual([]);
+    expect(bindingsProblems({ b: B, exists: (p) => fs.existsSync(path.join(REPO, p)), descriptor: realDescriptor, policy: POLICY, rootsTexts, converted: B_CONVERTED })).toEqual([]);
+    expect(isFrontend(POLICY, 'src/components/report/ReportPage.tsx')).toBe(true);
+    expect(B.module_roots).toContain('src/components/report/');
+    expect(B.mapping.web.REPORT).toBeUndefined(); // the renderer is not a library binding
+  });
+  it('the real tree: C-2b and C-8 judge the three files; display text is 0 and the structural counts equal the pin', () => {
+    expect(reportRendererProblems(realTexts())).toEqual([]);
+  });
+  it('RED (in memory): a file dropped from modules, a wrong owner, an extra file and a missing promoted entry fail the listing; the real listing is the control', () => {
+    expect(reportListingProblems(B)).toEqual([]);
+    const edit = (f: (b: Json) => void): Json => { const b = structuredClone(B); f(b); return b; };
+    expect(reportListingProblems(edit((b) => { b.modules = b.modules.filter((m: Json) => m.path !== REPORT_FILES[1]); }))).toHaveLength(1);
+    expect(reportListingProblems(edit((b) => { b.modules.find((m: Json) => m.path === REPORT_FILES[0]).owner = 'binding_web_static'; }))).toEqual(['C-12 src/components/report/ReportPage.tsx: owner binding_web_static, expected binding_web_report']);
+    expect(reportListingProblems(edit((b) => { b.modules.push({ path: 'src/components/report/Extra.tsx', platform: 'web', archetypes: ['REPORT'], owner: 'binding_web_report', exports: ['X'] }); }))).toHaveLength(1);
+    expect(reportListingProblems(edit((b) => { b.promoted_entries = b.promoted_entries.filter((e: string) => e !== 'binding_web_report'); }))).toEqual(['C-12 binding_web_report is not a promoted entry']);
+  });
+  it('RED (in memory): planted display text, a new intrinsic element, a fixed finding and a missing file each fail; the real texts are the control', () => {
+    const texts = realTexts();
+    expect(reportRendererProblems(texts)).toEqual([]);
+    const view = REPORT_FILES[1] as string;
+    const planted = { ...texts, [view]: `${texts[view]}\nexport const Planted = () => <p>Hello</p>;\n` };
+    const got = reportRendererProblems(planted);
+    expect(got.some((l) => /JSX text "Hello"/.test(l))).toBe(true);
+    expect(got.some((l) => /C-8 structural findings 42, pinned 41 \(a new finding\)/.test(l))).toBe(true);
+    expect(reportRendererProblems(texts, { ...REPORT_RENDERER_PIN, [view]: { 'C-2b': 14, 'C-8': 41 } })).toEqual([`C-12 ${view}: C-2b structural findings 13, pinned 14 (fewer: lower the pin)`]);
+    expect(reportRendererProblems({ ...texts, [view]: undefined as unknown as string })).toEqual([`C-12 ${view}: not read`]);
   });
 });

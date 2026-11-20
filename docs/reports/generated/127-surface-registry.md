@@ -7274,7 +7274,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **What it reads and writes.** It reads nothing itself: the page passes the page view (built and checked on the server by buildPage / pageViewOf) and the content strings.
 
-**Under Spec 126.** **OWNER ENTRY** (task-384 STD.REPORT-OWN, dated 2026-11-20): a platform_shared census entry that owns the web REPORT renderer files so R-13 totality holds for them. The files stay a component (Spec 126 section 11b.1, :923). They are not yet listed in bindings.json modules, so the FE-31 text (C-2b) and component (C-8) checks do not judge them: C-3 needs their module root to be a frontend glob in mcbylaws/protected-paths.json (operator question).
+**Under Spec 126.** **OWNER ENTRY AND LISTED MODULES** (task-384 STD.REPORT-OWN, dated 2026-11-20): a platform_shared census entry that owns the web REPORT renderer files so R-13 totality holds for them; the files are listed web REPORT modules of bindings.json, so the FE-31 text check (C-2b) and component check (C-8) judge them. The files stay a component (Spec 126 section 11b.1, :925-926: REPORT keeps the landed renderer). Their structural findings are pinned per file and per kind (REPORT_RENDERER_PIN, shrink-only, both directions); display text is 0. Outside C-9 (it judges golden nodes, not files).
 
 **kind** SURFACE · **archetype** `REPORT` · **platforms** `web` · **status** new · **shard** `web-product` · **unresearched fields: 4**
 
@@ -7294,7 +7294,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 | Claim | Citation (`file:line`, `migration:line`, or a spec §anchor) |
 |---|---|
-| `files` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 (:923-924)` |
+| `files` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 (:925-926)` |
 | `contracts` | — |
 | `tables` | — |
 | `gate` | — |
@@ -7322,7 +7322,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | 14 | `offers` | `none` | It renders the ad sections the server placed (their Sponsored disclosure as sent); it decides no placement. — `src/components/report/ReportPage.tsx — the ad section case` |
 | 15 | `metering` | `none` | Rendering is not a metered product action. — `src/components/report/ReportPage.tsx`, `src/components/report/ReportView.tsx` |
 | 16 | `config` | `none` | No tunable of its own: the binding consumes no registered logic variable; the layout row (report-layout.json) is read by the server projection, not here. — `src/components/report/ReportPage.tsx — no config read` |
-| 17 | `sharing` | `shared` | Every web REPORT surface (the MaxBLD report page). — `scripts/surfaces/_schema/bindings.json — modules` |
+| 17 | `sharing` | `shared` | Every web REPORT surface (the MaxBLD report page). — `scripts/surfaces/_schema/bindings.json — modules lists the three files (owner binding_web_report)` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 19 | `deviations` | **UNRESEARCHED** | _to be researched — see the closed vocabulary for `deviations` in [the schema](../../../scripts/surfaces/_schema/surface.schema.json)_ |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
@@ -7332,7 +7332,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/components/report/ReportPage.tsx` · `src/components/report/ReportView.tsx` · `src/components/report/ReportPageToggles.tsx`
 
-> ⚠️ task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): limitations states the three files are outside C-2b, C-8 and C-9; deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here).
+> ⚠️ task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here). Dated note 2026-11-20 (BL-REPORTOWN2, part two): the three files are listed in bindings.json modules and src/components/report/** is a frontend glob; reduced_motion is honoured (src/app/globals.css:182-185, locked by report-checked.logic.test.ts C5); the three display strings of ReportView.tsx moved to content (report-presentation.json states.view).
 
 <a id="c-027"></a>
 

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:52:56.112Z file_sha256=16691f5cd40fcc610f917cabef6f401a9c00c857711ac3b3dfe0ae3c3c1a729a prompt_sha256=44f9537f62c2f23d21a2a9df621ba70e8aa54be99b5039fbad670a001415aa4d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-plan-compliance-surface-128-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — mcbylaws/protected-paths.json $comment "Edited by MB-67's lane only." — plan step 1 "mcbylaws/protected-paths.json: frontend += "src/components/report/**"; a dated note in $comment" — the edit-owner clause is unmet because the lane is BL-REPORTOWN2 (@lane-BL-REPORTOWN2), not MB-67 — route the glob and its dated note through MB-67's lane as a paired commit (the P35-D12 form quoted in the same $comment) and keep this lane's plan to the measurement that justifies it.
+
+BUG severity=HIGH — MORNING-DECISIONS.md:1421 "3. Leave the reports as components, and bring them under the existing checks (task 384)." — plan "Not done (named): ... C-9 reach (needs a rule on what to judge in a hand-built renderer)" — the approved item names the existing checks and the card names C-2b, C-8 and C-9, so dropping C-9 narrows an approved item with no ruling and no ladder — put C-9 to the operator as its own ask exactly as the plan does for C-8 SHARED_REPORT_RENDERERS, or obtain a ruling that item 3 is C-2b and C-8 only.
+
+DEFER severity=MED — rule-lists.json surfaces row "\"lists\": [\"surface-136\", \"surface-126\", \"surface-127\", \"surface-128\", \"surface-135\", \"eng-all\"]" — plan step 5 "for the three files, resolve lists surface-136, surface-126, surface-127, surface-128, surface-135" — the expected set omits eng-all, which the row attaches to every frontend path and which the plan's own fact 1 shows resolving today, so the new test either goes red against the real resolve or narrows the mandated lens set — assert the full six-list set including eng-all in rule-lists-table.logic.test.ts.
+
+DEFER severity=MED — MORNING-DECISIONS.md:1421 "bring them under the existing checks (task 384)" — plan "the three report files are judged with a pin REPORT_RENDERER_PIN per file and per kind (C-2b structural, C-8) ... shrink-only (lowered by editing the pin with the fix)" — the pin is a 108/213-finding allowance the lane grants itself, while the plan defers a comparable C-8 allowance to the operator ("The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision") — put the pin in the same operator ask, or record it as a named baseline with its item-3 citation in the census descriptor before lock.
+
+DEFER severity=MED — mcbylaws/protected-paths.json $comment "frontend (D-2 b, MF-17 item 6, 2026-11-06): the McFrontend surface paths; arms H, C, P and Q read it, the loop gate does not." — plan step 1 "frontend += "src/components/report/**"" — the glob puts the three files under arms H, C, P and Q as well, yet the plan measures only C-2b, C-8, C-3, C-12 and the rule-lists table — measure arms H, C, P and Q on the three files before the glob and fold their findings into the changes or the baseline.
+
+DEFER severity=LOW — rule-lists.json surfaces row "are governed by Spec 136 section 2 (every McFrontend rule)" and Spec 136 section 2 fe.31 "Every MaxBLD page (a converted non-REPORT surface)" — plan step 5 "the real lens-input for surface-136 holds fe.01 to fe.44 (44 distinct ids)" — presence of the 44 ids is asserted but no answer for them is planned, and fe.31's own parenthetical excludes REPORT — record in the census descriptor, per rule id, that the converted-surface rules are n/a for a kept REPORT renderer, or the surface-136 lens will fail the plan on them.
+
+MET — Spec 126 section 11b.1 "REPORT keeps the landed renderer (11a; Spec 135 FE-24)" — plan "They stay a component; nothing is converted (Spec 126 :925 \"REPORT keeps the landed renderer\", :926 \"the landed web REPORT renderer\" is on the list of our code)" — keeping the renderer is what the clause permits.
+MET — Spec 126 section 11b.1 "Our code is limited to ... the landed web REPORT renderer" — plan step 3 keeps the renderer and only moves its strings to a content module read by import — no new page code is claimed.
+MET — Spec 136 section 2 fe.31 "Every MaxBLD page (a converted non-REPORT surface)" — plan "They stay a component; nothing is converted" — the report's exclusion from fe.31's descriptor and props-golden demands is honoured.
+MET — MORNING-DECISIONS.md:1476 "Let the grounder resolve them all as long as the result is compliant" — plan "task left RUNNING, grounder owed" — the grounder step is preserved rather than replaced by the lane.
+MET — mcbylaws/protected-paths.json $comment "The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it." — plan "Protected path: the push gate asks the operator y." — adding the glob tightens the protected set and the gate stays on.
+MET — rule-lists.json surfaces row "\"globs_from\": { \"file\": \"mcbylaws/protected-paths.json\", \"key\": \"frontend\" }" — plan fact 1 "the surface lists attach to a path only when it is in frontend" — the mechanism chosen matches the row.
+
+REJECT — Spec 126 section 11b.1 "No hand-built standard component." — accused of leaving the report renderer hand-built — the same clause names REPORT as the exception ("REPORT keeps the landed renderer") and the operator's item 3 says leave the reports as components.
+REJECT — Spec 126 section 11b.1 "Every MaxBLD page = descriptor + content + standard library components configured by schema." — accused of giving the report no descriptor — the clause's next sentence keeps the landed REPORT renderer, so the descriptor duty does not reach it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 6
+
+---
+⏱  52904ms (52.9s)
+📊 Tokens — total: 28626, input: 17690, output: 10936, reasoning: 9488

@@ -4,11 +4,11 @@
   "docs": {
     "purpose": "The web REPORT renderer: ReportPage.tsx draws the v21 report page view (sections, parts, the detail sheet, the footer) for the MaxBLD report page; ReportView.tsx draws the earlier report view and the Picture; ReportPageToggles.tsx is the client toggle script of the page. It is the landed renderer Spec 126 section 11b.1 keeps (\"REPORT keeps the landed renderer\"); it is a component, not a library binding.",
     "data_story": "It reads nothing itself: the page passes the page view (built and checked on the server by buildPage / pageViewOf) and the content strings.",
-    "under_126": "**OWNER ENTRY** (task-384 STD.REPORT-OWN, dated 2026-11-20): a platform_shared census entry that owns the web REPORT renderer files so R-13 totality holds for them. The files stay a component (Spec 126 section 11b.1, :923). They are not yet listed in bindings.json modules, so the FE-31 text (C-2b) and component (C-8) checks do not judge them: C-3 needs their module root to be a frontend glob in mcbylaws/protected-paths.json (operator question)."
+    "under_126": "**OWNER ENTRY AND LISTED MODULES** (task-384 STD.REPORT-OWN, dated 2026-11-20): a platform_shared census entry that owns the web REPORT renderer files so R-13 totality holds for them; the files are listed web REPORT modules of bindings.json, so the FE-31 text check (C-2b) and component check (C-8) judge them. The files stay a component (Spec 126 section 11b.1, :925-926: REPORT keeps the landed renderer). Their structural findings are pinned per file and per kind (REPORT_RENDERER_PIN, shrink-only, both directions); display text is 0. Outside C-9 (it judges golden nodes, not files)."
   },
   "evidence": {
     "files": [
-      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 (:923-924)"
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 (:925-926)"
     ],
     "contracts": [],
     "tables": [],
@@ -41,7 +41,7 @@
       "answer": "none",
       "why": "The renderer has no wire contract of its own: its input is the page view (report-page.schema.json) and its output is markup. A change shows up as a golden or render-smoke failure.",
       "evidence": [
-        "src/tests/surfaces/surface-conformance.logic.test.ts — C-12 holds the ownership"
+        "src/tests/surfaces/surface-conformance.logic.test.ts — C-12 holds the ownership, the listing and the pinned findings"
       ]
     },
     "ref": "S-095"
@@ -121,7 +121,7 @@
       "severity": "FAIL",
       "blocking": true,
       "when": "pre",
-      "why": "The three files are owned by this entry (Spec 128 R-13 totality); listing them in bindings.json modules is owed (see docs)."
+      "why": "The three files are owned by this entry (Spec 128 R-13 totality) and listed as web REPORT modules in bindings.json (FE-31 C-3); C-2b and C-8 judge them against the pin in C-12."
     }
   ],
   "invariants": "none",
@@ -176,7 +176,7 @@
     "answer": "shared",
     "why": "Every web REPORT surface (the MaxBLD report page).",
     "evidence": [
-      "scripts/surfaces/_schema/bindings.json — modules"
+      "scripts/surfaces/_schema/bindings.json — modules lists the three files (owner binding_web_report)"
     ],
     "surfaces": [],
     "varies_by_surface": "Only the page view and content passed in."
@@ -185,20 +185,20 @@
     "touch_target_min_px": "UNRESEARCHED",
     "labels": "UNRESEARCHED",
     "dark_mode": "UNRESEARCHED",
-    "reduced_motion": "none",
+    "reduced_motion": "honoured",
     "i18n": "none",
     "safe_area": "none"
   },
   "deviations": "UNRESEARCHED",
   "limitations": [
     {
-      "what": "The three owned files (src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx) are outside the FE-31 text check C-2b, the component check C-8 and the 44 px check C-9: none of them reads these files. C-2b and C-8 read only the files listed in bindings.json mounts and modules, and these three are not listed (owed: C-3 needs src/components/report/ as a frontend glob in mcbylaws/protected-paths.json, an operator item). C-9 reads golden nodes, not source files.",
-      "measured": "Ownership only (Spec 128 R-13). Treated as web REPORT modules, a lane measure run raised 108 C-2b and 213 C-8 findings (docs/reports/lanes/2026-11-20/BL-REPORTOWN/measure-before.txt); no 44 px measure exists.",
+      "what": "The three owned files (src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx) are judged by the FE-31 text check C-2b and the component check C-8 (listed web REPORT modules of bindings.json), but they are hand-built by design (Spec 126 section 11b.1), so their structural findings are a pinned baseline, not zero: C-2b attributes (as, data-*, aria-*) and C-8 intrinsic elements and local components. They are outside the 44 px check C-9: it judges golden nodes (component and size), not source files.",
+      "measured": "C-2b 105 and C-8 213 structural findings pinned (ReportPage 92 and 171, ReportView 13 and 41, ReportPageToggles 0 and 1) in src/tests/surfaces/surface-conformance.logic.test.ts REPORT_RENDERER_PIN; display text 0. No 44 px measure exists.",
       "check_id": "C-2b, C-8, C-9"
     }
   ],
   "interpretation": "none",
-  "notes": "task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): limitations states the three files are outside C-2b, C-8 and C-9; deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here).",
+  "notes": "task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here). Dated note 2026-11-20 (BL-REPORTOWN2, part two): the three files are listed in bindings.json modules and src/components/report/** is a frontend glob; reduced_motion is honoured (src/app/globals.css:182-185, locked by report-checked.logic.test.ts C5); the three display strings of ReportView.tsx moved to content (report-presentation.json states.view).",
   "x-draft": {
     "shard": "web-product",
     "files": [

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T19:57:31.485Z file_sha256=2f74bc5d37d84a358e5e700929a1c7609ee563536d5cfd2b01b47d9681bd718a prompt_sha256=5236c218fa942f9c2a0f3cb90a5d046f1d4965ba76b21d8e92d80c143815d947
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown2/material-plan.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan change 3 "3. Move the three display strings of ReportView.tsx to content: seed-report-v2.mjs `states.view` (details, meta line template), regenerated into report-presentation.json by the generator; ReportView reads them by import as StaticBinding does. No view type or golden changes." vs design "REPORT keeps the landed renderer (Spec 126 §11b.1, :925)" — the three words the person reads on the report ("confidence:", "· provenance:", the "Details" control at ReportView.tsx:19 and :121) change owner to a content file while the plan removes the only likeness guard, so a changed separator on the meta line template or a missing states.view key leaves the Details control with no name and nothing turns red — fix: write the three landed strings verbatim into states.view and add one assertion that report-presentation.json holds exactly those strings in every report state.
+
+DEFER severity=MED — plan fact 3 "ReportPage.tsx string children are the blank spacer " " (5) and `label=` values are key names, not text: structural." vs C-2b as built "else if (ts.isJsxAttribute(n) && n.initializer && !nonDisplay.includes(n.name.getText(sf)))" — by the check's own definition every non-exempt string attribute is display text, so pinning 92 ReportPage findings as structural rests on a reading nobody has verified, and any label the person actually reads there stays out of the content registry — rationale: cheap remedy, name each label value in the pin note and move any that renders visible text in change 3.
+
+DEFER severity=MED — approved item "3. Leave the reports as components, and bring them under the existing checks (task 384)." (MORNING-DECISIONS.md:1421) vs plan "with the structural findings pinned as a shrink-only baseline" and "REPORT_RENDERER_PIN per file and per kind (C-2b structural, C-8): exact counts" — the approval names the existing checks, the pin is a new mechanism that freezes 108 C-2b and 213 C-8 findings on the renderer the person uses, so those screen elements are declared permanently out of conformance — rationale: shrink-only and named in the plan, but the change of mechanism is a departure from the approved wording and belongs to the operator to confirm.
+
+DEFER severity=MED — plan change 6 "limitations say the files are judged by C-2b and C-8 with the baseline, and are outside C-9 (it judges golden nodes, not files)" — the report states the person actually reaches (loading, failed load, empty, repeat visit) get no golden node check at all, so a blank or unescapable report state introduced by any later edit would be caught by nothing — rationale: named as out of scope in the plan, design text pasted is silent on which report states are golden checked.
+
+DEFER severity=LOW — plan "the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision" — the person arriving on the landing page sees the same report renderer with no closed component table and no decision recorded yet, so what they see there is outside the check indefinitely — rationale: named and deferred, settle it before the landing page is used.
+
+DEFER severity=LOW — plan fact 3 "Display text is exactly three findings: ReportView.tsx:19 "confidence:" and "· provenance:", :121 "Details"." — the only copy this task touches is internal vocabulary the customer reads on the report, and it moves untouched — rationale: design text pasted is silent on the report's wording, so no departure is claimed, but "provenance" is worth one question to the operator.
+
+REJECT — plan "They stay a component; nothing is converted (Spec 126 :925 "REPORT keeps the landed renderer", :926 "the landed web REPORT renderer" is on the list of our code)." — looks like new machinery around a page the operator said to leave alone, but it matches the approved item 3 and Spec 126 b.1, so the person's report is left exactly as designed.
+
+VERDICT: FAIL on the person's experience
+States checked: first view, loading, answered (report shown), failed load, empty, repeat visit, back navigation (this plan draws none of them; its only person-facing act is moving the three report strings)   Dead ends found: 0
+
+---
+⏱  50976ms (51.0s)
+📊 Tokens — total: 25528, input: 16505, output: 9023, reasoning: 8064

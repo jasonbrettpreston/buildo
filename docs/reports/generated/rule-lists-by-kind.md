@@ -29,16 +29,16 @@ Example Files line: `src/components/report/, scripts/surfaces/parcel_product/F02
 | list | document | selection | characters | parts |
 | --- | --- | --- | ---: | ---: |
 | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
-| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
-| airtight-124a | docs/specs/01-pipeline/124a_step_standard_policy_appendix.md | Appendix §B10; Appendix §B12 | 38,138 | 1 |
-| airtight-v3-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 5.5 Condition 4 | 5,017 | 1 |
-| airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
-| airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
 | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 13,783 | 1 |
 | surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |
 | surface-127 | docs/specs/02-web-admin/127_surface_conversion_procedure.md | whole file | 50,606 | 1 |
 | surface-128 | docs/specs/02-web-admin/128_surface_standard_policy.md | whole file | 77,169 | 1 |
 | surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file | 84,215 | 1 |
+| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
+| airtight-124a | docs/specs/01-pipeline/124a_step_standard_policy_appendix.md | Appendix §B10; Appendix §B12 | 38,138 | 1 |
+| airtight-v3-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 5.5 Condition 4 | 5,017 | 1 |
+| airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
+| airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
 | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |

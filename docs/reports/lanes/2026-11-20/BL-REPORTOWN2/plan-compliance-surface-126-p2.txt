@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:51:30.951Z file_sha256=5f2b1a1083e3c538c7035f0c8c5ccf3fe2a90b5734babdf7be70a09d5cd4917e prompt_sha256=be98abb4973fe1400f73d4253622cf3660bcb4f6b03665bad85eb345ea469c06
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-plan-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-384 card, "so C-2b, C-8 and C-9 never run on them (defect D8 sat there)" plus the task title "comes under the existing text, component and 44 px checks" and ruling item 3 "Leave the reports as components, and bring them under the existing checks (task 384)." — plan, "Not done (named): the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision; C-9 reach (needs a rule on what to judge in a hand-built renderer)" and step 6 "are outside C-9 (it judges golden nodes, not files)" — the third named check (44 px) is declared out of scope, so the card's C-9 clause is unmet — bring C-9 onto the three files, or put the exclusion to the operator as a ruling before plan-lock.
+
+BUG severity=HIGH — task-384 card, "findings the checks then raise are fixed or brought to the operator." — plan step 4, "the three report files are judged with a pin REPORT_RENDERER_PIN per file and per kind (C-2b structural, C-8): exact counts, both directions" — 321 findings (C-2b 108, C-8 213, plan fact 3) are absorbed into a shrink-only baseline, which is neither of the two dispositions the card names, and no operator decision on that baseline is queued (the order ends "grounder owed", findings untriaged) — either fix them or put the baseline and its counts to the operator as a decision.
+
+DEFER severity=MED — C-2b definition, "display text written in a mount file or binding module (JSX text, a string child, a string display attribute)" — plan fact 3, "ReportPage.tsx string children are the blank spacer \" \" (5) and `label=` values are key names, not text: structural" against step 4, "display text in the three files has no pin and must be 0" — textProblems() emits every one of ReportPage's 92 findings as "C-2b" with one message form, so pinning 92 and requiring 0 display text cannot both hold without a named change to the check's nonDisplay list or the spacer branch — name the exact check change that makes the 92 non-findings, or drop the 92 from the pin.
+
+DEFER severity=MED — protected-paths $comment, "The gate reads the BASE copy of this file, so a commit cannot loosen the rules that judge it. Edited by MB-67's lane only." — plan step 1, "mcbylaws/protected-paths.json: frontend += \"src/components/report/**\"; a dated note in $comment in the form of the earlier notes (MB-67 owner commit..." — the edit is scheduled in the BL-REPORTOWN2 build order with only a note-form mention of an owner commit, and no MB-67 lane step or same-push ordering (P35-D12) appears in the order — add the MB-67 owner-commit step and its push ordering, or route the edit through MB-67's lane.
+
+DEFER severity=MED — protected-paths $comment, "frontend (D-2 b, MF-17 item 6, 2026-11-06): the McFrontend surface paths; arms H, C, P and Q read it, the loop gate does not." — plan step 1, "frontend += \"src/components/report/**\"" — the landed REPORT renderer is not a McFrontend surface path (Spec 126 :925 "REPORT keeps the landed renderer") and adding it changes the target set of four gate arms with no effect stated — state what arms H, C, P and Q now judge differently, or carry the path under a separate key.
+
+DEFER severity=MED — task-384 card, "The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision." — plan, "Not done (named): the landing embed exception (C-8 SHARED_REPORT_RENDERERS) is its own operator decision" — naming it as not-done is not putting it, and the plan produces no answer-page entry, question id or operator words for it — add that question to the answer page inside this task, or quote an existing operator ruling that already answers it.
+
+DEFER severity=LOW — task-384 card, "src/tests/surface-registry.infra.test.ts:198 it.fails" — plan step 6, "Regenerate the two 127 registry docs and descriptor with generate-surface-registry.mjs" — the card names surface-registry.infra.test.ts in Files and cites its it.fails as the unowned evidence, but no plan step flips or re-pins that assertion once binding_web_report owns the files — add the change to that assertion to the steps.
+
+MET — operator item 3, "Leave the reports as components" — plan goal, "They stay a component; nothing is converted (Spec 126 :925..." — satisfied, no conversion is proposed.
+
+MET — Spec 126 :925, "REPORT keeps the landed renderer (§11a; Spec 135 FE-24)" — plan goal quotes :925 and keeps the three files as they are — satisfied.
+
+MET — Spec 126 :926, "the landed web REPORT renderer" among our code — plan step 2, "modules += the three files (web, REPORT, owner binding_web_report, exports)" — satisfied, the renderer is registered as our code rather than a library binding.
+
+MET — protected-paths $comment, "a commit cannot loosen the rules that judge it" — plan step 1, "frontend += \"src/components/report/**\"" — the addition only adds paths to the judgement, it removes none — satisfied.
+
+REJECT — Spec 136 fe.31 — accused of not giving the report a descriptor, goldens and converted-manifest entry — fe.31 binds only "a converted non-REPORT surface", so it does not reach a REPORT renderer that stays unconverted.
+
+REJECT — Spec 126 §11b.1, "No hand-built standard component." — accused of leaving the three files hand-built — the same clause names the exception, "REPORT keeps the landed renderer", so the hand-built renderer is the permitted state.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 6
+
+---
+⏱  74753ms (74.8s)
+📊 Tokens — total: 45855, input: 30120, output: 15735, reasoning: 14326

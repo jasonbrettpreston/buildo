@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:51:30.948Z file_sha256=9cd03d3827c6423f6afeacb46e76962a9fc5d79081fe1f81635255b0cdc23706 prompt_sha256=66453fd58ba259280265b07d546534fd5296d586740997f860010cd874ec38d3
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-reportown2/docs/reports/lanes/2026-11-20/BL-REPORTOWN2/in-plan-compliance-surface-136.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — operator ruling MORNING-DECISIONS.md:1421 item 3 "3. Leave the reports as components, and bring them under the existing checks (task 384)." — NONE (plan "Not done (named): ... C-9 reach (needs a rule on what to judge in a hand-built renderer)") — C-9 is one of "the existing checks" the task names ("C-2b, C-8 and C-9 never run on them") and no operator word authorizes leaving it out — run C-9 with a pin as C-2b/C-8 are, or put the C-9 question to the operator before plan-lock.
+
+BUG severity=MED — fe.01 "Surface paths are held (pending globs) until Phase 1 opens." — plan change 1 "mcbylaws/protected-paths.json: frontend += \"src/components/report/**\" ... it does not say the operator ruled an exemption" — the glob makes the path active before Phase 1 opens and no exemption/Phase-1-open word is cited; the operator's "we are in development" is not cited as the opener — cite the operator word that opens the path (or the Phase 1 open) or leave the glob out.
+
+DEFER severity=MED — fe.31 "Every MaxBLD page (a converted non-REPORT surface) is ... in the converted manifest (two-direction totality); one props golden per reachable state per declared target" — plan "C-3 count lock [10,7,25] becomes [13,8,25]" against plan goal "nothing is converted" and "No view type or golden changes" — either the three files enter the converted manifest (then fe.31 props goldens per state per target are owed and absent) or they do not (then the C-3 count change is wrong) — keep C-3 at [10,7,25] and judge by C-2b/C-8/C-12 only, or supply the goldens.
+
+DEFER severity=MED — operator ruling MORNING-DECISIONS.md:1421 item 3 "bring them under the existing checks" — plan "the three report files are judged with a pin REPORT_RENDERER_PIN ... (C-2b structural, C-8)" and C-2b as built "out.push(`C-2b ${file}:${at(n)}: display attribute ${n.name.getText(sf)}=\"${v.text}\"`)" — pinning 92 C-2b findings as "structural" suppresses findings C-2b itself classifies as display text, so C-2b does not reach 0 for ReportPage.tsx — move the label= strings to content or get an operator ruling for the exemption.
+
+DEFER severity=MED — fe.15 "the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria" — plan step 7 "Task file through the backlog CLI: Files line extended ... acceptance criteria added, notes" names no canaries — add the a-f canaries to the graded acceptance criteria.
+
+DEFER severity=LOW — rule-lists.json surfaces row "\"lists\": [\"surface-136\", \"surface-126\", \"surface-127\", \"surface-128\", \"surface-135\", \"eng-all\"]" — plan step 5 "for the three files, resolve lists surface-136, surface-126, surface-127, surface-128, surface-135" omits eng-all — the planted test would assert an incomplete list and drop the engineering standards the row attaches according to its "why" ("the engineering standards are attached whole (eng-all)") — assert eng-all in the expected resolve.
+
+REJECT — fe.14 "the report page converts first" — the change leaves the report as a component — the operator ruling of 2026-11-20 (:1421 item 3 "Leave the reports as components, and bring them under the existing checks") is later and governs the report page, so fe.14's "converts first" does not apply here.
+
+MET — 126:924-926 "REPORT keeps the landed renderer" — plan goal "They stay a component; nothing is converted" — REPORT is the named exception to descriptor+library, so keeping the hand-built renderer is compliant.
+
+MET — fe.18 "every displayed field binds to a source in the closed set catalogue / content ..." — plan change 3 "Move the three display strings of ReportView.tsx to content: seed-report-v2.mjs `states.view`" — the three real display strings move to content, a closed source.
+
+MET — fe.05 "no maths in the UI" — plan fact 4 "FE-05 (report-no-maths.logic.test.ts DIRS) already scans src/components/report, so the listing adds no new no-maths exposure" — no maths is added and the existing scan covers the path.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 26   Unmet: 6
+
+---
+⏱  85117ms (85.1s)
+📊 Tokens — total: 36862, input: 18110, output: 18752, reasoning: 17652
