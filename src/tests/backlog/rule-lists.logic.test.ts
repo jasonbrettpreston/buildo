@@ -607,4 +607,18 @@ describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', ()
     expect(l.r.stderr).toContain('caf\\303\\251.ts');
     expect(l.r.stderr).toContain('core.quotepath=false');
   });
+  it('F13: a diff that passes the room estimate but whose rendered head (141 long paths) pushes the final prompt over the bound is chunked, not refused', () => {
+    const f = fixture();
+    const names = Array.from({ length: 141 }, (_, i) => `src/some/deeper/folder/file-number-${String(i).padStart(3, '0')}-with-a-long-name.ts`);
+    const d = names.map((p) => dfile(p, 1)).join('');
+    const m = path.join(f.d, 'f13.material'); fs.writeFileSync(m, d);
+    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+    const max = 2 * (d.length + 900) + 300;
+    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f13'), '--template', tpl, '--max', String(max)]);
+    expect(r.status, r.stderr).toBe(0);
+    const texts = r.stdout.split('\n').filter(Boolean).map((x) => fs.readFileSync(x, 'utf8'));
+    expect(texts.length).toBeGreaterThan(1);
+    for (const x of texts) expect(2 * x.length + 80).toBeLessThanOrEqual(max);
+    expect([...texts.flatMap((x) => stampOf(x).paths ?? [])].sort()).toEqual([...names].sort());
+  });
 });

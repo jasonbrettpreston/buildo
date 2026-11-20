@@ -357,6 +357,10 @@ export function buildLensInputs({ id, list, root, material, templateFile, max = 
     const unitMax = avail - material.length - RESERVE;
     if (unitMax < (list ? 200 : 0)) throw room(`material is ${material.length} characters; with the lens template (${fixed} fixed characters, the plan placeholder used ${k}x) at most ${avail} characters fit one file, leaving ${unitMax} for the list: split the material (a list is never trimmed)`);
     parts = partsFor(unitMax);
+    // F13: the room test above is an estimate; when the FINAL prompt (stamp, head with the path list, marker) of the widest part would pass the bound, the material is chunked too
+    const widest = parts.reduce((x, y) => (y.length > x.length ? y : x), '');
+    const finalLen = sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: widest, i: parts.length, n: parts.length, material, paths: segs ? chunks[0].paths : null, c: 1, m: 1 }), specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
+    if (finalLen > max) throw room(`the input with the rendered head would be ${finalLen} characters, over the ${max} bound`, widest.length);
   } catch (e) {
     if (!e.room || !segs) throw e;
     // the material is a diff: cut it at file boundaries. The list part gets half the room (more when one of its blocks cannot be split), never so much that the largest file cannot ride beside it.
