@@ -3,10 +3,11 @@ id: TASK-378
 title: >-
   FIX.TUNE Phone tunables are data, not code; lookup and entitlement contract
   entries corrected (D14, D15)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-FIXTUNE'
 created_date: '2026-11-20T14:00:00Z'
-updated_date: '2026-11-20T14:00:00Z'
+updated_date: '2026-11-20T15:10:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -45,4 +46,6 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 added from the task-372 grounder: the length factor is still typed: src/lib/parcels/geometry.ts:6 M_TO_FT = 3.28084 (used at :20 and lot-size-entry.ts:170,174), src/lib/massing/geometry.ts:32; a pinned variable parcels_m_to_ft already exists (seed near :8212). Spec 136 fe.44 covers every area and length. Bring these under the registered variable in this task by the pattern task-372 used for SQM_TO_SQFT; the two phone copies of the area factor (mobile/src/lib/leadDetailFormat.ts:15, parcelCostFormat.ts:11) stay the dated baseline of gate B until fixed here or by its own task. Also owed from task-372: a DB mirror migration for maxbld_report_lot_size_implausible_min_sqm and _max_sqm (admin visibility only; nothing reads the DB rows; number claimed from the ID ledger; operator typed GO for any DB job).
+
+2026-11-20 taken on the board at lane launch (lane BL-FIXTUNE, worktree /Users/brettpreston_macmini/Buildo-wt-fixtune, branch wf1/inc1b-fixtune), RR-0240
 <!-- SECTION:NOTES:END -->
