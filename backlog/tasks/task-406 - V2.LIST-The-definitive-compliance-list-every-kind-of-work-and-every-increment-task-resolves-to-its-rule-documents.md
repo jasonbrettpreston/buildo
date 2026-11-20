@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LIST'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-20T17:34:00Z'
+updated_date: '2026-11-20T18:31:00Z'
 labels:
   - McFix
   - McFix V2
@@ -43,4 +43,6 @@ Operator, 2026-11-20, verbatim: "That works. Let;s this - the 10th plan today on
 PRIORITY, operator 2026-11-20 verbatim: "I also need certainty within the tasks that a rpiority is getting the right information about compliance to the reviewer.  Put extra stree" (MORNING-DECISIONS.md, entry "Operator APPROVES the McFix V2 launch"). So acceptance adds PROOF ON THE REAL INPUTS, not on the table: (1) for each kind of work (pipeline step, McFrontend web, phone, storage, tooling, spec-only) generate the actual compliance lens input files for a real task of that kind and show, by grep with line numbers, that each contains the five principles in the governing handbook's own words, the plan protocol, the milestone objectives, and each governing spec WHOLE (or the named sections, with the reason a section is left out); (2) the close check refuses a task whose compliance outputs do not include the always-attached list (planted-defect test with a passing control); (3) the lens is given the WHOLE change: where a diff is over the size bound it is split into parts and every part is reviewed against every list, never trimmed to core files (lanes trimmed on 2026-11-20): the check refuses a compliance run whose material does not cover every changed path (the material names the paths; compare with the range). (4) the generated page states, per kind of work, the documents AND their sizes and part counts, so a missing or shrunken document is visible in a diff.
 
 2026-11-20 taken on the board at lane launch (lane BL-V2LIST, worktree /Users/brettpreston_macmini/Buildo-wt-v2list, branch wf1/inc1b-v2list), RR-0240
+
+Operator 2026-11-20, verbatim (MORNING-DECISIONS.md:1494): "Correct this - Phone work gets no engineering standards. The mobile row was missed. - Some surface script paths get none either. - Generated reports are attached to the wrong spec. They are governed by Spec 124 Rule 13, which no list carried." All three are in the fix round sent to the lane.
 <!-- SECTION:NOTES:END -->
