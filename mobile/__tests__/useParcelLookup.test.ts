@@ -21,7 +21,10 @@ jest.mock('@sentry/react-native', () => ({ captureException: jest.fn() }));
 import { fetchWithAuth } from '@/lib/apiClient';
 import { ApiError, AccountDeletedError, RateLimitError } from '@/lib/errors';
 import { ConsumerParcelLookupResultSchema } from '@/lib/schemas';
+import { SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
 import {
+  answeredParcelLookup,
+  buildAnswerParcelLookupOptions,
   fetchParcelLookup,
   parcelLookupParams,
   shouldRetryParcelLookup,
@@ -181,5 +184,51 @@ describe('shouldRetryParcelLookup — deterministic states are not retried', () 
     expect(shouldRetryParcelLookup(0, new ApiError(500, 'boom'))).toBe(true);
     expect(shouldRetryParcelLookup(2, new ApiError(500, 'boom'))).toBe(true);
     expect(shouldRetryParcelLookup(3, new ApiError(500, 'boom'))).toBe(false);
+  });
+});
+
+// FIX.SEMI (task-373, grounder D5; Spec 99 section 4 B1 99:219 "Every server fetch MUST go through TanStack Query"): the semi page's Continue lookup is the
+// mutation of useAnswerParcelLookup. The two pins below keep what task-361 built: a failed or offline lookup ends in the error state at once (networkMode
+// 'always': TanStack's default would pause a mutation offline, so the bounded wait would never start and the page would stay busy), and no retry re-sends it.
+describe('FIX.SEMI answeredParcelLookup and the options of useAnswerParcelLookup', () => {
+  beforeEach(() => mockFetch.mockReset());
+
+  it('sends the answered lookup (semi=answered) and returns the parsed result', async () => {
+    mockFetch.mockResolvedValueOnce({ data: hitResponse });
+    const out = await answeredParcelLookup('PIN-777');
+    expect(mockFetch.mock.calls).toEqual([['/api/parcels/lookup?parcelId=PIN-777&semi=answered']]);
+    expect(out).toEqual(ConsumerParcelLookupResultSchema.parse(hitResponse));
+  });
+
+  it('a lookup that never settles rejects once the bounded wait (SEMI_CONTINUE_WAIT_MS) has run, not before', async () => {
+    jest.useFakeTimers();
+    try {
+      mockFetch.mockReturnValueOnce(new Promise(() => undefined));
+      let outcome = 'pending';
+      void answeredParcelLookup('PIN-777').then(() => { outcome = 'resolved'; }, (e: Error) => { outcome = e.name; });
+      await jest.advanceTimersByTimeAsync(SEMI_CONTINUE_WAIT_MS - 1);
+      expect(outcome).toBe('pending');
+      await jest.advanceTimersByTimeAsync(1);
+      expect(outcome).toBe('SemiContinueTimeoutError');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('a failed lookup rejects with the failure itself (the page shows its built error state)', async () => {
+    mockFetch.mockRejectedValueOnce(new ApiError(500, 'boom'));
+    await expect(answeredParcelLookup('PIN-777')).rejects.toBeInstanceOf(ApiError);
+  });
+
+  it('a drifted answer is schema drift, never stored', async () => {
+    mockFetch.mockResolvedValueOnce({ data: { not: 'a lookup' } });
+    await expect(answeredParcelLookup('PIN-777')).rejects.toBeInstanceOf(ParcelLookupSchemaError);
+  });
+
+  it('the mutation options: this function, no retry, runs offline (networkMode always)', () => {
+    const o = buildAnswerParcelLookupOptions();
+    expect(o.mutationFn).toBe(answeredParcelLookup);
+    expect(o.retry).toBe(0);
+    expect(o.networkMode).toBe('always');
   });
 });

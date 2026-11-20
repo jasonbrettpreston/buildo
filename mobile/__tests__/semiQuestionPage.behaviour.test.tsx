@@ -27,11 +27,15 @@ type Hook = { data?: unknown; isFetching: boolean; isError?: boolean; error: unk
 let mockHook: Hook = { data: undefined, isFetching: false, error: null, refetch: jest.fn() };
 const mockCalls: Array<string | undefined> = [];
 const mockFetchLookup = jest.fn();
+// FIX.SEMI (task-373, D5): Continue's lookup runs through the mutation hook useAnswerParcelLookup (Spec 99 99:219); here its mutateAsync is the same bounded wait over
+// the same mocked fetch (the real boundedWait), so every case below asserts what it asserted before.
+const mockAnswerCalls: string[] = [];
 // SRCH.SEMI stage 2 (task-319): Continue stores the answered lookup in the report's cache entry (through useSetParcelLookup since task-353; same key and value).
 const mockSetQueryData = jest.fn();
 jest.mock('@/hooks/useParcelLookup', () => {
   class ParcelLookupSchemaError extends Error {}
-  return { ParcelLookupSchemaError, fetchParcelLookup: (...a: unknown[]) => mockFetchLookup(...a), useParcelLookup: (id: string | undefined) => { mockCalls.push(id); return mockHook; }, useSetParcelLookup: () => (id: string, result: unknown) => mockSetQueryData(['parcel-lookup', id], result) };
+  const { boundedWait, SEMI_CONTINUE_WAIT_MS } = jest.requireActual('@/lib/semiQuestion');
+  return { ParcelLookupSchemaError, useAnswerParcelLookup: () => ({ mutateAsync: (parcelId: string) => { mockAnswerCalls.push(parcelId); return boundedWait(mockFetchLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS); } }), fetchParcelLookup: (...a: unknown[]) => mockFetchLookup(...a), useParcelLookup: (id: string | undefined) => { mockCalls.push(id); return mockHook; }, useSetParcelLookup: () => (id: string, result: unknown) => mockSetQueryData(['parcel-lookup', id], result) };
 });
 jest.mock('@/components/surfaces/ReportPageHost', () => {
   const { View } = jest.requireActual('react-native');
@@ -49,7 +53,7 @@ const data = (lotForm?: unknown) => ({ match: { parcelId: 'PCL-S1', matchType: '
 
 beforeEach(() => {
   mockPush.mockClear(); mockReplace.mockClear(); mockBack.mockClear(); mockCanGoBack = true;
-  mockCalls.length = 0;
+  mockCalls.length = 0; mockAnswerCalls.length = 0;
   mockFetchLookup.mockReset(); mockSetQueryData.mockReset();
   mockFetchLookup.mockResolvedValue(data(form(true)));
   mockParams = { parcelId: 'PCL-S1' };
@@ -85,6 +89,17 @@ describe('the question page (semi-question.tsx)', () => {
     expect(mockFetchLookup.mock.calls).toEqual([[{ parcelId: 'PCL-S1', semi: 'answered' }]]);
     expect(mockSetQueryData.mock.calls).toEqual([[['parcel-lookup', 'PCL-S1'], data(form(true))]]);
     expect(mockPush).not.toHaveBeenCalled();
+  });
+  it('FIX.SEMI (task-373, D5): Continue asks the answered lookup of the mutation hook, once, with the page id; the page imports no raw fetch of its own', async () => {
+    mockHook = { ...mockHook, data: data(form(true)) };
+    render(<Question />);
+    fireEvent.press(screen.getByTestId('parcel-semi-answer-no'));
+    fireEvent.press(screen.getByTestId('parcel-semi-continue'));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledTimes(1));
+    expect(mockAnswerCalls).toEqual(['PCL-S1']);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const src = (require('node:fs') as typeof import('node:fs')).readFileSync(`${__dirname}/../app/(app)/parcel-tool/semi-question.tsx`, 'utf8');
+    expect(src).not.toMatch(/fetchParcelLookup/);
   });
   it('a double press while the fetch runs sends one fetch and one replace', async () => {
     let done: (v: unknown) => void = () => undefined;

@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXSEMI'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T13:35:00Z'
+updated_date: '2026-11-20T13:37:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -43,6 +43,12 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. AC1 confirm D5, D4, D12 on head with file:line (semi-question.tsx:64,:74; useParcelLookup.ts:134 vs Spec 99:226-235; [parcelId].tsx:35 vs Spec 99 8.3). 2. AC2 red first: add cases only (useParcelLookup.test.ts for the new pure mutation function; new reportScreen.gateStability test; semi page mock gets the new hook, assertions unchanged); red commit attempt into red.out. 3. Fix D5: useAnswerParcelLookup (useMutation, mutationFn = boundedWait(fetchParcelLookup semi answered, SEMI_CONTINUE_WAIT_MS)) in useParcelLookup.ts; page calls mutateAsync; busy latch, empty-id guard, unmount guard, navigation unchanged; 60 s constant not moved. 4. Fix D4: registry row in Spec 99 section 4 B1 table. 5. Fix D12: isFetching stability test per Spec 99 8.3. 6. AC3 lens set (compliance per rule list whole, code-review, error-paths, regression) at plan and output; findings by id; grounder owed. 7. AC4 green commit through real hooks; typecheck before/after; task stays RUNNING.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
