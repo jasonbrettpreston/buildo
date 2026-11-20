@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T17:12:00Z'
+updated_date: '2026-11-20T17:22:00Z'
 labels:
   - McFix
   - McFix V2
@@ -34,3 +35,9 @@ Operator, 2026-11-20, verbatim: "That works. Let;s this - the 10th plan today on
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+PRIORITY, operator 2026-11-20 verbatim: "I also need certainty within the tasks that a rpiority is getting the right information about compliance to the reviewer.  Put extra stree" (MORNING-DECISIONS.md, entry "Operator APPROVES the McFix V2 launch"). So acceptance adds PROOF ON THE REAL INPUTS, not on the table: (1) for each kind of work (pipeline step, McFrontend web, phone, storage, tooling, spec-only) generate the actual compliance lens input files for a real task of that kind and show, by grep with line numbers, that each contains the five principles in the governing handbook's own words, the plan protocol, the milestone objectives, and each governing spec WHOLE (or the named sections, with the reason a section is left out); (2) the close check refuses a task whose compliance outputs do not include the always-attached list (planted-defect test with a passing control); (3) the lens is given the WHOLE change: where a diff is over the size bound it is split into parts and every part is reviewed against every list, never trimmed to core files (lanes trimmed on 2026-11-20): the check refuses a compliance run whose material does not cover every changed path (the material names the paths; compare with the range). (4) the generated page states, per kind of work, the documents AND their sizes and part counts, so a missing or shrunken document is visible in a diff.
+<!-- SECTION:NOTES:END -->

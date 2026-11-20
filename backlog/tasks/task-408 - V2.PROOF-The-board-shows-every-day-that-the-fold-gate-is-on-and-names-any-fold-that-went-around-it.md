@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T17:12:00Z'
+updated_date: '2026-11-20T17:22:00Z'
 labels:
   - McFix
   - McFix V2
@@ -37,3 +38,9 @@ Operator, 2026-11-20, verbatim: "Hwo will I know it is actually working on a dai
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+PRIORITY, operator 2026-11-20 verbatim: "I also need certainty within the tasks that a rpiority is getting the right information about compliance to the reviewer.  Put extra stree" (MORNING-DECISIONS.md, entry "Operator APPROVES the McFix V2 launch"). So the daily board adds a fourth line, REVIEWER INPUTS: each rebuild regenerates the lens input for one fixture task per kind of work and checks the five principles, the plan protocol, the objectives and the governing specs are in it (the same greps as V2.LIST acceptance 1); red with the missing document named when not.
+<!-- SECTION:NOTES:END -->
