@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T14:28:00Z'
+updated_date: '2026-11-20T15:00:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -40,3 +41,9 @@ Operator 2026-11-20 (verbatim): "I agree." to the recommendation "2. Rule that e
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+REWRITE OWED BEFORE LAUNCH (2026-11-20, plan grounder round 2, task-371; recorded in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md "Grounder verdict on the merged plan"): scope items (2) and (4) above (widening the five compute gates; the spec note on widened scope) are REJECTED as not realistic: compute-closure.mjs:56 has no .ts suffix, compute-literals.mjs:289 filters to .js, compute-shape.yml globs are .js only, purity G1-G8 read a step descriptor. Scope that stands: (1) Gate A wired with a closed reach list (task-367); (new) the one-importer lock src/tests/customer-report-compute.logic.test.ts:243 uses Gate A reach forms so a dynamic import is seen; (3) the C1 lock. Known bypasses to state, not close: computed specifier, a hop through another scripts/ file, child process. Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md section C.
+<!-- SECTION:NOTES:END -->
