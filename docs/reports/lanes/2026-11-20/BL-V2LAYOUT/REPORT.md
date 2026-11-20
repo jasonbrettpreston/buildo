@@ -20,3 +20,6 @@
   Their files were not moved.
 - Lenses: plan-stage and out-stage in docs/reports/lanes/2026-11-20/BL-V2LAYOUT/ (9 plan outputs, 9 out outputs, 14 in- inputs); findings listed untriaged in FINDINGS.md (84 finding lines: plan 56, out 28); plan findings informed the tests (both directions for -r2, interpolated folder in the message, all four messages tested). No verdicts given.
 - Noted for the grounder: out-error-paths#1 is a "BUG severity=<none>" line (a non-finding counted as a finding by the strict reader); out-error-paths#2 says the brief still names r1-<lens>.txt as output (existing text, kept because test task-358 pins it).
+
+## Fold round 1 (grounder: 16 CONFIRMED, 67 REJECTED, 1 CONFLICT)
+- Whole-change sentence now states the lens-input mechanism (rule list split at headings, whole diff in every part, diff never split or trimmed, oversize diff refused by lens-input and reported to the orchestrator). Output names agree with the layout (plan-<lens>.txt, out-<lens>.txt, a separate grounder rules every finding in GROUNDER.md); the task-358 pins at backlog-lane.logic.test.ts (r1-<lens>.txt, round 2) were changed to the corrected text. Layout text: parity pin test (fragments in both sources), lens-plan/ added, rN form. No plan-/out- file edited. GROUNDER.md copied byte for byte.
