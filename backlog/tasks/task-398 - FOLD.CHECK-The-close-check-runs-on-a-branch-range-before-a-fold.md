@@ -1,9 +1,11 @@
 ---
 id: TASK-398
 title: FOLD.CHECK The close check runs on a branch range before a fold
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-FOLDCHECK'
 created_date: '2026-11-20T16:34:00Z'
+updated_date: '2026-11-20T16:43:00Z'
 labels:
   - McFix
   - McFix Z
@@ -32,3 +34,9 @@ Validated before writing by a separate read-only grounder (2026-11-20; verdict r
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-20 taken on the board at lane launch (lane BL-FOLDCHECK, worktree /Users/brettpreston_macmini/Buildo-wt-foldcheck, branch wf1/inc1b-foldcheck), RR-0240
+<!-- SECTION:NOTES:END -->
