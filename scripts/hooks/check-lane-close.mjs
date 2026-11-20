@@ -9,6 +9,7 @@
 //  * the lane report: docs/reports/lanes/<date>/<lane>/ holding a file TASK that names exactly this task id (a dir reused for another task does not count);
 //  * Files against the diff: every path changed since the lane branch point (merge-base with the table's base_ref) or staged, outside docs/reports and backlog, is covered by the task's
 //    Files line; a build or fix task whose Files resolve to no rule list is refused;
+//  * every_task (V2.LIST, task-406): the table's every_task lists are attached to every task by the resolver, so each needs its compliance output like any list; a table with no every_task is refused;
 //  * the LENS SET the task type calls for (scripts/analysis/rule-lists.mjs lensSet, the function the launch brief uses): per attached rule list one compliance output
 //    (out-compliance-<list id>.txt; plan- or out- for a non build/fix task; ONE file or parts -p1..-pK with no gap), and for a build or fix task also out-<lens>.txt for code-review,
 //    error-paths (ux, security by the Files line) and at least one plan-stage output. Each required output starts with the review tool's REVIEW header (template name matching the lens,
@@ -78,6 +79,10 @@ export function closeErrors(i) {
   try { r = resolveTask({ table: i.table, root: i.root, body: i.taskText, type, letter: i.letter }); } catch (e) { return [`${id}: cannot read the rule-list table or one of its path maps: ${String(e.message).split('\n')[0]}`]; }
   if (r.error) return [`${id}: ${r.error.replace(/^refused: /, '')}`];
   const errors = [];
+  // V2.LIST (task-406): the every_task lists (the five words, the plan protocol) are required of every task like any list; a table that names none is refused, not skipped (nobody switches them off by leaving the key out)
+  const every = i.table.every_task;
+  if (!Array.isArray(every) || every.length === 0) return [`${id}: the rule-list table has no every_task lists: the five words and the plan protocol must be attached to every task (scripts/analysis/rule-lists.json)`];
+  for (const e of every) if (!r.lists.some((l) => l.id === e)) errors.push(`${id}: the every_task list ${e} is not among the resolved lists (a task always gets it; the table or the resolver was altered)`);
 
   // Files against the diff
   const entries = filesEntries(i.taskText);

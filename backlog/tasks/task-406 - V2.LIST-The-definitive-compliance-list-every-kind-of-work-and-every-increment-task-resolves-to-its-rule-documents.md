@@ -60,4 +60,6 @@ PRIORITY, operator 2026-11-20 verbatim: "I also need certainty within the tasks 
 2026-11-20 taken on the board at lane launch (lane BL-V2LIST, worktree /Users/brettpreston_macmini/Buildo-wt-v2list, branch wf1/inc1b-v2list), RR-0240
 
 Operator 2026-11-20, verbatim (MORNING-DECISIONS.md:1494): "Correct this - Phone work gets no engineering standards. The mobile row was missed. - Some surface script paths get none either. - Generated reports are attached to the wrong spec. They are governed by Spec 124 Rule 13, which no list carried." All three are in the fix round sent to the lane.
+
+2026-11-20 BL-V2LIST: build commits: table, helper, check-tasks, generated page and plan protocol copy first; the close check edit in its own commit (protected path). Task left RUNNING, grounder owed.
 <!-- SECTION:NOTES:END -->
