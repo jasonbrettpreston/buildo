@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LIST'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-20T18:42:00Z'
+updated_date: '2026-11-20T18:52:00Z'
 labels:
   - McFix
   - McFix V2
@@ -78,4 +78,6 @@ Operator 2026-11-20, verbatim (MORNING-DECISIONS.md:1494): "Correct this - Phone
 2026-11-20 BL-V2LIST round 2 report and re-run outputs committed.
 
 2026-11-20 BL-V2LIST: round 2 report count corrected (63 output findings).
+
+2026-11-20 BL-V2LIST: grounder file added; fold note in the report.
 <!-- SECTION:NOTES:END -->

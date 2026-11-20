@@ -194,3 +194,6 @@ docs/reports/generated/127-surface-registry.md: policy-124-s2-s5 ... surface-127
 (sha256 are the first 12 hex of each file; counts are BUG and DEFER lines; 63 findings in the 13 outputs, FINDINGS.md refreshed, untriaged.)
 
 STATUS: BL-V2LIST task-406 round 2 READY, task RUNNING, grounder owed again; commits a55976216, 8b0f3f994, 1e67bda61, 6285effe0 (+ reports commit); fix 4 halted (budget pin), policy-124-s2-s5 has no output (lens-input size refusal).
+
+## Fold note (after the round 2 grounder: 42 CONFIRMED, 78 REJECTED, 4 CONFLICT)
+The branch folds with task-406 left RUNNING because list policy-124-s2-s5 cannot be reviewed until task-410's material-split mode exists (lens-input refuses for size: section "2. The rules" is 34,244 characters with no deeper heading). The pre-commit wiring of `page --check` is a recorded deviation from Spec 124 R-DJ, pending a budget ruling (the pre-commit budget evidence re-measures registry_s 31.84 s to 32.12 s against the pinned 27.5 s; the new stage itself costs 0.08 s).
