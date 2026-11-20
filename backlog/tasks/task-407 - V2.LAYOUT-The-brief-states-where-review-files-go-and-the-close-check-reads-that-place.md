@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LAYOUT'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-20T17:38:00Z'
+updated_date: '2026-11-20T17:49:00Z'
 labels:
   - McFix
   - McFix V2
@@ -61,4 +61,6 @@ PRIORITY, operator 2026-11-20 verbatim: "I also need certainty within the tasks 
 2026-11-20 taken on the board at lane launch (lane BL-V2LAYOUT, worktree /Users/brettpreston_macmini/Buildo-wt-v2layout, branch wf1/inc1b-v2layout), RR-0240
 
 2026-11-20 lane BL-V2LAYOUT ready: commits 5cc4ae052 (check message, own commit) and 0f3c32a61 (brief sentence); Files line extended with src/tests/backlog/backlog-lane.logic.test.ts; lens outputs and untriaged FINDINGS.md in docs/reports/lanes/2026-11-20/BL-V2LAYOUT; task left RUNNING, grounder owed.
+
+2026-11-20 grounder fold, round 1 (coordinator message): whole-change sentence reworded to the lens-input mechanism, r1-/TRIAGE.md wording replaced, layout text parity-pinned across backlog-lane.mjs and check-lane-close.mjs, lens-plan/ and rN added.
 <!-- SECTION:NOTES:END -->
