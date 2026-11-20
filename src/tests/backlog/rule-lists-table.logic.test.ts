@@ -65,8 +65,10 @@ describe('V2.LIST round 2: the repo copy of the plan protocol', () => {
 
 // V2.LIST round 4 (task-406; operator, 2026-11-20, "yes, ground it and resolve it. don't makr the task complete until it actually works.", MORNING-DECISIONS.md:1517): the contract routes of the programme get the surface standard (Spec 126) and the surface standard policy (Spec 128).
 // Census scopes parcel_product and parcel_admin are attached (Spec 126:135 and :136 "Yes"); platform_shared (36 entries) waits for the operator (Spec 126:1132 "Admin pages other than D1-D4 are estate admin, not MaxBLD pages" is read against its 20 admin routes); estate_other is "No" (Spec 126:138).
-type CensusEntry = { programme?: { scope?: string }; evidence?: { files?: string[] } };
+type CensusEntry = { identity?: { id?: string }; programme?: { scope?: string }; evidence?: { files?: string[] } };
 const ATTACHED_SCOPES = ['parcel_product', 'parcel_admin'];
+// In-scope census entries that name no route file TODAY, by identity id, stated here so the skip is explicit: a route file added to one of them later makes this list stale and fails the test (the row then needs the new route).
+const EXPECTED_UNROUTED = ['contract_parcels_tracked']; // /api/parcels/tracked: its evidence names only the typed client stub mobile/src/hooks/useTrackedLots.ts, the route does not exist yet
 /** The route file of each census entry in the attached scopes: the first route.ts under src/app/api in evidence.files, its :line suffix removed; an entry naming none is skipped. */
 export const censusRoutes = (census: Record<string, CensusEntry>, scopes = ATTACHED_SCOPES): string[] => {
   const out = new Set<string>();
@@ -77,6 +79,10 @@ export const censusRoutes = (census: Record<string, CensusEntry>, scopes = ATTAC
   }
   return [...out].sort();
 };
+const routeOf = (e: CensusEntry) => (e.evidence?.files ?? []).map((x) => x.replace(/:\d+.*$/, '')).find((x) => /^src\/app\/api\/.+\/route\.ts$/.test(x));
+/** The identity ids of the in-scope census entries that name no route file. */
+export const unroutedContracts = (census: Record<string, CensusEntry>, scopes = ATTACHED_SCOPES): string[] =>
+  Object.entries(census).filter(([, e]) => scopes.includes(e.programme?.scope ?? '') && !routeOf(e)).map(([k, e]) => e.identity?.id ?? `entry ${k}`).sort();
 /** What a row misses and what it holds that the census no longer names. */
 export const routeDrift = (rowGlobs: string[], census: Record<string, CensusEntry>) => {
   const want = new Set(censusRoutes(census));
@@ -84,7 +90,7 @@ export const routeDrift = (rowGlobs: string[], census: Record<string, CensusEntr
   return { missing: [...want].filter((x) => !have.has(x)).sort(), stale: [...have].filter((x) => !want.has(x)).sort() };
 };
 const censusFile = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/surfaces/_schema/census/contracts.json'), 'utf8')) as Record<string, CensusEntry>;
-const entry = (scope: string, file: string): CensusEntry => ({ programme: { scope }, evidence: { files: [`${file}:1`] } });
+const entry = (scope: string, file: string, id = file): CensusEntry => ({ identity: { id }, programme: { scope }, evidence: { files: [`${file}:1`] } });
 
 describe('V2.LIST round 4: the surface-contract-routes row equals the census (drift test)', () => {
   it('the real row lists exactly the route files the census names for parcel_product and parcel_admin, and attaches Specs 126, 128, 135 and 136 (operator "1-5 y", MORNING-DECISIONS.md:1520, item 2)', () => {
@@ -107,5 +113,22 @@ describe('V2.LIST round 4: the surface-contract-routes row equals the census (dr
     expect(lists('src/app/api/parcels/lookup/route.ts')).toEqual(expect.arrayContaining(four));
     expect(lists('src/app/api/admin/media/route.ts')).toEqual(expect.arrayContaining(four));
     for (const p of ['src/app/api/leads/detail/[id]/route.ts', 'src/app/api/admin/stats/route.ts']) for (const l of four) expect(lists(p), `${p}: ${l}`).not.toContain(l);
+  });
+});
+
+describe('V2.LIST round 5: an in-scope census entry with no route file is skipped by name, never silently', () => {
+  it('the real census: the in-scope entries naming no route file are exactly the expected list (a route added later fails here and in the row drift test)', () => {
+    expect(unroutedContracts(censusFile())).toEqual(EXPECTED_UNROUTED);
+  });
+  it('control, PLANTED DEFECTS: an unlisted entry with no route fails; a listed entry that now names a route fails; the control equals the list', () => {
+    const base = { a: entry('parcel_product', 'src/app/api/x/route.ts', 'contract_x') };
+    const noRoute: CensusEntry = { identity: { id: 'contract_new' }, programme: { scope: 'parcel_admin' }, evidence: { files: ['mobile/src/hooks/useNew.ts:1'] } };
+    expect(unroutedContracts({ ...base, n: noRoute })).toEqual(['contract_new']);
+    expect(unroutedContracts({ ...base, n: noRoute })).not.toEqual([]);
+    expect(unroutedContracts(base)).toEqual([]);
+    const nowRouted: CensusEntry = { identity: { id: 'contract_parcels_tracked' }, programme: { scope: 'parcel_product' }, evidence: { files: ['src/app/api/parcels/tracked/route.ts:1'] } };
+    expect(unroutedContracts({ ...base, t: nowRouted })).not.toEqual(EXPECTED_UNROUTED);
+    expect(unroutedContracts({ ...base, t: { ...nowRouted, evidence: { files: ['mobile/x.ts:1'] } } })).toEqual(EXPECTED_UNROUTED);
+    expect(unroutedContracts({ ...base, e: { identity: { id: 'contract_lead' }, programme: { scope: 'estate_other' }, evidence: { files: [] } } })).toEqual([]);
   });
 });

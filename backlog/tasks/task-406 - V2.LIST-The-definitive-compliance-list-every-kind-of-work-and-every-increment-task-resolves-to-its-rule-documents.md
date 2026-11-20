@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LIST'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-20T20:06:00Z'
+updated_date: '2026-11-20T20:13:00Z'
 labels:
   - McFix
   - McFix V2
@@ -98,4 +98,6 @@ Step 4 audit by a separate grounder 2026-11-20 (file ~/Buildo-scratch/lanes-2026
 2026-11-20 BL-V2LIST round 4 report.
 
 2026-11-20 BL-V2LIST round 5: test extended for Specs 135 and 136 on the contract routes (operator 1-5 y, MORNING-DECISIONS.md:1520).
+
+2026-11-20 BL-V2LIST round 6: skip stated by name in the drift test; pin attribution corrected (operator confirmed 33.2 s, MORNING-DECISIONS.md:1526).
 <!-- SECTION:NOTES:END -->
