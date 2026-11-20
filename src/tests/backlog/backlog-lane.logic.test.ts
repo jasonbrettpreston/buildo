@@ -210,6 +210,16 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     expect(e).toMatch(/round 2/);
     expect(e).toContain('NEVER run one generic pass');
   });
+  // task-375 FIX.TOOLS D11 (Spec 08 section 7 rule 4 dated note, 08_agents.md:338; scripts/deepseek-review.js:189 fills "(no pasted context provided)" when --context is absent):
+  // every plan lens command carries --context, as the output lens commands do.
+  it('every plan lens command carries --context, and the --context value is not a flag', () => {
+    const e = lensBrief('build', 'scripts/analysis/x.mjs, src/tests/');
+    const seg = /Plan review lenses: ([\s\S]*?)\. Output review lenses/.exec(e)?.[1] ?? '';
+    const cmd = /each `([^`]+)`/.exec(seg)?.[1] ?? '';
+    expect(seg).toContain('plan-review-deepseek.md');
+    expect(cmd).toContain('scripts/deepseek-review.js review');
+    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context <pasted-context file>/);
+  });
   it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
     for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
       expect(lensBrief('build', files), files).toContain('lens-security.md');

@@ -265,3 +265,20 @@ describe('T9 task-363 input guards: null suite, bad timeoutMs, unwritable --out 
     expect(byId('design-fit')?.notbuilt.blockedBy).toEqual(['task-345', 'task-67']);
   });
 });
+
+// task-375 FIX.TOOLS D10 (Spec 132 core.8, 132_step_standard_handbook.md:154 "Runner and gate numbers are pinned `step_*` / `gate_*` / `tooling_*` variables"):
+// the runner's child-output ceiling is the registered tooling_spawn_max_buffer_mb, not a typed 16 MiB.
+describe('D10 task-375: the child-output ceiling is the registered variable', () => {
+  it('a real child that writes 20 MiB to stdout is not cut off (the typed 16 MiB ceiling cut it off with ENOBUFS)', async () => {
+    const mod = (await import('../../scripts/analysis/proof-slice.mjs')) as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+    const r = mod.realIo().run(['node', '-e', "process.stdout.write('x'.repeat(20 * 1024 * 1024))"], { timeoutMs: 60000 });
+    expect(r.error?.code).toBeUndefined();
+    expect(r.status).toBe(0);
+    expect(r.stdout.length).toBe(20 * 1024 * 1024);
+  });
+  it('the maxBuffer argument is read from tooling_spawn_max_buffer_mb through gateVariable, with no typed MiB literal', () => {
+    const src = fs.readFileSync(path.join(REPO, 'scripts/analysis/proof-slice.mjs'), 'utf8');
+    expect(src).toMatch(/maxBuffer:\s*gateVariable\('tooling_spawn_max_buffer_mb'\)\s*\*\s*1024\s*\*\s*1024/);
+    expect(src).not.toMatch(/maxBuffer:\s*\d/);
+  });
+});

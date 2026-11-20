@@ -15,6 +15,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gateVariable } from './gates/variables.mjs';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DATA = path.join(REPO, 'scripts/analysis/proof-slices.json');
@@ -125,11 +126,11 @@ const parseArgs = (argv) => {
   return o.slice && o.out ? o : null;
 };
 
-const realIo = () => ({
+export const realIo = () => ({
   readFile: (f) => fs.readFileSync(f, 'utf8'),
   run: (argv, { timeoutMs }) => {
     const [cmd, ...rest] = argv;
-    return spawnSync(cmd === 'node' ? process.execPath : cmd, rest, { cwd: REPO, encoding: 'utf8', timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024 });
+    return spawnSync(cmd === 'node' ? process.execPath : cmd, rest, { cwd: REPO, encoding: 'utf8', timeout: timeoutMs, maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024 });
   },
   head: spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).stdout.trim(),
   writeFile: (f, t) => fs.writeFileSync(f, t),
