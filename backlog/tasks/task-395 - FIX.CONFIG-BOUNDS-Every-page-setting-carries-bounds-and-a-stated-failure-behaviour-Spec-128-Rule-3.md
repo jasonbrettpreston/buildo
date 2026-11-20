@@ -14,6 +14,8 @@ labels:
 milestone: m-1
 dependencies:
   - TASK-378
+references:
+  - docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/REPORT.md
 type: fix
 ordinal: 95012
 ---
