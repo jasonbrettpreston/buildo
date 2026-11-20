@@ -78,4 +78,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 round 3 started (grounder r2: F8-F13). Tests first.
 
 2026-11-20 round 3 part 1: rule-lists.mjs F13 (chunk when the final prompt overflows).
+
+2026-11-20 round 3 part 2: check-lane-close.mjs (F8 launch commit coverage, F9 no-list regenerate and lens prompt hashes, F10 table and templates from the range base, F11 type from the launch copy, F12 records only). Hook point for task-375: lensContexts().
 <!-- SECTION:NOTES:END -->
