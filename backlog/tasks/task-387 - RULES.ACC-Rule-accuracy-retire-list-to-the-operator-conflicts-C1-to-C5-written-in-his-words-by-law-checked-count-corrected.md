@@ -3,10 +3,11 @@ id: TASK-387
 title: >-
   RULES.ACC Rule accuracy: retire list to the operator, conflicts C1 to C5
   written in his words, by-law checked count corrected
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-RULESACC'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T15:41:00Z'
+updated_date: '2026-11-20T15:44:00Z'
 labels:
   - McFix
   - McFix E
@@ -44,4 +45,6 @@ Operator ruling 2026-11-20, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (the six de
 Operator ruling 2026-11-20, verbatim: "Phone retires yes and web search yes" (MORNING-DECISIONS.md entry "phone retries and the web search legal line"). C2 addition: the phone keeps its 3 retries before the error screen shows (orchestrator reading of 'Phone retires yes': the recommendation put was to keep them).
 
 Operator 2026-11-20, verbatim: "Task 370 yes . approved" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1427; the table put to him is quoted in that entry). Also in this task: enter the operator rulings of 2026-11-20 into the rulings register and the Backlog decisions with scripts/analysis/backlog-decision.mjs (next id after RR-0314), each with its verbatim quote and MORNING-DECISIONS.md line: the six decisions; phone retries and web search; the conversion approval; the plan rulings (go on A and B, fold, d, e); task-370 dropped and task-348 answered (:1427), so those two statuses move by the ruling record, not by hand.
+
+2026-11-20 taken on the board at lane launch (lane BL-RULESACC, worktree /Users/brettpreston_macmini/Buildo-wt-rulesacc, branch wf1/inc1b-rulesacc), RR-0240
 <!-- SECTION:NOTES:END -->
