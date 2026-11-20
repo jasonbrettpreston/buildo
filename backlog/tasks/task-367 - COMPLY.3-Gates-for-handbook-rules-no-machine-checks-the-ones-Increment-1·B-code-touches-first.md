@@ -3,8 +3,9 @@ id: TASK-367
 title: >-
   COMPLY.3 Gates for handbook rules no machine checks, the ones Increment 1·B
   code touches first
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-GATES'
 created_date: '2026-11-20T13:04:00Z'
 updated_date: '2026-11-20T13:13:00Z'
 labels: []
@@ -45,4 +46,6 @@ Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze need
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 operator, verbatim: "I also what you to test the new gates as part of the Task 367 - small test and show me it works and what is catches.  ie the review you are running now will catch items - try the file with the gates and see the result.  Only do this if it doesnt take too much time. I want to know they work especially on the key items". Stage 1 is therefore a small report-only proof of three gates on the real pushed files; blocking wiring waits for the operator to confirm the gate list (stage 2).
+
+2026-11-20 taken on the board at lane launch (lane BL-GATES, worktree /Users/brettpreston_macmini/Buildo-wt-gates, branch wf1/inc1b-gates), RR-0240
 <!-- SECTION:NOTES:END -->
