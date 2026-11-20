@@ -1,18 +1,24 @@
-◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:49:06.470Z file_sha256=d75a1081bb5e095a705fd61329ce4a829ce03c6eb418b17a431177d59c5ed0e7 prompt_sha256=4d878b86f08a75408d45598c752d56625798cc2765ab1d442c6ce5d91b633efe
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:21:43.048Z file_sha256=ffb2159ab9d359a31cae667dc658d40e6964037b2b2f019c4be3e6d8eacfe66d prompt_sha256=eeea5bb01935b5b5fec056c77cc0abdd8986f31b96ce7949ab83447d29c3ec7f
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — ms-S Objectives "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built" — docs/specs/00-architecture/08_agents.md:231 "task-410 V2.WHOLE, lane BL-V2WHOLE, Increment 1·B; operator, verbatim, 2026-11-20" — the one pasted governing clause puts the search page, address confusion and lot confusion ahead of increment 1, and this change adds increment 1·B review machinery while touching none of the three — paste the operator entry that lifts the order for this task into the review context, or hold the change until the ordering clause is satisfied.
+BUG severity=HIGH — Project objectives, relevance "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — src/tests/backlog/rule-lists.logic.test.ts:495 "// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries" — the added coverage is for the review tool, and no pasted clause, card or ruling names task-410 or makes lens-input chunking a supporting function of the designed report, details or search page; the relevance link exists only in a comment — quote the card or operator ruling that makes the review tool a supporting function, or move this work out of the search increment.
 
-BUG severity=HIGH — ms-S Objectives "Search comes before increment 1" — scripts/analysis/rule-lists.mjs:32 "export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--text', '--full-index', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];" — every behaviour this diff adds (file-boundary chunking, "chunk c of m" stamps with path lists, prompt_sha256 recompute, the new close refusals, the exempt-path gate) is named by no pasted clause or ruling; its only authority is the dated note the diff itself writes into 08_agents.md and 137_mcqueue.md — attach the operator ruling for V2.WHOLE (items 1 to 5, verbatim, the entry the added notes cite) to the pasted context before this close is allowed to pass.
+BUG severity=HIGH — Project objectives, no scope creep "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — src/tests/backlog/rule-lists.logic.test.ts:626 "// V2.WHOLE round 3, operator item 3 (\"1-5 y\"): the real table (task-406's fold) exempts a real golden from the review material and nothing that is not one." — a second card's fold (task-406) is carried inside the task-410 change and golden-snapshot exemption is named by no pasted clause — split the golden exemption block into its own change against its own card.
 
-DEFER severity=MED — ms-S rule list header "sections Project objectives; Increment objectives; Objectives), part 2 of 2" — NONE — only the Objectives section (a single bullet) is pasted; the Project objectives and Increment objectives clauses of the same list sit in part 1, reviewed in another run, so any clause there that binds a build task in Increment 1·B is "cannot see" here and this material may close with those clauses unchecked — run the same material against part 1 in the same close so the parts together carry the whole list.
+BUG severity=HIGH — Increment objectives, search before increment 1 "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — src/tests/backlog/rule-lists.logic.test.ts:583 "describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', () => {" — the material under review is 141 added lines of review-tool tests and none touch the search page, the address confusion or the lot confusion the increment is ordered to deliver first — land this after the search page work or obtain a pasted ruling that reorders it.
 
-MET — ms-S Objectives "most of it is already built" — src/tests/backlog/check-lane-close.logic.test.ts:362 (hunk @@ -325,3 +362,142 @@) — no line of the change touches the search page, the address surfaces or the lot surfaces, so the already-built part of the clause is not regressed.
+DEFER severity=MED — Project objectives, one plan "we need one plan - we can only execute one plan" — src/tests/backlog/rule-lists.logic.test.ts:626 "operator item 3 (\"1-5 y\")" — the chunk advances task-410, task-406's fold and an operator item 3 in one stream, so which single plan it executes cannot be seen — name the one plan in the change description or split the folds.
+
+MET — Project objectives, database services the report, details and search page — src/tests/backlog/rule-lists.logic.test.ts:495 — the diff touches only a backlog test file, no report, details or search path is altered, so that clause is not broken.
+
+MET — Increment objectives, 65 designed search elements A to G "| id | element | where | status | deliverers | built |" — src/tests/backlog/rule-lists.logic.test.ts:583 — no element A to G is added, removed or re-scoped by this chunk, so their statuses stand.
+
+REJECT — Project objectives "or a supporting function" — that the change feeds old code or is wholly irrelevant — this is not a real issue on the diff alone, since the clause itself admits a supporting function and the chunk deletes nothing.
 
 VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 1   Unmet: 1
+Clauses checked: 9   Unmet: 3
 
 ---
-⏱  35204ms (35.2s)
-📊 Tokens — total: 42645, input: 35720, output: 6925, reasoning: 6326
+⏱  38105ms (38.1s)
+📊 Tokens — total: 13362, input: 5399, output: 7963, reasoning: 7217

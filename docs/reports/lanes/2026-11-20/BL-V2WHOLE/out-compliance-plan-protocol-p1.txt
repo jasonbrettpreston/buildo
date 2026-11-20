@@ -1,22 +1,22 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:49:06.378Z file_sha256=016da77eda1ffb9f5b326f44930c5d1c3fb39ddcdaa18b47b84d1b1768918402 prompt_sha256=a208fea0a982a3bff8662c581f68273458b81cbf504efdff70a557acb4bef1d6
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:21:42.961Z file_sha256=0723432cf14aebf0b21e5a2675011a978c55c7e55039b8f73fd2639889b20014 prompt_sha256=b01ddde9b826fc5fecdd56870f82a43690b580ec4d93e0bcad8f7b0185782f17
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-plan-protocol-p1.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — plan-protocol operator verbatim "The biggest thing this cant take forever ... simple and no scope creep ... Dont make more ungrounded recommendations." — `scripts/hooks/check-lane-close.mjs:70` "export function chunkErrors({ label, items, expected, diffOf = () => null, optional = [] }) {" — the diff adds a whole-change review machinery (DIFF_ARGS, splitDiff, renderLensInput chunk stamps, chunkErrors, launch-commit range, closing-commit record filter) whose only stated ground is a 2026-11-20 entry ("1-5 y", item 4) that appears nowhere in the pasted context, so the change adds behaviour no pasted clause or ruling names — paste that ruling into the review context (or cut the chunk proof back to the pasted lens-set/grounder clauses) before merge
+MET — plan-protocol dated note 2026-11-20 (M-246): "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce" — scripts/hooks/check-lane-close.mjs:36 — `lensSet` is still imported and the `for (const lens of set.out)` loop still requires every out lens, the chunk logic is added on top.
 
-DEFER severity=MED — `docs/specs/00-architecture/08_agents.md:230` "each compliance and lens output's prompt_sha256 is recomputed from the template, the input and the context" — `scripts/hooks/check-lane-close.mjs` "if (expected.length === 0) errors.push(...reviewErrors(n, t, `lens-${lens}.md`, null).map((x) => `${id}: ${x}`));" — when the task range holds no Files-covered change outside the exempt paths (any record-type task) the unsplit lens output is checked with `inputText` null, so neither file_sha256 nor prompt_sha256 is recomputed, contrary to the note the same commit writes — pass the recomputed (even empty) diff or fail closed when `expected.length === 0` for a non-build task
+MET — plan-protocol dated note 2026-11-20 (M-246): "plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`)" — scripts/analysis/backlog-lane.mjs:157 — "a separate grounder rules on every finding. You do not rule on your own findings" is unchanged, and the GROUNDER.md requirement is untouched.
 
-DEFER severity=MED — plan-protocol dated note, item 4 "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce" — `scripts/analysis/backlog-lane.mjs:156` "HEAD -- ${filesText(task.body).split(',').map((s) => s.trim())" vs `scripts/hooks/check-lane-close.mjs:405` "const entries = [...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])];" — the brief tells the lane to build the material from the current Files line only, while the close check requires coverage of the union of the launch and current Files entries, so a lane that narrows its Files line is refused for files the brief never told it to include (launch script and close check do not enforce the same set) — print the union in the brief, or use one Files reading on both sides
+MET — plan-protocol section 0 superseding note: "the board is the plan" — scripts/hooks/check-lane-close.mjs:321 — `const boardRef = BOARD_REFS.find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0) ?? null;` makes the deciding keys come from the board ref and fails closed when it is unreadable.
 
-MET — plan-protocol dated note, item 3 ("the board is the plan", RR-0205) — `docs/specs/00-architecture/137_mcqueue.md:134` — the added note leaves rule 3 unchanged and the check keeps `base_ref` (the board) as its only base, no second plan source introduced
+MET — plan-protocol section 0: "Nothing is re-written from scratch. Every existing task stays until a step below removes it with a cited reason." — docs/specs/00-architecture/08_agents.md:230 — "Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOLE, Increment 1·B" is appended with prior text kept, no task removed.
 
-MET — plan-protocol dated note, item 4 (nine-seat roster is for the whole-increment review; a lane task takes the section 7 lens set) — `scripts/hooks/check-lane-close.mjs:222` "for (const lens of set.out) {" — the set still comes from `lensSet`, and every out lens still needs its output or its `-pN` parts, so the lane lens set is intact
+DEFER severity=LOW — plan-protocol Principles: "keep it simple; no scope creep" — docs/specs/00-architecture/08_agents.md:230 "the whole change goes to the reviewer and the close check proves it" — the diff adds chunk coverage, board-ref pinning, launch-commit search, prompt-hash recompute and closing-commit path restriction, and the task-410 ruling that would name them is not pasted so the card cannot be checked — rationale: verify the task-410 card authorizes each added check, bounded to review tooling.
 
-MET — plan-protocol dated note, item 4 (separate grounder, Spec 08 section 7 rules 5 and 7) — `scripts/hooks/check-lane-close.mjs:87` "A build or fix task needs GROUNDER.md even with zero findings." — split `out-<lens>-pN.txt` files match `isLensOutput`, so their BUG/DEFER lines still require a grounder verdict
+REJECT — plan-protocol section 0: "The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board)" — the diff is accused of creating a new plan — the change edits review tooling and spec notes, adds no plan and no task, so the one-plan rule is untouched.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 5   Unmet: 3
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
 
 ---
-⏱  64836ms (64.8s)
-📊 Tokens — total: 49089, input: 36171, output: 12918, reasoning: 12040
+⏱  140264ms (140.3s)
+📊 Tokens — total: 55786, input: 27491, output: 28295, reasoning: 27680

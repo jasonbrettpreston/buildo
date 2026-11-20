@@ -1,4 +1,4 @@
-LIST queue-137 sha256:6818641457cd33c9821cecaab1a1c8a4f5dde00e0c7b3e2c376a6a25810ad998 material sha256:02baf134bce69f725799910b3894fbc7b7685b04e8663809ba45c37061dd980e part 1 of 1 chunk 1 of 2
+LIST queue-137 sha256:6818641457cd33c9821cecaab1a1c8a4f5dde00e0c7b3e2c376a6a25810ad998 material sha256:0536d6523bc56f1cdd9e5e9f5af0dd7cfc0409f17c5379eb6b13de6cca4f27aa part 1 of 1 chunk 1 of 2
 RULE LIST queue-137 (docs/specs/00-architecture/137_mcqueue.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/backlog-lane.mjs","scripts/analysis/rule-lists.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts"]
 
 # SPEC 137 — McQueue
@@ -184,7 +184,7 @@ Also deferred: Backlog.md as the source of truth ("part 2"). Not adopted. It nee
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
-index 763216acc64b9298fff7f6497128ad440234023c..291ab954096c3a09d972fe5ed2a09290da3c25d1 100644
+index 763216acc64b9298fff7f6497128ad440234023c..06af2bba98dfc873ffe538b42ccc0b35734543f7 100644
 --- a/docs/reports/generated/rule-lists-by-kind.md
 +++ b/docs/reports/generated/rule-lists-by-kind.md
 @@ -17,10 +17,10 @@ Example Files line: `scripts/steps/_schema/converted.json, scripts/load-permits.
@@ -260,7 +260,7 @@ index 763216acc64b9298fff7f6497128ad440234023c..291ab954096c3a09d972fe5ed2a09290
  | list | document | selection | characters | parts |
  | --- | --- | --- | ---: | ---: |
 -| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 4,727 | 1 |
-+| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 7,314 | 1 |
++| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 9,113 | 1 |
  | agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 27,384 | 1 |
 -| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 27,664 | 1 |
 +| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 28,593 | 1 |
@@ -272,7 +272,7 @@ index 763216acc64b9298fff7f6497128ad440234023c..291ab954096c3a09d972fe5ed2a09290
  | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
  | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
 -| total | 9 lists | | 173,691 | 9 |
-+| total | 9 lists | | 178,507 | 9 |
++| total | 9 lists | | 180,306 | 9 |
  
  ## spec-only
  
@@ -293,15 +293,17 @@ index 763216acc64b9298fff7f6497128ad440234023c..291ab954096c3a09d972fe5ed2a09290
 +| total | 7 lists | | 139,623 | 7 |
  
 diff --git a/docs/specs/00-architecture/08_agents.md b/docs/specs/00-architecture/08_agents.md
-index d7b586247fa56bfa5524a8afcc3896a44e8e0429..f8f48bd3dd87d68d40680e761078dc55e1770c77 100644
+index d7b586247fa56bfa5524a8afcc3896a44e8e0429..cb251a2e1ef64cc44478bd67b2533b62034188bf 100644
 --- a/docs/specs/00-architecture/08_agents.md
 +++ b/docs/specs/00-architecture/08_agents.md
-@@ -227,6 +227,8 @@ Deeper notes for the roles whose value, dependencies, or gating need spelling ou
+@@ -227,6 +227,10 @@ Deeper notes for the roles whose value, dependencies, or gating need spelling ou
  Not a new agent — a **mandatory second pass**. After the panel returns findings, run **DeepSeek + Integration against the *proposed findings/changes*** (not the code): for each finding, is the premise true, is the ruling already settled, does the fix cost less than the risk? This operationalizes manual §6.3 (⅓ false premises). Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8). Round-2 is cheap (DeepSeek) and catches the eager-fix (§8.4).
  
  Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2, lane BL-COMPLY2, Increment 1·B; the infra freeze is lifted for it by name; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the 2026-11-20 entries: "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." and "yes to McStorage and 1,2,3 yes as recommended" (the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table)): the mechanical half of section 7 rule 4 and section 5.3 is built in the repo. (1) `scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code, says which rule lists (whole files, or whole sections where the file itself separates rules from history) govern a touched path; it reuses the path maps of `mcbylaws/protected-paths.json` (`layer23`, `frontend`) instead of copying them. (2) `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through it, refuses a task with no Files line (a record-only task gets the queue lists) or an unmatched path with the path named, puts the governing lists into the brief (READ each whole before planning) and runs the compliance lens once per list with the list pasted whole ahead of the plan or diff (`scripts/analysis/rule-lists.mjs lens-input`; a list is split by its own headings when list plus material pass the review tool bound, never trimmed). (3) `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane) with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding of the lens outputs; presence and form only, the judgement stays with the grounder (rule 4: a separate grounder rules on every finding; this section: rejections carry reasons). The lane that wrote the work leaves the task RUNNING with "grounder owed".
 +
 +Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOLE, Increment 1·B; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y", item 4 as put to him: "Keep the split for code review, error paths, UX and security"): the whole change goes to the reviewer and the close check proves it. (1) `scripts/analysis/rule-lists.mjs lens-input` cuts a diff that leaves no room (counting the rendered stamp, head and path list) into chunks at FILE boundaries, the tool and never by hand; each chunk goes against every list part and is stamped chunk c of m with its path list; one file alone over the room is refused naming it. With no `--list` and a lens template it writes the same chunks for code-review, error-paths, ux and security (the split the operator kept). (2) `scripts/hooks/check-lane-close.mjs` takes the task's launch commit L (the first board commit on the base ref, first-parent, that holds the lane assignee on the task file; refused when none or not an ancestor of HEAD) and requires that every file changed from L to HEAD that the Files line covers, minus the exempt paths, is in exactly one chunk whose text equals what `git diff` (the pinned flag set `DIFF_ARGS`) prints for it. The rule-list table (lists, rows, every_task, exempt, protected paths, base_ref), the lens templates and the task type are read from the range base or the launch copy, so an earlier commit of the lane cannot trim or widen them; a lane that changes exempt or base_ref is refused; a task whose Files line names the table is judged by its branch table with every field that decides what is reviewed still taken from the base. Each committed input is regenerated from its stamp and compared; each compliance and lens output's prompt_sha256 is recomputed from the template, the input and the context (the tool's placeholder today; the hook point is `lensContexts` for task-375); an unsplit lens output's file hash must be that of the recomputed whole diff; a lane build or fix close stages only its lane report directory, the review context directory, task files and decision records. Known limits, not built here: a clause spanning two files is judged in two chunk runs; a hand-written output whose author computed the public hashes passes; moving the board ref by a forbidden command is refused by the lane guard, not by this check; plan-phase compliance outputs for a build task (task-404) and the reviewer context (task-375).
++
++Dated note 2026-11-20 (M-246, prior text kept; correction to the task-410 note above, grounder round 3; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentence above that the rule-list table and its protected paths cannot be trimmed or widened by an earlier commit of the lane was too wide. What `scripts/hooks/check-lane-close.mjs` enforces now is exactly this: (1) `base_ref`, `finished_statuses`, `protected_paths` and `exempt` are read from the board ref `refs/heads/wf2/board` (else `refs/remotes/origin/wf2/board`), and the task's launch commit is searched on that same ref; a lane whose own table differs from the board's in any of those four keys is refused, so a lane cannot cut the finished statuses, repoint the base to its own branch or widen the exempt paths (a task that changes them is refused too: those changes land on the board first). (2) The rest of the table (lists, rows, every_task) and the lens templates are read from the range base (the merge-base with that ref); a task whose Files line names the table is judged by its branch table for lists and rows, with every_task still from the base. (3) The task type, the lane assignee and the milestone are read from the launch copy of the task file; a lane that retypes or moves its task is refused. (4) `scripts/lib/review-template.js` and `scripts/deepseek-review.js`, which decide what a recomputed prompt hash proves, may not differ from the range base unless the task's launch Files line covers them. Not enforced: a hand-written output whose author computed the public hashes, and a board ref moved by a forbidden command (the lane guard refuses that command).
  
  ### 5.4 Schema-Fidelity
  **Question:** *Does every DB field this change reads/writes actually exist in the live schema with the assumed type, nullability, and constraints?* Cross-checks column existence, type, `NOT NULL` (+ default), `UNIQUE`/PK, FK, and `ON CONFLICT` arbiters against `docs/specs/00-architecture/01_database_schema.md` + the live `information_schema` + the generated `src/lib/db/generated/schema.ts`.
@@ -542,7 +544,7 @@ index 88293741ff4abbc782341e33271cf592e0812b5e..17a1fd6c2242dad6bf96ef54608c6692
      let files;
      try { files = buildLensInputs({ id, list, root, material: fs.readFileSync(matFile, 'utf8'), templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..104a5f47781db2d44e7603e95bc1ba7a335516b0 100644
+index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..d765ffab20de3803eac1c45c7b568e2f18f0101a 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -15,6 +15,11 @@
@@ -566,7 +568,7 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..104a5f47781db2d44e7603e95bc1ba7a
  import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
  
  const git = (a) => { const r = spawnSync('git', ['-c', 'core.quotepath=false', ...a], { encoding: 'utf8', maxBuffer: 1 << 28 }); return { status: r.status ?? 1, stdout: r.stdout ?? '' }; };
-@@ -46,25 +51,88 @@ const VERDICT = /^\s*[-*]?\s*(\S+)\s+(CONFIRMED|REJECTED|CONFLICT)\s+(\S+?):(\d+
+@@ -46,25 +51,90 @@ const VERDICT = /^\s*[-*]?\s*(\S+)\s+(CONFIRMED|REJECTED|CONFLICT)\s+(\S+?):(\d+
  const REVIEW = /^REVIEW template=(\S+) model=(\S+) at=(\S+) file_sha256=([0-9a-f]{64}) prompt_sha256=([0-9a-f]{64})\s*$/m;
  
  /** The REVIEW header problems of one required lens output ([] when fine); `inputText` (or null) is the committed input it must have been run on. */
@@ -638,6 +640,8 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..104a5f47781db2d44e7603e95bc1ba7a
 +  if (extra.length) e.push(`${label}: ${extra.length} path(s) in the chunks are not in the task range (or are exempt paths): ${extra.slice(0, 6).join(', ')}${extra.length > 6 ? ', ...' : ''}`);
 +  return e;
 +}
++/** H1: the board ref the base, the launch commit and the deciding table keys are read from (a lane's table cannot name another). */
++export const BOARD_REFS = ['refs/heads/wf2/board', 'refs/remotes/origin/wf2/board'];
 +const kOf = (name) => { const x = /-p(\d+)\.txt$/.exec(name); return x ? Number(x[1]) : null; };
 +
  /**
@@ -658,7 +662,7 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..104a5f47781db2d44e7603e95bc1ba7a
    const build = type === 'build' || type === 'fix';
    const laneOf = (as) => as.map((a) => /^@lane-(.+)$/.exec(a)?.[1]).find(Boolean);
    const laneName = laneOf(i.assignees);
-@@ -79,6 +147,9 @@ export function closeErrors(i) {
+@@ -79,6 +149,9 @@ export function closeErrors(i) {
    try { r = resolveTask({ table: i.table, root: i.root, body: i.taskText, type, letter: i.letter }); } catch (e) { return [`${id}: cannot read the rule-list table or one of its path maps: ${String(e.message).split('\n')[0]}`]; }
    if (r.error) return [`${id}: ${r.error.replace(/^refused: /, '')}`];
    const errors = [];
@@ -668,7 +672,7 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..104a5f47781db2d44e7603e95bc1ba7a
    // V2.LIST (task-406): the every_task lists (the five words, the plan protocol) and the milestone lists are required of every task like any list; verifyResolved is the one reading shared with validate, check-tasks and the launch.
    // A table with no every_task is refused (fails closed: nobody switches the lists off by leaving the key out); a missing milestone_docs key or entry counts as missing lists; a build task with no milestone is refused by resolveTask above.
    const missing = verifyResolved(i.table, r, i.letter, type);
-@@ -120,17 +191,22 @@ export function closeErrors(i) {
+@@ -120,17 +193,22 @@ export function closeErrors(i) {
        for (const n of names) {
          const input = textOf(`in-${n}`);
          if (input === undefined) { bad.push(`${n}: the input in-${n} that the review tool read is not committed beside it`); continue; }
@@ -693,7 +697,7 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..104a5f47781db2d44e7603e95bc1ba7a
        }
        if (bad.length) { why.push(bad.join('; ')); continue; }
        ok = true;
-@@ -143,8 +219,34 @@ export function closeErrors(i) {
+@@ -143,8 +221,34 @@ export function closeErrors(i) {
      for (const lens of set.out) {
        const n = `out-${lens}.txt`;
        const t = textOf(n);
@@ -729,38 +733,54 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..104a5f47781db2d44e7603e95bc1ba7a
      }
      if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7); ${layout}`);
    }
-@@ -237,23 +339,81 @@ function check(msgFile) {
+@@ -214,7 +318,12 @@ function check(msgFile) {
+   if (!fs.existsSync(tableFile) && !tableInHead) return 0; // a repo that never had the table is not held to it
+   let table;
+   try { table = readTable(tableFile); } catch (e) { return fail([`cannot read scripts/analysis/rule-lists.json${tableInHead ? ' (it is in HEAD: the close check fails closed; restore it)' : ''}: ${String(e.message).split('\n')[0]}`]); }
+-  const finished = new Set((table.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
++  // H1 (V2.WHOLE round 4): the keys that decide what is checked (base_ref, finished_statuses, protected_paths, exempt) come from the BOARD ref, never from the lane's own table or from a ref the lane's table names
++  const boardRef = BOARD_REFS.find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0) ?? null;
++  let boardTable = null;
++  if (boardRef) { const bx = git(['show', `${boardRef}:scripts/analysis/rule-lists.json`]); try { boardTable = bx.status === 0 ? JSON.parse(bx.stdout) : null; } catch { boardTable = null; } }
++  if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: the keys that decide what is checked come from the board (fail closed)`]);
++  const finished = new Set((boardTable.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
+   const staged = git(['diff', '--cached', '--name-only', '--no-renames']).stdout.split('\n').filter(Boolean);
+   const taskFiles = staged.filter((f) => /^backlog\/tasks\/task-\d+( -.*)?\.md$/i.test(f));
+   const moves = [];
+@@ -232,28 +341,83 @@ function check(msgFile) {
+   if (moves.length === 0) return 0;
+   const errors = [];
+   // self-edit: the check, its table, its helper, the review tool and the hooks may not change in a commit that also closes a task
+-  const prot = staged.filter((p) => matchesAny(table.protected_paths ?? [], p));
++  const prot = staged.filter((p) => matchesAny(boardTable.protected_paths ?? [], p));
+   if (prot.length) errors.push(`this commit changes protected path(s) (${prot.slice(0, 4).join(', ')}) and also moves ${moves.map((m) => path.basename(m.f).slice(0, 12)).join(', ')} to a finished status: land the check or hook change first, close the task in a later commit (self-edit rule, COMPLY.2)`);
    // the diff since the lane branch point, plus what is staged
-   const baseRef = table.base_ref;
+-  const baseRef = table.base_ref;
    let changed = [];
-+  let full = null;
-+  let base = null;
-+  let baseTable = null;
-   if (!baseRef) errors.push('rule-lists.json has no base_ref: the lane branch point cannot be found (fail closed)');
-   else {
+-  if (!baseRef) errors.push('rule-lists.json has no base_ref: the lane branch point cannot be found (fail closed)');
+-  else {
 -    const mb = git(['merge-base', 'HEAD', baseRef]);
 -    if (mb.status !== 0) errors.push(`cannot find the lane branch point (git merge-base HEAD ${baseRef} failed): the Files line cannot be checked against the diff (fail closed)`);
 -    else changed = [...new Set([...git(['diff', '--name-only', '--no-renames', mb.stdout.trim(), 'HEAD']).stdout.split('\n'), ...staged].filter(Boolean))];
-+    // V2.WHOLE fix round (F1): the base is a fully qualified ref (refs/heads/<name>, else refs/remotes/<name>), so a tag of the same name cannot shadow the branch
-+    full = (baseRef.startsWith('refs/') ? [baseRef] : [`refs/heads/${baseRef}`, `refs/remotes/${baseRef}`]).find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0) ?? null;
-+    const mb = full ? git(['merge-base', 'HEAD', full]) : { status: 1, stdout: '' };
-+    if (mb.status !== 0) errors.push(`cannot find the lane branch point (git merge-base HEAD ${full ?? `refs/heads/${baseRef}`} failed or the ref does not exist): the Files line cannot be checked against the diff (fail closed)`);
++  const full = boardRef;
++  let base = null;
++  let baseTable = null;
++  for (const k of ['base_ref', 'finished_statuses', 'protected_paths', 'exempt']) if (JSON.stringify(table[k] ?? null) !== JSON.stringify(boardTable[k] ?? null)) errors.push(`the ${k} of this branch's table (${JSON.stringify(table[k] ?? null)}) differs from the board's (${JSON.stringify(boardTable[k] ?? null)}): a lane may not change what decides what is checked or what the review need not cover (the check uses the board's)`);
++  {
++    const mb = git(['merge-base', 'HEAD', full]);
++    if (mb.status !== 0) errors.push(`cannot find the lane branch point (git merge-base HEAD ${full} failed): the Files line cannot be checked against the diff (fail closed)`);
 +    else {
 +      base = mb.stdout.trim();
-+      // F7 + F10: the WHOLE rule-list table (lists, rows, every_task, exempt, protected paths, base_ref) comes from the range base, so an earlier commit of the lane cannot trim or widen it and hide a review
++      // F10: the rest of the table (lists, rows, every_task) comes from the range base
 +      const bt = git(['show', `${base}:scripts/analysis/rule-lists.json`]);
 +      try { baseTable = bt.status === 0 ? JSON.parse(bt.stdout) : null; } catch { baseTable = null; }
 +      if (!baseTable) errors.push(`scripts/analysis/rule-lists.json cannot be read at the range base ${base.slice(0, 9)}: the table cannot be taken from the board's copy (fail closed)`);
-+      else {
-+        if (baseTable.base_ref !== table.base_ref) errors.push(`base_ref differs between the range base's table (${baseTable.base_ref}) and this branch's (${table.base_ref}): a lane may not move its own base`);
-+        if (JSON.stringify(baseTable.exempt ?? []) !== JSON.stringify(table.exempt ?? [])) errors.push(`the exempt paths of this branch's table (${JSON.stringify(table.exempt ?? [])}) differ from the range base's (${JSON.stringify(baseTable.exempt ?? [])}): a lane may not widen what the review need not cover (the review uses the range base's list)`);
-+      }
 +      const rr = git(['diff', '--name-only', '--no-renames', base, 'HEAD']);
 +      if (rr.status !== 0) errors.push(`git diff --name-only ${base.slice(0, 9)} HEAD failed (status ${rr.status}): the changed paths of the task range cannot be recomputed (fail closed)`);
 +      changed = [...new Set([...rr.stdout.split('\n').filter(Boolean), ...staged].filter(Boolean))];
 +    }
    }
-+  const exempt = baseTable?.exempt ?? table.exempt ?? [];
++  const exempt = boardTable.exempt ?? [];
    const codeStaged = staged.filter((f) => /^(src|scripts|mobile|migrations)\//.test(f));
    const readRepo = (p) => { for (const ref of [`:${p}`, `HEAD:${p}`]) { const x = git(['show', ref]); if (x.status === 0) return x.stdout; } return null; };
 +  const readBase = (p) => { if (!base) return null; const x = git(['show', `${base}:${p}`]); return x.status === 0 ? x.stdout : null; }; // F10: lens templates from the range base
@@ -784,6 +804,9 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..104a5f47781db2d44e7603e95bc1ba7a
 +    }
 +    const baseFm = baseTask ? parseFM(baseTask).fm : null;
 +    const type = String(baseFm?.type ?? mv.fm.type ?? '').toLowerCase();
++    if (baseFm && String(baseFm.milestone ?? '') !== String(mv.fm.milestone ?? '')) errors.push(`${id}: the milestone is ${mv.fm.milestone} here but ${baseFm.milestone} at its launch: a lane may not move its task to another milestone (the milestone decides which objectives lists apply)`);
++    // H3: the prompt builder and the review tool decide what a recomputed prompt hash proves; they may not differ from the range base unless the task's launch Files line covers them
++    if (base && baseTask) for (const p of ['scripts/lib/review-template.js', 'scripts/deepseek-review.js']) if (git(['diff', '--quiet', base, 'HEAD', '--', p]).status === 1 && !coveredBy(filesEntries(baseTask) ?? [], p)) errors.push(`${id}: ${p} differs from the range base but the task's launch Files line does not name it: the recomputed prompt hash would only prove consistency with the lane's own prompt builder`);
 +    if (baseFm && String(mv.fm.type ?? '').toLowerCase() !== type) errors.push(`${id}: the task type is ${mv.fm.type} here but ${baseFm.type} at its launch: a lane may not retype its task`);
      if (!laneName && codeStaged.length && !(type === 'build' || type === 'fix' || type === 'check')) { errors.push(`${id} is set ${mv.status} by a commit that changes code (${codeStaged.slice(0, 3).join(', ')}) but has no @lane-* assignee: take it through the launch script (no exemption for code, COMPLY.2)`); continue; }
      const laneFiles = laneName ? lanePaths.filter((f) => { const p = f.split('/'); return p.length === 6 && p[4] === laneName; }).map((f) => ({ dir: path.dirname(f), name: path.basename(f), text: git(['show', `:${f}`]).stdout })) : [];
@@ -812,8 +835,9 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..104a5f47781db2d44e7603e95bc1ba7a
 +    }
 +    // F10: the table the task is judged by is the range base's; a task whose own Files line names the table is the one exception: it is judged by its branch table (so its own edit applies) with every field that decides what is reviewed (exempt, base_ref, finished_statuses, protected_paths, every_task) still the range base's
 +    const ownsTable = coveredBy(filesEntries(baseTask ?? mv.now), 'scripts/analysis/rule-lists.json');
-+    const judge = !baseTable ? table : ownsTable ? { ...table, exempt: baseTable.exempt, base_ref: baseTable.base_ref, finished_statuses: baseTable.finished_statuses, protected_paths: baseTable.protected_paths, every_task: baseTable.every_task } : baseTable;
-+    errors.push(...closeErrors({ id, taskText: mv.now, fm: mv.fm, assignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase }));
++    const pin = { exempt: boardTable.exempt, base_ref: boardTable.base_ref, finished_statuses: boardTable.finished_statuses, protected_paths: boardTable.protected_paths };
++    const judge = !baseTable ? { ...table, ...pin } : ownsTable ? { ...table, ...pin, every_task: baseTable.every_task } : { ...baseTable, ...pin };
++    errors.push(...closeErrors({ id, taskText: mv.now, fm: mv.fm, assignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase }));
    }
    return errors.length ? fail(errors) : 0;
  }

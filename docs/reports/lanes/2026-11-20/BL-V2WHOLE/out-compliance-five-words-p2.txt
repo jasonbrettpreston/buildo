@@ -1,24 +1,20 @@
-◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:49:06.332Z file_sha256=6b2e8fa6dd93c996c4fd56b16a19acc0fb834e27bbc3b2862cfa26064880d6c9 prompt_sha256=645c7e32e031061afcdf2c72ea78ed12eca843e23b97c29afec3cd2986ae2b7c
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:21:42.919Z file_sha256=481a58ec2f35931b6adee3730b19c32fb1c09a6766571786c5570d34e6c23be5 prompt_sha256=2c1d1dfc32c99e7d0fce2c084558a0ddd15ea50d15e3d2703b1336704535d3d0
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-five-words-p2.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — five words "five words: R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates." — src/tests/backlog/rule-lists.logic.test.ts:505 "describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries'" — the added suite asserts lens-input chunking, chunk stamps, size refusal, DIFF_ARGS and a golden exemption; no pasted Glossary clause names any of those behaviours, so this is behaviour added with no pasted clause to bind it — paste the V2.WHOLE card and the operator rulings verbatim into the context, or hold these tests out of this list's change
-
-BUG severity=HIGH — lock "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/backlog/rule-lists.logic.test.ts:494 "// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries" — `V2.WHOLE` is not a rule id or declared alias in the pasted Glossary (which names five words, G0–G9, #NN, Gate A…K/V, V3, PURITY-G0…G13, SPEC121-M1…M14, W4A-Rn), so these tests do not satisfy the lock condition they claim — name the declared rule id or alias under test, or register `V2.WHOLE` in the rule map in a reviewed change
-
-DEFER severity=MED — the same suite's authority is a comment only, and the ruling itself is not pasted — src/tests/backlog/rule-lists.logic.test.ts:622 "// V2.WHOLE round 3, operator item 3 ("1-5 y"): the real table (task-406's fold) exempts a real golden from the review material and nothing that is not one." — the exemption behaviour rests on an operator ruling whose text is nowhere in the pasted context, so compliance with it cannot be judged; a clause carried by a comment is UNMET — paste operator item 3 verbatim with the exact exempt glob it authorises
-
-DEFER severity=LOW — lock "run by `npm test`" — "diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts" — whether the backlog folder is inside the `npm test` glob cannot be seen from this chunk, so the lock clause's run condition is unverified here — confirm the glob in chunk 1 or in `package.json`
-
-REJECT — #NN "Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates." — accused of citing F2, F5, F6, F13 which do not exist in step-validate — those are review finding codes, not `#NN` invariants, so the clause does not reach them
-
-MET — RE-FREEZE "#N: A field is added or deleted only by one." — src/tests/backlog/rule-lists.logic.test.ts:496 "const dfile = (p: string, n: number) =>" — the chunk adds tests only, no descriptor or frozen-vocabulary field, so no re-freeze is owed
-
-MET — lock "a `check` is a `step-validate` invariant or gate token" — src/tests/backlog/rule-lists.logic.test.ts:505 "describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries'" — no step-validate invariant or gate token is added or renamed by this chunk, so no gate list is left stale
-
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 4   Unmet: 2
+```
+REJECT — five-words rule list, part 1 of 1 (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary) "RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary), part 1 of 1" — the whole new lane-close behaviour (chunked material, chunk stamps, prompt_sha256 recompute) is accused of being out of scope because no pasted line names it — the pasted part is a Glossary of definitions for the step program and carries no obligation on src/tests/backlog, so no clause is unmet; the card authorising task-410 is not pasted and I do not invent it
+MET — class-A "its behaviours need a both-directions lock" — src/tests/backlog/check-lane-close.logic.test.ts:+366 "PLANTED DEFECTS each have a passing control (the same scenario untouched)" — every planted defect is paired with a passing control, so each new behaviour is asserted in both directions
+MET — lock / lock-db / check / hook "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/backlog/rule-lists.logic.test.ts:+494 "describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries'" — the added tests live under src/tests as *.logic.test.ts and name V2.WHOLE in every describe; whether V2.WHOLE is a declared id or alias in scripts/analysis/rule-lists.json is cannot see from this context
+MET — five words "R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates" — paths stamp of this chunk "paths: [\"src/tests/backlog/check-lane-close.logic.test.ts\",\"src/tests/backlog/rule-lists.logic.test.ts\"]" — no file under scripts/analysis/step-validate.mjs or scripts/analysis/gates/ is touched, so the gate V mapping is unchanged by this chunk
+REJECT — five words "each PASS or FAIL from the mapped gates" — that the fixture docs/ev.md "the five words and the plan protocol" stands in for gate V — it is list text in a temp fixture written by scenario(), not a PASS/FAIL computation, and the gate itself is untouched
+REJECT — #NN "Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates" — that the trailing 15…44 arguments to refused() are #NN invariant citations — they are not written as #NN and no prose in the diff calls them step-validate invariants; they are planted-defect numbers and the clause does not reach them
+REJECT — Gate A … K, V "Gate E is compute purity, Gate F the score floor" — that the new test titles "F1 (e)", "F3 (h)", "H1", "H3", "H4" collide with Gates F and H — they are grounder-attack labels inside test titles, not gate tokens in a rule map, and title wording is lens-code-review
+REJECT — lock / lock-db / check / hook "a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook" — that the new tests are mis-kinded as locks — they are named tests under src/tests run by the test runner, which is the lock kind, and no .husky or step-validate file is added
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+```
 
 ---
-⏱  34476ms (34.5s)
-📊 Tokens — total: 13143, input: 6189, output: 6954, reasoning: 6073
+⏱  50948ms (50.9s)
+📊 Tokens — total: 25297, input: 15958, output: 9339, reasoning: 8485

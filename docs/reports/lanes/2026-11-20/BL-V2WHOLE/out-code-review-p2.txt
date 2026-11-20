@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T21:27:26.582Z file_sha256=42b03f7e0721686da1bcaa7d2870c6aef36d3e8e13a8417ab90a0193876f471f prompt_sha256=7997dffc1dd95291bd34aa0b465493cbcb34c67a7fe73ae59ca85f4f5f868359
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/backlog/rule-lists.logic.test.ts:533 "for (const p of stampOf(t).paths ?? []) expect(mat).toContain(dfile(p, 50).trimEnd());" — if the paths parse returns undefined, `?? []` makes the loop body run zero times and the "never cut inside a file" test degenerates to the single `mat.startsWith('diff --git ')` check, so a mid-file cut passes silently — assert the list first: `const ps = stampOf(t).paths; expect(ps?.length).toBeGreaterThan(0);` then loop over `ps!`.
+DEFER severity=MED — src/tests/backlog/rule-lists.logic.test.ts:521 "l.text.forEach((t, i) => byChunk.set(st[i]!.chunk as number, materialOf(t)));" — keyed by chunk only, so when `parts > 1` (the line above multiplies by `st[0]!.parts`) every earlier part is overwritten and the join at :522 fails on missing parts, not on chunking; the `as number` also hides an undefined key — key by `${chunk}-${part}` and drop the cast by asserting `st[i]!.chunk` is defined.
+DEFER severity=MED — src/tests/backlog/rule-lists.logic.test.ts:505 ").replace(/\n$/, '');" — `materialOf` strips exactly one trailing newline per input, so concatenating chunk bodies at :522 drops the newline at every chunk boundary while `BIGDIFF` still has it, making the equality fail for a formatting reason unless the emitter writes a blank line after each chunk — normalize both sides (join with an explicit `"\n"` between chunk bodies, or compare against `BIGDIFF` with the same one-newline strip per file).
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts:503 "part: Number(m?.[3]), parts: Number(m?.[4])," — `Number(undefined)` is `NaN`, not `undefined`, so a missing or misshapen stamp becomes a `number`-typed `NaN` and only surfaces later as a confusing numeric comparison far from the cause — return `m ? Number(m[3]) : undefined` and type these fields `number | undefined`.
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts:548 "expect(l.r.status).toBe(1);" — no stderr in the assertion message, unlike "expect(l.r.status, l.r.stderr).toBe(0)" at :511 and :529, so a refusal regression prints no diagnostic output — pass the stderr string as the second argument in both refusal tests (:548, :556).
+DEFER severity=NIT — src/tests/backlog/rule-lists.logic.test.ts:513 "const m = st[0]!.chunks;" — if `l.text` is empty, `st[0]!` throws a bare TypeError before the intended "chunk stamp present" message can be reported — assert `expect(st.length).toBeGreaterThan(0)` before reading `st[0]`.
+REJECT — src/tests/backlog/rule-lists.logic.test.ts:533 "dfile(p, 50).trimEnd()" — looks like the trim could hide a mismatch between the expected file text and the material — it is correct: `materialOf` already removed the final newline, so the last file inside a chunk is only found in its trimmed form.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The mid-file-cut test's inner assertion loop is empty when `paths` is undefined, so the test can pass without ever checking a file against its chunk.
+- `byChunk` is keyed by chunk only, contradicting the `* st[0]!.parts` assertion two lines above, and drops parts in a multi-part run.
+- `materialOf` strips one trailing newline per input, so the chunk-join equality loses the boundary newline and can fail on formatting rather than on chunking.
+
+---
+⏱  72784ms (72.8s)
+📊 Tokens — total: 20361, input: 4609, output: 15752, reasoning: 14849

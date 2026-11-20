@@ -1,18 +1,12 @@
-◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:49:06.427Z file_sha256=da8f5a4fd297fd66f74ad2c67161936788f9a5615c7cf52fe1acc3ca3f1b3376 prompt_sha256=9ef46e70b5266e47b9a81ebf627e080452a4fcfd63c19b7738fac43c59a827a9
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:21:43.003Z file_sha256=c2c7bac679568c924bb0316c207aed47bafd3339caf06a6c0f3fca533b923fd5 prompt_sha256=41bb54c199c7c7e2d68083bccd504082e79b6a2a5603f29183adece0f4cd09fa
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — clause this change installs at docs/specs/00-architecture/08_agents.md:230 "each compliance and lens output's prompt_sha256 is recomputed from the template, the input and the context (the tool's placeholder today; the hook point is `lensContexts` for task-375)" — scripts/hooks/check-lane-close.mjs (added block) "export const lensContexts = () => [undefined];" against scripts/analysis/backlog-lane.mjs "`--context <pasted-context file>`" — the clause says the hash is recomputed from the context, the code offers only the placeholder, and the same brief still tells the lane to run the lenses with a context file, so a lane that follows the brief writes a prompt_sha256 the close check refuses — fix: have lensContexts return the committed pasted-context file's text, or drop `--context` from the review line the brief prints, before any lane closes on this hook.
-
-DEFER severity=LOW — doc-2 inc-S, whole file, "| F-SEARCH-MOBILE | Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN (origin/wf1/mb-rulings)" (no clause of the pasted list names the review harness, the rule-list table or these two architecture notes) — scripts/analysis/rule-lists.mjs "export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--text', '--full-index', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];" — the attached governing list binds none of the changed files, and the task-410 ruling the change rests on ("Keep the split for code review, error paths, UX and security") is quoted only inside the diff, so compliance of the chunking mechanism with its own ruling cannot be judged this run: cannot see — rationale: either the path table attaches the wrong list to the tooling paths or the task-410 ruling must be pasted; deferrable, nothing in the pasted clauses is contradicted.
-
-REJECT — F-LOTMAP / F-LOOKUP-RESOLVER ("LIST binding with map projection, lot cards, states: ON ORIGIN; queue Status DONE") — accused of changing built search or lot-map behaviour — no path in this chunk is under mobile/, src/app, src/components or src/lib; the chunk is scripts/analysis, scripts/hooks, one generated report, two architecture notes and one test.
-
-REJECT — Built state "All of it is the old dark look (zinc and #0e0e10), not Daylight" — accused of moving the visual state — no style, component or theme file appears anywhere in the diff.
+DEFER severity=LOW — context: no pasted clause (the operator ruling the diff implements, 2026-11-20 item 4, is not in the pasted context) "" — docs/specs/00-architecture/08_agents.md:230 "item 4 as put to him: \"Keep the split for code review, error paths, UX and security\"" — the governing ruling and the task-410 card are quoted only inside the material under review, so nothing pasted states what the diff chunking, the chunk proof, the board-ref table or the prompt-hash recomputation must do, and those clauses cannot be checked — paste the operator entry and the task-410 Files/acceptance text as context so the mechanism (rule-lists.mjs buildLensInputs, check-lane-close.mjs chunkErrors, BOARD_REFS, lensPromptHash) is judged against the words that ordered it
 
 VERDICT: PASS on compliance with the pasted clauses
 Clauses checked: 0   Unmet: 0
 
 ---
-⏱  73052ms (73.1s)
-📊 Tokens — total: 44215, input: 30076, output: 14139, reasoning: 13498
+⏱  16834ms (16.8s)
+📊 Tokens — total: 34065, input: 31331, output: 2734, reasoning: 2514

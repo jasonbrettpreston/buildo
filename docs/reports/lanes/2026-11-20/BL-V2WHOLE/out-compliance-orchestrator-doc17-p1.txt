@@ -1,22 +1,17 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:49:06.294Z file_sha256=96629cb8ebbb9b54f66721c3f7658913cb5701783d6e3c19a95ce5d6249d6637 prompt_sha256=f316693f9a11180bc68a2d7c44215285c9b9728e45230dd4836b861be0ceae9b
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:21:42.879Z file_sha256=f836b06a5e50d19233afb0cf6c5906efda7bfc828218c51bcf3c88b8b83c92a0 prompt_sha256=79f0cdaf710651933c91faf97896b9c2076a2f89cda8065cc742c88ac84adda9
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18). The operator's rulings are the decisions." — scripts/hooks/check-lane-close.mjs "export const lensContexts = () => [undefined];" — the close proof admits exactly one context value (the tool's "(no pasted context provided)" placeholder), so a lane that obeys doc-17 by pasting the operator's rulings into the lens run hashes differently and is refused, and no committed artefact says which decisions, as against which readings, a review was given — make lensContexts return the text of the committed pasted-context file for the lane (the range's decision records) and hash that, or refuse a close whose lens outputs prove no decision context was pasted.
-
-DEFER severity=LOW — doc-17 "The operator's rulings are the decisions." — docs/specs/00-architecture/137_mcqueue.md "the entry \"2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)\": \"1-5 y\", item 4 as put to him: \"Keep the split for code review, error paths, UX and security\"" — the only operator words are "1-5 y"; the operative content ("keep the split") is the question as the drafter put it, and the cited 2026-11-20 entry is not in the pasted register (the pasted entries stop at 2026-11-19, RR-0218, line 870), so the note rests on a logged entry whose ruling text the reviewer cannot see — quote the operator's own answer to item 4 and its date, as the neighbouring COMPLY.2 note does for its two quotes.
-
-REJECT — RR-0111 "Permit step conversion stays frozen (Spec 137 rule 11)" — that the note added to 137_mcqueue.md works around a frozen step conversion — RR-0111 is a reading, and this list's own clause says a reading "never feed[s] a review as a ruling"; the added note touches lane close records, not permit step conversion, and Spec 137 rule 10 and 11 are not pasted.
-
-REJECT — doc-17 "The operator's rulings are the decisions." — that the diff adds behaviour (diff chunking, a stricter close refusal, hashed inputs and outputs) no pasted clause names — doc-17 governs what may feed a review as a ruling, not what tooling may be built; the build authority cited in the notes (task-410) is not in the pasted context, so the addition is not mine to judge.
-
-MET — doc-17 "never feed a review as a ruling" — scripts/analysis/rule-lists.mjs "LIST ${list ? id : 'none'} sha256:${sha256(Buffer.from(part))} material sha256:${sha256(Buffer.from(material))} part ${i} of ${n}${mark}" — the stamp and head are built from the list part, the material and the chunk path list only; no RR id, reading or register entry is read into any lens input.
-
-MET — doc-17 "The operator's rulings are the decisions." — docs/specs/00-architecture/08_agents.md "operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry \"2026-11-20 · Operator RULES on five more items\"" — both new dated notes cite the operator's words in the decisions file rather than a reading of it.
+DEFER severity=MED — doc-17 preamble "They are NOT the operator's words as a ruling and never feed a review as a ruling" — docs/specs/00-architecture/08_agents.md:230 "the entry \"2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)\": \"1-5 y\", item 4 as put to him: \"Keep the split for code review, error paths, UX and security\"" — the four-lens split and the chunk proof become rules reviews are judged by, but the only operator words are "1-5 y"; the operative content is the orchestrator's wording of the item — quote the item text explicitly as the question put to the operator and keep the verbatim beside it, or cite the ruling record line that names the four lenses so no reader has to take the restatement as the ruling.
+DEFER severity=LOW — doc-17 preamble "never feed a review as a ruling" — docs/reports/generated/rule-lists-by-kind.md:101 "| orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |" — the regenerated page carries forward the attachment of the readings file as a governing list pasted whole into tooling reviews, the paste the clause says must never happen — not introduced by this change; if the attachment stays, the file's own disclaimer paragraph is the only thing stopping a lens treating RR lines as rules, so say so in the brief line that names this list.
+MET — doc-17 preamble "never feed a review as a ruling" — whole material — no reading id of the form RR-nnnn is cited anywhere in the diff; the new spec notes cite only the operator's words and the decisions-log entry they sit in, never a reading as authority.
+MET — doc-17 "The operator's rulings are the decisions." — docs/specs/00-architecture/137_mcqueue.md:134 — the queue note raises its new refusal with the operator's words quoted first ("1-5 y") and states the enforcement, so the quoted decision, not a reading, is the stated basis.
+MET — doc-17 "Readings and register entries of the rulings register." (the register is a log, not a rule source) — docs/specs/00-architecture/08_agents.md:232 — the correction note reopens and narrows the earlier claim against the same quoted ruling and names what is not enforced, so the earlier note is not left standing as an unqualified rule in a file that is pasted whole into reviews.
+REJECT — doc-17 preamble — that the change cites 2026-11-20 decisions-log entries which do not appear in doc-17's readings list (updated 2026-11-19) — doc-17 states no duty to register new rulings and its list is dated data, so an absent 2026-11-20 entry is not a clause unmet.
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 2   Unmet: 0
+Clauses checked: 3   Unmet: 0
 
 ---
-⏱  37356ms (37.4s)
-📊 Tokens — total: 42090, input: 34829, output: 7261, reasoning: 6432
+⏱  102477ms (102.5s)
+📊 Tokens — total: 46820, input: 36084, output: 10736, reasoning: 10070

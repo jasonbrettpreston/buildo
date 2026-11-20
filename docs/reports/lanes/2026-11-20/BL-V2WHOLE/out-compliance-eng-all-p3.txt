@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:21:42.843Z file_sha256=db8d339c9727d6799eee4a00d99fc810e23b53a951674e4ec58afea9bd2521c6 prompt_sha256=1b20e2a4becb5aa04f7309dcf3b28b701f19b0a8493be02687306da7b4011389
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-eng-all-p3.txt (model: deepseek-reasoner)
+
+BUG severity=MED — §2.3 "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/backlog/rule-lists.logic.test.ts "expect(st[0]!.id).toBe('none');" (also "st[i]!.chunk", "l.text[0]!", "st[0]!.chunks") — every `!` in the added blocks is undocumented, so §2.3 is unmet — replace each with a guard helper that throws on undefined, or add a one-line justification comment per use.
+
+BUG severity=MED — §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — src/tests/backlog/rule-lists.logic.test.ts "const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, ...]);" with "expect(r.status, r.stderr).toBe(0);" — the added cases spawn a subprocess, write temp files and assert exit codes and stderr, which is process/filesystem integration, not pure derivation, so the layer named by §5.2 does not match the claim — move the shelling-out cases into a `*.infra.test.ts`, or extract the chunk packer and the refusal decision as pure exports and test those here.
+
+DEFER severity=MED — §12.12 "Pure functions with arithmetic invariants ... MUST have at least one `fast-check` property test asserting the invariant. Example-based tests are still required for happy paths and explicit edge cases." — src/tests/backlog/rule-lists.logic.test.ts "expect([...byChunk.entries()].sort((a, b) => a[0] - b[0]).map((e) => e[1]).join('')).toBe(BIGDIFF);" — the pack invariants (chunks rejoin to the input diff, every chunk under the bound, no file split) are pinned by fixed fixtures only, no forAll — add `src/tests/property/*.property.test.ts` asserting rejoin-equality and bound-fit over arbitrary per-file size lists.
+
+DEFER severity=MED — operator ruling cited by the material, not pasted: "// V2.WHOLE fix round (grounder 2026-11-20): F2 the diff flags, F5 a measured chunk room, F6 the refusal for a name git quotes." — src/tests/backlog/rule-lists.logic.test.ts "+// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries (the tool, never by hand)" — the rulings this change implements (task-410, operator item 3, grounder 2026-11-20) are absent from the pasted context, so their clauses cannot be judged clause by clause — paste the ruling text, or cite the spec section each case implements.
+
+DEFER severity=LOW — §14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions**" — src/tests/backlog/rule-lists.logic.test.ts "+// V2.WHOLE round 3, operator item 3 ("1-5 y"): the real table (task-406's fold) exempts a real golden" — new blocks cite task and ruling ids but no spec section, and the F2 case couples the suite to `DIFF_ARGS` in `scripts/analysis/rule-lists.mjs` — add the spec §N link to each new describe and record the coupling.
+
+MET — §5.5 parity battery — src/tests/backlog/rule-lists.logic.test.ts "const t = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as { exempt: string[] };" plus `matchesAny` — the JSON exempt list and its consumer are checked for drift, which is the parity row's purpose.
+MET — §8.2 ES2017 constraint — src/tests/backlog/rule-lists.logic.test.ts "const m = /^LIST (\S+) sha256:[0-9a-f]{64} material sha256:([0-9a-f]{64}) part (\d+) of (\d+)(?: chunk (\d+) of (\d+))?\n/.exec(t);" — no dotAll `s` flag is used, so the target constraint is respected.
+MET — §5.3 red-green cycle — src/tests/backlog/rule-lists.logic.test.ts "it('F6: a name git quotes is refused with the header line and the remedy (core.quotepath, the brief command)', () => {" — the fix-round tests assert failing behaviour before the code change and land with it, which is the Red-then-Green shape.
+MET — §12.13 mutation surface — src/tests/backlog/rule-lists.logic.test.ts "@@ -491,3 +491,146 @@ describe('V2.LIST round 2: the milestone guard', () => {" — the touched file is not one of the four mutation targets, so no Stryker obligation applies.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  43848ms (43.8s)
+📊 Tokens — total: 24757, input: 16538, output: 8219, reasoning: 7031

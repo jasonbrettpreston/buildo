@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T21:27:26.584Z file_sha256=bbadf6965658ecc95e8fbc03ec2b02642c43e80f3f0e7fc8ff2293a2d671ca30 prompt_sha256=71ac71688ab96dbd939de170227b1814468c70e19ba75b88665c0ed31eea07ef
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none found; see the DEFERs below.
+
+DEFER severity=MED — scripts/analysis/backlog-lane.mjs "const baseFull = /^refs\//.test(ruleTable?.base_ref ?? '') ? ruleTable.base_ref : `refs/heads/${ruleTable?.base_ref ?? 'wf2/board'}`;" — a base_ref that names a remote-tracking ref becomes refs/heads/origin/wf2/board, and if that ref does not resolve the `$(git log ${baseFull} ...)` substitution is empty, so the emitted command silently degrades to `git diff ... HEAD -- paths` (HEAD against the worktree, an empty material on a clean lane) while check-lane-close accepts refs/remotes/origin/wf2/board — resolve the name through the same two refs check-lane-close uses (BOARD_REFS) and refuse the brief loudly when neither exists.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "if (avail - RESERVE - listRoom < big.text.length) throw new Error(`file ${big.path} is ${big.text.length} characters of diff and cannot be split inside a file: ...`)" — when listRoom was grown by splitUnits's room error (a list section with no deeper heading), this refusal blames a diff file that would fit and tells the operator to report it — keep the list block's room error and name the section when the growth came from partsFor, and name the file only when a measured single file alone overflows.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs "const ownsTable = coveredBy(filesEntries(baseTask ?? mv.now), 'scripts/analysis/rule-lists.json');" — every other call to filesEntries in this diff guards with `?? []` (e.g. "coveredBy(filesEntries(baseTask) ?? [], p)" and "filesEntries(baseTask ?? '') ?? []"), so a launch copy with no Files line can pass null into coveredBy and kill the hook with a stack trace instead of a refusal line — add the same `?? []` guard.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs "@param {{id:string, taskText:string, fm:object, ... expectedPaths?:string[], diffOf?:(paths:string[])=>string|null, readRepo:(p:string)=>string|null}} i" — the JSDoc type, the only type this object has, omits rangeEmpty, optionalPaths and readBase that the body reads as i.rangeEmpty, i.optionalPaths and i.readBase — add the three optional fields to the @param so the contract matches the use.
+
+NIT — scripts/hooks/check-lane-close.mjs "else if (!p || p.id !== 'none' || !p.ok || p.listPart.trim() !== '') errors.push(...)" — the p.listPart.trim() !== '' clause can never decide: an id-none input with a non-empty list part always fails the preceding renderLensInput({ ... part: '' ... }) !== input comparison, which is evaluated with part hard-coded to '' — drop the clause or test listPart in its own branch before the render comparison.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  249788ms (249.8s)
+📊 Tokens — total: 86039, input: 34852, output: 51187, reasoning: 50481
