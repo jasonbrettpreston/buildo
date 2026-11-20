@@ -3,10 +3,11 @@ id: TASK-396
 title: >-
   FIX.MASSING The two massing thresholds become registered settings (20 and 60
   square metres)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-MASSING'
 created_date: '2026-11-20T15:54:00Z'
-updated_date: '2026-11-20T17:26:00Z'
+updated_date: '2026-11-20T17:30:00Z'
 labels:
   - McFix
   - McFix A
@@ -41,4 +42,6 @@ Found by the lens set and confirmed by the separate grounder on task-378 (2026-1
 
 <!-- SECTION:NOTES:BEGIN -->
 Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder's recommendation of 2026-11-20: do NOT register anything: the registered source exists (seed rows massing_shed_threshold_sqm and massing_garage_max_sqm, read by scripts/lib/compute/link-massing.js); the src copy (classifyStructure, SHED_THRESHOLD_SQM, GARAGE_MAX_SQM in src/lib/massing/geometry.ts) has no caller outside tests: delete it and its test block (src/tests/massing.logic.test.ts near :63-90); keep the lock in src/tests/link-massing.infra.test.ts or state what replaces it. The lane first proves by grep that nothing at run time calls it. The grounder recommends moving this card out of Increment 1·B (permits code older than the increment): the milestone move goes by the ruling record. Also found, not in this task: typed storey heights in the same file that the live permits route uses.
+
+2026-11-20 taken on the board at lane launch (lane BL-MASSING, worktree /Users/brettpreston_macmini/Buildo-wt-massing, branch wf1/inc1b-massing), RR-0240
 <!-- SECTION:NOTES:END -->
