@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:54:00Z'
+updated_date: '2026-11-20T16:06:00Z'
 labels:
   - McFix
   - McFix A
@@ -35,3 +36,9 @@ Found by the separate grounder on task-378 (2026-11-20): Spec 128 Rule 3 (docs/s
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Added 2026-11-20 after task-378 folded (second grounder): also in this task: the phone area-factor copies mobile/src/lib/leadDetailFormat.ts:15 and mobile/src/lib/parcelCostFormat.ts:11 (10.7639 typed): the surface config schema accepts integers only (surface.schema.json), so a number-typed key is part of the bounds decision the operator rules; and SEARCH_DEBOUNCE_MS = 400 in mobile/src/constants/parcelSearch.ts is a dead second copy imported only by two phone tests.
+<!-- SECTION:NOTES:END -->
