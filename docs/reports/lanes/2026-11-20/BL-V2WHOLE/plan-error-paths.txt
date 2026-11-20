@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T18:56:55.974Z file_sha256=12ef4f399a94c6ed11540f216c2e2aa17c37a4d41f1c75888bffeda4adfe0aa2 prompt_sha256=0ee702ee93e3ef5cbfe80048b72cd14e5eda31aa32097e8dfec09785bf574f4a
+🔍 Lens review of docs/reports/reviews/task-410/context-2026-11-20.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan task-410 (b) "A single file over the room is refused with one line naming the file and its size." — when the throw comes from the unsplittable list block (fact 2: "lens-input refuses a material that leaves no room (rule-lists.mjs buildLensInputs) and an unsplittable list block") every chunk still carries the full list part, so each one-file chunk throws the same room error and the refusal names the smallest changed file, sending the lane to shrink a file that is not the cause — test list-part room on its own before splitting, refuse with a distinct line naming the list block and its size, never the file.
+
+BUG severity=MED — plan task-410 (b) "files are -p1..-pN chunk-major (N = m x list parts)" — m is derived from the room the list part leaves, with no cap stated, so a large list block makes m grow and N grow with it, each call carries its own timeout, one timed-out chunk leaves the set incomplete and the close refuses only at the end after the whole spend — cap m, print m, N and the measured room in the chunk header, and refuse above the cap with the operator word needed to raise it.
+
+BUG severity=MED — plan task-410 (c) "Empty expected list: nothing to cover." — a mistyped or stale merge-base, or a lane that committed into the wrong branch, yields an empty expected list and the close passes with zero review material while claiming the whole change is covered — print the computed range and refuse an empty expected list unless the lane records an explicit empty-diff reason checked against the task's files list.
+
+BUG severity=MED — plan task-410 (c) "expected paths = git diff --name-only --no-renames merge-base..HEAD minus table exempt globs" against "the union of the chunk path lists must be exactly the expected list" — the splitter in (b) chunks the lane's diff before any exempt subtraction, so a diff that contains one exempt path puts that path in a chunk and the union can never equal the expected list, a refusal the lane cannot clear — have rule-lists.mjs drop the same table exempt globs before splitting, or state the diff command with the matching pathspec exclusion so both sides agree.
+
+BUG severity=MED — plan task-410 (c) "expected paths = git diff --name-only --no-renames merge-base..HEAD" against (b) "the TOOL cuts the diff at those headers (file boundaries only)" — a material produced without --no-renames carries one diff --git header with rename from/rename to lines, the splitter stamps one path while the check recomputes two (delete plus add), so the union is short by one path and the close refuses — make lens-input refuse a material containing rename from/rename to, or stamp both paths, and put --no-renames in the brief command from (d).
+
+DEFER severity=MED — plan task-410 (b) "A single file over the room is refused with one line naming the file and its size." — with generated-file exclusion explicitly not built, any diff carrying one oversized generated or lock file can never close and has no named escape — state the escape in the brief (the operator-word exclusion list applied by rule-lists.mjs and mirrored by the close check) so the refusal line points somewhere.
+
+DEFER severity=LOW — plan task-410 (c) "each chunk material must equal git diff --no-renames merge-base HEAD -- <its paths>" — a lane that produced the diff with different options (different context count, stat, colour) gets a text mismatch refusal that names no remedy — have the mismatch message print the required command and the first differing position.
+
+REJECT — plan task-410 (c) "the union of the chunk path lists must be exactly the expected list with no path in two chunks" and "every part of a chunk carries the same chunk and material" — a resubmitted or duplicated chunk looks like double counting — it is refused by the no-path-in-two-chunks rule, and a re-run of a failed chunk p3 rewrites identical text because its material is pinned to the recomputed diff for its own paths, so a retry is a no-op.
+
+VERDICT: FAIL on error-path safety
+Paths walked: chunk-split refusal (list room, one file over room), chunk count growth, empty expected list, exempt-glob mismatch, rename material, close-check chunk verification, chunk re-run and duplicate submit   Unguarded: 3
+
+---
+⏱  34964ms (35.0s)
+📊 Tokens — total: 17429, input: 11218, output: 6211, reasoning: 5240

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:56:55.819Z file_sha256=2bb5df39fdb5e39f99b0c06c0a194a21e9c5f64f64c98afe5cfef481bab4957e prompt_sha256=3712ba951971ddd51dc3ba77368a245393ac9e301e5cac20e669f57a53df1e85
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — doc-17 §Readings, "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — material "Decisions in force (titles; the ones this task names carry the operator's words)" listing "RR-0044 2026-11-18 · Operator direction: page-level lot information in increme", an entry doc-17 itself pastes under "## Readings" — a pasted reading is fed to the reviewer as a decision in force and the plan has no step that prevents it — add a plan step where rule-lists.mjs refuses any list entry whose RR id resolves to a readings row, asserted in rule-lists.logic.test.ts.
+
+BUG severity=HIGH — doc-17 §Readings, "The operator's rulings are the decisions" — material "- Search shows addresses only; the pick (lookup hit) starts the one-lot compute (LOAD.1) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696) "undefined"" (and the brief's own admission "two Storage set-up lines and four Register rulings lines end with the word undefined where a quote belongs") — the words a reviewer receives are the literal undefined, so what feeds is not the operator's words as a ruling, and plan (d) rewrites only the diff-split sentence — fix: plan adds a rule-lists refusal for an empty or "undefined" quote field with a red-first test in rule-lists.logic.test.ts.
+
+BUG severity=HIGH — doc-17 §Readings, "never feed a review as a ruling" — material Storage set-up "- Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3)", which is pasted reading RR-0006 "Loading screen setting is 35 s (LOAD.3: max raised to 35,000 ms)" — the brief feeds a reading as the governing storage rule and plan (d) "the brief sentence is updated to match" touches only the diff-splitting sentence — fix: name the Storage set-up lines in the (d) change, or record them as out of scope under a cited ruling.
+
+BUG severity=HIGH — doc-17 §Readings, "never feed a review as a ruling" — plan (b) "each chunk gets every list part" with plan (c) verifying only "the union of the chunk path lists must be exactly the expected list with no path in two chunks" — chunking multiplies every list part m times over the material and the close check verifies material paths only, never that a list part carries rulings rather than readings — fix: add a close-check assertion that every list part fed to a chunk resolves to decision entries, refusing a reading-kind id, with the planted-defect test named in Acceptance.
+
+DEFER severity=MED — doc-17 §Readings, "never feed a review as a ruling" — NONE — the plan's new behaviour (file-boundary chunking in lens-input, path-union and per-chunk hash recomputation in check-lane-close.mjs, non-compliance-lens chunk inputs) is named by no pasted clause or ruling, while the one pasted clause bearing on review inputs gets no step — rationale: the plan's cited authority (task-410 card, Spec 126 section 0a, 08_agents.md section 7) is not pasted, so scope cannot be confirmed here.
+
+DEFER severity=LOW — doc-17, "## Register entries (operator words as logged, kind entry)" and "They are NOT the operator's words as a ruling" — material heading "### Register rulings of this group (operator words)" — the brief relabels register entries as rulings, the exact mislabel the doc forbids, and they are listed again under "Decisions in force" — fix: label the block "register entries (not rulings, do not bind)" in both places so the reviewer is not fed them as rules.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 2   Unmet: 2
+
+---
+⏱  45381ms (45.4s)
+📊 Tokens — total: 31298, input: 22050, output: 9248, reasoning: 8355

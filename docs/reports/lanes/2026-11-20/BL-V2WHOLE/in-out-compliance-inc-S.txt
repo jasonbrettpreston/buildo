@@ -1,0 +1,806 @@
+LIST inc-S sha256:294dccfb5cb249211234ece578abcd1c8efe723cdca65ea17f8e270941993db8 material sha256:85338350a8c8a7146593612016367a38fb0135ed49cca9d891c0f88b130f8ba3 part 1 of 1 chunk 1 of 1
+RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md","scripts/analysis/backlog-lane.mjs","scripts/analysis/rule-lists.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+
+---
+id: doc-2
+title: Increment S requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Increment S requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web (the web search page is built but sends no lookup while the live switch is false). The lookup route, resolver, meter and the report hand-off contract are on origin. Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page. All of it is the old dark look (zinc and #0e0e10), not Daylight.
+counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}
+
+- F-SEARCH-MOBILE Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN (origin/wf1/mb-rulings); queue: phone check and device run OWED, UNVERIFIED on device
+- F-SEARCH-WEB Web search page (W4): the one web SEARCH binding, SearchPageClient mount, live switch: PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false
+- F-LOTMAP Choose-your-lot map page (S-071): LIST binding with map projection, lot cards, states: ON ORIGIN (origin/wf1/mb-rulings); queue Status DONE
+- F-LOOKUP-RESOLVER Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification: ON ORIGIN (origin/wf1/mb-rulings)
+- F-SHELL Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows): PARTLY: shelf built; tracked and account are stubs
+- F-LANDING MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target: ON ORIGIN (origin/wf1/mb-rulings)
+- F-ADMIN-LOOKUP Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search): ON ORIGIN (origin/wf1/mb-rulings)
+
+## Scenario
+Search first: the current search pages = latest rendering small-pages-v8 ("MaxBLD Small Pages" https://claude.ai/artifact/8KLUsAtd4JN6r2j8CxZSU7, 2026-11-12) + later rulings; built status from the 2026-11-17 sweep (search-delta/CURRENT-SEARCH.md, 176 quotes PASS)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| A.1 | A Search page · Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | details | AVAILABLE | GAP.13 | BUILT |
+| A.2 | A Search page · Search box: one pill, placeholder Enter lot address, search icon | main | AVAILABLE |  | BUILT |
+| A.3 | A Search page · Typeahead resolution of the typed text (street-prefix, up to 10) | main | AVAILABLE |  | BUILT |
+| A.4 | A Search page · Typed street direction (E/W/N/S) kept in the match | details | NOT-BUILT (parser) | 1.4 | NOT BUILT |
+| A.5 | A Search page · Unit number typed after the address | details | NOT-BUILT | 1.4 | NOT BUILT |
+| A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |
+| A.7 | A Search page · Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | details | AVAILABLE |  | BUILT |
+| A.8 | A Search page · Searching state: query in the box, the word Searching, clear button | details | AVAILABLE |  | BUILT |
+| A.9 | A Search page · Outside Toronto state: Lots are only available in Toronto. | details | AVAILABLE |  | BUILT |
+| A.10 | A Search page · Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | details | AVAILABLE | LS.6 | BUILT |
+| A.11 | A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| A.12 | A Search page · Bottom tab bar: Lookup, Tracked Lots, Account (app) | details | AVAILABLE · MISSED by the sweep | MF-49 | BUILT |
+| A.13 | A Search page · In-bar Account button (MF-35 builds it amber) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.1 | B Address confusion · Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | main | AVAILABLE |  | BUILT |
+| B.2 | B Address confusion · Select button after the pick (Select, Open the selected lot) | main | AVAILABLE |  | BUILT |
+| B.3 | B Address confusion · Candidate row area line (locality, e.g. Downtown Toronto) | details | NOT-BOUND · REMOVED by the design |  | NOT BUILT |
+| B.4 | B Address confusion · Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | main | AVAILABLE |  | BUILT |
+| B.5 | B Address confusion · Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | main | AVAILABLE |  | BUILT |
+| B.6 | B Address confusion · Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | main | AVAILABLE |  | BUILT |
+| B.7 | B Address confusion · Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | details | SERVED-NOT-POPULATED | SRCH.C12 LS.12 LS.6 | BUILT-NO-DATA |
+| B.8 | B Address confusion · Faint tappable neighbour outlines on the unlinked state | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.9 | B Address confusion · No-match state: No parcel found for that address. | details | AVAILABLE |  | BUILT |
+| B.10 | B Address confusion · Intersection on the map (corner lots at the centreline node) | details | NOT-BUILT · REMOVED by the design | LS.11 | NOT BUILT |
+| C.1 | C Lot confusion (lot map) · Heading: This address covers 2 lots. Which one do you mean? | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.2 | C Lot confusion (lot map) · Search pill on top (clear returns to search); hidden h1 Choose your lot | details | NOT TRACED · MISSED by the sweep | MF-53 | BUILT |
+| C.3 | C Lot confusion (lot map) · Map: each matched lot outlined (amber), neighbours in zinc | main | AVAILABLE |  | BUILT |
+| C.4 | C Lot confusion (lot map) · Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | main | AVAILABLE |  | BUILT |
+| C.5 | C Lot confusion (lot map) · Building footprint on each lot (or none), drawn on the map | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.6 | C Lot confusion (lot map) · Address pin and the street name drawn on the road (Dunmore Lane) | details | AVAILABLE · MISSED by the sweep | GAP.13 | BUILT |
+| C.7 | C Lot confusion (lot map) · Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | main | UNDESIGNED-DATA · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.8 | C Lot confusion (lot map) · Lot card size line: 1,614 sq ft · 150 m² | main | AVAILABLE |  | BUILT |
+| C.9 | C Lot confusion (lot map) · Lot card frontage and zoning string (7.6m • CR 2.5 style) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| C.10 | C Lot confusion (lot map) · Selection shared by map tap and card (radiogroup Choose a lot) | main | NOT TRACED · MISSED by the sweep | GAP.13 | BUILT |
+| C.11 | C Lot confusion (lot map) · Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | main | AVAILABLE |  | BUILT |
+| C.12 | C Lot confusion (lot map) · Link: Not sure which lot? Get help with an address | details | NOT-BOUND | SRCH.C12 LS.12 LS.6 | NOT BUILT |
+| C.13 | C Lot confusion (lot map) · Loading, error, rate-limit, entitlement, schema-drift states of the map page | details | AVAILABLE |  | BUILT |
+| C.14 | C Lot confusion (lot map) · Routing: one printed address over two or more lots opens this page (shown only then) | main | AVAILABLE |  | BUILT |
+| D.1 | D Semi question page · Page shown only when the lot is unsure (before the report) | main | AVAILABLE |  | BUILT |
+| D.2 | D Semi question page · Lot form on the lookup hit (detected, basis, unsure) | details | AVAILABLE |  | BUILT |
+| D.3 | D Semi question page · Question: Is this house one half of a semi-detached pair? | main | AVAILABLE |  | BUILT |
+| D.4 | D Semi question page · Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | main | AVAILABLE |  | BUILT |
+| D.5 | D Semi question page · Continue button (Choose an answer when none picked; Open the report with this answer) | main | AVAILABLE |  | BUILT |
+| D.6 | D Semi question page · Back to search link | details | AVAILABLE |  | BUILT |
+| D.7 | D Semi question page · Question-page states: loading, error, rate limit, entitlement, schema drift | details | AVAILABLE |  | BUILT |
+| D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA |
+| D.9 | D Semi question page · Input: distance from your wall to the shared line, with an assumed default and an assumption line | main | NOT-BUILT | SRCH.SEMI MF-89 7.25 GAP.12 | NOT BUILT |
+| D.10 | D Semi question page · Semi override applied in the report | main | NOT-BUILT | SRCH.SEMI 7.25 | NOT BUILT |
+| D.11 | D Semi question page · Evidence columns linked_parcel_count, best_shared_len_m | details | STORED-NOT-SERVED |  | BUILT-NO-DATA |
+| E.1 | E Web search pages · W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | main | SERVED-NOT-POPULATED | LS.12 1.3 | BUILT-NO-DATA |
+| E.2 | E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | details | AVAILABLE · MISSED by the sweep | MF-44 MF-46 | NOT BUILT |
+| E.3 | E Web search pages · W5 choose your parcel on the web, address list (text_candidates) | main | SERVED-NOT-POPULATED | LS.12 | NOT BUILT |
+| E.4 | E Web search pages · W5 on the web for several lots, no lot linked and intersection (map) | main | NOT-BUILT | LS.11 | NOT BUILT |
+| E.5 | E Web search pages · W6 web report route /parcel-tool/{lot} | main | NOT-BUILT | LS.12 1.3 MB-44 | BUILT-NO-DATA |
+| E.6 | E Web search pages · Recent-search chips on the web frame | details | NOT TRACED · MISSED by the sweep | LS.11 | NOT BUILT |
+| F.1 | F Landing (search entry and sample) · Hero call to action: Start free trial (to /signup); no search box on the landing page | main | NOT-BUILT | MF-76 | BUILT |
+| F.2 | F Landing (search entry and sample) · How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | details | NOT TRACED · MISSED by the sweep | MF-76 | BUILT |
+| F.3 | F Landing (search entry and sample) · Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | main | NOT TRACED · MISSED by the sweep | LS.7 | BUILT |
+| F.4 | F Landing (search entry and sample) · Landing legal line | details | AVAILABLE | LS.6 | BUILT |
+| F.5 | F Landing (search entry and sample) · After login the user lands on the search page (never the dashboard) | details | AVAILABLE |  | BUILT |
+| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) | main | AVAILABLE |  | BUILT |
+| G.2 | G Hand-off to the report · Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | main | NOT TRACED · MISSED by the sweep | 1.3 MF-62 | BUILT-NO-DATA |
+| G.3 | G Hand-off to the report · Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | main | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.4 | G Hand-off to the report · Skip control during the animation | details | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.5 | G Hand-off to the report · Report page for the lot on a hit | main | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA |
+| G.6 | G Hand-off to the report · Report meter: a hit counts one report; report limit page when exhausted | details | AVAILABLE | LS.12 | BUILT |
+
+## Search pages today (search-delta/current.json)
+| page | id | element | status | tasks |
+|---|---|---|---|---|
+| A Search page | A.1 | Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | AVAILABLE | NO TASK |
+| A Search page | A.2 | Search box: one pill, placeholder Enter lot address, search icon | AVAILABLE | NO TASK |
+| A Search page | A.3 | Typeahead resolution of the typed text (street-prefix, up to 10) | AVAILABLE | NO TASK |
+| A Search page | A.4 | Typed street direction (E/W/N/S) kept in the match | AVAILABLE | 1.4 |
+| A Search page | A.5 | Unit number typed after the address | NOT-BUILT | 1.4 |
+| A Search page | A.6 | Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | NOT-BOUND | SRCH.A6 |
+| A Search page | A.7 | Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | AVAILABLE | NO TASK |
+| A Search page | A.8 | Searching state: query in the box, the word Searching, clear button | AVAILABLE | NO TASK |
+| A Search page | A.9 | Outside Toronto state: Lots are only available in Toronto. | AVAILABLE | NO TASK |
+| A Search page | A.10 | Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | AVAILABLE | LS.6 |
+| A Search page | A.11 | Clear (x) button inside the box | NOT TRACED | NO TASK |
+| A Search page | A.12 | Bottom tab bar: Lookup, Tracked Lots, Account (app) | AVAILABLE | NO TASK |
+| A Search page | A.13 | In-bar Account button (MF-35 builds it amber) | AVAILABLE | NO TASK |
+| B Address confusion | B.1 | Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | AVAILABLE | NO TASK |
+| B Address confusion | B.2 | Select button after the pick (Select, Open the selected lot) | AVAILABLE | NO TASK |
+| B Address confusion | B.3 | Candidate row area line (locality, e.g. Downtown Toronto) | NOT-BOUND | NO TASK |
+| B Address confusion | B.4 | Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | AVAILABLE | NO TASK |
+| B Address confusion | B.5 | Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | AVAILABLE | NO TASK |
+| B Address confusion | B.6 | Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | AVAILABLE | NO TASK |
+| B Address confusion | B.7 | Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | SERVED-NOT-POPULATED | SRCH.C12 |
+| B Address confusion | B.8 | Faint tappable neighbour outlines on the unlinked state | AVAILABLE | NO TASK |
+| B Address confusion | B.9 | No-match state: No parcel found for that address. | AVAILABLE | NO TASK |
+| B Address confusion | B.10 | Intersection on the map (corner lots at the centreline node) | NOT-BUILT | LS.11 |
+| C Lot confusion (lot map) | C.1 | Heading: This address covers 2 lots. Which one do you mean? | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.2 | Search pill on top (clear returns to search); hidden h1 Choose your lot | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.3 | Map: each matched lot outlined (amber), neighbours in zinc | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.4 | Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.5 | Building footprint on each lot (or none), drawn on the map | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.6 | Address pin and the street name drawn on the road (Dunmore Lane) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.7 | Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | UNDESIGNED-DATA | NO TASK |
+| C Lot confusion (lot map) | C.8 | Lot card size line: 1,614 sq ft · 150 m² | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.9 | Lot card frontage and zoning string (7.6m • CR 2.5 style) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.10 | Selection shared by map tap and card (radiogroup Choose a lot) | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.11 | Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.12 | Link: Not sure which lot? Get help with an address | NOT-BOUND | SRCH.C12 |
+| C Lot confusion (lot map) | C.13 | Loading, error, rate-limit, entitlement, schema-drift states of the map page | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.14 | Routing: one printed address over two or more lots opens this page (shown only then) | AVAILABLE | NO TASK |
+| D Semi question page | D.1 | Page shown only when the lot is unsure (before the report) | AVAILABLE | NO TASK |
+| D Semi question page | D.2 | Lot form on the lookup hit (detected, basis, unsure) | AVAILABLE | NO TASK |
+| D Semi question page | D.3 | Question: Is this house one half of a semi-detached pair? | AVAILABLE | NO TASK |
+| D Semi question page | D.4 | Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | AVAILABLE | NO TASK |
+| D Semi question page | D.5 | Continue button (Choose an answer when none picked; Open the report with this answer) | AVAILABLE | NO TASK |
+| D Semi question page | D.6 | Back to search link | AVAILABLE | NO TASK |
+| D Semi question page | D.7 | Question-page states: loading, error, rate limit, entitlement, schema drift | AVAILABLE | NO TASK |
+| D Semi question page | D.8 | Owner answer stored (a reopened lot does not ask again) | BOUND-NOT-STORED | NO TASK |
+| D Semi question page | D.9 | Input: distance from your wall to the shared line, with an assumed default and an assumption line | NOT-BUILT | SRCH.SEMI |
+| D Semi question page | D.10 | Semi override applied in the report | NOT-BUILT | SRCH.SEMI 7.25 |
+| D Semi question page | D.11 | Evidence columns linked_parcel_count, best_shared_len_m | STORED-NOT-SERVED | NO TASK |
+| E Web search pages | E.1 | W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.2 | Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | AVAILABLE | NO TASK |
+| E Web search pages | E.3 | W5 choose your parcel on the web, address list (text_candidates) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.4 | W5 on the web for several lots, no lot linked and intersection (map) | NOT-BUILT | LS.11 |
+| E Web search pages | E.5 | W6 web report route /parcel-tool/{lot} | NOT-BUILT | LS.12 1.3 |
+| E Web search pages | E.6 | Recent-search chips on the web frame | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.1 | Hero call to action: Start free trial (to /signup); no search box on the landing page | NOT-BUILT | NO TASK |
+| F Landing (search entry and sample) | F.2 | How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.3 | Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | NOT TRACED | LS.7 |
+| F Landing (search entry and sample) | F.4 | Landing legal line | AVAILABLE | LS.6 |
+| F Landing (search entry and sample) | F.5 | After login the user lands on the search page (never the dashboard) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.1 | Unique match goes straight to the report (no extra page) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.2 | Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | NOT TRACED | 1.3 |
+| G Hand-off to the report | G.3 | Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
+| G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md b/backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md
+index 9c316a80d..0c9a3d2fb 100644
+--- a/backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md	
++++ b/backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md	
+@@ -7,7 +7,7 @@ status: RUNNING
+ assignee:
+   - '@lane-BL-V2WHOLE'
+ created_date: '2026-11-20T17:52:00Z'
+-updated_date: '2026-11-20T18:53:00Z'
++updated_date: '2026-11-20T19:21:00Z'
+ labels:
+   - McFix
+   - McFix V2
+@@ -15,6 +15,8 @@ milestone: m-1
+ dependencies:
+   - TASK-406
+   - TASK-407
++references:
++  - docs/reports/lanes/2026-11-20/BL-V2WHOLE/REPORT.md
+ type: build
+ ordinal: 110012
+ ---
+@@ -39,8 +41,25 @@ Operator, 2026-11-20, verbatim: "I also need certainty within the tasks that a r
+ - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
+ <!-- DOD:END -->
+ 
++## Implementation Plan
++
++<!-- SECTION:PLAN:BEGIN -->
++PLAN task-410 (V2.WHOLE). Rule: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1; PLAN-PROTOCOL.md:3 simple, no scope creep. Principles served: standardized, understandable, simple.
++Verified facts (opened): (1) check-lane-close.mjs compliance block checks the material only by its stamped hash; (2) scripts/deepseek-review.js:35 bound 120000, lens-input refuses a material that leaves no room (rule-lists.mjs buildLensInputs) and an unsplittable list block; (3) part (a) the four templates carry {{PLAN}} once each (lens-code-review/error-paths/ux/security.md line 34): DONE by task-406, not redone.
++(b) rule-lists.mjs lens-input: when buildLensInputs throws for room (material or unsplittable list block) and the material holds `diff --git` headers, the TOOL cuts the diff at those headers (file boundaries only) into chunks of at most the room left after the list part; each chunk gets every list part. Stamp: line 1 gains ` chunk c of m`, head line gains ` paths: <JSON array>`; files are -p1..-pN chunk-major (N = m x list parts). A single file over the room is refused with one line naming the file and its size. No --list (with --template of a non-compliance lens) writes the same chunk inputs with an empty list part: that is how code-review, error-paths, ux, security are split (same tool); the close check accepts out-<lens>-pN.txt for them, each with its committed in- input verified like a chunk.
++(c) check-lane-close.mjs: expected paths = git diff --name-only --no-renames merge-base..HEAD minus table exempt globs; for out-phase inputs: each chunk's stamped paths must equal the paths of its own material, every part of a chunk carries the same chunk and material, the union of the chunk path lists must be exactly the expected list with no path in two chunks, and each chunk material must equal git diff --no-renames merge-base HEAD -- <its paths>. An unchunked input is chunk 1 of 1 (its paths read from its diff headers). Empty expected list: nothing to cover. Limit stated: a path staged only in the closing commit is not in the range (the closing commit is records only).
++(d) backlog-lane.mjs brief sentence: says the diff is split by lens-input at file boundaries, the command to make the diff, chunk naming and the refusal for one file over the room; the review-files-go-here sentence kept.
++Tests first (red as failing assertions through the pre-commit related run): rule-lists.logic.test.ts (chunking, file over room, no-list mode, non-diff material still refused), check-lane-close.logic.test.ts (control passes; chunk set missing a changed file refused; chunk text differing from the diff refused; hand-edited stamp refused; non-compliance parts), backlog-lane.logic.test.ts (sentence). Each protected-path edit in its own commit, no status move. NOT built: the always-attached lists checked at plan phase only for build tasks (measured), lens-input pasted context (measured), generated-file exclusion, bound change, task size limit.
++<!-- SECTION:PLAN:END -->
++
+ ## Implementation Notes
+ 
+ <!-- SECTION:NOTES:BEGIN -->
+ 2026-11-20 taken on the board at lane launch (lane BL-V2WHOLE, worktree /Users/brettpreston_macmini/Buildo-wt-v2whole, branch wf1/inc1b-v2whole), RR-0240
++
++2026-11-20 part (b) landed (713959765 rule-lists.mjs lens-input splits a diff at file boundaries into chunks stamped chunk c of m with paths; no --list serves the non-compliance lenses). Part (c) in progress: check-lane-close.mjs chunkErrors.
++
++2026-11-20 part (c) landed (ba26e1b81 check-lane-close.mjs chunkErrors; closing commit may stage no path outside the task range). Part (d) in progress: backlog-lane.mjs brief sentence.
++
++2026-11-20 part (d) landed (9bed06dbb backlog-lane.mjs brief sentence). Commits: 713959765 (b), ba26e1b81 (c), 9bed06dbb (d); part (a) verified done by task-406 (the four templates hold {{PLAN}} once, line 34). Real split runs (inputs only): see docs/reports/lanes/2026-11-20/BL-V2WHOLE/REPORT.md. Not built, measured for a grounder: build tasks require the always-attached lists at the output phase only (check-lane-close.mjs:159); lens-input never passes the task text or rulings (the review tool fills '(no pasted context provided)' without --context). Grounder owed; task stays RUNNING.
+ <!-- SECTION:NOTES:END -->
+diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
+index 391e9f37e..c6e036e83 100644
+--- a/scripts/analysis/backlog-lane.mjs
++++ b/scripts/analysis/backlog-lane.mjs
+@@ -20,7 +20,7 @@ import fs from 'node:fs';
+ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ import { args, asList, descriptionOf, home, parseFM, readItems, REPO, sha256, today } from './backlog-lib.mjs';
+-import { DEFAULT_TABLE, filesText, lensSet, milestoneLetter, readTable, resolveTask, verifyResolved } from './rule-lists.mjs';
++import { DEFAULT_TABLE, DIFF_ARGS, filesText, lensSet, milestoneLetter, readTable, resolveTask, verifyResolved } from './rule-lists.mjs';
+ 
+ const a = args();
+ const str = (k, d) => (a[k] && a[k] !== true ? String(a[k]) : d);
+@@ -149,9 +149,9 @@ const lensLine = (task, ctx, lists) => {
+   const f = (l) => (l === 'plan-review-deepseek' ? 'plan-review-deepseek.md' : `lens-${l}.md`);
+   const cmd = 'DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review';
+   const ids = lists.map((l) => l.id);
+-  const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed): for each list id L and each phase P (plan: material = ${ctx}; out: material = the diff file), \`node scripts/analysis/rule-lists.mjs lens-input --list L --material <material> --out <lane dir>/in-P-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md > P-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'plan-compliance-' + i + '.txt, out-compliance-' + i + '.txt').join('; ')}. Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list, an out-<lens>.txt for every other output lens named above, a plan-stage output (plan-<lens>.txt), and the grounder file below (scripts/hooks/check-lane-close.mjs).`;
++  const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed): for each list id L and each phase P (plan: material = ${ctx}; out: material = the diff file), \`node scripts/analysis/rule-lists.mjs lens-input --list L --material <material> --out <lane dir>/in-P-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md > P-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'plan-compliance-' + i + '.txt, out-compliance-' + i + '.txt').join('; ')}. Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list, an out-<lens>.txt for every other output lens named above, a plan-stage output (plan-<lens>.txt), and the grounder file below (scripts/hooks/check-lane-close.mjs).`;
+   // task-407 (V2.LAYOUT): the one place the close check reads (scripts/hooks/check-lane-close.mjs: lane files at path depth 6, plan-*.txt / out-*.txt, in- beside them), said in every brief
+-  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; a later (fix) round (r2, r3, ...) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: lens-input splits the rule list at its headings into parts -p1..-pN and puts the whole diff in every part; the diff is never split or trimmed to core files; a diff too large for one part is refused by lens-input: report that to the orchestrator at once.`;
++  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; a later (fix) round (r2, r3, ...) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with \`git diff ${DIFF_ARGS.join(' ')} $(git merge-base HEAD ${ruleTable?.base_ref ?? 'wf2/board'}) HEAD -- . ${(ruleTable?.exempt ?? []).map((g) => `'${':(exclude)'}${g.replace(/\/\*\*$/, '')}'`).join(' ')}\` (never trimmed to core files); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (\`lens-input --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md\`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited.`;
+   const grounder = ' Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy plan-*.txt, out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY plan-*.txt and out-*.txt (rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote on that line>" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it.';
+   return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Plan review lenses: ${plan.map(f).join(', ')}, each \`${cmd} ${ctx} --template .claude/review-templates/<lens file> --context <pasted-context file>\` (the context file is the plan and its pasted rulings; the pasted-context file holds the spec clauses and rulings, the same file as for the output lenses; without --context a lens sees "(no pasted context provided)"). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> --context <pasted-context file>\`. ${per}${layout} Run the lenses of each review in parallel, one call each, outputs plan-<lens>.txt and out-<lens>.txt in the lane report dir; then a separate grounder rules every finding in GROUNDER.md (below).${grounder}`;
+ };
+diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
+index 88293741f..91f1df32c 100644
+--- a/scripts/analysis/rule-lists.mjs
++++ b/scripts/analysis/rule-lists.mjs
+@@ -3,9 +3,12 @@
+ // Used by scripts/analysis/backlog-lane.mjs (attach at launch), scripts/hooks/check-lane-close.mjs (require at close) and this file's own CLI:
+ //   validate [--table f] [--root dir]                      every list file exists, every section selector names exactly one heading, every glob matches a tracked path
+ //   resolve --files "<Files line>" [--type t] [--letter L]   the lists a Files line attaches (JSON); exit 3 with one line when refused
+-//   lens-input --list id --material f --out prefix [--template f] [--max n]
++//   lens-input [--list id] --material f --out prefix [--template f] [--max n]
+ //                                                           the compliance lens input: the list FIRST, then the material; split by the list's own headings when list +
+-//                                                           material would pass the review tool bound; never trims; exit 1 when it cannot fit
++//                                                           material would pass the review tool bound; never trims; exit 1 when it cannot fit. V2.WHOLE (task-410): when the material is
++//                                                           a git diff that leaves no room for a list part, the TOOL splits it at FILE boundaries into chunks (each chunk against every list
++//                                                           part, stamped chunk c of m with its path list); one file alone over the room is refused naming it. No --list: the same chunks for
++//                                                           a non-compliance lens template (an empty list part)
+ //   check-tasks [--table f] [--root dir]                    every open task of backlog/tasks: resolves (with the every_task and milestone lists verified) or is listed by id as not yet resolvable, with the reason
+ //   page [--write|--check] [--table f] [--root dir]          the generated page docs/reports/generated/rule-lists-by-kind.md: per kind of work the documents, sizes and part counts
+ //   findings --dir d                                        the finding ids of the lens outputs in d (<file stem>#<ordinal among BUG and DEFER lines>)
+@@ -24,6 +27,21 @@ export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');
+ const BOUND = 120000; // scripts/deepseek-review.js MAX_PROMPT_CHARS
+ const RESERVE = 800; // stamp, header and separator of one lens input file
+ const MARKER = '\n=== MATERIAL UNDER REVIEW (everything below this line) ===\n';
++/** V2.WHOLE (task-410): the one diff command the brief, the lens input and the close check share (every flag pinned, so the text is the same on every machine). */
++export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];
++/** A git diff cut at its file headers: [{path, text}] in order, or null when the text is not a diff (does not start at a header). Content lines carry a prefix, so a file whose own text says "diff --git" is never cut. */
++export function splitDiff(text) {
++  const at = [...text.matchAll(/^diff --git /gm)].map((m) => m.index);
++  if (at.length === 0 || at[0] !== 0) return null;
++  return at.map((s, i) => {
++    const seg = text.slice(s, at[i + 1] ?? text.length);
++    const rest = seg.split('\n', 1)[0].slice('diff --git a/'.length);
++    const p = rest.slice(0, (rest.length - 3) / 2);
++    if (!seg.startsWith('diff --git a/') || `${p} b/${p}` !== rest) throw new Error(`cannot read the path of a diff file header (renames and quoted names are not supported; use the shared diff command): ${seg.split('\n', 1)[0].slice(0, 120)}`);
++    return { path: p, text: seg };
++  });
++}
++export const diffPaths = (text) => (splitDiff(text) ?? []).map((s) => s.path);
+ 
+ export const readTable = (file = DEFAULT_TABLE) => JSON.parse(fs.readFileSync(file, 'utf8'));
+ export function trackedFiles(root) {
+@@ -275,7 +293,7 @@ export function findingsIn(files) {
+ function splitUnits(text, max, label, id) {
+   if (text.length <= max) return [text];
+   const subs = headings(text).filter((h) => h.offset > 0);
+-  if (subs.length === 0) throw new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading to split at (room for list text in one file: ${max})`);
++  if (subs.length === 0) throw Object.assign(new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading to split at (room for list text in one file: ${max})`), { room: true, size: text.length });
+   const level = Math.min(...subs.map((h) => h.level));
+   const cuts = [0, ...subs.filter((h) => h.level === level).map((h) => h.offset), text.length];
+   const out = [];
+@@ -285,7 +303,13 @@ function splitUnits(text, max, label, id) {
+   }
+   return out;
+ }
+-/** The lens input files for one list: [{suffix, text}]. The list part comes first, whole; the material follows. Throws when a part cannot fit (never trims). */
++/**
++ * The lens input files for one list: [{suffix, text}]. The list part comes first, whole; the material follows. Throws when a part cannot fit (never trims).
++ * V2.WHOLE (task-410): when the material leaves no room for a list part and is a git diff, the TOOL cuts it at file boundaries into chunks (packed in diff order, each at most the room
++ * left beside the list part); every chunk goes against every list part, files are -p1..-pN chunk by chunk (N = chunks x list parts), and each input is stamped "chunk c of m" with
++ * its path list. One file alone over the room is refused naming the file and its size. A diff is always stamped (chunk 1 of 1 when it fits), so the close check reads paths from the stamp.
++ * `list` null (a non-compliance lens template): the same chunks with an empty list part, id "none".
++ */
+ export function buildLensInputs({ id, list, root, material, templateFile, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {
+   const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
+   const split = rt.splitTemplate(fs.readFileSync(templateFile, 'utf8'));
+@@ -293,26 +317,56 @@ export function buildLensInputs({ id, list, root, material, templateFile, max =
+   const k = (split.userTemplate.match(/\{\{PLAN\}\}/g) ?? []).length || 1;
+   const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
+   const avail = Math.floor((max - fixed - 200) / k);
+-  const unitMax = avail - material.length - RESERVE;
+-  if (unitMax < 200) throw new Error(`material is ${material.length} characters; with the lens template (${fixed} fixed characters, the plan placeholder used ${k}x) at most ${avail} characters fit one file, leaving ${unitMax} for the list: split the material (a list is never trimmed)`);
+-  const units = listBlocks(list, root, id).flatMap((b) => splitUnits(b.text, unitMax, b.label, id));
+-  const parts = [];
+-  let cur = [];
+-  let len = 0;
+-  for (const u of units) {
+-    if (cur.length && len + u.length + 1 > unitMax) { parts.push(cur.join('\n')); cur = []; len = 0; }
+-    cur.push(u); len += u.length + 1;
++  const room = (msg, size) => Object.assign(new Error(msg), { room: true, size });
++  const partsFor = (unitMax) => {
++    if (!list) return [''];
++    const units = listBlocks(list, root, id).flatMap((b) => splitUnits(b.text, unitMax, b.label, id));
++    const parts = [];
++    let cur = [];
++    let len = 0;
++    for (const u of units) {
++      if (cur.length && len + u.length + 1 > unitMax) { parts.push(cur.join('\n')); cur = []; len = 0; }
++      cur.push(u); len += u.length + 1;
++    }
++    if (cur.length) parts.push(cur.join('\n'));
++    return parts;
++  };
++  const segs = splitDiff(material);
++  let chunks = [{ text: material, paths: segs ? segs.map((s) => s.path) : null }];
++  let parts;
++  try {
++    const unitMax = avail - material.length - RESERVE;
++    if (unitMax < (list ? 200 : 0)) throw room(`material is ${material.length} characters; with the lens template (${fixed} fixed characters, the plan placeholder used ${k}x) at most ${avail} characters fit one file, leaving ${unitMax} for the list: split the material (a list is never trimmed)`);
++    parts = partsFor(unitMax);
++  } catch (e) {
++    if (!e.room || !segs) throw e;
++    // the material is a diff: cut it at file boundaries. The list part gets half the room (more when one of its blocks cannot be split), never so much that the largest file cannot ride beside it.
++    const big = segs.reduce((x, y) => (y.text.length > x.text.length ? y : x));
++    let listRoom = list ? Math.max(0, Math.min(Math.floor(avail / 2), avail - RESERVE - big.text.length)) : 0;
++    for (;;) {
++      if (avail - RESERVE - listRoom < big.text.length) throw new Error(`file ${big.path} is ${big.text.length} characters of diff and cannot be split inside a file: at most ${avail - RESERVE - listRoom} fit one input beside the rule list part of ${listRoom} (bound ${max}); report it to the orchestrator`);
++      try { parts = partsFor(listRoom); break; } catch (x) { if (!x.room || !(x.size > listRoom)) throw x; listRoom = x.size; }
++    }
++    const chunkRoom = avail - RESERVE - listRoom;
++    chunks = [];
++    for (const s of segs) {
++      const last = chunks[chunks.length - 1];
++      if (last && last.text.length + s.text.length <= chunkRoom) { last.text += s.text; last.paths.push(s.path); } else chunks.push({ text: s.text, paths: [s.path] });
++    }
+   }
+-  if (cur.length) parts.push(cur.join('\n'));
+-  const sel = list.whole ? 'whole file' : `sections ${list.sections.join('; ')}`;
+-  const files = parts.map((p, i) => {
+-    const head = `RULE LIST ${id} (${list.file}, ${sel}), part ${i + 1} of ${parts.length}. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.`;
+-    const stamp = `LIST ${id} sha256:${sha256(Buffer.from(p))} material sha256:${sha256(Buffer.from(material))} part ${i + 1} of ${parts.length}`;
+-    const text = `${stamp}\n${head}\n\n${p}${MARKER}${material}\n`;
++  const sel = list ? (list.whole ? 'whole file' : `sections ${list.sections.join('; ')}`) : '';
++  const files = [];
++  chunks.forEach((ch, ci) => parts.forEach((p, i) => {
++    const mark = ch.paths ? ` chunk ${ci + 1} of ${chunks.length}` : '';
++    const what = list ? `RULE LIST ${id} (${list.file}, ${sel}), part ${i + 1} of ${parts.length}. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.` : 'NO RULE LIST: the lens template alone judges the material under review.';
++    const head = `${what}${ch.paths ? ` The material is chunk ${ci + 1} of ${chunks.length} of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ${JSON.stringify(ch.paths)}` : ''}`;
++    const stamp = `LIST ${list ? id : 'none'} sha256:${sha256(Buffer.from(p))} material sha256:${sha256(Buffer.from(ch.text))} part ${i + 1} of ${parts.length}${mark}`;
++    const text = `${stamp}\n${head}\n\n${p}${MARKER}${ch.text}\n`;
+     const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
+     if (prompt > max) throw new Error(`list ${id}: part ${i + 1} would be ${prompt} characters, over the ${max} bound`);
+-    return { suffix: parts.length === 1 ? '' : `-p${i + 1}`, text };
+-  });
++    const n = ci * parts.length + i + 1;
++    files.push({ suffix: files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });
++  }));
+   return files;
+ }
+ 
+@@ -321,14 +375,17 @@ export function buildLensInputs({ id, list, root, material, templateFile, max =
+  * and checks that the parts of a list together carry the WHOLE list (whitespace aside), so a list cannot be shortened or softened and re-stamped.
+  */
+ export function parseLensInput(text) {
+-  const m = /^LIST (\S+) sha256:([0-9a-f]{64}) material sha256:([0-9a-f]{64}) part (\d+) of (\d+)\n/.exec(text);
++  const m = /^LIST (\S+) sha256:([0-9a-f]{64}) material sha256:([0-9a-f]{64}) part (\d+) of (\d+)(?: chunk (\d+) of (\d+))?\n/.exec(text);
+   if (!m) return null;
+   const l1 = text.indexOf('\n', text.indexOf('\n') + 1);
+   const mi = text.indexOf(MARKER);
+   if (l1 < 0 || mi < 0) return null;
+   const listPart = text.slice(l1 + 2, mi);
+   const material = text.slice(mi + MARKER.length).replace(/\n$/, '');
+-  return { id: m[1], listSha: m[2], materialSha: m[3], part: Number(m[4]), parts: Number(m[5]), listPart, material, ok: sha256(Buffer.from(listPart)) === m[2] && sha256(Buffer.from(material)) === m[3] };
++  const pm = / paths: (\[.*\])$/.exec(text.slice(0, l1));
++  let paths = null;
++  try { paths = pm ? JSON.parse(pm[1]) : null; } catch { paths = null; }
++  return { id: m[1], listSha: m[2], materialSha: m[3], part: Number(m[4]), parts: Number(m[5]), chunk: m[6] === undefined ? undefined : Number(m[6]), chunks: m[7] === undefined ? undefined : Number(m[7]), paths, listPart, material, ok: sha256(Buffer.from(listPart)) === m[2] && sha256(Buffer.from(material)) === m[3] };
+ }
+ /** The text of a whole list as the helper reads it (all blocks), for the whole-list comparison. */
+ export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');
+@@ -412,10 +469,11 @@ function cli() {
+     console.log(JSON.stringify(r, null, 2));
+   } else if (cmd === 'lens-input') {
+     const id = str('list', '');
+-    const list = table.lists[id];
+-    if (!list) die(1, `no list ${id} in ${tableFile}`);
++    const list = id ? table.lists[id] : null; // no --list: a non-compliance lens template, the chunks alone (V2.WHOLE)
++    if (id && !list) die(1, `no list ${id} in ${tableFile}`);
++    if (!id && !a.template) die(2, 'usage: lens-input needs --list <id>, or --template <lens file> alone to split the material for a non-compliance lens');
+     const matFile = str('material', ''); const outPrefix = str('out', '');
+-    if (!matFile || !outPrefix || !fs.existsSync(matFile)) die(2, 'usage: lens-input --list <id> --material <file> --out <prefix> [--template <lens file>] [--max <n>]');
++    if (!matFile || !outPrefix || !fs.existsSync(matFile)) die(2, 'usage: lens-input [--list <id>] --material <file> --out <prefix> [--template <lens file>] [--max <n>]');
+     if (a.max !== undefined && !(Number.isFinite(Number(a.max)) && Number(a.max) > 0)) die(1, `--max must be a positive number (got ${a.max}); the bound has to be enforced`);
+     let files;
+     try { files = buildLensInputs({ id, list, root, material: fs.readFileSync(matFile, 'utf8'), templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }
+diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
+index d8b5cd0d1..b11ce9029 100644
+--- a/scripts/hooks/check-lane-close.mjs
++++ b/scripts/hooks/check-lane-close.mjs
+@@ -15,6 +15,11 @@
+ //    error-paths (ux, security by the Files line) and at least one plan-stage output. Each required output starts with the review tool's REVIEW header (template name matching the lens,
+ //    model, timestamp, file_sha256, prompt_sha256) and ends in a VERDICT: line. A compliance output's file_sha256 must be that of the committed input in-<output name> whose first line
+ //    `LIST <id> sha256:<hex> material sha256:<hex> part i of n` is recomputed here, and the parts together must carry the WHOLE rule list (so a list cannot be shortened or softened);
++//  * the WHOLE change (V2.WHOLE, task-410): the changed paths of the task range (merge-base with the table's base_ref to HEAD, minus the table's exempt paths) are recomputed here; the
++//    committed out-phase inputs (each compliance list, and a split code-review, error-paths, ux or security lens: out-<lens>-pN.txt with in-<same name>) carry the chunk stamps lens-input wrote
++//    ("chunk c of m" and the path list); the check refuses when the union of the chunk path lists is not that list (a file left out, or a path outside the change), when a path is in two
++//    chunks, when a stamp does not match its own material or its file name, when the chunks of a list are not 1..m with every list part, or when a chunk's text is not what
++//    git diff (rule-lists.mjs DIFF_ARGS) prints for its paths. A path staged in the closing commit itself is in no chunk and is refused (the closing commit holds records only).
+ //  * finding lines: a loose reading of every lens output must count the same BUG/DEFER lines as the strict one, else "finding lines altered or unparsable";
+ //  * GROUNDER.md, always for a build or fix task, for any other task when a lens output holds a finding. `Grounder: <name>` and `Lane: <name>`: the grounder is not the lane, the Lane
+ //    header or ANY assignee, compared with case, punctuation and digit separators removed, and not a name that contains or is contained in one (comply2-b, comply-2). `Ruled: <file>
+@@ -31,7 +36,7 @@ import fs from 'node:fs';
+ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ import { asList, parseFM } from '../analysis/backlog-lib.mjs';
+-import { coveredBy, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
++import { coveredBy, DIFF_ARGS, diffPaths, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
+ import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
+ 
+ const git = (a) => { const r = spawnSync('git', ['-c', 'core.quotepath=false', ...a], { encoding: 'utf8', maxBuffer: 1 << 28 }); return { status: r.status ?? 1, stdout: r.stdout ?? '' }; };
+@@ -58,10 +63,58 @@ function reviewErrors(name, text, template, inputText) {
+   return e;
+ }
+ 
++/**
++ * V2.WHOLE (task-410): the chunk proof for one output family. `items` [{name, k, p}] are the committed inputs (k: the -pN number in the name or null, p: parseLensInput's result); `expected` the changed
++ * paths of the task range minus the exempt ones; `diffOf(paths)` the text git prints for them. Returns the refusal lines ([] when the chunks together are exactly the change and each is true).
++ */
++export function chunkErrors({ label, items, expected, diffOf = () => null }) {
++  const e = [];
++  if (items.length === 0) return e;
++  const m = items[0].p.chunks ?? 1;
++  const n = items[0].p.parts;
++  const byChunk = new Map();
++  for (const it of items) {
++    const { p, name } = it;
++    const c = p.chunk ?? 1;
++    if ((p.chunks ?? 1) !== m || p.parts !== n) e.push(`${name}: stamped chunk ${c} of ${p.chunks ?? 1}, ${p.parts} list part(s); the other inputs of ${label} say ${m} chunk(s), ${n} part(s)`);
++    if (c < 1 || c > m) e.push(`${name}: chunk ${c} of ${m} is outside 1..${m}`);
++    const own = diffPaths(p.material);
++    if (p.chunk !== undefined && (!p.paths || JSON.stringify(p.paths) !== JSON.stringify(own))) e.push(`${name}: the stamped path list ${JSON.stringify(p.paths)} is not the list of files in its own material ${JSON.stringify(own)} (the stamp was edited)`);
++    if ((it.k ?? 1) !== (c - 1) * p.parts + p.part) e.push(`${name}: the file number does not match its stamp (chunk ${c} of ${m}, part ${p.part} of ${p.parts} is file -p${(c - 1) * p.parts + p.part}; the stamp was edited or the file renamed)`);
++    if (!byChunk.has(c)) byChunk.set(c, []);
++    byChunk.get(c).push(it);
++  }
++  if (items.length !== m * n) e.push(`${label}: ${items.length} input file(s) but the stamps say ${m} chunk(s) x ${n} list part(s) = ${m * n}: a chunk or a part is missing or left over from an earlier run`);
++  const seen = new Map();
++  for (let c = 1; c <= m; c++) {
++    const its = byChunk.get(c) ?? [];
++    if (its.length === 0) { e.push(`${label}: chunk ${c} of ${m} has no input file`); continue; }
++    if (new Set(its.map((x) => x.p.materialSha)).size > 1) e.push(`${label}: the parts of chunk ${c} carry different material`);
++    if (its.map((x) => x.p.part).sort((a, b) => a - b).join() !== Array.from({ length: n }, (_, j) => j + 1).join()) e.push(`${label}: chunk ${c} does not hold list parts 1..${n} once each`);
++    const paths = diffPaths(its[0].p.material);
++    for (const q of paths) seen.set(q, [...(seen.get(q) ?? []), c]);
++    const want = diffOf(paths);
++    if (want === null || its[0].p.material !== want) {
++      const a = its[0].p.material; const b = want ?? '';
++      let at = 0; while (at < a.length && a[at] === b[at]) at++;
++      e.push(`${label}: chunk ${c} of ${m} (${paths.slice(0, 3).join(', ') || 'no file'}${paths.length > 3 ? ', ...' : ''}) is not what git diff prints for its paths (first difference at character ${at}; the diff is made with the command in the brief: rule-lists.mjs DIFF_ARGS, merge-base to HEAD)`);
++    }
++  }
++  const dup = [...seen].filter(([, cs]) => cs.length > 1).map(([q]) => q);
++  if (dup.length) e.push(`${label}: ${dup.length} path(s) are in more than one chunk: ${dup.slice(0, 5).join(', ')}`);
++  const exp = new Set(expected);
++  const missing = expected.filter((q) => !seen.has(q));
++  const extra = [...seen.keys()].filter((q) => !exp.has(q));
++  if (missing.length) e.push(`${label}: ${missing.length} changed file(s) of the task range are in no chunk, so the review never saw them: ${missing.slice(0, 6).join(', ')}${missing.length > 6 ? ', ...' : ''}`);
++  if (extra.length) e.push(`${label}: ${extra.length} path(s) in the chunks are not in the task range (or are exempt paths): ${extra.slice(0, 6).join(', ')}${extra.length > 6 ? ', ...' : ''}`);
++  return e;
++}
++const kOf = (name) => { const x = /-p(\d+)\.txt$/.exec(name); return x ? Number(x[1]) : null; };
++
+ /**
+  * Every refusal for one closing task, as lines. Pure of git: the caller supplies what it read.
+  * @param {{id:string, taskText:string, fm:object, assignees:string[], headAssignees:string[], type:string, table:object, root:string, letter?:string,
+- *          laneFiles:{dir:string,name:string,text:string}[], changed:string[], readRepo:(p:string)=>string|null}} i
++ *          laneFiles:{dir:string,name:string,text:string}[], changed:string[], expectedPaths?:string[], diffOf?:(paths:string[])=>string|null, readRepo:(p:string)=>string|null}} i
+  */
+ export function closeErrors(i) {
+   const { id, type, readRepo } = i;
+@@ -79,6 +132,7 @@ export function closeErrors(i) {
+   try { r = resolveTask({ table: i.table, root: i.root, body: i.taskText, type, letter: i.letter }); } catch (e) { return [`${id}: cannot read the rule-list table or one of its path maps: ${String(e.message).split('\n')[0]}`]; }
+   if (r.error) return [`${id}: ${r.error.replace(/^refused: /, '')}`];
+   const errors = [];
++  const expected = i.expectedPaths ?? []; // V2.WHOLE: the changed paths of the task range minus the exempt ones (check() computes them)
+   // V2.LIST (task-406): the every_task lists (the five words, the plan protocol) and the milestone lists are required of every task like any list; verifyResolved is the one reading shared with validate, check-tasks and the launch.
+   // A table with no every_task is refused (fails closed: nobody switches the lists off by leaving the key out); a missing milestone_docs key or entry counts as missing lists; a build task with no milestone is refused by resolveTask above.
+   const missing = verifyResolved(i.table, r, i.letter, type);
+@@ -130,7 +184,11 @@ export function closeErrors(i) {
+       if (!bad.length) {
+         let whole;
+         try { whole = listBlocks(i.table.lists[l.id], i.root, l.id).map((b) => b.text).join(''); } catch (e) { bad.push(`list ${l.id}: ${String(e.message).split('\n')[0]}`); }
+-        if (whole !== undefined && listParts.map((p) => p.listPart).join('').replace(/\s+/g, '') !== whole.replace(/\s+/g, '')) bad.push(`the committed inputs do not carry the whole list ${l.id} (${l.file}) as it is now: the list was shortened, softened or is out of date`);
++        // V2.WHOLE: every chunk holds the whole list (its parts 1..n together); the coverage of the change is proved per list
++        const chunks = new Map();
++        for (const p of listParts) { const c = p.chunk ?? 1; chunks.set(c, [...(chunks.get(c) ?? []), p]); }
++        for (const [c, ps] of chunks) if (whole !== undefined && ps.sort((a, b) => a.part - b.part).map((p) => p.listPart).join('').replace(/\s+/g, '') !== whole.replace(/\s+/g, '')) bad.push(`the committed inputs${chunks.size > 1 ? ` of chunk ${c}` : ''} do not carry the whole list ${l.id} (${l.file}) as it is now: the list was shortened, softened or is out of date`);
++        if (ph === 'out' && expected.length) bad.push(...chunkErrors({ label: `${base}`, items: names.map((n, x) => ({ name: `in-${n}`, k: kOf(n), p: listParts[x] })), expected, diffOf: i.diffOf }));
+       }
+       if (bad.length) { why.push(bad.join('; ')); continue; }
+       ok = true;
+@@ -143,6 +201,24 @@ export function closeErrors(i) {
+     for (const lens of set.out) {
+       const n = `out-${lens}.txt`;
+       const t = textOf(n);
++      const lparts = files.map((f) => new RegExp(`^out-${esc(lens)}-p(\\d+)\\.txt$`).exec(f.name)).filter(Boolean).map((x) => Number(x[1])).sort((a, b) => a - b);
++      if (t === undefined && lparts.length) {
++        // V2.WHOLE: a lens whose prompt was over the bound is split by the same tool (lens-input with the lens template, no --list): out-<lens>-pN.txt, each with its committed in- input
++        const gapAt = lparts.findIndex((x, k) => x !== k + 1);
++        if (gapAt !== -1) { errors.push(`${id}: out-${lens}: parts ${lparts.join(',')} have a gap, out-${lens}-p${gapAt + 1}.txt is missing`); continue; }
++        const items = [];
++        for (const x of lparts) {
++          const nm = `out-${lens}-p${x}.txt`;
++          const input = textOf(`in-${nm}`);
++          if (input === undefined) { errors.push(`${id}: ${nm}: the input in-${nm} that the review tool read is not committed beside it`); continue; }
++          errors.push(...reviewErrors(nm, textOf(nm) ?? '', `lens-${lens}.md`, input).map((y) => `${id}: ${y}`));
++          const p = parseLensInput(input);
++          if (!p || p.id !== 'none' || !p.ok || p.listPart.trim() !== '') errors.push(`${id}: in-${nm}: not an input written by lens-input for a lens with no rule list (first line "LIST none sha256:... part 1 of 1 chunk c of m", stamps matching its text)`);
++          else items.push({ name: `in-${nm}`, k: x, p });
++        }
++        if (items.length === lparts.length && expected.length) errors.push(...chunkErrors({ label: `out-${lens}`, items, expected, diffOf: i.diffOf }).map((y) => `${id}: ${y}`));
++        continue;
++      }
+       if (t === undefined) errors.push(`${id}: the lens set of a ${type} task needs ${n} in ${dirNote} (Spec 08 section 7 rule 4: never one generic pass); ${layout}`);
+       else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, null).map((x) => `${id}: ${x}`));
+     }
+@@ -237,11 +313,22 @@ function check(msgFile) {
+   // the diff since the lane branch point, plus what is staged
+   const baseRef = table.base_ref;
+   let changed = [];
++  let expectedPaths = [];
++  let diffOf = () => null;
+   if (!baseRef) errors.push('rule-lists.json has no base_ref: the lane branch point cannot be found (fail closed)');
+   else {
+     const mb = git(['merge-base', 'HEAD', baseRef]);
+     if (mb.status !== 0) errors.push(`cannot find the lane branch point (git merge-base HEAD ${baseRef} failed): the Files line cannot be checked against the diff (fail closed)`);
+-    else changed = [...new Set([...git(['diff', '--name-only', '--no-renames', mb.stdout.trim(), 'HEAD']).stdout.split('\n'), ...staged].filter(Boolean))];
++    else {
++      const base = mb.stdout.trim();
++      const range = git(['diff', '--name-only', '--no-renames', base, 'HEAD']).stdout.split('\n').filter(Boolean);
++      changed = [...new Set([...range, ...staged].filter(Boolean))];
++      // V2.WHOLE: what the review must have seen = the range minus the exempt paths; the text for any set of its paths is what the one shared command prints
++      expectedPaths = range.filter((p) => !matchesAny(table.exempt ?? [], p));
++      diffOf = (paths) => { const r = git(['diff', ...DIFF_ARGS, base, 'HEAD', '--', ...paths]); return r.status === 0 ? r.stdout : null; };
++      const late = staged.filter((p) => !matchesAny(table.exempt ?? [], p) && !p.startsWith('docs/reports/') && !p.startsWith('backlog/'));
++      if (late.length) errors.push(`the closing commit stages ${late.length} path(s) outside the reviewed task range: ${late.slice(0, 6).join(', ')}${late.length > 6 ? ', ...' : ''} (the closing commit holds records only; commit the work first so the review covers it)`);
++    }
+   }
+   const codeStaged = staged.filter((f) => /^(src|scripts|mobile|migrations)\//.test(f));
+   const readRepo = (p) => { for (const ref of [`:${p}`, `HEAD:${p}`]) { const x = git(['show', ref]); if (x.status === 0) return x.stdout; } return null; };
+@@ -253,7 +340,7 @@ function check(msgFile) {
+     const laneName = assignees.map((a) => /^@lane-(.+)$/.exec(a)?.[1]).find(Boolean);
+     if (!laneName && codeStaged.length && !(type === 'build' || type === 'fix' || type === 'check')) { errors.push(`${id} is set ${mv.status} by a commit that changes code (${codeStaged.slice(0, 3).join(', ')}) but has no @lane-* assignee: take it through the launch script (no exemption for code, COMPLY.2)`); continue; }
+     const laneFiles = laneName ? lanePaths.filter((f) => { const p = f.split('/'); return p.length === 6 && p[4] === laneName; }).map((f) => ({ dir: path.dirname(f), name: path.basename(f), text: git(['show', `:${f}`]).stdout })) : [];
+-    errors.push(...closeErrors({ id, taskText: mv.now, fm: mv.fm, assignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table, root: top, letter: milestoneLetter(top, mv.fm.milestone), laneFiles, changed, readRepo }));
++    errors.push(...closeErrors({ id, taskText: mv.now, fm: mv.fm, assignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table, root: top, letter: milestoneLetter(top, mv.fm.milestone), laneFiles, changed, expectedPaths, diffOf, readRepo }));
+   }
+   return errors.length ? fail(errors) : 0;
+ }
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index 518a4dff3..b8583a6cc 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -229,8 +229,18 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+       expect(e).toContain('in-<same name>');
+       expect(e).toContain('out-<lens>[-<list id>]-rN.txt');
+       expect(e).toContain('fix-*.txt');
+-      // mechanism (rule-lists.mjs lens-input): the RULE LIST is split at its headings into -p1..-pN and the whole diff rides in every part; a diff is never split
+-      expect(e).toMatch(/compliance lens reviews the WHOLE change: lens-input splits the rule list at its headings into parts -p1\.\.-pN and puts the whole diff in every part; the diff is never split or trimmed to core files; a diff too large for one part is refused by lens-input: report that to the orchestrator at once/);
++      // V2.WHOLE (task-410): lens-input splits the rule list at its headings AND, when the diff leaves no room for a list part, the DIFF at file boundaries (the tool, never by hand)
++      expect(e).toContain('The compliance lens reviews the WHOLE change');
++      expect(e).toContain('git diff --no-ext-diff --no-textconv --no-color --no-renames --src-prefix=a/ --dst-prefix=b/ -U3');
++      expect(e).toContain("':(exclude)docs/reports/lanes' ':(exclude)docs/reports/reviews'");
++      expect(e).toContain('lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file)');
++      expect(e).toContain('each chunk goes against every list part');
++      expect(e).toContain('stamped chunk c of m with its path list');
++      expect(e).toContain('out-<lens>-pN.txt');
++      expect(e).toContain('one file alone over the room is refused naming the file and its size: report that to the orchestrator at once');
++      expect(e).toContain('The close check recomputes the changed paths of the task range');
++      expect(e).not.toMatch(/the diff is never split or trimmed to core files/);
++      expect(e).not.toMatch(/puts the whole diff in every part/);
+       expect(e).not.toMatch(/a diff over the review tool's bound is split/);
+     }
+   });
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index 028a17e93..f98cc1370 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -52,6 +52,7 @@ function grounder(lane: Lane, o: G = {}): string {
+ type Opts = {
+   status?: string; before?: string; type?: string; files?: string | null; assignees?: string[]; beforeAssignees?: string[]; trailer?: string | false; msg?: string; table?: 'keep' | 'delete' | 'never';
+   tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
++  split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean };
+   mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
+ };
+ function scenario(o: Opts = {}) {
+@@ -74,16 +75,34 @@ function scenario(o: Opts = {}) {
+   if (!o.noTaskFile) w(TASK, o.taskFileText ?? `${taskText({ status: o.status ?? 'BUILT', type: o.type, files: o.files, assignees: o.assignees })}notes\n`);
+   // the lane report: inputs written by the real lens-input, outputs carrying the review tool's header
+   const lane: Lane = { TASK: 'task-7\n' };
+-  fs.writeFileSync(path.join(d, '.git/material.txt'), 'MATERIAL UNDER REVIEW: a diff\n');
++  // V2.WHOLE (task-410): the material is the REAL diff of the task range (the command the brief gives), so the close check's path and text recompute has something true to compare
++  const dArgs = ['diff', '--no-ext-diff', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];
++  const mb = g('merge-base', 'HEAD', 'lane-base').stdout.trim();
++  const realDiff = g(...dArgs, mb, 'HEAD', '--', '.', ':(exclude)docs/reports/lanes', ...(o.split?.skip ? [`:(exclude)${o.split.skip}`] : [])).stdout;
++  const material = realDiff ? (o.split?.alter ? o.split.alter(realDiff) : realDiff) : 'MATERIAL UNDER REVIEW: a diff\n';
++  fs.writeFileSync(path.join(d, '.git/material.txt'), material);
++  fs.writeFileSync(path.join(d, '.git/tpl.md'), '## System persona\nsys\n\n## User prompt\nPLAN:\n{{PLAN}}\nSPECS:\n{{SPECS}}\n');
++  const splitArgs = o.split ? ['--max', String(o.split.max), '--template', path.join(d, '.git/tpl.md')] : [];
+   for (const id of ['first', 'inc-F', ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
+     const out = path.join(d, LD, `in-out-compliance-${id}`);
+-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out], { cwd: d });
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
+     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
+-    const inText = fs.existsSync(`${out}.txt`) ? fs.readFileSync(`${out}.txt`, 'utf8') : '';
+-    lane[`in-out-compliance-${id}.txt`] = inText;
+-    lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', inText) + body(id === 'first' && o.lensFinding !== false);
++    for (const p of r.stdout.split('\n').filter(Boolean)) {
++      const nm = path.basename(p);
++      const inText = fs.readFileSync(p, 'utf8');
++      lane[nm] = inText;
++      lane[nm.replace(/^in-/, '')] = hdr('lens-compliance.md', inText) + body(id === 'first' && o.lensFinding !== false);
++    }
++    if (r.status !== 0) { lane[`in-out-compliance-${id}.txt`] = ''; lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', '') + body(id === 'first' && o.lensFinding !== false); }
+   }
+   lane['out-code-review.txt'] = hdr('lens-code-review.md', null) + body(false);
++  if (o.split?.lens) {
++    // the non-compliance lenses split by the same tool: no --list, a lens template; the outputs are out-<lens>-pN.txt, each with its committed input
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--material', path.join(d, '.git/material.txt'), '--out', path.join(d, LD, 'in-out-code-review'), ...splitArgs], { cwd: d });
++    if (r.status !== 0) throw new Error(`lens-input (no list): ${r.stderr}`);
++    lane['out-code-review.txt'] = null;
++    for (const p of r.stdout.split('\n').filter(Boolean)) { const nm = path.basename(p); const inText = fs.readFileSync(p, 'utf8'); lane[nm] = inText; lane[nm.replace(/^in-/, '')] = hdr('lens-code-review.md', inText) + body(false); }
++  }
+   lane['out-error-paths.txt'] = hdr('lens-error-paths.md', null) + body(false);
+   lane['plan-code-review.txt'] = body(false);
+   let l = o.mutate ? o.mutate(lane, d) : lane;
+@@ -325,3 +344,53 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
+     refused(scenario({ tableEdit: (t) => { t.milestone_docs = { Z: ['msf'] }; } }), /milestone_docs|milestone objectives/);
+   });
+ });
++
++// V2.WHOLE (task-410): the close check proves the review saw the WHOLE change. It recomputes the changed paths of the task range (merge-base to HEAD, minus the table's exempt paths), reads the
++// chunk stamps of the committed out-phase inputs, and refuses when the union of the chunk path lists is not that list, when a chunk's text is not what git prints for its paths, or when a
++// stamp was edited. PLANTED DEFECTS each have a passing control (the same scenario untouched).
++const F5 = Object.fromEntries(['f1', 'f2', 'f3', 'f4', 'f5'].map((n) => [`src/${n}.ts`, Array.from({ length: 25 }, (_, i) => `export const ${n}v${i} = 'value number ${i} of ${n}';`).join('\n') + '\n']));
++// a lane that edits an input and runs the review again: the REVIEW header's file_sha256 then matches the edited input, so only the chunk proof can refuse it
++const reReview = (l: Lane, stem: string, edit: (x: string) => string): Lane => { const inn = edit(l[`in-out-compliance-${stem}.txt`] as string); return { ...l, [`in-out-compliance-${stem}.txt`]: inn, [`out-compliance-${stem}.txt`]: hdr('lens-compliance.md', inn) + body(false) }; };
++const SPLIT = { files: 'src/', lensFinding: false, laneWork: F5, split: { max: 4000 } } as const;
++describe('close check: the review material is the whole change (V2.WHOLE)', () => {
++  it('control: a change too big for one input, split into chunks by lens-input, with every file in one chunk, closes', () => {
++    const r = scenario({ ...SPLIT });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('control: a small change in one unsplit input (stamped chunk 1 of 1) closes', () => {
++    const r = scenario({ files: 'src/', laneWork: { 'src/one.ts': 'export const one = 1;\n' } });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('PLANTED DEFECT: a chunk set missing one changed file is refused, naming the file', () => {
++    refused(scenario({ ...SPLIT, split: { max: 4000, skip: 'src/f3.ts' } }), /src\/f3\.ts/, 15);
++    refused(scenario({ files: 'src/', laneWork: { 'src/one.ts': 'export const one = 1;\n', 'src/two.ts': 'export const two = 2;\n' }, split: { max: 100000, skip: 'src/two.ts' } }), /src\/two\.ts/, 15);
++  });
++  it('PLANTED DEFECT: a whole diff passed off as material that is not a diff (no file headers) is refused', () => {
++    refused(scenario({ files: 'src/', laneWork: { 'src/one.ts': 'export const one = 1;\n' }, split: { max: 100000, alter: () => 'MATERIAL UNDER REVIEW: a diff of one.ts\n' } }), /src\/one\.ts/, 16);
++  });
++  it('PLANTED DEFECT: a chunk whose text differs from the diff (re-stamped, so its own hash holds) is refused', () => {
++    refused(scenario({ ...SPLIT, split: { max: 4000, alter: (d) => d.replace("export const f2v3 = 'value number 3 of f2';", "export const f2v3 = 'value number 3 of f2 softened';") } }), /f2|differ|not what git prints/i, 17);
++  });
++  it('PLANTED DEFECT: a hand-edited chunk stamp (chunk number) is refused', () => {
++    refused(scenario({ ...SPLIT, mutate: (l) => reReview(l, 'first-p2', (x) => x.replace(/ chunk 2 of (\d+)\n/, ' chunk 1 of $1\n')) }), /chunk/, 18);
++  });
++  it('PLANTED DEFECT: a hand-edited path list in a chunk stamp is refused', () => {
++    refused(scenario({ ...SPLIT, mutate: (l) => reReview(l, 'first-p2', (x) => x.replace(/ paths: \["src\/f2\.ts"\]\n/, ' paths: ["src/f3.ts"]\n')) }), /stamped path list/, 19);
++  });
++  it('a chunk set with the last chunk deleted (all its list parts) is refused: the stamps say m chunks, and a file is missing', () => {
++    refused(scenario({ ...SPLIT, mutate: (l) => { const o = { ...l }; for (const k of Object.keys(o)) if (/-first-p5\.txt$/.test(k)) o[k] = null; return o; } }), /first|chunk|src\/f5\.ts/, 20);
++  });
++  it('a file left out of ONE rule list review is refused too: the check runs per list', () => {
++    refused(scenario({ ...SPLIT, mutate: (l) => { const o = { ...l }; for (const k of Object.keys(o)) if (/-ev-p5\.txt$/.test(k)) o[k] = null; return o; } }), /ev|chunk|src\/f5\.ts/, 21);
++  });
++  it('the paths staged in the closing commit itself (outside the exempt paths and the task files) are refused: they are in no chunk', () => {
++    refused(scenario({ files: 'src/', staged: { 'src/late.ts': 'export const late = 1;\n' } }), /late\.ts/, 22);
++  });
++  it('the non-compliance lenses split by the same tool (lens-input with a lens template and no --list): out-<lens>-pN.txt with committed inputs closes (control)', () => {
++    const r = scenario({ ...SPLIT, split: { max: 4000, lens: true } });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('PLANTED DEFECT: a split code-review run with its last chunk missing is refused, naming the lens', () => {
++    refused(scenario({ ...SPLIT, split: { max: 4000, lens: true }, mutate: (l) => { const o = { ...l }; for (const k of Object.keys(o)) if (/code-review-p3\.txt$/.test(k)) o[k] = null; return o; } }), /code-review/, 23);
++  });
++});
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index d4adce251..b9d7f8037 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -491,3 +491,90 @@ describe('V2.LIST round 2: the milestone guard', () => {
+     expect(verifyResolved(t, good, undefined, 'record')).toEqual([]);
+   });
+ });
++
++// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries (the tool, never by hand), each chunk against every list part,
++// each input stamped "chunk c of m" with its path list; one file alone over the room is refused naming the file and its size. No --list (a non-compliance lens template) writes the same chunks.
++const dfile = (p: string, n: number) => `diff --git a/${p} b/${p}\nindex 1111111..2222222 100644\n--- a/${p}\n+++ b/${p}\n@@ -1 +1 @@\n-old\n${'+line of new text\n'.repeat(n)}`;
++const FILES = ['src/a.ts', 'src/b.ts', 'src/c.ts', 'src/d.ts', 'src/e.ts'];
++const BIGDIFF = FILES.map((p) => dfile(p, 50)).join('');
++const stampOf = (t: string) => {
++  const m = /^LIST (\S+) sha256:[0-9a-f]{64} material sha256:([0-9a-f]{64}) part (\d+) of (\d+)(?: chunk (\d+) of (\d+))?\n/.exec(t);
++  const pm = / paths: (\[.*\])\n/.exec(t.split('\n').slice(0, 3).join('\n') + '\n');
++  return { id: m?.[1], matSha: m?.[2], part: Number(m?.[3]), parts: Number(m?.[4]), chunk: m?.[5] === undefined ? undefined : Number(m[5]), chunks: m?.[6] === undefined ? undefined : Number(m[6]), paths: pm ? (JSON.parse(pm[1] as string) as string[]) : undefined };
++};
++const materialOf = (t: string) => t.slice(t.indexOf('=== MATERIAL UNDER REVIEW (everything below this line) ===\n') + '=== MATERIAL UNDER REVIEW (everything below this line) ===\n'.length).replace(/\n$/, '');
++describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries', () => {
++  it('a diff too large for one input becomes chunks: every changed path in exactly one chunk, chunk texts joined are the diff, every input within the bound, each stamped chunk c of m with its paths', () => {
++    const f = fixture();
++    const max = 12000;
++    const l = lens(f, 'first', BIGDIFF, max);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    const st = l.text.map(stampOf);
++    const m = st[0]!.chunks;
++    expect(m, 'chunk stamp present').toBeGreaterThan(1);
++    expect(l.files.length).toBe((m as number) * st[0]!.parts);
++    for (const t of l.text) expect(t.length).toBeLessThanOrEqual(max);
++    const seen = st.flatMap((s) => s.paths ?? []);
++    expect([...seen].sort()).toEqual([...FILES].sort());
++    expect(new Set(seen).size).toBe(seen.length);
++    const byChunk = new Map<number, string>();
++    l.text.forEach((t, i) => byChunk.set(st[i]!.chunk as number, materialOf(t)));
++    expect([...byChunk.entries()].sort((a, b) => a[0] - b[0]).map((e) => e[1]).join('')).toBe(BIGDIFF);
++    expect(l.files.map((x) => path.basename(x))).toEqual(l.files.map((_, i) => `o-p${i + 1}.txt`));
++    for (const t of l.text) expect(t).toContain('first text');
++  });
++  it('a chunk is never cut inside a file: each chunk text starts at a diff header and holds whole files', () => {
++    const f = fixture();
++    const l = lens(f, 'first', BIGDIFF, 12000);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    for (const t of l.text) {
++      const mat = materialOf(t);
++      expect(mat.startsWith('diff --git ')).toBe(true);
++      for (const p of stampOf(t).paths ?? []) expect(mat).toContain(dfile(p, 50).trimEnd());
++    }
++  });
++  it('a list block that cannot be split still gets every chunk: the list part is whole in each input', () => {
++    const f = fixture();
++    const d = FILES.map((p) => dfile(p, 30)).join('');
++    const l = lens(f, 'big', d, 12000);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    expect(stampOf(l.text[0]!).chunks).toBeGreaterThan(1);
++    for (const t of l.text) expect(t).toContain('rule line');
++  });
++  it('one file alone over the room is refused with a line naming the file and its size', () => {
++    const f = fixture();
++    const d = dfile('src/a.ts', 5) + dfile('src/huge.ts', 400) + dfile('src/z.ts', 5);
++    const l = lens(f, 'first', d, 12000);
++    expect(l.r.status).toBe(1);
++    expect(l.r.stderr).toContain('src/huge.ts');
++    expect(l.r.stderr).toMatch(/src\/huge\.ts[^\n]*\b\d{4,}\b/);
++    expect(l.files).toEqual([]);
++  });
++  it('a material that is not a diff and does not fit is still refused, never trimmed (control)', () => {
++    const f = fixture();
++    const r = lens(f, 'first', 'plain text '.repeat(3000), 12000);
++    expect(r.r.status).toBe(1);
++    expect(r.r.stderr).toMatch(/material/);
++  });
++  it('a diff that fits is one input stamped chunk 1 of 1 with its paths (control: no split)', () => {
++    const f = fixture();
++    const l = lens(f, 'first', dfile('src/a.ts', 3) + dfile('src/b.ts', 3), 20000);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    expect(l.files).toHaveLength(1);
++    const s = stampOf(l.text[0]!);
++    expect([s.chunk, s.chunks, s.paths]).toEqual([1, 1, ['src/a.ts', 'src/b.ts']]);
++  });
++  it('no --list with a lens template (code-review, error-paths, ux, security) writes the same chunk inputs with an empty list part', () => {
++    const f = fixture();
++    const m = path.join(f.d, 'nl.material'); fs.writeFileSync(m, BIGDIFF);
++    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
++    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/nl'), '--template', tpl, '--max', '9000']);
++    expect(r.status, r.stderr).toBe(0);
++    const files = r.stdout.split('\n').filter(Boolean);
++    const st = files.map((x) => stampOf(fs.readFileSync(x, 'utf8')));
++    expect(st[0]!.id).toBe('none');
++    expect(st[0]!.chunks).toBeGreaterThan(1);
++    expect(files.length).toBe(st[0]!.chunks);
++    expect([...st.flatMap((s) => s.paths ?? [])].sort()).toEqual([...FILES].sort());
++  });
++});
+

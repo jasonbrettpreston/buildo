@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:23:02.478Z file_sha256=3ff84d32d7a87f2d56cffab96511a92872dd064dcf70e760417bb9b30cbc461a prompt_sha256=d0a63d008ba7501f8c30170156e4a8222ccd5e4c155f31fd14213a8fc26a1904
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG none.
+
+DEFER severity=MED — 08_agents.md §7 rule 6 "DEFER → `review_followups.md` with reasons" — task-410 plan "NOT built: the always-attached lists checked at plan phase only for build tasks (measured), lens-input pasted context (measured), generated-file exclusion, bound change, task size limit." — these deferred items carry no `review_followups.md` filing or reason, so each deferral is untracked — file each item to `review_followups.md` with its reason, or open a follow-up task id.
+
+DEFER severity=LOW — 08_agents.md §7 rule 10 dated note 2026-11-19 (TKT-1) "The review context file for a task is written by the same tool to `docs/reports/reviews/<task>/context-<date>.md`, so the rule quoted with file:line ... comes from the task's decisions and acceptance criteria" — scripts/analysis/backlog-lane.mjs:152 "then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md > P-compliance-L[-pN].txt\`" — the compliance command carries no `--context`, and the plan admits "lens-input pasted context (measured)", so the compliance seat judges without the task's pasted decisions — pass the context file with `--context` or file this gap to `review_followups.md`.
+
+DEFER severity=LOW — 08_agents.md §11.1 "a line citation is read, not remembered" (an executable claim must match what is executed) — task-410 plan "(c) ... each chunk material must equal `git diff --no-renames merge-base HEAD -- <its paths>`" — the diff instead compares against DIFF_ARGS ("--no-ext-diff, --no-textconv, --no-color, --no-renames, --src-prefix=a/, --dst-prefix=b/, -U3"), so a lane reading the plan's shorter command can produce text the check refuses — restate the plan's (c) command as the shared DIFF_ARGS command the brief gives.
+
+MET — 08_agents.md §7 rule 4 "run the LENS SET in parallel, each a narrow prompt" — scripts/analysis/backlog-lane.mjs lensLine — the five-lens DeepSeek set is preserved and each lens is split only when its prompt exceeds the bound.
+
+MET — 08_agents.md §11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new)" — src/tests/backlog/check-lane-close.logic.test.ts "PLANTED DEFECTS each have a passing control (the same scenario untouched)" — each planted defect ships a passing control ("control: ... closes").
+
+MET — 08_agents.md §11.4 "The failing tests ... are written INTO the plan" — task-410 plan "Tests first (red as failing assertions through the pre-commit related run): rule-lists.logic.test.ts (chunking, file over room, no-list mode, non-diff material still refused)" — cases, files and mode are named in the plan.
+
+MET — 08_agents.md §7 rule 4 "one Claude grounder adjudicates every finding as round 2" — task-410 notes "Grounder owed; task stays RUNNING" — the task is left RUNNING pending a separate grounder, matching the grounder requirement.
+
+MET — 08_agents.md §7 rule 10 dated note 2026-11-19 "the task's references point at that repo copy" — task file diff "+references: - docs/reports/lanes/2026-11-20/BL-V2WHOLE/REPORT.md" — the reference points at the docs/reports/lanes repo copy, not a scratch path.
+
+MET — 08_agents.md §7 rule 6 "BUG → WF3 before Green Light" (fail-closed) — scripts/hooks/check-lane-close.mjs chunkErrors "the union of the chunk path lists is not that list (a file left out, or a path outside the change)" — an unreviewed file makes close refuse rather than pass.
+
+REJECT — 08_agents.md §11.5 "CLI models ... DEMOTED to whole-file audit generators ... never folds into a diff review" — the change feeds a split diff to the DeepSeek lenses — the dated note 2026-11-19 (task-358, operator "I believe deepseek does the compliance seat") supersedes the demotion for the five-lens set, so it is not a violation.
+
+VERDICT: PASS
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  195902ms (195.9s)
+📊 Tokens — total: 52315, input: 28058, output: 24257, reasoning: 23231

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:23:02.664Z file_sha256=7ac7c28ab704429400678599aebf637ad95b9f3c347cd5686cc723e1355efc9c prompt_sha256=4354809b92f38b058fcab31ad508cadddeaf9fbd4fa4e816e6ea566146a480dc
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — plan-protocol 5.5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — backlog/tasks/task-410...md:45 "PLAN task-410 (V2.WHOLE). Rule: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1; PLAN-PROTOCOL.md:3 simple, no scope creep." — the card's implementation plan states no estimate for parts (b), (c) or (d), measured or labelled GUESS, so the integration pass cannot show the critical path through it — add one estimate line per part to the PLAN block, MEASURED with its source or marked GUESS.
+
+DEFER severity=LOW — plan-protocol 2 step D "Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands." — backlog/tasks/task-410...md:52 "Tests first (red as failing assertions through the pre-commit related run): rule-lists.logic.test.ts (chunking, file over room, no-list mode, non-diff material still refused), check-lane-close.logic.test.ts" — the red-first tests are named but no exact command to run them red is given, and two of the three cited facts carry no file:line — name the command (e.g. the vitest run for the three test files) and the file:line for the lens-input room refusal and the clock/chunk code paths.
+
+DEFER severity=LOW — plan-protocol 5.6 "INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule) and is listed in the plan as tasks with sources" — scripts/analysis/rule-lists.mjs:320 "const mark = ch.paths ? ` chunk ${ci + 1} of ${chunks.length}` : '';" — the change extends shared review infrastructure (lens-input chunking, close-check recompute, new closing-commit staged-path refusal at scripts/hooks/check-lane-close.mjs:326) but the card never states the gap blocks this plan, nor cites a gap-register row for it; the justification given is Spec 126 and 08_agents, which are not in the pasted context — add one line to the PLAN block saying which plan step is blocked without it and the source line for that block.
+
+DEFER severity=LOW — plan-protocol 0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added." — backlog/tasks/task-410...md:45 "Rule: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1" — three of the four sources are section references with no line, and none of the cited clauses is pasted, so the "nothing the card or ruling did not name" check cannot be closed from this material — replace the section references with file:line (as done for scripts/deepseek-review.js:35) or paste the cited clauses into the card.
+
+MET — plan-protocol 3 "keep it simple; no scope creep" — backlog/tasks/task-410...md:52 "NOT built: the always-attached lists checked at plan phase only for build tasks (measured), lens-input pasted context (measured), generated-file exclusion, bound change, task size limit." — the plan bounds its own scope and names the excluded items, so no ungrounded expansion rides along.
+
+MET — plan-protocol 2 step D "red-first tests named" — src/tests/backlog/rule-lists.logic.test.ts:494 "describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries', () => {" — the three named test files each carry the assertions the plan names (chunking, file over room, no-list mode, non-diff refused; chunk set missing a file, edited stamp, split lens part missing; brief sentence).
+
+MET — plan-protocol 0 "The ONLY plan is ... Nothing is re-written from scratch." — backlog/tasks/task-410...md:66 "2026-11-20 part (c) landed (ba26e1b81 check-lane-close.mjs chunkErrors; closing commit may stage no path outside the task range)." — the work is recorded as increments on the existing card with commit ids, not as a parallel plan.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  67310ms (67.3s)
+📊 Tokens — total: 30273, input: 22394, output: 7879, reasoning: 6855

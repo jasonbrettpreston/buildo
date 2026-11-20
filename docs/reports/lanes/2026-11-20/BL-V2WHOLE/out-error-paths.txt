@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T19:23:02.743Z file_sha256=85338350a8c8a7146593612016367a38fb0135ed49cca9d891c0f88b130f8ba3 prompt_sha256=a4644b572fa58ed64684bb71722301807281bcbf4142fef8aa034fc525582bc1
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/DIFF.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/hooks/check-lane-close.mjs:324 "const range = git(['diff', '--name-only', '--no-renames', base, 'HEAD']).stdout.split('\n').filter(Boolean);" — the status of this git call is never read, so a nonzero exit yields range [] and expectedPaths [] and the gate "if (ph === 'out' && expected.length)" skips chunkErrors entirely while the sibling merge-base failure one line up is refused: a transient git failure silently disables the whole-change proof this task adds — capture the status and push a refusal (fail closed) when it is nonzero, same as the merge-base branch.
+
+BUG severity=MED — scripts/hooks/check-lane-close.mjs:328 "diffOf = (paths) => { const r = git(['diff', ...DIFF_ARGS, base, 'HEAD', '--', ...paths]); return r.status === 0 ? r.stdout : null; };" — the chunk's own paths are re-fed as pathspecs without literal mode, so a changed path holding a glob metacharacter (for example mobile routes written as src/app/[id].tsx) matches a different file set and a legitimate close is refused as "not what git diff prints for its paths" with no lane-side fix — add --literal-pathspecs (or GIT_LITERAL_PATHSPECS=1) to this one call.
+
+BUG severity=MED — scripts/hooks/check-lane-close.mjs:205 "if (t === undefined && lparts.length) {" — the chunk proof for a non-compliance lens runs only when the unsplit out-<lens>.txt is absent; when both exist (or the input fits) the pre-existing branch runs with inputText null, so an out-code-review.txt plus in-out-code-review.txt of one file's diff passes, though the same material split into -pN parts is refused: the split form is strictly checked and the unsplit form not at all — run chunkErrors on the unsplit out-phase input too whenever in-out-<lens>.txt is committed.
+
+BUG severity=MED — scripts/hooks/check-lane-close.mjs:81 "const own = diffPaths(p.material);" — splitDiff throws on a material header it cannot read (a rename header from a plain git diff, or a quoted non-ASCII name) and no try/catch around the closeErrors call is visible, so a lane-committed input crashes the hook with a stack trace instead of a refusal line — wrap diffPaths here and in the diffOf comparison, and turn the throw into a refusal naming the input.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:82 "if (p.chunk !== undefined && (!p.paths || JSON.stringify(p.paths) !== JSON.stringify(own)))" — a stamp edited to delete " chunk c of m" and its " paths: [...]" makes p.chunk undefined, so the path comparison and the -pN equation both pass, so the documented "a hand-edited stamp is refused" does not hold for that edit (coverage still stands because the material text is recomputed) — compare the path list against the material whenever it is a diff, not only when a chunk is stamped.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:43 "const git = (a) => { const r = spawnSync('git', ['-c', 'core.quotepath=false', ...a], { encoding: 'utf8', maxBuffer: 1 << 28 }); return { status: r.status ?? 1, stdout: r.stdout ?? '' }; };" — core.quotepath is pinned only in the check's wrapper and not in DIFF_ARGS, so the brief's command quotes a non-ASCII path header, splitDiff throws there and the recompute here disagrees, refusing a close made exactly with the documented command — pin quotepath inside DIFF_ARGS (or the command in the brief) so the lane and the check print the same bytes.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:87 "a chunk or a part is missing or left over from an earlier run" — a second lens-input run at a smaller --max writes fewer -pN files and leaves the earlier ones (the write loop is not in this diff, so any unlink is cannot see), and the close is then refused with no tool-side cleanup, so a re-run is not idempotent until a human deletes files — have lens-input remove the prefix's existing -pN.txt outputs before writing, or say in the message which files to delete.
+
+VERDICT: FAIL on error-path safety
+Paths walked: lens-input fit path, over-bound chunking, one file over room refusal, no --list mode, non-diff over-bound refusal, chunk union and duplicate coverage, missing and extra path coverage, empty expected list, git merge-base failure, git name-only failure, git diff failure in diffOf, splitDiff parse throw in the check, stamped paths and -pN equation, hand-edited stamp variants, chained lens-template path, staged-late path, rerun leftovers   Unguarded: 3
+
+---
+⏱  195579ms (195.6s)
+📊 Tokens — total: 43100, input: 20416, output: 22684, reasoning: 21564

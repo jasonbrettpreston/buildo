@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-20T18:56:55.973Z file_sha256=12ef4f399a94c6ed11540f216c2e2aa17c37a4d41f1c75888bffeda4adfe0aa2 prompt_sha256=b2cb3db9ca5d3850d15b306d22c8818e20081626c910f07b6b1e9069b0f705b2
+🔍 Lens review of docs/reports/reviews/task-410/context-2026-11-20.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Plan (b) "the TOOL cuts the diff at those `diff --git` headers (file boundaries only)" — a changed file whose own content contains a line beginning `diff --git` (committed patch/markdown; this repo already carries DIFF-core.patch) is split mid-file and fabricates a path, so the chunk's stamped paths ≠ real paths — never split by header text; derive boundaries from `git diff --name-only --no-renames merge-base HEAD`, then per-file `git diff -- <path>`, and add a fixture with a `diff --git` line inside a file.
+BUG severity=HIGH — Plan (c) "each chunk material must equal `git diff --no-renames merge-base HEAD -- <its paths>`" — byte equality also depends on `diff.noprefix`, `diff.external`, `diff.renames` (default true), `diff.context`, `core.autocrlf`, color, which the lane need not share, so honest lanes get mass false-rejects (or a real omission rides a matching config) — pin every flag on both sides: `--no-renames -U3 --no-color --no-ext-diff --src-prefix=a/ --dst-prefix=b/`, state them in the brief, and verify with `git config --get diff.external` etc.
+BUG severity=HIGH — Plan (c) "expected paths = `git diff --name-only --no-renames merge-base..HEAD`" — unstaged and uncommitted working-tree edits fall outside the range, so a lane can close with the review omitting them and the check still passes, which defeats "the whole change" — add `git status --porcelain` clean assertion (records/closing globs excluded) or fold `git diff HEAD` into the expected set.
+BUG severity=HIGH — Plan (b) "A single file over the room is refused" + NOT-built "generated-file exclusion" — any routine change to a file >120 KB (package-lock.json, a big JSON, a migration) can never be reviewed, so the lane is permanently blocked — measure sizes now (`git ls-files | xargs -I{} sh -c 'wc -c "{}"' | sort -n | tail`) and allow generated-file exclusion or a raised bound before this gate is enforced.
+BUG severity=MED — Plan (c) "the closing commit is records only" is asserted, not checked — a code file accidentally staged into the closing commit is silently dropped from expected paths — add the assertion `git diff --name-only HEAD~1 HEAD` ⊂ records globs.
+BUG severity=MED — Plan (b) "files are -p1..-pN chunk-major" — positional naming leaves stale `out-<lens>-pN.txt` from an earlier larger run, and their paths feed the union on the next close — require the check to also match the recorded m and list-part count and refuse an out file whose (lens,chunk,material) stamp is not current.
+BUG severity=MED — Plan (b) "chunks of at most the room left after the list part" — the new ` chunk c of m` line and the `paths:` JSON array plus template overhead are not subtracted, so an assembled chunk can still exceed 120000 — define room = 120000 − template − list − stamp overhead and assert final assembled length in a test.
+BUG severity=MED — Plan (c) "`git diff ... -- <its paths>`" and the `paths:` JSON array — paths with spaces, tabs, unicode, or a leading `-` (quoted `diff --git "a/foo bar"` form) break both header parsing and arg passing — add a test with a spaced/unicode path and pass paths after `--` as separate argv.
+BUG severity=MED — Plan (b) unchunked input = "chunk 1 of 1 (its paths read from its diff headers)" — in-flight lanes carrying pre-change, possibly non-diff materials will be retro-rejected at close the moment (c) lands — state a cutover (re-run lens-input once (b) is merged) or grandfather by a stamp-version field.
+BUG severity=MED — Plan (c) reads "out-phase inputs" at the location task-407 defines "where review files go" (status RUNNING) — if task-407 lands a different convention the close check reads the wrong place and passes vacuously — confirm the BL-V2LAYOUT report / task-407 output before wiring the path.
+BUG severity=HIGH — Sibling to the fixed hole: the other four lenses (code-review, error-paths, ux, security) get chunked in (b) but the plan does not state their union is checked against expected paths — if (c)'s union rule covers only the compliance list parts, a lane can still close with those lenses run on partial material — make the union/path-equality rule lens-agnostic over every out-phase input.
+
+DEFER severity=MED — Sibling root cause "material is sent twice" — other prompt-assembly paths (brief builder, plan prompt, any template with a `{{...}}` placeholder) may double-include the same way the four lenses did — `grep -rn '{{' .claude/review-templates scripts/analysis`; defer if task-406's scope was exactly these four.
+
+DEFER severity=MED — Sibling root cause "no `--no-renames`" — any other script that produces material for review (or the brief's suggested command) may still emit rename-form diffs that will never byte-match the close check — grep for `git diff` calls that omit `--no-renames`.
+
+DEFER severity=LOW — Concurrent two lanes writing review files into the same directory — if the task-407 layout is lane-scoped there is no contention; confirm before adding any locking.
+
+REJECT — Plan header "Verified facts (opened)" — the DB-oriented failure categories in the template (FK/NULL/deadlock/MMKV/feature-flag) — this change writes no database rows and touches only git text and repo files; rollback is a plain `git revert` of the one protected-path commit each part already requires, so no transactional rollback is needed.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers:
+- Byte-equality recompute in (c) depends on unpinned git diff config (`diff.renames` default true, `diff.external`, `diff.context`, prefixes), so honest lanes false-reject and dishonest ones can still mismatch silently.
+- The single-file-over-room refusal plus the deferred generated-file exclusion lets any routine >120 KB file (lockfile, big JSON) block a lane from ever closing.
+- Expected paths from `merge-base..HEAD` exclude uncommitted working-tree edits, so "the whole change" is not actually proven at close.
+
+Top 3 unverified data premises:
+- task-390 diff = 121,482 chars and the bound is exactly 120000 — `grep -n '120000' scripts/deepseek-review.js; git diff --no-renames <merge-base> HEAD -- <paths> | wc -c` (re-measure on the real branch).
+- Templates' placeholder sits on line 32 (task text) vs line 34 (plan), and exactly one remains per file — `grep -c '{{PLAN}}' .claude/review-templates/lens-{code-review,error-paths,ux,security,compliance}.md`.
+- No changed file's content contains a `diff --git` line and no tracked file exceeds the room — `git grep -n '^diff --git' -- ':!*.patch'; wc -c $(git ls-files | grep -E 'package-lock.json|\.min\.js')`.
+
+---
+⏱  56429ms (56.4s)
+📊 Tokens — total: 22147, input: 12104, output: 10043, reasoning: 8368

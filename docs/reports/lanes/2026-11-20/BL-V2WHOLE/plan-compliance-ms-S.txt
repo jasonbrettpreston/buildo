@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:56:55.970Z file_sha256=cec32b9b6ccae6c37802817daca8038fd274ab2604c5a656bdc9a05becf54eb0 prompt_sha256=80830a2392a7035862edc16deabe297c815cf91fe3ba82c187407fc0c055a3f0
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN-PROTOCOL.md:3 "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — Plan task-410 (b) "No --list (with --template of a non-compliance lens) writes the same chunk inputs with an empty list part: that is how code-review, error-paths, ux, security are split (same tool); the close check accepts out-<lens>-pN.txt for them" — the plan adds a chunking mode plus close-check verification for the four non-compliance lenses, a behaviour no pasted clause or ruling names — cut that branch out of this plan into its own card and keep this one to the compliance lens and the list parts.
+
+DEFER severity=MED — RR-0208 "Each new gate is assessed as necessary or not, with how to do it right" — Plan task-410 front matter "Rule: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1" — the new path-union gate is given rule citations but no necessary-or-not assessment — add one line per new gate stating it is necessary and why, and how it is done right.
+
+DEFER severity=MED — RR-0208 "Each new gate is assessed as necessary or not, with how to do it right" — Plan task-410 (c) "Limit stated: a path staged only in the closing commit is not in the range (the closing commit is records only)" — a stated hole where a path escapes the new coverage check, with no assessment or closure named — record it as an accepted limit with the rule text that makes the closing commit records-only, or state what refuses a code path in that commit.
+
+DEFER severity=MED — RR-0190 "orchestrator replies that recommend or name a ruling must cite file:line, an RR id or UNVERIFIED (enforced by hooks)" — Plan task-410 front matter "Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1" — the rules this plan rests on are cited by section only, no line and no RR id, so the citation is not verifiable — cite file:line or an RR id for each named rule.
+
+DEFER severity=LOW — MORNING-DECISIONS.md:635 "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — Plan task-410 front matter "Principles served: standardized, understandable, simple." — the plan names principles, not the designed element or supporting function this tooling task serves — name the supporting function the close check and lens-input serve.
+
+MET — MORNING-DECISIONS.md:652 "we need one plan - we can only execute one plan" — Plan task-410 — one plan for one task, no second plan offered alongside it.
+
+MET — RR-0174 "the animation still needs to be complete.. the button shows when its ready - anytime after the animation completes" — superseded by RR-0176 "yes that is correct" — Plan task-410 — the plan touches no loading-screen, search-page or lot behaviour, so neither ruling is contradicted.
+
+MET — RR-0212 "we needd the loader and the three gates" — Plan task-410 (c) — the plan edits the existing close check rather than adding a fourth gate mechanism, apart from the non-compliance branch reported above.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 5
+
+---
+⏱  25014ms (25.0s)
+📊 Tokens — total: 16644, input: 11843, output: 4801, reasoning: 4014

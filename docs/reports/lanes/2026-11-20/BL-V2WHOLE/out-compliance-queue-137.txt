@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:23:02.514Z file_sha256=32cb3f47d947aa03ae2f6cf8cbaf3520580fd80cea8f509ee642bb3b24ec06e4 prompt_sha256=14644566a07f1f71384c0a4e80c41aa8d61cd4ca246b369e5abf676693230335
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §4 Rule 3 "The status line changes in the same commit as the work. When work lands for a row, the commit that lands it edits that row's status line." — scripts/hooks/check-lane-close.mjs:329 "const late = staged.filter((p) => !matchesAny(table.exempt ?? [], p) && !p.startsWith('docs/reports/') && !p.startsWith('backlog/'));" — a lane that lands work and edits its status line in one commit, which Rule 3 requires, stages src/ or scripts/ paths in the commit that sets BUILT, so `late` refuses that commit ("the closing commit holds records only; commit the work first"), making Rule 3 unsatisfiable for every code lane — exclude staged paths that are already inside the task range (`range`) from the `late` filter, and refuse only staged paths that are neither records nor in the reviewed range.
+
+DEFER severity=MED — Spec 137 §2 table "McBylaws | `.cursor/MCBYLAWS-QUEUE.md`" and §1 amendment Rule 13 "a queue row still changes only on its own row." — scripts/hooks/check-lane-close.mjs:329 "!p.startsWith('docs/reports/') && !p.startsWith('backlog/')" — a close that edits a queue row on its own row stages `.cursor/MCBYLAWS-QUEUE.md` or `.cursor/MCFRONTEND-QUEUE.md`, which is under neither allowed prefix; the only exempt globs visible are "':(exclude)docs/reports/lanes' ':(exclude)docs/reports/reviews'" (src/tests/backlog/backlog-lane.logic.test.ts), and the full exempt list in rule-lists.json cannot be seen — add `.cursor/` (or the queue files by name) to the records-only allowance so a queue row can still be closed on its own row.
+
+DEFER severity=MED — Spec 137 §1 item 3 "This page gathers the queue rules with their sources (§4) and gives the weekly check (§5)." — scripts/hooks/check-lane-close.mjs:184 "if (ph === 'out' && expected.length) bad.push(...chunkErrors({ label: `${base}`, items: names.map((n, x) => ({ name: `in-${n}`, k: kOf(n), p: listParts[x] })), expected, diffOf: i.diffOf }));" — the diff adds three enforced close rules (chunk coverage of the whole change, refusal of late staged paths, split non-compliance lens outputs accepted as out-<lens>-pN.txt) while the pasted page still says only that the hook "refuses the commit that sets BUILT or DONE without them"; no dated note with a source for the new refusals is added to §1 or §4 — add one M-246 dated note to §1 or §4 quoting the operator words that asked for whole-change coverage and naming the three new refusals.
+
+DEFER severity=LOW — Spec 137 §4 Rule 7 "Each open row carries an opened date and an expiry 7 days later." and §3 amendment "the due date is `expires`" — backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md:16 "type: build\ ordinal: 110012" — the task is open (status RUNNING) and the front matter shown carries `status`, `dependencies`, `references`, `type`, `ordinal` but no `expires` line — add an `expires:` date to the task front matter, or an operator-set expiry recorded on the row as Rule 7 allows.
+
+MET — Spec 137 §1 amendment (COMPLY.2) "one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding" — scripts/hooks/check-lane-close.mjs:187 "if (whole !== undefined && ps.sort((a, b) => a.part - b.part).map((p) => p.listPart).join('').replace(/\s+/g, '') !== whole.replace(/\s+/g, '')) bad.push(...)" — every chunk of a list must still carry the whole list, and the per-list output and GROUNDER requirements are untouched.
+
+MET — Spec 137 §1 amendment Rule 2 "A plan task that is not a queue row: its Backlog file is its row." — backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md:1 — the plan task's row is its Backlog file and it is in this diff.
+
+MET — Spec 137 §1 amendment Rule 3 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — scripts/analysis/rule-lists.mjs:3 and scripts/hooks/check-lane-close.mjs:36 — the commit changes scripts/ and the task file task-410 rides in the same diff (the trailer is a commit-message item and is not visible here).
+
+MET — Spec 137 §3 amendment "`since` is derived from git (the author date of the last commit that changed its `status:` line)" — backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md:7 "status: RUNNING" with only "updated_date: '2026-11-20T19:21:00Z'" changed — the status word is not moved and `since` is not faked.
+
+MET — Spec 137 §1 amendment (COMPLY.2) "a separate grounder rules on every finding ... leave the task RUNNING with 'grounder owed'" — backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md:55 "Grounder owed; task stays RUNNING." — the task is not set BUILT or DONE before the grounder exists, as the close rule requires.
+
+REJECT — Spec 137 §1 amendment (COMPLY.2) "one compliance lens output per rule list the task attaches" — accused of: splitting a list's review into out-compliance-<id>-p1..pN so more than one output stands for one list and part of the change can be skipped — not a real issue: chunkErrors recomputes every chunk against `git diff` for its own paths and requires the union of chunk paths to be exactly the changed paths of the range, with missing and extra paths refused.
+
+REJECT — Spec 137 §1 item 1 "McQueue does not move them, copy them or keep an index of them." — accused of: adding a `references:` entry to the task, which is an index of a report — not a real issue: a single reference to that task's own lane report is neither a copy of the task nor an index of tasks.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 4
+
+---
+⏱  77793ms (77.8s)
+📊 Tokens — total: 44364, input: 28423, output: 15941, reasoning: 14344

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:23:02.740Z file_sha256=ef64846a9a2f0f34794d49069d6090282062070130aa558e7a8024ea2850274b prompt_sha256=865068a3ff1716bcc75f15073ca6376ce7f841c0d67efa7a7804986c4c2ef24b
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG none raised at CRIT or HIGH.
+
+DEFER severity=MED — "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — backlog/tasks/task-410 - V2.WHOLE...md "No --list (with --template of a non-compliance lens) writes the same chunk inputs with an empty list part: that is how code-review, error-paths, ux, security are split (same tool); the close check accepts out-<lens>-pN.txt for them" — no pasted clause and no part of the card's own words ("The compliance review covers the whole change") names splitting the four non-compliance lenses; this change adds a new lens-input mode, a new file naming family and new brief obligations for every lane — file it as its own card or drop part (b)'s no-list branch from this change.
+
+DEFER severity=MED — "standardization, observability, scalability, accuracy, understandability" — src/tests/backlog/check-lane-close.logic.test.ts "const dArgs = ['diff', '--no-ext-diff', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];" — the scenario material is built from a hand copy of the diff command that omits '--no-textconv' from rule-lists.mjs DIFF_ARGS, so the test's "control" does not exercise the text the close check actually recomputes and can pass where a real lane is refused — build the scenario diff with the exported DIFF_ARGS instead of a local copy.
+
+DEFER severity=LOW — "standardization, observability, scalability, accuracy, understandability" — scripts/hooks/check-lane-close.mjs "if (t === undefined && lparts.length) {" — the chunk coverage proof for the non-compliance lenses runs only when the lens was split into -pN files, so an unsplit out-code-review.txt/out-error-paths.txt (the normal case) is never checked against the task range; either state that limit in the brief sentence or run the chunk proof for a single unsplit stamp too.
+
+MET — "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant" — scripts/hooks/check-lane-close.mjs, scripts/analysis/rule-lists.mjs — the change adds no end-user or database behaviour; it is the review gate that supports the lanes delivering the designed search/report elements.
+MET — "we need one plan - we can only execute one plan" — backlog/tasks/task-410 "## Implementation Plan" / "<!-- SECTION:PLAN:BEGIN -->" — one plan section, one PLAN block, no second plan introduced.
+MET — "standardization" — scripts/analysis/rule-lists.mjs "export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];" — one command pinned and shared by the brief, lens-input and the close check (production side).
+MET — "This includes the search page" / increment objective "the search page, then (1) address confusion, (2) lot confusion" — the material contains no change to search, report or details code, so it neither blocks nor substitutes for those elements.
+
+REJECT — "Search comes before increment 1" — that this change diverts capacity from the search page — a task serving a supporting function is permitted by the same objective set, and the card sits inside milestone m-1 rather than inventing a new plan.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  42166ms (42.2s)
+📊 Tokens — total: 29342, input: 21191, output: 8151, reasoning: 7333

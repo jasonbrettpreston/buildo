@@ -1,0 +1,14 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:23:02.701Z file_sha256=f1e142507b3c413219de89975878d2d8b306789147bcb7d2f34feb588e8df692 prompt_sha256=f0e2c3ba84407ad61bb353121b0ce43f663ee80de5363e15582f3e074034aa24
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — inc-S (whole file) governs the search pages, the change is review tooling — inc-S "The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web" — backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md:48 "PLAN task-410 (V2.WHOLE). Rule: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1; PLAN-PROTOCOL.md:3 simple, no scope creep." — the change declares spec 126 and 08_agents.md section 7 as its rule, neither is pasted, and every pasted clause (A.1 to G.6, built state, counts) governs search-page elements the diff does not touch, so no pasted clause names the behaviour added (diff chunking, path stamps, close-check coverage recompute, brief sentence) — paste spec 126 section 0a principle 1 and 11b.2, 08_agents.md section 7 rules 3 and 4 and section 11.1, and PLAN-PROTOCOL.md:3 into the context file and re-run this lens against the change's own list.
+
+DEFER severity=MED — operator ruling on task-410 (cannot see the operative words) — the hunk header of the task-410 diff "@@ -39,8 +41,25 @@ Operator, 2026-11-20, verbatim: \"I also need certainty within the tasks that a r" — backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md, ruling line quoted only as "Operator, 2026-11-20, verbatim: \"I also need certainty within the tasks that a r" — the ruling the task is built on is cut at 80 characters in the material and is not in the pasted context, so its operative clause cannot be shown satisfied or unsatisfied (rest: cannot see) — paste the ruling in full in the context file for the next round.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 62   Unmet: 0
+
+---
+⏱  48808ms (48.8s)
+📊 Tokens — total: 32114, input: 26645, output: 5469, reasoning: 4954
