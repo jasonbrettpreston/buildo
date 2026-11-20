@@ -3,10 +3,15 @@
 Six plain lines for the operator
 
 1. Packed whole (rule lists copied verbatim, nothing trimmed, split by heading only for size): McFrontend Spec 136 (44 rules), step standard Spec 132 (65 handbook lines, 444 rule ids), by-law Spec 133 section 2 (543 rules), McStorage doc-16 (12 rules P1-P12, a DRAFT), McQueue Spec 137 (14 rules), McIncrement/McProof/agents Spec 08 sections 7 and 11, McDonald's Airtight V1/V2/V3 (register rows, 122 section 5.5 and 6.6.1, 122a A26 and A27), the mobile specs 90, 98, 99, 100, 96 and .claude/domain-admin.md, and docs/specs/00_engineering_standards.md. 24 pack files in .claude/review-templates/packs/. Evidence for the copy: a check read every non-blank line of the 24 pack files (3630 lines) and found each one verbatim in its source file (0 not found); sha256 of every pack is in packs.sha256 (fe.md 86fd3afd8441eafa5793faeea4b5f54dd74ede6329830f1aeb74ebfd87f66c86).
+
 2. Machine checks: where the source says so, 35 of 44 McFrontend rules name a lock (8 are OWED); 363 of 427 step rule ids on the sent lines have a check (64 have none; 80 of 444 overall); 426 of 543 by-law lines name an enforcer (117 OWED); McStorage 3 of 12; McQueue 2 of 14. The other lists (Spec 08, Airtight, mobile, engineering standards) have no per-rule enforcement field, so none was invented.
+
 3. Findings (BUG plus DEFER lines as returned, untriaged), 491 in 104 runs, 101 of them severity CRIT or HIGH: McFrontend 42, step 45, by-law 66, McStorage 37, McQueue 4, Spec 08 5, Airtight 36, mobile-core 28, Spec 99 42, Spec 100 52, Spec 96 29, engineering standards 105.
+
 4. Three that look most serious (quoted, not judged): see "Three most serious-looking" below.
+
 5. Could not be reviewed: goldens and fixtures (160 files), the two generated registries, and every test file outside mobile (size bound); the Spec 135 register rows in full and Spec 126/128 text (not in a pack); 8-finding cap per lens run; the lens saw only the part of the diff in each run (38000 characters); no gate was run, only read.
+
 6. Unverified: the finding claims themselves (each needs a grounder); whether report-compute.ts is reachable from a scanned compute module; whether the by-law pack should bind a route that is not a step; the mechanical "Opened:" check treats a quote with an elision as not found.
 
 ## What was done (acceptance criteria)
@@ -36,7 +41,9 @@ Six plain lines for the operator
 ## Three most serious-looking (CRIT lines, quoted as returned)
 
 1. F-463 (storage, route-1): `BUG severity=CRIT — P4 "if the compute fails it shows the closed not_evaluated:<reason> (lifecycle `error`); never blank, 0 or the old number." — src/lib/parcels/report-compute.ts:14 "A thrown query or a core error propagates (the route's error boundary makes it a 500 with no page and no meter); it is never read as a miss."` (Opened: the quoted code is not there as one line; the grounder opens report-compute.ts.)
+
 2. F-470 (storage, route-2): `BUG severity=CRIT — P3 "Stamp: every stored record carries Layer 2 table_version, evaluator_version and the settings sha" and A-ST5 "A stored record whose stamp differs from the current stamp is never served; it is recomputed" — src/lib/report-projection/project.ts "if (rows.some((r) => r.layer2_table_version !== stamp.table_version)) moved.push('layer2'); if (rows.some((r) => r.catalogue_sha !== current.catalogue_sha)) moved.push('catalogue');" ... the stamp comparison never checks evaluator_version or the settings sha`
+
 3. F-459 (storage, load1-2): `BUG severity=CRIT — NONE — NONE` (returned by the lens with no clause and no code; listed because it is the third CRIT line, not because it is serious). The next most serious by content is F-001 (airtight, load1-1): `BUG severity=HIGH — R-BF "every step-registry and cross-step-ledger row generated or witnessed, never hand-kept; declared == observed" — src/lib/parcels/report-compute.ts:35 "const UNITS_SQL = 'SELECT unit_key, unit_id FROM bylaw_resolution_units';"`.
 
 ## The Airtight scan-scope question and the file-to-rule mapping
