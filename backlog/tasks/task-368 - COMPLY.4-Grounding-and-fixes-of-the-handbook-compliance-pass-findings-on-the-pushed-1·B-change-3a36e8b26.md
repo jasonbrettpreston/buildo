@@ -3,9 +3,11 @@ id: TASK-368
 title: >-
   COMPLY.4 Grounding and fixes of the handbook compliance pass findings on the
   pushed 1·B change (3a36e8b26)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-GROUND'
 created_date: '2026-11-20T13:04:00Z'
+updated_date: '2026-11-20T13:13:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -38,3 +40,9 @@ Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze need
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-20 taken on the board at lane launch (lane BL-GROUND, worktree /Users/brettpreston_macmini/Buildo-wt-ground, branch wf1/inc1b-ground), RR-0240
+<!-- SECTION:NOTES:END -->

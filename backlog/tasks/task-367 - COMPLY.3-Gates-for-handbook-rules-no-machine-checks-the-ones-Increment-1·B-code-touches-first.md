@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T13:04:00Z'
+updated_date: '2026-11-20T13:13:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -39,3 +40,9 @@ Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze need
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-20 operator, verbatim: "I also what you to test the new gates as part of the Task 367 - small test and show me it works and what is catches.  ie the review you are running now will catch items - try the file with the gates and see the result.  Only do this if it doesnt take too much time. I want to know they work especially on the key items". Stage 1 is therefore a small report-only proof of three gates on the real pushed files; blocking wiring waits for the operator to confirm the gate list (stage 2).
+<!-- SECTION:NOTES:END -->
