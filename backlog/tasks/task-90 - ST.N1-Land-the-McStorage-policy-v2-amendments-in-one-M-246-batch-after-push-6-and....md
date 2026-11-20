@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-STN1'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-20T13:46:00Z'
+updated_date: '2026-11-20T13:57:00Z'
 due_date: '2026-11-26'
 labels:
   - '6'
@@ -92,4 +92,6 @@ who (plan text): McBylaws lane R (rulings text), operator reads first
 Landing commit 2 (ST.N1): dated M-246 notes at 69a:696-699 (ST-5 first repo home, rules P1-P12 with Lock, ST-3 without ceiling clause, ST-6), Spec 78:752 and :754 (ST-4, O-6), Spec 135 FE-39, Spec 126 11a.3, Spec 137 section 2 McStorage row (in-cell), MCBYLAWS-QUEUE MB-38/MB-75/MB-76/MB-94, MCFRONTEND-QUEUE MF-51/MF-62/MF-80; Spec 133/136 regenerated; doc-16 header status line. Waiting: A-ST3 ceiling clause (open point 1), cost wording (open point 3), A-ST5b (open point 4). Plan round and output round compliance lens run once per rule list; triage in the lane TRIAGE.md. Grounder owed.
 
 AC1 evidence: pre-registration committed alone, 905741d7f. AC3: write_scope declared in the brief (lane dir and ~/Buildo-wt-stn1). Landing 587c98a50. AC2 and AC6 not applicable (no new check or test, no script changed); AC4 partial (compliance lens per rule list only); AC5 owed (separate grounder); AC7 repo copies in docs/reports/lanes/2026-11-20/BL-STN1; AC8 not applicable. Task left RUNNING: grounder owed.
+
+Commit 4: grounder-round fixes (status cells separate operator words from doc-16 policy text; OPEN items moved out of ruling text; doc-16 body lines marked SUPERSEDED in place). Task stays RUNNING.
 <!-- SECTION:NOTES:END -->
