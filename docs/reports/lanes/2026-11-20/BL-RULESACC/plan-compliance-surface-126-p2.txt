@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:54:29.159Z file_sha256=19bfe6e3e73c55d95159678b85bdb0faac9431fc765a16157ad919bf5e15c192 prompt_sha256=ff0d2a50ea90faabc113d5b10b55a03b1369d9d4fc3d6b7a437c6b96d593124d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-plan-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11367 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 24426 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 36879 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 48932 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 59914 chars, answer 819 chars, 75s
+BUG severity=HIGH — task deliverable "By-law handbook count: report-only is not counted as enforced" — plan (4) "(4) BY-LAW CHECKED COUNT: computed from Spec 133; the figure lives in dated lane reports, not in a script: drafted, nothing changed." — the corrected count is committed nowhere, so report-only rows stay counted as enforced and the task title's "count corrected" is met only by a draft and by a test that a file exists — write the corrected figure into the named dated lane report with the report-only rows listed and excluded, and assert the number, not the file's existence
+BUG severity=HIGH — task "C1 to C5 ... written as dated notes only after his words" plus :1399 "1 a 2 b 3 a 4 a 5 c 6 accept" (C2, C3, D13, C5, D1, semi cache only) — plan (2) "and C4 at :990 (in-app sheet rests on the 2026-11-11 "1-12 yes", not on the "Linking.openURL" description; Android Done and silent failure residuals stated)" — a Spec 126 note is written on operator words ("1-12 yes") that appear in no pasted ruling, so C4 fails the "only after his words" gate — cite the RR id for the 2026-11-11 words and paste the line, or drop the C4 note from this task
+BUG severity=MED — Spec 126 §9 "Write the declared `emits` ... and the `usage_events` ledger row where `metering` is declared." — plan (2) "the meter (counts only when a report is produced; counted in the lookup route; location ruled "2. y")" — the planned Spec 100 note records the meter location but says nothing about the `usage_events` row or a declared departure with its stated why (§6.2 rule 1), so the metered path carries no ledger clause — have the note name the `usage_events` row the lookup route writes (event, `subject_kind` per R-04) or state the departure and its why
+BUG severity=MED — :1404 "D1 RULED (c): ... task-380 waits on that; option (b) is not ruled." — plan (1) records "C2, C3, D13, C5, D1, semi cache" and no step sets the dependency — the ruling's explicit action (task-380 blocked on ST.P1) is left unassigned, so the ruling is recorded but not applied — set task-380's blocker on ST.P1 through the backlog CLI in this commit, or name the lane that owns it
+BUG severity=MED — RR-0190 "every register row is marked operator words or orchestrator reading and only operator words feed reviews as rulings" with :1428 "drop task-370 from this increment" — plan (1) "task-370 LATER to DROPPED (ruling: line, quote "Task 370 yes . approved", marked with the orchestrator reading)" — DROPPED (a task status) exceeds the reading "drop from this increment", and the recommendation the operator answered "yes" to is not in the record, so the scope of the status move cannot be checked — paste the recommendation beside the quote, and either move task-370 out of the increment or record the DROPPED status as an operator-words action
+BUG severity=MED — :1384 "3. please xplainwith recommendation. Still open review all pages for schema complaince - is C already complete" and RR-0154 "a task blocked on an operator question goes to the answer page" — plan (1) "plan go, fold, d, e (:1384)" — the operator's open question in the same entry ("is C already complete", review all pages for schema compliance) gets no disposition anywhere in the plan — add the item to the answer page with what was checked and what remains open
+DEFER severity=MED — Spec 126 §5.0 "A validator in a test that re-implements the rules is banned; the test imports the same module the engine does." — plan "TEST: src/tests/surfaces/rules-acc-notes.logic.test.ts asserts the notes exist with the operator quote" — the test asserts note prose by string, so the operator quote is declared twice (record plus prose) and every dated-note amendment (M-246, prior text kept) forces a hand edit of the test — assert the record id and quote through the same module backlog-decision.mjs writes, not the note text
+DEFER severity=LOW — Spec 126 §5.2 "keep `_contracts.json` as the cross-layer numeric/vocabulary constant registry it already is." — plan (2) "scripts/surfaces/_schema/bindings.json $comment: a dated note that the 48 px is the operator's ruling "3 a"" — a 48 px constant whose provenance is now an operator ruling is recorded with its comment in the schema directory, not with the numeric registry — record the provenance on the `_contracts.json` constant (or state why the binding value is not a cross-layer constant)
+
+MET — task "retiring is the operator's ruling" — plan (3) "as an OPERATOR DRAFT file only ... nothing retired, no edit to specs 90 or 08"
+MET — :1399 "3 a" (D13) — plan (2) bindings.json `$comment` "the 48 px is the operator's ruling "3 a" (the earlier wording kept)"
+MET — :1432 "2. y" — plan (2) "counted in the lookup route; location ruled "2. y""
+MET — RR-0190 "marked operator words or orchestrator reading" — plan (1) "the meaning of each is the orchestrator's reading, recorded as a reading in the text, never in the quote field"
+MET — task "grounder launched by the orchestrator, never the lane" — plan "Not done by this lane: grounder (owed), push, DB, register edit"
+MET — :1422 "remember the app is not beign used - we are in development" — plan (1) "page conversion approved and app-not-in-use (:1422)"
+MET — :1399 "2 b" (C3) — plan (2) "C3 is not repeated (task-389)"
+
+REJECT — Spec 126 §7 "One generic table, not a second permit-shaped one" — accused of leaving the meter in the lookup route rather than in `usage_events` — not a real issue: the pasted operator ruling at :1432 "2. y" rules the meter stays where it is, and a pasted ruling governs this plan
+REJECT — Spec 126 §5.7 "a value in two places is a drift source" — accused of writing the C5 ruling into both Spec 100 :123 and the Spec 135 FE-39 row — not a drift source: both are dated prose notes of one ruling that touches two specs (Spec 00 §14, cited in the plan), and no descriptor value is restated
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 5
+
+---
+⏱  80228ms (80.2s)
+📊 Tokens — total: 44924, input: 27578, output: 17346, reasoning: 15774

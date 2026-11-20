@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:06:46.215Z file_sha256=4333cfacbd17da41138c9c478c08c6ade2641a9b44c54c2bcb0306ee9709490a prompt_sha256=320b2a23899228a96db474cb6ca8ff8fab7cedf335074e70158a619176056ca0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10136 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21751 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33978 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45269 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 56126 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 66680 chars, answer 695 chars, 90s
+DEFER severity=MED — §11a.3 "A report waiting for a first-open compute shows the loading screen, and a card waiting for an owner-input recompute shows an 'updating' display state" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-39 "one record per lot and option, computed on first open (or track, or owner input) and stored with its stamp" — the amendment names a third compute trigger, `track`, that no pasted clause or pasted ruling defines, so the trigger has no authority in this part — add the ruling that creates the track trigger or drop the word from the amendment.
+DEFER severity=LOW — §11a.3 "A stored record whose stamp differs is never shown." — 135 FE-39 "a record whose stamp differs is never served and is recomputed" — the amendment adds a recompute step the pasted sentence does not state and does not say which display state covers it — append "then the loading state of the BL-STN1 note" so the display path stays tied to a pasted state.
+DEFER severity=LOW — §11a.1 "(unverified) marks a fact the drafting lane did not confirm; it is confirmed at build." — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md "CORRECTED CHECKED COUNT under the task card rule (report-only is not counted as enforced): 321 - 2 - 7 = 312" locked by src/tests/surfaces/rules-acc-notes.logic.test.ts "expect(d).toMatch(/312/)" — the text lock pins a figure the draft itself marks "UNVERIFIED against the lane's tool", so an unconfirmed fact becomes enforced — assert the UNVERIFIED marker instead of the number, or confirm the count before locking it.
+DEFER severity=LOW — §11a.3 "Disclosure codes are a closed list generated from the catalogue/content (a declared field set), extended only by an amendment to this section plus a lock." — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 "(C1 ...) The buildable lock is a test that the core's closure never reads those two keys; it is owed and not built by this note." — a second owed lock lands in the same commit that adds a text lock, with no owner or row named for it — name the task or register row that owes the buildable lock so the debt is traceable.
+
+MET — §11a.3 "`status` is one of: `permitted` | `not_permitted:<clause>` | ..." — docs/specs/02-web-admin/126_maxbld_surface_standard.md:812 — the added C2 note routes a failed compute to the error screen and adds no status value.
+MET — §11a.3 "Spec 100:123 ("a core or query error is the route's existing 500 with no page and no meter") stands (Spec 100 carries the matching note)." — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 — the matching Spec 100 note is added and keeps the 500 sentence.
+MET — §11a.3 "A stored record whose stamp differs is never shown." — 135 FE-39 row — the amendment keeps "a record whose stamp differs is never served", no stale record is displayed.
+MET — §11a.3 "It is escalated through Spec 128 §4 (126:295: a surface that needs a value the menu lacks escalates, it does not add one)" — 126:812 — the correction adds no new reason to the closed set.
+MET — §11a.1 "The CLOSED binding set (`source`)" — scripts/surfaces/_schema/bindings.json $comment "No value of the list changes." — no source or member is added in this diff.
+MET — §11a.1 "(unverified) marks a fact the drafting lane did not confirm" — RETIRE-DRAFT.md header "UNVERIFIED: that no other line of 08_agents still says PLANNED for the engine" — the scope limit is marked as unverified as the clause asks.
+MET — §11a.4 "Every reading carries `confidence` ... and `source` provenance" — 135 FE-39 row — the amendment changes storage timing only and touches no confidence or provenance value.
+MET — §11a.2 "Ad slots stay outside the card list and outside `variants[]`." — no changed line — no note in this diff touches variants or ad slots.
+
+REJECT — §11a.3 "extended only by an amendment to this section plus a lock" — the C2 correction is accused of changing the closed status set without a new lock — the list is unchanged and no value is added, so that lock clause is not triggered.
+REJECT — part 3 of 4 scope — the Help in-app browser note (126:997) and the 48 px touch target note (bindings.json) are accused of landing outside their rules — they sit outside section 11a and are reviewed in their own parts.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  94147ms (94.1s)
+📊 Tokens — total: 42344, input: 23801, output: 18543, reasoning: 17408

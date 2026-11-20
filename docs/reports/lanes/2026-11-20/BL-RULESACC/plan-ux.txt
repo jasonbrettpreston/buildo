@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T15:52:00.763Z file_sha256=847805443872543968a12df6810b73518ad6391d09a50e01ff61660c526f79f5 prompt_sha256=1b6a7f3f11b99c0769d0e71353dd871eeaa93dff22ca899364846fdef915a099
+🔍 Lens review of docs/reports/reviews/task-387/context-2026-11-20.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10069 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21186 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32732 chars, answer 0 chars, 45s
+DEFER severity=MED — ":1410: - Orchestrator reading: "Phone retires yes" = keep the 3 retries before the error screen (the recommendation put)." — the plan records the retry count only as a reading, so no spec line fixes how many attempts the customer gets before the error screen, and the person can be shown the error on the first failure, the option he answered against — in the Spec 126 dated note state the retry count his "Phone retires yes" answer keeps, with the reading marked per RR-0190
+DEFER severity=MED — "A load-failure page is a task, built from the other small pages (RR-0179) ... "2. Add it as a task using the othr mini pages as a template"" vs ":1400: - C2 RULED (a): a failed compute shows the error screen with Try again and is not counted." — two approved surfaces for one failed compute and no pasted line says which one the person sees, so the person can land on a page with no Try again — in the C2 dated note name the one screen shown and say how it relates to the RR-0179 load-failure page, adding no new design
+DEFER severity=LOW — "docs/specs/02-web-admin/126_maxbld_surface_standard.md:810: ... a failed compute is the lifecycle `error` with a closed not_evaluated:<reason>" vs plan (2) "C2 correction (error screen with Try again, not counted; "closed reason" sentence of the 2026-11-20 note is overturned for the failed compute)" — the top line the builder reads still says a closed reason while the correction sits below it, so the customer can be shown a machine reason where he approved an error screen with Try again — in the note repeat the customer-visible wording (error screen, Try again), prior text kept as M-246 requires
+DEFER severity=LOW — "docs/specs/03-mobile/90_mobile_engineering_protocol.md:46: * **Auth:** Firebase Auth via `@react-native-firebase/auth` (native module)." vs "mobile/package.json:27 "@supabase/supabase-js": "2.110.7"; no "@react-native-firebase" in mobile/package.json" — the sign-in state the customer uses is built on Supabase while the protocol the builder reads says Firebase, so a later task following the protocol can break sign-in — defer, because plan (3) leaves the line to the operator's ruling ("nothing retired, no edit to specs 90 or 08") as the brief requires
+REJECT — ":1434: - 2 y: the meter stays where it is (in the lookup route, counting only when a report is produced); a spec note says so." — a reader might think failed attempts are added to the count the person sees — it matches the pasted design "Spec 100:123 ... A core or query error is the route's existing 500 with no page and no meter." and C2 "not counted", so the visible number never includes a failed attempt
+
+VERDICT: PASS on the person's experience
+States checked: this change draws no customer state, the notes describe the failed-compute error screen, the loading screen, the phone search legal line, the semi page 48 px buttons, the report meter   Dead ends found: 0
+
+---
+⏱  53711ms (53.7s)
+📊 Tokens — total: 38014, input: 28186, output: 9828, reasoning: 9099

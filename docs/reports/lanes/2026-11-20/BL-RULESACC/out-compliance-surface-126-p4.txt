@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:07:07.467Z file_sha256=fa29864d3d1ff1100777f853696c52ca3c08060120630f75dbfce588717e4828 prompt_sha256=0ba9a278e3e8fd6998fb149dfc472108c9336d391d5bb19a0496581c5f6cf626
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10980 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23381 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 36238 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 48809 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 61122 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 73214 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 85885 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 97389 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 106235 chars, answer 2907 chars, 135s
+DEFER severity=MED — operator ruling B10, quoted in the pasted C4 note "Help, Terms and Privacy open in an in-app browser sheet with Done" — docs/specs/02-web-admin/126_maxbld_surface_standard.md C4 note "an Android Custom Tab has no Done button; a failed open is only logged" — the "with Done" half of B10 is unmet on Android and the mobile Terms/Privacy opener is not addressed, only recorded as a residual "not ruled" — obtain an operator ruling for the Android Done case (or render a sheet with a Done control) and record the Terms/Privacy mobile opener.
+
+DEFER severity=LOW — §11b.3 MF-45 note "The report counts only when a report is produced, after the address and lot are found" — 126 line 812 C2 note "A failed compute shows the error screen with Try again ... a core or query error is the route's existing 500 with no page and no meter" — the boundary between "failed compute" (Try again, not counted) and "core or query error" (500, no page) is never stated, so which failure class maps to which surface is ambiguous — name explicitly which error class renders the Try-again screen and which returns the 500.
+
+MET — §11b.3 C4 note "does not record an operator choice of that opener" — 126 C4 note "describes the code of 2026-11-12 and does not record an operator choice of that opener ... opens Help in the in-app browser sheet (`mobile/src/lib/maxbldHelp.ts:24`, `openBrowserAsync`)" — the diff disclaims the opener choice and records the built opener, matching the pasted note.
+
+MET — §11b.3 MF-44 note "the report route answers not found after the sign-in and plan check" / gate `MAXBLD_WEB_LIVE` — 135 FE-39 C5 note "the gate stays `MAXBLD_WEB_LIVE` alone, with no session gate and no new switch" — consistent with the pasted live-switch clause.
+
+MET — §11b.7 A4 note "each new report counts toward the monthly limit" — 100 line 125 note "the report counts only when a report is produced ... is not counted" — the C2 meter wording matches "counts only when produced".
+
+REJECT — §14 "Spec 100 stays fenced" / Spec 90 and 08_agents not in scope — RETIRE-DRAFT.md lists `90_mobile_engineering_protocol.md:46`, `08_agents.md:19/28/343` as retire candidates — accusation that out-of-scope specs are being edited — not a real issue, the draft states "Nothing below is retired, edited or ruled" and "Specs 90 and 08_agents are untouched by this lane"; the list is a candidate set for the operator to rule.
+
+REJECT — proposed retirement of the Spec 90 Firebase auth line — accusation it removes a still-true rule — not a real issue, the pasted §12 "never" row and §14 out-of-scope quote "these talk to the Supabase Auth SDK", so the Firebase line is already stale against the pasted text.
+
+REJECT — new `rules-acc-notes.logic.test.ts` asserts the Spec 100 note marks C1 via `/C1[\s\S]*not an operator ruling/` while the note reads "this is NOT an operator ruling" (uppercase) — accusation this breaks a pasted clause — the assertion is a test-correctness matter for lens-code-review, not a clause in this part of Spec 126; the note's clause (C1 is not an operator ruling) is satisfied by the text itself.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  135413ms (135.4s)
+📊 Tokens — total: 63688, input: 33954, output: 29734, reasoning: 28905

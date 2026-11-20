@@ -1,0 +1,41 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:54:49.124Z file_sha256=49b374d23622af94d1662c2b7da1de540922f8477d5e273e78a70b276b3a3d3b prompt_sha256=a57dd04d13c5f61fd8076defe4ca70b228feb34f93d66ac2f49fb6d73bd6a554
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-plan-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11018 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22854 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 35218 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 46714 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 57086 chars, answer 2660 chars, 75s
+BUG severity=HIGH — NONE (no CRIT/HIGH raised)
+
+DEFER severity=MED — RR-0154 "a task blocked on an operator question goes to the answer page and work moves to the next unblocked task; nothing waits idle." — plan (3) "RETIRE LIST as an OPERATOR DRAFT file only (Spec 90 :46 and :71, 08_agents :19 :28 :343): nothing retired, no edit to specs 90 or 08." — the operator question the card hands over (retiring Spec 90 :46, :71 and 08_agents :343, :19, :28) plus the by-law count has no answer-page row named, only a lane-dir draft — name the answer-page row for the retire list and the count in the plan, with the five line cites, so it is visible on the board.
+
+DEFER severity=MED — RR-0190 "orchestrator replies that recommend or name a ruling must cite file:line, an RR id or UNVERIFIED (enforced by hooks)." — plan (2) "C4 at :990 (in-app sheet rests on the 2026-11-11 "1-12 yes", not on the "Linking.openURL" description; Android Done and silent failure residuals stated)." — a ruling is named to justify the C4 note with no file:line and no RR id — cite the MORNING-DECISIONS.md line for "1-12 yes" or mark it UNVERIFIED before the note is committed.
+
+DEFER severity=MED — task-387 "C1 to C5 (docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md; BL-GROUND/VERDICTS-SUMMARY-2.md) written as dated notes only after his words" — plan (2) "C3 is not repeated (task-389)." — no dated note is written for C3 in this plan and task-389 is named with no evidence it carries the note — state the spec and line where C3's note lands, or write it here.
+
+DEFER severity=LOW — §11b.2 "its 7 goldens regenerate with identical props (fingerprint re-stamp only; evidence `docs/reports/red-evidence/MF-40/binding-standard-restamp-fingerprint-only.txt`)" — plan (2) "scripts/surfaces/_schema/bindings.json $comment: a dated note that the 48 px is the operator's ruling "3 a" (the earlier wording kept)." — the bindings.json edit names no re-stamp, regeneration or lock evidence — state whether bindings.json is hash-locked and re-stamp with the evidence file if it is.
+
+DEFER severity=LOW — task-387 "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN" — plan "TEST (red first, through the real hooks): src/tests/surfaces/rules-acc-notes.logic.test.ts asserts the notes exist with the operator quote" — the attack round and its refused or STILL OPEN report are absent, and the only owed item named is "Not done by this lane: grounder (owed)." — add the attack round and its report line to the plan.
+
+DEFER severity=LOW — task-387 "by-law checked count corrected" — plan (4) "BY-LAW CHECKED COUNT: computed from Spec 133; the figure lives in dated lane reports, not in a script: drafted, nothing changed." — nothing is corrected, the deliverable exists only as a draft — name the one home that reads the figure and commit the corrected value there, or state that no consumer of the count exists.
+
+MET — C2 ruling (:1400 "C2 RULED (a): a failed compute shows the error screen with Try again and is not counted. Spec 126:810 ("failed compute shows a closed reason") is corrected to this; Spec 100:123 stands.") — plan (2) "Spec 126 after :810: C2 correction ...; Spec 100 after :123: C2 stands" — both sides of the conflict are handled as ruled.
+
+MET — M-246 prior text kept — plan (2) "DATED NOTES, prior text kept (M-246)" — the notes amend without deleting prior text.
+
+MET — RR-0190 register marking — plan (1) "the meaning of each is the orchestrator's reading, recorded as a reading in the text, never in the quote field" — quotes hold operator fragments ("1 a", "2 b", "3 a", "4 a", "5 c", "6 accept") and readings are separated.
+
+MET — RR-0278 "Report meter counts on report production only" — plan (2) "the meter (counts only when a report is produced; counted in the lookup route; location ruled "2. y")" — the note matches the ruling.
+
+MET — task-387 "retiring is the operator's ruling" — plan (3) "nothing retired, no edit to specs 90 or 08" — nothing is retired without the operator.
+
+REJECT — C5 note placement — the plan is accused of not recording C5 on Spec 126's `MAXBLD_WEB_LIVE` switch note — the ruling names only FE-39 (:1403 "FE-39 (tester-only preview first) needs a dated note recording this"), so no Spec 126 note is owed.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  76778ms (76.8s)
+📊 Tokens — total: 49619, input: 33193, output: 16426, reasoning: 15217

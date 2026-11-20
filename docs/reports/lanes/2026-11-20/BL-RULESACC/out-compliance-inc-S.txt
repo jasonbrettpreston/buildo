@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:04:49.601Z file_sha256=0f431d9cbd148b3e26f8d0db117a9a8c5325b8f1594a6d0df59e802a79126578 prompt_sha256=7d2b61682352d0303fb5f7ee97393fb839275c83ab6bf60cff87f484c95f8fcd
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10044 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20795 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30820 chars, answer 463 chars, 45s
+DEFER severity=MED — no pasted clause names any content of this change; doc-2 governs Increment S elements only — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:3 "OPERATOR DRAFT. Nothing below is retired, edited or ruled." — every rule the change rests on (MORNING-DECISIONS.md:1303, :1399, :1409, :1432) is outside the pasted context, so compliance with the operator words is unestablished, not shown — paste MORNING-DECISIONS.md:1294-1310 and :1396-1434 in the next run so the notes can be judged clause by clause
+
+DEFER severity=MED — doc-2 "Report meter: a hit counts one report; report limit page when exhausted" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 "the report counts only when a report is produced, after the address and lot are found" — the added note restates when a report counts but never says one hit counts one report, so doc-2 G.6 is neither restated nor contradicted by it — add "one report per produced report" to the note, or state that G.6 remains the sole wording
+
+DEFER severity=LOW — doc-2 "the reports-left line" (listed under "Not built") — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 "the meter stays in the lookup route" — with the meter fixed in the route, no clause in this change says what serves the reports-left line of element A.6, which doc-2 leaves NOT-BOUND under deliverer SRCH.A6 — name A.6 as untouched by this lane or bind it in the note
+
+REJECT — doc-2 "controls disabled and no lookup request while MAXBLD_WEB_LIVE is false" — the change is accused of removing the tester-only preview gate (FE-39 C5 note) contrary to the built state — doc-2 itself names MAXBLD_WEB_LIVE as the only stated gate and names no session gate, so the note contradicts no pasted clause
+
+REJECT — doc-2 "Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map ..." — the change is accused of leaving 16 elements NOT BUILT — doc-2 is a state-of-build specification with no clause requiring any commit to build an element, so a documentation lock cannot violate it
+
+MET — doc-2 "The lookup route, resolver, meter and the report hand-off contract are on origin." — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 "the meter stays in the lookup route" — the change keeps the meter where doc-2 says it lives
+
+MET — doc-2 "F-SEARCH-WEB Web search page (W4): ... no lookup request while MAXBLD_WEB_LIVE is false" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 "the gate is the switch `MAXBLD_WEB_LIVE` alone." — the change names the same single gate doc-2 names
+
+MET — doc-2 "B.7 ... Get help with an address (to /help?topic=wrong-lot) under every notice" — docs/specs/02-web-admin/126_maxbld_surface_standard.md:997 "The built app opens Help in the in-app browser sheet (`mobile/src/lib/maxbldHelp.ts:24`, `openBrowserAsync`)." — the note changes the opener only and leaves the topic route of doc-2 unedited
+
+MET — doc-2 "counts: {\"BUILT\":42,\"BUILT-NO-DATA\":7,\"NOT BUILT\":16}" — docs/specs/02-web-admin/126_maxbld_surface_standard.md:812 "Dated note 2026-11-20 (M-246, prior text kept ..." — no element status row of doc-2 is edited by this diff, so its counts remain as pasted
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  48296ms (48.3s)
+📊 Tokens — total: 26444, input: 17110, output: 9334, reasoning: 8395

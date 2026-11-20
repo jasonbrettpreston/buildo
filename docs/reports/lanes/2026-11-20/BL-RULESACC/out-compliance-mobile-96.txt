@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:05:37.938Z file_sha256=e1b250159c1912eb0412ab8b27448141188902abce5a955d76aace18b8f68e52 prompt_sha256=fa214ce5bd5e097aa2bce52469e21289701f9690757f41b3d43875aa22052d4a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-mobile-96.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9714 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20165 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30577 chars, answer 0 chars, 45s
+DEFER severity=MED — Spec 96 §3 "Firebase Auth is the bridge. Same UID on web and mobile" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:9 "Supabase Auth (native ID-token linking, Spec 93 section 3.2 as cited at sign-in.tsx:41-43)" — candidate 1 proposes a replacement that supersedes the Firebase Auth clauses of the governing spec (Spec 96 §3 bridge, §5 Firebase Bearer token, §10 `firebase.auth().signOut()`), and the draft's scope line at :3 "Specs 90 and 08_agents are untouched by this lane" names neither — add the Spec 96 Firebase Auth lines as candidates, or a dated note, before the operator rules candidate 1
+DEFER severity=LOW — Spec 96 dated note 2026-11-11 "metered, Spec 126 section 11b.7 dated note 2026-11-11" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 "the meter stays in the lookup route" — whether the added "not counted on failure" rule agrees with the §11b.7 metered definition that Spec 96 relies on cannot be checked, §11b.7 is not pasted, cannot see — paste the 126 §11b.7 note of 2026-11-11 or confirm the two notes agree
+DEFER severity=LOW — clause not pasted (Spec 133 / task-387 card) "no pasted context provided" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:26 "CORRECTED CHECKED COUNT under the task card rule (report-only is not counted as enforced): 321 - 2 - 7 = 312 rows" — the corrected by-law count rests on a card rule and a generator marker that are not in the pasted context, cannot see, and no Spec 96 clause bears on it — bounded to a lane report, nothing retired or coded by it, so safe to defer
+REJECT — Spec 96 §10 target files — the change adds a text lock and dated notes in Spec 126, 135, 100 and bindings.json that no Spec 96 clause names — the added lines touch no subscription-gate surface (§2 statuses, §5 nonce, §9 paywall, §10 webhook untouched) and the rules that govern the notes (Spec 137 rule 10, Spec 00 §14, cited in the test header) are not pasted
+MET — Spec 96 dated note 2026-11-11 "else 403 `SUBSCRIPTION_REQUIRED`" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 — the added note changes the failed-compute screen and the meter location only, the entitlement set and the 403 are not altered
+MET — Spec 96 §10 "It is written only by" — src/tests/surfaces/rules-acc-notes.logic.test.ts:1 — no diff line writes or reads `subscription_status`, the new test reads doc files only
+MET — Spec 96 §5 "The app opens this URL via `WebBrowser.openBrowserAsync()`" — scripts/surfaces/_schema/bindings.json:2 — the only change to that file is appended $comment text, no route, URL or opener touched
+MET — Spec 96 §9 "paywallStore.reset() MUST be called in the sign-out action" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 — the note added there is the FE-39 engine-values ruling, so no store, gate or sign-out line is introduced
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  57917ms (57.9s)
+📊 Tokens — total: 31873, input: 20830, output: 11043, reasoning: 10194

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T16:04:08.728Z file_sha256=04afe9d5a1d715954e80ae933e701302e746aa09ce9916a82e128fee0fa57db7 prompt_sha256=2e780bd1bbca585ab0dc717df506230b514d49a00e6b690912cd6a269a817260
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/out-diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 8994 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19469 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29103 chars, answer 2037 chars, 45s
+BUG severity=HIGH — src/tests/surfaces/rules-acc-notes.logic.test.ts:37 "expect(SPEC126).toContain('a failed compute is the lifecycle `error` with a closed not_evaluated:<reason>'); // prior text kept" — the new note added at 126:812 quotes that same sentence ("that a failed compute is the lifecycle `error` with a closed not_evaluated:<reason>"), so the assertion passes even if the prior :810 text is deleted; the M-246 guard is vacuous — assert against the text before the anchor, e.g. SPEC126.slice(0, SPEC126.indexOf(`${NOTE} · C2`)).
+
+BUG severity=MED — src/tests/surfaces/rules-acc-notes.logic.test.ts:57 "expect(BINDINGS.$comment).toContain('orchestrator decision under the pre-approved criteria'); // prior text kept" — the D13 note itself writes "The words \"orchestrator decision under the pre-approved criteria ... (not an operator ruling)\" in the 2026-11-19 note above were true when written", so this guard also passes on the quote alone and does not prove the 2026-11-19 wording is kept — slice $comment before the D13 anchor and assert on that slice.
+
+DEFER severity=MED — src/tests/surfaces/rules-acc-notes.logic.test.ts:64 "expect(t370).toMatch(/^status: DROPPED$/m);" — the test locks status moves of backlog/tasks/task-370 and task-348, but the diff shown touches no backlog/tasks file, so the guard depends on a mutation outside this diff (and would fail or hit the "no task file" throw) — confirm the CLI status write is in the same commit or drop the assertion.
+
+DEFER severity=LOW — src/tests/surfaces/rules-acc-notes.logic.test.ts:28 "return i < 0 ? '' : text.slice(i, i + 6000);" — a missing anchor degrades to an empty string, so the failure message reads "expected '' to contain ..." with no hint which anchor or file missed; the 6000-char window is also silent if a note is longer — throw with the anchor name, or return a labelled result.
+
+DEFER severity=LOW — src/tests/surfaces/rules-acc-notes.logic.test.ts:69 "expect(t348).toMatch(/RR-03\d\d/);" — any RR-03xx anywhere in the task file satisfies this, so it does not prove the answering record id is the 2026-11-20 one; assert the exact id the ruling record carries.
+
+DEFER severity=NIT — src/tests/surfaces/rules-acc-notes.logic.test.ts:20 "const BINDINGS: { $comment: string } = JSON.parse(read('scripts/surfaces/_schema/bindings.json'));" — JSON.parse returns any and is narrowed without checking, so a file missing $comment fails later as "cannot read properties of undefined"; parse and assert the shape (or check typeof) first.
+
+DEFER severity=NIT — src/tests/surfaces/rules-acc-notes.logic.test.ts:3 "docs/specs/02-web-admin/126_maxbld_surface_standard.md (810, 990)" — the C4 note lands at the hunk "@@ -994,0 +997,2 @@", not at 990, so the SPEC LINK comment's line reference is already stale; anchoring is by text so nothing breaks, but fix the numbers.
+
+REJECT — src/tests/surfaces/rules-acc-notes.logic.test.ts:52 "const row = SPEC135.split('\n').find((l) => l.startsWith('| FE-39 |')) ?? '';" — the "?? ''" looks like a swallowed null that hides a missing row — it is correct here: a missing row gives a readable "expected '' to contain" failure instead of a TypeError, and the row text is present at 135:61.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- Spec 126 prior-text-kept lock is vacuous: the quoted sentence also appears in the new 126:812 note, so removal of :810 would not fail the test.
+- Same vacuity for the bindings.json 2026-11-19 wording guard (the D13 note quotes the phrase).
+- Status-move assertions on task-370/task-348 are not backed by any backlog/tasks change in this diff.
+
+---
+⏱  47064ms (47.1s)
+📊 Tokens — total: 35845, input: 26816, output: 9029, reasoning: 8044

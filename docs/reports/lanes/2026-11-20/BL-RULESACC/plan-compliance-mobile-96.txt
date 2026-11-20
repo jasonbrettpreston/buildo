@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:53:14.706Z file_sha256=35cc16b8a86e014ef99b70a534450f68e13b872b5bc2db984b6010459263a741 prompt_sha256=037f9212d1f82277f802121c34f06217be254d009aa2f63383e28a97563efac0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-plan-compliance-mobile-96.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10516 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21566 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32527 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43836 chars, answer 0 chars, 60s
+BUG severity=HIGH — task card, operator 2026-11-20 text this task names "By-law handbook count: report-only is not counted as enforced." — plan item (4) "(4) BY-LAW CHECKED COUNT: computed from Spec 133; the figure lives in dated lane reports, not in a script: drafted, nothing changed." — the one rule the card attaches to the count (report-only rows are not to be counted as enforced) is neither applied nor stated, so a drafted figure with no counting method cannot be checked against it — fix: state in the dated lane report which Spec 133 rows are report-only, that they are excluded, and the resulting checked figure with row ids.
+
+DEFER severity=MED — Spec 96, the pasted rule list, does not govern this change "**Cross-references:** Spec 90 (Engineering Protocol), Spec 93 (Auth), Spec 91 (Lead Feed), Spec 95 (User Profiles)" — plan Files "docs/specs/03-mobile/90_mobile_engineering_protocol.md, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, docs/specs/02-web-admin/126_maxbld_surface_standard.md, docs/specs/00-architecture/08_agents.md" — none of the four specs the plan edits is pasted, so the retire list at Spec 90 :46/:71, the 08_agents :19/:28/:343 lines, Spec 126:810 and Spec 100:123 are "cannot see" and this pass certifies only that Spec 96 is untouched — rationale: re-run with those four specs and the 2026-11-20 ruling lines as the pasted context.
+
+DEFER severity=MED — RR-0298 (title only in context, wording not pasted) "RR-0298 Status changes only by the launch script" — plan "(2) ... task-370 LATER to DROPPED ... task-348 OPERATOR to DONE-as-answered ... both through the CLI in this commit." — the plan moves two statuses from a lane commit and reconciles that only against Spec 137 section 3, never against RR-0298, so whether a lane CLI write is "the launch script" is unaddressed — fix: cite RR-0298 and say either the CLI path is the launch script or the move is deferred to it.
+
+DEFER severity=MED — operator 2026-11-20 ":1384" "1. yes. add the tasks to incr 1b and remove the ones we dont need" — plan item (1) "task-370 LATER to DROPPED ... task-348 OPERATOR to DONE-as-answered" only — the "remove the ones we dont need" half is executed for one task only, with no list of which tasks are removed versus kept, so the plan does not evidence that clause being carried out — rationale: name the removal set, or point to the task that carries it if it is not this one.
+
+REJECT — operator-words-copied rule ("The operator's words are copied exactly, with the date, the row id and the queue") — the plan is accused of splitting the single sentence ":1409" "Phone retires yes and web search yes" into two quote fields "Phone retires yes" and "web search yes" — each field holds an exact substring of the one line, two distinct rulings cannot share one quote slot, and the meaning of each is marked as a reading rather than placed in the quote.
+
+MET — operator-words-copied rule, readings kept out of the quote — plan item (1) "the meaning of each is the orchestrator's reading, recorded as a reading in the text, never in the quote field" — readings for :1409 and :1427 are labelled as readings, not written as the operator's words.
+
+MET — retire list is the operator's ruling, nothing retired unilaterally — plan item (3) "(3) RETIRE LIST as an OPERATOR DRAFT file only (Spec 90 :46 and :71, 08_agents :19 :28 :343): nothing retired, no edit to specs 90 or 08." — the candidates go to him as a draft, no spec text is changed.
+
+MET — Spec 96 dated note 2026-11-11 "admit a `parcel_tool` entitlement in {trial, active, past_due, admin_managed} (metered, Spec 126 section 11b.7 dated note 2026-11-11)" — plan item (2) "the meter (counts only when a report is produced; counted in the lookup route; location ruled "2. y")" — the meter stays where Spec 96 places it, in the lookup route, counting report production only.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 1
+
+---
+⏱  74402ms (74.4s)
+📊 Tokens — total: 35886, input: 21505, output: 14381, reasoning: 13326

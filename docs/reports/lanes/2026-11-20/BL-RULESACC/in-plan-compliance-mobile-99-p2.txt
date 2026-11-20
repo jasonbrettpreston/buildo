@@ -1,0 +1,368 @@
+LIST mobile-99 sha256:e25bf72009501924d14ec71964b0afc82892c9fd7f61f94c725afa06d8129a34 material sha256:847805443872543968a12df6810b73518ad6391d09a50e01ff61660c526f79f5 part 2 of 2
+RULE LIST mobile-99 (docs/specs/03-mobile/99_mobile_state_architecture.md, whole file), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 9. Migration Plan (followup WFs)
+
+The following items eliminate the duplication identified in the audit and resolve the spec-vs-code drift surfaced by adversarial review. Each is a separate WF — this Spec 99 only authorizes the work; it does not perform it.
+
+**Priority legend:**
+- **P0/BLOCKING** — closes an active incident or spec-code drift visible in production code. Spec 99's normative rules are violated until landed.
+- **P1** — duplication / structural cleanup; required for the spec to fully apply but not actively breaking users today.
+- **P2** — observability / tooling / future-proofing.
+
+**Sequencing:** items with explicit `depends on:` lines MUST land in order.
+
+| # | Priority | Item | WF type | Files |
+|---|----------|------|---------|-------|
+| 9.4a | **P0** | Strip `isFetching` from AppLayout loading gate (§6.5 violation; root cause of incident #3 emulator flicker loop) | WF3 | `mobile/app/(app)/_layout.tsx:202` |
+| 9.4b | P2 | (Optional) keep `refetchOnReconnect: true` decision documented; no code change needed | — | — |
+| 9.8 | **P0** | Add deep-equal-before-set to `filterStore.hydrate` and `userProfileStore.hydrate` (§6.6 violation; required before §9.7 tests can pass) | WF3 | `mobile/src/store/filterStore.ts:78`, `mobile/src/store/userProfileStore.ts:59`. Install `fast-deep-equal`. |
+| 9.10 | ✅ DONE | Implemented as `queryClient.clear()` in `mobile/src/store/authStore.ts` (`clearLocalSessionState` helper per §9.19) — broader-than-spec purge for defense-in-depth (cancels in-flight refetches across all queries, not just `['user-profile']`). Originally specified as scoped `removeQueries({queryKey: ['user-profile']})`; spec amended 2026-05-05 to match implementation (see §B5 rule body). | WF3 | `mobile/src/store/authStore.ts:signOut()` |
+| 9.11 | ✅ DONE | Implemented in `mobile/src/lib/auth/decideAuthGateRoute.ts:100` as part of the §9.6 pure-function extraction. Hardened beyond spec letter with `!profile.user_id` falsy pre-check (Gemini WF2 §9.6 F1 + DeepSeek #2 consensus — rejects corrupted-cache attack class where `user_id` is null/empty while attesting to `onboarding_complete: true`). Spec §5.2 amended 2026-05-05 to document the falsy guard. | WF3 | `mobile/src/lib/auth/decideAuthGateRoute.ts` |
+| 9.2a | P1 | Migrate `IncompleteBanner` to read `useUserProfile().data.onboarding_complete` (NOT `useOnboardingStore.isComplete`) | WF2 | `mobile/src/components/onboarding/IncompleteBanner.tsx` |
+| 9.2b | P1 | depends on 9.2a — Remove `markComplete()` bridge from `useUserProfile.ts:101-103` AND update direct callers in `mobile/app/(onboarding)/complete.tsx:69` and `terms.tsx:91` to PATCH `onboarding_complete=true` directly to server (no local state mirror) | WF2 | `mobile/src/hooks/useUserProfile.ts`, `mobile/app/(onboarding)/complete.tsx`, `mobile/app/(onboarding)/terms.tsx` |
+| 9.2c | P1 | depends on 9.2b — Remove `isComplete` field + `markComplete()` action from `onboardingStore`. Add `persist` `migrate` function (version bump 0→1) to drop the legacy MMKV key for existing users. | WF2 | `mobile/src/store/onboardingStore.ts` |
+| 9.3 | P1 | Remove `selectedTrade`, `selectedTradeName`, `locationMode`, `homeBaseLat`, `homeBaseLng`, `supplierSelection` duplicates from `onboardingStore`. Add `persist` `migrate` function (version bump) to drop legacy MMKV keys. Update onboarding screens to write to `filterStore` after server PATCH success (no local mirror). | WF2 | `mobile/src/store/onboardingStore.ts`, `mobile/app/(onboarding)/profession.tsx`, `address.tsx`, `supplier.tsx` |
+| 9.1 | ✅ DONE | Eliminated `user-profile-cache` MMKV blob. TanStack persister is now sole canonical profile cache (verified sync via `mmkvPersister.restoreClient` — no cold-boot regression). §B5 dropped the `clearUserProfileCache()` call. One-time `cleanupLegacyUserProfileCache()` migration in `mobile/src/lib/migrations/` purges the orphaned blob on existing installs (gated by `legacyStorage.contains('profile')` to avoid materializing an empty file on fresh installs per Gemini WF3-§9.1 review F2). | WF3 | `mobile/src/hooks/useUserProfile.ts`, `mobile/src/store/authStore.ts`, `mobile/src/lib/migrations/userProfileCacheCleanup.ts` |
+| 9.5 | ✅ DONE | Promoted `loopDetector.ts` → `mobile/src/lib/debug/stateDebug.ts` (commit `af52c75`). Every export `__DEV__`-guarded. `useDepsTracker` exported as module-scope ternary (`__DEV__ ? useDepsTrackerDev : useDepsTrackerNoop`) so production noop calls ZERO hooks (Hermes/Metro DCEs the dev impl). `wired` flag persisted on `globalThis` so HMR re-fires of `wireStoreLogging()` don't multiply subscriptions. Production-path test at `mobile/__tests__/stateDebug.prod.test.ts` exercises the `__DEV__ === false` path. | WF3 | `mobile/src/lib/debug/stateDebug.ts`, 5 import-site updates, `mobile/__tests__/stateDebug.prod.test.ts` (NEW) |
+| 9.5b | ✅ DONE | Added `getDiagnosticsSnapshot(): {renders: DiagnosticsCounter[], effects: DiagnosticsCounter[]}` to `stateDebug.ts`; both arrays sorted by total desc; production returns empty arrays via `__DEV__` guard. `dumpDiagnostics()` refactored to format the snapshot. CI assertions can now read counters structurally. | WF2 P2 batch | `mobile/src/lib/debug/stateDebug.ts` |
+| 9.6 | P1 | Add AuthGate router branch tests (9 arms per §5.3) | WF2 | `mobile/__tests__/authGate.test.ts` (NEW) |
+| 9.7 | P1 | depends on 9.8 — Idempotency tests for all bridges per §8.1 | WF2 | `mobile/__tests__/bridges.test.ts` (NEW) |
+| 9.9 | ✅ DONE | Audited `paywallStore.show()` — caller is `mobile/src/components/paywall/InlineBlurBanner.tsx:12` (`usePaywallStore((s) => s.show)`). The original §3.4 audit grep missed the selector usage; row updated with verified caller. | WF2 P2 batch | `docs/specs/03-mobile/99_mobile_state_architecture.md` §3.4 |
+| 9.12 | ✅ DONE | Added `mobile/__tests__/storeReset.coverage.test.ts`. Discovers all Zustand stores in `mobile/src/store/` via regex, asserts each has a matching `.getState().reset()` call in `signOut()` OR a `// signOut-exempt: <reason>` comment. Catches the silent-leak bug where adding a new store and forgetting the signOut entry leaves stale data on shared devices (PIPEDA leak class). | WF2 P2 batch | `mobile/__tests__/storeReset.coverage.test.ts` (NEW) |
+| 9.13 | ✅ DONE | Added `mobile/scripts/check-spec99-matrix.mjs`. Parses Zod schema field names + §3.1 table column 1; asserts setEqual. Brace-depth tracker in schema parser skips nested `notification_prefs` keys; multi-line `z\s*\.` allows `subscription_status` (split across 3 lines). Currently 0 drift across 27 fields. Discovered & fixed 4 missing §3.1 rows (`created_at`, `updated_at`, `display_name`, `email`) as part of close-out. | WF2 P2 batch | `mobile/scripts/check-spec99-matrix.mjs` (NEW), `docs/specs/03-mobile/99_mobile_state_architecture.md` §3.1 |
+| 9.14 | ✅ DONE | Flattened `notification_prefs` JSONB → 5 sibling columns (3 booleans + 2 enums) via migration 117. Server (`userProfile.schema.ts` + 2 API routes + `classify-lifecycle-phase.js` push-dispatch script) and mobile (`userProfile.schema.ts`, `userProfileStore`, `settings.tsx`, 4 test files) updated in coordinated phases. Cost-tier enum reconciled from divergent `['small','medium','large','major','mega']` (one-off in `notifications/preferences/route.ts`) to canonical `['low','medium','high']`. `lifecycle_stalled_pref` server-column suffix avoids collision with `permits.lifecycle_stalled` in pipeline joins. `userProfileStore` persist `version: 1` + migrate drops orphan JSONB blob from existing MMKV. `fast-deep-equal` no longer called from `userProfileStore` — primitive `Object.is` per field replaces the deep-equal hot path that §6.6 was written to mitigate. | WF2 cross-domain | migration 117, `src/lib/userProfile.schema.ts`, `src/app/api/user-profile/route.ts`, `src/app/api/notifications/preferences/route.ts`, `scripts/classify-lifecycle-phase.js`, 4 server test files; `mobile/src/lib/userProfile.schema.ts`, `mobile/src/store/userProfileStore.ts`, `mobile/app/(app)/settings.tsx`, 4 mobile test files |
+| 9.15 | ✅ DONE | Added `mobile/__tests__/routerHygiene.lint.test.ts`. Two static-analysis rules: (1) router-effect hygiene — extracts every `useEffect(() => { BODY }, [DEPS])` block via brace-depth tracking; if `router` is in DEPS, scans BODY for `useXStore(` hook calls (lazy `.getState()` reads remain permitted). (2) atomic-selector mandate — globs `mobile/app/**/*.tsx` + `mobile/src/components/**/*.tsx`; flags any `useXStore()` zero-arg whole-store read per §6.1. 51 tests pass against current code. | WF2 P2 batch | `mobile/__tests__/routerHygiene.lint.test.ts` (NEW) |
+| 9.16 | ✅ DONE | Migrated the 3 lossy local-only `setRadiusKm` call sites (`(app)/index.tsx` ×2 widen-radius shortcuts + `(app)/settings.tsx` slider + `LeadFilterSheet.tsx` preset buttons) to canonical Bridge B3 via the new `usePatchProfile` hook. Each invocation now: cancels in-flight `['user-profile']` refetches → optimistically applies via `setRadiusKm` (the canonical setter per §3.1) → PATCHes `/api/user-profile` → rolls back on error → invalidates the query on settle. No new B6 pattern was added; the prior partial implementation was a bug, not a deliberate design. The `usePatchProfile` options-builder is exported separately so `mobile/__tests__/usePatchProfile.test.ts` can construct a `MutationObserver` directly without a React renderer (6 lifecycle tests cover all 4 §4.B3 contract obligations). The hook is intentionally extensible — adding `location_mode`/`home_base_lat`/`home_base_lng`/`supplier_selection`/`default_tab` to `ProfilePatch` plus snapshot/apply branches in `onMutate`/`onError` is a straightforward future expansion. | WF2 §9.16 | `mobile/src/hooks/usePatchProfile.ts` (NEW), `mobile/__tests__/usePatchProfile.test.ts` (NEW), `mobile/app/(app)/index.tsx`, `mobile/app/(app)/settings.tsx`, `mobile/src/components/feed/LeadFilterSheet.tsx` |
+| 9.17 | ✅ DONE | Cursor backward-compat — accept pre-deploy bare-int builder `lead_ids` in lead-feed cursor parser at the Phase 6 deploy moment (server-side fix). Closes deferred CRITICAL from the WF3 Phase 7 adversarial review (Gemini): cursor wire-format break for in-flight clients during the lead_id-to-string Phase 6 transition. The `get-lead-feed.ts` row-tuple comparison was extended with a `CASE WHEN $7::text = 'builder' THEN LPAD($8::text, 20, '0') ELSE $8::text END` pattern so cursors emitted before deploy (bare int) and after deploy (zero-padded string) both decode against the canonical lead_id shape. Existing logic test relaxed to match the new shape while still asserting row-tuple comparison structure. | WF3 (Spec 70 cursor work, recorded here for §9 catalog completeness) | `src/features/leads/lib/get-lead-feed.ts`, `src/tests/get-lead-feed.logic.test.ts` |
+| 9.18 | ✅ DONE | Strip `['user-profile']` query from MMKV persister to comply with §2.1 PII layer boundary. Closes deferred CRITICAL from WF3 Phase 7 Gemini review: the mobile `UserProfileSchema` includes 5 PII identity fields (full_name, phone_number, company_name, email, backup_email) that landed unencrypted on disk via the TanStack persister; `mmkvPersister` is Layer 4a UNENCRYPTED while §2.1 mandates Layer 4b SecureStore for PII. Two-commit landing: `671aa87` (initial fix via `dehydrateOptions.shouldDehydrateQuery` filter excluding the user-profile query — only filters WRITES to MMKV) + `202a9aa` (code-reviewer CRITICAL amendment: bumped persister `buster` to `'wf3-pii-strip-1'` to flush the pre-WF3 persisted blob from existing clients on cold-boot, since `shouldDehydrateQuery` does NOT filter rehydration READS; also extracted `persistFilter.ts` helper for the dehydrate predicate). | WF3 | `mobile/src/lib/persistFilter.ts` (NEW), `mobile/app/_layout.tsx` (PersistQueryClientProvider config), `mobile/src/store/authStore.ts` (`mmkvPersister.removeClient()` call), `mobile/__tests__/offline.test.ts` |
+| 9.19 | ✅ DONE | Unify forced-signout cleanup with explicit-signout path (§B5 listener-null branch). Pre-WF3 the `signOut()` finally block did the global fan-out (queryClient.clear + 4 peer-store resets + persister blob purge) but the `onAuthStateChanged(null)` listener branch only called `clearAuth()` — leaving stale data on shared devices for forced sign-outs (admin disable, password change on another device, project token revocation per Spec 93 §3.1). The asymmetry was the PROMOTED CRITICAL from §9.14 Phase D Gemini review, made more visible in §9.18 (which added `mmkvPersister.removeClient()` to `signOut()` but not the listener path). Resolution: extracted `clearLocalSessionState()` module-scope helper containing the full fan-out; both paths now invoke it. Added `forced_signout` PostHog event distinct from `signout_initiated` so analytics distinguishes the two trigger paths. `lastKnownUid !== null` guard prevents the cleanup from firing on every cold-boot first-fire (when the listener legitimately fires `null` before Firebase resolves the cached session). Two-commit landing: `381a0c9` (initial unification with helper extraction + telemetry) + `f2f7147` (code-reviewer amendments — deterministic mock-call assertions in `useAuth.test.ts`). | WF3 | `mobile/src/store/authStore.ts` (`clearLocalSessionState` helper + listener wiring), `mobile/__tests__/storeReset.coverage.test.ts`, `mobile/__tests__/useAuth.test.ts` |
+| 9.20 | ✅ DONE | Dead-code sweep across cumulative §9 + WF3 changes (16+ commits across mobile state + auth + push dispatch + mobile schema + cursor backward-compat + PII strip). Conservative posture: only items with NO consumers AND NO upgrade-path obligation removed. Knip baseline reduced from 4 unused exports to 3 — the removed export was `CLIENT_SAFE_COLUMNS` in the SERVER `userProfile.schema.ts` (consumers were since-deleted server-shape lookup helpers). Persist `migrate` functions and one-time MMKV cleanup helpers KEPT for upgrader safety (existing v0 clients still need them; removing would silently corrupt v0 state on upgraders). | WF3 | `src/lib/userProfile.schema.ts` (server-side `CLIENT_SAFE_COLUMNS` removal) |
+| 9.23 | ✅ DONE | B6 — API Client → Auth Listener (mid-session token refresh on 401) bridge spec amendment per WF2 M1+M2+M3 #6 (DeepSeek). Documents the existing `mobile/src/lib/apiClient.ts:65-84` 401 interceptor as a normative bridge — Firebase ID tokens expire after ~1 hour but `onAuthStateChanged` does NOT fire on expiry, so without this bridge a future contributor could remove the interceptor "because it's not in the spec" and silently break the app at the 1-hour mark. §4 header renamed Five → Six Bridge Patterns. No code change — implementation existed; this is normative documentation. | WF2 doc-only | `docs/specs/03-mobile/99_mobile_state_architecture.md` §4 (B6 section + header rename) |
+| 9.24 | ✅ DONE (spec amendment + 2026-05-05 same-day revision) | B3 rollback race documentation per WF2 M1+M2+M3 #7 (DeepSeek). Initial amendment mandated re-read-before-rollback as the recommended default; revised same day to match `usePatchProfile.ts` §9.16 implementation — naive rollback is the canonical pattern for low-contention fields, re-read-before-rollback is recommended for high-contention fields if/when production observation justifies it. Closes the spec-vs-code drift the M1+M2+M3 batch was designed to prevent. No code change needed. | WF2 doc-only | `docs/specs/03-mobile/99_mobile_state_architecture.md` §4 B3 Rules subsection |
+| 9.21 | ✅ DONE | Pattern A class-level fix per audit Phase 5 (`audit_spec99_2026-05-04.md` line 161-168) — `mobile/__tests__/spec99.mandates.lint.test.ts` statically asserts every §7 + §8 mandate has implementation evidence. 10 mandate cases (§7.1-§7.4, §8.1-§8.6) + 1 sanity case + 1 meta-count guard. Hardcoded `MANDATES` array means adding a new spec mandate requires explicitly adding a row (the meta-count guard catches accidental drops). Source-grep style consistent with `routerHygiene.lint.test.ts` (§5.4+§6.1 enforcement) and `storeReset.coverage.test.ts` (§8.5). The lint test surfaced a NEW gap: §7.2 (`Sentry.addBreadcrumb({category:'query'})` paired with `invalidateQueries`) has zero implementation evidence at HEAD — audit Phase 4 verified §7.1/§7.3 but not §7.2; that case is `it.skip` with `pendingReason` until a follow-up WF3 wires the telemetry. | WF1 | `mobile/__tests__/spec99.mandates.lint.test.ts` (NEW) |
+
+---
+
+
+## 10. Operating Boundaries
+
+### Target Files
+- `docs/specs/03-mobile/99_mobile_state_architecture.md` (this file — the spec)
+- `docs/reports/mobile_state_audit_2026-05-02.md` (the audit feeding §3)
+- `docs/specs/03-mobile/90_mobile_engineering_protocol.md` §7 (replaced with pointer to this spec)
+
+### Out-of-Scope Files
+- All `mobile/src/store/*.ts` — modified in §9.3 / §9.5 followups, not here
+- All `mobile/app/**/_layout.tsx` — already fixed in prior WF3; further changes per §9.4
+- All `mobile/app/(onboarding)/*.tsx` — modified in §9.3 followup
+- `mobile/src/hooks/useUserProfile.ts` — modified in §9.1 / §9.2 / §9.4
+- `mobile/src/lib/debug/stateDebug.ts` (renamed from `loopDetector.ts` in §9.5) — modify only via §9.5b structured-snapshot followup
+
+### Cross-Spec Dependencies
+- **This spec is a dependency of:** every future mobile WF that adds state, a store, or a router.
+- **This spec depends on:** Spec 90 (engineering stack), Spec 93 (auth + AuthGate), Spec 94 (onboarding flow), Spec 95 (server profile = canonical), Spec 96 (subscription gate).
+- **Authorized amendment process:** any change to §3 (Field Ownership Matrix), §4 (Bridge Patterns), or §5 (Routing Authority Rules) requires a WF1 amendment with adversarial review.
+- `scripts/classify-lifecycle-phase.js` — consumes the mig-117 flattened notification-preference columns (`lifecycle_stalled_pref` etc.) this spec owns, for push-dispatch gating (§9.14).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+# Review context for task-387 (no plan id) written 2026-11-20 by backlog-brief.mjs
+
+## Task
+task-387 RULES.ACC Rule accuracy: retire list to the operator, conflicts C1 to C5 written in his words, by-law checked count corrected
+status: RUNNING · milestone: m-1 · assignee: @lane-BL-RULESACC · labels: McFix, McFix E
+
+## Description
+Plan section E2. Retire candidates (grounder-verified stale): Spec 90 :46 and :71, 08_agents :343 and :19/:28: retiring is the operator's ruling. C1 to C5 (docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md; BL-GROUND/VERDICTS-SUMMARY-2.md) written as dated notes only after his words; Spec 126:810 against Spec 100:123 resolved by his C2 answer. By-law handbook count: report-only is not counted as enforced. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: docs/specs/03-mobile/90_mobile_engineering_protocol.md, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, docs/specs/02-web-admin/126_maxbld_surface_standard.md, docs/specs/00-architecture/08_agents.md
+
+## Acceptance criteria
+
+## References
+- (none)
+
+## Documents
+- (none)
+
+## Decisions in force (titles; the ones this task names carry the operator's words)
+- RR-0005 2026-11-18 · Operator direction: page-level lot information in increme
+- RR-0087 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0088 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0092 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0099 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0136 Operator: start Increment 1·A
+- RR-0137 Operator: completeness, holistic and per-increment optimisation
+- RR-0139 Operator: push 6, re-sort, answer page
+- RR-0140 Operator: faster pushes and GOs asked
+- RR-0141 Operator: Q-LT-1
+- RR-0143 Operator answer IMG-1: six lot-size bands
+- RR-0012 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0144 Operator answer PRG-1: purge rule
+- RR-0145 Operator answer TRK-1: tracked lots refresh
+- RR-0146 Operator answer PG-1: pushes and GOs
+- RR-0147 Operator answer NAME-1
+- RR-0149 Increment 1·A tooling location
+- RR-0150 Infra freeze named list
+- RR-0152 Increment 1·A re-use and drops
+- RR-0154 Work pulling
+- RR-0156 Push 6 literal test
+- RR-0157 Push 6 R-MD
+- RR-0014 McSTORAGE-RULINGS.md:5
+- RR-0159 Push 6 recapture; 1·A panel scope
+- RR-0161 Work pulling
+- RR-0162 Answer ONE-1
+- RR-0163 Answer ONE-2
+- RR-0164 Answer ONE-4
+- RR-0165 Answer ONE-5
+- RR-0166 Answer ONE-12
+- RR-0167 Answer ONE-13
+- RR-0168 Answer ONE-21
+- RR-0169 Answer ONE-22
+- RR-0028 open-questions.md:1088
+- RR-0170 Answer ONE-35
+- RR-0172 Search lot map street name
+- RR-0174 Loading screen
+- RR-0176 Loading screen
+- RR-0178 MB-44 W timing
+- RR-0179 Load-failure page
+- RR-0180 Web recent-search chips
+- RR-0182 Search identification and semi wiring
+- RR-0184 Semi question page design
+- RR-0186 Inc6 protection window
+- RR-0044 2026-11-18 · Operator direction: page-level lot information in increme
+- RR-0188 Push 6 recapture
+- RR-0190 Enforcement
+- RR-0192 Operator oversight scope
+- RR-0193 McRecommendations
+- RR-0195 Push CHK.5/CHK.3
+- RR-0196 Push CHK.5/CHK.3
+- RR-0198 Push 6 recapture
+- RR-0200 Recommendation tracking tools
+- RR-0202 Backlog working board
+- RR-0203 Backlog working board
+- RR-0060 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0205 Backlog home of the plan
+- RR-0207 Backlog: use all features, bring content and process over, ensure use
+- RR-0208 Gates: assess necessity; Backlog to make the process followed and reviews validated
+- RR-0210 McLane is the lane policy name
+- RR-0212 Backlog plan v8 scope: loader + three gates
+- RR-0214 1·A not replaced; relevancy pass after the move
+- RR-0215 Images round 4 directions
+- RR-0217 Concept gallery scope
+- RR-0219 Backlog plan v8 approved
+- 2026-11-18 re-use ruling: drop INFRA.2 guard.mjs and CHK.4 (operator words)
+- RR-0080 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- Q-H2 drop the J5 storeys backfill chain (7.7-7.9, 7.23)
+- RR-0232 Open decisions: grounding and verified recommendation
+- RR-0233 Operator expertise scope
+- RR-0235 McLane brief: full context from milestone, reviews and decisions
+- RR-0242 One-command lane launch
+- RR-0248 Increment 1·A parallel lanes
+- RR-0264 Semi page placeholder in 1·B
+- RR-0270 Web search footer: once, approved
+- RR-0273 Shared footer component
+- RR-0271 LOAD.1 drives the report now, ST.P1 split
+- RR-0081 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0277 Search fuzzy matching reuses the permit address spec
+- RR-0278 Report meter counts on report production only
+- RR-0281 No clear-search button (A.11 not required)
+- RR-0282 Daylight restyle token substitutions stay as built
+- RR-0284 Lot map: two data reads allowed (C.5 footprint, C.7 card line)
+- RR-0299 SRCH.C12 support address is a placeholder until launch
+- RR-0300 1·B blockers as OPERATOR tasks
+- RR-0298 Status changes only by the launch script
+- RR-0301 task-341 approved: run tasks 121, 122, 123 now, then LOAD.1, LOAD.2, LOAD.4
+- RR-0302 Loose ends task per milestone
+- RR-0086 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0303 design-elements file: produce now if not a big job
+- RR-0306 task-342 answered: the proof tool does not wait for the design-fit check
+- RR-0307 task-340 answered: A.6 is built now from the existing entitlement read, compliant and researched first
+- RR-0308 Semi question mock approved (task-319)
+- RR-0309 Regenerated semi mock approved (task-319 stage 2)
+- RR-0310 A.6 reset date served as a Toronto-time label (task-320)
+- RR-0311 A.6 zero reports left still shows the line (task-352 question 1)
+- RR-0312 No plan: an error page with a way to sign up (task-352 question 2)
+- RR-0313 Search box says Enter a Toronto address (task-352 question 3)
+- RR-0314 Outside-Toronto notice stays — "yes." (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1223)
+
+## Milestone
+m-1 Increment 1·B Search [S]
+
+### Description
+
+Increment S (re-opened, scenario slice)
+
+### Problems
+- None named in the S brief (docs/reports/plan-import/raw/2026-11-19/search-brief.json carries inc, deliverable and specs only).
+- Found by the R10 validation pass (task-316, 2026-11-19), text left as found: the first two Storage set-up lines below still say a 35 s loading screen and LOAD.3; RR-0176 (decision-43, supersedes RR-0174) rules no 35 s cap and LOAD.3 dropped (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- Found by the R10 validation pass: two Storage set-up lines and four Register rulings lines end with the word undefined where a quote belongs (generator defect, draft task on backlog-brief.mjs); doc-16 section 5 row S still reads LOAD.1 to LOAD.3 (backlog/docs/doc-16 - McStorage-policy-v2.md:108)
+
+### Project objectives
+- Objective: finish a completed project, a database that works and is ready (operator 2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "our objective is to finish a completed project ie a database that works and is ready"
+- The database exists to service the designed report, details and search page (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page"
+- A task that serves neither a designed element nor a supporting function is most likely not relevant (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code"
+- Five principles, keep it simple, no scope creep (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep"
+- One plan only (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "we need one plan - we can only execute one plan"
+
+### Increment objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion (docs/reports/plan-import/raw/2026-11-19/search-brief.json inc; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report; the semi calculation stays in Increment 7 (7.25) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report) (backlog/docs/increments/doc-2 - Increment-S-requirements.md:27) "| id | element | where | status | deliverers | built |"
+
+### Objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+
+### Deliverable
+- A user types any Toronto address, resolves address or lot confusion through the designed pages (choose your lot, and the three states: intersection, no lot linked, many lots), and lands on the report (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682) "Readings: (1) Q-GAP-0 image hold R-IMG1..3 LIFTED (dated note owed, M-246 form). (2) Q-GAP-2 "Most space": every option, a tie goes to the l"
+- The search pages follow the Daylight product standard (small pages v8); today they are still old dark on origin (mobile/src/constants/parcelSearch.ts:58) (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1100) "R-D1 Daylight is the product standard: small pages (v8), landing (v10+), report (B v3: summary + concept gallery), demo "
+
+### Specs
+- Spec 89 parcel cost model tool (search parser rules): origin:docs/specs/02-web-admin/89_parcel_cost_model_tool.md
+- Spec 126 MaxBLD surface standard: origin:docs/specs/02-web-admin/126_maxbld_surface_standard.md
+- Current search (latest rendering + later rulings): ~/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md
+- MORNING-DECISIONS.md: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md
+- McFrontend phase1 open-questions.md (search and small-pages rulings): ~/Buildo-scratch/mcfrontend/phase1/open-questions.md
+- PROTOCOL.md: ~/Buildo-scratch/panel-tools/PROTOCOL.md
+
+### Rulings
+- Search pages come first in the plan, before increment 1 (RR-0005) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "the search pages should be even before the increment 1"
+- Search parser: fix the street direction guard and the unit-token strip before launch (RR-0166) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-12 a"
+- W5 choose your parcel on the web is deferred and the web live switch stays off (RR-0170) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-35 b"
+- Lot map: the street name on the road comes from the map's own road labels (RR-0172) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:775) "Map's road labels (Recommended)"
+- The 'faces the street' rule question was withdrawn by the operator (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:774) "why does this matter? do you not know how to do the lookup?"
+- Loading screen: the animation keeps its own length and always runs to completion; the button waits for the report AND See details; LOAD.3 not needed (RR-0176, supersedes RR-0174 which said 35,000 ms) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- The customer read module W (1.3) is built now in Increment 1 (RR-0178) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "1. it has to happen now - read the objectives"
+- A load-failure page is a task, built from the other small pages (RR-0179) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "2. Add it as a task using the othr mini pages as a template"
+- Web recent-search chips (E.6) stay deferred (RR-0180) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "3. This can stay defferred for now"
+- 1·B builds A.6 and C.12 as their own tasks and identifies the semi lot; the semi calculation stays in 7.25 (RR-0182) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- The semi question page is designed like the other small pages: a v8 mock for approval, then built (RR-0184) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:801) "also need a semi question page similar to a min page"
+- Small pages: Daylight ("modern") is the product standard (R-D1) (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1098) "Just looking at the small pages - love it! Let's go with modern."
+- Increment 1·B starts as a validation pass of its tasks, the semi page placeholder, the McFrontend fields and page tasks, dependencies and the prior panel records (RR-0257) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1019) "This work has been done - just validation."
+
+### Storage set-up
+- McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md) "undefined"
+- Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3); skipped for a re-opened lot (its record is read); no screen for owner input or the Tracked Lots list (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696; ~/Buildo-scratch/mcfrontend/MF-62/plan.md:44) "undefined"
+- Search shows addresses only; the pick (lookup hit) starts the one-lot compute (LOAD.1) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696) "undefined"
+- ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts) (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126) "undefined"
+
+### Register rulings of this group (operator words)
+- RR-0005 2026-11-18: Search pages first in the plan, before increment 1 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- RR-0137 2026-11-18: For increments 1b-10: all tasks present to fulfil each increment's objectives and deliverables (rulings most relevant, McStorage policy, compliance, project objectives; ensure relevancy); tasks optimised holistically, then within each increment, updated in the plan (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:729) "ensure all tasks are present to fufill the increments objectives and deliverables"
+- RR-0144 2026-11-18: Stored lot records are purged after 90 days unopened (operator answer PRG-1 a); tracked lots are never purged while tracked (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "PRG-1 a (purge after 90 days unopened)"
+- RR-0145 2026-11-18: Tracked lots are refreshed in the background when the stamp moves (operator answer TRK-1 a) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "TRK-1 a (background refresh of tracked lots when the stamp moves)"
+- RR-0154 2026-11-18: When a task completes the next ready task starts at once; a task blocked on an operator question goes to the answer page and work moves to the next unblocked task; nothing waits idle. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:754) "it should pull the next task as something completes or move to the next task if a question remains"
+- RR-0166 2026-11-18: Search parser (1.4): fix the two defects before launch (street direction guard, unit-token strip), with two labels and one dated note on Spec 89 line 33 (ONE-12 a) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-12 a"
+- RR-0170 2026-11-18: W5 (choose your parcel) on the web: deferred; the web live switch stays off (ONE-35 b) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-35 b"
+- RR-0172 2026-11-18: Lot map: the street name on the road comes from the map's own road labels; no new data read or drawing code. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:775) "Map's road labels (Recommended)"
+- RR-0174 2026-11-18: Loading screen: the animation always runs its full set length (report_check_min_ms = 35,000 ms, default and maximum); the button to open the report shows when the lot's numbers are ready, at any time after the animation completes. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:779) "the animation still needs to be complete.. the button shows when its ready - anytime after the animation completes"
+- RR-0176 2026-11-18: Loading screen: the animation keeps its own length (23 s today, may change later) and always runs to completion; the button to open the report shows only when the report AND See details are loaded, however long that takes (no 35 s cap); the 35,000 ms setting change (LOAD.3) is not needed now. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- RR-0178 2026-11-18: MB-44: T now, per-increment checks now, and the customer read module W (1.3) built NOW in Increment 1 (not after J9 in increment 8), because McStorage policy v2 computes at the search pick (MD:704). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "1. it has to happen now - read the objectives"
+- RR-0179 2026-11-18: New task: the load-failure page shown when a lot's report or See details fails to load, built from the other small pages (small-pages-v8) as its template. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "2. Add it as a task using the othr mini pages as a template"
+- RR-0180 2026-11-18: Web recent-search chips (E.6) stay deferred. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "3. This can stay defferred for now"
+- RR-0182 2026-11-18: Increment 1·B builds A.6 (reports-left line, app search page) and C.12 (help link) as their own tasks; the search identifies two-or-more parcels, a mis-typed address, or a possible semi lot; the search portion and the semi question page are done now with the wiring (link) to the report; the semi calculation stays in Increment 7 (7.25). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- RR-0184 2026-11-18: The semi question page is designed like the other small pages (small-pages-v8 Daylight): a mock from the v8 template for operator approval, then built (SRCH.SEMI). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:801) "also need a semi question page similar to a min page"
+- RR-0186 2026-11-18: Increment-6 protection rules 1, 3, 7 and 9 are closed (D7 done); suites and pushes only through the push station and the operator; DB jobs only on the operator typed GO; rules 2, 4, 5, 6, 8, 10, 11 stay until push 6 lands. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:805) "y and your not following the McQueue rules"
+- RR-0190 2026-11-18: Lane launches need an authorized plan for any repo worktree they write; every register row is marked operator words or orchestrator reading and only operator words feed reviews as rulings; orchestrator replies that recommend or name a ruling must cite file:line, an RR id or UNVERIFIED (enforced by hooks). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:813) "close the gap.  fix teh register"
+- RR-0192 2026-11-18: Questions come to the operator only on database structure, the frontend, the user experience and storage; everything else is decided under the six-criteria rule, reviewed and logged as a McRecommendation card for audit. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:819) "I dont provide oversight on questions beyond the databse strcuture, the frontend the user experience and storage"
+- RR-0193 2026-11-18: McRecommendations: every recommendation is a card in the repo decision log with customer / UX / space / DB-logic framing, options, rulings (operator words only), sources, research kept separate from the recommendation status (judgment only, reviewed, proven), five principles, what it serves, computed confidence and outcome. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:817) "the recommendation should be framed with an explanation that speaks to what I know"
+- RR-0202 2026-11-18: The increment plan moves into the repo queue rows (Spec 137); the Backlog board generated from them is the working board, showing per task its increment, decisions and research (review/run) IDs. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:837) "I need to be able to see the board and the categories and the decisions and the research ids for each"
+- RR-0203 2026-11-18: The move of the increment plan into the repo queues is done by a committed generator with --check, from a committed raw snapshot; nothing hand-copied. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:839) "use a generator"
+- RR-0205 2026-11-18: The increment plan lives in Backlog.md in the repo (milestones = increments, assignees = lanes, priority/ordinal, dependencies, decision and research refs per task); the operator organises on the board; queue rows stay and are linked by id; loaded once by an import script. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:843) "yes of course"
+- RR-0207 2026-11-19: Backlog: every feature is used; each increment's objectives, rulings, citations and storage objectives move over; the existing process (handbooks, Spec 08) is carried over; process documents are updated; the move is structured so the system is actually used. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:847) "Make sure opus actually uses the system"
+- RR-0208 2026-11-19: The board data exists in the artifact and the procedures in Spec 08; the failure is scratch work, made-up responses and wrong reviewer context; hence the gates and full Backlog use. Each new gate is assessed as necessary or not, with how to do it right. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:848) "determine if the new gates etc are necessary and how to do this right"
+- RR-0210 2026-11-19: The lane policy is named McLane in the Spec 08 and Spec 137 dated notes of the Backlog-home plan; McDecision is not adopted. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:852) "Let's stick with McLane for a name."
+- RR-0212 2026-11-19: The Backlog-home plan is the loader plus the three enforcement pieces, with Backlog's own browser as the board; the v7 board job, mirror synchroniser, import verifier and structural gate are dropped (simple, no scope creep). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:867) "we needd the loader and the three gates"
+- RR-0214 2026-11-19: Increment 1·A is not replaced by the Backlog plan; after the move every task on the board is re-checked for relevancy against the plan (kept / merged / changed) before 1·B starts. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:857) "ensure the tasks are updated and relevancy determined in light of the plan"
+- RR-0219 2026-11-19: Backlog-home plan v8 is authorized (PLAN LOCKED): loader + three gates + Backlog's browser; D1-D5, D7-D10 as recommended; every relevant spec note lands; every imported task carries all available information; the 1·A tasks are updated or removed against the plan through the panel. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:871) "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the tasks"
+
+### Compliance codes in use
+- None named: no 1·B task (task-12, 13, 14, 68, 69, 266, 267, 268, and the promoted and created task-317 to task-325) carries a comp: label (checked on the task files, 2026-11-19).
+
+### Decisions
+Every file in backlog/decisions whose Groups line names S or whose Tasks named line names a 1·B plan id (checked 2026-11-19, R10):
+- decision-1: RR-0005 2026-11-18 · Operator direction: page-level lot information in increme
+- decision-15: RR-0137 Operator: completeness, holistic and per-increment optimisation
+- decision-20: RR-0144 Operator answer PRG-1: purge rule
+- decision-21: RR-0145 Operator answer TRK-1: tracked lots refresh
+- decision-27: RR-0154 Work pulling
+- decision-36: RR-0166 Answer ONE-12
+- decision-40: RR-0170 Answer ONE-35
+- decision-41: RR-0172 Search lot map street name
+- decision-42: RR-0174 Loading screen
+- decision-43: RR-0176 Loading screen
+- decision-44: RR-0178 MB-44 W timing
+- decision-45: RR-0179 Load-failure page
+- decision-46: RR-0180 Web recent-search chips
+- decision-47: RR-0182 Search identification and semi wiring
+- decision-48: RR-0184 Semi question page design
+- decision-49: RR-0186 Inc6 protection window
+- decision-51: RR-0190 Enforcement
+- decision-52: RR-0192 Operator oversight scope
+- decision-53: RR-0193 McRecommendations
+- decision-58: RR-0202 Backlog working board
+- decision-59: RR-0203 Backlog working board
+- decision-60: RR-0205 Backlog home of the plan
+- decision-61: RR-0207 Backlog: use all features, bring content and process over, ensure use
+- decision-62: RR-0208 Gates: assess necessity; Backlog to make the process followed and reviews validated
+- decision-63: RR-0210 McLane is the lane policy name
+- decision-64: RR-0212 Backlog plan v8 scope: loader + three gates
+- decision-65: RR-0214 1·A not replaced; relevancy pass after the move
+- decision-68: RR-0219 Backlog plan v8 approved
+
+### Documents
+- Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md
+- McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md#L27) and docs/reports/plan-import/raw/2026-11-19/elements-by-inc.json#S
+- McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md#L108-L108 and docs/reports/plan-import/raw/2026-11-19/storage-by-group.json#S
+
+## Document sections
+Cap: 120 KB in total, 12 KB per block (document blocks below; an omitted block costs its notice against the total); a block that would pass the total is listed as omitted. Sections named in a link (#L<n>-<m> or a section title) are read; with none named, the first 12 KB.
+
+### Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md (not readable: ENOENT; read it at Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md)
+
+### McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md (not readable: ENOENT; read it at McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md)
+
+### McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md (not readable: ENOENT; read it at McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md)
+
+## Decisions naming this task
+- RR-0314 Outside-Toronto notice stays (names RR-0314) — "yes." (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1223)
+
+## Prior reviews and lane reports
+### task-387 (this task)
+- (none)
+
+## Dependencies
+- (none)
+
+
+## Plan, and the operator rulings of 2026-11-20 it records (appended by the lane by script; the lines marked Orchestrator reading are NOT the operator words)
+
+### Plan
+PLAN task-387 RULES.ACC (lane BL-RULESACC). Smallest change, existing mechanisms only. Principles served: standardized, understandable, simple. Rule: Spec 135 header "Operator verbatim = the operator's own words"; Spec 137 rule 10 (137_mcqueue.md:109) "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept."; Spec 00 section 14 (00_engineering_standards.md:463) a behaviour-changing ruling updates all cited specs in the same commit; 08_agents.md section 7 rule 4 and section 11.1.
+
+(1) RULING RECORDS (scripts/analysis/backlog-decision.mjs, ids from RR-0315, quote checked against its MORNING-DECISIONS.md line by the tool). One record per distinct ruling, from the six entries headed "Operator RULES" / "APPROVES" of 2026-11-20 (MORNING-DECISIONS.md:1383, :1397, :1407, :1420, :1425, :1430): plan go, fold, d, e (:1384); C2, C3, D13, C5, D1, semi cache (:1399, fragments "1 a", "2 b", "3 a", "4 a", "5 c", "6 accept"); phone retries and web search (:1409, "Phone retires yes", "web search yes"; the meaning of each is the orchestrator's reading, recorded as a reading in the text, never in the quote field); page conversion approved and app-not-in-use (:1422); task 370 and the six-row table (:1427, meaning is the orchestrator reading :1428); McFrontend row for a fix and the meter location (:1432, "1 a" and "2. y"). The rulings register ~/Buildo-scratch/plan-gen/rulings-register.json is outside the lane write scope: the rows are drafted in the lane dir for the orchestrator to add with add-ruling.mjs (not written by this lane).
+Status moves: no tool moves a status from a ruling record (backlog-decision.mjs only appends the dated note, backlog-status-check.mjs is read-only). The sanctioned route is a lane commit that sets the status word with the backlog CLI and quotes the ruling (Spec 137 section 3, 137_mcqueue.md:21 and :84 "DROPPED ... The ruling is quoted"). task-370 LATER to DROPPED (ruling: line, quote "Task 370 yes . approved", marked with the orchestrator reading); task-348 OPERATOR to DONE-as-answered with the record id; both through the CLI in this commit. If the hooks refuse, stop and report.
+(2) DATED NOTES, prior text kept (M-246): Spec 126 after :810: C2 correction (error screen with Try again, not counted; "closed reason" sentence of the 2026-11-20 note is overturned for the failed compute; phone 3 retries is the orchestrator reading) and C4 at :990 (in-app sheet rests on the 2026-11-11 "1-12 yes", not on the "Linking.openURL" description; Android Done and silent failure residuals stated). Spec 100 after :123: C2 stands, C5 (every paying user at once; gate stays the switch alone; D-1 now ruled), C1 as verified (engineering matter, no operator words: the buildable lock is a test that the core's closure never reads run_at or descriptor; nothing built here), the meter (counts only when a report is produced; counted in the lookup route; location ruled "2. y"). Spec 135 FE-39 row: dated note C5 (a) via the Spec 135 row text; the Spec 136 handbook is regenerated by its generator if it renders the row. scripts/surfaces/_schema/bindings.json $comment: a dated note that the 48 px is the operator's ruling "3 a" (the earlier wording kept). C3 is not repeated (task-389).
+(3) RETIRE LIST as an OPERATOR DRAFT file only (Spec 90 :46 and :71, 08_agents :19 :28 :343): nothing retired, no edit to specs 90 or 08.
+(4) BY-LAW CHECKED COUNT: computed from Spec 133; the figure lives in dated lane reports, not in a script: drafted, nothing changed.
+TEST (red first, through the real hooks): src/tests/surfaces/rules-acc-notes.logic.test.ts asserts the notes exist with the operator quote, the bindings note names the operator ruling, and the retire/count draft file exists. Extend the task Files line (CLI) for the files this needs.
+Not done by this lane: grounder (owed), push, DB, register edit.
+
+### Rulings (MORNING-DECISIONS.md line: text)
+:1384: Operator, verbatim: "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold 3. please xplainwith recommendation. Still open review all pages for schema complaince - is C already complete d. just add the review enforcement not the others. e. fine  - is the McFront-end updated - what does it mean when I say? Enforce McFront-end?"
+:1385: - 1: go on sections A and B; tasks added to Increment 1·B: task-380 FIX.FRESH, 381 STD.HOOKS, 382 STD.SCAN, 383 STD.ROUTE, 384 STD.REPORT-OWN, 385 GATE.B-EXT, 386 VERIFY.ALL, 387 RULES.ACC, 388 MF.RULES (task-379 kept, cut scope).
+:1386: - 2: close check folded onto wf2/board as built (wf1/inc1b-comply2), as a guard against a skipped review only; two attack rounds on file; no further hardening. task-366 stays RUNNING until its lane closes it.
+:1399: Operator, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept"
+:1400: - C2 RULED (a): a failed compute shows the error screen with Try again and is not counted. Spec 126:810 ("failed compute shows a closed reason") is corrected to this; Spec 100:123 stands. STILL OPEN: whether the phone keeps its 3 retries before the error shows.
+:1401: - C3 RULED (b): the legal line on the phone search page goes at the bottom, as in the later mock (small-pages-v8). This is a BUILD (it sits under the box today): new task.
+:1402: - D13 RULED (a): 48 px for Continue and Try again on the semi page; now the operator's ruling (was an orchestrator decision).
+:1403: - C5 RULED (a): when the web switch flips, engine numbers go to every paying user at once, as built. FE-39 (tester-only preview first) needs a dated note recording this; through the register generator.
+:1404: - D1 RULED (c): the freshness compare is left until stored records exist; it moves with the storage record write (ST.P1). task-380 waits on that; option (b) is not ruled.
+:1405: - Semi page cache write: ACCEPTED as built (through the shared hook).
+:1409: Operator, verbatim: "Phone retires yes and web search yes"
+:1410: - Orchestrator reading: "Phone retires yes" = keep the 3 retries before the error screen (the recommendation put). "web search yes" = the web search page's legal line also goes at the bottom, the same as the phone (C3 b), if the web page shows that line.
+:1422: Operator, verbatim: "approved [the five items pasted] - remember the app is not beign used - we are in development"
+:1427: Operator, verbatim: "Task 370 yes . approved"
+:1428: - Orchestrator reading: "Task 370 yes" = drop task-370 from this increment (the recommendation put); "approved" = the six-row table as put, including that today's C5 ruling answers task-348.
+:1432: Operator, verbatim: "2. y 1 a"
+:1433: - 1 (a): a McFix task may file its commits under the McFrontend row that built what it fixes; its own review is the McFix lens set and separate grounder.
+:1434: - 2 y: the meter stays where it is (in the lookup route, counting only when a report is produced); a spec note says so.
+

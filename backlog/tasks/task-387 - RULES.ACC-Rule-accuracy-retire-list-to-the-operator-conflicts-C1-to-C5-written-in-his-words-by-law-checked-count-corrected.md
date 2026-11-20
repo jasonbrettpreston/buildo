@@ -7,12 +7,15 @@ status: RUNNING
 assignee:
   - '@lane-BL-RULESACC'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T16:02:00Z'
+updated_date: '2026-11-20T16:14:00Z'
 labels:
   - McFix
   - McFix E
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-RULESACC/REPORT.md
+  - docs/reports/lanes/2026-11-20/BL-RULESACC/FINDINGS.md
 type: build
 ordinal: 87012
 ---
@@ -97,4 +100,6 @@ Dated note 2026-11-20 (M-246, prior text kept; RR-0330 · task-387 · Backlog; o
 Dated note 2026-11-20 (M-246, prior text kept; RR-0331 · task-387 · Backlog; operator, verbatim: "2. y")
 
 Dated note 2026-11-20 (M-246, prior text kept; RR-0332 · task-387 · Backlog; operator, verbatim: "1 a")
+
+2026-11-20 lane BL-RULESACC: ready, grounder owed; commits 893528a4b and the ruling-records commit; report docs/reports/lanes/2026-11-20/BL-RULESACC/REPORT.md
 <!-- SECTION:NOTES:END -->

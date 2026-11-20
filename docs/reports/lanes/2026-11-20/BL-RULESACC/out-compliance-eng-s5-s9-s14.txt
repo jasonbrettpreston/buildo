@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:04:08.728Z file_sha256=0c1e1954e1134f78e417c889a90bfc52051be2e1649112957ba8b1cf49ed68c3 prompt_sha256=018d1a25e6c06074d64d0fab3e114df309434aedaa1f3fc703e0dc25eeb3adfa
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-eng-s5-s9-s14.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9512 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19470 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 26796 chars, answer 3359 chars, 45s
+BUG severity=HIGH — spec 00_engineering_standards.md §14 registry "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 "the gate is the switch `MAXBLD_WEB_LIVE` alone" / "Spec 100 carries the matching note." while the same row's Sources cell (unchanged, visible in the hunk) cites "126 §11a.3 (R-2)" — the C5 ruling overturns the EI-D2 tester-only preview gate, yet the cited primary home Spec 126 §11a.3 receives no C5 note in this commit (the two Spec 126 notes added at :812 and :997 are C2 and C4), so a cited spec is left stale — add the matching C5 note at 126 §11a.3 and name 126 in the FE-39 C5 note.
+
+DEFER severity=MED — spec 00_engineering_standards.md §5.5 "Pick the layer that *proves the claim*; a green suite in the wrong layer is false confidence." — src/tests/surfaces/rules-acc-notes.logic.test.ts:1 "A text lock: the dated notes the operator's 2026-11-20 rulings called for exist" — the file is filed under the logic layer, whose claim is "The pure function computes the right value on happy + edge inputs", while it proves a doc-to-ruling drift claim that the map assigns to the parity/regression layer — refile or rename to the layer that proves a text/drift claim so a passing suite is not read as proof of a derivation.
+
+DEFER severity=MED — spec 00_engineering_standards.md §5.5 "a green suite in the wrong layer is false confidence" — src/tests/surfaces/rules-acc-notes.logic.test.ts:70 "expect(d).toMatch(/312/);" against RETIRE-DRAFT.md "UNVERIFIED: whether other cells name something that is not a check" — the lock pins a count the draft itself marks unverified, so green now certifies an unverified figure — assert only the draft's shape and its UNVERIFIED marker, or drop the numeric assertion until the recount is verified.
+
+DEFER severity=LOW — spec 00_engineering_standards.md §14 registry "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — src/tests/surfaces/rules-acc-notes.logic.test.ts:3 "docs/specs/02-web-admin/126_maxbld_surface_standard.md (810, 990), docs/specs/03-mobile/100_mobile_parcel_cost_tool.md (123)" — three of the cited specs are pinned by line number or row id (810, 990, 123, "FE-39", "touch_targets") and not by section (§N) — replace with the section numbers.
+
+DEFER severity=LOW — spec 00_engineering_standards.md §14 registry "new couplings update **Cross-Spec Dependencies both directions**" — NONE (no Cross-Spec Dependencies hunk in the diff) — the notes deliberately couple 126, 100, 135 and bindings.json ("Spec 100 carries the matching note", "Spec 135 FE-39 carries the matching note") but no Cross-Spec Dependencies entry is added on any side — add the mutual entries in each spec's Cross-Spec Dependencies table.
+
+DEFER severity=LOW — spec 00_engineering_standards.md §5.3 "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code." — src/tests/surfaces/rules-acc-notes.logic.test.ts:1 new file in the same diff as the notes it asserts — no failing-run record accompanies the diff, so red-before-green is unverifiable from the material — record the failing run (test output before the notes land) in the lane report.
+
+REJECT — spec 00_engineering_standards.md §9.4 Pipeline SDK Mandate — the change is accused of using a non-SDK count script — the clause is scoped to `scripts/*.js` and the script named at RETIRE-DRAFT.md:24 ("~/Buildo-scratch/lanes-20261119/inc1b/rulesacc/count-bylaw.mjs") lives outside the repo, so the mandate does not reach it.
+
+MET — §14 "A behavior-changing ruling updates ALL cited specs" (C2 and C4 halves) — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 and docs/specs/02-web-admin/126_maxbld_surface_standard.md:812 — the failed-compute correction and its Spec 100 counterpart both land here, and the C4 note lands with its matching Spec 126 line.
+MET — §5.1 Typed Factories Only — src/tests/surfaces/rules-acc-notes.logic.test.ts:8 — no inline untyped mocks; only fs, path and vitest are imported.
+MET — §9.1 to §9.7 — NONE — no `scripts/*.js` file is added or changed in the diff, so no transaction, parameter-limit, upsert, SDK, streaming, manifest or tracing obligation is engaged.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  46397ms (46.4s)
+📊 Tokens — total: 22310, input: 13864, output: 8446, reasoning: 7248

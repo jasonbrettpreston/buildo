@@ -1,0 +1,45 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-20T15:52:00.760Z file_sha256=847805443872543968a12df6810b73518ad6391d09a50e01ff61660c526f79f5 prompt_sha256=3446ead68120501c641e72d63716c1cc69b1d323431bf0d84e1ad8ae72ac0d0e
+🔍 Lens review of docs/reports/reviews/task-387/context-2026-11-20.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9887 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20441 chars, answer 0 chars, 30s
+BUG severity=HIGH — §TEST ("red first, through the real hooks") — the plan commits the test and the notes that make it green in the same run, so "red first" leaves no post-hoc evidence; a green-on-first-run test proves nothing — state a two-commit sequence (commit test → run and capture RED → add notes → run GREEN) and commit the RED run transcript to the lane dir.
+
+BUG severity=HIGH — §2 vs §TEST — the notes must keep prior text (M-246) but the test only asserts "the notes exist with the operator quote"; a lane that replaces instead of appends passes the test — add assertions that each prior dated-note body survives (e.g. 126:810's "the closed status list is unchanged", 100:123's LOAD.1 body) after the new note is inserted.
+
+BUG severity=HIGH — §1 status moves ("both through the CLI in this commit. If the hooks refuse, stop and report") — no rollback for a half-applied pair (task-370 moved to DROPPED, task-348 refused by hook) leaving a dirty working tree with no ruling record — split the two moves into a dedicated commit and specify `git checkout -- <task file>` on hook refusal, reporting which move landed.
+
+BUG severity=HIGH — §1 "ids from RR-0315" while the register is written later by the orchestrator (add-ruling.mjs) — nothing reserves the range, so a second lane drafting from RR-0315 the same day collides at add time — reserve by reading the register's current max id at lane start and pin the drafted range in the lane report; add a test that drafted ids are unique against the register.
+
+BUG severity=MED — §1 backlog-decision.mjs idempotency is not stated ("One record per distinct ruling") — a re-run or retry mid-batch duplicates records in the decisions log — state whether the tool no-ops on an existing (ruling line + quote) pair, or add a pre-check that skips already-written rulings.
+
+BUG severity=MED — §2 line-number anchors ("Spec 126 after :810", "Spec 100 after :123", "C4 at :990") — if another lane edits those specs between plan-lock and execution the note lands at the wrong line or mid-sentence, and the text-only test still passes — anchor on content (the closing marker of the prior dated note) rather than the line number, and assert ordering.
+
+BUG severity=MED — §1 "Phone retires yes" — verbatim requires the operator's typo to survive, but nothing pins it; a later "fix typo" overwrites the quote — add an assertion that the recorded quote contains "retires" exactly.
+
+DEFER severity=MED — §4 "the figure lives in dated lane reports, not in a script" — the by-law count (543 / 222 / 117 / 312) stales the next time Spec 133 changes and no gate notices — acceptable as report-only, but have the dated report cite the Spec 133 line count or content hash it counted from.
+
+DEFER severity=LOW — §3 retire list — nothing enforces that the draft names the operator's decision (delete vs rewrite) per line; if the operator later rules, the draft must be actionable — ensure the draft carries a proposed replacement per candidate (90:46, 90:71, 08:19, 08:28, 08:343), not just the line reference.
+
+REJECT — §2 bindings.json $comment note — worry that a new field breaks the schema check — the pasted context shows `$comment` already carries the 2026-11-19 task-353 sentence, so the field is legitimate; no issue.
+
+REJECT — Axis-1 concurrency between the spec-note lane and BL-STN1 at 126:810 — the note appends after the existing block; git merge on append-only dated blocks is trivially reconcilable, and the "prior text kept" assertion (once added) catches clobbering; not a plan blocker.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- Red-first is unverifiable because test and notes ship in one commit (§TEST).
+- M-246 "prior text kept" is not asserted, so a clobbering note passes the test (§2/§TEST).
+- Partial status-move rollback is undefined; a hook refusal mid-pair leaves unrecorded state (§1).
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- RR-0315 is the next free id — verify: `jq -r 'map(.id)|max' ~/Buildo-scratch/plan-gen/rulings-register.json` and confirm it is below RR-0315.
+- task-370 is LATER and task-348 is OPERATOR at execution time — verify with the backlog CLI status read (or `git grep -n 'status:' <task file>`) before the first move.
+- The five retire lines and the three note anchors still hold their claimed content — verify: `sed -n '46p;71p' docs/specs/03-mobile/90_mobile_engineering_protocol.md; sed -n '19p;28p;343p' docs/specs/00-architecture/08_agents.md; sed -n '810p' docs/specs/02-web-admin/126_maxbld_surface_standard.md; sed -n '123p' docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`.
+- by-law "checked" definition (312 gate-naming vs 426 enforcer-naming vs 543 in force) — verify: `grep -n 'Enforced by' docs/specs/01-pipeline/133_bylaw_handbook.md | wc -l` and reconcile which figure "report-only is not counted as enforced" yields before writing the note.
+- "DONE-as-answered" is a valid queue status word — verify: `grep -rn 'DONE-as-answered\|status' <queue schema> | head` (the CLI will refuse if not in the enum; confirm before committing).
+
+---
+⏱  36529ms (36.5s)
+📊 Tokens — total: 25104, input: 18603, output: 6501, reasoning: 5169

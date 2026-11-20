@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:06:35.934Z file_sha256=1497a6847804c97a8534d8c2c0412812f290017a72efbecda91c39fc5c4f1d91 prompt_sha256=67e048f14e219a71d11b562fd1a580133f6c267b332626a2cf9d2442f2f355a1
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10939 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22301 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33598 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44694 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 54891 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 65623 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 75906 chars, answer 1134 chars, 105s
+DEFER severity=MED — §5.7 "§2's numbered behavioural contract and §3.2's field lists become descriptor data and are deleted from prose, a value in two places is a drift source" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "the report counts only when a report is produced, after the address and lot are found ... the code counts it in the lookup route, `src/app/api/parcels/lookup/route.ts` (the meter block)" — restates the metering rule in prose where the clause says it belongs in descriptor/contract data, and the route code is a third copy — record the ruling as a pointer to the descriptor or §2 contract, not a restatement.
+DEFER severity=MED — §5.7 "a value in two places is a drift source, which §5.2 measured four times over" — docs/specs/02-web-admin/126_maxbld_surface_standard.md "A failed compute shows the error screen with Try again and is not counted; no closed not_evaluated reason is shown for a failure" — restates an error-state rule in prose that §9 Edge Cases already declares (`schema_drift`, `on_missing`) — make the note a pointer to the states/errors descriptor.
+DEFER severity=MED — §5.0a "scripts/violations/generate-spec-mirror.mjs already follows both conventions: --check, --self-test" — src/tests/surfaces/rules-acc-notes.logic.test.ts:1 "docs/specs/02-web-admin/126_maxbld_surface_standard.md (810, 990), docs/specs/03-mobile/100_mobile_parcel_cost_tool.md (123)" — the cited lines do not match the notes the diff inserts at 812, 997 and 125 — update the SPEC LINK line numbers to the inserted locations.
+DEFER severity=MED — §5.7 "a value in two places is a drift source" — src/tests/surfaces/rules-acc-notes.logic.test.ts "const NOTE = 'Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387'" and "expect(d).toMatch(/312/)" — the note header format and the by-law count 312 are re-declared in both the test and RETIRE-DRAFT, which the draft itself marks UNVERIFIED — read them from one source, or lock the report header rather than the figure.
+DEFER severity=LOW — §5.0a "plus a RED canary proving the check itself fires" — src/tests/surfaces/rules-acc-notes.logic.test.ts "expect(n).toContain('operator, verbatim: \"1 a\"')" — every assertion is positive presence, there is no tampered/missing-note negative case — add one RED canary so the lock is proven to fire.
+
+MET — §5.0 — diff (whole) — no file is added under the generated fan-out (no `src/lib/surfaces/generated/*`, no descriptor, no migration, no seeded projection), so the ONE-SOURCE rule is not broken
+MET — §6.1 — diff (whole) — no table is declared and no migration is authored, so the declare-and-assert five steps are not triggered
+MET — §6.4 — diff (whole) — `apply-surface-descriptors.js` and `surface_descriptors` are untouched, so the DO-NOTHING and drift-lock rules are not engaged
+MET — §7.1 — diff (whole) — no `anon` insert policy is added or edited, so the single-write rule is untouched
+MET — §8 — diff (whole) — no role, policy or `is_admin` predicate is changed, so the Auth Matrix is not altered
+
+REJECT — §7.1 — the note on offers/impressions is accused of adding an unauthenticated write — the diff adds no SQL policy, it only describes existing behaviour — no policy appears in the material.
+REJECT — §6.1 — the change is accused of skipping declare-and-assert for a new table — no table and no migration are added — steps 1-5 are not triggered.
+REJECT — §5.0 — the doc-lock test is accused of being a banned test validator — §5.0's ban is scoped to descriptor schema validators ("the test imports the same module the engine does"), which this doc text lock is not.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+
+---
+⏱  107415ms (107.4s)
+📊 Tokens — total: 48072, input: 26903, output: 21169, reasoning: 20168

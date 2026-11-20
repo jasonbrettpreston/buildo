@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:53:16.009Z file_sha256=99312c48473c7ca2aa8b5d80262ccdaae5e8b8aeca8078d1d86e7a457b48e1b5 prompt_sha256=d81ac832f824620a73f1e615abaab7017e3750a980cfe4b89d70157a0a266e0a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-plan-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9943 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21070 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32368 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41303 chars, answer 3438 chars, 60s
+DEFER severity=MED — task "conflicts C1 to C5 (docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md; BL-GROUND/VERDICTS-SUMMARY-2.md) written as dated notes only after his words" — plan (2) "C1 as verified (engineering matter, no operator words: the buildable lock is a test that the core's closure never reads run_at or descriptor; nothing built here)" — a C1 dated note lands in Spec 100 although the task allows a note only after his words and the plan itself says there are none — hold the C1 note, or mark it orchestrator reading with a cited file:line per the 2026-11-18 ruling (MD:813) and keep it out of the ruling record.
+DEFER severity=MED — operator ruling :1403 "C5 RULED (a): when the web switch flips, engine numbers go to every paying user at once, as built." — plan (2) "Spec 100 after :123: C2 stands, C5 (every paying user at once; gate stays the switch alone; D-1 now ruled)" — the note adds a gate conclusion ("gate stays the switch alone") the operator never ruled, so the copied text is not his words alone — keep the note to :1403 or mark the gate sentence as an orchestrator reading with a citation.
+DEFER severity=MED — decision in force "RR-0298 Status changes only by the launch script" — plan (1) "The sanctioned route is a lane commit that sets the status word with the backlog CLI ... task-370 LATER to DROPPED ... task-348 OPERATOR to DONE-as-answered ... both through the CLI in this commit" — the plan moves two task statuses from a lane commit, which the pasted ruling forbids, and that ruling carries no verbatim words so the conflict cannot be settled from this material — quote the operator line behind RR-0298, or leave both statuses to the launch script.
+DEFER severity=MED — task "by-law checked count corrected" and "By-law handbook count: report-only is not counted as enforced" — plan (4) "BY-LAW CHECKED COUNT: computed from Spec 133; the figure lives in dated lane reports, not in a script: drafted, nothing changed" — the count the task says to correct is only drafted, so that deliverable is not met — put the corrected figure in the named lane report and say which rows moved, or ask the operator whether drafting closes it.
+DEFER severity=LOW — operator ruling :1399 "1 a 2 b 3 a 4 a 5 c 6 accept" (mapped at :1400 to :1405 as C2, C3, D13, C5, D1, semi cache) — plan (2) "and C4 at :990 (in-app sheet rests on the 2026-11-11 "1-12 yes", not on the "Linking.openURL" description; Android Done and silent failure residuals stated)" — a C4 dated note is written on a ruling not pasted here, so the note's authority cannot be checked — cite the 2026-11-11 line for "1-12 yes" or withhold the C4 note until he rules.
+DEFER severity=LOW — spec 98 §4 "Location: `mobile/__tests__/`" and "Unit tests focus strictly on business logic, state machines, and Expo Router guards." — plan TEST "src/tests/surfaces/rules-acc-notes.logic.test.ts asserts the notes exist with the operator quote" — a test asserting document text sits outside both the mandated location and the stated focus, so §4 does not sanction it as a unit test — state in the plan that this is a repo-level doc check outside §4, so the protocol's location rule is not silently widened.
+MET — spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)." — plan TEST "asserts the notes exist with the operator quote, the bindings note names the operator ruling" — existence and text assertions only, no rendered snapshot.
+MET — spec 98 "Dated note 2026-11-10 (M-246, prior text kept; ...)" — plan (2) "DATED NOTES, prior text kept (M-246)" — every note added keeps the prior text, matching the dated-note form.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  60316ms (60.3s)
+📊 Tokens — total: 26815, input: 14590, output: 12225, reasoning: 11242

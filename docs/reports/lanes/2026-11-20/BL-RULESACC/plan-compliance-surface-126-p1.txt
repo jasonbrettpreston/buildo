@@ -1,0 +1,41 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:54:16.379Z file_sha256=62592331a21a31131190ce3f67d285ac3c4acb1f730c34b458489f86834aefa8 prompt_sha256=48d69ba29404d181c80f8e3a377ee3fd147f76e4935eccf87a85f953c037ab03
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-plan-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10868 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22490 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33862 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45170 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53144 chars, answer 4918 chars, 75s
+BUG severity=HIGH — §0b item 6 "A ruling does not stay only in a scratch file: it lands with its row's next docs commit or a lane R docs commit." — plan (1) "The rulings register ~/Buildo-scratch/plan-gen/rulings-register.json is outside the lane write scope: the rows are drafted in the lane dir for the orchestrator to add with add-ruling.mjs (not written by this lane)." — the rulings this commit leans on (:1422 page conversion approved, :1427 task 370, :1432 "1 a" McFrontend row) land only as drafts in a scratch lane dir — land each relied-on ruling as a dated M-246 note in the commit it drives, or take register write scope for this lane before the commit.
+
+BUG severity=HIGH — §0b item 9 "Where no rule governs, the nearest related rules are cited and the question goes to the operator as a ruling (Spec 135 rule 1: a different party adjudicates)." — plan (2) "C1 as verified (engineering matter, no operator words: the buildable lock is a test that the core's closure never reads run_at or descriptor; nothing built here)" — a conflict is written into Spec 100 as verified with no operator words behind it, and the row asks for C1 to C5 "written in his words" — put C1 to the answer page and land its note only after his words, or cite the ruling by file:line that makes it verified.
+
+BUG severity=HIGH — §0b item 1 "Wider scope than the row is a new row, not a longer brief (Spec 08 §11.9 TKT-1, `08_agents.md:494`)." — plan (1) "task-370 LATER to DROPPED (ruling: line, quote "Task 370 yes . approved", marked with the orchestrator reading); task-348 OPERATOR to DONE-as-answered with the record id; both through the CLI in this commit" — two queue status moves are folded into a row titled "retire list to the operator, conflicts C1 to C5 written in his words, by-law checked count corrected" — carry the two status moves on the rows that own them, or open a row for them.
+
+DEFER severity=MED — §0b item 2 "pre-registration committed alone before the code (`prereg-MF-n-k.json`, Spec 128:171 and :183)" — plan "TEST (red first, through the real hooks): src/tests/surfaces/rules-acc-notes.logic.test.ts asserts the notes exist with the operator quote" — the plan names a red-first test and no pre-registration committed alone before it — add a step committing prereg-MF-387-1.json (rules[] each RULED) on its own before the notes and the test.
+
+DEFER severity=MED — §0b item 6 "cited by every commit, prereg and lock that relies on it (the `McFrontend-Task:` trailer and the prereg `rules[]`, each RULED, Spec 128:170-171; the `Operator-Ruling:` line, as on the landed lane commits)" — plan "Not done by this lane: grounder (owed), push, DB, register edit." — the plan specifies neither the `McFrontend-Task:` trailer nor the `Operator-Ruling:` line its commits must carry for :1399, :1409, :1427, :1432 — name the trailer and the ruling line in the plan's commit step.
+
+DEFER severity=MED — §0b item 10 "the gate `surface-validate.mjs --check` (FE-13)" — plan (2) "scripts/surfaces/_schema/bindings.json $comment: a dated note that the 48 px is the operator's ruling "3 a" (the earlier wording kept)" — the plan edits a schema-set artifact and lists no run of the surface gate — run surface-validate.mjs --check after the bindings edit and record the result in the test step.
+
+DEFER severity=MED — §0b item 1 "A task not listed here is not done" (`.cursor/MCFRONTEND-QUEUE.md:3`) — plan (4) "BY-LAW CHECKED COUNT: computed from Spec 133; the figure lives in dated lane reports, not in a script: drafted, nothing changed." — the row's named output "by-law checked count corrected" is not landed in the commit — name the committed report file and line where the corrected figure lands, and cite it from the row.
+
+MET — §0b item 6 "landed as a Spec 135 FE row with one lock (Spec 135 rules 2, 3 and 5) or as a dated note with the prior text kept (M-246, `69a_mcbylaw_register.md:141`)" — plan "(2) DATED NOTES, prior text kept (M-246)" — every Spec 126 and Spec 100 text change is carried as a dated note, not a rewrite.
+
+MET — §0b item 6 "The operator's own words with the date and the record path" — plan (1) "quote checked against its MORNING-DECISIONS.md line by the tool" — the quote field is machine-checked against the operator's line, with readings kept out of it.
+
+MET — §0b item 6 "no rule, no decision on the side" as carried into retirement — plan (3) "RETIRE LIST as an OPERATOR DRAFT file only (Spec 90 :46 and :71, 08_agents :19 :28 :343): nothing retired, no edit to specs 90 or 08." — retirement is put to the operator and no spec text is changed.
+
+MET — §0b item 7 "The orchestrator takes such a decision only when all six hold, each with its evidence, and logs it with a D-nn id" — plan "D13 RULED (a): 48 px for Continue and Try again on the semi page; now the operator's ruling (was an orchestrator decision)" — the former orchestrator decision is confirmed by the operator and recorded as his ruling in bindings.json.
+
+MET — §3.1 dated note "The generated table above is NOT regenerated ... Regenerate: `node scripts/violations/generate-spec-mirror.mjs`" — plan (2) "the Spec 136 handbook is regenerated by its generator if it renders the row" — generated content is regenerated by its generator, not hand-edited.
+
+REJECT — §0b item 6 verbatim form — that "Task 370 yes . approved" is not the operator's words — the quote field holds his line at :1427 and :1428 marks the meaning as a reading, which is the provenance form the clause asks for.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 7
+
+---
+⏱  75794ms (75.8s)
+📊 Tokens — total: 46921, input: 31308, output: 15613, reasoning: 14108

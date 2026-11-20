@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T16:04:08.730Z file_sha256=04afe9d5a1d715954e80ae933e701302e746aa09ce9916a82e128fee0fa57db7 prompt_sha256=da22c105ecc983df9b7eb2577ea3953b61c4ff2d22d2c86b12dde997b5c8f60c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/out-diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9716 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21154 chars, answer 0 chars, 30s
+BUG severity=HIGH — docs/specs/02-web-admin/126_maxbld_surface_standard.md:997 "an Android Custom Tab has no Done button" vs design "Help, Terms and Privacy open in an in-app browser sheet with Done" — a person on Android opens Help and has no Done control to close the sheet, only the device back key, so the screen the design specifies ends without the named control — name the Android dismissal control as an open point for the operator in this note, not only as a residual.
+
+BUG severity=HIGH — docs/specs/02-web-admin/126_maxbld_surface_standard.md:997 "a failed open is only logged (`maxbldHelp.ts:26-28`) and shows the person nothing" — the person taps Help, nothing appears, nothing says it failed and nothing offers a second try, a silent dead end carried by this change — record it as an open point with a task id in the note, as the lane does for the engine retries, so it cannot rest as an unruled residual.
+
+DEFER severity=MED — docs/specs/02-web-admin/126_maxbld_surface_standard.md:997 "The built app opens Help in the in-app browser sheet" vs design "Help, Terms and Privacy open in an in-app browser sheet with Done" — only Help is verified, so a person on Terms or Privacy may be sent out of the app to a browser, which B10 does not allow, and the note does not say — state in the note whether Terms and Privacy use the same sheet or are unverified, so the reader is not left to assume the design is met for all three.
+
+DEFER severity=MED — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 "the code counts it in the lookup route" beside "a failed compute shows the error screen with Try again and is not counted" — a person whose lookup reaches the meter and whose compute then fails may be charged and shown an error screen, and the same note says both — reconcile the two sentences in the note so what the person is charged on a failed compute is stated once.
+
+DEFER severity=MED — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 row FE-39 keeps "a \"Preview\" banner, no charge (EI-D2)" while the new note says "engine numbers go to every paying user at once, as built" — a paying user cannot be told from the register whether the report they buy carries a Preview banner, a charge, or the EI-D6 pre-payment coverage check — state in the note whether the banner and the coverage check still apply once the switch flips.
+
+DEFER severity=LOW — docs/specs/02-web-admin/126_maxbld_surface_standard.md:812 "The phone keeps its 3 retries before the error screen: orchestrator reading of \"Phone retires yes\"" — a person on a failing compute waits through three attempts before any error appears, and the approved text does not carry his words for that count, only a reading — confirm the three retries with the operator before this note is treated as settled copy.
+
+REJECT — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 "a core or query error is the route's existing 500 with no page and no meter" — a person on web gets a bare 500 where the phone shows Try again, which reads like a dead end — the line STANDS by the approved 2026-11-19 note quoted in the same paragraph, so this change neither departs from it nor alters what the person sees.
+
+VERDICT: FAIL on the person's experience
+States checked: engine compute failure (error screen with Try again), phone 3 retries before error, web route core/query 500, engine numbers before and after the MAXBLD_WEB_LIVE flip (Preview banner, charge, coverage check), Help sheet open, Android sheet dismissal, Help open failure, empty engine field showing "Not yet evaluated", semi page Continue and Try again at 48 px, repeat visit against a stored record   Dead ends found: 1
+
+---
+⏱  40828ms (40.8s)
+📊 Tokens — total: 34029, input: 26832, output: 7197, reasoning: 6310

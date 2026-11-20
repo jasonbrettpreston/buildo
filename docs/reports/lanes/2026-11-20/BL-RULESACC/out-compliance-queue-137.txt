@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:06:08.577Z file_sha256=3c0209ee8b21766d5ed2faf492aefb14b2f585fa5fe6283496178ee78c71a535 prompt_sha256=cefa513063d01a404266a9ca435d61ec4070b212ebcc94c792405deb0457da97
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10299 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21933 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33220 chars, answer 0 chars, 45s
+BUG severity=HIGH — Spec 137 §1 amendment "Rule 3" "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — diff line "diff --git a/src/tests/surfaces/rules-acc-notes.logic.test.ts b/src/tests/surfaces/rules-acc-notes.logic.test.ts" and the edited `scripts/surfaces/_schema/bindings.json` — the diff lands changes under `src/` and `scripts/` yet contains no `backlog/tasks/task-N` or `backlog/drafts/` file, so G3 refuses the commit — add the task-387 backlog (task or draft) file to this same diff and carry a `Task: task-387` trailer.
+
+BUG severity=MED — Spec 137 §4 Rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form: `Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: \"<words>\")`" — docs/specs/02-web-admin/126_maxbld_surface_standard.md "Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · C2; operator, verbatim: \"1 a\"" — the notes in 126, 100 and bindings.json read "RULES.ACC · task-387 · <item>" and drop both the queue and the "lane X" label, so the Rule 4 form is not met — rewrite each as "<row> · McIncrement plan (Backlog) · lane BL-RULESACC, task-387 (<item>)".
+
+DEFER severity=LOW — Spec 137 §4 Rule 4 "The orchestrator writes each ruling into the row's status line the same day." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "late write: ruled 2026-11-18, written 2026-11-20 (Spec 137 rule 4 asks for the same day)" — the note records a ruling written two days late, so the same-day clause is unmet — keep the deviation as prior text; nothing in this diff can undo it, record it for the weekly check (§5 step 9).
+
+DEFER severity=MED — Spec 137 §4 dated note 2026-11-20 "the close of a lane's task ... now also needs, in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`), one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md (the only file shown in that lane dir) — no `GROUNDER.md` and no compliance lens output is present in BL-RULESACC — cannot see a task-387 status change in the diff, so if this is the closing commit add both files or confirm it is a mid-lane commit that does not set BUILT or DONE.
+
+REJECT — Spec 137 §1 item 4 "No rule here is new" — the new src/tests/surfaces/rules-acc-notes.logic.test.ts is accused of adding a check no pasted clause names — it is a test-only text lock that reads files and adds no runtime behaviour, and no pasted Spec 137 clause forbids it.
+
+MET — Spec 137 §4 Rule 10 "the prior row text is kept" — docs/specs/02-web-admin/126_maxbld_surface_standard.md "The rest of that note is unchanged and its earlier wording is kept as written." — the corrected sentence is retained.
+
+MET — Spec 137 §3 Rule 1 "Every row has ONE status line, REPLACED when the status changes, never appended." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "[-date.-]{+date.<br>Dated note 2026-11-20" — the prior text "date." is kept and the note is appended, not a status replacement.
+
+MET — Spec 137 §4 Rule 4 "operator, verbatim: \"<words>\"" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md "Spec 135 FE-39 · McFrontend queue · lane BL-STN1, task-90 (ST.N1)" — this note does use the full row, queue, lane form.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+
+---
+⏱  58846ms (58.8s)
+📊 Tokens — total: 31409, input: 18888, output: 12521, reasoning: 11473

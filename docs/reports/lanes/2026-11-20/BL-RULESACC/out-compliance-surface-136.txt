@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:08:23.428Z file_sha256=88ceaa4a95dffc9aeeb8d41c3a54877e23ad77bec9737659a0d5e60bada55c97 prompt_sha256=076997e1a20cd783b03642ccbe2b4a2ac19a16d82f9b444968ccf3613bc210af
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10660 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22400 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33361 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44141 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 54835 chars, answer 0 chars, 75s
+DEFER severity=MED — fe.01 "McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name" — src/tests/surfaces/rules-acc-notes.logic.test.ts:5 "RULES.ACC (task-387, lane BL-RULESACC, Increment 1·B McFix). A text lock" — executable code joins the surfaces lock suite from an Increment 1.B lane while the clause holds the surfaces work to documents until increment 2 closes and the freeze is lifted by name, and the diff records neither — name the increment-2 closure and the by-name lift in the lane report, or hold the test as a draft.
+
+DEFER severity=MED — fe.39 "one stored headline per lot and option" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 "reads \"one record per lot and option, computed on first open (or track, or owner input) and stored with its stamp\"" — the register now marks the clause's headline wording SUPERSEDED while the pasted handbook rule fe.39 still reads stored headline and no regeneration of 136 (fe.08) appears in the diff, so the two governing texts disagree — regenerate 136 or land the identical dated note in the handbook rule so its text matches the register.
+
+DEFER severity=MED — fe.39 "Engine values show before MB-38 only in the admin preview and in a tester-only preview: golden 25 + the MB-35 cohort, a \"Preview\" banner, no charge (EI-D2)." — 135 FE-39 "the gate is the switch `MAXBLD_WEB_LIVE` alone. The EI-D2 sentence is prior text, kept, and is overturned for the flip by this ruling. Spec 100 carries the matching note." — C5 is recorded in 135 and 100 only, and the diff shows no edit to 126, the spec carrying the EI-D2 sentence (fe.39 cites 126 §11a.3 and §11b.7), so the spec still tells a reader the tester-only gate — add the matching dated note at the EI-D2 sentence in 126.
+
+REJECT — fe.30 "retirement is the switchboard row OFF, never a retired-rows list" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md is accused of being the forbidden retired-rows list — not a real issue: it retires spec prose (90_mobile_engineering_protocol.md, 08_agents.md), not catalogue report fields, and it states "Nothing below is retired, edited or ruled."
+
+MET — fe.09 — 135_mcfrontend_decisions_register.md FE-39 — the Lock cell keeps "OWED `src/tests/surfaces/engine-inputs-bind.logic.test.ts`", so the lock column still resolves.
+
+MET — fe.29 — 126_maxbld_surface_standard.md "no closed not_evaluated reason is shown for a failure" — the added reason form is withdrawn, keeping node status to the closed 11a.3 forms plus none.
+
+MET — fe.08 — docs/specs/02-web-admin/126 and /135 — the new dated notes land in the doc set the clause names.
+
+MET — fe.39 "cost comes from the Spec 88 scenario lines, joined by the producer (M-67 kept, EI-D8)" — 135 "The cost sentence of this row ... is NOT amended here" — the cost binding the clause requires is preserved untouched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  85038ms (85.0s)
+📊 Tokens — total: 31457, input: 14894, output: 16563, reasoning: 15753

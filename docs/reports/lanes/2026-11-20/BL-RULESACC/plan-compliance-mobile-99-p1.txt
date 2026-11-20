@@ -1,0 +1,44 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:53:38.238Z file_sha256=f0c82e3b68a6914c5e34cebc63a8cdce32a6e4c666741336b6892ef405d0c896 prompt_sha256=a06aae0a584151def24caf76e0a1dc813cbd28a75fd99fb0e495fe7c8fb448f8
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-plan-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11900 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 24108 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 36088 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 47844 chars, answer 0 chars, 60s
+BUG severity=HIGH — RR-0298 "RR-0298 Status changes only by the launch script" — Plan, status-moves paragraph "both through the CLI in this commit" — two statuses are moved by a lane CLI commit (task-370 LATER to DROPPED, task-348 OPERATOR to DONE-as-answered) on the route this pasted decision reserves to the launch script, and the plan never addresses RR-0298 — send both status words through the launch script (orchestrator action) or cite the ruling that supersedes RR-0298 before writing them.
+
+BUG severity=HIGH — operator 2026-11-20 ":1384 ... 1. yes. add the tasks to incr 1b and remove the ones we dont need" — Plan step (3) "RETIRE LIST as an OPERATOR DRAFT file only" — the pasted words are read at ":1385 ... tasks added to Increment 1·B" as removing tasks, no pasted operator word retires Spec 90 :46/:71 or 08_agents :19/:28/:343, and the grounder that would verify staleness is owed ("Not done by this lane: grounder (owed)"), so the file attributes a retire ruling the operator did not give — retitle it as unruled candidates, drop the "OPERATOR DRAFT" framing, and record no retire, no retirement date and no ruling id until the operator rules.
+
+DEFER severity=MED — card "written as dated notes only after his words" and RR-0190 "every register row is marked operator words or orchestrator reading and only operator words feed reviews as rulings" — Plan step (2) "C1 as verified (engineering matter, no operator words" — a dated note lands in Spec 100 after :123 with no operator words behind it, which is exactly what the card's "only after his words" excludes — keep C1 in the lane report as a verification finding, not as a Spec 100 dated note.
+
+DEFER severity=MED — ":1400 ... STILL OPEN: whether the phone keeps its 3 retries before the error shows." — Plan step (2) "phone 3 retries is the orchestrator reading" — the Spec 126 note records the retry count on the strength of a reading at ":1410 ... "Phone retires yes" = keep the 3 retries before the error screen (the recommendation put)", so a spec note settles what the operator's own line leaves open and rests on a reading only — quote :1409 and the :1410 reading line verbatim in the note, or leave the retry count stated as open.
+
+DEFER severity=MED — ":1403 ... FE-39 (tester-only preview first) needs a dated note recording this; through the register generator." — Plan step (2) "dated note C5 (a) via the Spec 135 row text" — the C5 (a) note is hand-written into the Spec 135 row while only the downstream Spec 136 handbook is generator-rendered, so the next regeneration drops the note and the "through the register generator" route is not taken — draft the C5 (a) row in the register for add-ruling.mjs and let the generator render Spec 135.
+
+DEFER severity=MED — card "a separate agent attacks it, results reported as refused or STILL OPEN" — Plan "TEST (red first, through the real hooks)" — the plan commits to the planted-defect test and its red-first run but names no adversarial attack round and no refused/STILL OPEN record, leaving half the gate unowned — add the attack round and where its result is recorded, or state that the orchestrator owns it.
+
+DEFER severity=MED — card "By-law handbook count: report-only is not counted as enforced" and title "by-law checked count corrected" — Plan step (4) "the figure lives in dated lane reports, not in a script: drafted, nothing changed" — no file:line of the count is named and nothing in the repo is corrected, so "corrected" is not delivered — name the file and line holding the count (the Spec 136 handbook row) and state what changes there, or return the correction to the orchestrator as the owner.
+
+MET — operator ":1399 ... 1 a" (C2) — Plan step (2) "Spec 126 after :810: C2 correction (error screen with Try again, not counted" — C2 option (a) is recorded at the named line, Spec 100:123 left standing, prior text kept.
+
+MET — ":1427: Operator, verbatim: "Task 370 yes . approved"" — Plan step (1) "marked with the orchestrator reading" — the quote is exact and the meaning is labelled a reading, as RR-0190 requires.
+
+MET — RR-0190 "orchestrator replies that recommend or name a ruling must cite file:line, an RR id or UNVERIFIED" — Plan step (1) "the meaning of each is the orchestrator's reading, recorded as a reading in the text, never in the quote field" — readings are kept out of the quote field and tied to their decision lines.
+
+MET — ":1399 ... 3 a" (D13) — Plan step (2) "a dated note that the 48 px is the operator's ruling "3 a" (the earlier wording kept)" — the 48 px is recorded against the operator's own fragment with the earlier wording kept.
+
+MET — ":1432: Operator, verbatim: "2. y 1 a"" — Plan step (2) "the meter (counts only when a report is produced; counted in the lookup route; location ruled "2. y")" — meter location recorded as ruled and the count-on-production condition stated.
+
+MET — Spec 99 §1 "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec." — Plan files list — only docs, bindings.json and one logic test are written; no store, blob, bridge or routing effect is added, so §1's gate is never engaged.
+
+REJECT — Spec 99 §8.6 "A pre-commit script `mobile/scripts/check-spec99-matrix.mjs` MUST parse the Zod object keys ... asserting setEqual" — accused of leaving the matrix drift check unwired — no Zod key and no §3.1 row is touched by this plan, and the pasted amendment assigns the wiring to Spec 126 §12 phase P0b, not to this card.
+
+REJECT — Spec 99 §2.1 "The `['user-profile']` TanStack query is excluded from MMKV persistence" — accused of adding a persisted PII surface — the plan adds no query, no persisted field and no persister change; every file it writes is a document, a JSON comment or a test.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 7
+
+---
+⏱  70839ms (70.8s)
+📊 Tokens — total: 44059, input: 28892, output: 15167, reasoning: 13657

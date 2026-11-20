@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:04:45.339Z file_sha256=7163a2ef242ae5b79a3196caf1b4e54480051de64fc47e77b3da0f7c39bb2674 prompt_sha256=260cc33aadc2015a2a69b490229cefeabca3db25c67a78e3945202330fb2aea6
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10808 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21442 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32401 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44302 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 56738 chars, answer 0 chars, 75s
+BUG severity=HIGH — §5.2 "*.logic.test.ts | Pure functions, scoring, classification | Any pure/derivation logic" — src/tests/surfaces/rules-acc-notes.logic.test.ts:7 "It reads files only; no database, no network." — the new test is named logic but asserts documentation text, not a pure function, so the file pattern is wrong — rename to *.regression.test.ts as the fence lock, or move the doc assertion out of the logic layer.
+BUG severity=HIGH — §5.5 "*.logic.test.ts | The pure function computes the right value on happy + edge inputs." — src/tests/surfaces/rules-acc-notes.logic.test.ts:77 "expect(d).toMatch(/312/);" — the corrected by-law count is proven only by the literal 312 in a draft, not by a test of the count derivation — commit the count script and a logic test with fixture rows asserting 222 owed, 321 not owed, and 312 checked.
+DEFER severity=MED — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — NONE — cannot see a failing run in the diff; the test and the doc edits land together — attach the red-light run to the lane report or show the failing test before the doc edits.
+MET — §5.1 Typed Factories Only — src/tests/surfaces/rules-acc-notes.logic.test.ts:22 — BINDINGS is typed and parsed from the real bindings.json; no untyped inline mock is added.
+MET — §5.2 Test File Pattern (no new route, DB, component, security, or migration surface) — diff — no API route, DB mutation, component, auth surface, or migration is added, so no *.infra, *.ui, *.security, or *.db file is mandated.
+MET — §5.4 Test Data Seeding — diff — no DB scenario is set up; the test reads repo files only, so no seed script is required.
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 2
+
+---
+⏱  83162ms (83.2s)
+📊 Tokens — total: 28762, input: 12119, output: 16643, reasoning: 16177

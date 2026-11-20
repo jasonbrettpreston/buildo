@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:54:01.512Z file_sha256=030119f3d1e9ef8d785daeee08d6fb052831a29b24585b5ac7759b6db8441386 prompt_sha256=7956e63980bbb3b23f136226a11ea3920b5f9a72b0578e3f286330788b0c1edf
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11815 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23533 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 35609 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 48234 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 60102 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 70113 chars, answer 2801 chars, 90s
+BUG severity=HIGH — Spec 137 §3 "Word list (closed; nine words)" — PLAN (1) Status moves: "task-348 OPERATOR to DONE-as-answered with the record id" — DONE-as-answered is a tenth word; the closed list gives DONE one meaning, "The work landed and the evidence exists", so folding an answer into it changes the word and the line cannot be read against the list — set the one word DONE (or leave OPERATOR until the answer is actioned) and record the answer and the record id in `next` and the M-246 dated note.
+
+BUG severity=HIGH — Spec 137 §1 note 2026-11-20 "the close of a lane's task ... now also needs ... one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding; `scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them" — PLAN closing line "Not done by this lane: grounder (owed), push, DB, register edit." read with "(1) ... task-348 OPERATOR to DONE-as-answered" — the same commit that sets DONE on task-348 carries no compliance lens output for that task's rule lists and no non-lane GROUNDER.md, and the stated fallback "If the hooks refuse, stop and report." plans no artefacts, only a stop — place the compliance lens output(s) and a GROUNDER.md from an agent other than BL-RULESACC in `docs/reports/lanes/2026-11-20/BL-RULESACC/` before that commit, or keep task-348 OPERATOR.
+
+BUG severity=MED — Spec 137 §3 DROPPED row "Closed by an operator ruling. The ruling is quoted." — MORNING-DECISIONS.md:1428 "- Orchestrator reading: "Task 370 yes" = drop task-370 from this increment (the recommendation put)" against PLAN (1) "task-370 LATER to DROPPED (ruling: line, quote "Task 370 yes . approved", marked with the orchestrator reading)" — the quoted words approve taking task-370 out of this increment, they do not close the task, so DROPPED (closed, no expiry) overstates the ruling — use LATER (or MERGED if it duplicates a row) unless the operator's words close the task, and put the increment reading in `next`.
+
+BUG severity=MED — Spec 137 §5a note 2026-11-19 "an open decision reaches the operator as a Backlog task in status OPERATOR carrying two lines, `Grounded:` (the issue verified against its sources, cite) and `Recommendation:` (the answer recommended, verified by a repo review round or marked UNVERIFIED)" — PLAN (3) "RETIRE LIST as an OPERATOR DRAFT file only (Spec 90 :46 and :71, 08_agents :19 :28 :343): nothing retired, no edit to specs 90 or 08." — retiring spec lines is the operator's decision, yet it reaches him as a lane-dir draft file, not an OPERATOR Backlog task with the two lines, so `scripts/analysis/backlog-next.mjs` lists and flags nothing — raise the retire list as (or attach it to) a Backlog task in status OPERATOR carrying `Grounded:` and `Recommendation:`.
+
+DEFER severity=MED — Spec 137 §1 note Rule 3 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — PLAN (2) "scripts/surfaces/_schema/bindings.json $comment" and TEST "src/tests/surfaces/rules-acc-notes.logic.test.ts asserts the notes exist" — the commit touches both `scripts/` and `src/`, and the plan states neither the `Task: task-387` trailer nor that `backlog/tasks` task-387 file is in the same commit — write the trailer and the task file into the plan's commit step and extend the Files line before the test commit.
+
+DEFER severity=MED — Spec 137 §1 note Rule 13 "for plan tasks the operator edits on the Backlog board (browser, port 6421) and the edit is committed through the real hooks by the board-commit job (a conforming `docs(137_mcqueue): board edits <date>` message ...); a queue row still changes only on its own row" — PLAN (1) "The sanctioned route is a lane commit that sets the status word with the backlog CLI" — no pasted clause names that route, and the cited "Spec 137 section 3" contains no such rule, so the plan adds a status-setting mechanism the spec does not name — name the pasted clause that permits it, or route the two status words through the route the note names.
+
+DEFER severity=MED — Spec 137 §4 Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — material under review, Storage set-up "…no all-lot fill (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; …) "undefined"" (four such lines) — four storage lines of the record the plan works on carry `undefined` where the operator's words belong, and the plan's dated-note steps do not repair them — fix the brief generator and regenerate the four lines, or mark them UNVERIFIED, before any note rests on them.
+
+DEFER severity=LOW — Spec 137 §3 Rule 1 "`expires` ... `none` for DONE, FROZEN, DROPPED and MERGED" — PLAN (1) "task-370 LATER to DROPPED (ruling: line ...)"; "task-348 OPERATOR to DONE" — the plan names the ruling quote but never the expiry field, so a DROPPED or DONE line can land still carrying a date — state `expires none` for both status lines.
+
+MET — Spec 137 §1 note Rule 4 "rulings for plan tasks are entered through `scripts/analysis/backlog-decision.mjs` (gate G2)" — PLAN (1) "(scripts/analysis/backlog-decision.mjs, ids from RR-0315, quote checked against its MORNING-DECISIONS.md line by the tool)" — plan-task rulings go through the G2 tool.
+MET — Spec 137 §4 Rule 10 "the prior row text is kept" — PLAN (2) "DATED NOTES, prior text kept (M-246)" — every note keeps the prior text.
+MET — Spec 137 §4 Rule 10 "The operator's words are copied exactly" — PLAN (1) "(the meaning of each is the orchestrator's reading, recorded as a reading in the text, never in the quote field)" — readings are kept out of the quote field.
+MET — Spec 137 §4 Rule 2 "Every task is registered." — PLAN (3) "nothing retired, no edit to specs 90 or 08" — the retire list drafts only, no row is moved or copied.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 8
+
+---
+⏱  93276ms (93.3s)
+📊 Tokens — total: 39789, input: 19563, output: 20226, reasoning: 18603

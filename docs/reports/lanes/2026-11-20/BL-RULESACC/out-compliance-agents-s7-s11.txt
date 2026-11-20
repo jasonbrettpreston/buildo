@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:04:08.733Z file_sha256=5d71102557ff14417f41df96bcdfcf20d503dc1dc4e6d8d1a50d2e5eb67dadf2 prompt_sha256=db04b15ae68f9383f89fbbc69b62f30d3c1882edf0c7328cc7c8faf4d351520e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10041 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20852 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31540 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42738 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53481 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 65373 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 77100 chars, answer 852 chars, 105s
+BUG severity=HIGH — §11.1 "a census grep runs at the full scope its conclusion covers" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:20 "UNVERIFIED: that no other line of 08_agents still says PLANNED for the engine (this lane read lines 19, 28, 34-44, 343 only)." — candidates 3 to 5 conclude that 08_agents says PLANNED in exactly three places, and a cross-check asks the operator to rule that "the fix is one dated note, not three edits", while the census that supports it covered a partial line range only — run the census at full-file scope (git grep -n "PLANNED\|SUB-ENG-1" docs/specs/00-architecture/08_agents.md) and record command and output in the draft before it goes to the operator.
+
+BUG severity=MED — §11.2 "checks the folded decisions PAIRWISE and walks every checklist line for staleness" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 "the code counts it in the lookup route, `src/app/api/parcels/lookup/route.ts` (the meter block)" — read pairwise with the Spec 126 C2 note in the same commit, "a failed compute shows the error screen with Try again and is not counted", the set is consistent only under an unstated order: the meter sits in the lookup route and C1 of the same note keeps "the route-side call of the one-lot compute" there, so a lookup that succeeds and a compute that then fails is not stated to be uncounted — add one sentence fixing that the meter block runs after a successful compute, or restate which note governs a failed compute.
+
+BUG severity=MED — §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:23 "How 426 was computed (reconstructed, UNVERIFIED against the lane's tool)" — the by-law figure the draft puts to the operator (426 against a corrected 312) is a data claim whose method is reconstructed, and the recount tool it cites is scratch-only (~/Buildo-scratch/lanes-20261119/inc1b/rulesacc/count-bylaw.mjs), so no one can reproduce the number from the repo — record the exact command and its output, or commit the counting script, beside the 312 figure.
+
+BUG severity=MED — §11.9 TKT-1 "The first lines of every brief and prompt (after any front-matter block) are: `Ticket: MB-nn · lane X · stage N`" and "Items 1 and 2 apply to every seat and lane agent, Claude and DeepSeek (Sonnet seats, lane agents, panel seats, lane reports)" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:1 "# OPERATOR DRAFT: retire list and by-law checked count (task-387, lane BL-RULESACC, 2026-11-20)" — this lane report to the operator carries no `Rule:`, `Scope:`, `Done-condition:` or `max_fix_rounds:` line and no stage — add the header the backlog-brief tool generates (Ticket: task-387 · lane BL-RULESACC · stage N, Rule, Scope, Done-condition, max_fix_rounds) above the draft body.
+
+BUG severity=MED — §7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:25 "CORRECTED CHECKED COUNT under the task card rule (report-only is not counted as enforced)" — the 312 figure the draft puts to the operator rests on a "task card rule" that is named but never quoted with its file:line, unlike the retire card at MORNING-DECISIONS.md:1303 — quote the task card rule with its file:line in the draft before the figure goes to him.
+
+DEFER severity=MED — §11.3 "Survive-the-fix locks (green-both) are stated as such per case." — src/tests/surfaces/rules-acc-notes.logic.test.ts:37 "expect(SPEC126).toContain('a failed compute is the lifecycle `error` with a closed not_evaluated:<reason>'); // prior text kept" — this assertion (and its twin at :57) is green before and after the change and is not stated as a survive-the-fix lock, and no red-both-directions run for the new lock is recorded — label it green-both or drop it, and record the red run against the pre-note files.
+
+DEFER severity=LOW — §11.3 "Red must land at the DESIGNED assertion; red-for-the-wrong-reason is a test defect found NOW." — src/tests/surfaces/rules-acc-notes.logic.test.ts:75 "expect(d).toMatch(/312/)" — the count assertion is a bare substring match on "312" and does not land on the corrected figure or its line, so it cannot go red for the defect it names — assert the count line itself (for example the "321 - 2 - 7 = 312" sentence) rather than the bare digits.
+
+MET — §7 rule 10 dated note 2026-11-19 "The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/`" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:1 — the lane record sits in the repo at the dated lane path the note names.
+MET — §7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:3 "(MORNING-DECISIONS.md:1303, orchestrator text)" — the retire card that authorises the list is quoted with its file:line and with his answer.
+MET — §11.1 "a line citation is read, not remembered" — docs/specs/02-web-admin/126_maxbld_surface_standard.md:812 — the operator words are quoted verbatim with the decisions-log line (:1399, :1409) and the orchestrator's own reading is marked as a reading ("is the orchestrator reading at :1410 and not his words").
+
+REJECT — §7 rule 6 "Findings triage (WF6): BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons." — the 426 against 312 discrepancy is not filed to `review_followups.md` — rule 6 governs WF6 triage of review findings, and this count is carried to the operator in the task-387 lane draft that the card route names, not treated as a triaged review finding.
+REJECT — §11.7 MCPROOF-3 "The author of an example never reviews its own example." — the lane wrote the dated notes and the lock that reads them — the clause governs worked-example answer keys in McProof increments, and no example, answer key or blind stage appears in this diff.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 7
+
+---
+⏱  110623ms (110.6s)
+📊 Tokens — total: 41041, input: 18523, output: 22518, reasoning: 20838

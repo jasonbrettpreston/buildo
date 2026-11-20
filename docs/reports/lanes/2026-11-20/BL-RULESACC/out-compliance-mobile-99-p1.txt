@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:05:59.406Z file_sha256=74fb4e9b7f4023e1f01d2e347741364610875ce29455d0bf1539d0a552bed37f prompt_sha256=fd53c9b3f5dca00f5656eddc3353940d8028a717f38423ec49f221bde0c798c0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9727 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20502 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29283 chars, answer 2154 chars, 45s
+DEFER severity=LOW — Spec 99 §8.6 "`mobile/scripts/check-spec99-matrix.mjs` exists and **nothing runs it** ... Wiring it into `mobile-ci.yml` is Spec 126 §12 phase **P0b**." — docs/specs/02-web-admin/126_maxbld_surface_standard.md:812 "Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · C2" — this diff edits Spec 126 by line but does not touch the §12 P0b wiring the clause names, so the recorded drift-check gap stays open after a Spec 126 edit — add the P0b line for `check-spec99-matrix.mjs` (or state in the note that P0b remains owed).
+
+DEFER severity=LOW — Spec 99 §8.6 "`mobile/__tests__/spec99.mandates.lint.test.ts:335-346` only asserts the file *exists*." — src/tests/surfaces/rules-acc-notes.logic.test.ts:74 "expect(d).toMatch(/312/)" — the new lock proves only that note strings and one bare number appear, which is the same exists-only shape the clause catalogues as not enforcement — assert the superseded sentences are marked as superseded and the 312/319/426 figures reconcile, or record the file as a documentation lock only.
+
+DEFER severity=LOW — Spec 99 §9.21 "statically asserts every §7 + §8 mandate has implementation evidence" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 "The buildable lock is a test that the core's closure never reads those two keys; it is owed and not built by this note." — a lock is landed as a sentence with no implementation evidence and no OWED marker in the note — add the closure test, or mark it OWED the way Spec 135 FE-39 marks "OWED `src/tests/surfaces/engine-inputs-bind.logic.test.ts`".
+
+DEFER severity=LOW — pasted governing set carries no operator rulings, the block reads "(no pasted context provided)" — docs/specs/02-web-admin/126_maxbld_surface_standard.md:812 "operator, verbatim: \"1 a\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1399, RR-0319)" — every "verbatim" claim in the five notes rests on MORNING-DECISIONS.md:1399/1409/1432 and open-questions.md:1016, which I cannot see — re-run this lane with those log lines pasted so the quotes can be checked against source.
+
+MET — Spec 99 §1 "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec." — src/tests/surfaces/rules-acc-notes.logic.test.ts:5 "It reads files only; no database, no network." — no store, blob, bridge or router effect is added anywhere in the diff.
+
+MET — Spec 99 §2.1 "The current allowlist of sensitive-but-OK-in-MMKV items is empty." — no hunk touches `mmkvPersister.ts`, `persistFilter.ts` or any persist config; the only non-markdown file is a node `fs`-reading vitest.
+
+MET — Spec 99 §3.1 "This table is **normative**. Adding a field to the mobile app requires adding a row here." — no field is added to `mobile/src/lib/userProfile.schema.ts` and no §3.1 row is added, so no row is owed.
+
+MET — Spec 99 §4 "Adding a new server query requires a row here" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 "the code counts it in the lookup route, `src/app/api/parcels/lookup/route.ts`" — the meter stays where it was and no new query key is introduced.
+
+REJECT — Spec 99 §2.1 "Anything sensitive ... MUST go into Layer 4b" — accused of putting new user-scoped state on unencrypted MMKV — the diff contains no persistence code, only markdown notes, a JSON `$comment` and a file-reading test.
+
+REJECT — Spec 99 §3.4c "the `recentSearchesStore` row above is added by MF-35" — accused of landing the recent-searches MMKV persistence — that row and its MF-35 dated note are governing-spec text inside the pasted clause block, not part of the material under review.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  46766ms (46.8s)
+📊 Tokens — total: 41710, input: 32762, output: 8948, reasoning: 7876

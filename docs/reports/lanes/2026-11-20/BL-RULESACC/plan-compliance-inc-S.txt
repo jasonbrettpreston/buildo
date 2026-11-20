@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:52:33.181Z file_sha256=e6e2424fb6ed40aeed0175a75974444a77a2ba8bf86ec4fcc0a5b1db68529238 prompt_sha256=eb0aef28f326c1d4bbc861582252e8466b8f52195deeab5a413c36195bd7d108
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11469 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23286 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34822 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 46024 chars, answer 472 chars, 60s
+BUG severity=HIGH — MORNING-DECISIONS.md:1409 ":1409: Operator, verbatim: 'Phone retires yes and web search yes'", and the pasted entries at :1422, :1427, :1432 — plan section (1) "(MORNING-DECISIONS.md:1383, :1397, :1407, :1420, :1425, :1430)" — four of the six entry lines the records bind their quotes to do not exist as pasted (:1407,:1420,:1425,:1430 vs :1409,:1422,:1427,:1432), so the tool "quote checked against its MORNING-DECISIONS.md line" checks the wrong line or fails — cite :1384, :1399, :1409, :1422, :1427, :1432 and re-run the quote check before lock.
+
+BUG severity=HIGH — task-387 card "By-law handbook count: report-only is not counted as enforced." — plan section (4) "BY-LAW CHECKED COUNT: computed from Spec 133; the figure lives in dated lane reports, not in a script: drafted, nothing changed." — no step states that report-only rows are excluded, so the drafted figure can still count report-only items as enforced — state the exclusion rule in the count report and label each counted row enforced or report-only.
+
+BUG severity=HIGH — MORNING-DECISIONS.md:1401 "C3 RULED (b): the legal line on the phone search page goes at the bottom ... This is a BUILD (it sits under the box today): new task." and the card "C1 to C5 ... written as dated notes only after his words" — plan section (2) "C3 is not repeated (task-389)." — no dated C3 note is written here and the "new task" the ruling requires is evidenced only by an id (task-389) that no pasted line names — either add the dated C3 note to Spec 126 with the quote "2 b" and name task-389 with its board evidence, or create the task in this commit.
+
+BUG severity=MED — MORNING-DECISIONS.md:1410 "'web search yes' = the web search page's legal line also goes at the bottom, the same as the phone (C3 b), if the web page shows that line." — plan section (2) "C3 is not repeated (task-389)." — no plan step records the web legal line placement or attaches it to a build, the only web note is the FE-39 C5 switch note — carry the web legal line into the same C3 note or the same task as the phone legal line.
+
+DEFER severity=MED — MORNING-DECISIONS.md:1404 "D1 RULED (c): the freshness compare is left until stored records exist; it moves with the storage record write (ST.P1). task-380 waits on that; option (b) is not ruled." — plan section (1) "task-370 LATER to DROPPED ...; task-348 OPERATOR to DONE-as-answered with the record id; both through the CLI in this commit." — nothing makes task-380 wait on ST.P1 as the ruling directs — add the task-380 dependency move through the CLI in the same commit, or report it as owned elsewhere with the evidence.
+
+DEFER severity=MED — MORNING-DECISIONS.md:1400 "STILL OPEN: whether the phone keeps its 3 retries before the error shows." — plan section (2) "Spec 126 after :810: C2 correction (... phone 3 retries is the orchestrator reading)" — a spec note settles an item the ruling marks STILL OPEN on an orchestrator reading alone — keep the 3 retries in the decision record as still open, or state in the note that it is unruled and carried on the orchestrator reading, citing :1410.
+
+DEFER severity=LOW — task-387 card "written as dated notes only after his words" — plan section (2) "C4 at :990 (in-app sheet rests on the 2026-11-11 '1-12 yes', not on the 'Linking.openURL' description ...)" — the operator words "1-12 yes" that the C4 note rests on are not in the pasted rulings, cannot see, so the note's provenance is unverifiable here — paste the 2026-11-11 line or mark the C4 note's quote UNVERIFIED.
+
+MET — doc-2 G.6 "Report meter: a hit counts one report; report limit page when exhausted" — plan section (2) "the meter (counts only when a report is produced; counted in the lookup route; location ruled '2. y')" — matches MORNING-DECISIONS.md:1434 "the meter stays where it is (in the lookup route, counting only when a report is produced); a spec note says so."
+
+MET — doc-2 F-SEARCH-WEB "PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false" — plan section (2) "C5 (every paying user at once; gate stays the switch alone; D-1 now ruled)" — records MORNING-DECISIONS.md:1403 as built and leaves RR-0170's "the web live switch stays off" untouched.
+
+MET — MORNING-DECISIONS.md:1402 "D13 RULED (a): 48 px for Continue and Try again on the semi page; now the operator's ruling" — plan section (2) "bindings.json $comment: a dated note that the 48 px is the operator's ruling '3 a' (the earlier wording kept)" — the fragment is recorded as the operator's ruling with prior text kept.
+
+MET — task-387 card "grounder launched by the orchestrator, never the lane" — plan "Not done by this lane: grounder (owed)" — grounder left to the orchestrator as the card requires.
+
+REJECT — RR-0190 "only operator words feed reviews as rulings" — the Spec 100 C1 note written with no operator words is accused of violating RR-0190 — not a real issue, RR-0190 governs register rows, and the plan marks C1 "engineering matter, no operator words" and "nothing built here".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 6
+
+---
+⏱  65008ms (65.0s)
+📊 Tokens — total: 31653, input: 17785, output: 13868, reasoning: 12464

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:08:05.909Z file_sha256=d90a4033f0a48fd35de34684a3d3dabaf968449847112794809e87d2be70dd40 prompt_sha256=e863e326a6620fdd91349d339fc63dcea8ac03646038073fd0d7c1264224e95d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-surface-135-p1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11234 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22847 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34367 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45764 chars, answer 0 chars, 60s
+DEFER severity=LOW — rule 2 "A rule without a lock is not yet a rule (Spec 124 section 4.4)." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-39 "The operator ruled option (a): when the web live switch flips, engine numbers go to every paying user at once, as built; the gate is the switch `MAXBLD_WEB_LIVE` alone." — the flip is written as ruled while the row still reads "OWED `src/tests/surfaces/engine-inputs-bind.logic.test.ts`" with no built lock, so by rule 2 it is not yet in force and the note does not say so — append "not in force until the lock lands" to the C5 note.
+
+MET — rule 2 "ONE lock per row; the Lock is in the LAST cell with the status" — 135 FE-39 — the appended C5 note adds no second lock; the single lock path stays in the Status and Lock cell.
+MET — rule 3 "Never an OWED marker with no lock path (`statusOf` reads it OWED forever: `cite-parse.mjs:57-70`)." — 135 FE-39 "OWED `src/tests/surfaces/engine-inputs-bind.logic.test.ts`" — the OWED status keeps its lock path after the note is added.
+MET — rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — 135 FE-39 "engine-inputs-bind.logic.test.ts" — the OWED lock is a valid surfaces test path and the diff does not create it.
+MET — rule 5 "a `.db.test.ts` lock must be named in a CI step (test.yml)" — 135 FE-39 "engine-inputs-bind.logic.test.ts" — the lock is `.logic.test.ts`, not `.db.`, so no CI naming is triggered and the change adds no `.db.` lock.
+
+REJECT — rule 4 "`pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — the change is accused of a non-conforming Six cell "P pass (locks owed, below)" — not a real issue: "pass" is the value and the parenthetical is reasoning, not a different token.
+REJECT — rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts`" — the new file "src/tests/surfaces/rules-acc-notes.logic.test.ts" is accused of breaking the lock namespace — not real: rule 5 constrains the lock path a row names, and no row names this file.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  62698ms (62.7s)
+📊 Tokens — total: 49091, input: 35820, output: 13271, reasoning: 12627

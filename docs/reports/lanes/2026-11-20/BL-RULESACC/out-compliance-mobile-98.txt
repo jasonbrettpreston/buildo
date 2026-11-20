@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:05:43.745Z file_sha256=08b435dededdeb2d746597a1370cd37a9280d1e9116badce558d842b06c821bc prompt_sha256=53f51aeb2db3418d63379a587c608e4f858f5b5ffd4b9fad09ad1214e2d069b4
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9329 chars, answer 0 chars, 15s
+```
+DEFER severity=LOW — Spec 98 §5 "Pull Request Checks: On every PR targeting `main`, GitHub Actions runs: ... `npm run test` (Jest unit tests)" — src/tests/surfaces/rules-acc-notes.logic.test.ts "import { describe, expect, it } from 'vitest';" — the new text lock is a vitest file outside the Jest run this clause names, so this clause does not show it executing on the PR — state in the lane report which command runs src/tests/surfaces/*.logic.test.ts, or run it under the runner the neighbouring surface locks use
+DEFER severity=LOW — Spec 98 §4 dated note "(M-246, prior text kept; ...)" — src/tests/surfaces/rules-acc-notes.logic.test.ts "expect(SPEC126).toContain('a failed compute is the lifecycle `error` with a closed not_evaluated:<reason>'); // prior text kept" — the "prior text kept" wording this assertion pins is in an earlier Spec 126 note that is not in the pasted material, so whether the M-246 form is honoured cannot be seen here — have the lane cite the line number of the kept sentence in Spec 126 alongside the assertion
+MET — Spec 98 §4 "UI component snapshot testing is deliberately excluded" — src/tests/surfaces/rules-acc-notes.logic.test.ts "expect(t370).toMatch(/^status: DROPPED$/m);" — the new lock asserts file content only, no render or snapshot
+MET — Spec 98 §4 dated note form "(M-246, prior text kept; ... operator, verbatim: ...)" — docs/specs/02-web-admin/126_maxbld_surface_standard.md "The rest of that note is unchanged and its earlier wording is kept as written." — the diff reuses the pasted note form and keeps the corrected sentence
+MET — Spec 98 §3.1 clearState rules and §3.2 required suites — NONE — no Maestro YAML is added or altered by this diff
+MET — Spec 98 §2.1/§2.2 boot sequence and seeding — NONE — no build, startup, Metro or pg_dump/pg_restore file is touched by this diff
+REJECT — Spec 98 §4 "**Tool:** Jest + jest-expo ... **Location:** `mobile/__tests__/`" — accused: the new lock uses vitest outside mobile/__tests__ — §1 Scope bounds this clause to the mobile app's Jest suite (Zustand stores, routing guards); the file is a repo-level documentation text lock, so the clause does not bind it
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+```
+
+---
+⏱  27048ms (27.0s)
+📊 Tokens — total: 18619, input: 13915, output: 4704, reasoning: 4094

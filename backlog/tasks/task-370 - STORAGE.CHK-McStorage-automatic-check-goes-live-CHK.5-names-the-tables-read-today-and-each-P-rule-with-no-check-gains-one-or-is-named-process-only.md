@@ -3,10 +3,10 @@ id: TASK-370
 title: >-
   STORAGE.CHK McStorage automatic check goes live: CHK.5 names the tables read
   today, and each P rule with no check gains one or is named process-only
-status: LATER
+status: DROPPED
 assignee: []
 created_date: '2026-11-20T13:23:00Z'
-updated_date: '2026-11-20T15:41:00Z'
+updated_date: '2026-11-20T16:00:00Z'
 labels:
   - McFix E
   - McFix
@@ -20,6 +20,9 @@ ordinal: 70012
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Operator 2026-11-20 (verbatim): "yes to McStorage and 1,2,3 yes as recommended". Record: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, entry "Operator: McStorage amendments and check into 1·B; second front-end pass". and (same day) 'Why can't there be machine checks for the sotrage and queue'. Scope now, stage 1 a measured plan: CHK.5 (task-66, built) prints WAITS 'chk5_tables is empty' on every commit; the customer read (task-123) and the compute at the pick (task-266) already read and project stored rows. Measure what CHK.5 checks today, name the tables and readers that exist now, and for each of P1 to P12 of the landed policy say: checked by (file:line), checkable now (the check, red first), or process-only (why). Includes the two findings of task-365 if the grounder confirms them: the freshness check compares two of the three stamp parts; a compute failure shows a server error where the policy says a closed not_evaluated reason. Waits on: task-90 (the amendments landed) and task-368 (the grounder).
+
+ruling: Task 370 yes . approved
+Ruling record RR-0329 (decision-114), operator words at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1427. That "Task 370 yes" means drop task-370 from this increment is the ORCHESTRATOR READING at :1428 (the recommendation put), not the operator's words; status moved in the commit of task-387 (RULES.ACC), Spec 137 section 3.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -47,4 +50,6 @@ Operator 2026-11-20 (verbatim): "yes to McStorage and 1,2,3 yes as recommended".
 
 <!-- SECTION:NOTES:BEGIN -->
 Operator 2026-11-20, verbatim: "Task 370 yes . approved" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1427; the table put to him is quoted in that entry). DROPPED from this increment by the operator words above (the recommendation put: "Task 370 (storage automatic check): I recommend dropping it from this increment"). Status move owed through the ruling record (task-387); do not launch.
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0329 · task-370 · Backlog; operator, verbatim: "Task 370 yes")
 <!-- SECTION:NOTES:END -->

@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:55:34.868Z file_sha256=d6f5f04cfce4a1d0deb88887f102b4702e167799f979c7b8224ce8670722c65d prompt_sha256=5b98927c7a32b528280a0d3f55fd318e180b8f2efb332db2e69e0ce2481db6a6
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-plan-compliance-surface-127.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11680 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 24042 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 36739 chars, answer 0 chars, 45s
+BUG severity=HIGH — task-387 "by-law checked count corrected" + Spec 127 §1 "a hand-written scorecard is not evidence" — plan(4) "BY-LAW CHECKED COUNT: computed from Spec 133; the figure lives in dated lane reports, not in a script: drafted, nothing changed." — the corrected checked count is delivered as a hand-typed number in a lane report and the plan changes nothing, so the named deliverable is not delivered and the count is exactly the prose-instead-of-artifact shape §1 forbids — generate the count from Spec 133 with a committed script or a --check arm, cite its output, and state where the corrected figure lands.
+
+BUG severity=HIGH — Spec 127 §2a step 6 "a lock never red against the defect it names is not a lock" — plan(2) "C1 as verified (engineering matter, no operator words: the buildable lock is a test that the core's closure never reads run_at or descriptor; nothing built here)" — a lock that is described and explicitly not built has no red-first proof at the designed assertion, so C1's disposition rests on prose — build the closure test through the real hooks with a planted read of run_at proving RED, or record C1 as knowingly unbuilt and route that to the operator.
+
+BUG severity=HIGH — RR-0190 ":813 ... only operator words feed reviews as rulings" — plan(1) "task-348 OPERATOR to DONE-as-answered with the record id" resting on ":1428: - Orchestrator reading: ... including that today's C5 ruling answers task-348" — the link from the C5 ruling to task-348 is an orchestrator reading, so closing task-348 on it makes a status move that no operator word supports — hold task-348 at OPERATOR until the operator words name it, or record the close as an orchestrator reading awaiting confirmation.
+
+BUG severity=MED — Spec 137 rule 10 "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — plan(2) "C2 correction (error screen with Try again, not counted; "closed reason" sentence ... is overturned for the failed compute)" — the dated notes are specified as paraphrase, with no row id and no queue stated, so rule 10 is unmet at the note level even though the ruling record keeps the quote field clean — each dated note carries the verbatim fragment ("1 a"), the MORNING-DECISIONS.md line, the RR id and the queue.
+
+BUG severity=MED — Spec 126 §4.3 note "The four tranche-1 fingerprint inputs are the `FP_FILES` ... `scripts/surfaces/_schema/binding-sources.json`" and §5 "every golden's `source_fingerprint` matches the current fingerprint files" — plan(2) "scripts/surfaces/_schema/bindings.json $comment: a dated note that the 48 px is the operator's ruling "3 a"" — a $comment edit to a schema input changes its hash and stales every golden, and the plan carries no restamp step — confirm whether bindings.json is in FP_FILES, and if so add the fingerprint-only restamp commit with red evidence, as the MF-20 note did.
+
+BUG severity=MED — Spec 137 rule 10 "The operator's words are copied exactly" — plan "TEST ... src/tests/surfaces/rules-acc-notes.logic.test.ts asserts the notes exist with the operator quote" — an exists-and-contains test is green on a note whose quote is wrong or whose prior text was dropped, so the committed test does not attack the defect it names — assert the copied quote equals the MORNING-DECISIONS.md line byte for byte and that the prior text is still present.
+
+DEFER severity=LOW — ":1410: - Orchestrator reading: ... "web search yes" = the web search page's legal line also goes at the bottom, the same as the phone (C3 b)" — plan(2) "C3 is not repeated (task-389)." — the web half of the :1409 ruling is neither recorded as a note nor shown to be inside task-389's scope; cannot see task-389 — name the task that carries the web legal-line move, or state that the reading is conditional on the web page showing the line.
+
+MET — Spec 127 §9.4 "recorded with evidence and routed, to the defect ledger, or to the operator as a ruling" — plan(3) "RETIRE LIST as an OPERATOR DRAFT file only (Spec 90 :46 and :71, 08_agents :19 :28 :343): nothing retired, no edit to specs 90 or 08." — retire candidates are routed to the operator as a draft and nothing is deleted.
+MET — ":1399: Operator, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept"" — plan(2) "a dated note that the 48 px is the operator's ruling "3 a"" — D13 is recorded against the operator's own fragment, not an inference.
+MET — RR-0190 ":813 ... only operator words feed reviews as rulings" — plan(1) "(the meaning of each is the orchestrator's reading, recorded as a reading in the text, never in the quote field)" — orchestrator readings are kept out of the quote field on the 1409 and 1427 rows.
+MET — ":1427: Operator, verbatim: "Task 370 yes . approved"" — plan(1) "task-370 LATER to DROPPED (ruling: line, quote "Task 370 yes . approved", marked with the orchestrator reading)" — the drop carries the quote and marks the reading.
+MET — Spec 127 §2 "M-246" prior-text discipline — plan(2) "DATED NOTES, prior text kept (M-246)" — every dated note is specified to keep the prior text.
+
+REJECT — Spec 127 §5 "the one command ... `node scripts/surfaces/surface-validate.mjs --surface=<id> --write`" — accused of not running the scorecard command — no surface descriptor or conversion is in this task's scope, so §5 scoring is not triggered by note and draft edits.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 7
+
+---
+⏱  55948ms (55.9s)
+📊 Tokens — total: 36819, input: 25104, output: 11715, reasoning: 10332

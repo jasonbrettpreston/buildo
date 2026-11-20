@@ -1,0 +1,284 @@
+LIST surface-136 sha256:ed8ec3a255c1af1e1b44d812d1dd7cbcb8dd1bad99517aa4ce827b8398cff37d material sha256:04afe9d5a1d715954e80ae933e701302e746aa09ce9916a82e128fee0fa57db7 part 1 of 1
+RULE LIST surface-136 (docs/specs/02-web-admin/136_mcfrontend_handbook.md, sections 2. Rules), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 2. Rules
+
+- **fe.01** McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name; scope mobile, web, admin and PDF. Surface paths are held (pending globs) until Phase 1 opens.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-status.infra.test.ts · +4 dated notes
+
+- **fe.02** P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generated-only.infra.test.ts · +2 dated notes
+
+- **fe.03** P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-validate.infra.test.ts · +1 dated note
+
+- **fe.04** P3 Fast: a REPORT performance budget (load, payload); a new field ships in hours. Payload is mechanical; load time and "hours" are PROSE-ONLY. Numbers are measured first, then ruled (Q-MF5).
+  Status: OWED · lock owed: src/tests/surfaces/budget.infra.test.ts
+
+- **fe.05** P4 Single source: the front end may show more, never derive differently; every number from McBylaws; no maths in the UI.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-no-maths.logic.test.ts · +1 dated note
+
+- **fe.06** P5 Honest display: disclosures, confidence, "at least", not_evaluated, not_modelled always shown; closed status list; oracle = catalogue flags.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +2 dated notes
+
+- **fe.07** P6 Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/parity.golden.test.ts · +2 dated notes
+
+- **fe.08** Doc set: specs in docs/specs/02-web-admin; 135 = decisions register; 136 = generated handbook.
+  Status: RULED 2026-11-04
+
+- **fe.09** A separate decisions spec, 124a/69a form, with a Lock column that resolves.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/register-locks-resolve.infra.test.ts · +1 dated note
+
+- **fe.10** The generator lives in the spec: the REPORT section of Spec 126.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/handbook-rule-map.logic.test.ts · +1 dated note
+
+- **fe.11** The product (report page) goes first; the admin converts on touch, with no fixed admin pilot; /admin/surfaces is built when the admin next needs that view.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +2 dated notes
+
+- **fe.12** Admin market-metrics is DASHBOARD (126:207, :717); its descriptor's REPORT is an error fixed at conversion.
+  Status: OWED · lock owed: src/tests/surfaces/dashboard-not-report.logic.test.ts
+
+- **fe.13** surface-validate.mjs (MF-15) is the first gate McFrontend builds, part of the build after increment 2. Focus stays on McBylaws.
+  Status: RULED 2026-11-04 · Enforced by: src/tests/surfaces/surface-validate.logic.test.ts · +3 dated notes
+
+- **fe.14** LEAN: the report page converts first (generator, one REPORT renderer, goldens, locks); reuse the back-end machinery; other screens convert on touch.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfrontend-queue.infra.test.ts · +2 dated notes
+
+- **fe.15** "How we know it works": the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/mcfront-proof.infra.test.ts · +2 dated notes
+
+- **fe.16** Q-MF1: all McFrontend specs in docs/specs/02-web-admin; 135 = register; 136 = handbook. No tooling change.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/spec-paths.infra.test.ts · +1 dated note
+
+- **fe.17** Q-MF2: one card per building type, variants[] inside (roof form flat/pitched A/pitched B; unit class houseplex 2-4 at 4, 6 not_modelled), generated from the catalogue; headline flag emitted by the generator; ad slots outside the card list.
+  Status: OWED · lock owed: src/tests/surfaces/report-variants.logic.test.ts
+
+- **fe.18** Q-MF3 binding rule (core premise): every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot (and external_embed, the fifth source, by FE-21); the schema references the field only (no old engine names, no older-rule text, no code). Labels, help text and…
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts · +2 dated notes
+
+- **fe.19** User inputs are shared, not private: an entered fact updates the shared database, raises that lot's confidence for every viewer, and keeps provenance (source user, entered_at). Confidence by source: estimated low, user medium, verified high. McBylaws re-evaluates (increment 6); McFrontend declares…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-input-provenance.logic.test.ts · +2 dated notes
+
+- **fe.20** Conflict rule for user entries: verified permit/plan facts outrank user entries; the newest user entry is shown; earlier entries are kept in history so a bad entry can be reverted.
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/user-entry-precedence.logic.test.ts · +2 dated notes
+
+- **fe.21** external_embed (map tiles, payment checkout, analytics) is the fifth binding source: each embed declared, never coded.
+  Status: OWED · lock owed: src/tests/surfaces/report-binding-embed.logic.test.ts
+
+- **fe.22** Ad targeting only on declared database keys; never on user-entered facts without consent.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-targeting-keys.logic.test.ts · +1 dated note
+
+- **fe.23** Ad slots: own source (ad_slot) and disclosure (R-17), never inside a card (R-34), outside variants[] and the card list.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/ad-slot.golden.test.ts · +1 dated note
+
+- **fe.24** A new catalogue row reaches mobile, web, admin and PDF with zero front-end code; the renderer throws on an unknown field or status.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/new-row-zero-code.golden.test.ts · +4 dated notes
+
+- **fe.25** The 25 golden lots render end to end the McBylaws answer-key numbers on every target. Runs as a db-type test in a named CI step.
+  Status: OWED · lock owed: src/tests/surfaces/answer-key-e2e.db.test.ts
+
+- **fe.26** In-product error count and budget breach are shown on admin, through the real writer and reader. The on-screen part is a manual operator check (PROSE-ONLY).
+  Status: OWED · lock owed: src/tests/surfaces/error-count.db.test.ts
+
+- **fe.27** parcels is a source in the closed binding set: a field bound to a column of the parcels table (a DB field the consumer payload reads, Spec 100 §3.2 whitelist). A column that is not in the migrations, or a path not on the whitelist, fails.
+  Status: RULED 2026-11-06 · Enforced by: src/tests/surfaces/report-binding.logic.test.ts
+
+- **fe.28** none is a closed status value, "no reading on this node", valid only on the message node of a lifecycle tree (loading / miss / error); the tree carries lifecycle, closed loading | miss | error. Omission of status stays a build failure; every node carries one.
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts
+
+- **fe.29** The report node contract has ONE home, scripts/surfaces/_schema/report-tree.schema.json (draft 2020-12, additionalProperties false): a tree is lifecycle? (loading | miss | error) plus nodes[]; each node requires field, source, label, value (string or null), status (the 11a.3 forms plus none),…
+  Status: RULED 2026-11-08 · Enforced by: src/tests/surfaces/report-honest.logic.test.ts · +1 dated note
+
+- **fe.30** Report fields are generated from the catalogue, one home per fact. (1) Every effective-ON catalogue row (its switch ON and its building type ON) is a report field, automatically; off yields none; retirement is the switchboard row OFF, never a retired-rows list. (2)…
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/report-generator-fields.logic.test.ts · +1 dated note
+
+- **fe.31** Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema: descriptor valid with no UNRESEARCHED and no golden: "none"; in the converted manifest (two-direction totality); one props golden per reachable state per declared target,…
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/surface-conformance.logic.test.ts · +6 dated notes
+
+- **fe.32** contract is a binding kind: a displayed value may bind to a field of a declared CONTRACT descriptor's response projection; the member must exist in that descriptor; any other value fails.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/contract-binding.logic.test.ts · +2 dated notes
+
+- **fe.33** One render smoke per archetype per platform: each binding renders its archetype's goldens on each platform (web renderToStaticMarkup in the root suite; mobile jest-expo), and every displayed string, library default strings and form error messages included, comes from content.
+  Status: RULED 2026-11-09 · Enforced by: src/tests/surfaces/render-smoke.logic.test.ts · +2 dated notes
+
+- **fe.34** The v21 report PAGE tree has ONE contract, scripts/surfaces/_schema/report-page.schema.json, beside the node contract (FE-29; an ad section reuses its $defs/slot): the sections of the page table scripts/surfaces/_schema/report-page.json in screen order; each part is one shown text bound to a…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.35** The REPORT loading state "What we checked" (MF-62): a lifecycle: loading tree may carry ONE root-only checked object (never a node, never on miss, error or a reading tree; the one-message-node rule unchanged): the title, the citywide and per-lot groups and the data dates, each line a content…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/report-checked.logic.test.ts
+
+- **fe.36** Navigation is a route: a control that moves the user uses the platform router (web <Link>, redirect(), router.push/replace after an action; mobile expo-router with canGoBack() before back()); a view is never swapped by local state; local state is disclosure only; a navigating pressable has a role…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/nav-by-route.logic.test.ts
+
+- **fe.37** A STATIC page may read declared stored values on the server: its values are content templates with one {value} slot filled on the server with a server-formatted string, each from a read declared in the page table and the page's server module; a failed read leaves its part out (never a 500, never a…
+  Status: RULED 2026-11-11 · Enforced by: src/tests/surfaces/web-landing.logic.test.ts
+
+- **fe.38** Legacy values are neither sent nor shown on the live app (EI-D1). /api/parcels/lookup sends the legacy Spec 88 cost menu and the 12 cost scalars as null. It sends the legacy size headlines as null (keys kept for installed apps and declarations; CONSUMER_WITHHELD_LEGACY_COLS): opt_aor_*, opt_coa_*,…
+  Status: RULED 2026-11-12 · Enforced by: src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts · +1 dated note
+
+- **fe.39** Engine inputs bind (EI-D2..EI-D8). The report and its producer bind the final engine fields: one stored headline per lot and option. Size, status, reason and the CoA size come from Layer 3; cost comes from the Spec 88 scenario lines, joined by the producer (M-67 kept, EI-D8). The detail is…
+  Status: OWED · lock owed: src/tests/surfaces/engine-inputs-bind.logic.test.ts · +1 dated note
+
+- **fe.40** McTest: the real app is proven wired by layers run against a separate local test stack, never the dev DB (API journeys, a dead-wire crawler, a lot sweep, stress, failure drills, phone runs). The cases are rows of one catalogue, tests/e2e/scenarios.json (data; no test code names a case). Every row…
+  Status: RULED 2026-11-12 · Enforced by: src/tests/mctest/catalogue.infra.test.ts
+
+- **fe.41** The REPORT page table gains the section kind summary (options at a glance, Daylight B): no data of its own; every item is a reference (ref, FE-18, FE-32 part kind) to a part of the option's BUILT section, never a copied value. A hidden option is in neither the list nor the count; a not-evaluated…
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.42** The REPORT page table gains the part kind drawing (lot views, From above): the server sends the drawing already built in a fixed 0..1000 frame (state, outline, one class per edge as explicit lines, envelope and footprints when it has them); the client only draws it (inline SVG on web,…
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.43** See details opens as its own sheet on web and mobile, by a second CLOSED layout key details_view (inline or sheet) in report-layout.json: web and mobile sheet, admin and pdf inline. No existing details value changes: the six readers of details: collapsed (report-page.logic.test.ts,…
+  Status: RULED 2026-11-14 · Enforced by: src/tests/surfaces/report-page.logic.test.ts
+
+- **fe.44** Units across the whole report: store METRIC only. The page producer sends each number pre-formatted in both units; the client only switches which is shown, with no maths (Spec 128 Rule 16, FE-18); the conversion factor is content/settings, never code; one toggle covers every area and length and is…
+  Status: OWED · lock owed: src/tests/surfaces/report-units.logic.test.ts
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md b/docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md
+new file mode 100644
+index 000000000..0be395c94
+--- /dev/null
++++ b/docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md
+@@ -0,0 +1,27 @@
+{+# OPERATOR DRAFT: retire list and by-law checked count (task-387, lane BL-RULESACC, 2026-11-20)+}
+
+{+OPERATOR DRAFT. Nothing below is retired, edited or ruled. Retiring a rule is the operator's ruling (task-387 card). The measure was put as "(6) prune: a lane lists stale or uncheckable rules as retirement candidates; retiring is the operator's ruling" (MORNING-DECISIONS.md:1303, orchestrator text) and he answered "Review them first 1. y 2. y 3. y 4. y 5. where does this rule set go on the board yes 6. yes" (:1302). Specs 90 and 08_agents are untouched by this lane.+}
+
+{+## A. Retire candidates (each: file:line as it stands, why stale, what replaces it)+}
+
+{+| # | file:line | the line says | why stale (evidence opened this lane) | what replaces it |+}
+{+|---|---|---|---|---|+}
+{+| 1 | docs/specs/03-mobile/90_mobile_engineering_protocol.md:46 | "Auth: Firebase Auth via `@react-native-firebase/auth` (native module) ... Native Keychain / Keystore ... Play Integrity ... APN silent-push" | mobile/package.json:27 lists "@supabase/supabase-js"; `git grep "@react-native-firebase" -- mobile` finds only mobile/__tests__/useAuth.test.ts:18 "it is no longer in package.json"; mobile/app/(auth)/sign-in.tsx:43 "Replaces the Firebase `pendingCredential` object" | Supabase Auth (native ID-token linking, Spec 93 section 3.2 as cited at sign-in.tsx:41-43); the Keychain / Keystore sentence needs the operator or the Spec 93 owner to confirm which storage the Supabase session uses (UNVERIFIED) |+}
+{+| 2 | docs/specs/03-mobile/90_mobile_engineering_protocol.md:71 | "Validation (Monorepo): Zod schemas are shared via a `packages/shared-types` monorepo workspace" | no `packages/` directory in the repo (`ls packages`: No such file or directory); .claude/review-templates/packs/mobile-core.md:48 "There is no monorepo and no `packages/shared-types`" | Zod schemas are transcribed per tree today; Spec 126 section 5.2 generates the mobile mirror from the CONTRACT descriptor (the same pack line) |+}
+{+| 3 | docs/specs/00-architecture/08_agents.md:19 | "a third that is PLANNED but not built (tracked SUB-ENG-1)" | 08_agents.md:36 the DeepSeek Execution Engine row is `live` (v1, 2026-09-22); :43 "`deepseek` is live as of SUB-ENG-1 v1 (2026-09-22)"; scripts/deepseek-exec.js exists | the :36 and :43 statements: live as of v1 |+}
+{+| 4 | docs/specs/00-architecture/08_agents.md:28 | "`EXECUTION_PROVIDER` (PLANNED, SUB-ENG-1, inert today, section B)" | same :43; the engine reads `EXECUTION_PROVIDER` (:43) | live, per :43 |+}
+{+| 5 | docs/specs/00-architecture/08_agents.md:343 | "The execution half is `PLANNED` (SUB-ENG-1) - until it ships, execution is Claude." | same :36 and :43 | the sentence should read as live, with the :43 fallback to `claude` unchanged. The substrate economics sentence of rule 9 is not stale, only its PLANNED clause |+}
+
+{+Cross-check the operator should know: lines 3, 4 and 5 are the same fact (SUB-ENG-1 shipped) written three times; the fix is one dated note, not three edits, if he rules it. UNVERIFIED: that no other line of 08_agents still says PLANNED for the engine (this lane read lines 19, 28, 34-44, 343 only).+}
+
+{+## B. By-law handbook checked count+}
+
+{+Where the figure lives: Spec 133 (docs/specs/01-pipeline/133_bylaw_handbook.md) is generated by scripts/generate-bylaw-handbook.mjs and prints no "checked" count; it prints "543 in force (222 with an OWED marker)" (line 24) and a section "Rows with an OWED marker (222 in force)". The figure "426 checked" is a lane figure: docs/reports/lanes/2026-11-20/BL-COMPLY/REPORT.md:7 "426 of 543 by-law lines name an enforcer (117 OWED)", tools/finalize.mjs:72, and the plan figures in BL-ENFORCE PLAN.md:45 and :135 and PLAN-2-MERGED.md:44 "at most 426 (count soft)". It is dated lane record, so nothing is edited here (no one-line fix is obvious: five places, all history, and the enforcement table that would show it is not built).+}
+
+{+How 426 was computed (reconstructed, UNVERIFIED against the lane's tool): 543 rows minus 117 rows whose "Enforced by" cell starts with OWED. That counts as "checked" the rows that say "none yet (OWED)" (54 cells begin "none"), the report-only rows, and rows carrying an OWED marker in the status word.+}
+
+{+Recount by this lane's script (~/Buildo-scratch/lanes-20261119/inc1b/rulesacc/count-bylaw.mjs, Spec 133 lines 28-1826, 543 rows):+}
+{+- on the handbook's own OWED list (the generator's marker): 222 (matches Spec 133 line 24)+}
+{+- not owed: 321, of which report-only: 2 (m.25 line 805 "G-CODE (ii) report-only"; m.151 line 1093 "G-STANDARD report (report-only)") and "none (no code change)" or "none (data)": 7 (m.257, m.258, m.291, m.104, m.309, m.310, m.331)+}
+{+- CORRECTED CHECKED COUNT under the task card rule (report-only is not counted as enforced): 321 - 2 - 7 = 312 rows name a gate, lock or test and are not owed. Under the card rule alone (only report-only removed, the "none" rows kept) it is 319. The lane figure 426 exceeds 312 by 114.+}
+{+- UNVERIFIED: whether other cells name something that is not a check (e.g. m.44 "The spike report (docs/reports/mcbylaw-s05-spike.md) recording each measured value", m.126 "Round report lines; Phase 3 entry (4)"); the 3 history rows (546 rendered - 543) are not in this range; the count is of handbook lines, not of independent rules.+}
+diff --git a/docs/specs/02-web-admin/126_maxbld_surface_standard.md b/docs/specs/02-web-admin/126_maxbld_surface_standard.md
+index dd4c1d3dc..4dd607845 100644
+--- a/docs/specs/02-web-admin/126_maxbld_surface_standard.md
++++ b/docs/specs/02-web-admin/126_maxbld_surface_standard.md
+@@ -811,0 +812,2 @@ Rule: an `at_least` value renders "at least" beside the number on every target.
+{+> Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · C2; operator, verbatim: "1 a" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1399, RR-0319), his answer to option (a) of the table put to him at :1398 ("a failed compute: (a) error screen with Try again, not counted, or (b) 'not evaluated' page"); and "Phone retires yes" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1409, RR-0325), whose meaning, that the phone keeps its 3 retries before the error screen shows, is the orchestrator reading at :1410 and not his words): this corrects the sentence of the 2026-11-20 note above (lane BL-STN1, task-90) that a failed compute is the lifecycle `error` with a closed not_evaluated:<reason>. A failed compute shows the error screen with Try again and is not counted; no closed not_evaluated reason is shown for a failure. The rest of that note is unchanged and its earlier wording is kept as written. Spec 100:123 ("a core or query error is the route's existing 500 with no page and no meter") stands (Spec 100 carries the matching note).+}
+
+@@ -994,0 +997,2 @@ A converted-surfaces manifest has two-direction totality against the MaxBLD-scop
+{+> Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · C4, as verified in docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md section C4 (task-377); operator, verbatim, 2026-11-11: "Let's make those changes . 1-12 yes" (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1016), to the consolidated B list whose item B10 reads "Help, Terms and Privacy open in an in-app browser sheet with Done" (~/Buildo-scratch/mcfrontend/small-pages-v8/DECISIONS.md:82); that "1-12 yes" covers B10 is the record of that list in open-questions.md, which is the orchestrator's summary of it, and is not a separate ruling): the sentence of the 2026-11-12 MF-46 follow-up note above, item (4), that the app leaves for `MAXBLD_HELP_URL` through `Linking.openURL`, describes the code of 2026-11-12 and does not record an operator choice of that opener. The built app opens Help in the in-app browser sheet (`mobile/src/lib/maxbldHelp.ts:24`, `openBrowserAsync`). Residuals, not ruled: an Android Custom Tab has no Done button; a failed open is only logged (`maxbldHelp.ts:26-28`) and shows the person nothing. Not checked: whether the operator saw the sheet frames before "1-12 yes" (VERIFY.md C4.5).+}
+
+diff --git a/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md b/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
+index 9966b56f4..84f4fc20b 100644
+--- a/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
++++ b/docs/specs/02-web-admin/135_mcfrontend_decisions_register.md
+@@ -61 +61 @@
+| FE-39 | Engine inputs bind (EI-D2..EI-D8). The report and its producer bind the final engine fields: one stored headline per lot and option. Size, status, reason and the CoA size come from Layer 3; cost comes from the Spec 88 scenario lines, joined by the producer (M-67 kept, EI-D8). The detail is computed on demand. An empty field shows "Not yet evaluated", never 0 (a new reason, `not_in_engine_population`). Engine values show before MB-38 only in the admin preview and in a tester-only preview: golden 25 + the MB-35 cohort, a "Preview" banner, no charge (EI-D2). The customer cost is base rate x escalation, with no income-based neighbourhood premium (EI-D3). "Can you build bigger?" stays "Not yet evaluated" until MB-38/MB-44 (EI-D4). Per-scenario neighbour reach is an admin setting: detached house 400 m, secondary suite 400 m, garden/laneway suite 750 m, houseplex 1,000 m; all years; the reach is always printed (EI-D5). Testing uses the cohort + 25, with a coverage check before payment (EI-D6). Copy: neighbours "approved", "at least", "records we could classify"; build-bigger is not a promise of approval; the cost-scope line stays in See details and goes to the lawyer list (EI-D7). | 126 §11a.3 (R-2), §11b.7 item 9 (R-5); 69a M-71 (R-3), M-67 (R-4, R-7); 88 §2 (R-4, R-7); migration 309 header, MB-44 note, lock L1 (R-6) | D pass (fields declared, not coded), P pass (locks owed, below), F pass (stored headline, detail on demand), S pass (one producer per value), H pass (not_evaluated, never 0; reach printed), E pass (one declaration) | Operator, verbatim (2026-11-12): "D all as recommended - please ensure this is addedd to the McFrontend decisions" (plan D-2 (b), D-3 (a), D-4 (a), D-5 as measured, D-6 (a), D-7 as recommended, D-8 (a)). Record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Engine inputs (cost / build bigger / neighbours) — rulings 2026-11-12"; plan `~/Buildo-scratch/mcbylaws/ENGINE-INPUTS-PLAN.md` v2 §4, §8, §10, §11. McBylaws queue MB-94 parts (b)-(f). | OWED `src/tests/surfaces/engine-inputs-bind.logic.test.ts`<br>Dated note 2026-11-20 (M-246, prior text kept; Spec 135 FE-39 · McFrontend queue · lane BL-STN1, task-90 (ST.N1); operator, verbatim: "yes.  we need to run a panel on the tasks this impacts and how to set-it up properly per increment. I want to see this and the ruling - per increment and overall as the McStroage policy.  This needs to be updated and conflicting rulings removed." (2026-11-18, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:702-704, RR-0130) and, to land it, "the McStroage policy was recently updated with the new direction - I just want to ensure the rules were updated as well. I dont want to be bound with stale McStorage" and "yes to McStorage and 1,2,3 yes as recommended" (2026-11-20, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1296-1297); policy `backlog/docs/doc-16 - McStorage-policy-v2.md`, amendment A-FE39 without its cost sentence; the amendment text below is policy text of doc-16, not operator words, except the operator words quoted verbatim (the operator's "yes to McStorage" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1297) approves the landing as a whole, not each clause); late write: ruled 2026-11-18, written 2026-11-20 (Spec 137 rule 4 asks for the same day); the lane STORAGE-POLICY held every repo file until push 6 and the operator's read (doc-16 header, as drafted), and the operator asked for the landing on 2026-11-20): "one stored headline per lot and option ... The detail is computed on demand" reads "one record per lot and option, computed on first open (or track, or owner input) and stored with its stamp; a record whose stamp differs is never served and is recomputed; the values of the main page and See details are in the record (metric numbers and codes)". SUPERSEDED, prior text kept above: those two sentences as written. The cost sentence of this row ("cost comes from the Spec 88 scenario lines, joined by the producer (M-67 kept, EI-D8)") is NOT amended here: the draft wording (lineCost at each open on the record's size) waits for open point 3 of doc-16 section 7. ENGINE-INPUTS-PLAN section 4.0 and ~/Buildo-scratch/mcbylaws/McSTORAGE-ALIGNMENT.md:157 (scratch, read-only to this lane) are owed the same change (not done). The panel cell of this row ("F pass (stored headline, detail on demand)") is prior text, kept. The rest of the row stands. ST-5 as amended is the Spec 69a note of this [-date.-]{+date.<br>Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · C5; operator, verbatim: "4 a" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1399, RR-0322), to the table put at :1398 whose option (b) was "testers only first with a Preview banner per FE-39"): this row says engine values show before MB-38 only in the admin preview and a tester-only preview with a Preview banner and no charge (EI-D2). The operator ruled option (a): when the web live switch flips, engine numbers go to every paying user at once, as built; the gate is the switch `MAXBLD_WEB_LIVE` alone. The EI-D2 sentence is prior text, kept, and is overturned for the flip by this ruling. Spec 100 carries the matching note.+} |
+diff --git a/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md b/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
+index a99073021..2d7a5003a 100644
+--- a/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
++++ b/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
+@@ -124,0 +125,2 @@ Everything else in `parcels` — zoning internals, bylaw fields, heritage/ravine
+{+> Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · C2, C5, C1, meter; the lines marked operator are his words, the rest is verification and spec text): (C2) operator, verbatim: "1 a" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1399, RR-0319): a failed compute shows the error screen with Try again and is not counted; the sentence of the 2026-11-19 note above "a core or query error is the route's existing 500 with no page and no meter" STANDS (Spec 126 carries the correction of its own 2026-11-20 sentence). The phone keeps its 3 retries before the error screen: orchestrator reading of "Phone retires yes" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1409, RR-0325; reading at :1410), not his words. (C5) operator, verbatim: "4 a" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1399, RR-0322): the note above says decision D-1 (who sees numbers before launch) is not ruled; it is now ruled: when the web live switch flips, engine numbers go to every paying user at once, as built; the gate stays `MAXBLD_WEB_LIVE` alone, with no session gate and no new switch (Spec 135 FE-39 carries the matching note). (Meter) the report counts only when a report is produced, after the address and lot are found (operator words of 2026-11-19 in the task-376 note of 2026-11-20 in this section, RR-0278); the code counts it in the lookup route, `src/app/api/parcels/lookup/route.ts` (the meter block); operator, verbatim: "2. y" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1432, RR-0331), to "I recommend leaving it where it is and adding a spec note that says so" (:1431): the meter stays in the lookup route. (C1, as verified by lane BL-VERIFYC, docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md section C1, task-377; this is NOT an operator ruling, it is an engineering matter under RR-0233 and carries no operator words): the route-side call of the one-lot compute stays (RR-0271 asks for the compute at the search pick and does not say route versus runner). A parity check "the route's context matches the runner's" as worded would fail today: the route passes `{ config, lookups }` to `materializeRows` while the runner passes `{ config, run_at, descriptor, lookups }` (VERIFY.md C1.2), and no code path in the closure reads `run_at` or `descriptor`. The buildable lock is a test that the core's closure never reads those two keys; it is owed and not built by this note.+}
+
+diff --git a/scripts/surfaces/_schema/bindings.json b/scripts/surfaces/_schema/bindings.json
+index 065cd3562..24282e17d 100644
+--- a/scripts/surfaces/_schema/bindings.json
++++ b/scripts/surfaces/_schema/bindings.json
+@@ -2 +2 @@
+  "$comment": "MF-42 (FE-31; plan.min cut 5, P42-D9 a): the one data home of the binding boundary. libraries = the MaxBLD-new UI packages (one tier); they may be imported only by a listed binding module, a listed provider, a test file or the vendor dir. A converted surface's mount file (mounts[]) may import only a framework package (framework[]), a binding module or a project-internal path (mount_internal[], relative paths included), never a UI library or any other package. modules[] are exact .tsx files under the R-13 component roots, each owned by a promoted platform_shared census entry (promoted_entries[]). ref_kinds and non_display_keys judge golden props (SV-SBIND); widget_types judges render.form (SV-DESC). Shape: screen-data.schema.json#/definitions/bindings. Read by scripts/surfaces/screen-checks.mjs and the FE-31 and FE-05 locks. Dated note 2026-11-09 (MF-37; D-23, ~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md): mapping.web is the closed list of JSX element names each web binding module may render per archetype (FE-31 C-8); RJSF's Mantine theme renders FileInput, NumberInput, TextInput, Select and the submit Button itself, so those names document what a FORM shows rather than JSX in our modules. touch_targets.web lists the Mantine size values that reach 44 px (FE-31 C-9), measured from @mantine/core 9.8.0: inputs and Button lg 50 px, xl 60 px; CloseButton and ActionIcon lg 34 px, xl 44 px. ref_kinds gains contract (FE-32): a golden value {\"contract\": \"<contract_id>.<field>\"} names a field of a CONTRACT descriptor's inputs.field_whitelist. Dated note 2026-11-09 (MF-37; operator \"a, 1-3 approved\"): the web library is Mantine 8.3.18 / mantine-datatable 8.3.13; the touch_targets values were re-measured on @mantine/core 8.3.18 styles.css (--button-height-lg and --input-height-lg 3.125rem, xl 3.75rem; --cb-size-xl and --ai-size-xl 2.75rem = 44 px) and are unchanged. Dated note 2026-11-10 (MF-35; the binding standard, Spec 126 §11b.2 dated note 2026-11-10 item (5); plan ~/Buildo-scratch/mcfrontend/MF-35/plan.v3.md §2): the first mobile binding. modules gains mobile/src/components/surfaces/SurfaceRenderer.tsx and SearchBinding.tsx (archetype SEARCH, owner shared_mobile_surface_binding, promoted); mounts gains the search screen; mount_internal gains @/hooks/ and @/store/ (the screen reads the lookup hook and the recent-searches store); edges is the safe-area EdgeRecord {top: additive}, equal to the legacy edges [top] (an array of strings under a non-display key reads as display text to SV-SBIND); ref_kinds gains derived (P35-D14 a: a declared deviation with a closed list of names, checked by the mobile golden test); non_display_keys gains the React Native prop names that carry no display text (measured with SV-SBIND on the goldens). mapping.mobile.SEARCH is the closed component table of SurfaceRenderer.tsx: its COMPONENTS literal has exactly these keys, each an imported library part (FE-31 C-8 mobile half). touch_targets.mobile names the className token that reaches 44 px on Button and Input: NativeWind's rem is 14 here, so min-h-11 is 38.5 px and only min-h-[44px] is 44 (plan v2 F-A; FE-31 C-9 mobile half). Dated note 2026-11-10 (MF-40; operator, verbatim: \"y recommendation: C, with the four trims. approved\"; plan delta 1 section 3 item 5 and S3): mapping.web.FORM gains Textarea and DateInput, which RJSF's Mantine theme renders for the offer form's textarea and date widgets (documentation of what a FORM shows, as for the other RJSF names; no Checkbox: trim 4). mounts gain the admin placements page files. MF-44 (dated 2026-11-11; operator \"01-a 0-2 b as long as they are complaint\"; Spec 126 §11b.5): + the web SEARCH module src/components/surfaces/web/SearchBinding.tsx (owner binding_web_search), mapping.web.SEARCH, the web search mounts (the page, its client mount, the not-found and error boundaries of src/app/(maxbld)/parcel-tool) and the parcel-tool provider layout. Dated note 2026-11-11 (MF-48; operator, verbatim: \"just to understand for the McFrontend and the web pages we are still using schema's and no code. except all recommendations\"; ~/Buildo-scratch/mcfrontend/MF-48/DECISIONS.md D-2 a, D-3 a, D-4 a; Spec 126 §11b.2 and §11b.4 dated notes 2026-11-11): the mobile REPORT binding. modules gains ReportBinding.tsx and ReportPageHost.tsx (archetype REPORT, owner binding_mobile_report, promoted); the shared renderer SurfaceRenderer.tsx lists SEARCH and REPORT (the one-archetype rule amended for the render half only). mapping.mobile.REPORT is the renderer's closed REPORT list (a subset of its SEARCH parts, so its COMPONENTS table is unchanged); mapping.mobile.REPORT_HOST is the host's table (FE-31 C-8m host list: the existing @gorhom/bottom-sheet and the shared renderer; libraries.mobile is not extended, a lane finding: seven Buildo-app files import the sheet). ref_kinds gains part ({\"part\": \"<section id>.<part index>.<role>\"} into MF-57's pageViewOf view; <id>.ad.value|disclosure). non_display_keys gains option and panel (the toggle_panel action's arguments) and pressBehavior (the sheet backdrop), measured on the MF-48 goldens and host. Dated note 2026-11-11 (MF-53; operator 2026-11-11, verbatim: \"\\\"choose your lot\\\" and \\\"address issues\\\" screens should be built now and we should only be using the new report obviosuly\"; plan ~/Buildo-scratch/mcfrontend/MF-53/plan.v4.md §3, §8 items 1-2): the first mobile LIST binding, for S-071 mobile_parcel_disambiguation_map (render.projection map). modules gains mobile/src/components/surfaces/LotMapBinding.tsx (archetype LIST, owner the new promoted entry binding_mobile_list, the MF-48 D-2 a form) and SurfaceRenderer.tsx (the render half, owner shared_mobile_surface_binding) renders SEARCH, REPORT and LIST; mapping.mobile.LIST is the closed table of the map page, adding react-native-maps' own MapView, Polygon and Marker (configured by props; no hand-built part). libraries.mobile is NOT extended with react-native-maps: two Buildo-app files import it (LeadMapPane.tsx, map.tsx), the MF-48 L-1 precedent; the renderer imports it as a layout part (FE-31 C-8m MOBILE_PARTS). mounts gains the map page; non_display_keys gains the react-native-maps prop names that carry no display text. Dated note 2026-11-11 (MF-19; operator D-1..D-8 \"all as recommmended\", D-4): mounts gain the admin lot-size page files (page, client mount, error boundary) of admin_lot_size_revert; report_lot_size_entry has no mount until the entry switch flips (D-6). Dated note 2026-11-11 (MF-46 stage C; operator D-2 (a) \"1 y 2 y ...\" 2026-11-11; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 12 fold 13; Spec 126 section 11b.5): + the first web STATIC module src/components/surfaces/web/StaticBinding.tsx (owner binding_web_static, promoted), mapping.web.STATIC (the closed list it renders: Stack, Group, Title, Text, List, ListItem and Button; a link is a Button rendered as the Next Link, a real route), and the mounts of the MaxBLD plain pages under src/app/(maxbld)/parcel-tool/(static)/ (Help & Support, Terms, Privacy, and the error and not-found boundaries of web_maxbld_error). No new library; non_display_keys unchanged. Dated note 2026-11-11 (MF-76 · McFrontend queue · lane E; operator D-1 (a), D-2 (a), D-3 (a) \"3 y\"; plan ~/Buildo-scratch/mcfrontend/MF-46/plan.md v3 section 12 folds 12, 13): mounts gains the landing (web_landing, parcel-tool/(static)/home/page.tsx; its errors reach the plain pages' boundary, already mounted). mapping.web.STATIC is unchanged: the landing kinds render with the same Mantine parts; the two report regions are the shared REPORT renderers (ReportView, its Picture, ReportPage), embedded by exact name and module as a named exception of the FE-31 C-8 lock (Spec 126 section 11b.1: REPORT keeps the landed renderer; FE-07), never a mapping entry. Server values are {\"derived\": <read>} refs (the existing kind, a closed list: the landing's declared reads). non_display_keys gains tabIndex (the sample region's keyboard stop, 0). Dated note 2026-11-12 (MF-46 follow-up, Help & Support contact; operator \"All recommendations accepted ... Ensure the least amount of code and use schema's\"): non_display_keys gains topic (a mailto node's topic, one of the closed list in static-page.schema.json, never text); the mail address is a {\"derived\": \"support_inbox\"} ref (the existing kind). Dated note 2026-11-19 (task-353 SUITE.FIX-2): touch_targets.mobile.Button gains min-h-[48px] beside min-h-[44px] (Input stays min-h-[44px] only): the semi question page (SRCH.SEMI, task-319, MF-93) draws Continue and Try again at 48 px in the mock the operator approved (RR-0309, MORNING-DECISIONS.md:1199); the 44 px is a floor (Spec 126 line 351, Spec 128 line 265) and 48 reaches it; orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling). The check C-9m still requires exactly one min-h- token on the list; nothing under 44 is [-listed.",-]{+listed. Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · D13; operator, verbatim: \"3 a\" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1399, RR-0321), his answer to option (a), 48 px as built, of the table put to him at :1398): the 48 px of Continue and Try again on the semi page is now the operator's ruling. The words \"orchestrator decision under the pre-approved criteria ... (not an operator ruling)\" in the 2026-11-19 note above were true when written and are superseded by this ruling for the 48 px; they are kept as written. No value of the list changes.",+}
+diff --git a/src/tests/surfaces/rules-acc-notes.logic.test.ts b/src/tests/surfaces/rules-acc-notes.logic.test.ts
+new file mode 100644
+index 000000000..64829a315
+--- /dev/null
++++ b/src/tests/surfaces/rules-acc-notes.logic.test.ts
+@@ -0,0 +1,77 @@
+{+// SPEC LINK: docs/specs/00-architecture/137_mcqueue.md rule 10 (:109, the operator's words are copied exactly with the date; prior text kept), section 3 (:21, :84, DROPPED carries a quoted ruling),+}
+{+//            docs/specs/00_engineering_standards.md section 14 (a behaviour-changing ruling updates all cited specs in the same commit),+}
+{+//            docs/specs/02-web-admin/126_maxbld_surface_standard.md (810, 990), docs/specs/03-mobile/100_mobile_parcel_cost_tool.md (123),+}
+{+//            docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-39, scripts/surfaces/_schema/bindings.json touch_targets.+}
+{+//+}
+{+// RULES.ACC (task-387, lane BL-RULESACC, Increment 1·B McFix). A text lock: the dated notes the operator's 2026-11-20 rulings called for exist, each carries his words+}
+{+// verbatim with the line of the decisions log, the earlier wording is kept (M-246), and the two status moves are quoted. It reads files only; no database, no network.+}
+{+import { describe, expect, it } from 'vitest';+}
+{+import fs from 'node:fs';+}
+{+import path from 'node:path';+}
+
+{+const ROOT = process.cwd();+}
+{+const read = (rel: string): string => fs.readFileSync(path.join(ROOT, rel), 'utf8');+}
+{+const NOTE = 'Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387';+}
+{+const MD = 'MORNING-DECISIONS.md';+}
+
+{+const SPEC126 = read('docs/specs/02-web-admin/126_maxbld_surface_standard.md');+}
+{+const SPEC100 = read('docs/specs/03-mobile/100_mobile_parcel_cost_tool.md');+}
+{+const SPEC135 = read('docs/specs/02-web-admin/135_mcfrontend_decisions_register.md');+}
+{+const BINDINGS: { $comment: string } = JSON.parse(read('scripts/surfaces/_schema/bindings.json'));+}
+{+const taskFile = (n: number): string => {+}
+{+  const f = fs.readdirSync(path.join(ROOT, 'backlog/tasks')).find((x) => x.startsWith(`task-${n} - `));+}
+{+  if (!f) throw new Error(`no task file for task-${n}`);+}
+{+  return read(`backlog/tasks/${f}`);+}
+{+};+}
+{+const noteOf = (text: string, anchor: string): string => {+}
+{+  const i = text.indexOf(anchor);+}
+{+  return i < 0 ? '' : text.slice(i, i + 6000);+}
+{+};+}
+
+{+describe('RULES.ACC dated notes in the operator words (task-387)', () => {+}
+{+  it('Spec 126 carries the C2 correction with his words "1 a" and the log line, and keeps the line it corrects', () => {+}
+{+    const n = noteOf(SPEC126, `${NOTE} · C2`);+}
+{+    expect(n).toContain('operator, verbatim: "1 a"');+}
+{+    expect(n).toContain(`${MD}:1399`);+}
+{+    expect(n).toContain('Try again');+}
+{+    expect(SPEC126).toContain('a failed compute is the lifecycle `error` with a closed not_evaluated:<reason>'); // prior text kept+}
+{+  });+}
+{+  it('Spec 126 carries the C4 note on the Help sheet resting on his "1-12 yes", not on a description of the code', () => {+}
+{+    const n = noteOf(SPEC126, `${NOTE} · C4`);+}
+{+    expect(n).toContain('1-12 yes');+}
+{+    expect(n).toContain('open-questions.md:1016');+}
+{+  });+}
+{+  it('Spec 100 carries C2 stands, C5, the meter location ("2. y") and C1 as verified, each marked as ruled or not', () => {+}
+{+    const n = noteOf(SPEC100, `${NOTE} · C2, C5, C1, meter`);+}
+{+    expect(n).toContain('operator, verbatim: "4 a"');+}
+{+    expect(n).toContain('operator, verbatim: "2. y"');+}
+{+    expect(n).toContain(`${MD}:1432`);+}
+{+    expect(n).toMatch(/C1[\s\S]*not an operator ruling/);+}
+{+  });+}
+{+  it('Spec 135 FE-39 carries the C5 note with "4 a"', () => {+}
+{+    const row = SPEC135.split('\n').find((l) => l.startsWith('| FE-39 |')) ?? '';+}
+{+    expect(row).toContain(`${NOTE} · C5`);+}
+{+    expect(row).toContain('operator, verbatim: "4 a"');+}
+{+  });+}
+{+  it('bindings.json keeps the 2026-11-19 wording and adds the note that the 48 px is the operator\'s ruling "3 a"', () => {+}
+{+    expect(BINDINGS.$comment).toContain('orchestrator decision under the pre-approved criteria'); // prior text kept+}
+{+    const n = noteOf(BINDINGS.$comment, `${NOTE} · D13`);+}
+{+    expect(n).toContain('operator, verbatim: "3 a"');+}
+{+    expect(n).toContain(`${MD}:1399`);+}
+{+  });+}
+{+  it('task-370 is DROPPED with the quoted ruling and the orchestrator reading marked as a reading; task-348 is answered with the record id', () => {+}
+{+    const t370 = taskFile(370);+}
+{+    expect(t370).toMatch(/^status: DROPPED$/m);+}
+{+    expect(t370).toContain('ruling: Task 370 yes . approved');+}
+{+    expect(t370).toMatch(/orchestrator reading/i);+}
+{+    const t348 = taskFile(348);+}
+{+    expect(t348).toMatch(/^status: DONE$/m);+}
+{+    expect(t348).toMatch(/RR-03\d\d/);+}
+{+  });+}
+{+  it('the retire list and the by-law count are drafts for the operator in the lane report, with file and line for each candidate', () => {+}
+{+    const d = read('docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md');+}
+{+    for (const ref of ['90_mobile_engineering_protocol.md:46', '90_mobile_engineering_protocol.md:71', '08_agents.md:343', '08_agents.md:19', '08_agents.md:28']) expect(d).toContain(ref);+}
+{+    expect(d).toMatch(/OPERATOR DRAFT/);+}
+{+    expect(d).toMatch(/312/);+}
+{+  });+}
+{+});+}
+

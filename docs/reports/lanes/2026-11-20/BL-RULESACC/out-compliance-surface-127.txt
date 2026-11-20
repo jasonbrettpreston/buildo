@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:07:10.623Z file_sha256=8adb9d7077f0d78fe1d88495bd1098f589f5a5dafc3f97316c2d215b7620ba62 prompt_sha256=a14bfc9631b3fec1e78b0453895684b31c6a5d4e4ec477bffb04427db8c41a72
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-surface-127.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10892 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22275 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33377 chars, answer 0 chars, 45s
+DEFER severity=MED — Spec 127 §3.2a S-golden "A golden exists for EVERY (state x target) pair, targets = mobile, web, admin, pdf (the whole declaration; no "where declared" escape)." — docs/specs/02-web-admin/126_maxbld_surface_standard.md:812 "A failed compute shows the error screen with Try again and is not counted; no closed not_evaluated reason is shown for a failure." — the corrected render behaviour of a named state lands with no golden in the diff and cannot see whether the failed-compute goldens still encode `not_evaluated:<reason>` — refresh the failed-compute golden per target in the same commit with red evidence and the Spec 135 FE-39 cite.
+
+DEFER severity=MED — Spec 127 §4.3 "Goldens are protected paths: a refresh needs red-evidence and a register cite; the honest-display oracle is the catalogue flags, never the golden." — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 "when the web live switch flips, engine numbers go to every paying user at once, as built; the gate is the switch `MAXBLD_WEB_LIVE` alone." — a new rendering condition for every paying user is ruled and no golden or state-manifest change appears in the diff; cannot see the manifest — add the state to `states.json` and capture goldens per target, or record in the note why no state changes.
+
+DEFER severity=MED — Spec 127 header "`docs/specs/00-architecture/00_system_map.md` **has been regenerated** as part of this change; re-run `node scripts/generate-system-map.mjs` whenever a boundary list changes." — src/tests/surfaces/rules-acc-notes.logic.test.ts:1 "// SPEC LINK: docs/specs/00-architecture/137_mcqueue.md rule 10" (new file under `src/`, no `00_system_map.md` in the diff) — a new `src/` path may belong in an owning spec's Target Files row, and no regeneration is in the diff; cannot see whether any boundary list changed — run the generator and include the regenerated map if a list changed.
+
+DEFER severity=MED — Spec 127 §8.3 "**`_unmeasured_` is never a guess.** ... A plausible-looking value nobody measured is the defect this whole programme exists to retire." — src/tests/surfaces/rules-acc-notes.logic.test.ts:74 "expect(d).toMatch(/312/)" against docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md "How 426 was computed (reconstructed, UNVERIFIED against the lane's tool)" — a repo test pins a numeral the draft itself marks UNVERIFIED, turning an unconfirmed count into a locked invariant — assert the draft's sections and file:line refs, not the numeral, until the count is verified.
+
+DEFER severity=LOW — Spec 127 §10 "**Logic:** `*.logic.test.ts` — the gate scorer ..., archetype eligibility ..., the Intent Ledger vocabulary being closed." — src/tests/surfaces/rules-acc-notes.logic.test.ts:6 "A text lock: the dated notes the operator's 2026-11-20 rulings called for exist" — the surface test tree gains a filesystem prose lock that neither the logic row nor the infra row of the Testing Mandate names — move it to the infra row and name its mandate, or state the deviation in the header.
+
+DEFER severity=LOW — walk rule 4, no pasted clause or ruling names it — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:17 "## B. By-law handbook checked count" — a by-law handbook recount (426 vs 312) is added; nothing in Spec 127 governs by-law counts, and the draft states "the count is of handbook lines, not of independent rules" — carry it in its own lane record rather than this change.
+
+MET — Spec 127 §11 Out-of-Scope "`scripts/analysis/step-validate.mjs` and `docs/specs/01-pipeline/123_step_opt_assessment_validation.md` — ... This spec MIRRORS them and must never edit them" — diff paths — neither the pipeline validator nor Spec 123 is touched.
+
+MET — Spec 127 §3 "the source rows are parsed from that spec, so this table cannot drift from it without `--check` failing" — docs/specs/02-web-admin/127_surface_conversion_procedure.md generated blocks — no generated mirror block is hand-edited by the diff.
+
+MET — Spec 127 §4.1 "A different party adjudicates than the one that discovered." — RETIRE-DRAFT.md:3 "OPERATOR DRAFT. Nothing below is retired, edited or ruled. Retiring a rule is the operator's ruling" — discovery and disposition are kept apart and the adjudicator is named.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  55208ms (55.2s)
+📊 Tokens — total: 35346, input: 24429, output: 10917, reasoning: 9794

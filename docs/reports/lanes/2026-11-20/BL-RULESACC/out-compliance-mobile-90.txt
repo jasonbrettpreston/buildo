@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:04:55.868Z file_sha256=6351cf0efd54f08c26c9475c78be0b40570bb597b133b10f746f33ecb6dcff7d prompt_sha256=118a4c3ab5a9625ff01ee626442994cb9d7bd2a10cb2ed23664700bf23217937
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9909 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21226 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32054 chars, answer 86 chars, 45s
+DEFER severity=MED — Spec 90 §4 AMENDMENT 2026-09-15 item 1 "Token persistence via Keychain/Keystore is still accurate in substance" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:9 "the Keychain / Keystore sentence needs the operator or the Spec 93 owner to confirm which storage the Supabase session uses (UNVERIFIED)" — the draft puts in doubt a sentence the pasted amendment already records as accurate in substance, so an operator "y" on this candidate would retire accurate text, not stale text — reword item 1 to say the Keychain/Keystore sentence stands per the amendment and scope the candidate to the provider clause only.
+DEFER severity=LOW — Spec 90 §7 AMENDMENT 2026-09-15 item 2 "There is no monorepo and no `packages/shared-types`" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:10 "Spec 126 section 5.2 generates the mobile mirror from the CONTRACT descriptor (the same pack line)" — item 2 grounds its staleness on a review-template pack line rather than on the pasted amendment that already records the same drift, so the retirement rests on the wrong authority — cite the Spec 90 2026-09-15 amendment item 2 as the evidence, as item 1's sibling drift is cited.
+MET — Spec 90 §4 AMENDMENT 2026-09-15 item 1 "Auth is Supabase, not Firebase" — RETIRE-DRAFT.md:9 — item 1 marks the Firebase line stale and names Supabase Auth with the Spec 93 3.2 replacement, matching the amendment.
+MET — Spec 90 §7 line 71 with AMENDMENT item 2 "Zod schemas are transcribed per tree today" — RETIRE-DRAFT.md:10 — item 2 records that no packages directory exists and that Spec 126 §5.2 generates the mobile mirror.
+MET — Spec 90 §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`" — scripts/surfaces/_schema/bindings.json:2 "No value of the list changes" with the 48 px D13 note — 48 px exceeds the 44 px floor and no listed value moves below it.
+MET — Spec 90 dated-note convention "Dated note 2026-11-09 (M-246, prior text kept; ...)" — docs/specs/02-web-admin/126_maxbld_surface_standard.md:812 "Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · C2" — every new note keeps the corrected prior text as written.
+REJECT — Spec 90 §10 "Unit Testing (Jest): Jest + React Native Testing Library for logic hooks" — the new lock is written in vitest under src/tests — Spec 90 governs the mobile domain, this lock lives in the Next tree and asserts on docs, so the mobile Jest and 80 percent clause does not reach it.
+REJECT — Spec 90 §5 "NO DOM APIs: Never use `window`, `document`, `localStorage`" — the new test reads files with fs and process.cwd() — Node file reads in a text lock are not DOM APIs and the file is not mobile code.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  47837ms (47.8s)
+📊 Tokens — total: 23694, input: 14584, output: 9110, reasoning: 8332

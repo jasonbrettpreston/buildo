@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:52:54.515Z file_sha256=2fc08d9525b49319f555cab8bf22d7fbf42b2b8668bcb54bf9f4b52ef40cb706 prompt_sha256=3d8886f76bcbb8967f212734e7c65a77aa0e4b537bf00f47b30bbdf5884220db
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-plan-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10561 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21705 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32632 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43523 chars, answer 0 chars, 60s
+BUG severity=HIGH — ruling :1428 "Orchestrator reading: "Task 370 yes" = drop task-370 from this increment (the recommendation put)" — plan "(1) ... task-370 LATER to DROPPED (ruling: line, quote "Task 370 yes . approved", marked with the orchestrator reading)" — the plan's action is terminal (LATER to DROPPED) while the recorded meaning is only removal from this increment, which LATER already gives; a terminal status rests on a reading of "yes" — fix: leave task-370 out of 1·B without DROPPED, or obtain operator words for DROPPED before the CLI commit
+DEFER severity=MED — ruling :1404 "D1 RULED (c): the freshness compare is left until stored records exist; it moves with the storage record write (ST.P1). task-380 waits on that; option (b) is not ruled." — plan "(1) RULING RECORDS ... C2, C3, D13, C5, D1, semi cache" — no step records task-380's wait on ST.P1; only the quote is kept — fix: add the ST.P1 blocker to task-380's row through the CLI in the same commit
+DEFER severity=MED — ruling :1400 "STILL OPEN: whether the phone keeps its 3 retries before the error shows." — plan "(2) DATED NOTES ... Spec 126 after :810: C2 correction (error screen with Try again, not counted; ... phone 3 retries is the orchestrator reading)" — a spec note lands the 3 retries as a rule although the register still marks that question open — fix: land the ruled part (error screen with Try again, not counted) only and carry the retries as open in the note
+DEFER severity=MED — ruling :1433 "1 (a): a McFix task may file its commits under the McFrontend row that built what it fixes; its own review is the McFix lens set and separate grounder." — plan "(2) DATED NOTES ... C3 is not repeated (task-389)." and "(3) ... no edit to specs 90 or 08" — no dated note for "1 a" lands in 08_agents (a file this task names), so the process ruling keeps no spec home and sits only in a lane-dir register draft — fix: add a dated note to 08_agents section 7 rule 4 and 11.1, prior text kept
+DEFER severity=LOW — task card "by-law checked count corrected" — plan "(4) BY-LAW CHECKED COUNT: computed from Spec 133; the figure lives in dated lane reports, not in a script: drafted, nothing changed." — the corrected count is only drafted, no produced figure is shown in the material — fix: emit the corrected number with the report-only rows excluded, in the dated lane report
+REJECT — Spec 90 §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`." — accused of breaching the touch-target minimum with the D13 "3 a" 48 px note — 48 px is above the stated minimum, so the note does not conflict with the clause
+MET — Spec 90 §4 amendment "Additive; the original lines are retained below, unedited." — plan "(3) ... nothing retired, no edit to specs 90 or 08" — the two retire candidates (:46, :71) are left in place
+MET — Spec 90 §4 amendment item 2 "There is no monorepo and no `packages/shared-types`." against §7 "Zod schemas are shared via a `packages/shared-types` monorepo workspace" — plan edits neither line; the additive amendment already carries the correction
+MET — Spec 90 §2 dated-note form "M-246, prior text kept; operator, verbatim:" — plan "(2) DATED NOTES, prior text kept (M-246)" — notes are written in the spec's own additive form
+MET — operator :1399 "1 a 2 b 3 a 4 a 5 c 6 accept" — plan "(1) ... C2, C3, D13, C5, D1, semi cache (:1399, fragments "1 a", "2 b", "3 a", "4 a", "5 c", "6 accept")" — all six fragments are recorded verbatim
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+
+---
+⏱  66956ms (67.0s)
+📊 Tokens — total: 28029, input: 15259, output: 12770, reasoning: 11772

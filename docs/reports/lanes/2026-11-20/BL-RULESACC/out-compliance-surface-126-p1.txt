@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:06:10.867Z file_sha256=344f053ee49d6ffd6f5c1e0385180c223f99b8c889ad42ac39adef96b0c011a4 prompt_sha256=b21b76bcde19cc6d37a6389be67775f5a8b36e6140a4c0fbcdf1bb489587d08e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10286 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21330 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32213 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43590 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 54575 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 65244 chars, answer 0 chars, 90s
+BUG severity=HIGH — Spec 126 §4 `deviations` "`{from, why, adjudicated_by, date}` — unchanged shape" — docs/specs/02-web-admin/126_maxbld_surface_standard.md:997 "Residuals, not ruled: an Android Custom Tab has no Done button" — the approved B10 wording "Help, Terms and Privacy open in an in-app browser sheet with Done" is not met on Android and the note leaves it "not ruled", so the deviation carries no `adjudicated_by` and no `date`; the ruling's clause is unmet by disclosure alone — put the Android case to the operator as a decision and, once ruled, land a `deviations` entry (from/why/adjudicated_by/date), or amend B10's wording with his ruling.
+
+DEFER severity=MED — Spec 126 §4 `states` "A surface terminal is a render STATE, each pinned by a named golden." — docs/specs/02-web-admin/126_maxbld_surface_standard.md:812 "A failed compute shows the error screen with Try again and is not counted; no closed not_evaluated reason is shown for a failure" — the corrected report terminal names no render state and no golden, and the diff adds none — name the state and the golden that pins it, or state where it is already pinned.
+
+DEFER severity=MED — Spec 126 §0b item 9 "Where no rule governs, the nearest related rules are cited and the question goes to the operator as a ruling." — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md "CORRECTED CHECKED COUNT under the task card rule (report-only is not counted as enforced): 321 - 2 - 7 = 312" and src/tests/surfaces/rules-acc-notes.logic.test.ts "expect(d).toMatch(/312/)" — the draft asserts a corrected by-law count that conflicts with the landed "426 of 543" record and no pasted ruling covers a recount, then the new lock pins that unverified number — present 312 to the operator as a question and drop the /312/ assertion until it is ruled.
+
+DEFER severity=LOW — Spec 126 §0b item 6 "The operator's own words with the date and the record path" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md "he answered \"Review them first 1. y 2. y 3. y 4. y 5. where does this rule set go on the board yes 6. yes\" (:1302)" — the quote carries the record path but no date on the quoted answer itself — add the 2026-11-20 date to the quoted answer.
+
+DEFER severity=MED — Spec 126 §0b item 1 "A task not listed here is not done" and "No McFrontend work starts without its row in `.cursor/MCFRONTEND-QUEUE.md`" — NONE — the material shows task-387 lane BL-RULESACC and no queue row for it (cannot see `.cursor/MCFRONTEND-QUEUE.md`), while the lane edits a programme schema (`bindings.json`) and adds an `src/tests/surfaces/` lock — cite the queue row in the lane report or add it so the rule-1 join exists.
+
+MET — Spec 126 §0b item 6 "Every operator ruling is recorded verbatim, dated, landed and cited." — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 — each ruling quotes his words ("1 a", "4 a", "2. y") with the decisions-log line and date, and C1 is explicitly marked "NOT an operator ruling".
+MET — Spec 126 §0b item 6 "as a dated note with the prior text kept (M-246 ...)" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 — "SUPERSEDED, prior text kept above" and "The EI-D2 sentence is prior text, kept".
+MET — Spec 126 §0b item 6 "the amendment text below is policy text of doc-16, not operator words" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 — separates doc-16 policy text from the operator's verbatim words and names the record path.
+MET — Spec 126 §0b item 4 "Existing components only." — scripts/surfaces/_schema/bindings.json:2 — the edit is a `$comment` dated note only; no module, mount, library or binding entry is added.
+MET — Spec 126 §0b item 3 "Screens are declared as data and drawn by the shared bindings; no page code." — the diff adds no page or component file, only docs, a schema comment and one text lock.
+
+REJECT — Spec 126 §0b principle 5 "not_evaluated and not_modelled always shown, never hidden" — the C2 note drops a not_evaluated reason for a failed compute — a failed compute is an error terminal the operator ruled ("1 a"), not a not_evaluated value about the lot, so principle 5 does not reach it.
+REJECT — Spec 126 §0b item 6 same-day landing — the FE-39 McStorage note is a late write — the note itself states "late write: ruled 2026-11-18, written 2026-11-20" and cites the operator asking for the landing on 2026-11-20, so the gap is disclosed, not hidden.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  97107ms (97.1s)
+📊 Tokens — total: 49845, input: 30633, output: 19212, reasoning: 17953

@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:54:45.324Z file_sha256=80921234c4f8895fa0c50bcdd57896f1d47928dc2c77409db2b53324845cc8a2 prompt_sha256=4ed02730e5ec76335031a3f7e685d8d8b2258f1d995ddf2530f1f7f04f3ad1b7
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-plan-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10720 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22765 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34098 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45680 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 56398 chars, answer 1672 chars, 75s
+BUG severity=HIGH — 11a.3 "a failed compute is the lifecycle `error` with a closed not_evaluated:<reason>" — plan step (2) "the "closed reason" sentence of the 2026-11-20 note is overturned for the failed compute" — the pasted clause is overturned on the strength of the orchestrator row ":1400: - C2 RULED (a): a failed compute shows the error screen with Try again and is not counted" whose only operator words are ":1399: Operator, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept"", and the plan itself calls the same row a reading one clause later ("phone 3 retries is the orchestrator reading") — keep the closed reason on the error state per the pasted clause, or land "Try again, not counted" as an addition and record the removal of the reason as an orchestrator reading pending his words.
+
+BUG severity=MED — task "C1 to C5 (docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md; BL-GROUND/VERDICTS-SUMMARY-2.md) written as dated notes only after his words" — plan "(2) ... C1 as verified (engineering matter, no operator words: the buildable lock is a test that the core's closure never reads run_at or descriptor; nothing built here)" — a dated note lands in Spec 100 with no operator words, which the task forbids and RR-0192 routes to a McRecommendation card — file C1 as a lane finding or recommendation card and keep it out of the spec dated notes.
+
+BUG severity=MED — task "By-law handbook count: report-only is not counted as enforced." — plan "(4) BY-LAW CHECKED COUNT: computed from Spec 133; the figure lives in dated lane reports, not in a script: drafted, nothing changed." — the named deliverable (count corrected) is not delivered in the commit and carries no lock, so "report-only is not counted" stays unenforced — land the corrected count in the file it is read from and add a test that fails when a report-only rule is counted as enforced.
+
+DEFER severity=MED — task "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN" — plan "TEST (red first, through the real hooks): src/tests/surfaces/rules-acc-notes.logic.test.ts asserts the notes exist with the operator quote, the bindings note names the operator ruling, and the retire/count draft file exists" — a document-presence assertion is not a planted-defect gate and no second-agent attack round is named — add one planted-defect fixture per gate and a named attack round reported as refused or STILL OPEN.
+
+DEFER severity=MED — plan rule "Spec 137 rule 10 (137_mcqueue.md:109) "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept."" — plan "(1) ... the rows are drafted in the lane dir for the orchestrator to add with add-ruling.mjs (not written by this lane)" — the dated notes cite row ids that do not exist yet, so the row id the rule requires cannot be copied into them — run add-ruling.mjs for RR-0315 onward before the notes land, or carry the MORNING-DECISIONS line as the reference until the row exists.
+
+DEFER severity=LOW — 11a.1 "The set file is `scripts/surfaces/_schema/binding-sources.json` (D-4 a)" and "Adding a source or a member needs a register row and a panel" — plan "(2) ... scripts/surfaces/_schema/bindings.json $comment: a dated note that the 48 px is the operator's ruling "3 a" (the earlier wording kept)" — a 48 px interface value is parked in the binding schema, the file 11a.1 keeps to the closed source set, and no pasted rule puts a size there — record the 48 px with the semi page's own declaration or the layout table instead.
+
+DEFER severity=LOW — ":1428: - Orchestrator reading: "Task 370 yes" = drop task-370 from this increment (the recommendation put)" — plan "(1) ... task-370 LATER to DROPPED (ruling: line, quote "Task 370 yes . approved", marked with the orchestrator reading)" — the approved reading removes the task from this increment, DROPPED makes it terminal, a wider act than the words put to him — move it to the word the reading names, or hold the status move until his words name the task itself.
+
+MET — task "Retire candidates (grounder-verified stale): Spec 90 :46 and :71, 08_agents :343 and :19/:28: retiring is the operator's ruling" — plan "(3) RETIRE LIST as an OPERATOR DRAFT file only (Spec 90 :46 and :71, 08_agents :19 :28 :343): nothing retired, no edit to specs 90 or 08" — nothing is retired without his ruling; a draft goes to him.
+
+MET — 11a.3 "`coa_required:<clause>` is NOT in the list; it is added by amendment at the McBylaws increment that lands that route" — plan (2) DATED NOTES — no status value or disclosure code is added by this change.
+
+MET — M-246 "prior text kept" — plan "(2) DATED NOTES, prior text kept (M-246)" — amendments are added as dated notes with the prior text retained, not overwritten.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 7
+
+---
+⏱  77982ms (78.0s)
+📊 Tokens — total: 40197, input: 24160, output: 16037, reasoning: 14765

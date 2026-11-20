@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:06:07.629Z file_sha256=a10cee6b3570e31f72d6f8a99e60a472f43e9a2df1f93292eb8ef44a13d0f02e prompt_sha256=ea5acd4495c9f45108ac87e58fe5c8cd380d730c82508d932e4605aba8080c0a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/rulesacc/rev/in-out-compliance-mobile-99-p2.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10779 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22101 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33552 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44404 chars, answer 859 chars, 60s
+BUG severity=HIGH — mobile-99 §10 Target Files "`docs/specs/03-mobile/99_mobile_state_architecture.md`, `docs/reports/mobile_state_audit_2026-05-02.md`, `docs/specs/03-mobile/90_mobile_engineering_protocol.md` §7" — docs/specs/02-web-admin/126_maxbld_surface_standard.md:812 "Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · C2" — Spec 126 is not one of the three Target Files, so the operating boundary is unmet — remove the Spec 126 note or obtain a pasted operator ruling that adds it.
+
+BUG severity=HIGH — mobile-99 §10 Target Files "`docs/specs/03-mobile/99_mobile_state_architecture.md`, `docs/reports/mobile_state_audit_2026-05-02.md`, `docs/specs/03-mobile/90_mobile_engineering_protocol.md` §7" — docs/specs/02-web-admin/135_mcfrontend_decisions_register.md:61 "Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · C5" — Spec 135 is outside the three Target Files — remove the Spec 135 note or obtain a pasted operator ruling that adds it.
+
+BUG severity=HIGH — mobile-99 §10 Target Files "`docs/specs/03-mobile/99_mobile_state_architecture.md`, `docs/reports/mobile_state_audit_2026-05-02.md`, `docs/specs/03-mobile/90_mobile_engineering_protocol.md` §7" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:125 "Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · C2, C5, C1, meter" — Spec 100 is outside the three Target Files — remove the Spec 100 note or obtain a pasted operator ruling that adds it.
+
+BUG severity=HIGH — mobile-99 §10 Target Files "`docs/specs/03-mobile/99_mobile_state_architecture.md`, `docs/reports/mobile_state_audit_2026-05-02.md`, `docs/specs/03-mobile/90_mobile_engineering_protocol.md` §7" — scripts/surfaces/_schema/bindings.json:2 "Dated note 2026-11-20 (M-246, prior text kept; RULES.ACC · task-387 · D13" — bindings.json is outside the three Target Files — remove the bindings.json note or obtain a pasted operator ruling that adds it.
+
+BUG severity=HIGH — mobile-99 §10 Target Files "`docs/specs/03-mobile/99_mobile_state_architecture.md`, `docs/reports/mobile_state_audit_2026-05-02.md`, `docs/specs/03-mobile/90_mobile_engineering_protocol.md` §7" — src/tests/surfaces/rules-acc-notes.logic.test.ts:1 "// SPEC LINK: docs/specs/00-architecture/137_mcqueue.md rule 10" — the new test file is outside the three Target Files — remove the test or obtain a pasted operator ruling that adds it.
+
+BUG severity=HIGH — mobile-99 §10 Target Files "`docs/specs/03-mobile/99_mobile_state_architecture.md`, `docs/reports/mobile_state_audit_2026-05-02.md`, `docs/specs/03-mobile/90_mobile_engineering_protocol.md` §7" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:1 "# OPERATOR DRAFT: retire list and by-law checked count" — the new report is outside the three Target Files — remove the report or obtain a pasted operator ruling that adds it.
+
+BUG severity=MED — mobile-99 §10 Target Files "`docs/specs/03-mobile/90_mobile_engineering_protocol.md` §7" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:9-10 "| 1 | docs/specs/03-mobile/90_mobile_engineering_protocol.md:46 | ... | 2 | docs/specs/03-mobile/90_mobile_engineering_protocol.md:71 |" — the draft targets Spec 90 lines 46 and 71, but §10 permits only §7 of Spec 90 — restrict the draft to §7 or obtain a pasted operator ruling that expands it.
+
+BUG severity=MED — mobile-99 §10 Target Files "`docs/specs/03-mobile/99_mobile_state_architecture.md`, `docs/reports/mobile_state_audit_2026-05-02.md`, `docs/specs/03-mobile/90_mobile_engineering_protocol.md` §7" — docs/reports/lanes/2026-11-20/BL-RULESACC/RETIRE-DRAFT.md:11 "| 3 | docs/specs/00-architecture/08_agents.md:19 |" — the draft proposes retiring lines in 08_agents.md, which is not a Target File — remove those candidates or obtain a pasted operator ruling that adds them.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  62919ms (62.9s)
+📊 Tokens — total: 24911, input: 11392, output: 13519, reasoning: 12272
