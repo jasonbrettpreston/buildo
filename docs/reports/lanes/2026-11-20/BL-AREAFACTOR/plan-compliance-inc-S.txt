@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:37:12.049Z file_sha256=569d62fc5b968a7eac5b508c881113b164c6c5cf68764b052d16b0c464b3193d prompt_sha256=eb6b9db442d143f2aa980c0353875e6628982978ae99b660d65e943c1fea5c66
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0190 "Lane launches need an authorized plan for any repo worktree they write" — "## Review context for task-411 (no plan id)" — the card shows the lane live on repo work ("status: RUNNING · ... assignee: @lane-BL-AREAFACTOR", files named under "Files: src/app/api/leads/detail/[id]/route.ts, mobile/src/lib/leadDetailFormat.ts, mobile/src/lib/parcelCostFormat.ts, src/tests/admin-report-preview-live.logic.test.ts") while carrying no plan id, so the authorization the ruling requires before a worktree is written is not shown — name the authorizing plan id in the card, or hold the lane, before any of the four files is written.
+
+DEFER severity=MED — MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" — "Also noted by the grounder, not in this task: the permits route serves feet_per_metre (route.ts:267) for client maths, which strains fe.44 the same way" — the ruling admits no exception, and the plan records a second hand-typed factor staying in code with nothing filed against it (fe.44's own text is not pasted, so I cannot see it) — file the follow-up task (or extend this one) so feet_per_metre is read from the setting, so the ruling is not left half-honoured by the same change that invokes it.
+
+MET — MORNING-DECISIONS.md:241 "The conversion factor lives in content/settings, never in code" — src/lib/parcels/geometry.ts:6 — the plan serves the converted value from the pinned setting parcels_sqm_to_sqft already read there ("the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT") and deletes the typed copies at mobile/src/lib/leadDetailFormat.ts:15 and mobile/src/lib/parcelCostFormat.ts:11, with formatSqft formatting only.
+
+MET — MORNING-DECISIONS.md:1476 "Let the grounder resolve them all as long as the result is compliant" — mobile/src/lib/leadDetailFormat.ts:15 — the resolution it authorises is the compliant one: no new surface, no slice, the factor taken from settings and both code copies removed.
+
+MET — PLAN-PROTOCOL.md:3 "keep it simple; no scope creep" — src/tests/admin-report-preview-live.logic.test.ts — the change stays inside the four named files, re-points the parity oracle to literal expected strings, and adds no surface or slice.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 2
+
+---
+⏱  40055ms (40.1s)
+📊 Tokens — total: 23124, input: 16021, output: 7103, reasoning: 6498

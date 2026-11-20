@@ -12,6 +12,7 @@ import type {
   LeadDetailCost,
   LeadDetailNeighbourhood,
 } from '@/app/api/leads/detail/[id]/types';
+import { SQM_TO_SQFT } from '@/lib/parcels/geometry';
 
 /**
  * Raw row shape returned by `pool.query<LeadDetailRow>(LEAD_DETAIL_SQL, …)`.
@@ -150,6 +151,11 @@ function composeAddress(
   return composed.length > 0 ? composed : fallback;
 }
 
+/** The area served already converted (fe.44: the phone only formats); the factor is the pinned parcels_sqm_to_sqft read by src/lib/parcels/geometry.ts. */
+function sqmToSqftOrNull(sqm: number | null): number | null {
+  return sqm === null ? null : sqm * SQM_TO_SQFT;
+}
+
 function toCost(row: LeadDetailRow): LeadDetailCost | null {
   // Surface the cost block only when at least one cost field is populated;
   // an all-null block from the LEFT JOIN with no matching cost_estimates
@@ -170,6 +176,7 @@ function toCost(row: LeadDetailRow): LeadDetailCost | null {
     range_low: toNumberOrNull(row.cost_range_low),
     range_high: toNumberOrNull(row.cost_range_high),
     modeled_gfa_sqm: toNumberOrNull(row.modeled_gfa_sqm),
+    modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm)),
   };
 }
 
@@ -345,6 +352,7 @@ function toCoaCost(row: CoaLeadDetailRow): LeadDetailCost | null {
     range_low: null,
     range_high: null,
     modeled_gfa_sqm: toNumberOrNull(row.modeled_gfa_sqm),
+    modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm)),
   };
 }
 

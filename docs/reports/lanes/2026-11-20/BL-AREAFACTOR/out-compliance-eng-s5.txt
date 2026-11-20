@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:46:44.975Z file_sha256=a694529a0f4441710182955ccc7ab9ba6f8b4c256431a89f83f6835bd66f5702 prompt_sha256=5c920422f87dd3f38f1b31f78b91764b74102aa2672a92bbd45467974c400ba4
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-out-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §5.2 "`*.ui.test.tsx` | React component rendering, interactions | Any new/changed component" — mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — the only changed component carries the visible consequence of the whole change (label now sourced from a new optional field, must render null when an older server omits it) and no `*.ui.test.tsx` exists in the diff or in the plan file list — add a `*.ui.test.tsx` that renders the screen with modeled_gfa_sqft present, absent, and null.
+
+BUG severity=HIGH — §5.3 "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code." — task-411 NOTES "Red proven by a refused commit attempt (2 server tests failed); phone tests cannot run locally, phone-test green is UNVERIFIED until Mobile CI" — the phone half (formatSqft rewrite, schemas.ts field, [lead].tsx wiring) has neither a demonstrated red nor a green run, so "run the test and confirm it fails" is unmet for that slice — run the three touched mobile test files in the worktree and record the red output before the green, or hold the phone edits.
+
+DEFER severity=MED — §5.2 "`*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence" — mobile/__tests__/leadDetailFormat.test.ts removed line "// Multi-Agent plan review flagged drift between 10.764 and 10.7639 in separate plan sections; this constant is the single source of truth." — an explicit past-review drift fence is retired and no `*.regression.test.ts` re-pins the surviving invariant (one canonical factor, read from the pinned setting, never typed) — add a `*.regression.test.ts` asserting the canonical value behind src/lib/parcels/geometry.ts plus the no-typed-factor rule.
+
+DEFER severity=MED — §5.2 "Parity battery ... Two parallel implementations stay in sync (§7 dual-path ...) | Any dual-surface or generated artifact (drift guard)" — src/tests/admin-report-preview-live.logic.test.ts "const { formatSqm } = (await import(MOBILE)) as { formatSqm: (m: number) => string | null };" — the runtime comparison between server `fmt('area_sqft', m)` and mobile `formatSqft` is replaced by hand-written literals, so the two sq-ft formatters are no longer held in lockstep and can drift silently — keep one parity assertion such as `fmt('area_sqft', m)` equals mobile `formatSqft(m * 10.7639)` on the shared samples.
+
+DEFER severity=MED — §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — src/lib/leads/lead-detail-query.ts:155 "return sqm === null ? null : sqm * SQM_TO_SQFT;" — the new pure derivation is exercised only through `.infra.test.ts` files; no logic test pins the conversion and null pass-through — add a `*.logic.test.ts` covering the conversion for null, 0, and a typical area.
+
+DEFER severity=MED — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — mobile/__tests__/useLeadDetail.test.ts added line "modeled_gfa_sqft: 1533.85575," — the new field is added to the untyped inline fixture that is fed straight into `mockFetch`, instead of a typed lead-detail fixture — import (or add) a typed LeadDetail fixture and spread it.
+
+DEFER severity=LOW — §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — mobile/__tests__/leadDetailFormat.test.ts "describe('formatSqft (the API serves square feet, FIX.AREA-FACTOR / fe.44: the phone only formats)'" — the new pure-formatter cases (rounding, 1533.85575, source regex) are written into a plain `.test.ts`, not the mandated `*.logic.test.ts` — split or rename to leadDetailFormat.logic.test.ts.
+
+MET — §5.2 "`*.infra.test.ts` | API routes, DB queries, external calls" — src/tests/leads-detail.infra.test.ts "serves the area already converted: cost.modeled_gfa_sqft is modeled_gfa_sqm times the pinned factor" — the route-level field and its null-area case are proven at the infra layer.
+
+MET — §5.3 "Run the test and confirm it fails" (server half) — NOTES "Red proven by a refused commit attempt (2 server tests failed)" — the server conversion red was demonstrated before the build.
+
+MET — §5.2 "DB replay (`*.db.test.ts` ...) | Any migration touching schema/constraints/indexes" — no migration, constraint or index is touched by this diff, so DB replay is not triggered.
+
+MET — §5.5 "a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three" — the diff adds only a value-derivation (no DB constraint, no generated artifact), so the three-layer combination is not triggered.
+
+MET — §5.4 "create `scripts/seed-[scenario].js`" — no DB scenario setup is introduced or needed by this change.
+
+MET — §5.1 (server tests) — src/tests/lead-detail-query.coa.infra.test.ts "toCoaLeadDetail({ ...sampleCoaRow, modeled_gfa_sqm: null })" — the shared typed row fixture is spread rather than replaced by an inline object.
+
+REJECT — Spec 136 fe.44 / MORNING-DECISIONS.md:241 — the change is accused of nothing judgeable here — those clauses are not in the pasted context (it reads "no pasted context provided"); only eng-s5 §5 is mine to apply, which is what the findings above do.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 6
+
+---
+⏱  56782ms (56.8s)
+📊 Tokens — total: 21391, input: 10314, output: 11077, reasoning: 9652

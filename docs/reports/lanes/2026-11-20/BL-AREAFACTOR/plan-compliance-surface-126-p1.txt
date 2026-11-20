@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:37:12.137Z file_sha256=fc3764f50c11cfc2048974adda196ad3227bca0871e316a71d716354f351610d prompt_sha256=a454e4455247c0d9ceb845024e695962b0078c01713c6df63dd1e3567cd05925
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-plan-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §0b item 5 "a page part is the server-formatted string as sent, and a number throws (FE-34). A display transform lives on the server or in content, never in a binding." — task-411 description "the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT; the phone Zod schema takes it and formatSqft only formats" — the number still crosses to the client and a client format helper performs the display transform, so FE-34 and §5.3 Layer 1 ("formatting decisions" server-canonical) are unmet, only the arithmetic moved — serve the server-formatted string (for example cost.modeled_gfa_sqft_label) and delete formatSqft from the phone path.
+
+BUG severity=HIGH — §5.0 "There is one source, and everything else is emitted from it." and §3.1 "`response.projection` (explicit pick-by-name whitelist)" — task-411 description "Files: src/app/api/leads/detail/[id]/route.ts, mobile/src/lib/leadDetailFormat.ts, mobile/src/lib/parcelCostFormat.ts, src/tests/admin-report-preview-live.logic.test.ts" — a hand-added field lands in the response with no CONTRACT descriptor / registry row change in the file list, so the declared projection and the registry census row for /api/leads/detail/:id go stale, which is exactly the hand-written second declaration §5.0 bans — update the CONTRACT descriptor (response.projection, consumers[]) and re-run the registry generator in the same change.
+
+DEFER severity=MED — §5.2 "the transcription, the strictness drift, the missing parcel lock, and the CI exclusion" — task-411 description "the parity test re-pointed to literal expected strings" — two typed copies are deleted and a third hand-typed copy of the converted value is created in src/tests/admin-report-preview-live.logic.test.ts:129, so the transcription this standard retires is re-instantiated and will not follow the pinned setting — derive the expected value from SQM_TO_SQFT in the test, or assert server field against the setting.
+
+DEFER severity=MED — §5.6 "The fingerprint spans descriptor + contract descriptor + the archetype component + the format helpers." — task-411 description "Files: ... mobile/src/lib/leadDetailFormat.ts, mobile/src/lib/parcelCostFormat.ts" — format helpers are inside every golden source_fingerprint that names them; the plan names no golden recapture, so the change either breaks goldens or silently leaves a stale fingerprint — name the affected goldens and recapture in the same commit, or state that no golden fingerprint includes these files.
+
+DEFER severity=MED — §0b item 2 "red first, each lock proven in both directions (`08_agents.md:461`, §11.3; Spec 127:124, PH-7)" — task-411 "## Acceptance criteria" (empty, no test or lock named for the deletion) — a deletion-only change with no lock that fails when a typed conversion factor reappears leaves the fix reversible by the next copy-paste — add one lock that fails on a literal 10.7639 in the phone tree, and cite MORNING-DECISIONS.md:241 in it.
+
+DEFER severity=MED — §0a principle 4 "Single source: the front end may show more, never derive differently (Spec 126 P2); every number comes from McBylaws; no maths in the UI." — task-411 description "the lead-detail API serves an optional cost.modeled_gfa_sqft" — the same measurement is then on the wire twice (modeled_gfa_sqm and modeled_gfa_sqft) with no declared canonical field, so the phone can derive either way again — declare the canonical field in the CONTRACT descriptor and have the surface consume only the converted one.
+
+DEFER severity=LOW — §4 category 13 "`{what, measured, check_id}` — unchanged shape." — task-411 description "Also noted by the grounder, not in this task: the permits route serves feet_per_metre (route.ts:267) for client maths, which strains fe.44 the same way." — a known same-class violation is recorded in a task brief with no check_id and no limitations row, so it is prose only and nothing fires — file a limitations row with a check_id or its own queue row in this change.
+
+MET — §2.2.1 P4 "All tunables are data; zero thresholds in `src/`" — task-411 description "the pinned setting parcels_sqm_to_sqft is already read at src/lib/parcels/geometry.ts:6 (SQM_TO_SQFT)" — the conversion is read from the registered setting rather than typed in the route.
+MET — §0b item 3 "Screens are declared as data and drawn by the shared bindings; no page code." — task-411 description "No new surface, no slice." — no page code and no new surface is added.
+MET — §3.4 "Under **R-03 the fence holds**" — task-411 description "the lead-detail API serves an optional cost.modeled_gfa_sqft" (no parcel reference, no parcel_id_translation consumer) — no lead-to-parcel coupling or deep link is introduced.
+MET — §0a principle 5 "no maths in the UI" — task-411 description "both typed copies deleted" — the typed 10.7639 in leadDetailFormat.ts:15 and parcelCostFormat.ts:11 is removed from the client.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 7
+
+---
+⏱  62133ms (62.1s)
+📊 Tokens — total: 44789, input: 32946, output: 11843, reasoning: 10599

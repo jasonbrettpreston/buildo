@@ -121,6 +121,21 @@ describe('GET /api/leads/detail/[id] — 200', () => {
     expect(body.data.cost.modeled_gfa_sqm).toBe(142.5);
   });
 
+  it('serves the area already converted: cost.modeled_gfa_sqft is modeled_gfa_sqm times the pinned factor (FIX.AREA-FACTOR, fe.44); null when the area is null', async () => {
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    mockedPool.query.mockResolvedValueOnce({ rowCount: 1, rows: [sampleRow] });
+    const res = await GET(makeRequest(), makeContext('24 101234--01'));
+    const body = (await readJson(res)) as { data: { cost: { modeled_gfa_sqft: number } } };
+    expect(body.data.cost.modeled_gfa_sqft).toBeCloseTo(1533.85575, 5); // 142.5 m2 at the pinned 10.7639
+
+    mockedGetUserContext.mockResolvedValueOnce(sampleContext);
+    mockedPool.query.mockResolvedValueOnce({ rowCount: 1, rows: [{ ...sampleRow, modeled_gfa_sqm: null }] });
+    const res2 = await GET(makeRequest(), makeContext('24 101234--01'));
+    const body2 = (await readJson(res2)) as { data: { cost: { modeled_gfa_sqm: number | null; modeled_gfa_sqft: number | null } } };
+    expect(body2.data.cost.modeled_gfa_sqm).toBeNull();
+    expect(body2.data.cost.modeled_gfa_sqft).toBeNull();
+  });
+
   it('returns cost: null when no cost_estimates row matched', async () => {
     mockedGetUserContext.mockResolvedValueOnce(sampleContext);
     mockedPool.query.mockResolvedValueOnce({

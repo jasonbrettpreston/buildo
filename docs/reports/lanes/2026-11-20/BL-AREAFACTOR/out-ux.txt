@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T18:48:24.546Z file_sha256=25dfedf06ba93b83dd2305dc12404a29eb5be4d0220950e24ab167fc01f066be prompt_sha256=63c229f5417880a13427a48073aa438441b086d2ee7c5a99b6879cac9bcb26ba
+🔍 Lens review of docs/reports/reviews/task-411/diff-2026-11-20.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/src/lib/schemas.ts:204 "modeled_gfa_sqft: z.number().nullable().optional()," — a response from a server that omits the field makes mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" resolve to null, so the person sees no square footage at all even though modeled_gfa_sqm came back, losing the Square Footage Projection the screen owes them — ship and verify the API field before the phone build that reads it, so no phone ever asks a server that omits it.
+
+DEFER severity=MED — mobile/src/lib/parcelCostFormat.ts:84 "Square feet arrive already converted by the API (fe.44: the factor is the pinned setting parcels_sqm_to_sqft, never typed here); this only formats." — this still-exported alt formatter now multiplies nothing, so any caller that hands it the stored metric value shows an m² figure carrying the label sq ft, about 10.76 times too small, to the report reader; cannot see a caller in this diff — confirm scripts/analysis/report-schema.mjs RS-4 and the presentation registry feed it square feet only, or it should not be reachable.
+
+DEFER severity=LOW — src/tests/admin-report-preview-live.logic.test.ts:132 "for (const [m, expected] of SQFT) expect(`${fmt('area_sqft', m)} sq ft`).toBe(`${expected} sq ft`);" — the web report formatter and the phone formatSqft are no longer compared on shared samples, so nothing catches the same lead showing 1,534 sq ft on the phone and 1,533 sq ft in the report — keep one shared sample where the phone formats the server-computed sqft and the web formatter formats the same area, asserting one identical string.
+
+DEFER severity=NIT — mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — the caption and order of the value the person reads are not in the diff, cannot see whether the visible label still describes a value that now arrives pre-converted — note only, no change asked.
+
+REJECT — mobile/src/lib/leadDetailFormat.ts:16 "if (sqft === null || sqft === undefined || !Number.isFinite(sqft)) return null;" — a lead with no modelled area loses the row entirely, which reads as missing data — it matches the approved null-handling rule quoted in [lead].tsx, a section header renders only when at least one leaf field has a non-null value, and it is the same behaviour the screen had before.
+
+VERDICT: PASS on the person's experience
+States checked: first view of lead detail, answered (area served already converted, 1533.85575 renders 1,534 sq ft), empty (area null, row hidden), response missing the field (older or cached server), repeat visit; loading, error, offline, back are not drawn by this diff, cannot see   Dead ends found: 0
+
+---
+⏱  45824ms (45.8s)
+📊 Tokens — total: 26645, input: 18352, output: 8293, reasoning: 7606

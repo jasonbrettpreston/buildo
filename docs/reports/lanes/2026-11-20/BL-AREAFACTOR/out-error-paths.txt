@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T18:48:24.545Z file_sha256=25dfedf06ba93b83dd2305dc12404a29eb5be4d0220950e24ab167fc01f066be prompt_sha256=c0c1cb2d4f9c90e32e11c6c80eb048a5bac3a4524007da54edc124918b5d6eb9
+🔍 Lens review of docs/reports/reviews/task-411/diff-2026-11-20.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/lib/leads/lead-detail-query.ts:15 "import { SQM_TO_SQFT } from '@/lib/parcels/geometry';" — this adds a module-load dependency on pinnedSetting for the whole lead-detail module: if parcels_sqm_to_sqft is absent or non-numeric and pinnedSetting throws at import time, GET /api/leads/detail/:id fails before the handler runs and every lead detail screen 500s, not just the area row (cannot see whether pinnedSetting throws, grounder to confirm). — Read the pinned setting lazily inside sqmToSqftOrNull behind a try that falls back to serving modeled_gfa_sqft null, so a settings fault hides one row instead of the route.
+
+DEFER severity=MED — mobile/src/lib/parcelCostFormat.ts:84 "Kept exported because the report presentation registry names it as the alt formatter of formats.area" — the exported name and registry binding are unchanged but the input unit silently flipped from m² to ft², so any registry-driven or unseen caller that still passes m² now renders a number 10.7639x too small with no error and no type break. — Rename the export (e.g. formatSqftFromSqft) and re-point the registry so a wrong-unit call fails at the registry/lint gate instead of displaying a wrong number.
+
+DEFER severity=LOW — mobile/app/(app)/[lead].tsx:81 "const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);" — on skew where the new app meets a server that omits the field (or a cached pre-change response), the row silently disappears even though modeled_gfa_sqm is still parsed and present, so the screen fails closed but loses the area with no signal. — Accept the hidden-row state explicitly (comment plus the existing optional-schema test), or log once in dev when sqm is non-null and sqft is absent.
+
+DEFER severity=LOW — mobile/src/lib/schemas.ts:204 "modeled_gfa_sqft: z.number().nullable().optional()," — the new field is strict on type, so a mis-typed served value (e.g. a numeric string) fails the whole LeadDetailSchema parse and blanks the entire detail screen for a one-field glitch, a blast radius larger than the feature. — Chain .catch(null) (or .catch(undefined)) on the optional field so a bad area value costs the row, never the screen.
+
+REJECT — src/lib/leads/lead-detail-query.ts:155 "return sqm === null ? null : sqm * SQM_TO_SQFT;" — looks unguarded for non-finite sqm (NaN/Infinity) — handled: JSON serialization emits null for NaN/Infinity and mobile formatSqft returns null for non-finite ("if (sqm === null || sqm === undefined || !Number.isFinite(sqm)) return null"), so the row hides and a wrong number cannot render.
+
+REJECT — src/lib/leads/lead-detail-query.ts:179 "modeled_gfa_sqft: sqmToSqftOrNull(toNumberOrNull(row.modeled_gfa_sqm))," — double-submit and retry concern for a write or counted event — handled: this path is a pure GET recomputation from the same row with no write, insert or counter, so repeated, concurrent or re-sent requests are idempotent by construction.
+
+VERDICT: PASS on error-path safety
+Paths walked: permit toCost, CoA toCoaCost, null modeled_gfa_sqm, zero area, NaN/Infinity area, empty cost block, old-server missing modeled_gfa_sqft, new-phone/old-server skew, pinned-setting read at module load, schema parse of optional field, repeated/concurrent GET, phone formatSqft null/undefined/non-finite, parcelCostFormat.formatSqft registry consumer, timeouts (no new network or storage I/O added)   Unguarded: 1 (pinned-setting read at src/lib/parcels/geometry.ts:6, grounder to confirm throw behaviour)
+
+---
+⏱  37654ms (37.7s)
+📊 Tokens — total: 25022, input: 18353, output: 6669, reasoning: 5762

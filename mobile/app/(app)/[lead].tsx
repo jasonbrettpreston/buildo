@@ -78,7 +78,7 @@ export default function LeadDetailScreen() {
   const costEstimated = formatCurrencyAbbrev(cost?.estimated ?? null);
   const costRangeLow = formatCurrencyAbbrev(cost?.range_low ?? null);
   const costRangeHigh = formatCurrencyAbbrev(cost?.range_high ?? null);
-  const sqftLabel = formatSqft(cost?.modeled_gfa_sqm ?? null);
+  const sqftLabel = formatSqft(cost?.modeled_gfa_sqft ?? null);
 
   // Per Multi-Agent Review null-handling rules: a section header renders
   // only when at least one leaf field has a non-null value. Avoids

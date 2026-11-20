@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T18:36:05.793Z file_sha256=62e97acc906379f9ff7ea612e1ada2c63cc8a779bed1add3f4c3a96f8275bc75 prompt_sha256=cae4803d25691297620ebf32e006b08bee2e74d9bfe3f9c6d3d3941ec67b602c
+🔍 Lens review of docs/reports/reviews/task-411/context-2026-11-20.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan step 2 "mobile schemas.ts LeadDetailCostSchema adds optional nullable modeled_gfa_sqft; [lead].tsx passes cost.modeled_gfa_sqft" — three states now reach formatSqft (number, null, undefined) but step 1 only tests "schema accepts an optional field", so a missing field (older server, cached bundle) or a null sqm is the untested empty path and can render NaN or a bare unit to the customer — define the absent and null outputs (label with no figure, no unit) and add the two cases to the phone test list, with no client-side factor as fe.44 requires.
+
+BUG severity=HIGH — "src/lib/parcels/geometry.ts:6 export const SQM_TO_SQFT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_sqm_to_sqft');" — the factor now enters the lead-detail cost build from a pinned setting, and how pinnedSetting behaves when parcels_sqm_to_sqft is absent or non-numeric is cannot see; if it throws, one settings problem fails every lead-detail response where the deleted typed constants could not fail — add a server test for the absent and invalid setting and assert one defined outcome (field omitted, rest of cost block intact, or a single error), never a partial cost block with a wrong number.
+
+BUG severity=MED — "the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT" — the multiplication and the display rounding are not pinned to one precision, so a value near a .5 boundary (100.4999 sqft) can round differently in the phone formatter than in the parity oracle, and the parity test then passes or fails on float noise rather than on the served number — round once where modeled_gfa_sqft is produced (named precision), return the rounded value, and test one x.5 boundary server side.
+
+DEFER severity=MED — "[lead].tsx passes cost.modeled_gfa_sqft" — no step names the lead whose cost block is absent entirely (no toCost/toCoaCost result), so the property access before formatSqft is unguarded by any listed test — add one phone test for a detail payload with no cost object and guard the read the same way as the optional field.
+
+REJECT — "GET /api/leads/detail/:id" — looks like a double-submit or retry risk on a retried request — it is a read-only GET with no write and no counted event (RR-0325 three retries return the same numbers), so no idempotency key or dedup is owed here.
+
+DEFER severity=NIT — "parity test uses literal expected strings (no import of the phone file)" — the literals freeze today's 10.7639 in a web test while the factor is content/settings, so a future settings change turns the oracle red for the wrong reason — date the literal and say it is deliberate, or compare against SQM_TO_SQFT read from the same pinned setting.
+
+VERDICT: FAIL on error-path safety
+Paths walked: missing optional field, null sqm, absent cost block, pinned-setting absent or invalid, retry of the GET, double-submit, parity oracle, rounding boundary   Unguarded: 3
+
+---
+⏱  18695ms (18.7s)
+📊 Tokens — total: 22394, input: 19560, output: 2834, reasoning: 2119

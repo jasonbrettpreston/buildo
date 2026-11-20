@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:37:12.058Z file_sha256=e48515284bbd509d1ef7fae7b19a35b610027157d50eca2dd881c9211967989b prompt_sha256=41285d1a2a0146100c8ba28f33f9ece346c071d946999ed43c007bc180450be6
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-plan-compliance-eng-s2-s4-s10-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §11 If API Route Created/Modified "Unhappy-path test cases listed: 400, 404, 500 (§2.1)" — task-411 Build "the parity test re-pointed to literal expected strings" — the only test work planned is the web parity oracle; no `.infra.test.ts` case exists for the modified lead-detail route (bad id shape 400, unknown id 404, geometry/settings read throwing 500 with no raw `.message`) — list those cases by name in the Build paragraph before plan-lock, per §2.1's forced-failure requirement.
+
+BUG severity=HIGH — §11 "Overarching try-catch with logError(tag, err, context) (§2.2, §6.1)" — task-411 Build "the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT" — a new computation is added to the handler body with no statement that it sits inside the overarching try-catch, so a throwing settings/geometry read can surface `err.message` — state that the conversion runs inside the existing try-catch and that failures return `{ error: 'Human-readable message' }` at 500 with `logError` server-side only.
+
+BUG severity=HIGH — §11 "Request/Response TypeScript interface in src/lib/[feature]/types.ts (§10.3)" — task-411 Build "the phone Zod schema takes it" — the only typed contract planned for the new field is the mobile Zod schema, a client schema, so the API-side response interface is never updated — add the optional field to the lead Response interface in the shared types file in the same commit as the route.
+
+DEFER severity=MED — §4.4 "All API routes must return a consistent envelope: { data, error, meta }. Never return raw arrays or ad-hoc shapes." — task-411 Build "the lead-detail API serves an optional cost.modeled_gfa_sqft" — the brief does not say where the field lands, so an ad-hoc top-level key or a cost object outside `data` is not excluded — state that the field is added inside the existing `data.cost` object of the envelope.
+
+DEFER severity=MED — §10.3 "Avoid returning database column names directly. Map to a stable API field name (e.g., est_const_cost → estimatedCost)." — task-411 Build "cost.modeled_gfa_sqft" — the new field mirrors the DB column spelling `modeled_gfa_sqm` and couples clients to schema naming — return a stable mapped name (for example `cost.modeledGfaSqft`) or state the explicit mapping, and say what happens to the sibling `modeled_gfa_sqm`.
+
+DEFER severity=MED — §10.3 "API routes must be thin, validate input, call a lib function, return the result. Business logic belongs in src/lib/, not in route handlers." — task-411 Build "computed from SQM_TO_SQFT" — the multiply and any rounding are placed in the route handler, so the maths is not unit-testable or reusable by the web or permits paths — move the conversion next to `SQM_TO_SQFT` in src/lib/parcels/geometry.ts:6 and have the route call it.
+
+DEFER severity=MED — §4.1 "All endpoints within src/app/api/ must be analyzed for protection." — task-411 Files "src/app/api/leads/detail/[id]/route.ts" — the brief modifies this endpoint and never states its protection analysis, so whether it is public by design or carries `verifyAdminAuth` cannot be checked — state the route classification and either the guard it carries or that no auth change is intended.
+
+DEFER severity=MED — operator ruling quoted in task-411 "The conversion factor lives in content/settings, never in code" — task-411 Build "the parity test re-pointed to literal expected strings" — re-pointing src/tests/admin-report-preview-live.logic.test.ts:129 to literal expected strings re-encodes the converted output in code and no row is added to src/tests/contracts.infra.test.ts mapping `parcels_sqm_to_sqft` to its consumers — assert equality between the API value and the setting-derived value instead of a frozen literal, and add the contracts row for geometry.ts:6 and the lead-detail route.
+
+MET — operator ruling "The conversion factor lives in content/settings, never in code" — src/lib/parcels/geometry.ts:6 "SQM_TO_SQFT" — the factor is read from the pinned setting and both typed copies at mobile/src/lib/leadDetailFormat.ts:15 and mobile/src/lib/parcelCostFormat.ts:11 are deleted.
+MET — §10.2 "Convenience columns ... should be computed in the API layer instead" — task-411 Build "No new surface, no slice" — the conversion is computed in the API layer, no migration or column is added.
+MET — §10.2 "Frontend WFs must NOT modify files in scripts/, migrations/, or scripts/lib/" — task-411 Files list — none of the four named files is under scripts/, migrations/ or scripts/lib/.
+MET — §4.3 "Never place API keys, admin SDK credentials, or database connection strings in use client components" — task-411 Build — the setting is read server-side and only a number reaches the phone bundle.
+MET — §4.2 "Raw SQL statements must utilize Drizzle parameterized queries" — task-411 Build — the brief introduces no new SQL statement, order by or search-term concatenation.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 8
+
+---
+⏱  55108ms (55.1s)
+📊 Tokens — total: 23085, input: 12736, output: 10349, reasoning: 9123

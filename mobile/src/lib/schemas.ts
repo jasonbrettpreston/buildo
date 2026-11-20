@@ -200,6 +200,8 @@ export const LeadDetailCostSchema = z.object({
   range_low: z.number().nullable(),
   range_high: z.number().nullable(),
   modeled_gfa_sqm: z.number().nullable(),
+  // served already converted by the API (fe.44: no conversion on the phone); optional so an older server still parses
+  modeled_gfa_sqft: z.number().nullable().optional(),
 });
 
 export const LeadDetailNeighbourhoodSchema = z.object({

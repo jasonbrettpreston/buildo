@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:37:12.105Z file_sha256=6351d9036a8904be7f0dbacea85e8ba7c44a4865395be942d1240743e045e7a9 prompt_sha256=6e3c7ba53c71feaf3877c1acb64217e1bb4339c099df272c0b4df1020c9c19b5
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-plan-compliance-mobile-99.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 99 §2.1 "The query payload carries 5 PII identity fields (full_name, phone_number, company_name, email, backup_email); persisting it to Layer 4a would violate this section" — src/app/api/leads/detail/[id]/route.ts "the lead-detail API serves an optional cost.modeled_gfa_sqft" — the brief never states the PII status of the added field although `['lead-detail', id]` is persisted to Layer 4a (only `['user-profile']` is dehydrate-filtered) — add one line to the PR: modeled GFA is derived public permit data, so the MMKV persister stays compliant.
+
+MET — Spec 99 §1 "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec." — brief "No new surface, no slice." — no store, blob, hydrate bridge or router effect is added, so nothing under §3-§5 is owed.
+
+MET — Spec 99 §2.1 "Layer 3 (Zustand) NEVER mirrors a Layer 1 (server) field unless the Field Ownership Matrix §3 explicitly authorizes the mirror" — brief "the phone Zod schema takes it and formatSqft only formats" — the value is read from the query and formatted, no Zustand mirror and no owner layer is created.
+
+MET — Spec 99 §4 B1 "Validation: every response MUST be parsed through a Zod schema before TanStack stores it" — brief "the phone Zod schema takes it" — the new field enters the cache through the schema, not a raw field read.
+
+MET — Spec 99 §4 B1 registry "| `['lead-detail', id]` | `useLeadDetail` | single lead |" — brief "GET /api/leads/detail/:id" — the query already holds a registry row, so no new key row is owed and the key stays parameterized on the lead id.
+
+MET — operator ruling quoted in the brief "The conversion factor lives in content/settings, never in code" — brief "the pinned setting parcels_sqm_to_sqft is already read at src/lib/parcels/geometry.ts:6 (SQM_TO_SQFT)" — the typed 10.7639 copies in leadDetailFormat.ts:15 and parcelCostFormat.ts:11 are deleted and the conversion reads the setting.
+
+MET — MAX-SERVER-SIDE amendment "Anything else computed on the client is a Spec 128 rule-2 violation needing a dated `deviations[]` row." — brief "the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT" — the conversion moves to the server, so no deviations row is owed.
+
+REJECT — Spec 99 §3.1 "Adding a field to the mobile app requires adding a row here." — adding `cost.modeled_gfa_sqft` to the phone schema with no §3.1 row — §3.1 is the server-authoritative profile matrix (Spec 95 §6) per its heading, and a lead-detail display field with no Layer-3 mirror owes no row.
+
+REJECT — operator ruling quoted in the brief "The conversion factor lives in content/settings, never in code" — leaving feet_per_metre at src/app/api/leads/detail/[id]/route.ts:267 unconverted — the brief records it as "not in this task" and Spec 99 publishes no clause over it, so it is not this change's unmet clause.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  44138ms (44.1s)
+📊 Tokens — total: 40341, input: 32089, output: 8252, reasoning: 7443

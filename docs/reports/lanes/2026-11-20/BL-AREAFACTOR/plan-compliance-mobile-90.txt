@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:37:12.113Z file_sha256=db6d510cd791947e48aa2104e25bbc71978a740d638976f147bf4888aacb1ead prompt_sha256=c428f3781bd12170177a8ff3c52324ec76e9379fba216aaab7b1399cedcd74d5
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-plan-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — operator ruling 2026-11-20 (MORNING-DECISIONS.md:1476) "Let the grounder resolve them all as long as the result is compliant" and MD:241 "The conversion factor lives in content/settings, never in code" — task-411 Facts line "used by [lead].tsx via formatSqft on cost.modeled_gfa_sqm" against Files line "Files: src/app/api/leads/detail/[id]/route.ts, mobile/src/lib/leadDetailFormat.ts, mobile/src/lib/parcelCostFormat.ts, src/tests/admin-report-preview-live.logic.test.ts" — the plan deletes the factor and makes "formatSqft only formats" but never names switching the one caller from cost.modeled_gfa_sqm to cost.modeled_gfa_sqft, so [lead].tsx would hand square metres to a pass-through formatter and print them as square feet, which is not a compliant result — add the [lead].tsx caller to the Build steps and Files list, passing cost.modeled_gfa_sqft into formatSqft, and state the render assertion in the plan.
+
+DEFER severity=MED — Spec 90 §7 "Zod schemas are shared via a `packages/shared-types` monorepo workspace to guarantee the mobile app and Next.js backend are never out of sync", read with the §4 amendment "the two Zod declarations disagree in strictness" — plan Build line "the phone Zod schema takes it and formatSqft only formats" — the new cost field is hand-transcribed into the mobile schema, the exact drift the amendment measures, so the sharing clause is still unmet for this field — either generate the mobile mirror from the CONTRACT descriptor per Spec 126 §5.2 or add a dated Spec 90 §7 amendment note recording modeled_gfa_sqft as a transcribed field.
+
+DEFER severity=MED — Spec 90 §10 "Minimum 80% coverage threshold" — plan Build line "the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT" names no test for the new branch — the present and absent paths of a new computed field land with no named coverage, which is how the threshold slips — add a route test asserting modeled_gfa_sqft equals modeled_gfa_sqm times the pinned setting and is absent when modeled_gfa_sqm is null.
+
+DEFER severity=MED — operator ruling MD:241 "The conversion factor lives in content/settings, never in code" — plan line "the permits route serves feet_per_metre (route.ts:267) for client maths, which strains fe.44 the same way" — the change removes two typed copies but leaves a shipped literal factor of the same class live, so the ruling stays unmet on the permits route — file the follow-up task the grounder noted, reading feet_per_metre from content/settings at route.ts:267.
+
+REJECT — Spec 90 §3 "This prohibits server-authoritative computed state" — accused of making the API compute a display figure — §3's own list requires "Fetching pre-calculated JSON from the backend", so the server computing modeled_gfa_sqft is the directive, not a breach of it.
+
+MET — Spec 90 §3 "Fetching pre-calculated JSON from the backend" — plan Build line "the lead-detail API serves an optional cost.modeled_gfa_sqft computed from SQM_TO_SQFT" — the conversion moves off the device, the phone only fetches and renders.
+MET — Spec 90 §7 "The Next.js `src/app/api/*` routes are the absolute source of truth" — plan Build line "computed from SQM_TO_SQFT" — the unit contract now lives in the route, not in the two phone copies.
+MET — operator ruling MD:241 "The conversion factor lives in content/settings, never in code" — "the pinned setting parcels_sqm_to_sqft is already read at src/lib/parcels/geometry.ts:6 (SQM_TO_SQFT)" — the factor comes from the pinned setting and both typed copies are deleted.
+MET — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI" — plan Build line "the phone Zod schema takes it" — the new field is declared in the Zod schema before the UI sees it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  57399ms (57.4s)
+📊 Tokens — total: 24060, input: 13495, output: 10565, reasoning: 9591

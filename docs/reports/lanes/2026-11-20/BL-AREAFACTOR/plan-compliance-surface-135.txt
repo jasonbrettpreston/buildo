@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:37:12.151Z file_sha256=8f304a9d21c4d63a6d536b24fb0cb4e5139cbd4e986613ea2885d20619f27497 prompt_sha256=3034016d59530f72a40f0842acfd7e70306ede0080db2fd22f1a9ca401ebc3c4
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-AREAFACTOR/in-plan-compliance-surface-135.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 135 FE-44 "the conversion factor is content/settings, never code" — "the parity test re-pointed to literal expected strings ... No new surface, no slice" — the change lands FE-44's producer rule on a new API with no lock: FE-44 reads "OWED `src/tests/surfaces/report-units.logic.test.ts`" and none of the four files named (route.ts, leadDetailFormat.ts, parcelCostFormat.ts, admin-report-preview-live.logic.test.ts) is a surfaces lock, so Spec 135 rule 2 "A rule without a lock is not yet a rule" is unmet — add or extend `src/tests/surfaces/report-units.logic.test.ts` to assert the lead-detail API sends `modeled_gfa_sqft` from SQM_TO_SQFT and that no 10.7639 literal remains under `mobile/src/lib`.
+
+BUG severity=MED — Spec 135 FE-06 "disclosures, confidence, \"at least\", not_evaluated and not_modelled always shown, never hidden" with FE-38 "a slot that must stay reads \"Not yet evaluated\" (FE-06, 126 §11a.3), never a number or $0" — "the lead-detail API serves an optional cost.modeled_gfa_sqft" — the material never says what the phone renders when the optional sqft is absent, so the honest empty state is unstated — state in the brief and acceptance criteria that an absent `modeled_gfa_sqft` shows "Not yet evaluated", never 0 or a blank.
+
+BUG severity=MED — Spec 135 FE-44 "one toggle covers every area and length and is remembered per user; the default is imperial" — "the phone Zod schema takes it and formatSqft only formats" — the phone path shows one pre-chosen unit with no toggle wired to the new field, so the toggle clause is unaddressed — name in the brief whether this screen is inside the FE-44 toggle or is ruled out of it, with the ruling cited.
+
+BUG severity=MED — Spec 135 FE-07 "parity compares each target's real output" — "the parity test re-pointed to literal expected strings" — replacing the shared-factor expectation with literals ends the cross-target comparison, so parity no longer compares "each target's real output" — keep one comparison against the served `modeled_gfa_sqft`, or record a dated note that the oracle is now a literal snapshot.
+
+DEFER severity=MED — Spec 135 FE-44 "the conversion factor is content/settings, never code" — "the permits route serves feet_per_metre (route.ts:267) for client maths, which strains fe.44 the same way" — a second client-side factor survives this fix, so the clause stays unmet on that route — file the follow-up task or widen this one, rather than leaving it as a grounder note.
+
+DEFER severity=LOW — Spec 135 FE-18 "Labels, help text and legal copy are content fields, not an exception" — "formatSqft only formats" — the unit label stays inside a formatter function with no content binding named — state where the "sq ft" label comes from, or record that this screen is hand-coded until MF-48 Stage B.
+
+REJECT — Spec 135 FE-32 "the member must exist in that descriptor" — the change adds `cost.modeled_gfa_sqft` to a served payload without naming a descriptor or binding update — not a real issue here: FE-38's Six cell reads "D n/a (hand-coded screen until MF-48 Stage B)", so no contract binding exists that would have to declare the member.
+
+MET — Spec 135 FE-05 "every number comes from McBylaws; no maths in the UI" — "formatSqft only formats; both typed copies deleted" — derivation leaves the phone and no replacement constant is added in code.
+
+MET — Spec 135 FE-44 "the conversion factor is content/settings, never code" — "parcels_sqm_to_sqft is already read at src/lib/parcels/geometry.ts:6 (SQM_TO_SQFT)" — the fix reuses the pinned setting instead of minting a third copy.
+
+MET — Spec 135 FE-44 "store METRIC only" — "cost.modeled_gfa_sqft computed from SQM_TO_SQFT" — the metric value stays the stored and served source and sqft is derived server-side.
+
+MET — Spec 135 rule 5 "an OWED row's lock path must be a valid src/tests/surfaces/*.test.ts that does NOT yet exist" — "OWED `src/tests/surfaces/report-units.logic.test.ts`" — FE-44 keeps its OWED form and path, nothing is claimed RULED without a lock.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 6
+
+---
+⏱  42970ms (43.0s)
+📊 Tokens — total: 43422, input: 35112, output: 8310, reasoning: 7230
