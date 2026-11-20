@@ -1,0 +1,25 @@
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:20:59.392Z file_sha256=c5300dabe7c746a8ca880b4e9b4425699fe96690807f69cb27042bf049f08ba9 prompt_sha256=717d580881a7d2da06ca59fa3bfc812535d332669f5f7e22060a8f395f2071ad
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtools/lens/in-out-compliance-eng-s5-s9-s14.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10942 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22092 chars, answer 0 chars, 30s
+BUG/DEFER findings below. All clauses judged are from the pasted rule list (Spec 00 §5, §9, §14); the "pasted context" field itself is empty, so no operator ruling outside this list is judged.
+
+```
+DEFER severity=MED — §5.5 layer map "*.logic.test.ts | The pure function computes the right value on happy + edge inputs." — src/tests/proof-slice.logic.test.ts "a real child that writes 20 MiB to stdout is not cut off (the typed 16 MiB ceiling cut it off with ENOBUFS)" — the claim proven is a real subprocess spawn (an external call, §5.2 infra column), so the logic layer is the wrong prover and a 20 MiB child now runs in the default `npm run test` — move it to a `*.infra.test.ts` (or inject a fake run()) and keep the logic layer for pure derivation.
+DEFER severity=LOW — §5.5 "a green suite in the wrong layer is false confidence" — src/tests/proof-slice.logic.test.ts "expect(src).toMatch(/maxBuffer:\s*gateVariable('tooling_spawn_max_buffer_mb')\s*\*\s*1024\s*\*\s*1024/)" — this asserts the file's source text, not a computed value, so it cannot catch a passing-but-wrong variable read — replace with a test that injects a fake gateVariable and asserts the resulting maxBuffer number.
+DEFER severity=MED — §14 registry "Every source/test file's SPEC LINK points at the spec AND the section (§N); new couplings update Cross-Spec Dependencies both directions" — scripts/analysis/proof-slice.mjs "import { gateVariable } from './gates/variables.mjs';" — the source site gains a new coupling to the Spec 132 variable registry with no SPEC LINK, section or cross-spec entry, the only citation sits in a test comment — add the SPEC LINK (Spec 132 core.8) at the new coupling and record the dependency both directions.
+DEFER severity=MED — §14 registry "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — src/tests/proof-slice.logic.test.ts "// the runner's child-output ceiling is the registered tooling_spawn_max_buffer_mb, not a typed 16 MiB." — the diff carries only the two scripts and two test files, no spec or runbook path, so any doc still quoting a plan lens command without --context or a 16 MiB ceiling stays stale — grep docs/ and docs/reference for the old plan-lens command and the 16 MiB cap and update them in this same commit.
+DEFER severity=MED — §5.2 "Parity battery (*.infra.test.ts / *.logic.test.ts) | Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults ...)" — scripts/analysis/proof-slice.mjs "maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024" — a new consumer of a registered variable, and no declaration of that variable or its parity battery is visible anywhere in this material, so the dual-surface guard does not cover it — show `tooling_spawn_max_buffer_mb` in the registry/seed JSON with its parity test, or add it here.
+MET — §5.2 "Any pure/derivation logic" mandates *.logic.test.ts — src/tests/backlog/backlog-lane.logic.test.ts — the lensLine brief-string derivation change is pinned in the logic layer.
+MET — §5.1 "Never write untyped inline mocks" — src/tests/backlog/backlog-lane.logic.test.ts — the added case calls lensBrief('build', ...) directly and adds no inline fixture objects.
+MET — §9.4 "No inline new Pool({...}) instantiation, no bare console.error()" — scripts/analysis/proof-slice.mjs — the change keeps the SDK-free analysis tool's spawnSync/fs shape and adds no Pool or logging instantiation.
+MET — §9.1, §9.2, §9.3 apply to DB-writing pipeline scripts — scripts/analysis/backlog-lane.mjs — no BEGIN/COMMIT, batch insert or re-run hazard is introduced because the diff touches no database mutation.
+MET — §14 registry "SPEC LINK points at the spec AND the section (§N)" — src/tests/backlog/backlog-lane.logic.test.ts:213 — the new test carries "Spec 08 section 7 rule 4", spec and section both present.
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+```
+
+---
+⏱  41867ms (41.9s)
+📊 Tokens — total: 15366, input: 6967, output: 8399, reasoning: 7369

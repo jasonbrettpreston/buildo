@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:13:07.449Z file_sha256=9d7b6d628504559ee6128f861b09f1de1a912fbfc0e89d58333ab8eae4f12ab3 prompt_sha256=6ecd34db29817e0c742b6fe76c10629c7cfcfdb51b9c1f3923d57b7be2c5bd05
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtools/lens/in-plan-compliance-eng-s5-s9-s14.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10457 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20899 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30845 chars, answer 0 chars, 45s
+BUG severity=HIGH — §5.5 "Un-pinned derivation logic silently changes value." plus "The pure function computes the right value on happy + edge inputs." — plan step "realIo().run of a child writing 20 MiB to stdout returns status 0 and a 20 MiB stdout" — the one assertion the plan gives passes with any ceiling above 20 MiB (32, 64, 256), so the derivation the change introduces (`gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024`) is never pinned to the registered value and can silently drift back to a smaller number, clause unmet — add a .logic.test.ts assertion that the resolved maxBuffer equals `gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024` (happy: 256 MiB) and keep the 20 MiB spawn as the separate infra proof.
+
+DEFER severity=MED — §5.2 "`*.infra.test.ts` | API routes, DB queries, external calls" — plan test line "src/tests/proof-slice.logic.test.ts: realIo().run of a child writing 20 MiB to stdout" — a real OS child spawn asserted on its piped stdout is an external-call subject, which §5.2 assigns to `.infra.test.ts`, not `.logic.test.ts` — move the spawn assertion to src/tests/proof-slice.infra.test.ts and leave only the pure derivation and literal scan in the logic file (§5.5 parity row permits either layer for the drift guard).
+
+DEFER severity=LOW — §14 registry row "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions**" — plan step "1. proof-slice.mjs: import gateVariable from ./gates/variables.mjs" — the plan adds a new script-to-seed coupling and a new test file, but names no SPEC LINK header for either and no cross-spec dependency update, clause unmet — state the SPEC LINK (§N) for proof-slice.mjs and the new test, plus the Cross-Spec Dependencies edit, in the plan steps.
+
+DEFER severity=NIT — operator rulings "(no pasted context provided)" — "no pasted context provided" — no operator ruling was pasted into this run, so no ruling can be checked; the exact defect this plan fixes (D11a: plan lens commands carry no --context) is reproducing here — re-run this lane with the pasted context file before plan-lock.
+
+REJECT — §9.1, §9.2, §9.3, §9.4 — accused of skipping transactions, parameter chunking, idempotent upserts and the Pipeline SDK — proof-slice.mjs changes a spawn buffer ceiling and backlog-lane.mjs composes a text line; neither writes rows to Postgres, so the scripts/*.js database rules do not bind this diff.
+
+REJECT — §9.5 — accused of accumulating a 256 MiB payload in memory — §9.5's scope is "Data loaders that fetch from external APIs (CKAN, etc.)"; proof-slice.mjs pipes a local child process's stdout, not an external API fetch, so the async-generator mandate does not apply.
+
+MET — §5.3 — plan line "Tests (red first through the real hooks)" with "red now (ENOBUFS at 16 MiB)" — a failing test is named and run through the real hook before the one-line change.
+
+MET — §5.2 — plan line "the plan-lens segment of the lens line contains --context for every plan lens command; red now" — a pure string-composition assertion in backlog-lane.logic.test.ts is the layer the table mandates.
+
+MET — §5.1 — plan line "realIo().run of a child writing 20 MiB to stdout" — no inline untyped mock object is constructed, the test drives real code, so no factories import is owed.
+
+MET — §5.5 — plan line "no `16 * 1024 * 1024` literal in the runner source" — the source scan is the drift guard that keeps the retired literal from returning.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 3
+
+---
+⏱  56129ms (56.1s)
+📊 Tokens — total: 15267, input: 4966, output: 10301, reasoning: 9368

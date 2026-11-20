@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:13:07.449Z file_sha256=3c2cd194a78ac470fd25b71c3f3b8ead7e63cd1bac7965415ac790c1d1036072 prompt_sha256=666a7f1005b4d8326b511e0019cc697ca92dfe9cfd840ecad07e94fe484a09a7
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtools/lens/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11371 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22552 chars, answer 0 chars, 30s
+BUG severity=HIGH — dated note 2026-11-20, clause 2, "runs the compliance lens once per list with the list pasted whole ahead of the plan or diff" — plan: "the plan lens clause gets ` --context <pasted-context file>` (same token the output lenses carry), with one sentence naming it." — the plan threads a flag but names nothing that writes the pasted-context file in plan mode, so the plan-lens compliance run still has no governing list ahead of the plan; the evidence is this run, where the context block reads "(no pasted context provided)" while list agents-s5-1to3 is attached — fix: add a plan step naming the producer of that file in plan mode (per attached list, the `rule-lists.mjs lens-input` output, whole), and make the test assert the resolved file exists and contains the whole list, not just the token.
+
+DEFER severity=MED — dated note 2026-11-20, clause 3, "The lane that wrote the work leaves the task RUNNING with \"grounder owed\"." — plan: "## Operator/orchestrator items owed (1) D10b timeout variable needs a migration number claim (outside write scope)." — no plan step produces `docs/reports/lanes/<date>/BL-FIXTOOLS/` with one compliance lens output per attached list and a GROUNDER.md whose `Grounder:` is not the `Lane:` with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding, and nothing states the task is left RUNNING with "grounder owed", so check-lane-close.mjs will refuse the lane close — fix: add a close step naming the lane directory, GROUNDER.md with Grounder not equal to Lane, one CONFIRMED/REJECTED line per BUG/DEFER finding of this lens, task left RUNNING.
+
+DEFER severity=LOW — dated note 2026-11-20, clause 2, "a list is split by its own headings when list plus material pass the review tool bound, never trimmed" — plan: "One move: the child-output ceiling 16 MiB -> 256 MiB (the registered value, \"the largest former literal, so no limit shrinks\", seed description)." — change 1 raises the spawn-output ceiling and touches the review-tool-bound path, yet no pasted clause or ruling names proof-slice.mjs or that ceiling, so it enters the lane with no governing clause behind it — rationale: not a compliance-mandated change; route it to the card owner and keep it visible in the lane record rather than silently bundled with the two clauses the note does name.
+
+MET — 5.1 HARD DEPENDENCY, "Run **Ground-truth (§5.2) FIRST**; a stale spec makes compliance-checking a check against fiction" — plan: "## Confirmed on the head (8383e9e4c), by defect" — every defect is pinned to a code line at head before any change ("scripts/analysis/proof-slice.mjs:132 `maxBuffer: 16 * 1024 * 1024` (literal)"), so this is not checked against fiction.
+
+MET — dated note 2026-11-20, clause 2, "`scripts/analysis/rule-lists.mjs lens-input`; a list is split by its own headings ... never trimmed" — plan: "Not touched: check-lane-close.mjs, rule-lists.mjs, rule-lists.json" — the splitter and the path table stay byte-identical, so no attached list can be trimmed by this change.
+
+MET — 5.3, "Rejected findings are written to the plan *with reasons* so they don't return every round" — plan: "D11b security lens never fires for admin or PII ... NOT fixed; listed." and "needs a migration number claim (outside write scope)" — both deferred defects carry their blocking reason in the plan.
+
+MET — dated note 2026-11-20, clause 3, "presence and form only, the judgement stays with the grounder" — plan: "Not touched: check-lane-close.mjs" — the close check keeps its presence-and-form role and the plan does not edit it.
+
+REJECT — 5.1 — the change is accused of leaving the security lens dead for admin and PII (D11b) — no pasted clause names a security lens or its regex; the note governs the compliance lens once per attached list, and rule-lists.mjs is outside this lane's write scope by the brief.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+
+---
+⏱  38986ms (39.0s)
+📊 Tokens — total: 11002, input: 3355, output: 7647, reasoning: 6619

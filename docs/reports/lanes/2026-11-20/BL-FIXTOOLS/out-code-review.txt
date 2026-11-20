@@ -1,0 +1,22 @@
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T15:20:59.400Z file_sha256=64c98e0318f4f81c4b09ee62fd006fe552ae9c963030688cf9c61bebf2c26b68 prompt_sha256=37646d775b0c11755e9fa21a9f67ec9bd66f2e8b407d383a42ebcf5a7f7dc54a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtools/lens/diff-material.diff (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10756 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22042 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33008 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44005 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 54766 chars, answer 0 chars, 75s
+DEFER severity=MED — scripts/analysis/proof-slice.mjs:133 "maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024" — the setting is multiplied with no finite/positive check and nothing is logged, so an unregistered or non-numeric value yields NaN or 0, which spawnSync does not reject, and the ceiling silently disappears or every child is truncated — resolve the value once, assert Number.isFinite(v) && v > 0 (throw naming tooling_spawn_max_buffer_mb) before building the option.
+DEFER severity=MED — scripts/analysis/backlog-lane.mjs:150 "the pasted-context file holds the spec clauses and rulings, the same file as for the output lenses" — the same sentence calls the positional material "the plan and its pasted rulings", so if `<pasted-context file>` is that same file the plan reaches the lens twice, the duplicate-material defect named for lens-compliance.md:32/:34 — name the distinct file the lane must pass, or stop passing `${ctx}` positionally when --context carries it (the caller of lensLine is not in the diff, cannot see).
+DEFER severity=LOW — src/tests/proof-slice.logic.test.ts:274 "process.stdout.write('x'.repeat(20 * 1024 * 1024))" — the test is green only if tooling_spawn_max_buffer_mb is seeded above 20 MiB, and the seeded value is not in the diff (cannot see scripts/seeds/logic_variables.json), so the result depends on data rather than on the code — derive the payload size from gateVariable or assert the registered value in the same test.
+DEFER severity=LOW — src/tests/proof-slice.logic.test.ts:273 "const mod = (await import('../../scripts/analysis/proof-slice.mjs')) as Record<string, any>;" — the cast plus the eslint-disable erases all checking, and line 274 then calls mod.realIo() with no typeof guard, so a rename fails as a runtime TypeError instead of at compile time — cast to an explicit shape ({ realIo: () => { run: (argv: string[], o: { timeoutMs: number }) => any } }) or assert typeof realIo === 'function'.
+DEFER severity=LOW — src/tests/proof-slice.logic.test.ts:280 "const src = fs.readFileSync(path.join(REPO, 'scripts/analysis/proof-slice.mjs'), 'utf8');" — this test needs fs, path and REPO in scope and the diff adds no import (file head not in the diff, cannot see), so a missing one is a ReferenceError at run time only — confirm the three are imported or defined at the top of the file.
+DEFER severity=LOW — src/tests/proof-slice.logic.test.ts:273 "await import('../../scripts/analysis/proof-slice.mjs')" — the test imports a CLI module; if proof-slice.mjs runs its main at import time rather than behind an import.meta.url === process.argv[1] guard (the diff adds no guard), the import parses the test runner's argv and exits the suite — confirm the guard exists in the file head (cannot see).
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- None at CRIT/HIGH: the two MED items are the unvalidated maxBuffer value in proof-slice.mjs:133 and the possible double delivery of the plan in backlog-lane.mjs:150.
+
+---
+⏱  84555ms (84.6s)
+📊 Tokens — total: 31434, input: 15163, output: 16271, reasoning: 15507

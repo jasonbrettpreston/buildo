@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T15:13:07.450Z file_sha256=de947d3b9a84333d9477f6cd2da45a4fea0416cf06cd4f867340e43342440dae prompt_sha256=07d965dc9c23b8a5d4e3edbdf271f355881c33c96674235c944ab3f5baa8dd60
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtools/lens/plan-material.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9589 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19869 chars, answer 0 chars, 30s
+BUG severity=MED — scripts/analysis/proof-slice.mjs:132 "maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024" — the setting read now sits on the per-row spawn path and the plan states no behaviour for a missing, non-numeric, zero or negative seed value, so one bad seed row either makes maxBuffer NaN and aborts the whole run at the first spawn with a range error, or removes the cap for every row, whereas the literal it replaces could not fail — read the value once before the row loop, assert Number.isFinite and > 0, and throw a named error that names the seed row.
+BUG severity=MED — scripts/analysis/proof-slice.mjs:21 "DEFAULT_TIMEOUT_MS = 120000" — the time-out path is left exactly as it was and gets no test, so after the ceiling moves to 256 MiB a child that now buffers tens of MiB and is killed at 120 s has no stated outcome (killed child returns no status and a signal), and whether that row is recorded as a failure cannot be seen — add a test whose child outlives the timeout and assert the row is a failure with stdout not compared.
+BUG severity=MED — scripts/analysis/backlog-lane.mjs lensLine "the plan lens clause gets ` --context <pasted-context file>` (same token the output lenses carry)" — the emitted command names a placeholder path and the plan covers no path for a context file that is missing or empty, the very case that produced "(no pasted context provided)" (scripts/deepseek-review.js:189), while the new test only asserts the substring --context is present — add a test that runs the emitted token against a nonexistent and an empty context file and asserts a loud error and non-zero exit instead of a silent empty block.
+DEFER severity=LOW — plan change 1 "a row that wrote more than 16 MiB used to fail with ENOBUFS and now passes" — a runaway child that emits tens of MiB is now a silent pass and nothing records that the old ceiling was crossed — log a warning line when stdout exceeds 16 MiB so the runaway stays visible while the row still passes.
+DEFER severity=LOW — plan change 1 "the child-output ceiling 16 MiB -> 256 MiB" — at 256 MiB per spawn, N concurrent rows hold N times 256 MiB; whether proof-slice spawns rows serially cannot be seen from the material — confirm serial iteration or bound the concurrency before relying on the new ceiling.
+REJECT — plan change 2 "the output lens commands in the same line do" — the added token looks like a second copy of the same flag on one line — handled: it mirrors the output lens clause, and re-running a lens command is a read-only review with no write and no counted event, so a repeat is not a double-submit.
+
+VERDICT: PASS on error-path safety
+Paths walked: missing or malformed setting row read per spawn, child output ceiling hit (ENOBUFS), time-out expiry of a killed child, empty stdout row, missing or empty pasted-context file for plan lens, repeat run of the same lens command (double-submit, idempotency)   Unguarded: 3
+
+---
+⏱  40709ms (40.7s)
+📊 Tokens — total: 18261, input: 11180, output: 7081, reasoning: 6371

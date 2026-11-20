@@ -1,0 +1,108 @@
+LIST agents-s5-1to3 sha256:be92afaacf4acc939b88110b6e2fb525a3a1d12a727dc9265f57a539e72f910b material sha256:64c98e0318f4f81c4b09ee62fd006fe552ae9c963030688cf9c61bebf2c26b68 part 1 of 1
+RULE LIST agents-s5-1to3 (docs/specs/00-architecture/08_agents.md, sections 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+### 5.1 Compliance (spec → code)
+**Question:** *Given a spec and the implementation, does the code SATISFY every clause of the spec's Behavioral Contract + Auth Matrix?* Item-by-item, spec-clause → code-line, PASS/FAIL.
+**Substrate:** DeepSeek CLI at plan altitude (`spec <path>`), or a `general-purpose` agent for the code diff.
+**Distinct from A3/A5 because:** Code Reviewer asks "is the code good?"; Integration asks "does it match the *codebase*?"; Compliance asks "does it match the *spec*?" — a clause the spec mandates but the code omits (e.g. Spec 21 §6's phantom `stripe_cancel_failed` directory filter, which the spec promised and the code never built) is a Compliance finding no other role owns.
+**HARD DEPENDENCY:** Compliance is only meaningful if the spec is TRUE. Run **Ground-truth (§5.2) FIRST**; a stale spec makes compliance-checking a check against fiction (manual §8.3).
+
+### 5.2 Ground-truth (reality → spec)
+**Question:** *Is the SPEC still true?* For each load-bearing claim in the spec, verify it against the live code / DB / behavior; report every drift as "spec §X says A; reality is B."
+**Substrate:** `general-purpose` (main tree + live DB) — it needs to read code AND query the schema/data.
+**Absorbs "spec-freshness enforcement":** you do NOT need a separate up-to-dateness agent — spec drift IS this agent's primary output. Enforcement = (a) Ground-truth runs at the START of any WF that touches a spec-governed area, and (b) a **standing periodic Ground-truth sweep** (a scheduled routine — see §7) that diffs high-traffic specs against reality and files drift to `review_followups.md`. This directly serves CLAUDE.md Prime Directive #10 (spec-first, no assumptions).
+**Why:** the manual's single most-cited failure (§8.3) is planning against a stale spec. Spec 20 described unbuilt routes; Spec 95/97 described a retired immediate-cancel design after the period-end ruling. Ground-truth is the antibody.
+
+### 5.3 Round-2 adjudication — FORMALIZE the existing practice
+**Substrate: DeepSeek CLI produces the pass; Integration (`general-purpose`, main tree) is its grounder** — already practised, now stamped (§A/§B).
+Not a new agent — a **mandatory second pass**. After the panel returns findings, run **DeepSeek + Integration against the *proposed findings/changes*** (not the code): for each finding, is the premise true, is the ruling already settled, does the fix cost less than the risk? This operationalizes manual §6.3 (⅓ false premises). Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8). Round-2 is cheap (DeepSeek) and catches the eager-fix (§8.4).
+
+Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2, lane BL-COMPLY2, Increment 1·B; the infra freeze is lifted for it by name; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the 2026-11-20 entries: "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." and "yes to McStorage and 1,2,3 yes as recommended" (the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table)): the mechanical half of section 7 rule 4 and section 5.3 is built in the repo. (1) `scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code, says which rule lists (whole files, or whole sections where the file itself separates rules from history) govern a touched path; it reuses the path maps of `mcbylaws/protected-paths.json` (`layer23`, `frontend`) instead of copying them. (2) `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through it, refuses a task with no Files line (a record-only task gets the queue lists) or an unmatched path with the path named, puts the governing lists into the brief (READ each whole before planning) and runs the compliance lens once per list with the list pasted whole ahead of the plan or diff (`scripts/analysis/rule-lists.mjs lens-input`; a list is split by its own headings when list plus material pass the review tool bound, never trimmed). (3) `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane) with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding of the lens outputs; presence and form only, the judgement stays with the grounder (rule 4: a separate grounder rules on every finding; this section: rejections carry reasons). The lane that wrote the work leaves the task RUNNING with "grounder owed".
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
+index 73a1a9287..5ba421d57 100644
+--- a/scripts/analysis/backlog-lane.mjs
++++ b/scripts/analysis/backlog-lane.mjs
+@@ -147,7 +147,7 @@ const lensLine = (task, ctx, lists) => {
+   const ids = lists.map((l) => l.id);
+   const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed): for each list id L and each phase P (plan: material = ${ctx}; out: material = the diff file), \`node scripts/analysis/rule-lists.mjs lens-input --list L --material <material> --out <lane dir>/in-P-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md > P-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'plan-compliance-' + i + '.txt, out-compliance-' + i + '.txt').join('; ')}. Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list, an out-<lens>.txt for every other output lens named above, a plan-stage output (plan-<lens>.txt), and the grounder file below (scripts/hooks/check-lane-close.mjs).`;
+   const grounder = ' Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy plan-*.txt, out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY plan-*.txt and out-*.txt (rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote on that line>" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it.';
+-  return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Plan review lenses: ${plan.map(f).join(', ')}, each \`${cmd} ${ctx} --template .claude/review-templates/<lens file>\` (the context file is the plan and its pasted rulings). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> --context <pasted-context file>\`. ${per} Run the lenses of each review in parallel, one call each, outputs r1-<lens>.txt (plan-<lens>.txt and out-<lens>.txt in the lane report dir); then every finding is adjudicated as round 2 by a grounder (KEEP or REJECT with the opened file:line, TRIAGE.md).${grounder}`;
++  return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Plan review lenses: ${plan.map(f).join(', ')}, each \`${cmd} ${ctx} --template .claude/review-templates/<lens file> --context <pasted-context file>\` (the context file is the plan and its pasted rulings; the pasted-context file holds the spec clauses and rulings, the same file as for the output lenses; without --context a lens sees "(no pasted context provided)"). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> --context <pasted-context file>\`. ${per} Run the lenses of each review in parallel, one call each, outputs r1-<lens>.txt (plan-<lens>.txt and out-<lens>.txt in the lane report dir); then every finding is adjudicated as round 2 by a grounder (KEEP or REJECT with the opened file:line, TRIAGE.md).${grounder}`;
+ };
+ const ctxRel = `docs/reports/reviews/${taskId}/context-${date}.md`;
+ const ticket = (!dry && /^Ticket:.*$/m.exec(g1r.stdout)?.[0]) || `Ticket: ${taskId} (<label from the G1 ticket>) · lane ${lane} · stage ${stage}`;
+diff --git a/scripts/analysis/proof-slice.mjs b/scripts/analysis/proof-slice.mjs
+index 1c1989390..34c851007 100644
+--- a/scripts/analysis/proof-slice.mjs
++++ b/scripts/analysis/proof-slice.mjs
+@@ -15,6 +15,7 @@ import { spawnSync } from 'node:child_process';
+ import fs from 'node:fs';
+ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
++import { gateVariable } from './gates/variables.mjs';
+ 
+ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+ const DATA = path.join(REPO, 'scripts/analysis/proof-slices.json');
+@@ -125,11 +126,11 @@ const parseArgs = (argv) => {
+   return o.slice && o.out ? o : null;
+ };
+ 
+-const realIo = () => ({
++export const realIo = () => ({
+   readFile: (f) => fs.readFileSync(f, 'utf8'),
+   run: (argv, { timeoutMs }) => {
+     const [cmd, ...rest] = argv;
+-    return spawnSync(cmd === 'node' ? process.execPath : cmd, rest, { cwd: REPO, encoding: 'utf8', timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024 });
++    return spawnSync(cmd === 'node' ? process.execPath : cmd, rest, { cwd: REPO, encoding: 'utf8', timeout: timeoutMs, maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024 });
+   },
+   head: spawnSync('git', ['rev-parse', 'HEAD'], { cwd: REPO, encoding: 'utf8' }).stdout.trim(),
+   writeFile: (f, t) => fs.writeFileSync(f, t),
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index 5fcfa111d..e9658403e 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -210,6 +210,16 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+     expect(e).toMatch(/round 2/);
+     expect(e).toContain('NEVER run one generic pass');
+   });
++  // task-375 FIX.TOOLS D11 (Spec 08 section 7 rule 4 dated note, 08_agents.md:338; scripts/deepseek-review.js:189 fills "(no pasted context provided)" when --context is absent):
++  // every plan lens command carries --context, as the output lens commands do.
++  it('every plan lens command carries --context, and the --context value is not a flag', () => {
++    const e = lensBrief('build', 'scripts/analysis/x.mjs, src/tests/');
++    const seg = /Plan review lenses: ([\s\S]*?)\. Output review lenses/.exec(e)?.[1] ?? '';
++    const cmd = /each `([^`]+)`/.exec(seg)?.[1] ?? '';
++    expect(seg).toContain('plan-review-deepseek.md');
++    expect(cmd).toContain('scripts/deepseek-review.js review');
++    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context <pasted-context file>/);
++  });
+   it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
+     for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
+       expect(lensBrief('build', files), files).toContain('lens-security.md');
+diff --git a/src/tests/proof-slice.logic.test.ts b/src/tests/proof-slice.logic.test.ts
+index efea4d8be..e0125ca1e 100644
+--- a/src/tests/proof-slice.logic.test.ts
++++ b/src/tests/proof-slice.logic.test.ts
+@@ -265,3 +265,20 @@ describe('T9 task-363 input guards: null suite, bad timeoutMs, unwritable --out
+     expect(byId('design-fit')?.notbuilt.blockedBy).toEqual(['task-345', 'task-67']);
+   });
+ });
++
++// task-375 FIX.TOOLS D10 (Spec 132 core.8, 132_step_standard_handbook.md:154 "Runner and gate numbers are pinned `step_*` / `gate_*` / `tooling_*` variables"):
++// the runner's child-output ceiling is the registered tooling_spawn_max_buffer_mb, not a typed 16 MiB.
++describe('D10 task-375: the child-output ceiling is the registered variable', () => {
++  it('a real child that writes 20 MiB to stdout is not cut off (the typed 16 MiB ceiling cut it off with ENOBUFS)', async () => {
++    const mod = (await import('../../scripts/analysis/proof-slice.mjs')) as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
++    const r = mod.realIo().run(['node', '-e', "process.stdout.write('x'.repeat(20 * 1024 * 1024))"], { timeoutMs: 60000 });
++    expect(r.error?.code).toBeUndefined();
++    expect(r.status).toBe(0);
++    expect(r.stdout.length).toBe(20 * 1024 * 1024);
++  });
++  it('the maxBuffer argument is read from tooling_spawn_max_buffer_mb through gateVariable, with no typed MiB literal', () => {
++    const src = fs.readFileSync(path.join(REPO, 'scripts/analysis/proof-slice.mjs'), 'utf8');
++    expect(src).toMatch(/maxBuffer:\s*gateVariable\('tooling_spawn_max_buffer_mb'\)\s*\*\s*1024\s*\*\s*1024/);
++    expect(src).not.toMatch(/maxBuffer:\s*\d/);
++  });
++});
+

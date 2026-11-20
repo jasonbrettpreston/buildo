@@ -1,0 +1,19 @@
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:20:59.400Z file_sha256=78a316ae5703afcf63c96db26c471243da5fef4a5ee06a91c34f8efff990954f prompt_sha256=9687f4cf0f1bce5a01aa4bf3926bdf3cc1bcc1f252b1763de541b5fce1b3f006
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtools/lens/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+MET — doc-17 preamble, "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — the material under review (scripts/analysis/backlog-lane.mjs:150, src/tests/backlog/backlog-lane.logic.test.ts:213, src/tests/proof-slice.logic.test.ts:269) — the diff cites no RR- entry as authority anywhere: the two test comments cite "Spec 08 section 7 rule 4" and "Spec 132 core.8", so no reading is fed in as a ruling.
+
+REJECT — RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record)" — accused of doing tooling/infra work (gateVariable import in scripts/analysis/proof-slice.mjs:18, spawn ceiling change) under a freeze — not a real issue: doc-17 says "They are NOT the operator's words as a ruling and never feed a review as a ruling", and even inside the list RR-0001 records the freeze "lifted for the named list only" as a reading, so no pasted decision binds this change.
+
+REJECT — RR-0008 "RULED: storage computed on first open, then stored" — accused of touching stored/computed report behaviour — not a real issue: the diff changes only a review-brief string, a spawn maxBuffer read and their tests (scripts/analysis/backlog-lane.mjs:150, scripts/analysis/proof-slice.mjs:132); nothing in storage, lots or report computation is touched, and the entry is a reading, not a ruling.
+
+REJECT — Spec 08 section 7 rule 4 (cited at src/tests/backlog/backlog-lane.logic.test.ts:213 "Spec 08 section 7 rule 4 dated note, 08_agents.md:338") — accused of requiring plan-lens "--context" — cannot be checked: that clause and 08_agents.md:338 are not pasted (context block reads "(no pasted context provided)"), and a clause that is not pasted is not mine to invent; the only pasted list is doc-17, whose entries the document itself declares non-rulings.
+
+REJECT — Spec 132 core.8 (cited at src/tests/proof-slice.logic.test.ts:269 "Spec 132 core.8, 132_step_standard_handbook.md:154") — accused of requiring "tooling_spawn_max_buffer_mb" instead of a typed 16 MiB — cannot be checked: 132_step_standard_handbook.md:154 is not pasted, and no pasted entry names a spawn-buffer variable, so I can neither confirm nor reject the requirement.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 1   Unmet: 0
+
+---
+⏱  13763ms (13.8s)
+📊 Tokens — total: 17642, input: 14966, output: 2676, reasoning: 2030

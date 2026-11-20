@@ -1,0 +1,44 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-20T15:13:07.450Z file_sha256=de947d3b9a84333d9477f6cd2da45a4fea0416cf06cd4f867340e43342440dae prompt_sha256=35713d1029379ee103c8e33be3761e1d939b6a9e49dc1065787911aab219dcdb
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtools/lens/plan-material.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9567 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19586 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 28472 chars, answer 1936 chars, 45s
+BUG severity=HIGH — Changes §1 (proof-slice.mjs `gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024`) — no stated behaviour when the variable is absent/non-numeric: `gateVariable` returning `undefined` yields `maxBuffer: NaN` (Node throws `ERR_OUT_OF_RANGE`), and a reader that throws at module scope takes proof-slice down at import — i.e. the proof tool dies exactly in a fresh worktree where the seed/artifact isn't loaded — fix: read the value lazily inside `realIo().run`, reject non-finite/≤0 with a named error, and add the negative test (variable missing → explicit message, not NaN).
+
+BUG severity=HIGH — Tests §2 (`the plan-lens segment … contains --context for every plan lens command`) — this assertion goes green on a malformed command line: `--context` immediately followed by `--template <file>` parses the template path as the context value, and an empty/greater-than-zero re-ordering is also accepted — fix: assert the exact emitted shape for at least one known plan lens (`… --context <non-empty value> --template <file>`, value before `--template`) and that the segment matches ≥1 plan lens command.
+
+BUG severity=MED — Changes §2 (` --context <pasted-context file>`, "same token the output lenses carry") — the degraded path today is deepseek-review.js:189 emitting "(no pasted context provided)"; the plan does not state that a plan-lens run with a missing/absent context file still degrades rather than erroring, so the fix can convert a silent soft-fail into a hard review failure across every lane — fix: state the fallback (deepseek-review treats an unreadable `--context` path as no-context) and cover it with the same test's fixture.
+
+DEFER severity=MED — Changes §1 ("16 MiB → 256 MiB", D10b timeout left literal) — the buffer was the only implicit runaway-output guard; a child that floods stdout now buffers up to the 256 MiB ceiling (per process, times concurrent lane proofs) before the unchanged 120 s timeout kills it — rationale: clamp or warn (`Math.min(value, 64)`, or log when stdout > 16 MiB) stays compatible with "no limit shrinks".
+
+DEFER severity=MED — Not touched (`check-lane-close.mjs`) — the same defect class (typed literals in analysis tooling, shared lensSet/lens regex) lives in a file the plan names as untouched without saying it was checked — check: `grep -n "maxBuffer\|120000\|16 \* 1024" scripts/analysis/check-lane-close.mjs scripts/deepseek-review.js scripts/lib/*.js`; either fix in-lane or add to the owed list.
+
+DEFER severity=MED — Sibling of D11d (lens-compliance.md duplicate `{{PLAN}}`) — the guard test at review-lens-template.infra.test.ts:101-103 targets compliance only, so duplicate/missing `{{PLAN}}`/`{{SPECS}}` in the other `.claude/review-templates/*.md` files stays invisible — check: loop every template asserting exactly one `{{PLAN}}` and one `{{SPECS}}`.
+
+DEFER severity=MED — Sibling of D11c/D11d (placeholder/substitution class) — backlog-brief.mjs emits the literal word "undefined" where a quote belongs (named in the milestone Problems; `"undefined"` appears on four Storage set-up lines and four Register rulings lines of this very brief), same generator family that builds the lens context this task touches — check: `grep -n "undefined" docs/reports/plan-import/**/*.json` plus a `quote ?? ''` guard in the generator.
+
+DEFER severity=MED — Changes §1 rollout — if `gates/variables.mjs gateVariable()` reads a generated variables artifact rather than the committed `scripts/seeds/logic_variables.json`, proof-slice breaks in fresh worktrees until the artifact is regenerated, and the plan names no regeneration/verification step — check: one `node -e "import('./scripts/analysis/gates/variables.mjs').then(m=>console.log(m.gateVariable('tooling_spawn_max_buffer_mb')))"` in the lane proof, run from a clean checkout.
+
+DEFER severity=LOW — Tests §1 (`no '16 * 1024 * 1024' literal in the runner source`) — formatting-brittle: `16*1024*1024`, `16777216` and `0x1000000` all pass while still hardcoding the ceiling — assert the gateVariable expression is present in the `maxBuffer:` argument instead of the absence of one spelling.
+
+DEFER severity=LOW — Tests §1 (child writes 20 MiB "to stdout") — `maxBuffer` bounds stdout and stderr separately; the plan fixes both but tests one, so a stderr-flooding child is untested — extend the fixture child to write to both streams (one extra line, same assertion shape).
+
+DEFER severity=LOW — Tests §2 ("for every plan lens command") — vacuously true if the plan-lens segment is empty (no plan lenses emitted, e.g. in a reduced-lens run) — assert the matched command count is ≥1 so the test cannot pass on nothing.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- `gateVariable` failure behavior unspecified: missing/NaN/non-numeric value produces a confusing spawnSync error or an import-time crash in the proof tool, with no negative test.
+- The backlog-lane test asserts token presence only and would go green on `--context --template <file>` (template path eaten as the context value).
+- No stated fallback when the plan-lens `--context` path is absent, so the `--context` fix can turn the current "(no pasted context provided)" soft-fail into a hard review failure across lanes.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- "No stored value or golden moves" (Changes §1): nothing depends on ENOBUFS at >16 MiB — verify `grep -rn "ENOBUFS\|maxBuffer\|16777216\|16 \* 1024 \* 1024" scripts src .claude` returns only proof-slice plus its new test.
+- "tooling_spawn_max_buffer_mb (256, pinned)" and `gateVariable` usable outside a gate run — verify `grep -n -A4 '"tooling_spawn_max_buffer_mb"' scripts/seeds/logic_variables.json` shows `256` and a pin flag, and `node -e "import('./scripts/analysis/gates/variables.mjs').then(m=>console.log(typeof m.gateVariable('tooling_spawn_max_buffer_mb'), m.gateVariable('tooling_spawn_max_buffer_mb')))"` prints `number 256`.
+- "same token the output lenses carry" plus graceful handling of an absent context file — verify `grep -n "context" scripts/analysis/backlog-lane.mjs | head -20` and `sed -n '180,200p' scripts/deepseek-review.js` show the output-lens token is in scope for the plan clause and that a missing path yields the no-context branch rather than an error.
+
+---
+⏱  50165ms (50.2s)
+📊 Tokens — total: 19838, input: 11175, output: 8663, reasoning: 7051

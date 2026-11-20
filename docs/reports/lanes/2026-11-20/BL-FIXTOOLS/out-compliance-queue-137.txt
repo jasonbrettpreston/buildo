@@ -1,0 +1,23 @@
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:20:59.390Z file_sha256=90f65935741d01f2d48b9f00725a672945e381bce17d04bce7d3aa0045ad26b7 prompt_sha256=acb09d4ce140886fd8fa389ef8dfebfa557ff65774808b2014173ba74127afa4
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtools/lens/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10385 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21479 chars, answer 0 chars, 30s
+BUG severity=HIGH — Spec 137 §1 McLane amendment, Rule 3 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff; docs, spec, queue-row, backlog-only and merge commits are exempt" — scripts/analysis/proof-slice.mjs:18 "+import { gateVariable } from './gates/variables.mjs';" (and src/tests/proof-slice.logic.test.ts:274 "+// task-375 FIX.TOOLS D10") — the diff changes `scripts/` and `src/tests/`, so G3 applies, yet the diff carries no `backlog/` task or draft file for task-375, leaving the file half of the clause visibly unmet and the trailer half not visible at all — put `backlog/tasks/task-375*.md` (front matter status line updated, §3 amendment) into this same commit.
+
+DEFER severity=MED — Spec 137 §4 dated note 2026-11-20 (task-366 COMPLY.2) "the close of a lane's task ... now also needs, in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`), one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding; `scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them" — src/tests/backlog/backlog-lane.logic.test.ts:213 "// task-375 FIX.TOOLS D11 (Spec 08 section 7 rule 4 dated note, 08_agents.md:338" with no `docs/reports/lanes/` path anywhere in the diff — if the commit this diff belongs to sets task-375 BUILT or DONE, the close is refused; the commit message is not pasted so the status transition cannot be seen — include the lane report copies (out-compliance-<list>.txt per attached list, plus GROUNDER.md) in that close commit.
+
+MET — Spec 137 §4 rule 2 "Every task is registered. A card, or a claimed id, gets a status line too." — scripts/analysis/backlog-lane.mjs:150 — the diff claims no new id, card or number; both test comments name the existing task-375, so no unregistered task is introduced.
+
+MET — Spec 137 §5a rule 13 "The board is a view; the row is the record. ... Nobody edits the board." — scripts/analysis/backlog-lane.mjs:150 — the diff touches no board file, no `Status:` line and no `BOARD-STATUS.txt`, so the view-versus-record split is untouched.
+
+REJECT — Spec 132 core.8, cited in src/tests/proof-slice.logic.test.ts:269 "Spec 132 core.8, 132_step_standard_handbook.md:154" — the change is accused of pinning the spawn ceiling to `gateVariable('tooling_spawn_max_buffer_mb')` without a pasted authority — Spec 132 is not in this run's pasted list and Spec 137 contains no clause on runner, gate or `tooling_*` variables, so this lens cannot judge it.
+
+REJECT — Spec 137 §1 amendment, Rule 8 "for plan tasks a task comment replaces the card" — the change is accused of adding plan-lens `--context` behaviour that no pasted clause names — the only stated authority, "Spec 08 section 7 rule 4 dated note, 08_agents.md:338" (src/tests/backlog/backlog-lane.logic.test.ts:213), is not pasted, and Spec 137 governs queue rows, homes and the board, not the review tool's arguments.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  37696ms (37.7s)
+📊 Tokens — total: 19440, input: 11991, output: 7449, reasoning: 6567

@@ -1,0 +1,43 @@
+LIST agents-s5-1to3 sha256:be92afaacf4acc939b88110b6e2fb525a3a1d12a727dc9265f57a539e72f910b material sha256:de947d3b9a84333d9477f6cd2da45a4fea0416cf06cd4f867340e43342440dae part 1 of 1
+RULE LIST agents-s5-1to3 (docs/specs/00-architecture/08_agents.md, sections 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+### 5.1 Compliance (spec → code)
+**Question:** *Given a spec and the implementation, does the code SATISFY every clause of the spec's Behavioral Contract + Auth Matrix?* Item-by-item, spec-clause → code-line, PASS/FAIL.
+**Substrate:** DeepSeek CLI at plan altitude (`spec <path>`), or a `general-purpose` agent for the code diff.
+**Distinct from A3/A5 because:** Code Reviewer asks "is the code good?"; Integration asks "does it match the *codebase*?"; Compliance asks "does it match the *spec*?" — a clause the spec mandates but the code omits (e.g. Spec 21 §6's phantom `stripe_cancel_failed` directory filter, which the spec promised and the code never built) is a Compliance finding no other role owns.
+**HARD DEPENDENCY:** Compliance is only meaningful if the spec is TRUE. Run **Ground-truth (§5.2) FIRST**; a stale spec makes compliance-checking a check against fiction (manual §8.3).
+
+### 5.2 Ground-truth (reality → spec)
+**Question:** *Is the SPEC still true?* For each load-bearing claim in the spec, verify it against the live code / DB / behavior; report every drift as "spec §X says A; reality is B."
+**Substrate:** `general-purpose` (main tree + live DB) — it needs to read code AND query the schema/data.
+**Absorbs "spec-freshness enforcement":** you do NOT need a separate up-to-dateness agent — spec drift IS this agent's primary output. Enforcement = (a) Ground-truth runs at the START of any WF that touches a spec-governed area, and (b) a **standing periodic Ground-truth sweep** (a scheduled routine — see §7) that diffs high-traffic specs against reality and files drift to `review_followups.md`. This directly serves CLAUDE.md Prime Directive #10 (spec-first, no assumptions).
+**Why:** the manual's single most-cited failure (§8.3) is planning against a stale spec. Spec 20 described unbuilt routes; Spec 95/97 described a retired immediate-cancel design after the period-end ruling. Ground-truth is the antibody.
+
+### 5.3 Round-2 adjudication — FORMALIZE the existing practice
+**Substrate: DeepSeek CLI produces the pass; Integration (`general-purpose`, main tree) is its grounder** — already practised, now stamped (§A/§B).
+Not a new agent — a **mandatory second pass**. After the panel returns findings, run **DeepSeek + Integration against the *proposed findings/changes*** (not the code): for each finding, is the premise true, is the ruling already settled, does the fix cost less than the risk? This operationalizes manual §6.3 (⅓ false premises). Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8). Round-2 is cheap (DeepSeek) and catches the eager-fix (§8.4).
+
+Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2, lane BL-COMPLY2, Increment 1·B; the infra freeze is lifted for it by name; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the 2026-11-20 entries: "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." and "yes to McStorage and 1,2,3 yes as recommended" (the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table)): the mechanical half of section 7 rule 4 and section 5.3 is built in the repo. (1) `scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code, says which rule lists (whole files, or whole sections where the file itself separates rules from history) govern a touched path; it reuses the path maps of `mcbylaws/protected-paths.json` (`layer23`, `frontend`) instead of copying them. (2) `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through it, refuses a task with no Files line (a record-only task gets the queue lists) or an unmatched path with the path named, puts the governing lists into the brief (READ each whole before planning) and runs the compliance lens once per list with the list pasted whole ahead of the plan or diff (`scripts/analysis/rule-lists.mjs lens-input`; a list is split by its own headings when list plus material pass the review tool bound, never trimmed). (3) `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane) with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding of the lens outputs; presence and form only, the judgement stays with the grounder (rule 4: a separate grounder rules on every finding; this section: rejections carry reasons). The lane that wrote the work leaves the task RUNNING with "grounder owed".
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+# PLAN task-375 FIX.TOOLS (lane BL-FIXTOOLS)
+
+## Confirmed on the head (8383e9e4c), by defect
+- D10a buffer: scripts/analysis/proof-slice.mjs:132 `maxBuffer: 16 * 1024 * 1024` (literal). Variable exists: scripts/seeds/logic_variables.json:9759 tooling_spawn_max_buffer_mb (256, pinned), reader scripts/analysis/gates/variables.mjs gateVariable() used the same way at scripts/analysis/gates/net-new.mjs:155.
+- D10b timeout: proof-slice.mjs:21 `DEFAULT_TIMEOUT_MS = 120000`. No registered tooling_ variable for it exists (grep of the seed: only tooling_spawn_max_buffer_mb, tooling_precommit_budget_*). Registering one needs a migration number claim in ~/Buildo-scratch/ids (outside this lane's write scope) plus a migration, seed row, registry doc and the control-panel key list. NOT done in this lane; listed as an owed item.
+- D11a plan lens commands: scripts/analysis/backlog-lane.mjs lensLine, "Plan review lenses: ... each `${cmd} ${ctx} --template ...`" has no --context (the output lens commands in the same line do). Plan lenses see "(no pasted context provided)" (scripts/deepseek-review.js:189).
+- D11b security lens never fires for admin or PII: the regex is scripts/analysis/rule-lists.mjs:128 `/entitlement|auth|stripe|metered/i` inside lensSet (shared with the close check). The brief forbids changing rule-lists.mjs. NOT fixed; listed.
+- D11c review-template dollar expansion: ALREADY FIXED by task-366: scripts/lib/review-template.js:74-78 one pass with a function replacer; test src/tests/review-template.logic.test.ts:193-198.
+- D11d lens-compliance.md placeholder twice: ALREADY FIXED by task-366: one {{PLAN}} (line 34) and one {{SPECS}} (line 39); test src/tests/review-lens-template.infra.test.ts:101-103.
+
+## Changes (smallest; existing components)
+1. proof-slice.mjs: import gateVariable from ./gates/variables.mjs; realIo().run uses `maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024`; export realIo (so a test can spawn a real child). One move: the child-output ceiling 16 MiB -> 256 MiB (the registered value, "the largest former literal, so no limit shrinks", seed description). No stored value or golden moves; a row that wrote more than 16 MiB used to fail with ENOBUFS and now passes.
+2. backlog-lane.mjs lensLine: the plan lens clause gets ` --context <pasted-context file>` (same token the output lenses carry), with one sentence naming it. No other text moves.
+## Tests (red first through the real hooks)
+- src/tests/proof-slice.logic.test.ts: realIo().run of a child writing 20 MiB to stdout returns status 0 and a 20 MiB stdout; red now (ENOBUFS at 16 MiB). And no `16 * 1024 * 1024` literal in the runner source.
+- src/tests/backlog/backlog-lane.logic.test.ts: the plan-lens segment of the lens line contains --context for every plan lens command; red now.
+## Not touched
+check-lane-close.mjs, rule-lists.mjs, rule-lists.json; operator items C1-C5, 48/44 px, the 60 s wait value.
+## Operator/orchestrator items owed
+(1) D10b timeout variable needs a migration number claim (outside write scope). (2) D11b security regex lives in rule-lists.mjs (forbidden to change here).
+

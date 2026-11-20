@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:13:07.449Z file_sha256=ecf66640a8ed96acaa475fab84e7f40806565c49848dbf6e7d88d5ea121f2375 prompt_sha256=dd841a6dba55d9c4f2c7b2f578faa495c83a23ed535c7d56234112635a8491e3
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtools/lens/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — doc-17 header "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)." — NONE — the pasted rule list is a readings register that disqualifies itself as review input, so there are zero governing clauses to score this plan against — no fix inside the plan; re-run with the operator ruling text pasted as context
+DEFER severity=LOW — plan "NOT done in this lane; listed as an owed item." — NONE — D10b timeout constant "DEFAULT_TIMEOUT_MS = 120000" is left unfixed by the plan's own admission, and no pasted clause states what the timeout must be, so I can neither pass nor fail it — carry D10b as an open compliance item until the ruling that fixes the timeout value is pasted
+DEFER severity=LOW — plan "NOT fixed; listed." — NONE — D11b "the regex is scripts/analysis/rule-lists.mjs:128 `/entitlement|auth|stripe|metered/i`" is knowingly left unfixed, and the clause requiring the security lens to fire on admin or PII is not pasted — treat D11b as unmet-by-design pending the pasted clause, do not let it pass silently at plan-lock
+DEFER severity=LOW — plan "the registered value, "the largest former literal, so no limit shrinks", seed description" — NONE — the 16 MiB to 256 MiB ceiling move rests on a seed row description, not on a pasted spec clause or operator ruling, so no pasted clause authorises it — paste the ruling or variable-registry clause that sets tooling_spawn_max_buffer_mb as the ceiling
+DEFER severity=LOW — plan "operator items C1-C5, 48/44 px, the 60 s wait value." — NONE — the plan asserts these are untouched, but the rulings naming them are not pasted, so the assertion of non-interference cannot be checked — paste the C1-C5, 48/44 px and 60 s rulings in the next run
+REJECT — RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit" — accused of adding tooling work under an infra freeze — not a real issue: doc-17 states the readings never feed a review as a ruling, so RR-0110 is not a governing clause here
+REJECT — RR-0111 "Permit step conversion stays frozen (Spec 137 rule 11)" — accused of unfreezing a permit step — not a real issue: nothing in the material touches permit step conversion, and the line is a reading, not a ruling
+REJECT — doc-17 readings generally, e.g. RR-0006 "Loading screen setting is 35 s (LOAD.3: max raised to 35,000 ms)" — accused of breaking the 35 s loading value — not a real issue: no loading-screen code is in the changes, and the item is a reading the doc bars from review use
+
+VERDICT: PASS on compliance with the pasted clauses (vacuous: the pasted part is a readings register, 0 governing clauses)
+Clauses checked: 0   Unmet: 0
+
+---
+⏱  13322ms (13.3s)
+📊 Tokens — total: 15203, input: 12965, output: 2238, reasoning: 1521

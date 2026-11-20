@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:13:07.450Z file_sha256=0de4651a6022154a11270ae38d95bce304287f242a25aa5b2236dfa707e862b9 prompt_sha256=4e1eca4794cc67d979c4c1b1cc3866ab32e892bf1c933006c1beb5d7a393eedd
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtools/lens/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10573 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21102 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30837 chars, answer 1964 chars, 45s
+BUG severity=HIGH — Spec 137 §4 Rule 3 amendment (G3) "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — PLAN "Changes (smallest; existing components)" "1. proof-slice.mjs: import gateVariable from ./gates/variables.mjs ... 2. backlog-lane.mjs lensLine: the plan lens clause gets ` --context <pasted-context file>`" — both changed files are under scripts/ and src/tests, yet no step puts the task-375 Backlog file in the same diff nor adds a `Task: task-375` trailer, so check-backlog-task.mjs refuses the landing commit — add a step: edit the task-375 Backlog file and land both scripts in one commit carrying `Task: task-375`.
+
+BUG severity=HIGH — Spec 137 §4 Rule 3 "The status line changes in the same commit as the work." — PLAN "Not touched: check-lane-close.mjs, rule-lists.mjs, rule-lists.json; operator items C1-C5, 48/44 px, the 60 s wait value." — no step sets task-375's front matter (`status`, `expires` per rule 7) in the landing commit, so the row stays stale while the fix lands — add the front matter edit (RUNNING at start, BUILT at close, expiry per rule 7) to the same commit.
+
+DEFER severity=MED — Spec 137 §4 dated note 2026-11-20 "one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding; `scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them" — PLAN "Operator/orchestrator items owed (1) D10b timeout variable needs a migration number claim (outside write scope). (2) D11b security regex lives in rule-lists.mjs (forbidden to change here)." — the owed list omits the close evidence, so the BUILT commit will be refused — add a step writing the compliance lens output(s) and GROUNDER.md under `docs/reports/lanes/<date>/BL-FIXTOOLS/`.
+
+DEFER severity=LOW — no pasted clause authorises the runner limit change; the card that does is not pasted (cannot see its wording) — PLAN "One move: the child-output ceiling 16 MiB -> 256 MiB (the registered value, \"the largest former literal, so no limit shrinks\", seed description)." — a row that used to fail with ENOBUFS now passes, and no pasted Spec 137 clause or ruling names that behaviour change — paste task-375's D10a text or the seed row as the governing clause, or hold the ceiling move.
+
+REJECT — Spec 137 §4 Rule 2 source, ID ledger "Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere" — accused of leaving D10b's tooling timeout variable unregistered — the clause forbids using an unclaimed number and the plan uses none: "NOT done in this lane; listed as an owed item."
+
+REJECT — Spec 137 §1 item 1 "Tasks stay in their homes (§2). McQueue does not move them, copy them or keep an index of them." — accused of relocating task homes — the plan only edits analysis scripts and tests, it creates no index, copy or move.
+
+MET — Spec 137 §4 Rule 2 "Every task is registered." — PLAN "PLAN task-375 FIX.TOOLS (lane BL-FIXTOOLS)" — the work is carried under one existing task id, no new row is invented.
+
+MET — Spec 137 §4 dated note 2026-11-20 "the launch refuses a task whose Files line is missing or matches no row" — PLAN header "PLAN task-375 FIX.TOOLS (lane BL-FIXTOOLS)" — the lane is already running against its Files line, so a rule-lists.json row matched and the launch clause is not re-raised.
+
+MET — Spec 137 §5a Rule 13 "Nobody edits the board. A change on the board changes nothing" — PLAN "Not touched: check-lane-close.mjs, rule-lists.mjs, rule-lists.json" — no queue-row or board edit is proposed, the record stays on its row.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  47182ms (47.2s)
+📊 Tokens — total: 19310, input: 9990, output: 9320, reasoning: 8288

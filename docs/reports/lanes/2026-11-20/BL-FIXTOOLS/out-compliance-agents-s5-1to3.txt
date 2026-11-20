@@ -1,0 +1,33 @@
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:20:59.389Z file_sha256=3eea50f1699b8bc52e45c33e350daf67912f53d11ededd7bb4c86cb60eef4dad prompt_sha256=6e08c7045de0d9375db199fb21212fe8609e33f46bdec8fd581d76db90a278c2
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixtools/lens/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11293 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23265 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34842 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 46063 chars, answer 301 chars, 60s
+DEFER severity=MED — dated note 2026-11-20 (2) "runs the compliance lens once per list with the list pasted whole ahead of the plan or diff" — scripts/analysis/backlog-lane.mjs:150 "the pasted-context file holds the spec clauses and rulings, the same file as for the output lenses" — the plan-lens `--context` addition is named by no pasted clause (the relying clause in the test comment, "Spec 08 section 7 rule 4, 08_agents.md:338", is not pasted), and if that file is the one already passed positionally as ${ctx}, the plan and its rulings are pasted twice into every plan lens, an unnamed duplication with no splitting rule to bound it — paste 08_agents.md section 7 rule 4 into the context, or drop the plan-lens `--context` and keep the note's lens-input path as the only carrier
+
+DEFER severity=MED — dated note 2026-11-20 (1)-(3) "scripts/analysis/rule-lists.json is the path to rule-list table ... backlog-lane.mjs ... check-lane-close.mjs (commit-msg) refuses a commit" — scripts/analysis/proof-slice.mjs:133 "maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024" — the diff adds behaviour (a fourth mechanism file, a gate variable read, a 20 MiB child-output ceiling) that no pasted clause names; the authorising text, "Spec 132 core.8, 132_step_standard_handbook.md:154", is not pasted — paste Spec 132 core.8 into the context so the variable name and ceiling are checkable, or move this hunk to a lane governed by that spec
+
+DEFER severity=MED — 5.1 "HARD DEPENDENCY: Compliance is only meaningful if the spec is TRUE. Run Ground-truth (5.2) FIRST" — scripts/analysis/backlog-lane.mjs:150 "then every finding is adjudicated as round 2 by a grounder (KEEP or REJECT with the opened file:line, TRIAGE.md)" — the brief schedules plan lenses, the per-list compliance lens and round-2 grounding, but names no ground-truth pass ahead of the compliance lens, so the pasted hard dependency is unmet by the artifact (no other scheduler visible) — add a ground-truth step before the compliance lens that names the spec files the Files line resolves to
+
+DEFER severity=LOW — dated note 2026-11-20 (2) "runs the compliance lens once per list with the list pasted whole ahead of the plan or diff (scripts/analysis/rule-lists.mjs lens-input)" — scripts/analysis/backlog-lane.mjs:148 "<each input file> --template .claude/review-templates/lens-compliance.md > P-compliance-L[-pN].txt" — the same brief now says plan lenses carry `--context` while the plan-stage per-list compliance command carries none, so two readers of one brief run two different plan commands, and the note names only the lens-input path — state in the per-list sentence that plan-stage compliance runs from the lens-input file and needs no `--context`, or add it there too
+
+MET — 5.3 "Rejected findings are written to the plan with reasons" — scripts/analysis/backlog-lane.mjs:149 "[reason: needed for REJECTED and CONFLICT]" — rejections and conflicts carry a mandatory reason field
+
+MET — dated note 2026-11-20 (3) "a GROUNDER.md whose Grounder: is not the Lane: (and not the task's lane)" — scripts/analysis/backlog-lane.mjs:149 "the grounder is not the lane and not any assignee of the task" — independence of the grounder is stated
+
+MET — dated note 2026-11-20 (3) "The lane that wrote the work leaves the task RUNNING with 'grounder owed'" — scripts/analysis/backlog-lane.mjs:149 "leave the task RUNNING with \"grounder owed\"" — unchanged and still required
+
+MET — dated note 2026-11-20 (2) "a list is split by its own headings when list plus material pass the review tool bound, never trimmed" — scripts/analysis/backlog-lane.mjs:148 "parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound" and "a list is never trimmed" — splitting by bound only, trimming forbidden
+
+MET — dated note 2026-11-20 (2) "runs the compliance lens once per list" — scripts/analysis/backlog-lane.mjs:148 "Files to produce, one per list: ${ids.map((i) => 'plan-compliance-' + i + '.txt, out-compliance-' + i + '.txt').join('; ')}" — one plan and one out output per attached list
+
+MET — 5.3 "After the panel returns findings, run DeepSeek + Integration against the proposed findings" — scripts/analysis/backlog-lane.mjs:150 "then every finding is adjudicated as round 2 by a grounder (KEEP or REJECT with the opened file:line, TRIAGE.md)" — the second pass is preserved by the diff
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  64189ms (64.2s)
+📊 Tokens — total: 18326, input: 5356, output: 12970, reasoning: 11772

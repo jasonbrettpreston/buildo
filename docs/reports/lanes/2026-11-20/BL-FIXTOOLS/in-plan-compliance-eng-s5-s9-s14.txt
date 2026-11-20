@@ -1,0 +1,124 @@
+LIST eng-s5-s9-s14 sha256:6bf659d4ca053a9bd5e0e5bbe96b0f8dfac086538ca468840dafcb277d149427 material sha256:de947d3b9a84333d9477f6cd2da45a4fea0416cf06cd4f867340e43342440dae part 1 of 1
+RULE LIST eng-s5-s9-s14 (docs/specs/00_engineering_standards.md, sections 5. Testing Standards; 9. Pipeline & Script Safety; 14. The Prevention Loop), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 🧪 5. Testing Standards
+
+### 5.1 Typed Factories Only
+- **Rule:** Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`.
+
+### 5.2 Test File Pattern
+| Pattern | Tests | Mandated when | Example |
+|---------|-------|---------------|---------|
+| `*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic | `scoring.logic.test.ts` |
+| `*.ui.test.tsx` | React component rendering, interactions | Any new/changed component | `admin.ui.test.tsx` |
+| `*.infra.test.ts` | API routes, DB queries, external calls | New API route / DB mutation (unhappy path first, §5.3) | `api.infra.test.ts` |
+| `*.security.test.ts` | Negative/abuse — blocks malicious payloads and unauthorized users | Auth-guarded / externally-reachable surfaces | `auth.security.test.ts` |
+| DB replay (`*.db.test.ts` under `BUILDO_TEST_DB=1 npm run test:db`; Spec 124 R-DH) | Real Postgres: IMMUTABLE/NOT NULL/FK/length/index errors a SQL-string test misses | Any migration touching schema/constraints/indexes (run before push) | `assert-data-bounds.infra.test.ts` |
+| `*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence | `coa-cost-model.regression.test.ts` |
+| Parity battery (`*.infra.test.ts` / `*.logic.test.ts`) | Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator) | Any dual-surface or generated artifact (drift guard) | `control-panel.logic.test.ts`, `logic-vars-registry.infra.test.ts` |
+
+### 5.3 Red-Green Test Cycle (Golden Rule)
+- **Rule:** You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails.
+- **Execution:** For new API routes and database mutations, the failing test MUST be an `.infra.test.ts` that exercises the **unhappy path** (error responses, invalid input, missing auth). For pure logic, use `.logic.test.ts`. Run the test and confirm it fails — only then implement the code to make it pass (Green Light). This is the single strongest defense against hallucinated or untested code.
+
+### 5.4 Test Data Seeding
+- **Rule:** To set up specific DB scenarios for testing or demos, create `scripts/seed-[scenario].js`. Define a JSON state object, insert it, and verify DB contents.
+
+### 5.5 Test-Layer Map — which layer proves what
+The six layers of §5.2 are complementary, not interchangeable. Pick the layer that *proves the claim*; a green suite in the wrong layer is false confidence.
+
+| Layer | Proves | Runs in | Consequence of skipping |
+|-------|--------|---------|-------------------------|
+| `*.logic.test.ts` | The pure function computes the right value on happy + edge inputs. | `npm run test` (default) | Un-pinned derivation logic silently changes value. |
+| `*.ui.test.tsx` | The component renders each state + wires interactions. | `npm run test` | UI regressions ship unseen. |
+| `*.infra.test.ts` (no DB) | API envelope / query shape / error paths (§5.3 unhappy-path-first). | `npm run test` | Hallucinated/untested routes. |
+| DB replay — `BUILDO_TEST_DB=1 npm run test:db` | The migration/query survives **real Postgres**: IMMUTABLE, NOT NULL, FK, length, CHECK, index build. A SQL-string assertion does NOT catch these. | Local opt-in (Docker) / CI | A migration that passes string tests but throws on apply — caught only in production. **Run before pushing any schema change.** |
+| `*.regression.test.ts` | A load-bearing behavior (a documented fence — a past `fix(...)` carrying a Spec 05 §5 severity/lesson footer, an edge-case guard, a workaround) is preserved across a change. | `npm run test` | Chesterton's-Fence: a diff silently drops a behavior that existed for a reason. Authored whenever the Regression Guardian finds an unguarded fence. |
+| Parity battery | Two surfaces that MUST agree stay in lockstep: dual code paths (§7), seed JSON ↔ TS `LOGIC_VAR_DEFAULTS`, and **generated doc ↔ its generator** (the drift guard — regenerate to a buffer, diff the committed file). | `npm run test` | Silent divergence — exactly the doc-rot the generated AI-operator docs (Spec 47 §5, `docs/reference/*`) are gated against. |
+
+**Rule:** a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity — not just the one that is easiest to write.
+
+---
+
+## 🛢️ 9. Pipeline & Script Safety
+
+### 9.1 Transaction Boundaries
+- **Rule:** Pipeline scripts (`scripts/*.js`) that write to the database MUST wrap multi-row mutations in explicit transactions (`BEGIN` / `COMMIT`). The `ROLLBACK` in the catch block MUST itself be wrapped in a nested try-catch to prevent crash-on-rollback-failure.
+
+### 9.2 PostgreSQL Parameter Limit
+- **Rule:** PostgreSQL has a hard limit of **65,535 parameters** per prepared statement. Batch `INSERT` statements in pipeline scripts MUST use sub-batch chunking (e.g., `MAX_ROWS_PER_INSERT = 4000` for a table with 16 columns: 4000 x 16 = 64,000 params).
+- **Execution:** When adding columns to a table that has a batch insert script, recalculate `MAX_ROWS_PER_INSERT` to stay under 65,535. The formula is: `Math.floor(65535 / number_of_columns)`.
+
+### 9.3 Idempotent Scripts
+- **Rule:** All pipeline scripts MUST be safe to re-run. Use `INSERT ... ON CONFLICT DO UPDATE` (upsert) or `DELETE + INSERT` within a transaction rather than bare `INSERT` which fails on duplicate keys.
+
+### 9.4 Pipeline SDK Mandate
+- **Rule:** All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`) for infrastructure concerns. No inline `new Pool({...})` instantiation, no bare `console.error()` for error handling.
+- **Execution:** Every script must:
+  1. `const pipeline = require('./lib/pipeline');`
+  2. Wrap its main logic in `pipeline.run('script-name', async (pool) => { ... })`
+  3. Use `pipeline.createPool()` (handled by `run()`) — never instantiate `Pool` directly
+  4. Use `pipeline.log.{info,warn,error}()` for structured JSON logging
+  5. Use `pipeline.withTransaction(pool, fn)` for all multi-row write operations
+  6. Call `pipeline.emitSummary({ records_total, records_new, records_updated })` before exit
+  7. Call `pipeline.emitMeta(reads, writes, external?)` to declare I/O schema
+- **SDK exports:** `createPool`, `run`, `log`, `withTransaction`, `emitSummary`, `emitMeta`, `progress`, `BATCH_SIZE`, `maxRowsPerInsert`, `isFullMode`
+
+### 9.5 Streaming Ingestion
+- **Rule:** Data loaders that fetch from external APIs (CKAN, etc.) MUST NOT accumulate all records in memory before processing. Use async generator (yield-per-page) streaming to keep peak memory at O(batch_size) rather than O(total_records).
+- **Execution:** Replace array-accumulation fetch patterns with `async function*` generators that `yield` each page of results. Consumers process each batch immediately via `for await...of`.
+
+### 9.6 Pipeline Manifest
+- **Rule:** Pipeline metadata (chain definitions, script paths, table reads/writes, feature flags) MUST be declared in `scripts/manifest.json` as the single source of truth.
+- **Execution:** The chain orchestrator (`scripts/run-chain.js`) reads chain definitions from the manifest rather than hardcoding them. The UI (`FreshnessTimeline.tsx`) exports chain/registry data that must stay consistent with the manifest. Test coverage validates that every manifest entry points to an existing script file and that chain definitions match the UI registry.
+
+### 9.7 Pipeline Observability (Opt-In)
+- **Rule:** The Pipeline SDK (`scripts/lib/pipeline.js`) instruments `run()`, `withTransaction()`, and `progress()` with OpenTelemetry spans and events. Tracing is **opt-in** — it silently no-ops when `@opentelemetry/api` is not installed or no SDK is registered.
+- **Execution:** The tracing bootstrap (`scripts/lib/tracing.js`) attempts `require('@opentelemetry/api')` with a try-catch fallback to no-op stubs. Individual pipeline scripts require zero changes — all instrumentation is SDK-internal. To enable tracing:
+  1. `npm install @opentelemetry/api @opentelemetry/sdk-node @opentelemetry/exporter-trace-otlp-http`
+  2. Set `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` (or Honeycomb/Datadog endpoint)
+  3. Run any pipeline script — spans are exported automatically
+- **Span hierarchy:** `pipeline.run.{name}` (root) → `pipeline.transaction` (per write batch) → `pipeline.progress` events (per progress tick)
+- **Attributes:** `pipeline.name`, `pipeline.duration_ms`, `pipeline.status`, `db.system=postgresql`
+
+---
+
+## 🛡️ 14. The Prevention Loop (findings → protocols → gates)
+
+Detection is not enough. **Every CRITICAL/HIGH review finding (Spec 08 roster) is triaged with a second question beyond "fix it": *"what standing rule would have prevented this whole CLASS, and where does it live?"*** The rule is placed here (or in the domain doc), and where deterministic, **promoted to a machine-read GATE** (husky footgun / ESLint / migration hook) — the strongest form: *a NO-GO the machine reads cannot be shipped past; a guideline eventually will* (operating-manual §2.4). This is the rule-oriented mirror of Spec 05's lesson-routing; the Roster Manager (Spec 08 §5.9) recommends new entries.
+
+**Registry (extracted from real findings — domain-tagged; promote guideline → gate as effort allows):**
+
+| Rule | Class it prevents | Domain | Form |
+|------|-------------------|--------|------|
+| Every `INSERT` provides all **NOT-NULL** columns; every `SELECT` feeding a typed client includes **every field the client type declares** | `lead_analytics` NOT-NULL crash; `DETAIL_COLUMNS` omission → dead UI | backend + admin | Schema-Fidelity agent → *candidate footgun* |
+| An `ON CONFLICT` INSERT **`GROUP BY`s the arbiter expression**, never the raw inputs it's derived from | the `21000` LPAD `lead_key` double-hit | backend | Schema-Fidelity → *candidate lint* |
+| Every **privileged mutation + its audit row** commit in ONE `withTransaction` (extends §R9 from `scripts/` to API routes) | reconcile/retry-cancel unaudited-mutation hole | admin + backend | guideline → *extend footgun* |
+| A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit** | period-end drift (Spec 95/97 stale vs code) | cross-cutting | Ground-truth/Compliance |
+| Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions** | traceability rot; stale cross-refs | cross-cutting | *candidate gate* (Spec 08 §5.10) |
+| A webhook/event that can arrive from a **superseded object** must match the CURRENT owning id before mutating state | the P26 stale-subscription downgrade | backend | guideline |
+
+**Domain protocol specs own their domain-tagged rows and point back here** (this §14 is the cross-cutting canonical registry): **Spec 47** (`docs/specs/01-pipeline/47_pipeline_script_protocol.md`, backend/pipeline), **Spec 34** (`docs/specs/02-web-admin/34_web_admin_testing_protocol.md`, admin), **Spec 90** (`docs/specs/03-mobile/90_mobile_engineering_protocol.md`, frontend/mobile).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+# PLAN task-375 FIX.TOOLS (lane BL-FIXTOOLS)
+
+## Confirmed on the head (8383e9e4c), by defect
+- D10a buffer: scripts/analysis/proof-slice.mjs:132 `maxBuffer: 16 * 1024 * 1024` (literal). Variable exists: scripts/seeds/logic_variables.json:9759 tooling_spawn_max_buffer_mb (256, pinned), reader scripts/analysis/gates/variables.mjs gateVariable() used the same way at scripts/analysis/gates/net-new.mjs:155.
+- D10b timeout: proof-slice.mjs:21 `DEFAULT_TIMEOUT_MS = 120000`. No registered tooling_ variable for it exists (grep of the seed: only tooling_spawn_max_buffer_mb, tooling_precommit_budget_*). Registering one needs a migration number claim in ~/Buildo-scratch/ids (outside this lane's write scope) plus a migration, seed row, registry doc and the control-panel key list. NOT done in this lane; listed as an owed item.
+- D11a plan lens commands: scripts/analysis/backlog-lane.mjs lensLine, "Plan review lenses: ... each `${cmd} ${ctx} --template ...`" has no --context (the output lens commands in the same line do). Plan lenses see "(no pasted context provided)" (scripts/deepseek-review.js:189).
+- D11b security lens never fires for admin or PII: the regex is scripts/analysis/rule-lists.mjs:128 `/entitlement|auth|stripe|metered/i` inside lensSet (shared with the close check). The brief forbids changing rule-lists.mjs. NOT fixed; listed.
+- D11c review-template dollar expansion: ALREADY FIXED by task-366: scripts/lib/review-template.js:74-78 one pass with a function replacer; test src/tests/review-template.logic.test.ts:193-198.
+- D11d lens-compliance.md placeholder twice: ALREADY FIXED by task-366: one {{PLAN}} (line 34) and one {{SPECS}} (line 39); test src/tests/review-lens-template.infra.test.ts:101-103.
+
+## Changes (smallest; existing components)
+1. proof-slice.mjs: import gateVariable from ./gates/variables.mjs; realIo().run uses `maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024`; export realIo (so a test can spawn a real child). One move: the child-output ceiling 16 MiB -> 256 MiB (the registered value, "the largest former literal, so no limit shrinks", seed description). No stored value or golden moves; a row that wrote more than 16 MiB used to fail with ENOBUFS and now passes.
+2. backlog-lane.mjs lensLine: the plan lens clause gets ` --context <pasted-context file>` (same token the output lenses carry), with one sentence naming it. No other text moves.
+## Tests (red first through the real hooks)
+- src/tests/proof-slice.logic.test.ts: realIo().run of a child writing 20 MiB to stdout returns status 0 and a 20 MiB stdout; red now (ENOBUFS at 16 MiB). And no `16 * 1024 * 1024` literal in the runner source.
+- src/tests/backlog/backlog-lane.logic.test.ts: the plan-lens segment of the lens line contains --context for every plan lens command; red now.
+## Not touched
+check-lane-close.mjs, rule-lists.mjs, rule-lists.json; operator items C1-C5, 48/44 px, the 60 s wait value.
+## Operator/orchestrator items owed
+(1) D10b timeout variable needs a migration number claim (outside write scope). (2) D11b security regex lives in rule-lists.mjs (forbidden to change here).
+
