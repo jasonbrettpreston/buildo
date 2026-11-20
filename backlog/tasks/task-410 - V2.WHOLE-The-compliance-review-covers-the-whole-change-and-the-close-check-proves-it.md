@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T19:11:00Z'
+updated_date: '2026-11-20T19:15:00Z'
 labels:
   - McFix
   - McFix V2
@@ -56,4 +56,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 taken on the board at lane launch (lane BL-V2WHOLE, worktree /Users/brettpreston_macmini/Buildo-wt-v2whole, branch wf1/inc1b-v2whole), RR-0240
 
 2026-11-20 part (b) landed (713959765 rule-lists.mjs lens-input splits a diff at file boundaries into chunks stamped chunk c of m with paths; no --list serves the non-compliance lenses). Part (c) in progress: check-lane-close.mjs chunkErrors.
+
+2026-11-20 part (c) landed (ba26e1b81 check-lane-close.mjs chunkErrors; closing commit may stage no path outside the task range). Part (d) in progress: backlog-lane.mjs brief sentence.
 <!-- SECTION:NOTES:END -->
