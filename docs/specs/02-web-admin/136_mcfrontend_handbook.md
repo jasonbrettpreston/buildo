@@ -146,7 +146,7 @@ On a policy question the register governs (Spec 128 §5 dated note 2026-11-04; S
   Status: RULED 2026-11-12 · Enforced by: src/tests/consumer-parcel-lookup-legacy-hide.logic.test.ts · +1 dated note
 
 - **fe.39** Engine inputs bind (EI-D2..EI-D8). The report and its producer bind the final engine fields: one stored headline per lot and option. Size, status, reason and the CoA size come from Layer 3; cost comes from the Spec 88 scenario lines, joined by the producer (M-67 kept, EI-D8). The detail is…
-  Status: OWED · lock owed: src/tests/surfaces/engine-inputs-bind.logic.test.ts
+  Status: OWED · lock owed: src/tests/surfaces/engine-inputs-bind.logic.test.ts · +1 dated note
 
 - **fe.40** McTest: the real app is proven wired by layers run against a separate local test stack, never the dev DB (API journeys, a dead-wire crawler, a lot sweep, stress, failure drills, phone runs). The cases are rows of one catalogue, tests/e2e/scenarios.json (data; no test code names a case). Every row…
   Status: RULED 2026-11-12 · Enforced by: src/tests/mctest/catalogue.infra.test.ts
