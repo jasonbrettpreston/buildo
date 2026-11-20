@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T21:45:00Z'
+updated_date: '2026-11-20T21:46:00Z'
 labels:
   - McFix
   - McFix V2
@@ -102,4 +102,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 round 5 started (grounder r4: H8 and the board read after the moves check). Tests first.
 
 2026-11-20 round 5: check-lane-close.mjs takes the lane assignee from the staged copy else the HEAD copy and the type from the launch copy, so dropping the assignee or retyping cannot hide the lane (H8); the board is read only when a task moves.
+
+2026-11-20 second correcting dated note added to 08_agents.md (the assignee sentence; a close needs the board ref).
 <!-- SECTION:NOTES:END -->
