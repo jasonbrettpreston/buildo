@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXFOOT'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-20T19:02:00Z'
 labels:
   - McFix
   - McFix A
@@ -65,4 +65,6 @@ Grounder verdict 2026-11-20 (separate read-only agent, launched by the orchestra
 2026-11-20 BL-FIXFOOT: D7 confirmed at ReportPage.tsx:251 (plain <a>), D8 confirmed at ReportPage.tsx:240 (no min-h); approved report mock B.html:222 draws the links at min-height:44px so D8 is a code fix. StaticBinding.tsx:90 is a Mantine Button size lg (50px, Button.css:5): not changed. Fix: next/link plus inline-flex min-h-11 items-center on REPORT_FOOTER_LAYOUT.link. Red: red.out (2 failed, 2 passed). Operator items left untouched: C1 to C5, 48 or 44 px, 60 s wait. Lens outputs and untriaged findings in docs/reports/lanes/2026-11-20/BL-FIXFOOT/; grounder owed.
 
 2026-11-20 grounder fold: D8 width. The footer link also gets min-w-11 and justify-center (standards 1.1: 44px x 44px, finding out-compliance-eng-s1#1).
+
+Retro review by a separate grounder 2026-11-20 (task-405), work as on the board: file ~/Buildo-scratch/lanes-20261119/inc1b/retro/BL-FIXFOOT/RETRO-374.md. The code is sound: every web footer link is a router link through the one footerNode.ts builder; 44 px holds for the classes applied; red proved; no golden moved. DEFECTS before a push: (1) Files line omits src/tests/surfaces/site-footer-route.ui.test.tsx. (2) TASK and the 29 lens files sit in lens/. (3) rule-list set stale (now eng-all, five-words, plan-protocol, inc-S, ms-S). (4) no grounder file although a note records a verdict; 129 findings ungrounded (the three fingerprint HIGH findings are false: ReportPage.tsx is not in FP_FILES). (5) three comments contradict the code: ReportPage.tsx:9 and :236, footerNode.ts:7 ('plain tags'; the footer renders next/link). (6) the 44 px test pins class tokens only; the planned static-footer control was not written.
 <!-- SECTION:NOTES:END -->

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXSPECS'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T15:43:00Z'
+updated_date: '2026-11-20T19:02:00Z'
 labels:
   - McFix
   - McFix A
@@ -64,4 +64,6 @@ Plan (BL-FIXSPECS, stage 1). Confirmed on head: D3-a contract_parcels_entitlemen
 2026-11-20 BL-FIXSPECS: defects confirmed on head with file:line (REPORT.md); notes and corrections written; 12 --check scripts before/after in checks-*.out; red.out then commit.out; compliance lens per resolved list (21), findings untriaged in FINDINGS.md; grounder owed; conflicts C1-C5, 48/44 px and the 60 s wait untouched. AC left unchecked: AC3 needs the separate grounder verdict.
 
 2026-11-20 grounder fold fixes (coordinator): dropped the mobile legal-line clause from the Spec 135 footer note (operator ruled C3 b; BL-LEGAL task-389 writes the new position in Spec 100); removed the vacuous or brittle test cases (19 -> 14); deleted the closing sentence of the Spec 100 note; item (1) meter wording made precise.
+
+Retro review by a separate grounder 2026-11-20 (task-405), work as on the board: file ~/Buildo-scratch/lanes-20261119/inc1b/retro/BL-FIXSPECS/RETRO-376.md. DEFECTS before a push: (1) Spec 100:127 item (1) ends 'This is the operator's words above' but describes built behaviour (count in the lookup route when page is non-null); where the count sits is ruled at MORNING-DECISIONS.md:1432 (RR-0331): add a dated note, do not edit the old one. (2) contract_parcels_lookup.descriptor.json:6 (and the generated 127 registry, census/contracts.json mirror) says candidates, a miss, a map and a dangling id are logged with the three labels; the route logs meter 'none' for those (route.ts:179-183). (3) Spec 135:53 FE-31 footer note puts orchestrator ruling text under 'operator, verbatim'; his words are only '1. once  -approved' and 'this is a shared component': dated correction. (4) lens files sit in lens/ where the close check does not read; the lane ran inc-1, the table gives inc-S and ms-S; no grounder file: the whole lens set is owed. (5) src/tests/spec-notes-1b.logic.test.ts pins the lane's own prose; nothing ties the notes to route.ts. Quotes, ids, seven entitlement keys checked and correct.
 <!-- SECTION:NOTES:END -->
