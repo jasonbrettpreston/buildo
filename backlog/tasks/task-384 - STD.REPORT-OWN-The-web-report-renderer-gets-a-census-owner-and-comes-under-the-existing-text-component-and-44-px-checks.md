@@ -3,10 +3,11 @@ id: TASK-384
 title: >-
   STD.REPORT-OWN The web report renderer gets a census owner and comes under the
   existing text, component and 44 px checks
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-REPORTOWN2'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T19:42:00Z'
+updated_date: '2026-11-20T19:43:00Z'
 labels:
   - McFix
   - McFix B
@@ -76,4 +77,6 @@ Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the
 Retro review by a separate grounder 2026-11-20 (task-405), work as on the board: GROUNDER.md at ~/Buildo-scratch/lanes-20261119/inc1b/retro/BL-REPORTOWN/GROUNDER.md (sha256 ddb7e1f659f5…, 194 findings: 65 CONFIRMED, 126 REJECTED, 3 CONFLICT). DEFECTS: (1) commit ec063fd58 says the renderer is 'owned and under the surface checks'; it is owned only: no check judges the three files (part two unbuilt). (2) the out lens outputs judged a different diff (diff-task-384.patch with a bindings.json listing that is not on the board): no output lens saw the board change. (3) red.out does not match the committed tests; C-12 has no planted-defect case. (4) the descriptor cites 'bindings.json modules' as sharing evidence, which lists none of the three files; Spec 126 cites :923-924 stale (now 925-926); reduced_motion 'none' against globals.css:138. (5) trailers disagree (MF-83 a LATER row, MF-57 a DONE row); the governing approval, item 3 at MORNING-DECISIONS.md:1421-1422, is cited nowhere. (6) the card has no acceptance criteria. (7) 14 of 17 resolved lists have no valid output. Three display strings still at ReportView.tsx:19 and :121 (part two). Part two also puts the files under the FE-05 no-maths lock, never measured.
 
 2026-11-20 released by the launch script's own undo command (backlog-lane.mjs:87) on the operator's word (MORNING-DECISIONS.md entry 'Operator ALLOWS the release and relaunch of tasks 384 and 375'): the BL-REPORTOWN lane ended with part two unbuilt; relaunched as BL-REPORTOWN2.
+
+2026-11-20 taken on the board at lane launch (lane BL-REPORTOWN2, worktree /Users/brettpreston_macmini/Buildo-wt-reportown2, branch wf1/inc1b-reportown2), RR-0240
 <!-- SECTION:NOTES:END -->
