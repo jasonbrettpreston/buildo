@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-REPORTOWN2'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T19:43:00Z'
+updated_date: '2026-11-20T20:22:00Z'
 labels:
   - McFix
   - McFix B
@@ -79,4 +79,6 @@ Retro review by a separate grounder 2026-11-20 (task-405), work as on the board:
 2026-11-20 released by the launch script's own undo command (backlog-lane.mjs:87) on the operator's word (MORNING-DECISIONS.md entry 'Operator ALLOWS the release and relaunch of tasks 384 and 375'): the BL-REPORTOWN lane ended with part two unbuilt; relaunched as BL-REPORTOWN2.
 
 2026-11-20 taken on the board at lane launch (lane BL-REPORTOWN2, worktree /Users/brettpreston_macmini/Buildo-wt-reportown2, branch wf1/inc1b-reportown2), RR-0240
+
+Grounder read of part two 2026-11-20 (branch wf1/inc1b-reportown2, b1fff68cd; read check before a fold, not a ruling): purpose HOLDS by the grounder's own runs (the three report files resolve to surface-136, 126, 127, 128, 135; 44 fe ids in a real input); three strings render byte-identical; 105 goldens differ only in the fingerprint line. NOT COMPLETE, owed before a close: (1) the shrink-only pin has three holes: it compares counts, so removing one attribute and adding aria-label words passes; text inside a ternary or template literal is not seen; a library component also counts, so the pin can shrink only by deleting elements (total 318, not 317); (2) five lists have no output review because the list itself exceeds the room: surface-126, surface-128, surface-135, airtight-124a, policy-124-s2-s5; the output lenses ran on a hand-reduced diff; (3) trailer MF-57 chosen under RR-0332 (MORNING-DECISIONS.md:1432) though ReportView.tsx was built under MF-14: orchestrator reading, not ruled; (4) no test asserts the Details text; (5) wf1/inc1b-areafactor restamped the same 105 goldens: the second branch to land rebases and regenerates with the capture tools, no hand merge. Fold HELD by the orchestrator until the task-410 grounder rules how a folded task closes.
 <!-- SECTION:NOTES:END -->
