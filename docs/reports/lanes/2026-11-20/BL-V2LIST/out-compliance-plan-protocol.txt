@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:53:13.722Z file_sha256=141987c0763a5dea180523475d42fea46f20435ba5fd922111f3969a146b64c0 prompt_sha256=258563f660eca99e315dc62cdf7fb998001c27f8321bf6c135ad7db5f4ce7630
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LIST/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan-protocol section 4 "REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict)" — backlog/tasks/task-406 - V2.LIST...md "8. Lens set at plan (this) and at output: compliance once per list whole, plus code-review and error-paths; findings untriaged in FINDINGS.md; no verdicts, no grounder file; task left RUNNING, grounder owed. No push, no DB." — the plan explicitly declines to give the per-task verdict the protocol requires, so the review step is planned as unmet, not merely pending — plan and record one verdict per plan item after seats R,C,I,D,G,O,W,X and F, or state in SITTING.md why this task is outside the increment review
+
+BUG severity=HIGH — plan-protocol operator verbatim "Dont make more ungrounded recommendations." — scripts/analysis/rule-lists.json new row generated-reports "why": "... docs/reports/policy has no governing spec found, so the lane-tools lists are attached as the nearest (to verify); both were unmatched" — a row and a list attachment are added with the table itself recording that no governing document was found, which is the ungrounded recommendation the ruling forbids — drop docs/reports/policy from the row until a governing document is cited, or cite it now
+
+DEFER severity=MED — plan-protocol section 3 "A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source." — backlog/tasks/task-406 - V2.LIST...md "Source of every item: COVERAGE-GROUNDER.md RECOMMENDED block (read whole; facts verified by opening the files) and the task text." — the item source is a whole block plus "the task text", no file:line per item, so no added item can be checked against its source — cite file:line per added list, row and page entry as section 0 bullet 3 requires
+
+DEFER severity=MED — plan-protocol section 5 item 6 "INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule) and is listed in the plan as tasks with sources" — backlog/tasks/task-406 - V2.LIST...md "Pre-commit wiring is not done (it pins an exact generator count in hooks-composition test): the page check runs in the suite test. Reported as a choice." — the blocker that stops the --check from running at commit time is named and then left out of the plan as a task with a source, while scripts/analysis/gates/generated-docs.mjs registers the page with has_check: true — either add the hooks-composition generator-count pin as a task with its file:line source, or wire the page check
+
+DEFER severity=MED — plan-protocol section 5 item 5 "TIME: every task carries an estimate (MEASURED with source, or GUESS labelled); the integration pass shows the critical path to the customer-ready product." — backlog/tasks/task-406 - V2.LIST...md "PLAN (lane BL-V2LIST, task-406, stage 1; Rule: Spec 126 section 0a principle 1 and section 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1; PLAN-PROTOCOL.md:3 "keep it simple; no scope creep"; principles served: standardized, understandable, simple)" — none of the eight plan items nor the task carries an estimate, MEASURED or GUESS — label an estimate per item, or record why none is given for this task
+
+DEFER severity=MED — plan-protocol section 2 step C gate "check.mjs, check-cites, check-quotes PASS" — backlog/tasks/task-406 - V2.LIST...md "2026-11-20 BL-V2LIST: build commits: table, helper, check-tasks, generated page and plan protocol copy first; the close check edit in its own commit (protected path). Task left RUNNING, grounder owed." — no PASS line for check.mjs, check-cites or check-quotes appears anywhere in the material, only build order and a commitment — paste the three PASS lines into the notes once the panel runs
+
+DEFER severity=LOW — plan-protocol section 5 item 2 "lives in increment "1-2 shared" or the Launch gate, from the gap register and the launch list only" — NONE — the material never states which increment or gate task-406 belongs to, so the shared-work home and the source set for this task cannot be checked — name the owning increment or gate in the plan and the SITTING
+
+MET — plan-protocol section 0 "The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board). Nothing is re-written from scratch." — docs/specs/00-architecture/plan-protocol.md, 43 lines, byte-identical to the pasted protocol text down to "design-fit check in every panel (done: seat X)." — no plan is rewritten and no existing task is deleted, the plan lives in a board task
+
+MET — plan-protocol section 0 "Every existing task stays until a step below removes it with a cited reason." — backlog/tasks/task-406 - V2.LIST...md "Task left RUNNING, grounder owed." — the task is kept running, not removed
+
+MET — plan-protocol section 3 "Rulings: only when a search of the record finds none; the search is quoted." — docs/specs/00-architecture/plan-protocol.md is made a repo document and scripts/analysis/rule-lists.json attaches it as "plan-protocol": { "file": "docs/specs/00-architecture/plan-protocol.md", "whole": true } to every task, so the protocol the rulings sit in now travels with each review
+
+REJECT — plan-protocol section 3 "keep it simple; no scope creep" — the change is accused of scope creep for attaching docs/specs/00_engineering_standards.md whole as eng-all in place of the five eng-* section lists — the table's own rule already says "A list is used WHOLE ... a section is allowed only where the file itself separates rules from history or narrative", so the whole-file attachment is the table's stated policy, not new scope
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 7
+
+---
+⏱  52655ms (52.7s)
+📊 Tokens — total: 39576, input: 28717, output: 10859, reasoning: 9433

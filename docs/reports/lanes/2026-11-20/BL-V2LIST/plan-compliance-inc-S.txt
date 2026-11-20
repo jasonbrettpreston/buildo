@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:38:31.269Z file_sha256=2b8902336bb3c95e6561ba66bba8c76f998f562fc0b585cd7e0ad718877bee6b prompt_sha256=cc706328647643717a196359f0d2f927dfb3a71d30935ec28fcaee53ae7465eb
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LIST/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-406 Acceptance — "a planted task whose Files line resolves to no principles list is refused at launch" — PLAN(step 4) "CLOSE CHECK (scripts/hooks/check-lane-close.mjs): own commit: refuses a table with no every_task and a task whose resolved lists lack an every_task id" — the refusal is placed at lane close, not at launch, and scripts/analysis/backlog-lane.mjs (named on the task Files line) is never touched by any step — add a launch-time refusal in scripts/analysis/backlog-lane.mjs for a task whose Files line resolves to no principles list, plant that task at launch, and keep check-lane-close as the secondary gate
+
+BUG severity=HIGH — task-406 Part 2 (i) — "rows so that every compliance review receives (i) the five principles as stated in the governing handbook for that kind of work" — PLAN(step 1) "new lists five-words (Spec 132 Glossary)" — one Glossary list is issued for every kind, not the governing handbook per kind, and Part 1's question "whether the sectioned handbooks (step handbook 132 sections 2, 3, 4, 6; McFrontend handbook 136 section 2; 124a, 122a) leave out the section that states the five principles" is left unanswered in the plan — add a principles list per governing handbook (Spec 132 and Spec 136 section 2) and record the Part 1 finding on the missing section with its citation
+
+BUG severity=HIGH — task-406 Part 2 — "rows for docs/reports/generated/**, scripts/seeds/logic_variables.json, docs/reports/policy/**" — PLAN(step 1) "Rows extended or added as RECOMMENDED (step-pipeline, lane-tools, generated-reports new, ui-app, tests, middleware-config)" — no row is named for scripts/seeds/logic_variables.json or docs/reports/policy/**, so two paths the clause names receive no governing spec — add both rows (or name the existing row that covers each and show its spec list)
+
+DEFER severity=MED — task-406 Task, operator verbatim — "review all teh currentMCfix tasks and ensure they are still relevant" — PLAN(step 7) "Tasks 376, 378, 384, 372, 401, 408 resolve (paste)" — no step reviews every open McFix task for relevance, six resolutions are not the "all" the operator named — add a step listing every open McFix task with kept / merged / changed and its reason
+
+DEFER severity=MED — task-406 Part 1 — "which paths touched in the last 60 commits match no row or miss an obviously governing spec" — PLAN(source line) "Source of every item: COVERAGE-GROUNDER.md RECOMMENDED block" — the plan carries no line reporting that last-60-commit unmatched-path list, cannot see it in the plan — add the list as a step 1 output so the clause is shown answered
+
+DEFER severity=LOW — task-406 Part 1 — "where the plan protocol lives" — PLAN(step 2) "byte-for-byte copy of ~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md (sha256 d92940f4...) to docs/specs/00-architecture/plan-protocol.md" — the task Specs block names "PROTOCOL.md: ~/Buildo-scratch/panel-tools/PROTOCOL.md" and no line records which file is the plan protocol or why the other is not, and a byte copy with no comparison check will drift silently — record the resolution and add a sha256 compare of the two files to the page --check
+
+MET — task-406 Part 3 — PLAN(step 3) "page [--check] generates docs/reports/generated/rule-lists-by-kind.md (per kind of work: documents, sizes, part counts), registered in gate J (scripts/analysis/gates/generated-docs.mjs)" — generated page by a generator with --check in the form of the existing generated docs
+
+MET — task-406 Acceptance, all-increments check — PLAN(step 3) "check-tasks lists every open task as resolves or not yet resolvable by id with the reason" — the every-task, every-increment check with its list
+
+MET — task-406 Part 4 — PLAN(step 1) "milestone_docs {letter: [ms-letter]} beside increment_docs" and "resolveTask adds every_task lists to every task and milestone_docs lists for the milestone letter" — milestone objectives reach the compliance lens input
+
+MET — task-406 Part 2 (ii) — PLAN(step 1) "New keys every_task [\"five-words\",\"plan-protocol\"]" — the plan protocol is in every compliance review
+
+REJECT — doc-2 element rows A.1 to G.6 — change accused of not delivering the 65 designed search elements — not a real issue, the material is task-406 tooling work and those element clauses do not touch a rule-lists generator
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 6
+
+---
+⏱  45945ms (45.9s)
+📊 Tokens — total: 26801, input: 17042, output: 9759, reasoning: 8614

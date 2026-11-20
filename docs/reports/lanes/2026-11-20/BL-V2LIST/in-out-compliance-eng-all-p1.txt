@@ -1,0 +1,1156 @@
+LIST eng-all sha256:14c620943ed05ebe68c0e07fcaebe04f3d85f21dfce57b7708d0fc32a3f6f054 material sha256:188db89f5851227f110741cddd74cb9fa7ece82b15836d0ba9ce157c661293fc part 1 of 2
+RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+# Engineering Standards & Stability Guardrails
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 1** of `.cursor/active_task.md`.
+
+This document outlines the strict engineering standards, stability rules, and defensive programming patterns that all AI agents and human developers must adhere to when contributing to the Buildo codebase.
+
+---
+
+
+## 🏗️ 1. Architecture & UI Standards
+
+### 1.1 Mobile-First UI Mandate
+- **Rule:** All Tailwind CSS styling MUST be written mobile-first.
+- **Execution:** The base (unprefixed) utility classes must dictate the layout for mobile screens (<=640px). You may only use `sm:`, `md:`, and `lg:` prefixes to enhance or reflow the layout for larger viewports. Do not start with a desktop view and attempt to retrofit mobile breakpoints.
+- **Touch Targets:** All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of **44px x 44px**. Use `min-h-[44px] min-w-[44px]` or equivalent padding.
+- **Responsive Layout:** Card and row layouts MUST stack vertically on mobile and flow horizontally on desktop. Use `flex flex-col md:flex-row` (not `flex` alone). Dense metadata rows MUST use `flex-wrap`. Tooltips and popovers MUST be capped at `max-w-[calc(100vw-2rem)]` on mobile.
+
+### 1.2 Component Isolation
+- **Rule:** Shared UI components (`src/components/ui/`) must remain pure and stateless where possible. They should not directly fetch data via API calls or rely on global context unless explicitly engineered to do so.
+
+### 1.3 Mobile Front-End Patterns & UX
+
+**Touch Targets:** All `Pressable` and `TouchableOpacity` elements must satisfy a minimum tappable area of **44px × 44px**. Use `min-h-[44px]` or explicit `hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}` when the visual size is smaller. Bare text nodes used as CTAs are not permitted — wrap in a `TouchableOpacity` with the required minimum height.
+
+**Micro-animations & Haptics:** Primary interactive cards and buttons must use Reanimated `withSpring` for press-state feedback (scale or opacity). Critical state transitions — save confirmation, destructive delete, error toasts — must trigger a haptic: `lightImpact()` for neutral actions, `successNotification()` for confirms, and the error variant for failures. Silent state changes that affect financial or account data are not acceptable.
+
+**TanStack Query Hardening (Expo):**
+- **Cold-boot offline:** `onlineManager.setEventListener` must be called synchronously at app boot (before any query fires) so TanStack Query's network state matches the device state from the first render, not after the first poll cycle.
+- **Safe MMKV hydration:** `JSON.parse()` output from MMKV must be structurally validated (e.g. `safeParse` via Zod or a shape-check guard) before casting to `PersistedClient`. A corrupt or schema-mismatched cache must be discarded with a warning — not silently cast.
+- **401 interceptor:** When `fetchWithAuth` receives a 401, it must call `firebase.auth().currentUser?.getIdToken(true)` to force a token refresh and retry once before propagating `ApiError(401)` to TanStack Query. Expired-token 401s must not surface as user-visible errors on the first failure.
+
+**Design System Fidelity:** `font-mono` is reserved strictly for data values (permit numbers, distances, currency amounts, timestamps). It must never be applied to human-readable labels, headings, or button text. Dark-mode colour tokens must use NativeWind `dark:` variants (e.g. `dark:bg-zinc-900`) rather than hardcoded `bg-zinc-950` so the system colour scheme is respected.
+
+---
+
+
+## 🚨 2. Error Handling & Stability
+
+### 2.1 The "Unhappy Path" Test Mandate
+- **Rule:** When writing integration tests (`.infra.test.ts`), you MUST include tests for **error paths and silent failures**.
+- **Execution:** Do not merely test "Loading," "Success," and "Error" states. Force errors in the deepest layer of the call stack (e.g., forcing a database `ROLLBACK` to throw, or simulating a network timeout) and explicitly assert that the top layer recovers gracefully or returns a safe HTTP 500 without leaking the raw `.message`.
+
+### 2.2 The Try-Catch Boundary Rule
+- **Rule:** Every newly created API route (`export async function GET/POST/PUT/DELETE/PATCH` inside `src/app/api/`) MUST have an overarching `try-catch` block wrapping the entire handler body.
+- **Execution:** The catch block MUST return `{ error: 'Human-readable message' }` with an appropriate HTTP status (e.g., 500) and log the raw error server-side only. **Never expose `err.message` to clients.** The guardrail tests in `api.infra.test.ts` scan route files to enforce this.
+
+### 2.3 Assumption Documentation
+- **Rule:** Before accessing nested object properties, explicitly check for `null` or `undefined`.
+- **Execution:** Use TypeScript Optional Chaining (`?.`) or explicit type guards. Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment.
+
+---
+
+
+## 🗄️ 3. Database Management & Scaling
+
+### 3.1 Zero-Downtime Migration Pattern
+- **Rule:** When altering existing columns in a database table larger than 100,000 rows, do NOT use `ALTER TABLE ... ALTER COLUMN` directly.
+- **Execution:** Use the **Add-Backfill-Drop** pattern to avoid table-locking:
+  1. Add the new column.
+  2. Backfill data into the new column.
+  3. Swap application references to the new column.
+  4. Drop the old column in a subsequent deployment.
+- **Execution:** `CREATE INDEX` on large tables should use the `CONCURRENTLY` keyword when applicable.
+
+### 3.2 Migration Rollback Safety
+- **Rule:** Every migration file in `migrations/` MUST contain both `UP` and `DOWN` blocks so any schema change can be reversed with a single rollback.
+- **Execution:** Write `-- UP` (create/alter/add) and `-- DOWN` (drop/revert) SQL in the same `NNN_[feature].sql` file. If Database Impact is YES in the Active Task, the migration file is a mandatory deliverable — never skip it.
+
+### 3.3 Pagination Enforcement
+- **Rule:** Any API route that reads from growing database tables (`permits`, `coa_applications`) MUST enforce pagination boundaries. Unbounded `SELECT *` without `LIMIT` is strictly forbidden.
+
+---
+
+
+## 🔐 4. Security & API Contracts
+
+### 4.1 Route Guarding
+- **Rule:** All endpoints within `src/app/api/` must be analyzed for protection. Never leave administrative routes unprotected.
+- **Rule (amended 2026-09-15, WF3 SEC-1):** `src/middleware.ts` is a **presence-only pre-filter, not the gate**. Its admin/API arm performs no authorization: it passes any request carrying a non-empty `sb-*-auth-token` cookie (of any shape) OR any `x-admin-key` header value (the secret comparison lives solely in `verify-admin.ts` mode 2 — the P1-F4 break-glass transport decision, 2026-07-19), and Spec 13 §3.5 states plainly that middleware performs no cryptographic verification. The **authoritative gate for every `/api/admin/**` route is `verifyAdminAuth(request)` as the FIRST statement of the handler** (Spec 33 §8). Measured 2026-09-15: 11 of 29 admin routes relied on the middleware and had no guard at all — two of them said so in a header comment. Enforcement is locked by the source scan in `src/tests/api.infra.test.ts` (*"every /api/admin/** handler export calls verifyAdminAuth as its FIRST statement"*), plus an integration lock in `src/tests/admin-route-guard.infra.test.ts` proving an `x-admin-key: anything` request no longer reaches a handler. Route **classification** (`classifyRoute` returning `'admin'`) is a label; it enforces nothing.
+
+### 4.2 Parameterization
+- **Rule:** Raw SQL statements must utilize Drizzle parameterized queries to prevent SQL injection. String concatenation for dynamic queries (especially via `order by` or search terms) is forbidden unless rigorously validated against a static whitelist.
+
+### 4.3 Frontend Security
+- **Rule:** Never place API keys, admin SDK credentials, or database connection strings in `use client` components. Firebase client config (public keys) is the only exception.
+- **Rule:** Never use `dangerouslySetInnerHTML` without explicit sanitization. Prefer React JSX which escapes by default.
+- **Rule:** API routes must return only the fields the UI needs. Never `SELECT *` — always project specific columns. This limits exposure if an API route is accessed directly.
+- **Rule:** All authorization must be enforced server-side in API routes or middleware. Client-side route hiding (e.g., hiding an admin link) is cosmetic, not security. Both must exist.
+- **Rule:** User-provided input displayed in the UI (search terms, company names, addresses) must be treated as untrusted. Watch for reflected XSS in query params rendered into page content.
+
+### 4.4 API Design for Multi-App Consumption
+- **Rule:** API routes are the **contract boundary** between frontend and backend. They must be designed as stable, versioned interfaces that could serve multiple client apps.
+- **Response shape:** All API routes must return a consistent envelope: `{ data, error, meta }`. Never return raw arrays or ad-hoc shapes.
+- **No client assumptions:** API routes must not assume which frontend is calling. Do not embed UI-specific logic (pagination styles, component-shaped responses) in the API layer. Return normalized data; let each client transform it.
+- **Auth via tokens, not cookies (future):** Current cookie-based auth works for the Next.js app. When a second client app is added, migrate to Bearer token auth (Firebase ID tokens in `Authorization` header) so non-browser clients can authenticate.
+- **Rate limiting:** Public-facing API routes must include rate limiting before a second app is connected. Use middleware-level throttling, not per-route logic.
+- **CORS:** When a second app is added, configure explicit CORS origins in `next.config.js`. Never use `Access-Control-Allow-Origin: *` in production.
+
+---
+
+
+## 🧪 5. Testing Standards
+
+### 5.1 Typed Factories Only
+- **Rule:** Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`.
+
+### 5.2 Test File Pattern
+| Pattern | Tests | Mandated when | Example |
+|---------|-------|---------------|---------|
+| `*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic | `scoring.logic.test.ts` |
+| `*.ui.test.tsx` | React component rendering, interactions | Any new/changed component | `admin.ui.test.tsx` |
+| `*.infra.test.ts` | API routes, DB queries, external calls | New API route / DB mutation (unhappy path first, §5.3) | `api.infra.test.ts` |
+| `*.security.test.ts` | Negative/abuse — blocks malicious payloads and unauthorized users | Auth-guarded / externally-reachable surfaces | `auth.security.test.ts` |
+| DB replay (`*.db.test.ts` under `BUILDO_TEST_DB=1 npm run test:db`; Spec 124 R-DH) | Real Postgres: IMMUTABLE/NOT NULL/FK/length/index errors a SQL-string test misses | Any migration touching schema/constraints/indexes (run before push) | `assert-data-bounds.infra.test.ts` |
+| `*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence | `coa-cost-model.regression.test.ts` |
+| Parity battery (`*.infra.test.ts` / `*.logic.test.ts`) | Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator) | Any dual-surface or generated artifact (drift guard) | `control-panel.logic.test.ts`, `logic-vars-registry.infra.test.ts` |
+
+### 5.3 Red-Green Test Cycle (Golden Rule)
+- **Rule:** You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails.
+- **Execution:** For new API routes and database mutations, the failing test MUST be an `.infra.test.ts` that exercises the **unhappy path** (error responses, invalid input, missing auth). For pure logic, use `.logic.test.ts`. Run the test and confirm it fails — only then implement the code to make it pass (Green Light). This is the single strongest defense against hallucinated or untested code.
+
+### 5.4 Test Data Seeding
+- **Rule:** To set up specific DB scenarios for testing or demos, create `scripts/seed-[scenario].js`. Define a JSON state object, insert it, and verify DB contents.
+
+### 5.5 Test-Layer Map — which layer proves what
+The six layers of §5.2 are complementary, not interchangeable. Pick the layer that *proves the claim*; a green suite in the wrong layer is false confidence.
+
+| Layer | Proves | Runs in | Consequence of skipping |
+|-------|--------|---------|-------------------------|
+| `*.logic.test.ts` | The pure function computes the right value on happy + edge inputs. | `npm run test` (default) | Un-pinned derivation logic silently changes value. |
+| `*.ui.test.tsx` | The component renders each state + wires interactions. | `npm run test` | UI regressions ship unseen. |
+| `*.infra.test.ts` (no DB) | API envelope / query shape / error paths (§5.3 unhappy-path-first). | `npm run test` | Hallucinated/untested routes. |
+| DB replay — `BUILDO_TEST_DB=1 npm run test:db` | The migration/query survives **real Postgres**: IMMUTABLE, NOT NULL, FK, length, CHECK, index build. A SQL-string assertion does NOT catch these. | Local opt-in (Docker) / CI | A migration that passes string tests but throws on apply — caught only in production. **Run before pushing any schema change.** |
+| `*.regression.test.ts` | A load-bearing behavior (a documented fence — a past `fix(...)` carrying a Spec 05 §5 severity/lesson footer, an edge-case guard, a workaround) is preserved across a change. | `npm run test` | Chesterton's-Fence: a diff silently drops a behavior that existed for a reason. Authored whenever the Regression Guardian finds an unguarded fence. |
+| Parity battery | Two surfaces that MUST agree stay in lockstep: dual code paths (§7), seed JSON ↔ TS `LOGIC_VAR_DEFAULTS`, and **generated doc ↔ its generator** (the drift guard — regenerate to a buffer, diff the committed file). | `npm run test` | Silent divergence — exactly the doc-rot the generated AI-operator docs (Spec 47 §5, `docs/reference/*`) are gated against. |
+
+**Rule:** a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity — not just the one that is easiest to write.
+
+---
+
+
+## 📡 6. Centralized Logging
+
+### 6.1 logError Mandate
+- **Rule:** All server-side error logging MUST use `logError()` from `src/lib/logger.ts` — never bare `console.error()` in API routes or lib modules. Client-side components (React `'use client'`) may use `console.error` since `logError` imports server-only modules.
+- **Execution:** `logError(tag, err, context)` writes to `console.error` locally and reports to Sentry when `SENTRY_DSN` is configured in production. The guardrail tests in `api.infra.test.ts` enforce that critical paths import `logError`.
+
+---
+
+
+## 🔀 7. Dual Code Path Safety
+
+### 7.1 Classification Sync Rule
+- **Rule:** Trade classification logic exists in two parallel implementations that MUST stay in sync:
+  - `src/lib/classification/classifier.ts` — TypeScript API used by the web app
+  - `scripts/classify-permits.js` — standalone Node.js script for batch DB processing
+- **Execution:** When modifying classification rules (tag-trade matrix, tier rules, narrow-scope codes, confidence thresholds), you MUST update **both** files. Before committing, verify both paths produce identical output for the same input by running the classification test suite: `npx vitest run src/tests/classification.logic.test.ts`.
+
+### 7.2 Scope Classification Sync
+- **Rule:** The same dual-path constraint applies to scope classification:
+  - `src/lib/classification/scope.ts` — TypeScript API
+  - `scripts/classify-scope.js` — standalone batch script
+- **Execution:** Changes to scope tags, project types, or the `classifyScope()` algorithm must be mirrored in both files.
+
+---
+
+
+## ⚙️ 8. Next.js & TypeScript Constraints
+
+### 8.1 API Route Export Rule
+- **Rule:** Next.js App Router `route.ts` files may ONLY export HTTP handler functions (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`). Exporting any other function, constant, or type from a `route.ts` file will cause a build error or silent runtime failure.
+- **Execution:** If a route file needs shared helper logic, extract it to a module under `src/lib/` and import it. Never `export function` or `export const` from route files unless it is a named HTTP handler.
+
+### 8.2 TypeScript Target Gotchas
+- **Rule:** The project `tsconfig.json` targets **ES2017**. Be aware of these constraints:
+  - Regex `s` flag (dotAll) requires ES2018+ — use `[\s\S]` instead.
+  - `process.env.NODE_ENV = 'test'` fails due to literal type narrowing — use `(process.env as Record<string, string>).NODE_ENV = 'test'`.
+  - `typeof globalThis.google` breaks in Next.js client bundles — use `(window as any).google`.
+  - The `functions/` directory (Cloud Functions, deleted 2026-07-20 — Supabase migration Phase 3.1, zero live references) formerly had its own `tsconfig.json` excluded from the root config.
+
+---
+
+
+## 🛢️ 9. Pipeline & Script Safety
+
+### 9.1 Transaction Boundaries
+- **Rule:** Pipeline scripts (`scripts/*.js`) that write to the database MUST wrap multi-row mutations in explicit transactions (`BEGIN` / `COMMIT`). The `ROLLBACK` in the catch block MUST itself be wrapped in a nested try-catch to prevent crash-on-rollback-failure.
+
+### 9.2 PostgreSQL Parameter Limit
+- **Rule:** PostgreSQL has a hard limit of **65,535 parameters** per prepared statement. Batch `INSERT` statements in pipeline scripts MUST use sub-batch chunking (e.g., `MAX_ROWS_PER_INSERT = 4000` for a table with 16 columns: 4000 x 16 = 64,000 params).
+- **Execution:** When adding columns to a table that has a batch insert script, recalculate `MAX_ROWS_PER_INSERT` to stay under 65,535. The formula is: `Math.floor(65535 / number_of_columns)`.
+
+### 9.3 Idempotent Scripts
+- **Rule:** All pipeline scripts MUST be safe to re-run. Use `INSERT ... ON CONFLICT DO UPDATE` (upsert) or `DELETE + INSERT` within a transaction rather than bare `INSERT` which fails on duplicate keys.
+
+### 9.4 Pipeline SDK Mandate
+- **Rule:** All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`) for infrastructure concerns. No inline `new Pool({...})` instantiation, no bare `console.error()` for error handling.
+- **Execution:** Every script must:
+  1. `const pipeline = require('./lib/pipeline');`
+  2. Wrap its main logic in `pipeline.run('script-name', async (pool) => { ... })`
+  3. Use `pipeline.createPool()` (handled by `run()`) — never instantiate `Pool` directly
+  4. Use `pipeline.log.{info,warn,error}()` for structured JSON logging
+  5. Use `pipeline.withTransaction(pool, fn)` for all multi-row write operations
+  6. Call `pipeline.emitSummary({ records_total, records_new, records_updated })` before exit
+  7. Call `pipeline.emitMeta(reads, writes, external?)` to declare I/O schema
+- **SDK exports:** `createPool`, `run`, `log`, `withTransaction`, `emitSummary`, `emitMeta`, `progress`, `BATCH_SIZE`, `maxRowsPerInsert`, `isFullMode`
+
+### 9.5 Streaming Ingestion
+- **Rule:** Data loaders that fetch from external APIs (CKAN, etc.) MUST NOT accumulate all records in memory before processing. Use async generator (yield-per-page) streaming to keep peak memory at O(batch_size) rather than O(total_records).
+- **Execution:** Replace array-accumulation fetch patterns with `async function*` generators that `yield` each page of results. Consumers process each batch immediately via `for await...of`.
+
+### 9.6 Pipeline Manifest
+- **Rule:** Pipeline metadata (chain definitions, script paths, table reads/writes, feature flags) MUST be declared in `scripts/manifest.json` as the single source of truth.
+- **Execution:** The chain orchestrator (`scripts/run-chain.js`) reads chain definitions from the manifest rather than hardcoding them. The UI (`FreshnessTimeline.tsx`) exports chain/registry data that must stay consistent with the manifest. Test coverage validates that every manifest entry points to an existing script file and that chain definitions match the UI registry.
+
+### 9.7 Pipeline Observability (Opt-In)
+- **Rule:** The Pipeline SDK (`scripts/lib/pipeline.js`) instruments `run()`, `withTransaction()`, and `progress()` with OpenTelemetry spans and events. Tracing is **opt-in** — it silently no-ops when `@opentelemetry/api` is not installed or no SDK is registered.
+- **Execution:** The tracing bootstrap (`scripts/lib/tracing.js`) attempts `require('@opentelemetry/api')` with a try-catch fallback to no-op stubs. Individual pipeline scripts require zero changes — all instrumentation is SDK-internal. To enable tracing:
+  1. `npm install @opentelemetry/api @opentelemetry/sdk-node @opentelemetry/exporter-trace-otlp-http`
+  2. Set `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` (or Honeycomb/Datadog endpoint)
+  3. Run any pipeline script — spans are exported automatically
+- **Span hierarchy:** `pipeline.run.{name}` (root) → `pipeline.transaction` (per write batch) → `pipeline.progress` events (per progress tick)
+- **Attributes:** `pipeline.name`, `pipeline.duration_ms`, `pipeline.status`, `db.system=postgresql`
+
+---
+
+
+## 🧱 10. Frontend/Backend Boundary
+
+### 10.1 Data Flow Direction
+- **Rule:** The data flow is strictly one-directional: `[Pipelines] → [Database] → [API Routes] → [Frontend]`. Frontend components never write to pipeline tables. Pipelines never read frontend state. API routes are the only bridge.
+
+### 10.2 Boundary Rules During Frontend Phase
+- **Rule:** Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`. If a frontend feature needs data that doesn't exist, add an API route that queries and transforms existing tables — do not change how data enters the database.
+- **Rule:** Database schema is frozen during frontend work unless a feature genuinely requires a new column. Convenience columns ("I wish this was pre-computed") should be computed in the API layer instead.
+- **Rule:** If a `src/lib/` module is imported by both API routes and frontend components, any modification requires `npx vitest related` to verify no API regression. Shared modules are the highest-risk cross-boundary files.
+
+### 10.3 API Route Discipline
+- **Rule:** API routes must be thin — validate input, call a lib function, return the result. Business logic belongs in `src/lib/`, not in route handlers. This keeps logic testable and reusable across future apps.
+- **Rule:** New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route. This enables type-safe consumption by any client.
+- **Rule:** Avoid returning database column names directly. Map to a stable API field name (e.g., `est_const_cost` → `estimatedCost`). This decouples the API contract from the schema, so future DB refactors don't break clients.
+
+---
+
+
+## ✅ 11. Plan Compliance Checklist
+
+Before presenting "PLAN LOCKED", the plan MUST address each applicable item below. These are not optional — if the condition applies, the corresponding items must appear in the plan.
+
+### If Database Impact = YES:
+- [ ] UP + DOWN migration in `migrations/NNN_[feature].sql` (§3.2)
+- [ ] Backfill strategy for ALTER on 100K+ row tables (§3.1)
+- [ ] `src/tests/factories.ts` updated with new fields (§5.1)
+- [ ] `npm run typecheck` planned after `db:generate` (§8.2)
+
+### If API Route Created/Modified:
+- [ ] Request/Response TypeScript interface in `src/lib/[feature]/types.ts` (§10.3)
+- [ ] Consistent response envelope: `{ data, error, meta }` (§4.4)
+- [ ] Overarching try-catch with `logError(tag, err, context)` (§2.2, §6.1)
+- [ ] Unhappy-path test cases listed: 400, 404, 500 (§2.1)
+- [ ] Route guarded by `verifyAdminAuth(request)` as the handler's FIRST statement — middleware is a presence-only pre-filter, never the gate (§4.1, Spec 33 §8)
+- [ ] Every mutating admin export writes an `admin_audit_log` row inside the mutation's own transaction, and refuses the shared non-session sentinels with 403 (§4.1, Spec 33 §8.1, Spec 128 R-12)
+- [ ] No `.env` secrets exposed to client components (§4.3)
+- [ ] Returns projected fields only, not `SELECT *` (§4.3)
+- [ ] No client-specific assumptions in response shape (§4.4)
+
+### If UI Component Created/Modified:
+- [ ] Mobile-first layout: base classes = mobile, `md:`/`lg:` = desktop (§1.1)
+- [ ] Touch targets ≥ 44px (§1.1)
+- [ ] 375px viewport test in test plan
+- [ ] No API keys or secrets in `use client` components (§4.3)
+- [ ] User-provided input escaped/sanitized before display (§4.3)
+
+### If Shared Logic Touched (classification, scoring, scope):
+- [ ] All dual-code-path consumers identified (§7.1, §7.2)
+- [ ] Update plan covers both TS module and JS script
+- [ ] `npx vitest related` planned for cross-boundary validation (§10.2)
+
+### If Pipeline Script Created/Modified:
+- [ ] Uses Pipeline SDK: `pipeline.run`, `withTransaction`, `emitSummary` (§9.4)
+- [ ] Streaming ingestion for external API data (§9.5)
+
+### Frontend Boundary Check (all frontend WFs):
+- [ ] No modifications to `scripts/`, `migrations/`, or `scripts/lib/` (§10.2)
+- [ ] API route returns stable field names, not raw DB columns (§10.3)
+- [ ] Business logic in `src/lib/`, not in route handlers (§10.3)
+
+### Frontend Foundation Check (new code in `src/features/`):
+- [ ] Biome check passes (§12.1)
+- [ ] No `useEffect` for data fetching — TanStack Query only (§12.2)
+- [ ] No `useState` for form fields — React Hook Form + Zod (§12.3)
+- [ ] No React Context inside `src/features/leads/` — Zustand only (§12.4)
+- [ ] All `onClick`/`onSubmit` handlers call `captureEvent()` (§13.1)
+- [ ] Centered modals replaced with Shadcn `<Drawer>` on mobile (§12.5)
+- [ ] Lists >50 items wrapped in TanStack Virtual (§12.6)
+- [ ] Toast notifications via Sonner — no custom alert banners (§12.7)
+
+### Pre-Review Self-Checklist (always applies, every WF):
+- [ ] Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change (Behavioral Contract / API Endpoints / Operating Boundaries / §4 Edge Cases). Walk each item against the ACTUAL diff. Output PASS/FAIL per item in the response BEFORE running tests. See `CLAUDE.md` WF1/WF2/WF3 execution plans for the per-workflow phrasing.
+- [ ] WF3 variant: list 3-5 sibling bugs that could share the same root cause and verify the fix covers them (or document why each doesn't apply).
+
+### Cross-Layer Contracts Check (always applies):
+- [ ] Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)
+- [ ] If a new threshold is introduced, a row is added to `src/tests/contracts.infra.test.ts` mapping the JSON key to its consumer file(s) so drift becomes a CI failure
+- [ ] If a threshold is changed, EVERY consumer file listed in `contracts.infra.test.ts` is updated in the same commit
+
+### Database/Migration Check:
+- [ ] New migration has DOWN block (§3.2, §12.8)
+- [ ] SQLFluff lint passes for new migration files (§12.8)
+- [ ] `validate-migration.js` passes (no DROP without confirmation, no non-CONCURRENTLY indexes on tables >100K rows) (§12.8)
+- [ ] No raw SQL string concatenation — parameterized only (§4.2)
+
+---
+
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/backlog/tasks/task-406 - V2.LIST-The-definitive-compliance-list-every-kind-of-work-and-every-increment-task-resolves-to-its-rule-documents.md b/backlog/tasks/task-406 - V2.LIST-The-definitive-compliance-list-every-kind-of-work-and-every-increment-task-resolves-to-its-rule-documents.md
+index 97327e071..950cf9bc6 100644
+--- a/backlog/tasks/task-406 - V2.LIST-The-definitive-compliance-list-every-kind-of-work-and-every-increment-task-resolves-to-its-rule-documents.md	
++++ b/backlog/tasks/task-406 - V2.LIST-The-definitive-compliance-list-every-kind-of-work-and-every-increment-task-resolves-to-its-rule-documents.md	
+@@ -8,5 +8,5 @@ assignee:
+   - '@lane-BL-V2LIST'
+ created_date: '2026-11-20T17:12:00Z'
+-updated_date: '2026-11-20T17:34:00Z'
++updated_date: '2026-11-20T17:50:00Z'
+ labels:
+   - McFix
+@@ -21,5 +21,5 @@ ordinal: 106012
+ 
+ <!-- SECTION:DESCRIPTION:BEGIN -->
+-Operator, 2026-11-20, verbatim: "That works. Let;s this - the 10th plan today on the same thing.  Let's review the McFix tasks realted to compliance and either substitue. This is the McFixV2 Plan. Hwo will I know it is actually working on a daily basis and no one has swtiched it off.  I still think you need to create the definitive complianc list McFront-end and all the tasks in the Increments.  Add to the board - review all teh currentMCfix tasks and ensure they are still relevant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, entry "Operator APPROVES McFix V2"). McFix V2 step 1. Replaces task-403 and task-404 (their scope is here). Part 1, a read-only coverage review by a separate grounder BEFORE any row is written: the rule-list table (scripts/analysis/rule-lists.json: 41 lists, 16 rows) against the whole spec estate: which McDonald's specs or sections govern code and are attached to nothing; whether the sectioned handbooks (step handbook 132 sections 2, 3, 4, 6; McFrontend handbook 136 section 2; 124a, 122a) leave out the section that states the five principles; where the plan protocol lives; which paths touched in the last 60 commits match no row or miss an obviously governing spec. Part 2, data: rows so that every compliance review receives (i) the five principles as stated in the governing handbook for that kind of work, (ii) the plan protocol, (iii) the milestone objectives and increment requirements, (iv) every spec governing the touched paths; rows for docs/reports/generated/**, scripts/seeds/logic_variables.json, docs/reports/policy/**. Part 3, the list made visible: one generated page (by a generator with --check, in the form of the existing generated docs) that prints, per kind of work (pipeline step, McFrontend web, phone, storage, tooling, spec-only) the documents its compliance review receives; and a check over EVERY open task in EVERY increment on the board: each has a Files line that resolves, or is listed by id as not yet resolvable with the reason. Part 4: the compliance lens command is given the milestone objectives (today they go only into the ticket). Acceptance: the generated page; the all-increments check with its list; a planted task whose Files line resolves to no principles list is refused at launch. Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/rule-lists.logic.test.ts
++Operator, 2026-11-20, verbatim: "That works. Let;s this - the 10th plan today on the same thing.  Let's review the McFix tasks realted to compliance and either substitue. This is the McFixV2 Plan. Hwo will I know it is actually working on a daily basis and no one has swtiched it off.  I still think you need to create the definitive complianc list McFront-end and all the tasks in the Increments.  Add to the board - review all teh currentMCfix tasks and ensure they are still relevant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, entry "Operator APPROVES McFix V2"). McFix V2 step 1. Replaces task-403 and task-404 (their scope is here). Part 1, a read-only coverage review by a separate grounder BEFORE any row is written: the rule-list table (scripts/analysis/rule-lists.json: 41 lists, 16 rows) against the whole spec estate: which McDonald's specs or sections govern code and are attached to nothing; whether the sectioned handbooks (step handbook 132 sections 2, 3, 4, 6; McFrontend handbook 136 section 2; 124a, 122a) leave out the section that states the five principles; where the plan protocol lives; which paths touched in the last 60 commits match no row or miss an obviously governing spec. Part 2, data: rows so that every compliance review receives (i) the five principles as stated in the governing handbook for that kind of work, (ii) the plan protocol, (iii) the milestone objectives and increment requirements, (iv) every spec governing the touched paths; rows for docs/reports/generated/**, scripts/seeds/logic_variables.json, docs/reports/policy/**. Part 3, the list made visible: one generated page (by a generator with --check, in the form of the existing generated docs) that prints, per kind of work (pipeline step, McFrontend web, phone, storage, tooling, spec-only) the documents its compliance review receives; and a check over EVERY open task in EVERY increment on the board: each has a Files line that resolves, or is listed by id as not yet resolvable with the reason. Part 4: the compliance lens command is given the milestone objectives (today they go only into the ticket). Acceptance: the generated page; the all-increments check with its list; a planted task whose Files line resolves to no principles list is refused at launch. Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/rule-lists.logic.test.ts, docs/specs/00-architecture/plan-protocol.md, docs/reports/generated/rule-lists-by-kind.md, scripts/analysis/gates/generated-docs.mjs, scripts/hooks/check-lane-close.mjs, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/00_system_map.md
+ <!-- SECTION:DESCRIPTION:END -->
+ 
+@@ -38,4 +38,19 @@ Operator, 2026-11-20, verbatim: "That works. Let;s this - the 10th plan today on
+ <!-- DOD:END -->
+ 
++## Implementation Plan
++
++<!-- SECTION:PLAN:BEGIN -->
++PLAN (lane BL-V2LIST, task-406, stage 1; Rule: Spec 126 section 0a principle 1 and section 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1; PLAN-PROTOCOL.md:3 "keep it simple; no scope creep"; principles served: standardized, understandable, simple)
++Source of every item: COVERAGE-GROUNDER.md RECOMMENDED block (read whole; facts verified by opening the files) and the task text.
++1. TABLE (scripts/analysis/rule-lists.json, data): new lists five-words (Spec 132 Glossary), plan-protocol (docs/specs/00-architecture/plan-protocol.md whole), ms-F..ms-AL (15 milestone files; sections Project objectives, Increment objectives, Objectives), eng-all (engineering standards whole, replacing eng-s1, eng-s2-s4-s10-s11, eng-s3-s9, eng-s5-s9-s14, eng-s5 in every row), bylaw-133 gains section 3 (OWED marker rows). New keys every_task ["five-words","plan-protocol"] and milestone_docs {letter: [ms-letter]} beside increment_docs. Rows extended or added as RECOMMENDED (step-pipeline, lane-tools, generated-reports new, ui-app, tests, middleware-config). Nothing under NOT DECIDED HERE is built.
++2. PLAN PROTOCOL: byte-for-byte copy of ~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md (sha256 d92940f4...) to docs/specs/00-architecture/plan-protocol.md; both sha256 reported.
++3. HELPER (scripts/analysis/rule-lists.mjs; a protected path: the policy refuses only a commit that also closes a task, this task stays RUNNING): resolveTask adds every_task lists to every task and milestone_docs lists for the milestone letter; validate checks the two keys (defined lists, every increment letter covered) and fails a resolved set lacking the every_task lists (verifyResolved); check-tasks lists every open task as resolves or not yet resolvable by id with the reason and fails when a resolving task lacks an every_task list; page [--check] generates docs/reports/generated/rule-lists-by-kind.md (per kind of work: documents, sizes, part counts), registered in gate J (scripts/analysis/gates/generated-docs.mjs). Pre-commit wiring is not done (it pins an exact generator count in hooks-composition test): the page check runs in the suite test. Reported as a choice.
++4. CLOSE CHECK (scripts/hooks/check-lane-close.mjs): own commit: refuses a table with no every_task and a task whose resolved lists lack an every_task id; planted defect plus passing control.
++5. TESTS FIRST (red through the real pre-commit related run, red.out): rule-lists.logic.test.ts and check-lane-close.logic.test.ts.
++6. PROOF ON REAL INPUTS: for one real task per kind (pipeline step, McFrontend web, phone, storage, tooling, spec-only) lens-input at both phases into the lane dir; grep with line numbers for the five words statement, plan protocol, milestone objectives; table kind by document.
++7. Tasks 376, 378, 384, 372, 401, 408 resolve (paste). Whole-change rule not built; measured cost reported only.
++8. Lens set at plan (this) and at output: compliance once per list whole, plus code-review and error-paths; findings untriaged in FINDINGS.md; no verdicts, no grounder file; task left RUNNING, grounder owed. No push, no DB.
++<!-- SECTION:PLAN:END -->
++
+ ## Implementation Notes
+ 
+@@ -44,3 +59,5 @@ PRIORITY, operator 2026-11-20 verbatim: "I also need certainty within the tasks
+ 
+ 2026-11-20 taken on the board at lane launch (lane BL-V2LIST, worktree /Users/brettpreston_macmini/Buildo-wt-v2list, branch wf1/inc1b-v2list), RR-0240
++
++2026-11-20 BL-V2LIST: build commits: table, helper, check-tasks, generated page and plan protocol copy first; the close check edit in its own commit (protected path). Task left RUNNING, grounder owed.
+ <!-- SECTION:NOTES:END -->
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+new file mode 100644
+index 000000000..dd3685344
+--- /dev/null
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -0,0 +1,122 @@
++<!-- GENERATED by scripts/analysis/rule-lists.mjs page --write from scripts/analysis/rule-lists.json and the documents it names. Do not edit; regenerate. -->
++
++# What each kind of work receives: the compliance review documents
++
++Every task gets the every_task lists (the five words in the step handbook Glossary, and the plan protocol) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of 30,000 characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.
++
++## pipeline step
++
++Example Files line: `scripts/steps/_schema/converted.json, scripts/load-permits.js`; type build; milestone group [S].
++
++| list | document | selection | characters | parts |
++| --- | --- | --- | ---: | ---: |
++| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
++| airtight-124a | docs/specs/01-pipeline/124a_step_standard_policy_appendix.md | Appendix §B10; Appendix §B12 | 38,138 | 1 |
++| airtight-v3-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 5.5 Condition 4 | 5,017 | 1 |
++| airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
++| airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
++| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
++| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
++| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 7,525 | 1 |
++| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
++| ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
++| total | 10 lists | | 195,941 | 10 |
++
++## McFrontend web
++
++Example Files line: `src/components/report/, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json`; type build; milestone group [S].
++
++| list | document | selection | characters | parts |
++| --- | --- | --- | ---: | ---: |
++| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
++| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
++| airtight-124a | docs/specs/01-pipeline/124a_step_standard_policy_appendix.md | Appendix §B10; Appendix §B12 | 38,138 | 1 |
++| airtight-v3-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 5.5 Condition 4 | 5,017 | 1 |
++| airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
++| airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
++| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 13,783 | 1 |
++| surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |
++| surface-127 | docs/specs/02-web-admin/127_surface_conversion_procedure.md | whole file | 50,606 | 1 |
++| surface-128 | docs/specs/02-web-admin/128_surface_standard_policy.md | whole file | 77,169 | 1 |
++| surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file | 84,215 | 1 |
++| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
++| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 7,525 | 1 |
++| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
++| ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
++| total | 15 lists | | 678,126 | 18 |
++
++## phone
++
++Example Files line: `mobile/src/app/`; type build; milestone group [S].
++
++| list | document | selection | characters | parts |
++| --- | --- | --- | ---: | ---: |
++| mobile-90 | docs/specs/03-mobile/90_mobile_engineering_protocol.md | whole file | 14,097 | 1 |
++| mobile-98 | docs/specs/03-mobile/98_mobile_testing_protocol.md | whole file | 11,496 | 1 |
++| mobile-99 | docs/specs/03-mobile/99_mobile_state_architecture.md | whole file | 83,401 | 1 |
++| mobile-100 | docs/specs/03-mobile/100_mobile_parcel_cost_tool.md | whole file | 54,254 | 1 |
++| mobile-96 | docs/specs/03-mobile/96_mobile_subscription.md | whole file | 37,337 | 1 |
++| surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 13,783 | 1 |
++| surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |
++| surface-127 | docs/specs/02-web-admin/127_surface_conversion_procedure.md | whole file | 50,606 | 1 |
++| surface-128 | docs/specs/02-web-admin/128_surface_standard_policy.md | whole file | 77,169 | 1 |
++| surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file | 84,215 | 1 |
++| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
++| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 7,525 | 1 |
++| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
++| ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
++| total | 14 lists | | 719,040 | 17 |
++
++## storage
++
++Example Files line: `src/lib/parcels/report-compute.ts`; type build; milestone group [S].
++
++| list | document | selection | characters | parts |
++| --- | --- | --- | ---: | ---: |
++| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
++| surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |
++| surface-128 | docs/specs/02-web-admin/128_surface_standard_policy.md | whole file | 77,169 | 1 |
++| storage-doc16 | backlog/docs/doc-16 - McStorage-policy-v2.md | whole file | 38,848 | 1 |
++| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
++| airtight-124a | docs/specs/01-pipeline/124a_step_standard_policy_appendix.md | Appendix §B10; Appendix §B12 | 38,138 | 1 |
++| airtight-v3-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 5.5 Condition 4 | 5,017 | 1 |
++| airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
++| airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
++| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
++| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 7,525 | 1 |
++| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
++| ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
++| total | 13 lists | | 568,370 | 16 |
++
++## tooling
++
++Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs`; type build; milestone group [S].
++
++| list | document | selection | characters | parts |
++| --- | --- | --- | ---: | ---: |
++| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 4,727 | 1 |
++| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 27,384 | 1 |
++| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 27,664 | 1 |
++| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
++| orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |
++| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
++| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 7,525 | 1 |
++| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
++| ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
++| total | 9 lists | | 173,691 | 9 |
++
++## spec-only
++
++Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; milestone group [S].
++
++| list | document | selection | characters | parts |
++| --- | --- | --- | ---: | ---: |
++| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 27,664 | 1 |
++| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 27,384 | 1 |
++| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
++| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
++| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 7,525 | 1 |
++| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
++| ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
++| total | 7 lists | | 137,394 | 7 |
++
+diff --git a/docs/specs/00-architecture/00_system_map.md b/docs/specs/00-architecture/00_system_map.md
+index c25f899ca..6888c6697 100644
+--- a/docs/specs/00-architecture/00_system_map.md
++++ b/docs/specs/00-architecture/00_system_map.md
+@@ -22,4 +22,5 @@
+ | 137 | `00-architecture/137_mcqueue.md` | McQueue | — | — | DRAFT |
+ | 13 | `00-architecture/13_authentication.md` | Authentication | `src/lib/auth/config.ts`, `src/lib/auth/types.ts`, `src/lib/auth/route-guard.ts`, `src/lib/auth/get-user.ts`, `src/lib/auth/verify-admin.ts`, `src/lib/auth/get-user-context.ts`, `src/lib/supabase/`, `src/app/login/page.tsx`, `src/components/auth/LoginForm.tsx`, `src/middleware.ts` | `src/tests/auth.logic.test.ts`, `src/tests/auth-get-user.logic.test.ts`, `src/tests/middleware.logic.test.ts` | Done |
++| 99 | `00-architecture/plan-protocol.md` | Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00) | — | — | Done |
+ | 99 | `00-architecture/two_client_architecture.md` | Two-Client Architecture | — | — | Active |
+ 
+diff --git a/docs/specs/00-architecture/plan-protocol.md b/docs/specs/00-architecture/plan-protocol.md
+new file mode 100644
+index 000000000..a265dcf0f
+--- /dev/null
++++ b/docs/specs/00-architecture/plan-protocol.md
+@@ -0,0 +1,43 @@
++> **Role: standard.**
++
++# Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00)
++Operator, verbatim: "re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which we can remove later depending if they fit the plan ... These early plans need to be reviewed, grounded with the panel. We need a build pass and then optimization. The biggest thing is this cant take forever ... simple and no scope creep ... Dont make more ungrounded recommendations."
++Principles (buildo-grounded-rules): standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep.
++
++## 0. One plan, no new plan
++- The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board). Nothing is re-written from scratch. Every existing task stays until a step below removes it with a cited reason.
++- Increments 1-5 are RE-OPENED in sequence.json as increments "1".."5", one per built scenario: 1-2 detached house, 3 houseplex 2-4, 4 house with secondary suite, 5 garden suite. Their engine work stays DONE (cited); only the missing slice parts are added as tasks.
++- Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added.
++
++## 1. Done = the scenario works for a customer (the slice definition)
++An increment is done only when, on a real lot on the real page: (1) engine rows right (answer key); (2) stored as ruled (headline / on demand, per the storage sitting); (3) page section + binding; (4) display text; (5) public route; (6) cost line; (7) CoA per option; (8) search hand-off where the scenario needs one; (9) measured check on the page. Built ONCE with the first slice (detached house): the route (MB-44 W), the headline table (MB-38), the text registry, the cost capture, the CoA mechanism, the check. Later slices add data + one check.
++
++## 2. Steps, in order (per increment, 1 first)
++| Step | What | Gate |
++|---|---|---|
++| A. Merge | Add the slice tasks to sequence.json from the existing sources only: gap-register/REGISTER.md, resolve-design/items.json, replan SCENARIO-SLICES.md (18 slice items), CoA regression, storage-outcome. Duplicates merged, never doubled. Old tasks untouched. | every added task has a source line; board re-rendered |
++| B. Fit check | Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE. NONE goes on a removal list with its evidence (grep), not deleted. | design-fit seat X |
++| C. Panel | Seats R,C,I,D,G,O,W,X then F on the increment's task list (tasks, order, dependencies). Beyond-research parts GROUNDED / STRIPPED / STILL OPEN. | check.mjs, check-cites, check-quotes PASS |
++| D. Build pass | Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines |
++| E. Optimisation | Merge, fold into existing nights/pushes, drop the removal list items the operator approves; nothing new added here. | F on the final wording |
++| F. One sitting | One page per increment: the task list, the removal list, rulings only where a rule is genuinely open (searched first). | operator's words logged |
++
++## 3. Simplicity guards (to stop task growth)
++- No new research topics. Only the sources in step A.
++- A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source.
++- Every step reports: tasks before, added (with source), removed-candidate, after. The count must not grow without a source per task.
++- Rulings: only when a search of the record finds none; the search is quoted.
++- One lane per increment at a time; increment 1-2 (detached house) first, the others queue behind it.
++
++## 4. Operator order, 2026-11-17 ~22:20 (supersedes the step order in section 2)
++Operator, verbatim: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integration, context, compliance etc. (for every task) 2 - optimize all the tasks within the increment (we need to complete this quickly) and then runa build pass and review any potential pushes in advance. When you get to incremement six - need to incorporate all the relevant tasks from the current plan. Do all nine increments this way tonight. In the end like today this needs to be one plan... we know what we are working on.. keep it simple."
++Per increment: 1. ADD the slice tasks (section 2 step A) and REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict). 2. OPTIMISE the increment's tasks (merge, fold into existing nights/pushes, removal list; nothing new). 3. BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step). Then the one-page sitting.
++Increments: 1-2 detached house, 3 houseplex, 4 house with suite, 5 garden suite, 6 renovations (with 6c owner inputs; incorporate every relevant task already in the current plan), 7 semi renovation, 8 sixplex, 9 merged measure, 10 proof set (+ Launch gate L). Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason) + SITTING.md + PASS lines. The orchestrator applies each patch to sequence.json after checking, so the end result is ONE plan.
++
++## 5. Joining steps (operator 2026-11-17 ~22:40, verbatim: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project ie a database that works and is ready 3. yes - this is the mess we created we need to clean it up 4. yes. 5. yes we need to finish this as quickly as possible today was a massive setback - we cant continue to make these mistakes - the infastrcuture may need to change as per your earlier grounding issues etc. yes add them")
++1. INTEGRATION PASS (after the last increment, before the board is final): across all increments check ids/dependsOn exist, one DB job at a time (Spec 137 rule 9), one recapture per increment, push order and contents, storage room vs the ST-3 line, shared-piece ids from increment 1-2 used consistently. Panel R,C,I,D,G,W,X then F. Output: one sequence.json.
++2. LAUNCH-SHARED home: work that serves the finished product but no single scenario (search fixes, McFrontend launch list MCFRONTEND-QUEUE.md:498 - billing, account, tracked lots, landing, lawyer check -, McTest harness, the shared pieces) lives in increment "1-2 shared" or the Launch gate, from the gap register and the launch list only. Objective: a completed project - a database that works and is ready, served to the customer.
++3. ONE SITTING: the orchestrator merges every increment's SITTING.md and the pending sittings (6c, 7, 8, 9, 10, design, gaps, storage) into one, duplicates merged, anything already ruled recorded not asked (search quoted).
++4. HELD MERGE: when the CoA regression and the storage review land, their items go into their increments and only those items are re-reviewed (seats + F).
++5. TIME: every task carries an estimate (MEASURED with source, or GUESS labelled); the integration pass shows the critical path to the customer-ready product.
++6. INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule) and is listed in the plan as tasks with sources: e.g. ground.mjs pack contention, the forbidden-name guard on command lines, lanes reading only seat tails, design-fit check in every panel (done: seat X).
+diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
+index 91d8530a6..e0909476c 100644
+--- a/scripts/analysis/backlog-lane.mjs
++++ b/scripts/analysis/backlog-lane.mjs
+@@ -21,5 +21,5 @@ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ import { args, asList, descriptionOf, home, parseFM, readItems, REPO, sha256, today } from './backlog-lib.mjs';
+-import { DEFAULT_TABLE, filesText, lensSet, milestoneLetter, readTable, resolveTask } from './rule-lists.mjs';
++import { DEFAULT_TABLE, filesText, lensSet, milestoneLetter, readTable, resolveTask, verifyResolved } from './rule-lists.mjs';
+ 
+ const a = args();
+@@ -72,6 +72,10 @@ const rlOpt = str('rule-lists', '');
+ if (rlOpt && path.resolve(home(rlOpt)) !== path.resolve(DEFAULT_TABLE) && process.env.RULE_LISTS_ALLOW_OVERRIDE !== '1') refuse(`--rule-lists ${rlOpt} is not the repo table (${DEFAULT_TABLE}): a different table would decide which rule lists apply, so it is refused (the tests set RULE_LISTS_ALLOW_OVERRIDE=1)`);
+ let resolved;
+-try { resolved = resolveTask({ table: readTable(path.resolve(home(str('rule-lists', DEFAULT_TABLE)))), root: board, body: t.body, type: String(t.fm.type ?? ''), letter: milestoneLetter(board, t.fm.milestone) }); } catch (e) { refuse(`${taskId}: cannot read the rule-list table or one of its path maps under ${board}: ${String(e.message).split('\n')[0]}`); }
++let ruleTable;
++const letterOf = milestoneLetter(board, t.fm.milestone);
++try { ruleTable = readTable(path.resolve(home(str('rule-lists', DEFAULT_TABLE)))); resolved = resolveTask({ table: ruleTable, root: board, body: t.body, type: String(t.fm.type ?? ''), letter: letterOf }); } catch (e) { refuse(`${taskId}: cannot read the rule-list table or one of its path maps under ${board}: ${String(e.message).split('\n')[0]}`); }
+ if (resolved.error) refuse(`${taskId}: ${resolved.error.replace(/^refused: /, '')}`);
++const missingLists = verifyResolved(ruleTable, resolved, letterOf); // V2.LIST (task-406): a launch whose lists lack the five words, the plan protocol or the milestone objectives is refused
++if (missingLists.length) refuse(`${taskId}: the resolved rule lists are incomplete: ${missingLists.join('; ')}`);
+ const st = git('status', '--porcelain');
+ if (st.status !== 0) refuse(`git status failed on ${board}: ${st.stderr.trim().split('\n')[0]}`);
+diff --git a/scripts/analysis/gates/generated-docs.mjs b/scripts/analysis/gates/generated-docs.mjs
+index 826a5e1e2..c2a85e330 100644
+--- a/scripts/analysis/gates/generated-docs.mjs
++++ b/scripts/analysis/gates/generated-docs.mjs
+@@ -51,4 +51,6 @@ export const GENERATED_DOCS = [
+   { file: 'envelope-answer-tracker.md', generator: 'scripts/analysis/bylaw/generate-answer-tracker.mjs', has_check: true,
+     proposed: 'keep', note: '--check exits 1 on drift (Spec 78 P5.15 INV-25); wired 2026-10-18 with the max-build trace tooling.' },
++  { file: 'rule-lists-by-kind.md', generator: 'scripts/analysis/rule-lists.mjs', has_check: true,
++    proposed: 'keep', note: 'task-406 (V2.LIST): `page --check` exits 1 on drift (a list document or the table changed); what each kind of work receives, with sizes and part counts.' },
+   { file: '127-surface-review-queue.md', generator: 'scripts/violations/generate-surface-registry.mjs', has_check: true,
+     proposed: 'keep', note: 'same generator + --check arm as the registry; written together.' },
+diff --git a/scripts/analysis/rule-lists.json b/scripts/analysis/rule-lists.json
+index 1edd1a625..d8b4811a0 100644
+--- a/scripts/analysis/rule-lists.json
++++ b/scripts/analysis/rule-lists.json
+@@ -4,5 +4,6 @@
+     "A list is used WHOLE: `whole` = the file, `sections` = whole sections picked by heading (a heading text is matched at its start, after leading emoji and punctuation; the section runs to the next heading of the same or a higher level); a section is allowed only where the file itself separates rules from history or narrative. Never a hand-picked clause.",
+     "A row maps path globs to lists. `globs` are literal; `globs_from` REUSES an existing path map (mcbylaws/protected-paths.json keys layer23 = by-law code and frontend = McFrontend surface paths; Spec 133 R-KP / R-LD, Spec 128 section 4.11) instead of copying it; `imports_from` makes the row fire only for a file that imports from that path. Several rows may match: the lists are the union.",
+-    "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks get the queue lists). `increment_docs`: every task also gets the requirements document of its milestone group letter."
++    "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks get the queue lists). `increment_docs`: every task also gets the requirements document of its milestone group letter.",
++    "V2.LIST (task-406, McFix V2 step 1; operator 2026-11-20, see the task text): `every_task` lists are attached to EVERY task whatever its Files line (the five words in the step handbook Glossary, and the plan protocol as a repo document); `milestone_docs` attaches to a task the objectives sections of its own milestone, beside `increment_docs`; `kinds` are the examples the generated page docs/reports/generated/rule-lists-by-kind.md prints (what each kind of work receives). `rule-lists.mjs validate` refuses a table with none of them."
+   ],
+   "contract_version": 1,
+@@ -11,4 +12,6 @@
+   "protected_paths": ["scripts/hooks/check-lane-close.mjs", "scripts/analysis/rule-lists.mjs", "scripts/analysis/rule-lists.json", "scripts/deepseek-review.js", ".husky/*"],
+   "lists": {
++    "five-words": { "file": "docs/specs/01-pipeline/132_step_standard_handbook.md", "sections": ["Glossary"], "generated_by": "scripts/generate-step-handbook.mjs" },
++    "plan-protocol": { "file": "docs/specs/00-architecture/plan-protocol.md", "whole": true, "generated_by": "hand-written" },
+     "step-132": { "file": "docs/specs/01-pipeline/132_step_standard_handbook.md", "sections": ["2. Every step", "3. By archetype", "4. Cross-cutting", "6. Rules with no or partial machine check"], "generated_by": "scripts/generate-step-handbook.mjs" },
+     "airtight-124a": { "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md", "sections": ["Appendix §B10", "Appendix §B12"], "generated_by": "hand-written" },
+@@ -16,10 +19,6 @@
+     "airtight-v2-122": { "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md", "sections": ["6.6.1 Registry and ledger truth"], "generated_by": "hand-written" },
+     "airtight-122a": { "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md", "sections": ["Appendix §A26", "Appendix §A27"], "generated_by": "hand-written" },
+-    "eng-s3-s9": { "file": "docs/specs/00_engineering_standards.md", "sections": ["3. Database Management", "9. Pipeline & Script Safety"], "generated_by": "hand-written" },
+-    "eng-s1": { "file": "docs/specs/00_engineering_standards.md", "sections": ["1. Architecture & UI Standards"], "generated_by": "hand-written" },
+-    "eng-s2-s4-s10-s11": { "file": "docs/specs/00_engineering_standards.md", "sections": ["2. Error Handling", "4. Security & API Contracts", "10. Frontend/Backend Boundary", "11. Plan Compliance Checklist"], "generated_by": "hand-written" },
+-    "eng-s5-s9-s14": { "file": "docs/specs/00_engineering_standards.md", "sections": ["5. Testing Standards", "9. Pipeline & Script Safety", "14. The Prevention Loop"], "generated_by": "hand-written" },
+-    "eng-s5": { "file": "docs/specs/00_engineering_standards.md", "sections": ["5. Testing Standards"], "generated_by": "hand-written" },
+-    "bylaw-133": { "file": "docs/specs/01-pipeline/133_bylaw_handbook.md", "sections": ["2. Rules by provision family"], "generated_by": "scripts/generate-bylaw-handbook.mjs" },
++    "eng-all": { "file": "docs/specs/00_engineering_standards.md", "whole": true, "generated_by": "hand-written" },
++    "bylaw-133": { "file": "docs/specs/01-pipeline/133_bylaw_handbook.md", "sections": ["2. Rules by provision family", "3. Rows with an OWED marker"], "generated_by": "scripts/generate-bylaw-handbook.mjs" },
+     "storage-doc16": { "file": "backlog/docs/doc-16 - McStorage-policy-v2.md", "whole": true, "generated_by": "hand-written", "status": "draft, operator to confirm it binds" },
+     "surface-136": { "file": "docs/specs/02-web-admin/136_mcfrontend_handbook.md", "sections": ["2. Rules"], "generated_by": "scripts/surfaces/generate-surface-handbook.mjs" },
+@@ -51,13 +50,28 @@
+     "inc-10": { "file": "backlog/docs/increments/doc-13 - Increment-10-requirements.md", "whole": true, "generated_by": "hand-written" },
+     "inc-L": { "file": "backlog/docs/increments/doc-14 - Increment-L-requirements.md", "whole": true, "generated_by": "hand-written" },
+-    "inc-AL": { "file": "backlog/docs/increments/doc-15 - Increment-AL-requirements.md", "whole": true, "generated_by": "hand-written" }
++    "inc-AL": { "file": "backlog/docs/increments/doc-15 - Increment-AL-requirements.md", "whole": true, "generated_by": "hand-written" },
++    "ms-F": { "file": "backlog/milestones/m-0 - increment-1·a-foundations-[f].md", "sections": ["Objectives"], "generated_by": "hand-written" },
++    "ms-S": { "file": "backlog/milestones/m-1 - increment-1·b-search-[s].md", "sections": ["Project objectives", "Increment objectives", "Objectives"], "generated_by": "hand-written" },
++    "ms-1-2": { "file": "backlog/milestones/m-2 - increment-1·c-launch-shared-parts-[1-2].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
++    "ms-1": { "file": "backlog/milestones/m-3 - increment-1·d-detached-house-+-shared-report-page-.md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
++    "ms-3": { "file": "backlog/milestones/m-4 - increment-3-detached-houseplex-(2-4-units)-[3].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
++    "ms-4": { "file": "backlog/milestones/m-5 - increment-4-house-with-a-secondary-suite-[4].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
++    "ms-5": { "file": "backlog/milestones/m-6 - increment-5-garden-suite-add-on-[5].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
++    "ms-6": { "file": "backlog/milestones/m-7 - increment-6-renovations-finish-[6].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
++    "ms-6c": { "file": "backlog/milestones/m-8 - increment-6c-owner-inputs-[6c].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
++    "ms-7": { "file": "backlog/milestones/m-9 - increment-7-semi-detached-(renovation-only)-[7].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
++    "ms-8": { "file": "backlog/milestones/m-10 - increment-8-sixplex-(houseplex-5-6-units)-[8].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
++    "ms-9": { "file": "backlog/milestones/m-11 - increment-9-merged-measure-(the-25,-coa-172,-4d)-[.md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
++    "ms-10": { "file": "backlog/milestones/m-12 - increment-10-mcproof-proof-set-[10].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
++    "ms-L": { "file": "backlog/milestones/m-13 - launch-gate-[l].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
++    "ms-AL": { "file": "backlog/milestones/m-14 - after-launch-[al].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" }
+   },
+   "rows": [
+     {
+       "id": "step-pipeline",
+-      "globs": ["scripts/*.js", "scripts/**/*.descriptor.json", "scripts/lib/compute/**", "scripts/lib/step/**", "scripts/quality/**", "migrations/**"],
+-      "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js"],
+-      "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a", "eng-s3-s9"],
+-      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9"
++      "globs": ["scripts/*.js", "scripts/**/*.descriptor.json", "scripts/lib/compute/**", "scripts/lib/step/**", "scripts/quality/**", "migrations/**", "scripts/steps/**", "scripts/lib/**", "scripts/seeds/**", "scripts/ast-grep-rules/**"],
++      "not": ["scripts/deepseek-review.js", "scripts/gemini-review.js", "scripts/lib/review-template.js"],
++      "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a", "eng-all"],
++      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations (not the review tool CLIs scripts/deepseek-review.js and scripts/gemini-review.js, which are lane tools, see lane-tools) are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9. V2.LIST (task-406, coverage review 2026-11-20): also scripts/steps, scripts/lib (the lane review helper scripts/lib/review-template.js excepted: lane-tools), scripts/seeds and scripts/ast-grep-rules, which the step handbook and the Airtight sources govern (the paths RUNNING tasks 376, 378, 384 and tasks 345, 372, 379, 401, 408 named and no row matched); the engineering standards are attached whole (eng-all)"
+     },
+     {
+@@ -70,18 +84,18 @@
+       "id": "api-lib",
+       "globs": ["src/app/api/**", "src/lib/**"],
+-      "lists": ["eng-s2-s4-s10-s11"],
+-      "why": "API routes and src/lib are governed by engineering standards sections 2, 4, 10 and 11"
++      "lists": ["eng-all"],
++      "why": "API routes and src/lib are governed by engineering standards sections 2, 4, 10 and 11. V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists"
+     },
+     {
+       "id": "ui-app",
+-      "globs": ["src/components/**", "src/app/**"],
+-      "lists": ["eng-s1", "eng-s2-s4-s10-s11"],
+-      "why": "ADDED by COMPLY.2 (real Files lines named these paths and no starting row matched): UI components and app pages are governed by engineering standards section 1 (architecture and UI), and sections 2, 4, 10 and 11 (errors, security, the front/back boundary, the plan checklist); the surface paths among them also match the surfaces row"
++      "globs": ["src/components/**", "src/app/**", "src/features/**"],
++      "lists": ["eng-all"],
++      "why": "ADDED by COMPLY.2 (real Files lines named these paths and no starting row matched): UI components and app pages are governed by engineering standards section 1 (architecture and UI), and sections 2, 4, 10 and 11 (errors, security, the front/back boundary, the plan checklist); the surface paths among them also match the surfaces row. V2.LIST (task-406): also src/features (unmatched); the engineering standards are attached whole (eng-all)"
+     },
+     {
+       "id": "middleware-config",
+-      "globs": ["src/middleware.ts", "package.json", ".github/**"],
+-      "lists": ["eng-s2-s4-s10-s11", "eng-s5-s9-s14"],
+-      "why": "ADDED by COMPLY.2: the request middleware (security and boundary), the dependency manifest and CI workflows are governed by engineering standards sections 2, 4, 10, 11 (errors, security, boundary) and 5, 9, 14 (testing, script safety, the prevention loop)"
++      "globs": ["src/middleware.ts", "package.json", ".github/**", "tsconfig*.json", "eslint.config.mjs", "biome.json", "knip.json", "next.config.ts", ".sqlfluff"],
++      "lists": ["eng-all"],
++      "why": "ADDED by COMPLY.2: the request middleware (security and boundary), the dependency manifest and CI workflows are governed by engineering standards sections 2, 4, 10, 11 (errors, security, boundary) and 5, 9, 14 (testing, script safety, the prevention loop). V2.LIST (task-406): also the TypeScript, lint, biome, knip, Next and sqlfluff configuration files (unmatched); the engineering standards are attached whole (eng-all)"
+     },
+     {
+@@ -125,13 +139,19 @@
+     {
+       "id": "lane-tools",
+-      "globs": ["scripts/analysis/**", "scripts/hooks/**", "scripts/deepseek-review.js", "scripts/lib/review-template.js", ".husky/**", ".claude/**"],
+-      "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-s5-s9-s14", "orchestrator-doc17"],
+-      "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings)"
++      "globs": ["scripts/analysis/**", "scripts/hooks/**", "scripts/deepseek-review.js", "scripts/lib/review-template.js", ".husky/**", ".claude/**", "scripts/board/**", "CLAUDE.md", "mcbylaws/*.json"],
++      "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
++      "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings). V2.LIST (task-406): also scripts/board, CLAUDE.md and the mcbylaws/*.json path maps (coverage review 2026-11-20: unmatched); the engineering standards are attached whole (eng-all)"
++    },
++    {
++      "id": "generated-reports",
++      "globs": ["docs/reports/generated/**", "docs/reports/policy/**"],
++      "lists": ["surface-127", "agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
++      "why": "V2.LIST (task-406, coverage review 2026-11-20): generated reports (docs/reports/generated) are governed by the surface conversion procedure (Spec 127: surface-127); docs/reports/policy has no governing spec found, so the lane-tools lists are attached as the nearest (to verify); both were unmatched"
+     },
+     {
+       "id": "specs-docs",
+       "globs": ["docs/specs/**"],
+-      "lists": ["eng-s5-s9-s14", "agents-s7-s11", "queue-137"],
+-      "why": "ADDED by COMPLY.2 (task-376: a real Files line named a spec and no row matched): a task that edits spec files is governed by engineering standards sections 14 (a behaviour-changing ruling updates all cited specs in the same commit), 9 and 5 (the list the table already names for them), Spec 08 sections 7 and 11 and Spec 137; backlog/docs/** is already matched by queue-records (backlog/**)"
++      "lists": ["eng-all", "agents-s7-s11", "queue-137"],
++      "why": "ADDED by COMPLY.2 (task-376: a real Files line named a spec and no row matched): a task that edits spec files is governed by engineering standards sections 14 (a behaviour-changing ruling updates all cited specs in the same commit), 9 and 5 (the list the table already names for them), Spec 08 sections 7 and 11 and Spec 137; backlog/docs/** is already matched by queue-records (backlog/**). V2.LIST (task-406): the engineering standards are attached whole (eng-all), replacing the section lists"
+     },
+     {
+@@ -149,7 +169,7 @@
+     {
+       "id": "tests",
+-      "globs": ["src/tests/**"],
+-      "lists": ["eng-s5"],
+-      "why": "ADDED by COMPLY.2 (not in the starting rows): test files are governed by engineering standards section 5 (testing)"
++      "globs": ["src/tests/**", "tests/**", "scripts/tests/**", "supabase/tests/**"],
++      "lists": ["eng-all"],
++      "why": "ADDED by COMPLY.2 (not in the starting rows): test files are governed by the engineering standards (testing, section 5). V2.LIST (task-406): the standards are attached whole (eng-all); also tests/**, scripts/tests/** and supabase/tests/** (coverage review 2026-11-20: unmatched)"
+     }
+   ],
+@@ -159,4 +179,30 @@
+     "F": "inc-F", "S": "inc-S", "1-2": "inc-1-2", "1": "inc-1", "3": "inc-3", "4": "inc-4", "5": "inc-5", "6": "inc-6",
+     "6c": "inc-6c", "7": "inc-7", "8": "inc-8", "9": "inc-9", "10": "inc-10", "L": "inc-L", "AL": "inc-AL"
+-  }
++  },
++  "every_task": ["five-words", "plan-protocol"],
++  "milestone_docs": {
++    "1": ["ms-1"],
++    "3": ["ms-3"],
++    "4": ["ms-4"],
++    "5": ["ms-5"],
++    "6": ["ms-6"],
++    "7": ["ms-7"],
++    "8": ["ms-8"],
++    "9": ["ms-9"],
++    "10": ["ms-10"],
++    "F": ["ms-F"],
++    "S": ["ms-S"],
++    "1-2": ["ms-1-2"],
++    "6c": ["ms-6c"],
++    "L": ["ms-L"],
++    "AL": ["ms-AL"]
++  },
++  "kinds": [
++    { "id": "pipeline", "label": "pipeline step", "files": "scripts/steps/_schema/converted.json, scripts/load-permits.js", "type": "build", "letter": "S" },
++    { "id": "web", "label": "McFrontend web", "files": "src/components/report/, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json", "type": "build", "letter": "S" },
++    { "id": "phone", "label": "phone", "files": "mobile/src/app/", "type": "build", "letter": "S" },
++    { "id": "storage", "label": "storage", "files": "src/lib/parcels/report-compute.ts", "type": "build", "letter": "S" },
++    { "id": "tooling", "label": "tooling", "files": "scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs", "type": "build", "letter": "S" },
++    { "id": "spec", "label": "spec-only", "files": "docs/specs/00-architecture/08_agents.md", "type": "build", "letter": "S" }
++  ]
+ }
+diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
+index 4f76a4efb..f3b86be41 100644
+--- a/scripts/analysis/rule-lists.mjs
++++ b/scripts/analysis/rule-lists.mjs
+@@ -7,4 +7,6 @@
+ //                                                           the compliance lens input: the list FIRST, then the material; split by the list's own headings when list +
+ //                                                           material would pass the review tool bound; never trims; exit 1 when it cannot fit
++//   check-tasks [--table f] [--root dir]                    every open task of backlog/tasks: resolves (with the every_task and milestone lists verified) or is listed by id as not yet resolvable, with the reason
++//   page [--write|--check] [--table f] [--root dir]          the generated page docs/reports/generated/rule-lists-by-kind.md: per kind of work the documents, sizes and part counts
+ //   findings --dir d                                        the finding ids of the lens outputs in d (<file stem>#<ordinal among BUG and DEFER lines>)
+ // Rules: Spec 08 section 7 rule 4 and section 5.3 (08_agents.md), 00_engineering_standards.md section 14, operator 2026-11-20 (see the table's $comment); PLAN-PROTOCOL.md:3 simple.
+@@ -15,5 +17,5 @@ import { createRequire } from 'node:module';
+ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+-import { args, parseFM, REPO, sha256 } from './backlog-lib.mjs';
++import { args, parseFM, readItems, REPO, sha256 } from './backlog-lib.mjs';
+ import { globToRegExp, matchesAny } from './mcbylaws/paths.mjs';
+ 
+@@ -107,4 +109,16 @@ export function validateTable(table, root) {
+   if (d && !(table.rows ?? []).some((r) => r.id === d.row)) bad.push(`no_files_default: row ${d.row} is not defined`);
+   for (const [k, id] of Object.entries(table.increment_docs ?? {})) if (!table.lists?.[id]) bad.push(`increment_docs ${k}: list ${id} is not defined`);
++  // V2.LIST (task-406): the always-attached lists cannot be switched off by leaving the keys out
++  if (!Array.isArray(table.every_task) || table.every_task.length === 0) bad.push('every_task: missing or empty (the lists every task gets: the five words and the plan protocol)');
++  else for (const id of table.every_task) if (!table.lists?.[id]) bad.push(`every_task: list ${id} is not defined`);
++  for (const k of Object.keys(table.increment_docs ?? {})) {
++    const m = table.milestone_docs?.[k];
++    if (!Array.isArray(m) || m.length === 0) bad.push(`milestone_docs: increment letter ${k} has no milestone list`);
++    else for (const id of m) if (!table.lists?.[id]) bad.push(`milestone_docs ${k}: list ${id} is not defined`);
++  }
++  for (const k of table.kinds ?? []) {
++    if (!k.id || !k.label || !k.files) bad.push(`kinds: ${k.id ?? '?'} needs id, label and files`);
++    else { try { const r = resolveTask({ table, root, body: `Files: ${k.files}`, type: k.type ?? 'build', letter: k.letter, tracked }); if (r.error) bad.push(`kinds ${k.id}: ${r.error}`); else { const miss = verifyResolved(table, r, k.letter); if (miss.length) bad.push(`kinds ${k.id}: ${miss.join('; ')}`); } } catch (e) { bad.push(`kinds ${k.id}: ${String(e.message).split('\n')[0]}`); } }
++  }
+   return bad;
+ }
+@@ -209,12 +223,31 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
+   if (result.unmatched.length) return { error: `refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json: ${result.unmatched.join(', ')} (add a row to the table, or fix the Files line); no silent "no rules apply"` };
+   if (entries.length > 0 && rowHits === 0 && ['build', 'fix'].includes(String(type ?? '').toLowerCase())) return { error: `refused: the Files line of a ${type} task resolves to no rule list (only exempt paths: ${result.exempt.join(', ')}); a build or fix task must touch at least one governed path` };
++  for (const id of table.every_task ?? []) add(id, 'every-task', 'every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)');
+   if (letter !== undefined) {
+     const id = table.increment_docs?.[letter];
+     if (!id) return { error: `refused: no increment requirements document for milestone group [${letter}] in increment_docs of scripts/analysis/rule-lists.json` };
+     add(id, 'increment', 'every task also gets the requirements document of its increment (the milestone group letter)');
++    const ms = table.milestone_docs;
++    if (ms !== undefined) {
++      if (!Array.isArray(ms[letter]) || ms[letter].length === 0) return { error: `refused: no milestone objectives list for milestone group [${letter}] in milestone_docs of scripts/analysis/rule-lists.json` };
++      for (const id of ms[letter]) add(id, 'milestone', 'every task also gets the objectives sections of its milestone (the milestone group letter)');
++    }
+   }
+   return result;
+ }
+ 
++/**
++ * What a resolved set is missing: the every_task lists and the milestone lists of the letter (task-406). [] when complete; the table's own every_task key being empty is a problem too.
++ * Shared by validate, check-tasks and the close check, so the always-attached lists cannot be skipped by one of them.
++ */
++export function verifyResolved(table, result, letter) {
++  const have = new Set((result?.lists ?? []).map((l) => l.id));
++  const out = [];
++  if (!Array.isArray(table.every_task) || table.every_task.length === 0) out.push('the table has no every_task lists (the five words and the plan protocol must be attached to every task)');
++  for (const id of table.every_task ?? []) if (!have.has(id)) out.push(`every_task list ${id} is not attached`);
++  if (letter !== undefined && table.milestone_docs !== undefined) for (const id of table.milestone_docs[letter] ?? []) if (!have.has(id)) out.push(`milestone list ${id} is not attached`);
++  return out;
++}
++
+ // ---- finding ids (shared with scripts/hooks/check-lane-close.mjs) ----
+ /** A deliberately loose reading of a finding line (decoration, numbering, quotes, bold, a colon, any case). It must give the same count as the strict FINDING_LINE, else lines were altered. */
+@@ -297,4 +330,61 @@ export function parseLensInput(text) {
+ export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');
+ 
++// ---- the check over every open task, and the generated page (task-406, V2.LIST) ----
++/** Every open task (not finished, not DROPPED) of root's backlog/tasks: {resolve: [ids], notYet: [{id, cls, reason}], bad: [lines]}. A task with a Files line that resolves must carry the every_task and milestone lists. */
++export function checkTasks({ table, root }) {
++  const tracked = trackedFiles(root);
++  const done = new Set([...(table.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']), 'DROPPED'].map((s) => s.toUpperCase()));
++  const out = { resolve: [], notYet: [], bad: [] };
++  for (const t of readItems(root)) {
++    if (done.has(String(t.fm.status ?? '').toUpperCase())) continue;
++    const letter = milestoneLetter(root, t.fm.milestone);
++    let r;
++    try { r = resolveTask({ table, root, body: t.body, type: String(t.fm.type ?? ''), letter, tracked }); } catch (e) { out.bad.push(`${t.id}: cannot resolve: ${String(e.message).split('\n')[0]}`); continue; }
++    if (!r.error) {
++      const miss = verifyResolved(table, r, letter);
++      if (miss.length) out.bad.push(`${t.id}: resolves but ${miss.join('; ')}`); else out.resolve.push(t.id);
++      continue;
++    }
++    const m = /matched by no row[^:]*: (.*?) \(add a row/.exec(r.error);
++    if (m) out.notYet.push({ id: t.id, cls: 0, reason: `a Files path matches no row: ${m[1]}` });
++    else if (/no Files: line/.test(r.error)) out.notYet.push({ id: t.id, cls: 2, reason: 'no Files line' });
++    else out.notYet.push({ id: t.id, cls: 1, reason: r.error.replace(/^refused: /, '') });
++  }
++  out.notYet.sort((a, b) => a.cls - b.cls || numOf(a.id) - numOf(b.id));
++  return out;
++}
++const numOf = (id) => Number(/(\d+)$/.exec(String(id))?.[1]);
++
++const PAGE = 'docs/reports/generated/rule-lists-by-kind.md';
++const NOMINAL = 30000; // characters of material per review (the plan context file of a task is about this size)
++const fmtN = (n) => n.toLocaleString('en-US');
++/** The generated page: per kind of work (table key kinds) the documents its compliance review receives, with characters and lens-input part counts at a nominal material size. */
++export function renderPage({ table, root }) {
++  const tracked = trackedFiles(root);
++  const tmpl = path.join(REPO, '.claude/review-templates/lens-compliance.md');
++  const o = [];
++  o.push('<!-- GENERATED by scripts/analysis/rule-lists.mjs page --write from scripts/analysis/rule-lists.json and the documents it names. Do not edit; regenerate. -->', '');
++  o.push('# What each kind of work receives: the compliance review documents', '');
++  o.push('Every task gets the every_task lists (the five words in the step handbook Glossary, and the plan protocol) and the objectives sections of its milestone; the rows add the specs that govern the touched paths. Characters are the text of the list as the review receives it; parts are the lens-input files for one list at a material of ' + fmtN(NOMINAL) + ' characters (a list is split by its own headings, never trimmed, when list plus material pass the review tool bound). A missing or shrunken document shows here as a changed row.', '');
++  for (const k of table.kinds ?? []) {
++    const r = resolveTask({ table, root, body: `Files: ${k.files}`, type: k.type ?? 'build', letter: k.letter, tracked });
++    o.push(`## ${k.label}`, '');
++    if (r.error) { o.push(`Not resolvable: ${r.error}`, ''); continue; }
++    o.push(`Example Files line: \`${k.files}\`; type ${k.type ?? 'build'}; milestone group [${k.letter ?? 'none'}].`, '');
++    o.push('| list | document | selection | characters | parts |', '| --- | --- | --- | ---: | ---: |');
++    let chars = 0; let parts = 0;
++    for (const l of r.lists) {
++      const def = table.lists[l.id];
++      const c = listBlocks(def, root, l.id).reduce((n, b) => n + b.text.length, 0);
++      let p;
++      try { p = buildLensInputs({ id: l.id, list: def, root, material: 'x'.repeat(NOMINAL), templateFile: tmpl }).length; } catch { p = 0; }
++      chars += c; parts += p;
++      o.push(`| ${l.id} | ${l.file} | ${def.whole ? 'whole file' : def.sections.join('; ')} | ${fmtN(c)} | ${p || 'does not fit'} |`);
++    }
++    o.push(`| total | ${r.lists.length} lists | | ${fmtN(chars)} | ${parts} |`, '');
++  }
++  return o.join('\n') + '\n';
++}
++
+ // ---- CLI ----
+ function cli() {
+@@ -330,4 +420,20 @@ function cli() {
+     for (const f of fs.readdirSync(dir)) if (f === `${base}.txt` || new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-p\\d+\\.txt$`).test(f)) fs.rmSync(path.join(dir, f));
+     for (const f of files) { const p = path.join(dir, `${base}${f.suffix}.txt`); fs.writeFileSync(p, f.text); console.log(p); }
++  } else if (cmd === 'check-tasks') {
++    let c;
++    try { c = checkTasks({ table, root }); } catch (e) { die(1, e.message); }
++    console.log(`check-tasks: open ${c.resolve.length + c.notYet.length + c.bad.length}: resolve ${c.resolve.length}, not yet resolvable ${c.notYet.length}${c.bad.length ? `, FAILED ${c.bad.length}` : ''}`);
++    const heads = ['a Files path matches no row (a governance gap: add a row or fix the Files line)', 'other reason', 'no Files line (the author adds one before launch)'];
++    for (let cls = 0; cls < 3; cls++) { const g = c.notYet.filter((x) => x.cls === cls); if (g.length) { console.log(`not yet resolvable, ${heads[cls]}: ${g.length}`); for (const x of g) console.log(`  ${x.id}: ${x.reason}`); } }
++    if (c.bad.length) { for (const b of c.bad) console.log(`FAILED ${b}`); die(1, `${c.bad.length} open task(s) resolve without the every_task or milestone lists`); }
++  } else if (cmd === 'page') {
++    const file = path.join(root, PAGE);
++    const want = renderPage({ table, root });
++    if (a.write) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, want); console.log(`rule-lists: wrote ${PAGE}`); }
++    else if (a.check) {
++      const have = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
++      if (have !== want) die(1, `${PAGE} is ${have === null ? 'missing' : 'out of date'}: regenerate with node scripts/analysis/rule-lists.mjs page --write (a document or the table changed)`);
++      console.log(`rule-lists: ${PAGE} is current`);
++    } else die(2, 'usage: page --write | --check');
+   } else if (cmd === 'findings') {
+     const dir = str('dir', '');
+@@ -336,5 +442,5 @@ function cli() {
+     for (const f of files) console.log(ruledLine(f.name, f.text));
+     for (const f of findingsIn(files)) console.log(`${f.id}\t${f.line}`);
+-  } else die(2, 'usage: rule-lists.mjs validate | resolve | lens-input | findings');
++  } else die(2, 'usage: rule-lists.mjs validate | resolve | lens-input | check-tasks | page | findings');
+ }
+ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) cli();
+diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
+index 727f9efe5..403cf5ec6 100644
+--- a/scripts/hooks/check-lane-close.mjs
++++ b/scripts/hooks/check-lane-close.mjs
+@@ -10,4 +10,5 @@
+ //  * Files against the diff: every path changed since the lane branch point (merge-base with the table's base_ref) or staged, outside docs/reports and backlog, is covered by the task's
+ //    Files line; a build or fix task whose Files resolve to no rule list is refused;
++//  * every_task (V2.LIST, task-406): the table's every_task lists are attached to every task by the resolver, so each needs its compliance output like any list; a table with no every_task is refused;
+ //  * the LENS SET the task type calls for (scripts/analysis/rule-lists.mjs lensSet, the function the launch brief uses): per attached rule list one compliance output
+ //    (out-compliance-<list id>.txt; plan- or out- for a non build/fix task; ONE file or parts -p1..-pK with no gap), and for a build or fix task also out-<lens>.txt for code-review,
+@@ -79,4 +80,8 @@ export function closeErrors(i) {
+   if (r.error) return [`${id}: ${r.error.replace(/^refused: /, '')}`];
+   const errors = [];
++  // V2.LIST (task-406): the every_task lists (the five words, the plan protocol) are required of every task like any list; a table that names none is refused, not skipped (nobody switches them off by leaving the key out)
++  const every = i.table.every_task;
++  if (!Array.isArray(every) || every.length === 0) return [`${id}: the rule-list table has no every_task lists: the five words and the plan protocol must be attached to every task (scripts/analysis/rule-lists.json)`];
++  for (const e of every) if (!r.lists.some((l) => l.id === e)) errors.push(`${id}: the every_task list ${e} is not among the resolved lists (a task always gets it; the table or the resolver was altered)`);
+ 
+   // Files against the diff
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index 708d7def0..f0fd89afc 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -261,5 +261,5 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+   it('the lens line runs the compliance lens once per list through the helper, other lenses stay, and the separate-grounder rule is written in', () => {
+     const { extra } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' });
+-    for (const l of ['mobile-98', 'eng-s2-s4-s10-s11', 'storage-doc16', 'inc-F']) {
++    for (const l of ['mobile-98', 'eng-all', 'storage-doc16', 'inc-F']) {
+       expect(extra).toContain('plan-compliance-' + l);
+       expect(extra).toContain('out-compliance-' + l);
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index 8bf92d670..20a98f185 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -19,5 +19,6 @@ const taskText = (o: { id?: string; status: string; type?: string | undefined; f
+ const TABLE = {
+   contract_version: 1, base_ref: 'lane-base', finished_statuses: ['BUILT', 'DONE', 'MERGED'], protected_paths: ['scripts/hooks/check-lane-close.mjs', 'scripts/analysis/rule-lists.*', '.husky/*'],
+-  lists: { first: { file: 'docs/a.md', whole: true, generated_by: 'hand-written' }, 'inc-F': { file: 'docs/inc.md', whole: true, generated_by: 'hand-written' } },
++  lists: { first: { file: 'docs/a.md', whole: true, generated_by: 'hand-written' }, 'inc-F': { file: 'docs/inc.md', whole: true, generated_by: 'hand-written' }, ev: { file: 'docs/ev.md', whole: true, generated_by: 'hand-written' } },
++  every_task: ['ev'],
+   rows: [{ id: 'src', globs: ['src/**'], lists: ['first'], why: 'src' }], exempt: ['docs/reports/lanes/**'], increment_docs: { F: 'inc-F' },
+ };
+@@ -62,5 +63,5 @@ function scenario(o: Opts = {}) {
+   o.tableEdit?.(table);
+   if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
+-  w('docs/a.md', '# A\nrule one text\nrule two text\n'); w('docs/inc.md', '# Inc\nincrement text\n');
++  w('docs/a.md', '# A\nrule one text\nrule two text\n'); w('docs/ev.md', '# Ev\nthe five words and the plan protocol\n'); w('docs/inc.md', '# Inc\nincrement text\n');
+   w('src/a.ts', AFILE);
+   w('backlog/milestones/m-0 - inc.md', '---\nid: m-0\ntitle: "Increment 1·A Foundations [F]"\n---\n');
+@@ -75,5 +76,5 @@ function scenario(o: Opts = {}) {
+   const lane: Lane = { TASK: 'task-7\n' };
+   fs.writeFileSync(path.join(d, '.git/material.txt'), 'MATERIAL UNDER REVIEW: a diff\n');
+-  for (const id of ['first', 'inc-F']) {
++  for (const id of ['first', 'inc-F', ...((table.every_task as string[] | undefined) ?? [])]) {
+     const out = path.join(d, LD, `in-out-compliance-${id}`);
+     const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out], { cwd: d });
+@@ -127,5 +128,5 @@ describe('close check: the lens set (AC #3)', () => {
+   });
+   it('a record-only task needs compliance lens outputs (plan or out) per list and no lens set; a grounder only when a lens returned a finding', () => {
+-    const rec = (finding: boolean) => scenario({ type: 'record', lensFinding: finding, mutate: (l) => ({ TASK: l.TASK as string, 'in-out-compliance-first.txt': l['in-out-compliance-first.txt'] as string, 'in-out-compliance-inc-F.txt': l['in-out-compliance-inc-F.txt'] as string, 'out-compliance-first.txt': l['out-compliance-first.txt'] as string, 'out-compliance-inc-F.txt': l['out-compliance-inc-F.txt'] as string, ...(finding ? {} : { 'GROUNDER.md': null }) }) });
++    const rec = (finding: boolean) => scenario({ type: 'record', lensFinding: finding, mutate: (l) => ({ TASK: l.TASK as string, 'in-out-compliance-first.txt': l['in-out-compliance-first.txt'] as string, 'in-out-compliance-inc-F.txt': l['in-out-compliance-inc-F.txt'] as string, 'out-compliance-first.txt': l['out-compliance-first.txt'] as string, 'out-compliance-inc-F.txt': l['out-compliance-inc-F.txt'] as string, 'in-out-compliance-ev.txt': l['in-out-compliance-ev.txt'] as string, 'out-compliance-ev.txt': l['out-compliance-ev.txt'] as string, ...(finding ? {} : { 'GROUNDER.md': null }) }) });
+     const none = rec(false);
+     expect(none.status, none.stderr).toBe(0);
+@@ -258,2 +259,17 @@ describe('close check: scope of the lane report, the diff and who may close', ()
+   });
+ });
++
++// V2.LIST (task-406): the always-attached lists (table key every_task) are required at close like any list; a table with none is refused (fails closed); planted defect plus passing control.
++describe('close check: the every_task lists (V2.LIST)', () => {
++  it('control: the lane report with an out-compliance output for the every_task list passes', () => {
++    const r = scenario();
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('PLANTED DEFECT: a task whose compliance outputs lack the every_task list is refused, naming the list and the file to write', () => {
++    refused(scenario({ mutate: (l) => ({ ...l, 'out-compliance-ev.txt': null, 'in-out-compliance-ev.txt': null }) }), /list ev[\s\S]*out-compliance-ev\.txt/, 11);
++  });
++  it('a table with no every_task (or an empty one) is refused at close, not skipped (fails closed: nobody switches the lists off)', () => {
++    refused(scenario({ tableEdit: (t) => { delete t.every_task; } }), /every_task/, 12);
++    refused(scenario({ tableEdit: (t) => { t.every_task = []; } }), /every_task/);
++  });
++});
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 4772d6b5b..3920de809 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -56,9 +56,9 @@ describe('the real table (AC #1: data, every listed rule file exists)', () => {
+     const lists = (files: string) => { const r = script(CLI, ['resolve', '--files', files, '--type', 'build', '--letter', '1']); expect(r.status, r.stderr).toBe(0); return ids(JSON.parse(r.stdout) as Res); };
+     const mobile = lists('docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json');
+-    for (const l of ['eng-s5-s9-s14', 'agents-s7-s11', 'queue-137', 'mobile-100', 'mobile-90', 'surface-136']) expect(mobile).toContain(l);
++    for (const l of ['eng-all', 'agents-s7-s11', 'queue-137', 'mobile-100', 'mobile-90', 'surface-136']) expect(mobile).toContain(l);
+     const web = lists('docs/specs/02-web-admin/128_surface_standard_policy.md');
+-    for (const l of ['eng-s5-s9-s14', 'agents-s7-s11', 'queue-137', 'surface-128', 'surface-135']) expect(web).toContain(l);
++    for (const l of ['eng-all', 'agents-s7-s11', 'queue-137', 'surface-128', 'surface-135']) expect(web).toContain(l);
+     const pipe = lists('docs/specs/01-pipeline/132_step_standard_handbook.md');
+-    for (const l of ['eng-s5-s9-s14', 'agents-s7-s11', 'queue-137']) expect(pipe).toContain(l);
++    for (const l of ['eng-all', 'agents-s7-s11', 'queue-137']) expect(pipe).toContain(l);
+     expect(pipe).not.toContain('mobile-100');
+     expect(lists('backlog/docs/doc-16 - McStorage-policy-v2.md')).toContain('queue-137');
+@@ -316,2 +316,154 @@ describe('findings: ids are <file stem>#<ordinal among BUG and DEFER lines>', ()
+   });
+ });
++
++// ---- V2.LIST (task-406, McFix V2 step 1): the lists every compliance review receives; the check over every open task; the generated page ----
++// Rule: Spec 126 section 0a principle 1 and section 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1; PLAN-PROTOCOL.md:3 (docs/specs/00-architecture/plan-protocol.md) simple, no scope creep.
++type Table = { every_task?: string[]; milestone_docs?: Record<string, string[]>; increment_docs: Record<string, string>; lists: Record<string, { file: string; sections?: string[]; whole?: boolean }>; rows: { id: string; lists: string[]; globs?: string[] }[]; kinds?: { id: string }[] };
++const real = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as Table;
++const mod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<{ verifyResolved: (t: Table, r: { lists: { id: string }[] }, letter?: string) => string[] }>;
++
++describe('V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick)', () => {
++  it('the table names every_task = five-words (Spec 132 Glossary) and plan-protocol (the repo copy), and no removed engineering list id is left anywhere', () => {
++    const t = real();
++    expect(t.every_task).toEqual(['five-words', 'plan-protocol']);
++    expect(t.lists['five-words']).toMatchObject({ file: 'docs/specs/01-pipeline/132_step_standard_handbook.md', sections: ['Glossary'] });
++    expect(t.lists['plan-protocol']).toMatchObject({ file: 'docs/specs/00-architecture/plan-protocol.md', whole: true });
++    const text = JSON.stringify(t);
++    for (const gone of ['"eng-s1"', 'eng-s2-s4-s10-s11', 'eng-s3-s9', 'eng-s5-s9-s14', '"eng-s5"']) expect(text, gone).not.toContain(gone);
++    expect(t.lists['eng-all']).toMatchObject({ file: 'docs/specs/00_engineering_standards.md', whole: true });
++  });
++  it('the Glossary block of Spec 132 carries the five words statement, and the repo plan protocol carries the five principles line', () => {
++    const r = script(CLI, ['lens-input', '--list', 'five-words', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fw'), 'in-x')]);
++    expect(r.status, r.stderr).toBe(0);
++    const text = fs.readFileSync(r.stdout.trim().split('\n')[0] as string, 'utf8');
++    expect(text).toContain('STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE');
++    expect(fs.readFileSync(path.join(ROOT, 'docs/specs/00-architecture/plan-protocol.md'), 'utf8')).toContain('standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep');
++  });
++  it('milestone_docs gives every increment letter its own milestone list (objectives sections), and the table validates', () => {
++    const t = real();
++    for (const k of Object.keys(t.increment_docs)) {
++      const lids = t.milestone_docs?.[k] ?? [];
++      expect(lids.length, `letter ${k}`).toBeGreaterThan(0);
++      for (const id of lids) expect(t.lists[id]?.file, `${k}: ${id}`).toMatch(/^backlog\/milestones\/m-\d+ - /);
++    }
++    expect(script(CLI, ['validate']).status).toBe(0);
++  });
++  it('a real task of each kind resolves with the every_task lists and its milestone list (pipeline, web, phone, storage, tooling, spec-only)', () => {
++    const kinds: Record<string, string> = {
++      pipeline: 'scripts/steps/_schema/converted.json, scripts/load-permits.js', web: 'src/app/(maxbld)/page.tsx, src/features/x.ts', phone: 'mobile/src/app/x.tsx',
++      storage: 'src/lib/parcels/report-compute.ts', tooling: 'scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/board/x.mjs', spec: 'docs/specs/00-architecture/08_agents.md',
++    };
++    for (const [k, files] of Object.entries(kinds)) {
++      const r = script(CLI, ['resolve', '--files', files, '--type', 'build', '--letter', 'S']);
++      expect(r.status, `${k}: ${r.stderr}`).toBe(0);
++      expect(ids(JSON.parse(r.stdout) as Res), k).toEqual(expect.arrayContaining(['five-words', 'plan-protocol', 'ms-S', 'inc-S']));
++    }
++  });
++  it('the paths that matched no row on 2026-11-20 now resolve (tasks 376, 378, 384, 372, 401, 408 and the paths of the coverage review)', () => {
++    for (const p of ['docs/reports/generated/rule-lists-by-kind.md', 'docs/reports/policy/x.md', 'scripts/seeds/logic_variables.json', 'scripts/board/x.mjs', 'scripts/steps/_schema/converted.json', 'scripts/lib/step-x/y.js', 'scripts/ast-grep-rules/x.yml', 'src/features/x.ts', 'tests/x.ts', 'scripts/tests/x.mjs', 'supabase/tests/x.sql', 'CLAUDE.md', 'mcbylaws/protected-paths.json', 'tsconfig.json', 'eslint.config.mjs', 'biome.json', 'knip.json', 'next.config.ts', '.sqlfluff']) {
++      const r = script(CLI, ['resolve', '--files', p, '--type', 'build', '--letter', 'S']);
++      expect(r.status, `${p}: ${r.stderr}`).toBe(0);
++    }
++  });
++  it('verifyResolved (what validate and check-tasks run): a resolved set that lacks an every_task list or the milestone list is named; the real resolution passes', async () => {
++    const { verifyResolved } = await mod();
++    const t = real();
++    const good = JSON.parse(script(CLI, ['resolve', '--files', 'scripts/analysis/rule-lists.mjs', '--type', 'build', '--letter', 'S']).stdout) as Res;
++    expect(verifyResolved(t, good, 'S')).toEqual([]);
++    const planted = { lists: good.lists.filter((l) => l.id !== 'five-words' && l.id !== 'ms-S') };
++    expect(verifyResolved(t, planted, 'S').join('|')).toMatch(/five-words/);
++    expect(verifyResolved(t, planted, 'S').join('|')).toMatch(/ms-S/);
++    expect(verifyResolved({ ...t, every_task: [] }, good, 'S').join('|')).toMatch(/every_task/);
++  });
++});
++
++describe('V2.LIST: validate refuses a table that switches the always-attached lists off', () => {
++  const edit = (fn: (t: Record<string, unknown>) => void) => {
++    const f = fixture();
++    const t = JSON.parse(fs.readFileSync(f.table, 'utf8')) as Record<string, unknown>;
++    fn(t);
++    fs.writeFileSync(f.table, JSON.stringify(t));
++    return script(CLI, ['validate', '--root', f.d, '--table', f.table]);
++  };
++  it('control: the fixture with every_task and milestone_docs validates', () => {
++    const r = edit((t) => { t.every_task = ['queue']; t.milestone_docs = { F: ['queue'] }; });
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++  });
++  it('no every_task key, an empty one, or one naming an undefined list is refused', () => {
++    expect(edit((t) => { t.milestone_docs = { F: ['queue'] }; }).stderr).toMatch(/every_task/);
++    expect(edit((t) => { t.every_task = []; t.milestone_docs = { F: ['queue'] }; }).stderr).toMatch(/every_task/);
++    expect(edit((t) => { t.every_task = ['nope']; t.milestone_docs = { F: ['queue'] }; }).stderr).toMatch(/every_task.*nope/);
++  });
++  it('an increment letter with no milestone_docs entry, or an entry naming an undefined list, is refused', () => {
++    expect(edit((t) => { t.every_task = ['queue']; }).stderr).toMatch(/milestone_docs.*F/);
++    expect(edit((t) => { t.every_task = ['queue']; t.milestone_docs = { F: ['nope'] }; }).stderr).toMatch(/milestone_docs F.*nope/);
++  });
++  it('resolution attaches every_task and the milestone list to a matched task, and an unmatched path is still refused (never a vacuous resolve)', () => {
++    const f = fixture();
++    const t = JSON.parse(fs.readFileSync(f.table, 'utf8')) as Record<string, unknown>;
++    t.every_task = ['queue']; t.milestone_docs = { F: ['crlf'] };
++    fs.writeFileSync(f.table, JSON.stringify(t));
++    const ok = JSON.parse(res(f, 'src/two.ts', ['--type', 'build']).stdout) as Res;
++    expect(ids(ok)).toEqual(expect.arrayContaining(['queue', 'crlf', 'first', 'inc-F']));
++    expect(ids(ok).filter((x) => x === 'queue')).toHaveLength(1);
++    const bad = res(f, 'zzz/none.txt', ['--type', 'build']);
++    expect(bad.status).toBe(3);
++    expect(bad.stderr).toContain('zzz/none.txt');
++  });
++});
++
++describe('V2.LIST: check-tasks lists every open task as resolving or not yet resolvable, by id, with the reason', () => {
++  it('a fixture board: a resolving task, a task with no Files line, a task whose path matches no row (listed first), a finished task (skipped)', () => {
++    const f = fixture();
++    const t = JSON.parse(fs.readFileSync(f.table, 'utf8')) as Record<string, unknown>;
++    t.every_task = ['queue']; t.milestone_docs = { F: ['crlf'] };
++    fs.writeFileSync(f.table, JSON.stringify(t));
++    const w = (n: string, status: string, body: string) => { const p = path.join(f.d, `backlog/tasks/task-${n} - x.md`); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, `---\nid: TASK-${n}\ntitle: x\nstatus: ${status}\ntype: build\nmilestone: m-0\n---\n\n## Description\n\n${body}\n`); };
++    w('1', 'WAITS', 'Files: src/two.ts'); w('2', 'WAITS', 'no files here'); w('3', 'WAITS', 'Files: zzz/none.txt'); w('4', 'DONE', 'Files: zzz/none.txt');
++    fs.mkdirSync(path.join(f.d, 'backlog/milestones'), { recursive: true });
++    fs.writeFileSync(path.join(f.d, 'backlog/milestones/m-0 - a.md'), '---\nid: m-0\ntitle: "A [F]"\n---\n');
++    const r = script(CLI, ['check-tasks', '--root', f.d, '--table', f.table]);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    expect(r.stdout).toMatch(/open 3: resolve 1, not yet resolvable 2/);
++    expect(r.stdout.indexOf('task-3')).toBeGreaterThan(-1);
++    expect(r.stdout.indexOf('task-3')).toBeLessThan(r.stdout.indexOf('task-2'));
++    expect(r.stdout).toMatch(/task-3[^\n]*matches no row[^\n]*zzz\/none\.txt/);
++    expect(r.stdout).toMatch(/task-2[^\n]*no Files line/);
++    expect(r.stdout).not.toContain('task-4');
++  });
++  it('the real board: every open task that resolves carries the every_task lists (exit 0), and the count line is printed', () => {
++    const r = script(CLI, ['check-tasks']);
++    expect(r.status, r.stdout.slice(-600) + r.stderr).toBe(0);
++    expect(r.stdout).toMatch(/open \d+: resolve \d+, not yet resolvable \d+/);
++  });
++});
++
++describe('V2.LIST: the generated page of what each kind of work receives', () => {
++  it('the real page is current (page --check), names each kind with documents, sizes and part counts, and is a registered generated doc (gate J)', () => {
++    const c = script(CLI, ['page', '--check']);
++    expect(c.status, c.stdout + c.stderr).toBe(0);
++    const page = fs.readFileSync(path.join(ROOT, 'docs/reports/generated/rule-lists-by-kind.md'), 'utf8');
++    for (const k of ['pipeline step', 'McFrontend web', 'phone', 'storage', 'tooling', 'spec-only']) expect(page, k).toContain(k);
++    expect(page).toMatch(/five-words[^\n]*\|\s*[\d,]+\s*\|\s*\d+\s*\|/);
++    expect(page).toContain('plan-protocol');
++    const g = run('node', ['scripts/analysis/gates/generated-docs.mjs'], { cwd: ROOT });
++    expect(g.status, g.stdout + g.stderr).toBe(0);
++    expect(fs.readFileSync(path.join(ROOT, 'scripts/analysis/gates/generated-docs.mjs'), 'utf8')).toContain("file: 'rule-lists-by-kind.md'");
++  });
++  it('fixture: --write makes the page, --check passes, and a shrunken document or a hand edit makes --check fail naming the page', () => {
++    const f = fixture();
++    const t = JSON.parse(fs.readFileSync(f.table, 'utf8')) as Record<string, unknown>;
++    t.every_task = ['queue']; t.milestone_docs = { F: ['crlf'] };
++    t.kinds = [{ id: 'k1', label: 'kind one', files: 'src/two.ts', type: 'build', letter: 'F' }];
++    fs.writeFileSync(f.table, JSON.stringify(t));
++    const w = script(CLI, ['page', '--write', '--root', f.d, '--table', f.table]);
++    expect(w.status, w.stderr).toBe(0);
++    const page = path.join(f.d, 'docs/reports/generated/rule-lists-by-kind.md');
++    expect(fs.readFileSync(page, 'utf8')).toMatch(/kind one[\s\S]*queue/);
++    expect(script(CLI, ['page', '--check', '--root', f.d, '--table', f.table]).status).toBe(0);
++    fs.appendFileSync(path.join(f.d, 'docs/q.md'), 'one more rule line\n');
++    const stale = script(CLI, ['page', '--check', '--root', f.d, '--table', f.table]);
++    expect(stale.status).toBe(1);
++    expect(stale.stderr).toContain('rule-lists-by-kind.md');
++  });
++});
+

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:53:13.694Z file_sha256=4bb683780c4d4dcd8ab1f12d1f2dd1cd155048a0ddbf786081a77fc2f84c77af prompt_sha256=bafa6465a5d8b2c8c4df4e13de619fe5b7147883b31f73101f389234e99c159b
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LIST/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §2 "| McIncrement plan | `backlog/` (`backlog/tasks`, `backlog/drafts`, `backlog/milestones`, `backlog/decisions`, `backlog/docs`, `backlog/config.yml`) |" and §6 "Backlog is the source of truth for the increment plan only (RR-0205)" — docs/specs/00-architecture/plan-protocol.md:8 "- The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board)." — the diff imports a page that names a LOCAL file as the one plan and is then attached to EVERY task ("every_task": ["five-words","plan-protocol"]), so the repo now tells every lane the plan lives outside the repo, contradicting the pasted home row and RR-0205 — add a dated note in the repo copy that Spec 137 §2 / RR-0205 supersede section 0 and every LOCAL plan path, in the same commit that makes it an every_task list, or do not attach it until reconciled
+
+BUG severity=HIGH — Spec 137 §2 "| ID ledger | LOCAL `~/Buildo-scratch/ids/` | one folder per claimed number | `<kind>-<n>` ... | Which numbers are taken, and by which lane. Checked by `ids/check.mjs` before a push command" — docs/specs/00-architecture/00_system_map.md "+| 99 | `00-architecture/plan-protocol.md` | Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00) | ... | Done |" while the next row is "| 99 | `00-architecture/two_client_architecture.md` | Two-Client Architecture | — | — | Active |" — the new spec page claims number 99, which is already taken in the same table, and its file name carries no number (every other row is `NN_name.md`), so the claim record the id ledger is supposed to hold is broken and the citation "Spec 99" is ambiguous — claim a free number in `~/Buildo-scratch/ids`, rename to `<n>_plan_protocol.md`, and update the system-map row
+
+BUG severity=MED — Spec 137 §3 "Where the line sits" "Spec pages carry their own status in the page header (`Status: DRAFT`)" — docs/specs/00-architecture/plan-protocol.md:1 "+> **Role: standard.**" (no status line; the page is a standard, and the system map records it as "Done") — the new spec page has no status in its header — add the header status line to the page so it matches the word the system map gives it
+
+DEFER severity=MED — Spec 137 §4 "Rule 4: rulings for plan tasks are entered through `scripts/analysis/backlog-decision.mjs` (gate G2): a verbatim quote and a cite file:line that exists and contains the quote, or it refuses" — backlog/tasks/task-406 "...md" description "+Operator, 2026-11-20, verbatim: "That works..." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, entry "Operator APPROVES McFix V2")" — the ruling carried on the edited description line cites a file and an entry name but no line number, so the G2 form (file:line that contains the quote) is not met on the record — enter the ruling through backlog-decision.mjs so the cite reads `MORNING-DECISIONS.md:<line>`, or add the line number to the description cite
+
+DEFER severity=LOW — Spec 137 §4 dated note 2026-11-20 "the infra freeze is lifted for it by name" (the lift pasted here names task-366 COMPLY.2 only) — task-406 plan step "4. CLOSE CHECK (scripts/hooks/check-lane-close.mjs): own commit: refuses a table with no every_task ..." plus scripts/analysis/gates/generated-docs.mjs "+  { file: 'rule-lists-by-kind.md', generator: 'scripts/analysis/rule-lists.mjs', has_check: true," — infra (a commit hook edit and a new generated-doc gate registration) is built under a task the pasted context does not name for a freeze lift — name task-406 in a freeze-lift note, or move the hook and gate edits to a task that holds a lift
+
+DEFER severity=LOW — Spec 137 §3 word list "MERGED | The row is the same task as another row. The line reads `MERGED into <id>` and points to it" and §4 "Rule 2. One task, one row, in one home ... A task with no row does not exist" — task-406 description "McFix V2 step 1. Replaces task-403 and task-404 (their scope is here)." and no task-403/task-404 file appears in this diff (cannot see those files) — two superseded rows are not shown carrying `MERGED into task-406` — set task-403 and task-404 to MERGED into task-406, or state in the task that this was already done with the commit
+
+MET — Spec 137 §4 dated note 2026-11-20 "one compliance lens output per rule list the task attaches" — scripts/hooks/check-lane-close.mjs "+  for (const e of every) if (!r.lists.some((l) => l.id === e)) errors.push(...)" — every list now attached, including the two every_task lists, is required at close, so no newly attached list escapes the close check
+
+MET — Spec 137 §5a rule 13 "The board is a view; the row is the record ... Nobody edits the board" — docs/reports/generated/rule-lists-by-kind.md:1 "<!-- GENERATED by scripts/analysis/rule-lists.mjs page --write ... Do not edit; regenerate. -->" with `page --check` exiting 1 on drift — the new page is a generated view that cannot be edited into a record, so the row stays the record
+
+MET — Spec 137 §1 dated note 2026-11-15 "McQueue still keeps no index in the repo" — docs/reports/generated/rule-lists-by-kind.md tables list documents per kind of work only, and `check-tasks` prints to stdout without writing a file — no task index is created in the repo
+
+REJECT — Spec 137 §1 dated note 2026-11-15 "McQueue still keeps no index in the repo" — the new generated repo page is accused of being the forbidden task index — it lists documents per kind of work, not task ids, and the all-tasks check writes nothing; the index rule is untouched
+
+REJECT — Spec 137 §5 step 4a "For every task labelled `queue-row`, compare its Backlog status with the queue row's word" — accused of replacing the weekly drift step — the diff is additive (new CLI verbs and a page); §5 steps 1 to 9 are unchanged in this material
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 3
+
+---
+⏱  93089ms (93.1s)
+📊 Tokens — total: 53988, input: 34746, output: 19242, reasoning: 17642

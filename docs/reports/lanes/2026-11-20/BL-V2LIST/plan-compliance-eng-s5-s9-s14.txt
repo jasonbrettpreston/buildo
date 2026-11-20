@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:38:31.269Z file_sha256=19060a25b178398c39efd6dffd38d288e8de0209afa26672dc50d5a90a68d402 prompt_sha256=629668d1306169e3961f8f4125f94de76e151db4b84a16cc766b4f9fb18a270e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LIST/in-plan-compliance-eng-s5-s9-s14.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Part 2 "rows so that every compliance review receives ... every spec governing the touched paths; rows for docs/reports/generated/**, scripts/seeds/logic_variables.json, docs/reports/policy/**" — plan step 1 "Rows extended or added as RECOMMENDED (step-pipeline, lane-tools, generated-reports new, ui-app, tests, middleware-config)" — two of the three path groups the card names (scripts/seeds/logic_variables.json, docs/reports/policy/**) have no row in the plan; generated-reports alone covers only docs/reports/generated/** — add a row for scripts/seeds/logic_variables.json and one for docs/reports/policy/** with their governing specs, or state which existing row resolves each and prove it with resolveTask.
+
+BUG severity=HIGH — Spec 14 registry "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — plan step 3 "3. HELPER (scripts/analysis/rule-lists.mjs; ...)" and step 4 "CLOSE CHECK (scripts/hooks/check-lane-close.mjs)" — the plan names four new or altered source files (rule-lists.mjs, docs/specs/00-architecture/plan-protocol.md, src/tests/backlog/rule-lists.logic.test.ts, docs/reports/generated/rule-lists-by-kind.md) and no step writes a SPEC LINK header pointing at spec and section into any of them — add a step that stamps SPEC LINK (spec id + §N) on every file the change creates or alters.
+
+BUG severity=HIGH — Spec 14 registry "A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**" — plan step 1 "eng-all (engineering standards whole, replacing eng-s1, eng-s2-s4-s10-s11, eng-s3-s9, eng-s5-s9-s14, eng-s5 in every row)" — retiring five list ids changes what every compliance review receives, yet no step updates the specs, protocols or runbooks that name those ids (this review's own header still cites eng-s5-s9-s14) — add a step that greps the estate for each retired list id and updates every citing document in the same commit.
+
+BUG severity=HIGH — card Acceptance "a planted task whose Files line resolves to no principles list is refused at launch" — plan step 4 "CLOSE CHECK (scripts/hooks/check-lane-close.mjs): own commit: refuses a table with no every_task and a task whose resolved lists lack an every_task id" — the refusal is named only at close-check and at check-tasks, nothing refuses the task at launch, and step 3 states "Pre-commit wiring is not done" — name the launch path (lane launch command) and the exact place it refuses the unresolvable Files line, with the planted task as its red test.
+
+DEFER severity=MED — Spec 5.3 "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code" — plan step 5 "TESTS FIRST (red through the real pre-commit related run, red.out): rule-lists.logic.test.ts and check-lane-close.logic.test.ts" — the new page generator and its --check have no named red test, the red list names only the two logic files — add the test (or the gate-J red run) that fails on a missing or stale docs/reports/generated/rule-lists-by-kind.md into red.out before step 3 is written.
+
+DEFER severity=MED — card Part 1 "a read-only coverage review by a separate grounder BEFORE any row is written ... which McDonald's specs or sections govern code and are attached to nothing ... where the plan protocol lives ... which paths touched in the last 60 commits match no row" — plan step 8 "no grounder file; task left RUNNING, grounder owed" — the four Part 1 answers exist only as an uncommitted scratch source while the plan states the grounder artifact is still owed, so the rows in step 1 cannot be traced to a checkable review — produce the grounder report as a committed artifact (or name its file:line) before step 1 rows are written.
+
+DEFER severity=LOW — Spec 5.1 "Never write untyped inline mocks ... You MUST always import typed factories from `src/tests/factories.ts`" — plan step 5 "rule-lists.logic.test.ts" — the test fixtures for rule-list rows, every_task keys and milestone_docs shapes are not named as factory exports, so the first inline `{kind, lists}` literal breaches 5.1 — add the typed factory exports to src/tests/factories.ts and import them in rule-lists.logic.test.ts.
+
+REJECT — Spec 9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — the change is accused of not routing scripts/analysis/rule-lists.mjs through pipeline.run() — the file is scripts/analysis/*.mjs and performs no DB read or write (it reads and writes JSON and Markdown), so 9.1 to 9.5 and 9.7 do not bite it.
+
+MET — Spec 5.3 — plan step 5 "TESTS FIRST (red through the real pre-commit related run, red.out): rule-lists.logic.test.ts and check-lane-close.logic.test.ts" — failing tests for the resolve/validate logic and the close refusal are named and run before the code.
+
+MET — Spec 5.2 logic layer — plan step 5 "rule-lists.logic.test.ts" — the pure resolution and validation derivation is pinned at the mandated layer.
+
+MET — Spec 14 gate form — plan step 3 "registered in gate J (scripts/analysis/gates/generated-docs.mjs)" — the generated page gets a machine-read NO-GO rather than a guideline alone.
+
+MET — Spec 5.2 DB replay — plan step 1 "scripts/analysis/rule-lists.json, data" — no schema, constraint or index change, so the DB replay layer is not triggered.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 6
+
+---
+⏱  44017ms (44.0s)
+📊 Tokens — total: 22735, input: 13796, output: 8939, reasoning: 7584

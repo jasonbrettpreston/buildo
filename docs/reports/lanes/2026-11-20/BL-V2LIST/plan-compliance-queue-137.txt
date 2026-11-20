@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:38:31.255Z file_sha256=2943d3541c7f7d9ea1893e787adbfc502639bd7bdabda9355a8758f369657e76 prompt_sha256=7decb8a66c4acdf9ff7ea87b8ab0eb96889fb967b2c06b0094a4d3491cdae886
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LIST/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §4 dated note 2026-11-20 "`scripts/analysis/backlog-lane.mjs` from the task's Files line (the launch refuses a task whose Files line is missing or matches no row)" — PLAN step 4 "CLOSE CHECK (scripts/hooks/check-lane-close.mjs): own commit: refuses a table with no every_task and a task whose resolved lists lack an every_task id" — the refusal is built at close in the commit hook, not at launch in backlog-lane.mjs, and its condition (no every_task id) is not the spec's condition (Files line missing or matching no row) — put the Files-line refusal in scripts/analysis/backlog-lane.mjs so the launch refuses, and leave the every_task check at close.
+
+BUG severity=HIGH — Spec 137 §4 dated note 2026-11-20 "Which lists a task attaches is decided by `scripts/analysis/rule-lists.json` from the task's Files line" — task-406 "Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/rule-lists.logic.test.ts" against PLAN step 2 "docs/specs/00-architecture/plan-protocol.md", step 3 "registered in gate J (scripts/analysis/gates/generated-docs.mjs)", step 4 "scripts/hooks/check-lane-close.mjs" — the diff changes three paths its own Files line does not name, so those files resolve to no list and get no governing spec in the very review mechanism this task exists to fix — extend the Files line with all three (or add the rows in step 1) before committing them.
+
+BUG severity=HIGH — task-406 Description, operator verbatim "Add to the board - review all teh currentMCfix tasks and ensure they are still relevant" — NONE — the plan has no step that re-checks the current McFix tasks for relevance and no step that lands the list on the board; step 3 only "page [--check] generates docs/reports/generated/rule-lists-by-kind.md" — add a step that lists every McFix-labelled task with keep, merge or drop, and state which Backlog record carries it (§5a rule 13 makes the board a view of status lines, so a repo page is not "on the board").
+
+DEFER severity=MED — task-406 Description, operator verbatim "Hwo will I know it is actually working on a daily basis and no one has swtiched it off" — PLAN step 3 "Pre-commit wiring is not done (it pins an exact generator count in hooks-composition test): the page check runs in the suite test" — a check that only a suite test runs, with nothing scheduling it, gives the operator no daily signal that the table still works — wire the page --check into a hook or the board-commit/board-ff jobs so a broken table shows as a WARN the operator sees.
+
+DEFER severity=MED — Spec 137 §4 dated note 2026-11-20 "one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding" — PLAN step 8 "findings untriaged in FINDINGS.md; no verdicts, no grounder file; task left RUNNING, grounder owed" with step 3 "this task stays RUNNING" — the plan builds the close gate in step 4 and explicitly exempts its own close from the grounder and the verdicts, so the clause is avoided rather than met — name the stage and date that produces GROUNDER.md with a verdict line per finding before the task reaches BUILT.
+
+DEFER severity=MED — task-406 Description Part 2 "rows for docs/reports/generated/**, scripts/seeds/logic_variables.json, docs/reports/policy/**" — PLAN step 1 "Rows extended or added as RECOMMENDED (step-pipeline, lane-tools, generated-reports new, ui-app, tests, middleware-config)" — two of the three named paths, scripts/seeds/logic_variables.json and docs/reports/policy/**, have no row in the plan and none is named in the steps — add a row for each or record the grounder finding that neither governs code.
+
+DEFER severity=MED — Milestone objective "Five principles, keep it simple, no scope creep (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3)" — PLAN step 1 "eng-all (engineering standards whole, replacing eng-s1, eng-s2-s4-s10-s11, eng-s3-s9, eng-s5-s9-s14, eng-s5 in every row)" — swapping every row's section lists for the whole engineering-standards document widens every lane's compliance read, a global behaviour change no acceptance in task-406 names — keep the sectioned lists and add eng-all only to the rows the coverage grounder shows are missing a governing section.
+
+DEFER severity=MED — Spec 137 §3 rule 1 form "Status: <WORD> · since <date> · expires <date or \"when <event>\"> · next: <step>" and §4 rule 7 "Each open row carries an opened date and an expiry 7 days later" — task-406 header "status: RUNNING · milestone: m-1 · assignee: @lane-BL-V2LIST · labels: McFix, McFix V2" — no expires or due date is visible for an open row, so §5 step 6 would list it as "no expiry" — set the due date (expires) and next on task-406 or record the operator-set exception on the row.
+
+MET — Spec 137 §4 rule 9 "The DB lane runs one job at a time" — PLAN closing line — "No push, no DB."
+
+MET — Spec 137 §3 dated note "A task with no row does not exist" (rule 2) — PLAN step 3 "check-tasks lists every open task as resolves or not yet resolvable by id with the reason" — every open task is resolved or named as no-row by id.
+
+MET — task-406 Description Part 4 "the compliance lens command is given the milestone objectives (today they go only into the ticket)" — PLAN step 1 "milestone_docs {letter: [ms-letter]} beside increment_docs" — milestone objective documents join the resolved set per milestone letter.
+
+MET — Spec 137 §5a rule 13 "The board is a view; the row is the record" — PLAN step 1 "Nothing under NOT DECIDED HERE is built." — the plan writes no board state; the generated page is derived output only.
+
+MET — Spec 137 §1 dated note (McLane) "The McBylaws/McFrontend queue rows stay; plan tasks link to them by id, not copies" — PLAN step 1 "Rows extended or added as RECOMMENDED" — table rows and links added, no queue rows copied.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 8
+
+---
+⏱  61466ms (61.5s)
+📊 Tokens — total: 31616, input: 18820, output: 12796, reasoning: 11233

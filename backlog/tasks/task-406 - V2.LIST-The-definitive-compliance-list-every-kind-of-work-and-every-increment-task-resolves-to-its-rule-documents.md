@@ -13,6 +13,8 @@ labels:
   - McFix V2
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-V2LIST/REPORT.md
 type: build
 ordinal: 106012
 ---

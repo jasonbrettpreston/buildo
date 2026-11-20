@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:53:13.661Z file_sha256=5b54bb4558a625b87a5f5b1a4439b531a919b7c925e5e1403a14dddf709f0852 prompt_sha256=632cd33051d3ac03a7d27dca6827fab8342204f066783d8043d2884b7043cdf1
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LIST/in-out-compliance-eng-all-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — eng-all §11 Pre-Review Self-Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests. ... These are not optional" — backlog/tasks/task-406 plan "8. Lens set at plan (this) and at output: compliance once per list whole, plus code-review and error-paths; findings untriaged in FINDINGS.md; no verdicts, no grounder file; task left RUNNING, grounder owed." — the plan carries no 5-10 item self-skeptical checklist with PASS/FAIL per item and no WF3 list of 3-5 sibling bugs, though the checklist is marked always-applicable — add both to the plan (for example ms-9 list path, milestone_docs coverage for every letter, every_task enforcement at launch vs close) each with PASS/FAIL, before tests run.
+
+DEFER severity=MED — eng-all §5.3 "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — scripts/analysis/backlog-lane.mjs "if (missingLists.length) refuse(`${taskId}: the resolved rule lists are incomplete: ${missingLists.join('; ')}`);" — the new launch refusal has no red test: plan step 5 names only "rule-lists.logic.test.ts and check-lane-close.logic.test.ts" and the sole backlog-lane test change is an id swap to 'eng-all', so the acceptance case ("refused at launch") is untested — add a backlog-lane red test refusing a table with no every_task and a planted task whose Files resolve to no principles list, run it red first and paste red.out.
+
+DEFER severity=MED — eng-all §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/backlog/rule-lists.logic.test.ts "t.kinds = [{ id: 'k1', label: 'kind one', files: 'src/two.ts', type: 'build', letter: 'F' }];" — new fixtures are untyped inline objects assigned through Record<string, unknown>, not typed factories — add a typed rule-list table factory to src/tests/factories.ts and use it in the new V2.LIST test blocks.
+
+MET — eng-all §5.2 Parity battery "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — scripts/analysis/rule-lists.mjs — "if (have !== want) die(1, `${PAGE} is ${have === null ? 'missing' : 'out of date'}...`)" with the page registered in scripts/analysis/gates/generated-docs.mjs "file: 'rule-lists-by-kind.md', generator: 'scripts/analysis/rule-lists.mjs', has_check: true".
+
+MET — eng-all §5.2 "*.logic.test.ts | Pure functions, scoring, classification | Any pure/derivation logic" — src/tests/backlog/rule-lists.logic.test.ts — verifyResolved, checkTasks and renderPage are each exercised in the logic layer, with a fixture board and a real-board run.
+
+REJECT — eng-all §6.1 "never bare `console.error()` in API routes or lib modules" — bare console.log/die in scripts/analysis/rule-lists.mjs and scripts/hooks/check-lane-close.mjs — the clause is scoped to API routes and lib modules; these are CLI lane tools, not either surface.
+
+REJECT — eng-all §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — the diff edits scripts/analysis/*, scripts/hooks/* and scripts/analysis/rule-lists.json — task-406 is a tooling/spec lane (Files: scripts/analysis, docs, src/tests), not a frontend WF, so the boundary clause does not bind it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 3
+
+---
+⏱  65895ms (65.9s)
+📊 Tokens — total: 46823, input: 33771, output: 13052, reasoning: 12108

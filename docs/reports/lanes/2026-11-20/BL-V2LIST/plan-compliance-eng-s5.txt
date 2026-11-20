@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:39:55.663Z file_sha256=1238865f6dda509bc7b134dcf58583ed86ad95b66a5f5710049039cfea2f1882 prompt_sha256=36a7f51d68149ce58c1f1cb73f58b7dc468a99782430f77c86df4f9c94b2ed33
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LIST/in-plan-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — PLAN step 5 "5. TESTS FIRST (red through the real pre-commit related run, red.out): rule-lists.logic.test.ts and check-lane-close.logic.test.ts." — the clause is unmet at plan level: the red run is numbered after step 1 (new five-words/plan-protocol/ms-*/eng-all lists and keys written into rule-lists.json), step 3 (resolveTask/validate/check-tasks/page implemented in rule-lists.mjs) and step 4 (check-lane-close refusal implemented and committed on its own), so feature code is scheduled before any failing test exists — renumber so the red run of both test files and the recorded red.out precede step 1, and state that no edit to rule-lists.json, rule-lists.mjs or check-lane-close.mjs happens until red is captured
+
+DEFER severity=MED — §5.2 parity battery row "Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator)" and "Any dual-surface or generated artifact (drift guard)" — PLAN step 5 "rule-lists.logic.test.ts and check-lane-close.logic.test.ts" — the change adds a generated artifact "page [--check] generates docs/reports/generated/rule-lists-by-kind.md" but names no test file for it, only "the page check runs in the suite test", which does not identify the parity battery that regenerates to a buffer and diffs the committed file — name the parity test file (logic or infra) that diffs the committed page against the regenerated buffer, so the drift guard is located in §5.2's table and not only in gate J
+
+DEFER severity=MED — §5.2 regression row "Pin a load-bearing behavior a diff must NOT retire" and "When altering/deleting code the Regression Guardian flags as a fence" — PLAN step 1 "eng-all (engineering standards whole, replacing eng-s1, eng-s2-s4-s10-s11, eng-s3-s9, eng-s5-s9-s14, eng-s5 in every row)" — five existing list ids are retired from every row with no Regression Guardian pass recorded and no .regression.test.ts named, so whether a fence is being dropped is unestablished — record the Regression Guardian result for the replaced eng-* ids in the plan, and add a .regression.test.ts if any of them is flagged
+
+DEFER severity=LOW — §5.1 "Never write untyped inline mocks (e.g., const permit = {id: 1}). You MUST always import typed factories from src/tests/factories.ts." — PLAN step 3 "check-tasks lists every open task as resolves or not yet resolvable by id with the reason" — the plan does not say which typed factories the two new test files draw task and list-row fixtures from, leaving inline object literals the obvious route for the by-id fixtures — name the factory functions from src/tests/factories.ts in step 5 for task, milestone and list fixtures
+
+MET — §5.2 "*.logic.test.ts | Pure functions, scoring, classification" — PLAN step 5 "rule-lists.logic.test.ts" — the new resolveTask, validate and check-tasks derivation logic is placed in a logic test, the layer the table mandates for pure derivation
+
+MET — §5.3 "For pure logic, use .logic.test.ts." — PLAN step 5 "rule-lists.logic.test.ts and check-lane-close.logic.test.ts" — both new behaviours are authored at the logic layer named for pure logic rather than at an unrelated layer
+
+REJECT — §5.2 DB replay row "Any migration touching schema/constraints/indexes (run before push)" and §5.4 seeding — the plan is accused of having no *.db.test.ts and no scripts/seed-[scenario].js — no migration, schema constraint, index or DB scenario is added by this plan; its only data file is scripts/analysis/rule-lists.json
+
+REJECT — §5.5 "a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three" — the plan is accused of missing DB-replay and regression-lock under the three-of-three rule — only two of the three conditions are present (value-derivation and generated artifact); the parity half is raised separately above, and no schema constraint is added
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 1
+
+---
+⏱  25084ms (25.1s)
+📊 Tokens — total: 17030, input: 12051, output: 4979, reasoning: 3966

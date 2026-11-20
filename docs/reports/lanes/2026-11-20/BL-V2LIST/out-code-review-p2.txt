@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T18:00:38.291Z file_sha256=ee2e177eb4955ab2dd6d41be97bb5a74b5d2961a3dd26096a1019348408a23ca prompt_sha256=acf4bdbab988872e2b2a4bc602ca02d43ffec8e59ebf2b1af314988cb8a22d3b
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/v2list/diff-out-p2.patch (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "rows: { id: string; lists: string[]; globs?: string[] }[]; kinds?: { id: string }[]" — `rows` and `kinds` are declared on the new `Table` type but never read by any added test, and `kinds` only types `id` while the fixture writes `{ id, label, files, type, letter }`, so the type contradicts its data — drop `rows` and `kinds`, or type `kinds` with `label/files/type/letter`.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "for (const gone of ['\"eng-s1\"', 'eng-s2-s4-s10-s11', 'eng-s3-s9', 'eng-s5-s9-s14', '\"eng-s5\"']) expect(text, gone).not.toContain(gone);" — the two quoted entries only match an exact JSON key or a whole string value, so a leftover `eng-s1`/`eng-s5` embedded in a longer note passes while the three unquoted ids are caught, the "left anywhere" guard misses two of five ids — check all five unquoted, or parse the object keys.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "expect(edit((t) => { t.milestone_docs = { F: ['queue'] }; }).stderr).toMatch(/every_task/);" — the invalid-table cases assert only that stderr mentions the key, never that `validate` exits nonzero (the control does assert `r.status`), so a warning naming `every_task` with exit 0 would pass — also assert the status is nonzero.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "fs.appendFileSync(path.join(f.d, 'docs/q.md'), 'one more rule line\n');" — the test titled "a shrunken document or a hand edit" only appends (grows) the document, so the shrink path in its name is never exercised and a shrink that should fail `--check` is untested — add a shrink case or rename the test.
+
+DEFER severity=LOW — docs/specs/00-architecture/plan-protocol.md:1 "> **Role: standard.**" — the committed file adds this header (the page measures 7,525 chars against the grounder's 7,502), so it is not the "byte-for-byte copy" the plan asserts and the two reported sha256 values cannot match — commit the raw bytes, or change the plan wording to "copy plus role header".
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts "refused(scenario({ tableEdit: (t) => { t.every_task = []; } }), /every_task/);" — this equivalent no-every_task fault pins no exit code while the sibling `delete t.every_task` case pins 12, so if `refused()` defaults to 11 the empty-array case cannot pass — pass 12 to both.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- n/a (no CRIT or HIGH findings)
+
+---
+⏱  139621ms (139.6s)
+📊 Tokens — total: 58424, input: 30395, output: 28029, reasoning: 27305

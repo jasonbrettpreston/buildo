@@ -1,0 +1,82 @@
+RED attempt 2026-11-20: commit with only the new tests and the task file staged (real hooks); refused, exit 1. Tail:
+
+- 0
++ 2
+
+ ❯ src/tests/backlog/rule-lists.logic.test.ts:436:55
+    434|   it('the real board: every open task that resolves carries the every_…
+    435|     const r = script(CLI, ['check-tasks']);
+    436|     expect(r.status, r.stdout.slice(-600) + r.stderr).toBe(0);
+       |                                                       ^
+    437|     expect(r.stdout).toMatch(/open \d+: resolve \d+, not yet resolvabl…
+    438|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/17]⎯
+
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: the generated page of what each kind of work receives > the real page is current (page --check), names each kind with documents, sizes and part counts, and is a registered generated doc (gate J)
+AssertionError: rule-lists: usage: rule-lists.mjs validate | resolve | lens-input | findings
+: expected 2 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 2
+
+ ❯ src/tests/backlog/rule-lists.logic.test.ts:444:43
+    442|   it('the real page is current (page --check), names each kind with do…
+    443|     const c = script(CLI, ['page', '--check']);
+    444|     expect(c.status, c.stdout + c.stderr).toBe(0);
+       |                                           ^
+    445|     const page = fs.readFileSync(path.join(ROOT, 'docs/reports/generat…
+    446|     for (const k of ['pipeline step', 'McFrontend web', 'phone', 'stor…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/17]⎯
+
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: the generated page of what each kind of work receives > fixture: --write makes the page, --check passes, and a shrunken document or a hand edit makes --check fail naming the page
+AssertionError: rule-lists: usage: rule-lists.mjs validate | resolve | lens-input | findings
+: expected 2 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 2
+
+ ❯ src/tests/backlog/rule-lists.logic.test.ts:460:32
+    458|     fs.writeFileSync(f.table, JSON.stringify(t));
+    459|     const w = script(CLI, ['page', '--write', '--root', f.d, '--table'…
+    460|     expect(w.status, w.stderr).toBe(0);
+       |                                ^
+    461|     const page = path.join(f.d, 'docs/reports/generated/rule-lists-by-…
+    462|     expect(fs.readFileSync(page, 'utf8')).toMatch(/kind one[\s\S]*queu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/17]⎯
+
+ Test Files  3 failed (3)
+      Tests  17 failed | 87 passed (104)
+   Start at  12:43:21
+   Duration  24.35s (transform 10ms, setup 22ms, collect 11ms, tests 36.12s, environment 0ms, prepare 68ms)
+
+exit 1
+
+ FAIL  src/tests/backlog/backlog-lane.logic.test.ts > backlog-lane attaches the rule lists by touched path (task-366) > the lens line runs the compliance lens once per list through the helper, other l
+ FAIL  src/tests/backlog/check-lane-close.logic.test.ts > close check: the every_task lists (V2.LIST) > a table with no every_task (or an empty one) is refused at close, not skipped (fails closed: nob
+ FAIL  src/tests/backlog/check-lane-close.logic.test.ts > close check: the every_task lists (V2.LIST) > PLANTED DEFECT: a task whose compliance outputs lack the every_task list is refused, naming the 
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > the real table (AC #1: data, every listed rule file exists) > task-376: a task that edits spec files resolves; a mobile or web-admin spec also gets 
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: check-tasks lists every open task as resolving or not yet resolvable, by id, with the reason > a fixture board: a resolving task, a task wi
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: check-tasks lists every open task as resolving or not yet resolvable, by id, with the reason > the real board: every open task that resolve
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick) > a real task of each kind resolves 
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick) > milestone_docs gives every increme
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick) > the Glossary block of Spec 132 car
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick) > the paths that matched no row on 2
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick) > the table names every_task = five-
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick) > verifyResolved (what validate and 
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: the generated page of what each kind of work receives > fixture: --write makes the page, --check passes, and a shrunken document or a hand 
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: the generated page of what each kind of work receives > the real page is current (page --check), names each kind with documents, sizes and 
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: validate refuses a table that switches the always-attached lists off > an increment letter with no milestone_docs entry, or an entry naming
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: validate refuses a table that switches the always-attached lists off > no every_task key, an empty one, or one naming an undefined list is 
+ FAIL  src/tests/backlog/rule-lists.logic.test.ts > V2.LIST: validate refuses a table that switches the always-attached lists off > resolution attaches every_task and the milestone list to a matched t
+ACCURATE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / to
+report-fields current (1 rendered fields); gates FAIL (report-only): RF-2, RF-4, RF-6, RF-7, RF-9
+UNDERSTANDABLE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 

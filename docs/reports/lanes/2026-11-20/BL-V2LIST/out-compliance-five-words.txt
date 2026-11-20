@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:53:13.665Z file_sha256=0ce31bc6bca32eacf31c1e786446d478e54671e591546fec93ea7c75fbff9941 prompt_sha256=820ea5891ace7474500633e6d404f3fb613b51b95baad7fbeca4d7e4d2e95e9f
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LIST/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — clause "**five words**: R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates." — scripts/analysis/rule-lists.json `"five-words": { "file": "docs/specs/01-pipeline/132_step_standard_handbook.md", "sections": ["Glossary"], "generated_by": "scripts/generate-step-handbook.mjs" },` — the list named five-words delivers the whole 132 Glossary of term definitions (page row: `| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |`) with no per-word PASS or FAIL from the mapped gates, and it is attached by every_task to non-step kinds too, so what a review receives is not the clause's referent (gate V) — fix: select the gate V mapping or the single five-words entry instead of the whole Glossary, or rename the list to five-principles and keep the Glossary out of every_task.
+
+DEFER severity=MED — clause "**lock / lock-db / check / hook**: Enforcement kinds in the rule map. A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; ... a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook." — src/tests/backlog/check-lane-close.logic.test.ts `// V2.LIST (task-406): the always-attached lists (table key every_task) are required at close like any list;` — the new enforcement is asserted only under the label V2.LIST/task-406 and the new `check-tasks` CLI is neither a step-validate invariant nor a gate token, so none of the four kinds in the clause covers it and no rule id or declared alias is shown for V2.LIST — fix: declare V2.LIST as an alias (or cite the rule id) in the tests, and register `check-tasks` as a check under a gate or as a hook.
+
+DEFER severity=LOW — clause "**stage**: A pending step's declared progress in `converted.json` `pending[]` (`red_suite` … `shape_clean`); it decides which gates cannot yet be answered." — backlog/tasks/task-406 plan line `PLAN (lane BL-V2LIST, task-406, stage 1; Rule: Spec 126 section 0a principle 1 and section 11b.2;` — "stage 1" uses the single defined sense of stage for a planning pass of a tooling task that has no `pending[]` row, so a reader cannot tell whether a converted.json stage is meant — fix: write "plan pass 1" or name the converted.json stage instead of "stage 1".
+
+MET — **Gate A … K, V** "implemented in `scripts/analysis/gates/` or in `scripts/analysis/step-validate.mjs`" — scripts/analysis/gates/generated-docs.mjs `+  { file: 'rule-lists-by-kind.md', generator: 'scripts/analysis/rule-lists.mjs', has_check: true,` — the new page check is registered as a generated-doc token inside the gate directory the clause names, so it is a gate token rather than a free-standing script.
+
+MET — **OWED** "Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps." — scripts/analysis/rule-lists.json `"bylaw-133": { "file": "docs/specs/01-pipeline/133_bylaw_handbook.md", "sections": ["2. Rules by provision family", "3. Rows with an OWED marker"]` — the change cites OWED only as a marker a bylaw row carries, it does not redefine OWED as a pass or fail, so the clause is not contradicted.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 27   Unmet: 0
+
+---
+⏱  66299ms (66.3s)
+📊 Tokens — total: 40919, input: 28304, output: 12615, reasoning: 11674

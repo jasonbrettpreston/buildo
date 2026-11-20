@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:53:13.689Z file_sha256=77e12c8d790c56b346255bbd8357b1050a3432f7984e6998990100b543bc92d8 prompt_sha256=1829653d4f621dedf81cf1bec3266e27901ca672b9e6d21b919048d2d2f3d3b5
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LIST/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Project objectives, PLAN-PROTOCOL.md:3 "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — docs/reports/generated/rule-lists-by-kind.md "| total | 15 lists | | 678,126 | 18 |" (McFrontend web) with scripts/analysis/rule-lists.json "eng-all": { "file": "docs/specs/00_engineering_standards.md", "whole": true } — one web compliance review now receives 15 lists, 678,126 characters and 18 lens-input parts, an increase driven by attaching the whole engineering standards file in every row that replaced four section lists, which is not "simple" and grows work the pasted clauses do not ask for — keep the section lists where the whole file is not needed, or record a per-kind cap and its reason in the table and the page.
+
+DEFER severity=MED — Project objectives "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — scripts/analysis/rule-lists.json "docs/reports/policy has no governing spec found, so the lane-tools lists are attached as the nearest (to verify)" — lists are attached to a path whose governing spec was not found, so a policy-document review is judged against agent, queue and doc-17 rules that no found spec states govern it — leave docs/reports/policy unmatched and report it through check-tasks as not yet resolvable with that reason, which is the mechanism the same change builds.
+
+DEFER severity=MED — Project objectives, PLAN-PROTOCOL.md:3 "standardization, observability, scalability, accuracy, understandability" — plan step 2 "byte-for-byte copy of ~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md (sha256 d92940f4...) to docs/specs/00-architecture/plan-protocol.md; both sha256 reported." — the repo copy is the text every compliance review receives (rule-lists.json "plan-protocol": { "file": "docs/specs/00-architecture/plan-protocol.md", "whole": true }), but it is compared to the source only by a one-time sha256 printed at build, with no --check arm or test, so the copy can drift from the ruling quoted at PLAN-PROTOCOL.md:3 and every review still passes — add a sha256 equality check (page --check arm or a logic test) between the copy and the source document.
+
+DEFER severity=LOW — Project objectives, PLAN-PROTOCOL.md:3 "standardization ... understandability" — docs/specs/00-architecture/00_system_map.md "+| 99 | `00-architecture/plan-protocol.md` | Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00) | — | — | Done |" sitting beside "| 99 | `00-architecture/two_client_architecture.md` | Two-Client Architecture | — | — | Active |" — two specs now carry id 99 and a file created in this diff is marked Done with no Files and no tests, so the map no longer keeps one id per spec — give the protocol an unused id and a status that matches the file's state.
+
+MET — Increment objectives "The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report" and "What the customer sees: the 65 designed search elements" — docs/reports/generated/rule-lists-by-kind.md "| inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |" — every group-S task receives the increment-S requirements document whole, so the designed search elements reach the review.
+
+MET — Objectives, PLAN-PROTOCOL.md:3 "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — scripts/analysis/rule-lists.json "\"every_task\": [\"five-words\", \"plan-protocol\"]" and scripts/analysis/rule-lists.mjs "for (const id of table.every_task ?? []) add(id, 'every-task', ...)" — the five words and the plan protocol are attached to every task whatever its Files line, and verifyResolved plus check-lane-close refuse a set that lacks them.
+
+MET — Objectives "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built" — docs/reports/generated/rule-lists-by-kind.md "| ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |" — the milestone objectives pasted as this rule list are delivered to every group-S compliance review, which is exactly what the card's part 2 (iii) needs.
+
+MET — Project objectives "we need one plan - we can only execute one plan" — plan step 1 "New keys every_task [\"five-words\",\"plan-protocol\"] and milestone_docs {letter: [ms-letter]} beside increment_docs" — the change adds attachment data to the existing table and existing plan, and introduces no competing plan file.
+
+REJECT — "we need one plan - we can only execute one plan" — the change adds docs/specs/00-architecture/plan-protocol.md as a second plan document — the file declares "> **Role: standard.**" and is the protocol, not a plan, and the table attaches it as a rule list; the copy-drift risk is raised separately above.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  81086ms (81.1s)
+📊 Tokens — total: 42858, input: 27514, output: 15344, reasoning: 14071

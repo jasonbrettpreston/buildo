@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:38:31.252Z file_sha256=38f6fe5474ef8f171e45840458f9351ec4903fac95f9a59bc7dae7cd1ccb93e9 prompt_sha256=3f8f45efb9e2072f723a8499426250d36a0c12d2d3abbc3742f5eb673df62f1a
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LIST/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-17 preamble "Readings and register entries of the rulings register ... never feed a review as a ruling" — PLAN "Source of every item: COVERAGE-GROUNDER.md RECOMMENDED block (read whole; facts verified by opening the files) and the task text." — no pasted operator ruling authorises any of the 8 plan steps, and the only operator quote in the material ("Operator, 2026-11-20, verbatim") is a scratch register quote of exactly the class doc-17 excludes, so authority for steps 1 to 8 is not verifiable from pasted clauses — land the McFix V2 approval as an operator ruling id (RR) in the repo decision log before plan-lock so the compliance lens receives it as a ruling, not a reading.
+
+MET — doc-17 preamble "never feed a review as a ruling" — PLAN "Rule: Spec 126 section 0a principle 1 and section 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1; PLAN-PROTOCOL.md:3" — the plan cites no RR id from the pasted readings list (RR-0001 to RR-0111) or register entries (RR-0112 onward) as authority; it cites spec sections and PLAN-PROTOCOL.md:3 only.
+
+REJECT — doc-17 preamble — the plan is accused of feeding doc-17 readings to the review as rulings because the review context's "Decisions in force" block lists ~200 RR ids, several explicitly marked "(reading)" — those ids appear only in the generator's context block, not in the plan or diff under review; the plan names none of them.
+
+Cannot see: the governing operator words for McFix V2 ("Operator APPROVES McFix V2", "That works. Let;s this - the 10th plan today on the same thing") are quoted inside the material under review at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md with no line number and no RR id, so clause 2 of the walk (find the plan line satisfying each ruling) cannot be executed for them; and the three Documents blocks are all "not readable: ENOENT".
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 1   Unmet: 0
+
+---
+⏱  15893ms (15.9s)
+📊 Tokens — total: 24736, input: 21795, output: 2941, reasoning: 2428

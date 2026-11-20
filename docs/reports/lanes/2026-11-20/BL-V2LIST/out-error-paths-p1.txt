@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T18:00:38.292Z file_sha256=6091b7fddf611af64b509ed522db20c50a586ba5abd577e164417877d81aa26f prompt_sha256=e66fdd2abf82a2a7e2fad44480b8083f96faa7b6506cfcdf052ca7aa3d943999
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/v2list/diff-out-p1.patch (model: deepseek-reasoner)
+
+BUG severity=MED — scripts/analysis/backlog-lane.mjs:75 "const letterOf = milestoneLetter(board, t.fm.milestone);" — this call used to sit inside the try that wraps resolveTask, so a throw from milestoneLetter (unreadable milestone or board) now escapes as an uncaught stack instead of the refuse() message that names the task — move it inside the try and refuse with the task id on failure.
+
+BUG severity=MED — scripts/analysis/rule-lists.mjs:341 "const letter = milestoneLetter(root, t.fm.milestone);" — one open task whose milestone cannot be mapped throws before the per-task try, aborting the entire check-tasks run, and the CLI's die(1, e.message) names no task id — move the letter computation inside the try and push the task to out.bad with its id.
+
+BUG severity=MED — scripts/analysis/rule-lists.mjs:379 "const c = listBlocks(def, root, l.id).reduce((n, b) => n + b.text.length, 0);" — a list document that is missing, renamed or lacks a named section (the exact drift the page exists to detect) throws out of renderPage, so page --check fails with a stack instead of the "regenerate with page --write" message; the resolveTask call at :371 is likewise unguarded — wrap each list and each kind in try/catch and print a "document unreadable" row.
+
+BUG severity=MED — scripts/analysis/rule-lists.mjs:381 "try { p = buildLensInputs({ id: l.id, list: def, root, material: 'x'.repeat(NOMINAL), templateFile: tmpl }).length; } catch { p = 0; }" — a missing template, a missing document and a genuine over-bound all collapse to p=0 and print "does not fit", so page --write bakes the wrong state into the page and page --check then passes on it — give each cause its own status text (or rethrow everything except the too-big error) so a missing template cannot read as a size problem.
+
+BUG severity=MED — scripts/analysis/rule-lists.mjs:120 "for (const k of table.kinds ?? []) {" — an absent or empty kinds key passes validate because the loop body never runs, the page then renders headers and no kind, and page --check blesses it once written, contradicting the table's own note that validate refuses a table with none of them — push a bad line when kinds is missing or empty.
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:86 "for (const e of every) if (!r.lists.some((l) => l.id === e)) errors.push(...)" — if resolveTask returned { error } (an unmatched Files line, the common case for the 195 tasks with no Files line) then r.lists is undefined and this throws, crashing the close hook where it should report the refusal; I cannot see whether r.error is checked above this point — use (r.lists ?? []) or place this loop after the resolve-error check.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:85 "if (!Array.isArray(every) || every.length === 0) return [`${id}: the rule-list table has no every_task lists: the five words and the plan protocol must be attached to every task (scripts/analysis/rule-lists.json)`];" — the early return discards every other close error of the same run, so the operator fixes the table, re-runs, and only then sees the rest, and it throws if i.table is undefined — push the message into errors and continue.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:349 "const m = /matched by no row[^:]*: (.*?) \(add a row/.exec(r.error);" — the not-yet-resolvable buckets are classified by regexing resolveTask's prose, so any wording change silently reclassifies governance gaps as "other reason" and drops the path name the report exists to show — have resolveTask return a code plus the path instead of parsing the message.
+
+VERDICT: FAIL on error-path safety
+Paths walked: backlog-lane launch, resolveTask/verifyResolved, validateTable, checkTasks, renderPage with page --write/--check, closeErrors, gate J registration   Unguarded: 4
+
+---
+⏱  66631ms (66.6s)
+📊 Tokens — total: 36268, input: 23540, output: 12728, reasoning: 11766

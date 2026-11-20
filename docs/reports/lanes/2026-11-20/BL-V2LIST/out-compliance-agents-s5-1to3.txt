@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:53:13.656Z file_sha256=97c3e45ea31a6337721439ec12e99dc4889fc2655f8ef62106a7a7546c4002a6 prompt_sha256=d29bcaea728db0947a34e5e720a162d5a0fdb3e7ad2d7d29ebea37d6d3e196a7
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LIST/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 5.1 HARD DEPENDENCY "Compliance is only meaningful if the spec is TRUE. Run **Ground-truth (§5.2) FIRST**; a stale spec makes compliance-checking a check against fiction" — pasted task-406 plan step 8 "Lens set at plan (this) and at output: compliance once per list whole ... no verdicts, no grounder file"; step 1 "Source of every item: COVERAGE-GROUNDER.md RECOMMENDED block" — every row in the diff asserts which spec governs which path, yet no COVERAGE-GROUNDER.md and no per-row ground-truth output is in the material and the plan itself says "no grounder file", so the ground-truth-first dependency is unmet on the pasted material and the compliance lens would run against unverified lists — land the grounder file (or a CONFIRMED line per row) in the diff before the rows, or hold the rows.
+
+DEFER severity=MED — 5.2 "For each load-bearing claim in the spec, verify it against the live code / DB / behavior; report every drift" — pasted 00_system_map.md line "+| 99 | `00-architecture/plan-protocol.md` | Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00) | — | — | Done |" — the map now carries two rows numbered 99 (the existing row is "| 99 | `00-architecture/two_client_architecture.md` | Two-Client Architecture | — | — | Active |"), so "spec 99" cites two different documents and any compliance review citing 99 is ambiguous — give plan-protocol an unused number (the next free one) and use it in the table, the plan and the map.
+
+DEFER severity=MED — card Part 2 "(i) the five principles as stated in the governing handbook for that kind of work" — pasted page "## phone" row "| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |" (same row under McFrontend web, storage and spec-only) — the five words reach every kind only from the pipeline handbook, while the same page gives phone five mobile specs as its governing documents, so "the governing handbook for that kind of work" is met for pipeline work alone — either attach the five words from each kind's own handbook or record the operator ruling that 132's Glossary is the single statement for all kinds.
+
+DEFER severity=MED — card Part 2 "(iii) the milestone objectives and increment requirements" — pasted rule-lists.mjs comment "Shared by validate, check-tasks and the close check, so the always-attached lists cannot be skipped by one of them" versus pasted check-lane-close addition only "if (!r.lists.some((l) => l.id === e))" for `i.table.every_task` — the close check enforces every_task but never the milestone_docs lists, so a task can close with no milestone objectives and the sharing the comment claims exists only as a comment — call verifyResolved in closeErrors, or also refuse a table whose increment letters lack milestone_docs at close.
+
+DEFER severity=MED — 5.1 "does the code SATISFY every clause of the spec's Behavioral Contract" — pasted rule-lists.json row `"generated-reports"` why "docs/reports/policy has no governing spec found, so the lane-tools lists are attached as the nearest (to verify)" — attaching six lists (agents-s5-1to3, agents-s7-s11, queue-137, eng-all, orchestrator-doc17, surface-127) that no clause binds to a policy report makes the compliance lens judge it against Spec 08 agent roles and Spec 137 queue rules, which cannot be its contract — leave `docs/reports/policy/**` as an explicitly listed unmatched gap in check-tasks, or cite the operator ruling that makes those lists govern.
+
+DEFER severity=LOW — card Part 3 "one generated page ... that prints, per kind of work ... the documents its compliance review receives" — pasted rule-lists.json kinds all carry `"letter": "S"` and the page prints "Example Files line: `mobile/src/app/`; type build; milestone group [S]." — the page shows ms-S/inc-S as the objectives and requirements documents for a phone, storage, tooling or spec-only task whose real letter is 3 or 10, so the visible list is wrong for every kind outside increment S — print the milestone and increment rows per letter, or state on the page that those two rows follow the task's own letter.
+
+DEFER severity=LOW — card Part 1 "a read-only coverage review ... which McDonald's specs or sections govern code and are attached to nothing" — pasted rule-lists.json `"ms-9": { "file": "backlog/milestones/m-11 - increment-9-merged-measure-(the-25,-coa-172,-4d)-[.md"` — unlike all 14 other ms-* entries this name ends "-[.md" with no increment letter and no closing bracket, so either the increment 9 list reads no file or it names a different file than the one on disk and every increment 9 task launch refuses on the milestone list — correct the path to the on-disk name and let validate prove it.
+
+MET — dated note (1) "data, not code, says which rule lists ... govern a touched path" — pasted rule-lists.json rows/globs/kinds — every change to what governs a path is a table row, list definition or kind entry, no branch in code.
+
+MET — dated note (2) "an unmatched path with the path named" — pasted rule-lists.mjs "Files path(s) matched by no row of scripts/analysis/rule-lists.json: ${result.unmatched.join(', ')}" — still fails closed with the path named.
+
+MET — dated note (3) "one compliance lens output per attached list" — pasted check-lane-close.mjs "the every_task list ${e} is not among the resolved lists (a task always gets it; the table or the resolver was altered)" — the two new always-attached lists are demanded at close like any list, with a planted-defect test.
+
+MET — dated note (4) "The lane that wrote the work leaves the task RUNNING with 'grounder owed'" — pasted plan step 8 "task left RUNNING, grounder owed" — the lane does not set BUILT/DONE.
+
+MET — dated note (2) "a list is split by its own headings when list plus material pass the review tool bound, never trimmed" — pasted page line "parts are the lens-input files for one list at a material of 30,000 characters (a list is split by its own headings, never trimmed...)" — the page reports parts per list and the helper is unchanged in its splitting.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  79914ms (79.9s)
+📊 Tokens — total: 43561, input: 28111, output: 15450, reasoning: 13906

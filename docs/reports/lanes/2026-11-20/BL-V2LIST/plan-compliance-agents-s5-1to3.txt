@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:38:31.259Z file_sha256=d7a021022630084f8ffb9dd1424e2eb2e5ccf670ab41f81974abf8bf2d136af1 prompt_sha256=10351a09f3c620125ccf11a52b24b2381ab26eae084fc8619152215e09a8d147
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LIST/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md dated note 2026-11-20 (2) "resolves the task's `Files:` line through it, refuses a task with no Files line (a record-only task gets the queue lists) or an unmatched path with the path named" — PLAN step 1 "New keys every_task [\"five-words\",\"plan-protocol\"] and milestone_docs {letter: [ms-letter]} beside increment_docs" and PLAN step 3 "resolveTask adds every_task lists to every task and milestone_docs lists for the milestone letter" — attaching the every_task lists to every task makes every resolved set non-empty, so an unmatched or absent Files line no longer fails a set-based refusal; the plan leaves only the close check (step 4) and a report (step 3 "check-tasks lists every open task as resolves or not yet resolvable by id with the reason"), and plans no planted task refused at launch — fix: state in step 3 that the no-Files and unmatched-path refusals are keyed to the Files-line parse independently of every_task lists, and add one planted unmatched-path task refused at launch to step 5/step 6.
+
+DEFER severity=MED — 08_agents.md dated note 2026-11-20 (2) "a list is split by its own headings when list plus material pass the review tool bound, never trimmed" — PLAN step 1 "eng-all (engineering standards whole, replacing eng-s1, eng-s2-s4-s10-s11, eng-s3-s9, eng-s5-s9-s14, eng-s5 in every row)" — every task's compliance review now carries the whole engineering standards file plus plan-protocol, five-words and a milestone document, and no step measures that combined payload against the review tool bound or proves the heading split — fix: add to step 6 the measured payload per attached-list set and one run past the bound whose output shows a heading split with no trimming.
+
+DEFER severity=MED — 08_agents.md dated note 2026-11-20 (1) "which rule lists (whole files, or whole sections where the file itself separates rules from history) govern a touched path" — PLAN step 1 "eng-all (engineering standards whole, replacing eng-s1, eng-s2-s4-s10-s11, eng-s3-s9, eng-s5-s9-s14, eng-s5 in every row)" — the plan drops five section-scoped eng lists for the whole file in every row, which the clause reserves for files that do not separate rules from history, so a history section would land whole in every review — fix: keep the section-level eng lists, or record the check that the engineering standards file has no history section.
+
+DEFER severity=LOW — 08_agents.md dated note 2026-11-20 (1) "it reuses the path maps of `mcbylaws/protected-paths.json` (`layer23`, `frontend`) instead of copying them" — PLAN step 1 "Rows extended or added as RECOMMENDED (step-pipeline, lane-tools, generated-reports new, ui-app, tests, middleware-config)" — the plan names no map key for any new or extended row, so a row can satisfy the clause only by accident or restate paths literally — fix: name the protected-paths map key per row and forbid literal path copies in the table.
+
+MET — 08_agents.md dated note 2026-11-20 (2) "puts the governing lists into the brief (READ each whole before planning)" — brief head "RULE LIST agents-s5-1to3 (docs/specs/00-architecture/08_agents.md, sections 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication), part 1 of 1" — the governing list is pasted whole ahead of the plan.
+
+MET — 08_agents.md dated note 2026-11-20 (2) "runs the compliance lens once per list with the list pasted whole ahead of the plan or diff" — PLAN step 8 "Lens set at plan (this) and at output: compliance once per list whole".
+
+MET — 08_agents.md dated note 2026-11-20 (3) "The lane that wrote the work leaves the task RUNNING with "grounder owed"" — PLAN step 8 "task left RUNNING, grounder owed".
+
+MET — 08_agents.md dated note 2026-11-20 (1) "data, not code, says which rule lists ... govern a touched path" — PLAN step 1 "TABLE (scripts/analysis/rule-lists.json, data)".
+
+MET — 08_agents.md 5.1 "HARD DEPENDENCY: ... Run **Ground-truth (§5.2) FIRST**" — PLAN "Source of every item: COVERAGE-GROUNDER.md RECOMMENDED block (read whole; facts verified by opening the files)".
+
+MET — 08_agents.md dated note 2026-11-20 (3) "presence and form only, the judgement stays with the grounder" — PLAN step 4 "own commit: refuses a table with no every_task and a task whose resolved lists lack an every_task id; planted defect plus passing control".
+
+REJECT — 08_agents.md dated note 2026-11-20 (3) "a `GROUNDER.md` whose `Grounder:` is not the `Lane:`" — accused of shipping no grounder file — not an issue, the commit does not set BUILD/DONE, PLAN step 8 "task left RUNNING, grounder owed".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  71193ms (71.2s)
+📊 Tokens — total: 27302, input: 12185, output: 15117, reasoning: 13871

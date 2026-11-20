@@ -1,0 +1,52 @@
+== commit B (table, helper, page, plan protocol)
+
+ ✓ src/tests/backlog/backlog-lane.logic.test.ts (28 tests) 9404ms
+   ✓ backlog-lane refusals (AC #2): exit 3, one line, nothing written > refuses a dirty board: a modified file outside backlog/ (and an untracked one), but not a change inside backlog/ 316ms
+   ✓ backlog-lane refusals (AC #2): exit 3, one line, nothing written > refuses a missing backlog binary, a bad lane name, a missing task and a missing input 318ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > takes the task, waits for the job commit, cuts the worktree, links, writes G1 and task.json, runs brief.mjs and prints BRIEF-FILE with its sha256 571ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > uses --spec instead of a generated task.json when given 454ms
+   ✓ backlog-lane real launch on the temp board (AC #1) > refuses after the wait when the job commit never lands, naming the state and the recovery command (exit 3, one line) 1903ms
+   ✓ backlog-lane review line names the lens set (task-358) > security joins when the Files line touches entitlements, auth, stripe or a metered route 781ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > a task with no Files line is refused, but a record-only task gets the queue lists 384ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > ATTACK 11: --rule-lists with a table other than the repo one is refused unless the test env var is set; a Files line of only exempt paths for a build task is refused 419ms
+   ✓ backlog-lane attaches the rule lists by touched path (task-366) > a real launch with --spec (what the orchestrator runs) still writes the rule-list block and the per-list lens line into the brief it tells the lane to read 390ms
+
+ Test Files  3 passed (3)
+      Tests  92 passed (92)
+   Start at  12:48:45
+   Duration  12.06s (transform 8ms, setup 21ms, collect 11ms, tests 15.04s, environment 0ms, prepare 69ms)
+
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 5 file(s)
+[wf1/inc1b-v2list f9c638c93] feat(08_agents): every compliance review receives the five words, the plan protocol and the milestone objectives; unmatched paths get rows (V2.LIST)
+ 10 files changed, 530 insertions(+), 39 deletions(-)
+ create mode 100644 docs/reports/generated/rule-lists-by-kind.md
+ create mode 100644 docs/specs/00-architecture/plan-protocol.md
+exit 0
+== commit A (close check, own commit)
+   ✓ close check: the separate grounder (AC #4) > binds the ruled outputs: a Ruled line per lens output, with its sha256 and finding count; an output edited after grounding is refused 879ms
+   ✓ close check: the separate grounder (AC #4) > ATTACK 5: finding lines the strict matcher misses (bold, numbered, quoted, lower case, colon) are refused as altered or unparsable 2156ms
+   ✓ close check: the lens outputs are the review tool's, on the committed input > ATTACK 6a: a compliance output with only a VERDICT line and no REVIEW header is refused 667ms
+   ✓ close check: the lens outputs are the review tool's, on the committed input > ATTACK 6b: the header names another lens template, or a hash that is not of the committed input, or the input does not carry the list text 1411ms
+   ✓ close check: scope of the lane report, the diff and who may close > ATTACK 1: every finished status triggers the check (MERGED as well as BUILT and DONE) 374ms
+   ✓ close check: scope of the lane report, the diff and who may close > ATTACK 2a: a wrong-task trailer or no trailer does not avoid the check; every staged task file that moves to finished is checked 699ms
+   ✓ close check: scope of the lane report, the diff and who may close > ATTACK 7: the lane dir is scoped by a TASK file naming exactly this task; a dir reused for another task is refused 650ms
+   ✓ close check: scope of the lane report, the diff and who may close > ATTACK 8: every path changed since the lane branch point must be covered by the Files line; a build task whose Files resolve to no rule list is refused 984ms
+   ✓ close check: scope of the lane report, the diff and who may close > ATTACK 9: a finished move of a build, fix or check task with no @lane assignee is refused whatever the commit touches; dropping the assignee in the closing commit too 688ms
+   ✓ close check: scope of the lane report, the diff and who may close > ATTACK 10: a commit that edits the check, the table, a hook or the review tool may not also move a task to finished 668ms
+   ✓ close check: scope of the lane report, the diff and who may close > fails closed when the rule-list table that HEAD has is gone; a repo that never had one is not held to it 414ms
+   ✓ close check: scope of the lane report, the diff and who may close > exempt: a commit that moves nothing to finished, a status that is not finished, a non-build task nobody lane-holds with no code staged 638ms
+   ✓ close check: the every_task lists (V2.LIST) > a table with no every_task (or an empty one) is refused at close, not skipped (fails closed: nobody switches the lists off) 474ms
+
+ Test Files  1 passed (1)
+      Tests  33 passed (33)
+   Start at  12:50:26
+   Duration  25.35s (transform 2ms, setup 5ms, collect 3ms, tests 22.81s, environment 0ms, prepare 18ms)
+
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 2 file(s)
+[wf1/inc1b-v2list 0d25c5e46] feat(08_agents): the close check requires the every_task lists and refuses a table with none (V2.LIST)
+ 3 files changed, 28 insertions(+), 5 deletions(-)
+exit 0

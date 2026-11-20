@@ -1,0 +1,14 @@
+task-345 LATER resolves 14 lists, every_task 0 missing
+task-372 RUNNING resolves 13 lists, every_task 0 missing
+task-376 RUNNING resolves 24 lists, every_task 0 missing
+task-378 RUNNING resolves 26 lists, every_task 0 missing
+task-379 LATER resolves 17 lists, every_task 0 missing
+task-384 RUNNING resolves 19 lists, every_task 0 missing
+task-401 LATER resolves 9 lists, every_task 0 missing
+task-408 LATER resolves 9 lists, every_task 0 missing
+BEFORE task-372 REFUSED refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json: scripts/seeds/logic_variables.js
+BEFORE task-376 REFUSED refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json: docs/reports/generated/127-surfa
+BEFORE task-378 REFUSED refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json: docs/reports/generated/127-surfa
+BEFORE task-384 REFUSED refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json: docs/reports/generated/127-surfa
+BEFORE task-401 REFUSED refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json: scripts/board/fold.mjs (add a ro
+BEFORE task-408 REFUSED refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json: scripts/board/fold.mjs, scripts/

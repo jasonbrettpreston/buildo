@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:53:13.657Z file_sha256=46db94a1f184a1e1a04535f3f1dda3f82027b8b5b626d94078decb2765c355a6 prompt_sha256=1d2c97669c86e256ca05c1fccf2e8f44b6a78e4c5ecff618de98a99c50bf1a27
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LIST/in-out-compliance-eng-all-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §14 registry "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions**" — docs/specs/00-architecture/00_system_map.md:24 "| 99 | `00-architecture/plan-protocol.md` | Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00) | — | — | Done |" — the same commit makes plan-protocol a document attached to EVERY task ("every_task": ["five-words", "plan-protocol"]) and pins it with a test, yet the registry row records no governed path and no test, so the new coupling exists in neither direction — Fix: fill the two columns for that row (scripts/analysis/rule-lists.json every_task key, src/tests/backlog/rule-lists.logic.test.ts) in this same commit
+
+DEFER severity=MED — §14 registry "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — docs/specs/00-architecture/00_system_map.md:24 "| 99 | `00-architecture/plan-protocol.md` |" beside :25 "| 99 | `00-architecture/two_client_architecture.md` | Two-Client Architecture" — two different documents now carry spec id 99, so any "Spec 99 §N" citation in a source or test SPEC LINK is ambiguous — Fix: give plan-protocol a free spec number and update the map row and every citation to it in this commit
+
+DEFER severity=MED — §14 registry "A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**" — src/tests/backlog/rule-lists.logic.test.ts "+    for (const gone of ['\"eng-s1\"', 'eng-s2-s4-s10-s11', 'eng-s3-s9', 'eng-s5-s9-s14', '\"eng-s5\"']) expect(text, gone).not.toContain(gone);" where "const text = JSON.stringify(t);" — the five removed list ids are proven gone only inside rule-lists.json; the diff shows no update to, or check of, any spec, runbook, hook or review template outside the table that cited eng-s5-s9-s14 and its siblings — Fix: grep the estate for the five ids in this commit and update every hit, or assert repo-wide absence in the test
+
+DEFER severity=MED — §13.3 "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`." — scripts/analysis/rule-lists.mjs (renderPage) "try { p = buildLensInputs({ id: l.id, list: def, root, material: 'x'.repeat(NOMINAL), templateFile: tmpl }).length; } catch { p = 0; }" — the new catch binds no error and logs nothing, so a list that genuinely fails to build is printed on the operator's page as "does not fit" (`${p || 'does not fit'}`) with no reason — Fix: catch (err), pass it to logError or an inline reason, and print that reason in the page row
+
+DEFER severity=MED — §12.12 "Pure functions with arithmetic invariants — scoring formulas, key normalizers, distance/unit conversions, cursor comparators — MUST have at least one `fast-check` property test asserting the invariant" — scripts/analysis/rule-lists.mjs "const numOf = (id) => Number(/(\d+)$/.exec(String(id))?.[1]);" used as "out.notYet.sort((a, b) => a.cls - b.cls || numOf(a.id) - numOf(b.id));" — the new id normalizer that fixes the order of the reported list has only example assertions in *.logic.test.ts, and its NaN result for an id without trailing digits is untested — Fix: add one fast-check property (forAll(a < b => numOf(a) <= numOf(b)) plus an id with no digits) under src/tests/property/, or record why it is outside §12.12
+
+DEFER severity=MED — §14 "where deterministic, **promoted to a machine-read GATE** (husky footgun / ESLint / migration hook) — the strongest form: *a NO-GO the machine reads cannot be shipped past*" — task-406 plan "Pre-commit wiring is not done (it pins an exact generator count in hooks-composition test): the page check runs in the suite test. Reported as a choice." — the page --check that answers "is it actually working on a daily basis" is deliberately left outside any commit or push gate, so a stale or switched-off page lands and is caught only by whoever runs the suite — Fix: wire `rule-lists.mjs page --check` into the pre-commit run and update the pinned generator count in the same commit
+
+MET — §12.1 "Biome MUST pass on all files in `src/features/leads/` before commit" — scripts/analysis/rule-lists.json "globs": ["src/components/**", "src/app/**", "src/features/**"] — the glob widening attaches lists to features tasks but edits no file under src/features/leads/, so the Biome gate has no new surface here
+
+MET — §12.8 "All NEW migration files must pass `sqlfluff lint --dialect postgres`" and §12.10 "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts`" — no file under migrations/ appears anywhere in the diff — neither obligation fires on this change
+
+MET — §14 registry "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — src/tests/backlog/rule-lists.logic.test.ts "// Rule: Spec 126 section 0a principle 1 and section 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1; PLAN-PROTOCOL.md:3" — the new test block cites sections, not bare spec names
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 26   Unmet: 6
+
+---
+⏱  112908ms (112.9s)
+📊 Tokens — total: 53217, input: 31719, output: 21498, reasoning: 20114

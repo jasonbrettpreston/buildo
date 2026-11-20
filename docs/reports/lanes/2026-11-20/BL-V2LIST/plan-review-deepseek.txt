@@ -1,0 +1,53 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-20T17:38:31.263Z file_sha256=aad71f8e8a31bced3ad09c649f7b46db127313bccc4448f7f7f270accf5e5cc2 prompt_sha256=45876a875be0dc2ccc6fb9f585e7c168eb217f073028fb460a41725201e1e803
+🔍 Lens review of docs/reports/reviews/task-406/context-2026-11-20.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — step 3 "resolveTask adds every_task lists to every task" — unconditional injection makes "resolves" vacuously true: a task whose Files paths match no row now resolves to five-words+plan-protocol+ms-N, so the grounder's 8 unmatched tasks report as resolvable and the acceptance test ("a planted task whose Files line resolves to no principles list is refused") can never fire — split the verdict: resolved = kind/path matched AND every_task attached; an unmatched path must return "not yet resolvable: <path> matches no row".
+
+BUG severity=HIGH — Files line names scripts/analysis/backlog-lane.mjs; no step in the PLAN mentions it — acceptance says "refused at launch", but the resolver is only wired into check-tasks/check-lane-close/the suite page, so launch still accepts an unresolvable task — add a step calling resolveTask from backlog-lane.mjs and put the planted launch refusal in step 4 alongside the close-check defect.
+
+BUG severity=HIGH — step 1 (table) vs step 4 ("close check ... own commit") — new close check refuses a table with no every_task, so any revert or partial land leaves every lane unable to close a task while 1·A/1·B lanes run in parallel (RR-0248); the plan also never says whether the old validate rejects the new keys, i.e. whether the table can land first at all — land table+helper+close-check as one commit and define rollback as a single revert of that triple.
+
+BUG severity=HIGH — step 1 new row generated-reports covers docs/reports/policy/** while the grounder itself writes "governing spec not found: lane-tools lists as the nearest, to verify" — a "definitive" list ships a row whose governing document is admittedly unknown — either mark the row OWED with a dated note (the bylaw-133 precedent the same step establishes) or resolve the governing spec before the row is written.
+
+BUG severity=HIGH — step 6 "for one real task per kind" — the actual path to deepseek-review's 120,000-char refusal (grounder: refusals already fire, lanes hand-trimmed diffs) is a task whose Files line spans 4–6 kinds and unions every kind's material plus five-words/plan-protocol/ms-N (~+15 KB always-on) — add one real multi-kind task to step 6 and report its total chars per phase.
+
+BUG severity=MED — step 3 page emits per-document "sizes" and the page is under --check — any later edit to a spec or milestone document changes a size and fails the check with no table change, so the check cries wolf until it is ignored (the inverse of the operator's "no one has switched it off") — keep sizes outside the checked block, or check only the document id and kind sets.
+
+BUG severity=MED — step 5 "TESTS FIRST (red ... red.out)" names only the two logic tests — registering the 6th generator in gate J trips the exact generator count the plan itself says hooks-composition pins, so step 5/6 will show a third, untriaged red — list hooks-composition among the expected reds and update its count in the same commit.
+
+BUG severity=MED — step 1 "eng-all ... replacing eng-s1, eng-s2-s4-s10-s11, eng-s3-s9, eng-s5-s9-s14, eng-s5 in every row" — no step asserts zero residual references to the five removed ids in the JSON, in fixtures/tests, or in any list-count pin; one missed occurrence gives a reviewer the same content twice (slice + whole) — require `grep -rn 'eng-s1\|eng-s2-s4-s10-s11\|eng-s3-s9\|eng-s5' scripts src tests .claude` to be empty post-edit and a test asserting no removed id appears in any row.
+
+BUG severity=MED — step 3 check-tasks lists "every open task as resolves or not yet resolvable by id with the reason" — the 195 no-Files tasks and the 8 unmatched-path tasks collapse into one bucket, so the page built for the operator hides the 8 governance gaps among 195 authoring gaps — require two distinct reason classes and order the unmatched-path ones first.
+
+DEFER severity=MED — step 2 copies ~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md with only a truncated sha256 ("d92940f4...") — nothing keeps the repo copy in sync with a live out-of-repo file and a reviewer cannot tell which version they are reading — put source path, full sha256 and date in a header block of the copy (and record the full sha in the plan).
+
+DEFER severity=MED — plan step 8 "task left RUNNING, grounder owed" because rule-lists.mjs is a protected path — no task owns post-acceptance corrections to the helper or the table, and step 4's protection logic means a fix cannot ride a closing task — name the closing task and the follow-up route now.
+
+DEFER severity=MED — step 1 rewrites scripts/analysis/rule-lists.json, a shared file that the grounder shows parallel lanes (BL-RULESACC, BL-PAGETABLE) also touch — a hand-resolved JSON merge can drop a row silently — state single-writer for the window, or require re-running check-tasks on the merged file before commit.
+
+DEFER severity=LOW — step 7 resolves 6 of the grounder's 8 unmatched tasks (376, 378, 384, 372, 401, 408) — 345 and 379 are left refused with no reason stated — list them as OWED with the reason on the page rather than silently dropping them.
+
+DEFER severity=LOW — step 1 ms-F..ms-AL sections — m-0 carries only "Objectives" while m-1 carries three headings, so a milestone file with a renamed or mistyped heading silently attaches an empty document and the milestone objectives vanish exactly as they do today — have validate assert every section named in every ms-N list (and every list) exists as a heading in its file.
+
+DEFER severity=NIT — step 3 "validate checks the two keys (defined lists, every increment letter covered)" — coverage is asserted over increment letters, but a task whose milestone letter has no milestone file or carries no milestone at all is unmodelled — state the resolve behavior (not yet resolvable with reason) for that case.
+
+REJECT — step 1 eng-all (46,352 chars) — the fear that eng-all alone pushes kinds past the material ceiling — it replaces up to five overlapping eng slices whose characters summed comparably; the net growth is dominated by five-words + plan-protocol + ms-N (~15 KB), which finding 5 already covers.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- resolveTask's unconditional every_task injection (step 3) makes "resolves" vacuous and disables the acceptance test for an unresolvable Files line.
+- "Refused at launch" is unwired: backlog-lane.mjs is in Files with no step touching it, so lanes still launch on tasks that resolve to no governing list.
+- Table/helper/close-check land as separate commits with no stated ordering or revert unit; a partial land or a revert leaves the close gate refusing every lane's task close across parallel increments.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- The table's shape is as of 2026-11-20, not as of execution: `jq '{lists:(.lists|keys|length), ids:(.lists|keys), rows:(.rows|length)}' scripts/analysis/rule-lists.json` — reconcile against "41 lists, 16 rows" and against any row another lane added since.
+- The milestone letter→file mapping and the named sections exist: `ls backlog/milestones/; for f in backlog/milestones/m-*; do echo "== $f"; grep -nE '^#{1,4} ' "$f"; done` — cross-check every letter in milestone_docs against a file heading before writing the key.
+- The plan-protocol source is the version the plan names: `wc -c ~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md; shasum -a 256 ~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md` — must equal the recorded d92940f4… and 7,502 chars at copy time.
+- The five words are actually in the section five-words attaches: `grep -n "standardization, observability, scalability, accuracy, understandability" docs/specs/01-pipeline/132_step_standard_handbook.md` — if the phrase lives outside the Glossary heading, the new list attaches an empty block, the exact defect being fixed.
+- The post-change resolve counts, so a regression is detectable: run check-tasks before and after and record the baseline (grounder: 297 open, 91 resolve, 195 no Files line, 8 unmatched, 3 exempt-only) plus the expected post-change numbers for each class.
+
+---
+⏱  65242ms (65.2s)
+📊 Tokens — total: 25373, input: 13474, output: 11899, reasoning: 9904
