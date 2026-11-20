@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { backlog, backlogBin, makeProject, mk, run, tmp } from './helpers';
+import { backlog, backlogBin, makeProject, mk, ROOT, run, tmp } from './helpers';
 
 const ID = { GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@t' };
 const git = (cwd: string, ...a: string[]) => run('git', ['-c', 'commit.gpgsign=false', ...a], { cwd, env: ID });
@@ -199,26 +199,39 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     expect(spec, r.stdout + r.stderr).not.toBeNull();
     return spec.extra.join('\n') as string;
   };
-  it('a build on a surface: compliance, code-review, ux, error-paths, in parallel, outputs r1-<lens>.txt, triage as round 2; no security', () => {
+  it('a build on a surface: compliance, code-review, ux, error-paths, in parallel, outputs plan-<lens>.txt and out-<lens>.txt, a separate grounder rules in GROUNDER.md; no security', () => {
     const e = lensBrief('build', 'mobile/app/(app)/x.tsx, src/tests/');
     for (const l of ['plan-review-deepseek.md', 'lens-compliance.md', 'lens-code-review.md', 'lens-ux.md', 'lens-error-paths.md']) expect(e).toContain(l);
     expect(e).not.toContain('lens-security.md');
     expect(e).toMatch(/plan review/i);
     expect(e).toMatch(/output review/i);
     expect(e).toContain('in parallel');
-    expect(e).toContain('r1-<lens>.txt');
-    expect(e).toMatch(/round 2/);
+    // the output names agree with the layout sentence and the close check (task-407 fold: the old r1-<lens>.txt / round 2 / TRIAGE.md wording contradicted both)
+    expect(e).toContain('outputs plan-<lens>.txt and out-<lens>.txt in the lane report dir');
+    expect(e).not.toContain('r1-<lens>.txt');
+    expect(e).not.toContain('TRIAGE.md');
+    expect(e).toContain('a separate grounder rules every finding in GROUNDER.md');
     expect(e).toContain('NEVER run one generic pass');
   });
   // task-407 (V2.LAYOUT): the close check reads lens outputs only directly in docs/reports/lanes/<date>/<lane>/ (plan-/out-/in- names); two lanes filed in subfolders because the brief never said so.
+  // one text in two files (brief: backlog-lane.mjs, refusal: scripts/hooks/check-lane-close.mjs): parity pin, the shared fragments must be in both sources
+  const LAYOUT_NAMES = 'plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name>';
+  it('PARITY: the layout fragments the brief states are the ones the close check refusal states (names, subfolder examples, the rN round form, fix-*.txt)', () => {
+    const src = (p: string) => fs.readFileSync(path.join(ROOT, p), 'utf8');
+    for (const p of ['scripts/analysis/backlog-lane.mjs', 'scripts/hooks/check-lane-close.mjs']) {
+      for (const frag of [LAYOUT_NAMES, '(lens-plan/, lens-out/, stage2/)', 'out-<lens>[-<list id>]-rN.txt', 'fix-*.txt']) expect(src(p), `${p} lacks: ${frag}`).toContain(frag);
+    }
+  });
   it('every brief, build or record-only, states the one folder, the file names, the round-2 form and that the compliance lens reviews the whole change (split, never trimmed)', () => {
     for (const e of [lensBrief('build', 'scripts/analysis/x.mjs, src/tests/'), lensBrief('record', 'docs/specs/00-architecture/08_agents.md')]) {
       expect(e).toMatch(/REVIEW FILES GO IN ONE PLACE: docs\/reports\/lanes\/\d{4}-\d{2}-\d{2}\/\S+\/ directly \(no subfolders/);
-      expect(e).toContain('plan-<lens>[-<list id>][-pN].txt and out-<lens>[-<list id>][-pN].txt');
+      expect(e).toContain(LAYOUT_NAMES);
       expect(e).toContain('in-<same name>');
-      expect(e).toContain('out-<lens>[-<list id>]-r2.txt');
+      expect(e).toContain('out-<lens>[-<list id>]-rN.txt');
       expect(e).toContain('fix-*.txt');
-      expect(e).toMatch(/compliance lens reviews the WHOLE change: a diff over[^\n]*split into parts[^\n]*never trimmed to core files/);
+      // mechanism (rule-lists.mjs lens-input): the RULE LIST is split at its headings into -p1..-pN and the whole diff rides in every part; a diff is never split
+      expect(e).toMatch(/compliance lens reviews the WHOLE change: lens-input splits the rule list at its headings into parts -p1\.\.-pN and puts the whole diff in every part; the diff is never split or trimmed to core files; a diff too large for one part is refused by lens-input: report that to the orchestrator at once/);
+      expect(e).not.toMatch(/a diff over the review tool's bound is split/);
     }
   });
   // task-375 FIX.TOOLS D11 (Spec 08 section 7 rule 4 dated note, 08_agents.md:338; scripts/deepseek-review.js:189 fills "(no pasted context provided)" when --context is absent):
