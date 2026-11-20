@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T19:15:00Z'
+updated_date: '2026-11-20T19:21:00Z'
 labels:
   - McFix
   - McFix V2
@@ -15,6 +15,8 @@ milestone: m-1
 dependencies:
   - TASK-406
   - TASK-407
+references:
+  - docs/reports/lanes/2026-11-20/BL-V2WHOLE/REPORT.md
 type: build
 ordinal: 110012
 ---
@@ -58,4 +60,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 part (b) landed (713959765 rule-lists.mjs lens-input splits a diff at file boundaries into chunks stamped chunk c of m with paths; no --list serves the non-compliance lenses). Part (c) in progress: check-lane-close.mjs chunkErrors.
 
 2026-11-20 part (c) landed (ba26e1b81 check-lane-close.mjs chunkErrors; closing commit may stage no path outside the task range). Part (d) in progress: backlog-lane.mjs brief sentence.
+
+2026-11-20 part (d) landed (9bed06dbb backlog-lane.mjs brief sentence). Commits: 713959765 (b), ba26e1b81 (c), 9bed06dbb (d); part (a) verified done by task-406 (the four templates hold {{PLAN}} once, line 34). Real split runs (inputs only): see docs/reports/lanes/2026-11-20/BL-V2WHOLE/REPORT.md. Not built, measured for a grounder: build tasks require the always-attached lists at the output phase only (check-lane-close.mjs:159); lens-input never passes the task text or rulings (the review tool fills '(no pasted context provided)' without --context). Grounder owed; task stays RUNNING.
 <!-- SECTION:NOTES:END -->
