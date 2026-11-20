@@ -3,11 +3,10 @@ id: TASK-384
 title: >-
   STD.REPORT-OWN The web report renderer gets a census owner and comes under the
   existing text, component and 44 px checks
-status: RUNNING
-assignee:
-  - '@lane-BL-REPORTOWN'
+status: LATER
+assignee: []
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T19:13:00Z'
+updated_date: '2026-11-20T19:42:00Z'
 labels:
   - McFix
   - McFix B
@@ -75,4 +74,6 @@ Rules served: Spec 126 section 0a principle 1 and 11b.2; 128 R-13; standardized,
 Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder, 2026-11-20 (the lane verifies each cited fact before building): option 2 with the strings fixed: add src/components/report/** to the frontend list of mcbylaws/protected-paths.json (dated note quoting the approved item 3 "Leave the reports as components, and bring them under the existing checks" at MD:1421-1422; the note may not say the operator ruled an exemption; the push gate still asks the operator y), list the three files (they are in src/components/report/, not surfaces/) in bindings.json, move the 3 display strings (ReportView.tsx:19 and :121) to content per FE-31, pin only the structural C-2b and C-8 findings per file and kind as a shrink-only two-direction baseline, state outside C-9 in the census entry. No policy-ledger row is involved. Rejected: option 1 leaves the files outside the checks; option 3 breaks Spec 126:924 "REPORT keeps the landed renderer".
 
 Retro review by a separate grounder 2026-11-20 (task-405), work as on the board: GROUNDER.md at ~/Buildo-scratch/lanes-20261119/inc1b/retro/BL-REPORTOWN/GROUNDER.md (sha256 ddb7e1f659f5…, 194 findings: 65 CONFIRMED, 126 REJECTED, 3 CONFLICT). DEFECTS: (1) commit ec063fd58 says the renderer is 'owned and under the surface checks'; it is owned only: no check judges the three files (part two unbuilt). (2) the out lens outputs judged a different diff (diff-task-384.patch with a bindings.json listing that is not on the board): no output lens saw the board change. (3) red.out does not match the committed tests; C-12 has no planted-defect case. (4) the descriptor cites 'bindings.json modules' as sharing evidence, which lists none of the three files; Spec 126 cites :923-924 stale (now 925-926); reduced_motion 'none' against globals.css:138. (5) trailers disagree (MF-83 a LATER row, MF-57 a DONE row); the governing approval, item 3 at MORNING-DECISIONS.md:1421-1422, is cited nowhere. (6) the card has no acceptance criteria. (7) 14 of 17 resolved lists have no valid output. Three display strings still at ReportView.tsx:19 and :121 (part two). Part two also puts the files under the FE-05 no-maths lock, never measured.
+
+2026-11-20 released by the launch script's own undo command (backlog-lane.mjs:87) on the operator's word (MORNING-DECISIONS.md entry 'Operator ALLOWS the release and relaunch of tasks 384 and 375'): the BL-REPORTOWN lane ended with part two unbuilt; relaunched as BL-REPORTOWN2.
 <!-- SECTION:NOTES:END -->
