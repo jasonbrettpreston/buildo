@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/gates/lens/diff-2.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10123 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21793 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33115 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44971 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 56164 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 70079 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 81708 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 93773 chars, answer 0 chars, 120s
+BUG severity=HIGH — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — src/tests/gate-mobile-compliance.infra.test.ts:40 "expect(gateC.ROWS.length).toBe(6);" — the never-do row count is a bare gate number and the quote-length floor at :41 is a bare tooling number, neither is a pinned gate_* or tooling_* variable — register both as pinned logic variables (min=max) and assert against them.
+DEFER severity=MED — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — src/tests/gate-compute-reach.infra.test.ts:47 "expect(gate.reaches(\"import x from '../../scripts/lib/step/config.js'\").length).toBe(1);" — the expected reach count and the two-conversion-factor count at gate-mobile-compliance.infra.test.ts:18 are bare literals, so they will drift from the fixtures — pin them as tooling_* variables or derive them from the fixtures.
+REJECT — core.9 — the diff is accused of not asserting PURITY-G0..G13 read zero — the clause's trigger is a new step conversion, this diff adds gate tests only, so the trigger is absent.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 2   Unmet: 1
+
+---
+⏱  133055ms (133.1s)
+📊 Tokens — total: 39265, input: 11838, output: 27427, reasoning: 27112

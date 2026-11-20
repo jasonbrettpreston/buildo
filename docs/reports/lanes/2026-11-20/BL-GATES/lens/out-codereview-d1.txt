@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/gates/lens/diff-1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9537 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20109 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30053 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 40591 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53572 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 63671 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 73647 chars, answer 1212 chars, 105s
+BUG severity=HIGH — compute-reach.mjs:157 "if (spec === s.stem || base === s.stem) via.add(s.file);" — neither `spec` nor `base` has its extension stripped, so a caller importing the reacher as `'./clean-reacher.js'` yields `base='src/clean-reacher.js'` which never equals `stem='src/clean-reacher'`, and the caller is silently never listed or scanned — strip the extension on both sides before comparing, e.g. const noExt=(p)=>p.replace(/\.[^./]+$/,'') and compare noExt(spec)/noExt(base) to s.stem.
+
+DEFER severity=MED — mobile-never-do.mjs:60 "if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && row('C3-no-dom-apis').names.includes(n.name.text)) shadowed.add(n.name.text);" — `shadowed` is one file-wide set, so a single `const document = ...` anywhere suppresses every genuine global `document`/`window`/`localStorage` reference in that file (the gate checks `!shadowed.has(n.text)` at line 87), so a real DOM use in the same file is missed — resolve shadowing per scope with a push/pop binding set instead of a file-global Set.
+
+DEFER severity=MED — compute-reach.mjs:111 "const LINE_RE = /^(.+?):(\d+):(\d+): (?:error|warning|info)\[([\w-]+)\]:/;" — ast-grep severities include `hint`, and every stdout line that fails this regex (including a `hint[...]` finding) is dropped at line 128-129 with no warning, so findings vanish silently — add `hint|warning|error|info` to the alternation and count/log unmatched non-empty stdout lines.
+
+DEFER severity=LOW — compute-reach.mjs:82 "out.push({ form, spec, line: text.slice(0, m.index + m[0].indexOf(m[1])).split('\n').length });" — `indexOf(m[1])` finds the first textual occurrence of the specifier, so for `import foo from './foo'` it locates the imported binding `foo`, not the quoted specifier, giving a wrong reported line for a multi-line import — use `m[0].lastIndexOf(m[1])` (the specifier is always last in the match) or the regex `d` flag indices.
+
+DEFER severity=LOW — compute-reach.mjs:68 "else if (SCAN_EXT.test(e.name) && !SKIP_FILE.test(e.name)) out.push(rel);" — `SCAN_EXT = /\.(?:[cm]?[jt]sx?)$/` also matches `.d.ts` and `SKIP_FILE` does not drop it, so declaration files (and `import type`) get listed as reachers and run through ast-grep, while the two sibling gates explicitly skip `.d.ts` — add `\.d\.ts$` to `SKIP_FILE` or `SKIP_DIR`.
+
+DEFER severity=NIT — mobile-never-do.mjs:72 "if (ts.isCallExpression(n) && ts.isIdentifier(n.expression) && (n.expression.text === 'require' || n.expression.text === 'import')" — the `'import'` branch is dead code: a dynamic `import()` call has an `ImportKeyword` expression, so `ts.isIdentifier(n.expression)` is false and only the line-74 check can ever fire for it — drop `|| n.expression.text === 'import'`.
+
+DEFER severity=LOW — compute-reach.mjs:123 "if (res.error) throw res.error;" — `main()` (line 176 `const { reachers, callers, findings } = run();`) calls `run()` with no try/catch, so any thrown error (spawn failure, missing rule id at line 104) exits as an uncaught stack trace with no summary line, indistinguishable in exit code from a `--strict` finding failure — wrap `run()` in try/catch, log the message, and `process.exit(2)` for errors.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- Caller matching compares against `stem` without stripping the import extension, so any `X.js` import is never listed as a caller.
+- The C3 shadow set is file-wide, so one local `document`/`window` binding hides all genuine DOM-global references in that file.
+- `LINE_RE` omits the `hint` severity and silently drops unmatched ast-grep output lines, losing findings without a log.
+
+---
+⏱  107974ms (108.0s)
+📊 Tokens — total: 43968, input: 21561, output: 22407, reasoning: 21383

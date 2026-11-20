@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/gates/lens/diff-1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9151 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22309 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32798 chars, answer 0 chars, 45s
+BUG severity=HIGH — scripts/analysis/gates/compute-reach.mjs:123 "if (res.status !== 0 && res.status !== 1) throw new Error(`ast-grep failed (exit ${res.status}): ${res.stderr}`);" — if ast-grep exits 1 for a rule-load or config error instead of a match, the gate accepts it, parses empty stdout to zero findings and reports the file clean, a false-negative fail-open — treat exit 1 as findings only when stdout parses and stderr carries no diagnostic, otherwise throw and abort loudly.
+
+DEFER severity=MED — scripts/analysis/gates/compute-reach.mjs:128 "if (m) out.push({ file, line: Number(m[2]), ruleId: m[4], lineText: (lines[Number(m[2]) - 1] || '').trim() });" — any output line whose severity or format differs from LINE_RE is dropped with no notice, so real findings vanish silently — count non-empty stdout lines that fail LINE_RE and fail the scan if any exist.
+
+DEFER severity=MED — scripts/analysis/gates/compute-reach.mjs:156 "if (spec === s.stem || base === s.stem) via.add(s.file);" with :155 "const base = path.posix.normalize(path.posix.join(path.posix.dirname(f), m[1]));" — a caller importing the reacher as "./clean-reacher.js" yields a base that keeps the extension while s.stem is extension-stripped, so that caller is never listed or scanned — strip the extension from base before the equality test.
+
+DEFER severity=MED — scripts/analysis/gates/mobile-never-do.mjs:61 "if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && row('C3-no-dom-apis').names.includes(n.name.text)) shadowed.add(n.name.text);" — one local "const document =" anywhere in a file suppresses every document, window and localStorage reference in that same file, including genuine global uses, so C3 goes quiet (false clean) — scope shadowing to the declaring binding's references, not a file-wide name set.
+
+DEFER severity=MED — scripts/analysis/gates/compute-reach.mjs:184 "if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main();" — invoking the gate through a symlink or node_modules/.bin shim makes the guard false, so it prints nothing and exits 0, indistinguishable from a clean pass — compare realpath to realpath, or pathToFileURL on the resolved path.
+
+DEFER severity=MED — scripts/analysis/gates/compute-reach.mjs:62 "if (!fs.existsSync(abs)) return out;" — when both src/ and mobile/ are absent the walk returns nothing and main prints 0 files, 0 findings, exit 0, a silent clean for a tree it never scanned — fail (exit non-zero) when the walked file count across all roots is zero.
+
+DEFER severity=LOW — scripts/analysis/gates/compute-reach.mjs:118 "fs.writeFileSync(ruleFile, rules.map((r) => yaml.dump(r, { lineWidth: -1 })).join('---\n'));" — this write sits before the try/finally, so a throw here (disk full, read-only tmp) leaks the mkdtemp dir on every error — move it inside the try so the finally rmSync removes the temp dir.
+
+REJECT — scripts/analysis/gates/compute-reach.mjs:122 "if (res.error) throw res.error;" — a missing ast-grep binary or a maxBuffer overflow surfaces as res.error and is thrown, aborting the run — no false clean, the degrade is loud failure which is the safe direction.
+
+VERDICT: FAIL on error-path safety
+Paths walked: ast-grep spawn failure, ast-grep exit-code ambiguity, short-report line parsing, extensioned import resolution, shadowed DOM globals, argv entry guard, missing scan roots, temp-dir cleanup, readFileSync during walk   Unguarded: 7
+
+---
+⏱  53493ms (53.5s)
+📊 Tokens — total: 32774, input: 21578, output: 11196, reasoning: 10305

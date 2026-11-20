@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/gates/lens/diff-1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10530 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20821 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31194 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41540 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 54696 chars, answer 0 chars, 75s
+BUG severity=HIGH — 122 §5.5 "over `scripts/lib/compute/**` (driver: `scripts/hooks/check-step-shape.mjs`, always blocking, the directory IS the scope, no `converted.json` entry needed)" — compute-reach.mjs:13-14 "A file under src/ or mobile/ that IMPORTS the compute core is outside that directory, so no existing gate scans it (the gap). Gate A (1) LISTS every such file, and (2) runs the SAME rule data ... on it as an ADVISORY" — the gate applies compute-shape rule ids to files the pasted clause puts outside the rule's scope, and no pasted ruling authorizes the widening (A26: "no widening of an old gate") — in stage 1 emit only the REACH/CALLER lists, and emit rule-id findings only after an operator ruling adding src/ and mobile/ to scope is pasted into the spec.
+
+BUG severity=HIGH — 122a A26 "The ast-grep codes are added to `GATE_E_RULE_IDS`; rule ids 1–10 stay non-filterable ("no widening of an old gate", `compute-literals.mjs`)." — compute-reach.mjs:56 "...GATE_E_RULE_IDS.filter((id) => id !== 'compute-forbidden-require-dynamic' && id !== 'compute-no-literal-violation-compare')," — a gate E literal id is filtered out of the reused set, and the filter is not even listed in the gate's own EXCLUDED comment at :50-52, so an id the ruling says stays non-filterable silently stops applying — apply every non-dynamic gate E id unfiltered, or record the exclusion as a ruling row in 122a before shipping.
+
+BUG severity=MED — 122a A26 "rule ids 1–10 stay non-filterable" read with the gate's own closed-set claim "Rule ids of compute-shape.yml applied to a reacher (closed)" — compute-reach.mjs:50-52 "EXCLUDED with reason: ... compute-no-postgis-branch, compute-no-verdict-derivation, compute-no-literal-threshold, compute-no-literal-byte-window, compute-no-literal-url-tunable (bind a compute's own check/verdict code, not a route)" — none of those five ids is excluded by the code at :56, so the applied set is wider than the set the gate declares and a route will receive findings the design text says do not bind a route — derive the list from an explicit EXCLUDED_RULE_IDS constant and throw unless applied plus excluded equals GATE_E_RULE_IDS.
+
+BUG severity=MED — 122 §5.5 "a finding is closed only by becoming a declared `config.logic_variables[]` entry (as gate A requires for descriptor-level bounds) or a dated `standard-gates-ledger.json` row" — compute-reach.mjs:179 "for (const f of findings) console.log(`FINDING ${f.file}:${f.line} ${f.ruleId} | ${f.lineText}`);" — findings are published under gate E rule ids on route files that have no descriptor logic_variables[] and no ledger row, so the pasted closure path cannot exist for them and they read as unclosable gate E debt — either name the closure route for advisory findings in the header or emit them under advisory-only ids that gate E does not own.
+
+DEFER severity=MED — pasted context names no prove-red fixture obligation for these gates, yet the gates assert planted defects are caught — compute-reach.mjs:33 "export const SCAN_ROOTS = ['src', 'mobile'];" against scripts/steps/_schema/fixtures/reach/bad-reacher.ts:5 "const core = await import('../../../../../scripts/lib/compute/demo-core.js');" — all six fixture files sit outside the gates' own scan roots and no test in the diff runs them, so the only evidence that the rules fire is an unexecuted comment — add a gate test that calls run(dirname of fixtures) and asserts the specific planted findings.
+
+DEFER severity=LOW — 122a A26 "Every site answers exactly one token: `PASS | FAIL:<CODE>:<file>:<line>`. `<CODE>` is a row's rule id below" — compute-reach.mjs:179 "console.log(`FINDING ${f.file}:${f.line} ${f.ruleId} | ${f.lineText}`);" — sites judged under A26 code-table ids are reported outside the closed answer grammar, so PASS and not-run are indistinguishable in the output — print the A26 token form or state in the header that these ids are outside the A26 answer set.
+
+DEFER severity=LOW — clauses fe.05/fe.44 (136), Spec 90 §5, 132 core.8 and core.9 are cited but are not in the pasted context, cannot see — mobile-literals.mjs:7 "136_mcfrontend_handbook.md:163 fe.44 ...; the conversion factor is content/settings, never code" and compute-reach.mjs:9 "132_step_standard_handbook.md:154 core.8" — the BOUND/INFORMATIONAL split of Gate B and the six rows of Gate C, plus Gate A's justification for touching routes, rest on text I cannot check here — paste fe.05, fe.44, Spec 90 §5 and 132 core.8/core.9 verbatim so scope and severity can be judged.
+
+MET — 122a A26 "a cross-cutting promise is declared data, generated and gated, and is never re-discovered by a manually commissioned inventory" — compute-reach.mjs:104-106 — rule objects are read from RULE_FILE and re-pointed ("const { files, ...rest } = byId.get(id);"), not copied into a second rule set.
+
+MET — 122 §5.5 "the directory IS the scope, no `converted.json` entry needed" for gate E itself — compute-reach.mjs:27 "import { RULE_FILE, GATE_E_RULE_IDS } from './compute-literals.mjs';" — compute-literals.mjs is imported only, not edited, so gate E's own scope and its fast invariant #32 are unchanged by this diff.
+
+MET — 122a A26 "The landing changes gates, ledger rows and specs only, no runtime code." — the diff touches only scripts/analysis/gates/*.mjs and scripts/steps/_schema/fixtures/*; nothing under scripts/lib, scripts/*.js or scripts/quality/*.js moves.
+
+MET — 122a A26 G0 "The purity codes run over compute and its AST `require` closure; compute Shape 1–10 rules do not." — compute-reach.mjs:17-18 "The purity codes G1-G8 (compute-purity.mjs) are NOT applied" — no second purity engine or closure walk is created, so G0 keeps one owner.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 4
+
+---
+⏱  84954ms (85.0s)
+📊 Tokens — total: 42125, input: 25052, output: 17073, reasoning: 15535

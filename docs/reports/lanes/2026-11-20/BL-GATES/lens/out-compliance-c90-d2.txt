@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/gates/lens/diff-2.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10032 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20172 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 28813 chars, answer 2849 chars, 45s
+DEFER severity=MED — Spec 90 §5 "Strict Anti-Patterns (NEVER DO THESE)" — src/tests/gate-mobile-compliance.infra.test.ts:39-41 "it('C2: the list is six rows, each with its quote from Spec 90 §5'" / "expect(row.quote.length).toBeGreaterThan(10)" — the test name claims every row carries its quote from §5 but the only assertions are row count 6 and quote length > 10, so a wrong-but-long quote is green, meaning the six-row list is not bound to the six pasted §5 bullets — assert each row.quote is a substring of the pasted §5 text and assert the six expected row ids.
+DEFER severity=LOW — Spec 90 §5 "NO HTML/DOM: Never use `<div>`, `<span>`, `<a>`, `<p>`, or `<button>`." — src/tests/gate-mobile-compliance.infra.test.ts:37 "for (const row of gateC.ROWS) expect(hit(findings, 'bad-c.tsx', row.id), row.id).toBe(true);" — one hit per row on one fixture is the whole proof for a row that must catch five distinct tags, a row matching only one tag would still pass C1 — assert a hit per tag, or split the expected ids per tag.
+DEFER severity=LOW — clause not pasted (136 fe.05, fe.44; 132 §6 R-BA, core.8, core.9; 08_agents.md:462) — src/tests/gate-mobile-compliance.infra.test.ts:21 "for (const id of ['U1-upper-snake-number', 'U2-timer-number', 'U3-retry-count', 'U4-query-option-number'])" — the conversion-factor bound and the four informational classes are behaviour no pasted clause names, and no pasted Spec 90 clause governs numeric literals in mobile code — paste fe.05/fe.44 so the B1/U1-U4 rules have a governing clause in context.
+DEFER severity=LOW — clause not pasted (122 §5.5, 132 §6 R-BA/core.8/core.9) — src/tests/gate-compute-reach.infra.test.ts:1 "// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.5 (:804-815); 132_step_standard_handbook.md §6 R-BA, core.8, core.9" — Gate A rests entirely on clauses absent from the pasted context, so this lens can neither confirm nor refute A1 to A5 — paste 122 §5.5 and 132 §6 core.8/core.9 into the review context.
+MET — Spec 90 §5 six bullets, "NO HTML/DOM" through "NO standard `<Image>`" — src/tests/gate-mobile-compliance.infra.test.ts:40 "expect(gateC.ROWS.length).toBe(6);" — the asserted row count matches the six pasted §5 bullets, one row per bullet.
+MET — Spec 90 §5 "NO Web Libraries: Never import `shadcn/ui`, `@tremor/react`, `framer-motion`, or `lucide-react`." — src/tests/gate-mobile-compliance.infra.test.ts:43 "(lucide-react-native is not lucide-react; ...)" — the clean twin is green for lucide-react-native, which matches the clause's literal scope.
+MET — Spec 90 §5 "NO DOM APIs: Never use `window`, `document`, `localStorage`, `navigator.geolocation`." — src/tests/gate-mobile-compliance.infra.test.ts:43 "(a local `document` is not the DOM)" — the clause forbids the DOM API, not an identifier that shadows it.
+REJECT — Spec 90 §10 "Unit Testing (Jest): Jest + React Native Testing Library for logic hooks." — accused of testing mobile compliance with vitest — not a real issue: both files exercise Node gate scripts under scripts/analysis/gates, not mobile logic hooks.
+REJECT — Spec 90 §5 "NO DOM APIs: Never use `window`, `document`, ..." — accused of carving a shadowing local `document` out of the rule — not a real issue: the pasted clause forbids the DOM API, and a locally declared identifier is not that API.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  45522ms (45.5s)
+📊 Tokens — total: 17748, input: 8812, output: 8936, reasoning: 7947

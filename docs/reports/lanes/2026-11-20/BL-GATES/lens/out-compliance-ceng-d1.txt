@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/gates/lens/diff-1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9795 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20436 chars, answer 0 chars, 30s
+BUG severity=HIGH — §5.3 "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code." — NONE (no test file appears in the diff) — three new gate modules and eight fixture files are added with no failing test that demonstrates the red light, so the Golden Rule has no evidence of being followed — add the red test that fails against the fixture before the gate code, and show the run.
+
+BUG severity=HIGH — §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — scripts/analysis/gates/compute-reach.mjs:73 "export function reaches(text) {" — the diff adds pure derivation logic (`reaches`, `walk`, `scan`, `isSkipped`, `nonZero`, `matchesPkg`, `reusedRules`) across three modules, plus `bad-b.tsx` / `bad-c.tsx` / `clean-*` / `reach/*` fixtures, and no `*.logic.test.ts` exists to run any of them, so the fixtures prove nothing — add `compute-reach.logic.test.ts`, `mobile-literals.logic.test.ts`, `mobile-never-do.logic.test.ts` asserting each planted fixture yields its named findings and each clean twin yields none.
+
+BUG severity=MED — §14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — scripts/steps/_schema/fixtures/reach/bad-reacher.ts:1 "// @ts-nocheck" — all eight new fixture files (bad-b, bad-c, clean-b, clean-c, bad-reacher, caller, clean-reacher, not-a-reacher) start at line 1 with `@ts-nocheck` and carry no SPEC LINK at all, unlike the three gate modules which do — add a SPEC LINK naming the spec and section (e.g. 90_mobile_engineering_protocol.md §5) to each fixture.
+
+DEFER severity=MED — §14 "where deterministic, **promoted to a machine-read GATE** (husky footgun / ESLint / migration hook) — the strongest form: *a NO-GO the machine reads cannot be shipped past*" — scripts/analysis/gates/compute-reach.mjs:20 "// Report-only: exit 0 with a findings list; --strict exits 1 on findings. Not wired into any hook, the push station or CI (stage 1)." — all three gates are advisory only, so nothing yet prevents the classes §14 exists to prevent — stage 2 must wire at least one hook/CI entry, and that wiring should be the named next step, not left open.
+
+DEFER severity=LOW — §9.6 "Pipeline metadata (chain definitions, script paths, table reads/writes, feature flags) MUST be declared in `scripts/manifest.json` as the single source of truth." — NONE (no manifest entry in the diff) — three new scripts are added under `scripts/` with no `scripts/manifest.json` entry, so the "single source of truth" for script paths no longer lists them — confirm whether analysis gates are manifest-scoped or add entries with their read-only I/O declaration.
+
+REJECT — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — accused by scripts/steps/_schema/fixtures/mobile-gates/clean-c.tsx:15 "const document = { id: 1 };" — this is a planted shadowing input that the scanner is meant to parse, not a mock constructing an expectation, so the typed-factory rule does not reach it.
+
+REJECT — §9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK ... no inline `new Pool({...})` instantiation, no bare `console.error()`" — accused by the three new scripts not importing `scripts/lib/pipeline.js` — they are read-only analysis gates under `scripts/analysis/gates/` doing fs/spawnSync work with no pool, transaction, or DB write, so the SDK mandate for DB pipeline scripts is not engaged.
+
+MET — §14 "Every source/test file's `SPEC LINK` points at the spec AND the section (§N)" — scripts/analysis/gates/compute-reach.mjs:1 "// SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.5; 132_step_standard_handbook.md §6 R-BA" — all three gate modules carry section-level SPEC LINK lines.
+
+MET — §9.1 Transaction Boundaries — scripts/analysis/gates/mobile-never-do.mjs:23 "import ts from 'typescript';" — no DB mutation anywhere in the three gates, so the transaction/rollback clause has nothing to bind.
+
+MET — §5.5 Test-Layer Map — scripts/analysis/gates/mobile-literals.mjs:46 "export function scan(root = REPO_ROOT, roots = SCAN_ROOTS) {" — the scan functions are pure/analytical, the correct layer for them is `*.logic.test.ts` (flagged above as missing), not `.ui` or DB replay.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  42029ms (42.0s)
+📊 Tokens — total: 32569, input: 24518, output: 8051, reasoning: 6891

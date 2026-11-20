@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/gates/lens/diff-2.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9766 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19705 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31035 chars, answer 0 chars, 45s
+DEFER severity=MED — src/tests/gate-compute-reach.infra.test.ts:12 "const run = (): any => gate.run(ROOT, [FIX]);" — returning `any` erases the whole gate result shape, so a renamed field (`ruleId` vs `id`) or a missing `hits` only surfaces as a runtime TypeError, and line 28 "expect(clean.hits.map((h: { form: string }) => h.form).sort()).toEqual(['dynamic', 'static']);" dereferences the possibly-undefined `find` result with no guard — safe only because the preceding toBeTruthy throws first — declare an interface for the run() return (or JSDoc types in the .mjs) and return that instead of `any`.
+
+DEFER severity=MED — src/tests/gate-compute-reach.infra.test.ts:45 "expect(() => gate.reusedRules(ROOT)).not.toThrow();" — the test name claims "the applied rule ids all exist in the reused rule file" but the assertion only proves the call does not throw, so a renamed or absent rule id in the rules file still passes — assert membership, e.g. `GATE_A_RULE_IDS.every((id) => gate.reusedRules(ROOT).some((r) => r.id === id))`.
+
+DEFER severity=MED — src/tests/gate-mobile-compliance.infra.test.ts:24 "expect([...bound, ...info].filter((f: F) => f.file.endsWith('clean-b.tsx'))).toEqual([]);" and :44 "expect(findings.filter((f: F) => f.file.endsWith('clean-c.tsx'))).toEqual([]);" — both GREEN assertions are vacuously true if the clean twin is never visited (renamed fixture, extension filtered out, path mismatch), because nothing asserts the clean file was scanned — add a positive control, e.g. assert the clean file is in the scanned set or plant one bound-class literal in the clean twin and assert that single finding.
+
+DEFER severity=LOW — src/tests/gate-compute-reach.infra.test.ts:17 "expect(reachers.map((r: { file: string }) => r.file)).toContain(`${FIX}/bad-reacher.ts`);" — A1 and :40 compare an exact relative path while A2/A3/C compare basenames with `endsWith`, so if the gate emits ROOT-joined paths A1/A4 go red while A2 stays green — derive the expectation from the same value the gate returns, or use `endsWith` consistently.
+
+DEFER severity=LOW — src/tests/gate-mobile-compliance.infra.test.ts:35 "const findings = gateC.scan(ROOT, [FIX]) as F[];" — unchecked `as` cast to a shape keyed on `id`, whereas Gate A's findings are keyed on `ruleId` (gate-compute-reach:20 "const ids = new Set(findings.filter((f: { file: string }) => f.file.endsWith('bad-reacher.ts')).map((f: { ruleId: string }) => f.ruleId));"); if Gate C in fact emits another field, `hit` returns false and the message is misleading — type the scan return rather than casting, so the compiler checks the field name.
+
+DEFER severity=LOW — src/tests/gate-compute-reach.infra.test.ts:35 "expect(findings.some((f: { file: string }) => f.file.endsWith('not-a-reacher.ts'))).toBe(false);" — the header's "breaks rules but never reaches the core is not listed" claim is only exercised if that fixture file actually contains a violation, which this test does not assert (cannot see the fixture file) — assert the fixture itself contains a known violating line before asserting the gate stayed silent.
+
+DEFER severity=NIT — src/tests/gate-mobile-compliance.infra.test.ts:11 "type F = { file: string; id: string; line: number };" — `line` is never read anywhere in the file (`hit` uses only `file` and `id`), so the field is dead — either drop it or include `f.line` in the failure messages.
+
+```
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none (no CRIT/HIGH findings; MED items are test-strength gaps, not wrong assertions)
+```
+
+---
+⏱  50788ms (50.8s)
+📊 Tokens — total: 15109, input: 5117, output: 9992, reasoning: 9041

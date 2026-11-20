@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/gates/lens/diff-1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9363 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19257 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33858 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44500 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 56102 chars, answer 0 chars, 75s
+BUG severity=HIGH — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — scripts/analysis/gates/mobile-literals.mjs:31 "export const CONVERSION_FACTORS = ['10.7639', '10.764', '3.28084', '3.2808', '0.3048', '0.092903', '0.0929'];" — the seven numbers that decide every BOUND finding of this gate are literals in code, not gate_* / tooling_* variables, so the gate that enforces externalization exempts itself — move the factor set into a registered logic variable read through gateVariable and pin it.
+
+BUG severity=MED — core.8 "Unit constants and definitional windows are pinned (min = max)." — scripts/analysis/gates/compute-reach.mjs:121 "maxBuffer: gateVariable('tooling_spawn_max_buffer_mb') * 1024 * 1024" — the MB to bytes unit constant 1024 * 1024 is written in code while the registered variable is in MB — register the buffer ceiling in bytes as a pinned tooling_* variable and use it directly.
+
+DEFER severity=MED — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — scripts/analysis/gates/mobile-literals.mjs:7 "It names step, gate, admin surface, tool. It does NOT name the phone app, so by its own words it does not bind mobile code." — whether core.8 reaches phone numbers (classes U1 to U4, counted by nothing and never by --strict) rests only on a code comment plus an UNVERIFIED note, and no operator ruling is pasted — carry the question as an explicit open item with the ruling reference, or apply core.8 to phone numbers until that ruling lands.
+
+DEFER severity=MED — §6 R-BA "A step-standard item that no machine checks is not part of the standard" — scripts/analysis/gates/mobile-never-do.mjs:10 "Exit 0 with a list; --strict exits 1 on findings. Not wired." — three report-only gates wired to no hook, station or CI leave the §6 none count unchanged, so no standard item becomes machine-checked — name the wiring step inside this change or state in the change record that it closes nothing.
+
+DEFER severity=LOW — §6 "The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count." — scripts/analysis/gates/compute-reach.mjs:1 "SPEC LINK: docs/specs/01-pipeline/122_pipeline_step_optimization.md §5.5; 132_step_standard_handbook.md §6 R-BA" — no test or lock in the diff names R-BA or any §6 row, so the SPEC LINK citation is not carried by the shrink-only register — add the lock test naming the rule ids or drop the §6 R-BA citation.
+
+DEFER severity=LOW — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero." — scripts/steps/_schema/fixtures/reach/bad-reacher.ts:3 "const WAIT_LIMIT = 5;" — the new fixtures carry planted numbers and defects under scripts/steps, outside compute-reach.mjs:33 "export const SCAN_ROOTS = ['src', 'mobile'];" and outside the mobile roots at mobile-literals.mjs:28, and no test in the diff points a gate at them — add the test that runs the gates over these fixture roots or drop the fixtures.
+
+MET — core.8 — scripts/analysis/gates/mobile-literals.mjs:19 "Exit 0 with a list; --strict exits 1 when a BOUND finding exists." — the only numbers in mobile-literals are the factors at :31 and this, no threshold decides a finding.
+
+MET — §6 R-BA — scripts/analysis/gates/mobile-never-do.mjs:6 "EXISTING ENFORCEMENT CHECKED, none found (so nothing is duplicated)" — the change checks the register before adding, so no §6 row is credited twice.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 3
+
+---
+⏱  84244ms (84.2s)
+📊 Tokens — total: 45678, input: 28282, output: 17396, reasoning: 16437

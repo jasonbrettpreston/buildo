@@ -1,0 +1,43 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/gates/lens/diff-1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10668 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21294 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31498 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41975 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53515 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 63479 chars, answer 0 chars, 90s
+DEFER severity=MED — Spec 90 §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`." — scripts/analysis/gates/mobile-literals.mjs:16 "(Spec 97:328 names tabBarHeight only; Spec 90 §9 sets a 44px minimum, which is a floor, not a ban)." — §9 is a deterministic numeric MUST and is therefore gate-able, yet the numbers gate records it as not covered and calls a MUST "a floor, not a ban", leaving the only deterministic numeric clause in the pasted spec unenforced while a non-pasted conversion-factor rule is bound — add a check that flags interactive elements sized below 44px, or cite a pasted operator ruling that defers §9.
+
+DEFER severity=MED — Spec 90 §5 C3 "Never use `window`, `document`, `localStorage`, `navigator.geolocation`." — scripts/analysis/gates/mobile-never-do.mjs:61 "if (ts.isVariableDeclaration(n) && ts.isIdentifier(n.name) && row('C3-no-dom-apis').names.includes(n.name.text)) shadowed.add(n.name.text);" — shadowing is collected file-wide, so one parameter or local named document/window/localStorage suppresses every reference to the real global in that file and §5 C3 passes undetected — make the suppression scope-aware so only references bound to that declaration are skipped.
+
+DEFER severity=LOW — Spec 90 §5 C6 "Never use the base React Native `<Image>` for external URLs." — scripts/analysis/gates/mobile-never-do.mjs:50 "let rnImage = false; // `Image` imported from 'react-native'" — rnImage is only set for an ES named import, so a namespace `<RN.Image source={{uri:...}}>` or a destructured `require('react-native')` yields no flag and a base RN Image for an external URL passes — also detect Image reached via a namespace member or a destructured require.
+
+DEFER severity=LOW — Spec 90 §5 C4 "Never fetch API data inside a `useEffect`." — scripts/analysis/gates/mobile-never-do.mjs:95 "if (effectDepth.n > 0 && ts.isCallExpression(n) && ts.isIdentifier(n.expression) && row('C4-no-useeffect-fetch').names.includes(n.expression.text))" — detection only sees fetch/fetchWithAuth called literally in the effect subtree, so `useEffect(fetcher)` or a fetch inside a named helper the effect calls is not flagged — also flag a bare fetch identifier passed as the effect argument, or follow a named helper reference.
+
+DEFER severity=LOW — no pasted clause names conversion factors — scripts/analysis/gates/mobile-literals.mjs:10 "Binds the client: a unit-conversion factor written in code. -> BOUND class B1." — Gate B's only BOUND class and its `--strict` exit 1 rest on 136 fe.44 which is not in the pasted context, and no pasted Spec 90 clause bans a conversion factor, so a failing behaviour is added without a pasted governing clause — cite a pasted clause or operator ruling for B1, or drop `--strict` for it.
+
+DEFER severity=LOW — no pasted clause names compute-shape on mobile — scripts/analysis/gates/compute-reach.mjs:41 "export const SCAN_ROOTS = ['src', 'mobile'];" — Gate A applies the 122/132 compute rules (not pasted) to files under mobile, and the pasted Spec 90 says nothing about compute-shape or core.8/core.9, so this added detection is ungoverned by anything pasted — cite the pasted clause authorizing compute checks on mobile, or scope Gate A to the pasted spec.
+
+MET — §5 C1 — scripts/analysis/gates/mobile-never-do.mjs:24 — ROWS C1 lists div, span, a, p, button and the JSX opening/self-closing check flags each.
+
+MET — §5 C2 — scripts/analysis/gates/mobile-never-do.mjs:24 — ROWS C2 enumerates shadcn/ui, @tremor/react, framer-motion, lucide-react and matchesPkg matches the module specifier for each.
+
+MET — §5 C3 — scripts/analysis/gates/mobile-never-do.mjs:24 — ROWS C3 covers window, document, localStorage, with navigator.geolocation handled as a property access.
+
+MET — §5 C5 — scripts/analysis/gates/mobile-never-do.mjs:24 — a renderItem JSX attribute whose initializer is an arrow or function expression is flagged.
+
+MET — §5 C6 — scripts/analysis/gates/mobile-never-do.mjs:24 — rnImage plus a source.uri that is not a file:/data: literal is flagged as base RN Image.
+
+MET — §5 verbatim quotes — scripts/analysis/gates/mobile-never-do.mjs:24 — the six ROWS quotes match the pasted bullets word for word.
+
+REJECT — §5 C2 — change accused of not flagging lucide-react-native — spec names lucide-react only, and the gate matches that literal, so reading as written is faithful.
+
+REJECT — §5 C6 — change accused of flagging local file images — the uri check exempts file: and data: literals, matching the "external URLs" wording.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  104347ms (104.3s)
+📊 Tokens — total: 45101, input: 25256, output: 19845, reasoning: 18635

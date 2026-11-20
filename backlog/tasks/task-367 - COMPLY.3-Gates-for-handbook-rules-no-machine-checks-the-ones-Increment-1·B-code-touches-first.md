@@ -7,12 +7,13 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATES'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-20T13:23:00Z'
+updated_date: '2026-11-20T13:31:00Z'
 labels: []
 milestone: m-1
 dependencies: []
 references:
   - docs/reports/lanes/2026-11-20/BL-GATES/REPORT.md
+  - docs/reports/lanes/2026-11-20/BL-GATES/FINDINGS.md
 type: build
 ordinal: 67012
 ---

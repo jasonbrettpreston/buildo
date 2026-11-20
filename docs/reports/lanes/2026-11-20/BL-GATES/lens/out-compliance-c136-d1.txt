@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/gates/lens/diff-1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10025 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19973 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30557 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41229 chars, answer 0 chars, 60s
+BUG severity=HIGH — fe.01 "McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name" — scripts/analysis/gates/mobile-literals.mjs:1 "// SPEC LINK: docs/specs/02-web-admin/136_mcfrontend_handbook.md fe.05, fe.44" — two McFrontend/mobile gates are added as build with no pasted ruling that increment 2 closed or that the freeze was lifted for task-367 by name — fix: paste the operator ruling that lifts the freeze for this card, or hold mobile-literals.mjs and mobile-never-do.mjs to stage 2.
+DEFER severity=MED — fe.13 "surface-validate.mjs (MF-15) is the first gate McFrontend builds, part of the build after increment 2" — scripts/analysis/gates/mobile-never-do.mjs:1 "// SPEC LINK: docs/specs/03-mobile/90_mobile_engineering_protocol.md §5; 132_step_standard_handbook.md §6 R-BA" — the named first McFrontend gate surface-validate.mjs appears nowhere in the diff while two other McFrontend gates land — rationale: a resequence may be legitimate, but no pasted ruling resequences it.
+DEFER severity=MED — fe.05 "every number from McBylaws; no maths in the UI" — scripts/analysis/gates/mobile-literals.mjs:11-12 "a timer or retry count is not a displayed number and not maths on one" — the gate puts non-displayed numbers (scripts/steps/_schema/fixtures/mobile-gates/bad-b.tsx:4 "export const SLOW_WAIT_MS = 45_000;") outside --strict on a "displayed" qualifier fe.05 does not contain — rationale: the carve-out is the gate's own reading, an operator ruling must supply it.
+DEFER severity=MED — fe.44 "the conversion factor is content/settings, never code" — scripts/analysis/gates/mobile-literals.mjs:31 "export const CONVERSION_FACTORS = ['10.7639', '10.764', '3.28084', '3.2808', '0.3048', '0.092903', '0.0929'];" — a factor written as any other spelling (0.09290304, 2.47105 acres per hectare, 0.836127 square yards) is invisible, so "never code" is enforced only for these seven strings — rationale: bounded miss, but the clause is absolute and the list is closed.
+DEFER severity=MED — fe.15 "planted defect in a temp copy: non-zero exit; clean copy: zero" — scripts/steps/_schema/fixtures/mobile-gates/bad-b.tsx:1 "// @ts-nocheck" — eight planted-defect and clean-twin fixtures are added with no runner in the diff, so nothing proves the bad twin exits non-zero and the clean twin exits zero — fix: add the proving test that runs each gate over its bad and clean fixtures.
+MET — fe.44 — scripts/steps/_schema/fixtures/mobile-gates/bad-b.tsx:5 "export function toFeet(m: number) { return m * 3.28084; }" — a unit factor written in client code is the BOUND class B1 the gate names and fails --strict on, the half of fe.44 the gate claims.
+REJECT — fe.16 — the change adds tooling where fe.16 says "No tooling change" — fe.16 answers Q-MF1 on where McFrontend specs are filed (135 register, 136 handbook), it does not bar gate scripts.
+REJECT — the 90_mobile_engineering_protocol.md §5, 122:804-806 and 132 core.8 quotes carried inside the three gate files — accused of misquoting the governing spec — those clauses are not in the pasted context, so their accuracy is not mine to judge.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 1
+
+---
+⏱  63621ms (63.6s)
+📊 Tokens — total: 37765, input: 25559, output: 12206, reasoning: 11284
