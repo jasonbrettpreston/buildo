@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/load2/plan-under-review.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — src/../mobile/src/lib/apiClient.ts (plan quote) "no client time-out (grep apiClient: none); platform request timeout unknown (BL-LOAD1B REPORT line 10 \"UNVERIFIED\")" — on the stuck-request path the animation ends, T1 correctly keeps the button hidden, and nothing ever fires again (D-5 is still a draft, G1 is a live option, and T1-T8 contain no give-up case), so the person sits on a finished sequence with no button for ever — rule D-5 before plan-lock and put the bound in this slice as a named timer that hands off to the lifecycle error state, with a new test (T9: checked tree present, page never arrives, bound expires, hand-off fires once).
+
+BUG severity=HIGH — PLAN.md D-3 C1 "a person can leave the screen early, to the page if loaded, else the sequence goes on" — Skip is the WCAG 2.2.2 escape but on every lot today page is null until MAXBLD_WEB_LIVE flips, so Skip is a no-op tap that neither stops the clock nor navigates, and combined with the missing bound above there is no exit at all — define Skip's target per state (miss, page pending, error) and have it stop the clock, then test it (double tap Skip must not navigate twice).
+
+BUG rarity=HIGH — PLAN.md 1.4 contract row "the animation must not start for a lot that will redirect, or must stop at the redirect; no \"ready\" line" — under D-1 A2 the fast `checking` read fires in parallel at the pick and starts the 23 s clock before the lookup can report lotForm.unsure, so a held lot plays the sequence (and can reach the ready line if the ready mark precedes the redirect) before the semi question redirects — have the checking read carry the unsure/held flag (or gate its `enabled` on resolution) so the sequence never starts, and add the test that T1-T8 omit.
+
+DEFER severity=MED — PLAN.md 1.4 "client retries 3 more times, retry delay not set so the library default (shouldRetryParcelLookup, useParcelLookup.ts:46-53)" — four synchronous attempts at median 9.7 s and max 15.9 s already exceed the recommended 60 s bound (G2) before the bound can fire, and the plan names no idempotency key for the write a compute attempt implies (the stamp is named only as a hit condition, and the meter block runs on every attempt), so a retry chain can recompute and re-meter with no dedup — set an explicit retryDelay, cap attempts by wall clock rather than count, and name the compute/stamp/meter key in the plan so a repeat is a known no-op.
+
+DEFER severity=MED — PLAN.md 3.2 item 1 "`readWhatWeChecked`, never a 500 (producer returns null on any read error: what-we-checked.ts header line 14-16)" — the checking read swallows every failure and degrades silently to the old spinner, so a persistent failure of the read is indistinguishable from a quiet lot and nothing in the slice logs it — name one non-fatal log line at the route for the null case and assert it in the route test (T7).
+
+DEFER severity=MED — PLAN.md 1.5 "LOAD.2 never renders failure text; LOAD.4 never renders the sequence" — the mid-animation 500 path is unowned: reportScreenState today orders page, miss, error, loading, and the new hold rule plus the screen-reader branch (T5 announces `summary`) do not say whether a lookup error at t=5 s cuts the sequence, holds it, or fires a second announcement on top of the checked-tree one — state the precedence in `reportScreenState` and make one announcement owner explicit in the tests.
+
+REJECT — PLAN.md 3.2 T6 "the checked tree null (producer returned null): the old spinner and text (the screen is skipped, as the producer promises)" — a null checked tree looks like an unhandled empty, but it degrades to today's spinner and the page branch still wins, so nothing false is ever said and no ready line is shown.
+
+REJECT — PLAN.md 3.2 T7 "the route's `checking` read returns only `whatWeChecked`, no meter row, no compute call" — the second request under D-1 A2 looks like a duplicate submit, but it is pinned read-only by T7 and touches neither the meter nor the compute, so a double open or a retry of it cannot double-count anything.
+
+VERDICT: FAIL on error-path safety
+Paths walked: compute error and 4-attempt retry, miss with page null, checked tree null, held unsure lot mid-animation, time-out and no-bound stuck request, Skip aborted early, double open and second request, mid-animation hand-off to error   Unguarded: 3
+
+---
+⏱  45043ms (45.0s)
+📊 Tokens — total: 27019, input: 19540, output: 7479, reasoning: 6390

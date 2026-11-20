@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/load2/plan-under-review.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN.md D-3 C1 "a person can leave the screen early, to the page if loaded, else the sequence goes on" vs design D1 "a quiet "Skip" from the start (build.mjs:803-804 wwcBar/wwcRun; content.json screen.skip; WCAG 2.2.2)" — the person taps Skip at 5 s and nothing visible changes, the sequence just carries on, so the one control offered for escape does nothing — make Skip end the sequence at once and land on the hold state already in the plan, the button appears there when the page arrives.
+
+BUG severity=HIGH — PLAN.md §3.2 stage-2 file list items 1-11 name no bar title and no Skip line vs design D1 "Top bar: Back "Lookup", the address as title, a quiet "Skip" from the start" and delta 2 "backProps only, ReportBinding.tsx:381-389; no address, no Skip" — after this slice the person still cannot see which lot is being checked and still has no way out of the 23 s that D-3 C1 recommends keeping — add the address title and the Skip control to items 6 and 8 and to a named test.
+
+BUG severity=HIGH — T1 (PLAN.md §3.2) "with the checked tree and no page at elapsed 30 s: no "View report" button" vs design D4 "the ready line "The Building Possibilities Report for {address} is ready."" — at the end of the animation the screen tells the person the report is ready while no button exists and nothing can be opened — the ready line must not be shown before the button can be, and where the hold copy sits is the operator's to rule, not the slice's to assume.
+
+BUG severity=HIGH — D-5 G2 (PLAN.md §4) "60 s from the pick (the same bound the semi Continue uses, task-361)" vs ruling "the button to open the report shows only when the report AND See details are loaded, however long that takes" — a person whose compute takes 70 s is shown the failure page at 60 s and loses the report he waited for, which is the same cap the operator struck out at 35 s — do not recommend a bound that ends the wait, put G1 and the struck 35 s cap to the operator and let LOAD.4 read the answer.
+
+DEFER severity=MED — PLAN.md §1.4 contract row "the animation must not start for a lot that will redirect, or must stop at the redirect; no "ready" line" read with D-1 A2 "the sequence starts at once" — a held lot's sequence starts, shows some checks, then the screen jumps away to the semi question, a list of checks that were never finished for that lot — rule the either/or in the plan and make the fast read carry the unsure flag so the first frame is right.
+
+DEFER severity=MED — D-3 C1 (PLAN.md §4) "No auto-open; the button is the only way in (RR-0176 read)" vs design D6 "App: after a 2.5 s still hold the report slides in by itself (auto-open)" — the recommended answer ships a screen the mock does not draw, the person waits for a report that never slides in and must find a button — the design draws auto-open, so the operator should rule D-3 without a recommendation that departs from D6.
+
+DEFER severity=MED — D-2 B3 (PLAN.md §4) "B1 at launch, B2 later" vs design D5 "Illustration: a fixed generic scene ... each sized option builds with its label counting up to its real Max build" — the person at launch gets ten lines and no picture, a different screen from the approved one — the departure is named and asked, keep it named on the queue row so the later row is not lost.
+
+DEFER severity=MED — PLAN.md §1.4 contract row "403 REPORT_LIMIT_REACHED, 403 SUBSCRIPTION_REQUIRED, 429 ... the error text" against B3 "Could not load this report. Try again." — a person stopped by the report limit is told the report could not load and offered Try again, which cannot succeed — design silent on the limit wall, so name this copy in the BL-TRIAGE D-4 row so the misleading text is on the record.
+
+VERDICT: FAIL on the person's experience
+States checked: first view, loading sequence, animation done with page, animation done without page (hold), miss, error and timeout, unsure held lot, 403/429, Skip and back, repeat visit, reduce motion and screen reader, offline   Dead ends found: 2
+
+---
+⏱  63919ms (63.9s)
+📊 Tokens — total: 30672, input: 19539, output: 11133, reasoning: 10113

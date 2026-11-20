@@ -3,11 +3,11 @@ id: TASK-267
 title: >-
   LOAD.2 Loading screen (MF-62 Checking your lot): the animation keeps its set
   length...
-status: RUNNING
+status: WAITS
 assignee:
   - '@lane-BL-LOAD2'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T23:44:00Z'
+updated_date: '2026-11-20T00:04:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -36,6 +36,8 @@ references:
   - >-
     /Users/brettpreston_macmini/Buildo-scratch/lanes-20261117/search-1b-adj/REPORT.md
   - .cursor/MCFRONTEND-QUEUE.md#L467
+  - docs/reports/lanes/2026-11-19/BL-LOAD2/REPORT.md
+  - docs/reports/lanes/2026-11-19/BL-LOAD2/PLAN.md
 documentation:
   - backlog/docs/increments/doc-2 - Increment-S-requirements.md
 priority: low
@@ -87,6 +89,12 @@ who (plan text): McFrontend lane (MF-62 follow-up)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Pre-register the expected moves (prereg round claimed at stage 2), committed alone (AC1). 2. Red tests into the plan, reviewed at plan altitude: T1-T13 in PLAN.md section 3.2, lens set run, TRIAGE.md (AC2, AC4, AC5). 3. write_scope in the brief: ~/Buildo-scratch/lanes-20261119/inc1b/load2, ~/Buildo-wt-load2 (AC3). 4. Stage 2 build waits on decisions D-1 and D-2 (and D-3 to D-6): fast checking read at the pick, app clock and button gate in the existing host, existing components only, red first then green (AC6). 5. OUTPUT panel record committed with the work (AC7). 6. McFrontend follow-up row to MF-62 claimed before any build (AC8). Detail: docs/reports/lanes/2026-11-19/BL-LOAD2/PLAN.md.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
@@ -101,4 +109,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-267 · Backlog; o
 2026-11-19 (R16, task-347, RR-0300): What-we-checked wiring (gap Q9, D04) is ALREADY RULED, no OPERATOR task: operator verbatim 'x-4 a' (2026-11-11), X-4 (a): readWhatWeChecked is wired into GET /api/parcels/lookup as a nullable whatWeChecked (.cursor/MCFRONTEND-QUEUE.md:363); ONE-5 'y' (MORNING-DECISIONS.md:738) covered the bundle naming gap Q9 (a reading). The BL-W plan proposes this task as its carrier; today the title of this task does not name it and task-123's title keeps it conditional on Q9. Carrier choice goes to the orchestrator by dated note (loose end on task-343). OPERATOR task-348 (D1) also bears on this screen: before launch a phone tester sees the miss page, not the lot loading lines' report. Status unchanged.
 
 2026-11-19 taken on the board at lane launch (lane BL-LOAD2, worktree /Users/brettpreston_macmini/Buildo-wt-load2, branch wf1/inc1b-load2), RR-0240
+
+Dated note 2026-11-19 (lane BL-LOAD2, stage 1; prior text kept): the measured plan and impact map are in docs/reports/lanes/2026-11-19/BL-LOAD2/ (PLAN.md, IMPACT.md, TRIAGE.md, REPORT.md, checks.out, r1-*.txt). LOAD.2 at its smallest: the app shows the ruled sequence (the checked lines, ready line, button) for the set 23 s and shows the button only when the lookup has returned a page. BUILT today: a spinner and "Loading the report…" (mobile/src/components/surfaces/ReportBinding.tsx:369-380); the core, producer and web ReportView for the checked tree (MF-62 DONE). NOT built: the producer is wired to no route (no whatWeChecked in src/app/api/parcels/lookup/route.ts or mobile/src/lib/schemas.ts:429-438), the app has no render of it. It cannot be built whole now: (a) the lines never reach the app, the smallest missing piece is a fast read at the pick (D-1; no task carries it, loose end noted on task-343); (b) the picture behind the lines has no existing component (D-2). Six operator decisions drafted D-1 to D-6 (PLAN.md section 4), none decided. Seam with task-317 (LOAD.4): LOAD.2 owns lifecycle loading and the give-up timer, LOAD.4 renders lifecycle error. Measured: 9 --check scripts all exit 0 on head 2e127dffa. Lens set: compliance, ux, error-paths, code-review, 30 findings, 21 kept, 4 rejected, 3 agreed rejects, 4 duplicates (TRIAGE.md). stage 1 plan done; stage 2 build waits on the orchestrator. Files: src/app/api/parcels/lookup/route.ts, mobile/src/lib/schemas.ts, mobile/src/hooks/useParcelLookup.ts, mobile/src/components/surfaces/ReportBinding.tsx, mobile/src/components/surfaces/ReportPageHost.tsx, mobile/app/(app)/parcel-tool/[parcelId].tsx, mobile/src/generated/surfaces/mobile_parcel_detail.json, scripts/surfaces/_schema/report-presentation.json, scripts/surfaces/_schema/census/contracts.json, mobile/__tests__/reportScreen.mount.behaviour.test.tsx, mobile/__tests__/reportPage.behaviour.test.tsx, mobile/__tests__/reportScreens.golden.test.ts, mobile/__tests__/reportChecked.behaviour.test.tsx, src/tests/fixtures/report-page/props/loading.mobile.json, docs/specs/02-web-admin/126_maxbld_surface_standard.md, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, .cursor/MCFRONTEND-QUEUE.md
 <!-- SECTION:NOTES:END -->

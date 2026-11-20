@@ -1,0 +1,154 @@
+# PLAN: BL-LOAD2, task-267 (LOAD.2 the loading screen, MF-62 "Checking your lot"), stage 1
+Status line (Spec 137 rule 3): BL-LOAD2 lane, task-267, stage 1 (measured plan, no product code). Head 2e127dffa on wf1/inc1b-load2. Date 2026-11-19.
+Rules this plan rests on: RR-0176 (MORNING-DECISIONS.md:785 "yes that is correct"), RR-0173 (:778), RR-0179 (:789), RR-0301 (:1160), RR-0304 (:1167), RR-0232/0233 (:925-929), Spec 08 11.8 MCINC-2/3 (08_agents.md:486-490), PLAN-PROTOCOL.md:3 (simple, no scope creep), memory rules: DB fields are the key, build with existing components, propose the minimum first.
+
+## 0. Six plain lines
+(see REPORT.md; the same six lines)
+
+## 1. The task at its smallest NOW
+Task text: the animation keeps its set length (23 s) and always runs to completion; the button to open the report shows only when the report AND See details are loaded, however long that takes (no 35 s cap) (task-267 title; RR-0176).
+At its smallest: on the phone, between the pick and the report, show the ruled processing sequence (the `checked` lines, the ready line, the button) for the whole set length, and show the button only when the lookup has returned a page. Nothing else (no scene illustration, no failure page, no limit wall: see the seams).
+
+### 1.1 What is built today (head 2e127dffa)
+| # | What | Where |
+|---|------|-------|
+| B1 | App loading state = one spinner and the text "Loading the report…" (no sequence, no address, no Skip, no button) | mobile/src/components/surfaces/ReportBinding.tsx:369-380 (lifecycleProps); text scripts/surfaces/_schema/report-presentation.json:87; generated mobile/src/generated/surfaces/mobile_parcel_detail.json:6 |
+| B2 | The screen derives "loading" client-side: page -> page; data without page -> miss; error -> error; else loading | ReportBinding.tsx:399-404 (reportScreenState); mount mobile/app/(app)/parcel-tool/[parcelId].tsx:22-36 |
+| B3 | Miss text "No report for this lot yet."; error text "Could not load this report. Try again." with Retry "Try again" (one refetch) | report-presentation.json:88-89; ReportBinding.tsx:373-378; mobile/__tests__/reportScreen.mount.behaviour.test.tsx:74-96 |
+| B4 | An unsure (held) lot shows loading, never the miss text, until the redirect to the semi question | [parcelId].tsx:30-35 (needsSemiQuestion) |
+| B5 | The web ReportView renders the `checked` tree (paced CSS, Skip link, ready line, View report link); used by the landing demo and admin preview only; the web lot route is notFound while MAXBLD_WEB_LIVE is false | src/components/report/ReportView.tsx:51-113; src/lib/surfaces/maxbld-landing.ts:112; src/app/(maxbld)/parcel-tool/[parcelId]/page.tsx:4-6 |
+| B6 | The core builds the `checked` tree and checks it (closed keys, content templates, order) | src/lib/surfaces/report/core.ts:110-216, 239-243, 400-403 |
+| B7 | The producer `readWhatWeChecked` (citywide stored counts, this lot's lines, dates, ready line, server pace) and `showsWhatWeChecked(meter)` (re-opened-lot rule) | src/lib/parcels/what-we-checked.ts:167, :51 |
+| B8 | Pace settings: report_check_min_ms default 23000 (bounds 1000-30000), report_check_skip_after_ms default 0, report_check_ready_hold_ms default 1500 | scripts/seeds/logic_variables.json:10491-10516; src/lib/parcels/report-check-pace.ts:15-19 |
+| B9 | NOT built: the producer is NOT wired into GET /api/parcels/lookup (X-4 a wiring), the app schema has no such field, the app has no render of `checked`, no reduce-motion or screen-reader handling | git grep readWhatWeChecked over src/app, mobile: no hit (only src/lib/parcels/what-we-checked.ts:167 and maxbld-landing.ts); mobile/src/lib/schemas.ts:429-438 (the whole lookup schema: match, candidates, warnings, parcel, resolution, map, page, lotForm); git grep AccessibilityInfo mobile/src mobile/app: no hit |
+| B10 | MF-62 queue row is DONE for the server half (web through the one ReportView; app "with MF-48"); the app render was left to MF-48 Stage B2, never built | .cursor/MCFRONTEND-QUEUE.md:480-498 (MF-62 DONE); :371 (Stage B2 "not in this change") |
+
+### 1.2 What the approved design draws
+Source: ~/Buildo-scratch/mcfrontend/small-pages-v8 (page what-we-checked.html, built by build.mjs:775-835 for the states and :1043-1130 for the animated demo what-we-checked-demo.html, template daylight-story.tpl, words content.json "screen" and "perLot"). Operator words 2026-11-11 recorded at .cursor/MCFRONTEND-QUEUE.md:490-492.
+- D1 Top bar: Back "Lookup", the address as title, a quiet "Skip" from the start (build.mjs:803-804 wwcBar/wwcRun; content.json screen.skip; WCAG 2.2.2).
+- D2 No title and no section labels (queue :489).
+- D3 One ordered list of ten checks: five citywide trust lines then five lot lines; each shows an in-progress verb ("Loading the lot", "Pulling by-law results" ...: content.json screen.active) then resolves to its fact with a tick (build.mjs:779-790, wwc() :791-798).
+- D4 After the last fact: dates line (content.json screen.dateLines), a pause, then the ready line "The Building Possibilities Report for {address} is ready." (screen.settled), then the report cover (build.mjs:795-797).
+- D5 Illustration: a fixed generic scene (city -> street -> typical lot -> by-law ticker -> each sized option builds with its label counting up to its real Max build -> options fold into the report cover), not this lot (build.mjs:805 note, :1043-1130, daylight-story.tpl 78,791 bytes of inline SVG plus requestAnimationFrame). Stills of the scene: stills/*.jpg (7 frames).
+- D6 App: after a 2.5 s still hold the report slides in by itself (auto-open); web: View report, nothing opens by itself (build.mjs:808 notes).
+- D7 Reduce motion or screen reader: every fact at once, ready line, "View report" (content.json screen.view), nothing opens by itself, one announcement (queue :367, :369).
+- D8 Gated lot: the by-law line reads "By-law limits not yet evaluated", never "checked" (content.json perLot.exception; build.mjs:812-813).
+- D9 Timeline: DEMO_TIMING (build.mjs:1050-1070): facts at hand-set marks; READY_MS 15,570, MIN_MS 18,070 in the demo (what-we-checked-demo.html:313), stretched to the ruled 18-30 s window when fewer options are sized (build.mjs:1085).
+- D10 "Could not load" frame: not this task (see seam, section 1.5).
+
+### 1.3 THE DELTA (built vs designed), numbered
+| # | Delta | Design line | Built line |
+|---|-------|-------------|------------|
+| 1 | The loading body: ten-line sequence with verbs, facts, ticks, dates, ready line | build.mjs:791-798; content.json screen, perLot | ReportBinding.tsx:369-380 one spinner and "Loading the report…" |
+| 2 | The address as the bar title and a Skip control | build.mjs:803-804 | backProps only, ReportBinding.tsx:381-389; no address, no Skip |
+| 3 | The data the sequence reads (the `checked` tree: lines, delay_ms, done_ms, ready_ms, min_ms, skip, open, summary) reaches the app | core.ts:12-14, 400-403 (tree built server-side) | NOT wired: no `whatWeChecked` in route.ts or schemas.ts:429-438 (B9) |
+| 4 | The app clock: show each verb at delay_ms, each fact at done_ms, the ready line at ready_ms | queue :369 "the app render follows the tree" | none |
+| 5 | The button: RR-0176 says it shows only when the page is loaded, after the animation; the mock draws app auto-open at min_ms (D6) | MORNING-DECISIONS.md:778, :785 vs build.mjs:808 | none; the page shows the moment it arrives (ReportBinding.tsx:400). OWED (lens fold, ux U6): the mock's app ending (auto-open, build.mjs:808) is stale against RR-0173/0176; the mock needs its ending updated for the operator to see before the build (design work, not decided here) |
+| 6 | Wait for the page, however long (no cap): the screen must hold at the end of the animation until `page` arrives | MORNING-DECISIONS.md:785 | the screen has no end of animation; the wait is the query pending; no client time bound anywhere on this route (mobile/src/lib/apiClient.ts: no timeout or signal; grep found none) |
+| 7 | Reduce motion / screen reader path, one announcement | queue :367, :369 | no AccessibilityInfo anywhere in mobile/src or mobile/app |
+| 8 | Gated lot wording | content.json perLot.exception | producer B7 builds it; app has nothing to show it in |
+| 9 | Re-opened lot skips the screen | MF-62 plan.md; doc-16 A-MF62 (backlog/docs/doc-16 line 89); what-we-checked.ts:51 | the app is not told the meter (route.ts meter is logged, never sent); schemas.ts:429-438 |
+| 10 | The scene illustration (D5) | daylight-story.tpl | none; REPORT component list is ScrollView, View, Text, Button, Input, ActivityIndicator, SafeAreaView, Svg, SvgPolygon, SvgLine (mobile/__tests__/reportScreens.golden.test.ts:184); no Image kind, and a lifecycle tree carries no image (core.ts:338-341) |
+| 11 | Two clocks: the mock's scene runs DEMO_TIMING (MIN 18,070 in the demo) while the server pace is uniform steps of floor((min-hold)/(facts+1)) of the 23,000 setting (what-we-checked.ts header comment lines 21-25; the fixture marks 1,954 ms apart: loading_checked.mobile.json) | build.mjs:1050-1085 | what-we-checked.ts pace |
+| 12 | The mock's main act counts each option up to its real Max build, which is page data, but the page arrives with the lookup (after or during the animation) | build.mjs:1043-1130 (OPTIONS from shared/report-cover.mjs) | page only in the lookup response (route.ts:155-166) |
+
+Web (FE-07 parity): the web ReportView already renders deltas 1-4 and 7 from the tree (ReportView.tsx:51-113; core.ts) and is behind MAXBLD_WEB_LIVE (maxbld-web.ts:19; [parcelId]/page.tsx:4-6), so the web lot route shows nothing at all today (notFound). Stage 2 touches the app only; the web gets the same data when the live switch flips (task-348, task-287). Parity of the fact text is already pinned (parity.golden.test.ts).
+
+### 1.4 The contract the screen needs from the lookup route, as it is now
+What the app receives (src/app/api/parcels/lookup/route.ts; BL-LOAD1B REPORT.md lines 5-9; mobile/src/hooks/useParcelLookup.ts):
+| Case | What arrives | Screen today | Contract owed to LOAD.2 |
+|------|--------------|--------------|-------------------------|
+| computed or stored page | 200, `page` set (route.ts:149-166); compute sync, median 9.7 s, max 15.9 s on the golden 25 (BL-LOAD1B REPORT line 9; 33.6 s measured by STORAGE) | page shows at once | hold until the animation is done, then the button |
+| miss (switch off, no stamp, no row, no parcel) | 200, `page: null`, resolution unique | miss text at once (B2) | decision D-4: cut to miss at once, or finish the animation |
+| held unsure lot | 200, `page: null`, `lotForm.unsure` true, meter semi_pending (route.ts:146-155) | loading, then redirect to the semi question (B4) | the fast read returns no checked tree for a held lot (same test as route.ts:142-146: unsure and not answered), so the sequence never starts for a lot that will redirect; the old loading stays until the redirect (lens fold: ux U5, error-paths E3) |
+| compute error | route 500, no page, no meter (BL-LOAD1B REPORT line 7); client retries 3 more times, retry delay not set so the library default (shouldRetryParcelLookup, useParcelLookup.ts:46-53) | error text and Try again after the last failure | LOAD.4 owns this page; the hand-off is lifecycle `error` |
+| 403 REPORT_LIMIT_REACHED, 403 SUBSCRIPTION_REQUIRED, 429 | ApiError, not retried (useParcelLookup.ts:46-53) | the error text "Could not load this report. Try again.", which is misleading for the limit (Try again cannot succeed) | name only; the limit wall is the UNRULED D-4 of BL-TRIAGE and the copy belongs to LOAD.4 (lens fold: ux U8) |
+| error mid-animation (a 500 or network failure at, say, 5 s, after the retries) | isError with the sequence running | n/a | precedence in `reportScreenState`: page, then held redirect, then miss (settled data), then error, then loading; an error hands to LOAD.4's page at once and stops the clock; the host is the one owner of the announcement (lens fold: error-paths E6) |
+| time-out | no client time-out (grep apiClient: none); platform request timeout unknown (BL-LOAD1B REPORT line 10 "UNVERIFIED") | spinner for ever, or the 500 | D-5 below; LOAD.4 shows the page |
+| 60 s wait | exists only on the semi Continue (mobile/app/(app)/parcel-tool/semi-question.tsx:55-64, SEMI_CONTINUE_WAIT_MS = 60_000 at semiQuestion.ts:16) | not on this screen | D-5 |
+| the lines | NOT sent: no `whatWeChecked` in the response (B9) | n/a | the smallest missing piece (section 3) |
+"Report AND See details loaded" is one condition: See details is the detail sheet of the same page view (ReportPageHost.tsx: trees.detail from the one `view`), so `page` non-null is both. UNVERIFIED that a stored page (W) always carries the detail sections (route reads one view; not exercised here).
+
+### 1.5 The seam with LOAD.4 (task-317, lane BL-LOAD4, plans the failure page)
+LOAD.2 owns: lifecycle `loading` (the sequence, the wait, the button) from the pick until a page, a miss or a hand-off arrives. LOAD.4 owns: the page shown for lifecycle `error` (a failed or timed-out lookup, Try again, Back) and anything the operator rules for 403/429. The shared line is `reportScreenState` (ReportBinding.tsx:399-404) and the host branch `view === null` (ReportPageHost.tsx:61): LOAD.2 changes the `loading` branch and adds its inputs; LOAD.4 changes what `error` renders. Commit order: LOAD.2 first (task-317 depends on task-267), LOAD.4 rebases on it. The time bound (D-5) is the one value both need; it is asked once, here, and LOAD.4 reads the answer. LOAD.2 never renders failure text; LOAD.4 never renders the sequence. The clock and the give-up timer (D-5) live in LOAD.2's host because the clock is there; when the bound expires the host sets lifecycle `error`, which LOAD.4 renders (lens fold: code-review CR2).
+
+### 1.6 Timings: which settings and rulings set them
+- The animation length: report_check_min_ms = 23,000 default (seed :10491-10496, bounds 1000-30000), edited in the Admin Control Panel; RR-0176 keeps 23 s "may change later, not now"; the 35,000 ms change (LOAD.3, task-13, dropped) is NOT needed (RR-0176; task-13 file; label dep-dropped on task-267).
+- Skip delay: report_check_skip_after_ms = 0; ready hold: report_check_ready_hold_ms = 1,500.
+- The wait for the page: RR-0176 says no cap; doc-16 P12/A-MF62 (35 s cap and the "updating" state at the maximum) are superseded on that point by RR-0176 ("Supersedes RR-0174"; MORNING-DECISIONS.md:785). The only existing bounded wait is the semi 60 s (task-361).
+
+## 2. Impact map: see IMPACT.md (measured).
+
+## 3. Stage-2 plan (the minimum, existing components only)
+### 3.1 Can it be built now? Plainly: NO, not whole. Two things block it.
+(a) The lines never reach the app (delta 3). The smallest missing piece: a second, fast read at the pick that returns only the `checked` tree (no compute, no meter), so the sequence can start at once while the main lookup runs. Without it the lines can only arrive with the page, i.e. after the 9.7 s median wait, which makes the screen sequential (wait, then 23 s) and not the operator's reading ("the animation takes 23 seconds ... the button only appears when the load is done ... that would be at 36 seconds", MORNING-DECISIONS.md:782-785). The key X-4 a ("a nullable whatWeChecked on GET /api/parcels/lookup", queue :366) was ruled before the compute was synchronous. Owner: no task carries it (task-267's note of 2026-11-19 R16 names the carrier choice as open, loose end on task-343). Needs the operator: D-1.
+(b) What is drawn behind the lines (delta 10, 12) is unbuilt and has no existing component; porting the Daylight scene is a new component kind (animated scene) and needs a ruling: D-2.
+D-3, D-4, D-5, D-6 change what is built but not whether it can start; they are asked together with D-1, D-2 (one decision list).
+
+### 3.2 The slice that can be built as soon as D-1 and D-2 are answered (recommended answers assumed: D-1 A2, D-2 B3 (lines only now), D-3 C2 (no Skip), D-4 E2 and F1, D-5 G2 (60 s), D-6 H1)
+Existing components only: View, Text, Button, ActivityIndicator, Svg kinds already in the REPORT list; the pacing clock is screen-local state in the existing host (ReportPageHost.tsx holds the screen-local UI state already), no new component kind.
+Files (GUESS, 13 to 16 files):
+1. src/app/api/parcels/lookup/route.ts: the `checking` read (no compute, no meter): `readWhatWeChecked`, never a 500 (the producer returns null on any read error and already logs it: what-we-checked.ts:171 logError, :179/:186/:203 logWarn); returns null for a held lot (readLotForm, same test as route.ts:142-146).
+2. src/lib/parcels/what-we-checked.ts: only if D-4 asks for the re-opened-lot rule (a read of the month's count; showsWhatWeChecked already exists, :53-56).
+3. contract_parcels_lookup descriptor and Spec 100 §3.2 dated note (the whitelist extension), census contracts.json, goldens (mobile_parcel_search, lookup goldens).
+4. mobile/src/lib/schemas.ts: the checked schema (strict).
+5. mobile/src/hooks/useParcelLookup.ts: `useParcelChecking(parcelId)` key ['parcel-checking', id], same enabled and retry rules.
+6. mobile/src/components/surfaces/ReportBinding.tsx: `checkedProps(checked: WhatWeChecked | null, elapsedMs: number)` pure (null returns today's lifecycle props); the bar title is the tree's `address` (delta 2); the Skip control per D-3; `reportScreenState` gets the order page, held redirect, miss, error, loading and the rule: the button shows when `page !== null && elapsedMs >= min_ms` (min_ms is never below ready_ms plus the hold: report-check-pace.ts:41-42; one predicate, used verbatim in T2 and T3).
+7. mobile/src/components/surfaces/ReportPageHost.tsx: the screen-local clock (elapsed = now minus the moment the checked tree arrived, so every line keeps its full server time; the lookup runs from the pick, so the page may be in already), the give-up timer from D-5 (hands off to lifecycle `error` once), reduce motion and screen reader branch, the one announcement; the ready line shows only when the page is in (delta fold ux U3) and, until then, the D-6 hold state.
+8. mobile/app/(app)/parcel-tool/[parcelId].tsx: pass the two queries.
+9. scripts/surfaces/_schema/report-presentation.json and the mobile content slice (emit-mobile-surfaces.mjs regenerates mobile/src/generated/surfaces/mobile_parcel_detail.json): content keys for open, skip, summary, ready already exist under states.checked; the slice currently lists only lifecycle keys (ReportBinding.tsx:391-394), so the slice grows.
+10. Tests (red first): mobile/__tests__/reportScreen.mount.behaviour.test.tsx (the loading cases :83-85 change), reportPage.behaviour.test.tsx:153, reportScreens.golden.test.ts:285, new mobile/__tests__/reportChecked.behaviour.test.tsx (the clock: verbs at delay_ms, facts at done_ms, ready, button only when page present AND done, no auto-open, reduce motion path), new src/tests for the route read (C1..), fixtures src/tests/fixtures/report-page/props/loading.mobile.json plus a loading_checked props fixture.
+11. Spec 126 §11a.7 dated note; MF queue follow-up row (id claimed in ~/Buildo-scratch/ids at stage 2; claim nothing now), which names the departures from the approved mock (no scene under B3; no auto-open; the D-6 hold state) so the later rows are not lost (lens fold: ux U7); prereg round claimed at stage 2; task-267 file.
+Tests red first (named): (T1) lookup still pending at elapsed 30 s: no "View report" button and no ready line, the D-6 hold state; (T2) page present at elapsed 5 s: button absent until ready_ms and min_ms both passed; (T3) page present and elapsed past min_ms: button present, report not auto-opened; (T4) lookup settled with page null: per D-4 (the miss text at once under E1; under E2 the sequence finishes with no ready line, then the miss text); (T5) reduce motion: all lines, ready line, button after the page, one announce of `summary`; (T6) the checked tree null (producer returned null): the old spinner and text (the screen is skipped, as the producer promises); (T7) the route's `checking` read returns only `whatWeChecked`, no meter row, no compute call; (T8) no client arithmetic (FE-05: texts are the server's, only the pacing integers compared); (T9) held unsure lot: the fast read returns no tree, no sequence starts, the redirect still fires; (T10) the page never arrives and the D-5 bound expires: the hand-off to lifecycle `error` fires once and the clock stops; (T11) Skip, per the D-3 answer (C1: it ends the sequence at once to the end state and a second tap does nothing; C2: no Skip, test that none renders); (T12) a lookup error at 5 s hands to `error` at once, one announcement only; (T13) the clock epoch: marks measured from the tree's arrival (a tree that arrives 300 ms late still shows its first verb at delay_ms from arrival).
+Commit order: (1) prereg alone; (2) red tests + task file; (3) route read + schema + hook + descriptor/census/goldens; (4) binding + host + mount + content slice regen; (5) specs and queue row; (6) reports. Hooks are the real hooks; the full suite only at the push station.
+Size: 13 to 16 files, GUESS (not measured; LOAD.1's like-for-like landing touched 20+ files incl. generated, BL-LOAD1B REPORT "What was built"). Time GUESS: one build lane, one day.
+What is explicitly NOT built: the scene illustration (unless D-2 rules otherwise), the web live render (behind MAXBLD_WEB_LIVE), the failure page (LOAD.4), the limit wall (BL-TRIAGE D-4, unruled), the failed-Continue state (BL-TRIAGE D-1, unruled), any change to report_check_min_ms (LOAD.3 dropped), any new setting, any new route if D-1 is answered as A2 by a request flag on the existing route.
+If D-2 is answered with the Daylight scene port: new component kind "animated scene" (SVG plus reanimated in the app, reanimated and react-native-svg are already dependencies: mobile/package.json:59,62), a named reason (the design draws it) and a ruling are required; size XL GUESS (the scene is 78,791 bytes of web script), plus a rule for the two-clock problem (delta 11) and for delta 12.
+
+## 4. Decision list (drafts; only the operator decides; RR-0233: front-end, design, timeframes)
+Check of the register before calling any of these new: ~/Buildo-scratch/plan-gen/rulings-register.json (314 rows) searched for loading screen, animation, checked, processing: found RR-0006/0007/0125/0128/0173-0176/0179 (all read); none rules D-1..D-5 (RR-0176 rules the length and the button; RR-0179 the failure page).
+
+### D-1 How does the screen get its lines while the lookup runs?
+Today the lookup is one request that returns at the end of the compute (median 9.7 s, max 15.9 s); the lines come from a producer that exists but is wired to no route.
+- A1 (on the page's response): the animation starts when the lookup answers. A person sees the old spinner for the compute time, then the 23 s sequence, then the button: about 33 s typical, 39 s worst case on the golden 25. Smallest build (the ruled key X-4 a as written).
+- A2 (a fast read at the pick, in parallel): the sequence starts at once; the lookup runs behind it; the button shows at 23 s if the page is already in, later if not. One extra read-only request per open.
+- A3 (the lines inside the search pick response): not recommended; changes the search contract.
+Grounded: yes. route.ts:149-166 (the page is built inside the request); BL-LOAD1B REPORT line 9 (9.7 s median, 15.9 s max); backlog/docs/doc-16 line 16 ("worked out once, behind the 35 second loading screen"), P12 ("the first open is covered by the loading screen") and A-MF62 ("the loading screen starts the one-lot compute at the search pick"), MORNING-DECISIONS.md:696 ("the loading screen covers that time"): the screen covers the compute, i.e. a parallel start; the operator's "36 seconds" (:782) is read either way and is NOT used as grounds (lens fold: compliance C4); .cursor/MCFRONTEND-QUEUE.md:366 (X-4 a).
+Recommendation: A2. Lenses that read it: compliance (corrected the grounding, no objection to A2), ux and error-paths (raised the held-lot start: folded into the read), code-review (clock epoch: folded). Cost of the extra read per open UNVERIFIED (no DB).
+
+### D-2 What does the person see behind the lines at launch?
+- B1 lines only: the ten lines with ticks, dates, ready line, button (no picture). Existing components. The operator's words about the picture ("the image of the lot isn't very compelling", "a different finish making a visual report", build.mjs:805 notes) are not met.
+- B2 the Daylight scene: the approved mock, a new animated scene component, XL GUESS; two open design problems (delta 11, 12: the clocks and the option numbers).
+- B3 lines first now, the scene as its own later row: B1 at launch, B2 later.
+Grounded: yes. build.mjs:805-835, :1043-1130; stills/manifest.json; REPORT component list reportScreens.golden.test.ts:184; core.ts:338-341.
+Recommendation: B3 (the minimum first; the wiring and the wait are what the operator's rulings name; the scene is a separate component with its own ruling). Lens: ux named the departure from the approved screen (kept named on the queue row): at launch the screen has no picture.
+
+### D-3 Skip, and the button (app)
+RR-0173/0176 say the animation "always runs to completion" and the button shows when the page is loaded, after the animation; no auto-open (the button is ruled: that part is not asked). Skip is not in any operator words I found: it comes from the 2026-11-11 accessibility audit relayed by the coordinator (queue :367, :369) and the mock (build.mjs:803-804); the approved mock also draws an app auto-open, which RR-0173/0176 supersede (the mock ending is owed an update).
+- C1 keep Skip (from the start; report_check_skip_after_ms = 0): a tap ENDS the sequence at once and shows its end state (every line resolved, the same state the reduce-motion path shows); the button still waits for the page; a second tap does nothing. This is an exception to "always runs to completion" and needs the operator to accept it.
+- C2 no Skip: every person watches the whole 23 s; WCAG 2.2.2 is answered only by the reduce-motion and screen-reader path.
+Grounded: yes. MORNING-DECISIONS.md:778 and :785; build.mjs:803-808; content.json screen.skip, screen.view; queue :367, :369; seed :10501-10506 (skip 0). No pasted ruling names Skip (lens compliance C6).
+Recommendation: C2, because it is the only option that follows the pasted words; the cost is WCAG 2.2.2 for people who have not set reduce motion; C1 is the design and accessibility answer and needs the operator's explicit exception. Lenses: compliance (for C2) and ux (against a Skip that does nothing: fixed by the C1 wording above); UNVERIFIED beyond that.
+
+### D-4 When the lookup returns no page (a miss, every lot today), and for a re-opened lot
+Until the web live switch flips every lot is page null (route.ts; BL-LOAD1B line 2; task-348).
+- E1 cut to the miss text at once (the sequence stops; no "ready" line is ever shown for a report that does not exist). Departs from "animation always runs to completion" for a lookup that returned nothing.
+- E2 finish the animation, then the miss text, without the ready line.
+- Re-opened lot (A-MF62: "still skips for a re-opened lot", doc-16 line 89) versus the 2026-11-18 words "even if the load completes quicker the animation still needs to be complete": F1 play for every open; F2 skip for a re-opened lot (needs the producer rule showsWhatWeChecked and a server read of the month's count in the fast read).
+Grounded: yes. ReportBinding.tsx:399-404; what-we-checked.ts:51; MORNING-DECISIONS.md:778, :782; task-348 (a tester sees the miss page).
+Recommendation: E2 and F1: they follow the pasted words (RR-0173 "even if the load completes quicker the animation still needs to be complete"; the later words win over the earlier A-MF62 skip); the ready line is never shown without a report. Cost named: until the live switch flips (task-348) every phone tester waits the full 23 s to read the miss text; E1 avoids that and needs the operator to rule that a miss ends the sequence (compliance lens HIGH against E1; ux lens did not object to either). I do not cite :778 as grounds for E1.
+
+### D-5 How long before the screen gives up and shows the failure page (LOAD.4)?
+RR-0176 puts no cap on the wait for the report. An unanswered request still needs an end. Today there is none (no client time-out; platform time-out unknown), and the app retries a failed lookup three more times.
+- G1 no bound: wait as long as the request lives (a stuck request is a stuck screen).
+- G2 60 s from the pick (the same bound the semi Continue uses, task-361).
+- G3 another value.
+Grounded: yes. apiClient.ts: no timeout (grep); semiQuestion.ts:16; BL-LOAD1B REPORT line 10; MORNING-DECISIONS.md:785.
+Recommendation: G2, flagged: it is a change to the words "however long that takes" for a request that never answers, not an application of them (compliance and ux lenses object to ending the wait; error-paths and code-review require some bound, else a finished sequence with no button waits for ever). The nearest ruled bound is task-361's 60 s (a precedent, not a ruling for this screen). If the page lands after the bound, the failure page's Try again re-reads it (LOAD.4's to design). Shared with LOAD.4.
+
+### D-6 What does the person see when the animation is done but the report is not in yet?
+The approved mock assumes the report is ready by the end; with a 9.7 s median and 15.9 s max compute that is true when the animation (23 s) is longest, but a first open can take 33.6 s (STORAGE) and a slow request longer. The ready line says the report is ready, so it cannot show before the page does (lens ux U3). The mock draws no hold state. This is a gap in the design, not in a ruling.
+- H1 hold on the resolved lines with the existing spinner and the existing text "Loading the report…" under them; the ready line and button appear when the page arrives. No new copy, existing components (ActivityIndicator, Text).
+- H2 a new line of copy for the wait (new text needs the operator's wording).
+Grounded: yes. build.mjs:795-797 (ready line is part of the end state), ReportBinding.tsx:371-372 (spinner and loading text exist), MORNING-DECISIONS.md:785 ("however long that takes"), BL-LOAD1B REPORT line 4 (33.6 s measured by STORAGE).
+Recommendation: H1 (the minimum: reuse what exists; no new copy). Lens: ux (raised the gap); UNVERIFIED beyond that.
