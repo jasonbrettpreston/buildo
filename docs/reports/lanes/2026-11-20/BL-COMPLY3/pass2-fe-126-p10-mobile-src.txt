@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — A2 "address entry, Toronto only; shows the reports left this month" — mobile/src/lib/parcelSearchCore.ts "return !!e && e.reportsLeft !== null ... typeof e.resetsOnDisplay === 'string' && e.resetsOnDisplay.length > 0;" — the line is suppressed whenever the served date label is null or empty even though reportsLeft and reportsLimit are served, because mobile/src/lib/schemas.ts allows each field to be null on its own ("resetsOnDisplay: z.string().nullable()"), so A2's reports-left is not shown on that payload — gate the line on reportsLeft and reportsLimit only and print the date when it is present.
+
+DEFER severity=MED — FE-05 "the reports left and the limit-reached flag; pages bind to them (FE-05)" — mobile/src/lib/parcelSearchCore.ts "`EntitlementLine` is the three served fields the line binds, nothing else" — the schema parses the served flag ("reportsLimitReached: z.boolean().nullable()") but the entitlement carried into the search situation drops it, so no page in this change binds the server's limit-reached flag — carry reportsLimitReached through EntitlementLine and SearchSituation, or state where the search page binds it.
+
+DEFER severity=MED — Ownership "Spec 126 owns which pages exist and how they connect" — mobile/src/constants/lotMap.ts "the semi question page's own keys, drawn from the approved mock" — a pre-report semi question page between A3 and A4 is added with its own top, heading, card, dots, select and retry keys, and the pasted page table lists A1 to A6 and names no such page, its governing operator ruling not being pasted — add the page to the page set or cite the ruling, before merge.
+
+DEFER severity=MED — rule 9 "Terms, Privacy and a support contact are required (MF-46 web; linked from Account)" — mobile/src/constants/lotMap.ts "helpRow: 'mt-3 flex-row flex-wrap items-center justify-center gap-1'" — Terms, Privacy and support links are added as a row on the choose-lot page, a surface the pasted context names only in A6 ("support, Terms, Privacy, sign out") and the cited small-pages-v8 line is not pasted — confirm the extra surface with the operator or record it against the A6 row.
+
+DEFER severity=LOW — Connections "Account -> Terms / Privacy / Support" — mobile/src/lib/maxbldHelp.ts "await WebBrowser.openBrowserAsync(helpUrl(topic, q));" — the Support page changes from leaving the app to an in-app browser sheet, a behaviour no pasted clause or ruling names, the citing "in-app browser sheet (B10)" line not being pasted — cite the ruling for the sheet or keep the pasted linking behaviour until ruled.
+
+MET — FE-05 "The server computes every count, the reports left and the limit-reached flag; pages bind to them (FE-05)" — mobile/src/lib/parcelSearchCore.ts "the page only prints them, no date is derived on the device": the three bound fields are served and none is computed in the app.
+
+MET — D-2 a "The count resets on the billing date, `entitlements.current_period_end`" — mobile/src/hooks/useParcelLookup.ts "resetsOnDisplay": the reset date is printed as served, never chosen on the device.
+
+MET — A2 "shows the reports left this month" — mobile/src/hooks/useParcelLookup.ts "queryKey: ['parcel-entitlement']": useParcelEntitlement reads the served count and the line binds reportsLeft and reportsLimit, so no number is typed in the page.
+
+REJECT — D-3 a "A lot counts once per period; re-opening it is free (D-3 a)." — the change is accused of double counting a lot through the answered lookup and the shared cache key — the count is the server's (FE-05) and the key is left unchanged on purpose ("it changes the request, not the key"), so a stored answered result serves the report instead of a second request.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 5
+
+---
+⏱  75304ms (75.3s)
+📊 Tokens — total: 36238, input: 22702, output: 13536, reasoning: 12600

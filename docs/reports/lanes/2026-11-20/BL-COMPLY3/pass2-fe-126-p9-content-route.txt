@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-content-route.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 MF-46 dated note 2026-11-11 item (5) "the plain pages `web_help`, `web_terms`, `web_privacy` and the MaxBLD error/not-found `web_maxbld_error` ... public, footer Terms of Service · Privacy Policy · Help & Support with the short legal line" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json "+\"footer.copyright\": \"© MaxBLD\", +\"footer.help\": \"Help & Support\", +\"footer.privacy\": \"Privacy Policy\", +\"footer.terms\": \"Terms of Service\"" — the footer (and a copyright line no clause names) is placed on the mobile SEARCH surface, while the pasted ruling puts that footer on the static pages only; no pasted clause names a footer or copyright on mobile_parcel_search — remove footer.* from the search content and keep the footer in the static page content home the ruling names.
+
+BUG severity=HIGH — Spec 126 MF-46 follow-up note 2026-11-12 item (4) "The map page's \"Report incorrect lot match\" (MF-53, topic lot_match with the parcel) is not on the page yet and is not added here" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json "+\"help.lot.prompt\": \"Not sure which lot?\", +\"help.address.link\": \"Get help with an address\"" — a help affordance is added to the disambiguation map page, the one page the pasted ruling closes for help/report-lot-match content — drop the two keys from the map content or obtain and paste the ruling that reopens MF-53's help channel.
+
+BUG severity=HIGH — Spec 126 MF-46 follow-up note 2026-11-12 item (4) "`mobile_parcel_search` state `ambiguous` gains the content key `list.report` and the action `open_help {topic: address_match, q: {derived: input}}` on both targets (FE-07 parity)" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json (diff adds only "footer.*" and "search.reports_left") — the change the ruling names is not delivered: no `list.report` key and no open_help action appear, while unrelated keys do — add `list.report` and the `open_help {topic: address_match, q: {derived: input}}` action to the ambiguous state on both targets, or defer the whole item to its own row.
+
+DEFER severity=MED — Spec 126 §11b.6 "every declared state maps to a library state component" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "+\"name\": \"hit\"," and "+\"golden\": \"reports_left\"" — a state named after a lookup resolution carries a content-line golden and maps to no SEARCH state component in the pasted context — declare the reports-left line under the existing state's golden case rather than as a new state.
+
+DEFER severity=MED — Spec 126 MF-44 dated note 2026-11-11 "Until the live switch (`MAXBLD_WEB_LIVE` ...), the web search makes no lookup request (no report is charged)" — src/app/api/parcels/lookup/route.ts "+pageResponse = await computeCustomerPageResponse(parcelRef);" — the compute runs on every stored miss and the "null while the web live switch is off" claim lives in a module not in the diff (cannot see) — confirm computeCustomerPageResponse returns null before any read while MAXBLD_WEB_LIVE is off, and show that file.
+
+DEFER severity=MED — Spec 126 §11b.3 principle "the surface descriptor as contract" with §11b.6 "Accuracy" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json "its response is an explicit `.strict()` whitelist of six fields" (line unchanged) beside "+\"resetsOnDisplay\"" in src/app/api/parcels/entitlement/types.ts — the descriptor still declares six fields while the strict schema now has seven, and src/app/api/parcels/entitlement/route.ts changes only a comment so the new field's producer is not visible (cannot see) — restate the whitelist count and show the response body that always writes resetsOnDisplay.
+
+DEFER severity=MED — Spec 126 §11b.6 "Accuracy | values only through the closed binding set" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json "+\"search.reports_left\": \"{left} of {allowance} reports left until {reset}\"" — the line rests only on rulings not pasted (descriptor: "SRCH.A6, task-320 ... operator RR-0307" and "resetsOnDisplay (RR-0310, task-351)"), so it cannot be shown to satisfy any pasted clause — paste RR-0307/SRCH.A6/RR-0310 into the review material or drop the key from this change.
+
+DEFER severity=NIT — Spec 126 §11b.6 "Accuracy" (no pasted clause names this string) — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json "-\"search.input.placeholder\": \"Enter lot address\", +\"search.input.placeholder\": \"Enter a Toronto address\"" — an unnamed copy change rides the content route — confirm it belongs to a named row before merge.
+
+MET — Spec 126 §11b.3 table row "mobile on the library; the `web` target is added later" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json — no `web` target is added; the diff touches only content, descriptor refs and the two API routes.
+
+MET — Spec 126 §11b.6 "values only through the closed binding set; no maths in bindings" — descriptor "why": "it binds as a contract value" with search.reports_left placeholders — the three values are contract fields (reportsLeft, reportsLimit, resetsOnDisplay), no client-derived name or maths is introduced for them.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  47147ms (47.1s)
+📊 Tokens — total: 31773, input: 23117, output: 8656, reasoning: 7226

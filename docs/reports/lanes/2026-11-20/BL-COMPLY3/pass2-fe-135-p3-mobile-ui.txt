@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-ui.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — FE-31 "one props golden per reachable state per declared target, each `covers` a state or check, every state covered" — mobile/src/components/surfaces/SemiQuestionBinding.tsx "accessibilityState: s.busy ? { disabled: s.route === null, busy: true } : { disabled: s.route === null }," and mobile/src/components/surfaces/LotMapBinding.tsx "...(awaitingPick(s) ? [pickHint()] : []), helpRow()," — this diff adds a new reachable busy state and new nodes to the intersection, too_many_lots, unlinked, unlinked_no_pin and multi_parcel trees, and no props golden or covers entry is among the eight files of this diff, so those states are uncovered — add the regenerated props goldens (covers: busy, awaitingPick, and the four help-link states) to this commit.
+
+BUG severity=MED — FE-32 "the member must exist in that descriptor; any other value fails" — mobile/src/components/surfaces/SearchBinding.tsx "const ENTITLEMENT = 'contract_parcels_entitlement';" used as "entitlement('resetsOnDisplay')" — the contract_parcels_entitlement descriptor and its response projection are not in this diff (cannot see), so reportsLeft, reportsLimit and resetsOnDisplay cannot be shown to be declared members — include the descriptor in the diff or cite the commit and file that declares those three wire keys.
+
+DEFER severity=MED — FE-31 dated note 2026-11-11 "dont worry about things in the stitch screen that have no source - dont add them - its just an example - not law" — mobile/src/components/surfaces/LotMapBinding.tsx "/** C.11 (task-362; choose-lot.html:278): 'Pick a lot on the map or in the list.'" and "/** C.12: 'Not sure which lot? Get help with an address' (choose-lot.html:279)." — the only source cited for the pick hint and the help row is a mock line, no pasted ruling, spec clause, setting or DB field names them — cite the ruling or spec clause that names these two elements, or drop them.
+
+DEFER severity=MED — FE-31 dated note 2026-11-11 "every MaxBLD build reuses the existing components, bindings and patterns; a new library, component kind or binding beyond the Spec 126 §11b.5 first-use costs is an operator ruling first" — mobile/src/components/surfaces/SurfaceRenderer.tsx "export const ICONS = { Search, MapPin, AlertTriangle, RefreshCw, Lock, Ban, User, Check, ArrowRight, X, ChevronLeft, Info };" — the closed icon table gains ChevronLeft and Info and no pasted ruling authorizes the two additions — cite the ruling that admits the two icons or reuse icons already in the table.
+
+DEFER severity=LOW — FE-31 "every value through a binding kind" — mobile/src/components/surfaces/LotMapBinding.tsx "onPress: { action: 'open_help', topic, q: derived('query') }," — the derived name 'query' is not shown in this file's closed derived-name list nor in lotMapData in this diff (cannot see), so the ref may resolve against nothing — add 'query' to the closed list and to lotMapData in this commit.
+
+DEFER severity=LOW — FE-33 "every displayed string, library default strings and form error messages included, comes from content" — mobile/src/components/surfaces/SearchBinding.tsx "text: content('search.reports_left')," — the content key search.reports_left is not in the diff (the generated search slice is not among the eight files, cannot see), so the string's content home cannot be verified — include the generated slice or the content file change in this diff.
+
+DEFER severity=LOW — FE-31 "descriptor + content + standard library components configured by schema" — mobile/src/components/surfaces/SemiQuestionBinding.tsx "className: s.busy ? `${L.semiSelect} opacity-[0.85]` : L.semiSelect," — a raw class string is written in the binding while every other class comes from the layout table, and all L.semi* keys are outside this diff (cannot see) — move the busy opacity into mobile/src/constants/lotMap.ts and include that file in the diff.
+
+MET — FE-36 "mobile expo-router with `canGoBack()` before `back()`" — mobile/app/(app)/parcel-tool/semi-question.tsx "push: (route: string) => void continueToReport(route)" and "back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup))" — the Continue path still moves the user through router.replace, no local-state view swap.
+MET — FE-33 "every displayed string ... comes from content" — mobile/src/components/surfaces/SemiQuestionBinding.tsx "node('Text', { key: 'loading-text', testID: 'parcel-semi-loading', className: L.semiLoadingText, role: 'status' }, [content('state.loading')])" — the replacement loading line is a content ref, no literal text.
+MET — FE-31 "a converted page's mount file imports only framework packages, binding modules and project-internal paths" — mobile/app/(app)/parcel-tool/index.tsx "import { useFocusEffect, useRouter } from 'expo-router';" and "import { useAuthStore } from '@/store/authStore';" — framework and project-internal imports only, no third-party package.
+MET — FE-31 "every MaxBLD build reuses the existing components, bindings and patterns" — mobile/src/components/surfaces/LotMapBinding.tsx "node('Button', { key: 'help', testID: 'parcel-lotmap-help', variant: 'link'," — the help affordance is the shared Button plus the already registered open_help action, no new component kind.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 1
+
+---
+⏱  73994ms (74.0s)
+📊 Tokens — total: 42444, input: 28779, output: 13665, reasoning: 12311

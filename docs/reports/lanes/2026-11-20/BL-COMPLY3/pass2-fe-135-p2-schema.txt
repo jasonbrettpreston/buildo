@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-schema.patch (model: deepseek-reasoner)
+
+DEFER lines are safe-to-defer; BUG lines block merge.
+
+BUG severity=HIGH — FE-02 dated note 2026-11-11 "rulings verbatim and cited, pre-approved decisions logged and confirmed" — scripts/surfaces/_schema/bindings.json $comment "orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling)" — the added 48 px token reaches a file whose own header says it is "Read by ... the FE-31 and FE-05 locks" (FE-05 lock landed 710c67940) on an authority the note itself disclaims as not an operator ruling, so the pre-approved route is invoked without the confirmation the pasted row requires — land the token only behind a cited operator ruling (verbatim, dated), or drop min-h-[48px] from touch_targets.mobile.Button.
+
+DEFER severity=MED — FE-03 "every declaration is checked against the live contracts" — scripts/surfaces/_schema/bindings.json $comment "The check C-9m still requires exactly one min-h- token on the list; nothing under 44 is listed." — the same commit lists two tokens: "Button": ["min-h-[44px]", "min-h-[48px]"], so either C-9m reads per-golden (fine) or per-list (broken); screen-checks.mjs is not in the diff, cannot see it — state in the note whether C-9m is per-line or per-list token.
+
+DEFER severity=MED — FE-06 "status words come from a closed list" — scripts/surfaces/_schema/seed-report-v2.mjs "'not_evaluated:not_in_engine_population': 'Not yet evaluated', // MB-94 (c), Spec 126 11a.3 dated note 2026-11-12 (R-2 literal)" — the closed copy list gains a member whose authorising note (Spec 126 §11a.3 dated note 2026-11-12, R-2) is not pasted and no operator ruling is quoted — paste the §11a.3 dated note (or the R-2 operator verbatim) so the member is checked against its ruling.
+
+DEFER severity=MED — FE-03 "Proven, not reviewed: declarations checked against live contracts" — scripts/surfaces/_schema/census/contracts.json "its response is an explicit `.strict()` whitelist of six fields" — the response list in the same descriptor gains "resetsOnDisplay" ("resetsOn", "resetsOnDisplay") while under_126 still declares six fields, so the declaration now contradicts itself — restate the count in under_126.
+
+DEFER severity=MED — FE-03 "Proven, not reviewed: declarations checked against live contracts" — scripts/surfaces/_schema/census/contracts.json "It reads 9 tables" versus the same string's "besides the stored tables above, the Layer 2 results `bylaw_resolution_results` ... `parcel_maxbld_population`" — the header count and the appended rows disagree inside one changed field, so the declaration cannot be checked as written — restate the count (or drop it) to match the full read set.
+
+DEFER severity=MED — FE-06 "status words come from a closed list" — scripts/surfaces/_schema/census/contracts.json "\"unsure\", \"semi\"" — a new closed-list member is added to the lookup's enumeration with no pasted ruling naming it and no prose in the same descriptor's "every response also names its `resolution`" sentence describing what a semi resolution returns — cite the ruling for the new member or leave the enumeration unchanged.
+
+DEFER severity=LOW — FE-03 "every state x target file present, nothing stray" — scripts/surfaces/_schema/census/mobile-product.json "\"name\": \"hit\", \"golden\": \"reports_left\"" — the state name and its golden diverge from the existing pattern ("static"/"static") and the golden file reports_left is not in the diff, cannot see it exists — confirm the reports_left golden file is present or name the state to match its golden.
+
+MET — FE-05 "the front end may show more, never derive differently" — scripts/surfaces/_schema/census/mobile-product.json "the server serves it already written in Toronto time as resetsOnDisplay (RR-0310, task-351) and it binds as a contract value" — the reset date is served pre-formatted and bound as a contract value, no client derivation.
+
+MET — FE-02 "a screen is a descriptor; the only code is the shared archetype components" — whole diff, five files under scripts/surfaces/_schema (JSON plus the seed generator) — the change is declaration and generator seed only, no screen code added.
+
+MET — FE-02 dated note 2026-11-11 "server-formatted values" — scripts/surfaces/_schema/census/contracts.json "\"resetsOn\"," / "\"resetsOnDisplay\"" — the display string is a new server field, not a UI format.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 1
+
+---
+⏱  41467ms (41.5s)
+📊 Tokens — total: 35636, input: 27988, output: 7648, reasoning: 6513

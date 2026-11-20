@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-ui.patch (model: deepseek-reasoner)
+
+BUG severity=NONE — not used. Findings below are deferrals only; no pasted clause is demonstrably unmet by a line in this diff.
+
+DEFER severity=MED — Spec 126 §13 "<clause>The `*.ui.test.tsx` … every archetype renderer against its golden rendered-tree snapshot, per declared state</clause>" — mobile/src/components/surfaces/LotMapBinding.tsx:240 "return [unlinkedNotice(), helpLink('address_match'), ...mapView(s)];" — the rendered tree changes in five declared states (intersection, too_many_lots, unlinked_no_pin, unlinked, multi_parcel, plus the new pick hint and help row) and no golden or snapshot file appears in this pasted part, so the per-declared-state goldens are unverified — show the golden update in the same commit or name the diff part that carries it.
+
+DEFER severity=MED — Spec 126 §13 "<clause>every archetype renderer against its golden rendered-tree snapshot, per declared state</clause>" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:107 "return [node('Text', { key: 'loading-text', testID: 'parcel-semi-loading', className: L.semiLoadingText, role: 'status' }, [content('state.loading')])];" — the loading state loses its spinner node and the Continue button gains a new busy accessibilityState at SemiQuestionBinding.tsx:96 "className: s.busy ? `${L.semiSelect} opacity-[0.85]` : L.semiSelect", a new declared state with no golden in this part — land the S-093 goldens for the loading and busy states with this change.
+
+DEFER severity=MED — Spec 126 §12.1 "<clause>SEARCH is not eligible at B2 and `parcel_search` converts in full form</clause>" — mobile/src/components/surfaces/SearchBinding.tsx:52 "const ENTITLEMENT = 'contract_parcels_entitlement';" — parcel_search is edited incrementally with a second served contract ref and a new rendered line, and the authorising text (task-320, RR-0307, RR-0310) is not in the pasted context, so compliance of this edit cannot be checked — paste the ruling named at SearchBinding.tsx:93 or defer this edit to the declared B2 full-form conversion.
+
+DEFER severity=LOW — Spec 126 §12 "<clause>It is not a second plan: if a batch moves, it moves in Spec 127 and this table follows.</clause>" — mobile/app/(app)/parcel-tool/semi-question.tsx:54 "const continueToReport = useCallback(async (route: string) => {" — a two-stage answered lookup on surface S-093 (mobile_parcel_semi_question) whose row, archetype and eligibility appear in no row of the pasted table, and S-093 is named only in a code comment at line 6 — confirm in Spec 127 §4.4 where this surface sits; cannot see that row here.
+
+MET — Spec 126 §14 "<clause>mobile/app/(auth)/{sign-in,sign-up,confirm}.tsx … Deliberately out of scope</clause>" — none of the eight pasted files — no fenced auth screen is touched.
+
+MET — Spec 126 §14 "<clause>migrations/** — no migration is authored by this spec</clause>" — none of the eight pasted files — no migration file appears in the diff.
+
+MET — Spec 126 §14 "<clause>scripts/manifest.json and every scripts/**/*.descriptor.json</clause>" — none of the eight pasted files — no scripts or descriptor file is edited.
+
+MET — Spec 126 §13 "<clause>the `schema_drift` state rendering rather than blanking</clause>" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:110 "case 'error': return errorNotices(s);" — schemaDrift is still carried from the submit error at semi-question.tsx:37 and the error branch still renders notices.
+
+MET — Spec 126 §14 "<clause>'Step' keeps its pipeline meaning; the engine is `SurfaceEngine`</clause>" — mobile/src/components/surfaces/SurfaceRenderer.tsx:31 "export const ICONS = { Search, MapPin, AlertTriangle, RefreshCw, Lock, Ban, User, Check, ArrowRight, X, ChevronLeft, Info };" — the change extends the renderer and introduces no pipeline 'step' vocabulary.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  57055ms (57.1s)
+📊 Tokens — total: 32964, input: 22752, output: 10212, reasoning: 9193

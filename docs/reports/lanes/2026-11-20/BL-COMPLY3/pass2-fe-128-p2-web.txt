@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-web.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 128 §4.8 item 3 "A rule without a lock is not yet a rule" — src/components/surfaces/web/footerNode.ts:5 "// MF-91 (SRCH.FOOTER, task-332; operator, verbatim, 2026-11-19: "1. once  -approved" (MORNING-DECISIONS.md:1061)" — the five changed files contain no test path, so the ruling's behaviour (footer carries the legal sentence once, the under-input line removed, the reports-left line added, resetsOnDisplay added) lands with no both-directions test in the same commit — add the red/green lock test in this commit, or hold the behaviour until the lock commit.
+
+BUG severity=HIGH — Spec 128 §4 dated note 2026-11-15 (MF-19) "the closed part-role list of the report page's sheet section ... grows by one role, `link`" and "the lock is the report-page roles test and the sheet goldens, red first" — src/components/surfaces/web/footerNode.ts:14 "export type FooterPart = { role: string; content?: string; href?: string; pending?: boolean };" — the closed footer role vocabulary grows by two roles (`line`, `copyright`) plus a new `pending` part field, and footerNode.ts:57 "if (p.role !== 'legal' && p.role !== 'line' && p.role !== 'copyright') return fail(`unknown role "${p.role}"`);" makes every existing static footer part outside link/legal now throw, with no pasted ruling and no red-first roles/goldens lock — add the dated §4 note, the operator ruling and the roles plus goldens lock, or keep the role set at link/legal.
+
+BUG severity=HIGH — Spec 128 §4 dated note 2026-11-11 (MF-76) "A read that throws, a missing stored row, a zero value or an out-of-bounds setting leaves its part out on the server (logged, never a 500, never a partial group)" — src/lib/surfaces/maxbld-landing.ts:147 "footer: pickFooterText(SEARCH_CONTENT)" with footerNode.ts:28 "if (typeof v !== 'string' || v === '') throw new Error(`footer text: missing key "${k}"`);" — a missing or non-string footer content key now throws inside the server read `readLanding`, which is neither "leaves its part out" nor "logged" — log the miss and send no footer (or no footer text) instead of throwing on the server path.
+
+DEFER severity=MED — Spec 128 §4 dated note 2026-11-11 (MF-76) "A read that throws, a missing stored row, a zero value or an out-of-bounds setting leaves its part out on the server (logged, never a 500, never a partial group)" — src/components/surfaces/web/StaticBinding.tsx:392 "const footerOf2 = (report: StaticReport): FooterText => report.footer ?? fail('no footer text (the server leaves this part out)');" — the client makes the sample report footer mandatory, so the exact case the ruling says the server may omit now hard-fails the static page render instead of leaving the part out — pass no footer / render without it when `report.footer` is absent.
+
+DEFER severity=MED — Spec 128 §4.7a "Every `ACCEPTED` row names a **deciding source outside this pass**" — src/components/surfaces/web/SearchBinding.tsx:148 "/** SRCH.A6 (task-320; RR-0307; v8 search.html:320): the mobile line, the same refs; drawn only when the read answered with all three served fields. */" — SRCH.A6, task-320, RR-0307, RR-0310 and MORNING-DECISIONS.md:1061/:1066 are cited as the deciding sources for the reports-left line, `resetsOnDisplay` and the footer-once change but none is in the pasted context, so the deciding source cannot be seen — cite the register row with its resolving lock, or paste the rulings, before this lands.
+
+DEFER severity=MED — Spec 128 §4.11 item 6 "surface paths (`scripts/surfaces/**`, `src/lib/surfaces/**`, `src/tests/surfaces/**`) are NOT layer23 today" — src/components/surfaces/web/footerNode.ts:1 "// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.2" — the new shared surface module sits under `src/components/surfaces/**`, outside the three pasted surface globs, so the hold/surface-validate machinery named in §4.11 items 6 and 8 does not cover the file the other bindings now depend on — add that glob to the surface path list in the same change, or move the module under `src/lib/surfaces/`.
+
+MET — Spec 128 §4 dated note 2026-11-11 (MF-76) "No API contract and no client fetch; the closed render vocabulary is not widened" — src/lib/surfaces/maxbld-landing.ts:147 — the footer text travels inside the report object the server already sends, no fetch and no contract key added.
+
+MET — Spec 128 §4 dated note 2026-11-11 (MF-76) "never a partial group" — src/components/surfaces/web/SearchBinding.tsx:150 — `reportsLeftShown(s.entitlement)` gates the whole line and the whole `contract_parcels_entitlement` block, so no partial draw.
+
+REJECT — Spec 128 §4 dated note 2026-11-15 (MF-19) "The `link` part is text only: it carries no href and no action in the page tree" — the change is accused of giving the footer `link` role an href — that ruling is scoped to the report page sheet roles in `report-page.json`, and the static footer already wrote `href: p.href` before this diff, so no closed report-page role widened here.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 5
+
+---
+⏱  65385ms (65.4s)
+📊 Tokens — total: 31908, input: 19149, output: 12759, reasoning: 11372

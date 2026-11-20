@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §2.2.1 P4 "All tunables are data; zero thresholds in `src/`." — mobile/src/lib/semiQuestion.ts:18 "export const SEMI_CONTINUE_WAIT_MS = 60_000;" — a tunable timeframe ships as a bare source constant with no declared data home, which is the exact anti-pattern P4 retires ("SearchPermitsModal.tsx:34 DEBOUNCE_MS = 300 ... a required `config.debounce_ms` declaration"), and the diff's own comment calls it "a timeframe; operator item in the lane report" — declare the wait as data (descriptor config or a served bound) and read it, or let the server bound the answered lookup.
+
+DEFER severity=MED — Spec 126 §2.0 consequence 4 "**A scope-C change is a two-product change.** Its plan says so, and its review panel is sized for it." — mobile/src/hooks/useParcelLookup.ts "queryKey: ['parcel-entitlement']," — the change reads and prints the entitlements registry ("entitlements" is scope C in the §2.0 table) yet nothing in the material declares the two-product consequence or a sized panel — add the scope-C, two-product statement to the plan, or show the entitlement read is scope A with its contract declared.
+
+DEFER severity=MED — pasted context header "in this part: 4 · this is part 2 of 11" — mobile/src/hooks/useParcelLookup.ts "SRCH.A6 (task-320; RR-0307): the caller's plan and this month's report count" — the reports-left line, the Continue wait, the busy state and the in-app browser sheet rest only on rulings (RR-0278, RR-0307, RR-0310, task-319/360/361/362, small-pages-v8) that are not pasted, so their compliance cannot be judged clause by clause — paste those rulings into the review context or split them out of this diff.
+
+MET — Spec 126 §2 "do not restate a count in prose." — mobile/src/lib/parcelSearchCore.ts:66-70 "GET /api/parcels/entitlement serves the count" — the new comment names the three served fields, restates no estate count.
+
+MET — Spec 126 §2.2.1 P11 "Architecture boundaries enforced mechanically, not by review." — mobile/src/hooks/useParcelLookup.ts:97-104 "so the one setQueryData call lives here" — the query-client call is moved out of the mount file into hooks/ so the machine-checked mount_internal boundary holds.
+
+MET — Spec 126 §2.2.1 P2 "it may not *derive* differently" — mobile/src/lib/parcelSearchCore.ts:73-79 "reportsLeftShown" — the date and counts are printed as served ("resetsOnDisplay"), the client only tests presence, so no second derivation exists.
+
+REJECT — Spec 126 §2.0 acceptance criterion (3) "`guards.entitlement: \"parcel_tool\"` + `metering`" — accused of moving the metering decision to the client through `semi: 'answered'` — that clause governs the parcel_detail descriptor's guard declaration, not a lookup query param, and no descriptor is in this diff.
+
+REJECT — Spec 126 §2.2.1 P3 "**Every admin mutation writes exactly one ledger row**" — accused of adding a metered write with no ledger row — no admin route or mutation appears in the diff, so P3 has no subject here.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 3
+
+---
+⏱  68927ms (68.9s)
+📊 Tokens — total: 31981, input: 19337, output: 12644, reasoning: 11820

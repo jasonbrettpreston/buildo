@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §13 UI "the `schema_drift` state rendering rather than blanking" — mobile/src/hooks/useParcelLookup.ts (hunk @@ -68,17 +76,65 @@) "retry on 401/403/429 or drift (the line is simply absent)" — the rule says a drifted shape renders a schema_drift state, the code drops the line silently, and the same comment makes drift a `ParcelLookupSchemaError` thrown out of the query, so no state is drawn — render a schema_drift state for the entitlement line (or feed it through the drift state the lookup already uses) instead of omitting the line
+
+DEFER severity=MED — Spec 126 §12 P2 "the generated mobile Zod mirror replacing the four-site transcription" — mobile/src/lib/schemas.ts "export const ParcelToolEntitlementSchema = z.object({" — a new server contract is transcribed by hand in the app, which is the pattern the pasted deliverable replaces, and no set-equality lock covers it (the §13 logic lock names only `PARCEL_COST_LINES`) — add the entitlement contract to the generated mirror set and its set-equality lock, or record the deferral against the mirror generator task
+
+DEFER severity=MED — Spec 126 §12.1 "SEARCH is not eligible at B2 and `parcel_search` converts in full form" — mobile/src/constants/parcelSearch.ts (hunk @@ -159,6 +159,8 @@) "SRCH.A6 (task-320): the reports-left line under the box" — three SEARCH-surface items (SRCH.A6 line, SRCH.C12 help row, SRCH.SEMI-3 wait) land as mobile UI edits with no SEARCH descriptor, eligibility entry or full-form record in the pasted material — show the declared eligibility row and the full-form conversion record these edits belong to
+
+DEFER severity=MED — Spec 126 §12.1 "Eligibility is declared data per Spec 127 §4.4, and these two rows are the reason it is declared rather than assumed" — mobile/src/hooks/useParcelLookup.ts (hunk @@ -68,17 +76,65 @@) "SRCH.METER-2 (task-360, RR-0278; SE-1, SE-2)" — cannot see: RR-0278, RR-0307, SRCH.A6/C12/SEMI-3/LOTMAP-2 and FE-05 are cited throughout the diff and absent from the pasted context, so the reports-left line, the `semi=answered` metering param and the help sheet cannot be checked against their governing words — paste those rulings and card items
+
+DEFER severity=MED — operator "semi ask a" / P5.7, cited in-file and not pasted: "the effect is the semi calculation of 7.25 (task-209)" — mobile/src/lib/lotForm.ts (hunk @@ -5,7 +5,8 @@) "does not apply it yet: nothing outside this file reads the param or calls `lotFormEffective`" — the answer the person gives is satisfied only by a comment, while the same change sends `semi=answered` so the server counts the lot; the clause is unmet pending task-209 — either apply `lotFormEffective` on the report or hold the `semi=answered` count until it does
+
+DEFER severity=MED — walk step 4, no pasted clause or ruling names the value "how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report)" — mobile/src/lib/semiQuestion.ts (hunk @@ -12,6 +12,27 @@) "export const SEMI_CONTINUE_WAIT_MS = 60_000;" — a user-facing 60 s wait ships while the constant's own comment records the operator's timeframe item as still open — cite the ruled timeframe line or hold the value to the lane item's ruling
+
+DEFER severity=LOW — Spec 126 §13 UI "every archetype renderer against its golden rendered-tree snapshot, per declared state" — mobile/src/lib/semiQuestion.ts (hunk @@ -56,6 +81,7 @@) "busy: ask && args.submitting === true" — a new declared state is introduced and no per-state snapshot is in this diff part (cannot see the test part) — add the busy state to the per-state snapshot set
+
+DEFER severity=NIT — Spec 126 §13 "declared RLS policies equalling `pg_policies` in both directions" is the only pasted lock near this; no pasted clause names a back-icon number — mobile/src/constants/lotMap.ts (hunk @@ -56,7 +79,7 @@) "Numbers (FE-05: none in the binding)." added "backIcon: 22" — a number enters a constant whose own note says no number is in the binding, with no pasted clause naming the value — cite FE-05 for 22 or keep the size out of LOT_MAP_SIZES
+
+MET — Spec 126 §12 "never" row "`mobile/app/(auth)/{sign-in,sign-up,confirm}.tsx` (1,302 lines)" — none of the ten touched files is under mobile/app/(auth)
+MET — Spec 126 §14 "Spec 100 stays fenced: **no linkage to LeadDetail, the flight board, or the lead feed.**" — no lead-feed, flight-board or LeadDetail import or route appears in the diff
+MET — Spec 126 §14 "`migrations/**` — no migration is authored by this spec" — no migrations path in the diff
+MET — Spec 126 §14 "`scripts/manifest.json` and every `scripts/**/*.descriptor.json`" out of scope — no scripts path in the diff
+MET — Spec 126 §14 "`src/app/api/quality/**`, `src/lib/quality/**` — held by another programme." — none of the diff paths sit under those trees
+
+REJECT — Spec 126 §13 "the `schema_drift` state rendering rather than blanking" — accused: the semi page blanks on a drifted lookup — mobile/src/lib/semiQuestion.ts "const errors = classifyParcelSearchError(error, args.schemaDrift);" draws the error state, so this is not blanking
+REJECT — Spec 126 §12.1 "SEARCH is not eligible at B2" — accused: this change claims SEARCH eligibility — the diff adds no descriptor and no eligibility data, so nothing is asserted
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 3
+
+---
+⏱  98677ms (98.7s)
+📊 Tokens — total: 35646, input: 17882, output: 17764, reasoning: 16306

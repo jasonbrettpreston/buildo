@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-web.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §2.0 Consequences 4 "A scope-C change is a two-product change. Its plan says so, and its review panel is sized for it." (scope C row: "entitlements ... Used by both products, owned by neither") — src/lib/entitlements/index.ts (hunk +621) "+  resetsOnDisplay: string | null;" — a new non-optional field is widened onto the shared exported `ParcelToolUsage` read (scope C) for one product's display line, with no two-product statement and no other constructor/consumer of the widened interface in the diff, including the §2.2 group "C. Usage & entitlements" surfaces (`admin_usage_funnel`, `admin_entitlements`) that read the same result — state the two-product effect of the shared-module change and update every constructor/consumer of `ParcelToolUsage` in the same change.
+
+DEFER severity=MED — Spec 126 §2 unit 1 SURFACE "the contracts it reads/writes **by reference**" — src/components/surfaces/web/SearchBinding.tsx "+const ENTITLEMENT = 'contract_parcels_entitlement';" — the web search surface now reads a second contract by reference, and no surface or contract descriptor file appears in this diff (cannot see one), so the declared `contracts[]` join cannot be shown updated — add `contract_parcels_entitlement` to the search surface descriptor's `contracts[]` and confirm the contract row exists.
+
+DEFER severity=MED — Spec 126 §2 "**EXPORT is a render target, not a unit.**" and "100% data parity between the web view and the exported document" — src/components/surfaces/web/StaticBinding.tsx "+return <ReportPage key={k} view={reportOf(p.view, 'sample', ctx.report)} footer={footerOf2(ctx.report)} />;" — the footer is injected at the web screen render of the sample report only, the same sample's export render target is not in the diff (cannot see it), so the parity the clause converts into a golden is unverified for this new footer — feed the footer from the report data at every render target of the same sample view and refresh the golden capture.
+
+DEFER severity=LOW — Spec 126 §2.2.1 P11 "**Architecture boundaries enforced mechanically, not by review.**" — src/lib/surfaces/maxbld-landing.ts "+import { pickFooterText } from '@/components/surfaces/web/footerNode';" — a server-side `src/lib` module now depends upward on a `src/components` module, the reverse of the direction the same change asserts in footerNode.ts ("This module imports no binding"), so this layering is held only by review — move `FOOTER_TEXT_KEYS`/`pickFooterText` into a lib-level content module and let the component builder import it.
+
+DEFER severity=NIT — Spec 126 §2 dated note 2026-11-04 "do not restate a count in prose" — src/components/surfaces/web/footerNode.ts "+// three web users: the static pages (StaticBinding), the web search page (SearchBinding) and the web report page" — a consumer count is restated in prose in a file header — drop the numeral and just name the three call sites, or leave the count to the registry.
+
+MET — Spec 126 §2 "**PROJECTION is a field, not a unit.**" — src/components/surfaces/web/SearchBinding.tsx "import { diffCandidateAddress, parcelSearchPath, reportsLeftShown, type AddressSegment, type EntitlementLine, type SearchOutcome } from '../../../../mobile/src/lib/parcelSearchCore';" — the web tree reuses the mobile core's predicate and type instead of deriving its own, one tree with a render per platform.
+MET — Spec 126 §2.2.1 P10 "Time-travel is the ledger, not a snapshot table" — src/lib/entitlements/index.ts "+    resetsOnDisplay: resetLabel(u.resetsOn)," — the displayed reset date is derived on the read from `resetsOn`, no new column, no snapshot table.
+MET — Spec 126 §2 unit 4 ENTITLEMENT "the closed product vocabulary · per-product statuses · gate sites" — src/lib/entitlements/index.ts "+  resetsOn as the Toronto calendar date, '9 Dec 2026'" — no product key, status or gate is added to the closed vocabulary; only a display field on an existing read.
+REJECT — Spec 126 §2.1 one descriptor set for `["web","mobile"]` — the change is accused of diverging the search surface by moving the legal sentence into the web footer while mobile keeps it under the input — the same content ref is shown once on each platform, only placement differs, and the pasted spec makes projection a field, not a unit.
+REJECT — Spec 126 §2.2.1 P4 "zero thresholds in `src/`" — the new `allowance`/`footer*` entries are accused of being tunables in code — they are layout class strings, the same kind the existing `WEB_SEARCH_LAYOUT` table already holds, and no numeric threshold is introduced.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 5
+
+---
+⏱  86211ms (86.2s)
+📊 Tokens — total: 34891, input: 19215, output: 15676, reasoning: 14510

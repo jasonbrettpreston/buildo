@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-web.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — MF-91 "1. once  -approved" (quoted by the diff itself) — src/components/surfaces/web/StaticBinding.tsx:437 "return <ReportPage key={k} view={reportOf(p.view, 'sample', ctx.report)} footer={footerOf2(ctx.report)} />;" — the four shared footer strings are now rendered inside the sample report while the same page also renders its own footer section through footerOf, so any static page that carries both shows the footer twice and the "once" rule is not enforced anywhere in the tree builder — give the footer one owner per page (the section, or the report) and make the other omit it or throw on the duplicate.
+DEFER severity=MED — operator ruling cited only in code, not in the pasted context — src/components/surfaces/web/footerNode.ts:5 "MF-91 (SRCH.FOOTER, task-332; operator, verbatim, 2026-11-19: "1. once  -approved" (MORNING-DECISIONS.md:1061) and "this is a shared component"" — the ruling the change rests on exists only as a comment inside the diff, so the once-only rule, the five-item order (search.txt:323) and the shared-component requirement cannot be checked against anything pasted — paste MORNING-DECISIONS.md:1061 and :1066 and the v8 footer markup with the card.
+DEFER severity=MED — SRCH.A6 / RR-0307 / RR-0310, none pasted — src/lib/entitlements/index.ts:667 "resetsOnDisplay: resetLabel(u.resetsOn)," — a new served field, a new Toronto-date label and a new displayed line are added, and no pasted clause or ruling names any of them — paste RR-0307, RR-0310 and SRCH.A6, or drop the field and the line from this diff.
+DEFER severity=LOW — 126 §11a.1 "The schema references the field and nothing else: no old engine names, no older-rule text, no code." — src/components/surfaces/web/SearchBinding.tsx:137 "{ role: 'link', content: 'footer.terms', href: '/terms' }" — the five footer parts and their routes are code literals in the binding, not a declared table — cite the schema/table that declares these parts, or move them there as the static page's parts already live in its page table.
+REJECT — 126 §11a.3 "the renderer throws (never skips)" — accused: reportsLeft returns an empty array when the entitlement is absent, a silent skip — 11a.3's never-skip rule governs statuses and disclosure codes, this is an allowance line, not a status, so the clause does not reach it.
+MET — 126 §11a.1 "Labels, help text and legal copy are NOT an exception: they are content fields and bind like any field" — src/components/surfaces/web/SearchBinding.tsx:136 "{ role: 'legal', content: 'search.legal' }" — the legal sentence is drawn once as a content ref in the footer.
+MET — 126 §11a.6 "label from `content`" — src/components/surfaces/web/SearchBinding.tsx:150 "text: content('search.reports_left')," — the new line's label is a content ref, not typed text.
+MET — 126 §11a.6 "The UI computes none of these." — src/components/surfaces/web/SearchBinding.tsx:272 "reportsLeft: s.entitlement.reportsLeft" — the displayed counts are served values, and the date label is formatted in src/lib/entitlements/index.ts, not in the render.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  67858ms (67.9s)
+📊 Tokens — total: 30782, input: 18251, output: 12531, reasoning: 11687

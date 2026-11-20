@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-web.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 126 §3.1 STATIC "STATIC ... MUST answer `content_source` · `seo`" — src/lib/surfaces/maxbld-landing.ts:147 "footer: pickFooterText(SEARCH_CONTENT)" — the landing footer's four strings come from the web-search content module, so the landing's declared content_source is not the source for those strings; if the landing descriptor names its own content file, this is a cross-surface content source bypass — pass the landing `content` object to pickFooterText, or confirm the landing content_source is SEARCH_CONTENT.
+DEFER severity=MED — operator ruling MF-91, not pasted, "operator, verbatim, 2026-11-19: \"1. once  -approved\"" — src/components/surfaces/web/footerNode.ts:6 "MF-91 (SRCH.FOOTER, task-332; operator, verbatim, 2026-11-19: \"1. once  -approved\"..." — the ruling authorizing the footer and the "once" placement is only a code comment, not in the pasted governing context, so the change cannot be checked against a pasted operator ruling — paste MORNING-DECISIONS.md:1061 or cite the pasted ruling.
+DEFER severity=LOW — SRCH.A6, not pasted, "SRCH.A6 (task-320; RR-0307; v8 search.html:320)" — src/components/surfaces/web/SearchBinding.tsx:149 "key: 'reports-left'" — the ruling for the new reports-left line is only a code comment, so the required fields and placement cannot be verified against a pasted ruling — paste RR-0307 or cite the pasted line.
+MET — Spec 126 §4 SEARCH "log_hygiene (Spec 100 §2 item 8 — never log `q`)" — src/components/surfaces/web/SearchBinding.tsx:63 "input: 'flex-1 ph-no-capture'" — the new footer and reports-left code add no logging of the typed query.
+MET — Spec 126 §3 REPORT "`outputs.writes: \"none\"` enforced" — src/components/surfaces/web/StaticBinding.tsx:437 "<ReportPage ... footer={footerOf2(ctx.report)} />" — the change passes display strings only and adds no write path.
+MET — Spec 126 §4 "Omission is a build failure" — src/components/surfaces/web/footerNode.ts:28 "if (typeof v !== 'string' || v === '') throw new Error" — missing footer strings fail closed instead of silently omitting a required line.
+REJECT — Spec 126 §4 "A surface that needs a value the menu lacks does not add one" — the new footer roles `line` and `pending` are treated as new menu values — they are internal footer tree parts, not SURFACE categories in the closed 21-category menu, so the clause does not reach them.
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+
+---
+⏱  124231ms (124.2s)
+📊 Tokens — total: 45804, input: 23016, output: 22788, reasoning: 22114

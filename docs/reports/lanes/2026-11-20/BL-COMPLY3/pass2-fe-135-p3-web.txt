@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-web.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — FE-32 "the member must exist in that descriptor; any other value fails" — src/components/surfaces/web/SearchBinding.tsx "reset: entitlement('resetsOnDisplay')" — resetsOnDisplay is a field introduced only in src/lib/entitlements/index.ts and no CONTRACT descriptor file is edited in this diff part, so the new member cannot be shown to exist in the contract_parcels_entitlement response projection — add resetsOnDisplay to the declared contract_parcels_entitlement descriptor, or show where the descriptor declares it (cannot see here).
+
+BUG severity=MED — FE-34 "each part is one shown text bound to a declared field (the server-formatted string as sent; a number throws), a `content:page` text, or a ruled pending text" — src/components/surfaces/web/StaticBinding.tsx "return <ReportPage key={k} view={reportOf(p.view, 'sample', ctx.report)} footer={footerOf2(ctx.report)} />;" — the report page now shows four footer strings passed as a raw FooterText prop, not a report-page.json section nor a content:page text, so the shown part sits outside the one page-table contract — declare the footer as a report-page section bound to content:page, or show it is outside the v21 page tree (cannot see here).
+
+DEFER severity=MED — FE-31 "one props golden per reachable state per declared target, each `covers` a state or check, every state covered" — src/components/surfaces/web/SearchBinding.tsx "...reportsLeft(s)," and "+    footer()," — two new reachable states (footer drawn, reports-left drawn) appear but this diff part carries no props golden, so coverage of the new states cannot be seen — add or extend the search page props golden for the footer and reports-left states.
+
+DEFER severity=LOW — FE-31 "every string from content (listed exempt files only)" — src/lib/surfaces/maxbld-landing.ts "footer: pickFooterText(SEARCH_CONTENT)" — the landing draws its footer strings from the search page's content module, not the landing's own content, so the per-page content source is coupled across pages — source the landing footer text from the landing content file, or state the shared-content exemption (cannot see here).
+
+DEFER severity=MED — the governing ruling quoted in the diff "MF-91 (SRCH.FOOTER; operator \"1. once  -approved\")" — src/components/surfaces/web/SearchBinding.tsx "/** MF-91 (SRCH.FOOTER; operator \"1. once  -approved\")" — the operator ruling text (MORNING-DECISIONS.md 1061, 1066) and SRCH.A6/task-320 are not in the pasted context, so conformance of the footer and reports-left additions to them cannot be verified — paste the governing ruling or mark the change unverifiable against it.
+
+MET — FE-36 — src/components/surfaces/web/SearchBinding.tsx "if (typeof p.href === 'string') return <Button ... component={Link} href={p.href}" — footer links move the user via the platform Link router with a text name.
+MET — FE-33 — src/components/surfaces/web/SearchBinding.tsx "text: content('search.reports_left')" — displayed strings come from content refs, values via contract refs.
+MET — FE-37 — src/components/surfaces/web/StaticBinding.tsx "report.footer ?? fail('no footer text (the server leaves this part out)')" — the binding fails loud instead of skipping the part silently.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 2
+
+---
+⏱  75602ms (75.6s)
+📊 Tokens — total: 38431, input: 23787, output: 14644, reasoning: 13823

@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-content-route.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — FE-05 (dated note 2026-11-11) "The server computes every count, the reports left and the limit-reached flag; pages bind to them (FE-05)." — src/app/api/parcels/entitlement/types.ts:18 "resetsOnDisplay: z.string().nullable()" — the .strict() response now requires a server-computed resetsOnDisplay, but the entitlement route.ts diff changes only a comment line and adds no code that computes or returns the field, so the response fails the strict parse and A2's reports-left line errors — compute resetsOnDisplay in the route response from current_period_end else the created_at monthly date, in Toronto time, before returning.
+
+DEFER severity=MED — contract_parcels_entitlement under_126 "its response is an explicit `.strict()` whitelist of six fields" — contract_parcels_entitlement.descriptor.json:6 "whitelist of six fields" against the same file's added response field "resetsOnDisplay" — the change makes the response seven fields but leaves the prose at six, so the descriptor contradicts its own schema — update the under_126 text to "seven fields" and name resetsOnDisplay.
+
+DEFER severity=MED — contract_parcels_lookup data_story "It reads 9 tables" — the same sentence's LOAD.1 clause "the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`" — the header says 9 while the clause adds six more reads and database.reads[].tables was not extended (only two hunks: data_story, evidence field "semi"), so the declared read set is undercounted — correct the count and add the six conditional reads to database.reads[].
+
+DEFER severity=MED — clause 6 (dated note 2026-11-11) "an admin-only internal preview of the full flow on real lots ... behind a switch that is off for customers. Customers see nothing live until MB-44." — src/app/api/parcels/lookup/route.ts:145 "pageResponse = await computeCustomerPageResponse(parcelRef)" — the computed page is gated only by the web live switch and the `held` flag, not by an admin check, so flipping that switch for the preview would serve computed pages on the customer lookup (cannot see the switch's admin gate) — confirm the switch is admin-only or gate compute on an admin check.
+
+DEFER severity=LOW — no pasted clause names the semi question or its metering ("SRCH.SEMI stage 2 (task-319, MF-93; RR-0278)") — src/app/api/parcels/lookup/types.ts:44 "semi: z.literal('answered').optional()" — the change adds a lookup query parameter and holds the page and meter on it, behaviour no pasted clause names — record the ruling that authorizes it or defer; D-3 a "A lot counts once per period" still holds so blast radius is bounded.
+
+DEFER severity=LOW — A3 note (dated note 2026-11-11) names the disambiguation map's parts (map, letters, cards, the four states, "Report incorrect lot match arrives with MF-46") and no help link — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:14 "select.hint", :26 "help.lot.prompt", :27 "help.address.link" — adds content keys no pasted ruling names — record which card authorizes the help links or drop them.
+
+DEFER severity=LOW — Rule 9 (dated note 2026-11-11) "Terms, Privacy and a support contact are required (MF-46 web; linked from Account)." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:2 "footer.copyright", :3 "footer.help", :4 "footer.privacy", :5 "footer.terms" — a terms/privacy/support footer is added to the A2 search surface, which no pasted clause names (rule 9 puts them on Account and web) — confirm a layout ruling authorizes a search footer or move these to Account.
+
+DEFER severity=LOW — no pasted clause names a report-presentation schema hash change and that file is not in this diff — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json:1996 "scripts/surfaces/_schema/report-presentation.json": "e151b5ccd11cd137" — the sample records a new hash for a schema file this change does not touch, so the golden drifts from the tree — regenerate the sample or include the schema change.
+
+MET — row A2 "shows the reports left this month" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:80 "contract_ref": ["/api/parcels/lookup", "/api/parcels/entitlement"] — the search surface now binds the entitlement contract and a reports_left content key.
+
+MET — D-2 (dated note 2026-11-11) "The count resets on the billing date, `entitlements.current_period_end`, else on the monthly date of `entitlements.created_at` (D-2 a)." — src/app/api/parcels/entitlement/types.ts:17 "resetsOn: z.string().datetime().nullable()" — the reset instant stays on the wire additively beside the served label.
+
+REJECT — FE-05 — the change computes the reset label on the client from resetsOn — not a real issue: it binds a server-served resetsOnDisplay as a contract value, matching FE-05; the actual gap is the route not producing it (see the HIGH finding).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  72592ms (72.6s)
+📊 Tokens — total: 38514, input: 25074, output: 13440, reasoning: 12101

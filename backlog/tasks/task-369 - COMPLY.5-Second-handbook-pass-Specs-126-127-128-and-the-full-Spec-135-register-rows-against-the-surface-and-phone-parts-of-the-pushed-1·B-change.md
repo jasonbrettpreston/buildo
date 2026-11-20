@@ -3,14 +3,17 @@ id: TASK-369
 title: >-
   COMPLY.5 Second handbook pass: Specs 126, 127, 128 and the full Spec 135
   register rows against the surface and phone parts of the pushed 1·B change
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-COMPLY3'
 created_date: '2026-11-20T13:23:00Z'
-updated_date: '2026-11-20T13:25:00Z'
+updated_date: '2026-11-20T13:47:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-COMPLY3/REPORT.md
+  - docs/reports/lanes/2026-11-20/BL-COMPLY3/FINDINGS-2.md
 type: build
 ordinal: 69012
 ---
@@ -23,10 +26,10 @@ Operator 2026-11-20 (verbatim): "yes to McStorage and 1,2,3 yes as recommended".
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Each pack is the source text whole and verbatim, split only by its own headings
-- [ ] #2 One lens output per pack part and diff part committed
-- [ ] #3 FINDINGS-2.md lists every finding untriaged with ids continuing from F-491 and a coverage table
-- [ ] #4 No file under src, mobile or scripts changed
+- [x] #1 Each pack is the source text whole and verbatim, split only by its own headings
+- [x] #2 One lens output per pack part and diff part committed
+- [x] #3 FINDINGS-2.md lists every finding untriaged with ids continuing from F-491 and a coverage table
+- [x] #4 No file under src, mobile or scripts changed
 <!-- AC:END -->
 
 ## Definition of Done
@@ -43,8 +46,20 @@ Operator 2026-11-20 (verbatim): "yes to McStorage and 1,2,3 yes as recommended".
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Copy BL-COMPLY pack builder idea; build packs fe-126-pN, fe-127-pN, fe-128-pN, fe-135-pN by script from source lines, split only at the source's own headings, header with source, sha at head, rule-bearing line count; verify every pack line verbatim (AC1). 2. Cut diff parts (surface, mobile, route; list exclusions); run the compliance lens per pack part and diff part in parallel with the $ and placeholder escapes; commit outputs (AC2). 3. FINDINGS-2.md untriaged, ids from F-492, coverage table, likely duplicates by id (AC3). 4. README Handbook clause packs section; one docs commit with Task: task-369; no file under src, mobile or scripts changed (AC4); doctor clean; REPORT.md; gate.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-COMPLY3, worktree /Users/brettpreston_macmini/Buildo-wt-comply3, branch wf1/inc1b-comply3), RR-0240
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Four sources packed whole and verbatim (21 parts, verify-packs.mjs: 1238+364+310+88 lines, 0 mismatches); 105 lens runs (21 pack parts x 5 production diff parts), 585 findings untriaged F-492..F-1076 in docs/reports/lanes/2026-11-20/BL-COMPLY3/FINDINGS-2.md for task-368; README Handbook clause packs updated; no file under src, mobile or scripts changed; commit sha and hook tail in the lane commit.out and the closing report.
+<!-- SECTION:FINAL_SUMMARY:END -->

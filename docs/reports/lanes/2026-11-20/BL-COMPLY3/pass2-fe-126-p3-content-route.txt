@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-content-route.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — QUERY "response.projection (explicit pick-by-name whitelist)" — src/app/api/parcels/entitlement/types.ts:18 "resetsOnDisplay: z.string().nullable()" — the strict projection gains a seventh, non-optional key, yet the only change to the producing file in this diff is a comment ("Read by the app search page's reports-left line", src/app/api/parcels/entitlement/route.ts:6), so no pasted line computes or sets the key and the strict parse of the six-field body is unsatisfiable — ship the route hunk that writes resetsOnDisplay as the Toronto date of resetsOn, or make the key nullable-and-optional until that hunk lands.
+
+BUG severity=MED — QUERY "database.reads[]" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:6 "It reads 9 tables" — the same sentence then names the compute-path reads `bylaw_resolution_results`, `bylaw_resolution_option_results`, `bylaw_resolution_units`, `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, `parcels` and `logic_variables`, so the declared read set is understated and those tables live only in prose — correct the count and add every compute-path table to database.reads[].
+
+DEFER severity=MED — QUERY "response.projection (explicit pick-by-name whitelist)" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:6 "its response is an explicit `.strict()` whitelist of six fields" — the same diff makes that whitelist seven fields (resetsOnDisplay added at line 84), so under_126 now contradicts the projection it describes — change the stated count to seven.
+
+DEFER severity=MED — deviations "`{from, why, adjudicated_by, date}` — unchanged shape" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:472 "The reset date of the reports-left line (SRCH.A6) is not a derived name ... (RR-0310, task-351)" — a new binding-source claim is appended to a deviation whose adjudicated_by is still the 2026-11-09 photo ruling, and RR-0310 is not in the pasted context, so the added sentence carries no adjudication I can check — cite RR-0310 verbatim in adjudicated_by, or drop the added sentence.
+
+DEFER severity=LOW — sharing/consumers edge "Its `consumers[]` becomes the edge list of the fan-out graph" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:366 "\"mobile/src/hooks/useParcelLookup.ts:96\"" — the "sole" sharing answer and consumers_verified rest on a file that is not in this diff; the call site cannot be seen — verify it in the change set or record it as unverified.
+
+DEFER severity=LOW — no pasted clause names content strings (walk step 4) — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:2 "\"footer.copyright\": \"© MaxBLD\"" — footer.*, help.*, select.hint and the placeholder rewrite are additions no pasted clause or pasted ruling names — name the card or ruling that asked for them, or drop them from this change.
+
+DEFER severity=LOW — "GENERATED — do not hand-edit between the markers." — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json:1996 "\"scripts/surfaces/_schema/report-presentation.json\": \"e151b5ccd11cd137\"" — the attestation hash moves while report-presentation.json is absent from this diff, so the new hash cannot be checked from the material — regenerate the sample from the changed schema and include that file here.
+
+MET — QUERY "outputs.writes: \"none\"" — contract_parcels_lookup.descriptor.json:6 — the new compute path is declared "it writes nothing (the record write is ST.P1)".
+
+MET — QUERY "guards.rate_bucket" — src/app/api/parcels/lookup/route.ts:92 "const rl = q" — the semi flag is reachable only on the existing parcelId bucket, no new unbucketed path.
+
+MET — SEARCH "log_hygiene (Spec 100 §2 item 8, never log `q`)" — src/app/api/parcels/lookup/route.ts:208 "semi_answered: semi === 'answered'" — the added log fields carry no query text.
+
+MET — inputs "contract_ref[] (ids into the CONTRACT registry, never an inline schema)" — mobile_parcel_search.descriptor.json:80 "\"/api/parcels/entitlement\"" — the surface names the contract by id.
+
+MET — "A surface terminal is a render STATE, each pinned by a named golden." — mobile_parcel_search.descriptor.json:359 "{"name": "hit", "golden": "reports_left"}" — the new terminal carries a named golden.
+
+MET — sharing "which surfaces render this contract" — contract_parcels_entitlement.descriptor.json:324 "\"answer\": \"sole\"" — the answer moves off a bare "none" to a written-down answer with a why and evidence.
+
+MET — QUERY request closure via "response.projection" companion schema — src/app/api/parcels/lookup/types.ts:47 "semi: z.literal('answered').optional()" — the new param is a closed literal and the superRefine at line 55 rejects it without parcelId, so the count-lifting flag cannot ride a free-text query.
+
+REJECT — SEARCH "`outputs.writes` unless a claim action exists" — accused of adding a write by calling computeCustomerPageResponse — rejected: the compute is in memory, the descriptor still declares outputs.writes none, and the record write stays with ST.P1.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 7
+
+---
+⏱  69933ms (69.9s)
+📊 Tokens — total: 38504, input: 25510, output: 12994, reasoning: 11608

@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — operator note 2026-11-12 "Ensure the least amount of code and use schema's" — mobile/src/lib/parcelSearchCore.ts "export type EntitlementLine = { reportsLeft: number | null; reportsLimit: number | null; resetsOnDisplay: string | null };" — the three served fields are written twice by hand next to a Zod schema that already declares them (ParcelToolEntitlementSchema), so the line has three written declarations that can drift — derive EntitlementLine and ShownEntitlement from ParcelToolEntitlementSchema (Pick, plus a Required pick) and delete the hand-written null checks the schema already types.
+
+DEFER severity=MED — R-18 "A surface's declared auth must match its contracts' auth class**, as a `checks[]` entry at `severity: FAIL`" and dated note "P-4 every referenced contract has the same class" — mobile/src/hooks/useParcelLookup.ts "const raw = await fetchWithAuth<{ data: unknown }>('/api/parcels/entitlement');" — the change makes a surface consume a new contract and the diff carries no contract declaration or checks[] entry for it, so P-4 cannot be shown to hold (if the consuming surface is scope D this must be said, not assumed) — add the entitlement contract declaration and its auth-class check, or record the scope-D reason in the diff.
+
+DEFER severity=LOW — operator note 2026-11-12 "standardized, observable, scalable, accurate and understandable" — mobile/src/lib/maxbldHelp.ts "console.warn(`[maxbldHelp] could not open Help & Support (topic ${topic})`);" — a failed help open is invisible to the app's error reporting while every other failure path in the same change (fetchParcelEntitlement) goes to Sentry, so this path is not observable as the accepted ruling asks — send the caught error to Sentry with the topic and no address.
+
+DEFER severity=LOW — unruled, no pasted clause names a Continue timeout — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS = 60_000;" — the constant's own comment calls the timeframe an "operator item in the lane report" and no pasted ruling fixes 60 s or a bounded wait, so the number and its error state are an unruled addition — paste the ruling that fixes the wait, or drop the constant until it is ruled.
+
+DEFER severity=LOW — unruled, no pasted clause names an in-app browser sheet — mobile/src/lib/maxbldHelp.ts "await WebBrowser.openBrowserAsync(helpUrl(topic, q));" — the change replaces a leave-the-app move with a sheet and its only citations (task-362, SRCH.LOTMAP-2, search.html:235) are not in the pasted context, so this clause cannot be marked compliant — paste the ruling that requires the sheet, or keep Linking.openURL.
+
+MET — R-30 "period is derived at query time, never stored" — mobile/src/lib/persistFilter.ts "const NOT_PERSISTED = ['user-profile', 'parcel-entitlement'];" — the count and reset label are excluded from persistence, so an old period's number cannot survive into a later session.
+
+MET — R-22 "mobile is a **fetched projection** plus build-time generation" — mobile/src/hooks/useParcelLookup.ts "queryFn: fetchParcelEntitlement," — the entitlement is a client fetch behind the Zod boundary, no SSR/RSC mechanism assumed.
+
+MET — R-04 "`usage_events.subject_kind` is required and closed so a ledger row can never blend them" — mobile/src/hooks/useParcelLookup.ts "parcelId=${encodeURIComponent(params.parcelId)}${params.semi ? `&semi=${params.semi}` : ''}" — one sent id, one answered flag, no second parcel id introduced at the call site.
+
+MET — R-03 "No linkage to LeadDetail, the flight board, or the lead feed" — mobile/src/lib/schemas.ts "export const ParcelToolEntitlementSchema = z.object({" — the new contract carries plan counts only, no lead or lead_parcels reference.
+
+REJECT — R-30 — accused of baking a billing calendar into the client — the change stores no period and derives no date; it prints server-served scalars and refuses to persist the count.
+
+REJECT — dated note 2026-11-14 "A new part kind never lets the client compute" — accused of computing the reset date on device — the diff only tests field presence in reportsLeftShown and states "no date is derived on the device"; the display string is served.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  82857ms (82.9s)
+📊 Tokens — total: 37567, input: 22031, output: 15536, reasoning: 14475

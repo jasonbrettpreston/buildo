@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-content-route.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 "the surface descriptor as contract" / contract_parcels_entitlement under_126 "its response is an explicit `.strict()` whitelist of six fields" — src/app/api/parcels/entitlement/types.ts "resetsOnDisplay: z.string().nullable(), // the same instant as the Toronto date" — the seventh key is non-optional and `.strict()`, yet src/app/api/parcels/entitlement/route.ts is changed by a comment only ("the left count, the allowance and the served reset label"), so nothing in this diff produces it and the endpoint's parse/type now fails; the "served reset label" exists only in a comment — add the code that computes resetsOnDisplay to route.ts (or make the key optional) and update the descriptor's field count.
+
+BUG severity=HIGH — contract_parcels_lookup under_126 "It declares its `database.reads[]` with named columns" — src/app/api/parcels/lookup/route.ts "pageResponse = await computeCustomerPageResponse(parcelRef);" plus the new data_story "besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`" — eight read tables and a second page source enter the route while no hunk of this diff adds them to the descriptor's declared reads, and the authorising ruling (LOAD.1, task-266, M-246) is not pasted — declare the tables in reads[] and paste the LOAD.1 ruling.
+
+BUG severity=HIGH — Spec 126 §11a.7 dated note 2026-11-12 "The page view comes from the lookup's nullable `page` (B-3 a ...), built on the server by MF-57's core, null for every lot until MB-44, so customers see the approved miss text" — src/app/api/parcels/lookup/route.ts "const held = lotForm?.unsure === true && semi !== 'answered';" and "semi: z.literal('answered').optional()," — the pasted text names one cause of a null page (no producer); the diff adds a second cause and makes a client-supplied `semi=answered` lift it, a metering change authorised only by SRCH.METER-2 / task-360 / RR-0278 / task-319 / MF-93, none pasted — paste those rulings or drop the hold.
+
+DEFER severity=MED — contract_parcels_entitlement under_126 "its response is an explicit `.strict()` whitelist of six fields" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json "resetsOnDisplay" added to the response field list — the descriptor's own statement of its whitelist is now false at the same commit — restate it as seven fields and name resetsOnDisplay as the server-formatted display value.
+
+DEFER severity=MED — Spec 126 §11a.7 dated note 2026-11-09 "the content text `status_text.not_modelled` is ... (generated into `report-presentation.json` by `seed-report-v2.mjs`, never hand-edited)" — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json "scripts/surfaces/_schema/report-presentation.json": "e151b5ccd11cd137" — the pinned hash of a generator-only file moves while neither report-presentation.json nor seed-report-v2.mjs is in this change set, so "generated, never hand-edited" cannot be shown here — carry the seed run or the regenerated file in the same change.
+
+DEFER severity=LOW — Spec 126 "the MaxBLD surface standard (the surface descriptor as contract)"; no pasted clause or ruling names a search-page footer or help links — mobile_parcel_search.content.json "footer.copyright": "© MaxBLD", "footer.privacy": "Privacy Policy" and mobile_parcel_disambiguation_map.content.json "help.address.link": "Get help with an address", plus the placeholder rewrite "Enter a Toronto address" — copy and navigation the pasted material does not name — cite the ruling that names them or hold the keys back.
+
+MET — Spec 126 §11a.7 dated note 2026-11-11 (MF-62 copy) "the app search page `search.legal` read the short disclaimer 'This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.'" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json — "search.legal" is untouched, so the superseding short disclaimer still holds.
+
+MET — Spec 126 §11a.7 dated note 2026-11-12 "built on the server by MF-57's core" — src/app/api/parcels/lookup/route.ts "const page = pageResponse === null ? null : mobilePageView(pageResponse);" — the page is still built server-side through the same core, no client maths added.
+
+REJECT — Spec 126 §11a.8 "Load time and 'a new field ships in hours' are PROSE-ONLY until there is an in-product measure (no mechanical lock; vitest on fixtures measures payload, not device load)" — the change is accused of setting a performance budget in code — it only logs an in-product timing (compute_ms) and rules no budget number, which that pasted line permits.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+
+---
+⏱  111131ms (111.1s)
+📊 Tokens — total: 45240, input: 25429, output: 19811, reasoning: 18537

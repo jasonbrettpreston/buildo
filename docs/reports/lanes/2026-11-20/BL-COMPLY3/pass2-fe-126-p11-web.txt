@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-web.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — 126 §12 P7 row "| **P7** | **(web projection)** | the RSC renderer over the same descriptors; the public-route decision; the MaxBLD consumer surface | one contract, three surfaces, visible to a customer |" — src/components/surfaces/web/SearchBinding.tsx:98 "const ENTITLEMENT = 'contract_parcels_entitlement';" — the web projection now resolves two contracts in one tree and no pasted descriptor declares `contract_parcels_entitlement`, so "one contract" is not satisfied — serve reportsLeft/reportsLimit/resetsOnDisplay inside `contract_parcels_lookup`, or land the entitlement descriptor in the same change.
+
+BUG severity=HIGH — 126 §13 UI "every archetype renderer against its golden rendered-tree snapshot, per declared state" — src/components/surfaces/web/footerNode.ts:57 "if (p.role !== 'legal' && p.role !== 'line' && p.role !== 'copyright') return fail(`unknown role \"${p.role}\"`);" — the STATIC footer tree and the SEARCH web tree both change shape (new line/copyright Texts, per-run Groups, `pending` prop, legal moved out of the column), and the diff carries no golden snapshot or UI test update — land the snapshot updates for the STATIC footer section and the web search tree in this diff.
+
+BUG severity=HIGH — 126 §12.1 "B1 contains no SEARCH member, so SEARCH is not eligible at B2 and `parcel_search` converts in full form. Eligibility is declared data per Spec 127 §4.4, and these two rows are the reason it is declared rather than assumed." — src/components/surfaces/web/SearchBinding.tsx:134 "export const SEARCH_FOOTER: FooterSection = {" — the diff changes the `parcel_search` SEARCH surface (footer, reports-left line, second contract) with no declared eligibility and no full-form conversion — either fold this into the full-form SEARCH conversion or add the eligibility row in the Spec 127 §4.4 data first.
+
+DEFER severity=MED — 126 §12 P6 row "| **P6** | **B5 — GATE / SLOT / STATIC / SHELL** | the paywall family, `SponsorSlot`'s remaining placements, the landing page, AuthGate |" — src/lib/surfaces/maxbld-landing.ts:147 "const report: StaticReport = { sample: view, footer: pickFooterText(SEARCH_CONTENT), ...(demo ? { demo } : {}), ...(picture ? { picture } : {}) };" — the diff edits two P6/B5 members (the landing page, the STATIC footer) and the only pasted pull-forward note is limited to "the pages of §11b.3 only", which is not pasted, so I cannot see that these two pages qualify — cite the §11b.3 page list or move the change to its phase row.
+
+DEFER severity=MED — 126 §13 UI "the `schema_drift` state rendering rather than blanking" — src/components/surfaces/web/StaticBinding.tsx:392 "const footerOf2 = (report: StaticReport): FooterText => report.footer ?? fail('no footer text (the server leaves this part out)');" — a static page whose report dict lacks footer text now throws during render instead of rendering a degraded state, and only the landing supplies that field in this diff — render the page with its own footer content refs and raise the FAIL check, rather than throw the whole page away.
+
+MET — 126 §14 Out-of-Scope "`migrations/**` — no migration is authored by this spec" — diff file list — no migration file is added or edited.
+MET — 126 §14 Out-of-Scope "`scripts/steps/_schema/step.schema.json` — the pipeline's contract; this spec MIRRORS it and must never edit it" — diff file list — no file under `scripts/` is touched.
+MET — 126 §14 Out-of-Scope "`mobile/app/(auth)/*.tsx` (1,302 lines)" — diff file list — untouched.
+MET — 126 §12 preamble "guardrails are Phase 1, not Phase 4." — src/components/surfaces/web/footerNode.ts:51 "if (typeof p.href !== 'string' || p.href === '') fail('a link needs an href');" — the builder throws on a missing href, an unknown role and a missing content key instead of dropping the part, so the guardrail ships with the change.
+
+REJECT — 126 §12.1 "**Roles, class D and `seeds/roles.json`**" — accused of shipping without the role model — the diff declares no SLOT and authors no migration, so that pilot precondition is not triggered here.
+REJECT — 126 §13 Infra "**a RED canary per lock**" — accused of adding no lock canary — the diff adds no descriptor, no RLS policy and no declared schema, so no lock is owed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  61783ms (61.8s)
+📊 Tokens — total: 29842, input: 17760, output: 12082, reasoning: 10941

@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-ui.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 126 §9 "No business logic executes client-side beyond the five named exceptions (§5.3)." — mobile/app/(app)/parcel-tool/semi-question.tsx "result = await boundedWait(fetchParcelLookup({ parcelId: id, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS)" — the trigger that lets the server count a lot is now a client decision made on Continue, and §5.3 is not pasted so I cannot confirm this is one of the five exceptions — cite the §5.3 exception in the comment or derive the count from report production itself, server-side.
+DEFER severity=LOW — §9 edge case "Entitlement missing → the declared `on_missing` (402 | 403 | paywall), covering every value of the governing closed set." — mobile/app/(app)/parcel-tool/index.tsx "const entitlement = entitlementFailed ? null : entitlementData;" — a failed entitlement read and an absent plan both collapse to "no line", so no declared on_missing state is reached on the search screen — route the read's failure to the declared state, or state in the comment why this read is not a guards.entitlement read.
+DEFER severity=LOW — §9 "Entitlement missing → the declared `on_missing` (402 | 403 | paywall)" — mobile/src/components/surfaces/SemiQuestionBinding.tsx "? [notice('entitlement', 'Info', L.noticeIconNeutral, ..." — the gate state is redrawn from Lock to a neutral Info notice, changing the presentation of a gate refusal and no pasted ruling names the change — keep the declared on_missing presentation or cite the approving ruling.
+DEFER severity=LOW — §7.1 dated note 2026-11-11 "the raw search text is never stored" — mobile/src/components/surfaces/LotMapBinding.tsx "onPress: { action: 'open_help', topic, q: derived('query') }" — the new lot-map help links hand the raw typed address to an external Help & Support destination, a path the pasted note does not cover — send the topic only or a non-identifying handle.
+REJECT — §7 "the counter stays derived — COUNT(*) over the window, never a column" — accused of reintroducing a stored counter via reportsLeft — not a real issue, the client prints served values and computes no counter, any storage is server-side and outside this diff.
+REJECT — §9 "Metered action replayed → the `usage_events` PK absorbs it; zero rows written, no error." — accused of double-writing on a second Continue or a re-mount — not a real issue, dedup is server-side and the submittingRef latch is an extra client guard.
+MET — §7.1 "Rows are server-written through the owner connection (D1), so there is no insert policy for `authenticated` either" — semi-question.tsx and index.tsx — the diff issues a lookup and an entitlement read, it never writes a ledger row.
+MET — §6.3 row 3 "unchanged — Class A, `entitlements_select_own`" — index.tsx "if (accessToken) void refetchEntitlement({ cancelRefetch: false });" — the entitlement read runs only for the signed-in user and shows only that user's own numbers.
+
+VERDICT: PASS
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  107275ms (107.3s)
+📊 Tokens — total: 46676, input: 27796, output: 18880, reasoning: 18126

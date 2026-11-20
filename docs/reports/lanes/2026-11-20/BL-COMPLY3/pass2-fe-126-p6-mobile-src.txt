@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 126 §11a.1 "Every displayed field binds to a source" — mobile/src/lib/parcelSearchMatch.ts "+  /** SRCH.A6 (task-320): the served count fields the reports-left line binds; absent or null (loading, read failed, no plan) draws no line. */" — the new displayed lines (reports-left line, help prompt, pick hint) rest on cards SRCH.A6 / SRCH.C12 / SRCH.LOTMAP-2 that are not pasted, so no pasted clause declares their source — paste the SRCH.A6 binding row into the next review or confirm these search / lot-map surfaces sit outside 126 §11a before rollout.
+DEFER severity=LOW — Spec 126 §11 item 1 "one query key with one param, zero writes" — mobile/src/hooks/useParcelLookup.ts "so the server counts the lot once its report is produced" — the report lookup now triggers a server-side count on the surface §11 describes as zero-writes, while §11 item 4 "metering, `offers` and `usage_events` land where they are needed" anticipates it — record the delta against item 1 so the card and the spec do not read as disagreeing.
+REJECT — Spec 126 §11a.3 dated note "An empty field is never shown as 0 or $0" — the change is accused of printing 0 for a count it does not have — mobile/src/lib/parcelSearchCore.ts "return !!e && e.reportsLeft !== null && e.reportsLeft !== undefined && e.reportsLimit !== null ... && e.resetsOnDisplay.length > 0" draws only on a fully served triple; a served 0 is a real count and a no-plan user is all-null (no line drawn).
+REJECT — Spec 126 §11a.1 "Every displayed field binds to a source" — the semi answer is accused of reaching the report unbound — mobile/src/lib/lotForm.ts "it travels as a route param (OVERRIDE_PARAM) to the report, which does not apply it yet" — the answer is never displayed, so 11a.1's binding rule does not reach it; the diff corrects a comment and adds no field.
+MET — Spec 126 §11a.6 "The UI computes none of these. A sum in any file is a Rule 16 failure (Spec 128)." — mobile/src/lib/parcelSearchCore.ts "the server computes `reportsLeft`, `reportsLimit` and the reset date ... the page only prints them, no date is derived on the device" and reportsLeftShown does presence tests only.
+MET — Spec 126 §11a.1 "A field with any other source fails the check." — mobile/src/lib/schemas.ts "+export const ParcelToolEntitlementSchema = z.object({" — no REPORT field, status, variant, disclosure or confidence value is added, so the closed binding set of §11a.1 and the closed lists of §11a.3/§11a.5 are untouched.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+
+---
+⏱  45337ms (45.3s)
+📊 Tokens — total: 26861, input: 18373, output: 8488, reasoning: 7793

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-content-route.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — contract descriptor docs.under_126 "its response is an explicit `.strict()` whitelist of six fields" — src/app/api/parcels/entitlement/types.ts "resetsOnDisplay: z.string().nullable(), // the same instant as the Toronto date" — the diff adds a seventh response key and leaves the declared count at six, so the descriptor's own shape clause is now false — raise the count to seven (or delete the number) in the same commit, and add the new key to the response projection list.
+
+BUG severity=HIGH — contract descriptor docs.under_126 "It declares its `database.reads[]` with named columns" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json "It reads 9 tables" but the same paragraph's new dated note names "`parcel_abutments`, `parcel_maxbld_population`" plus the Layer 2 results and two lookups as read for a computed page — the declared read set undercounts by at least six tables that the same sentence says are read while the switch is on, and none of their columns are declared — extend `database.reads[]` (tables and named columns) to the switch-on set, or state the switch-off read set and the switch-on set as two explicit lists.
+
+DEFER severity=MED — Spec 135 rule 2 "ONE lock per row; the Lock is in the LAST cell with the status" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13 ... approved except for 9 - the report should still show with the google street view photo if its not available" — the row's `why` now also asserts a second, different exception ("the server serves it already written in Toronto time as resetsOnDisplay (RR-0310, task-351)") that this adjudicating quote does not contain and the pasted context does not carry — cite RR-0310's own text inside the row or give the reset-date exception its own adjudicated row.
+
+DEFER severity=LOW — no pasted clause or ruling names these user-facing lines — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json "footer.help": "Help & Support" and scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json "select.hint": "Pick a lot on the map or in the list." — new rendered behaviour and copy with no visible authority in the pasted material — attach the ruling id that names them or hold them back until one exists.
+
+DEFER severity=LOW — no pasted clause covers a sample hash refresh — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json "scripts/surfaces/_schema/report-presentation.json": "e151b5ccd11cd137" — the recorded digest of a schema file that does not appear in this diff's file list changed — confirm the schema edit lives in an earlier commit and regenerate the sample from it rather than carrying a digest with no matching source delta.
+
+DEFER severity=LOW — sharing claim cannot be checked against the pasted material — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json "answer": "sole" with "surfaces": ["mobile/src/hooks/useParcelLookup.ts:96"] — the sole named consumer file is not in this diff and cannot see, so the from-none-to-sole change rests on a line no reader of this diff can verify — confirm the call at that exact line before the row reads "sole" in HEAD.
+
+REJECT — Spec 135 land order "This file must be in HEAD in an EARLIER commit than the gate registers-array change" — accused of disturbing the register landing order — the diff touches no Spec 135 file and no registers array, so the clause is untouched.
+
+MET — Spec 135 rule 3 "Status words: `RULED <date>` · `OWED` · `PROPOSED` · `RETIRED`" — diff file list — no status word and no OWED marker is written anywhere in this change.
+
+MET — Spec 135 rule 5 "a RULED row's lock paths must exist" — diff file list — no FE row, lock path or register cell is added or moved, so nothing new needs to resolve.
+
+MET — declared query contract on both sides — src/app/api/parcels/lookup/types.ts "semi: z.literal('answered').optional()" and the lookup descriptor's query-key list "semi" — the new request parameter is declared in the schema and in the contract descriptor, and the superRefine keeps it tied to a parcelId.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 2
+
+---
+⏱  48646ms (48.6s)
+📊 Tokens — total: 27611, input: 18817, output: 8794, reasoning: 7717

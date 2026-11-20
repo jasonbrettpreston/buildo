@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-web.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — Rule 9, note 3 "the Help & Support inbox is ONE admin-editable setting, set by the operator to the address given "for now"; no page, content file or spec types the address." — src/components/surfaces/web/SearchBinding.tsx "{ role: 'link', content: 'footer.help', href: '/help' }" — the footer reaches the "support contact" only through a /help page link, while the ruling routes support through an admin-editable inbox; cannot see whether /help surfaces that inbox — confirm /help renders the setting or point the footer at it.
+
+DEFER severity=MED — W9 row "Terms, Privacy | not set | plain pages; the app stores need a privacy link and Stripe needs terms | MF-46" — src/components/surfaces/web/SearchBinding.tsx "{ role: 'link', content: 'footer.privacy', href: '/privacy' }" — the footer hardcodes /terms and /privacy to routes the pasted page set marks "not set", so these are dead links until W9 lands — confirm the route with the operator or withhold the links until W9.
+
+DEFER severity=LOW — Rule 9 "Terms, Privacy and a support contact are required (MF-46 web; linked from Account)." — src/components/surfaces/web/SearchBinding.tsx "{ role: 'copyright', content: 'footer.copyright' }" — the copyright item (and the 5-item order) is not named by any pasted clause; its authorization (search.txt:323, MF-91) is not in this context — record the ruling in-context before merge or keep the footer to the items a pasted clause names.
+
+DEFER severity=MED — Rule 9 "Terms, Privacy and a support contact are required (MF-46 web)" — src/lib/surfaces/maxbld-landing.ts "footer: pickFooterText(SEARCH_CONTENT)" and footerNode.ts "if (typeof v !== 'string' || v === '') throw new Error(`footer text: missing key \"${k}\"`)" — no content-file change in this diff supplies the four new keys, so readLanding (W1) throws if SEARCH_CONTENT lacks footer.terms/privacy/help/copyright — add the four keys to the content file or gate the read.
+
+MET — Rule 9 — src/components/surfaces/web/SearchBinding.tsx — SEARCH_FOOTER lists "footer.terms" and "footer.privacy", so Terms and Privacy are present on the page.
+
+MET — A2 "address entry, Toronto only; shows the reports left this month" and W4 "A2 rendered for the browser from the same descriptor" — src/components/surfaces/web/SearchBinding.tsx "const reportsLeft = (s: WebSituation): WebNode[]" — the web search renders the reports-left line from the same situation fields.
+
+MET — note "The server computes every count, the reports left and the limit-reached flag; pages bind to them (FE-05)." — src/lib/entitlements/index.ts "resetsOnDisplay: resetLabel(u.resetsOn)" with SearchBinding "vars: { left: entitlement('reportsLeft'), allowance: entitlement('reportsLimit'), reset: entitlement('resetsOnDisplay') }" — the reset label is computed server-side and the page binds contract refs, no date on the device.
+
+MET — Rule 11 "Layouts are sent per page, just before its row builds, in this order: (1) Search and Choose your parcel (MF-35)" — src/lib/surfaces/maxbld-landing.ts and SearchBinding — the change touches only W4 search rendering, not the page set or route decisions.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  79252ms (79.3s)
+📊 Tokens — total: 36880, input: 22580, output: 14300, reasoning: 13472

@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-schema.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — FE-31 dated note 2026-11-09 item (5) "The closed-mapping and 44 px cases land as edits of this lock with new red evidence in MF-37 (web) and MF-35 (mobile) (batch C-11)." — scripts/surfaces/_schema/bindings.json "Button": ["min-h-[44px]", "min-h-[48px]"], "Input": ["min-h-[44px]"] — the C-9m 44 px case is edited in the data but the diff carries no edit to the FE-31 lock and no red evidence for it — land the C-9m case edit and its red-evidence file in the same commit.
+
+BUG severity=HIGH — FE-31 dated note 2026-11-11 "every MaxBLD build reuses the existing components, bindings and patterns; a new library, component kind or binding beyond the Spec 126 §11b.5 first-use costs is an operator ruling first" — scripts/surfaces/_schema/bindings.json $comment "orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling)" — a change to the binding standard's touch-target list rests on a decision the diff itself states is not an operator ruling — hold the 48 px entry for an operator ruling or revert it.
+
+BUG severity=HIGH — FE-31 "one props golden per reachable state per declared target, each `covers` a state or check, every state covered" — scripts/surfaces/_schema/census/mobile-product.json { "name": "hit", "golden": "reports_left" } — a new reachable state is declared for the SEARCH surface but the diff's file list carries no golden, no covers entry and no render smoke for it, so the golden is a name only — land the reports_left golden and its covers with the state, or drop the state until the golden exists.
+
+DEFER severity=MED — FE-32 / contracts.json "its response is an explicit `.strict()` whitelist of six fields" — scripts/surfaces/_schema/census/contracts.json "resetsOn", "resetsOnDisplay" — the response projection now carries a field the descriptor's own under_126 statement does not name, so the .strict() shape and its description disagree — amend under_126 to the new field count in the same commit.
+
+DEFER severity=MED — FE-31 "descriptor valid with no `UNRESEARCHED` and no `golden: \"none\"`" — scripts/surfaces/_schema/census/contracts.json "a11y": { "touch_target_min_px": "UNRESEARCHED" — the entitlement descriptor the search line newly reads still carries an UNRESEARCHED a11y value while a new hit state and golden are declared for that surface — record the touch target for the reports-left line, or mark it n/a with a reason.
+
+DEFER severity=MED — contracts.json under_126 "It declares its `database.reads[]` with named columns" — scripts/surfaces/_schema/census/contracts.json "It reads 9 tables" then "...the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`..." — the same field names six further tables beyond the stated 9, so the declared read count understates what the LOAD.1 note says the lookup reads — restate the sentence as the 9 stored tables plus the Layer 3 memory reads.
+
+DEFER severity=LOW — FE-35 "'By-law limits not yet evaluated' on any other gate or no result, never 'checked'" — scripts/surfaces/_schema/report-presentation.json "not_evaluated:not_in_engine_population": "Not yet evaluated" — a no-result population now has a second, shorter not-evaluated literal that differs from the ruled per-lot wording — confirm the new key is never the checked block's per-lot line, or align the literal.
+
+MET — FE-32 "the member must exist in that descriptor's response projection; any other value fails" — scripts/surfaces/_schema/census/contracts.json "resetsOnDisplay" — the reset-date value binds to a name now declared in the entitlement descriptor.
+
+MET — FE-31 "every value through a binding kind" — scripts/surfaces/_schema/census/mobile-product.json "the server serves it already written in Toronto time as resetsOnDisplay (RR-0310, task-351) and it binds as a contract value" — the new display value carries a binding kind and is excluded from the derived closed list.
+
+MET — FE-31 "the 44 px is a floor (Spec 126 line 351, Spec 128 line 265)" — scripts/surfaces/_schema/bindings.json "min-h-[48px]" — 48 px is at or above the floor and nothing under 44 is listed.
+
+MET — FE-33 "every displayed string, library default strings and form error messages included, comes from content" — scripts/surfaces/_schema/report-presentation.json "not_evaluated:not_in_engine_population": "Not yet evaluated" — the new string lands in the content home, not in code.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 6
+
+---
+⏱  59435ms (59.4s)
+📊 Tokens — total: 39608, input: 28459, output: 11149, reasoning: 9956

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-content-route.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — R-19 "No generated migrations. Declare and assert." / "The descriptor's `database` block is a declaration asserted against the introspected types and the live catalog" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:6 "which reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`" — the prose now declares eight further tables read by the route while the same field still says "It reads 9 tables" and the descriptor's `database.tables[]`/`reads[]` gains no entry in this diff, so the declaration the assert is run against is understated — add each read table with named columns to `database.reads[]` and restate the count.
+
+DEFER severity=MED — R-07 "the projection is never built from a half-enriched corpus" (and "the ONLY seam the app reads", "Not an API-route write") — src/app/api/parcels/lookup/route.ts:151 "pageResponse = await computeCustomerPageResponse(parcelRef);" — the report page the app renders is now built inside the request from whatever Layer 2 rows exist whenever the stored page is missing or stale, so the app seam is no longer the end-of-chain projection and can be built from a partial corpus — either serve the page only when the end-of-chain stamp is present or record this as a declared deviation against R-07.
+
+DEFER severity=MED — R-28 "`schema_migrations.checksum` already pins the migration file and the golden `source_fingerprint` already pins the descriptor" — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json:1996 "scripts/surfaces/_schema/report-presentation.json": "e151b5ccd11cd137" — a pinned schema hash is re-stamped while `report-presentation.json` is absent from this diff, so the pin cannot be shown to match the artifact it claims to pin — regenerate the golden with its own writer (or include the schema change) and show the pin came from the generator, not a hand edit.
+
+DEFER severity=MED — R-18 "A surface's declared auth must match its contracts' auth class, as a `checks[]` entry at `severity: FAIL`" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:81 "/api/parcels/entitlement" — the surface's contract set grows by a contract whose declared class is authenticated, and the diff shows no change to this surface's own auth declaration nor to `scripts/surfaces/_schema/auth-class-parity-exceptions.json`, so the parity cannot be seen — re-run and record the auth-class-parity lock for the added reference.
+
+DEFER severity=MED — no pasted clause or ruling (walk step 4: nothing added that the card or ruling did not name) — src/app/api/parcels/entitlement/types.ts:18 "resetsOnDisplay: z.string().nullable(), // the same instant as the Toronto date" — three new behaviours rest on rulings that are not pasted: `resetsOnDisplay` (RR-0310, task-351), the `semi=answered` meter lift and page hold (RR-0278, task-319/MF-93), and the in-request compute (LOAD.1, task-266, M-246), so their authority is unverifiable here — paste RR-0310, RR-0278 and the M-246/LOAD.1 text, or cite the pasted clause each implements.
+
+DEFER severity=LOW — R-25 "The fan-out graph and the orphan panel derive from the CONTRACT's own `consumers[]`" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:331 "surfaces": [ "mobile/src/hooks/useParcelLookup.ts:96" ] — the same single call site is now written into three arrays (`sharing.surfaces`, `consumers`, `consumers_verified`), three places to forget to bump against R-25's one-source rule — keep `consumers[]` as the declaration and derive the others.
+
+MET — R-04 — src/app/api/parcels/lookup/route.ts:136 "parcelRef = String(row.parcel_id);" — the meter subject stays the municipal parcel_ref, never request text, and `semi` cannot substitute a subject.
+MET — R-22 — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:472 "the server serves it already written in Toronto time as resetsOnDisplay" — the mobile surface stays a fetched projection and adds no client-computed display value.
+MET — R-30 — src/app/api/parcels/entitlement/types.ts:17 "resetsOn: z.string().datetime().nullable()" — the billing period stays derived per response, no period or calendar is stored.
+MET — R-23 — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:362 "consumers": [ "mobile/src/hooks/useParcelLookup.ts" ] — the metered contract now declares its live caller instead of the zero-caller shape the row was written against.
+
+REJECT — R-29 — the change adds a second measured-cost spelling, `compute_ms` — R-29 binds a declared check's measured cost (plan ceiling and audit row), and route.ts:212 "compute_ms: computeMs" is a runtime log field beside the existing `duration_ms`, not a declared check.
+REJECT — R-30 — serving a Toronto date bakes a billing calendar into a row — the field is computed per response and stored nowhere, which is exactly R-30's "`period` is **derived at query time**, never stored".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 21   Unmet: 2
+
+---
+⏱  108347ms (108.3s)
+📊 Tokens — total: 44884, input: 24403, output: 20481, reasoning: 19110

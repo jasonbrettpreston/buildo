@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — §4.2 "never the pass that discovered it" — mobile/src/lib/semiQuestion.ts:16 "how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report)" — the pass that found the open timeframe also chose 60_000 and shipped it as a constant, so a policy number is self-adjudicated while the operator item is still open — quote the operator's ruling id and date beside SEMI_CONTINUE_WAIT_MS, or drop the constant until it is ruled.
+
+BUG severity=HIGH — §4.4 "A rule without a lock is not yet a rule" — mobile/src/lib/parcelSearchCore.ts:78 "export function reportsLeftShown(e: EntitlementLine | null | undefined): e is ShownEntitlement {" — the RR-0307, RR-0278 and LX-E1 behaviours land in this part across constants, hooks and lib with no both-directions test file in the pasted set, so no lock is visible here — add the red-then-green tests for reportsLeftShown, parcelLookupParams, the entitlement key of buildSearchSituation and boundedWait to this commit, or name the lock path if it sits in an unpasted part.
+
+BUG severity=MED — §4.9 "A new FE row (Spec 135) is not RULED unless its `Six` cell answers six questions" — mobile/src/constants/lotMap.ts:46 "semiTop: 'min-h-[56px] w-full flex-row items-center border-b border-report-line bg-report-page px-4'," — new FE surface (the semi page keys, the reports-left line, the in-app help sheet) is added and no Spec 135 row or Six cell appears in this part — add the FE row ids with their Six cells (or cite the commit that did) in the same change.
+
+BUG severity=MED — §4.3 "with an id, the statement, and what it amends" — mobile/src/hooks/useParcelLookup.ts:80 "SRCH.METER-2 (task-360, RR-0278; SE-1, SE-2)" — the rulings this diff executes (RR-0278, RR-0307, RR-0310, LX-E1) are cited only inside code comments and no §5 register row is touched in the pasted set — record each with its Amends and Lock column, or name where it was recorded.
+
+DEFER severity=LOW — §4.7a "a deciding source outside this pass" — mobile/src/hooks/useParcelLookup.ts:80 "SRCH.METER-2 (task-360, RR-0278; SE-1, SE-2)" — SE-1 and SE-2 are same-pass lane items, not a deciding source; the RR id carries the row, the lane ids do not — name the ruling text or record path beside SE-1 and SE-2.
+
+MET — 2026-11-11 note (FE-05) "filled on the server with a server-formatted string (FE-05; the FE-35 pattern)" — mobile/src/lib/parcelSearchCore.ts:69 "reset date already written in Toronto time as `resetsOnDisplay` (FE-05, RR-0310); the page only prints them, no date is derived on the device" — no date is derived on the device and the schema serves the label as a string.
+
+MET — §4.7a "a deciding source outside this pass" — mobile/src/lib/parcelSearchCore.ts:66 "operator RR-0307, MORNING-DECISIONS.md:1182" — the reports-left rule cites the operator record and its line rather than citing a same-pass spec.
+
+REJECT — §4.11 item 6 "put them in `pending_globs`/held (hold.mjs)" — accused of landing surface code past the hold — the diff's files are mobile/src/constants, hooks and lib, none under scripts/surfaces or src/lib/surfaces, so the hold rule does not reach it.
+
+REJECT — 2026-11-15 note (the link role of the report sheet) — accused of widening a closed role list without the noted method — the diff adds no report-page sheet role or part, so there is nothing to judge.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 5
+
+---
+⏱  62826ms (62.8s)
+📊 Tokens — total: 31662, input: 19271, output: 12391, reasoning: 11429

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-web.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Rule 11 "when a projection's section order changes, the declared order is re-derived and the goldens recaptured, never patched." — src/components/surfaces/web/SearchBinding.tsx searchWebTree hunk "-      legal()," / "+      ...reportsLeft(s)," and sibling "+    footer()," — the block order changed (legal line lifted out of the column, reports-left inserted, footer appended) and only the prop-tree comment was patched, with no golden recapture among this diff's five files (cannot see beyond them) — recapture the search goldens and re-derive the declared block order in this same commit, not as a later patch.
+
+BUG severity=HIGH — Rule 4 "which fields render, in which order, with which labels, is a declaration the server owns" — src/components/surfaces/web/SearchBinding.tsx "+export const SEARCH_FOOTER: FooterSection = {" with "-    { role: 'legal', content: 'search.legal' }," — the search footer's membership, order and the inserted reports-left block are declared inside the component file, not a server-owned declaration — move the footer parts and the reports-left order into the server-projected descriptor/tree, leave the binding to render refs only.
+
+DEFER severity=MED — Rule 15 "parity between render targets is a comparison, not a discipline." and "A comparison of one builder's tree does not count." — src/components/surfaces/web/footerNode.ts "+export const footerNode = (s: FooterSection, L: FooterLayout, prefix: string): FooterNode => {" shared by StaticBinding, SearchBinding and ReportPage — cross-target footer parity is asserted by sharing one builder, which the rule says does not count, and no parity golden is added in this diff — extend the parity golden to cover the three footer consumers' emitted text.
+
+DEFER severity=MED — Rule 20 "Every displayed field's `source` is in the closed set" and "adding a member needs a register row and a panel." — src/components/surfaces/web/SearchBinding.tsx "+const ENTITLEMENT = 'contract_parcels_entitlement';" — a new displayed-field source namespace is introduced for reportsLeft/reportsLimit/resetsOnDisplay with no register row or protected-file edit visible in this diff (cannot see bindings.json) — add the register row or confirm `contract_parcels_entitlement` is already a member of the closed set.
+
+DEFER severity=LOW — Rule 1 "no surface behaviour lives only in a component" — src/components/surfaces/web/SearchBinding.tsx "+  reportsLeftShown(s.entitlement)" — whether and when the reports-left line draws is decided only by the imported code helper, not a declared check or shape rule — declare the line's presence rule alongside the served fields, or justify it as pure glass.
+
+MET — Rule 12 "An unhandled state is a FAIL, not a blank screen." — src/lib/entitlements/index.ts "resetsOnDisplay: resetLabel(u.resetsOn)" with the helper "never a throw on the read" — an invalid period-end becomes a null the line treats as absent, not a blank screen.
+
+MET — Rule 6 "`\"none\"` is legal but must be written, never omitted." — src/components/surfaces/web/footerNode.ts "fail(`a ${p.role} part needs a content key`)" and "return fail(`unknown role \"${p.role}\"`)" — every part must carry its content key and every role is closed, nothing is skipped silently.
+
+REJECT — Rule 16 — the change is accused of producing a displayed number (reportsLeft, resetsOnDisplay) with client maths — the new line "resetsOnDisplay: resetLabel(u.resetsOn)" runs server-side through the named helper `formatDateDmyFixed`, and "Math.max(0, u.reportsLimit - u.reportsUsed)" is pre-existing unchanged code, so the new lines do not breach Rule 16.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 5
+
+---
+⏱  75267ms (75.3s)
+📊 Tokens — total: 33688, input: 19976, output: 13712, reasoning: 12820

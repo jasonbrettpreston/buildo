@@ -1,0 +1,322 @@
+# DIFF PART content-route: git diff 9f04d9074..3a36e8b26, files: scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json, scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json, src/app/api/parcels/entitlement/route.ts, src/app/api/parcels/entitlement/types.ts, src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lookup/types.ts
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json
+index 5f5c4e0f0..2b49a4884 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json
+@@ -11,6 +11,7 @@
+   "select.none": "Choose a lot",
+   "select.lot": "Continue with Lot {letter}",
+   "select.label": "Open the report for the chosen lot",
++  "select.hint": "Pick a lot on the map or in the list.",
+   "state.intersection": "That looks like an intersection. Type a house number to see the lots.",
+   "unlinked.heading": "No lot linked yet",
+   "unlinked.body": "We found {address}, but the City's data doesn't link it to a lot yet. Try a nearby address.",
+@@ -21,5 +22,7 @@
+   "state.ratelimit": "Too many searches. Try again in {seconds}s.",
+   "state.entitlement": "Your subscription doesn't include the parcel tool right now. This isn't a missing address — reactivate to search lots again.",
+   "retry.label": "Retry the search",
+-  "retry.text": "Try again"
++  "retry.text": "Try again",
++  "help.lot.prompt": "Not sure which lot?",
++  "help.address.link": "Get help with an address"
+ }
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json
+index 35be8e18f..1e64e8579 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json
+@@ -1,4 +1,8 @@
+ {
++  "footer.copyright": "© MaxBLD",
++  "footer.help": "Help & Support",
++  "footer.privacy": "Privacy Policy",
++  "footer.terms": "Terms of Service",
+   "list.badge": "{count} candidates",
+   "list.rail": "Ambiguous address query",
+   "list.refine": "More than 10 lots match. Add a house number to narrow it down.",
+@@ -10,12 +14,13 @@
+   "search.error": "Couldn’t reach the lot service. Check your connection and try again.",
+   "search.input.hint": "Enter at least 3 characters to search for a lot",
+   "search.input.label": "Search a Toronto address",
+-  "search.input.placeholder": "Enter lot address",
++  "search.input.placeholder": "Enter a Toronto address",
+   "search.legal": "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City.",
+   "search.miss": "No parcel found for that address.",
+   "search.outside_toronto": "Lots are only available in Toronto.",
+   "search.prompt": "Type at least 3 characters to search.",
+   "search.ratelimit": "Too many searches. Try again in {seconds}s.",
++  "search.reports_left": "{left} of {allowance} reports left until {reset}",
+   "search.retry.label": "Retry the search",
+   "search.retry.text": "Try again",
+   "search.schema_drift": "We couldn’t read the response for that address. This is our problem, not yours — it has been reported.",
+diff --git a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
+index 290191d67..0c500e381 100644
+--- a/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
++++ b/scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json
+@@ -77,7 +77,8 @@
+       "mobile/src/lib/parcelSearchMatch.ts:85 — export function isIntersectionQuery"
+     ],
+     "contract_ref": [
+-      "/api/parcels/lookup"
++      "/api/parcels/lookup",
++      "/api/parcels/entitlement"
+     ],
+     "query_key": [
+       "parcel-search",
+@@ -355,6 +356,10 @@
+     {
+       "name": "static",
+       "golden": "static"
++    },
++    {
++      "name": "hit",
++      "golden": "reports_left"
+     }
+   ],
+   "errors": {
+@@ -464,7 +469,7 @@
+     },
+     {
+       "from": "Spec 126 §11a.1 closed binding set (content, contract, ...): no source for client-derived display values",
+-      "why": "P35-D14 a: the field text, the candidate count, the recent searches, the card label (address, else parcel id) and the address segments (the word not in the query in amber) are derived on the client by mobile/src/lib/parcelSearchMatch.ts and mobile/src/store/recentSearchesStore.ts, and bind as {\"derived\": name}. The closed list of names: input, candidate_count, recent.<i>, label.<i>, segments.<i>.<j>.text (DERIVED_NAMES in SearchBinding.tsx; the mobile golden test refuses any other).",
++      "why": "P35-D14 a: the field text, the candidate count, the recent searches, the card label (address, else parcel id) and the address segments (the word not in the query in amber) are derived on the client by mobile/src/lib/parcelSearchMatch.ts and mobile/src/store/recentSearchesStore.ts, and bind as {\"derived\": name}. The closed list of names: input, candidate_count, recent.<i>, label.<i>, segments.<i>.<j>.text (DERIVED_NAMES in SearchBinding.tsx; the mobile golden test refuses any other). The reset date of the reports-left line (SRCH.A6) is not a derived name: the server serves it already written in Toronto time as resetsOnDisplay (RR-0310, task-351) and it binds as a contract value.",
+       "adjudicated_by": "operator 2026-11-09, Wave 1 decision batch item 13 (\"P35-D14 (a) deviation\"): \"approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show\"",
+       "date": "2026-11-10"
+     },
+diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
+index 746a0fb97..7633fe700 100644
+--- a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
+@@ -3,7 +3,7 @@
+   "status": "exists",
+   "docs": {
+     "purpose": "Tells a signed-in MaxBLD user which plan they hold and how many of this month's reports they have used and have left, and when the count resets, so the search page can say \"N of 20 reports left\" and the Account page can show the month's use.",
+-    "data_story": "It reads 3 tables — `entitlements` (the caller's `parcel_tool` row), `logic_variables` (the two monthly allowances) and `usage_events` (the distinct lots opened this billing month) — and writes nothing. Every value, including the reports left and the limit-reached flag, is computed on the server. No `parcel_tool` row is a 200 with every field null. No caller yet: MF-35 (the search line), MF-52 (Account) and MF-49 (the app gate) read it when they build.",
++    "data_story": "It reads 3 tables — `entitlements` (the caller's `parcel_tool` row), `logic_variables` (the two monthly allowances) and `usage_events` (the distinct lots opened this billing month) — and writes nothing. Every value, including the reports left and the limit-reached flag, is computed on the server. No `parcel_tool` row is a 200 with every field null. One caller today: the app search page line \"N of M reports left until <date>\" (SRCH.A6, task-320, a follow-up to MF-35; operator RR-0307) through mobile/src/hooks/useParcelLookup.ts; MF-52 (Account) and MF-49 (the app gate) read it when they build.",
+     "under_126": "A CONTRACT descriptor of archetype `QUERY`, born converted-shape: its response is an explicit `.strict()` whitelist of six fields, its auth class is authenticated, its rate bucket is per uid, `outputs.writes` is none and it is never a gate (the lookup's 403 `REPORT_LIMIT_REACHED` is the gate)."
+   },
+   "evidence": {
+@@ -80,7 +80,8 @@
+       "reportsLimit",
+       "reportsLeft",
+       "reportsLimitReached",
+-      "resetsOn"
++      "resetsOn",
++      "resetsOnDisplay"
+     ],
+     "tables": [
+       {
+@@ -320,12 +321,15 @@
+     "retired": []
+   },
+   "sharing": {
+-    "answer": "none",
+-    "why": "No surface renders it yet; MF-35 (the search line \"N of 20 reports left\"), MF-52 (Account) and MF-49 bind to it when they build.",
++    "answer": "sole",
++    "why": "Exactly one call site reads it today: the app search page line (SRCH.A6, task-320). Its web tree is inert until MAXBLD_WEB_LIVE flips (LS.12); MF-52 (Account) and MF-49 bind to it when they build.",
+     "evidence": [
++      "mobile/src/hooks/useParcelLookup.ts:96",
+       ".cursor/MCFRONTEND-QUEUE.md MF-45 row (dated note 2026-11-11)"
+     ],
+-    "surfaces": []
++    "surfaces": [
++      "mobile/src/hooks/useParcelLookup.ts:96"
++    ]
+   },
+   "a11y": {
+     "touch_target_min_px": "UNRESEARCHED",
+@@ -355,9 +359,13 @@
+     "methods": [
+       "GET"
+     ],
+-    "consumers": [],
++    "consumers": [
++      "mobile/src/hooks/useParcelLookup.ts"
++    ],
+     "writes_audit_row": false,
+-    "consumers_verified": [],
++    "consumers_verified": [
++      "mobile/src/hooks/useParcelLookup.ts:96"
++    ],
+     "auth_class_executed": "authenticated",
+     "locking_tests": [
+       "src/tests/parcels-entitlement.infra.test.ts"
+diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+index 7bf648ca1..0b4590b72 100644
+--- a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
++++ b/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json
+@@ -3,7 +3,7 @@
+   "status": "exists",
+   "docs": {
+     "purpose": "Lets a paying subscriber search for a property by address, or pick a specific close match, and see the estimated construction costs and nearby neighbourhood build activity for that property.",
+-    "data_story": "It reads 7 tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements` and `usage_events` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of 24 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered. Dated 2026-11-12 (MF-48 Stage B; operator \"Ball y\", B-3 a; Spec 100 §3.2 dated note): a hit also carries `page`, the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts); it is null for every lot until MB-44 serves a producer, absent of meaning on candidates, a miss or a dangling id (null), and .strict() at every level (target, layout, sections, parts, ad). It reads no table today and changes no meter.",
++    "data_story": "It reads 9 tables — `parcels`, `address_points`, `parcel_address_points`, `coa_applications`, `user_profiles`, `entitlements`, `usage_events`, and (MB-44 W, task-123, only while the web live switch is on; it is off) the stored report rows `parcel_maxbld_scenarios` and the Layer 2 stamps `bylaw_resolution_lot_stamps` — and writes one: a `usage_events` row (`property_view`) for each new lot a `parcel_tool` holder opens in the billing month (MF-45). Its response is an explicit pick-by-name projection of 24 fields, so a column added to a table upstream does not leak into the client by accident. It is called from 1 place: `mobile/src/hooks/useParcelLookup.ts`. Dated 2026-11-11 (MF-53): every response also names its `resolution`; for multi_parcel and unlinked only, a `map` block (lot outlines from parcels.geom, area by the report rule area_sqft_m2_dot from lot_size_sqm, frontage by len1 from frontage_m, zoning_zn_string, centroid_lat/lng, the address pin from address_points.latitude/longitude, a start view, and on unlinked the neighbour outlines within the logic-variable radius). The map is not metered. Dated 2026-11-12 (MF-48 Stage B; operator \"Ball y\", B-3 a; Spec 100 §3.2 dated note): a hit also carries `page`, the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts); it is null for every lot until MB-44 serves a producer, absent of meaning on candidates, a miss or a dangling id (null), and .strict() at every level (target, layout, sections, parts, ad). It reads no table today and changes no meter. Dated 2026-11-19 (LOAD.1, task-266, M-246): while the web live switch is on (it is off), a hit whose stored page is missing or stale is computed in memory by the Layer 3 step's own core (src/lib/parcels/report-compute.ts), which reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, the lot geometry and street columns of `parcels`, and the validated step settings of `logic_variables`; it writes nothing (the record write is ST.P1), adds no response key, and a lot with no Layer 2 stamp stays a miss.",
+     "under_126": "Becomes a **CONTRACT descriptor** of archetype `QUERY`. It declares its `database.reads[]` with named columns, its response projection as an explicit whitelist, its auth class, its rate bucket and its staleness — and `outputs.writes` is forced to `\"none\"`. Its `consumers[]` becomes the edge list of the fan-out graph — the join nothing in this estate holds today."
+   },
+   "evidence": {
+@@ -171,7 +171,8 @@
+       "lotForm",
+       "detected",
+       "basis",
+-      "unsure"
++      "unsure",
++      "semi"
+     ],
+     "tables": [
+       {
+diff --git a/scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json b/scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json
+index 400a9b510..309f48501 100644
+--- a/scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json
++++ b/scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json
+@@ -1993,7 +1993,7 @@
+     "files": {
+       "scripts/surfaces/_schema/ad-contract.json": "e58959b792405898",
+       "scripts/surfaces/_schema/binding-sources.json": "83f21d237a12c9b6",
+-      "scripts/surfaces/_schema/report-presentation.json": "6b780bd76e164820",
++      "scripts/surfaces/_schema/report-presentation.json": "e151b5ccd11cd137",
+       "scripts/surfaces/_schema/report-tree.schema.json": "9659f255f0039065",
+       "scripts/surfaces/_schema/report-v2.decl.json": "2d447d5c81933b29",
+       "scripts/surfaces/_schema/report-page.json": "5831e85c75fed373",
+diff --git a/src/app/api/parcels/entitlement/route.ts b/src/app/api/parcels/entitlement/route.ts
+index 4cdf86828..13c925e67 100644
+--- a/src/app/api/parcels/entitlement/route.ts
++++ b/src/app/api/parcels/entitlement/route.ts
+@@ -3,7 +3,7 @@
+ //
+ // GET /api/parcels/entitlement — the caller's parcel_tool plan and this billing month's report counts (MF-45, the
+ // entitlement read contract; operator 2026-11-11 "4. will we need to build this later.. we have the tokens now").
+-// Read by the search page line "N of 20 reports left" and the Account page. A display, never a gate: the lookup's
++// Read by the app search page's reports-left line (the left count, the allowance and the served reset label) and the Account page. A display, never a gate: the lookup's
+ // 403 REPORT_LIMIT_REACHED is the gate. Every value is server-computed (FE-05).
+ //
+ // Auth: getCurrentUserContext FIRST await (Spec 90 §11; route-guard '/api/parcels'). No entitlement guard: it reports
+diff --git a/src/app/api/parcels/entitlement/types.ts b/src/app/api/parcels/entitlement/types.ts
+index fce448e27..34beeff51 100644
+--- a/src/app/api/parcels/entitlement/types.ts
++++ b/src/app/api/parcels/entitlement/types.ts
+@@ -14,7 +14,8 @@ export const ParcelToolEntitlementResponseSchema = z
+     reportsLimit: z.number().int().positive().nullable(),
+     reportsLeft: z.number().int().nonnegative().nullable(),
+     reportsLimitReached: z.boolean().nullable(),
+-    resetsOn: z.string().datetime().nullable(), // the billing-month end, ISO-8601; the page formats it
++    resetsOn: z.string().datetime().nullable(), // the billing-month end, ISO-8601; the instant stays on the wire (additive_only)
++    resetsOnDisplay: z.string().nullable(), // the same instant as the Toronto date, "9 Dec 2026" (RR-0310); the page prints it
+   })
+   .strict();
+ export type ParcelToolEntitlementResponse = z.infer<typeof ParcelToolEntitlementResponseSchema>;
+diff --git a/src/app/api/parcels/lookup/route.ts b/src/app/api/parcels/lookup/route.ts
+index 5e1eb43b0..732b5e1dd 100644
+--- a/src/app/api/parcels/lookup/route.ts
++++ b/src/app/api/parcels/lookup/route.ts
+@@ -15,6 +15,8 @@
+ //   count the report unless the report is produced. I should only be charged a report if I find the address and lot Im looking for and a report
+ //   is produced"; MORNING-DECISIONS.md:1082): a lookup that ends in candidates, no-match, the lot map, a dangling id, a hit with no page, or an
+ //   unsure lot whose semi question comes first counts nothing. Prior text: a hit with an evaluated option counted at the lookup (route.ts:161).
++//   SRCH.METER-2 (task-360, 2026-11-19): that unsure lot's `page` is not sent either (null; neither the stored read nor the compute runs, meter semi_pending) until
++//   the request carries semi=answered, so a page that is sent is a page that is counted. Prior text: the page was sent and only the meter said semi_pending.
+ //   A new lot past the allowance → 403 REPORT_LIMIT_REACHED, no payload. Fail closed: a meter error is a 500, never an unmetered payload.
+ // Rate: `parcels-search:${uid}` 60/min on the q path; `parcels-lookup:${uid}` 30/min on parcelId.
+ // MF-48 Stage B (Spec 100 §3.2 dated note 2026-11-12, B-3 a): a hit also carries `page`, the mobile report page view built by MF-57's core from the
+@@ -51,6 +53,7 @@ import { assembleConsumerPayload, assembleLotMap, hasEvaluatedOption } from '@/l
+ import { resolveLotMap } from '@/lib/parcels/lot-map';
+ import { readLotForm } from '@/lib/parcels/lot-form';
+ import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';
++import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';
+ import {
+   ConsumerParcelLookupQuerySchema,
+   ConsumerParcelLookupResponseSchema,
+@@ -84,9 +87,10 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+   const parsed = ConsumerParcelLookupQuerySchema.safeParse({
+     q: sp.get('q') ?? undefined,
+     parcelId: sp.get('parcelId') ?? undefined,
++    semi: sp.get('semi') ?? undefined,
+   });
+   if (!parsed.success) return badRequestZod(parsed.error);
+-  const { q, parcelId } = parsed.data;
++  const { q, parcelId, semi } = parsed.data;
+ 
+   // 4. Rate limit — separate buckets so heavy searching cannot exhaust the detail budget.
+   const rl = q
+@@ -118,6 +122,8 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+ 
+     // The matched parcels.parcel_id of the fetched row: the meter's subject_key (R-04 parcel_ref), never request text.
+     let parcelRef: string | null = null;
++    let pageSource: 'stored' | 'computed' | 'none' = 'none'; // LOAD.1: where the page came from (logged, never its content)
++    let computeMs: number | null = null;
+     if (resolved.match) {
+       const row = await fetchParcelById(resolved.match.parcelId);
+       if (!row) {
+@@ -130,10 +136,23 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+         parcelRef = String(row.parcel_id);
+         // MF-48 Stage B (B-3 a): the report page view from the lot's producer response, through MF-57's core; null while no producer has the lot
+         // (every customer lot until MB-44). A core error throws to the catch below (500), never a half page.
+-        const pageResponse = await readCustomerPageResponse(parcelRef);
+-        const page = pageResponse === null ? null : mobilePageView(pageResponse);
++        // LOAD.1 (task-266, integrated with the board head): W first; on its miss the one-lot compute (the same pure core the pipeline step runs; no write). It answers null while the web
++        // live switch is off, for a lot with no Layer 2 stamp, and for no such parcel. A compute error throws to the catch below (500): no page, no meter.
+         // SEMI-B: the lot form from the view (one indexed read), so the app can ask the one question BEFORE the report shows when it is unsure.
+         const lotForm = await readLotForm(parcelRef);
++        // SRCH.METER-2 (task-360, RR-0278): an unsure lot's page is HELD until the semi answer (semi=answered, the task-319 flag): a page that is sent must be a page that
++        // is counted, so neither the stored read nor the compute runs for a held lot (the compute can take many seconds) and `page` is null; the meter below labels it
++        // semi_pending and the app asks the question. `unsure` is the server's own read of the view, never request text; the flag can only make the caller's own lot count.
++        const held = lotForm?.unsure === true && semi !== 'answered';
++        let pageResponse = held ? null : await readCustomerPageResponse(parcelRef);
++        if (pageResponse !== null) pageSource = 'stored';
++        else if (!held) {
++          const c0 = Date.now();
++          pageResponse = await computeCustomerPageResponse(parcelRef);
++          computeMs = Date.now() - c0; // the time of a compute that ends in a miss is logged too (the slow case is the one to see)
++          if (pageResponse !== null) pageSource = 'computed';
++        }
++        const page = pageResponse === null ? null : mobilePageView(pageResponse);
+         response = {
+           match: { ...resolved.match, address: resolved.match.address || String(row.__display_address ?? '') },
+           candidates: [],
+@@ -153,14 +172,14 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+ 
+     // Meter (MF-45; RR-0278 2026-11-19): only a hit whose report is produced (`page` sent) on the parcel_tool path counts. Candidates, a miss, a
+     // map or a dangling id show no report and count nothing; nor does an unsure lot before its semi question (SEMI-B, the app asks it before the
+-    // report shows; the route cannot see the answer: UNVERIFIED who counts the lot after it, the semi page task-319). Under the row lock the status is re-tested.
++    // report shows). SRCH.SEMI stage 2 (task-319, MF-93): the semi page's Continue fetches again with `semi=answered`, which lifts that hold, so the lot then counts like any lot, once, and only if its report is produced. Under the row lock the status is re-tested.
+     // Operator 2026-11-12, verbatim "1 b 2 a" (item 1 (b); Spec 100 §3.2 dated note): a hit with no evaluated option is served and
+     // NOT counted (meter not_evaluated), so a report whose sizes and costs read "Not yet evaluated" costs the user nothing.
+     let meter: 'counted' | 'already_counted' | 'limit_reached' | 'not_entitled' | 'none' | 'unmetered' | 'not_evaluated' | 'semi_pending' | 'not_produced' =
+       access === 'parcel_tool' ? 'none' : 'unmetered';
+     let refusal: ReturnType<typeof reportLimitReached> | ReturnType<typeof forbiddenSubscription> | null = null;
+     if (access === 'parcel_tool' && body.parcel && parcelRef !== null && !hasEvaluatedOption(body.parcel)) meter = 'not_evaluated';
+-    else if (access === 'parcel_tool' && body.parcel && parcelRef !== null && body.lotForm?.unsure === true) meter = 'semi_pending';
++    else if (access === 'parcel_tool' && body.parcel && parcelRef !== null && body.lotForm?.unsure === true && semi !== 'answered') meter = 'semi_pending';
+     else if (access === 'parcel_tool' && body.parcel && parcelRef !== null && body.page === null) meter = 'not_produced';
+     else if (access === 'parcel_tool' && body.parcel && parcelRef !== null) {
+       const ref = parcelRef;
+@@ -186,7 +205,10 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
+       meter,
+       lot_form: response.lotForm?.detected ?? null, // SEMI-B: the detected form, never the address
+       lot_form_unsure: response.lotForm?.unsure ?? null,
++      semi_answered: semi === 'answered', // SRCH.SEMI stage 2: the flag the semi page sends at Continue
+       page: response.page !== null, // MF-48 Stage B: whether a report page was sent (never its content)
++      page_source: pageSource, // LOAD.1: stored, computed or none
++      compute_ms: computeMs, // LOAD.1: the compute entry's time when it ran (about 0 while the switch is off), null when W served the page
+     });
+     if (duration_ms > SLOW_QUERY_MS) {
+       logWarn(TAG, 'slow_query', { duration_ms, outcome });
+diff --git a/src/app/api/parcels/lookup/types.ts b/src/app/api/parcels/lookup/types.ts
+index 1c9b52622..7cd18ddf5 100644
+--- a/src/app/api/parcels/lookup/types.ts
++++ b/src/app/api/parcels/lookup/types.ts
+@@ -41,11 +41,16 @@ export const ConsumerParcelLookupQuerySchema = z
+   .object({
+     q: z.string().trim().min(3, 'address must be at least 3 characters').max(120).optional(),
+     parcelId: z.string().trim().min(1).max(32).optional(),
++    // SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): the semi question page sets this on its Continue fetch, so an unsure lot counts like any lot once it is answered.
++    semi: z.literal('answered').optional(),
+   })
+   .superRefine((v, ctx) => {
+     if (Boolean(v.q) === Boolean(v.parcelId)) {
+       ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'provide exactly one of q or parcelId' });
+     }
++    if (v.semi !== undefined && !v.parcelId) {
++      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'semi belongs to a known lot: send it with parcelId' });
++    }
+   });
+ export type ConsumerParcelLookupQuery = z.infer<typeof ConsumerParcelLookupQuerySchema>;
+ 

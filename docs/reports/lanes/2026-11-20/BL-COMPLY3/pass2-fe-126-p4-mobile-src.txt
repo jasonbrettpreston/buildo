@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — §5.0 ONE-SOURCE "There is one source, and everything else is emitted from it." / "nothing in that fan-out is hand-written, and nothing in it is a *second declaration*" — mobile/src/lib/schemas.ts:445 "export const ParcelToolEntitlementSchema = z.object({" — the change hand-authors a second declaration of contract_parcels_entitlement on the client instead of emitting it from the CONTRACT descriptor, the exact fan-out §5.2 says must be generated — emit the mobile mirror from contracts/contract_parcels_entitlement.descriptor.json (the logic-variable-groups form, §5.0a) and delete the hand copy
+BUG severity=HIGH — §5.2 "the two Zod declarations disagree in strictness … *the client is looser than the server it mirrors*" — mobile/src/lib/schemas.ts:444 "A plain object, not .strict(): the contract is additive_only because an installed app does not redeploy with the server." — the new client schema is deliberately looser than the server contract it mirrors, the measured defect class this standard exists to retire, and no pasted clause sanctions the exception — derive strictness from the descriptor and regenerate the mirror rather than justifying a hand divergence in a comment
+DEFER severity=MED — §5.2 "the transcription, the strictness drift, the missing parcel lock, and the CI exclusion" — NONE — no lock test or --check generator accompanies the new parcel schema, so drift between mobile/src/lib/schemas.ts and src/app/api/parcels/entitlement/types.ts is undetectable, recreating the "missing parcel lock" the arrow is meant to kill — add the generated cross-tree lock and its RED canary per §5.0a "an infra test that re-runs the generator, plus a RED canary proving the check itself fires"
+DEFER severity=MED — §5.3 "also canonical for the *projection*: section order, labels, formatting decisions, which lines render" — mobile/src/lib/parcelSearchCore.ts:78 "export function reportsLeftShown(e: EntitlementLine | null | undefined): e is ShownEntitlement {" — the decision whether the reports-left line draws, and its shaping at mobile/src/lib/parcelSearchMatch.ts:357 "...(args.entitlement ? { entitlement: {...} } : {})", is made on the device, a which-lines-render call §5.3 assigns to the server projection — serve the rendered line (or a render flag) from /api/parcels/entitlement and have the client render it
+DEFER severity=LOW — pasted context header "this is part 4 of 11" — mobile/src/lib/maxbldHelp.ts:24 "await WebBrowser.openBrowserAsync(helpUrl(topic, q));" — the in-app sheet switch, the reports-left line and the 60s semi Continue wait are authorised only by cards and rulings (SRCH.A6, SRCH.LOTMAP-2, SRCH.SEMI-3, RR-0278, RR-0307) that are not pasted, so their compliance cannot be judged here — paste those cards and rulings for a verdict on them
+MET — §6.1 step 2 "Hand-author the SQL migration … `NNN_[feature].sql`" — NONE — the diff authors no migration, so the pre-commit migration gates are not triggered
+MET — §6.2 rule 2 "Every role in the closed set appears" — NONE — no table or rls block is added, so no role row is owed
+REJECT — §6.1 steps 1 to 5 — change accused of skipping declare-and-assert — no table is declared, altered or seeded in this diff, only a client read of an existing endpoint
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 3
+
+---
+⏱  39720ms (39.7s)
+📊 Tokens — total: 28756, input: 21491, output: 7265, reasoning: 6407

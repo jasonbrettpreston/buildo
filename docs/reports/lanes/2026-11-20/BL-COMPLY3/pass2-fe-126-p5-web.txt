@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-web.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — §9 "apply `inputs.field_whitelist`, which must equal the contract's" — src/components/surfaces/web/SearchBinding.tsx "const ENTITLEMENT = 'contract_parcels_entitlement';" — a new contract ref is read in code but no search-surface descriptor or field_whitelist change appears in this diff, the descriptor is not pasted so cannot see — add contract_parcels_entitlement with reportsLeft, reportsLimit, resetsOnDisplay to the search surface inputs.contract_ref and field_whitelist, and paste it for verification.
+
+DEFER severity=MED — §9 (no pasted clause names removing the MF-58 legal line) — src/components/surfaces/web/SearchBinding.tsx "the legal sentence (MF-58's key, now once, here)" — the diff deletes the line under the input and moves it into the footer, a behaviour change whose authorizing ruling (MF-91, operator "1. once  -approved", MORNING-DECISIONS.md:1061) is cited only in a comment and is not pasted, cannot see — paste the MF-91 ruling and SRCH.FOOTER clause so the removal can be verified, otherwise restore the MF-58 line.
+
+DEFER severity=LOW — §9 "No business logic executes client-side beyond the five named exceptions (§5.3)." — src/components/surfaces/web/SearchBinding.tsx "reportsLeftShown(s.entitlement) ? [ ... ] : []" — the draw decision is a branch computed in the binding from served fields, if it renders client-side that is a branch outside the §5.3 exceptions and the caller is not pasted, cannot see — pass a server-computed showReportsLeft flag on WebSituation instead.
+
+MET — §7 "the counter stays derived** — `COUNT(*)` over the window, never a column" — src/lib/entitlements/index.ts "reportsLeft: Math.max(0, u.reportsLimit - u.reportsUsed)" — reports left is derived, no stored counter column is added.
+
+MET — §7 "`period` is derived at query time, never stored." — src/lib/entitlements/index.ts "resetsOnDisplay: resetLabel(u.resetsOn)" — the display label is formatted from resetsOn at read, not persisted.
+
+MET — §9 "Assemble the projection **server-side**" — src/lib/entitlements/index.ts readParcelToolUsage and SearchBinding searchWebData — entitlement values are assembled server-side into the contract block.
+
+MET — §6.3 row 3 "unchanged — Class A, `entitlements_select_own`" — src/lib/entitlements/index.ts readParcelToolUsage — the entitlements read is unchanged; no RLS or CHECK change is in the diff.
+
+REJECT — SRCH.A6 / RR-0310 "the Toronto calendar date" — accused of a timezone derivation that may not be Toronto — that clause is not pasted and this is date-formatting correctness (lens-code-review), not a compliance finding here.
+
+REJECT — SRCH.FOOTER / operator "this is a shared component" — accused of extracting a shared footer builder without a pasted ruling — the ruling is cited only in code (MORNING-DECISIONS.md:1066) and is not pasted, so it is not mine to fail on.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  75771ms (75.8s)
+📊 Tokens — total: 36962, input: 22804, output: 14158, reasoning: 13393

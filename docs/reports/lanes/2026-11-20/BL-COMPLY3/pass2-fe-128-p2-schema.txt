@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-schema.patch (model: deepseek-reasoner)
+
+BUG severity=CRIT — Spec 128 §4 step 2 "never the pass that discovered it. This is a **policy rule**" — scripts/surfaces/_schema/bindings.json:1 "$comment" "orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling)" — the only adjudication in this diff is made by the pass that raised it and is self-declared not an operator ruling, so the 48 px token has no valid adjudicator — revert touch_targets.mobile.Button to its previous single token, or obtain and record an operator ruling in the §5 register before the token lands.
+
+BUG severity=HIGH — Spec 128 §4 step 4 "A rule without a lock is not yet a rule" and "the same commit that records the ruling adds a both-directions test (red on the old behaviour, green on the new) proving it" — scripts/surfaces/_schema/bindings.json:73 "\"Button\": [\"min-h-[44px]\", \"min-h-[48px]\"]" — the commit records a new px rule on Button and no both-directions test appears anywhere in the pasted diff — add the red/green test to this same commit or mark the note PROPOSED and hold the token.
+
+BUG severity=HIGH — Spec 128 §4 step 3 "The ruling is recorded in **§5's Register of rulings** with an id, the statement, and what it amends." and §4.10 "One lock per register row" — scripts/surfaces/_schema/bindings.json:1 "$comment" "Dated note 2026-11-19 (task-353 SUITE.FIX-2)" — the note carries no register row id and no lock path, unlike the pasted precedent "Register row: Spec 135 FE-37. Lock: `src/tests/surfaces/web-landing.logic.test.ts`" — add the FE row id and its lock path to the note, or do not record it as a ruling.
+
+BUG severity=HIGH — bindings.json dated note invariant "The check C-9m still requires exactly one min-h- token on the list; nothing under 44 is listed." — scripts/surfaces/_schema/bindings.json:73 "\"Button\": [\"min-h-[44px]\", \"min-h-[48px]\"]" — the list now holds two min-h- tokens, so the change contradicts the invariant the same note asserts and leaves C-9m unamended — restate C-9m in the note and in the check (any listed token, each at least 44 px) or keep exactly one token per element.
+
+BUG severity=HIGH — contracts.json parcels lookup clause "It reads no table today and changes no meter." — scripts/surfaces/_schema/census/contracts.json:22003 "which reads for that one lot, besides the stored tables above" — the standing clause is now false and was not restated, while the same commit did restate the table count to 9 — amend the clause to "reads no table while the switch is off" in the same edit.
+
+BUG severity=MED — contracts.json "It reads 9 tables" — scripts/surfaces/_schema/census/contracts.json:22003 "the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, ... `logic_variables`" — the stated count of 9 excludes every table the new LOAD.1 note says the compute path reads, so the count and the enumerated reads disagree — restate the count or list the conditional reads as a separate set outside the count.
+
+BUG severity=HIGH — contracts.json entitlement "under_126": "its response is an explicit `.strict()` whitelist of six fields" — scripts/surfaces/_schema/census/contracts.json:22970 "\"resetsOnDisplay\"" — the response whitelist grows to seven fields while the descriptor's own stated shape still reads six — amend the clause to seven fields in the same commit, and keep the `.strict()` schema in step.
+
+DEFER severity=MED — Spec 128 §4 steps 1 to 3, a closed-list growth needs a recorded adjudication — scripts/surfaces/_schema/census/contracts.json:22174 "\"semi\"" — a new enum value is added to a closed list with no dated note, register row or lock in that contract record, and no pasted clause or operator ruling names `semi` — record the ruling beside the list (the task-319 / RR-0309 note used in bindings.json) or drop the value until it is ruled.
+
+MET — Spec 128 §4.8 "The **`Lock`** column is not prose" (evidence resolver accepts "a real path (`file:line` allowed)") — scripts/surfaces/_schema/census/contracts.json:23211 "mobile/src/hooks/useParcelLookup.ts:96" — the added evidence, surfaces and consumers_verified tokens are all file:line form.
+
+MET — Spec 128 §4 step 3 "with an id, the statement, and what it amends" — scripts/surfaces/_schema/bindings.json:1 "$comment" "touch_targets.mobile.Button gains min-h-[48px] beside min-h-[44px] (Input stays min-h-[44px] only)" — the note states the statement and names what it amends (the missing id and lock are raised above).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 7
+
+---
+⏱  53943ms (53.9s)
+📊 Tokens — total: 34242, input: 23821, output: 10421, reasoning: 9178

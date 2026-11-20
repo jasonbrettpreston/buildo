@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-schema.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — §11a.3 dated note 2026-11-12 "Lock owed with FE-39: `src/tests/surfaces/engine-inputs-bind.logic.test.ts`." — NONE (no lock file in the diff) — the reason literal lands with the lock the amendment requires still absent — land the FE-39 lock or state in the change that the literal ships ahead of it
+DEFER severity=MED — bindings.json $comment claim "The check C-9m still requires exactly one min-h- token on the list; nothing under 44 is listed." — bindings.json:73 `"Button": ["min-h-[44px]", "min-h-[48px]"], "Input": ["min-h-[44px]"]` — the Button list now holds two min-h- tokens, which contradicts the note's own statement that C-9m requires exactly one, so the lock premise is unproven — state and land the amended C-9m rule in the same change, or say which token the check reads
+DEFER severity=LOW — mobile-product.json `why` "it binds as a contract value" vs pasted §11a.1 "Adding a source or a member needs a register row and a panel." — mobile-product.json:7999 "The reset date of the reports-left line (SRCH.A6) is not a derived name" — a `contract` source member is asserted without a pasted register row or panel, and it is not among the pasted §11a.1 sources — cite the register row and panel for the `contract` member, or bind resetsOnDisplay to a pasted source
+DEFER severity=NIT — no pasted clause governs census table counts (contracts.json data_story count) — contracts.json:22003 `"data_story": "It reads 9 tables"` — the same field's added LOAD.1 sentence names `bylaw_resolution_results`, `bylaw_resolution_option_results`, `bylaw_resolution_units`, `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population` as also read, so the stated count is false within one string — restate the count with the switch-on reads or drop the numeral
+REJECT — Spec 126 §11b.2 touch_targets / FE-31 C-9 (not pasted) — accused of extending the closed touch_targets list with min-h-[48px] on an orchestrator decision the note itself calls "not an operator ruling" — the touch-target clause and its closed list are not in the pasted context, so this lens cannot judge it
+MET — §11a.3 dated note 2026-11-12 "the closed list gains one `not_evaluated` reason, `not_in_engine_population`, which displays as "Not yet evaluated"." — report-presentation.json:26 — the literal is exactly "Not yet evaluated"
+MET — §11a.1 "scenario fields are GENERATED from the catalogue and switchboard into the SEED ... via `seed-report-v2.mjs`" — seed-report-v2.mjs:600 — the literal is added inside the seed generator's `pres` map, not in a generated decl file
+MET — §11a.3 "The status words are unchanged (a reason, not a new status)" — bindings.json:0 / report-presentation.json:26 — no new status word is introduced, only a reason key under `not_evaluated`
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  65951ms (66.0s)
+📊 Tokens — total: 35031, input: 22923, output: 12108, reasoning: 11327

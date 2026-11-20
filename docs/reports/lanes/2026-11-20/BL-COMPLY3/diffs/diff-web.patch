@@ -1,0 +1,336 @@
+# DIFF PART web: git diff 9f04d9074..3a36e8b26, files: src/components/surfaces/web/SearchBinding.tsx, src/components/surfaces/web/StaticBinding.tsx, src/components/surfaces/web/footerNode.ts, src/lib/entitlements/index.ts, src/lib/surfaces/maxbld-landing.ts
+diff --git a/src/components/surfaces/web/SearchBinding.tsx b/src/components/surfaces/web/SearchBinding.tsx
+index 0fb428e79..123cd9143 100644
+--- a/src/components/surfaces/web/SearchBinding.tsx
++++ b/src/components/surfaces/web/SearchBinding.tsx
+@@ -22,7 +22,8 @@
+ import type { ReactNode } from 'react';
+ import Link from 'next/link';
+ import { Alert, Button, Group, Loader, Stack, Text, TextInput, Title } from '@mantine/core';
+-import { diffCandidateAddress, parcelSearchPath, type AddressSegment, type SearchOutcome } from '../../../../mobile/src/lib/parcelSearchCore';
++import { footerNode, type FooterLayout, type FooterSection } from './footerNode';
++import { diffCandidateAddress, parcelSearchPath, reportsLeftShown, type AddressSegment, type EntitlementLine, type SearchOutcome } from '../../../../mobile/src/lib/parcelSearchCore';
+ 
+ export type Ref = { content: string } | { contract: string } | { derived: string };
+ export type Template = { text: Ref; vars: Record<string, Ref> };
+@@ -42,6 +43,8 @@ export type WebSituation = {
+   recent: string[];
+   selectedParcelId: string | null;
+   route: string | null;
++  /** SRCH.A6 (task-320): the served count fields of the reports-left line; absent or null draws no line. Inert on the web until MAXBLD_WEB_LIVE flips (LS.12, task-287). */
++  entitlement?: EntitlementLine | null;
+ };
+ 
+ /** The web base path of the parcel tool pages (Spec 126 §11b.3 dated note 2026-11-11: the app's route name, §11b.7 A2/A4). */
+@@ -58,7 +61,14 @@ export const WEB_SEARCH_LAYOUT = {
+   pill: 'flex-nowrap items-center gap-1 rounded-full border border-zinc-800 bg-zinc-900 py-1 pl-4 pr-1',
+   /** ph-no-capture: the analytics client never records the typed address (Spec 100 §2.8; MF-44 security S-7). */
+   input: 'flex-1 ph-no-capture',
+-  legal: 'mt-3 text-[13px] leading-[18px] font-normal text-zinc-400',
++  // MF-91 (RR-0270): the legal sentence is in the footer, once (v8 .wfoot: the sentence, the links, the copyright); the line under the input is gone on the web.
++  footer: 'mt-auto w-full gap-3 border-t border-zinc-800 px-4 py-6',
++  footerLinks: 'gap-2',
++  footerLink: 'rounded-xl text-zinc-300',
++  footerLegal: 'text-[13px] leading-[18px] font-normal text-zinc-400',
++  footerCopyright: 'text-[13px] leading-[18px] font-normal text-zinc-400',
++  /** SRCH.A6 (task-320): the reports-left line under the box (v8 .small). */
++  allowance: 'mt-3 text-center text-[13px] leading-[18px] font-normal text-zinc-400',
+   chipRow: 'mt-3 gap-2',
+   chip: 'rounded-full font-mono text-xs font-normal',
+   notice: 'mt-3 rounded-xl',
+@@ -84,8 +94,10 @@ const L = WEB_SEARCH_LAYOUT;
+ const HELP_PATH = '/help';
+ 
+ const CONTRACT = 'contract_parcels_lookup';
++const ENTITLEMENT = 'contract_parcels_entitlement';
+ const content = (key: string): Ref => ({ content: key });
+ const contract = (p: string): Ref => ({ contract: `${CONTRACT}.${p}` });
++const entitlement = (field: string): Ref => ({ contract: `${ENTITLEMENT}.${field}` });
+ const derived = (name: string): Ref => ({ derived: name });
+ const node = (component: string, props: Record<string, unknown>, children: WebNode['children'] = []): WebNode => ({ component, props, children });
+ 
+@@ -116,8 +128,29 @@ const pill = (s: WebSituation): WebNode =>
+     ...(s.isFetching ? [node('Loader', { key: 'spinner', testID: 'parcel-search-spinner', size: 'sm', color: 'yellow', ariaLabel: content('search.searching') })] : []),
+   ]);
+ 
+-/** MF-58 (ruling 2026-11-10 items 16 and 5; queue N8 for the web page): the legal line under the address input, before any result block. */
+-const legal = (): WebNode => node('Text', { key: 'legal', testID: 'parcel-search-legal', className: L.legal }, [content('search.legal')]);
++/** MF-91 (SRCH.FOOTER; operator "1. once  -approved"): the web footer, five items in the v8 order (search.txt:323): the legal sentence (MF-58's key, now once, here), Terms of
++ * Service, Privacy Policy, Help and Support, the copyright. Built by the one shared builder (footerNode.ts); the mobile page keeps its A.10 line under the input. */
++export const SEARCH_FOOTER: FooterSection = {
++  id: 'footer',
++  parts: [
++    { role: 'legal', content: 'search.legal' },
++    { role: 'link', content: 'footer.terms', href: '/terms' },
++    { role: 'link', content: 'footer.privacy', href: '/privacy' },
++    { role: 'link', content: 'footer.help', href: '/help' },
++    { role: 'copyright', content: 'footer.copyright' },
++  ],
++};
++const SEARCH_FOOTER_LAYOUT: FooterLayout = { footer: L.footer, links: L.footerLinks, link: L.footerLink, legal: L.footerLegal, line: L.footerLegal, copyright: L.footerCopyright };
++const footer = (): WebNode => footerNode(SEARCH_FOOTER, SEARCH_FOOTER_LAYOUT, 'parcel-search') as WebNode;
++
++/** SRCH.A6 (task-320; RR-0307; v8 search.html:320): the mobile line, the same refs; drawn only when the read answered with all three served fields. */
++const reportsLeft = (s: WebSituation): WebNode[] =>
++  reportsLeftShown(s.entitlement)
++    ? [node('Text', { key: 'reports-left', testID: 'parcel-search-reports-left', className: L.allowance }, [{
++      text: content('search.reports_left'),
++      vars: { left: entitlement('reportsLeft'), allowance: entitlement('reportsLimit'), reset: entitlement('resetsOnDisplay') },
++    }])]
++    : [];
+ 
+ const chips = (s: WebSituation): WebNode[] =>
+   s.recent.length === 0
+@@ -212,18 +245,19 @@ const tail = (s: WebSituation): WebNode[] => [
+   ...(s.showPrompt ? [node('Text', { key: 'prompt', testID: 'parcel-search-prompt', className: L.prompt }, [content('search.prompt')])] : []),
+ ];
+ 
+-/** The props tree of one render. Block order is the mobile binding's (MF-35 must-survive row 17; MF-58 legal line under the input). */
++/** The props tree of one render. Block order is the mobile binding's (MF-35 must-survive row 17) without the legal line, which is in the footer (last child, MF-91). */
+ export function searchWebTree(s: WebSituation): WebNode {
+   return node('Stack', { key: 'screen', testID: 'parcel-search-screen', className: L.screen }, [
+     node('Stack', { key: 'column', testID: 'parcel-search-column', className: L.column }, [
+       header(),
+       pill(s),
+-      legal(),
++      ...reportsLeft(s),
+       ...chips(s),
+       ...notices(s),
+       ...addressList(s),
+       ...tail(s),
+     ]),
++    footer(),
+   ]);
+ }
+ 
+@@ -232,7 +266,10 @@ export type WebBindingData = { contract: Record<string, unknown>; derived: Recor
+ /** The values the refs of `searchWebTree(s)` resolve against (the mobile binding's searchData, the same keys). */
+ export function searchWebData(s: WebSituation): WebBindingData {
+   return {
+-    contract: { [CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } } },
++    contract: {
++      [CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } },
++      ...(reportsLeftShown(s.entitlement) ? { [ENTITLEMENT]: { reportsLeft: s.entitlement.reportsLeft, reportsLimit: s.entitlement.reportsLimit, resetsOnDisplay: s.entitlement.resetsOnDisplay } } : {}),
++    },
+     derived: {
+       input: s.input,
+       candidate_count: s.candidates.length,
+@@ -319,7 +356,7 @@ function renderWebNode(n: WebNode, ctx: Ctx): ReactNode {
+   const base = defined({ 'data-testid': p.testID, className: p.className });
+   switch (n.component) {
+     case 'Stack':
+-      return <Stack key={k} {...base}>{kids}</Stack>;
++      return <Stack key={k} {...base} {...defined({ component: p.component })}>{kids}</Stack>;
+     case 'Group':
+       return <Group key={k} {...base}>{kids}</Group>;
+     case 'Title':
+@@ -343,6 +380,8 @@ function renderWebNode(n: WebNode, ctx: Ctx): ReactNode {
+     case 'Alert':
+       return <Alert key={k} {...base} {...defined({ color: p.color, variant: p.variant })}>{kids}</Alert>;
+     case 'Button': {
++      // MF-91: a footer link is a real route (126 §0b item 11); it is not a control of the search form, so the live switch does not disable it.
++      if (typeof p.href === 'string') return <Button key={k} {...base} {...defined({ size: p.size, variant: p.variant, color: p.color })} component={Link} href={p.href}>{kids}</Button>;
+       if (isObj(p.onClick) && p.onClick.action === 'open_help') {
+         const href = `${HELP_PATH}#topic=${encodeURIComponent(String(p.onClick.topic))}&q=${encodeURIComponent(String(resolveWebValue(p.onClick.q, ctx)))}`;
+         return <Button key={k} {...base} {...defined({ size: p.size, variant: p.variant, color: p.color })} component={Link} href={href}>{kids}</Button>;
+diff --git a/src/components/surfaces/web/StaticBinding.tsx b/src/components/surfaces/web/StaticBinding.tsx
+index db38e273d..ed219085a 100644
+--- a/src/components/surfaces/web/StaticBinding.tsx
++++ b/src/components/surfaces/web/StaticBinding.tsx
+@@ -35,6 +35,7 @@ import Link from 'next/link';
+ import { Button, Group, List, ListItem, Stack, Text, Title } from '@mantine/core';
+ import { Picture, ReportView } from '@/components/report/ReportView';
+ import { ReportPage } from '@/components/report/ReportPage';
++import { footerNode, type FooterLayout, type FooterText } from '@/components/surfaces/web/footerNode';
+ import type { PageView, ReportView as LoadingView, ViewImage } from '@/lib/surfaces/report/core';
+ import schema from '../../../../scripts/surfaces/_schema/static-page.schema.json';
+ import presentation from '../../../../scripts/surfaces/_schema/report-presentation.json';
+@@ -172,11 +173,9 @@ const proseNode = (s: StaticSection): StaticNode => {
+   return node('Stack', { key: s.id, testID: `static-${s.id}`, component: 'section', className: L.prose }, kids);
+ };
+ 
+-const footerNode = (s: StaticSection): StaticNode => node('Stack', { key: s.id, testID: 'static-footer', component: 'footer', className: L.footer }, [
+-  node('Group', { key: `${s.id}-links`, className: L.links }, s.parts.filter((p) => p.role === 'link').map((p, i) =>
+-    node('Button', { key: `${s.id}-${i}`, testID: `static-link-${p.href}`, href: p.href, size: 'lg', variant: 'subtle', color: 'gray', className: L.link }, [txt(p)]))),
+-  ...s.parts.filter((p) => p.role === 'legal').map((p, i) => node('Text', { key: `${s.id}-legal-${i}`, testID: 'static-legal', className: L.legal }, [txt(p)])),
+-]);
++// MF-91 (SRCH.FOOTER, task-332): the footer tree is the one shared builder (footerNode.ts), moved from here unchanged; this table is the static pages' layout.
++const STATIC_FOOTER: FooterLayout = { footer: L.footer, links: L.links, link: L.link, legal: L.legal, line: L.legal, copyright: L.legal };
++const footerOf = (s: StaticSection): StaticNode => footerNode(s, STATIC_FOOTER, 'static');
+ 
+ // ---- MF-76: the landing kinds ------------------------------------------------------------------------------------------------------------------
+ 
+@@ -312,7 +311,7 @@ const plansNode = (s: StaticSection): StaticNode => {
+   return node('Stack', { key: s.id, testID: `static-${s.id}`, id: s.id, component: 'section', className: L.section }, [...head, boxes, ...foot]);
+ };
+ 
+-const KIND_NODES: Record<string, (s: StaticSection) => StaticNode> = { prose: proseNode, footer: footerNode, hero: heroNode, figures: figuresNode, items: itemsNode, plans: plansNode };
++const KIND_NODES: Record<string, (s: StaticSection) => StaticNode> = { prose: proseNode, footer: footerOf, hero: heroNode, figures: figuresNode, items: itemsNode, plans: plansNode };
+ 
+ /** The props tree of one page. Sections in table order; every shown text a content ref or a server value ref. */
+ export function staticWebTree(page: StaticPage): StaticNode {
+@@ -337,7 +336,8 @@ export function staticWebTree(page: StaticPage): StaticNode {
+ export type StaticActions = { retry: () => void };
+ /** MF-76: the server's values (each a server-formatted string, FE-05) and the shared report views the landing embeds. */
+ export type StaticValues = Record<string, string>;
+-export type StaticReport = { demo?: LoadingView; sample?: PageView; picture?: ViewImage; scene?: ViewImage };
++// MF-91: `footer` is the four shared footer strings the sample report's footer shows (the server sends them with the views; the sample throws without them).
++export type StaticReport = { demo?: LoadingView; sample?: PageView; picture?: ViewImage; scene?: ViewImage; footer?: FooterText };
+ type Ctx = { content: Record<string, string>; actions: Partial<StaticActions>; values: StaticValues; report: StaticReport };
+ 
+ /** A server value by name; a missing value or one that is not a non-empty string throws (the server leaves out a part whose read failed). */
+@@ -389,6 +389,8 @@ const reportOf = <K extends keyof StaticReport>(ref: unknown, name: K, report: S
+   return v as NonNullable<StaticReport[K]>;
+ };
+ 
++const footerOf2 = (report: StaticReport): FooterText => report.footer ?? fail('no footer text (the server leaves this part out)');
++
+ /** One tree node -> its mapped Mantine part. Every element below is a listed library component (bindings.json mapping.web.STATIC) or, by exact
+  * name and module, one of the shared REPORT renderers (MF-76; Spec 126 §11b.1, FE-07). */
+ function renderStaticNode(n: StaticNode, ctx: Ctx): ReactNode {
+@@ -432,7 +434,7 @@ function renderStaticNode(n: StaticNode, ctx: Ctx): ReactNode {
+     case 'ReportView':
+       return <ReportView key={k} view={reportOf(p.view, 'demo', ctx.report)} />;
+     case 'ReportPage':
+-      return <ReportPage key={k} view={reportOf(p.view, 'sample', ctx.report)} />;
++      return <ReportPage key={k} view={reportOf(p.view, 'sample', ctx.report)} footer={footerOf2(ctx.report)} />;
+     case 'Picture':
+       return <Picture key={k} im={reportOf(p.image, (isObj(p.image) && p.image.derived === 'scene' ? 'scene' : 'picture'), ctx.report)} />;
+     default:
+diff --git a/src/components/surfaces/web/footerNode.ts b/src/components/surfaces/web/footerNode.ts
+new file mode 100644
+index 000000000..63f1ced71
+--- /dev/null
++++ b/src/components/surfaces/web/footerNode.ts
+@@ -0,0 +1,64 @@
++// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.2 (one binding per archetype per platform; refs only; one tree, a render per
++//            binding), docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-18 (every string from content), FE-34 (closed roles; nothing
++//            skipped silently).
++//
++// MF-91 (SRCH.FOOTER, task-332; operator, verbatim, 2026-11-19: "1. once  -approved" (MORNING-DECISIONS.md:1061) and "this is a shared component"
++// (MORNING-DECISIONS.md:1066)) · THE one web footer. The tree builder moved here from StaticBinding.tsx (footerNode, MF-46 stage C) and is used by the
++// three web users: the static pages (StaticBinding), the web search page (SearchBinding) and the web report page (ReportPage, plain tags: it renders
++// without a Mantine provider). A footer is a section of parts in render order; the tree carries refs only ({content: key}); each binding renders the
++// tree with its own mapped parts. This module imports no binding (the report page imports it, and the static binding imports the report page).
++//   roles: link (consecutive links form one Group), legal, line, copyright. A link has an href (a same-origin path, checked by the caller's table).
++//   An unknown role, a link with no href, a part with no content key or a layout with no class for a role throws a named error; nothing is skipped.
++export type FooterRef = { content: string };
++export type FooterNode = { component: string; props: Record<string, unknown>; children: Array<FooterNode | FooterRef> };
++export type FooterPart = { role: string; content?: string; href?: string; pending?: boolean };
++export type FooterSection = { id: string; parts: FooterPart[] };
++/** The class strings of one user's layout table. */
++export type FooterLayout = Record<'footer' | 'links' | 'link' | 'line' | 'legal' | 'copyright', string>;
++
++/** The four strings every web user shows besides the legal sentence and the report's own lines (one wording, every content file). */
++export const FOOTER_TEXT_KEYS = ['footer.terms', 'footer.privacy', 'footer.help', 'footer.copyright'] as const;
++export type FooterText = Record<(typeof FOOTER_TEXT_KEYS)[number], string>;
++
++/** The footer strings out of a content file; a missing or non-string key throws (FE-18: no fallback text is typed in code). */
++export function pickFooterText(content: Record<string, string>): FooterText {
++  const out: Record<string, string> = {};
++  for (const k of FOOTER_TEXT_KEYS) {
++    const v: unknown = Object.hasOwn(content, k) ? content[k] : undefined;
++    if (typeof v !== 'string' || v === '') throw new Error(`footer text: missing key "${k}"`);
++    out[k] = v;
++  }
++  return out as FooterText;
++}
++
++const fail = (why: string): never => { throw new Error(`footerNode: ${why}`); };
++const node = (component: string, props: Record<string, unknown>, children: FooterNode['children'] = []): FooterNode => ({ component, props, children });
++
++/** The footer node of one section. `prefix` names the test ids: `<prefix>-footer`, `-link-<href>`, `-legal`, `-line`, `-copyright` (the links group has none, as before). */
++export const footerNode = (s: FooterSection, L: FooterLayout, prefix: string): FooterNode => {
++  const cls = (role: keyof FooterLayout): string => {
++    const c = Object.hasOwn(L, role) ? L[role] : undefined;
++    return typeof c === 'string' ? c : fail(`the layout has no class for "${role}"`);
++  };
++  const key = (p: FooterPart): string => (typeof p.content === 'string' && p.content !== '' ? p.content : fail(`a ${p.role} part needs a content key`));
++  const kids: FooterNode[] = [];
++  let links: FooterNode | null = null;
++  const seen: Record<string, number> = {};
++  s.parts.forEach((p) => {
++    const n = seen[p.role] ?? 0;
++    seen[p.role] = n + 1;
++    if (p.role === 'link') {
++      if (typeof p.href !== 'string' || p.href === '') fail('a link needs an href');
++      if (links === null) { links = node('Group', { key: `${s.id}-links`, className: cls('links') }); kids.push(links); }
++      links.children.push(node('Button', { key: `${s.id}-${n}`, testID: `${prefix}-link-${p.href}`, href: p.href, size: 'lg', variant: 'subtle', color: 'gray', className: cls('link') }, [{ content: key(p) }]));
++      return;
++    }
++    links = null;
++    if (p.role !== 'legal' && p.role !== 'line' && p.role !== 'copyright') return fail(`unknown role "${p.role}"`);
++    kids.push(node('Text', {
++      key: `${s.id}-${p.role}-${n}`, testID: `${prefix}-${p.role}`, className: cls(p.role),
++      ...(p.pending === true ? { pending: true } : {}),
++    }, [{ content: key(p) }]));
++  });
++  return node('Stack', { key: s.id, testID: `${prefix}-footer`, component: 'footer', className: cls('footer') }, kids);
++};
+diff --git a/src/lib/entitlements/index.ts b/src/lib/entitlements/index.ts
+index 5abba979d..4886526ef 100644
+--- a/src/lib/entitlements/index.ts
++++ b/src/lib/entitlements/index.ts
+@@ -25,6 +25,7 @@
+ 
+ import type { QueryResult, QueryResultRow } from 'pg';
+ import { logWarn } from '@/lib/logger';
++import { formatDateDmyFixed } from '@/lib/parcels/lot-size-entry';
+ import seedJson from '../../../scripts/seeds/logic_variables.json';
+ 
+ /** A pg Pool or PoolClient — anything exposing parameterised `query`. */
+@@ -620,8 +621,16 @@ export interface ParcelToolUsage {
+   reportsLeft: number | null;
+   reportsLimitReached: boolean | null;
+   resetsOn: string | null;
++  /** resetsOn as the Toronto calendar date, "9 Dec 2026" (SRCH.A6, RR-0310): the page prints it, no date is derived on the device. */
++  resetsOnDisplay: string | null;
+ }
+ 
++/** The Toronto-date label of a period-end instant; null for an instant that is not a valid date (never a throw on the read). */
++const resetLabel = (iso: string): string | null => {
++  const d = new Date(iso);
++  return Number.isNaN(d.getTime()) ? null : formatDateDmyFixed(d);
++};
++
+ /**
+  * Reads the caller's parcel_tool plan and this month's report counts, unlocked.
+  * No row -> every field null (a zero-entitlement user is a legal state). A status
+@@ -629,7 +638,7 @@ export interface ParcelToolUsage {
+  * failure degrades to null counts with a WARN (the meter itself stays fail-closed).
+  */
+ export async function readParcelToolUsage(db: Queryable, uid: string): Promise<ParcelToolUsage> {
+-  const empty = { reportsUsed: null, reportsLimit: null, reportsLeft: null, reportsLimitReached: null, resetsOn: null };
++  const empty = { reportsUsed: null, reportsLimit: null, reportsLeft: null, reportsLimitReached: null, resetsOn: null, resetsOnDisplay: null };
+   if (!isUuid(uid)) return { status: null, ...empty };
+   const res = await db.query<ParcelToolRow>(
+     `SELECT status, plan_key, current_period_end, created_at, now() AS now
+@@ -655,5 +664,6 @@ export async function readParcelToolUsage(db: Queryable, uid: string): Promise<P
+     reportsLeft: Math.max(0, u.reportsLimit - u.reportsUsed),
+     reportsLimitReached: u.reportsUsed >= u.reportsLimit,
+     resetsOn: u.resetsOn,
++    resetsOnDisplay: resetLabel(u.resetsOn),
+   };
+ }
+diff --git a/src/lib/surfaces/maxbld-landing.ts b/src/lib/surfaces/maxbld-landing.ts
+index b7caf1a0c..f2775849b 100644
+--- a/src/lib/surfaces/maxbld-landing.ts
++++ b/src/lib/surfaces/maxbld-landing.ts
+@@ -35,6 +35,8 @@ import type { Queryable as PaceQueryable } from '@/lib/parcels/report-check-pace
+ import { buildTree, pageViewOf, viewOf, type PageView, type ReportView } from '@/lib/surfaces/report/core';
+ import { reportCtx } from '@/lib/surfaces/report/data';
+ import { keepValued } from '@/lib/surfaces/maxbld-static';
++import { pickFooterText } from '@/components/surfaces/web/footerNode';
++import { SEARCH_CONTENT } from '@/lib/surfaces/maxbld-web';
+ 
+ const TAG = '[maxbld-landing]';
+ export const LANDING = 'web_landing';
+@@ -142,7 +144,7 @@ export async function readLanding(db: Queryable): Promise<Landing> {
+   const view = sampleView();
+   // The step picture is the sample's first option picture; no image URL is issued yet (the signer is owed), so it is absent today.
+   const picture = Object.values(view.images ?? {})[0];
+-  const report: StaticReport = { sample: view, ...(demo ? { demo } : {}), ...(picture ? { picture } : {}) };
++  const report: StaticReport = { sample: view, footer: pickFooterText(SEARCH_CONTENT), ...(demo ? { demo } : {}), ...(picture ? { picture } : {}) };
+   const state = lines.length ? 'static' : 'degraded';
+   return { state, page: landingPage(state, values, report), content, values, report };
+ }

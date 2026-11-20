@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — errors: "each with its declared UI and `no_retry[]`" — mobile/src/hooks/useParcelLookup.ts "throw new ParcelLookupSchemaError('Parcel entitlement response failed schema validation');" — the doc block declares the drift UI as "the line is simply absent" but the code throws the very sentinel the module header says "re-throws to the ErrorBoundary", so a consumer that follows the module pattern crashes the search surface on entitlement drift instead of hiding the line — return null (or a non-fatal result) on entitlement drift and let the line be absent, or catch it in the consumer
+DEFER severity=MED — staleness: "`stale_time_ms` · `gc_time_ms` · `refetch_on_*` — the TanStack defaults `mobile/src/lib/queryClient.ts` sets globally today, declared per surface." — mobile/src/hooks/useParcelLookup.ts "staleTime: 0," — only stale time is set; gc_time and refetch_on_* are not declared and the doc's "re-read on focus" is a comment, not an evidenced refetch policy — set refetchOnWindowFocus/AppState and gcTime explicitly or declare them in the surface descriptor
+DEFER severity=MED — What to walk step 4: "A change that adds behaviour no pasted clause or ruling names is a finding" — mobile/src/lib/maxbldHelp.ts "await WebBrowser.openBrowserAsync(helpUrl(topic, q));" — the change adds an in-app browser sheet, a reports-left entitlement line, semi question page keys, a 60s boundedWait, and a semi=answered count, all cited only by SRCH.A6/SRCH.SEMI/SRCH.C12/SRCH.METER-2/SRCH.LOTMAP-2 and RR codes that are not in the pasted context, so none of it can be verified against the pasted clauses — paste the SRCH/RR governing clauses for this lane or confirm another spec part governs before this can be judged compliant
+MET — SEARCH archetype log_hygiene: "never log `q`" — mobile/src/lib/maxbldHelp.ts "console.warn(`[maxbldHelp] could not open Help & Support (topic ${topic})`);" — logs the topic only, the typed address q is never written to the log
+REJECT — REPORT "outputs.writes: "none"` **enforced**" — the change is accused of triggering a write via the semi=answered lookup GET — not a real issue: the count is the metered ledger event modelled under `metering`, which the spec carries separately from `outputs`, and the diff adds no surface `outputs` write
+REJECT — inputs "`contract_ref[]` ... **never an inline schema**" — the change is accused of defining an inline Zod schema in schemas.ts — not a real issue: ParcelToolEntitlementSchema is the app's runtime parse boundary, not a surface descriptor's `inputs.contract_ref`
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  66521ms (66.5s)
+📊 Tokens — total: 34917, input: 23138, output: 11779, reasoning: 11094

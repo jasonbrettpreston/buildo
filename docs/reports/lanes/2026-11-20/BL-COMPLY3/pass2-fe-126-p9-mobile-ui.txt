@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-ui.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §11b.3, dated note 2026-11-12 (MF-46 follow-up) item (4) "The map page's \"Report incorrect lot match\" (MF-53, topic lot_match with the parcel) is not on the page yet and is not added here." — mobile/src/components/surfaces/LotMapBinding.tsx, multi_parcel body "+        helpRow()," plus helper "helpLink('lot_match')", and mobile/app/(app)/parcel-tool/disambiguate.tsx "+      open_help: openHelp," — the diff adds exactly the map page lot_match help link the ruling excludes, and carries the typed query, not the parcel — remove helpRow, helpLink('lot_match') and the disambiguate open_help action until a ruling pastes them.
+
+BUG severity=HIGH — Spec 126 §11b.3, dated note 2026-11-12 (MF-46 follow-up) item (4) "`mobile_parcel_search` state `ambiguous` gains the content key `list.report` and the action `open_help {topic: address_match, q: {derived: input}}` on both targets (FE-07 parity)" — mobile/src/components/surfaces/LotMapBinding.tsx "case 'intersection': ... , helpLink('address_match')]" and the same insertion on too_many_lots, unlinked_no_pin and unlinked — the ruling scopes the address_match help action to the search page's ambiguous state; no pasted clause names it on the four map states — remove the four helpLink('address_match') insertions.
+
+BUG severity=HIGH — Spec 126 §11b.3, dated note 2026-11-12 (MF-46 follow-up) item (4) "the app leaves for `MAXBLD_HELP_URL` (`mobile/src/lib/maxbldHelp.ts`, `Linking.openURL`; pinned equal to `MAXBLD_ORIGIN` + `/help` because the app cannot import `host-policy.ts`)" — mobile/app/(app)/parcel-tool/index.tsx "+      // MF-46 follow-up (P35-D18 a): \"Report incorrect address match\" opens Help & Support in the in-app browser sheet (task-362; openBrowserAsync)." — the diff asserts a different handoff mechanism (in-app browser sheet) than the pinned Linking.openURL, and maxbldHelp.ts is not in the diff so the pinned URL and the fragment prefill of item (3) "never a query string" cannot be seen — keep Linking.openURL, or land and paste the operator ruling that amends item (4).
+
+DEFER severity=MED — Spec 126 §11b.3 table "`mobile_parcel_search`, `mobile_parcel_disambiguation_map` | SEARCH, LIST | mobile on the library; the `web` target is added later", the pasted slice names no allowance line — mobile/src/components/surfaces/SearchBinding.tsx "+      ...reportsLeft(s)," with its authority stated in code as "SRCH.A6 (task-320; RR-0307; small-pages-v8 search.html:267)" — the reports-left line and the entitlement read feeding it are named by no pasted clause or ruling, so compliance cannot be confirmed here — paste RR-0307 or the search card line that rules the line before merge.
+
+DEFER severity=MED — Spec 126 §11b.6 Accuracy "values only through the closed binding set; no maths in bindings; conformance and parity locks" — mobile/app/(app)/parcel-tool/semi-question.tsx "+      result = await boundedWait(fetchParcelLookup({ parcelId: id, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);" — Continue now issues a server-counted answered lookup whose only authority in the material is the code's own "SRCH.SEMI stage 2 (task-319, MF-93; RR-0278)" and the code-referenced "operator \"semi ask a\", 2026-11-13", neither pasted — paste the SRCH.SEMI ruling so the changed Continue path can be checked at all.
+
+DEFER severity=LOW — Spec 126 §11b.6 Accuracy "values only through the closed binding set" — mobile/src/components/surfaces/LotMapBinding.tsx "+    onPress: { action: 'open_help', topic, q: derived('query') }," — the lot map binding's closed derived-name list is not in the pasted material, so whether `query` is a declared name (and the ref resolves under the conformance lock) cannot be seen — confirm `query` sits in the lot map derived names before the golden is locked.
+
+DEFER severity=LOW — Spec 126 §11b.3, dated note 2026-11-11 (MF-46) item (3) "The topic, query and lot travel in the URL fragment (`/help#topic=address_match&q=...`), never a query string" — mobile/src/components/surfaces/LotMapBinding.tsx "+    onPress: { action: 'open_help', topic, q: derived('query') }," — the fragment construction lives in maxbldHelp.ts, which is not in the diff, so the "never a query string" rule cannot be verified for the new map-page calls — include maxbldHelp.ts in the reviewed diff.
+
+REJECT — Spec 126 §11b.6 Standardization "no hand-built component (import boundary)" — replacing the library Check icon with "+      node('View', { key: 'card-dot', className: checked ? L.semiDotChecked : L.semiDot })," — View is a primitive already in the renderer's COMPONENTS table and no new import or component is introduced.
+
+REJECT — Spec 126 §11b.6 Observability "every declared state maps to a library state component" — the semi loading state dropping ActivityIndicator for "+      return [node('Text', { key: 'loading-text', testID: 'parcel-semi-loading', className: L.semiLoadingText, role: 'status' }, [content('state.loading')])];" — Text is a vendored library part from the same closed table, so the state still maps to a library component.
+
+MET — Spec 126 §11b.3, dated note 2026-11-12 (MF-46 follow-up) item (4) "the action `open_help {topic: address_match, q: {derived: input}}`" — mobile/app/(app)/parcel-tool/index.tsx "      open_help: openHelp," — the ruled search-page action stays wired, the diff only rewrites its comment there.
+
+MET — Spec 126 §11b.6 Accuracy "values only through the closed binding set; no maths in bindings" — mobile/src/components/surfaces/SearchBinding.tsx "      vars: { left: entitlement('reportsLeft'), allowance: entitlement('reportsLimit'), reset: entitlement('resetsOnDisplay') }," — the three served values print as contract refs, with no arithmetic in the binding.
+
+MET — Spec 126 §11b.4 "The CLI output is vendored unmodified in `mobile/src/vendor/rnr/`" — mobile/src/components/surfaces/SurfaceRenderer.tsx "import { AlertTriangle, ArrowRight, Ban, Check, ChevronLeft, Info, Lock, MapPin, RefreshCw, Search, User, X } from 'lucide-react-native';" — the two icons come from an existing package and no vendored file is added or edited.
+
+MET — Spec 126 §11b.3 table "`mobile_parcel_search`, `mobile_parcel_disambiguation_map` | SEARCH, LIST | mobile on the library" — mobile/src/components/surfaces/LotMapBinding.tsx "    variant: 'link'," inside "node('Button', { key: 'help'," — the new help control is composed from the shared renderer's Button, not a hand-built component.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 3
+
+---
+⏱  61484ms (61.5s)
+📊 Tokens — total: 37642, input: 25615, output: 12027, reasoning: 10249

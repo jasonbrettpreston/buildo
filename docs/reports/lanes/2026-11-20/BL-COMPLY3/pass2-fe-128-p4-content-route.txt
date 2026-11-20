@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-content-route.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — contract_parcels_entitlement.descriptor.json:6 "its response is an explicit `.strict()` whitelist of six fields" — src/app/api/parcels/entitlement/types.ts:18 "resetsOnDisplay: z.string().nullable()," — the change adds a response field, so the descriptor's declared whitelist is now one short (six claimed, seven served) and `under_126` was left stale while only `response_fields` and `data_story` were updated — fix: update `under_126` to the new field count (and any other count asserted in the same file) in this change
+
+DEFER severity=MED — contract_parcels_entitlement.descriptor.json:324 "Exactly one call site reads it today" — NONE (the cited "mobile/src/hooks/useParcelLookup.ts:96" is not in this change set, cannot see it) — the `sharing.answer` flip from "none" to "sole" and the new `consumers`/`consumers_verified` entry rest on a call site this diff does not carry — verify the line exists at that path before merge, otherwise the sharing answer is an unsupported assertion
+
+DEFER severity=MED — Spec 128 §6 "An Ask is not a ruling: it carries a recommended default and a reversibility note, and it is resolved by the operator before the phase it gates." — mobile_parcel_search.content.json:2 ""footer.copyright": "© MaxBLD"," (also footer.help, footer.privacy, footer.terms, select.hint, help.lot.prompt, help.address.link) — no pasted ask or ruling names a footer, help links or a map hint on these surfaces, so these keys are additions with no authority in the pasted material and no shown binding in the descriptor hunks — cite the card or ruling that requires them, or drop them
+
+DEFER severity=LOW — web_landing.sample.json:1996 ""scripts/surfaces/_schema/report-presentation.json": "e151b5ccd11cd137"," — the pinned hash is changed for a schema file that is not among the files in this change set, cannot see the schema edit that would justify the new pin — confirm the pin equals the schema's hash at the merge commit, a stale pin fails the sample's own integrity check
+
+REJECT — operator 2026-11-09 "the report should still show with the google street view photo if its not available - just the photo space should not show" — the change is accused of contradicting "the report should still show" by sending `page` null for an unsure lot — the ruling is about a missing street view photo inside a produced report, not about the semi question that precedes a report, so it does not govern this hold
+
+REJECT — src/app/api/parcels/lookup/route.ts:92 "semi: z.literal('answered').optional()," — the change is accused of letting a caller mark its own lot countable and so perturb the meter — the flag can only lift a hold on the caller's own lot, the lot still counts once under the row lock and only when a page is sent, and the meter/exploit surface is not this lens
+
+MET — Spec 128 §6 ASK-21 "an edge to a designed thing renders dashed rather than being refused" — mobile_parcel_search.descriptor.json:80 "/api/parcels/entitlement" — the new `contract_ref` edge targets a contract whose status is "exists", so no designed-edge case is introduced
+
+MET — Spec 128 §6 ASK-19 "A measured value below 44 is a FINDING, not a setting" — contract_parcels_entitlement.descriptor.json a11y "touch_target_min_px": "UNRESEARCHED" — the change leaves the field as the counted UNRESEARCHED state and introduces no sub-44 value
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  62169ms (62.2s)
+📊 Tokens — total: 31583, input: 20461, output: 11122, reasoning: 10247

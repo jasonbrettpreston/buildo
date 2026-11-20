@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — FE-38 dated note "A hit with no evaluated option is not counted against the monthly allowance (1 b)" — mobile/src/hooks/useParcelLookup.ts:38 "`parcelId=${encodeURIComponent(params.parcelId)}${params.semi ? `&semi=${params.semi}` : ''}`" — the new semi=answered Continue path asks the server to count a lot, and nothing pasted shows the count skipped when the hit has no evaluated option — paste the contract_parcels_lookup count branch or RR-0278 proving the 1 b exemption holds for semi=answered hits, or gate the flag on an evaluated option.
+DEFER severity=LOW — SRCH.A6 governing clause (not pasted), only its citation is visible "SRCH.A6 (task-320; RR-0307): the caller's plan and this month's report count" — mobile/src/hooks/useParcelLookup.ts:82 "SRCH.A6 (task-320; RR-0307): the caller's plan and this month's report count" — the ruling that authorises the allowance line is outside the pasted register rows, so its clauses cannot be checked — paste RR-0307 (MORNING-DECISIONS.md:1182) with the diff.
+DEFER severity=LOW — FE-40 "Limits and budgets are read from DB fields or admin settings, never typed." — mobile/src/lib/semiQuestion.ts:16 "export const SEMI_CONTINUE_WAIT_MS = 60_000;" — a 60 second wait is typed as a code constant — rationale: FE-40's limits are the McTest catalogue's own, so blast radius is small, but record the operator item or move the number to a setting.
+DEFER severity=LOW — FE-40 "Every row names its owning task and a status" — mobile/src/lib/semiQuestion.ts:15 "SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup" — no catalogue row for tasks 319, 320, 353, 360, 361 or 362 is visible in this diff — rationale: rows may live in tests/e2e/scenarios.json, which is outside the pasted file list, so confirm rather than assume.
+REJECT — FE-38 "a slot that must stay reads 'Not yet evaluated' (FE-06, 126 §11a.3), never a number or $0" — the charge that the new allowance line prints a number where 0 or not_evaluated is required — the clause governs withheld legacy cost and size slots on the parcel screen, not the server-computed reports-left count.
+REJECT — FE-43 "See details opens as its own sheet on web and mobile, by a second CLOSED layout key `details_view`" — the charge that maxbldHelp.ts opens a sheet outside the closed layout key — "See details" is the report option panel, not the Help and Support web page, which this row does not govern.
+MET — FE-38 — mobile/src/lib/schemas.ts:443 — the lookup schema is untouched and ParcelToolEntitlementSchema adds no opt_ or max_ legacy key, so the withheld set stays withheld.
+MET — FE-39 — mobile/src/lib/maxbldHelp.ts:11 — the Help and Support transport changes only; no engine value and no "Can you build bigger?" copy is produced here, so EI-D4's "Not yet evaluated" is untouched.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  55272ms (55.3s)
+📊 Tokens — total: 28768, input: 18649, output: 10119, reasoning: 9338

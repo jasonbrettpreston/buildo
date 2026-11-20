@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-ui.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Rule 11 "when a projection's section order changes, the declared order is re-derived and the goldens recaptured, never patched." — mobile/src/components/surfaces/SearchBinding.tsx "pill(s), +      ...reportsLeft(s), +      legal()," (and SemiQuestionBinding.tsx "+    header()," moved outside the ScrollView, LotMapBinding.tsx "+        helpRow()," appended) — three projections change section order and the named file set (8 files, no golden) contains no recapture, so the declared order and goldens are patched by hand — recapture the golden pair for mobile_parcel_search, mobile_parcel_lot_map and mobile_parcel_semi_question and re-derive the declared order in the same commit (B4: "goldens refresh on fingerprint, never on request").
+
+BUG severity=HIGH — Rule 4 "which fields render, in which order, with which labels, is a declaration the server owns" / "not a component's implicit knowledge. The measured defect: one contract declared at four sites, locked at one." — mobile/app/(app)/parcel-tool/index.tsx "entitlement: entitlement ? { reportsLeft: entitlement.reportsLeft, reportsLimit: entitlement.reportsLimit, resetsOnDisplay: entitlement.resetsOnDisplay } : null," with SearchBinding.tsx "reportsLeftShown(s.entitlement)" twice — the all-three-present draw rule is now re-declared at index.tsx, searchProps and searchData, the exact multi-site declaration the rule names — declare the draw condition once (descriptor/config) and have the binding and the data map both read that one declaration.
+
+BUG severity=HIGH — Rule 1 "no surface behaviour lives only in a component" — mobile/src/components/surfaces/SemiQuestionBinding.tsx "className: s.busy ? `${L.semiSelect} opacity-[0.85]` : L.semiSelect," — the busy look (opacity 0.85) and the accessibilityState busy switch are behaviour that lives only in the binding, in the file whose replaced header said classes and numbers come from the layout table — move the busy class and the busy posture into the declared table (L.semiSelectBusy) or the descriptor and read it.
+
+BUG severity=MED — Rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture" — mobile/app/(app)/parcel-tool/semi-question.tsx "result = await boundedWait(fetchParcelLookup({ parcelId: id, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);" — a new timeout is consumed from a module constant and its expired posture is stated only in a comment and a catch, not as a declared variable with bounds — register the wait as a logic variable with bounds and on_invalid and read it through the slice config.
+
+BUG severity=MED — "a rule without a lock is not yet a rule", "the same commit that records a ruling adds a both-directions test, red on the old behaviour and green on the new." — mobile/app/(app)/parcel-tool/semi-question.tsx "// SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): Continue first fetches the same lookup" — SRCH.METER-2, SRCH.A6, SRCH.C12, SRCH.SEMI stage 2, SRCH.SEMI-3, C.11 and C.12 are all recorded as rulings and the 8-file set carries no test — add the red-on-old, green-on-new lock for each recorded clause in the same commit.
+
+DEFER severity=MED — Rule B2 "a proposal to add a declaration carries its measured cost, and the operator rules" — mobile/src/components/surfaces/LotMapBinding.tsx "return [notice('intersection', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'intersection-text', className: L.noticeTextNeutral }, [content('state.intersection')])]), helpLink('address_match')];" — five help links, a pick hint and a help row are added to the projection with no stated cost — state the surface-validate.mjs footprint (descriptor bytes, node count, golden bytes) for the added boxes before lock.
+
+DEFER severity=MED — Rule 20 "Every displayed field's `source` is in the closed set" and "adding a member needs a register row and a panel." — mobile/src/components/surfaces/SearchBinding.tsx "const ENTITLEMENT = 'contract_parcels_entitlement';" — a second contract id becomes the source of three displayed values with no register row in this diff, and the closed set is not pasted so membership cannot be confirmed — attach the register row and panel decision, or confirm the id is already a member of the protected set.
+
+MET — Rule 1 — mobile/src/components/surfaces/SurfaceRenderer.tsx "export const ICONS = { Search, MapPin, AlertTriangle, RefreshCw, Lock, Ban, User, Check, ArrowRight, X, ChevronLeft, Info };" — the two icons the new binding nodes name (ChevronLeft, Info) are added to the closed icon table rather than resolved ad hoc.
+
+MET — Rule 12 "An unhandled state is a FAIL, not a blank screen." — mobile/app/(app)/parcel-tool/semi-question.tsx "if (mountedRef.current) setSubmitError(e);" and "retry: () => { if (submitError != null) setSubmitError(null); else void refetch(); }" — a failed or timed-out Continue renders the built error state with a working retry instead of navigating or blanking.
+
+MET — Rule 2 "Anything else computed client-side is a Rule 2 violation and needs a `deviations[]` row with an adjudicator and a date." — mobile/app/(app)/parcel-tool/index.tsx "if (accessToken) void refetchEntitlement({ cancelRefetch: false });" — the focus re-read adds no client-side derivation of the count; the three printed values are passed through as served.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 7
+
+---
+⏱  69620ms (69.6s)
+📊 Tokens — total: 37866, input: 24968, output: 12898, reasoning: 11523

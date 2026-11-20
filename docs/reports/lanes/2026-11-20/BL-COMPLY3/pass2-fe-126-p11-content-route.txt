@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-content-route.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — §14 Out-of-Scope Files "`scripts/manifest.json` and every `scripts/**/*.descriptor.json`" — "scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json" (in the diff file list) — three `scripts/**/*.descriptor.json` files are edited although the pasted boundary declares that path out of scope, and the reason given there (the `app_outputs` step on the pipeline slot) only covers step descriptors, not surface or contract descriptors — add a dated note to §14 separating surface/contract descriptors from step descriptors, or hold these three descriptor edits.
+
+BUG severity=MED — §13 "the declared-schema ↔ introspected-types drift lock" and the descriptor-as-contract posture "its response is an explicit `.strict()` whitelist of six fields" — contract_parcels_entitlement.descriptor.json:6 "an explicit `.strict()` whitelist of six fields" vs src/app/api/parcels/entitlement/types.ts:18 "resetsOnDisplay: z.string().nullable()" — the change makes the strict response seven fields while the same descriptor still declares six, so the contract descriptor no longer describes the contract it governs — change "six fields" to seven in the same commit.
+
+BUG severity=MED — §13 "scriptstests/parcels-entitlement.infra.test.ts"" (locking_tests line, unchanged and not in the diff) — the response key list, `sharing.answer` (none to sole), `consumers` and `consumers_verified` all change with no seed, no drift update and no locking-test change in the diff, so the bidirectional drift lock and its RED canary are unproven for the new field — land the seed/drift update plus a proven RED canary for `resetsOnDisplay` with this change.
+
+BUG severity=MED — §13 "every archetype renderer against its golden rendered-tree snapshot, per declared state" — mobile_parcel_search.descriptor.json:359 "name": "hit", "golden": "reports_left" — a new declared state names a golden but no rendered-tree golden or test for it is in the diff (cannot see one) — land the golden tree for `hit`/`reports_left` and its lock with this change.
+
+BUG severity=LOW — no pasted clause names the added behaviour: "(RR-0310)" at src/app/api/parcels/entitlement/types.ts:18 and "semi: z.literal('answered').optional()" at src/app/api/parcels/lookup/types.ts:45 — the semi hold, the one-lot compute fallback, `resetsOnDisplay` and the `hit`/`reports_left` line all rest on RR-0310, RR-0278, SRCH.A6, SRCH.METER-2 and LOAD.1, none of which are in the pasted context, so compliance with them cannot be judged — paste those rulings.
+
+DEFER severity=NIT — §12 dated notes "(prior text kept, M-246)" — entitlement descriptor "answer": "none" replaced by "answer": "sole" — the entitlement descriptor replaces its prior statement instead of appending a dated note, while the lookup descriptor in the same diff appends "Dated 2026-11-19 (LOAD.1, task-266, M-246)" — restate the caller change as a dated note keeping the prior sentence.
+
+MET — §13 "the `schema_drift` state rendering rather than blanking" — mobile_parcel_search.content.json "search.schema_drift" — the state is kept and no state key is removed by the diff.
+
+MET — §14 "`migrations/**` — no migration is authored by this spec" — no file under `migrations/` appears in the diff.
+
+REJECT — §12.1 "the pilot ships a SLOT, a SLOT reads `offers`" / "**`pdf_exports`**" — accused of shipping the pilot without roles, class D, Storage bucket and `pdf_exports` — not a real issue: the diff converts no surface to SLOT, EXPORT or REPORT, it edits two content files, two contract descriptors, one sample hash and two routes.
+
+REJECT — §13 "the generated Zod mirror set-equalling the engine's `PARCEL_COST_LINES`" — accused of breaking the generated mirror lock — not a real issue: the entitlement schema is a hand-written contract whitelist, not the cost-lines mirror under that test.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 5
+
+---
+⏱  83973ms (84.0s)
+📊 Tokens — total: 35557, input: 20254, output: 15303, reasoning: 14290

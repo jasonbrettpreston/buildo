@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-ui.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §5.3 "The server returns the projected screen JSON; the client renders it through a small archetype component set; there is no client business logic." — mobile/src/components/surfaces/SearchBinding.tsx:93 "reportsLeftShown(s.entitlement) ? [node('Text', { key: 'reports-left', ... })] : []" and mobile/app/(app)/parcel-tool/index.tsx:56 "const entitlement = entitlementFailed ? null : entitlementData;" — clause unmet: whether the allowance line renders, and whether the served data is admissible, is decided in the client, while the same pasted clause makes SERVER "canonical for the projection: section order, labels, formatting decisions, which lines render" — fix: have the projection emit the line (or a render flag) and delete the client predicate.
+
+BUG severity=HIGH — Spec 126 §5.0 "nothing in that fan-out is hand-written, and nothing in it is a second declaration" — mobile/app/(app)/parcel-tool/index.tsx:78 "entitlement: entitlement ? { reportsLeft: entitlement.reportsLeft, reportsLimit: entitlement.reportsLimit, resetsOnDisplay: entitlement.resetsOnDisplay } : null" plus SearchBinding.tsx:49 "const ENTITLEMENT = 'contract_parcels_entitlement';" — clause unmet: the three entitlement fields and the contract name are re-declared by hand in the mobile projection (searchData repeats the same three fields), the exact transcription Arrow 2 says the generated mirror retires — fix: generate the entitlement mirror from the CONTRACT descriptor and copy the served object as one, do not re-list fields.
+
+BUG severity=MED — Spec 126 §5.3 "1 SERVER ... canonical for the projection: section order, labels, formatting decisions, which lines render" — mobile/app/(app)/parcel-tool/[parcelId].tsx:36 "reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError })" — clause unmet: the client discards the served page to substitute a loading state the server did not project — fix: let the lookup project the held state while the question is owed, and render the response as served.
+
+DEFER severity=MED — Spec 126 §5.3 "declared as `outputs.optimistic`, not improvised" — mobile/app/(app)/parcel-tool/semi-question.tsx:30 "const [submitting, setSubmitting] = useState(false);" and SemiQuestionBinding.tsx:93 "className: s.busy ? `${L.semiSelect} opacity-[0.85]` : L.semiSelect" — the busy presentation and the duplicate-press latch are client state with no `outputs.optimistic` declaration anywhere in the pasted change — fix: declare the pending output in the semi-question descriptor and regenerate, or drop the busy look.
+
+DEFER severity=MED — Spec 126 §5.6 "The fingerprint spans descriptor + contract descriptor + the archetype component + the format helpers." — SemiQuestionBinding.tsx:121 "return node('SafeAreaView', ..., [header(), node('ScrollView', ..." plus the icon swaps 'X' to 'ChevronLeft' and 'Lock' to 'Info' — the archetype components of three surfaces changed their rendered trees and no surfaces/__goldens__ refresh is visible in the pasted diff — fix: refresh the goldens for lot-map, search and semi-question in this same change.
+
+DEFER severity=LOW — Spec 126 §5.0 "There is one source, and everything else is emitted from it." — mobile/src/components/surfaces/LotMapBinding.tsx:102 "onPress: { action: 'open_help', topic, q: derived('query') }" and "content('help.lot.prompt')" — new content keys and a new derived ref appear in the bindings with no descriptor change or regenerated slice in the pasted diff, the slice contents cannot be seen — fix: confirm the keys exist in the descriptor content block and the derived name is in the closed list, or add them and regenerate.
+
+MET — Spec 126 §5.3 "Navigation position: `expo-router` owns which route is mounted" — mobile/app/(app)/parcel-tool/semi-question.tsx:81 "router.replace(route)" — the new Continue flow still navigates by route replace, no screen is mounted outside the router.
+
+MET — Spec 126 §5.3 "2 TanStack cache ... unchanged in role" — mobile/app/(app)/parcel-tool/semi-question.tsx:77 "storeLookup(id, result);" — the answered lookup is written under the report's existing key, so the cache keeps its role as the cache of server state.
+
+REJECT — Spec 126 §6.1 step 2 "The header names the descriptor it implements" — accused of adding DB shape without a declare-and-assert migration — no table, column or migration appears in the pasted diff, the entitlement read consumes an existing table, so no header is owed.
+
+REJECT — Spec 126 §6.2 "There is no `admin` Postgres role." — accused of widening the role matrix — the diff adds no role, no policy and no RLS block, it reads the parcels entitlement as the signed-in user.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 6
+
+---
+⏱  83612ms (83.6s)
+📊 Tokens — total: 42091, input: 26361, output: 15730, reasoning: 14544

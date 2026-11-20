@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-schema.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — bindings.json dated note 2026-11-19 (C-9m) "The check C-9m still requires exactly one min-h- token on the list; nothing under 44 is listed." — scripts/surfaces/_schema/bindings.json:73 "\"Button\": [\"min-h-[44px]\", \"min-h-[48px]\"], \"Input\": [\"min-h-[44px]\"]" — the same diff puts two min-h- tokens on the list while the note states C-9m requires exactly one and amends no check, so C-9m fails or the note is false — fix: state the C-9m change and carry it into screen-checks.mjs, or express 48 px without a second list token.
+
+BUG severity=MED — contracts.json entitlement under_126 "its response is an explicit `.strict()` whitelist of six fields" — scripts/surfaces/_schema/census/contracts.json:22970 "\"resetsOn\", \"resetsOnDisplay\"" — the response whitelist now carries seven fields while the descriptor still states six, so the descriptor and its own whitelist disagree — fix: change the sentence to seven fields or drop the count.
+
+BUG severity=MED — contracts.json parcel lookup data_story opening "It reads 9 tables" — scripts/surfaces/_schema/census/contracts.json:22003 (added note) "reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`" plus "the validated step settings of `logic_variables`" — the head count of 9 is contradicted by six further tables and logic_variables added in the same field — fix: state the conditional total or move the count out of the head sentence.
+
+DEFER severity=MED — bindings.json FE-32 "a golden value {\"contract\": \"<contract_id>.<field>\"} names a field of a CONTRACT descriptor's inputs.field_whitelist" — scripts/surfaces/_schema/census/mobile-product.json:7999 "the server serves it already written in Toronto time as resetsOnDisplay (RR-0310, task-351) and it binds as a contract value" — the list edited in contracts.json reads as the response whitelist (per "its response is an explicit `.strict()` whitelist"), and I cannot see any inputs.field_whitelist entry, so the contract ref may have no resolvable target — fix: add resetsOnDisplay to inputs.field_whitelist or name the exact list the binding resolves against.
+
+DEFER severity=MED — mobile-product.json P35-D14 a entry, adjudicator "operator 2026-11-09, Wave 1 decision batch item 13" — scripts/surfaces/_schema/census/mobile-product.json:7999 "The reset date of the reports-left line (SRCH.A6) is not a derived name" — an operator-adjudicated deviation record is amended on a non-pasted, non-operator reference while adjudicated_by stays the 2026-11-09 ruling, which does not name this value — fix: cite the operator ruling that approves the amendment in adjudicated_by, or leave the record unamended until one exists.
+
+DEFER severity=LOW — bindings.json dated note 2026-11-19 "orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling)" — scripts/surfaces/_schema/bindings.json:3 note text, and census/contracts.json "unsure", "semi" — all five new behaviours (min-h-[48px], 'semi', the 'hit'/reports_left golden, resetsOnDisplay, not_evaluated:not_in_engine_population) rest on rulings named but not pasted (task-353, task-319/MF-93, task-320/RR-0307, RR-0310/task-351, MB-94/Spec 126 11a.3), so compliance with each cannot be confirmed from the pasted material — fix: paste those rulings or add dated notes carrying the operator words, as the house pattern does.
+
+MET — §11b.4 dated note 2026-11-11 (MF-48 D-3 a) "`bindings.json` `libraries.mobile` is NOT extended" — scripts/surfaces/_schema/bindings.json:6 "\"mobile\": [\"@rn-primitives/*\"]" — no library, mapping entry, module or mount is added, so the C-8m host list and the no-new-library rule are untouched.
+
+MET — §11b.3 dated note 2026-11-11 (MF-48, operator) "we are still using schema's and no code. except all recommendations" — diff file list "scripts/surfaces/_schema/bindings.json, … contracts.json, … mobile-product.json, … report-presentation.json, … seed-report-v2.mjs" — every touched file is surface schema/census data or its seed, no application code.
+
+MET — §11b.5 "The first consumer of an archetype on a platform adds its binding entry, golden shape, one planted-defect case, one render smoke and its `frontend` path globs; nothing else." — scripts/surfaces/_schema/census/mobile-product.json:7886 "\"name\": \"hit\", \"golden\": \"reports_left\"" — SEARCH already landed (MF-35), and the change adds only a golden plus a contract_ref, no binding module, mount or mapping.
+
+MET — bindings.json P35-D14 a closed derived list "DERIVED_NAMES in SearchBinding.tsx; the mobile golden test refuses any other" — scripts/surfaces/_schema/census/mobile-product.json:7999 "is not a derived name" — the closed list is narrowed by exclusion only, no new derived name is admitted.
+
+REJECT — §11b.3 one-content-home reading of the MF-46 follow-up operator words "use schema's" — the same literal in report-presentation.json and seed-report-v2.mjs — every presentation key is already mirrored seed-to-json in that pair, so this is the files' existing pattern, not a new second home for content.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 6
+
+---
+⏱  67765ms (67.8s)
+📊 Tokens — total: 37761, input: 25295, output: 12466, reasoning: 11034

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-ui.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 128 §6 "An Ask is not a ruling: it carries a recommended default and a reversibility note, and it is resolved by the operator before the phase it gates." — mobile/app/(app)/parcel-tool/semi-question.tsx:61 "result = await boundedWait(fetchParcelLookup({ parcelId: id, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);" — the authority for this new server-side effect, and for SRCH.A6, SRCH.C12, SRCH.METER-2 and SRCH.SEMI-3, exists only as inline comments naming rulings (RR-0278, RR-0307, task-360/361/362) that are not pasted, so no pasted clause can be shown to resolve them — paste those rulings into the review context or cite the register cells before merge
+
+DEFER severity=MED — Spec 128 ASK-19 "A measured value **below 44 is a FINDING, not a setting**" — mobile/src/components/surfaces/LotMapBinding.tsx:97 "onPress: { action: 'open_help', topic, q: derived('query') }" inside "variant: 'link', className: L.helpLink" — the only new tappable control declares no height in this diff and L.helpLink is not pasted, so the 44 px floor for a surface touch target cannot be shown met — paste L.helpLink (or the surface's a11y.touch_target_min_px) with a measured value at or above 44
+
+REJECT — Spec 128 ASK-10 "**Yes, as a declared `"not_yet_metered"` cell, never a blank or a zero.**" — the reports-left line being dropped entirely when the entitlement read fails is accused of printing nothing where a value belongs — ASK-10 governs the `/admin/surfaces` usage column, not a mobile search line whose whole clause here is "Drawn only when the read answered"; nothing pasted forbids omitting it
+
+REJECT — Spec 128 ASK-23 "extending a vocabulary is a reviewed change made once, never a per-row invention" — adding ChevronLeft and Info to ICONS is accused of per-row vocabulary invention — ASK-23's amendment covers the schema archetype profiles GATE/STATIC ("schema `allOf`"), while the renderer table is declared closed by plan v3 §2.2, which is not pasted and is not this spec's vocabulary
+
+REJECT — Spec 128 ASK-15 "**Membership is measured** (the tables reached by a `public` route), never listed by hand." — the new entitlement read is accused of hand-listing an anon-readable table into class E — mobile/app/(app)/parcel-tool/index.tsx:60 "if (accessToken) void refetchEntitlement({ cancelRefetch: false });" shows the read is authenticated, so public-route class E membership is not implicated
+
+MET — Spec 128 ASK-17 "the latter deliberately **not** available to a SURFACE, because a screen writing directly is the defect this standard retires" — mobile/src/components/surfaces/SearchBinding.tsx:52 "const ENTITLEMENT = 'contract_parcels_entitlement';" — every new displayed value is a contract ref, no surface write path is added
+
+MET — Spec 128 §8 "This spec MIRRORS it and must never edit it" — diff header "files: mobile/app/(app)/parcel-tool/[parcelId].tsx, ... SurfaceRenderer.tsx" — no file under docs/specs is touched
+
+MET — Spec 128 §8 "`migrations/**` — this spec records rulings about schema, never schema." — diff header (8 mobile files) — no migration is added or edited
+
+MET — Spec 128 §8 "`scripts/reconcile-runs.js` ... NOT a target of this spec and never edited by a surface conversion" — diff header (8 mobile files) — this surface conversion touches no script
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  82698ms (82.7s)
+📊 Tokens — total: 37999, input: 22959, output: 15040, reasoning: 14127

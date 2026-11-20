@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-ui.patch (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 135 "This register decides McFrontend rulings only; it does not decide McBylaws numbers, which McBylaws owns." — mobile/src/components/surfaces/SearchBinding.tsx:93 "SRCH.A6 (task-320; RR-0307; small-pages-v8 search.html:267)" — every behaviour this diff adds (reports-left line, lot-map help link and pick hint, answered lookup on Continue, busy state, SEMI-2 loading page, open_help sheet) cites SRCH.*/RR-* rulings and v8 mock cites, none of which is in the pasted pack, so compliance cannot be judged — paste the SRCH rows or the Spec that names these behaviours; until then this review is vacuous on them.
+
+REJECT — Spec 135 rules 2 and 5 "A rule without a lock is not yet a rule" / "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — the change is accused of landing ruling behaviour with no register row and no lock test in the same commit — not a real issue here: the diff adds no register row at all (no FE-nn row, no lock cell, no status word is touched anywhere in the eight files), so no lock obligation attaches to this diff; the register edit is a separate commit under "Land order".
+
+MET — Spec 135 rule 5 (lock paths must resolve for RULED rows and must not yet exist for OWED rows) — mobile/src/components/surfaces/SemiQuestionBinding.tsx:123 "export function semiQuestionProps(s: SemiQuestionSituation): PropsNode {" — the diff adds no `src/tests/surfaces/*.test.ts` path and no row that would read one, so no lock-resolve clause is broken.
+
+VERDICT: PASS on compliance with the pasted clauses (the pasted pack is Spec 135 register mechanics only; no pasted clause binds a mobile UI diff, so nothing is unmet)
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  23454ms (23.5s)
+📊 Tokens — total: 25296, input: 21315, output: 3981, reasoning: 3531

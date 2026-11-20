@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — FE-19 "an entered fact updates the shared database, raises that lot's confidence for every viewer, and keeps provenance (source `user`, `entered_at`)" — mobile/src/lib/lotForm.ts:8 "it travels as a route param (OVERRIDE_PARAM) to the report, which does not apply it yet: nothing outside this file reads the param or calls `lotFormEffective`" — the semi answer is an entered fact and this change ships the page that collects it and has the server count the lot ("so the server counts the lot once its report is produced"), yet the answer reaches no shared store and carries no provenance, and no pasted clause or ruling permits that — write the answer as one shared record with source `user` and `entered_at` before the report is produced, or paste the ruling that exempts the semi answer.
+
+DEFER severity=MED — FE-03 "every declaration is checked against the live contracts and the catalogue, with golden render states and both-directions locks" — mobile/src/lib/schemas.ts:444 "export const ParcelToolEntitlementSchema = z.object({" — the new entitlement contract and the new `semi` request parameter land in this diff part with no contract lock and no golden render state — land the contract/Zod lock and the search-surface golden in the same change.
+
+DEFER severity=MED — FE-07 "Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output" — mobile/src/constants/lotMap.ts (pasted line) "helpRow: 'mt-3 flex-row flex-wrap items-center justify-center gap-1'," — the help row, pick hint and reports-left line appear only as mobile keys, with no web counterpart or parity assertion in this diff part — land the conformance/parity assertion for the search and semi surfaces, or paste the surface's single-target declaration.
+
+DEFER severity=MED — FE-05 "every number comes from McBylaws; no maths in the UI" — mobile/src/lib/parcelSearchCore.ts (pasted line) "the server computes reportsLeft, reportsLimit and the reset date already written in Toronto time as `resetsOnDisplay`" — the count is computed by the app's own route (src/app/api/parcels/entitlement), not shown anywhere here to be a McBylaws number, so a displayed number gains a second source — record the McBylaws binding for reportsLeft, or paste the ruling that names this route the single source.
+
+DEFER severity=LOW — FE-11 "no MF task outside Phase 0-2 or convert-on-touch, and admin tasks only as listed for Phase 2 (MF-30, MF-37, MF-40)" — mobile/src/constants/lotMap.ts (pasted line) "SRCH.SEMI stage 2 (task-319, MF-93)" — MF-93 is not one of the Phase 2 ids the register names, so it is lawful only as a convert-on-touch task and that reason is not shown — cite the queue row or state the convert-on-touch reason in the commit.
+
+DEFER severity=LOW — FE-01 "no Phase 1 surface commit lands without a McFrontend-Task trailer once MF-17 lands" — NONE (commit 3a36e8b26's message is not pasted) — no trailer is visible and the task ids appear only inside code comments — confirm the commit carries the McFrontend-Task trailer.
+
+REJECT — FE-02 "Declared, not coded: a screen is a descriptor" — accused of adding hand-written screen code for the search, lot map and semi pages — these are style constants for existing mount files, and the pasted operator ruling D-3 ("we should used our existing components and approach as detailed in the mobile build specs") keeps the mobile approach.
+
+REJECT — FE-06 "status words come from a closed list" — accused of opening a status word with status: z.string().nullable() — FE-06 governs displayed report status words and this line binds only the three served count fields ("the three served fields the line binds, nothing else"), status is never shown.
+
+MET — FE-01 — mobile/src/lib/maxbldHelp.ts (pasted line) "import * as WebBrowser from 'expo-web-browser';" — the package is already used at useSubscribeCheckout.ts:61 per the file's own note, so no new library dependency is added outside the freeze lifted by name.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 1
+
+---
+⏱  95160ms (95.2s)
+📊 Tokens — total: 41085, input: 23438, output: 17647, reasoning: 16660

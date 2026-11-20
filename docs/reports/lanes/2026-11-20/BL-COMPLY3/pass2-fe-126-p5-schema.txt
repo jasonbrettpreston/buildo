@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-schema.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — pasted task-353 SUITE.FIX-2 note (in-diff), "orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling)" — bindings.json:73 `"Button": ["min-h-[44px]", "min-h-[48px]"]` — no pasted spec clause and no operator ruling authorizes a 48 px token on mobile Button, and the note itself concedes it is not an operator ruling, so the added behaviour is unnamed in the governing context — fix: drop `min-h-[48px]` until an operator ruling is pasted, or paste RR-0309 and the operator words into the context and cite the clause they satisfy.
+
+BUG severity=HIGH — pasted task-353 SUITE.FIX-2 note (in-diff), "The check C-9m still requires exactly one min-h- token on the list" — bindings.json:73 `"Button": ["min-h-[44px]", "min-h-[48px]"]` — the same added note states the lock needs exactly one min-h- token on the list while the diff lists two, so either C-9m fails on this file or the note is false, and either way the change cannot be shown compliant with its own lock — fix: keep one token per component entry and move the semi-page 48 px into the surface's own binding, or amend C-9m in the same change with the ruling.
+
+BUG severity=MED — Spec 126 §10, "| tables (transitively) | the referenced CONTRACT descriptors' `database` |" — contracts.json:22003 `"It reads 9 tables"` followed in the same sentence by "the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`" plus `bylaw_resolution_results`, `bylaw_resolution_option_results` and `logic_variables` — the declared count is contradicted by the paragraph that carries it, so the registry's derived table column undercounts by seven — fix: restate as "reads 9 tables, and while the live switch is on and only for a missing or stale page, 7 more: ..." with all 16 named.
+
+BUG severity=MED — Spec 126 §9, "apply `inputs.field_whitelist`, which must equal the contract's" — contracts.json:22970 `"resetsOn", "resetsOnDisplay"` beside the unchanged contracts.json `"under_126": "its response is an explicit `.strict()` whitelist of six fields"` — the response whitelist gains a seventh field while the descriptor's own count still declares six, so there is no single truth for the whitelist the surface must equal — fix: update `under_126` in the same change to seven fields and name `resetsOnDisplay`.
+
+BUG severity=MED — Spec 126 §8, "`surface.guards.session` must agree with the auth class of every contract in `inputs.contract_ref[]`, as a `checks[]` entry at `severity: FAIL`" — mobile-product.json:7607 `"contract_ref": ["/api/parcels/lookup", "/api/parcels/entitlement"]` — the surface's contract_ref now spans a second contract whose auth class is `authenticated` and the diff adds no checks[] entry covering it, so the required FAIL-severity cross-check scope has grown with nothing shown to match — fix: add or verify the checks[] entry naming both contracts at severity FAIL.
+
+DEFER severity=MED — Spec 126 §6.3 dated-note convention, "> Dated note 2026-11-10 (M-246, prior text kept;" — contracts.json:22003 `"Dated 2026-11-19 (LOAD.1, task-266, M-246): while the web live switch is on (it is off), a hit whose stored page is missing or stale is computed in memory"` — the census asserts an M-246 spec note that the pasted Spec 126 §6.3 and §6.3.1 do not contain, so the change rests on a clause not in the governing text — fix: land the LOAD.1 note in Spec 126 §6.3 before the census cites it, or cite its real provenance.
+
+DEFER severity=MED — Spec 126 §6.3 row 9, "its `descriptor->'consumers'` is where the fan-out graph's edges live" and row 8, "`PK (surface_id)`" — contracts.json:23250 `"consumers": ["mobile/src/hooks/useParcelLookup.ts"]` and `"surfaces": ["mobile/src/hooks/useParcelLookup.ts:96"]` — the new fan-out edge and sharing entry are file paths, not surface ids, so they cannot join a `surface_descriptors` row and §10's unconsumed column is satisfied by a key that names no surface — fix: name the consuming surface id in `consumers`/`sharing.surfaces` and keep the file:line in `consumers_verified`/`evidence`.
+
+DEFER severity=LOW — no pasted clause (Spec 126 §11a.3 dated note 2026-11-12, R-2 is cited but not pasted) — seed-report-v2.mjs:600 `'not_evaluated:not_in_engine_population': 'Not yet evaluated', // MB-94 (c), Spec 126 11a.3 dated note 2026-11-12 (R-2 literal)` — the literal's verbatim compliance against R-2 cannot be checked because the cited clause is not in the pasted context; cannot see — fix: paste §11a.3 R-2 or confirm the literal against it.
+
+MET — Spec 126 §10, "a contract with zero `sharing.surfaces` entries renders **red**" — contracts.json:23250 — `sharing.surfaces` is non-empty, so this contract no longer renders red.
+MET — Spec 126 §7, "**`period` is derived at query time, never stored.**" — contracts.json:22970 — `resetsOnDisplay` is a per-request server string, no stored period or counter column is introduced.
+MET — Spec 126 §6.3.1, "Until that step exists, a REPORT surface reads its existing contract (`/api/parcels/lookup`)" — contracts.json:22003 — the extra reads stay behind the lookup contract and the off switch, no new app-facing seam is added.
+MET — Spec 126 §9, "No business logic executes client-side beyond the five named exceptions" — mobile-product.json:7996 — the reset date moves to the server "already written in Toronto time as resetsOnDisplay", removing a client formatting step.
+
+REJECT — Spec 126 §7, "event `TEXT NOT NULL, -- closed: property_view | pdf_send | offer_impression | offer_click | export | parcel_id_translated`" — accused of widening a closed §7 list with `semi` — not a real issue: the `semi` entry is added to a census lotForm evidence enum, not to `usage_events.event` or `subject_kind`.
+REJECT — Spec 126 §6.3 row 1, "the materialised projection, the **ONLY** seam the app reads (§6.3.1)" — accused of adding a request-time read of `parcel_maxbld_scenarios` — not a real issue: §6.3.1 explicitly keeps `/api/parcels/lookup` as the interim seam, the app still reads one contract, and the path is off.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 5
+
+---
+⏱  78867ms (78.9s)
+📊 Tokens — total: 42119, input: 27476, output: 14643, reasoning: 12923

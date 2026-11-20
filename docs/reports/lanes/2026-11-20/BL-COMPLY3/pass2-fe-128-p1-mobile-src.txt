@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Rule 3 (Tunables externalized) "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture" — mobile/src/hooks/useParcelLookup.ts:136 "staleTime: 0," — the new entitlement query's stale time is a bare literal with no registry row, no bounds and no on_invalid posture, so the clause is unmet — read the stale time from the registered logic variable (or register one with bounds and an on_invalid posture) and cite it in the hook.
+
+BUG severity=HIGH — Rule 3 (Tunables externalized; the same pasted row's source text names "timeout") "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture" — mobile/src/lib/semiQuestion.ts:17 "export const SEMI_CONTINUE_WAIT_MS = 60_000;" — a new 60 second wait is a module constant whose own comment calls it "a timeframe; operator item in the lane report", i.e. an unregistered threshold — resolve it through the logic-variable registry with bounds and an on_invalid posture and drop the local constant.
+
+BUG severity=HIGH — §2.1 Rule 2 boundary "Anything else computed client-side is a Rule 2 violation and needs a `deviations[]` row with an adjudicator and a date." — mobile/src/lib/parcelSearchCore.ts:78 "export function reportsLeftShown(e: EntitlementLine | null | undefined): e is ShownEntitlement {" — the client decides whether the metered count is shown and off what fields, which is none of the five declared exceptions, and no deviations[] row appears in the pasted diff — add the deviations[] row naming adjudicator and date, or move the decision to the contract.
+
+DEFER severity=MED — Rule 4 (Projection rule declared) "which fields render, in which order, with which labels, is a declaration the server owns" — mobile/src/lib/parcelSearchCore.ts:70 "`EntitlementLine` is the three served fields the line binds, nothing else." — the rendered field subset and its label are declared in a client module rather than a server-owned declaration — bind the line to a declared projection (fields, order, labels) or record a deviations[] row.
+
+DEFER severity=MED — Spec 124 §4.4 inherited verbatim "a rule without a lock is not yet a rule, the same commit that records a ruling adds a both-directions test, red on the old behaviour and green on the new." — mobile/src/hooks/useParcelLookup.ts:79 "SRCH.METER-2 (task-360, RR-0278; SE-1, SE-2)" — rulings are recorded in code comments and this diff part carries no test file, so no both-directions lock is visible — add the red/green test in the same commit or state in the lane report which diff part holds the lock.
+
+DEFER severity=MED — Rule 12 (Truthful failure posture) "An unhandled state is a FAIL, not a blank screen." — mobile/src/lib/maxbldHelp.ts:26 "console.warn(`[maxbldHelp] could not open Help & Support (topic ${topic})`);" — a failed sheet open shows the person nothing and the posture exists only as a console line, not a declared state — declare the failure posture (a shown message, or an explicitly declared silent no-op) instead of a warn.
+
+DEFER severity=MED — Rule 1 (Nothing hidden) "no surface behaviour lives only in a component, it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field, in that order." — mobile/src/lib/lotForm.ts:8 "which does not apply it yet: nothing outside this file reads the param or calls `lotFormEffective`" — the answered question's effect is recorded only in a code comment, so the surface behaviour lives in a comment — declare the effect as descriptor data or a shape rule, or hold the question until task-209 lands.
+
+DEFER severity=LOW — Rule 11 (Render-order re-derive) "when a projection's section order changes, the declared order is re-derived and the goldens recaptured, never patched" — mobile/src/constants/parcelSearch.ts:163 "allowance: 'mt-3 text-center text-[13px] leading-[18px] font-normal text-report-muted'," — a line is inserted under the box, changing the page's rendered order, with no re-derivation or recapture visible in this part — re-derive the declared order and recapture the goldens, or point at the recapture commit.
+
+MET — Rule 1 "or (last resort) a new schema field" — mobile/src/lib/schemas.ts:446 "export const ParcelToolEntitlementSchema = z.object({" — the served entitlement shape is declared as a schema with per-field nullability rather than assumed inside a component.
+
+REJECT — SRCH.A6 / RR-0307 (reports-left line) — the change is accused of adding a surface no pasted clause names — neither the ruling nor the entitlement contract is in the pasted context, so this lens does not invent that clause.
+
+REJECT — Rule 5 / Rule 13 (checks >= 1, a surface validates itself) — accused of shipping with no declared check — the surface's descriptor and its checks are not pasted, so no unmet can be shown.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 7
+
+---
+⏱  84877ms (84.9s)
+📊 Tokens — total: 37410, input: 20098, output: 17312, reasoning: 16091

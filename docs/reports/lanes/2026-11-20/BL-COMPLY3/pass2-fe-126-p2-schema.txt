@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-schema.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — bindings.json dated note 2026-11-19 (task-353 SUITE.FIX-2) "The check C-9m still requires exactly one min-h- token on the list; nothing under 44 is listed." — scripts/surfaces/_schema/bindings.json:73 `"Button": ["min-h-[44px]", "min-h-[48px]"], "Input": ["min-h-[44px]"]` — the added comment states C-9m requires exactly one min-h- token on the list, and the same diff puts two on Button, while screen-checks.mjs (the reader) is not in this file set so the check cannot have been widened in this change — either list one token per component or amend C-9m in the same change.
+
+DEFER severity=MED — Spec 126 §2 unit 2 CONTRACT "one API route — request · response projection · **tables** · auth class · rate buckets · consumers" — scripts/surfaces/_schema/census/contracts.json:22003 "It reads 9 tables — `parcels` ... `usage_events`, and ... `parcel_maxbld_scenarios` and ... `bylaw_resolution_lot_stamps`" against the same paragraph's appended note "besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, ... `logic_variables`" — the leading count of 9 is contradicted by the note the same diff appends, which names seven further tables read on the compute path — restate the head count or mark it as the stored-read count only.
+
+DEFER severity=MED — Spec 126 §2 unit 2 CONTRACT "response projection" (the descriptor's own declared shape) — scripts/surfaces/_schema/census/contracts.json:22894 "its response is an explicit `.strict()` whitelist of six fields" against contracts.json:22971 `"resetsOnDisplay"` — the entitlement descriptor gains a field in its listed set but the same descriptor's under_126 sentence still says six fields, so the descriptor's declared shape and its field list disagree — update the count to seven or state why the new field is outside the whitelist.
+
+DEFER severity=MED — Spec 126 §2 dated note 2026-11-09 (M-246; operator "D-0-D-4 approved", D-2) "per D-2 the web and admin archetype set is Mantine 9 + `@rjsf/mantine` + `mantine-datatable` (§11b.4)" — scripts/surfaces/_schema/bindings.json:1 (rewritten $comment) "the web library is Mantine 8.3.18 / mantine-datatable 8.3.13; the touch_targets values were re-measured on @mantine/core 8.3.18 styles.css" — the $comment line is replaced wholesale in this diff, so it re-asserts a version the pasted operator ruling supersedes — reword to the pasted §11b.4 version or cite the ruling that supersedes D-2.
+
+DEFER severity=MED — bindings.json dated note 2026-11-19 (task-353 SUITE.FIX-2) "orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling)" — scripts/surfaces/_schema/bindings.json:73 `"min-h-[48px]"` — the change to the binding-boundary data home rests, by its own words, on a non-operator decision, and no pasted operator ruling authorises a 48 px token — paste the RR-0309 approval as a ruling in the context or hold the token until one exists.
+
+DEFER severity=LOW — Spec 126 §2 intro "Every surface, contract and job named in this spec has a row" — scripts/surfaces/_schema/census/mobile-product.json:7887 `"name": "hit", "golden": "reports_left"` — the census now references a golden named reports_left and no golden file appears in the changed file set; cannot see the mobile golden tree, so the row may point at a capture that does not exist — confirm the golden exists and is captured by the mobile golden test.
+
+DEFER severity=LOW — Spec 126 §2 intro "source of record `scripts/surfaces/_schema/surface-census.json`, drift-locked by `src/tests/surface-registry.infra.test.ts`" — the file set touches only scripts/surfaces/_schema/census/contracts.json and census/mobile-product.json — the pasted clause names surface-census.json as the source of record and this diff does not touch it; cannot see whether a build folds the census/ files in — state the fold step or edit the named source of record.
+
+MET — Spec 126 §2 unit 2 CONTRACT "consumers" — scripts/surfaces/_schema/census/contracts.json:23250 `"consumers": ["mobile/src/hooks/useParcelLookup.ts"]` — the entitlement contract now declares its fan-out edge instead of an empty list.
+MET — Spec 126 §2 "those edges are the CONTRACT's own `consumers[]`" — scripts/surfaces/_schema/census/contracts.json:23252 `"consumers_verified": ["mobile/src/hooks/useParcelLookup.ts:96"]` — the edge is evidenced at file:line, not just named.
+MET — Spec 126 §2 intro "Read the registry to review the estate" — scripts/surfaces/_schema/census/mobile-product.json:7607 `"/api/parcels/entitlement"` added to contract_ref — the search surface now declares both contracts it reads by reference.
+
+REJECT — Spec 126 §2 unit 2 CONTRACT "tables" — accused of leaving `tables[]` stale when data_story gains `parcel_maxbld_scenarios` and `bylaw_resolution_lot_stamps` — the contents of that array are not pasted ("cannot see"), so it is not raised as a finding.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 5
+
+---
+⏱  66451ms (66.5s)
+📊 Tokens — total: 36140, input: 23887, output: 12253, reasoning: 10849

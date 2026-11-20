@@ -1,0 +1,506 @@
+# DIFF PART mobile-ui: git diff 9f04d9074..3a36e8b26, files: mobile/app/(app)/parcel-tool/[parcelId].tsx, mobile/app/(app)/parcel-tool/disambiguate.tsx, mobile/app/(app)/parcel-tool/index.tsx, mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/src/components/surfaces/LotMapBinding.tsx, mobile/src/components/surfaces/SearchBinding.tsx, mobile/src/components/surfaces/SemiQuestionBinding.tsx, mobile/src/components/surfaces/SurfaceRenderer.tsx
+diff --git a/mobile/app/(app)/parcel-tool/[parcelId].tsx b/mobile/app/(app)/parcel-tool/[parcelId].tsx
+index a38a5c704..b49524f34 100644
+--- a/mobile/app/(app)/parcel-tool/[parcelId].tsx
++++ b/mobile/app/(app)/parcel-tool/[parcelId].tsx
+@@ -19,18 +19,21 @@ import { needsSemiQuestion, semiQuestionRoute, SEMI_PARAM } from '@/lib/lotForm'
+ export default function ParcelReportScreen() {
+   const router = useRouter();
+   const { parcelId, [SEMI_PARAM]: semi } = useLocalSearchParams<{ parcelId: string; semi?: string }>();
+-  const { data, isError, isFetching, refetch } = useParcelLookup(parcelId);
++  const semiParam = typeof semi === 'string' ? semi : undefined;
++  const { data, isError, isFetching, refetch } = useParcelLookup(parcelId, semiParam);
+   // SEMI-B (operator "semi ask a", 2026-11-13): an unsure lot (the doubt band of Spec 78 O-4) is asked the one question BEFORE the report shows. The
+   // redirect fires once, on the first settled data (Spec 99 §6.5), never on a background refetch; a `semi` param means it was answered, and an older
+   // server that sends no lotForm never asks. Clear semis and clear detached lots stay on the report.
+   const askedRef = useRef(false);
+-  const ask = needsSemiQuestion(data, typeof semi === 'string' ? semi : undefined);
++  const ask = needsSemiQuestion(data, semiParam);
+   useEffect(() => {
+     if (isFetching || !ask || askedRef.current || !parcelId) return;
+     askedRef.current = true;
+     router.replace(semiQuestionRoute(parcelId));
+   }, [ask, isFetching, parcelId, router]);
+-  const { view, lifecycle } = reportScreenState({ data: data ? { page: data.page ?? null } : undefined, isError });
++  // SRCH.METER-2 (task-360, UX-2c): the server holds an unsure lot's page (null) until the answer, so while the question is owed the screen shows the loading
++  // state, never the miss text, on the settled render before the redirect above fires.
++  const { view, lifecycle } = reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError });
+   const onRetry = useCallback(() => void refetch(), [refetch]);
+   const onBack = useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);
+   return <ReportPageHost view={view} lifecycle={lifecycle} content={REPORT_SLICE.content} onRetry={onRetry} onBack={onBack} />;
+diff --git a/mobile/app/(app)/parcel-tool/disambiguate.tsx b/mobile/app/(app)/parcel-tool/disambiguate.tsx
+index f54cd6d95..eac1afef2 100644
+--- a/mobile/app/(app)/parcel-tool/disambiguate.tsx
++++ b/mobile/app/(app)/parcel-tool/disambiguate.tsx
+@@ -15,6 +15,7 @@ import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/Surface
+ import { LOT_MAP_SLICE, lotMapData, lotMapProps } from '@/components/surfaces/LotMapBinding';
+ import { useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+ import { buildLotMapSituation } from '@/lib/lotMap';
++import { openHelp } from '@/lib/maxbldHelp';
+ import { PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
+ 
+ export default function ParcelDisambiguationScreen() {
+@@ -46,6 +47,8 @@ export default function ParcelDisambiguationScreen() {
+       retry: () => void refetch(),
+       select: (parcelId: string) => setSelectedParcelId(parcelId),
+       push,
++      // SRCH.C12 (task-321): the help link opens Help & Support in the in-app browser sheet (task-362) with the topic and the query (the same action as the search page).
++      open_help: openHelp,
+       // NAV-AUDIT-20261111 #64: a cold open (deep link, no history) has nothing to go back to, so Clear replaces with the Lookup route.
+       back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
+     }),
+diff --git a/mobile/app/(app)/parcel-tool/index.tsx b/mobile/app/(app)/parcel-tool/index.tsx
+index ec27c0d55..70d6120e6 100644
+--- a/mobile/app/(app)/parcel-tool/index.tsx
++++ b/mobile/app/(app)/parcel-tool/index.tsx
+@@ -13,7 +13,7 @@
+ // open `disambiguate` (MF-53). MaxBLD is its own product (Spec 116 OD5): nothing here may reference a lead-gen concept, and the query is
+ // never logged or tracked.
+ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+-import { useRouter } from 'expo-router';
++import { useFocusEffect, useRouter } from 'expo-router';
+ import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
+ import {
+   SEARCH_CANDIDATE_LIMIT,
+@@ -23,10 +23,11 @@ import {
+   searchData,
+   searchProps,
+ } from '@/components/surfaces/SearchBinding';
+-import { useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
++import { useParcelEntitlement, useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+ import { buildSearchSituation, PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
+ import { openHelp } from '@/lib/maxbldHelp';
+ import { useRecentSearchesStore } from '@/store/recentSearchesStore';
++import { useAuthStore } from '@/store/authStore';
+ 
+ export default function ParcelSearchScreen() {
+   const router = useRouter();
+@@ -47,6 +48,18 @@ export default function ParcelSearchScreen() {
+     setSelectedParcelId(null);
+   }, [debounced]);
+ 
++  // SRCH.A6 (task-320; RR-0307): the reports-left line reads the served count (GET /api/parcels/entitlement) and re-reads it each time this screen gains
++  // focus, so the number is current after a report was produced. A failed read or no plan leaves `data` undefined or null: no line (v8 draws none).
++  // After a failed re-read the query keeps its last data: a failed read draws NO line, so the data is dropped when the query is in error (output review r2).
++  const accessToken = useAuthStore((s) => s.accessToken);
++  const { data: entitlementData, isError: entitlementFailed, refetch: refetchEntitlement } = useParcelEntitlement();
++  const entitlement = entitlementFailed ? null : entitlementData;
++  useFocusEffect(
++    useCallback(() => {
++      if (accessToken) void refetchEntitlement({ cancelRefetch: false });
++    }, [accessToken, refetchEntitlement]),
++  );
++
+   // The Toronto-only rule (operator ruling 2026-09-16 (b)): an out-of-Toronto address is refused visibly and never sent ('' disables the hook).
+   const { data, isFetching, error, refetch } = useParcelSearch(searchQueryArg(debounced));
+ 
+@@ -62,8 +75,9 @@ export default function ParcelSearchScreen() {
+       selectedParcelId,
+       cap: SEARCH_CANDIDATE_LIMIT,
+       minQueryLen: SEARCH_MIN_QUERY_LEN,
++      entitlement: entitlement ? { reportsLeft: entitlement.reportsLeft, reportsLimit: entitlement.reportsLimit, resetsOnDisplay: entitlement.resetsOnDisplay } : null,
+     }),
+-    [input, debounced, data, error, isFetching, recent, selectedParcelId],
++    [input, debounced, data, error, isFetching, recent, selectedParcelId, entitlement],
+   );
+ 
+   // A search is recorded only when it opens a page (P35-D16 a): the lot, SELECT, the map page. One navigation, one record.
+@@ -99,7 +113,7 @@ export default function ParcelSearchScreen() {
+       push: (to: string) => navigate(to),
+       // The search page renders no back control; the action exists for the shared renderer's action set. Guarded as #64 so it can never strand a cold open.
+       back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
+-      // MF-46 follow-up (P35-D18 a): "Report incorrect address match" leaves the app for Help & Support (Linking.openURL).
++      // MF-46 follow-up (P35-D18 a): "Report incorrect address match" opens Help & Support in the in-app browser sheet (task-362; openBrowserAsync).
+       open_help: openHelp,
+     }),
+     [refetch, navigate, router],
+diff --git a/mobile/app/(app)/parcel-tool/semi-question.tsx b/mobile/app/(app)/parcel-tool/semi-question.tsx
+index 06c553990..31422f732 100644
+--- a/mobile/app/(app)/parcel-tool/semi-question.tsx
++++ b/mobile/app/(app)/parcel-tool/semi-question.tsx
+@@ -6,15 +6,18 @@
+ // Surface S-093 `mobile_parcel_semi_question` — the one-question page before the report (operator "semi ask a", 2026-11-13), on the MF-53 "choose your
+ // lot" pattern (disambiguate.tsx). The mount file of a converted surface: hooks, the redirect effect and the callbacks only; everything it shows comes
+ // from the binding (SemiQuestionBinding.tsx), the shared renderer and the content file. It reads the SAME query as the report (['parcel-lookup', id]),
+-// so it makes no extra request. Nothing is selected at open. The answer is the owner's lot_form_user_override, carried to the report as a route param
++// so opening it adds no lookup of its own; the one lookup it issues is the answered one on Continue (below). Nothing is selected at open. The answer is the owner's lot_form_user_override, carried to the report as a route param
+ // (lotForm.ts; O-12: the pipeline never reads it, no server store); Continue REPLACES this page with the report so Back from the report never returns here.
+-import React, { useEffect, useMemo, useRef, useState } from 'react';
++// SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): Continue first fetches the same lookup with the one flag `semi: 'answered'`, which lets the server count
++// the lot once its report is produced, stores the result in the report's cache entry, then opens the report. A failed fetch shows the built error
++// state and does not navigate; Try again clears it and the chosen answer is still there.
++import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+ import { useLocalSearchParams, useRouter } from 'expo-router';
+ import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
+ import { SEMI_QUESTION_SLICE, semiQuestionData, semiQuestionProps } from '@/components/surfaces/SemiQuestionBinding';
+-import { useParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
++import { fetchParcelLookup, useParcelLookup, useSetParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+ import { SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
+-import { buildSemiQuestionSituation } from '@/lib/semiQuestion';
++import { boundedWait, buildSemiQuestionSituation, SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
+ import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
+ 
+ export default function SemiQuestionScreen() {
+@@ -23,10 +26,20 @@ export default function SemiQuestionScreen() {
+   const id = typeof parcelId === 'string' ? parcelId : '';
+   const [selected, setSelected] = useState<SemiAnswer | null>(null);
+   const { data, isFetching, error, refetch } = useParcelLookup(id || undefined);
++  const storeLookup = useSetParcelLookup();
++  const [submitError, setSubmitError] = useState<unknown>(null);
++  const [submitting, setSubmitting] = useState(false);
++  const submittingRef = useRef(false);
++  const mountedRef = useRef(true);
++  // Set true in the body too: an effect cleanup followed by a re-run (Fast Refresh, StrictMode) must not leave the guard false (task-361, CR-1).
++  useEffect(() => {
++    mountedRef.current = true;
++    return () => { mountedRef.current = false; };
++  }, []);
+ 
+   const situation = useMemo(
+-    () => buildSemiQuestionSituation({ parcelId: id, data, error, isFetching, schemaDrift: error instanceof ParcelLookupSchemaError, selected }),
+-    [id, data, error, isFetching, selected],
++    () => buildSemiQuestionSituation({ parcelId: id, data, error: submitError ?? error, isFetching, schemaDrift: (submitError ?? error) instanceof ParcelLookupSchemaError, selected, submitting }),
++    [id, data, error, submitError, isFetching, selected, submitting],
+   );
+ 
+   // The redirect state (a lot that is not unsure) replaces this page once, on settled data, never on a background refetch.
+@@ -38,19 +51,44 @@ export default function SemiQuestionScreen() {
+     router.replace(target);
+   }, [target, isFetching, router]);
+ 
++  // Continue: the answered lookup, stored under the report's key, then the report; never throws, a second press while it runs is ignored.
++  // No lookup with an empty id (the hook above is guarded the same way); the wait is bounded so the latch cannot stick (task-361, LX-R2, LX-E1):
++  // a lookup that does not settle ends in the same built error state as a failed one, and the next Continue works.
++  const continueToReport = useCallback(async (route: string) => {
++    if (!id) return;
++    if (submittingRef.current) return;
++    submittingRef.current = true;
++    setSubmitting(true);
++    let result;
++    try {
++      result = await boundedWait(fetchParcelLookup({ parcelId: id, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);
++    } catch (e) {
++      if (mountedRef.current) setSubmitError(e);
++      return;
++    } finally {
++      submittingRef.current = false;
++      if (mountedRef.current) setSubmitting(false);
++    }
++    // Left the page while the fetch ran (the server has counted or not): do not open the report behind the user's back.
++    if (!mountedRef.current) return;
++    storeLookup(id, result);
++    redirectedRef.current = true;
++    router.replace(route);
++  }, [id, storeLookup, router]);
++
+   const actions = useMemo(
+     () => ({
+       change_input: () => undefined,
+       set_input: () => undefined,
+-      retry: () => void refetch(),
++      retry: () => { if (submitError != null) setSubmitError(null); else void refetch(); },
+       // The renderer's `select` carries a string; here it is the answer (the descriptor's deviation entry).
+       select: (answer: string) => {
+         if ((SEMI_ANSWERS as readonly string[]).includes(answer)) setSelected(answer as SemiAnswer);
+       },
+-      push: (route: string) => router.replace(route),
++      push: (route: string) => void continueToReport(route),
+       back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
+     }),
+-    [refetch, router],
++    [refetch, router, submitError, continueToReport],
+   );
+ 
+   return (
+diff --git a/mobile/src/components/surfaces/LotMapBinding.tsx b/mobile/src/components/surfaces/LotMapBinding.tsx
+index 9a6be911c..2b8aa69c1 100644
+--- a/mobile/src/components/surfaces/LotMapBinding.tsx
++++ b/mobile/src/components/surfaces/LotMapBinding.tsx
+@@ -93,6 +93,28 @@ const unlinkedNotice = (): PropsNode =>
+     ]),
+   ]);
+ 
++/** SRCH.C12 / B.7: the v8 link to Help & Support, prefilled with the typed query (the existing action open_help). */
++const helpLink = (topic: 'lot_match' | 'address_match'): PropsNode =>
++  node('Button', {
++    key: 'help',
++    testID: 'parcel-lotmap-help',
++    variant: 'link',
++    className: L.helpLink,
++    accessibilityRole: 'link',
++    onPress: { action: 'open_help', topic, q: derived('query') },
++  }, [node('Text', { key: 'help-text', className: L.helpLinkText }, [content('help.address.link')])]);
++
++/** C.11 (task-362; choose-lot.html:278): "Pick a lot on the map or in the list." under the disabled Choose a lot button. */
++const pickHint = (): PropsNode =>
++  node('Text', { key: 'pick-hint', testID: 'parcel-lotmap-pick-hint', className: L.pickHint }, [content('select.hint')]);
++
++/** C.12: "Not sure which lot? Get help with an address" (choose-lot.html:279). */
++const helpRow = (): PropsNode =>
++  node('View', { key: 'help-row', testID: 'parcel-lotmap-help-row', className: L.helpRow }, [
++    node('Text', { key: 'help-prompt', className: L.helpPrompt }, [content('help.lot.prompt')]),
++    helpLink('lot_match'),
++  ]);
++
+ const polygon = (key: string, coords: string, holes: string, stroke: string, fill: string, width: number, parcelPath: string): PropsNode =>
+   node('Polygon', {
+     key,
+@@ -175,6 +197,9 @@ const cards = (s: LotMapSituation): PropsNode[] =>
+     ])]);
+   });
+ 
++/** Nothing picked yet: Choose a lot is disabled and its hint shows (one predicate for both; choose-lot.html:278). */
++const awaitingPick = (s: LotMapSituation): boolean => s.route === null;
++
+ const continueButton = (s: LotMapSituation): PropsNode => {
+   const label: Child = s.route === null
+     ? content('select.none')
+@@ -186,10 +211,12 @@ const continueButton = (s: LotMapSituation): PropsNode => {
+     testID: 'parcel-lotmap-continue',
+     variant: 'default',
+     className: L.select,
+-    disabled: s.route === null,
++    disabled: awaitingPick(s),
+     accessibilityRole: 'button',
+-    accessibilityState: { disabled: s.route === null },
++    accessibilityState: { disabled: awaitingPick(s) },
+     accessibilityLabel: content('select.label'),
++    // aria-describedby="pick-hint" of the mock: the hint line travels with the disabled button.
++    ...(awaitingPick(s) ? { accessibilityHint: content('select.hint') } : {}),
+     onPress: s.route === null ? null : { action: 'push', route: s.route },
+   }, [node('Text', { key: 'continue-text', className: L.selectText }, [label])]);
+ };
+@@ -204,13 +231,13 @@ const body = (s: LotMapSituation): PropsNode[] => {
+     case 'error':
+       return errorNotices(s);
+     case 'intersection':
+-      return [notice('intersection', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'intersection-text', className: L.noticeTextNeutral }, [content('state.intersection')])])];
++      return [notice('intersection', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'intersection-text', className: L.noticeTextNeutral }, [content('state.intersection')])]), helpLink('address_match')];
+     case 'too_many_lots':
+-      return [notice('too-many', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'too-many-text', className: L.noticeTextNeutral }, [content('state.too_many')])])];
++      return [notice('too-many', 'MapPin', L.noticeIconNeutral, [node('AlertDescription', { key: 'too-many-text', className: L.noticeTextNeutral }, [content('state.too_many')])]), helpLink('address_match')];
+     case 'unlinked_no_pin':
+-      return [unlinkedNotice()];
++      return [unlinkedNotice(), helpLink('address_match')];
+     case 'unlinked':
+-      return [unlinkedNotice(), ...mapView(s)];
++      return [unlinkedNotice(), helpLink('address_match'), ...mapView(s)];
+     case 'multi_parcel':
+       return [
+         node('View', { key: 'list-header', testID: 'parcel-lotmap-header', className: L.listHeader }, [
+@@ -220,6 +247,8 @@ const body = (s: LotMapSituation): PropsNode[] => {
+         ...mapView(s),
+         ...cards(s),
+         continueButton(s),
++        ...(awaitingPick(s) ? [pickHint()] : []),
++        helpRow(),
+       ];
+     case 'redirect':
+       return [];
+diff --git a/mobile/src/components/surfaces/SearchBinding.tsx b/mobile/src/components/surfaces/SearchBinding.tsx
+index bb37a419f..9fba77600 100644
+--- a/mobile/src/components/surfaces/SearchBinding.tsx
++++ b/mobile/src/components/surfaces/SearchBinding.tsx
+@@ -25,6 +25,7 @@ import {
+ } from '@/constants/parcelSearch';
+ import { REPORT_HEX as R } from '@/constants/reportPage';
+ import { diffCandidateAddress, parcelSearchRoute, type AddressSegment, type SearchSituation } from '@/lib/parcelSearchMatch';
++import { reportsLeftShown } from '@/lib/parcelSearchCore';
+ 
+ /** The generated slice: the descriptor's config values and the content strings (scripts/surfaces/emit-mobile-surfaces.mjs). */
+ export const SEARCH_SLICE: { surface: string; config: Record<string, number>; content: Record<string, string> } = slice;
+@@ -48,8 +49,10 @@ export const DERIVED_NAMES = [/^input$/, /^candidate_count$/, /^recent\.(0|[1-9]
+ const H = { primary: R.amber, onPrimary: R.ink, check: R.ink, textMuted: R.muted, placeholder: R.muted } as const;
+ 
+ const CONTRACT = 'contract_parcels_lookup';
++const ENTITLEMENT = 'contract_parcels_entitlement';
+ const content = (key: string): Ref => ({ content: key });
+ const contract = (p: string): Ref => ({ contract: `${CONTRACT}.${p}` });
++const entitlement = (field: string): Ref => ({ contract: `${ENTITLEMENT}.${field}` });
+ const derived = (name: string): Ref => ({ derived: name });
+ const node = (component: string, props: Record<string, unknown>, children: Child[] = []): PropsNode => ({ component, props, children });
+ 
+@@ -87,6 +90,19 @@ const pill = (s: SearchSituation): PropsNode =>
+ /** MF-58 (ruling 2026-11-10 items 16 and 5): the legal line, always shown, under the address input and before any result block. */
+ const legal = (): PropsNode => node('Text', { key: 'legal', testID: 'parcel-search-legal', className: L.legal }, [content('search.legal')]);
+ 
++/**
++ * SRCH.A6 (task-320; RR-0307; small-pages-v8 search.html:267): "6 of 10 reports left until 9 Dec 2026". The three values are served by the entitlement
++ * read (reportsLeft, reportsLimit; resetsOnDisplay, the Toronto date written by the server, RR-0310) and printed as served. Drawn only when the read answered with all
++ * three; loading, a failed read and no plan draw no line (v8 draws none).
++ */
++const reportsLeft = (s: SearchSituation): PropsNode[] =>
++  reportsLeftShown(s.entitlement)
++    ? [node('Text', { key: 'reports-left', testID: 'parcel-search-reports-left', className: L.allowance }, [{
++      text: content('search.reports_left'),
++      vars: { left: entitlement('reportsLeft'), allowance: entitlement('reportsLimit'), reset: entitlement('resetsOnDisplay') },
++    }])]
++    : [];
++
+ const chips = (s: SearchSituation): PropsNode[] =>
+   s.recent.length === 0
+     ? []
+@@ -215,6 +231,7 @@ export function searchProps(s: SearchSituation): PropsNode {
+     }, [node('View', { key: 'column', testID: 'parcel-search-column', className: L.column, style: { maxWidth: SEARCH_MAX_WIDTH } }, [
+       header(),
+       pill(s),
++      ...reportsLeft(s),
+       legal(),
+       ...chips(s),
+       ...notices(s),
+@@ -229,7 +246,10 @@ export type BindingData = { contract: Record<string, unknown>; derived: Record<s
+ /** The values the refs of `searchProps(s)` resolve against: the lookup response and its 429 detail, and the derived values. */
+ export function searchData(s: SearchSituation): BindingData {
+   return {
+-    contract: { [CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } } },
++    contract: {
++      [CONTRACT]: { candidates: s.candidates, errors: { '429': { retryAfterSeconds: s.errors.retryAfterSeconds } } },
++      ...(reportsLeftShown(s.entitlement) ? { [ENTITLEMENT]: { reportsLeft: s.entitlement.reportsLeft, reportsLimit: s.entitlement.reportsLimit, resetsOnDisplay: s.entitlement.resetsOnDisplay } } : {}),
++    },
+     derived: {
+       input: s.input,
+       candidate_count: s.candidates.length,
+diff --git a/mobile/src/components/surfaces/SemiQuestionBinding.tsx b/mobile/src/components/surfaces/SemiQuestionBinding.tsx
+index 32fd204b4..0c5aea294 100644
+--- a/mobile/src/components/surfaces/SemiQuestionBinding.tsx
++++ b/mobile/src/components/surfaces/SemiQuestionBinding.tsx
+@@ -7,7 +7,7 @@
+ // to a props tree; that tree IS the golden. Every displayed value is a ref: {"content": k} a key of mobile_parcel_semi_question.content.json (through
+ // the generated slice), {"contract": p} a 429 detail, {"derived": n} a value from the situation (the closed list SEMI_QUESTION_DERIVED_NAMES).
+ // The three answers are radio cards (the lot-card idiom), nothing selected at open, Continue disabled until one is chosen. Classes, hexes and numbers
+-// are the MF-53 layout table (mobile/src/constants/lotMap.ts), reused verbatim: no new constant.
++// are the MF-53 layout table (mobile/src/constants/lotMap.ts); SRCH.SEMI stage 2 (task-319, MF-93) draws the approved mock with the semi-prefixed keys of that table.
+ import slice from '@/generated/surfaces/mobile_parcel_semi_question.json';
+ import { LOT_MAP_BOTTOM_PADDING, LOT_MAP_HEX as H, LOT_MAP_LAYOUT as L, LOT_MAP_SIZES as Z } from '@/constants/lotMap';
+ import { SEARCH_MAX_WIDTH } from '@/constants/parcelSearch';
+@@ -27,17 +27,17 @@ const derived = (name: string): Ref => ({ derived: name });
+ const node = (component: string, props: Record<string, unknown>, children: Child[] = []): PropsNode => ({ component, props, children });
+ 
+ const header = (): PropsNode =>
+-  node('View', { key: 'header', className: L.listHeader }, [
++  node('View', { key: 'header', className: L.semiTop }, [
+     node('Button', {
+       key: 'back',
+       testID: 'parcel-semi-back',
+       variant: 'ghost',
+       size: 'icon',
+-      className: L.clear,
++      className: L.semiBack,
+       accessibilityRole: 'button',
+       accessibilityLabel: content('back.label'),
+       onPress: { action: 'back' },
+-    }, [node('Icon', { key: 'back-icon', icon: 'X', size: Z.icon, color: H.icon })]),
++    }, [node('Icon', { key: 'back-icon', icon: 'ChevronLeft', size: Z.backIcon, color: H.icon })]),
+   ]);
+ 
+ const notice = (key: string, icon: string, iconClassName: string, children: Child[], className: string = L.notice): PropsNode =>
+@@ -50,7 +50,7 @@ const errorNotices = (s: SemiQuestionSituation): PropsNode[] => [
+     ])], L.noticeError)]
+     : []),
+   ...(s.errors.entitlement
+-    ? [notice('entitlement', 'Lock', L.noticeIconNeutral, [node('AlertDescription', { key: 'entitlement-text', className: L.noticeTextNeutral }, [content('state.entitlement')])])]
++    ? [notice('entitlement', 'Info', L.noticeIconNeutral, [node('AlertDescription', { key: 'entitlement-text', className: L.noticeTextNeutral }, [content('state.entitlement')])])]
+     : []),
+   ...(s.errors.unexpected
+     ? [notice('error', 'AlertTriangle', L.noticeIcon, [
+@@ -58,8 +58,8 @@ const errorNotices = (s: SemiQuestionSituation): PropsNode[] => [
+       ...(s.errors.schemaDrift ? [] : [node('Button', {
+         key: 'retry',
+         testID: 'parcel-semi-retry',
+-        variant: 'default',
+-        className: L.retry,
++        variant: 'outline',
++        className: L.semiRetry,
+         accessibilityRole: 'button',
+         accessibilityLabel: content('retry.label'),
+         onPress: { action: 'retry' },
+@@ -75,26 +75,28 @@ const cards = (s: SemiQuestionSituation): PropsNode[] =>
+       key: `answer-${a}`,
+       testID: `parcel-semi-answer-${a}`,
+       variant: 'outline',
+-      className: checked ? L.cardChecked : L.card,
++      className: checked ? L.semiCardChecked : L.semiCard,
+       role: 'radio',
+       accessibilityState: { checked },
+       accessibilityLabel: content(`answer.${a}`),
+       onPress: { action: 'select', parcelId: derived(`answer.${i}`) },
+-    }, [node('View', { key: 'card-row', className: L.cardRow }, [
+-      node('Text', { key: 'card-title', className: L.cardArea }, [content(`answer.${a}`)]),
+-      ...(checked ? [node('Icon', { key: 'check', icon: 'Check', size: Z.icon, color: H.check })] : []),
++    }, [node('View', { key: 'card-row', className: L.semiCardRow }, [
++      node('View', { key: 'card-dot', className: checked ? L.semiDotChecked : L.semiDot }),
++      node('Text', { key: 'card-title', className: L.semiCardText }, [content(`answer.${a}`)]),
+     ])]);
+   });
+ 
++// SRCH.SEMI-3 (task-361, UX-4): while the answered lookup runs Continue is busy: accessibilityState busy and the approved busy look, the rule the mock draws
++// (semi-question.html:130 `.btn.p[aria-busy="true"] { opacity:.85; cursor:progress }`; v8 choose-lot.html:132). The mock draws no busy section and no busy text.
+ const continueButton = (s: SemiQuestionSituation): PropsNode =>
+   node('Button', {
+     key: 'continue',
+     testID: 'parcel-semi-continue',
+     variant: 'default',
+-    className: L.select,
++    className: s.busy ? `${L.semiSelect} opacity-[0.85]` : L.semiSelect,
+     disabled: s.route === null,
+     accessibilityRole: 'button',
+-    accessibilityState: { disabled: s.route === null },
++    accessibilityState: s.busy ? { disabled: s.route === null, busy: true } : { disabled: s.route === null },
+     accessibilityLabel: content('select.label'),
+     onPress: s.route === null ? null : { action: 'push', route: s.route },
+   }, [node('Text', { key: 'continue-text', className: L.selectText }, [content(s.route === null ? 'select.none' : 'select.go')])]);
+@@ -102,15 +104,12 @@ const continueButton = (s: SemiQuestionSituation): PropsNode =>
+ const body = (s: SemiQuestionSituation): PropsNode[] => {
+   switch (s.state) {
+     case 'loading':
+-      return [node('View', { key: 'loading', className: L.loading }, [
+-        node('ActivityIndicator', { key: 'spinner', testID: 'parcel-semi-spinner', size: 'small', color: H.primary, accessibilityLabel: content('state.loading') }),
+-        node('Text', { key: 'loading-text', className: L.loadingText }, [content('state.loading')]),
+-      ])];
++      return [node('Text', { key: 'loading-text', testID: 'parcel-semi-loading', className: L.semiLoadingText, role: 'status' }, [content('state.loading')])];
+     case 'error':
+       return errorNotices(s);
+     case 'ask':
+       return [
+-        node('Text', { key: 'question', testID: 'parcel-semi-question', className: L.noticeHeading, role: 'header' }, [content('question.title')]),
++        node('Text', { key: 'question', testID: 'parcel-semi-question', className: L.semiHeading, role: 'header' }, [content('question.title')]),
+         ...cards(s),
+         continueButton(s),
+       ];
+@@ -122,13 +121,13 @@ const body = (s: SemiQuestionSituation): PropsNode[] => {
+ /** The props tree of one render. The redirect state adds `navigate` (the mount's effect replaces the route with it). */
+ export function semiQuestionProps(s: SemiQuestionSituation): PropsNode {
+   return node('SafeAreaView', { className: L.screen, edges: { top: 'additive' }, testID: 'parcel-semi-screen', ...(s.navigate ? { navigate: s.navigate } : {}) }, [
++    header(),
+     node('ScrollView', {
+       key: 'scroll',
+       className: L.scroll,
+       contentContainerStyle: { paddingBottom: LOT_MAP_BOTTOM_PADDING, alignItems: 'center' },
+       keyboardShouldPersistTaps: 'handled',
+     }, [node('View', { key: 'column', testID: 'parcel-semi-column', className: L.column, style: { maxWidth: SEARCH_MAX_WIDTH } }, [
+-      header(),
+       ...body(s),
+     ])]),
+   ]);
+diff --git a/mobile/src/components/surfaces/SurfaceRenderer.tsx b/mobile/src/components/surfaces/SurfaceRenderer.tsx
+index d1bdf69de..27010d8a1 100644
+--- a/mobile/src/components/surfaces/SurfaceRenderer.tsx
++++ b/mobile/src/components/surfaces/SurfaceRenderer.tsx
+@@ -19,7 +19,7 @@ import { ActivityIndicator, ScrollView, View } from 'react-native';
+ import { SafeAreaView } from 'react-native-safe-area-context';
+ import MapView, { Marker, Polygon } from 'react-native-maps';
+ import Svg, { Line as SvgLine, Polygon as SvgPolygon } from 'react-native-svg';
+-import { AlertTriangle, ArrowRight, Ban, Check, Lock, MapPin, RefreshCw, Search, User, X } from 'lucide-react-native';
++import { AlertTriangle, ArrowRight, Ban, Check, ChevronLeft, Info, Lock, MapPin, RefreshCw, Search, User, X } from 'lucide-react-native';
+ import { Alert, AlertDescription } from '@/vendor/rnr/components/ui/alert';
+ import { Button } from '@/vendor/rnr/components/ui/button';
+ import { Icon } from '@/vendor/rnr/components/ui/icon';
+@@ -28,7 +28,7 @@ import { Text } from '@/vendor/rnr/components/ui/text';
+ 
+ export const COMPONENTS = { SafeAreaView, ScrollView, View, Text, Input, Button, Alert, AlertDescription, Icon, ActivityIndicator, MapView, Polygon, Marker, Svg, SvgPolygon, SvgLine };
+ /** The closed icon table (plan v3 §2.2). */
+-export const ICONS = { Search, MapPin, AlertTriangle, RefreshCw, Lock, Ban, User, Check, ArrowRight, X };
++export const ICONS = { Search, MapPin, AlertTriangle, RefreshCw, Lock, Ban, User, Check, ArrowRight, X, ChevronLeft, Info };
+ 
+ type Json = Record<string, unknown>;
+ export type SurfaceActions = {

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-web.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §11b.3 dated note 2026-11-11 (MF-76), item (3) "The page is descriptor + content (`web_landing.content.json`) + the web STATIC binding with the landing kinds hero, figures, items and plans and the plain pages' footer" — src/lib/surfaces/maxbld-landing.ts:147 "const report: StaticReport = { sample: view, footer: pickFooterText(SEARCH_CONTENT), ... }" — the landing's four footer strings are taken from the search page's content module, not from web_landing.content.json, so the landing no longer shows only its own content file — fix: pickFooterText(content) over the content object readLanding already holds, with footer.terms/privacy/help/copyright added to web_landing.content.json (and the landing test/goldens).
+
+BUG severity=HIGH — Spec 126 §11b.3 dated note 2026-11-11 (MF-44) "Locks: `src/tests/surfaces/search-parity.golden.test.ts`, `src/tests/surfaces/search-web-binding.ui.test.tsx`, `src/tests/maxbld-web-pages.logic.test.ts`." — src/components/surfaces/web/SearchBinding.tsx:249-264 "node('Stack', { key: 'column', ... }) ... footer()," — the web SEARCH tree's block order changes (legal line removed, reports-left and a five-item footer added) and no lock file appears in this diff, so the named parity/golden locks are stale or red, cannot see the test files — fix: re-cut search-parity.golden.test.ts and search-web-binding.ui.test.tsx in this same change and state the mobile/web divergence the goldens encode.
+
+BUG severity=MED — Spec 126 §11b.3 dated note 2026-11-11 (MF-46), item (5) "footer Terms of Service · Privacy Policy · Help & Support with the short legal line" — src/components/surfaces/web/StaticBinding.tsx:177 "const STATIC_FOOTER: FooterLayout = { footer: L.footer, links: L.links, link: L.link, legal: L.legal, line: L.legal, copyright: L.legal };" — the shared builder now accepts the new roles line and copyright on the static pages with the legal class instead of refusing them, roles the MF-46 footer does not name; the static footer also renders in data order where it rendered links-then-legal before — fix: give the static path a layout table that closes line/copyright (schema refuses them) or a two-role layout variant.
+
+DEFER severity=MED — Spec 126 §11b.3 dated note 2026-11-11 (MF-46), item (5) "the FE-34 precedent of closed section kinds and roles" — src/components/surfaces/web/SearchBinding.tsx:131 "MF-91 (SRCH.FOOTER; operator \"1. once  -approved\")" — the ruling that moves the legal sentence into the footer once and deletes the line under the input (MF-58) is cited only in code comments (MORNING-DECISIONS.md:1061/1066) and neither ruling is in the pasted context; I cannot see whether the removal is ruled — rationale: paste the MF-91 and MF-58 ruling text into the review pack before merge.
+
+DEFER severity=MED — Spec 126 §11b.6 "Accuracy | values only through the closed binding set; no maths in bindings" — src/components/surfaces/web/SearchBinding.tsx:97 "const ENTITLEMENT = 'contract_parcels_entitlement';" — the web binding starts reading a contract key that is not evidenced in the pasted context or in this diff's schema/bindings files; SRCH.A6, RR-0307 and RR-0310 are cited only in comments and entitlements/index.ts:624 "resetsOnDisplay: string | null;" adds a new served field, so closed-set membership cannot be verified — rationale: confirm contract_parcels_entitlement and resetsOnDisplay are registered in bindings.json and the entitlement golden, or drop the line.
+
+MET — Spec 126 §11b.3 dated note 2026-11-11 (MF-46), item (5) "links as Next `Link`" — src/components/surfaces/web/SearchBinding.tsx:383 "if (typeof p.href === 'string') return <Button ... component={Link} href={p.href}>" — footer links render as real routes through Next Link, not disabled form controls.
+
+MET — Spec 126 §11b.3 dated note 2026-11-11 (MF-46), item (5) "links as Next `Link`" — src/components/surfaces/web/footerNode.ts:53 "testID: `${prefix}-link-${p.href}` ... href: p.href" — the static pages keep their `static-link-<href>` and `static-legal` test ids through footerNode(s, STATIC_FOOTER, 'static'), so the existing hooks survive the move to the shared builder.
+
+MET — Spec 126 §11b.3 dated note 2026-11-11 (MF-76), item (5) "the sample is the shared `ReportPage` ... embedded in the binding by exact name and module" — src/components/surfaces/web/StaticBinding.tsx:437 "<ReportPage key={k} view={reportOf(p.view, 'sample', ctx.report)} footer={footerOf2(ctx.report)} />" — the sample report is still the shared ReportPage by exact name, the footer is passed as data.
+
+MET — Spec 126 §11b.3 dated note 2026-11-11 (MF-46), item (5) "(maxbld.ca `/help`, `/terms`, `/privacy`)" — src/components/surfaces/web/SearchBinding.tsx:140-143 "{ role: 'link', content: 'footer.terms', href: '/terms' } ... href: '/privacy' ... href: '/help'" — the three footers point at the declared page routes.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  71243ms (71.2s)
+📊 Tokens — total: 33160, input: 20623, output: 12537, reasoning: 11154

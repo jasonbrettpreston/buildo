@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-content-route.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §9 step 4 "apply `inputs.field_whitelist`, which must equal the contract's" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:472 "the server serves it already written in Toronto time as resetsOnDisplay (RR-0310, task-351) and it binds as a contract value" — the seventh entitlement field is satisfied only by that prose: the diff adds the field to the contract (entitlement/types.ts:18) but no binding, no field_whitelist entry and no client mirror for it (no mobile file in this diff, and the schema is ".strict()"), so the surface whitelist no longer equals the contract and the shipped call site at useParcelLookup.ts:96 will hit the §9 schema_drift path on every read — add the binding, the resetsOnDisplay client mirror and the drift check in this same change.
+
+DEFER severity=MED — Spec 126 §6.6 "that price is stated against the target it actually runs on — production scale, production heap state — never a local sample" — src/app/api/parcels/lookup/route.ts:210 "compute_ms: computeMs, // LOAD.1: the compute entry's time when it ran (about 0 while the switch is off)" — the request-time compute adds nine-plus declared reads (bylaw_resolution_results, option_results, units, texts, parcel_abutments, parcel_maxbld_population, parcels, logic_variables) with no checks[] WARN and no production-scale duration, only a switch-off sample — declare the read's WARN with a production-measured duration_ms and a retighten condition, or hold the compute behind the existing flag until measured.
+
+DEFER severity=MED — Spec 126 §8 "`surface.guards.session` must agree with the auth class of every contract in `inputs.contract_ref[]`, as a `checks[]` entry at `severity: FAIL`" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:80 "+ \"/api/parcels/entitlement\"" — a second contract ref joins the search surface and no checks[] FAIL entry pairing guards.session with its authenticated class appears in the diff — add the checks[] entry, or show the existing one covers the new ref.
+
+DEFER severity=MED — Spec 126 §7 "a denormalised bucket is a second source of truth about *when*, exactly as `lead_views_count` was a second source of truth about *how many*" — src/app/api/parcels/entitlement/types.ts:18 "resetsOnDisplay: z.string().nullable(), // the same instant as the Toronto date" — the same instant now travels the wire twice with no constraint on the display form and no check tying it to resetsOn, so the two can disagree — derive both from one value in the route and add an equality check.
+
+DEFER severity=LOW — Spec 126 §9 step 4 "which must equal the contract's", descriptor self-declaration — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json "its response is an explicit `.strict()` whitelist of six fields" — the descriptor still declares six while outputs now lists seven, so the contract's own statement of itself is false — update the count in this change.
+
+DEFER severity=LOW — Spec 126 §9 "**Inputs:** a SURFACE descriptor, its referenced CONTRACT descriptors, the archetype registry, and (at request time) the projected payload." — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json "footer.privacy": "Privacy Policy" — seven content keys (footer.*, help.lot.prompt, help.address.link, select.hint) name affordances no pasted clause or ruling names and no binding for them appears in this diff — name the card or ruling that authorises the footer and help links, or split them out.
+
+REJECT — Spec 126 §6.4 "the table equals the committed files, and the committed files equal the table" — the descriptor edits are accused of breaking the drift lock with no seed change — apply-surface-descriptors.js is ON CONFLICT DO UPDATE keyed on git_sha at migrate, so the table follows the files with no diff line owed.
+
+MET — Spec 126 §6.3.1 "`app_outputs` is **not** written by an API route" — src/app/api/parcels/lookup/route.ts:139 "the same pure core the pipeline step runs; no write" — the new compute path writes no projection row and adds no response key.
+
+MET — Spec 126 §7 dated note 2026-11-11 "the raw search text is never stored" — src/app/api/parcels/lookup/route.ts:206 "lot_form: response.lotForm?.detected ?? null, // SEMI-B: the detected form, never the address" — the added log fields are a source label, a milliseconds figure and a flag, no request text.
+
+MET — Spec 126 §8 "May INSERT into `usage_events` for `event = 'offer_impression'` only" — src/app/api/parcels/lookup/types.ts:47 "semi: z.literal('answered').optional()" with the parcelId refinement — the new parameter opens no anon write and names no new usage_events event.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 6
+
+---
+⏱  73840ms (73.8s)
+📊 Tokens — total: 38499, input: 25298, output: 13201, reasoning: 11980

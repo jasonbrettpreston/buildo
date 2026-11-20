@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-content-route.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — §6.1 step 1 "Declare the table in git, as descriptor data, database.tables[] inside the owning CONTRACT descriptor: table name, every column with its SQL type, nullability and default" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:6 "It reads 9 tables ... Dated 2026-11-19 (LOAD.1, task-266, M-246): ... which reads for that one lot, besides the stored tables above, the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, the lot geometry and street columns of `parcels`, and the validated step settings of `logic_variables`" — the data_story count of 9 is contradicted by its own added sentence which names six further read tables (15 distinct plus logic_variables), and the diff adds no database.tables[]/reads[] entry for any of them, so the reads exist only as prose — add the declared tables and columns to database.tables[] in the same descriptor, or delete the sentence.
+
+BUG severity=HIGH — §5.0/§5.2 "nothing in that fan-out is hand-written, and nothing in it is a second declaration" — src/app/api/parcels/entitlement/types.ts:18 "resetsOnDisplay: z.string().nullable(), // the same instant as the Toronto date" — the new response field is written by hand into the server Zod whitelist and independently listed in the descriptor's response fields, with no generator and no drift lock in the diff for the added key — emit types.ts from the CONTRACT descriptor (or add the both-directions lock asserting the Zod key set equals the descriptor response fields) in this change.
+
+BUG severity=HIGH — no pasted clause or ruling names this behaviour (card walk step 4: nothing added that the card or ruling did not name) — src/app/api/parcels/lookup/types.ts:45 "semi: z.literal('answered').optional()," — the semi hold (route.ts "const held = lotForm?.unsure === true && semi !== 'answered';"), the suppression of `page`, the semi_pending re-test and the in-memory compute fallback are all cited to RR-0278, RR-0310, SRCH.METER-2/task-360, LOAD.1/task-266 and task-319, none of which is in the pasted context, so no pasted clause authorises any of them — paste those rulings, or drop the behaviour from this change.
+
+DEFER severity=MED — §5.0 "A type that disagrees with the schema is not a disagreement to reconcile" (descriptor-as-contract) — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:7 "its response is an explicit `.strict()` whitelist of six fields" — the same descriptor now lists seven response fields (resetsOn + resetsOnDisplay) while its own under_126 clause still says six, and this line is untouched by the diff — update the count to seven in the same commit.
+
+DEFER severity=MED — §5.6 "The golden shape, a PAIR, both required" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json:361 "name": "hit", / 362 "golden": "reports_left" — the new state's name and its golden name diverge (unlike the existing static/static pair) and neither an API response fixture nor a rendered-tree snapshot for it appears in the diff, so the required pair cannot be seen — name the golden `hit` and add both members of the pair, or cite the path that already holds them.
+
+MET — §5.3 "there is no client business logic" — src/app/api/parcels/entitlement/types.ts:18 — the reset label is formatted server-side (Toronto date string) and the page only prints it, so no client date formatting is introduced.
+
+MET — §6.1 step 4 "no column outside the declared set appears in the contract's response projection" — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:6 "adds no response key" — the diff adds `semi` only to the request schema, the lookup response projection is unchanged.
+
+REJECT — §6.2 rule 2 "Every role in the closed set appears" — the change is accused of reading new tables with no RLS row in scripts/seeds/roles.json — no new table is declared by this diff, the reads named in prose are existing tables, so no new role-matrix row is owed here; the real gap is the prose-only declaration, reported above.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 5
+
+---
+⏱  56498ms (56.5s)
+📊 Tokens — total: 34166, input: 23863, output: 10303, reasoning: 9195

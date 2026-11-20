@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-content-route.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — FE-39 "Engine values show before MB-38 only in the admin preview and in a tester-only preview: golden 25 + the MB-35 cohort, a \"Preview\" banner, no charge (EI-D2)" — src/app/api/parcels/lookup/route.ts:151 "pageResponse = await computeCustomerPageResponse(parcelRef);" — the compute serves engine values to every parcel_tool caller, with no cohort or tester check, no Preview banner, and the produced page then meters as counted, so flipping MAXBLD_WEB_LIVE breaks EI-D2 on a paid customer path — either gate the compute on the golden-25 + MB-35 cohort with no charge, or paste the record showing MB-38 has landed and EI-D2 no longer governs.
+
+DEFER severity=MED — FE-44 "Builds `ui.format.area_unit` (report schema, \"proposed\"), extended to lengths." and "OWED `src/tests/surfaces/report-units.logic.test.ts`" — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json:1996 "scripts/surfaces/_schema/report-presentation.json": "e151b5ccd11cd137" — the sample records a new hash for a report schema that is not in this change, and FE-44's unit lock is still OWED, so a report-schema move rides in with no rule and no lock — include the schema change together with the FE-44 lock, or restore 6b780bd76e164820.
+
+DEFER severity=MED — Q-MB44 "MB-44 delivers the report as stored data; it is displayed only through the McFrontend REPORT renderer (MF-14). McBylaws owns the numbers; McFrontend owns the display." — src/app/api/parcels/lookup/route.ts:56 "import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';" — the app request path now produces a report that MB-44 did not deliver as stored data, putting number production on the consumer request — keep the route on stored rows and let the McBylaws producer own the compute, or paste an operator ruling amending Q-MB44.
+
+DEFER severity=LOW — FE-40 "a page behind an off switch is \"gate-only\"" — src/app/api/parcels/lookup/route.ts:139 "It answers null while the web live switch is off" (no tests/e2e/scenarios.json row in this diff) — the switch-gated compute and the switch-gated entitlement web tree have no visible gate-only catalogue row — add the two gate-only rows to the catalogue.
+
+DEFER severity=LOW — No pasted clause; in-code cite "RR-0310, task-351" is not pasted — src/app/api/parcels/entitlement/types.ts:18 "resetsOnDisplay: z.string().nullable()" — a new wire key lands on the entitlement contract, and the same file's record still says "a `.strict()` whitelist of six fields" (contract_parcels_entitlement.descriptor.json:6) while the schema now has seven — paste RR-0310 and correct the field count, or drop the key.
+
+DEFER severity=LOW — FE-39 "one stored headline per lot and option." — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json:5 "It reads no table today and changes no meter." — the same edited field now opens "It reads 9 tables" and adds the in-memory compute, while keeping the line that says it reads no table and changes no meter, and the meter branch does change (semi !== 'answered') — delete the stale sentence so the record names the tables and the semi meter branch it now has.
+
+MET — FE-38 "A hit with no evaluated option is not counted against the monthly allowance" — src/app/api/parcels/lookup/route.ts:180 "if (access === 'parcel_tool' && body.parcel && parcelRef !== null && !hasEvaluatedOption(body.parcel)) meter = 'not_evaluated';" — the not_evaluated branch still runs ahead of the semi branch, so an answered unsure lot with no evaluated option counts nothing even when its page is now sent.
+
+MET — FE-40 "Limits and budgets are read from DB fields or admin settings, never typed" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:23 "search.reports_left": "{left} of {allowance} reports left until {reset}" — left, allowance and reset are all substituted from the server contract, none typed in the client string.
+
+MET — FE-39 "The detail is computed on demand." — src/app/api/parcels/lookup/route.ts:149 "else if (!held) {" — the compute runs per request only on a stored-page miss, never stored back, which is the on-demand shape this row names.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 4
+
+---
+⏱  89937ms (89.9s)
+📊 Tokens — total: 37656, input: 21021, output: 16635, reasoning: 15518

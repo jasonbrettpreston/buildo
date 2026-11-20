@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-ui.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — FE-03 "every declaration is checked against the live contracts and the McBylaws catalogue, with golden render states and both-directions locks" — mobile/src/components/surfaces/SemiQuestionBinding.tsx "+ return [node('Text', { key: 'loading-text', testID: 'parcel-semi-loading', className: L.semiLoadingText, role: 'status' }, [content('state.loading')])];" plus "+    header()," (moved outside the ScrollView) — the rendered tree of four mobile surfaces changes (spinner node removed, header re-parented, icons X to ChevronLeft and Lock to Info, card Check icon replaced by a dot View) and no golden target or fingerprint file appears anywhere in this diff, so the golden render states FE-03 requires are not shown updated — land the regenerated mobile goldens and fresh fingerprints for these surfaces in this same commit.
+
+DEFER severity=MED — FE-18 "every displayed field binds to a source in the closed set `catalogue` / `content` / `user_input` / `ad_slot` (and `external_embed`, the fifth source, by FE-21)" — mobile/src/components/surfaces/SearchBinding.tsx "const entitlement = (field: string): Ref => ({ contract: `${ENTITLEMENT}.${field}` });" — the three new displayed fields resolve against a second contract source, `contract_parcels_entitlement`, which is not one of the pasted closed-set kinds; the protected `scripts/surfaces/_schema/binding-sources.json` is cannot see here, so whether this source kind is declared is unverified — show the binding-sources.json entry for the entitlement contract in the diff, or bind the three fields to a listed source.
+
+DEFER severity=MED — FE-14 "no MF task outside Phase 0-2 or convert-on-touch" — mobile/app/(app)/parcel-tool/disambiguate.tsx "+      open_help: openHelp," and mobile/app/(app)/parcel-tool/index.tsx "+  const { data: entitlementData, isError: entitlementFailed, refetch: refetchEntitlement } = useParcelEntitlement();" — the diff converts three non-REPORT surfaces (search, disambiguation, semi-question) while citing only maxbld task ids (task-319, task-320, task-321, task-360, task-361, task-362), so the Phase 2 or convert-on-touch queue row FE-14's lock asserts is cannot see — cite the authorizing MF/queue row in the commit message and the comments.
+
+DEFER severity=LOW — FE-13 "BIND (each node binds to a declared field, source kind in `binding-sources.json`, declared label)" — mobile/src/components/surfaces/SearchBinding.tsx "vars: { left: entitlement('reportsLeft'), allowance: entitlement('reportsLimit'), reset: entitlement('resetsOnDisplay') }" — the new Text child uses a `{ text, vars }` ref shape and new class keys (`L.allowance`, `L.helpLink`, `L.helpLinkText`, `L.pickHint`, `L.helpRow`, `L.helpPrompt`, `L.semi*`, `Z.backIcon`) whose declarations and ref resolution are not in any file this diff lists, so the declared-field and declared-label checks are cannot see — include the constants/content/descriptor files that declare them, or confirm they landed in the parent commit.
+
+DEFER severity=LOW — FE-07 "for non-REPORT surfaces it is checked inside the conformance lock (FE-31, MF-42)" — mobile/src/components/surfaces/LotMapBinding.tsx "+        ...(awaitingPick(s) ? [pickHint()] : [])," and "+        helpRow()," — the lot-map and search output gains nodes on the mobile target only, and no parity artifact for these surfaces appears in the diff; whether the other targets' real output matches is cannot see — land the conformance/parity evidence for these surfaces with the change.
+
+DEFER severity=LOW — FE-01 "no Phase 1 surface commit lands without a McFrontend-Task trailer once MF-17 lands" — NONE — the diff is a plain `git diff` and carries no commit message, so the required trailer cannot be seen — confirm the actual commit carries the McFrontend-Task trailer.
+
+MET — FE-05 — mobile/src/components/surfaces/SearchBinding.tsx reportsLeft — the three values are contract refs printed as served ("vars: { left: entitlement('reportsLeft'), allowance: entitlement('reportsLimit'), reset: entitlement('resetsOnDisplay') }"), with no client-side arithmetic on the count or the reset date.
+
+MET — FE-18 — mobile/src/components/surfaces/LotMapBinding.tsx helpLink, pickHint, helpRow — the new labels and help copy are content fields ("content('help.address.link')", "content('select.hint')", "content('help.lot.prompt')"), not literals, matching "Labels, help text and legal copy are content fields, not an exception."
+
+REJECT — FE-06 — the change is accused of hiding an unsure lot's report content by passing "data: data && !ask ? { page: data.page ?? null } : undefined" — no disclosure, confidence or status value is replaced by a different one; the render is the loading state before the redirect and the server holds that page null (the diff comment states it), so nothing is hidden.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  68254ms (68.3s)
+📊 Tokens — total: 40398, input: 28308, output: 12090, reasoning: 10870

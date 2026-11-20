@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-schema.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §0b item 7 "The orchestrator takes such a decision only when all six hold, each with its evidence, and logs it with a D-nn id in the dated pre-approval log (`~/Buildo-scratch/DECISIONS-PREAPPROVED-20261108.md`)" — scripts/surfaces/_schema/bindings.json:2 "$comment ... orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling)" — a standards file read by the FE-31/FE-05 locks is changed on a decision the change itself declares is not an operator ruling and is not logged with a D-nn id in the pre-approval log — add the D-nn entry (six criteria, each with evidence) plus operator confirmation, or obtain the operator ruling, before the token lands.
+
+BUG severity=HIGH — Spec 126 §0b item 10 "the gate `surface-validate.mjs --check` (FE-13)" — scripts/surfaces/_schema/bindings.json:73 "\"Button\": [\"min-h-[44px]\", \"min-h-[48px]\"], \"Input\": [\"min-h-[44px]\"]" against the same note's "The check C-9m still requires exactly one min-h- token on the list" — the Button list now carries two min-h- tokens, so either the gate fails on this file or the note's stated invariant is wrong — keep one token on the list, or amend C-9m in the same change and say so in the note.
+
+DEFER severity=MED — Spec 126 §0a principle 2 "every declaration is checked against the live contracts and the McBylaws catalogue" — scripts/surfaces/_schema/census/contracts.json:22003 "It reads 9 tables — `parcels`, ... `usage_events`, and ... `parcel_maxbld_scenarios` and ... `bylaw_resolution_lot_stamps`" — the same data_story then appends seven further reads ("`bylaw_resolution_results` and `bylaw_resolution_option_results`, ... `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`, ... `logic_variables`") and still ends "It reads no table today", so the declared count is contradicted inside one field — restate the read set truthfully or drop the number.
+
+DEFER severity=LOW — Spec 126 §0b item 6 "landed as a Spec 135 FE row with one lock ... or as a dated note with the prior text kept" — scripts/surfaces/_schema/report-presentation.json:26 "\"not_evaluated:not_in_engine_population\": \"Not yet evaluated\"" — the new status literal lands in the presentation schema with no dated note or ruling citation, while its seed twin carries "// MB-94 (c), Spec 126 11a.3 dated note 2026-11-12 (R-2 literal)" — mirror the dated citation in report-presentation.json.
+
+DEFER severity=LOW — Spec 126 §0a principle 2 "every declaration is checked against the live contracts and the McBylaws catalogue" — scripts/surfaces/_schema/census/contracts.json:22894 "its response is an explicit `.strict()` whitelist of six fields" — the whitelist gains `resetsOnDisplay` (contracts.json:22972) and this sentence is left untouched, so the declared field count is stale unless the new field was already inside the six — re-state the count or say in the why note that the addition keeps it.
+
+MET — Spec 126 §0b item 5 "The server formats every value; the UI does no maths" — scripts/surfaces/_schema/census/mobile-product.json:7999 "the server serves it already written in Toronto time as resetsOnDisplay (RR-0310, task-351) and it binds as a contract value" — the reset date is server-formatted and bound as contract, not derived in the binding.
+
+MET — Spec 126 §0a principle 5 "status words come from a closed list" — scripts/surfaces/_schema/seed-report-v2.mjs:600 "'not_evaluated:not_in_engine_population': 'Not yet evaluated'" with the identical literal in report-presentation.json:26 — the new not_evaluated reason joins the closed list in both the schema and its seed, matching.
+
+MET — Spec 126 §0b item 10 "Goldens per state per target" — scripts/surfaces/_schema/census/mobile-product.json:7886 "\"name\": \"hit\", \"golden\": \"reports_left\"" — the new search-screen state is pinned by a named golden rather than left unpinned.
+
+MET — Spec 126 §0b item 6 "dated note with the prior text kept (M-246)" — scripts/surfaces/_schema/census/mobile-product.json:7999 appends after "P35-D14 a: the field text, the candidate count, the recent searches ..." — the prior adjudicated text is kept and the addition is dated and cited.
+
+MET — Spec 126 §0b item 3 "Screens are declared as data and drawn by the shared bindings; no page code" — all five changed files are data (bindings.json, contracts.json, mobile-product.json, report-presentation.json, seed-report-v2.mjs) — no page or binding code is introduced.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+
+---
+⏱  52621ms (52.6s)
+📊 Tokens — total: 35751, input: 25466, output: 10285, reasoning: 9054

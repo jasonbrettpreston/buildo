@@ -1,0 +1,377 @@
+# DIFF PART mobile-src: git diff 9f04d9074..3a36e8b26, files: mobile/src/constants/lotMap.ts, mobile/src/constants/parcelSearch.ts, mobile/src/hooks/useParcelLookup.ts, mobile/src/lib/lotForm.ts, mobile/src/lib/maxbldHelp.ts, mobile/src/lib/parcelSearchCore.ts, mobile/src/lib/parcelSearchMatch.ts, mobile/src/lib/persistFilter.ts, mobile/src/lib/schemas.ts, mobile/src/lib/semiQuestion.ts
+diff --git a/mobile/src/constants/lotMap.ts b/mobile/src/constants/lotMap.ts
+index 6541acb15..b24cadac5 100644
+--- a/mobile/src/constants/lotMap.ts
++++ b/mobile/src/constants/lotMap.ts
+@@ -40,6 +40,29 @@ export const LOT_MAP_LAYOUT = {
+   markerTextChecked: 'text-xs font-bold text-report-ink',
+   select: S.select,
+   selectText: S.selectText,
++  // SRCH.C12 (v8 choose-lot.html:279): the help link reuses the search page link classes; the prompt is small muted text beside it.
++  // SRCH.SEMI stage 2 (task-319, MF-93): the semi question page's own keys, drawn from the approved mock (small pages v8, choose-lot: .top, h2,
++  // .card[role=radio], .btn.p, .btn.s). Semi-only: the shared card, heading and select keys above stay as the lot map and search page read them.
++  semiTop: 'min-h-[56px] w-full flex-row items-center border-b border-report-line bg-report-page px-4',
++  semiBack: 'min-h-[44px] min-w-[44px] -ml-3 rounded-xl',
++  semiHeading: 'mt-6 w-full text-lg font-bold leading-6 text-report-ink',
++  semiCard:
++    'mt-3 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-4 bg-report-card dark:bg-report-card border-report-line dark:border-report-line active:bg-report-sky dark:active:bg-report-sky',
++  semiCardChecked:
++    'mt-3 h-auto sm:h-auto min-h-[44px] w-full flex-col items-start justify-start rounded-[20px] px-4 py-4 bg-report-card dark:bg-report-card border-report-ink dark:border-report-ink active:bg-report-sky dark:active:bg-report-sky',
++  semiCardRow: 'w-full flex-row items-center gap-[14px]',
++  semiDot: 'h-[22px] w-[22px] rounded-full border-2 border-report-field bg-report-card',
++  semiDotChecked: 'h-[22px] w-[22px] rounded-full border-[7px] border-report-ink bg-report-card',
++  semiCardText: 'flex-1 text-base font-normal text-report-ink',
++  semiSelect: 'mt-6 min-h-[48px] w-full rounded-xl',
++  semiRetry: 'mt-3 min-h-[48px] w-full rounded-xl bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border',
++  semiLoadingText: 'mt-6 text-base font-normal text-report-muted',
++  // task-362 (choose-lot.html:278 `<p class="small" id="pick-hint">`, 13px muted): the hint under the disabled Choose a lot button, centred like the help row.
++  pickHint: 'mt-2 w-full text-center text-xs font-normal text-report-soft',
++  helpRow: 'mt-3 flex-row flex-wrap items-center justify-center gap-1',
++  helpPrompt: 'text-xs font-normal text-report-soft',
++  helpLink: S.report,
++  helpLinkText: S.reportText,
+ } as const;
+ 
+ /** Map colours (react-native-maps takes colour values, not classes): the Daylight twins. Amber is report-amber; the stroke is report-amber-ink (v8 draws #b45309, which has no report token: OPERATOR item). */
+@@ -56,7 +79,7 @@ export const LOT_MAP_HEX = {
+ } as const;
+ 
+ /** Numbers (FE-05: none in the binding). */
+-export const LOT_MAP_SIZES = { mapHeight: 280, lotStroke: 2, icon: 16, noticeIcon: 14 } as const;
++export const LOT_MAP_SIZES = { mapHeight: 280, lotStroke: 2, icon: 16, noticeIcon: 14, backIcon: 22 } as const;
+ /** The initial region is the server's start view padded by this factor, so the outlines never touch the frame. */
+ export const LOT_MAP_REGION_PAD = 1.4;
+ /** The scroll content's bottom padding: the S-004 shelf plus 24, as the search page. */
+diff --git a/mobile/src/constants/parcelSearch.ts b/mobile/src/constants/parcelSearch.ts
+index 028fdd1ef..65b2e7c33 100644
+--- a/mobile/src/constants/parcelSearch.ts
++++ b/mobile/src/constants/parcelSearch.ts
+@@ -159,6 +159,8 @@ export const PARCEL_SEARCH_LAYOUT = {
+     'flex-1 min-h-[44px] rounded-none border-0 bg-transparent dark:bg-transparent px-2 py-3 text-base font-normal text-report-ink shadow-none placeholder:text-report-soft',
+   /** MF-58: the legal line under the address input (ruling 2026-11-10 items 16 and 5); 13/18 muted as small pages v8 (.legal). */
+   legal: 'mt-3 text-[13px] leading-[18px] font-normal text-report-muted',
++  /** SRCH.A6 (task-320): the reports-left line under the box, v8 .small: one small centred muted line. */
++  allowance: 'mt-3 text-center text-[13px] leading-[18px] font-normal text-report-muted',
+   chipRow: 'mt-3 flex-row flex-wrap gap-2',
+   chip:
+     'min-h-[44px] rounded-full px-3 bg-report-button dark:bg-report-button border-report-button-border dark:border-report-button-border active:bg-report-sky dark:active:bg-report-sky',
+diff --git a/mobile/src/hooks/useParcelLookup.ts b/mobile/src/hooks/useParcelLookup.ts
+index faec53eed..ef427a56c 100644
+--- a/mobile/src/hooks/useParcelLookup.ts
++++ b/mobile/src/hooks/useParcelLookup.ts
+@@ -9,12 +9,18 @@
+ // ConsumerParcelLookupResultSchema. A drifted server shape re-throws to the ErrorBoundary; network
+ // errors (ApiError/RateLimitError/NetworkError) stay in `isError` for inline handling.
+ 
+-import { useQuery } from '@tanstack/react-query';
++import { useCallback } from 'react';
++import { useQuery, useQueryClient } from '@tanstack/react-query';
+ import * as Sentry from '@sentry/react-native';
+ import { fetchWithAuth } from '@/lib/apiClient';
+ import { AccountDeletedError, ApiError, RateLimitError } from '@/lib/errors';
+ import { useAuthStore } from '@/store/authStore';
+-import { ConsumerParcelLookupResultSchema, type ConsumerParcelLookupResult } from '@/lib/schemas';
++import {
++  ConsumerParcelLookupResultSchema,
++  ParcelToolEntitlementSchema,
++  type ConsumerParcelLookupResult,
++  type ParcelToolEntitlement,
++} from '@/lib/schemas';
+ 
+ // Sentinel for deterministic schema-drift failures — short-circuits the retry guard so a
+ // malformed server response doesn't generate duplicate Sentry events (mirrors useLeadDetail).
+@@ -26,11 +32,13 @@ export class ParcelLookupSchemaError extends Error {
+ }
+ 
+ export async function fetchParcelLookup(
+-  params: { q: string } | { parcelId: string },
++  // SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): `semi: 'answered'` is the one optional flag the semi question page sends at Continue, so the
++  // server counts the lot once its report is produced (contract_parcels_lookup, route.ts). It belongs to the parcelId form only.
++  params: { q: string } | { parcelId: string; semi?: 'answered' },
+ ): Promise<ConsumerParcelLookupResult> {
+   const qs = 'q' in params
+     ? `q=${encodeURIComponent(params.q)}`
+-    : `parcelId=${encodeURIComponent(params.parcelId)}`;
++    : `parcelId=${encodeURIComponent(params.parcelId)}${params.semi ? `&semi=${params.semi}` : ''}`;
+   const raw = await fetchWithAuth<{ data: unknown }>(`/api/parcels/lookup?${qs}`);
+   const parsed = ConsumerParcelLookupResultSchema.safeParse(raw.data);
+   if (!parsed.success) {
+@@ -68,17 +76,65 @@ export function useParcelSearch(q: string) {
+   });
+ }
+ 
++/**
++ * SRCH.METER-2 (task-360, RR-0278; SE-1, SE-2): the parcelId form of the lookup, carrying the report route's `semi` param to the server as `semi: 'answered'`
++ * only when it is exactly the string 'answered' (the server holds an unsure lot's page without it; a stray param asks, never skips: lotForm.ts needsSemiQuestion).
++ */
++export function parcelLookupParams(parcelId: string, semi?: string): { parcelId: string; semi?: 'answered' } {
++  return semi === 'answered' ? { parcelId, semi: 'answered' } : { parcelId };
++}
++
+ /**
+  * Detail lookup by parcelId. Depends ONLY on `['parcel-lookup', parcelId]` (Spec 100 §4 /
+- * fold #9 query-key hygiene) — never on the search query string.
++ * fold #9 query-key hygiene) — never on the search query string. `semi` is the report route's param (the report screen only); it changes the request,
++ * not the key (the semi page stores its answered result under the same key, useSetParcelLookup).
+  */
+-export function useParcelLookup(parcelId: string | undefined) {
++export function useParcelLookup(parcelId: string | undefined, semi?: string) {
+   const accessToken = useAuthStore((s) => s.accessToken);
+   return useQuery({
+     queryKey: ['parcel-lookup', parcelId],
+-    queryFn: () => fetchParcelLookup({ parcelId: parcelId! }),
++    queryFn: () => fetchParcelLookup(parcelLookupParams(parcelId!, semi)),
+     enabled: !!parcelId && !!accessToken,
+     staleTime: 60_000,
+     retry: shouldRetryParcelLookup,
+   });
+ }
++
++/**
++ * Store an answered lookup under the report's own cache key. SUITE.FIX-2 (task-353, 2026-11-19): the semi question page (a mount file) used to call
++ * useQueryClient itself (9fea46277); a mount may import only framework packages, binding modules and @/hooks/ (bindings.json mount_internal, FE-31 C-2),
++ * so the one setQueryData call lives here, the same key as useParcelLookup.
++ */
++export function useSetParcelLookup() {
++  const queryClient = useQueryClient();
++  return useCallback(
++    (parcelId: string, result: ConsumerParcelLookupResult) => { queryClient.setQueryData(['parcel-lookup', parcelId], result); },
++    [queryClient],
++  );
++}
++
++/**
++ * SRCH.A6 (task-320; RR-0307): the caller's plan and this month's report count, read from GET /api/parcels/entitlement (the line "N of M reports left
++ * until <date>"). A display, never a gate. Parsed through the Zod boundary like the lookup; a drifted shape is the same ParcelLookupSchemaError. No
++ * retry on 401/403/429 or drift (the line is simply absent); never persisted across a restart (mobile/src/lib/persistFilter.ts); re-read on focus.
++ */
++export async function fetchParcelEntitlement(): Promise<ParcelToolEntitlement> {
++  const raw = await fetchWithAuth<{ data: unknown }>('/api/parcels/entitlement');
++  const parsed = ParcelToolEntitlementSchema.safeParse(raw.data);
++  if (!parsed.success) {
++    Sentry.captureException(parsed.error, { extra: { context: 'useParcelEntitlement Zod parse' } });
++    throw new ParcelLookupSchemaError('Parcel entitlement response failed schema validation');
++  }
++  return parsed.data;
++}
++
++export function useParcelEntitlement() {
++  const accessToken = useAuthStore((s) => s.accessToken);
++  return useQuery({
++    queryKey: ['parcel-entitlement'],
++    queryFn: fetchParcelEntitlement,
++    enabled: !!accessToken,
++    staleTime: 0,
++    retry: shouldRetryParcelLookup,
++  });
++}
+diff --git a/mobile/src/lib/lotForm.ts b/mobile/src/lib/lotForm.ts
+index 59547581b..c79b8c9d2 100644
+--- a/mobile/src/lib/lotForm.ts
++++ b/mobile/src/lib/lotForm.ts
+@@ -5,7 +5,8 @@
+ // SEMI-B · the pure rules of the pre-report semi question (operator "semi all y" and "semi ask a", 2026-11-13). The server names the lot's form and an
+ // `unsure` flag (the view parcel_lot_form, migration 320); the app asks the one question ONLY when unsure is true; clear semis and clear detached lots
+ // go straight to the report. The answer is the owner's input `lot_form_user_override` (O-12: the pipeline never reads it; there is no server store):
+-// it travels as a route param to the report, which applies it through `lotFormEffective` (P5.7). "Not sure" writes nothing: the semi view is the
++// it travels as a route param (OVERRIDE_PARAM) to the report, which does not apply it yet: nothing outside this file reads the param or calls `lotFormEffective`
++// (P5.7); the effect is the semi calculation of 7.25 (task-209). "Not sure" writes nothing: the semi view is the
+ // detected form, and the post-report "This isn't a semi" correction stays.
+ import type { ConsumerParcelLookupResult, ParcelLotForm } from '@/lib/schemas';
+ 
+diff --git a/mobile/src/lib/maxbldHelp.ts b/mobile/src/lib/maxbldHelp.ts
+index c13df916c..7de64b3b6 100644
+--- a/mobile/src/lib/maxbldHelp.ts
++++ b/mobile/src/lib/maxbldHelp.ts
+@@ -1,18 +1,28 @@
+ // SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.3 (dated note 2026-11-12, MF-46: Help & Support contact), §11b.7 (dated
+ //            note 2026-11-11 item 3); ~/Buildo-scratch/mcfrontend/MF-46/plan.v1.md fold 8 (the prefill travels in the URL fragment).
+ //
+-// MF-46 follow-up (P35-D18 a) · the app's way to the MaxBLD Help & Support web page: it leaves the app for the browser (Linking.openURL, a
+-// leave-the-origin move, never a router push) with the topic and the query in the URL FRAGMENT, which the page reads on the client and never sends
+-// to a server. MAXBLD_HELP_URL is MAXBLD_ORIGIN + /help of src/lib/auth/host-policy.ts (the app cannot import outside mobile/);
++// MF-46 follow-up (P35-D18 a) · the app's way to the MaxBLD Help & Support web page, with the topic and the query in the URL FRAGMENT, which the
++// page reads on the client and never sends to a server.
++// task-362 SRCH.LOTMAP-2 (small-pages-v8 search.html:235 "in-app browser sheet (B10): Help, Terms, Privacy open the web page with Done"): the page
++// opens in the in-app browser sheet through expo-web-browser, the same call as useSubscribeCheckout.ts:61, instead of leaving the app through Linking.
++// MAXBLD_HELP_URL is MAXBLD_ORIGIN + /help of src/lib/auth/host-policy.ts (the app cannot import outside mobile/);
+ // src/tests/surfaces/static-page.logic.test.ts T8 pins the two equal.
+-import { Linking } from 'react-native';
++import * as WebBrowser from 'expo-web-browser';
+ 
+ export const MAXBLD_HELP_URL = 'https://maxbld.ca/help';
+ 
+ /** The Help & Support URL for one topic and one value (both URI-encoded into the fragment). */
+ export const helpUrl = (topic: string, q: string): string => `${MAXBLD_HELP_URL}#topic=${encodeURIComponent(topic)}&q=${encodeURIComponent(q)}`;
+ 
+-/** Opens the Help & Support page in the browser. */
+-export const openHelp = (topic: string, q: string): void => {
+-  void Linking.openURL(helpUrl(topic, q));
++/**
++ * Opens the Help & Support page in the in-app browser sheet. Resolves when the person dismisses the sheet (iOS shows Done; an Android Custom Tab has
++ * no Done button, the system back closes it). A rejecting openBrowserAsync is caught and logged with the topic only (never the typed address),
++ * so the caller never sees a rejection.
++ */
++export const openHelp = async (topic: string, q: string): Promise<void> => {
++  try {
++    await WebBrowser.openBrowserAsync(helpUrl(topic, q));
++  } catch {
++    console.warn(`[maxbldHelp] could not open Help & Support (topic ${topic})`);
++  }
+ };
+diff --git a/mobile/src/lib/parcelSearchCore.ts b/mobile/src/lib/parcelSearchCore.ts
+index 55b24b9fe..375d1f0c1 100644
+--- a/mobile/src/lib/parcelSearchCore.ts
++++ b/mobile/src/lib/parcelSearchCore.ts
+@@ -62,3 +62,19 @@ export function diffCandidateAddress(query: string, address: string): AddressSeg
+     return { text: run, differs: isWord && !typed.has(run.toLowerCase()) };
+   });
+ }
++
++// ── The reports-left line (SRCH.A6, task-320; operator RR-0307, MORNING-DECISIONS.md:1182) ─────────────────────────────────────────
++//
++// GET /api/parcels/entitlement serves the count (src/app/api/parcels/entitlement/types.ts): the server computes reportsLeft, reportsLimit and the
++// reset date already written in Toronto time as `resetsOnDisplay` (FE-05, RR-0310); the page only prints them, no date is derived on the device.
++// `EntitlementLine` is the three served fields the line binds, nothing else.
++
++/** The served fields the reports-left line binds (every one null when the user has no plan or the read could not count). */
++export type EntitlementLine = { reportsLeft: number | null; reportsLimit: number | null; resetsOnDisplay: string | null };
++/** The same fields once the line is known to be drawn: all present. */
++export type ShownEntitlement = { reportsLeft: number; reportsLimit: number; resetsOnDisplay: string };
++
++/** True only when all three served fields are present (a served 0 counts as present; the label is a non-empty string); else no line is drawn. */
++export function reportsLeftShown(e: EntitlementLine | null | undefined): e is ShownEntitlement {
++  return !!e && e.reportsLeft !== null && e.reportsLeft !== undefined && e.reportsLimit !== null && e.reportsLimit !== undefined && typeof e.resetsOnDisplay === 'string' && e.resetsOnDisplay.length > 0;
++}
+diff --git a/mobile/src/lib/parcelSearchMatch.ts b/mobile/src/lib/parcelSearchMatch.ts
+index dcf7b0d0f..38d2fd989 100644
+--- a/mobile/src/lib/parcelSearchMatch.ts
++++ b/mobile/src/lib/parcelSearchMatch.ts
+@@ -45,7 +45,7 @@
+ 
+ import type { ParcelCandidate, ConsumerParcelLookupResult } from '@/lib/schemas';
+ import { ApiError, RateLimitError } from '@/lib/errors';
+-import { parcelSearchPath } from './parcelSearchCore';
++import { parcelSearchPath, type EntitlementLine } from './parcelSearchCore';
+ 
+ // ── The Toronto-only rule (operator ruling 2026-09-16 (b)) ──────────────────
+ //
+@@ -317,6 +317,8 @@ export type SearchSituation = {
+   selectedParcelId: string | null;
+   /** Where the outcome navigates (unique, map kinds), else null: the screen's effect pushes it. */
+   route: string | null;
++  /** SRCH.A6 (task-320): the served count fields the reports-left line binds; absent or null (loading, read failed, no plan) draws no line. */
++  entitlement?: EntitlementLine | null;
+ };
+ 
+ /** The situation of one render, from the hook's values (rows 14, 16; the truth table in parcelSearchMatch.test.ts). */
+@@ -331,6 +333,8 @@ export function buildSearchSituation(args: {
+   selectedParcelId: string | null;
+   cap: number;
+   minQueryLen: number;
++  /** SRCH.A6: the entitlement read's data, undefined while loading or after a failed read. */
++  entitlement?: EntitlementLine | null;
+ }): SearchSituation {
+   const { debounced, data, error, isFetching } = args;
+   const outcome = deriveMatchType(debounced, error ? undefined : data);
+@@ -349,5 +353,7 @@ export function buildSearchSituation(args: {
+     recent: [...args.recent],
+     selectedParcelId: selected,
+     route: parcelSearchRoute(outcome, { parcelId: data?.match?.parcelId ?? null, query: debounced }),
++    // Only when a read answered: the key is left off otherwise so every other situation is unchanged.
++    ...(args.entitlement ? { entitlement: { reportsLeft: args.entitlement.reportsLeft, reportsLimit: args.entitlement.reportsLimit, resetsOnDisplay: args.entitlement.resetsOnDisplay } } : {}),
+   };
+ }
+diff --git a/mobile/src/lib/persistFilter.ts b/mobile/src/lib/persistFilter.ts
+index 5f028224c..dd8528836 100644
+--- a/mobile/src/lib/persistFilter.ts
++++ b/mobile/src/lib/persistFilter.ts
+@@ -24,5 +24,8 @@ export interface QueryShape {
+   queryKey: readonly unknown[];
+ }
+ 
++// SRCH.A6 (task-320): ['parcel-entitlement'] is the reports-left count; a count kept from a previous session would be a wrong number, so it is not persisted.
++const NOT_PERSISTED = ['user-profile', 'parcel-entitlement'];
++
+ export const shouldDehydrateQueryFn = (query: QueryShape): boolean =>
+-  query.queryKey[0] !== 'user-profile';
++  !NOT_PERSISTED.includes(String(query.queryKey[0]));
+diff --git a/mobile/src/lib/schemas.ts b/mobile/src/lib/schemas.ts
+index 7da1c3725..ed1e82bc5 100644
+--- a/mobile/src/lib/schemas.ts
++++ b/mobile/src/lib/schemas.ts
+@@ -439,3 +439,16 @@ export const ConsumerParcelLookupResultSchema = z.object({
+ export type ConsumerParcelLookupResult = z.infer<typeof ConsumerParcelLookupResultSchema>;
+ export type ParcelMatch = z.infer<typeof ParcelMatchSchema>;
+ export type ParcelCandidate = z.infer<typeof ParcelCandidateSchema>;
++
++// SRCH.A6 (task-320; RR-0307): GET /api/parcels/entitlement (contract_parcels_entitlement, src/app/api/parcels/entitlement/types.ts). A plain object, not
++// .strict(): the contract is additive_only because an installed app does not redeploy with the server. Every field is null when the user holds no plan.
++export const ParcelToolEntitlementSchema = z.object({
++  status: z.string().nullable(),
++  reportsUsed: z.number().int().nonnegative().nullable(),
++  reportsLimit: z.number().int().positive().nullable(),
++  reportsLeft: z.number().int().nonnegative().nullable(),
++  reportsLimitReached: z.boolean().nullable(),
++  resetsOn: z.string().datetime().nullable(),
++  resetsOnDisplay: z.string().nullable(),
++});
++export type ParcelToolEntitlement = z.infer<typeof ParcelToolEntitlementSchema>;
+diff --git a/mobile/src/lib/semiQuestion.ts b/mobile/src/lib/semiQuestion.ts
+index 5ffc50cf1..ce3dcebe7 100644
+--- a/mobile/src/lib/semiQuestion.ts
++++ b/mobile/src/lib/semiQuestion.ts
+@@ -12,6 +12,27 @@ import type { ConsumerParcelLookupResult } from '@/lib/schemas';
+ import { classifyParcelSearchError, PARCEL_TAB_ROUTE, parcelSearchRoute, type ParcelSearchErrorClass } from '@/lib/parcelSearchMatch';
+ import { reportRouteAfterAnswer, SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
+ 
++/** SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report). */
++export const SEMI_CONTINUE_WAIT_MS = 60_000;
++
++class SemiContinueTimeoutError extends Error {
++  constructor() {
++    super('The answered lookup did not settle in time');
++    this.name = 'SemiContinueTimeoutError';
++  }
++}
++
++/** Resolves or rejects as `p` does, or rejects with SemiContinueTimeoutError after `ms`; the timer is cleared on either settle and a late settle of `p` is handled. */
++export function boundedWait<T>(p: Promise<T>, ms: number): Promise<T> {
++  return new Promise<T>((resolve, reject) => {
++    const timer = setTimeout(() => reject(new SemiContinueTimeoutError()), ms);
++    p.then(
++      (v) => { clearTimeout(timer); resolve(v); },
++      (e) => { clearTimeout(timer); reject(e); },
++    );
++  });
++}
++
+ export const SEMI_QUESTION_STATES = ['loading', 'ask', 'error', 'redirect'] as const;
+ export type SemiQuestionState = (typeof SEMI_QUESTION_STATES)[number];
+ 
+@@ -25,6 +46,8 @@ export type SemiQuestionSituation = {
+   selected: SemiAnswer | null;
+   /** Where Continue goes (the report with the answer), else null (Continue disabled). */
+   route: string | null;
++  /** Continue's answered lookup is running (SRCH.SEMI-3): true only in the ask state. */
++  busy: boolean;
+   /** The redirect state's target (the report; the Lookup route with no data), else null. */
+   navigate: string | null;
+ };
+@@ -36,6 +59,8 @@ export function buildSemiQuestionSituation(args: {
+   isFetching: boolean;
+   schemaDrift: boolean;
+   selected: SemiAnswer | null;
++  /** Continue's answered lookup is running; optional, false when omitted. */
++  submitting?: boolean;
+ }): SemiQuestionSituation {
+   const { parcelId, data, error, isFetching } = args;
+   const errors = classifyParcelSearchError(error, args.schemaDrift);
+@@ -56,6 +81,7 @@ export function buildSemiQuestionSituation(args: {
+     answers: ask ? [...SEMI_ANSWERS] : [],
+     selected,
+     route: selected === null ? null : reportRouteAfterAnswer(parcelId, selected),
++    busy: ask && args.submitting === true,
+     navigate,
+   };
+ }

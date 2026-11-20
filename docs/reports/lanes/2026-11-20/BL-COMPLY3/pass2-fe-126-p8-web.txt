@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-web.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §11b.2 Goldens "one props golden per reachable state per declared target at `src/tests/fixtures/surfaces/<surface_id>/<state>.<target>.json`, each `covers` a state" — src/components/surfaces/web/SearchBinding.tsx:259 "+    footer()," (and the removed "legal()" at :131) — every reachable-state props golden for the web search surface changes (a footer node added, the legal node removed, a reports-left node added) and no fixture file appears anywhere in this diff — regenerate and include the web search props goldens, or the FE-31 gate has nothing to compare.
+
+BUG severity=HIGH — Spec 126 §11b.2 Goldens "REPORT goldens are unchanged" / MF-76 note "Goldens: `src/tests/fixtures/surfaces/web_landing/{static,degraded}.web.json`" — src/components/surfaces/web/StaticBinding.tsx:177 "this table is the static pages' layout" — the shared builder iterates `s.parts.forEach(...)` and starts a new links Group after every non-link part, while the removed builder put ALL `role === 'link'` parts in one leading Group before any legal Text, so a footer section whose parts interleave legal and link reorders and re-groups, web_landing's props are not "unchanged", and its two goldens are not touched in this diff — regenerate the web_landing goldens or preserve the old grouping order.
+
+DEFER severity=MED — Spec 126 §11b.2 Binding "a field of a declared CONTRACT descriptor's response projection" and the binding-standard note "(1) ... must be on that CONTRACT's `inputs.field_whitelist`" — src/components/surfaces/web/SearchBinding.tsx:101 "const entitlement = (field: string): Ref => ({ contract: `${ENTITLEMENT}.${field}` });" — `contract_parcels_entitlement` and the new wire field `resetsOnDisplay` are bound as contract refs with no descriptor or whitelist change in this diff, cannot see the contract row — show the `inputs.field_whitelist` entry for reportsLeft, reportsLimit and resetsOnDisplay.
+
+DEFER severity=MED — Spec 126 §11b.2 Content "every user-visible string comes from a content file; library default strings ... are overridden from content" — src/components/surfaces/web/SearchBinding.tsx:137 "{ role: 'link', content: 'footer.terms', href: '/terms' }" — four new content keys (footer.terms, footer.privacy, footer.help, footer.copyright) are referenced and no content-file change is in this diff, and footerNode.ts:27 throws on a missing key rather than falling back, so an absent key is a page failure — add the four keys to every content file the three web users read.
+
+DEFER severity=MED — Spec 126 §11b.1 "Every MaxBLD page = descriptor + content + standard library components" (a change adding behaviour no pasted clause or ruling names) — src/components/surfaces/web/SearchBinding.tsx:147 "const reportsLeft = (s: WebSituation): WebNode[] =>" — SRCH.A6, RR-0307, task-320 and RR-0270 are cited only in comments; the pasted clauses name no reports-left line, no five-item search footer and no footer prop on the report, and nothing in this diff populates `WebSituation.entitlement` — paste the ruling (or drop the line) so the addition has a pasted authority.
+
+DEFER severity=MED — MF-91 operator words as quoted at src/components/surfaces/web/SearchBinding.tsx:131 ""1. once  -approved"" (MORNING-DECISIONS.md:1061, not pasted) — src/lib/surfaces/maxbld-landing.ts:147 "footer: pickFooterText(SEARCH_CONTENT)" with StaticBinding.tsx:437 "<ReportPage ... footer={footerOf2(ctx.report)} />" — the landing page's own `footer` kind section and the embedded ReportPage both now carry the same four strings, so the links and copyright can render twice on the landing; the landing page table is not pasted, cannot see — confirm the landing table has no footer section, or drop one of the two renderers.
+
+DEFER severity=MED — Spec 126 §11b.1 "REPORT keeps the landed renderer (§11a; Spec 135 FE-24)" — src/components/surfaces/web/StaticBinding.tsx:437 "<ReportPage key={k} view={reportOf(p.view, 'sample', ctx.report)} footer={footerOf2(ctx.report)} />" — ReportPage.tsx is not in this diff, yet it is now passed a value that throws when absent (`footerOf2` fail) and footerNode.ts:5 claims "the web report page ... it renders without a Mantine provider", i.e. the REPORT renderer is claimed to import the web binding folder — show ReportPage.tsx's change and confirm the REPORT render/goldens are unaffected.
+
+DEFER severity=LOW — Spec 126 §11b.1 "Import boundary. Library imports are allowed only in the declared binding modules ... (`src/lib` ...) fails" — src/lib/surfaces/maxbld-landing.ts:39 "import { pickFooterText } from '@/components/surfaces/web/footerNode';" — a `src/lib` server module now depends on the web binding folder for footer-string policy, a direction no pasted clause authorises — move the key list and the read into a lib module, or state why the boundary permits it.
+
+MET — MF-91 "once" (as quoted at SearchBinding.tsx:131) — src/components/surfaces/web/SearchBinding.tsx:131-142 — the legal sentence is gone from under the input and appears once, in the footer, still keyed `search.legal`.
+MET — Spec 126 §11b.2 Binding "one per archetype per platform" / "one tree, a render per binding" — src/components/surfaces/web/footerNode.ts:37 — one tree builder, per-user layout tables, per-binding render.
+MET — Spec 126 §11b.2 Content / FE-18 "every user-visible string comes from a content file" — src/components/surfaces/web/SearchBinding.tsx:136-140 — footer parts carry content keys only, no literal user text is typed in code.
+MET — binding-standard note (1) "The two-part form `<contract_id>.<field>` is unchanged" — src/components/surfaces/web/SearchBinding.tsx:151 — refs are `contract_parcels_entitlement.reportsLeft`, `reportsLimit`, `resetsOnDisplay`.
+MET — Spec 126 §11b.1 "REPORT keeps the landed renderer" — src/components/surfaces/web/StaticBinding.tsx:437 — ReportPage is still embedded by exact name and module.
+
+REJECT — Spec 126 §11b.1 "No hand-built standard component" — that the `SEARCH_FOOTER` table in SearchBinding is a hand-written page part — the pasted MF-40 note (5) rules "the web bindings keep plain JSX and their names are unchanged by this note", so a hand-written binding tree is the sanctioned form.
+REJECT — Spec 126 §11b.1 "no maths in bindings (FE-05)" — that resetLabel derives the reset date — src/lib/entitlements/index.ts:627 runs in a server read module, not in a binding, and FE-18 bars only code-typed fallback text.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  120955ms (121.0s)
+📊 Tokens — total: 41085, input: 19253, output: 21832, reasoning: 20125

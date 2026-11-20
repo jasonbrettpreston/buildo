@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-schema.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH, §5 dated note 2026-11-04 "new McFrontend rulings are `FE-nn` rows in Spec 135", bindings.json:2 "orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling)", plus bindings.json:73 "min-h-[48px]", the diff adds a touch-target value on an authority it itself disclaims as not an operator ruling and does not record as an FE-nn row, so no pasted ruling names the behaviour and the addition legalises 48 px on every Button rather than the SRCH.SEMI page the note scopes it to, fix: record it as a dated FE-nn row in Spec 135 citing RR-0309 or drop the token, and state where the SRCH.SEMI-only scope is enforced.
+
+DEFER severity=MED, contracts.json:22894 own declaration "its response is an explicit `.strict()` whitelist of six fields", contracts.json:22970 "resetsOnDisplay", the same descriptor gains a field in the whitelist but its `under_126` still declares a six-field whitelist and the diff does not update it, so the descriptor contradicts itself on the very field the strict response is asserted from, fix: update `under_126` (and `data_story`) to the new field set in this commit.
+
+DEFER severity=MED, contracts.json:22003 own declaration "It reads 9 tables", same line's appended note "besides the stored tables above, the Layer 2 results", the header count stays at 9 while the note adds six more read tables (bylaw_resolution_results, bylaw_resolution_option_results, bylaw_resolution_units, bylaw_resolution_texts, parcel_abutments, parcel_maxbld_population), so the declared read set and its count disagree in one field, fix: restate the count and the two switch-gated read sets as one consistent list.
+
+DEFER severity=MED, R-18 dated note 2026-11-12 "P-4 every referenced contract has the same class", mobile-product.json:7608 "/api/parcels/entitlement", the screen's `contract_ref` gains a second contract that now falls under the landed auth-class-parity lock, and the diff shows neither the surface's declared class nor an owning row in auth-class-parity-exceptions.json (cannot see either), fix: paste the surface's session class beside the new ref, or add the named exception row in the same commit.
+
+MET, R-25 "The fan-out graph and the orphan panel derive from the CONTRACT's own `consumers[]`", contracts.json:23249, consumers[] and consumers_verified[] now name the single call site, so the join R-25 says lives in consumers[] is declared there and sharing.answer moved to sole with it.
+
+MET, R-03 "`lead_parcels` is read by no surface", contracts.json:22003, none of the newly named reads (parcel_maxbld_scenarios, bylaw_resolution_lot_stamps and the LOAD.1 tables) is lead_parcels, so the fence holds.
+
+MET, dated note 2026-11-14 "the closed REPORT page kind list grows by `summary`", report-presentation.json:26, the added member is a `not_evaluated:` message key, not a page kind or part kind, so the closed page-kind and part-kind lists are untouched.
+
+REJECT, R-27 "ONE home for the required-field profiles.", the same message is hand-listed in report-presentation.json:26 and seed-report-v2.mjs:600, R-27's one home is the surface schema's required-field profiles and its generator, not the report message catalogue, and no pasted clause forbids the catalogue and its seeder carrying one key.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 4
+
+---
+⏱  73007ms (73.0s)
+📊 Tokens — total: 40275, input: 26581, output: 13694, reasoning: 12836

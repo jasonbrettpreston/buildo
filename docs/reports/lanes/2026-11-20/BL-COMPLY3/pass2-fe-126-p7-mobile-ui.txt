@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-ui.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §11a.7 dated note 2026-11-12 (MF-48 Stage B) "The page view comes from the lookup's nullable `page` (B-3 a; Spec 100 §3.2 dated note), built on the server by MF-57's core, null for every lot until MB-44, so customers see the approved miss text." — mobile/app/(app)/parcel-tool/[parcelId].tsx:37 "reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError })" — a null page now renders the loading lifecycle text instead of the approved miss text whenever the semi question is owed, and no pasted ruling amends that rule — paste the 2026-11-13 "semi ask a" ruling this gate rests on, or keep the miss text for a null page until that ruling is in the pasted context.
+
+DEFER severity=MED — Spec 126 §11a.7 dated note 2026-11-08 item (4) "Nodes bind only to existing declaration fields plus `content` (MF-10 D-3 b)" — mobile/src/components/surfaces/SearchBinding.tsx:52 "const ENTITLEMENT = 'contract_parcels_entitlement';" — the new reports-left refs bind to a contract whose declaration is not in the material under review, so "existing declaration field" cannot be confirmed — include the descriptor or binding-sources entry that declares contract_parcels_entitlement with reportsLeft, reportsLimit and resetsOnDisplay.
+
+DEFER severity=MED — no pasted clause covers the closed icon table, the diff's own governing line is "/** The closed icon table (plan v3 §2.2). */" — mobile/src/components/surfaces/SurfaceRenderer.tsx:30 "export const ICONS = { Search, MapPin, AlertTriangle, RefreshCw, Lock, Ban, User, Check, ArrowRight, X, ChevronLeft, Info };" — a declared closed set is expanded by two icons on the change's own authority with plan v3 §2.2 not pasted — paste the plan v3 §2.2 amendment (or the mock ruling) that admits ChevronLeft and Info.
+
+DEFER severity=LOW — no pasted clause or operator ruling names a reports-left line, the new code cites only "small-pages-v8 search.html:267" and task-320, neither pasted — mobile/src/components/surfaces/SearchBinding.tsx:234 "...reportsLeft(s)," — a new customer-facing allowance line enters with no pasted clause to check it against — paste SRCH.A6 / RR-0307, or hold the line out of this change.
+
+DEFER severity=LOW — no pasted clause names the choose-lot help links, the pick hint or the help row, the code cites only "choose-lot.html:278" and "choose-lot.html:279", not pasted — mobile/src/components/surfaces/LotMapBinding.tsx:97 "onPress: { action: 'open_help', topic, q: derived('query') }" — new surfaces plus a `derived('query')` ref whose closed name list is not in the material under review — paste SRCH.C12 / C.11 and the lot-map derived-name list.
+
+DEFER severity=LOW — the governing line this change deletes said "are the MF-53 layout table (mobile/src/constants/lotMap.ts), reused verbatim: no new constant." — mobile/src/components/surfaces/SemiQuestionBinding.tsx:99 "className: s.busy ? `${L.semiSelect} opacity-[0.85]` : L.semiSelect" — new semi-prefixed layout keys and a raw 0.85 opacity enter with that header rewritten by the same change and no pasted ruling — paste the task-319 / task-361 mock ruling authorising the semi-prefixed keys and the busy look.
+
+REJECT — MF-58 "MF-58 (ruling 2026-11-10 items 16 and 5): the legal line, always shown, under the address input and before any result block." — that the new reports-left line displaces the legal line — the legal line still follows the input area and still precedes any result block, and the clause sets no adjacency to the pill.
+
+MET — MF-48 Stage B "The error state adds Retry with the approved text 'Try again'" — mobile/app/(app)/parcel-tool/[parcelId].tsx:37 — isError is still forwarded into reportScreenState, so the error and Retry path is untouched.
+MET — MF-14 note (5) "A value is shown as the producer sent it: `String(n)` plus the declared unit; null shows the content dash; no rounding" — mobile/src/components/surfaces/SearchBinding.tsx:246-252 — the three allowance values are bound straight to the served contract fields with no client maths or rounding.
+MET — MF-48 Stage B "The screen's texts reach the app through a generated slice" — SemiQuestionBinding.tsx and LotMapBinding.tsx — every new string is a content() ref, no inline copy string is added.
+MET — MF-62 copy note "until then no live-progress wording is shown" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:99-101 — the busy state adds accessibilityState busy and an opacity only, no new progress wording.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+
+---
+⏱  92410ms (92.4s)
+📊 Tokens — total: 45323, input: 27927, output: 17396, reasoning: 16191

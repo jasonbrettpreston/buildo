@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-ui.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 128 §4 step 4 / §4.8 item 3 "The same commit that records a ruling adds its both-directions test" and "A rule without a lock is not yet a rule" — mobile/app/(app)/parcel-tool/semi-question.tsx "result = await boundedWait(fetchParcelLookup({ parcelId: id, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);" — no test or lock path lands in this diff for the behaviours it attributes to rulings (SRCH.SEMI-2 task-319 RR-0278, SRCH.A6 task-320 RR-0307, SRCH.C12 task-321, SRCH.METER-2 task-360), so each rule is recorded without its lock — name the .test.ts/.test.tsx lock paths carried by this commit for RR-0278 and RR-0307, or state in the plan which commit carries them.
+
+DEFER severity=MED — 2026-11-11 dated note (D-2 a) "The closed render vocabulary is not widened" — mobile/src/components/surfaces/SurfaceRenderer.tsx "export const ICONS = { Search, MapPin, AlertTriangle, RefreshCw, Lock, Ban, User, Check, ArrowRight, X, ChevronLeft, Info };" — the closed icon table grows by two entries (ChevronLeft, Info) and no pasted ruling, register row or lock authorises the growth, while the pasted MF-19 method for a closed-list growth requires an operator ruling and a red-first lock — cite the ruling id and its lock for each icon, or reuse an existing icon already in the closed table.
+
+DEFER severity=LOW — §4.7a "Every ACCEPTED row names a deciding source outside this pass" — mobile/app/(app)/parcel-tool/index.tsx "// SRCH.A6 (task-320; RR-0307): the reports-left line reads the served count" — the deciding source named is a task id and an RR row, with no outside source (ratified spec section, executed code fact, prior operator ruling, law) given, so by §4.7a the row reads PROPOSED while the diff builds it as settled — add the outside deciding source and its anchor to the comment or the plan.
+
+DEFER severity=LOW — 2026-11-15 dated note (MF-19) "the lock is the report-page roles test and the sheet goldens, red first" — mobile/src/components/surfaces/LotMapBinding.tsx "const helpRow = (): PropsNode =>" — the help row, the pick hint and the per-state help links are behaviour no pasted clause, card text or ruling names (choose-lot.html:278-279 is cited but not pasted) — paste the card lines or the operator ruling that authorises these added parts, with their lock.
+
+REJECT — 2026-11-15 dated note (MF-19) "The `link` part is text only: it carries no href and no action in the page tree" — the accusation that LotMapBinding's helpLink with "onPress: { action: 'open_help', topic, q: derived('query') }" breaks it — that ruling is scoped to the report page sheet section's closed roles in report-page.json, and the choose-lot help link is not that part.
+
+REJECT — §4.11 "all code changes WAIT for the named freeze lift; McBylaws owner review" — the accusation that this mobile diff lands code under the freeze — §4.11 items name the arm C gate machinery (gate.mjs, cite-parse.mjs, paths.mjs, hold.mjs), and this diff touches none of those paths.
+
+MET — 2026-11-11 dated note (D-2 a) "The closed render vocabulary is not widened" (component set) — mobile/src/components/surfaces/SurfaceRenderer.tsx "export const COMPONENTS = { SafeAreaView, ScrollView, View, Text, Input, Button, Alert, AlertDescription, Icon, ActivityIndicator, MapView, Polygon, Marker, Svg, SvgPolygon, SvgLine };" — the component set is unchanged by this diff, so the closed vocabulary is not widened by a new component.
+
+MET — §4.7a consequence 2 "no row reads `BUILT`" — mobile/app/(app)/parcel-tool/semi-question.tsx "// SRCH.SEMI stage 2 (task-319, MF-93; RR-0278)" — the diff's comments cite task and RR ids only, and nothing in it claims a resolved lock or a BUILT row.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  61521ms (61.5s)
+📊 Tokens — total: 35256, input: 24141, output: 11115, reasoning: 10074

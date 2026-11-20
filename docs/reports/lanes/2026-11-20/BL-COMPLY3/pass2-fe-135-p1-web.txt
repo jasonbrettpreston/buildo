@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-web.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — 135 rule 5 "a RULED row's lock paths must exist; an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — footerNode.ts:12 "MF-91 (SRCH.FOOTER, task-332; operator, verbatim, 2026-11-19: ...)" — the diff implements the MF-91 ruling and this diff part adds no test under src/tests/surfaces, while the MF-91 row itself (RULED or OWED, and its lock path) is not pasted, so rule 5 cannot be confirmed — paste the MF-91 row and its lock path, or name the lock test that covers the shared footer builder.
+DEFER severity=MED — 135 register scope "The live register of McFrontend rulings (`FE-nn` rows)." — footerNode.ts:3 "FE-18 (every string from content), FE-34 (closed roles; nothing skipped silently)" — the two clauses the new module rests on are cited in its header but are not in the pasted part (rules and next-free-id only, part 1 of 4), so neither can be checked — paste the FE-18 and FE-34 rows.
+DEFER severity=MED — 135 role line "> **Role: authority register.**" (pasted part carries rules 1 to 5 and next-free-id only) — SearchBinding.tsx:131-134 "MF-91 (SRCH.FOOTER; operator \"1. once  -approved\") ... SRCH.A6 (task-320; RR-0307; v8 search.html:320)" — the five-item footer order, the single legal sentence and the three served entitlement fields are named only in rulings absent from the pasted context, and the operator words appear only inside the diff's own comment, which cannot itself satisfy a clause — paste MF-91, SRCH.FOOTER, SRCH.A6, RR-0270, RR-0307, RR-0310.
+DEFER severity=LOW — 135 pasted part contains no row carrying the date rule — entitlements/index.ts:664 "resetsOnDisplay: resetLabel(u.resetsOn)" — the added doc comment asserts "resetsOn as the Toronto calendar date, \"9 Dec 2026\" (SRCH.A6, RR-0310)" but RR-0310 is not pasted and `formatDateDmyFixed` is not in this diff, so the Toronto-calendar claim cannot be checked — paste RR-0310 and the formatter's source.
+MET — 135 "**Next free id:** `FE-45`." — footerNode.ts:3-4 — the only FE ids the diff cites, FE-18 and FE-34, are both below FE-45, so no id above the next-free-id line is invented.
+MET — 135 rule 2 "ONE lock per row; the Lock is in the LAST cell with the status" — no file in this diff edits the register table, so no row's lock cell is added, moved or emptied.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  38217ms (38.2s)
+📊 Tokens — total: 23381, input: 16323, output: 7058, reasoning: 6358

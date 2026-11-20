@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-content-route.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — §11b.2 Locks "no maths in bindings (FE-05)" — src/app/api/parcels/entitlement/types.ts "resetsOnDisplay: z.string().nullable(), // the same instant as the Toronto date, \"9 Dec 2026\" (RR-0310); the page prints it" — no diff line in entitlement/route.ts computes resetsOnDisplay (only a header comment changed), so the server-served reset label is asserted by comment and type only; the {reset} slot would have to be formatted in the binding, which is maths in the binding — add the server computation (or its test) for resetsOnDisplay to the entitlement response in this diff.
+
+BUG severity=HIGH — MF-48 dated note "the mobile report page view built on the server by MF-57's core (pageViewOf(buildPage(response))) from the lot's producer response (src/lib/parcels/report-page.ts)" — src/app/api/parcels/lookup/route.ts "+import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';" and "+ pageResponse = await computeCustomerPageResponse(parcelRef);" — the diff adds a second page source, report-compute.ts, which the pasted MF-48 ruling does not name; the ruling names only report-page.ts — cite the ruling that authorizes report-compute.ts as a page source, or serve the page only from report-page.ts.
+
+BUG severity=HIGH — §11b.2 Goldens "one props golden per reachable state per declared target at `src/tests/fixtures/surfaces/<surface_id>/<state>.<target>.json`, each `covers` a state" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json "+ { \"name\": \"hit\", \"golden\": \"reports_left\" }" — the descriptor declares a new state golden but no fixture under src/tests/fixtures/surfaces/mobile_parcel_search/ is added in this diff, so the declared golden has no file — add the regenerated hit.<target>.json fixture (or show it is generated in this diff).
+
+BUG severity=MED — MF-76 dated note "`hero`, `figures`, `items` and `plans` join `prose` and `footer`" (footer is a static-page kind) — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json "+ \"footer.copyright\": \"© MaxBLD\"," — footer keys are added to a mobile SEARCH content file, but the pasted ruling adds footer only to the static page contract's kinds; no pasted clause names a footer on the SEARCH surface — remove the footer keys or cite the ruling that authorizes footer on SEARCH.
+
+DEFER severity=MED — MF-76 dated note "a part may name `value`, a declared server read, whose content is then a template with one `{value}` slot filled on the server" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json "+ \"search.reports_left\": \"{left} of {allowance} reports left until {reset}\"," — the content template carries three slots filled from two contracts, while the only pasted server-fill template rule allows one `{value}` slot filled on the server; the multi-slot fill mechanism on the SEARCH surface is not named by a pasted clause — state the binding that fills the three contract values or reduce to a server-filled single slot.
+
+DEFER severity=LOW — §11b.2 Binding "A value binds only through the closed binding set (§11a.1) plus `contract`" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json "+ \"help.lot.prompt\": \"Not sure which lot?\"," — new strings are added to the S-071 content file but the S-071 descriptor/binding is not in this diff, so their binding through the closed set cannot be verified — include the S-071 binding change or confirm these keys are rendered.
+
+MET — §11b.2 Binding — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json "resetsOnDisplay" in field_whitelist and mobile_parcel_search.descriptor.json "contract_ref": [..., "/api/parcels/entitlement"] — the reset value is now on a declared CONTRACT projection, satisfying the contract-source rule.
+
+MET — §11b.2 Content — mobile_parcel_search.content.json "+ \"search.reports_left\": ..." and mobile_parcel_disambiguation_map.content.json "+ \"select.hint\": ..." — user-visible strings are placed in content files rather than in bindings.
+
+MET — Binding standard dated note "a name segment ... must be on that CONTRACT's `inputs.field_whitelist`" — contract_parcels_lookup.descriptor.json "+ \"semi\"" and lookup/types.ts "+ semi: z.literal('answered').optional()," — the new semi request value is declared on the contract whitelist alongside the schema.
+
+REJECT — §11b.1 "No hand-built standard component" — the change is accused of adding per-feature code via computeCustomerPageResponse — report-compute.ts is server compute, not a library component or a wrapper component in a binding module, so the §11b.1 component and import-boundary rules do not reach it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  65659ms (65.7s)
+📊 Tokens — total: 34005, input: 21747, output: 12258, reasoning: 11039

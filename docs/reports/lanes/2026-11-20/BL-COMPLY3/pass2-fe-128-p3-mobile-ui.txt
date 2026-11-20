@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-ui.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 128 R-25 "The fan-out graph and the orphan panel derive from the CONTRACT's own `consumers[]`; a table recording that join would be a second source of truth for a fact the descriptor already declares." — mobile/src/components/surfaces/SearchBinding.tsx:52 "const ENTITLEMENT = 'contract_parcels_entitlement';" — the search surface now resolves displayed values from a second contract, and no pasted descriptor block shows that contract in the surface's contracts[] or in the contract's consumers[] (cannot see the descriptor part), so the join R-25 derives the fan-out and orphan panel from misses this consumer — land the descriptor edit (search surface contracts[] plus contract_parcels_entitlement consumers[]) in this change or paste it.
+
+DEFER severity=MED — Spec 128 dated note 2026-11-12 (R-18 lock) "P-4 every referenced contract has the same class" and "fail closed both ways (a new finding fails; a fixed one left listed fails)" — mobile/src/components/surfaces/SearchBinding.tsx:52 "const ENTITLEMENT = 'contract_parcels_entitlement';" — the auth class of the newly referenced contract cannot be seen, and the parity lock fails closed, so an unreferenced-in-descriptor contract is either a silent miss (check has nothing to compare) or a CI failure — declare contract_parcels_entitlement on the search surface so auth-class-parity covers the pair.
+
+DEFER severity=MED — Spec 128 R-01 "The parcel tool is its own metered product, product key **`parcel_tool`**. ... Three grep-locked sites change: `chk_entitlements_product`, `stripe_price_product_map`, `_contracts.json.entitlement_products`." — mobile/app/(app)/parcel-tool/index.tsx "const { data: entitlementData, isError: entitlementFailed, refetch: refetchEntitlement } = useParcelEntitlement();" — the screens now render a metered count, and none of the three pins that decide which product that count belongs to appears in this diff part (cannot see), so the count could be served from a product other than parcel_tool — land or paste the three pinned sites alongside this read.
+
+DEFER severity=LOW — Spec 128 R-23 "what this row adds is the mechanism: a **`metering` ⇒ ledger-row check**" — mobile/app/(app)/parcel-tool/semi-question.tsx "result = await boundedWait(fetchParcelLookup({ parcelId: id, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);" — the client now triggers the counted lookup, and no pasted declaration ties mobile_parcel_semi_question to a metering entry or a usage_events ledger row — show the metering declaration plus the ledger-row assertion for the semi answered event.
+
+DEFER severity=LOW — prompt walk step 4 "A change that adds behaviour no pasted clause or ruling names is a finding (nothing added that the card or ruling did not name)." — mobile/src/components/surfaces/LotMapBinding.tsx "node('Text', { key: 'help-prompt', className: L.helpPrompt }, [content('help.lot.prompt')])" — the diff adds help links on six lot-map states, a pick hint, a help row, a Continue busy look and two new icons, each citing SRCH.C11, C.12, SRCH.SEMI-3, choose-lot.html:278-279 or semi-question.html:130, and none of those clauses, cards or mocks is in the pasted context — paste the card/mock text that names them, or drop them from this change.
+
+MET — Spec 128 R-22 "React Native has no Server Components. Web is RSC on Vercel (max server side); mobile is a **fetched projection** plus build-time generation." — mobile/app/(app)/parcel-tool/semi-question.tsx "result = await boundedWait(fetchParcelLookup({ parcelId: id, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);" — every new value arrives by client fetch or the generated slice, no SSR or RSC mechanism is assumed on mobile.
+
+MET — Spec 128 R-30 "`period` is **derived at query time**, never stored, so no billing calendar is baked into a historical row." — mobile/src/components/surfaces/SearchBinding.tsx "vars: { left: entitlement('reportsLeft'), allowance: entitlement('reportsLimit'), reset: entitlement('resetsOnDisplay') }" — the reset date is printed exactly as the server served it (RR-0310) and nothing period-like is computed or stored on the client.
+
+MET — Spec 128 R-01 "The parcel tool is its own metered product, product key **`parcel_tool`**." — mobile/app/(app)/parcel-tool/index.tsx "// SRCH.A6 (task-320; RR-0307): the reports-left line reads the served count (GET /api/parcels/entitlement)" — the client reads the parcel tool's own entitlement endpoint rather than a shared product count.
+
+REJECT — Spec 128 R-04 "The two `parcel_id`s are named distinctly: `parcel_ref` = `parcels.parcel_id` `VARCHAR(20)` (municipal); `parcel_pk` = `parcels.id` `SERIAL`." — the change could be accused of the ambiguous `parcelId` route param in mobile/app/(app)/parcel-tool/[parcelId].tsx — R-04 governs the DB columns and `usage_events.subject_kind`, not a client route param, so it does not bind this diff.
+
+REJECT — Spec 128 R-21 "One descriptor set, three renderers — `platforms[]` is a descriptor field." — the change could be accused of a mobile-only surface divergence because bindings were edited by hand — the edited files are the existing per-platform bindings fed by the generated slice, and R-21 constrains the descriptor's platforms[] field, not which file carries the renderer.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  60538ms (60.5s)
+📊 Tokens — total: 38307, input: 26901, output: 11406, reasoning: 10018

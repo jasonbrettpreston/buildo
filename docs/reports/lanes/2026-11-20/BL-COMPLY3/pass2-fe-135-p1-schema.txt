@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-schema.patch (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — register rule 2 "A rule without a lock is not yet a rule (Spec 124 section 4.4). ONE lock per row; the Lock is in the LAST cell with the status (arm C reads it)." — scripts/surfaces/_schema/bindings.json, hunk "@@ -70,7 +70,7 @@" ""Button": ["min-h-[44px]", "min-h-[48px]"]" — the same note concedes the authority is "orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling)" and the only check it names, C-9m, is unchanged in this diff, so no lock pins the newly permitted 48 px and the clause's "rule without a lock" test is not satisfied — list min-h-[48px] only after an operator ruling or a lock that pins the semi page at 48 px lands.
+DEFER severity=MED — contracts.json entitlement under_126 "its response is an explicit `.strict()` whitelist of six fields" (source clause not pasted; this is the file block's own record of it) — scripts/surfaces/_schema/census/contracts.json "@@ -22966,7 +22967,8 @@" ""resetsOn", "resetsOnDisplay"" — the whitelist gains a further field while the entry and its data_story still declare the six-field shape, so the descriptor's declared shape and its list disagree — restate the under_126 count and the data_story field list in this same change.
+DEFER severity=LOW — register rule 2 "A rule without a lock is not yet a rule (Spec 124 section 4.4)." — scripts/surfaces/_schema/census/contracts.json "@@ -22168,7 +22168,8 @@" ""unsure", "semi"" — a value is added to a closed list with no dated note, no cited ruling and no lock, unlike every other hunk in this diff which carries a dated note and an authority — add the dated note and the ruling or lock that admits "semi".
+DEFER severity=LOW — the added citation "MB-94 (c), Spec 126 11a.3 dated note 2026-11-12 (R-2 literal)" rests on Spec 126 11a.3 and R-2 (Spec 128), neither of which is pasted — scripts/surfaces/_schema/seed-report-v2.mjs "@@ -597,6 +597,7 @@" "'not_evaluated:not_in_engine_population': 'Not yet evaluated'" — cannot verify the literal is the R-2 literal, so "Not yet evaluated" is unconfirmed against its own authority — paste R-2 and Spec 126 11a.3, or carry the commit that lands them.
+MET — register rule 3 "Never an OWED marker with no lock path" — scripts/surfaces/_schema/bindings.json, census/contracts.json, census/mobile-product.json, report-presentation.json, seed-report-v2.mjs — no register row, status word or OWED marker is added, moved or removed by this diff.
+MET — register rule 5 "a RULED row's lock paths must exist; an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — same file list — the diff adds no lock path and renames none, so the exist/non-exist test is not engaged.
+MET — register "**Next free id:** `FE-45`" — same file list — the diff consumes no FE id and writes no row that would need one.
+MET — Land order "This file must be in HEAD in an EARLIER commit than the gate registers-array change (Spec 128 §4.11 item 1)." — same file list — the register file itself is untouched, so the land order is unaffected.
+REJECT — register rule 4 "`Six` cell: letters D P F S H E ... Applies to FE rows only." — the change is accused of leaving a Six cell unfilled — no FE row is added by this diff, so rule 4 does not bind it.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+```
+
+---
+⏱  54996ms (55.0s)
+📊 Tokens — total: 30948, input: 20995, output: 9953, reasoning: 9004

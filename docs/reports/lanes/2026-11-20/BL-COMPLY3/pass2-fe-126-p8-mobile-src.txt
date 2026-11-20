@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §11b.1 import boundary "Library imports are allowed only in the declared binding modules. A wrapper component anywhere else (`src/app`, `mobile/app`, `src/lib`, the vendor folder) fails." — mobile/src/lib/maxbldHelp.ts (@@ -1,18 +1,28 @@) "import * as WebBrowser from 'expo-web-browser';" — a library package is now imported from src/lib, a location the clause names as failing, and the diff does not declare this module as a binding module — move the openBrowserAsync call into the declared binding module that draws the help link and leave maxbldHelp.ts as the URL builder.
+
+BUG severity=HIGH — Spec 126 §11b.1 "Our code is limited to** the descriptor → library binding (one per archetype per platform, thin config), the generators, the gates and the landed web REPORT renderer. Per-feature code is named in its queue row: CONTRACT routes for writes, migrations, product gates, the entitlement read contract, the host allow-list." — mobile/src/hooks/useParcelLookup.ts "+export function parcelLookupParams(parcelId: string, semi?: string): { parcelId: string; semi?: 'answered' }" — the semi answered flag makes the server count a lot as a report, a product behaviour, and no pasted clause or ruling names it; only the entitlement read contract is named — paste the operator ruling that names the semi counting param for this queue row, or drop it from this diff.
+
+DEFER severity=MED — Spec 126 §11b.2 Goldens "one props golden per reachable state per declared target at `src/tests/fixtures/surfaces/<surface_id>/<state>.<target>.json`, each `covers` a state" — mobile/src/lib/semiQuestion.ts "+    busy: ask && args.submitting === true," and mobile/src/lib/parcelSearchMatch.ts "+  entitlement?: EntitlementLine | null;" — two new reachable render states (Continue busy, reports-left line drawn) arrive with no golden file in the diff — add the props goldens for the new states or show the golden diff.
+
+DEFER severity=MED — Spec 126 §11b.2 Binding "A value binds only through the closed binding set (§11a.1) plus `contract`: a field of a declared CONTRACT descriptor's response projection" — mobile/src/lib/schemas.ts "+export const ParcelToolEntitlementSchema = z.object({" — the three printed fields are typed by a hand-written Zod object and the diff carries no CONTRACT descriptor or projection change — bind reportsLeft, reportsLimit and resetsOnDisplay as contract_parcels_entitlement paths in the mobile binding, or paste the contract diff.
+
+DEFER severity=MED — Spec 126 §11b.1 "No hand-built standard component. Archetypes (FORM, LIST, SEARCH, DASHBOARD, auth, subscription, onboarding) use the libraries of §11b.4 or hosted components, configured by descriptors, never written by us." — mobile/src/constants/lotMap.ts "+  semiDotChecked: 'h-[22px] w-[22px] rounded-full border-[7px] border-report-ink bg-report-card'," — the new semi page's parts are authored as hand-written class and pixel values copied from the v8 mock, with no descriptor or bindings.json change in the diff — declare the semi page parts in its descriptor and mapping and paste that diff.
+
+DEFER severity=LOW — Spec 126 §11b.2 Content "every user-visible string comes from a content file; library default strings (e.g. "No records") are overridden from content" — mobile/src/lib/semiQuestion.ts "+    super('The answered lookup did not settle in time');" — the timeout text lives in app code and is the error that ends the built error state — put that text in the content file if the error state can surface it, otherwise state in the comment that the message is internal only.
+
+MET — Spec 126 §11b.1 "the entitlement read contract" — mobile/src/hooks/useParcelLookup.ts "+  const raw = await fetchWithAuth<{ data: unknown }>('/api/parcels/entitlement');" — the entitlement read is exactly the per-feature code the clause names, read once through the CONTRACT route.
+
+MET — Spec 126 §11b.2 "no maths in bindings (FE-05)" — mobile/src/lib/parcelSearchCore.ts "+// reset date already written in Toronto time as `resetsOnDisplay` ... the page only prints them, no date is derived on the device." — reportsLeftShown tests presence only, so no arithmetic or device-side date derivation enters a binding.
+
+REJECT — Spec 126 §11b.1 "No hand-built standard component" — the diff is accused of hand-building the reports-left line, the pick hint and the help row as new components — the diff adds only class strings plus one presence predicate, and contains no new component file.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 6
+
+---
+⏱  54071ms (54.1s)
+📊 Tokens — total: 29427, input: 19375, output: 10052, reasoning: 8940

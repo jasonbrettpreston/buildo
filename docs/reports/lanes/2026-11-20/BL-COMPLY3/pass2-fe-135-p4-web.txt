@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-web.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — FE-40 "a page behind an off switch is 'gate-only'" — src/components/surfaces/web/SearchBinding.tsx:46 "Inert on the web until MAXBLD_WEB_LIVE flips (LS.12, task-287)" — the diff adds two web-visible parts behind the MAXBLD_WEB_LIVE switch (the footer, the reports-left line) and the diff carries no row or status for them in tests/e2e/scenarios.json, so the FE-40 catalogue entry cannot be seen — add the catalogue rows naming task-332 and task-320 with status gate-only before the switch flips.
+DEFER severity=LOW — FE-38 "A hit with no evaluated option is not counted against the monthly allowance (1 b)." — src/lib/entitlements/index.ts:664 "reportsLeft: Math.max(0, u.reportsLimit - u.reportsUsed)," — the diff now prints this count to web users, and whether u.reportsUsed excludes hits with no evaluated option cannot be seen in the diff — confirm the count honours the 1 b rule before the web line can render.
+MET — FE-40 "Limits and budgets are read from DB fields or admin settings, never typed" — src/lib/entitlements/index.ts:621 "reportsLimit: number | null;" — reportsLimit, reportsLeft and the new resetsOnDisplay all come from the DB read (current_period_end, the month count), no limit value is typed in the diff.
+MET — FE-44 "the client only switches which is shown, with no maths (Spec 128 Rule 16, FE-18)" — src/lib/entitlements/index.ts:627 "const resetLabel = (iso: string): string | null => {" — the Toronto date label is built server-side on the read and the binding prints the served string, so no formatting maths lands in the web binding.
+REJECT — FE-42 "FAIL CLOSED: a part that needs a drawing is left out when the response has none" — that adding a ReportPage footer which throws when absent (footerOf2) breaks fail-closed — the clause is scoped to "a part that needs a drawing"; the footer carries no drawing, state or geometry.
+REJECT — FE-39 "Engine values show before MB-38 only in the admin preview and in a tester-only preview" — that printing the reports-left line on the web exposes engine values early — the clause governs engine size and cost values; the reports-left count is a plan allowance read, not an engine value.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  36769ms (36.8s)
+📊 Tokens — total: 25068, input: 18527, output: 6541, reasoning: 5968

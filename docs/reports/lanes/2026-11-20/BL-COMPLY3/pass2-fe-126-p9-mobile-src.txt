@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §11b.3 dated note 2026-11-12 (MF-46 follow-up) item (4) "the app leaves for `MAXBLD_HELP_URL` (`mobile/src/lib/maxbldHelp.ts`, `Linking.openURL`; pinned equal to `MAXBLD_ORIGIN` + `/help` because the app cannot import `host-policy.ts`), the web renders a real link to `/help#topic=address_match&q=...`" — mobile/src/lib/maxbldHelp.ts "import * as WebBrowser from 'expo-web-browser';" and "await WebBrowser.openBrowserAsync(helpUrl(topic, q));" — the pasted ruling names `Linking.openURL` and a leave-the-app move; the diff replaces both with an in-app browser sheet on a cite (small-pages-v8 search.html:235, task-362) that is not in the pasted context — restore `Linking.openURL`, or land an operator ruling that amends note item (4) before merge.
+
+DEFER severity=MED — Spec 126 §11b.3 dated note 2026-11-12 item (4) "The map page's \"Report incorrect lot match\" (MF-53, topic lot_match with the parcel) is not on the page yet and is not added here." — mobile/src/constants/lotMap.ts "helpRow: 'mt-3 flex-row flex-wrap items-center justify-center gap-1'," and "helpLink: S.report," — the lot map binding gains a help row and link that open the help page, a map page help action the pasted note says is not added here, resting only on SRCH.C12 (not pasted) — cite a pasted ruling for the lot map help row or drop those keys.
+
+DEFER severity=MED — Spec 126 §11b.6 "Accuracy | values only through the closed binding set; no maths in bindings; conformance and parity locks" — mobile/src/hooks/useParcelLookup.ts "export function useParcelEntitlement() {" — a new server read (GET /api/parcels/entitlement) and a reports-left line add a value path no pasted clause or binding set names; the cited authority (task-320, RR-0307, MORNING-DECISIONS.md:1182) is not in the pasted context — paste RR-0307 and the contract before this read lands, or defer it out of this change.
+
+DEFER severity=LOW — Spec 126 §11b.3 dated note 2026-11-12 item (4) "`mobile_parcel_search` state `ambiguous` gains the content key `list.report` and the action `open_help {topic: address_match, q: {derived: input}}` on both targets (FE-07 parity)" — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS = 60_000;" plus useParcelLookup.ts "semi: 'answered'" — the semi page layout keys, the Continue wait and the lookup `semi` param are behaviour no pasted clause names, resting on task-319, task-361, RR-0278 and LX-E1, none pasted — paste those rulings or split them out of this change.
+
+MET — Spec 126 §11b.3 dated note 2026-11-12 item (3) "The topic, query and lot travel in the URL fragment (`/help#topic=address_match&q=...`), never a query string" — mobile/src/lib/maxbldHelp.ts "helpUrl = (topic: string, q: string): string => `${MAXBLD_HELP_URL}#topic=${encodeURIComponent(topic)}&q=${encodeURIComponent(q)}`" — the fragment form is kept unchanged.
+
+MET — Spec 126 §11b.3 dated note 2026-11-12 item (4) "pinned equal to `MAXBLD_ORIGIN` + `/help` because the app cannot import `host-policy.ts`" — mobile/src/lib/maxbldHelp.ts "export const MAXBLD_HELP_URL = 'https://maxbld.ca/help';" — the constant and its pin comment survive, so the T8 equality still holds.
+
+MET — Spec 126 §11b.6 "no maths in bindings" — mobile/src/lib/parcelSearchCore.ts "export type EntitlementLine = { reportsLeft: number | null; reportsLimit: number | null; resetsOnDisplay: string | null }" — only served fields are bound and the reset label is served as `resetsOnDisplay`, nothing derived on the device.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 4
+
+---
+⏱  58380ms (58.4s)
+📊 Tokens — total: 32278, input: 20745, output: 11533, reasoning: 10483

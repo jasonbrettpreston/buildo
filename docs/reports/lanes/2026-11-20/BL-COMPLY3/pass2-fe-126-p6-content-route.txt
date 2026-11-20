@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-content-route.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 126 §11a.1 "A field with any other source fails the check." — mobile_parcel_search.descriptor.json "The reset date of the reports-left line (SRCH.A6) is not a derived name: the server serves it already written in Toronto time as resetsOnDisplay (RR-0310, task-351) and it binds as a contract value." — the new binding declares source "contract", which is not a member of the pasted closed set (catalogue, content, user_input, ad_slot, external_embed, parcels); the descriptor's own "from" line even renders the set as "(content, contract, ...)" — cite the search surface's own binding register instead of §11a.1, or register "contract" through the panel path §11a.1 requires.
+
+DEFER severity=MED — What to walk "A change that adds behaviour no pasted clause or ruling names is a finding" — src/app/api/parcels/lookup/types.ts "semi: z.literal('answered').optional()," and route.ts "const held = lotForm?.unsure === true && semi !== 'answered';" and entitlement/types.ts "resetsOnDisplay: z.string().nullable()" — the diff adds a semi-answer flag, a one-lot on-demand compute (computeCustomerPageResponse), and a server-formatted reset date, none named by a pasted clause; the rulings they cite (RR-0278, RR-0307, RR-0310, task-319/351/360/266, LOAD.1 task-266, M-246) are not pasted and I cannot see them — paste those rulings or confirm each in the register before merge.
+
+MET — Spec 126 §11a.1 "Every displayed field binds to a source" — mobile_parcel_search.content.json "search.reports_left": "{left} of {allowance} reports left until {reset}" — the line's label is a content field and its reset value is served, not a client-derived display, so no unbound displayed field is introduced.
+
+MET — Spec 126 §11a.1 "never into the generated report-v2.decl.json" — web_landing.sample.json "scripts/surfaces/_schema/report-presentation.json": "e151b5ccd11cd137" — only a presentation schema hash inside the sample bundle changes; no edit to the generated report-v2.decl.json appears in the diff.
+
+REJECT — Spec 126 §11a.1 closed binding set — the change is accused of adding a client-derived display for the reports-left date — resetsOnDisplay is server-formatted ("already written in Toronto time") and the client DERIVED_NAMES closed list is left unchanged, so no client-computed value is added.
+
+VERDICT: PASS on compliance with the pasted clauses (only deferrable items; the governing REPORT clauses are otherwise out of scope of the changed SEARCH/entitlement/lookup surfaces)
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  54746ms (54.7s)
+📊 Tokens — total: 30973, input: 20745, output: 10228, reasoning: 9575

@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 135 "The live register of McFrontend rulings (`FE-nn` rows)" — mobile/src/lib/parcelSearchCore.ts "// ── The reports-left line (SRCH.A6, task-320; operator RR-0307, MORNING-DECISIONS.md:1182)" — the ruling this line obeys (RR-0307 / SRCH.A6) is not among the pasted register rows, so clause-by-clause compliance of the reports-left line, the entitlement schema and its no-persist rule is cannot see — paste the FE row (or SRCH.A6 card text) that names SRCH.A6/RR-0307 before these lines can be certified.
+
+DEFER severity=MED — Spec 135 rule 5 "Locks: a RULED row's lock paths must exist; an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — mobile/src/lib/semiQuestion.ts "export const SEMI_CONTINUE_WAIT_MS = 60_000;" — the diff lands ruled behaviour (60s Continue wait, `semi: 'answered'` lookup, in-app browser sheet, `useSetParcelLookup`) citing RR-0278/SRCH.SEMI-3/task-353/task-362 that are not pasted, and no `src/tests/surfaces/*` lock file appears in this file set, so whether each RULED row carries its lock is cannot see — name the lock test for each new behaviour in the pasted context.
+
+DEFER severity=LOW — Spec 135 rule 2 "A rule without a lock is not yet a rule (Spec 124 section 4.4). ONE lock per row; the Lock is in the LAST cell with the status" — mobile/src/lib/lotForm.ts "nothing outside this file reads the param or calls `lotFormEffective` (P5.7)" — the diff changes behaviour (openHelp now an in-app browser sheet, a 60s bounded wait) on the strength of comments only, with no pasted row whose LAST cell carries the lock — cannot be checked from this part; no register row is touched.
+
+REJECT — Spec 135 rule 3 "Never an OWED marker with no lock path" — the change is accused of landing ruled behaviour with no OWED/RULED register marker — the diff adds no Spec 135 row at all (its file list is mobile/src only), so the marker rule is not engaged by this change.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  42997ms (43.0s)
+📊 Tokens — total: 24359, input: 16445, output: 7914, reasoning: 7336

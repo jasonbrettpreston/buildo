@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply3/esc/diff-mobile-src.patch (model: deepseek-reasoner)
+
+MET — FE-31 item (4) — mobile/src/hooks/useParcelLookup.ts, useSetParcelLookup "so the one setQueryData call lives here, the same key as useParcelLookup" — the mount-import rule is served by relocating the setQueryData call into @/hooks/ so the semi mount imports only @/hooks/ (the mount file itself is not in this diff)
+
+MET — FE-36 — mobile/src/lib/semiQuestion.ts "busy: ask && args.submitting === true," and "route: selected === null ? null : reportRouteAfterAnswer(parcelId, selected)," — busy is disclosure only and navigation stays on the computed route, no local-state view swap
+
+DEFER severity=MED — FE-31 "one props golden per reachable state per declared target, each `covers` a state or check, every state covered" — mobile/src/lib/semiQuestion.ts "busy: ask && args.submitting === true," — cannot see whether a props golden covers the new busy state (or the entitlement line present/absent states) — add or confirm goldens covering busy and the entitlement states
+
+DEFER severity=MED — FE-31 "library imports only in binding modules" — mobile/src/lib/maxbldHelp.ts "import * as WebBrowser from 'expo-web-browser';" — cannot see bindings.json to confirm maxbldHelp.ts is a listed binding module, and the comment cites only useSubscribeCheckout.ts:61, not a binding-module entry — list maxbldHelp.ts in bindings.json or route the open through a binding module
+
+REJECT — FE-32 — accused of binding resetsOnDisplay/reportsLeft/reportsLimit outside a declared contract — the fields are the declared contract_parcels_entitlement response (mobile/src/lib/schemas.ts "ParcelToolEntitlementSchema") and the display line itself is not in this diff, so nothing here violates the contract-binding kind
+
+REJECT — FE-21 — accused of coding an external embed for the Help page — an in-app browser sheet is the OS browser (same call as useSubscribeCheckout.ts:61), not map tiles, checkout or analytics embedded in the page, so FE-21's embed clause does not reach it
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+
+---
+⏱  78220ms (78.2s)
+📊 Tokens — total: 38607, input: 23909, output: 14698, reasoning: 14186
