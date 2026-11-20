@@ -87,10 +87,11 @@ const censusFile = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/sur
 const entry = (scope: string, file: string): CensusEntry => ({ programme: { scope }, evidence: { files: [`${file}:1`] } });
 
 describe('V2.LIST round 4: the surface-contract-routes row equals the census (drift test)', () => {
-  it('the real row lists exactly the route files the census names for parcel_product and parcel_admin, and attaches surface-126 and surface-128 only', () => {
+  it('the real row lists exactly the route files the census names for parcel_product and parcel_admin, and attaches Specs 126, 128, 135 and 136 (operator "1-5 y", MORNING-DECISIONS.md:1520, item 2)', () => {
     const row = table().rows.find((r) => r.id === 'surface-contract-routes')!;
     expect(row, 'row surface-contract-routes').toBeDefined();
-    expect(row.lists).toEqual(['surface-126', 'surface-128']);
+    expect(row.lists).toEqual(['surface-126', 'surface-128', 'surface-135', 'surface-136']);
+    expect(row.why).toContain('left out for Increment 1·B');
     expect(routeDrift(row.globs ?? [], censusFile())).toEqual({ missing: [], stale: [] });
     expect(row.why).toContain('The client is just glass');
     expect(row.why).toContain('one API route');
@@ -101,11 +102,10 @@ describe('V2.LIST round 4: the surface-contract-routes row equals the census (dr
     expect(routeDrift(['src/app/api/x/route.ts'], census).missing).toEqual(['src/app/api/admin/y/route.ts']);
     expect(routeDrift(['src/app/api/x/route.ts', 'src/app/api/admin/y/route.ts', 'src/app/api/gone/route.ts'], census).stale).toEqual(['src/app/api/gone/route.ts']);
   });
-  it('the lookup route and a parcel_admin route gain surface-126 and surface-128; an estate_other route (leads/detail/[id]) does not', () => {
-    expect(lists('src/app/api/parcels/lookup/route.ts')).toEqual(expect.arrayContaining(['surface-126', 'surface-128']));
-    expect(lists('src/app/api/admin/media/route.ts')).toEqual(expect.arrayContaining(['surface-126', 'surface-128']));
-    const lead = lists('src/app/api/leads/detail/[id]/route.ts');
-    expect(lead).not.toContain('surface-126');
-    expect(lead).not.toContain('surface-128');
+  it('the lookup route and a parcel_admin route gain all four surface lists; an estate_other route (leads/detail/[id]) and a platform_shared admin route (admin/stats, left out for Increment 1·B) gain none', () => {
+    const four = ['surface-126', 'surface-128', 'surface-135', 'surface-136'];
+    expect(lists('src/app/api/parcels/lookup/route.ts')).toEqual(expect.arrayContaining(four));
+    expect(lists('src/app/api/admin/media/route.ts')).toEqual(expect.arrayContaining(four));
+    for (const p of ['src/app/api/leads/detail/[id]/route.ts', 'src/app/api/admin/stats/route.ts']) for (const l of four) expect(lists(p), `${p}: ${l}`).not.toContain(l);
   });
 });

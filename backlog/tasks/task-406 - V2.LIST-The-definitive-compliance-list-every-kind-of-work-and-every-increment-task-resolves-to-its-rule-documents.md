@@ -96,4 +96,6 @@ Step 4 audit by a separate grounder 2026-11-20 (file ~/Buildo-scratch/lanes-2026
 2026-11-20 BL-V2LIST round 4: drift test for the surface-contract-routes row (operator MORNING-DECISIONS.md:1517).
 
 2026-11-20 BL-V2LIST round 4 report.
+
+2026-11-20 BL-V2LIST round 5: test extended for Specs 135 and 136 on the contract routes (operator 1-5 y, MORNING-DECISIONS.md:1520).
 <!-- SECTION:NOTES:END -->
