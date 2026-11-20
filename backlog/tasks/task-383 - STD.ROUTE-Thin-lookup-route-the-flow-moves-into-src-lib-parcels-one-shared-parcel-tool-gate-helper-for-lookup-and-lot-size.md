@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-THINROUTE'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T18:33:00Z'
+updated_date: '2026-11-20T18:37:00Z'
 labels:
   - McFix
   - McFix B
@@ -41,4 +41,6 @@ Plan section B3; after the section A fixes settle on these files. Engineering st
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-THINROUTE, worktree /Users/brettpreston_macmini/Buildo-wt-thinroute, branch wf1/inc1b-thinroute), RR-0240
+
+Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by a separate grounder 2026-11-20 (the lane verifies each fact first): BUILD as carded, narrowed. Rule: engineering standards 10.3 (docs/specs/00_engineering_standards.md:228-229) "API routes must be thin — validate input, call a lib function, return the result. Business logic belongs in `src/lib/`, not in route handlers." 1. Move the lookup flow (resolve through meter and log) into a new src/lib/parcels flow file; auth, query parse and the two rate buckets stay in the route; one gate helper returning parcel_tool, lead_gen_transitional or null: lookup answers 403 before any DB work, lot-size calls it after the settings switch. No response, meter, log or golden changes. 2. Re-point each REAL lock to the flow file in the same commit, same strength, each with a red-then-green plant (Spec 128 section 4.4): sole importer of report-compute (customer-report-compute.logic.test.ts:245-246), sole importer of openReport (parcel-tool-meter.logic.test.ts:215-223, keep the :214 comment), the report-page.ts importer list (customer-report-read.logic.test.ts T10), the meter guard body.page === null (customer-report-read.logic.test.ts:344), the log-hygiene pins (no q, no answer text), the lot-form log pin. 3. The gate-before-DB pin becomes: the route calls the helper before the flow call and the helper holds the status set; add a behavioural lapsed-account test if none exists. Drop only the exact import-line and token-order text pins (parcels-lookup-page.logic.test.ts:187; the readLotForm( token in parcel-lot-form.logic.test.ts) and say so. 4. Engine reach: the flow file is a new transitive caller: add it to ALLOWED_REACHERS in scripts/analysis/gates/compute-reach.mjs with a dated reason if that file is on the base; if it is only on branch wf1/inc1b-gates, state the owed list edit in the report; check scripts/analysis/gates/src-sql-ledger.mjs. The earlier brief sentence "every existing route test stays green unchanged" was orchestrator text, not a rule, and is withdrawn.
 <!-- SECTION:NOTES:END -->
