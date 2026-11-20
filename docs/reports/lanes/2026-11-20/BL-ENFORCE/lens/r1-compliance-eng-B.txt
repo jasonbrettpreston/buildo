@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens/planB.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10569 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22024 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32945 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43943 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 55230 chars, answer 0 chars, 75s
+BUG severity=HIGH — operator ruling 2026-11-20 "Essentially if its not enforced it doesnt get done is my view." — plan §4(f) "It cannot stop a ruling written outside the tool (a hand-written decision file)" and §4(g) "closed by one added arm in check-backlog-task.mjs or the Measure 1 gate refusing a file in backlog/decisions that lacks a `Check:` line (stage 2 decides; D-5)" — Measure 4 leaves the exact bypass route open and defers its closure to stage 2, so the approved "enforced" clause is unmet for hand-written rulings — make the pre-commit arm refusing any backlog/decisions file without a `Check:` line part of Measure 4's own commit, with D-5 answered yes/no before build, not left to stage 2.
+
+BUG severity=HIGH — operator ruling 2026-11-20 "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." — plan §7 "1. Measure 2 push side, part 1 ... 7. Measure 6: the operator rules on R1 to R10 whenever; no build." — the ruled home for the approved work (one increment 1b task per measure) is named nowhere; only task-366, 370, 371 appear in the plan — name the increment 1b card id per measure in §7, or state that the existing cards cover them.
+
+DEFER severity=MED — engineering standards §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — plan §9 "1. rule-enforcement gate cases. 2. check-push-range cases: ... 3. mobile-ci-local with a fixture. ... 6. rule-enforcement `--line` and `--check`." — four of six test groups name no file and no mandated suffix, so the layer that proves each claim is unstated — name each test file with its suffix (rule-enforcement.logic.test.ts, check-push-range.logic.test.ts, mobile-ci-local.infra.test.ts) in §9.
+
+DEFER severity=MED — engineering standards §5.1 "You MUST always import typed factories from `src/tests/factories.ts`." — plan §5(c) "Test red first: a fixture with 3 sets prints the exact line" and §9 "3. mobile-ci-local with a fixture." — the plan never names the mandate for the in-test objects the new cases build — state in §9 that decision, task and register objects come from src/tests/factories.ts, with only file fixtures built in tmp.
+
+DEFER severity=MED — engineering standards §9.6 "Pipeline metadata (chain definitions, script paths, table reads/writes, feature flags) MUST be declared in `scripts/manifest.json` as the single source of truth" and "Test coverage validates that every manifest entry points to an existing script file" — plan §5(c) "scripts/analysis/rule-enforcement.mjs (reads the data file and the adapters of Measure 1; modes `--write`, `--check`, `--line`)" with no manifest step anywhere in §5 or §7 — the new scripts under scripts/ are unregistered and untested against the manifest — add the manifest entry plus its existing test, or state in the plan why these tools sit outside the manifest.
+
+DEFER severity=MED — operator ruling RR-0150/RR-0149 "infra tooling is built in the Buildo repo under its hooks, suite and history; not in scratch or a separate repo" — plan §10 "check-lane-close.mjs and rule-lists.json are uncommitted in ~/Buildo-wt-comply2; the definition of 'on file' may change before landing." — Measures 1 and 2 lean on files that have no repo history and §7 has no step to land them — add a build-order step 0 that lands both via a reviewed commit before Measure 1 or 2.
+
+DEFER severity=MED — operator ruling 2026-11-20 "where does this rule set go on the board yes" — plan §10 "Which board status file the operator reads (BOARD-STATUS.txt vs BOARD-STATUS-6421.txt)." while §5 writes only "one line added to BOARD-STATUS-6421.txt" — the approved placement is left with one candidate file that may never carry the number — make D-6 name the file (or write the line to both) so the approved number reaches where the operator reads.
+
+REJECT — engineering standards §9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`)" — accused of leaving rule-enforcement.mjs off the Pipeline SDK — the new tool is a file-only .mjs CLI with no DB, pool, transaction or summary, so §9.4 has no surface to bind.
+
+MET — stage rule task-371 "this stage is a REVIEWED PLAN. Nothing is built" — plan §4(c)-§6 "Smallest build" / "candidates only" — every measure is stated as what it would build, nothing is built.
+MET — RR-0233 "reaching the operator only with a Grounded and a Recommendation line" — plan §8 D-1 to D-7 each carry a "Grounded:" and a "Recommendation:" line.
+MET — operator 2026-11-20 "where does this rule set go on the board yes" — plan §5 "a generated Backlog document `backlog/docs/doc-<n> - Rule-enforcement.md`, shown first under Documents" — the board placement is built as a generated doc with a `--check` in pre-commit.
+MET — engineering standards §5.5 "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — plan §5(c) "`--check` refuses a stale doc" and §9.6 — the parity guard is present as generator check plus test.
+MET — operator ruling Measure 6 "retiring is the operator's ruling" — plan §6 "candidates only; nothing retired" and D-7 — retirement is left to the operator.
+MET — engineering standards §9.3 "All pipeline scripts MUST be safe to re-run" — plan §5(c) "modes `--write`, `--check`, `--line`" — write regenerates the same doc from the same source, idempotent by construction.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 7
+
+---
+⏱  88305ms (88.3s)
+📊 Tokens — total: 30045, input: 13125, output: 16920, reasoning: 15485

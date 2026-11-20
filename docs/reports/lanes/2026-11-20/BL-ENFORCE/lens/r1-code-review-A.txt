@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens/planA.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9807 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20306 chars, answer 164 chars, 30s
+BUG severity=HIGH — plan 1(c)(2) "a ceiling raised above git HEAD's value (read with `git show HEAD:docs/rules/enforcement.json`, so raising needs a commit the gate rejects)" — no behaviour is stated for HEAD lacking the path, so the stage-2 seed commit that first writes docs/rules/enforcement.json either makes `git show` exit 1 (gate errors with a git fatal, not the plan message) or is read as a raise and refused — define the absent-at-HEAD case as "no prior ceiling, allowed", and cite the exit-code handling — wrap `git show` in a spawn that treats exit 1 plus "does not exist in 'HEAD'" as no-prior-value, throw on any other exit code.
+
+BUG severity=HIGH — plan 1(c)(1) "state is exactly one of `check` (ref = a file that exists), `owed` (ref = a task id that resolves in backlog/tasks), `advice`" vs "136 OWED to owed with the lock file named but no task id, so counted `unowned`" — the adapters emit a fourth state `unowned` that the three-value enum does not contain, and a single `ref` cannot hold both the owed lock path and a task id — add `unowned` to the enum or make it a derived count (not a stored state), and split ref into `ref` plus `lockRef` before the gate is written.
+
+BUG severity=HIGH — plan 3(c) Option A "runs `npm ci --legacy-peer-deps` in `~/Buildo-scratch/push-station/mobile-modules/<lockfile sha>/` once per mobile/package-lock.json hash" — `npm ci` requires package.json and package-lock.json to be present in its working directory, and nothing in the build copies them there, so the first run fails before typecheck — state the copy step (package.json plus package-lock.json from the worktree's mobile dir) as part of the cache-key setup and assert both exist before spawning npm.
+
+BUG severity=MED — plan 1(c)(2) "`owed` whose task id does not resolve" vs table row Spec 133 "117 OWED: later; each owed needs a task id, none has one" — the gate refuses exactly the rows the 133 adapter produces, so either the seed commit cannot pass or adapter-derived entries are silently exempt and the check is dead for the largest owed set — state explicitly that adapter-derived rows bypass task-id validation (and are counted unchecked only), otherwise give the 133 adapter an `unowned` result the gate accepts.
+
+BUG severity=MED — plan 1(g) "carried to the new field as `mentions: true` for file refs (accepted limit for the rest)" — `mentions` is absent from the row schema "{set, id, anchor `file:line`, state, ref}" and from the gate's refuse list, so the anti-trivial-file rule is described but never built — add `mentions` to the row schema and add "a `check` row whose ref exists but whose `mentions` is not true is refused" to the refuse list.
+
+BUG severity=MED — plan 1(f) "`advice` can be gamed only by the operator (it needs an RR id)" vs 1(c)(2) "`advice` whose decision id does not resolve" — the only stated check is that the RR id resolves, which any lane can create, so the operator-only guarantee does not follow from the built check — either add the "decision quote names advice" test to the refuse list or drop the guarantee from (f).
+
+BUG severity=MED — plan 2(c)(1) "This measure must import its functions (`findingsIn`, `resolveTask`, the check core) and never copy the definition" vs 2(b) "UNVERIFIED: it is not committed; its names may move before landing" — the build depends on a module that does not exist in the repo and whose exported names are unverified, so the import has no resolvable target at build time — land task-366's check-lane-close.mjs first and pin the import path and export names in the plan before Measure 2 is built.
+
+BUG severity=MED — plan 3(c) "and `jest --ci` with `--rootDir` the worktree's mobile dir and NODE_PATH set to the cached install" vs "it removes the symlink defect for phone tests without touching worktree links" — Node resolves `./node_modules` before NODE_PATH and `npm run typecheck` runs `tsc` from the worktree's own `node_modules/.bin`, so the symlinked defective install still wins and the stated defect is not removed — run typecheck and jest with cwd and bin paths inside the cached install, pass the worktree mobile dir only as a test path (`--roots`), and keep the symlinked node_modules out of resolution.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The ceiling gate has no defined behaviour when docs/rules/enforcement.json is absent at HEAD, so the seed commit is either a crash or a self-refusal.
+- The state enum (check/owed/advice) contradicts the adapter output (`unowned`) and the single `ref` field cannot hold both a lock path and a task id.
+- `npm ci` is run in a lockfile-keyed cache directory without package.json and package-lock.json being placed there, so Measure 3's Option A cannot run as written.
+
+---
+⏱  36000ms (36.0s)
+📊 Tokens — total: 27959, input: 21647, output: 6312, reasoning: 5123

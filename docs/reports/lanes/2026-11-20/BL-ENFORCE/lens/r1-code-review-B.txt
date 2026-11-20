@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens/planB.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9735 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20641 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30385 chars, answer 0 chars, 45s
+```
+BUG severity=HIGH — PLAN §4(c)2 "the check adds one arm: a register row cited by a decision made after the change date must carry the same `check`/`owed`/`advice` token" — nothing in the build writes that token onto a register row: the only write sites named are the decision body (:70) and the dated note (:64), so the arm reads a field that is never populated and refuses every decision logged after the change date — name the register-row field the arm reads and add the write that fills it (or have the arm parse the decision file's `Check:` line instead).
+BUG severity=HIGH — PLAN §4(c)1 "`advice` (accepted only with `--advice-quote`, a second verbatim operator quote at a cite, run through the existing `citedText` function" — citedText needs a (cite, text) pair and no second cite flag is introduced, so the advice quote is either run against the main quote's cite (wrong check) or not checked at all — add `--advice-cite` and run the pair through citedText, refusing a missing, non-resolving, or mismatched one.
+BUG severity=MED — PLAN §5 "The ceilings of the first five rows are today's unchecked count (owed plus unmarked)" — a ceiling computed from the value it bounds is a tautology and can never show a rise, so four of the five rows print a column that equals owed+unmarked by construction and only the step row's 100 (a test constant) is a real ceiling — read every ceiling from the pinned data file and print one source, so `--check` can refuse.
+BUG severity=MED — PLAN §4(c) "Refusal wording: `backlog-decision: refused, no --check-ref: a ruling must name its check" — one message covers a missing flag and a supplied but malformed or unresolvable value (`check:<nonexistent>`, `owed:task-999`), so a lane that passed the flag is told it did not — emit a distinct refusal per case, as the tool already does for the quote (:30, :31, :33).
+DEFER severity=MED — PLAN §4(c)1 "written into the decision body as a line `Check: ...` (writeDecisionBody, :70) and into the dated note (datedNote, :64)" — two write sites for one value with no stated precedence, and the dated note is the verbatim operator field (Spec 137 rule 10), so a hand edit to one leaves the arm comparing the other — write once and state which copy is authoritative.
+DEFER severity=MED — PLAN §5 header "generated 2026-11-20, source docs/rules/enforcement.json" plus "`--check` refuses a stale doc" — a date stamped by the generator makes the regenerated body differ from yesterday's doc, so the pre-commit gate refuses an untouched file and forces a `--write` churn on any later day — drop the date from the compared body or have `--check` ignore that line.
+DEFER severity=LOW — PLAN §4(c)1 "`check:<file>` (the file must exist in the repo or be a test path)" against PLAN §4(g) "`--check-ref check:<any existing file>`: accepted limit" — "or be a test path" has no resolution rule and nothing in (g) exercises it, a dead branch — delete it or state how a test path is recognised.
+DEFER severity=LOW — PLAN §5 "the step row's ceiling 100 is the existing test value, today 80 unmarked plus the partial 30 counted in the list" — the row reads 444 = 364 + 80, so the 30 partials are already inside the 364 checked and "80 plus the partial 30" double counts against a ceiling of 100 — say whether partials sit in checked or unmarked before the generator prints either number.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The decision-log arm tests a register-row token that no write site produces, so every post-change-date decision is refused.
+- The `advice` form cannot be verified: citedText needs a cite for the advice quote and no such flag exists.
+- The ceiling column is computed from the count it bounds for four of five rows, so it can never detect a rise; only the step row carries a real pin.
+```
+
+---
+⏱  53360ms (53.4s)
+📊 Tokens — total: 27614, input: 18151, output: 9463, reasoning: 8514

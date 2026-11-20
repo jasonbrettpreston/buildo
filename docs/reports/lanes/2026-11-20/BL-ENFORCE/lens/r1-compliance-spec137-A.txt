@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens/planA.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10946 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21877 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31973 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43051 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53594 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 65742 chars, answer 0 chars, 90s
+```
+BUG severity=HIGH — operator 2026-11-20 "5. where does this rule set go on the board yes" — plan "Data: `docs/rules/enforcement.json` (one file) with `sets` {id, source file, unit pattern, owner}, `ceilings` {set: n} and rows only for sets that have no field of their own" — no step in the plan places this rule set, or its unchecked/owed counts, on the board, so the operator's item 5 is unmet — add a step that renders enforcement.json read-only on the board under Spec 137 §5a (source file, rebuild job, who reads it) and mark it as a view, not a record.
+BUG severity=HIGH — "The infra freeze is lifted for compliance tooling by name." (and Spec 137 §1 amendment "its three conditions (missing status line, missing expiry, DROPPED without a quoted ruling) stay deferred") — plan "Spec 137 section 6 (137_mcqueue.md:169-171): the commit check is 'carded for the infra-freeze lift'; the freeze is now lifted for this by name" — the pasted lift names task-366 and task-367, not task-371, and §6 on its face stays deferred, so the plan claims a lift it does not cite and cites a deferred check for a different gate — record the operator words that name task-371 (or the six-recommendation approval verbatim) as the lift before lock.
+DEFER severity=MED — Spec 137 §1 Rule 3 "docs, spec, queue-row, backlog-only and merge commits are exempt" — plan "Exempt (data in the same file, shown in the message): range commits whose only changed paths are docs/reports/lanes, backlog, or docs." — the exemption is written against the range while the trigger is also range-level ("where the range touches src, scripts, mobile or migrations"), so a docs-only commit inside a code-touching range is not clearly exempt as Rule 3 requires — compute the exemption per commit and state that in the refusal message.
+DEFER severity=MED — RR-0233/RR-0232 "everything else is decided on the orchestrator" — plan "lane-guard and memory 'enforced-hooks-push-station' bind the scratch path; the operator decides, decision D-3" — a repo-versus-scratch location choice is sent to the operator with no Grounded or Recommendation line, when the ruling sends non-operator matters to the orchestrator with a Recommendation — decide D-3 on the orchestrator with a Recommendation line, or supply both lines verbatim on the decision row.
+DEFER severity=MED — operator 2026-11-20 "Essentially if its not enforced it doesnt get done is my view" and RR-0233 "everything else is decided on the orchestrator" — plan "state is exactly one of `check` (ref = a file that exists), `owed` (ref = a task id that resolves in backlog/tasks), `advice` (ref = a decision id RR-n that resolves in backlog/decisions and whose quote names 'advice'; only the operator can create it)" — the advice state leaves a rule with no enforcement and makes that depend on an operator decision, contrary to both the enforcement ruling and the operator-domain split — define advice as a repo decision carrying Grounded and Recommendation lines, or require an objecting operator ruling pasted for this task before the state is usable.
+DEFER severity=LOW — RR-0150/RR-0149 "infra tooling is built in the Buildo repo under its hooks, suite and history; not in scratch or a separate repo" — plan "the scratch station.sh gets one line `node scripts/hooks/check-push-range.mjs \"origin/$br..HEAD\"` inside `suite` ... Stage 2 also commits a repo copy `scripts/push-station/station.sh`" — the station caller that makes the gate mandatory for station-driven pushes lives in scratch with no history until stage 2 — make the repo pre-push line the stage-1 gate and land the repo station copy before relying on the scratch caller.
+MET — operator 2026-11-20 "a separate grounder rules on findings later; the plan states what each measure would build" — plan "Status: a plan. Nothing here is built. Every number is MEASURED (command output named) or labelled GUESS or UNVERIFIED" — nothing is built in this stage.
+MET — Spec 137 §1 Rule 3 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer" — plan "where the range touches src, scripts, mobile or migrations" — the push range check uses the same path set as G3.
+MET — RR-0233/RR-0232 "reaching the operator only with a Grounded and a Recommendation line" — plan Measure 3 "Recommendation: Option A. It is the only one that refuses before the push" — D-2 carries a Recommendation.
+MET — "no suite run in a lane (Spec 124 R-CQ; station owns the suite)" — plan "the station runs it only when the range touches `mobile/`" — the mobile run stays with the station, not the lane.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 5
+```
+
+---
+⏱  98581ms (98.6s)
+📊 Tokens — total: 39402, input: 21029, output: 18373, reasoning: 17200

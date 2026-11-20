@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens/planA.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9822 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20836 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31733 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41886 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 48176 chars, answer 5375 chars, 75s
+BUG severity=CRIT — R-BA, Spec 132 §6 "A step-standard item that no machine checks is not part of the standard" and x-rulings.1 "names a lock; the same commit adds the both-directions test and amends the spec" — plan §1(c)(1) "only the operator can create it" and §1(c)(2) "a set whose unchecked count (everything not `check` and not `advice`) is above its ceiling" — the new `advice` state puts a rule back in the standard with no machine check, no lock, no both-directions test and no ceiling obligation, which is exactly what R-BA forbids, and the gate accepts any decision whose quote contains the word advice so the "only the operator" limit is unchecked — drop `advice` (an uncheckable rule leaves the standard per R-BA) or require a Spec 124 §5 register row that names a lock plus a both-directions test, resolved through decision-log --check.
+
+BUG severity=HIGH — Spec 132 §6 "Enforcement across all 444 mapped ids: 296 lock, 1 lock-db, 37 check, 0 hook, 30 partial" — plan §1(b) "`444 {\"lock\":325,\"none\":80,\"check\":37,\"hook\":1,\"lock-db\":1} 100`" and counted table "Check today 364" — the plan reconciles three count disagreements but omits the lock 296 vs 325 and hook 0 vs 1 pair, so its seed check-today of 364 contradicts the governing clause's 334 and the ceiling is written from a number the spec does not state — add those two disagreements to the reconcile list and block the seed until generator output resolves all five.
+
+BUG severity=HIGH — Spec 132 §6 "The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it" — plan §1(c)(2) "a ceiling raised above git HEAD's value (read with `git show HEAD:docs/rules/enforcement.json`, so raising needs a commit the gate rejects)" — the step set gets a second cap in a new file while the pasted clause names the test constant, and on the seed commit `git show HEAD:docs/rules/enforcement.json` fails because the file is new, so the first ceiling is unpinned; the plan does not say which cap binds or what the gate does when HEAD has no file — state one authority (JSON read by the test constant, or vice versa) and define the first-commit path in the gate.
+
+BUG severity=HIGH — RR-0150/RR-0149 "infra tooling is built in the Buildo repo under its hooks, suite and history; not in scratch or a separate repo." — plan §2(c)(2) "the scratch station.sh gets one line `node scripts/hooks/check-push-range.mjs \"origin/$br..HEAD\"`" with the repo copy deferred to stage 2, and §2(g)(5) "closed only by the repo copy plus an exec stub (D-3)" — the only caller of the push gate lives in a file with no repo history at the moment the measure claims to be in force, and D-3 offers the operator a choice the ruling has already made — land scripts/push-station/station.sh and the exec stub in the same stage as check-push-range.mjs, and record D-3 as closed by RR-0150 rather than open.
+
+DEFER severity=MED — x-rulings.4 "each set of rulings ... is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`" and "`--check` at pre-commit fails on an uncovered decision or a citation of an unknown one" — plan §1(c)(1) "ref = a decision id RR-n that resolves in backlog/decisions and whose quote names \"advice\"" — the plan reads operator decisions from a second home and tests a keyword in the quote instead of the re-derived decision log, so the exemption path bypasses the check the clause names — resolve `advice` refs through the decision log and its raw record under docs/reports/decisions/raw/.
+
+DEFER severity=MED — x-verify.1 "The report lives at `docs/reports/verification/<branch>.md` and every integrate commit cites it (`.husky/commit-msg`)." — plan §2(b) "docs/reports/lanes/<date>/<lane>/ holds one compliance lens output per attached list ... and `GROUNDER.md`" — Measure 2 creates a second report convention for independent verification and the push-range gate never requires the x-verify.1 report, so an integrate range can pass the new gate with no docs/reports/verification/<branch>.md — have check-push-range.mjs require that file when the range touches src on an integrate branch, or state that GROUNDER.md is the R-RS declaration for this surface.
+
+DEFER severity=LOW — RR-0150/RR-0149 "infra tooling is built in the Buildo repo under its hooks, suite and history; not in scratch" — plan §3(c) Option A "runs `npm ci --legacy-peer-deps` in `~/Buildo-scratch/push-station/mobile-modules/<lockfile sha>/`" — the phone-test install that gates a push is a station-owned tree outside the repo, and the plan's own §2(c)(2) says "build in the repo, not side places" — put the cache under a gitignored repo path, or record in the plan that this is a cache, not tooling, with RR-0150 cited as the reason it may sit outside.
+
+DEFER severity=LOW — x-tooling.1 "Pre-commit is file-only, staged-scoped and inside a pinned time budget (#52)" — plan §1(e) "GUESS for the new gate: under 1 s per commit" — a gate is added to pre-commit with a GUESS and not a measurement of the pinned budget, and the pasted §6 lists R-LB "OWED MB-67: precommit-budget.mjs --measure with a re-pinned evidence file" as not yet machine-checked, so nothing refuses a breach — run the pinned budget measurement with the new line during the red-first stage and quote the number in that stage's evidence.
+
+MET — x-verify.2 "ceilings are never raised (resize instead)" — plan §1(c)(2) — the HEAD comparison plus "a ceiling only goes down" makes the pin one-way.
+
+MET — x-tooling.1 "Pre-commit is file-only, staged-scoped" — plan §1(c)(2) — the new gate is `--check` file-only, no DB, no suite, no lens.
+
+MET — x-captures.5 "shown red then green" — plan §1 "Red first" and "each in both directions" — the pin test is defined failing before the gate exists and exercised in both directions.
+
+REJECT — x-tooling.1 "The full suite runs at pre-push (8 forks; pre-commit 4; never above 10)" — accused of adding phone tests at push that the clause does not name — not a real issue: the clause fixes placement and fork counts, not which suites, and the mobile run is a separate command outside the 8-fork suite.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 8
+
+---
+⏱  75947ms (75.9s)
+📊 Tokens — total: 37026, input: 22581, output: 14445, reasoning: 12814

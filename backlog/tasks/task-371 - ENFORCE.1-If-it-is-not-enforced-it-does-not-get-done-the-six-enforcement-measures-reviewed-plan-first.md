@@ -7,10 +7,14 @@ status: RUNNING
 assignee:
   - '@lane-BL-ENFORCE'
 created_date: '2026-11-20T13:31:00Z'
-updated_date: '2026-11-20T13:32:00Z'
+updated_date: '2026-11-20T13:43:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-ENFORCE/PLAN.md
+  - docs/reports/lanes/2026-11-20/BL-ENFORCE/FINDINGS.md
+  - docs/reports/lanes/2026-11-20/BL-ENFORCE/REPORT.md
 type: build
 ordinal: 71012
 ---
@@ -43,8 +47,16 @@ Operator 2026-11-20 (verbatim): "Essentially if its not enforced it doesnt get d
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Per measure 1 to 6: rule quoted file:line, existing mechanism file:line, smallest build with red-first test, refusal message, cost (measured or GUESS), what it cannot do, bypass (AC1). 2. Run the DeepSeek lens set on the plan with each governing rule list whole (Spec 08 s5/7/11, Spec 137, eng s5/9/14, Spec 132 s4/6) plus code-review, error-paths, security; list findings by id; a separate grounder rules (AC2, grounder owed). 3. Measure 5: board place and text mock (AC3). 4. Measure 6: retirement candidates only (AC4). 5. Build order and operator decision drafts. Plan: docs/reports/lanes/2026-11-20/BL-ENFORCE/PLAN.md
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-ENFORCE, worktree /Users/brettpreston_macmini/Buildo-wt-enforce, branch wf1/inc1b-enforce), RR-0240
+
+2026-11-20 stage 1 plan and lens round 1 done (94 findings, untriaged, FINDINGS.md); task stays RUNNING: grounder owed.
 <!-- SECTION:NOTES:END -->

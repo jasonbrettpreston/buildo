@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens/planB.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10473 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21735 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31701 chars, answer 673 chars, 45s
+BUG severity=HIGH — Spec 132 x-rulings.4 "Operator decisions are transferred by generator, never by hand" — plan §4(f) "It cannot stop a ruling written outside the tool (a hand-written decision file)" and §4(g) "closed by one added arm in check-backlog-task.mjs or the Measure 1 gate refusing a file in backlog/decisions that lacks a `Check:` line (stage 2 decides; D-5)" — the "never by hand" half of the clause is left open by the measure as specified, closure is deferred to an undecided draft — move the refusal of a `backlog/decisions` file lacking `Check:` into Measure 4's build (c)(1), not stage 2, or state Measure 4 does not satisfy x-rulings.4 until D-5 is ruled
+
+BUG severity=HIGH — Spec 132 x-rulings.4 "every approved decision becomes a register row ... `--check` at pre-commit fails on an uncovered decision" — plan §4(c)(1) "The value is written into the decision body as a line `Check: ...` (writeDecisionBody, :70) and into the dated note (datedNote, :64)" against §4(c)(2) "each approved decision's `routing` already names the register row (decision-log.mjs:63)" — the token is written only into the backlog decision file, while decision-log.mjs reads docs/reports/decisions/*.json, so the new arm has no token to compare and the pre-commit `--check` cannot fail — name the file the arm reads and have backlog-decision.mjs (or the decision-log record writer) write the same `check`/`owed`/`advice` field into the log entry the arm tests
+
+BUG severity=HIGH — Spec 08 §7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line` (`card-cite-check.mjs`, to be built by MB-67)" — plan §8 D-1 "Grounded: the four counts differ by pattern (Spec 08 s7 and s11: 30 here vs 34 by BL-COMPLY; Spec 100: 7 sections by BL-COMPLY vs 9 h2 by grep)", with the same defect in D-2 "CI 60 s, measured; local install lacks the testing library, measured", D-3 "station.sh is scratch with no history" and D-5 "the tool refuses only its own calls" — four operator drafts carry no rule quoted with file:line, and R8 records card-cite-check.mjs exists yet is not run over them — add the file:line quote to every Grounded line and run card-cite-check.mjs on the drafts before they reach the operator
+
+DEFER severity=MED — Spec 08 §11.4 "The failing tests — cases, fixtures, red/green expectations, invocation mode — are written INTO the plan and reviewed at PLAN altitude" — plan §9 item 4 "backlog-decision `--check-ref` cases (five refusals, one pass)" and §4(c)(3) "gains red-first cases" — the six cases are counted but not written out, with no fixture text, per-case expected message, or invocation mode for the decision-log arm — enumerate the six cases with their fixture and expected refusal string
+
+DEFER severity=MED — Spec 08 §11.1 "a census grep runs at the full scope its conclusion covers" — plan §4(f) "UNVERIFIED: grep of scripts/hooks for `backlog/decisions` to be run in stage 2" — the grep is runnable now and it is the premise for the §4(g) bypass claim, so the plan rests an executable claim on an unrun command — run the grep and paste its result in §4(f)
+
+DEFER severity=MED — Spec 08 §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — plan §6 R9 "rule 10 (b) and the repo run `deepseek-exec`; UNVERIFIED whether still PLANNED" and §10 "Classification of the 62 engineering subsections ... (GUESS; the seed counts them)" — retirement candidates are put to the operator on premises the plan admits it did not read — read 08_agents.md:19, :28, :341 against the engine ledger before R9 goes into D-7
+
+DEFER severity=LOW — Spec 08 §7 rule 10 dated note (C2) "a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`)" — plan §4(a) "Spec 137 rule 10 (137_mcqueue.md:123; the lane brief cites :109, which is a different line in this tree: line drift)" — the drift is noted but the cite carries no sha, and the x-rulings.4 quote at 132_step_standard_handbook.md:428 is elided with "..." rather than verbatim — give the sha in the cite form and quote x-rulings.4 whole
+
+DEFER severity=LOW — Spec 08 §11.1 "No unexecuted executable claim" — plan §10 "Cold local `npm ci` time for mobile (not run: lane rule 2)" against §8 D-2 "Recommendation: A. UNVERIFIED (not timed locally)" — an operator draft goes out recommended on a timing the plan chose not to execute — time the cold install at the station (not a lane) before D-2 is put
+
+MET — Operator 2026-11-20 "5. where does this rule set go on the board yes" — plan §5 — the number lands on the 6421 board as a generated document plus one status line, both produced by repo scripts
+MET — Operator 2026-11-20 "The infra freeze is lifted for compliance tooling by name" — plan §7 item 1, §4(b) — the measures build tooling under the repo hooks and suite
+MET — RR-0233 "reaching the operator only with a Grounded and a Recommendation line" — plan §8 D-1 to D-7 — every draft carries both lines
+MET — Spec 137 rule 10 "A ruling enters a row as a verbatim dated note" — plan §4(c)(1) "a second verbatim operator quote at a cite, run through the existing `citedText` function" — the quote is checked against the cite, not typed by hand
+MET — Stage rule (task-371) "this stage is a REVIEWED PLAN. Nothing is built" — plan §4 to §9 — the measures are stated as what would be built, with no build in this stage
+MET — Measure 6 scope, "nothing retired; retiring is the operator's ruling" — plan §8 D-7 — the ten candidates go to the operator as candidates
+
+REJECT — RR-0150/RR-0149 "infra tooling is built in the Buildo repo under its hooks, suite and history; not in scratch or a separate repo" — accused of writing the board status in ~/Buildo-scratch — the writer is repo script scripts/board/board-ff.zsh:7-15 and the generator is scripts/analysis/rule-enforcement.mjs, only the file it writes sits in scratch, which the ruling does not forbid
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+
+---
+⏱  51341ms (51.3s)
+📊 Tokens — total: 31858, input: 21742, output: 10116, reasoning: 8469

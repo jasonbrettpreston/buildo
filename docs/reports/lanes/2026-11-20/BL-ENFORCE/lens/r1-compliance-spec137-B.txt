@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens/planB.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11153 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22540 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33328 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43856 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 52572 chars, answer 4316 chars, 75s
+BUG severity=HIGH — Spec 137 §5a Rule 14 — "The orchestrator reads the board's status at the start of every session, reports any WARN to the operator, and reads the board before giving any queue status or next step." — Measure 5, status file bullet: "Not BOARD-STATUS.txt: auto-board.zsh overwrites it wholly (UNVERIFIED which file the operator reads at session start; Spec 137 rule 14 names BOARD-STATUS.txt, 137_mcqueue.md:165)." — the approved rules number is written only to BOARD-STATUS-6421.txt, a file neither Rule 14 nor §5 step 7a ("It checks BOARD-STATUS.txt") reads, so the clause stays unmet and the plan records the gap as UNVERIFIED instead of closing it — write the line to the file Rule 14 and step 7a name, or land a dated note amending Rule 14 to name BOARD-STATUS-6421.txt, inside build order item 5.
+
+BUG severity=HIGH — Spec 137 §1 amendment Rule 4 — "rulings for plan tasks are entered through `scripts/analysis/backlog-decision.mjs` (gate G2): a verbatim quote and a cite file:line that exists and contains the quote, or it refuses; a duplicate is refused" — Measure 4 (c)(1): "backlog-decision.mjs gains `--check-ref <value>` ... Missing or malformed refused, same as the quote refusals." — after this change the tool refuses a ruling that satisfies every condition the pasted clause names, and no pasted clause adds a third refusal ground — record the --check-ref condition as a dated note amending Rule 4 in the same change, or make --check-ref advisory until Rule 4 names it.
+
+BUG severity=HIGH — Spec 137 §1 dated note 2026-11-19 (RR-0232, RR-0233) — "an open decision reaches the operator as a Backlog task in status OPERATOR carrying two lines, `Grounded:` (the issue verified against its sources, cite) and `Recommendation:` (the answer recommended, verified by a repo review round or marked UNVERIFIED)" — §8 header: "Operator decision drafts (RR-0233: the operator decides front end, design, storage, time, priorities; these are tooling decisions. Each is a draft for the six-criteria rule ...)" — D-1 to D-7 reach the operator as plan prose, not as Backlog tasks in OPERATOR with the two description lines, so backlog-next.mjs cannot list or flag them as the clause requires — raise each open decision as a Backlog task in status OPERATOR (or the task comment Rule 8's amendment names) carrying Grounded: and Recommendation: lines.
+
+DEFER severity=MED — Spec 137 §1 dated note 2026-11-19 (RR-0219) — "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the tasks." — build order item 7: "Measure 6: the operator rules on R1 to R10 whenever; no build." — the new gates (rule-enforcement gate, --check-ref, the board doc) have no spec-update step in the build order; the only spec-touching item is a candidate list with no build and no date — add one dated-note step to build order items 3, 4 and 5 that updates Spec 137 (and the spec the gate belongs to) with the new gate text.
+
+DEFER severity=MED — Spec 137 §1 amendment Rule 4 — "rulings for plan tasks are entered through `scripts/analysis/backlog-decision.mjs` (gate G2)" — Measure 4 (g): "Hand-writing a decision file: closed by one added arm in check-backlog-task.mjs or the Measure 1 gate refusing a file in backlog/decisions that lacks a `Check:` line (stage 2 decides; D-5)." — the pasted clause's gate stays bypassable by any hand-written decision file and the closure sits in a decision draft, not in the build order — fold the D-5 arm into build order item 3 so Rule 4 is enforced when Measure 4 lands.
+
+DEFER severity=MED — Spec 137 §4 Rule 10 — "A ruling enters a row as a verbatim dated note. The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — Measure 4 (c)(1): "The value is written into the decision body as a line `Check: ...` (writeDecisionBody, :70) and into the dated note (datedNote, :64)." — a tool-generated field inside the dated note departs from the M-246 form Rule 4 and Rule 10 fix, with no pasted ruling naming that change — keep Check: in the decision body only, or record the note-form change as a dated note the operator approves.
+
+DEFER severity=LOW — Spec 137 §1 amendment, §5a — "two boards run during the overlap: the pilot board (6420, read-only view of the queue rows, unchanged) and the Backlog board of the plan (6421, from `backlog/`) ... The pilot retires on the operator's word." — Measure 6 row R7: "the working board is the Backlog board on 6421 (137:27-28 dated note says two boards during the overlap)" — R7 targets the 6420 description for retirement while the pasted amendment keeps 6420 described and unchanged until the operator's word — drop R7 or reword it to the overlap wording the amendment already carries.
+
+MET — operator 2026-11-20 "5. where does this rule set go on the board yes" — Measure 5 (c) — a generated Backlog document on 6421 plus a status line, the placement the operator approved.
+MET — Spec 137 §5a Rule 13 "The board is a view; the row is the record." — Measure 5 (c) — the doc is generated by rule-enforcement.mjs and held fresh by a pre-commit --check, no status line is entered on the board.
+MET — RR-0150/RR-0149 "infra tooling is built in the Buildo repo under its hooks, suite and history" — Measure 5 (c) — the generator sits at scripts/analysis/rule-enforcement.mjs with a .husky/pre-commit line, not in scratch.
+MET — Stage rule (task-371) "this stage is a REVIEWED PLAN. Nothing is built" — sections 4 to 7 — every measure states what it would build and no build step runs.
+MET — Spec 137 §1 amendment, §6 "its three conditions (missing status line, missing expiry, DROPPED without a quoted ruling) stay deferred" — Measures 4 and 5 build none of the three.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 7
+
+---
+⏱  76537ms (76.5s)
+📊 Tokens — total: 32564, input: 17533, output: 15031, reasoning: 13500

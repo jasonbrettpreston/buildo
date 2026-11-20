@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens/planB.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 8342 chars, answer 0 chars, 15s
+BUG severity=HIGH — plan-B §4(b) "refuses ... a duplicate (:45-48); writes the decision body (:67-71)" — retry path: if the body write or the dated note fails after the file exists, the next attempt is refused as a duplicate at :45-48, so a half-recorded ruling can never be completed and the only route left is hand editing, the exact thing Measure 4 exists to close — write to a temp file then rename, and treat an existing file lacking a `Check:` line as resumable rather than a duplicate.
+
+BUG severity=HIGH — plan-B §4(c)2 "a register row cited by a decision made after the change date must carry the same `check`/`owed`/`advice` token" — one dangling token (task archived, the `check:` file renamed or deleted) makes decision-log `--check` refuse every later commit on every lane at pre-commit, with no waiver and no permitted way to edit the decision except by hand — name the escape (a superseding decision, or an explicit `Waived:` line) and have the refusal print the offending decision file and token.
+
+BUG severity=HIGH — plan-B §4(c)2 "each approved decision's `routing` already names the register row (decision-log.mjs:63)" — empty path: a post-change decision whose routing is empty, or names a row absent from every log, never reaches the new arm, so an unchecked ruling passes `--check` silently and the count is wrong by one — refuse a post-date decision whose routing is empty or does not resolve to a register row.
+
+DEFER severity=MED — plan-B §5(c) "a generated Backlog document `backlog/docs/doc-<n> - Rule-enforcement.md`" — double-submit: the doc number `<n>` is not pinned by the generator, so a second `--write` (a lane run plus the board-commit run, board-commit.zsh:10-15) can add a second Rule-enforcement doc under Documents and `--check` cannot say which is canonical — pin the doc id in enforcement.json and overwrite by id.
+
+DEFER severity=MED — plan-B §5 "one line added to BOARD-STATUS-6421.txt by board-ff.zsh (repo script) after the ff: `node scripts/analysis/rule-enforcement.mjs --line`" — error path: a nonzero exit or a missing data file leaves yesterday's rules line in place with today's date beside it, so the operator reads a stale count as current, the existing `WARN uncommitted` line being the only other signal — write the rules line only after truncating the old one, and on failure write `rules: unavailable <reason> <timestamp>`.
+
+DEFER severity=MED — plan-B §5(c) "scripts/analysis/rule-enforcement.mjs (reads the data file and the adapters of Measure 1; modes `--write`, `--check`, `--line`)" — error path: no behaviour is named for a missing docs/rules/enforcement.json or an adapter that throws, so in pre-commit a crash reads as a hook failure, not the generator's refusal wording, and once pinned in the tests it bricks the same way for everyone — catch read and adapter failures and exit with a named refusal carrying the file path and the underlying message.
+
+DEFER severity=MED — plan-B §4(c)2 "The grandfather is the date: rows before it are counted by Measure 1, not refused." — the date is read from the decision record, so a ruling recorded after the change date that carries an earlier date is grandfathered and never checked; no second key guards it — key the grandfather on the commit that first introduced the decision file, or on a fixed hash list of pre-change files.
+
+DEFER severity=LOW — plan-B §9 item 4 "4. backlog-decision `--check-ref` cases (five refusals, one pass)." — no case covers a second call or a failure midway, so the duplicate-versus-partial-write interaction above ships untested — add a double-run case and a case where the body write fails after the file is created.
+
+VERDICT: FAIL on error-path safety
+Paths walked: decision write retry after partial write, dangling check/owed token at pre-commit, empty routing, duplicate doc generation, status-line write failure, generator crash on missing input, date grandfather re-dating, double-submit test coverage   Unguarded: 8
+
+---
+⏱  29864ms (29.9s)
+📊 Tokens — total: 23091, input: 18168, output: 4923, reasoning: 3965

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens/planA.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 8985 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19168 chars, answer 0 chars, 30s
+Surfaces touched: admin (developer control plane: agent hooks, commit and push gates on the operator machine). No money, authentication, entitlements or PII in the change.
+
+BUG severity=HIGH — PLAN §2(c)3 "make the user-level file a one-line import of the repo file" — a lane with write scope to scripts/hooks/lane-guard.mjs gets its code executed by the user-level hook in every Claude Code session on the operator machine, so the gated party executes code in the operator session and can neuter the guard that constrains it, and on any worktree where the imported file is absent the check fails open — keep the hook source outside the repo, or install it by sha from a path lanes cannot write, with operator approval on every change.
+
+BUG severity=HIGH — PLAN §1(c)1 "advice (ref = a decision id RR-n that resolves in backlog/decisions and whose quote names \"advice\"; only the operator can create it)" — resolving an RR is a file existence check on a directory lanes commit to, and §2(c)1 exempts ranges whose only changed paths are backlog or docs, so a lane authors decision-NN quoting "advice", marks unchecked rules advice, and pushes with no lens output and no grounder — carry an operator-authored or signed marker on the decision file and verify it in the gate, or refuse an enforcement.json diff that adds advice unless the commit is the operator's.
+
+DEFER severity=MED — PLAN §3(c) "runs `npm ci --legacy-peer-deps` in `~/Buildo-scratch/push-station/mobile-modules/<lockfile sha>/`" — a lane that edits mobile/package-lock.json makes dependency lifecycle scripts run on the operator machine outside the lane, cached and reused under an attacker-chosen sha — install with --ignore-scripts or inside a container, and key the cache on the full lockfile content, not a claim.
+
+DEFER severity=MED — PLAN §1(c)2 "a ceiling raised above git HEAD's value (read with `git show HEAD:docs/rules/enforcement.json`, so raising needs a commit the gate rejects)" — a single `git commit --no-verify` lifts the ceiling, and every later gate run compares against the now-raised HEAD and passes, so the raise is never re-examined and the pre-push and station lines do not read history — compare against the merge-base value on the mainline instead of HEAD.
+
+REJECT — PLAN §2(g)(1) "366 checks `Grounder` differs from the task lane; not closed" — a lane writing its own adjudication looks like forged authority — it is a declared accepted limit, the operator reads GROUNDER.md headers, and it moves no money, auth, entitlement or PII record.
+
+VERDICT: FAIL on exploitability
+Surfaces touched: admin
+
+---
+⏱  35062ms (35.1s)
+📊 Tokens — total: 27125, input: 21654, output: 5471, reasoning: 4865

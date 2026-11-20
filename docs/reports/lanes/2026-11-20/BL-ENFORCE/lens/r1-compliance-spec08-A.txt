@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens/planA.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9683 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20452 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31169 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41541 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 51000 chars, answer 2402 chars, 75s
+BUG severity=HIGH — Spec 08 §11.4 "cases, fixtures, red/green expectations, invocation mode are written INTO the plan and reviewed at PLAN altitude" — plan 2(c)1 "scripts/hooks/check-push-range.mjs: input `<base>..<head>`; ... Exit 1 on any missing." — Measure 2's new gate names no test file, no case list, no fixtures, no red, while Measure 1 and Measure 3 each name theirs, so the gate that carries rule 4 at push time cannot be reviewed at plan altitude — add `src/tests/check-push-range.logic.test.ts` red first, with cases: missing lens output refuses, missing GROUNDER.md refuses, docs-only range passes, each in both directions, plus the invocation mode.
+
+BUG severity=HIGH — Operator 2026-11-20 "Essentially if its not enforced it doesnt get done is my view." — plan 1(g) "A lane using --no-verify: lane-guard B4 refuses in a session; the station suite re-runs the gate (Measure 2 adds it to the station)" against plan 2(c)2 "the scratch station.sh gets one line `node scripts/hooks/check-push-range.mjs \"origin/$br..HEAD\"` inside `suite`" — Measure 2 adds only the range check, so the station never re-runs rule-enforcement.mjs and the --no-verify closure Measure 1 claims does not exist — add `node scripts/analysis/gates/rule-enforcement.mjs --check` to the station suite and the pre-push hook, or delete the closure claim.
+
+BUG severity=HIGH — RR-0150/RR-0149 "infra tooling is built in the Buildo repo under its hooks, suite and history; not in scratch or a separate repo." — plan 2(c)2 "Stage 2 also commits a repo copy `scripts/push-station/station.sh` and makes the scratch file a one-line `exec` to it" and 2(g)(5) "Editing station.sh: scratch file, no repo history; closed only by the repo copy plus an exec stub (D-3)" — stage 1 leaves the enforcement caller and its edit path in scratch, the placement the ruling forbids — land `scripts/push-station/station.sh` in the repo in the same stage as check-push-range.mjs, with the scratch path a one-line exec from day one.
+
+DEFER severity=MED — Operator 2026-11-20 "5. where does this rule set go on the board yes" — plan 1(c)1 "Data: `docs/rules/enforcement.json` (one file)" — no pasted line places the rule set on the board; part B (measures 4 to 6, build order, decisions) is not pasted, so the board row cannot be seen — name the board or queue row, its owner and its lane in the plan.
+
+DEFER severity=MED — Spec 08 §7 rule 10(a) "No recommendation goes to the operator without its rule quoted with `file:line`" — plan 3(a) "CLAUDE.md Prime Directive 4 \"Never declare a task done until `npm run test` passes\"" — a rule carried into the Option A recommendation (D-2) with no file:line, and the line hints throughout carry no commit sha as C2 requires — give Prime Directive 4 a file:line and date each line hint with its sha or drop the hint.
+
+DEFER severity=MED — Spec 08 §11.1 "a claim that COULD be executed but wasn't" — plan 1(b) "Three counts disagree and must be reconciled by the build, not by hand ... UNVERIFIED which is current; the generator output decides" — the step-set ceiling, which is the shrink-only pin, is seeded from a count the author can run now (the sibling generator --check is measured at 0.17 s) — run the generator and the rule-map count, then write the reconciled ceiling, or state in the gate that seed ceilings are provisional by construction.
+
+DEFER severity=MED — Spec 08 §11.8 step 4 (MCINC-4) "Never port a stale draft: re-cut it on the tip." — plan 2(b) "UNVERIFIED: it is not committed; its names may move before landing. This measure must import its functions" — Measure 2 imports from an unlanded draft in ~/Buildo-wt-comply2 with movable names and states no ordering — make "task-366 landed on the tip" an explicit prerequisite of Measure 2, or re-cut the functions in Measure 2's own commit.
+
+MET — Operator 2026-11-20 "Essentially if its not enforced it doesnt get done is my view" — plan 1(c)2 "Refuses: a row with no state; `check` whose file is missing; `owed` whose task id does not resolve" — a rule cannot pass a commit without a resolvable check, owed task or operator advice.
+MET — Spec 08 §7 rule 4 "Every DeepSeek finding is adjudicated by a tool-having grounder before folding" — plan 2(b) "plus one verdict line per finding" — the push check imports 366's GROUNDER.md and per-finding CONFIRMED/REJECTED requirement.
+MET — Operator infra freeze (task-366/367) "The infra freeze is lifted for compliance tooling by name." — plan 1(c)2, 2(c)1, 3(c) — the three measures build only under that named lift.
+MET — Stage rule (task-371) "the plan states what each measure would build" — plan 1(c), 2(c), 3(c) — each measure carries a smallest build, a refusal line and a cost, and nothing is built.
+MET — Spec 08 §11.3 "Every lock is proven in BOTH directions" — plan 1(c) "all valid passes; each in both directions" — Measure 1's cases are stated both ways.
+
+REJECT — Spec 08 §11.9 TKT-2 "Every reply ends with one line `STATUS: ready|blocked|failed|dropped`" — accused of ending at 3(g) with no STATUS line — the plan file is not a reply and the lane's reply text is not pasted.
+REJECT — Lane rules "no push, no DB, no checkout, no suite run in a lane (Spec 124 R-CQ; station owns the suite)" — accused of running phone jest locally — the run sits in the station, not a lane, and the author's own UNVERIFIED label cites this rule.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 7
+
+---
+⏱  78072ms (78.1s)
+📊 Tokens — total: 40225, input: 25238, output: 14987, reasoning: 13519

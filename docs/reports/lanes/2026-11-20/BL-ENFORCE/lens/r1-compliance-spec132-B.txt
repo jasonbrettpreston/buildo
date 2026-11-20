@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens/planB.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10646 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21644 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32694 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43137 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53504 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 64554 chars, answer 0 chars, 90s
+BUG severity=HIGH — x-rulings.4 "Operator decisions are transferred by generator, never by hand" — §4(f) "It cannot stop a ruling written outside the tool (a hand-written decision file)" and §4(g) "closed by one added arm ... (stage 2 decides; D-5)" — the clause is unmet by the plan's own admission: hand-written decision files stay admitted and the closing arm is deferred out of Measure 4 — put the check-backlog-task.mjs arm refusing any backlog/decisions file without a `Check:` line inside Measure 4's build, not stage 2.
+
+BUG severity=HIGH — x-rulings.4 "Each log is re-derived at `--check` from its raw record under `docs/reports/decisions/raw/`, so a hand-edited log fails" — §4(c)1 "written into the decision body as a line `Check: ...` (writeDecisionBody, :70) and into the dated note (datedNote, :64)" against §4(c)2 "a register row cited by a decision made after the change date must carry the same `check`/`owed`/`advice` token" — the token is written only to backlog/decisions, never to the decision log json or its raw record, so the new arm has no generator-supplied source and could only be satisfied by the hand edit the clause forbids — write the token into the raw record and into decision-log --write's register-row skeleton in the same step.
+
+BUG severity=HIGH — x-v3.2 "An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it" — §8 "D-1 What is a rule for a prose spec ... Recommendation: ... UNVERIFIED by a review round" — none of D-1 to D-7 is routed to a `docs/reports/decisions/<date>-<slug>.json` log and a register row, so each measure that cites one cites a plan-only decision — add one line to §8: every approved D ruling lands through decision-log --write as a register row before Measure 1, 2, 3, 4 or 5 cites it.
+
+DEFER severity=MED — Operator 2026-11-20 "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." — §7 "1. Measure 2 push side, part 1 ... Depends on task-366 landing." — the build order names tasks 366, 367, 370, 371 but no line adds the six measures as tasks in increment 1b, which the ruling names — add a §7 item creating one task per measure in incr 1b with its D dependency.
+
+DEFER severity=MED — 132 §6 "50 have no check and 30 are partial" and "296 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 80 none" — §5 table "step standard 444 364 0 0 80 100" — 364 = 444 - 80 counts the 30 partial rows as checked, contradicting the pasted split of checked versus partial, and this is the row rendered on the board — report 334 checked, 30 partial, 80 unmarked, or add a partial column to the generated doc.
+
+DEFER severity=MED — x-tooling.3 "a programme-gate precondition is locked both directions, never a printed count" — §5 "The ceilings of the first five rows are today's unchecked count (owed plus unmarked)" and "(ceiling 247, down only)" — five of the six ceilings exist only as a printed column in the generated doc, with no test locking them both directions (only the step row's 100 has the existing test value) — lock each ceiling in a shrink-only test in the same commit as the generator, or drop the ceiling column.
+
+DEFER severity=LOW — x-verify.1 "The report lives at `docs/reports/verification/<branch>.md` and every integrate commit cites it (`.husky/commit-msg`)" — §7 "1. Measure 2 push side, part 1 (check-push-range.mjs plus the call from the station and the pre-push hook)" — the build order does not say whether these measures land on an integrate-N branch nor name the verification report, so the clause cannot be shown met — state per measure whether it lands on an integrate branch and add the report path to §9.
+
+DEFER severity=NIT — R-BA "A step-standard item that no machine checks is not part of the standard" — §4(c) refusal wording "backlog-decision: refused, no --check-ref ... Spec 132 x-rulings.4 and R-BA" — R-BA's pasted text governs step-standard items, not rulings, so the refusal cites a rule that does not reach what it refuses — cite x-rulings.4 alone, or a pasted ruling that names decisions.
+
+MET — RR-0233/RR-0232 "reaching the operator only with a Grounded and a Recommendation line" — §8 D-1 to D-7 — every draft carries a Grounded line and a Recommendation line.
+MET — Operator 2026-11-20 "5. where does this rule set go on the board yes" — §5 "a generated Backlog document `backlog/docs/doc-<n> - Rule-enforcement.md`" plus the BOARD-STATUS-6421.txt line — the rule set is placed on the board as approved.
+MET — Stage rule (task-371) "this stage is a REVIEWED PLAN. Nothing is built" — §4(c) "Smallest build. One required flag on the existing tool", §5(c) "Smallest build: scripts/analysis/rule-enforcement.mjs" — every measure is stated as what would be built; no file is written here.
+MET — x-tooling.1 "runs every generator `--check`" — §5 "held fresh by the same generator's `--check` in pre-commit (the pattern of every generator in .husky/pre-commit:20-45)" — the new surface is gated by the standard generator check.
+MET — x-rulings.2 "add a both-directions test" — §9 item 4 "backlog-decision `--check-ref` cases (five refusals, one pass)" — the new flag is locked both directions.
+MET — x-rulings.4 "`--check` at pre-commit fails on an uncovered decision" — §4(b) ".husky/pre-commit:41" and §4(c)2 "the check adds one arm" — the new arm rides the existing pre-commit check.
+
+REJECT — §6 Measure 6 / "retiring is the operator's ruling" — accused of retiring ten spec rules without a ruling — §6 states "candidates only; nothing retired; retiring is the operator's ruling" and D-7 drafts the choice as a decision, so no retirement is effected.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 6
+
+---
+⏱  97615ms (97.6s)
+📊 Tokens — total: 38141, input: 19085, output: 19056, reasoning: 17484

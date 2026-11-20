@@ -1,0 +1,13 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens/planB.md (model: deepseek-reasoner)
+
+NOT APPLICABLE: the pasted material is tooling and document governance only (a required `--check-ref` flag on scripts/analysis/backlog-decision.mjs, one arm in decision-log.mjs, a generated rule-enforcement doc and board status line, hook lines, retirement candidates); it changes no runtime request path, no query, no credential handling, no user record and no privilege check, and the only auth-adjacent text is a candidate to retire a doc line "Auth: Firebase Auth via `@react-native-firebase/auth`" (docs/specs/03-mobile/90_mobile_engineering_protocol.md:46) which the plan explicitly does not execute ("candidates only; nothing retired").
+
+```
+VERDICT: NOT APPLICABLE on exploitability
+Surfaces touched: none
+```
+
+---
+⏱  6818ms (6.8s)
+📊 Tokens — total: 19166, input: 18158, output: 1008, reasoning: 835

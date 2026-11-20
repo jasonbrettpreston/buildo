@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/enforce/lens/planA.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10709 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21378 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31975 chars, answer 0 chars, 45s
+BUG severity=HIGH — RR-0150/RR-0149 "infra tooling is built in the Buildo repo under its hooks, suite and history; not in scratch or a separate repo." — "(c) Smallest build ... 2. The station calls it. ... the scratch station.sh gets one line `node scripts/hooks/check-push-range.mjs \"origin/$br..HEAD\"` inside `suite`" — stage 1's only wiring of the new push check lives in the unversioned scratch station, repo copy deferred to stage 2, so the caller has no history, no diff review and no hooks, contrary to the ruling. — land scripts/push-station/station.sh plus the one-line exec stub in this same stage and put the caller there.
+
+BUG severity=HIGH — 00_engineering_standards.md 5.3 "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code." — "1. scripts/hooks/check-push-range.mjs: input `<base>..<head>`; for each distinct `Task: task-N` trailer in the range" — measure 2 part 1 adds new derivation logic (trailer discovery, path-scope filter, exemption list, missing-output decision) with no test file named and no red.out, while measures 1 and 3 each name a red-first test. — name src/tests/check-push-range.logic.test.ts with red-first cases: missing lens output refuses, docs-only range exempt, rebase-rewritten commit ids still pass.
+
+DEFER severity=MED — 00_engineering_standards.md 14 "Every CRITICAL/HIGH review finding ... is triaged with a second question beyond \"fix it\": *\"what standing rule would have prevented this whole CLASS, and where does it live?\"*" — "the two review-tool defects confirmed by BL-GROUND must be fixed first (scripts/lib/review-template.js:74-78 placeholder substitution; .claude/review-templates/lens-compliance.md:32 and :34 the doubled plan placeholder)" — the confirmed BL-GROUND defects are named inside a cost paragraph, not as a build step, and no standing rule location or gate is stated for the class. — make both fixes a numbered build step of this stage and state the rule text plus the file it lives in.
+
+DEFER severity=MED — 00_engineering_standards.md 5.5 "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — "4. Seed lane (stage 2 of this task, not this stage): a script emits the seed rows per set by the counted method below and writes the ceilings at today's counts" — docs/rules/enforcement.json is a generated, committed artifact with no parity test against its generator; the `--check` gate validates state values only, not regeneration drift. — add a regenerate-to-buffer diff test for enforcement.json beside rule-enforcement.logic.test.ts.
+
+DEFER severity=MED — 00_engineering_standards.md 9.3 "All pipeline scripts MUST be safe to re-run." — "writes the ceilings at today's counts" against "(g) a ceiling only goes down" — a second run of the seed script rewrites every ceiling up to the current count, which the HEAD-comparison gate then rejects, so the seed script is not safe to re-run and its own commit can be refused. — make the seed write a ceiling only when the key is absent, never overwrite an existing value.
+
+DEFER severity=MED — RR-0233/RR-0232 "reaching the operator only with a Grounded and a Recommendation line." — "the operator decides, decision D-3" and "Decision D-2." — D-3 carries no Grounded line and no Recommendation line, and D-2 carries a Recommendation but no Grounded line, so the ruling's required form for anything reaching the operator is not met. — write a Grounded line and a Recommendation line for each of D-2, D-3 and D-4.
+
+DEFER severity=LOW — 00_engineering_standards.md 14 registry "A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**" — "Three counts disagree and must be reconciled by the build, not by hand" — the plan knows Spec 132:503 and 132:505 state counts that disagree with rule-map, yet no build step updates the spec text, so the new enforcement.json becomes authoritative while the cited spec keeps saying the old numbers. — add a step that rewrites 132:503 and 132:505 from the generator output in the same commit as the seed.
+
+MET — Stage rule (task-371) "this stage is a REVIEWED PLAN. Nothing is built" — "Status: a plan. Nothing here is built." — no build step is executed in the plan, each measure states what it would build.
+MET — Lane rules "no push, no DB, no checkout, no suite run in a lane (Spec 124 R-CQ)" — "I could not run it: lane rule 2 forbids a suite run and my write scope is the lane dir" — the unmeasurable number is labelled UNVERIFIED rather than obtained by breaking the lane rule.
+MET — Operator 2026-11-20 "The infra freeze is lifted for compliance tooling by name." — "Freeze lifted for compliance tooling by name (operator 2026-11-20, task-366 and task-367 descriptions)" — the lift is cited by name before any measure is proposed.
+MET — 00_engineering_standards.md 14 "a NO-GO the machine reads cannot be shipped past" — "2. Gate: scripts/analysis/gates/rule-enforcement.mjs with `--check` (file-only), one line added to .husky/pre-commit" — the new rule is promoted to a machine-read commit gate, not left a guideline.
+
+REJECT — Operator ruling "Review them first 1. y 2. y 3. y 4. y 5. ... yes 6. yes" — that Measure 3 (phone tests before push) exceeds the freeze lift and adds unnamed behaviour — the six recommendations were individually reviewed and approved by the operator, so Measure 3 is named by the ruling.
+REJECT — 00_engineering_standards.md 9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — that the new gates and hooks breach the SDK mandate — the new files are .mjs, file-only, with no pool, no transaction and no DB access, and the clause names `scripts/*.js` pipeline scripts.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 7
+
+---
+⏱  56837ms (56.8s)
+📊 Tokens — total: 27421, input: 16621, output: 10800, reasoning: 9343

@@ -1,0 +1,7 @@
+# OPERATOR RULINGS IN FORCE FOR THIS PLAN (verbatim; supplied so no finding says "not pasted")
+- Operator 2026-11-20 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, entry "Operator: the six enforcement recommendations approved, reviewed first"): "Essentially if its not enforced it doesnt get done is my view. ... We spend so much time making rules and recording decisions but we dont follow them.  Same lesson over ans over" and "Review them first 1. y 2. y 3. y 4. y 5. where does this rule set go on the board yes 6. yes".
+- Operator 2026-11-20 (task-366 and task-367 descriptions): "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." The infra freeze is lifted for compliance tooling by name.
+- RR-0233 / RR-0232 (Spec 137 dated note, 137_mcqueue.md:166ff): the operator decides front end, design of the app, how much storage, timeframes, priorities; everything else is decided on the orchestrator, the repo review and gates under the six-criteria rule, reaching the operator only with a Grounded and a Recommendation line.
+- RR-0150/RR-0149: infra tooling is built in the Buildo repo under its hooks, suite and history; not in scratch or a separate repo.
+- Stage rule (task-371): this stage is a REVIEWED PLAN. Nothing is built; a separate grounder rules on findings later; the plan states what each measure would build.
+- Lane rules that bind the author, not the plan: no push, no DB, no checkout, no suite run in a lane (Spec 124 R-CQ; station owns the suite).
