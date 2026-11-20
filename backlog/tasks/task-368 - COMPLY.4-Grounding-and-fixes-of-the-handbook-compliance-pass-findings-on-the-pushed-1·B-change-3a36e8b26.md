@@ -7,10 +7,14 @@ status: RUNNING
 assignee:
   - '@lane-BL-GROUND'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-20T13:13:00Z'
+updated_date: '2026-11-20T13:30:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-GROUND/REPORT.md
+  - docs/reports/lanes/2026-11-20/BL-GROUND/GROUNDER.md
+  - docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY.md
 type: build
 ordinal: 68012
 ---
@@ -41,8 +45,16 @@ Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze need
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Extract the 101 CRIT and HIGH findings of FINDINGS.md, dedupe into defect groups (AC1). 2. For each group open the code at the pushed tip 3a36e8b26 and the rule in its source spec; rule CONFIRMED, REJECTED (reason) or CONFLICT with file:line. 3. Answer the scan-scope question by reading each gate's scope and running each gate's own --check read-only. 4. Rule the three orchestrator readings (core.9/10 vs P1, core.8 vs mobile, Spec 90 section 5 vs lucide). 5. Sample 30 of the MED and lower findings across handbooks and report the confirm rate. 6. Write GROUNDER.md and VERDICTS-SUMMARY.md, one docs commit; no code fixed, no task created (AC2 is the orchestrator's: it turns CONFIRMED groups into fix tasks and CONFLICTs into operator decisions).
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-GROUND, worktree /Users/brettpreston_macmini/Buildo-wt-ground, branch wf1/inc1b-ground), RR-0240
+
+2026-11-20 BL-GROUND (grounder): 101 CRIT and HIGH ruled in 24 groups: 22 ids CONFIRMED in 12 defects (D1-D12), 7 ids CONFLICT in 4 groups (C1-C4), 72 REJECTED (33 ruling exists, 22 already enforced, 16 rule does not bind or claim not true, 1 empty); MED sample 2 of 30 confirmed. Scan-scope, the three readings and the two review-tool defects answered in GROUNDER.md. No code fixed, no task created: AC2 (fix tasks and operator drafts) is the orchestrator's. Task left RUNNING.
 <!-- SECTION:NOTES:END -->
