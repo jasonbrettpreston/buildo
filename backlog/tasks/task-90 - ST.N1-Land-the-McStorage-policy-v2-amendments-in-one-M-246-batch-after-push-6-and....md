@@ -3,11 +3,11 @@ id: TASK-90
 title: >-
   ST.N1 Land the McStorage policy v2 amendments in one M-246 batch after push 6
   and...
-status: WAITS
+status: RUNNING
 assignee:
-  - '@lane-R'
+  - '@lane-BL-STN1'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-20T13:23:00Z'
+updated_date: '2026-11-20T13:24:00Z'
 due_date: '2026-11-26'
 labels:
   - '6'
@@ -70,4 +70,6 @@ who (plan text): McBylaws lane R (rulings text), operator reads first
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 operator, verbatim: "yes to McStorage and 1,2,3 yes as recommended" (item 3: land the McStorage policy v2 amendments now, in Increment 1·B, so the rule records are not stale). Earlier the same day: "the McStroage policy was recently updated with the new direction - I just want to ensure the rules were updated as well. I dont want to be bound with stale McStorage". The amendments that wait on the open points ST-OP1, ST-OP3 and ST-OP4 still wait on the operator.
+
+2026-11-20 taken on the board at lane launch (lane BL-STN1, worktree /Users/brettpreston_macmini/Buildo-wt-stn1, branch wf1/inc1b-stn1), RR-0240
 <!-- SECTION:NOTES:END -->
