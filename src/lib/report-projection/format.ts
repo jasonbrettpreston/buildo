@@ -5,17 +5,12 @@
 // MB-93 · the FE-05 server formatter of the five v21 page rules (`area_sqft`, `area_m2`, `area_sqft_m2_paren`, `area_sqft_m2_dot`, `int`), written
 // against the v21 synthetic golden strings ("2,670" / "sq ft" / "248 m²" / "2,670 sq ft (248 m²)" / "3,057 sq ft · 284 m²" / "3").
 // Plan ~/Buildo-scratch/mcfrontend/PREVIEW/plan.md 9.2-9.3 (RG H1, Code HIGH-1, RG M1): it lives OUTSIDE the four directories the no-maths lock scans
-// (src/tests/surfaces/report-no-maths.logic.test.ts), imports only the pinned seed reader, pins the digit grouping (a comma every three digits, the en-CA form) instead
+// (src/tests/surfaces/report-no-maths.logic.test.ts), imports nothing, pins the digit grouping (a comma every three digits, the en-CA form) instead
 // of an unpinned toLocaleString(), and returns the number and its unit as separate outputs (D-J). It shares only the factor value and the
 // half-up rounding of mobile/src/lib/parcelCostFormat.ts (left untouched; a parity test pins the two). FIX.PROJ (task-372, D2): the factor is the
-// registered pinned logic variable parcels_sqm_to_sqft (fe.44, core.8), read by pinnedSetting; the only import besides it is the seed. Honest refusals: a non-finite or negative
+// registered pinned logic variable parcels_sqm_to_sqft (fe.44, core.8), read once by project.ts through pinned-settings.ts and PASSED IN as sqftPerM2. Honest refusals: a non-finite or negative
 // number, an `int` value that is not a whole number, or an unknown rule format to null (the page shows the ruled null dash).
 
-import seed from '../../../scripts/seeds/logic_variables.json';
-import { pinnedSetting } from './pinned-settings';
-
-/** Square feet per square metre: the pinned logic variable parcels_sqm_to_sqft (the value of mobile/src/lib/parcelCostFormat.ts SQM_TO_SQFT). */
-export const SQFT_PER_M2: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_sqm_to_sqft');
 export const PAGE_RULES = ['area_sqft', 'area_m2', 'area_sqft_m2_paren', 'area_sqft_m2_dot', 'int'] as const;
 export type PageRule = (typeof PAGE_RULES)[number];
 /** One formatted value: `value` is the text of a value part; `unit` is the text of a `.unit` part (area_sqft only, D-J). */
@@ -34,9 +29,10 @@ const grouped = (whole: number): string => {
 };
 
 /** The rule's text for one stored number (square metres for the area rules; a count for `int`), or null when it is refused. */
-export function formatPageRule(rule: string, n: number): Formatted | null {
+export function formatPageRule(rule: string, n: number, sqftPerM2: number): Formatted | null {
+  if (typeof sqftPerM2 !== 'number' || !Number.isFinite(sqftPerM2) || sqftPerM2 <= 0) return null;
   if (typeof n !== 'number' || !Number.isFinite(n) || n < 0) return null;
-  const sqft = grouped(Math.round(n * SQFT_PER_M2));
+  const sqft = grouped(Math.round(n * sqftPerM2));
   const m2 = `${grouped(Math.round(n))} m²`;
   switch (rule) {
     case 'area_sqft':

@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXPROJ'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T13:49:00Z'
+updated_date: '2026-11-20T13:57:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -58,4 +58,6 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-FIXPROJ, worktree /Users/brettpreston_macmini/Buildo-wt-fixproj, branch wf1/inc1b-fixproj), RR-0240
+
+2026-11-20 fold round after the grounder ruling: lock restored, formatter imports nothing (factor passed in), geometry.ts SQM_TO_SQFT reads the same registered variable, pinnedWindow pair check tested. Owed: migration, number to be claimed by the orchestrator.
 <!-- SECTION:NOTES:END -->

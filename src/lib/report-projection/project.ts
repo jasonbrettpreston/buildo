@@ -21,7 +21,7 @@ import decl from '../../../scripts/surfaces/_schema/report-v2.decl.json';
 import presentation from '../../../scripts/surfaces/_schema/report-presentation.json';
 import { CONFIDENCE_ORDER, PAGE_RULES, formatPageRule, formatTextRule, TEXT_RULES } from './format';
 import seed from '../../../scripts/seeds/logic_variables.json';
-import { pinnedSetting } from './pinned-settings';
+import { pinnedSetting, pinnedWindow } from './pinned-settings';
 import type { SeedShas } from './seed-shas';
 
 /** One stored parcel_maxbld_scenarios row (migration 287 draft columns; NUMERIC arrives from pg as a string). */
@@ -76,12 +76,9 @@ export interface Binding { section: string; building_type: string | null; key: s
 
 /** Plausible lot size bounds in m² (operator D-7 a, reality F-3: 4,297 lots under 50 m², 1,923 over 5,000 m²; ONE-13 a); outside them the banner flags it.
  *  FIX.PROJ (task-372, D9; core.8): two registered pinned logic variables, read from the seed by pinnedSetting. */
-export const LOT_SIZE_PLAUSIBLE_M2 = (() => {
-  const min = pinnedSetting(seed as unknown as Record<string, unknown>, 'maxbld_report_lot_size_implausible_min_sqm');
-  const max = pinnedSetting(seed as unknown as Record<string, unknown>, 'maxbld_report_lot_size_implausible_max_sqm');
-  if (!(min < max)) throw new Error(`report-projection: the lot-size window is inverted (min ${min}, max ${max})`);
-  return Object.freeze({ min, max });
-})();
+export const LOT_SIZE_PLAUSIBLE_M2 = Object.freeze(pinnedWindow(seed as unknown as Record<string, unknown>, 'maxbld_report_lot_size_implausible_min_sqm', 'maxbld_report_lot_size_implausible_max_sqm'));
+/** Square feet per square metre: the pinned logic variable parcels_sqm_to_sqft (D2, fe.44, core.8), read once here and passed to the formatter. */
+export const SQFT_PER_M2: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_sqm_to_sqft');
 const LOT_SIZE_COLUMN = 'lot_size_sqm';
 
 const declFields = (): Json[] => {
@@ -245,7 +242,7 @@ export function projectStoredPage(input: ProjectInput): { response: PageResponse
       if (r && r.status === COMPUTED) n = num(r.value);
     }
     if (n === null) continue;
-    const f = formatPageRule(b.rule, n);
+    const f = formatPageRule(b.rule, n, SQFT_PER_M2);
     const text = f ? (b.unitPart ? f.unit : f.value) : undefined;
     if (typeof text === 'string' && text !== '') values[b.key] = text;
   }

@@ -13,3 +13,11 @@ export function pinnedSetting(seed: Record<string, unknown>, key: string): numbe
   if (row.type !== 'number' || typeof d !== 'number' || !Number.isFinite(d) || min !== d || max !== d) throw new Error(`report-projection: logic variable ${key} is not pinned (type number, min = max = default, finite)`);
   return d;
 }
+
+/** The pinned window [min, max] named by two pinned variables; throws when min is not below max (an inverted or empty window would flag every lot). */
+export function pinnedWindow(seed: Record<string, unknown>, minKey: string, maxKey: string): { min: number; max: number } {
+  const min = pinnedSetting(seed, minKey);
+  const max = pinnedSetting(seed, maxKey);
+  if (!(min < max)) throw new Error(`report-projection: the window ${minKey} / ${maxKey} is inverted (min ${min}, max ${max})`);
+  return { min, max };
+}

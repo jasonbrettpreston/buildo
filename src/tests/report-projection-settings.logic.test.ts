@@ -9,8 +9,9 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import seed from '../../scripts/seeds/logic_variables.json';
 import { pinnedSetting } from '@/lib/report-projection/pinned-settings';
-import { SQFT_PER_M2 } from '@/lib/report-projection/format';
-import { LOT_SIZE_PLAUSIBLE_M2 } from '@/lib/report-projection/project';
+import { pinnedWindow } from '@/lib/report-projection/pinned-settings';
+import { LOT_SIZE_PLAUSIBLE_M2, SQFT_PER_M2 } from '@/lib/report-projection/project';
+import { SQM_TO_SQFT } from '@/lib/parcels/geometry';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const src = (p: string): string => fs.readFileSync(path.join(ROOT, p), 'utf8');
@@ -22,9 +23,17 @@ const MIN_KEY = 'maxbld_report_lot_size_implausible_min_sqm';
 const MAX_KEY = 'maxbld_report_lot_size_implausible_max_sqm';
 
 describe('D2 the square-feet factor is the registered pinned variable', () => {
-  it('format.ts types no factor and names the variable', () => {
+  it('format.ts types no factor and imports nothing (the factor is passed in); project.ts and the cards module name the variable and type none', () => {
     expect(code('src/lib/report-projection/format.ts')).not.toMatch(/10\.7639/);
-    expect(code('src/lib/report-projection/format.ts')).toContain(FACTOR_KEY);
+    expect(code('src/lib/report-projection/format.ts')).not.toMatch(/^\s*import\b/m);
+    for (const p of ['src/lib/report-projection/project.ts', 'src/lib/parcels/geometry.ts']) {
+      expect(code(p), p).not.toMatch(/10\.7639/);
+      expect(code(p), p).toContain(FACTOR_KEY);
+    }
+  });
+  it('the report and the cards (geometry.ts: display-rules, lot-size-entry, consumer-lookup route) read one factor', () => {
+    expect(SQM_TO_SQFT).toBe(SQFT_PER_M2);
+    expect(SQM_TO_SQFT).toBe(SEED[FACTOR_KEY]?.default);
   });
   it('the exported factor is the pinned seed value (10.7639, unchanged)', () => {
     expect(SEED[FACTOR_KEY]).toMatchObject({ default: 10.7639, min: 10.7639, max: 10.7639 });
@@ -47,6 +56,17 @@ describe('D9 the lot-size window is two registered pinned variables', () => {
   });
   it('the exported window is the seed values, unchanged', () => {
     expect(LOT_SIZE_PLAUSIBLE_M2).toEqual({ min: 50, max: 5000 });
+  });
+});
+
+describe('the pinned window pair', () => {
+  const win = (min: number, max: number) => ({ lo: { default: min, min, max: min, type: 'number' }, hi: { default: max, min: max, max, type: 'number' } });
+  it('returns the ordered pair', () => {
+    expect(pinnedWindow(win(50, 5000), 'lo', 'hi')).toEqual({ min: 50, max: 5000 });
+  });
+  it('throws when min is not below max (inverted or empty window)', () => {
+    expect(() => pinnedWindow(win(5000, 50), 'lo', 'hi')).toThrow(/is inverted/);
+    expect(() => pinnedWindow(win(50, 50), 'lo', 'hi')).toThrow(/is inverted/);
   });
 });
 

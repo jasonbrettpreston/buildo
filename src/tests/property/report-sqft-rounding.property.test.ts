@@ -9,7 +9,10 @@
 // A negative, NaN or infinite input is refused (null), never shown.
 import { describe, it } from 'vitest';
 import * as fc from 'fast-check';
-import { formatPageRule } from '@/lib/report-projection/format';
+import { formatPageRule as formatPageRuleWith } from '@/lib/report-projection/format';
+import { SQFT_PER_M2 } from '@/lib/report-projection/project';
+
+const formatPageRule = (rule: string, n: number) => formatPageRuleWith(rule, n, SQFT_PER_M2);
 
 const FACTOR = 10.7639;
 const shown = (n: number): string => {

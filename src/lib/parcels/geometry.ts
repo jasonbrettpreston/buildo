@@ -1,6 +1,9 @@
+import seed from '../../../scripts/seeds/logic_variables.json';
+import { pinnedSetting } from '@/lib/report-projection/pinned-settings';
 import type { LotDimensions } from './types';
 
-export const SQM_TO_SQFT = 10.7639;
+/** Square feet per square metre: the pinned logic variable parcels_sqm_to_sqft (fe.44, core.8; one factor with the report projection). */
+export const SQM_TO_SQFT: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_sqm_to_sqft');
 export const M_TO_FT = 3.28084;
 
 /**

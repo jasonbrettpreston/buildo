@@ -18,9 +18,11 @@ import { createRequire } from 'node:module';
 
 vi.mock('@/lib/logger', () => ({ logError: vi.fn(), logWarn: vi.fn(), logInfo: vi.fn() }));
 
-import { formatPageRule, PAGE_RULES, SQFT_PER_M2, TEXT_RULES } from '@/lib/report-projection/format';
+import { formatPageRule as formatPageRuleWith, PAGE_RULES, TEXT_RULES } from '@/lib/report-projection/format';
 import { CURRENT_SEED_SHAS } from '@/lib/report-projection/seed-shas';
-import { pageBindings, pageOptions, projectStoredPage, type StoredRow, type LotStamp } from '@/lib/report-projection/project';
+import { pageBindings, pageOptions, projectStoredPage, SQFT_PER_M2, type StoredRow, type LotStamp } from '@/lib/report-projection/project';
+// FIX.PROJ (task-372): the formatter takes the factor as a parameter (it imports nothing); the page reads it once in project.ts.
+const formatPageRule = (rule: string, n: number) => formatPageRuleWith(rule, n, SQFT_PER_M2);
 import { readPreviewSwitch, storedPageResponse, PREVIEW_SWITCH_KEY, type Queryable } from '@/lib/admin/report-preview-live/stored-page';
 import { buildPage } from '@/lib/surfaces/report/core';
 import { reportCtx } from '@/lib/surfaces/report/data';
@@ -131,14 +133,12 @@ describe('F: the FE-05 server formatter (outside the no-maths directories)', () 
       expect(fmt('area_m2', m)).toBe(formatSqm(m));
     }
   });
-  it('lives outside the four directories the no-maths lock scans, and the formatter imports only the pinned seed reader and the seed (FIX.PROJ task-372 D2: the factor is the registered variable parcels_sqm_to_sqft)', () => {
+  it('lives outside the four directories the no-maths lock scans, and the formatter imports nothing', () => {
     const lock = fs.readFileSync('src/tests/surfaces/report-no-maths.logic.test.ts', 'utf8');
     const dirs = JSON.parse(((/const DIRS = (\[[^\]]*\])/.exec(lock) as RegExpExecArray)[1] as string).replace(/'/g, '"')) as string[];
     expect(dirs.length).toBe(4);
     for (const d of dirs) { expect(DIR.startsWith(d)).toBe(false); expect(PROJ.startsWith(d)).toBe(false); }
-    const imports = fs.readFileSync(`${PROJ}/format.ts`, 'utf8').split('\n').filter((l) => /^\s*import\b/.test(l)).map((l) => /from '([^']+)'/.exec(l)?.[1]);
-    expect(imports).toEqual(['../../../scripts/seeds/logic_variables.json', './pinned-settings']);
-    expect(fs.readFileSync(`${PROJ}/format.ts`, 'utf8')).not.toMatch(/require\(/);
+    expect(fs.readFileSync(`${PROJ}/format.ts`, 'utf8')).not.toMatch(/^\s*import\b|require\(/m);
     expect(fs.existsSync(`${PROJ}/format.ts`)).toBe(true);
   });
 });
