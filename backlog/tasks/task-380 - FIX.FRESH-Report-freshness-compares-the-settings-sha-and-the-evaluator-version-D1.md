@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
+updated_date: '2026-11-20T15:16:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -32,3 +33,9 @@ Plan section A. Confirmed defect D1 (docs/reports/lanes/2026-11-20/BL-GROUND/VER
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Operator ruling 2026-11-20, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (the six decisions; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entry "Operator RULES on the six decisions"). D1 RULED (c): leave the freshness compare until stored records exist; this task WAITS on the storage record write (ST.P1). Option (b) is not ruled.
+<!-- SECTION:NOTES:END -->

@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
+updated_date: '2026-11-20T15:18:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -32,3 +33,11 @@ Plan section E2. Retire candidates (grounder-verified stale): Spec 90 :46 and :7
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Operator ruling 2026-11-20, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (the six decisions; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entry "Operator RULES on the six decisions"). To write as dated notes citing those words, AFTER task-376 folds (same spec files): C2 (a) error screen with Try again, not counted: correct Spec 126:810, Spec 100:123 stands; C3 (b) legal line at the bottom of the phone search page (the build is its own task); D13 (a) 48 px on the semi page Continue and Try again is now an operator ruling (bindings.json touch_targets note says orchestrator decision: correct it); C5 (a) every paying user at once when the web switch flips: dated note on FE-39 through the register generator (with task-388). Semi page cache write accepted as built. C1 and C4 as verified in BL-VERIFYC. STILL OPEN for the operator: the phone's 3 retries before the error screen.
+
+Operator ruling 2026-11-20, verbatim: "Phone retires yes and web search yes" (MORNING-DECISIONS.md entry "phone retries and the web search legal line"). C2 addition: the phone keeps its 3 retries before the error screen shows (orchestrator reading of 'Phone retires yes': the recommendation put was to keep them).
+<!-- SECTION:NOTES:END -->

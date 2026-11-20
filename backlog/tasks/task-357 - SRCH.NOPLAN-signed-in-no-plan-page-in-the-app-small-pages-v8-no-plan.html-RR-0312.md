@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-19T22:02:00Z'
+updated_date: '2026-11-20T15:24:00Z'
 labels:
   - S
   - plan:SRCH.A6
@@ -105,3 +106,9 @@ Files: scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_no_plan.descri
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+HELD (operator 2026-11-20 "4. Hold the three unbuilt pages until the pilot result"): build as rows of the page table once the PAGE.TABLE pilot passes, not as a new props-tree binding (the plan above names the builder pattern: superseded).
+<!-- SECTION:NOTES:END -->

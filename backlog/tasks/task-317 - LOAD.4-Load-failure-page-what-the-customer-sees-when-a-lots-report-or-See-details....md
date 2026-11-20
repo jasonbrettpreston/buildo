@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOAD4'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-20T00:03:00Z'
+updated_date: '2026-11-20T15:24:00Z'
 labels:
   - S
   - plan:LOAD.4
@@ -105,4 +105,6 @@ Dated note 2026-11-19 (M-246, prior text kept; RR-0301 · task-317 · Backlog; o
 2026-11-19 taken on the board at lane launch (lane BL-LOAD4, worktree /Users/brettpreston_macmini/Buildo-wt-load4, branch wf1/inc1b-load4), RR-0240
 
 2026-11-19 (BL-LOAD4, stage 1, McIncrement 08_agents.md 11.8): stage 1 plan done; stage 2 build waits on the orchestrator. Measured on head 0bc76d829: today a failed or timed-out report shows a centred line with an outline Try again (ReportBinding.tsx:369-379), no address, no time bound, no refusal split; a miss shows the bare line and Back; the design draws one failure frame (small-pages-v8 build.mjs:803, 814-817). Delta list, contract, impact and decision drafts LD-1 (words), LD-2 (time-out figure), LD-3 (early failure vs animation), LD-5 (the miss), LD-6 (conditional still) in docs/reports/lanes/2026-11-19/BL-LOAD4/PLAN.md; D-1 and D-4 named, unruled, not decided. Smallest missing piece: task-267 stage 2 (the address source and the animation seam). Web: not buildable until the web report render (task-285 and task-287 chain).
+
+HELD (operator 2026-11-20 "4. Hold the three unbuilt pages until the pilot result"): build as rows of the page table once the PAGE.TABLE pilot passes, not by extending lifecycleProps.
 <!-- SECTION:NOTES:END -->
