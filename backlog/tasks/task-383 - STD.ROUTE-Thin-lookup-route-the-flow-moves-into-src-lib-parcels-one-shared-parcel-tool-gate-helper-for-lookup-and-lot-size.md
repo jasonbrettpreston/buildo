@@ -7,12 +7,14 @@ status: RUNNING
 assignee:
   - '@lane-BL-THINROUTE'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T18:45:00Z'
+updated_date: '2026-11-20T18:49:00Z'
 labels:
   - McFix
   - McFix B
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-THINROUTE/REPORT.md
 type: build
 ordinal: 83012
 ---
