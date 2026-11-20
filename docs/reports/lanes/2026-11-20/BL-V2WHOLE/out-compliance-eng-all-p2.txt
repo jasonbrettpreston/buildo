@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:03.256Z file_sha256=12bdbb62fd7bcd63dbce024261779d874d1e2fb217e7767aa1c61eb86bffbbb7 prompt_sha256=55cb78790d3d2448226effb0702a476538de95bc6ee9a3013fdf84d6f6f584f8
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-eng-all-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/backlog/check-lane-close.logic.test.ts "const TROW = { id: 'tbl', globs: ['scripts/analysis/**'], lists: ['first'], why: 'the table is governed like any file' };" — the new tests build rule-table rows and file maps as untyped inline literals pushed through `as unknown[]` (`(x.rows as unknown[]).push({ id: 'ga', globs: ['.gitattributes'], lists: ['first'], why: 't' })`), no factory from `src/tests/factories.ts` is imported anywhere in the added code, so the mandated typed-factory path is not used — add a typed row/table factory to `src/tests/factories.ts` and import it in both test files instead of the inline literals.
+
+DEFER severity=MED — §5.5 "a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity" — docs/reports/generated/rule-lists-by-kind.md "| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 6,589 | 1 |" — the diff edits a generated artifact (the page) and adds a value-derivation (chunk room), but neither added test block asserts the committed page equals the generator output (no `page --check` assertion appears in the added lines; cannot see one elsewhere) — add a logic test that regenerates the page to a buffer and diffs the committed file, per the parity row "generated doc ↔ generator".
+
+DEFER severity=LOW — §5.2 "Parity battery (`*.infra.test.ts` / `*.logic.test.ts`) | Two parallel implementations stay in sync" — src/tests/backlog/check-lane-close.logic.test.ts "const rt = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { splitTemplate:" — the test re-implements the prompt hash already exported as `lensPromptHash` in scripts/analysis/rule-lists.mjs, so the tool's hashing and the test's copy can drift apart silently — import `lensPromptHash` from rule-lists.mjs in the test instead of duplicating splitTemplate/substitutePlaceholders.
+
+DEFER severity=LOW — §5.2 "| `*.infra.test.ts` | API routes, DB queries, external calls | New API route / DB mutation (unhappy path first, §5.3)" vs "| `*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — src/tests/backlog/check-lane-close.logic.test.ts "const DIFF_FLAGS = (JSON.parse(run('node', ['-e', \"import('./scripts/analysis/rule-lists.mjs').then((m)=>console.log(JSON.stringify(m.DIFF_ARGS)))\"" — the added tests drive real `git` commits, tags and child processes from a `*.logic.test.ts` file, the layer the table reserves for pure functions, so the layer that proves the claim is misnamed — move the git/CLI driving assertions to an `.infra.test.ts` and keep only pure `chunkErrors`/`renderLensInput` assertions in the logic file.
+
+DEFER severity=LOW — §5.3 "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — backlog task-410 "Tests first (red as failing assertions through the pre-commit related run)" — the material records the claim but no failing run (no red output, no failing assertion names) for part (b) or the fix round, so "demonstrably fails" is asserted rather than shown — paste the red run output into the task NOTES for each part before the fix commits.
+
+MET — §5.2 "| `*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — src/tests/backlog/rule-lists.logic.test.ts "it('a diff too large for one input becomes chunks: every changed path in exactly one chunk, chunk texts joined are the diff, every input within the bound, each stamped chunk c of m with its paths'" — the new pure derivation (splitDiff/buildLensInputs chunking) is exercised with its refusal case (one file over the room) in the mandated logic layer.
+
+MET — §6.1 "All server-side error logging MUST use `logError()` from `src/lib/logger.ts`" — scripts/analysis/rule-lists.mjs "const room = (msg, size) => Object.assign(new Error(msg), { room: true, size });" — the added tool and hook code raises Errors and uses `die(...)`; no bare `console.error` is added and neither file is an API route or `src/lib` module.
+
+REJECT — §4.1 to §4.4 — unprotected admin routes, raw SQL, client-side auth, ad-hoc response envelopes — no file in the diff is under `src/app/api/`, no `use client` component and no SQL statement is touched, so section 4 has no subject in this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 23   Unmet: 1 blocking (HIGH), 4 deferred (1 MED, 3 LOW)
+
+---
+⏱  73637ms (73.6s)
+📊 Tokens — total: 50075, input: 35196, output: 14879, reasoning: 13619

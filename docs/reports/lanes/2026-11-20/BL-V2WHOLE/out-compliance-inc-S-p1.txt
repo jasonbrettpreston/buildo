@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:03.432Z file_sha256=475b1a28b7811ca98043936d0c45d2211ad68b33bd98080f2edc69efef1794cd prompt_sha256=a32c154fbe02e32ab7840b45fc2950ed4e6c3c7b9fe562479a0d0657bf5bec63
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — inc-S Built state (scope of the pasted list) "The search pages are built on mobile (search page, choose-your-lot map page, semi question page)" — scripts/analysis/rule-lists.mjs:6 "//   lens-input [--list id] --material f --out prefix [--template f] [--max n]" — no changed path in this chunk is a search page, a landing page, the lookup/resolver, the semi question page or the report hand-off, so a PASS against this list cannot prove the changed chunking and close-check behaviour satisfies any governing clause — the lists that resolve for scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs and docs/specs/00-architecture were not pasted ("no pasted context provided"); paste them and rerun this chunk.
+
+DEFER severity=LOW — operator ruling quoted only inside the material, not in the pasted context: "[material only, not pasted] Item 4 as put to him: \"Keep the split for code review, error paths, UX and security\"" — scripts/analysis/rule-lists.mjs:489 "const list = id ? table.lists[id] : null; // no --list: a non-compliance lens template, the chunks alone (V2.WHOLE)" — only item 4's split is visible in the diff; items 1, 2, 3 and 5 of the quoted "1-5 y" ruling are not pasted, so their satisfaction cannot be judged here — paste the 2026-11-20 MORNING-DECISIONS entry into the run's context and rerun.
+
+MET — inc-S A.1 to G.6 element table (65 clauses) — paths: ["backlog/tasks/task-410 ...", "docs/reports/generated/rule-lists-by-kind.md", "docs/specs/00-architecture/08_agents.md", "docs/specs/00-architecture/137_mcqueue.md", "scripts/analysis/backlog-lane.mjs", "scripts/analysis/rule-lists.mjs", "scripts/hooks/check-lane-close.mjs", "src/tests/backlog/backlog-lane.logic.test.ts"] — none of the changed files builds, serves or stores any listed element, so no recorded status (BUILT, NOT BUILT, BUILT-NO-DATA, NOT-BOUND, etc.) is contradicted by this chunk.
+
+REJECT — inc-S, no clause covers spec files — the diff adds dated notes to docs/specs/00-architecture/08_agents.md and 137_mcqueue.md, the specs that govern reviewers, so it could be read as editing the rules to fit the build — not a real issue against this list: no pasted inc-S clause governs those files and the added text states "prior text kept" (docs/specs/00-architecture/08_agents.md:229), so nothing pasted is contradicted.
+
+VERDICT: PASS on compliance with the pasted clauses (vacuous: the pasted list binds no changed path; see the two DEFER lines before relying on it)
+Clauses checked: 65   Unmet: 0
+
+---
+⏱  30571ms (30.6s)
+📊 Tokens — total: 35557, input: 29770, output: 5787, reasoning: 5089

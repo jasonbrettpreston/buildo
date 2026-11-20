@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:03.258Z file_sha256=fababbc8d8aa139ffa16d97c394f4c50b8508a57707346f88ca75d47e80f3879 prompt_sha256=6e927f128dfcbe4f8edf81e3242cc058f1cccdaf5c8dbf3b83757adfaa6fc59d
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-eng-all-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — operator ruling item 3, "Exempt generated snapshots from review material" (the 2026-11-20 note quoting the operator's "1-5 y") — backlog/tasks/task-410 - V2.WHOLE-...md "Item 3 as put to him: "Exempt generated snapshots from review material": ... NOT landed in the table: widening exempt in this lane is refused by the new base-table rule (F7), halted for the orchestrator." — the ruling is not implemented: scripts/analysis/rule-lists.json is unchanged and only the ITEM 3 test's tableEdit adds src/golden/**/*.web.json, so generated snapshots are still sent to the reviewer — have the orchestrator land the exempt globs in the range-base table (or record the operator's reversal) and cite it in the lane report
+
+DEFER severity=MED — card acceptance, "task-390's whole diff run through it for real, the call count reported" — backlog/tasks/task-410 - V2.WHOLE-...md "Real split runs (inputs only): see docs/reports/lanes/2026-11-20/BL-V2WHOLE/REPORT.md" — the acceptance requires the real review run and the call count, but the note says inputs only, so the call count is not shown by this change — run task-390's diff through the review tool and report the measured call count in the lane report
+
+DEFER severity=LOW — docs/specs/00_engineering_standards.md 2.3, "Do NOT use the non-null assertion operator (!) unless the value's existence is mathematically guaranteed by a prior validation step. If using !, you must document why in an inline comment." — src/tests/backlog/rule-lists.logic.test.ts "const m = st[0]!.chunks;" — non-null assertions on array indexes (also st[0]!.parts, l.text[0]!) have no prior validation and no inline comment — add a guard or the required inline comment
+
+DEFER severity=LOW — card part (a), "fix the four templates' line 32 as lens-compliance.md was fixed" — backlog/tasks/task-410 - V2.WHOLE-...md "part (a) the four templates carry {{PLAN}} once each (lens-code-review/error-paths/ux/security.md line 34): DONE by task-406, not redone." — compliance rests on a note, cannot see the four templates fixed in this diff, so part (a) is not shown here — cite task-406's commit that proves {{PLAN}} appears once in each template, or land the edit here
+
+MET — card (b) "the diff is split at FILE boundaries into chunks by the tool ... stamped with chunk i of m and its path list" — scripts/analysis/rule-lists.mjs splitDiff, renderLensInput, buildLensInputs — implemented and test-covered
+
+MET — card (c) "the close check recomputes the changed paths ... and refuses when the union of the chunks' paths is not that list" — scripts/hooks/check-lane-close.mjs chunkErrors — implemented and test-covered
+
+MET — card (d) "the brief sentence is updated to match" — scripts/analysis/backlog-lane.mjs layout — the git diff command, chunk naming and one-file refusal are in the brief
+
+MET — operator item 4 "Keep the split for code review, error paths, UX and security" — scripts/analysis/rule-lists.mjs (no --list mode) and scripts/hooks/check-lane-close.mjs (out-<lens>-pN) — satisfied
+
+MET — docs/specs/00_engineering_standards.md 2.1 "you MUST include tests for error paths and silent failures" — src/tests/backlog/check-lane-close.logic.test.ts planted-defect tests with passing controls — present
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 4
+
+---
+⏱  92685ms (92.7s)
+📊 Tokens — total: 55986, input: 34607, output: 21379, reasoning: 20493

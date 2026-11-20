@@ -1,0 +1,27 @@
+Superseded by the fix round re-run (2026-11-20), removed in the same commit as the new outputs:
+DIFF.patch
+in-out-compliance-agents-s5-1to3.txt
+in-out-compliance-agents-s7-s11.txt
+in-out-compliance-eng-all.txt
+in-out-compliance-five-words.txt
+in-out-compliance-inc-S.txt
+in-out-compliance-ms-S.txt
+in-out-compliance-orchestrator-doc17.txt
+in-out-compliance-plan-protocol.txt
+in-out-compliance-queue-137.txt
+out-code-review.txt
+out-compliance-agents-s5-1to3.txt
+out-compliance-agents-s7-s11.txt
+out-compliance-eng-all.txt
+out-compliance-five-words.txt
+out-compliance-inc-S.txt
+out-compliance-ms-S.txt
+out-compliance-orchestrator-doc17.txt
+out-compliance-plan-protocol.txt
+out-compliance-queue-137.txt
+out-error-paths.txt
+real-cfgbounds.txt
+real-pagetable.txt
+real-v2list.txt
+real-v2whole.txt
+selfproof.txt

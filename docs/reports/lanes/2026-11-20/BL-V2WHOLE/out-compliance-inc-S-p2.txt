@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:03.431Z file_sha256=deda8297f5d11eeeafb917c3eceae4a3ca7a64aea56649ba0d40c0c683c0abf4 prompt_sha256=81c62f48c8a511b7c27a6f9f4a605ceee67bd1d2dbdc68d4f49b6939a2fe3fe7
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — doc-2 (whole file) "title: Increment S requirements" — src/tests/backlog/check-lane-close.logic.test.ts:1 "import { describe, expect, it } from 'vitest';" — no clause in the pasted Increment S spec (built state, A.1 to G.6, both status tables) names the two changed test files or the V2.WHOLE lane-close/chunk behaviour they exercise, so this chunk satisfies no clause and leaves none unmet — confirm the spec that governs the review-tooling change is in context, it is not pasted here and cannot be judged.
+
+DEFER severity=LOW — doc-2 "counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}"" — src/tests/backlog/rule-lists.logic.test.ts:494 "// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries" — the change adds chunk-splitting and whole-change proof behaviour no pasted clause or ruling authorises, but doc-2 is a search-page built-state spec and does not speak to review tooling, so this is out of scope rather than a violated clause — if a task-410 card or operator ruling governs V2.WHOLE, paste it so the chunking rules (file boundaries, one-file-over-room refusal, stamp fields) can be judged.
+
+REJECT — doc-2 "Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map" — accused of not implementing these NOT BUILT elements — the line is a built-state description, not an instruction to build, and chunk 2 of 2 is test files only (chunk 1 is not pasted).
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 0   Unmet: 0
+
+---
+⏱  15710ms (15.7s)
+📊 Tokens — total: 19583, input: 16789, output: 2794, reasoning: 2364

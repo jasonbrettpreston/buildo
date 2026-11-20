@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:03.311Z file_sha256=8f94f00a264682598ba0bd94808a166ba4f888fb29efa0f29354ebf6805446ff prompt_sha256=68c6e68245bfdecbb205a53d71828544a6ca81c6c2a23a3ed5ceb5d4f952fcd3
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
+
+BUG severity=MED — doc-17 preamble "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — docs/reports/generated/rule-lists-by-kind.md "| orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |" — the regenerated page keeps doc-17 itself as a whole-file governing rule list, and the lens-input this diff edits renders every list under the head "Judge the material under review against the rules in this part" (scripts/analysis/rule-lists.mjs:309), so the readings do feed reviews as rules, which is the clause's one prohibition, and the page and the tool were both re-stamped in this change — remove orchestrator-doc17 from the governing lists (or route it to a context-only bucket never framed as rules) and regenerate docs/reports/generated/rule-lists-by-kind.md
+
+DEFER severity=MED — doc-17 "The operator's rulings are the decisions." — backlog/tasks/task-410 - V2.WHOLE-...md NOTES "item 3 as put to him: \"Exempt generated snapshots from review material\" ... NOT landed in the table: widening exempt in this lane is refused by the new base-table rule (F7), halted for the orchestrator" — the material records an operator ruling on item 3 that the diff does not carry out (no exempt entries land), and the new check-lane-close.mjs refusal "a lane may not widen what the review need not cover" (scripts/hooks/check-lane-close.mjs:352) makes the ruled change unlandable in the lane that recorded it, while the ruling's own words are not in the pasted context, so compliance cannot be shown — paste the MORNING-DECISIONS entry and land the exempt entries the ruling names (or record the reversal), do not leave a ruled item halted
+
+DEFER severity=LOW — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling" — docs/specs/00-architecture/08_agents.md:230 "+Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOLE; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry \"2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)\": \"1-5 y\", item 4 as put to him: \"Keep the split for code review, error paths, UX and security\")" — the spec text now asserts governing behaviour from a bare "1-5 y" answer whose question and source entry are not pasted and whose register status doc-17 denies, so a later reviewer cannot check the words — quote the ruling's own sentence (or question plus answer) with its line number in the note
+
+MET — RR-0111 "Permit step conversion stays frozen (Spec 137 rule 11)" — docs/specs/00-architecture/137_mcqueue.md:134 — the added note governs only the close check and the chunk stamps, permit step conversion is untouched
+
+MET — RR-0002 "lane tooling first; independent agent reviews" — scripts/hooks/check-lane-close.mjs:22 — "`Grounder: <name>` and `Lane: <name>`: the grounder is not the lane" is kept unchanged by this diff, so the independent-review requirement is not weakened
+
+REJECT — RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record)" — shipping new lane-tooling infrastructure during the freeze — the entry is a register memory record, and doc-17 states register entries are not the operator's words as a ruling, so it does not bind this change
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 1
+
+---
+⏱  42653ms (42.7s)
+📊 Tokens — total: 43026, input: 34523, output: 8503, reasoning: 7581

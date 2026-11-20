@@ -1,22 +1,26 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T19:23:02.628Z file_sha256=ece9cbff40424632cb9b5901e02958761b1c9b8301ee6e62ef2c374b24978762 prompt_sha256=07ed86c8178180112cd80a47f926a7ce600a2b0176cb0af5a27cb6492598332f
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:03.352Z file_sha256=3d5d9979c61a98cdf2649a89c5d92b16c1eef9296ef89d27068a6169ddf8794c prompt_sha256=1d183fde3b2a582f820ad08f23b968938b31fc05a140efa0d621c22d94f35020
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-five-words.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — five words "**five words**: R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates." — backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md:+46 "PLAN task-410 (V2.WHOLE). Rule: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1; PLAN-PROTOCOL.md:3 simple, no scope creep. Principles served: standardized, understandable, simple." — "simple" is outside the closed five words and no Gate V PASS/FAIL is cited for the two words that are named, so the self-assessment stands in for the gate verdict the clause requires — drop "simple" (or replace it with one of the five) and cite gate V's PASS/FAIL per word from the gate's own output, not from the plan.
+DEFER severity=LOW — five words "STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates" — backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md:46 "Principles served: standardized, understandable, simple." — the card claims a principle ("simple") that is not one of the closed five words and leaves OBSERVABLE, SCALABLE and ACCURATE unstated, so the card cannot be scored against gate V — restate the sentence in the five words and name the mapped gate that passes each, or drop the claim.
 
-MET — RE-FREEZE #N "A field is added or deleted only by one." — diff path list "paths: [\"backlog/tasks/task-410 ...\",\"scripts/analysis/backlog-lane.mjs\",\"scripts/analysis/rule-lists.mjs\",\"scripts/hooks/check-lane-close.mjs\",\"src/tests/backlog/backlog-lane.logic.test.ts\",\"src/tests/backlog/check-lane-close.logic.test.ts\",\"src/tests/backlog/rule-lists.logic.test.ts\"]" — neither `scripts/steps/_schema/step.schema.json` nor `template-freeze.json` is touched, so the added stamp tokens ("chunk c of m", `paths:`) and the extra `parseLensInput` key are lens-input grammar, not frozen step vocabulary.
+DEFER severity=NIT — check/hook "a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook" — docs/specs/00-architecture/08_agents.md:231 "This is more than presence and form: it recomputes text, and it is still a check of what was reviewed, not of how well" — the new spec sentence classifies a commit-msg hook recompute as a "check", the term the Glossary reserves for a step-validate invariant or gate token, so the reader cannot place it in the defined enforcement kinds — write "a hook that recomputes text" so the kind stays unambiguous.
 
-MET — #NN "Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates." — the hand-written parts of the card cite file:line (`scripts/deepseek-review.js:35`, `check-lane-close.mjs:159`) and DOD item numbers, no `#NN` invariant is cited.
+MET — five words "R-BA gate V (in `scripts/analysis/step-validate.mjs`)" — scripts/analysis/step-validate.mjs (unchanged, absent from the diff) — gate V's implementation and mapping are not touched by this change, so the five-word gate the list defines is neither moved nor renamed here.
 
-MET — lock / lock-db / check / hook "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/backlog/check-lane-close.logic.test.ts:+347 "describe('close check: the review material is the whole change (V2.WHOLE)', () => {" — the new assertions are `.logic.test.ts` files under `src/tests/`, the npm-test lock kind, labelled like the pre-existing `V2.LIST`/`V2.LAYOUT` lane rules.
+MET — five words, list integrity — docs/reports/generated/rule-lists-by-kind.md:98 "| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |" — the generated page keeps this very list whole in one part (size unchanged), so the list this run judges is the same text.
 
-REJECT — Gate A … K, V "Lettered R-BA gates (A…K, plus V for the five words), implemented in `scripts/analysis/gates/` or in `scripts/analysis/step-validate.mjs`" — accused of adding an ungated lettered gate or a scorecard gate — the change implements lens-input chunking and the close check only, and neither `scripts/analysis/gates/` nor `step-validate.mjs` is in the diff path list.
+MET — check/hook — scripts/hooks/check-lane-close.mjs:69 "the chunk proof for one output family" — the added enforcement is written into the commit-msg hook, the kind the Glossary names, and is not presented as a step-validate check.
 
-REJECT — SCORECARD-G0 … SCORECARD-G9 "Spec 123 scorecard gates G0–G9 (G7 test adequacy, G8 differential); rule ids `G0`…`G9` carry these aliases." — accused of asserting scorecard gates for a step — no step is converted here and no `G0`…`G9` alias is cited in the card or the tests.
+MET — #NN "Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates" — backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md:46 "Rule: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1" — no "#NN" step-validate invariant number is cited by the plan or the notes, so the existence clause is not engaged.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 28   Unmet: 1
+REJECT — operator ruling in the card "item 3 as put to him: \"Exempt generated snapshots from review material\"" (with the note "NOT landed in the table: widening exempt in this lane is refused by the new base-table rule (F7), halted for the orchestrator") — the change leaves generated snapshots in the material — that ruling is not a clause of the pasted five-words list (which is the Glossary only), the card itself records it as escalated, and the exempt rows live in a table this chunk does not carry.
+
+REJECT — lock "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — the new tests are titled "close check: the review material is the whole change (V2.WHOLE)" and name a task label, not a rule id — the Glossary defines what a lock is, it does not require every new test to name a rule id, and whether these tests are declared locks is a rule-map question not pasted in this run.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
 
 ---
-⏱  80870ms (80.9s)
-📊 Tokens — total: 31482, input: 21981, output: 9501, reasoning: 8631
+⏱  150895ms (150.9s)
+📊 Tokens — total: 63604, input: 34530, output: 29074, reasoning: 28180

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:03.209Z file_sha256=7b811b3c823da8edb3c141fb1ef077b6f29f6aada1f27fc8f54eea0e19945e4e prompt_sha256=446e92ad36e920838e282d48259202389da61d862806453398ee63be0c0ec8eb
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-queue-137-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-410 dated note "when a chunk or an input was edited" — scripts/hooks/check-lane-close.mjs:224 "if (!p || p.id !== 'none' || !p.ok || p.listPart.trim() !== '') errors.push(...)" — a split code-review, error-paths, ux or security input (id none) is never regenerated and compared the way compliance inputs are, so an in-place edit of its head line (line 2, the instruction the reviewer reads) plus a re-run review passes the close — add the same `renderLensInput({...}) !== input` (or prompt_sha256) check to the split-lens branch as the compliance branch has.
+
+BUG severity=HIGH — task-410 dated note "when the closing commit itself stages a path outside the records" — scripts/hooks/check-lane-close.mjs:356 "const late = laneBuild ? staged.filter((p) => !matchesAny(exempt, p) && !p.startsWith('docs/reports/') && !p.startsWith('backlog/')) : [];" — every docs/reports/ and backlog/ path is treated as a record, so a non-exempt generated report (docs/reports/generated/rule-lists-by-kind.md, a file this very change touches) or another task's row staged only in the closing commit is not "late", is in no chunk because expectedPaths is the range base..HEAD only, and was never reviewed — restrict the allowlist to the moved task's own row (backlog/tasks/<id> ...), docs/reports/lanes/<date>/<lane>/, and the exempt paths.
+
+DEFER severity=MED — 137_mcqueue.md dated note "1-5 y" (item 3 approved) — "backlog/tasks/task-410 ...md" "item 3 as put to him: \"Exempt generated snapshots from review material\" ... NOT landed in the table: widening exempt in this lane is refused by the new base-table rule (F7), halted for the orchestrator." — an operator-approved item (as the material records it under the pasted "1-5 y") is not implemented, the exemption is exercised only by a test's tableEdit, not in rule-lists.json — land the exemption in the base table, or record on the row that item 3 moved to a named task.
+
+MET — task-410 dated note "the changed files of the task range are not exactly the files in the review chunks" — scripts/hooks/check-lane-close.mjs:150 "if (missing.length) e.push(...)" / "if (extra.length) e.push(...)" — the union of chunk diff paths is compared to expectedPaths both directions.
+
+MET — task-410 dated note "when a chunk ... was edited" (material text) — scripts/hooks/check-lane-close.mjs:143 "if (want === null || its[0].p.material !== want)" — each chunk's text is compared to what git prints for its paths.
+
+MET — task-410 dated note "when a split or unsplit code-review ... output is not bound to the whole-range diff" — scripts/hooks/check-lane-close.mjs:230 "const whole = expected.length && i.diffOf ? i.diffOf(expected) : null;" — unsplit outputs are bound by file_sha256 to the recomputed whole-range diff; split outputs by the chunk union.
+
+MET — Rule 3 "The status line changes in the same commit as the work" — task-410 file frontmatter "status: RUNNING" left unchanged with "Task stays RUNNING, grounder owed" — no status move is made while the work is unfinished.
+
+MET — Rule 10 "A ruling enters a row as a verbatim dated note" — docs/specs/00-architecture/137_mcqueue.md "Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOLE ... "1-5 y" ...)" — the ruling is recorded with date, row, queue, lane and the verbatim words, prior text kept.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 2
+
+---
+⏱  155244ms (155.2s)
+📊 Tokens — total: 67376, input: 35300, output: 32076, reasoning: 31153

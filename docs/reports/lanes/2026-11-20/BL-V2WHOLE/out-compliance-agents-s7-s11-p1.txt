@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:03.148Z file_sha256=33ec23f25462e34484c038aa0aa58782eb1035230bbb13941672e68fac7509c5 prompt_sha256=d6a15abac24da05586fcf0588041fdd87b0152f61022fdcbec02e0e6d092893b
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-agents-s7-s11-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md 7.4 dated note "run with `scripts/deepseek-review.js review <file> --template <lens> --context <pasted context>`" — scripts/analysis/rule-lists.mjs (new `lensPromptHash`) "context = '(no pasted context provided)'" and the call site scripts/hooks/check-lane-close.mjs "reviewErrors(n, textOf(n) ?? '', 'lens-compliance.md', input, { templateText: readRepo('.claude/review-templates/lens-compliance.md') })" — the new prompt_sha256 proof is computed with the no-context placeholder, so the compliance run rule 4 prescribes (with the pasted context) is refused at close, and the brief's compliance command still carries no --context at all, so the two sides contradict each other — pass the committed context text into lensPromptHash (or accept both hashes and record which) and put --context in the brief's compliance command.
+
+BUG severity=HIGH — 08_agents.md 7.4 "Run the set at plan AND output for WF1/WF2" — scripts/analysis/backlog-lane.mjs (layout) "the code-review, error-paths, ux and security lenses ... use the same tool with their own template and no --list ... and are filed out-<lens>-pN.txt with their in-<same name>" against rule-lists.mjs "suffix: files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`" and check-lane-close.mjs "the REVIEW header file_sha256 is not the sha256 of the recomputed diff of the whole task range" — when the diff fits, the no-list run writes in-out-<lens>.txt (no -pN) and its output cannot be named out-<lens>-p1.txt (no in-out-<lens>-p1.txt exists) nor pass as an unsplit out-<lens>.txt (its file_sha256 is the stamped input, not the raw diff), so that lens can never close; the same brief also still says the close needs "an out-<lens>.txt for every other output lens" while the check refuses both forms together — make the brief name exactly one form per lens and let the unsplit binding accept the lens-input file the brief tells the lane to produce.
+
+BUG severity=MED — 08_agents.md 7.2 "Ground-truth gates Compliance (§5.1/§5.2): validate the spec against reality before checking code against the spec" — docs/specs/00-architecture/08_agents.md new dated note "when a compliance output's prompt_sha256 is not the hash of its template, input and context" and docs/specs/00-architecture/137_mcqueue.md "when a split or unsplit code-review, error-paths, ux or security output is not bound to the whole-range diff" — the spec text asserts two things the code does not do (no context is ever hashed; each split output is bound to the diff of its own chunk paths, not the whole-range diff), so the spec was written ahead of the behaviour it describes — either implement the context hash and word 137 as "bound to the diff of its own chunk's paths", or reword 08 to "template and input".
+
+DEFER severity=MED — 08_agents.md 11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — backlog/tasks/task-410 notes "Real split runs (inputs only): see docs/reports/lanes/2026-11-20/BL-V2WHOLE/REPORT.md" — the card's acceptance "task-390's whole diff run through it for real, the call count reported" and the plan's "exact number to be measured and reported" have no run and no call count anywhere in this change — run task-390's diff through lens-input and paste the measured call count into the task notes.
+
+DEFER severity=LOW — 08_agents.md 7.6 "DEFER → `review_followups.md` with reasons" — task-410 notes "NOT landed in the table: widening exempt in this lane is refused by the new base-table rule (F7), halted for the orchestrator" — the operator-ruled item 3 is neither landed nor filed as a deferred item in a review_followups record — add the one-line deferred entry with these reasons so it does not have to be rediscovered.
+
+MET — 08_agents.md 7.4 "one Claude grounder adjudicates every finding as round 2" — backlog/tasks/task-410 notes "Grounder owed; task stays RUNNING." — the lane leaves the close open until a separate grounder rules.
+
+MET — 08_agents.md 7.10 dated note 2026-11-19 (RR-0232) "the task's references point at that repo copy" — backlog/tasks/task-410 front matter "references: - docs/reports/lanes/2026-11-20/BL-V2WHOLE/REPORT.md" — the reference resolves to the in-repo lane report path, not the scratch tree.
+
+MET — 08_agents.md 7.1 "Plan review ... Output review points them at the diff" — scripts/hooks/check-lane-close.mjs "no plan-stage lens output (plan-<lens>.txt) in ${dirNote}" — both altitudes stay required after the change.
+
+MET — 08_agents.md 11.1 "execute what's executable" (planted-defect half of the card's acceptance) — src/tests/backlog/check-lane-close.logic.test.ts "PLANTED DEFECT: a chunk set missing one changed file is refused, naming the file" with "control: ... closes" — the two required planted defects carry passing controls as executed tests.
+
+REJECT — 08_agents.md 7.9 "Substrate economics" — the change multiplies review calls about three times (80 to 120 per phase) — the card states that cost plainly ("Cost stated plainly: about three times today's review calls") for operator decision, and the calls are DeepSeek passes, so no pasted budgeting clause is broken.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 5
+
+---
+⏱  89522ms (89.5s)
+📊 Tokens — total: 54030, input: 35386, output: 18644, reasoning: 17254

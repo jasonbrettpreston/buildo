@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:03.202Z file_sha256=afff8a01a549089dc8018fd9c2a0baf02476bb0773bee803fbf68ba11e93404d prompt_sha256=5002416cc85324a72969719b1b0ebccd53fa25583c561a86067d6c22e8f65955
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-queue-137-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — operator ruling 2026-11-20 "1-5 y", item 3 (quoted in the change's own record, not in the pasted context) "Item 3 as put to him: \"Exempt generated snapshots from review material\" ... NOT landed in the table: widening exempt in this lane is refused by the new base-table rule (F7), halted for the orchestrator." — scripts/hooks/check-lane-close.mjs "if (JSON.stringify(baseTable.exempt ?? []) !== JSON.stringify(table.exempt ?? [])) errors.push(`the exempt paths of this branch's table ...`)" — the one ruling item this change was given and did not land is now unlandable from a lane, because the change also installs a guard that refuses any branch whose exempt list differs from the range base's, so an approved item ends the change unmet and blocked — land the exempt rows (the golden folders with their validating checks named in exempt_why) on the board branch before this guard merges, or carry a dated operator deferral of item 3 in the task note.
+
+DEFER severity=MED — operator ruling 2026-11-20 "1-5 y" (quoted in the change's record) "\"1-5 y\", item 4 as put to him: \"Keep the split for code review, error paths, UX and security\"" — backlog/tasks/task-410 "..." "Item 3 as put to him: ... halted for the orchestrator." — the ruling is a batch of five items and the change restates only items 3 and 4, so a reviewer cannot tell which five obligations the diff must satisfy and two of them may be silently unbuilt — quote items 1, 2 and 5 verbatim in the note beside items 3 and 4, each with the line that meets it.
+
+DEFER severity=MED — §2 note "Spec 08 §11.8 (MCINC-7 and MCINC-8) and §11.9 (TKT) govern how lanes work on these rows. This page does not restate them." — docs/specs/00-architecture/137_mcqueue.md "the commit that sets BUILT or DONE on a lane build or fix task is also refused (scripts/hooks/check-lane-close.mjs) when the changed files of the task range are not exactly the files in the review chunks" — the change writes the lane close mechanics into this page while the page says it does not restate lane rules, so one rule now has two governing copies (here and 08 §5.3) that can drift — keep the wording in the 08 §5.3 dated note and leave 137 a pointer to it with the operator's words.
+
+DEFER severity=LOW — §2 homes table (no row names a home for lane review artifacts) "| ID ledger | LOCAL `~/Builds-scratch/ids/` | one folder per claimed number |" — scripts/hooks/check-lane-close.mjs "const p = f.split('/'); return p.length === 6 && p[4] === laneName;" — the change makes docs/reports/lanes/<date>/<lane>/ the machine-read store for inputs, outputs and GROUNDER.md and exempts it from the review material, yet no home in §2 authorises that location or that exemption — add the lane-report home (and its exempt status) to §2, or record the operator's word for it there.
+
+REJECT — §3 Rule 1 "Every row has ONE status line, REPLACED when the status changes, never appended" — accused of violating it by the eight dated Implementation Notes appended to task-410 — those lines are record prose, not a status line, and the file's single status (frontmatter RUNNING) is not rewritten or duplicated.
+
+REJECT — §3 word list (closed, nine words) — accused of extending the vocabulary via the new close-check outcomes — check-lane-close.mjs only reads RUNNING, BUILT and DONE, all three of which are in the pasted list and used in their listed senses.
+
+MET — §3 Rule 1 "Every row has ONE status line, REPLACED when the status changes, never appended" — backlog/tasks/task-410 "status: RUNNING" — the change writes no queue row's status line, and the task's status is left at one value.
+
+MET — §2 "Spec pages carry their own status in the page header (`Status: DRAFT`)" — docs/specs/00-architecture/08_agents.md "Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE ..." — both spec pages keep their headers and gain a dated note with the prior text kept, not a rewritten page.
+
+MET — §2 "Line numbers in this page are dated by the commit they were read at (`827ea5acc`) and are a hint; the section or note name is the pointer." — docs/specs/00-architecture/137_mcqueue.md "(scripts/hooks/check-lane-close.mjs)" — the new note points at the tool path and the rule names, no line numbers, so the hint rule is respected.
+
+MET — §2 "The queue rows it names stay in their queue files." — the change touches no .cursor queue file, the task stays at backlog/tasks/task-410.
+
+MET — §2 generated page consistency (whole-file size for queue-137 must match the file it lists) — docs/reports/generated/rule-lists-by-kind.md "| total | 9 lists | | 176,500 | 9 |" — the deltas (queue-137 +947, agents-s5-1to3 +1,862, totals +2,809 and +947) equal the two dated notes added, so the page was regenerated rather than hand-edited stale.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 1
+
+---
+⏱  109408ms (109.4s)
+📊 Tokens — total: 57836, input: 35312, output: 22524, reasoning: 21228

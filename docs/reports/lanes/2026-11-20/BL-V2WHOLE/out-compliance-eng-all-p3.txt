@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:03.258Z file_sha256=633be80c9bdc12ec7300b28e023a2be9182bd4f5eb8feb6ea3f613c8a76da0a0 prompt_sha256=75c76e7b38bfa11def523adbe1e981f572215f4c6b2576e0349156de10c5623c
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-eng-all-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-410 card, Acceptance clause: "task-390's whole diff run through it for real, the call count reported" — backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md:59 "Real split runs (inputs only): see docs/reports/lanes/2026-11-20/BL-V2WHOLE/REPORT.md." — the card requires the whole of task-390's diff run through the split lens set with the cost reported ("exact number to be measured and reported", line 27); the only recorded run is inputs only, so the call count and the three-fold cost claim are unproven, the acceptance clause is unmet — run task-390's full diff through the split compliance and lens set, record the call count in REPORT.md and cite it, before any status move.
+
+DEFER severity=MED — operator ruling recorded in the same card: "1-5 y"; "Item 3 as put to him: \"Exempt generated snapshots from review material\"" — backlog/tasks/task-410 - V2.WHOLE-The-compliance-review-covers-the-whole-change-and-the-close-check-proves-it.md:69 "NOT landed in the table: widening exempt in this lane is refused by the new base-table rule (F7), halted for the orchestrator." against the card's own line 27 "NOT built without the operator's word: excluding generated files from the material (no rule exempts them)" — the operator has now given the word for item 3, so the governing description states a condition that no longer holds and the approved exemption is neither landed nor recorded as a halt in the description — amend the description to record item 3 approved and halted for the orchestrator, or land the exempt entries outside this lane.
+
+MET — 8.1 "Next.js App Router `route.ts` files may ONLY export HTTP handler functions" — scripts/hooks/check-lane-close.mjs:105 "export function chunkErrors({ label, items, expected, diffOf = () => null })" — the new export lands in a hook module; no route.ts is added or given a non-handler export.
+
+MET — 9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — scripts/analysis/rule-lists.mjs:31 "export const DIFF_ARGS = [...]" — the change edits existing .mjs analysis and hook tooling, adds no scripts/*.js pipeline script, no `new Pool`, no new bare console.error path.
+
+MET — 9.6 "Pipeline metadata ... MUST be declared in `scripts/manifest.json` as the single source of truth" — scripts/analysis/backlog-lane.mjs:152 "const layout = ` REVIEW FILES GO IN ONE PLACE: ..." — no chain, script path or table read/write is added or removed, so no manifest entry or UI-registry consistency test is owed.
+
+MET — 10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — docs/specs/00-architecture/08_agents.md:231 "the infra freeze is lifted for it by name" (task-410 note) — the scripts/ edits belong to an Increment 1·B infra task with the freeze lifted, not a frontend WF, and no migrations/ or src/lib/ file is touched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 2
+
+---
+⏱  71531ms (71.5s)
+📊 Tokens — total: 50019, input: 35064, output: 14955, reasoning: 14187

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T20:10:03.151Z file_sha256=37283ed0661efb964a12f800a3d594854a61cc5bbbfe356fda197d645f41f454 prompt_sha256=494f7c2c6c0f13a7a089a04568fd042dba700bde58d21e8dac857e5572cefde6
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-agents-s7-s11-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 11.2 "After folding any review round, and BEFORE implementation: one grounder re-executes every claim in the fold + one cross-read adversary checks the folded decisions PAIRWISE and walks every checklist line for staleness" — backlog/tasks/task-410 (NOTES) "2026-11-20 fix round landed: f82b84339 (rule-lists.mjs), a92c11503 (check-lane-close.mjs), de431c6d7 (backlog-lane.mjs), 406bbb5af (dated notes in 08_agents.md and 137_mcqueue.md). ... Task stays RUNNING, grounder owed." — the F1-F7 fold was implemented in those commits before the grounder ran and no cross-read adversary pass is recorded, so fold-validation preceded-implementation is violated — run one grounder plus a named cross-read adversary over the F1-F7 fold (pairwise collisions, every plan line walked for staleness) and record GROUNDER.md before merge.
+
+BUG severity=MED — 11.2 "an expanded edit set kills every restated scope claim ('the three SET terms. Nothing else.' survived one fold past its own falsification)" — plan block "(c) check-lane-close.mjs: expected paths = git diff --name-only --no-renames merge-base..HEAD minus table exempt globs" against scripts/hooks/check-lane-close.mjs "exempt = baseTable.exempt ?? [];" — the fix round added F1 (qualified ref, empty-range refusal), F3 (prompt hash, unsplit-lens binding), F4 (late-stage only for lane build/fix) and F7 (exempt from the range-base table), none reflected in the plan's (c)/(d), so the restated mechanism is stale — update plan (c)/(d) to the folded behaviour or mark it superseded.
+
+BUG severity=MED — 11.3 "Red must land at the DESIGNED assertion; red-for-the-wrong-reason is a test defect found NOW" — src/tests/backlog/check-lane-close.logic.test.ts "it('PLANTED DEFECT: a whole diff passed off as material that is not a diff (no file headers) is refused', () => { refused(scenario({ ... split: { max: 100000, alter: () => 'MATERIAL UNDER REVIEW: a diff of one.ts\n' } }), /src\/one\.ts/, 16); })" — the regex matches the missing-path branch ("in no chunk") that any valid diff merely omitting src/one.ts also produces, so the lock is not red against "not a diff" — assert the not-a-diff/mismatch refusal text or rename the case to "a material with no readable paths leaves the file uncovered".
+
+DEFER severity=MED — 11.2 "one grounder re-executes every claim in the fold" — task-410 notes "Real split runs (inputs only): see docs/reports/lanes/2026-11-20/BL-V2WHOLE/REPORT.md" — the card's acceptance asks task-390's whole diff "run through it for real, the call count reported", but only input generation was exercised, so the call-count claim is not re-executed — have the grounder run the real split review on task-390's diff and record the call count before BUILT.
+
+DEFER severity=LOW — 11.4 "The failing tests — cases, fixtures, red/green expectations, invocation mode — are written INTO the plan" — plan "Tests first (red as failing assertions through the pre-commit related run): rule-lists.logic.test.ts (chunking, file over room, no-list mode, non-diff material still refused)" — fixtures (BIGDIFF, F5, TPL) and the per-case invocation mode are not written into the plan, so the plan panel cannot review them at plan altitude — add the fixture shapes and invocation per case to the plan block.
+
+MET — 11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new)" — src/tests/backlog/check-lane-close.logic.test.ts "it('control: a change too big for one input, split into chunks by lens-input, with every file in one chunk, closes'" and "PLANTED DEFECT: a chunk set missing one changed file is refused" — the chunk-coverage lock carries a passing control plus a planted-defect refusal.
+
+MET — 11.2 "a fold must be exercised in every execution mode the file has" — src/tests/backlog/rule-lists.logic.test.ts "no --list with a lens template (code-review, error-paths, ux, security) writes the same chunk inputs with an empty list part" — both lens-input modes (with --list and no --list) are exercised.
+
+MET — 11.4 "tests live in the plan" — plan "Tests first (red as failing assertions through the pre-commit related run)" — the three test files and their red/green expectations appear in the plan block.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 3
+
+---
+⏱  121247ms (121.2s)
+📊 Tokens — total: 60731, input: 35024, output: 25707, reasoning: 24579

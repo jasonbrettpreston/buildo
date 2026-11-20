@@ -1,13 +1,13 @@
-## cfgbounds: diff 156182 chars, 60 changed paths, largest files: docs/reference/logic-variables-registry.md 16020; src/tests/surfaces/surface-conformance.logic.test.ts 12110; backlog/tasks/task-395 - FIX.CONFIG-BOUNDS-Every-page-setting-carries-bounds-and-a-stated-failure-behaviour-Spec-128-Rule-3.md 11159
-compliance agents-s5-1to3: files 3, chunks 3, list parts 1, every changed path in exactly one chunk: true, largest input 63177 bytes
-compliance agents-s7-s11: files 3, chunks 3, list parts 1, every changed path in exactly one chunk: true, largest input 85922 bytes
-compliance queue-137: files 3, chunks 3, list parts 1, every changed path in exactly one chunk: true, largest input 86072 bytes
-compliance eng-all: files 3, chunks 3, list parts 1, every changed path in exactly one chunk: true, largest input 104694 bytes
-compliance orchestrator-doc17: files 3, chunks 3, list parts 1, every changed path in exactly one chunk: true, largest input 89989 bytes
-compliance five-words: files 3, chunks 3, list parts 1, every changed path in exactly one chunk: true, largest input 63779 bytes
-compliance plan-protocol: files 3, chunks 3, list parts 1, every changed path in exactly one chunk: true, largest input 65884 bytes
-compliance inc-S: files 3, chunks 3, list parts 1, every changed path in exactly one chunk: true, largest input 79330 bytes
-compliance ms-S: files 3, chunks 3, list parts 1, every changed path in exactly one chunk: true, largest input 60913 bytes
-lens code-review: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 110502 bytes
-lens error-paths: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 110502 bytes
-CALLS out phase (review-tool runs, the lists above plus the lenses above): 31
+## cfgbounds: diff 159902 chars, 60 changed paths, largest files: docs/reference/logic-variables-registry.md 16082; src/tests/surfaces/surface-conformance.logic.test.ts 12172; backlog/tasks/task-395 - FIX.CONFIG-BOUNDS-Every-page-setting-carries-bounds-and-a-stated-failure-behaviour-Spec-128-Rule-3.md 11221
+compliance agents-s5-1to3: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 113574 bytes
+compliance agents-s7-s11: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 113272 bytes
+compliance queue-137: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 114370 bytes
+compliance eng-all: files 3, chunks 3, list parts 1, every changed path in exactly one chunk: true, largest input 115657 bytes
+compliance orchestrator-doc17: files 3, chunks 3, list parts 1, every changed path in exactly one chunk: true, largest input 108781 bytes
+compliance five-words: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 112312 bytes
+compliance plan-protocol: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 114417 bytes
+compliance inc-S: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 109727 bytes
+compliance ms-S: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 114768 bytes
+lens code-review: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 112052 bytes
+lens error-paths: files 2, chunks 2, list parts 1, every changed path in exactly one chunk: true, largest input 112052 bytes
+CALLS out phase (review-tool runs, the lists above plus the lenses above): 24
