@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.429Z file_sha256=b663aadf5cdba540f668ef731c696f50ea88535f4d2109a8ee61804da81a9551 prompt_sha256=b201790012ee4d6bc3dfeeb300f8075fc0b381e044cb7a3aa7505ef23a2e83f4
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11317 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22550 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33836 chars, answer 0 chars, 45s
+BUG severity=HIGH — SRCH.LEGAL lock "Locks: `mobile/__tests__/parcelScreens.golden.test.ts` (MF-58 legal-line test) and the ten moved mobile goldens." — material NOTE line "NOTE: the other 8 mobile goldens and `mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json` move the same way (13 lines out, 13 in, the legal node relocated); loading.mobile.json and every web golden unchanged." — eight of the ten locked mobile goldens and `mobile_parcel_search.goldens.json` are satisfied only by a NOTE (2 of 10 fixtures are in the diff), which the walk treats as UNMET, and stale fixtures fail `npm run test` per Spec 98 §5 — put the remaining 8 `*.mobile.json` files and `mobile_parcel_search.goldens.json` in the change, no note standing in for them.
+
+DEFER severity=LOW — C3 b "C3 b: the legal line at the bottom as in v8 search.html:267-269" — mobile/__tests__/parcelScreens.golden.test.ts "// Dated 2026-11-20 (task-354; Mobile CI run 44741125636): where the reports-left line is drawn (SRCH.A6, ace05ccee; small-pages-v8 search.html:267-269)" now reads "it is the last block of the page, after every result block (v8 search.html:267-269)" — the same v8 line range is cited for the reports-left line and for the legal line, so the anchor for the move is unverifiable from here — re-cite the v8 lines actually showing the legal sentence at the bottom (or drop the citation) so the anchor is not doubled.
+
+MET — C1 "it is the last block of the search page, after the reports-left line, chips, notices and every result block" — mobile/src/components/surfaces/SearchBinding.tsx:232 — `legal(),` is moved out from after `...reportsLeft(s)` and appended after `...tail(s)` in `searchProps`.
+
+MET — C2 "still every state, one content key, text unchanged" — mobile/__tests__/parcelScreens.golden.test.ts:249 — `expect([k, ks.filter((x) => x === 'legal').length]).toEqual([k, 1]);` runs across every golden situation plus NAMED_CASES, and `content('search.legal')` is unchanged.
+
+MET — C3 "The reports-left line (SRCH.A6) stays right after the input." — mobile/src/components/surfaces/SearchBinding.tsx:235 — `...reportsLeft(s),` still sits immediately after `pill(s)`, and the test pins `expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'reports-left']);`.
+
+MET — C4 "The web search page already shows the sentence once, in the footer (MF-91), and is unchanged." — material NOTE line "loading.mobile.json and every web golden unchanged" plus no web file in the diff — no web surface or web golden is touched.
+
+MET — C5 "the MF-58 legal-line test" — mobile/__tests__/parcelScreens.golden.test.ts:250 — `expect([k, ks[ks.length - 1]]).toEqual([k, 'legal']);` replaces the old after-the-input assertion with last-child, once-per-state.
+
+REJECT — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)." — that moving ten prop-tree mobile goldens is excluded snapshot testing — the operator ruling in this same material names those ten goldens as the deliberate lock for this move, and the 2026-11-10 note in §4 states a render smoke and screen-behaviour test are not snapshots.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 1
+
+---
+⏱  50314ms (50.3s)
+📊 Tokens — total: 16791, input: 7061, output: 9730, reasoning: 8846

@@ -133,19 +133,6 @@
                 ]
               },
               {
-                "component": "Text",
-                "props": {
-                  "key": "legal",
-                  "testID": "parcel-search-legal",
-                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
-                },
-                "children": [
-                  {
-                    "content": "search.legal"
-                  }
-                ]
-              },
-              {
                 "component": "View",
                 "props": {
                   "key": "chips",
@@ -1303,6 +1290,19 @@
                 "children": [
                   {
                     "content": "list.refine"
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "legal",
+                  "testID": "parcel-search-legal",
+                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
+                },
+                "children": [
+                  {
+                    "content": "search.legal"
                   }
                 ]
               }

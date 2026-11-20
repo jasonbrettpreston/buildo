@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.470Z file_sha256=6c1b3bb614bff31cc9438fbad571c6b9e1729f77a4a05ea181148221a9ccfa29 prompt_sha256=3757f1ac4226257b0042997d32952faa60db47feecf597416f907a5760eec917
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-inc-1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11094 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23672 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 36109 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 48712 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 61488 chars, answer 0 chars, 75s
+BUG severity=HIGH — Locks: ten moved mobile goldens "Locks: `mobile/__tests__/parcelScreens.golden.test.ts` (MF-58 legal-line test) and the ten moved mobile goldens." — NOTE: "the other 8 mobile goldens and mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json move the same way" — Only empty.mobile.json and reports_left.mobile.json are in the diff; the other eight goldens are asserted in the NOTE, so the ten-golden lock is not satisfied by the material — Include the eight missing golden diffs and the aggregate fixture in the change.
+MET — last block, after reports-left, chips, notices, every result block — mobile/src/components/surfaces/SearchBinding.tsx:239 — "legal()," is the final child after "...tail(s),".
+MET — still every state — mobile/src/components/surfaces/SearchBinding.tsx:239 — legal() is called unconditionally in searchProps.
+MET — one content key — mobile/src/components/surfaces/SearchBinding.tsx:91 — legal() renders content('search.legal').
+MET — text unchanged — mobile/src/components/surfaces/SearchBinding.tsx:91 — no text value is edited, only the node position.
+MET — reports-left stays right after the input — mobile/src/components/surfaces/SearchBinding.tsx:234 — "...reportsLeft(s)," follows "pill(s),".
+MET — web search page unchanged — diff — no web file or web golden appears in the diff.
+MET — test file lock updated — mobile/__tests__/parcelScreens.golden.test.ts:250 — the new assertion requires "ks[ks.length - 1]" to be "legal".
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 1
+
+---
+⏱  86144ms (86.1s)
+📊 Tokens — total: 26848, input: 8400, output: 18448, reasoning: 18043

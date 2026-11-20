@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-regression.md model=deepseek-reasoner at=2026-11-20T15:27:32.336Z file_sha256=83cfe38addc815f1534c90aee03f87c1e6fc483f1a70e1f4b1626e3e092d8ee9 prompt_sha256=f436245f3def81796fb641a198cda18661271433e3c7a27311a336b0b7fc8f1c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/../PLAN.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10263 chars, answer 0 chars, 15s
+DEFER severity=MED — "the MF-58 legal-line test now expects the legal node to be the LAST child of the column in every golden and named case" — rewriting the MF-58 test to a last-child assertion can silently drop its existing pins (legal appears exactly once, className/testID/content key), leaving the phone without the pin the task does not name — keep the current once-only and node-identity assertions verbatim and add the last-child assertion rather than replacing the body.
+DEFER severity=MED — "Only the position of the legal node moves in each of the 11 mobile goldens (and their mobile copy mobile_parcel_search.goldens.json)" — this is a claim about a --write pass nobody has diffed yet, and a regeneration can absorb unrelated drift in other nodes of the same goldens — attach the git diff of the 11 goldens proving only the legal node block changed position and nothing else moved.
+DEFER severity=MED — "move `legal()` from after reportsLeft to the end of the column children (after tail)" — tail stops being the column's last child, so any `:last-child`, `:nth-last-child`, `+` or `~` rule keyed to the old last child silently changes tail's or legal's spacing/border, which surface-validate does not catch — grep the binding's style sheet for positional selectors on the column children before lock and state the result.
+DEFER severity=LOW — "then emit-mobile-surfaces.mjs --write (generated, never hand edited)" — the emitter regenerates all mobile surfaces, so an unrelated re-emission can move files outside this binding and be bundled into "generated" — confirm the diff touches only the search binding's emitted output.
+DEFER severity=LOW — "the web goldens do not move" — search-golden-capture --write runs over the web side too, so web goldens can churn from capture nondeterminism even with no web source change — require an empty `git diff` for web goldens and revert any web golden touched.
+DEFER severity=LOW — "the 2026-11-10 note's placement 'directly under the address input' is replaced by 'last block of the page' (owed by BL-MOBILECI finding F-2)" — "prior text kept" and "replaced" contradict each other, so the old dated note may be edited in place instead of superseded, erasing the pin that recorded the earlier ruling — leave the 2026-11-10 note text untouched and add M-246 as a new dated note that supersedes it.
+REJECT — "grep 'legal' in web binding gives only footer lines 64,68,131,136,143,248" — a legal sentence rendered twice on web after regeneration would be a regression — the web source is not touched and the only legal nodes are the footer ones, so nothing on web can move.
+
+VERDICT: PASS on regression safety
+Lines walked: Finding line (web already once at footer), Change 1 (golden test pin), Change 2 (legal() move + doc comment), Change 3 (golden + emitter regeneration), Change 4 (Spec 100 dated note), Not changed line, Checks line   Unintended: 0
+
+---
+⏱  18544ms (18.5s)
+📊 Tokens — total: 5315, input: 2118, output: 3197, reasoning: 2502

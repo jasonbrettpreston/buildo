@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:27:32.351Z file_sha256=5374d84fec595a3a263a5fb9103d38d723949b3f91b43a7e2911d92e3cca74c4 prompt_sha256=b3b7698c0420dabdaccbb2d21261c479510790451c9fca8824347d907f5834a7
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-mobile-99.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10666 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22312 chars, answer 0 chars, 30s
+BUG severity=HIGH — Spec 99 AMENDMENT 2026-09-15, §2 row ("the server owns section order, labels, formatting decisions and which lines render") — plan step 2 "move `legal()` from after reportsLeft to the end of the column children (after tail)" — the new block order is decided inside the client binding, so the client owns section order while the plan names no projection descriptor change — declare the legal block position in the surface projection descriptor (server side) and let the binding draw it, or obtain a Spec 99 amendment.
+BUG severity=MED — Spec 99 AMENDMENT 2026-09-15 ("Anything else computed on the client is a Spec 128 rule-2 violation needing a dated `deviations[]` row") — plan step 4 "Spec 100 dated note (M-246, prior text kept) recording the ruling" — no dated `deviations[]` row is added for the client-side ordering decision, only a Spec 100 doc note — add the dated deviations[] row in the same change as the Spec 100 note.
+DEFER severity=LOW — Spec 126 §0a principle 1 and 11b.2, Spec 100 §4 dated note, 08_agents.md §7 rules 3 and 4, PLAN-PROTOCOL.md:3 (not pasted) — plan line "Spec 126 section 0a principle 1 and 11b.2 (one binding per archetype, refs only); Spec 100 section 4 dated note 2026-11-10" — cannot see, so those four authorities cannot be judged — paste them for a full compliance check.
+MET — Spec 99 §1 "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern" — plan "Not changed: wording, content key, className, testID, any other block order, web." — no store, blob, bridge or router effect is added, so §1 does not gate this change.
+MET — Spec 99 §3 "Adding a field to the mobile app requires adding a row here." — plan step 2 "className, testID, content key unchanged" — no field is added or re-owned, so no §3.1 row is owed.
+MET — Spec 99 §2.1 "The current allowlist of sensitive-but-OK-in-MMKV items is empty." — plan "No migration/fallback code (app in development)." — no persisted field is added, so the Layer 4a allowlist is untouched.
+MET — operator ruling in the material "C3 b: legal line at the bottom as in v8 search.html:267-269" — plan step 2 "to the end of the column children (after tail)" — legal becomes the last block, matching the bottom placement.
+MET — operator ruling in the material "5. Do the legal-line move (389) now as a small code change" — plan "Change (phone only)" — the move is delivered as a phone-only code change with no scope creep into web.
+REJECT — Spec 99 §10 "All `mobile/src/store/*.ts` — modified in §9.3 / §9.5 followups, not here" — accused of editing files outside Spec 99's declared boundary lists — `mobile/src/components/surfaces/SearchBinding.tsx` and the goldens are not stores, layouts, onboarding screens or hooks, and §10 bounds Spec 99's own WFs, not task-389.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  44150ms (44.1s)
+📊 Tokens — total: 32651, input: 24038, output: 8613, reasoning: 7828

@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:27:32.314Z file_sha256=37c159b3a760f6a8623f571fee29caf458b42ae2c6b4ab57e991d56752fca804 prompt_sha256=7961d8473eb26ba8e5b8fd580fe08c90743ac8026552b8e091e2e082c9350e96
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-eng-s1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10530 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21399 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31559 chars, answer 1174 chars, 45s
+DEFER severity=MED — operator ruling "C3 b: legal line at the bottom as in v8 search.html:267-269" — material "move `legal()` from after reportsLeft to the end of the column children (after tail)" — the ruling's anchor v8 search.html:267-269 is not pasted, so "at the bottom" cannot be confirmed to mean last child of the scrolling column rather than the viewport footer the web side uses — paste search.html:267-269, or state in the plan that last column child is the phone equivalent of the web footer.
+
+DEFER severity=MED — operator ruling "Phone retires yes and web search yes" — material "So web before = once at the bottom (footer); web after = unchanged. No web change, no web golden moves." — the web half of the ruling is discharged only by an assertion about MF-91 and a grep whose output is not in the material, so "web search yes" may be an unserved deliverable — paste the grep output or the web footer file:line so the no-web-change reading is checkable against the ruling.
+
+DEFER severity=MED — material cites "PLAN-PROTOCOL.md:3" and that line is not pasted — material "Spec 100 dated note (M-246, prior text kept) recording the ruling" — no pasted clause or pasted ruling authorises editing Spec 100, and step 4's only cited authority is unpasted, so the amendment is unverified against any visible clause — paste PLAN-PROTOCOL.md:3 or move the Spec 100 note to a card that carries its authority.
+
+DEFER severity=LOW — the pasted operator words carry no date — material "the 2026-11-10 note's placement ... now moved by the 2026-11-20 ruling" — the dated note would record a ruling date (2026-11-20) that appears in no pasted ruling — cite the ruling by its recorded id/lane instead of an inferred date, and date the note as the day it is written.
+
+DEFER severity=LOW — rule 1.3 "All `Pressable` and `TouchableOpacity` elements must satisfy a minimum tappable area of 44px x 44px" and "`font-mono` is reserved strictly for data values" — material "className, testID, content key unchanged" — the legal node's own implementation and its links are not in the material, so touch-target and font-mono compliance of the relocated node is unverified — add one line confirming the legal node's links keep min-h-[44px] or hitSlop and that font-mono is not applied to the human-readable sentence.
+
+MET — operator ruling "5. Do the legal-line move (389) now as a small code change" — material "move `legal()` from after reportsLeft to the end of the column children (after tail)" — the code move is a discrete, single-file step, not deferred or re-scoped.
+
+MET — rule 1.1 "The base (unprefixed) utility classes must dictate the layout for mobile screens" — material "className, testID, content key unchanged" — no utility class is added or reordered, so mobile-first base/prefixed discipline is untouched.
+
+MET — rule 1.1 "Card and row layouts MUST stack vertically on mobile and flow horizontally on desktop" — material "Only the position of the legal node moves in each of the 11 mobile goldens" — flex direction and wrapping are unchanged, only child order changes.
+
+MET — rule 1.2 "Shared UI components (`src/components/ui/`) must remain pure and stateless" — material "mobile/src/components/surfaces/SearchBinding.tsx" — this is a surface file, not a ui/ component, and a child reorder adds no fetch or global-context dependency.
+
+MET — rule 1.3 "Critical state transitions ... must trigger a haptic" — material "Not changed: wording, content key, className, testID, any other block order" — no press feedback, haptic or state transition is added, removed or silenced by this change.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  47270ms (47.3s)
+📊 Tokens — total: 11434, input: 2605, output: 8829, reasoning: 7929

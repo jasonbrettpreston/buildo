@@ -1,0 +1,13 @@
+RED NOT OBTAINED THROUGH THE HOOKS: the commit of the new test + task file landed (b9575315f) because the pre-commit related run only fires for staged src/ or scripts/ files; this test is under mobile/__tests__ (phone tests run only in Mobile CI). Hook tail:
+
+./src/tests/write-set-null-unless.logic.test.ts
+68:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+pre-commit: no staged src/ or scripts/ source files — skipping the related-tests run
+check-task-files: WARN task-389 has no "Files:" line, so its scope is not checked. Add one line "Files: path, dir/, glob" to the task description.
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot head
+POLICY CHECKS OK (commit-msg): 1 file(s)
+[wf1/inc1b-legal b9575315f] feat(100_mobile_parcel_cost_tool): the search page legal line sits at the bottom (SRCH.LEGAL)
+ 2 files changed, 26 insertions(+), 9 deletions(-)

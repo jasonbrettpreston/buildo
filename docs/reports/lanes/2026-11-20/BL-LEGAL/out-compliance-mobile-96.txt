@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.480Z file_sha256=5413aa47ce65ebc10fa9d3eda4e5162e08ac8975f1f9860be021baa9fe0ef813 prompt_sha256=1c674c291eb1adf58f108e6d534729ff027d6e1768e24e253b63148520639919
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-mobile-96.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11082 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21438 chars, answer 854 chars, 30s
+DEFER severity=LOW — Spec 100 note 2026-11-20 in the material, lock clause "Locks: `mobile/__tests__/parcelScreens.golden.test.ts` (MF-58 legal-line test) and the ten moved mobile goldens." — NONE — only two of the ten locked goldens (`empty.mobile.json`, `reports_left.mobile.json`) are in the diff; the other eight plus `mobile_parcel_search.goldens.json` are asserted moved only in a trailing NOTE, cannot see them — include the eight remaining golden hunks (or the regeneration run output) so the lock is auditable.
+
+DEFER severity=LOW — pasted context for this run is Spec 96 only, "(no pasted context provided)"; the ruling this diff implements sits inside the material: "Dated note 2026-11-20 (M-246, prior text kept; SRCH.LEGAL task-389; operator, verbatim: \"1 a 2 b 3 a 4 a 5 c 6 accept\"..." — NONE — no pasted Spec 96 clause names search-page legal-line placement, so conformance is judgeable only against the material's own ruling text — pair the run with the Spec 100 rule list (legal-line clause plus the 2026-11-19 placeholder note) so the move is checked against a pasted clause, not the artifact it produced.
+
+MET — Spec 96 §11 Operating Boundaries "Target files:" (user-profile route, stripe webhook route, subscribe/session route, `(app)/_layout.tsx`, `PaywallScreen.tsx`, `paywallStore.ts`) — the diff touches only "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md", "mobile/src/components/surfaces/SearchBinding.tsx", two fixtures and one golden test — none of the six Spec 96 surfaces is altered.
+
+MET — Spec 96 §10 Step 2 six-status gate ("'trial' → full access", "'expired' → `<PaywallScreen>`", "'cancelled_pending_deletion' → call `firebase.auth().signOut()`") — `mobile/app/(app)/_layout.tsx` does not appear in the diff — no status branch added, removed or reordered.
+
+REJECT — Spec 96 §9 PaywallScreen Layout / Inline Blur State — accused of altering the paywall or blur layout — the only relocated render node is `parcel-search-legal` ("const legal = (): PropsNode => node('Text', { key: 'legal', testID: 'parcel-search-legal'"), no `PaywallScreen`, `BlurView` or banner class changed.
+
+REJECT — Spec 96 §4 trial mechanics and §10 Step 4 trial write — accused of touching subscription state — the diff contains no `subscription_status`, `trial_started_at` or webhook code; the only string moved is the `search.legal` content key, whose value is unchanged ("expect(SEARCH_SLICE.content['search.legal']).toBe(LEGAL_TEXT)").
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+
+---
+⏱  32045ms (32.0s)
+📊 Tokens — total: 20091, input: 13976, output: 6115, reasoning: 5418

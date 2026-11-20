@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.480Z file_sha256=c46e36c1bfd8f85b8a57d85c9759b14ef34e772605f935ef49d170fc61ef8a01 prompt_sha256=8d6cd78be02f506848e31143d06a50a68066f0fb79dc0932c6d84b13dee2fc24
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10072 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21338 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32845 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43486 chars, answer 0 chars, 60s
+BUG findings: none (no clause proven unmet on the pasted evidence).
+
+DEFER severity=MED — spec 100 SRCH.LEGAL note, operator ruling as recorded "still every state, one content key, text unchanged" — mobile/src/components/surfaces/SearchBinding.tsx:242 "+      legal()," and "loading.mobile.json and every web golden unchanged." — the legal node is appended unconditionally to every situation, so the loading rendered tree must move with it; the note declares the loading golden untouched, which is either a stale golden or a state that no longer carries the ruled line (loading.mobile.json is not pasted, so cannot see which) — regenerate loading.mobile.json or state in the note why the loading state carries no legal node.
+DEFER severity=LOW — spec 100 SRCH.LEGAL note "(C3 b: the legal line at the bottom as in v8 search.html:267-269)" — NONE — the ruled position ("last block ... after ... every result block") rests on the author's gloss of C3 b; v8 search.html:267-269 is not pasted, so the exact position cannot be verified against the operator's answer "1 a 2 b 3 a 4 a 5 c 6 accept" — paste the v8 lines or record the position in the ruling text itself.
+DEFER severity=LOW — spec 100 2026-11-11 note, still live placement text "(MF-58 placement unchanged: under the address input, before results)" — SearchBinding.tsx:90 "/** MF-58 (ruling 2026-11-10 items 16 and 5): the legal line, always shown." — two placements are now readable as live (under the input in the 2026-11-11 note and its parenthetical, last block in the 2026-11-20 note); only the 2026-11-10 wording is called out as replaced — mark the 2026-11-11 parenthetical superseded and re-point the code comment at the new ruling.
+MET — 126 §11a.1 binding set ("`content` | the label, help-text and legal-copy table ... legal copy are NOT an exception") — SearchBinding.tsx:90 "[content('search.legal')]" — the line keeps source `content`; no literal and no new source is introduced by the move.
+MET — 126 §11a.7 MF-62 follow-up note ("the app search page `search.legal` read[s] the short disclaimer 'This is an estimate, not 100% accurate...'") — mobile/__tests__/parcelScreens.golden.test.ts:241 "expect(SEARCH_SLICE.content['search.legal']).toBe(LEGAL_TEXT);" — the diff relocates the node and changes no copy, so the ruled wording is untouched.
+MET — 126 §9 Core Logic 5 ("No business logic executes client-side beyond the five named exceptions") — SearchBinding.tsx:235-242 — the change is a reorder of the projection block list; no predicate, guard or computation is added to the client tree.
+MET — 126 §9 Outputs ("the golden PAIR when captured") — empty.mobile.json, reports_left.mobile.json — both shown states' rendered trees are regenerated in step with the code (13 lines out, 13 in), not left behind.
+REJECT — 126 §11a.1 ("A field with any other source fails the check") — the move is accused of adding a placement binding for the legal line — placement is not a binding source; the field still resolves through `content`, and the closed set is unchanged.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  69885ms (69.9s)
+📊 Tokens — total: 41171, input: 28619, output: 12552, reasoning: 11740

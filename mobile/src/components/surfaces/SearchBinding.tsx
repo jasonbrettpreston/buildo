@@ -87,7 +87,7 @@ const pill = (s: SearchSituation): PropsNode =>
       : []),
   ]);
 
-/** MF-58 (ruling 2026-11-10 items 16 and 5): the legal line, always shown, under the address input and before any result block. */
+/** MF-58 (ruling 2026-11-10 items 16 and 5): the legal line, always shown. SRCH.LEGAL (task-389; operator "1 a 2 b 3 a 4 a 5 c 6 accept", 2026-11-20): it is the last block of the page, after every result block (v8 search.html:267-269). */
 const legal = (): PropsNode => node('Text', { key: 'legal', testID: 'parcel-search-legal', className: L.legal }, [content('search.legal')]);
 
 /**
@@ -232,11 +232,11 @@ export function searchProps(s: SearchSituation): PropsNode {
       header(),
       pill(s),
       ...reportsLeft(s),
-      legal(),
       ...chips(s),
       ...notices(s),
       ...addressList(s),
       ...tail(s),
+      legal(),
     ])]),
   ]);
 }

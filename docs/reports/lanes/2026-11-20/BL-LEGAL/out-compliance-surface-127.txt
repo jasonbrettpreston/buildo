@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.471Z file_sha256=87c30477e2f5964a3e43ca0ee4888904e40d65f4b888477e60880d3db49189a5 prompt_sha256=c8a11c8a5a8cb7c324a8d0643fd1758c515b5349657ac2c3e8afc6d3f22d8773
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-surface-127.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11877 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 24181 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 35775 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 47623 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 59644 chars, answer 0 chars, 75s
+BUG severity=HIGH — Spec 127 §3.2a S-golden "A golden exists for EVERY (state x target) pair ... every `source_fingerprint` matches" — NOTE "loading.mobile.json and every web golden unchanged" — the loading golden is left unrelocated while `searchProps` now appends `legal()` unconditionally as the last column child, so either the loading golden is stale relative to the renderer or loading is not a covered state; regenerate `loading.mobile.json` or record why loading renders no search column.
+
+DEFER severity=MED — Spec 127 §4.3 "The fingerprint spans descriptor + contract descriptor + the archetype component + the format helpers, so any of those changing forces a recapture" — the `empty.mobile.json` hunks `@@ -132,19 +132,6 @@` and `@@ -297,6 +284,19 @@` show only the legal-node relocation and no fingerprint change, yet `mobile/src/components/surfaces/SearchBinding.tsx` changed; I cannot see the FP_FILES list for this surface; restamp the goldens' `source_fingerprint` or document that SearchBinding.tsx is outside the fingerprint input set.
+
+MET — ruling 2026-11-20 (C3 b) "it is the last block of the search page" — `mobile/src/components/surfaces/SearchBinding.tsx` `"      ...tail(s),` then `"+      legal(),"` — legal() now renders last in the column.
+
+MET — ruling 2026-11-20 "The reports-left line (SRCH.A6) stays right after the input." — SearchBinding.tsx `"...reportsLeft(s),"` after `"pill(s),"` and test `"if (ks.includes('reports-left')) expect(...)"` — reports-left still immediately follows the input.
+
+MET — ruling 2026-11-20 "still every state, one content key, text unchanged" — SearchBinding.tsx `"content('search.legal')"` and test `"ks.filter((x) => x === 'legal').length"` — one legal node, same content key, text untouched.
+
+MET — ruling 2026-11-20 "The web search page already shows the sentence once, in the footer (MF-91), and is unchanged." — no web golden appears in the diff — web projections untouched.
+
+MET — Spec 127 §1 "A surface's conversion is evidenced by artifacts, never by prose." — `src/tests/fixtures/surfaces/mobile_parcel_search/*.mobile.json` plus `mobile/__tests__/parcelScreens.golden.test.ts` — the change carries golden artifacts and an updated lock, not prose alone.
+
+REJECT — Spec 127 §6.2 "every explained diff pointing at a Defect Ledger ID" — accused: the golden diffs cite the 2026-11-20 operator ruling, not a Defect Ledger id — §6 opens "A conversion is accepted when", so it governs a conversion commit, and this is a post-conversion placement change under a ruling.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 2
+
+---
+⏱  87826ms (87.8s)
+📊 Tokens — total: 35177, input: 17575, output: 17602, reasoning: 16911

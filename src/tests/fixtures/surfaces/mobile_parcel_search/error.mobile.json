@@ -133,19 +133,6 @@
                 ]
               },
               {
-                "component": "Text",
-                "props": {
-                  "key": "legal",
-                  "testID": "parcel-search-legal",
-                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
-                },
-                "children": [
-                  {
-                    "content": "search.legal"
-                  }
-                ]
-              },
-              {
                 "component": "Alert",
                 "props": {
                   "key": "error",
@@ -206,6 +193,19 @@
                         ]
                       }
                     ]
+                  }
+                ]
+              },
+              {
+                "component": "Text",
+                "props": {
+                  "key": "legal",
+                  "testID": "parcel-search-legal",
+                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
+                },
+                "children": [
+                  {
+                    "content": "search.legal"
                   }
                 ]
               }

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:27:32.308Z file_sha256=36c48a18279edfe9d9a899a9d50a00e59f271fa045bf3490f9f9bdc3dbabbcb9 prompt_sha256=650b00802a5bb8fd981c41187a62c62c1ba5333f08061626be5da0501a1b8ccf
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10756 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21696 chars, answer 0 chars, 30s
+BUG severity=HIGH — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)." — mobile/__tests__ (plan step 1) "the MF-58 legal-line test now expects the legal node to be the LAST child of the column in every golden and named case" — a cross-surface child-order golden is UI component snapshotting, and the only pasted carve-out covers "a render smoke (throws / renders non-empty / finds its test ids, labels and host props) and a screen-behaviour test are not snapshots", which a position pin is not — assert the move as a screen-behaviour test (order via the test ids already queried) for the one surface, or get a dated ruling extending §4 to goldens before plan-lock
+BUG severity=MED — Operator words (verbatim) "5. Do the legal-line move (389) now as a small code change" — plan step 1 "(reports-left stays right after the pill; chips, notices, list, tail come before legal)" — pins the full column order across every golden and named case, more than the ruling names and more than the small change ordered — assert only that legal comes after tail / is last, leave the other blocks unasserted
+DEFER severity=MED — Operator words (verbatim) "(C3 b: legal line at the bottom as in v8 search.html:267-269)" — plan step 2 "move `legal()` from after reportsLeft to the end of the column children (after tail)" — whether the mobile column is itself the page's last block (web keeps legal in a footer, a separate element) cannot be seen, so "bottom as in v8 search.html:267-269" is unverified — quote the mobile column's closing tag and v8 search.html:267-269 to show the column is the last block, not merely last inside the column
+DEFER severity=MED — Spec 98 §5 "On every PR targeting `main`, GitHub Actions runs: ... `npm run test` (Jest unit tests)" — plan checks "Phone tests are not run locally: phone-test green is UNPROVEN until Mobile CI." — "Mobile CI" is not a gate the pasted spec names, and whether the PR `npm run test` job runs the mobile jest goldens cannot be seen — name the workflow/job that runs mobile jest and confirm the new golden assertions execute there, or the unmet clause stays open at merge
+DEFER severity=LOW — Spec 98 §4 "Dated note 2026-11-10 (M-246, prior text kept; ...; operator, verbatim: \"approved except for 9 ...\"; record `~/Buildo-scratch/...`" — plan step 4 "Spec 100 dated note (M-246, prior text kept) recording the ruling" — the new note carries no date, no operator verbatim and no record path, unlike the pasted note convention — add the ruling date, the verbatim words and the open-questions record path
+DEFER severity=LOW — Spec 98 §4.1 "The normative test mandate set lives in Spec 99 §8 (Test Mandates)" — NONE — Spec 99 §8, Spec 126 §0a/11b.2, 08_agents §7 and PLAN-PROTOCOL.md:3 are not pasted, so the plan's compliance targets are unverifiable in this run — paste them into the ruling block before this plan is locked
+MET — Spec 98 §4 "Location: `mobile/__tests__/`" — mobile/__tests__/parcelScreens.golden.test.ts — the changed test sits in the directory the spec mandates
+MET — Spec 98 §4 "adds it as a dev dependency (`@testing-library/react-native` 13.3.3 ...)" — NONE — the plan adds no test tool or dependency, so no conflict with the pasted tool list
+REJECT — Spec 98 §3.2 "The following YAML flows must pass cleanly before any production release" — the change moves a user-visible surface with no Maestro flow for the parcel tool — §3.2's list names auth, onboarding-leads, onboarding-tracking, scroll-feed, subscription-paywall only, and the pasted note records "No Maestro flow covers parcel-tool today" as a fact, not a mandate to add one
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  42414ms (42.4s)
+📊 Tokens — total: 12915, input: 4775, output: 8140, reasoning: 7171

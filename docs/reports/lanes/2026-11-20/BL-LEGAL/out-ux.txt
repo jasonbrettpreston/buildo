@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T15:31:55.505Z file_sha256=740375fc0cac87a2301f95d5ad3579627434c77fc8b4e1fc44cb244909fd2140 prompt_sha256=89e20a9282a6b8caac4e8ce7d2eae7b52411b4207006f4219d7597c48fdf8e9c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/out-diff.diff (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10358 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20235 chars, answer 634 chars, 30s
+BUG severity=CRIT — none
+
+DEFER severity=MED — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:149 "still every state, one content key, text unchanged" vs the prompt note "loading.mobile.json and every web golden unchanged" — cannot see loading.mobile.json: since searchProps now appends legal() unconditionally for every situation, an unchanged loading golden means the waiting state either still draws the line under the input or draws none, so the one state where the person waits is the only one not matching the ruling — open the loading golden, confirm the legal node is the last column child there too, regenerate if not.
+
+REJECT — mobile/src/components/surfaces/SearchBinding.tsx:240 "+      legal()," placed after "...tail(s)," — a person who has a full list of results reads "This is an estimate, not 100% accurate. Not legal advice." only after scrolling past every result block — matches the approved design text "it is the last block of the search page, after the reports-left line, chips, notices and every result block", so it is the operator's chosen order, not a departure.
+
+REJECT — mobile/src/components/surfaces/SearchBinding.tsx:235 "...reportsLeft(s)," now sits right after "...pill(s)," and the legal line no longer follows it — the person with an entitlement sees the reports-left line immediately under the input with the disclaimer far below — matches the approved design text "The reports-left line (SRCH.A6) stays right after the input", harmless.
+
+DEFER severity=LOW — src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json:293 "\"className\": \"mt-3 text-[13px] leading-[18px] font-normal text-report-muted\"" — the caveat is 13px muted grey and now ends the scroll in every state, the least legible text at the exact point it matters most — design silent on size ("text unchanged"), so keep as is unless the operator's v8 footer line is larger, in which case a size/contrast follow-up.
+
+DEFER severity=LOW — mobile/__tests__/parcelScreens.golden.test.ts:250 "expect([k, ks.filter((x) => x === 'legal').length]).toEqual([k, 1]);" — the lock now proves the line is drawn exactly once and last but no longer proves where the address input sits relative to it, so a future move back under the input would pass silently for the person — rationale: the pasted design text only rules the end position, so this is a lock-strength note, not a person-facing fault.
+
+VERDICT: PASS on the person's experience
+States checked: first view empty, no results, answered with results, reports-left entitlement, loading (cannot see, marked DEFER), error (cannot see), offline (cannot see), back (cannot see), repeat visit (cannot see). Drawn by this change: empty.mobile.json, reports_left.mobile.json and the eight unnamed mobile goldens; the copy key search.legal and its text are untouched in all of them.   Dead ends found: 0
+
+---
+⏱  32739ms (32.7s)
+📊 Tokens — total: 12259, input: 6853, output: 5406, reasoning: 4731

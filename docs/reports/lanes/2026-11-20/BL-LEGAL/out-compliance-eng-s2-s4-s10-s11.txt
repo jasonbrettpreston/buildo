@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.482Z file_sha256=5b057de1dae3a9f619371785ac14e1283e7a16cb0c8c077bd050748acb1e6992 prompt_sha256=dfe5d75bdb93b894aa4df206e73922822ba079f7aee15a9706271e3d912f4e8e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-eng-s2-s4-s10-s11.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10790 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21525 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31518 chars, answer 0 chars, 45s
+BUG/DEFER findings
+
+DEFER severity=MED — operator ruling 2026-11-20 (doc note) "still every state, one content key, text unchanged" — src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json and reports_left.mobile.json are the only two goldens shown moved, the rest rest on "NOTE: the other 8 mobile goldens and mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json move the same way" — for 8 of 10 states the every-state requirement is carried by a note, and a note is not a change — include the 8 reordered golden fixtures and mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json in the same diff/commit so the golden test, not the note, proves every state.
+
+DEFER severity=LOW — operator ruling 2026-11-20 "it is the last block of the search page, after the reports-left line, chips, notices and every result block" — "loading.mobile.json and every web golden unchanged" — the new assertion "expect([k, ks[ks.length - 1]]).toEqual([k, 'legal']);" runs over every golden, so if the loading state draws any block after the old legal slot the untouched loading golden fails; cannot see loading.mobile.json to confirm it has nothing after the legal node — state in the material that loading.mobile.json has no column child after the legal node, or move it with the others.
+
+DEFER severity=LOW — §11 "If UI Component Created/Modified: 375px viewport test in test plan" — SearchBinding.tsx is modified and no 375px evidence appears — NONE — the pasted material carries no 375px viewport case for the relocated 13px legal block — the goldens are structural tree snapshots so width does not change the tree, but the checklist item asks the viewport case to appear in the test plan, name it or state why it does not apply.
+
+DEFER severity=NIT — §11 "generate a 5-10 item self-skeptical checklist ... Output PASS/FAIL per item in the response BEFORE running tests" — NONE — no self-skeptical PASS/FAIL checklist accompanies this material — process clause for the WF response, attach it before Green Light rather than after merge.
+
+MET lines
+
+MET — operator ruling 2026-11-20 "it is the last block of the search page" — mobile/src/components/surfaces/SearchBinding.tsx:240 "+      legal()," — legal() now renders after ...tail(s), the final column child.
+MET — operator ruling 2026-11-20 "The reports-left line (SRCH.A6) stays right after the input" — mobile/__tests__/parcelScreens.golden.test.ts:253 "if (ks.includes('reports-left')) expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'reports-left']);" — reports-left position is still asserted immediately after the input.
+MET — operator ruling 2026-11-20 "one content key, text unchanged" — mobile/src/components/surfaces/SearchBinding.tsx:90 "const legal = (): PropsNode => node('Text', ... [content('search.legal')]);" — the node still renders the single key and no content JSON is touched.
+MET — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — changed paths are docs/specs, mobile/src, mobile/__tests__, src/tests/fixtures — none under the forbidden three.
+MET — §2.2 "Every newly created API route ... MUST have an overarching `try-catch`" — NONE — no file under src/app/api/ is created or modified, the clause does not bind this change.
+MET — §4.3 "Never place API keys, admin SDK credentials, or database connection strings in `use client` components" — NONE — the diff adds no credential, secret or connection string.
+MET — §10.3 "Avoid returning database column names directly" / route discipline — NONE — no route handler and no src/lib types file is touched.
+
+REJECT — §10.2 "No modifications to `scripts/`, `migrations/`, or `scripts/lib/`" — change accused of editing generated fixtures under src/tests/ — src/tests/fixtures is neither scripts/, migrations/ nor scripts/lib/, so the boundary rule is untouched.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  58009ms (58.0s)
+📊 Tokens — total: 17653, input: 6971, output: 10682, reasoning: 9673

@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:27:32.261Z file_sha256=1550873feef7c4f85f4b04aa2874f53a8034bfa0b8a342831bd6f2e6d5fb8278 prompt_sha256=e2d8fa9b12a76de8364d76eb727124265cb46539fa710f11a07e9fdeb7add980
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10365 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21739 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32750 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43642 chars, answer 1462 chars, 60s
+DEFER severity=MED — §11b.2 / Spec 100 §4 note, not pasted "Spec 100 section 4 dated note 2026-11-10 (legal line under the input, now moved by the 2026-11-20 ruling)" — mobile/src/components/surfaces/SearchBinding.tsx NONE "move `legal()` from after reportsLeft to the end of the column children (after tail)" — the destination the plan builds to ("last block of the page", "end of the column children") rests on a 2026-11-20 ruling and a v8 markup cite (search.html:267-269) that are not in the pasted context, so no quoted clause can confirm the legal node ends where the ruling puts it — paste the ruling sentence and the v8 lines 267-269 into the task, or quote where "last block of the page" is ruled.
+
+DEFER severity=MED — §11b.2 Locks "conformance (FE-31), the `contract` binding kind (FE-32), generated-only incl. the vendored manifest (FE-02), no maths in bindings (FE-05), parity keyed by surface (FE-07)" — src/components/surfaces/web/SearchBinding.tsx:64,136 "the web search binding already shows the legal sentence once, in the footer, last child" and "web after = unchanged" — after this change the two targets of `mobile_parcel_search` put the legal block in different structures (web footer, phone last column child) and the plan reconciles them by assertion, not by a quoted clause, so a parity lock keyed by surface can read a structural divergence — state in the task that FE-07 parity covers content presence and not block order, or align the phone placement with the web footer.
+
+DEFER severity=LOW — §11b.2 Goldens "one props golden per reachable state per declared target at `src/tests/fixtures/surfaces/<surface_id>/<state>.<target>.json`, each `covers` a state" — NONE "Only the position of the legal node moves in each of the 11 mobile goldens (and their mobile copy mobile_parcel_search.goldens.json)" — the plan names one aggregate file rather than the declared per-state path shape, so compliance with the declared location and the per-golden `covers` is not shown — name the 11 paths (or the directory) and state that each still `covers` its state.
+
+DEFER severity=LOW — §14 Target Files "`docs/specs/02-web-admin/126_maxbld_surface_standard.md` — this spec" — NONE "Spec 100 dated note (M-246, prior text kept) recording the ruling" — step 4 writes into `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`, which is not on the pasted Target Files list, and the plan names no owner route for that write — name the Spec 100 owner commit or route (or add the file to §14) in the task.
+
+DEFER severity=LOW — §11b.2 Content "every user-visible string comes from a content file" — src/components/surfaces/web/SearchBinding.tsx:64,68,131,136,143,248 "Confirmed: grep \"legal\" in web binding gives only footer lines 64,68,131,136,143,248." — six grep hits establish presence, not that the sentence shows exactly once and is the last child, so the "no web change" half of the ruling is asserted from evidence that cannot show it — cite the web golden node path or the JSX where the footer closes, proving legal is last on web.
+
+MET — §11b.2 Content — "Not changed: wording, content key, className, testID, any other block order, web." — the legal string keeps its content key; no new literal is introduced.
+
+MET — §11b.2 Generator — "Regenerate goldens with scripts/surfaces/search-golden-capture.ts --write, then emit-mobile-surfaces.mjs --write (generated, never hand edited)" — the goldens and emitted mobile surfaces are regenerated, not hand-edited.
+
+MET — §11b.1 "Our code is limited to the descriptor → library binding (one per archetype per platform, thin config), the generators, the gates and the landed web REPORT renderer." — plan step 2 edits only the declared mobile SEARCH binding module, no new component.
+
+MET — §11b.3 / MF-44 note "the `web` target of `mobile_parcel_search` is added by MF-44 through the one web SEARCH binding (`src/components/surfaces/web/SearchBinding.tsx`, owner `binding_web_search`)" — the web target exists and the plan leaves it unchanged, no second web binding.
+
+REJECT — §11b.2 Generator "regenerated, never hand-edited" — the change is accused of hand-editing a generated file — the edited file, `mobile/src/components/surfaces/SearchBinding.tsx`, is the hand-authored binding module of §11b.1 "the descriptor → library binding", not one of the two `--write` emitters named in step 3.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  62602ms (62.6s)
+📊 Tokens — total: 36898, input: 24440, output: 12458, reasoning: 11300

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-regression.md model=deepseek-reasoner at=2026-11-20T15:31:55.453Z file_sha256=740375fc0cac87a2301f95d5ad3579627434c77fc8b4e1fc44cb244909fd2140 prompt_sha256=203c9fe4c88d6f3c9ad7bab457174b56539882a7879ae8a79c04b05c38d9dfc8
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/out-diff.diff (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 12058 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23070 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34349 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45602 chars, answer 0 chars, 60s
+REJECT — mobile/src/components/surfaces/SearchBinding.tsx "+      legal()," — the only runtime change is one relocation of the legal node from after "    ...reportsLeft(s)," to the end of the column after "    ...tail(s),"; component, key, testID, className and content('search.legal') are untouched, so no other child is reordered and no other behaviour rides on its slot — the named SRCH.LEGAL task-389 move only.
+REJECT — mobile/__tests__/parcelScreens.golden.test.ts "-      const after = ks.slice(ks.indexOf('pill') + 1);" and "-      expect([k, after.slice(0, owed.length)]).toEqual([k, owed]);" — the pin dropped is exactly the named one (legal immediately after the input, before results), and the incidental reports-left pin survives as "      if (ks.includes('reports-left')) expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'reports-left']);" so the SRCH.A6 slot after the input is still pinned.
+REJECT — mobile/__tests__/parcelScreens.golden.test.ts "+      expect([k, ks.filter((x) => x === 'legal').length]).toEqual([k, 1]);" and "+      expect([k, ks[ks.length - 1]]).toEqual([k, 'legal']);" — the replacement pin is strictly stronger than the old one (one legal node, last in every golden and named case), so nothing was weakened while swapping positions.
+REJECT — src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json "\"className\": \"mt-3 text-[13px] leading-[18px] font-normal text-report-muted\"" — the removed and inserted legal nodes in both visible goldens are byte-identical on key, testID, className and children (content "search.legal"), so the fixtures change by relocation only and no other node is touched.
+REJECT — src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json "+              }," — the appended comma closes the previously last sibling and the new legal object reuses the array-closing context, so the JSON stays well-formed with legal as the final child, not a dangling or duplicated block.
+DEFER severity=LOW — "NOTE: the other 8 mobile goldens and mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json move the same way (13 lines out, 13 in, the legal node relocated); loading.mobile.json and every web golden unchanged." — I cannot see loading.mobile.json or the other 8 goldens, so I cannot confirm the loading situation has nothing drawn after the input; if it does, its legal node would now be non-last and that golden stale — the golden test loops every golden and pins legal as the last key plus full fixture comparison, so a stale loading golden fails loudly rather than passing silently; confirm by running the golden test before merge.
+REJECT — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "+> Dated note 2026-11-20 (M-246, prior text kept; SRCH.LEGAL task-389; ..." — the retained "MF-58 placement unchanged: under the address input, before results" in the 2026-11-11 note is history under the explicit "prior text kept" convention, not a live pin, and the new note states the 2026-11-10 placement is replaced; no behaviour or test depends on that sentence.
+
+VERDICT: PASS on regression safety
+Lines walked: mobile/src/components/surfaces/SearchBinding.tsx "legal()," before/after; src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json legal removal/insertion; src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json legal removal/insertion; mobile/__tests__/parcelScreens.golden.test.ts old positional assertion vs new last-child/once/reports-left assertions; docs note 2026-11-20   Unintended: 0
+
+---
+⏱  70095ms (70.1s)
+📊 Tokens — total: 19427, input: 6704, output: 12723, reasoning: 11806

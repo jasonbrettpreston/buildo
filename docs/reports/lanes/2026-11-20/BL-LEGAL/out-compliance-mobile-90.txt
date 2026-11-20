@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.475Z file_sha256=5289c84f779f244d4dfc52f949eda09bb03d132702939933a8b638d2fb64f15f prompt_sha256=cc92a12436346f558f4dac4fb97ca1acf95f29e0cac865d5d31fc07c5aebf892
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10471 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21725 chars, answer 0 chars, 30s
+BUG — none found against the pasted clauses; the two DEFER lines below are verification gaps, not breaches.
+
+DEFER severity=LOW — spec-100 2026-11-20 note "Locks: `mobile/__tests__/parcelScreens.golden.test.ts` (MF-58 legal-line test) and the ten moved mobile goldens." — NONE (the other eight goldens and `mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json` are not in this diff; cannot see) — only two of the ten relocked goldens (`empty`, `reports_left`) are visible, so "still every state" cannot be verified from the material under review — attach the remaining eight golden hunks or the regen script output to the change so the lock is checkable.
+DEFER severity=LOW — spec-100 2026-11-20 note "The web search page already shows the sentence once, in the footer (MF-91), and is unchanged." — "diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json" — the two edited fixtures sit in the `src/` (web) tree, so whether "every web golden unchanged" holds depends on which consumer owns `src/tests/fixtures/surfaces/mobile_parcel_search/*.mobile.json`; cannot see — name that consumer in the note so the "web unchanged" claim is falsifiable rather than asserted.
+REJECT — Spec 90 §2 Theme Constraint "NativeWind `dark:` variants are required for all UI components" — accused of moving a `Text` whose className is `mt-3 text-[13px] leading-[18px] font-normal text-report-muted` with no `dark:` variant — why not a new issue: the diff relocates the node without touching its className, and the 2026-11-09 dated note in that same section records the measurement and assigns how the RN Reusables components carry dark values to MF-35 ("Measured fact only; no rule changes").
+
+MET — spec-100 2026-11-20 note "it is the last block of the search page, after the reports-left line, chips, notices and every result block" — `mobile/src/components/surfaces/SearchBinding.tsx:239` "legal()," — legal is now the final child, after `header`, `pill`, `reportsLeft`, `chips`, `notices`, `addressList`, `tail`.
+MET — spec-100 2026-11-20 note "The reports-left line (SRCH.A6) stays right after the input." — `mobile/src/components/surfaces/SearchBinding.tsx:234` "...reportsLeft(s)," — reports-left still follows the `pill` node immediately, now asserted at `mobile/__tests__/parcelScreens.golden.test.ts:252` "if (ks.includes('reports-left')) expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'reports-left']);".
+MET — spec-100 2026-11-20 note "still every state, one content key, text unchanged" — `mobile/__tests__/parcelScreens.golden.test.ts:249` "expect([k, ks.filter((x) => x === 'legal').length]).toEqual([k, 1]);" — drawn once per situation over all goldens plus NAMED_CASES, still emitted via `content('search.legal')`, and the `LEGAL_TEXT` verbatim assertion is untouched.
+MET — Spec 90 §5 "NO HTML/DOM: Never use `<div>`, `<span>`, `<a>`, `<p>`, or `<button>`." — `mobile/src/components/surfaces/SearchBinding.tsx:91` "const legal = (): PropsNode => node('Text', { key: 'legal', testID: 'parcel-search-legal', className: L.legal }, [content('search.legal')]);" — the moved node is a native `Text`, no DOM primitive added.
+MET — Spec 90 §3 "This mobile application is a 'Dumb Glass' client. It **MUST NOT** perform complex data mutation, geographic PostGIS math, or algorithmic sorting." — `mobile/src/components/surfaces/SearchBinding.tsx:235` "...chips(s)," — the change only reorders existing props nodes, no fetching, mutation or computation added.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  40353ms (40.4s)
+📊 Tokens — total: 15839, input: 7730, output: 8109, reasoning: 7097

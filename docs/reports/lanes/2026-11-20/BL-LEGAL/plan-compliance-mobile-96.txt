@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:27:32.283Z file_sha256=f98a029e97b9bbd77f0c60deb2dcc078d0886f38b6f35078e470f16b89b93c82 prompt_sha256=760a78554029379a0b899babde30be8ff8b5d34e91e3e0babdc0ec4688e2acb8
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-mobile-96.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10168 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20750 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31967 chars, answer 0 chars, 45s
+DEFER severity=MED — operator ruling "5. Do the legal-line move (389) now as a small code change" — "Phone tests are not run locally: phone-test green is UNPROVEN until Mobile CI." — the ruling's change is red-firsted in a test the plan's own Checks line does not run (it lists only search-golden-capture --check, emit-mobile-surfaces --check, surface-validate, typecheck), so the move is unproven at plan time — make Mobile CI phone-test green an explicit done-condition on 389 before the task is closed.
+
+DEFER severity=LOW — operator ruling "(C3 b: legal line at the bottom as in v8 search.html:267-269)" — "the legal node to be the LAST child of the column in every golden and named case" — the ruling anchors "bottom" to v8 search.html:267-269 but the plan substitutes "last child of the column" without quoting what those lines contain, so the shape match to the anchor is unverified — quote the v8:267-269 block order in the plan or in the test comment.
+
+DEFER severity=LOW — "Spec 126 section 0a principle 1 and 11b.2 (one binding per archetype, refs only)" — NONE — the clause text is not in the pasted context, only the plan's paraphrase, so whether the in-place edit satisfies 0a principle 1 and 11b.2 cannot be attested — paste §0a principle 1 and §11b.2 verbatim in the next run.
+
+DEFER severity=LOW — "Spec 100 section 4 dated note 2026-11-10 (legal line under the input, now moved by the 2026-11-20 ruling)" — "Spec 100 dated note (M-246, prior text kept) recording the ruling" — the existing note text is not pasted, so whether the replacement note keeps M-246 prior text and satisfies §4's form cannot be checked — paste the 2026-11-10 note text.
+
+DEFER severity=LOW — "08_agents.md section 7 rules 3, 4; PLAN-PROTOCOL.md:3" — NONE — neither rule text nor PLAN-PROTOCOL.md:3 is pasted, so those bind nothing in this review — paste them for the next run.
+
+DEFER severity=NIT — "Phone retires yes and web search yes" — "then emit-mobile-surfaces.mjs --write (generated, never hand edited). Only the position of the legal node moves in each of the 11 mobile goldens" — the shared emit script runs with --write while the plan asserts web goldens do not move, and no post-run verification of web golden files is stated — add a git status check on the web golden paths after the --write step.
+
+MET — operator ruling "(C3 b: legal line at the bottom ...)" — "move `legal()` from after reportsLeft to the end of the column children (after tail)" — legal becomes the last block of the column, satisfying bottom placement.
+MET — "Phone retires yes and web search yes" — "Not changed: wording, content key, className, testID, any other block order, web." — web search binding and web goldens are left untouched.
+MET — "one binding per archetype, refs only" (as paraphrased in the plan's Rule line) — "className, testID, content key unchanged" — the existing single binding is edited in place, no second binding and no new content introduced.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  49763ms (49.8s)
+📊 Tokens — total: 20967, input: 11690, output: 9277, reasoning: 8492

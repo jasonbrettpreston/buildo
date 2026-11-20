@@ -1,0 +1,284 @@
+LIST inc-1 sha256:d84eb7eabec3f6d97e52b1dabfe6cdb9620e0fe0becd25830aba54a30a3c0e34 material sha256:740375fc0cac87a2301f95d5ad3579627434c77fc8b4e1fc44cb244909fd2140 part 1 of 1
+RULE LIST inc-1 (backlog/docs/increments/doc-4 - Increment-1-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+---
+id: doc-4
+title: Increment 1 requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Increment 1 requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The report page parts are built once and shared by every scenario: the REPORT core, the web v21 page (ReportPage, Daylight keys), the mobile binding and host, the summary, the See-details sheets, the lot-view drawing component, the picture and image selection, the ad slot, What we checked, Add lot size, the admin preview and the Daylight tokens. The two detached cards o1 and o2 bind the size, storeys, footprint and homes fields; every cost, CoA, neighbour, setback, coverage, FSI, height and wall-height part renders ruled pending text because no field is declared or served. The customer producer returns null for every lot until MB-44, so everything renders on goldens and the admin preview only. Not built: the gallery, the side view, summary photos, the units switch, the heart, share, the extra lot rows.
+counts: {"BUILT":29,"BUILT-NO-DATA":38,"NOT BUILT":11}
+
+- F-REPORT-CORE REPORT core: buildTree/assertTree/viewOf, buildPage/assertPage/pageViewOf, declaration and layout table: ON ORIGIN (origin/wf1/mb-rulings)
+- F-REPORT-WEB ReportPage (web v21 report page, Daylight keys) + ReportPageToggles client island: ON ORIGIN (origin/wf1/mb-rulings)
+- F-REPORT-MOBILE Mobile REPORT binding + host: reportProps, ReportPageHost (bottom sheet), lot route mount: ON ORIGIN (origin/wf1/mb-rulings); the customer producer answers null for every lot (miss text) until MB-44
+- F-REPORT-TREE ReportView (admin and pdf tree renderer: field list, Picture figure, ad Slot, What we checked): ON ORIGIN (origin/wf1/mb-rulings)
+- F-SUMMARY Options-at-a-glance summary (FE-41): heading + one linked item per option (label, title, Max build, value, unit): ON ORIGIN (origin/wf1/mb-rulings)
+- F-LOTVIEW Lot view panel "From above" (drawing part, server-built 0..1000 frame) + eligibility rule + one-lot reader: PARTLY: drawing component, rule and reader are ON ORIGIN; the reader is not wired into any response and the table parcel_lot_view is the pipeline task MB-109 (absent)
+- F-DETAILS-SHEET See details as a sheet with its own address (FE-43): Detail dialog, PanelLink, Back; layout key details_view: ON ORIGIN (origin/wf1/mb-rulings)
+- F-IMAGES Report image selection and the option picture (one image per option; no gallery): PARTLY: selection logic and figure are ON ORIGIN; "Not wired yet" (the server read of media sets is deferred, default images only); no image asset is drawn
+- F-ADSLOT Ad slot (R-17 disclosure, R-34 outside the card): root slots[], ad section, per-scenario slot key: PARTLY: slot and flat-roof section built; no live offers served; no houseplex slot
+- F-CHECKED What we checked (loading state): checked tree, paced lines, Skip, ready line: PARTLY: web and admin renderer built; the mobile binding maps lifecycle loading to its approved text only (no checked lines in ReportBinding)
+- F-LOTSIZE Add lot size: box C1, after-entry line C2, sheet H0 (width + depth, ft/m), POST /api/parcels/lot-size, FORM descriptors: ON ORIGIN, entry switch OFF (queue Status BUILT: the 324 DB job and the push are the next steps)
+- F-PREVIEW Admin report preview (/admin/report-preview) + internal preview producer (stored rows -> v21 page payload): ON ORIGIN (origin/wf1/mb-rulings) (admin only)
+- F-DAYLIGHT Daylight B tokens: named report-* keys on web (globals.css) and mobile (tailwind.config.js) + contrast test: ON ORIGIN (origin/wf1/mb-rulings)
+- F-LOOKUP Lookup route page hand-off: /api/parcels/lookup returns parcel payload + `page` view + meter; web report route: PARTLY: route, whitelist and meter ON ORIGIN; page = null for every customer lot; web report route answers not found while MAXBLD_WEB_LIVE is false
+
+## Scenario
+Detached house (Option 1 pitched roof, Option 2 flat roof)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| SUM | Summary item at the top, one per option: smaller photo + option name + Max build estimate | main | NOT-BUILT | MF-83 GAP.1 | BUILT-NO-DATA |
+| PIC | Main picture (fixed image chosen by scenario and lot type) | main | NOT-BUILT (GAP.2 READY) | MF-38 GAP.1 GAP.2 | BUILT-NO-DATA |
+| GAL | Concept photo gallery behind the main picture | main | NOT-BUILT (GAP.2 READY) | MF-83 MF-38 GAP.1 GAP.2 | NOT BUILT |
+| VIEW-A | From above (drawn from the real lot) | main | NOT-BUILT, STORED-NOT-SERVED, CONTENT-STATIC | L.12 MB-109 X:MB109-rehearse MB-88 MF-83 | BUILT-NO-DATA |
+| VIEW-S | From the side (fixed image per scenario, labels from data) | main | NOT-BUILT (GAP.2 READY) | MB-88 MF-83 GAP.1 GAP.2 | NOT BUILT |
+| B0 | Option card frame (one per visible option, fixed order) | main | text |  | BUILT |
+| B1 | Option label on the picture | main | NOT-BUILT | GAP.4 | BUILT-NO-DATA |
+| B2 | Option title on the picture | main | NOT-BOUND | MB-94 GAP.4 | BUILT-NO-DATA |
+| B3 | "Most space" tag (every option; a tie goes to the lowest option number) | main | NOT-BUILT | 1.3 GAP.11 | BUILT-NO-DATA |
+| B4 | Picture and its caption | main | not traced | MF-38 GAP.1 | BUILT-NO-DATA |
+| B5 | BY-LAW SPECIFICATIONS label | main | text |  | BUILT |
+| B6 | Max build size tile | main | STORED-NOT-SERVED, NOT-BUILT | 1.3 MB-44 MB-38 L.5b GAP.4 | BUILT |
+| B7 | Cost to build tile | main | NOT-BUILT | 1.3 MB-44 MB-86 MB-94 MB-38 | BUILT-NO-DATA |
+| B9 | Max build size details panel (opens from B6 "See details") | details | NOT-BUILT, STORED-NOT-SERVED, NOT-BOUND | 1.3 MB-44 6c.8a GAP.4 | BUILT |
+| B9.1 | Max build size | details | STORED-NOT-SERVED | 1.3 MB-44 | BUILT |
+| B9.2 | Storeys | details | STORED-NOT-SERVED | 1.3 MB-44 | BUILT |
+| B9.3 | Height | details | NOT-BOUND | 1.3 MB-44 | BUILT-NO-DATA |
+| B9.11 | Footprint (detached) | details | STORED-NOT-SERVED | 1.3 MB-44 | BUILT |
+| B9.12 | Lot coverage (detached) | details | NOT-BOUND | 1.3 MB-44 MB-88 | BUILT-NO-DATA |
+| B9.13 | Floor space index (detached) | details | NOT-BOUND | 1.3 MB-44 MB-88 | BUILT-NO-DATA |
+| B9.14 | Front setback (detached) | details | NOT-BOUND | 1.3 MB-44 | BUILT-NO-DATA |
+| B9.15 | Rear setback (detached) | details | NOT-BOUND | 1.3 MB-44 MB-88 | BUILT-NO-DATA |
+| B9.16 | Side setbacks (detached) | details | NOT-BOUND | 1.3 MB-44 MB-88 | BUILT-NO-DATA |
+| B9.17 | Building depth (detached) | details | NOT-BOUND | 1.3 MB-44 | BUILT-NO-DATA |
+| B9.18 | Main wall height (detached) | details | NOT-BOUND | 1.3 MB-44 MB-88 | BUILT-NO-DATA |
+| B9.19 | Homes (detached) | details | STORED-NOT-SERVED | 1.3 MB-44 | BUILT |
+| B10 | Cost to build details panel (opens from B7 "See details") | details | NOT-BUILT | 1.3 MB-44 MB-86 GAP.4 | BUILT-NO-DATA |
+| B10.1 | Cost to build | details | NOT-BUILT | 1.3 MB-44 MB-86 MB-94 | BUILT-NO-DATA |
+| B10.2 | Cost per sq ft | details | NOT-BUILT | 1.3 MB-44 MB-86 MB-94 | BUILT-NO-DATA |
+| B10.3 | Area priced | details | NOT-BUILT | 1.3 MB-44 MB-86 MB-94 | BUILT-NO-DATA |
+| B10.4 | Area based on | details | NOT-BUILT | 1.3 MB-44 MB-86 MB-94 | BUILT-NO-DATA |
+| B10.5 | Confidence | details | NOT-BUILT | 1.3 MB-44 MB-86 MB-94 | BUILT-NO-DATA |
+| B10.6 | Not included | details | text |  | BUILT-NO-DATA |
+| B11 | BY-LAW VARIANCES label | main | text |  | BUILT |
+| B12 | "Can you build bigger?" question | main | NOT-BUILT | 1.3 MB-44 MB-38 CO.S123 CO.2 CO.3 CO.6 MB-94 | BUILT-NO-DATA |
+| B13 | How? panel | details | text |  | BUILT-NO-DATA |
+| B14 | "Did the neighbours build bigger?" question | main | NOT-BUILT | 1.3 7.2a MF-71 GAP.7 | BUILT-NO-DATA |
+| B15 | MOST RECENT row and the project mini cards | main | NOT-BOUND | 1.3 GAP.7 | BUILT-NO-DATA |
+| B16 | Option 2 neighbours pointer | main | text |  | BUILT-NO-DATA |
+| R+18 | From above fallback line when the lot cannot be drawn (irregular shape, unclear edges, setbacks not evaluated) | main | ruled after the brief | MF-83 | BUILT |
+| A0 | Page frame (page, every scenario) | main | text |  | BUILT |
+| A1 | Page title (page, every scenario) | main | text |  | BUILT |
+| A2 | Address (page, every scenario) | main | NOT-BOUND | 1.3 | BUILT-NO-DATA |
+| C1 | Lot-size box (after the first visible option) (page, every scenario) | main | not traced | MF-19 | BUILT |
+| C2 | After-entry line (replaces C1 once a lot size is entered) (page, every scenario) | main | USER-INPUT | 6c.7 6c.6 | BUILT |
+| D1 | Ad after the flat-roof card (page, every scenario) | main | not traced | MF-61 MF-20 | BUILT-NO-DATA |
+| D2 | Ad after the houseplex card (page, every scenario) | main | not traced | MF-61 | NOT BUILT |
+| E1 | Coming soon (page, every scenario) | main | text |  | BUILT-NO-DATA |
+| F1 | About this lot (heading) (page, every scenario) | main | text |  | BUILT |
+| F2 | Lot size (page, every scenario) | main | AVAILABLE | 1.3 1.1 | BUILT |
+| F3 | Frontage × depth (page, every scenario) | main | NOT-BOUND | GAP.5 | BUILT-NO-DATA |
+| F4 | Zone (page, every scenario) | main | NOT-BOUND | GAP.5 | BUILT-NO-DATA |
+| F5 | Heritage (page, every scenario) | main | STORED-NOT-SERVED | GAP.5 | BUILT |
+| F6 | Ravine protection area (page, every scenario) | main | STORED-NOT-SERVED | GAP.5 | BUILT |
+| F7 | Corner lot (page, every scenario) | main | STORED-NOT-SERVED | GAP.5 | BUILT |
+| F8 | Backs onto a laneway (page, every scenario) | main | NOT-BOUND | GAP.5 | BUILT-NO-DATA |
+| G1 | Not-legal-advice line (page, every scenario) | main | text |  | BUILT |
+| G2 | Footer: sources and data date (page, every scenario) | main | NOT-BUILT | GAP.4 | BUILT-NO-DATA |
+| G3 | Footer: by-laws change line (page, every scenario) | main | text |  | BUILT |
+| G4 | Footer: copyright (page, every scenario) | main | text |  | BUILT-NO-DATA |
+| H0 | Add lot size sheet (page, every scenario) | main | AVAILABLE, NOT-BUILT | 1.3 6c.7 6c.6 1.1 | BUILT |
+| R+3 | Units switch (sq ft / m2 and ft / m), default imperial (page, every scenario) | main | ruled after the brief | MF-83 | NOT BUILT |
+| R+4 | See details opens as its own sheet with its own address; Back closes (page, every scenario) | details | ruled after the brief | MF-83 | BUILT |
+| R+5 | Processing screen before the report (thinking page) (page, every scenario) | main | ruled after the brief | MF-62 1.3 | BUILT |
+| R+6 | Page states: loading, error, not found, rate limited, miss (page, every scenario) | main | ruled after the brief | MF-12 MF-14 MF-74 | BUILT |
+| R+7 | Status word for a number with no row: "Not yet evaluated" (page, every scenario) | main | ruled after the brief | CO.3 | BUILT |
+| R+8 | Lot rows under About this lot: through lot, irregular, sixplex area, holding zone, exception, zoning ambiguous (page, every scenario) | main | ruled after the brief | GAP.5 | NOT BUILT |
+| R+9 | Lot rows: abuts a major street; neighbourhood details (page, every scenario) | main | ruled after the brief | GAP.5 | NOT BUILT |
+| R+11 | Heart on the option picture (favourite option) (page, every scenario) | main | ruled after the brief | MF-55 LS.4 | NOT BUILT |
+| R+12 | Share link button (page, every scenario) | main | ruled after the brief | MF-56 | NOT BUILT |
+| R+13 | FSI cap line in See details (options with headline below the by-law shape) (page, every scenario) | details | ruled after the brief | MB-88 MF-83 | NOT BUILT |
+| R+14 | See details opens with the settings note (page, every scenario) | details | ruled after the brief | MF-85 | BUILT |
+| R+15 | Heritage, ravine, corner and confidence parts and the not-evaluated reason in See details (page, every scenario) | details | ruled after the brief | MF-85 | BUILT |
+| R+16 | Gallery model slide carries no dimension labels (page, every scenario) | main | ruled after the brief |  | NOT BUILT |
+| R+17 | App chrome: bottom tab bar (Lookup, Tracked Lots, Account) and Save / Track this lot (page, every scenario) | main | ruled after the brief | LS.3 LS.4 MF-49 | BUILT-NO-DATA |
+| B9.20 | Storeys below the main walls | details | NOT-BUILT | 1.3 MB-44 |  |
+| B9.21 | Buildable width | details | NOT-BUILT | 1.3 MB-44 |  |
+| B9.22 | By-laws that apply (29): chips and clause rows | details | NOT-BUILT | 1.3 MB-44 |  |
+| B9.23 | Calculated date and by-law data version line (and Back to the report) | details | NOT-BUILT | GAP.4 |  |
+| RR.1 | Right rail (desktop, 1100 px and wider): summary list of the options | main | NOT-BUILT | MF-83 GAP.1 |  |
+| RR.2 | Right rail: "This lot" box | main | NOT-BUILT | MF-83 GAP.5 |  |
+| OS.1 | Options sheet (phone, route #options) | main | NOT-BUILT | MF-83 |  |
+| TB.1 | Phone top bar | main | NOT-BUILT | MF-83 |  |
+| TB.2 | Web top bar | main | NOT-BUILT | MF-83 LS.3 LS.4 |  |
+| G5 | Footer links | main | text |  |  |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md b/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
+index 86220ca25..92359a2e5 100644
+--- a/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
++++ b/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
+@@ -145,6 +145,8 @@ Everything else in `parcels` — zoning internals, bylaw fields, heritage/ravine
+ 
+ > Dated note 2026-11-11 (M-246, prior text kept; MF-62 follow-up · McFrontend queue; operator, verbatim, small pages v7.1 item 9: "inside the search box - should be enter lot address"; and 14:54 "app search placeholder is lot address?"): the search placeholder `search.input.placeholder` is "Enter lot address" (was "Search Toronto address...", ruling 2026-11-09 item 1). Content only (MF-35 binding unchanged). Then operator, verbatim: "3 y 4. keep what we have 2. y 1 acutally think it needs longer" (D-1 a, D-5, D-6): the legal line `search.legal` reads "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City." (D-1 a; Landing v9 R2), superseding the wording of ruling 2026-11-10 item 5 (MF-58 placement unchanged: under the address input, before results); the lawyer check (MF-72) now covers the short line.
+ 
++> Dated note 2026-11-20 (M-246, prior text kept; SRCH.LEGAL task-389; operator, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b: the legal line at the bottom as in v8 search.html:267-269), "Phone retires yes and web search yes" and "5. Do the legal-line move (389) now as a small code change"; record `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md` entries of 2026-11-20): the placement of the legal line `search.legal` in the 2026-11-10 note ("directly under the address input") is replaced: it is the last block of the search page, after the reports-left line, chips, notices and every result block; still every state, one content key, text unchanged. The reports-left line (SRCH.A6) stays right after the input. The web search page already shows the sentence once, in the footer (MF-91), and is unchanged. Locks: `mobile/__tests__/parcelScreens.golden.test.ts` (MF-58 legal-line test) and the ten moved mobile goldens.
++
+ > Dated note 2026-11-19 (RR-0313, prior text kept; MF-35 follow-up · lane BL-BOX, task-356 SRCH.A6; operator, verbatim: "c. can't we put in the search box. Enter a Toronto address" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1216, decision-98), and on the outside-Toronto notice, "yes." (:1223, RR-0314, decision-99)): the search placeholder `search.input.placeholder` now reads "Enter a Toronto address", replacing "Enter lot address" (note above, kept). Content only: one value in `scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json`, read by the app and the web (FE-07); the generated slice and the goldens regenerated by their scripts. The notice `search.outside_toronto` ("Lots are only available in Toronto.") still shows for an address outside Toronto and the reports-left slot is unchanged. Departs from small-pages-v8 (`search.html:265`, `:278`, `:318` draw "Enter lot address"): the 2026-11-19 words are newer; the scratch mock still owes the same change (loose end, task-343).
+ 
+ ## 5. Subscription-check exception (documented)
+diff --git a/mobile/src/components/surfaces/SearchBinding.tsx b/mobile/src/components/surfaces/SearchBinding.tsx
+index 9fba77600..f3c70a327 100644
+--- a/mobile/src/components/surfaces/SearchBinding.tsx
++++ b/mobile/src/components/surfaces/SearchBinding.tsx
+@@ -87,7 +87,7 @@ const pill = (s: SearchSituation): PropsNode =>
+       : []),
+   ]);
+ 
+-/** MF-58 (ruling 2026-11-10 items 16 and 5): the legal line, always shown, under the address input and before any result block. */
++/** MF-58 (ruling 2026-11-10 items 16 and 5): the legal line, always shown. SRCH.LEGAL (task-389; operator "1 a 2 b 3 a 4 a 5 c 6 accept", 2026-11-20): it is the last block of the page, after every result block (v8 search.html:267-269). */
+ const legal = (): PropsNode => node('Text', { key: 'legal', testID: 'parcel-search-legal', className: L.legal }, [content('search.legal')]);
+ 
+ /**
+@@ -232,11 +232,11 @@ export function searchProps(s: SearchSituation): PropsNode {
+       header(),
+       pill(s),
+       ...reportsLeft(s),
+-      legal(),
+       ...chips(s),
+       ...notices(s),
+       ...addressList(s),
+       ...tail(s),
++      legal(),
+     ])]),
+   ]);
+ }
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json
+index f161fc6c4..6425adc90 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json
+@@ -132,19 +132,6 @@
+                   }
+                 ]
+               },
+-              {
+-                "component": "Text",
+-                "props": {
+-                  "key": "legal",
+-                  "testID": "parcel-search-legal",
+-                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
+-                },
+-                "children": [
+-                  {
+-                    "content": "search.legal"
+-                  }
+-                ]
+-              },
+               {
+                 "component": "View",
+                 "props": {
+@@ -297,6 +284,19 @@
+                     ]
+                   }
+                 ]
++              },
++              {
++                "component": "Text",
++                "props": {
++                  "key": "legal",
++                  "testID": "parcel-search-legal",
++                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
++                },
++                "children": [
++                  {
++                    "content": "search.legal"
++                  }
++                ]
+               }
+             ]
+           }
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json
+index 14584fa94..037fdde89 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json
+@@ -158,19 +158,6 @@
+                   }
+                 ]
+               },
+-              {
+-                "component": "Text",
+-                "props": {
+-                  "key": "legal",
+-                  "testID": "parcel-search-legal",
+-                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
+-                },
+-                "children": [
+-                  {
+-                    "content": "search.legal"
+-                  }
+-                ]
+-              },
+               {
+                 "component": "View",
+                 "props": {
+@@ -312,6 +299,19 @@
+                     "content": "search.prompt"
+                   }
+                 ]
++              },
++              {
++                "component": "Text",
++                "props": {
++                  "key": "legal",
++                  "testID": "parcel-search-legal",
++                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
++                },
++                "children": [
++                  {
++                    "content": "search.legal"
++                  }
++                ]
+               }
+             ]
+           }
+diff --git a/mobile/__tests__/parcelScreens.golden.test.ts b/mobile/__tests__/parcelScreens.golden.test.ts
+index d72b37f0c..f40f40dd8 100644
+--- a/mobile/__tests__/parcelScreens.golden.test.ts
++++ b/mobile/__tests__/parcelScreens.golden.test.ts
+@@ -240,17 +240,16 @@ describe('MF-58 the legal line on the search page (ruling 2026-11-10 items 16 an
+   it('the content key search.legal holds the ruled text verbatim', () => {
+     expect(SEARCH_SLICE.content['search.legal']).toBe(LEGAL_TEXT);
+   });
+-  it('in every golden and every named case the line is the column child right after the address input, before any result block', () => {
++  // Dated 2026-11-20 (task-389; operator, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b), "5. Do the legal-line move (389) now as a small code change"; v8 search.html:267-269): the legal line is the LAST
++  // block of the column, after the chips, notices, address list and the tail; it replaces the 2026-11-10 placement under the input. The reports-left line stays right after the input.
++  it('in every golden and every named case the line is the last column child, drawn once', () => {
+     for (const k of [...Object.values(goldens).map((g) => g.situation as string), ...NAMED_CASES]) {
+       const t = searchProps(situations[k] as SearchSituation);
+       const ks = keys(t);
+-      // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): where the reports-left line is drawn (SRCH.A6, ace05ccee; small-pages-v8 search.html:267-269)
+-      // it sits between the address input and the legal line; the legal line is still the next block after it, before any result block. Where it is not
+-      // drawn the legal line is the column child right after the input, as before.
+-      const after = ks.slice(ks.indexOf('pill') + 1);
+-      const owed = ks.includes('reports-left') ? ['reports-left', 'legal'] : ['legal'];
+-      expect([k, after.slice(0, owed.length)]).toEqual([k, owed]);
+-      expect([k, ks.includes('reports-left')]).toEqual([k, k === 'reports_left']); // only the reports_left situation carries an entitlement (review r1 fold: the expectation does not follow the tree)
++      expect([k, ks.filter((x) => x === 'legal').length]).toEqual([k, 1]);
++      expect([k, ks[ks.length - 1]]).toEqual([k, 'legal']);
++      expect([k, ks.includes('reports-left')]).toEqual([k, k === 'reports_left']); // only the reports_left situation carries an entitlement
++      if (ks.includes('reports-left')) expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'reports-left']);
+       const legal = column(t).children.find((c) => isNode(c) && c.props.key === 'legal') as PropsNode;
+       expect([k, legal.component, legal.props.testID, legal.children]).toEqual([k, 'Text', 'parcel-search-legal', [{ content: 'search.legal' }]]);
+     }
+NOTE: the other 8 mobile goldens and mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json move the same way (13 lines out, 13 in, the legal node relocated); loading.mobile.json and every web golden unchanged.
+

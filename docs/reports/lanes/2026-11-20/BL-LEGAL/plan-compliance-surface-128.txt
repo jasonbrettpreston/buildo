@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:27:32.275Z file_sha256=54f3a8015d10fd3f1726a7a1ca823cae41e29b9eec6c413f83741a23fed7c7db prompt_sha256=a046738851eafb0538055ab7f0c559b855170e449e02f1bc7486c1eb0a34aac4
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-surface-128.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10791 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22093 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33508 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44237 chars, answer 0 chars, 60s
+BUG severity=HIGH — Spec 128 §2 rule 4 "which fields render, in which order, with which labels, is a declaration the server owns" — NONE (material, change item 2: "move `legal()` from after reportsLeft to the end of the column children (after tail)") — the search projection's section order is changed inside a mobile component, with no server-owned declaration named or re-derived, which is exactly rule 4's "component's implicit knowledge" plus rule 11's "the declared order is re-derived ... never patched" — move the legal part's position in the declared page/part order the binding renders and let the component follow, or file a §2.1 `deviations[]` row with an adjudicator and a date.
+
+BUG severity=HIGH — Spec 128 §2 "a rule without a lock is not yet a rule: the same commit that records the ruling adds a both-directions test, red on the old behaviour and green on the new." — NONE (material, Checks: "Phone tests are not run locally: phone-test green is UNPROVEN until Mobile CI.") — neither direction is observed, so change item 1's test and item 4's Spec 100 dated note would land a ruling whose lock is asserted by test name only, which is the §4.4/§4.8 failure the register exists to stop — run `mobile/__tests__/parcelScreens.golden.test.ts` on the pre-change tree to capture the red, record it, and do not land the note until a run (local or CI) has produced the green.
+
+DEFER severity=MED — Spec 128 §2.2a rule 19 "Generated output is byte-identical to a regenerate (`--check`, pre-commit and CI, the 132/133 pattern)." — NONE (material, item 3: "then emit-mobile-surfaces.mjs --write (generated, never hand edited)") — item 2 hand-edits `mobile/src/components/surfaces/SearchBinding.tsx` and the plan never says whether that binding is emitted by `emit-mobile-surfaces.mjs` or is source, so it cannot be told whether a generated file is being hand-edited — name which of the two files is generated and, if the binding is, make the move in the generator input and regenerate.
+
+DEFER severity=LOW — operator ruling "1 a 2 b 3 a 4 a 5 c 6 accept" "(C3 b: legal line at the bottom as in v8 search.html:267-269)" — NONE (material, item 1: "reports-left stays right after the pill; chips, notices, list, tail come before legal") — the ruling names the legal line's position only, and the test additionally pins the relative order of unrelated blocks, a check no pasted clause or ruling names — assert only that the legal node is the last child and still present, and leave the other block order to the existing goldens.
+
+DEFER severity=LOW — operator ruling "Phone retires yes and web search yes" — NONE (material, item 3: "Only the position of the legal node moves in each of the 11 mobile goldens") — the plan spends the change keeping 11 mobile goldens current without saying whether the retirement ruling quoted in its own operator words applies to this surface — state in the plan whether the phone search surface retires and, if so, whether this legal move survives it.
+
+REJECT — Spec 128 §2 rule 15 "A surface declaring more than one `render.targets[]` entry proves its projections equal on the shared field set" — moving the legal node in mobile only while web stays in the footer is not a parity break — §2.2a's parity lock normalises to "{field, label, value, status, confidence, provenance, disclosures}", which carries no order, and both targets still emit the legal disclosure exactly once.
+
+REJECT — Spec 128 §4 step 3 "The ruling is recorded in §5's Register of rulings with an id" — recording the placement ruling in a Spec 100 dated note rather than a Spec 128 §5 or Spec 135 row — this is not a generic §2 change, and the dated-note-with-M-246 form is the pattern §2.2a and §5 of this same spec already use for operator rulings.
+
+MET — Spec 128 §2 rule 17 "a required disclosure renders" — material, items 1 and 2 — the legal node stays in every golden and named case with wording, content key, className and testID unchanged, only its position moves.
+
+MET — Spec 128 §3 rule B4 "This is mechanical (`source_fingerprint` over `fingerprint_files[]`), not a reviewer's judgment." — material, Checks: "search-golden-capture --check, emit-mobile-surfaces --check ... before and after" — the edited component forces the recapture rather than a refresh on request.
+
+MET — Spec 128 §2.2a rule 19 — material, item 3: "Regenerate goldens with scripts/surfaces/search-golden-capture.ts --write, then emit-mobile-surfaces.mjs --write" — the goldens are regenerated by the generator's own `--write`, not patched by hand.
+
+MET — Spec 128 §2 rule 13 "ONE command generates the scorecard and the policy-coverage matrix from artifacts" — material, Checks: "surface-validate" — the surface's own validator is named in the checks, no hand-maintained scorecard.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 3
+
+---
+⏱  72742ms (72.7s)
+📊 Tokens — total: 36668, input: 22984, output: 13684, reasoning: 12470

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:27:32.285Z file_sha256=5c02e16fde2bd83ef56c3dcb7851989709db996d08bd474761d1f22348c8884f prompt_sha256=a3f0cf88075b0afa1564123869e339420149f5f047173c476fa3f7a09f55e4a2
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10616 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19081 chars, answer 2711 chars, 30s
+BUG: none.
+DEFER severity=LOW — operator words, C3 b "legal line at the bottom as in v8 search.html:267-269" — NONE (v8 search.html not pasted, cannot see lines 267-269) — the reference artifact that defines "bottom" is not in the pasted context, so the plan's reading "end of the column children (after tail)" cannot be confirmed as the ruled placement (column-last vs page-footer) — attach v8 search.html:255-275 (or the footer markup) to the next run so the placement criterion is checkable.
+DEFER severity=LOW — plan rule line "Spec 100 section 4 dated note 2026-11-10 (legal line under the input, now moved by the 2026-11-20 ruling)" — NONE (Spec 100 §4 and the "2026-11-20 ruling" are not pasted, cannot see) — step 4 "Spec 100 dated note (M-246, prior text kept) recording the ruling" rests on a clause and a ruling that are not in the pasted context, so its obligation and its wording cannot be judged — paste Spec 100 §4 and the 2026-11-20 ruling text, or mark step 4 conditional on them.
+DEFER severity=LOW — Spec 90 §10 "Unit Testing (Jest) ... Minimum 80% coverage threshold." — "Phone tests are not run locally: phone-test green is UNPROVEN until Mobile CI." — step 1 "the MF-58 legal-line test now expects the legal node to be the LAST child" is red-first but unverified at plan-lock, so §10 conformance for the touched test cannot be shown — bounded blast radius, Mobile CI gates it.
+REJECT — operator words "Phone retires yes and web search yes" — the plan is accused of skipping the web surface — "web before = once at the bottom (footer); web after = unchanged" is backed by measured grep ("grep "legal" in web binding gives only footer lines 64,68,131,136,143,248"), so the web surface already carries the ruled once-at-bottom legal line and no web edit is needed.
+MET — Spec 90 §3 "It **MUST NOT** perform complex data mutation" — step 2 "move `legal()` from after reportsLeft to the end of the column children (after tail)" — a static presentational node is reordered; no mutation, PostGIS math or algorithmic sorting is added.
+MET — Spec 90 §7 "Adding a new field, store, or bridge requires either matching an existing pattern in Spec 99 §3-§5" — step 2 "className, testID, content key unchanged" — no new field, store, query key or cross-layer bridge is introduced.
+MET — Spec 90 §9 "Use the established design system tokens from Spec 74" / §2 "NativeWind `dark:` variants are required for all UI components" — "Not changed: wording, content key, className, testID, any other block order" — no className is touched, so token and dark-variant obligations are neither changed nor broken.
+MET — Spec 90 §5 "NO HTML/DOM: Never use `<div>`, `<span>`, `<a>`, `<p>`, or `<button>`." — file under change "mobile/src/components/surfaces/SearchBinding.tsx" — a reorder of existing React Native nodes introduces no HTML tag, web library or DOM API.
+MET — Spec 90 §10 "Jest + React Native Testing Library for logic hooks" — step 1 "Red first." — the behaviour change is pinned by an existing Jest golden assertion before the component move.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  30431ms (30.4s)
+📊 Tokens — total: 11140, input: 5444, output: 5696, reasoning: 4878

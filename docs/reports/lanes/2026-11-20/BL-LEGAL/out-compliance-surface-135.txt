@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.448Z file_sha256=991871c5eef5cc08ad33745e5a615480055bb89def24a1ea5acf0113790a388b prompt_sha256=b19e62ceff9bdc42d39628fe9a3459b3d8b00256bd62413f90b035da1e7c606a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-surface-135.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10274 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21368 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32204 chars, answer 0 chars, 45s
+BUG — none found.
+
+DEFER severity=LOW — Spec 135 Role "The live register of McFrontend rulings (`FE-nn` rows)." — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md (added note 2026-11-20) "the placement of the legal line `search.legal` in the 2026-11-10 note (\"directly under the address input\") is replaced" — a McFrontend display ruling lands as a Spec 100 dated note with no FE row and no register status word, so the register of record does not carry it (MF-58's own placement ruling did the same, so this is bookkeeping, not a new breach) — add the next free id (FE-45) row with a Six cell and its lock path, or add a dated note to Spec 135 saying why this placement stays in Spec 100.
+DEFER severity=NIT — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts`" with FE-33 "the mobile render smoke (MF-35) runs in mobile jest, outside the root suite, so it is prose-only here until MF-25 (one lock per row, 128 §4.10)" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "Locks: `mobile/__tests__/parcelScreens.golden.test.ts` (MF-58 legal-line test) and the ten moved mobile goldens." — the cited lock is a mobile jest file, which the register holds cannot discharge a register lock, so the note should not read as lock-satisfied — mark it prose-only until MF-25, exactly as FE-33 does.
+DEFER severity=LOW — FE-06 "disclosures, confidence, \"at least\", not_evaluated, not_modelled always shown" — src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json and reports_left.mobile.json are shown, then "NOTE: the other 8 mobile goldens and mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json move the same way" — every-state presence is proven for 2 of 10 states in the material; the other eight rest on a trailing assertion, not on the diff — include the remaining eight golden fixtures and the goldens JSON so "still every state" is shown, not claimed.
+MET — FE-18 "Labels, help text and legal copy are content fields, not an exception." — mobile/src/components/surfaces/SearchBinding.tsx:90 — the line is still `content('search.legal')`, no literal legal copy in the tree.
+MET — FE-31 "every string from content (listed exempt files only)" — src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json "content": "search.legal" — the relocated node carries the same content key, no hard-coded string.
+MET — FE-06 "always shown, never hidden" — mobile/__tests__/parcelScreens.golden.test.ts:249 "expect([k, ks[ks.length - 1]]).toEqual([k, 'legal']);" — presence plus last-position asserted for every golden and every named case, with a drawn-once count.
+MET — the 2026-11-11 note "The reports-left line (SRCH.A6) stays right after the input." — mobile/__tests__/parcelScreens.golden.test.ts:251 "if (ks.includes('reports-left')) expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'reports-left']);" — the reports-left slot is unchanged and still asserted next to the pill.
+MET — FE-07 "one content key, text unchanged" and "The web search page already shows the sentence once, in the footer (MF-91), and is unchanged." — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md (added note 2026-11-20) "still every state, one content key, text unchanged" — one key, one instance per target, web untouched.
+MET — FE-02 standing standard "rulings verbatim and cited" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md (added note 2026-11-20) "operator, verbatim: \"1 a 2 b 3 a 4 a 5 c 6 accept\" (C3 b ...), \"Phone retires yes and web search yes\"" — the operator words and their record file are cited in the note.
+MET — the 2026-11-10 note "the legal line, always shown, under the address input and before any result block" — mobile/src/components/surfaces/SearchBinding.tsx:90 — the code comment is updated to the new placement in the same commit, so no stale rule text survives in code.
+REJECT — FE-07 "mobile, web, admin and PDF render the same declaration; parity compares each target's real output" — accused of splitting web (footer) from mobile (last block) — not a real issue: FE-07 governs the declaration and its own dated note keeps the parity lock REPORT-scoped ("This lock, its REPORT scope and its status are unchanged"), so a platform chrome position is not a parity failure.
+REJECT — Spec 135 rule 4 "a RULED row's Six cell answers pass, n/a (reason) or FAIL" — accused of a missing Six cell — not a real issue: no register row is added or flipped by this diff, so no Six cell is owed here.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  55053ms (55.1s)
+📊 Tokens — total: 38964, input: 28768, output: 10196, reasoning: 8933

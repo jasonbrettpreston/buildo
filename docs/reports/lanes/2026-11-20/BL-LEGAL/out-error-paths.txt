@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T15:31:55.511Z file_sha256=740375fc0cac87a2301f95d5ad3579627434c77fc8b4e1fc44cb244909fd2140 prompt_sha256=0da911005b32073ef687c6e970fdfbe73adecd3ba4ea60666c45d198eca05d61
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/out-diff.diff (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9630 chars, answer 0 chars, 15s
+DEFER severity=LOW — mobile/src/components/surfaces/SearchBinding.tsx:90 "const legal = (): PropsNode => node('Text', { key: 'legal', testID: 'parcel-search-legal', className: L.legal }, [content('search.legal')]);" — empty path: if the `search.legal` key ever resolves to empty or undefined at runtime the disclaimer silently disappears from every state with no fallback and no log (and what `content()` returns for a missing key is not visible here) — fix: render the locked `LEGAL_TEXT` literal (or assert non-empty) when the key is falsy instead of trusting the resolver.
+
+REJECT — mobile/__tests__/parcelScreens.golden.test.ts:248 "(x) => x === 'legal').length]).toEqual([k, 1]" — moving `legal()` to after `...tail(s)` looks like it could draw the same disclaimer twice if it were also left earlier — handled: the drawn-once count assertion plus the single fixed `key: 'legal'` turns any duplicate render into a failing test, so the double-draw path is closed.
+
+REJECT — mobile/__tests__/parcelScreens.golden.test.ts (note) "loading.mobile.json and every web golden unchanged." — looks like the loading state might lose the line when it moves to the end — handled: in loading, chips, notices, addressList and tail are all empty so the new last position is the same position, hence the golden correctly does not change.
+
+VERDICT: PASS on error-path safety
+Paths walked: error (no network/parse/storage call added), empty/missing content key, retry (n/a, no call), timeout (n/a, no call), double-submit (drawn-once), degrade-safety (missing key fallback), idempotency key `legal` (single fixed node key)   Unguarded: 1
+
+---
+⏱  24401ms (24.4s)
+📊 Tokens — total: 10831, input: 6854, output: 3977, reasoning: 3560

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:29:27.712Z file_sha256=43ac325d82cd7ca9cf5c45c0d42bfa2e658285ed24f4992ea27ea0d819de7314 prompt_sha256=04acff3b47233a0d58cbda38a7c43ba70391c6be060b4a521745528078a4b46d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 12424 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 24989 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 36849 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 48727 chars, answer 449 chars, 60s
+BUG severity=HIGH — Spec 137 §4 Rule 3 (G3 amendment) "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — plan change step 2 "mobile/src/components/surfaces/SearchBinding.tsx: move `legal()` from after reportsLeft to the end of the column children (after tail)" and step 3 "Regenerate goldens with scripts/surfaces/search-golden-capture.ts --write" — the plan commits `mobile/` and `scripts/` but never names the `Task: task-389` trailer or the task file in the same diff, so G3 refuses the commit — add the trailer and the task file to the same commit and list it in Checks.
+
+BUG severity=HIGH — Spec 137 §4 dated note 2026-11-20 "the close of a lane's task (rule 3 of this section: the status line changes in the same commit as the work) now also needs, in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`), one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding" — plan "Task Implementation notes + AC via backlog CLI." — the closing step has no lane report and no GROUNDER.md, so a commit that sets BUILT or DONE is refused by check-lane-close.mjs — add the lane report with one compliance lens output per attached rule list and a non-lane GROUNDER.md before setting BUILT or DONE.
+
+BUG severity=HIGH — Spec 137 §4 Rule 4 (G2 amendment) "rulings for plan tasks are entered through `scripts/analysis/backlog-decision.mjs` (gate G2): a verbatim quote and a cite file:line that exists and contains the quote, or it refuses" — plan step 4 "Spec 100 dated note (M-246, prior text kept) recording the ruling: the 2026-11-10 note's placement "directly under the address input" is replaced by "last block of the page"" — the ruling that names task-389 ("5. Do the legal-line move (389) now as a small code change") is recorded only in a Spec 100 note, never on the task row through backlog-decision.mjs, so Rule 4 is unmet — add a step running backlog-decision.mjs for task-389 with the verbatim quote and an existing cite file:line.
+
+BUG severity=HIGH — Spec 137 §4 Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — plan step 4 "replaced by "last block of the page"" — the operator words pasted are "C3 b: legal line at the bottom as in v8 search.html:267-269", so "last block of the page" is a paraphrase in quotes that G2 would refuse as not found at the cite — quote the operator verbatim, e.g. "legal line at the bottom as in v8 search.html:267-269".
+
+DEFER severity=MED — Spec 137 §4 Rule 2 (McLane amendment) "A queue-row task: the queue row stays the record and the Backlog task mirrors it by hand under rule 3 (no synchroniser)." with Rule 3 "When work lands for a row, the commit that lands it edits that row's status line" — plan step 1 "the MF-58 legal-line test now expects the legal node to be the LAST child" and "(src/components/surfaces/web/SearchBinding.tsx:64,136; MF-91)" — the plan changes the work queue rows MF-58 and MF-91 track but never states the queue row stays the record nor edits its status line in the same commit — add the MF-58/MF-91 status-line update in the same commit, or state task-389 does not mirror a queue row.
+
+DEFER severity=MED — Spec 137 §4 Rule 12 "A row that waits on a named event takes that event as its expiry. The `expires` field reads `when <event>`, not a date 7 days out." — plan "Phone tests are not run locally: phone-test green is UNPROVEN until Mobile CI." — the plan leaves the task waiting on the Mobile CI event but sets no `expires: when <event>` for it — set the task expiry to `when phone-test green` (Mobile CI) instead of leaving it unset or dated.
+
+MET — Spec 137 §4 Rule 2 (McLane amendment) "a plan task that is not a queue row: its Backlog file is its row" — "task-389 SRCH.LEGAL (lane BL-LEGAL)" — the task is registered as a Backlog task, so it has a row and does not fall under "A task with no row does not exist".
+
+MET — Spec 137 §4 Rule 3 (G3 amendment) "docs, spec, queue-row, backlog-only and merge commits are exempt" — plan step 4 "Spec 100 dated note (M-246, prior text kept)" — the Spec 100 dated note lands in a docs/spec commit and is exempt from the G3 trailer.
+
+REJECT — Spec 137 §6 "Backlog.md as the source of truth ... Not adopted" — the plan registers task-389 in `backlog/` and edits it via backlog CLI — not a real issue: the §6 "Not adopted" stands for the queue rows only; the §1/§2 McLane amendment (RR-0205) makes `backlog/` the home for the increment plan's tasks.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 6
+
+---
+⏱  63942ms (63.9s)
+📊 Tokens — total: 24065, input: 9748, output: 14317, reasoning: 13032

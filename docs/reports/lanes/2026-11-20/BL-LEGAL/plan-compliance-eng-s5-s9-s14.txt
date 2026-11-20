@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:29:27.715Z file_sha256=13eb49a64a9a856530df21525359b62fba1e1ac4c1f4981e750fe16ba047ab8a prompt_sha256=4fa142e17cc96de108489f25fd9a4dc19027c995823fe5bddc68598e49759aff
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-eng-s5-s9-s14.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11162 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22878 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33535 chars, answer 0 chars, 45s
+BUG severity=HIGH — §14 "A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**" — plan rule line "Rule: Spec 126 section 0a principle 1 and 11b.2 (one binding per archetype, refs only); Spec 100 section 4 dated note 2026-11-10 ...; 08_agents.md section 7 rules 3, 4; PLAN-PROTOCOL.md:3." versus step 4 "Spec 100 dated note (M-246, prior text kept) recording the ruling" — four documents are cited as binding this move and only Spec 100 receives a dated note, so Spec 126 §0a/§11b.2, 08_agents §7 rules 3-4 and PLAN-PROTOCOL.md:3 still describe the under-input placement when the commit lands — add the same prior-text-kept dated note to Spec 126 §0a/§11b.2, 08_agents §7 rules 3-4 and PLAN-PROTOCOL.md:3 in the same commit, or state per document in the plan why it is unaffected.
+
+BUG severity=HIGH — §5.3 "Run the test and confirm it fails" — plan step 1 "the MF-58 legal-line test now expects the legal node to be the LAST child of the column in every golden and named case ... Red first." plus "Phone tests are not run locally: phone-test green is UNPROVEN until Mobile CI." — the Red Light is asserted as intent, never demonstrated, and step 2 code may not be written until the test demonstrably fails — run parcelScreens.golden.test.ts against the unmodified component first, paste the failing assertion output into the plan, then do step 2, or record this as an explicit operator-approved exception to §5.3.
+
+DEFER severity=MED — §5.2 "`*.ui.test.tsx` | React component rendering, interactions | Any new/changed component" — plan step 2 "mobile/src/components/surfaces/SearchBinding.tsx: move `legal()` from after reportsLeft to the end of the column children (after tail)" — a component's rendered child order changes and the plan adds or updates no `*.ui.test.tsx` — add or extend the mobile ui test asserting the legal block renders last, or record in the plan that Spec 90 designates the golden capture as the mobile component layer and have that accepted.
+
+DEFER severity=MED — §14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions**" — plan steps 1 and 2 touch "mobile/__tests__/parcelScreens.golden.test.ts" and "mobile/src/components/surfaces/SearchBinding.tsx" with no SPEC LINK step stated — the new placement lands in code and test while both files' SPEC LINK still point at the superseded note section — add a step updating the SPEC LINK header (§N) of both files and the Spec 100 ↔ Spec 126 Cross-Spec Dependencies entries in both directions.
+
+DEFER severity=MED — §5.5 "Pick the layer that *proves the claim*" with the plan's own Spec 126 rule "(one binding per archetype, refs only)" — plan step 1 "expects the legal node to be the LAST child of the column in every golden and named case" — the amended assertion proves position only, not that exactly one legal node exists per surface, so a duplicate legal block added later stays green against the one-binding rule — assert the legal node count (exactly one per surface) alongside the last-child position in the named case.
+
+REJECT — §9.1 / §9.2 / §9.3 / §9.4 / §9.5 — the change is accused of pipeline-safety violations — not a real issue: the only scripts invoked are "scripts/surfaces/search-golden-capture.ts --write, then emit-mobile-surfaces.mjs --write", which emit JSON artifacts, and §9 binds `scripts/*.js` database writers; no transaction, chunking, upsert or SDK clause is engaged and neither script is modified.
+
+REJECT — §5.2 test pattern table (no `*.golden.test.ts` row) — the change is accused of using an unlisted test pattern — not a real issue: `mobile/__tests__/parcelScreens.golden.test.ts` pre-exists as the mobile capture layer, the plan creates no new file pattern, and §5.2's table mandates patterns for new tests rather than forbidding pre-existing mobile capture tests.
+
+MET — §5.5 parity battery row "generated doc ↔ its generator (the drift guard ...)" — plan "Checks: every --check the hooks run for these files before and after (search-golden-capture --check, emit-mobile-surfaces --check)" — both generators are checked rather than the goldens being hand edited.
+
+MET — §14 same-commit row, for Spec 100 — plan step 4 "Spec 100 dated note (M-246, prior text kept) recording the ruling" — prior text is retained and the 2026-11-20 replacement is recorded rather than overwritten.
+
+MET — §5.1 "Never write untyped inline mocks" — plan step 1 "the MF-58 legal-line test now expects the legal node to be the LAST child" — the change asserts on captured golden trees and introduces no inline fixture object.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 5
+
+---
+⏱  50758ms (50.8s)
+📊 Tokens — total: 14656, input: 4724, output: 9932, reasoning: 8718

@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.429Z file_sha256=75301dfe0059e14c602fba197a8621f4efad4c41c6a95d8e0f7dce2e8f46fb53 prompt_sha256=ea6dce3d008f1d348adb40d5981e3a365dfea4d5066075940f84f58c48a40dae
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-eng-s1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 12129 chars, answer 0 chars, 15s
+```
+MET — 1.3 Design System Fidelity "font-mono is reserved strictly for data values ... It must never be applied to human-readable labels" — SearchBinding.tsx legal node className "mt-3 text-[13px] leading-[18px] font-normal text-report-muted" — the legal line is human-readable text and carries font-normal, not font-mono, so the reservation is respected.
+MET — 1.1 Mobile-First UI Mandate "The base (unprefixed) utility classes must dictate the layout" — SearchBinding.tsx legal className "mt-3 text-[13px] leading-[18px]" — the relocated node uses only unprefixed utilities, so it satisfies mobile-first regardless of reorder.
+MET — 1.3 Design System Fidelity "must use NativeWind `dark:` variants ... rather than hardcoded `bg-zinc-950`" — legal className "text-report-muted" — the node uses a semantic token, not a hardcoded colour, and the className is byte-identical before and after the move.
+REJECT — 1.1 Touch Targets "All interactive elements ... 44px x 44px" — accused of an undersized control — the moved node is a non-interactive Text (className "font-normal text-report-muted", children [{ content: "search.legal" }]), so the touch-target clause is not engaged.
+REJECT — 1.1 Responsive Layout "Card and row layouts MUST ... Use `flex flex-col md:flex-row`" — accused of a non-responsive column — the diff only reorders a child of an existing column; the container props are not shown and not changed, so nothing responsive is introduced or broken by this change ("cannot see" the wrapper, so no finding).
+REJECT — 1.3 Micro-animations & Haptics "Primary interactive cards and buttons must use Reanimated withSpring" — accused of a silent transition — the change relocates a static legal Text block; no interactive card or button is added, so the haptics/spring clause is not engaged.
+```
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  21854ms (21.9s)
+📊 Tokens — total: 9157, input: 4891, output: 4266, reasoning: 3802

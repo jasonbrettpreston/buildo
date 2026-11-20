@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:27:32.340Z file_sha256=e4f217a3e60c3b033b9e4201e8bb1ebee4d6bcb93687f0d162d6af8949290b77 prompt_sha256=f05e5f2ab277863b76e5f03ae14cca9a4b410488112dde8926f83ae8329b9a8f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10770 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22612 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33844 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44777 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 55967 chars, answer 0 chars, 75s
+DEFER severity=MED — Spec 126 §0a principle 6 "Same everywhere: mobile, web, admin and PDF render the same declaration; parity is a test (Spec 128 Rule 15)." — "No web change, no web golden moves." and "Checks: every --check the hooks run for these files ... typecheck." — the cross-platform parity the plan asserts (web footer vs phone column-last) is reasoned in prose and no parity test appears in the Checks list — name or run the web-vs-phone parity assertion, or cite the existing test that pins it
+DEFER severity=MED — Spec 126 §0b item 6 "Every operator ruling is recorded verbatim, dated, landed and cited. The operator's own words with the date and the record path" — "Spec 100 dated note (M-246, prior text kept) recording the ruling: ... replaced by 'last block of the page'" — the note is specified as a paraphrase ("last block of the page"), not the operator's words with date and record path — quote verbatim "C3 b: legal line at the bottom as in v8 search.html:267-269" with the date and the open-questions.md record path
+DEFER severity=LOW — operator "C3 b: legal line at the bottom as in v8 search.html:267-269" / "Phone retires yes and web search yes" — "The web search binding already shows the legal sentence once, in the footer, last child" — the plan equates web's footer node with the ruling's bottom/last block without showing the web node order; cannot see the web file — paste the web node and its parent order, or pin it with a web golden assertion
+DEFER severity=LOW — Spec 126 §0b item 1 "No McFrontend work starts without its row in `.cursor/MCFRONTEND-QUEUE.md`" — "PLAN task-389 SRCH.LEGAL (lane BL-LEGAL)" — plan cites backlog task-389 and a lane, not the MCFRONTEND-QUEUE row; cannot see they map — cite the queue row id
+
+MET — Spec 126 §0a principle 1 "the only code is the shared archetype components" — plan step 2 "mobile/src/components/surfaces/SearchBinding.tsx: move `legal()`" — edits the shared archetype component, the code principle 1 permits
+MET — Spec 126 §0b item 10 "Goldens per state per target" — plan step 3 "Regenerate goldens with scripts/surfaces/search-golden-capture.ts --write" — mobile goldens regenerated per state
+MET — Spec 126 §0b item 2 "red first" — plan step 1 "Red first." — the lock test is written before the code change
+MET — Spec 126 §0b item 8 "Scratch mocks are design inputs only ... never copied into the repo" — "legal line at the bottom as in v8 search.html:267-269" with "wording, content key ... unchanged" — v8 is referenced as design input, nothing copied
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  83755ms (83.8s)
+📊 Tokens — total: 40865, input: 24895, output: 15970, reasoning: 15267

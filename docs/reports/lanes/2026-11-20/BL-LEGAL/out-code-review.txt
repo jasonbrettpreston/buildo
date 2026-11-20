@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T15:31:55.525Z file_sha256=740375fc0cac87a2301f95d5ad3579627434c77fc8b4e1fc44cb244909fd2140 prompt_sha256=071fa4f03af50032862d46b6319b5c94c7d34bd90db00eadce7ee52302a1cebd
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/out-diff.diff (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10690 chars, answer 0 chars, 15s
+DEFER severity=MED — mobile/__tests__/parcelScreens.golden.test.ts:247 "expect([k, ks[ks.length - 1]]).toEqual([k, 'legal']);" — this holds only if keys(t) returns direct column children; keys() is not in the diff, and a recursive walk would leave the last key as a child of the tail block and fail — confirm keys() is flat (the old line "const after = ks.slice(ks.indexOf('pill') + 1);" implies it is), otherwise assert against column(t).children directly.
+
+DEFER severity=LOW — mobile/__tests__/parcelScreens.golden.test.ts:251 "const legal = column(t).children.find((c) => isNode(c) && c.props.key === 'legal') as PropsNode;" — the unchecked cast hides a possible undefined, so a missing node surfaces as a TypeError on "legal.component" instead of a readable failure — add expect(legal).toBeTruthy() before the component assertion.
+
+DEFER severity=LOW — NOTE in prompt "loading.mobile.json and every web golden unchanged" — searchProps now appends legal() after tail(s) for every situation, so any loading-state chip, notice, address or tail node would move it — cannot see loading.mobile.json, confirm it draws no column blocks after the old legal position.
+
+REJECT — src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json:290 "\"className\": \"mt-3 text-[13px] leading-[18px] font-normal text-report-muted\"" — the mt-3 top margin reads as stale for a line that was under the address input — it is spacing from the preceding block, identical in the reports_left golden and harmless, so no change is needed.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- n/a (PASS)
+
+---
+⏱  28710ms (28.7s)
+📊 Tokens — total: 11995, input: 6837, output: 5158, reasoning: 4749

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.449Z file_sha256=4c933817635a950d2a380c0778d8742e748ac00ac56e81e4ac593371f7a9c16b prompt_sha256=bc0ee6c46e8087ed1ce648637f154450de6bebe90ea179bde662139db440c6da
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10704 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22828 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 35108 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 46270 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 57847 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 67840 chars, answer 1268 chars, 90s
+DEFER severity=MED — §11b.2 Goldens "one props golden per reachable state per declared target at `src/tests/fixtures/surfaces/<surface_id>/<state>.<target>.json`, each `covers` a state" — "NOTE: the other 8 mobile goldens and mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json move the same way (13 lines out, 13 in, the legal node relocated); loading.mobile.json and every web golden unchanged." — 8 of the 10 states' goldens and the index are outside the pasted material, so their agreement with the moved `legal()` child cannot be checked (cannot see) — paste the regenerated set, or name the generator run that produced them, in the note.
+
+DEFER severity=MED — §11b.2 Goldens "at `src/tests/fixtures/surfaces/<surface_id>/<state>.<target>.json`" — "the other 8 mobile goldens and mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json move the same way (13 lines out, 13 in, the legal node relocated)" — the same props trees exist a second time under `mobile/__tests__/fixtures/surfaces/`, a path the clause does not name, so this move is made twice by hand and the two copies can drift — point the mobile test at the declared goldens, or record the second path in the spec.
+
+DEFER severity=LOW — SRCH.LEGAL ruling 2026-11-20 "C3 b: the legal line at the bottom as in v8 search.html:267-269" — "// Dated 2026-11-20 (task-354; Mobile CI run 44741125636): where the reports-left line is drawn (SRCH.A6, ace05ccee; small-pages-v8 search.html:267-269)" — the material cites the same three v8 lines for the reports-left line and for the legal line, so the "as in v8" basis for "the last block" cannot be confirmed — cite the legal line's own v8 lines, or drop the line range.
+
+DEFER severity=LOW — §11b.2 Goldens "one props golden per reachable state per declared target" — "loading.mobile.json and every web golden unchanged" — `legal()` now runs unconditionally after `tail(s)`, so if the loading situation draws any notice or tail child its golden is stale (cannot see `loading.mobile.json`) — regenerate and show `loading.mobile.json`.
+
+MET — §11b.2 Content "every user-visible string comes from a content file" — mobile/src/components/surfaces/SearchBinding.tsx:90 "[content('search.legal')]" — the moved node still reads the content key, no string is retyped in the binding.
+
+MET — §11b.1 "Our code is limited to the descriptor → library binding (one per archetype per platform, thin config)" — mobile/src/components/surfaces/SearchBinding.tsx:239 "+ legal()," — the change is a child reorder inside the declared binding, no new module and no new wrapper.
+
+MET — §11b.1 note 2026-11-11 "A new component kind would be a new decision." — mobile/src/components/surfaces/SearchBinding.tsx:90 "node('Text', { key: 'legal', testID: 'parcel-search-legal'" — the line stays a `Text` node, no new kind.
+
+REJECT — §11b.2 Locks "parity keyed by surface (FE-07)" — that moving the block on mobile only breaks mobile/web parity — the web page carries the one `search.legal` in its footer and is unchanged per the new note, and parity is keyed by surface content, not block order.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  91831ms (91.8s)
+📊 Tokens — total: 45168, input: 26726, output: 18442, reasoning: 17574

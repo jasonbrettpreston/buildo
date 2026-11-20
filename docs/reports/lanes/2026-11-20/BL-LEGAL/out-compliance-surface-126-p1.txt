@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.473Z file_sha256=935bdb189f885050e9d72ff2361016bf55e0ef1073218e11277150352c639e43 prompt_sha256=b73a8223d81ef378c4106ae84f17a872daf9ac85550b6dc96ad7c18c490fdd74
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10590 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21737 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31293 chars, answer 1310 chars, 45s
+BUG/DEFER findings first, then MET lines.
+
+DEFER severity=MED — Spec 126 §0b item 6 "Every operator ruling is recorded verbatim, dated, landed and cited." — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:147 "operator, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b: the legal line at the bottom as in v8 search.html:267-269)" — the operator's quoted words give option "5 c" and the instruction to do the move, but the exact placement ("last block, after every result block") rests on the author's parenthetical gloss "C3 b", whose option text is not quoted — quote the C3 b option text verbatim in the dated note (as decision-98 style records do) so the position is traceable to the operator's words, not a gloss
+
+DEFER severity=MED — Spec 126 §0b item 10 "Goldens per state per target and one render smoke per archetype per platform (FE-31, FE-33)" — src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json:284 (only empty/reports_left shown) against "NOTE: the other 8 mobile goldens and mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json move the same way ... loading.mobile.json and every web golden unchanged" — 8 of the 10 per-state mobile goldens are claimed moved but cannot see them in the material, so goldens-per-state is satisfied only by the note — include those fixture diffs (or the recapture output) in the material so the state set is provably current
+
+DEFER severity=LOW — Spec 126 §0b item 6 "cited by every commit, prereg and lock that relies on it (the `McFrontend-Task:` trailer and the prereg `rules[]`, each RULED)" — mobile/__tests__/parcelScreens.golden.test.ts:244 "// Dated 2026-11-20 (task-389; operator, verbatim: ..." — the lock cites the ruling but no `McFrontend-Task:` trailer or prereg `rules[]` entry is visible — cannot see the commit message or prereg; confirm both carry task-389 and this ruling
+
+DEFER severity=LOW — Spec 126 §0b item 1 "No McFrontend work starts without its row in `.cursor/MCFRONTEND-QUEUE.md`" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:147 "SRCH.LEGAL task-389" — the queue row is named but cannot see `.cursor/MCFRONTEND-QUEUE.md`, so the row-first step is unproven — cite the row line or attach the queue diff
+
+DEFER severity=LOW — Spec 126 §0b item 6 (dated note must describe what the change does) — mobile/src/components/surfaces/SearchBinding.tsx:239 "      ...tail(s)," then "    legal()," against the note "after the reports-left line, chips, notices and every result block" — the note enumerates the blocks the line follows but omits the tail/prompt block it actually follows (the fixture shows the preceding child holds "search.prompt") — name the tail in the note's enumeration so note and binding agree
+
+MET — Spec 126 §0b item 6 (dated note, prior text kept, M-246 form) — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:147 — adds a dated 2026-11-20 note that keeps the prior paragraphs and names the operator words and record path
+
+MET — Spec 126 §0b item 3 "Screens are declared as data and drawn by the shared bindings; no page code." — mobile/src/components/surfaces/SearchBinding.tsx:239 — the move is an ordering change inside the existing shared binding, not new page code
+
+MET — Spec 126 §0b item 4 "Every build reuses the existing components, bindings and patterns" — mobile/src/components/surfaces/SearchBinding.tsx:239 "    legal()," — no new component kind, binding or library is introduced
+
+MET — Spec 126 §0b item 5 "The server formats every value; the UI does no maths." — mobile/src/components/surfaces/SearchBinding.tsx:90 "node('Text', { key: 'legal', testID: 'parcel-search-legal', className: L.legal }, [content('search.legal')])" — the value is still the content key bound as sent, text unchanged
+
+MET — Spec 126 §0a principle 6 "Same everywhere: mobile, web, admin and PDF render the same declaration" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:147 "The web search page already shows the sentence once, in the footer (MF-91), and is unchanged." — one declaration, one content key, drawn once on each target
+
+REJECT — Spec 126 §0a principle 1 "a new scenario reaches the report with no code" — accused of adding page code by moving the legal block in TSX — not a real issue: the shared archetype binding is the code the principle permits, and the bound value is still content only
+
+REJECT — Spec 126 §0b item 8 "Mocks, briefs, Stitch exports and research in `~/Buildo-scratch/` are references, never copied into the repo" — accused of copying the scratch mock — not a real issue: the note cites `v8 search.html:267-269` as a reference only, no mock markup is added
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  49008ms (49.0s)
+📊 Tokens — total: 36602, input: 27181, output: 9421, reasoning: 8137

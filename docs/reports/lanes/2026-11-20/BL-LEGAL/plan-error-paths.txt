@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T15:27:32.334Z file_sha256=83cfe38addc815f1534c90aee03f87c1e6fc483f1a70e1f4b1626e3e092d8ee9 prompt_sha256=e7f1ea46d371db6e58df967a39a48814c57fbe4800a1f219553415c449a66683
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/../PLAN.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 8579 chars, answer 1359 chars, 15s
+BUG severity=MED — mobile/__tests__/parcelScreens.golden.test.ts (plan Change 1) "the MF-58 legal-line test now expects the legal node to be the LAST child of the column in every golden and named case" — if a stale `legal()` call survives after reportsLeft, last-child still passes, so the twice-rendered legal sentence path is undetected — also assert the count of legal nodes per golden is exactly 1, not just that the last child is legal.
+BUG severity=MED — plan Change 3 "Regenerate goldens with scripts/surfaces/search-golden-capture.ts --write, then emit-mobile-surfaces.mjs --write" — the pair is not atomic: if capture succeeds and emit is skipped or fails, the 11 generated mobile surfaces plus mobile_parcel_search.goldens.json are left stale and every later --check fails on a half-written state — rerun both --write in one step after any failure and close with both --check calls green, keyed by the golden file path so a repeat is a no-op.
+DEFER severity=MED — plan Checks "Phone tests are not run locally: phone-test green is UNPROVEN until Mobile CI." — the red-first assertion and 11 regenerated goldens can merge unverified, so a wrong golden (legal not actually last) lands on main with a green local log — make Mobile CI green an explicit merge gate for this change, or say it is not one and why.
+DEFER severity=LOW — plan Change 1 "the MF-58 legal-line test now expects the legal node to be the LAST child of the column in every golden and named case" — any golden or named case that today has no legal node will either fail or be forced to gain one, which is a content addition, not a move — scope the new last-child assertion to the cases whose golden already contains the legal block, and list them.
+DEFER severity=LOW — plan Change 4 "Spec 100 dated note (M-246, prior text kept) recording the ruling" — an appended dated note is not idempotent: a re-run of the docs step, or a second author, appends a second M-246 note — make the append skip when the note id already exists.
+DEFER severity=LOW — plan Change 2 "move `legal()` from after reportsLeft to the end of the column children (after tail); update the doc comment of legal()" — the doc comment is the only record that the position is deliberate and ruling-backed; nothing enforces it, so a later reorder silently reverts the ruling with all checks green — cite the dated note id in the comment line so the next editor sees the binding.
+REJECT — plan Change 2 "move `legal()` from after reportsLeft to the end of the column children (after tail)" — looks like an ordering change that could disturb error or empty rendering — it is a JSX child reorder only, className, testID and content key unchanged, no fetch, storage or write, so no error, retry, timeout or duplicate-write path exists here.
+REJECT — plan "No migration/fallback code (app in development)." — looks like a missing degrade-safe fallback — nothing reads a new field; the legal block renders from the existing content key with unchanged testID, so no new empty-data path is introduced.
+
+VERDICT: PASS on error-path safety
+Paths walked: no network/parse/storage path (pure render reorder), empty legal content, duplicate legal render, golden regeneration repeat-write, docs note repeat-append, unproven-mobile-CI merge   Unguarded: 4
+
+---
+⏱  17173ms (17.2s)
+📊 Tokens — total: 5133, input: 2268, output: 2865, reasoning: 2091

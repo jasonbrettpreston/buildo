@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.452Z file_sha256=edc5af405db7ff0d5d0ed9b343b7be2cca5f720d94dc0e099d064e2608d6ddba prompt_sha256=8024b5aa3edbf7349fbd49293ffb1a0b79239fec920c9ca281117d4ee499b851
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10293 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21503 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31699 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 40778 chars, answer 2342 chars, 60s
+DEFER severity=MED — Spec 05 §5.5 "a generated artifact needs ... Parity battery ... generated doc ↔ its generator (the drift guard — regenerate to a buffer, diff the committed file)" — mobile/__tests__/parcelScreens.golden.test.ts:247 "for (const k of [...Object.values(goldens).map((g) => g.situation as string), ...NAMED_CASES]) {" — the rewritten case uses `goldens` only to enumerate situation names and then asserts on `searchProps`, so it proves the builder's new order but not that the ten committed fixtures under src/tests/fixtures/surfaces/mobile_parcel_search/ were regenerated, and I cannot see a regenerate-and-diff assertion for those files — add or point to the drift-guard test that renders fresh and diffs the committed .mobile.json fixtures.
+
+DEFER severity=MED — Spec 05 §5.2 "`*.ui.test.tsx` | React component rendering, interactions | Any new/changed component" — mobile/src/components/surfaces/SearchBinding.tsx:242 "      legal()," — the changed component's child order is pinned only by `parcelScreens.golden.test.ts`, no `*.ui.test.tsx` appears in the diff — bounded risk because the golden asserts the exact position ("ks[ks.length - 1]" is 'legal'), so record why the golden layer is the proving layer for this component or add the ui test.
+
+DEFER severity=LOW — Spec 05 §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code" — mobile/__tests__/parcelScreens.golden.test.ts:246 "it('in every golden and every named case the line is the last column child, drawn once', () => {" — the assertion rewrite and the node move land in one diff with no recorded Red run, so the diff alone cannot show the new assertion ever failed against the old order — paste the Red receipt for the moved-legal assertion into the change notes.
+
+DEFER severity=LOW — Spec 05 §5.2 "Pins a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) ... When altering/deleting code the Regression Guardian flags as a fence" — deleted line in mobile/__tests__/parcelScreens.golden.test.ts "// Dated 2026-11-20 (task-354; Mobile CI run 44741125636): where the reports-left line is drawn" — a past CI-run fix is deleted with no note or `*.regression.test.ts` recording that the pill+1 reports-left ordering it pinned survives while the input-adjacent legal placement is retired — state in the diff that the task-354 ordering is kept (it is, via "if (ks.includes('reports-left'))") so a future reader does not restore the superseded placement.
+
+MET — Spec 05 §5.1 — src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted" — the relocation moves the existing typed node unchanged, no untyped inline mock added.
+
+MET — Spec 05 §5.5 "Pick the layer that *proves the claim*" — mobile/__tests__/parcelScreens.golden.test.ts:251 "expect([k, ks[ks.length - 1]]).toEqual([k, 'legal']);" — the position claim is proven on the props tree that actually produces the draw order, plus the drawn-once guard at line 250.
+
+MET — Spec 05 §5.2 DB replay row and §5.3 unhappy-path rule — mobile/src/components/surfaces/SearchBinding.tsx:242 "      legal()," — not triggered, the diff adds no API route, DB mutation or migration, so no `.infra.test.ts` or `BUILDO_TEST_DB` replay is owed.
+
+REJECT — Spec 05 §5.1 — accused of an untyped inline expected-node literal — mobile/__tests__/parcelScreens.golden.test.ts "expect([k, 'Text', 'parcel-search-legal', [{ content: 'search.legal' }]])" is pre-existing context, not introduced by this diff, and is an assertion target rather than a mock.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+
+---
+⏱  61511ms (61.5s)
+📊 Tokens — total: 16642, input: 5265, output: 11377, reasoning: 10409

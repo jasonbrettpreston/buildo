@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.452Z file_sha256=30a057f860ed683185ec33c624557897545c189da5901196eccd66f075f4348b prompt_sha256=b580a48f83c9f807134cefcf0d21aee9c6b08387cfe2023cc5e59a409d4c6eb0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10484 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21191 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32063 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43421 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 54867 chars, answer 0 chars, 75s
+DEFER severity=LOW — Spec 08 §11.1 "a census grep runs at the full scope its conclusion covers" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "+> Dated note 2026-11-20 ... Locks: `mobile/__tests__/parcelScreens.golden.test.ts` (MF-58 legal-line test) and the ten moved mobile goldens." — the material shows two moved goldens plus the goldens index, says 'loading.mobile.json and every web golden unchanged', and asserts the other eight, so neither the count 'ten' nor 'still every state' is evidenced here — name the moved file set and say why the loading golden needs no move.
+
+DEFER severity=LOW — §7 rule 10 (C2) "a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`)" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "+> Dated note 2026-11-20 ... (C3 b: the legal line at the bottom as in v8 search.html:267-269)" — the line hint carries no commit sha, and mobile/__tests__/parcelScreens.golden.test.ts "+  // block of the column ... (v8 search.html:267-269)" repeats it likewise — add the sha to both line hints.
+
+DEFER severity=LOW — §7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "+> ... record `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md` entries of 2026-11-20" — the record is cited with no line anchor where the adjacent 2026-11-19 note cites ':1216' and ':1223', and only items 3 and 5 of the answer "1 a 2 b 3 a 4 a 5 c 6 accept" are transcribed — cite the entry line numbers and transcribe items 1, 2, 4 and 6.
+
+DEFER severity=LOW — §11.2 "one cross-read adversary checks the folded decisions PAIRWISE and walks every checklist line for staleness" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:148 "MF-58 placement unchanged: under the address input, before results" — the new note replaces only 'the 2026-11-10 note', leaving the later 2026-11-11 note that restates the same placement unamended — name the 2026-11-11 note in the replacement sentence.
+
+DEFER severity=LOW — §11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed" — mobile/__tests__/parcelScreens.golden.test.ts "+  it('in every golden and every named case the line is the last column child, drawn once', () => {" — the new assertion and the regenerated goldens land in one cut with no red recorded against the pre-move order — record the failing run on the old shape beside the green.
+
+DEFER severity=NIT — spec 100 dated note 2026-11-20 "after the reports-left line, chips, notices and every result block" — mobile/__tests__/parcelScreens.golden.test.ts "+  // block of the column, after the chips, notices, address list and the tail; it replaces the 2026-11-10 placement under the input." — the comment's enumeration drops the reports-left line the note names — add 'reports-left' to the comment.
+
+MET — spec 100 dated note 2026-11-20 "it is the last block of the search page, after the reports-left line, chips, notices and every result block" — mobile/src/components/surfaces/SearchBinding.tsx:232-240 "+      legal()," at the end of the column after "      ...tail(s)," — the placement the note rules is the placement the code emits.
+MET — spec 100 dated note 2026-11-20 "The reports-left line (SRCH.A6) stays right after the input." — mobile/src/components/surfaces/SearchBinding.tsx:234 "      ...reportsLeft(s)," — its position after "      pill(s)," is untouched.
+MET — spec 100 dated note 2026-11-20 "one content key, text unchanged" — mobile/__tests__/parcelScreens.golden.test.ts:241 "expect(SEARCH_SLICE.content['search.legal']).toBe(LEGAL_TEXT);" — key and text stay locked to the ruled wording.
+MET — operator verbatim "5. Do the legal-line move (389) now as a small code change" — mobile/src/components/surfaces/SearchBinding.tsx:89-90 — only the legal node's position and its doc comment change, no other behaviour added.
+MET — spec 100 dated note 2026-11-20 "Locks: `mobile/__tests__/parcelScreens.golden.test.ts` (MF-58 legal-line test)" — mobile/__tests__/parcelScreens.golden.test.ts:245-249 — the lock asserts last position, drawn once, and reports-left after pill, replacing the old placement assertion.
+MET — §11.5-FE "UI-regression suites (`*.ui.test.tsx`), render tests" — mobile/__tests__/parcelScreens.golden.test.ts:243-251 — the placement claim is executed by a golden/render lock, not left as prose.
+MET — spec 100 dated note 2026-11-20 "The web search page already shows the sentence once, in the footer (MF-91), and is unchanged." — src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json diff — only mobile fixtures move; no web file appears in the diff.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  82303ms (82.3s)
+📊 Tokens — total: 27838, input: 11669, output: 16169, reasoning: 14794

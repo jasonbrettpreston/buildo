@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.468Z file_sha256=d903bc9715d0ddd296eae0e6ea3cf4479a712342599ce1c725f5f8275503ea14 prompt_sha256=a1fc244008ac7e18ad469462c01dc955573d242d882841f74450ab675e60c3cf
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-mobile-100.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10677 chars, answer 0 chars, 15s
+BUG severity=HIGH is not warranted; single finding below at MED.
+
+DEFER severity=MED — Spec 100 dated note 2026-11-11 (MF-62) "superseding the wording of ruling 2026-11-10 item 5 (MF-58 placement unchanged: under the address input, before results)" — mobile/src/components/surfaces/SearchBinding.tsx "      ...tail(s),\n+      legal()," — the new 2026-11-20 note replaces only "the placement of the legal line `search.legal` in the 2026-11-10 note", so this later restatement of the same placement, which is still live prose in the same §3.2 block, remains in force and is now contradicted by the tree — extend the 2026-11-20 note by one clause naming the 2026-11-11 MF-62 parenthetical and replacing it, in the same "correction to the note above" form the MF-35 fold used.
+
+MET — Spec 100 dated note 2026-11-20 "it is the last block of the search page, after the reports-left line, chips, notices and every result block" — mobile/src/components/surfaces/SearchBinding.tsx "      ...addressList(s),\n      ...tail(s),\n+      legal()," — legal() is the final column child, after reportsLeft, chips, notices, addressList and tail.
+MET — Spec 100 dated note 2026-11-20 "The reports-left line (SRCH.A6) stays right after the input." — SearchBinding.tsx "      pill(s),\n      ...reportsLeft(s)," plus parcelScreens.golden.test.ts "if (ks.includes('reports-left')) expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'reports-left']);" — reports-left still sits immediately after the input in every situation that carries it, now pinned by the test.
+MET — Spec 100 dated note 2026-11-20 "still every state, one content key, text unchanged" — parcelScreens.golden.test.ts "expect([k, ks.filter((x) => x === 'legal').length]).toEqual([k, 1]);" and "expect(SEARCH_SLICE.content['search.legal']).toBe(LEGAL_TEXT);" — all goldens plus NAMED_CASES assert the single legal node and the verbatim text; the binding still renders content('search.legal').
+MET — Spec 100 dated note 2026-11-20 "Locks: `mobile/__tests__/parcelScreens.golden.test.ts` (MF-58 legal-line test)" — parcelScreens.golden.test.ts "expect([k, ks[ks.length - 1]]).toEqual([k, 'legal']);" — the new placement is locked by an assertion on position, not by a comment or title.
+MET — Spec 100 dated note 2026-11-20 "The web search page already shows the sentence once, in the footer (MF-91), and is unchanged." — diff touches only mobile/src/components/surfaces/SearchBinding.tsx, the mobile search fixtures and the mobile golden test — no web golden or web surface file moves.
+
+REJECT — Spec 100 dated note 2026-11-20 "the ten moved mobile goldens" — accused: the diff moves only two fixtures (empty.mobile.json, reports_left.mobile.json) and leaves the remaining goldens stale — not a real issue, the pasted note states "the other 8 mobile goldens and `mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json` move the same way (13 lines out, 13 in, the legal node relocated); loading.mobile.json and every web golden unchanged", so the remaining eight and the snapshot move in the same change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 1
+
+---
+⏱  26448ms (26.4s)
+📊 Tokens — total: 23369, input: 18253, output: 5116, reasoning: 4247

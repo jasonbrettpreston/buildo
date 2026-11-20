@@ -1,0 +1,188 @@
+LIST eng-s1 sha256:cb482184b63eb26505a625ca3d41884ab95131c96d2f90fb35325b760eb3eec4 material sha256:740375fc0cac87a2301f95d5ad3579627434c77fc8b4e1fc44cb244909fd2140 part 1 of 1
+RULE LIST eng-s1 (docs/specs/00_engineering_standards.md, sections 1. Architecture & UI Standards), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+## 🏗️ 1. Architecture & UI Standards
+
+### 1.1 Mobile-First UI Mandate
+- **Rule:** All Tailwind CSS styling MUST be written mobile-first.
+- **Execution:** The base (unprefixed) utility classes must dictate the layout for mobile screens (<=640px). You may only use `sm:`, `md:`, and `lg:` prefixes to enhance or reflow the layout for larger viewports. Do not start with a desktop view and attempt to retrofit mobile breakpoints.
+- **Touch Targets:** All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of **44px x 44px**. Use `min-h-[44px] min-w-[44px]` or equivalent padding.
+- **Responsive Layout:** Card and row layouts MUST stack vertically on mobile and flow horizontally on desktop. Use `flex flex-col md:flex-row` (not `flex` alone). Dense metadata rows MUST use `flex-wrap`. Tooltips and popovers MUST be capped at `max-w-[calc(100vw-2rem)]` on mobile.
+
+### 1.2 Component Isolation
+- **Rule:** Shared UI components (`src/components/ui/`) must remain pure and stateless where possible. They should not directly fetch data via API calls or rely on global context unless explicitly engineered to do so.
+
+### 1.3 Mobile Front-End Patterns & UX
+
+**Touch Targets:** All `Pressable` and `TouchableOpacity` elements must satisfy a minimum tappable area of **44px × 44px**. Use `min-h-[44px]` or explicit `hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}` when the visual size is smaller. Bare text nodes used as CTAs are not permitted — wrap in a `TouchableOpacity` with the required minimum height.
+
+**Micro-animations & Haptics:** Primary interactive cards and buttons must use Reanimated `withSpring` for press-state feedback (scale or opacity). Critical state transitions — save confirmation, destructive delete, error toasts — must trigger a haptic: `lightImpact()` for neutral actions, `successNotification()` for confirms, and the error variant for failures. Silent state changes that affect financial or account data are not acceptable.
+
+**TanStack Query Hardening (Expo):**
+- **Cold-boot offline:** `onlineManager.setEventListener` must be called synchronously at app boot (before any query fires) so TanStack Query's network state matches the device state from the first render, not after the first poll cycle.
+- **Safe MMKV hydration:** `JSON.parse()` output from MMKV must be structurally validated (e.g. `safeParse` via Zod or a shape-check guard) before casting to `PersistedClient`. A corrupt or schema-mismatched cache must be discarded with a warning — not silently cast.
+- **401 interceptor:** When `fetchWithAuth` receives a 401, it must call `firebase.auth().currentUser?.getIdToken(true)` to force a token refresh and retry once before propagating `ApiError(401)` to TanStack Query. Expired-token 401s must not surface as user-visible errors on the first failure.
+
+**Design System Fidelity:** `font-mono` is reserved strictly for data values (permit numbers, distances, currency amounts, timestamps). It must never be applied to human-readable labels, headings, or button text. Dark-mode colour tokens must use NativeWind `dark:` variants (e.g. `dark:bg-zinc-900`) rather than hardcoded `bg-zinc-950` so the system colour scheme is respected.
+
+---
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md b/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
+index 86220ca25..92359a2e5 100644
+--- a/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
++++ b/docs/specs/03-mobile/100_mobile_parcel_cost_tool.md
+@@ -145,6 +145,8 @@ Everything else in `parcels` — zoning internals, bylaw fields, heritage/ravine
+ 
+ > Dated note 2026-11-11 (M-246, prior text kept; MF-62 follow-up · McFrontend queue; operator, verbatim, small pages v7.1 item 9: "inside the search box - should be enter lot address"; and 14:54 "app search placeholder is lot address?"): the search placeholder `search.input.placeholder` is "Enter lot address" (was "Search Toronto address...", ruling 2026-11-09 item 1). Content only (MF-35 binding unchanged). Then operator, verbatim: "3 y 4. keep what we have 2. y 1 acutally think it needs longer" (D-1 a, D-5, D-6): the legal line `search.legal` reads "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City." (D-1 a; Landing v9 R2), superseding the wording of ruling 2026-11-10 item 5 (MF-58 placement unchanged: under the address input, before results); the lawyer check (MF-72) now covers the short line.
+ 
++> Dated note 2026-11-20 (M-246, prior text kept; SRCH.LEGAL task-389; operator, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b: the legal line at the bottom as in v8 search.html:267-269), "Phone retires yes and web search yes" and "5. Do the legal-line move (389) now as a small code change"; record `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md` entries of 2026-11-20): the placement of the legal line `search.legal` in the 2026-11-10 note ("directly under the address input") is replaced: it is the last block of the search page, after the reports-left line, chips, notices and every result block; still every state, one content key, text unchanged. The reports-left line (SRCH.A6) stays right after the input. The web search page already shows the sentence once, in the footer (MF-91), and is unchanged. Locks: `mobile/__tests__/parcelScreens.golden.test.ts` (MF-58 legal-line test) and the ten moved mobile goldens.
++
+ > Dated note 2026-11-19 (RR-0313, prior text kept; MF-35 follow-up · lane BL-BOX, task-356 SRCH.A6; operator, verbatim: "c. can't we put in the search box. Enter a Toronto address" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1216, decision-98), and on the outside-Toronto notice, "yes." (:1223, RR-0314, decision-99)): the search placeholder `search.input.placeholder` now reads "Enter a Toronto address", replacing "Enter lot address" (note above, kept). Content only: one value in `scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json`, read by the app and the web (FE-07); the generated slice and the goldens regenerated by their scripts. The notice `search.outside_toronto` ("Lots are only available in Toronto.") still shows for an address outside Toronto and the reports-left slot is unchanged. Departs from small-pages-v8 (`search.html:265`, `:278`, `:318` draw "Enter lot address"): the 2026-11-19 words are newer; the scratch mock still owes the same change (loose end, task-343).
+ 
+ ## 5. Subscription-check exception (documented)
+diff --git a/mobile/src/components/surfaces/SearchBinding.tsx b/mobile/src/components/surfaces/SearchBinding.tsx
+index 9fba77600..f3c70a327 100644
+--- a/mobile/src/components/surfaces/SearchBinding.tsx
++++ b/mobile/src/components/surfaces/SearchBinding.tsx
+@@ -87,7 +87,7 @@ const pill = (s: SearchSituation): PropsNode =>
+       : []),
+   ]);
+ 
+-/** MF-58 (ruling 2026-11-10 items 16 and 5): the legal line, always shown, under the address input and before any result block. */
++/** MF-58 (ruling 2026-11-10 items 16 and 5): the legal line, always shown. SRCH.LEGAL (task-389; operator "1 a 2 b 3 a 4 a 5 c 6 accept", 2026-11-20): it is the last block of the page, after every result block (v8 search.html:267-269). */
+ const legal = (): PropsNode => node('Text', { key: 'legal', testID: 'parcel-search-legal', className: L.legal }, [content('search.legal')]);
+ 
+ /**
+@@ -232,11 +232,11 @@ export function searchProps(s: SearchSituation): PropsNode {
+       header(),
+       pill(s),
+       ...reportsLeft(s),
+-      legal(),
+       ...chips(s),
+       ...notices(s),
+       ...addressList(s),
+       ...tail(s),
++      legal(),
+     ])]),
+   ]);
+ }
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json
+index f161fc6c4..6425adc90 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json
+@@ -132,19 +132,6 @@
+                   }
+                 ]
+               },
+-              {
+-                "component": "Text",
+-                "props": {
+-                  "key": "legal",
+-                  "testID": "parcel-search-legal",
+-                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
+-                },
+-                "children": [
+-                  {
+-                    "content": "search.legal"
+-                  }
+-                ]
+-              },
+               {
+                 "component": "View",
+                 "props": {
+@@ -297,6 +284,19 @@
+                     ]
+                   }
+                 ]
++              },
++              {
++                "component": "Text",
++                "props": {
++                  "key": "legal",
++                  "testID": "parcel-search-legal",
++                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
++                },
++                "children": [
++                  {
++                    "content": "search.legal"
++                  }
++                ]
+               }
+             ]
+           }
+diff --git a/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json b/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json
+index 14584fa94..037fdde89 100644
+--- a/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json
++++ b/src/tests/fixtures/surfaces/mobile_parcel_search/reports_left.mobile.json
+@@ -158,19 +158,6 @@
+                   }
+                 ]
+               },
+-              {
+-                "component": "Text",
+-                "props": {
+-                  "key": "legal",
+-                  "testID": "parcel-search-legal",
+-                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
+-                },
+-                "children": [
+-                  {
+-                    "content": "search.legal"
+-                  }
+-                ]
+-              },
+               {
+                 "component": "View",
+                 "props": {
+@@ -312,6 +299,19 @@
+                     "content": "search.prompt"
+                   }
+                 ]
++              },
++              {
++                "component": "Text",
++                "props": {
++                  "key": "legal",
++                  "testID": "parcel-search-legal",
++                  "className": "mt-3 text-[13px] leading-[18px] font-normal text-report-muted"
++                },
++                "children": [
++                  {
++                    "content": "search.legal"
++                  }
++                ]
+               }
+             ]
+           }
+diff --git a/mobile/__tests__/parcelScreens.golden.test.ts b/mobile/__tests__/parcelScreens.golden.test.ts
+index d72b37f0c..f40f40dd8 100644
+--- a/mobile/__tests__/parcelScreens.golden.test.ts
++++ b/mobile/__tests__/parcelScreens.golden.test.ts
+@@ -240,17 +240,16 @@ describe('MF-58 the legal line on the search page (ruling 2026-11-10 items 16 an
+   it('the content key search.legal holds the ruled text verbatim', () => {
+     expect(SEARCH_SLICE.content['search.legal']).toBe(LEGAL_TEXT);
+   });
+-  it('in every golden and every named case the line is the column child right after the address input, before any result block', () => {
++  // Dated 2026-11-20 (task-389; operator, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b), "5. Do the legal-line move (389) now as a small code change"; v8 search.html:267-269): the legal line is the LAST
++  // block of the column, after the chips, notices, address list and the tail; it replaces the 2026-11-10 placement under the input. The reports-left line stays right after the input.
++  it('in every golden and every named case the line is the last column child, drawn once', () => {
+     for (const k of [...Object.values(goldens).map((g) => g.situation as string), ...NAMED_CASES]) {
+       const t = searchProps(situations[k] as SearchSituation);
+       const ks = keys(t);
+-      // Dated 2026-11-20 (task-354; Mobile CI run 44741125636): where the reports-left line is drawn (SRCH.A6, ace05ccee; small-pages-v8 search.html:267-269)
+-      // it sits between the address input and the legal line; the legal line is still the next block after it, before any result block. Where it is not
+-      // drawn the legal line is the column child right after the input, as before.
+-      const after = ks.slice(ks.indexOf('pill') + 1);
+-      const owed = ks.includes('reports-left') ? ['reports-left', 'legal'] : ['legal'];
+-      expect([k, after.slice(0, owed.length)]).toEqual([k, owed]);
+-      expect([k, ks.includes('reports-left')]).toEqual([k, k === 'reports_left']); // only the reports_left situation carries an entitlement (review r1 fold: the expectation does not follow the tree)
++      expect([k, ks.filter((x) => x === 'legal').length]).toEqual([k, 1]);
++      expect([k, ks[ks.length - 1]]).toEqual([k, 'legal']);
++      expect([k, ks.includes('reports-left')]).toEqual([k, k === 'reports_left']); // only the reports_left situation carries an entitlement
++      if (ks.includes('reports-left')) expect([k, ks[ks.indexOf('pill') + 1]]).toEqual([k, 'reports-left']);
+       const legal = column(t).children.find((c) => isNode(c) && c.props.key === 'legal') as PropsNode;
+       expect([k, legal.component, legal.props.testID, legal.children]).toEqual([k, 'Text', 'parcel-search-legal', [{ content: 'search.legal' }]]);
+     }
+NOTE: the other 8 mobile goldens and mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json move the same way (13 lines out, 13 in, the legal node relocated); loading.mobile.json and every web golden unchanged.
+

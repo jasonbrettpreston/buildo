@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:27:32.270Z file_sha256=7a6a78bfe128eb1a1ed806fc6f249cba00d829cb18750c098ec99a424351ff7d prompt_sha256=ae5563a4a25ede1d584a51e558bc998714d4adf7a00a069127586c7e753bf69c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-eng-s2-s4-s10-s11.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10714 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20092 chars, answer 2191 chars, 30s
+BUG severity=HIGH — §11 Pre-Review Self-Checklist, "always applies, every WF": "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests." — plan checks block "Checks: every --check the hooks run for these files before and after (search-golden-capture --check, emit-mobile-surfaces --check, surface-validate); typecheck" — the plan carries no 5-10 item self-skeptical PASS/FAIL checklist, only a command list plus the admission "Phone tests are not run locally: phone-test green is UNPROVEN until Mobile CI" — add the PASS/FAIL items (legal node is last child in each of the 11 goldens, web binding untouched, goldens generated only, no hand edits under scripts/) stated before the checks.
+
+BUG severity=HIGH — §11 "Before presenting "PLAN LOCKED", the plan MUST address each applicable item below. These are not optional" (If UI Component Created/Modified) — "mobile/src/components/surfaces/SearchBinding.tsx: move `legal()` from after reportsLeft to the end of the column children (after tail)" — the plan modifies a UI component but addresses none of the applicable UI checklist items (375px viewport test in test plan, touch targets >=44px, mobile-first base classes) — add one line per UI item marking applicable/not-applicable with reason, and list the 375px golden case in the test plan.
+
+DEFER severity=MED — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" (and §11 Frontend Boundary Check "No modifications to `scripts/`, `migrations/`, or `scripts/lib/` (§10.2)") — "Regenerate goldens with scripts/surfaces/search-golden-capture.ts --write, then emit-mobile-surfaces.mjs --write (generated, never hand edited)" — the plan never states where the written golden JSON files live; if they resolve under scripts/surfaces/, the WF writes inside `scripts/`, which §10.2 forbids — name the exact output paths of the 11 mobile goldens and the mobile_parcel_search.goldens.json copy, and record the generated-artifact exemption explicitly.
+
+DEFER severity=MED — operator ruling quoted in the material, "1 a 2 b 3 a 4 a 5 c 6 accept" with "(C3 b: legal line at the bottom as in v8 search.html:267-269)" — plan step 4 "the 2026-11-10 note's placement "directly under the address input" is replaced by "last block of the page"" — the plan's entire placement authority rests on the C3=b parenthetical while the ballot line records "3 a", and the plan never reconciles the two — record which reading the operator resolved (or cite the ballot decode source) before locking the "last block of the page" wording.
+
+DEFER severity=LOW — §2.3 "Before accessing nested object properties, explicitly check for `null` or `undefined` ... Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed" — "the MF-58 legal-line test now expects the legal node to be the LAST child of the column in every golden and named case" — the plan does not say how the LAST-child lookup is written, so an empty-column or `children[...]!` form would breach §2.3 — specify a bounds-safe lookup (e.g. `children.at(-1)` with an explicit undefined guard) in the test step.
+
+MET — §10.1 — plan "No migration/fallback code (app in development)" and render-order-only change — no data-flow direction is altered, nothing writes to pipeline tables.
+
+MET — §10.2 (schema frozen) — plan "Not changed: wording, content key, className, testID, any other block order, web" — no DB column added or changed during frontend work.
+
+MET — §10.3 (thin routes) — plan change list touches only mobile surface component, its golden test and a spec note — no API route handler is created or modified, so route thinness and type-file rules do not bind.
+
+MET — §11 Cross-Layer Contracts Check — plan "className, testID, content key unchanged" — no numeric threshold is introduced or moved, so no `_contracts.json` row or contracts.infra test entry is owed.
+
+MET — §4.3 "API routes must return only the fields the UI needs" — plan web scope "grep "legal" in web binding gives only footer lines 64,68,131,136,143,248" — no response shape or projection changes on either surface.
+
+REJECT — §2.1 "When writing integration tests (`.infra.test.ts`), you MUST include tests for error paths and silent failures" — the change adds no error-path test for the reorder — the mandate is scoped to `.infra.test.ts` integration tests and the plan touches only `parcelScreens.golden.test.ts`, so it does not reach this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 2
+
+---
+⏱  32891ms (32.9s)
+📊 Tokens — total: 10964, input: 4685, output: 6279, reasoning: 5131

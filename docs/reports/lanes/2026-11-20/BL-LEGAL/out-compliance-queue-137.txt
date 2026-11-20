@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.465Z file_sha256=a076f307b3ae26bb80382e46e482f7d08592a4416a746457591c5bf724f691dc prompt_sha256=c86b8e3295f5206698d2be639d54967535fd3b2fa30e3eff18188d010be50670
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9904 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20274 chars, answer 0 chars, 30s
+BUG severity=HIGH — Spec 137 §4 Rule 3 "The status line changes in the same commit as the work. When work lands for a row, the commit that lands it edits that row's status line." — "diff --git a/mobile/src/components/surfaces/SearchBinding.tsx b/mobile/src/components/surfaces/SearchBinding.tsx" — the material changes `mobile/` and `src/tests/fixtures/` for task-389 but edits no row status line: no `backlog/tasks/task-389*` and no queue row appears in the diff, so the landing commit carries no status change — add the task-389 row's replaced status line (word, `since 2026-11-20`, `expires`, `next:`) to this same commit.
+BUG severity=HIGH — Spec 137 §1 Rule 3 amendment (G3) "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — "diff --git a/mobile/src/components/surfaces/SearchBinding.tsx b/mobile/src/components/surfaces/SearchBinding.tsx" — the diff changes `mobile/` and `src/tests/fixtures/`, is therefore not exempt, yet contains no backlog task or draft file for task-389; the trailer cannot be seen at all — include `backlog/tasks/task-389` in the same diff and carry `Task: task-389` in the commit message.
+BUG severity=HIGH — Spec 137 §1 Rule 4 amendment (G2) "a verbatim quote and a cite file:line that exists and contains the quote, or it refuses" — "record `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md` entries of 2026-11-20" — the ruling cite gives a file and a date range but no `file:line`, so G2 refuses it, and the note is written into the spec page rather than entered through the gate — cite each quote as `MORNING-DECISIONS.md:<line>` and enter the ruling through `scripts/analysis/backlog-decision.mjs`.
+DEFER severity=MED — Spec 137 §4 Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — "+> Dated note 2026-11-20 (M-246, prior text kept; SRCH.LEGAL task-389; operator, verbatim:" — the note carries date and row id but omits the queue (the sibling note above reads "· McFrontend queue") and the lane named in the §4 Rule 4 form — add the queue and lane to the parenthetical.
+DEFER severity=MED — Spec 137 §4 Rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form" — "+> Dated note 2026-11-20 (M-246, prior text kept; SRCH.LEGAL task-389; operator, verbatim:" — the note lands only in `docs/specs/03-mobile/100_mobile_parcel_cost_tool.md`; no row file in the diff carries it, while G2 requires "the M-246 dated note is appended to each task the ruling names" — append the same note to the task-389 file (and the MF-62 row if that row is the record).
+MET — Spec 137 §4 Rule 10 "the prior row text is kept" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md — the new 2026-11-20 note is inserted above the 2026-11-10 and 2026-11-19 notes, neither of which is deleted or rewritten.
+MET — Spec 137 §1 item 1 "McQueue does not move them, copy them or keep an index of them" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md — the diff adds no queue file, index or copy; the row stays pointed to by id (`task-389`).
+REJECT — Spec 137 §5a Rule 13 "Nobody edits the board. A change on the board changes nothing" — the change is not accused of touching the board — the diff contains only mobile source, test fixtures, a golden test and one spec page, no board or `BOARD-STATUS.txt` file.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 5
+
+---
+⏱  39964ms (40.0s)
+📊 Tokens — total: 19764, input: 12034, output: 7730, reasoning: 6715

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:29:27.713Z file_sha256=c8b14a1d2930bd9c5229ed8147750f0052d4f14970bd5f2b88a03f3b6feb6567 prompt_sha256=cdacde5c92bfdc004e5a460328243a8c37067db0282bfb9198902bbb75dacc2f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11594 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23282 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34454 chars, answer 0 chars, 45s
+BUG severity=HIGH — eng-s5 §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — plan "Phone tests are not run locally: phone-test green is UNPROVEN until Mobile CI." — the step 1 "Red first" is asserted, never run or observed, and step 2 edits SearchBinding.tsx anyway, so 5.3 is unmet on the plan's own admission — run mobile/__tests__/parcelScreens.golden.test.ts immediately after the step 1 expectation change, attach the failing output, and only then make the component change.
+
+DEFER severity=MED — eng-s5 §5.2 "*.ui.test.tsx | React component rendering, interactions | Any new/changed component" — plan "2. mobile/src/components/surfaces/SearchBinding.tsx: move `legal()` from after reportsLeft to the end of the column children" — a changed component ships with no *.ui.test.tsx, the only render proof being mobile/__tests__/parcelScreens.golden.test.ts, a pattern absent from the 5.2 table — add (or point to) a ui test rendering the column and asserting the legal node's index, or record why the golden test is the mandated layer for mobile.
+
+DEFER severity=MED — eng-s5 §5.5 "Two parallel implementations stay in sync (§7 dual-path...)" — plan "The web search binding already shows the legal sentence once, in the footer, last child (src/components/surfaces/web/SearchBinding.tsx:64,136; MF-91)." — the twin surface is cleared by a grep, and after this change nothing in either layer asserts web and mobile place the legal node in the same position, so the dual path can drift with both suites green — add a parity assertion (both surfaces: legal is the last column child) or a web golden that reddens if web legal leaves the last-child slot.
+
+DEFER severity=MED — eng-s5 §5.2 "*.regression.test.ts | Pin a load-bearing behavior a diff must NOT retire | When altering/deleting code the Regression Guardian flags as a fence" — plan "the MF-58 legal-line test now expects the legal node to be the LAST child of the column in every golden and named case" — the existing fence assertion is rewritten in place and the plan never states that MF-58's "the legal sentence appears exactly once" property is retained, so dropping the count check would pass unnoticed — keep the once-only assertion alongside the new position assertion and add a *.regression.test.ts pinning "exactly once, last child" if MF-58 is a Guardian-flagged fence.
+
+DEFER severity=MED — eng-s5 §5.3 "Run the test and confirm it fails" — plan "3. Regenerate goldens with scripts/surfaces/search-golden-capture.ts --write" — the position assertion is stated to hold "in every golden and named case" and step 3 rewrites those goldens from the changed component after the change, so if that assertion reads the regenerated fixture it is judging the code by its own output and can never be red — state whether MF-58 reads the rendered column or the golden JSON, and if the latter, capture the red run against the pre-regeneration goldens.
+
+DEFER severity=MED — eng-s5 §5.5 "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — plan "3. ... then emit-mobile-surfaces.mjs --write (generated, never hand edited)" — step 2 hand-edits mobile/src/components/surfaces/SearchBinding.tsx and step 3 then runs the emitter with --write, and the plan never states whether that component is emitter-owned, so either the hand edit is out of bounds or the emitter overwrites it — state the ownership and show the post-emit `git diff` for SearchBinding.tsx is empty.
+
+DEFER severity=LOW — Spec 126 section 0a principle 1 and 11b.2, Spec 100 section 4, 08_agents.md section 7 rules 3 and 4, PLAN-PROTOCOL.md:3 — plan "Rule: Spec 126 section 0a principle 1 and 11b.2 (one binding per archetype, refs only)" — cannot see; only eng-s5 §5 is pasted, so every primary justification clause the plan cites is unassessable in this run — paste those clauses in the review context and accept this verdict as testing-standards only.
+
+MET — eng-s5 §5.5 "Any migration touching schema/constraints/indexes (run before push)" — plan "No migration/fallback code (app in development)" — no schema change, so DB replay does not bind.
+MET — eng-s5 §5.5 "generated doc ↔ its generator" — plan "every --check the hooks run for these files before and after (search-golden-capture --check, emit-mobile-surfaces --check, surface-validate)" — the generated artefacts are produced by their generators and gated by --check.
+MET — eng-s5 §5.4 "create `scripts/seed-[scenario].js`" — plan "Not changed: wording, content key, className, testID, any other block order, web." — no DB scenario is set up, so seeding does not bind.
+MET — eng-s5 §5.1 "MUST always import typed factories from `src/tests/factories.ts`" — plan "the MF-58 legal-line test now expects the legal node to be the LAST child" — the change edits an existing assertion and introduces no inline mock.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 3
+
+---
+⏱  53734ms (53.7s)
+📊 Tokens — total: 13197, input: 2979, output: 10218, reasoning: 8961

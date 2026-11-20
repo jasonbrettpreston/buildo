@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:55.409Z file_sha256=06d4f342d550de60b2006c27b8de7b0fde4eafab03d8c58b9b2a26b159cc4b6e prompt_sha256=f2fc94b7e6fc1a226263deb1524dee3c2d4b266c2623bc298688a5cf0beaa367
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10647 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21642 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32625 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43327 chars, answer 0 chars, 60s
+DEFER severity=MED — fe.31 "descriptor + content + standard library components configured by schema" — mobile/src/components/surfaces/SearchBinding.tsx @@ -232,11 +232,11 @@ "+      ...tail(s), / +      legal()," — the page order of a converted MaxBLD surface is changed in page specific TSX and no descriptor or converted manifest edit appears in the diff, so conformance against fe.31 cannot be seen — put the part order in the surface descriptor (or state in the diff that the descriptor derives order from this binding) so surface-conformance.logic.test.ts covers the new position.
+
+DEFER severity=MED — fe.02 "a screen is a descriptor; the only code is the shared archetype components" — mobile/src/components/surfaces/SearchBinding.tsx:90 "it is the last block of the page, after every result block (v8 search.html:267-269)" — the new placement exists as page specific composition code plus a code comment, not as a declaration — declare the legal part's position and have the binding read it, instead of encoding the order in searchProps.
+
+DEFER severity=LOW — op ruling 2026-11-20 "still every state, one content key, text unchanged" — mobile/__tests__/parcelScreens.golden.test.ts:246 "expect([k, ks[ks.length - 1]]).toEqual([k, 'legal']);" — this assertion now runs for every golden including the unchanged loading state, and loading.mobile.json is not in the material, so whether the loading tree already ends in legal cannot be seen — include loading.mobile.json (or its legal key order) in the material so the last child claim is evidenced.
+
+MET — fe.06 "disclosures ... always shown" — mobile/src/components/surfaces/SearchBinding.tsx:239 "+      legal()," — the disclosure is still appended unconditionally for every situation, once, with the same content key and text, so moving it does not drop it.
+
+MET — fe.18 "every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot" — mobile/src/components/surfaces/SearchBinding.tsx:91 "const legal = (): PropsNode => node('Text', ... [content('search.legal')]);" — the text stays bound to the content source, no new source or literal introduced.
+
+MET — fe.33 "every displayed string ... comes from content" — mobile/src/tests/fixtures/surfaces/mobile_parcel_search/empty.mobile.json "+                    \"content\": \"search.legal\"" — the moved node still renders the content key, no hard coded string.
+
+MET — fe.07 "mobile, web, admin and PDF render the same declaration" — docs/specs/03-mobile/100_mobile_parcel_cost_tool.md "+the web search page already shows the sentence once, in the footer (MF-91), and is unchanged" — mobile now also carries the line as the last block, so the two targets agree on end of page placement; nothing diverges.
+
+REJECT — fe.16 "all McFrontend specs in docs/specs/02-web-admin" — accused of filing an MF dated note in docs/specs/03-mobile/100 — fe.16 governs McFrontend specs 135 and 136; Spec 100 is the mobile consumer spec (fe.27 cites "Spec 100 §3.2 whitelist") and prior MF-35/MF-58/MF-62 notes already live there, so the note is filed where its surface lives.
+
+REJECT — fe.06 "disclosures ... always shown" — accused of demoting the disclosure below the result list, weakening honesty — the operator ruling pasted in the material ("the legal line at the bottom as in v8 search.html:267-269") sets this placement, and the line is still drawn in every state with the same wording.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  65072ms (65.1s)
+📊 Tokens — total: 19754, input: 8037, output: 11717, reasoning: 10849

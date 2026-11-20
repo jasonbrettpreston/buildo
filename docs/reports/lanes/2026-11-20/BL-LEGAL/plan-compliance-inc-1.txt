@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:29:27.722Z file_sha256=edcab89e42a7ce509997567e8c3795a6ac1accbc450f963f84c8af1a2e69c094 prompt_sha256=57212cfe7556816eb81bca35f41bcd11021502556e18bea1d751f0cfdb2fb4d9
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-inc-1.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10562 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21214 chars, answer 0 chars, 30s
+DEFER severity=MED — operator ruling C3 b "C3 b: legal line at the bottom as in v8 search.html:267-269" — NONE — the web half of the ruling rests only on the plan's own assertion "the web search binding already shows the legal sentence once, in the footer, last child (src/components/surfaces/web/SearchBinding.tsx:64,136)" and on a grep that lists line numbers "64,68,131,136,143,248" without showing the footer is the last child of the page column — paste SearchBinding.tsx around the footer children (or add a web assertion that the legal node is the last block) before declaring "web after = unchanged".
+DEFER severity=MED — operator words "Phone retires yes and web search yes" — step 3 "Regenerate goldens with scripts/surfaces/search-golden-capture.ts --write, then emit-mobile-surfaces.mjs --write" — the plan asserts "the web goldens do not move" but has no step that checks it after the capture script runs, so a silent web golden rewrite would go unnoticed — add a post-write check (git diff --stat on the web goldens) as a named step.
+DEFER severity=LOW — operator words "Phone retires yes and web search yes" — "Change (phone only):" — the plan reads "Phone retires yes" as the under-input phone placement retiring and spends the entire change on mobile, but never states that reading — add one line recording how "Phone retires yes" was read, otherwise the work may land on a surface the operator is retiring.
+DEFER severity=LOW — operator words "1 a 2 b 3 a 4 a 5 c 6 accept" — "5. Do the legal-line move (389) now as a small code change" — only item 5 is mapped to steps 1 to 4; items 1a, 2b, 3a, 4a and 6 are neither implemented nor declared out of scope for task-389 — add a per-item line stating in-scope or out-of-scope.
+DEFER severity=LOW — 08_agents.md section 7 rules 3, 4 — NONE — the two rule texts are not pasted, so whether "Red first" and "generated, never hand edited" satisfy rules 3 and 4 cannot be judged from this material — paste the two rule lines into the Rule block on the next run.
+MET — operator item 5 "5. Do the legal-line move (389) now as a small code change" — step 2 "mobile/src/components/surfaces/SearchBinding.tsx: move `legal()` from after reportsLeft to the end of the column children (after tail)" — the ruling's move is executed as a code change with wording, content key, className and testID held constant.
+MET — operator ruling C3 b "legal line at the bottom as in v8 search.html:267-269" — step 1 "the MF-58 legal-line test now expects the legal node to be the LAST child of the column in every golden and named case" — the bottom placement is asserted in the binding's own named test, not only inside a regenerated golden file.
+MET — Spec 100 section 4 dated note "legal line under the input, now moved by the 2026-11-20 ruling" — step 4 "the 2026-11-10 note's placement 'directly under the address input' is replaced by 'last block of the page'" — the superseded placement is recorded in the dated note with prior text kept.
+MET — Spec 126 11b.2 "one binding per archetype, refs only" — step 2 edits the existing mobile archetype binding only, no second binding or duplicated legal part is introduced.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  36161ms (36.2s)
+📊 Tokens — total: 12944, input: 6114, output: 6830, reasoning: 5987

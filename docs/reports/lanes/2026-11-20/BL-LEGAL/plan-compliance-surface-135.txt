@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:27:32.272Z file_sha256=30da3e72c61e7d393315a6f81e883ff1b994749ddf6b90843e9d895438dd3c8d prompt_sha256=33c8420b4d4b33b47aed82b7e8ff3517edad48b7ef989908c47ad5ebb5b59e2e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-surface-135.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10192 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21989 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33178 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44452 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 56017 chars, answer 0 chars, 75s
+DEFER severity=MED — Spec 135 header and rule 2 "Role: authority register. The live register of McFrontend rulings (`FE-nn` rows)." / "A rule without a lock is not yet a rule (Spec 124 section 4.4). ONE lock per row" — plan:4 "Spec 100 dated note (M-246, prior text kept) recording the ruling: the 2026-11-10 note's placement \"directly under the address input\" is replaced by \"last block of the page\"" — the new placement ruling is recorded only in Spec 100, with no FE row (register says "Next free id: `FE-45`") and no named lock, so under this register the ruling does not yet read as a rule — add FE-45 (RULED 2026-11-20) naming its lock (the `parcelScreens.golden.test.ts` legal-last case plus the web footer last-child assertion) and cross-reference the Spec 100 dated note.
+
+DEFER severity=MED — FE-07 "Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output." with its dated note "for non-REPORT surfaces it is checked inside the conformance lock (FE-31, MF-42)" — plan:3 "Only the position of the legal node moves in each of the 11 mobile goldens (and their mobile copy mobile_parcel_search.goldens.json); the web goldens do not move." — the plan changes the node order in the mobile target's goldens while the web-family goldens keep their order, and its Checks line "search-golden-capture --check, emit-mobile-surfaces --check, surface-validate" names neither the conformance lock nor the gate's PARITY arm ("PARITY (the four target files agree)", FE-13), so the parity clause is asserted, not shown — add the conformance lock to Checks and state whether parity is value-set or order-sensitive; if order-sensitive, move the legal node in the web-family goldens too or record that order sits outside parity.
+
+DEFER severity=MED — FE-33 "One render smoke per archetype per platform: each binding renders its archetype's goldens on each platform (web `renderToStaticMarkup` in the root suite; mobile jest-expo)" — plan:5 "phone tests are not run locally: phone-test green is UNPROVEN until Mobile CI." — the 11 mobile goldens this plan rewrites are never executed in this run, so the mobile limb of the render smoke is asserted rather than shown — make the Mobile CI result an AC gate on task-389 before merge, or run the jest job locally.
+
+MET — FE-18 "Labels, help text and legal copy are content fields, not an exception." — plan:2 "className, testID, content key unchanged" — the legal copy stays one content binding, no new source or field is introduced.
+
+MET — FE-31 "generated and vendored files pass `--check`/manifest" — plan:3 "Regenerate goldens with scripts/surfaces/search-golden-capture.ts --write, then emit-mobile-surfaces.mjs --write (generated, never hand edited)" plus the Checks line — both generators are regenerated and re-checked before and after, nothing hand edited.
+
+MET — FE-40 "a row or journey step whose task is not built is WAITS, never PASS or FAIL" — plan:5 "phone tests are not run locally: phone-test green is UNPROVEN until Mobile CI." — the plan claims no green it did not run.
+
+REJECT — Spec 126 §0a principle 1 and §11b.2, Spec 100 §4 dated note 2026-11-10, 08_agents.md §7 rules 3 and 4, PLAN-PROTOCOL.md:3 (the plan's own Rule line) — accused of being satisfied without evidence — their text is not pasted in this run, so the "one binding per archetype, refs only" limb and the dated-note form are not mine to judge; re-run with those clauses pasted.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  84648ms (84.6s)
+📊 Tokens — total: 42531, input: 26482, output: 16049, reasoning: 15131

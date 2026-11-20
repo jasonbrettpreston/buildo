@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:27:32.348Z file_sha256=4f4b8dd39ceabde95e4d67d50e2fa7c1a7a2fcc6775d3711708a8a05c83c317a prompt_sha256=413b3b2cfe02782132f4f64904dc3e1ee9f7922f8b4e9eded3d73d68bc6bc87a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/in-plan-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9620 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20300 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30830 chars, answer 0 chars, 45s
+BUG severity=HIGH — Spec 126 §11a.7 dated note 2026-11-11 "the report page `legal.line` and the app search page `search.legal` read the short disclaimer "This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City." … which supersedes the wording of ruling 2026-11-10 item 5 for both keys" — plan "Not changed: wording, content key, className, testID, any other block order, web." — the plan neither quotes nor asserts the current mobile `search.legal` value against the ruled short disclaimer, and step 3 regenerates all 11 mobile goldens, so any stale 2026-11-10 wording is locked in green — add one line to the plan quoting the live `search.legal` string and stating it equals the short disclaimer, or fix the content key in the same commit
+
+BUG severity=MED — operator verbatim quoted in the material: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b: legal line at the bottom as in v8 search.html:267-269), recorded by the plan itself as "last block of the page" — plan step 2 "move `legal()` from after reportsLeft to the end of the column children (after tail)" — "last child of the column" is not shown to be the bottom of the page, and the plan's own web evidence has the legal line inside a `footer` element ("in the footer, last child (src/components/surfaces/web/SearchBinding.tsx:64,136)"), so phone and web would differ in kind, not only in order — state in the plan that the column is the page body (or place legal after the column/footer) and record what v8 search.html:267-269 actually contains, since that line is the ruling's substance
+
+DEFER severity=MED — the plan's own governing references: "Rule: Spec 126 section 0a principle 1 and 11b.2 (one binding per archetype, refs only); Spec 100 section 4 dated note 2026-11-10 (legal line under the input, now moved by the 2026-11-20 ruling); 08_agents.md section 7 rules 3, 4; PLAN-PROTOCOL.md:3." — these four clauses are not in the pasted context (the pasted 126 part runs §6 to §11a.10, with no §0a or §11b) — cannot see them, so the majority of the plan's stated basis is unjudgeable — paste the cited clause text (or the register rows that carry it) into the plan so the change is reviewable against it
+
+DEFER severity=LOW — Spec 126 §11a.7 dated note 2026-11-08 item (4) "Nodes bind only to existing declaration fields plus `content` (MF-10 D-3 b)" — plan step 2 "the MF-58 legal-line test now expects the legal node to be the LAST child of the column in every golden and named case" — if the 11 mobile goldens include lifecycle or miss states in which the legal node is legitimately absent, a last-child assertion applied to "every golden" demands a node the state does not have — name in the plan the states where the assertion is skipped, or scope the assertion to the rendered trees that carry a legal node
+
+DEFER severity=LOW — plan "Phone tests are not run locally: phone-test green is UNPROVEN until Mobile CI." — the step 1 "Red first" claim is asserted but never executed before merge, so the only oracle for the ruled position is CI — run the single golden test locally (red against the pre-move component, green after) and record both outputs in the task notes
+
+MET — Spec 126 §11a.1 "Labels, help text and legal copy are NOT an exception: they are content fields and bind like any field" — plan step 2 "className, testID, content key unchanged" — the legal node stays bound to its content key, only its position in the column changes, so the binding is not converted to a literal
+
+MET — Spec 126 §11a.7 dated note 2026-11-11 "the app search page `search.legal`" — plan "content key unchanged" and step 2 "move `legal()` from after reportsLeft to the end of the column children" — the key the ruling names is preserved and only its render position moves, which is the ruling's order change and not a rename
+
+MET — Spec 126 §11a.7 dated note 2026-11-11 "the report footer line stays" — plan "Change (phone only)" with "No web change, no web golden moves" — the report and web search lines the ruling protects are untouched, and the web twin is claimed verified in place by grep on the binding
+
+REJECT — Spec 126 §11a.7 dated note 2026-11-08 item (5) "S-parity: the four target files of a state agree" — that the change makes the mobile goldens disagree with the web goldens by node order — S-parity is scoped to REPORT render states under `report-tree.schema.json`, and search goldens are not a four-target state set; the ruling's whole point is that the phone and the web search page differ
+
+REJECT — Spec 126 §11a.1 "The schema references the field and nothing else: no old engine names, no older-rule text, no code" — that hand-moving a node in `mobile/src/components/surfaces/SearchBinding.tsx` violates binding-by-reference — the clause binds what value a displayed field reads (its `source`), not where the bound node sits in the layout
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 2
+
+---
+⏱  53373ms (53.4s)
+📊 Tokens — total: 35866, input: 26333, output: 9533, reasoning: 8259

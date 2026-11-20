@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T15:27:32.319Z file_sha256=83cfe38addc815f1534c90aee03f87c1e6fc483f1a70e1f4b1626e3e092d8ee9 prompt_sha256=82a78164f39aed56c9ed5179a95fc6b03033491c2428b6b25caecb9daab60855
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/legal/lens/../PLAN.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9734 chars, answer 303 chars, 15s
+DEFER severity=MED — plan "move `legal()` from after reportsLeft to the end of the column children (after tail)" — on a phone in the answered state the legal sentence now sits below every result and below the tail, so the person meets who operates the service only after the entire scroll — the operator ruling "legal line at the bottom as in v8 search.html:267-269" makes this intended, recorded here so the placement is a decision and not a side effect.
+
+DEFER severity=MED — plan "in every golden and named case (reports-left stays right after the pill; chips, notices, list, tail come before legal)" — the states enumerated are the golden cases; loading, error, empty, offline and repeat-visit are not named, so I cannot see whether the legal block is present and where in those states — design silent, cannot see.
+
+DEFER severity=LOW — plan "(no pasted context provided)" — the approved design text and the 2026-11-20 ruling itself are not pasted, so "last block of the page" cannot be checked against the ruling's own words, only against the plan's paraphrase — cannot see the operator's ruling text.
+
+DEFER severity=LOW — plan "Spec 100 section 4 dated note 2026-11-10 (legal line under the input, now moved by the 2026-11-20 ruling)" — the rejection of "directly under the address input" is asserted but the replacing sentence is quoted only as "last block of the page", while the operator's words are "legal line at the bottom" and the older note says "under the input", three different phrasings for one placement — one placement sentence should be copied verbatim into the note so the next reader is not left with three variants.
+
+DEFER severity=LOW — plan "className, testID, content key unchanged" — nothing in the plan says whether the last block has bottom padding or safe-area inset, so on a notched phone the now-final legal line may sit behind the home indicator — cannot see the mobile column's bottom spacing.
+
+REJECT — plan "the web search binding already shows the legal sentence once, in the footer, last child (src/components/surfaces/web/SearchBinding.tsx:64,136; MF-91)" — a web visitor sees no change at all, one legal sentence at the bottom — matches the operator words "Phone retires yes and web search yes" and "legal line at the bottom", so nothing is owed to the web person.
+
+REJECT — plan "wording, content key, className, testID, any other block order" unchanged — the person reads the same legal sentence before and after, only its position on the phone changes, and screen-reader order follows the new position last — matches "legal line at the bottom as in v8 search.html:267-269", so it is not copy drift.
+
+VERDICT: PASS on the person's experience
+States checked: phone first view, phone loading, phone answered with a long list, phone empty, phone error, phone offline, phone back and repeat visit, web first view, web answered   Dead ends found: 0
+
+---
+⏱  18120ms (18.1s)
+📊 Tokens — total: 5213, input: 2267, output: 2946, reasoning: 2283

@@ -1,0 +1,250 @@
+{
+  "lists": [
+    {
+      "id": "surface-136",
+      "file": "docs/specs/02-web-admin/136_mcfrontend_handbook.md",
+      "sections": [
+        "2. Rules"
+      ],
+      "generated_by": "scripts/surfaces/generate-surface-handbook.mjs",
+      "rows": [
+        "surfaces",
+        "mobile",
+        "specs-mobile"
+      ],
+      "why": [
+        "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\")",
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files",
+        "ADDED by COMPLY.2: editing a mobile spec is also governed by the mobile specs' own list (the same lists as the mobile row, so a spec change is checked against the rules it must not contradict)"
+      ]
+    },
+    {
+      "id": "surface-126",
+      "file": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "surfaces",
+        "mobile"
+      ],
+      "why": [
+        "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\")",
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files"
+      ]
+    },
+    {
+      "id": "surface-127",
+      "file": "docs/specs/02-web-admin/127_surface_conversion_procedure.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "surfaces",
+        "mobile"
+      ],
+      "why": [
+        "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\")",
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files"
+      ]
+    },
+    {
+      "id": "surface-128",
+      "file": "docs/specs/02-web-admin/128_surface_standard_policy.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "surfaces",
+        "mobile"
+      ],
+      "why": [
+        "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\")",
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files"
+      ]
+    },
+    {
+      "id": "surface-135",
+      "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "surfaces",
+        "mobile"
+      ],
+      "why": [
+        "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\")",
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files"
+      ]
+    },
+    {
+      "id": "mobile-90",
+      "file": "docs/specs/03-mobile/90_mobile_engineering_protocol.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile",
+        "specs-mobile"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files",
+        "ADDED by COMPLY.2: editing a mobile spec is also governed by the mobile specs' own list (the same lists as the mobile row, so a spec change is checked against the rules it must not contradict)"
+      ]
+    },
+    {
+      "id": "mobile-98",
+      "file": "docs/specs/03-mobile/98_mobile_testing_protocol.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile",
+        "specs-mobile"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files",
+        "ADDED by COMPLY.2: editing a mobile spec is also governed by the mobile specs' own list (the same lists as the mobile row, so a spec change is checked against the rules it must not contradict)"
+      ]
+    },
+    {
+      "id": "mobile-99",
+      "file": "docs/specs/03-mobile/99_mobile_state_architecture.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile",
+        "specs-mobile"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files",
+        "ADDED by COMPLY.2: editing a mobile spec is also governed by the mobile specs' own list (the same lists as the mobile row, so a spec change is checked against the rules it must not contradict)"
+      ]
+    },
+    {
+      "id": "mobile-100",
+      "file": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile",
+        "specs-mobile"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files",
+        "ADDED by COMPLY.2: editing a mobile spec is also governed by the mobile specs' own list (the same lists as the mobile row, so a spec change is checked against the rules it must not contradict)"
+      ]
+    },
+    {
+      "id": "mobile-96",
+      "file": "docs/specs/03-mobile/96_mobile_subscription.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "mobile",
+        "specs-mobile"
+      ],
+      "why": [
+        "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files",
+        "ADDED by COMPLY.2: editing a mobile spec is also governed by the mobile specs' own list (the same lists as the mobile row, so a spec change is checked against the rules it must not contradict)"
+      ]
+    },
+    {
+      "id": "eng-s1",
+      "file": "docs/specs/00_engineering_standards.md",
+      "sections": [
+        "1. Architecture & UI Standards"
+      ],
+      "generated_by": "hand-written",
+      "rows": [
+        "ui-app"
+      ],
+      "why": [
+        "ADDED by COMPLY.2 (real Files lines named these paths and no starting row matched): UI components and app pages are governed by engineering standards section 1 (architecture and UI), and sections 2, 4, 10 and 11 (errors, security, the front/back boundary, the plan checklist); the surface paths among them also match the surfaces row"
+      ]
+    },
+    {
+      "id": "eng-s2-s4-s10-s11",
+      "file": "docs/specs/00_engineering_standards.md",
+      "sections": [
+        "2. Error Handling",
+        "4. Security & API Contracts",
+        "10. Frontend/Backend Boundary",
+        "11. Plan Compliance Checklist"
+      ],
+      "generated_by": "hand-written",
+      "rows": [
+        "ui-app"
+      ],
+      "why": [
+        "ADDED by COMPLY.2 (real Files lines named these paths and no starting row matched): UI components and app pages are governed by engineering standards section 1 (architecture and UI), and sections 2, 4, 10 and 11 (errors, security, the front/back boundary, the plan checklist); the surface paths among them also match the surfaces row"
+      ]
+    },
+    {
+      "id": "eng-s5",
+      "file": "docs/specs/00_engineering_standards.md",
+      "sections": [
+        "5. Testing Standards"
+      ],
+      "generated_by": "hand-written",
+      "rows": [
+        "tests"
+      ],
+      "why": [
+        "ADDED by COMPLY.2 (not in the starting rows): test files are governed by engineering standards section 5 (testing)"
+      ]
+    },
+    {
+      "id": "eng-s5-s9-s14",
+      "file": "docs/specs/00_engineering_standards.md",
+      "sections": [
+        "5. Testing Standards",
+        "9. Pipeline & Script Safety",
+        "14. The Prevention Loop"
+      ],
+      "generated_by": "hand-written",
+      "rows": [
+        "specs-docs"
+      ],
+      "why": [
+        "ADDED by COMPLY.2 (task-376: a real Files line named a spec and no row matched): a task that edits spec files is governed by engineering standards sections 14 (a behaviour-changing ruling updates all cited specs in the same commit), 9 and 5 (the list the table already names for them), Spec 08 sections 7 and 11 and Spec 137; backlog/docs/** is already matched by queue-records (backlog/**)"
+      ]
+    },
+    {
+      "id": "agents-s7-s11",
+      "file": "docs/specs/00-architecture/08_agents.md",
+      "sections": [
+        "7. Rules & economics",
+        "11. Grounded Verification Protocol"
+      ],
+      "generated_by": "hand-written",
+      "rows": [
+        "specs-docs"
+      ],
+      "why": [
+        "ADDED by COMPLY.2 (task-376: a real Files line named a spec and no row matched): a task that edits spec files is governed by engineering standards sections 14 (a behaviour-changing ruling updates all cited specs in the same commit), 9 and 5 (the list the table already names for them), Spec 08 sections 7 and 11 and Spec 137; backlog/docs/** is already matched by queue-records (backlog/**)"
+      ]
+    },
+    {
+      "id": "queue-137",
+      "file": "docs/specs/00-architecture/137_mcqueue.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "specs-docs"
+      ],
+      "why": [
+        "ADDED by COMPLY.2 (task-376: a real Files line named a spec and no row matched): a task that edits spec files is governed by engineering standards sections 14 (a behaviour-changing ruling updates all cited specs in the same commit), 9 and 5 (the list the table already names for them), Spec 08 sections 7 and 11 and Spec 137; backlog/docs/** is already matched by queue-records (backlog/**)"
+      ]
+    },
+    {
+      "id": "inc-1",
+      "file": "backlog/docs/increments/doc-4 - Increment-1-requirements.md",
+      "whole": true,
+      "generated_by": "hand-written",
+      "rows": [
+        "increment"
+      ],
+      "why": [
+        "every task also gets the requirements document of its increment (the milestone group letter)"
+      ]
+    }
+  ],
+  "exempt": [],
+  "unmatched": []
+}

@@ -7,11 +7,13 @@ status: RUNNING
 assignee:
   - '@lane-BL-LEGAL'
 created_date: '2026-11-20T15:16:00Z'
-updated_date: '2026-11-20T15:29:00Z'
+updated_date: '2026-11-20T15:34:00Z'
 labels:
   - McFix
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-LEGAL/REPORT.md
 type: build
 ordinal: 89012
 ---
@@ -63,7 +65,5 @@ Checks: every --check the hooks run for these files before and after (search-gol
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Operator ruling 2026-11-20, verbatim: "Phone retires yes and web search yes" (MORNING-DECISIONS.md entry "phone retries and the web search legal line"). Scope widened by the ruling: the web search page legal line also goes at the bottom, the same as the phone, if the web page shows that line (confirm in the plan). Add to the Files line before launch: src/components/surfaces/web/SearchBinding.tsx
-
-2026-11-20 taken on the board at lane launch (lane BL-LEGAL, worktree /Users/brettpreston_macmini/Buildo-wt-legal, branch wf1/inc1b-legal), RR-0240
+BL-LEGAL: legal() moved last in mobile searchProps; 10 mobile goldens + mobile copy regenerated (position only); web unchanged (already once in footer, MF-91); Spec 100 dated note added. Red not obtained through hooks (commit b9575315f landed: related run skips mobile/__tests__). Phone-test green UNPROVEN until Mobile CI. Lens outputs, FINDINGS.md untriaged, REPORT.md in docs/reports/lanes/2026-11-20/BL-LEGAL/. Grounder owed.
 <!-- SECTION:NOTES:END -->
