@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/in-out-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9447 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19665 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30949 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 40582 chars, answer 1054 chars, 60s
+BUG severity=HIGH — eng-s5 §5.3 "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — scripts/analysis/rule-lists.mjs:21 "export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');" — none of the 468 new lines (rule-lists.mjs, check-lane-close.mjs) has a test in this diff, and the table that line points at is not in the diff either, so the launch path backlog-lane.mjs now refuses on is never exercised — write and run the failing test first (resolveTask refusals, findingsIn ordinals, buildLensInputs bound), run `rule-lists.mjs validate` against the committed table, paste the Red output.
+
+BUG severity=HIGH — eng-s5 §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — scripts/analysis/rule-lists.mjs:168 "export function resolveTask({ table, root, body, type, letter, tracked }) {" — all new derivation (resolveTask, headings/sectionText, splitUnits, findingsIn, lensSet, closeErrors) ships with no *.logic.test.ts in the diff, so the refusal paths and the finding ordinals are unproven — add rule-lists.logic.test.ts pinning the no-Files refusal, the unmatched-path refusal, a selector matching two headings, and BUG/DEFER ordinal ids.
+
+DEFER severity=MED — eng-s5 §5.5 parity battery "Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator)" — scripts/hooks/check-lane-close.mjs:30 "const VERDICT = /^\s*[-*]?\s*(\S+)\s+(CONFIRMED|REJECTED|CONFLICT)\s+" vs docs/specs/00-architecture/08_agents.md:230 "one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding" — the verdict grammar is restated in the README, Spec 08, Spec 137 and the launch brief, with CONFLICT in some and absent in Spec 08, and no drift guard pins them — pin the word list once and add a parity test (or generate the doc sentence from the hook's list).
+
+DEFER severity=MED — eng-s5 §5.5 "A load-bearing behavior (a documented fence, a past `fix(...)` ...) is preserved across a change." — scripts/lib/review-template.js:75 "// task-366 (COMPLY.2): ONE pass with function replacers, so a value is inserted literally: no dollar-sequence expansion and no re-scan of inserted text for tokens." — this retires the three-pass replace that every lens prompt runs through and pins nothing (cannot see whether the Regression Guardian flagged it) — add a *.regression.test.ts feeding a material containing `$&` and `{{PLAN}}` and assert both survive literally, run red before the change.
+
+MET — eng-s5 §5.5 parity battery (dual-path reuse) — scripts/analysis/rule-lists.mjs:37 "const v = JSON.parse(fs.readFileSync(path.join(root, file), 'utf8'))[key];" — globs_from reads mcbylaws/protected-paths.json at run time instead of copying it, so the two path maps cannot drift.
+
+MET — eng-s5 §5.5 parity battery (two parallel implementations) — scripts/analysis/backlog-lane.mjs:141 "const { code, plan, out } = lensSet({ type: task.fm.type, files: filesText(task.body) }); // one lens-set function, shared with the close check (rule-lists.mjs)" — launch and close derive the required lens set from one function, so they cannot diverge by construction.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 3
+
+---
+⏱  62344ms (62.3s)
+📊 Tokens — total: 31819, input: 20279, output: 11540, reasoning: 10646

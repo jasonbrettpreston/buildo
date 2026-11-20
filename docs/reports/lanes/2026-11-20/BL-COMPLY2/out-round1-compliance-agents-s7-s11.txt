@@ -1,0 +1,45 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10592 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22552 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33029 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43863 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 55156 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 65676 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 76981 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 88274 chars, answer 0 chars, 120s
+BUG severity=HIGH — §11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed" — .husky/commit-msg "node scripts/hooks/check-lane-close.mjs \"$1\"" and no test file for the new gate anywhere in the diff — a blocking commit-msg lock (check-lane-close.mjs) and the resolver it rests on (rule-lists.mjs) land unproven in either direction — add red/green cases: a BUILT commit with no out-compliance/GROUNDER.md is refused, the same commit with well-formed artifacts passes.
+
+BUG severity=HIGH — §7 rule 6 "BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons." — scripts/hooks/check-lane-close.mjs "else if (v.word === 'REJECTED' && !v.reason) errors.push(`GROUNDER.md: finding ${f.id} is REJECTED with no reason after the file:line" — a finding ruled CONFIRMED (BUG or DEFER) is accepted by the close gate with no WF3 evidence and no review_followups.md entry, so a confirmed bug reaches a BUILT/DONE commit unchecked — refuse a CONFIRMED BUG with no WF3 reference and require a review_followups.md path beside a CONFIRMED DEFER.
+
+BUG severity=HIGH — §11.1 "a plan or fold may not contain a claim that COULD be executed but wasn't" — scripts/analysis/backlog-lane.mjs "resolved = resolveTask({ table: readTable(path.resolve(home(str('rule-lists', DEFAULT_TABLE))))" with rule-lists.mjs "export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');" — the table that every launch and every BUILT/DONE close now depends on is not in this material, and no `rule-lists.mjs validate` run is shown, so on the material shown the launch path refuses every task — ship scripts/analysis/rule-lists.json and its protected-paths.json dependency with the change, plus the validate output.
+
+DEFER severity=MED — §7 rule 10 note "The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/`" — scripts/analysis/backlog-lane.mjs "copy plan-*.txt, out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/" — the brief drops REPORT.md and TRIAGE.md from the copy instruction and invents FINDINGS.md, which no pasted ruling names, while the same string still ends "... TRIAGE.md" — name REPORT.md and TRIAGE.md in the copy instruction and remove FINDINGS.md or state it is TRIAGE.md.
+
+DEFER severity=MED — §7 rule 10 note "the task's references point at that repo copy, so a reference resolves from the board" — scripts/hooks/check-lane-close.mjs "const files = git(['ls-files', '--cached', '-z', '--', 'docs/reports/lanes'])" — the close gate checks only directory contents, never the task's references, so the out-of-repo lane references the note was written against still close clean — also parse the task's references and refuse one that does not point under docs/reports/lanes/<date>/<lane>/.
+
+DEFER severity=MED — §7 rule 4 note "run with `scripts/deepseek-review.js review <file> --template <lens> --context <pasted context>`" — scripts/analysis/backlog-lane.mjs "`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md > P-compliance-L[-pN].txt`" — the compliance run is ordered without --context, so at output altitude the lens sees the lists and the diff but never the task's pasted rulings and decisions — pass the task's context file as --context on the out-phase compliance run.
+
+DEFER severity=LOW — §7 rule 4 "Every DeepSeek finding is adjudicated by a tool-having grounder before folding" — scripts/hooks/check-lane-close.mjs "if (build || findings.length > 0) { const g = textOf('GROUNDER.md');" — a build or fix task must file GROUNDER.md even when no lens returned a single finding, an obligation this clause does not name — require GROUNDER.md only when a lens output actually holds a finding.
+
+MET — §7 rule 3 "file rejections with reasons" — scripts/hooks/check-lane-close.mjs "else if (v.word === 'REJECTED' && !v.reason) errors.push(" — a REJECTED verdict with no reason after the file:line refuses the commit.
+
+MET — §7 rule 10 note "in the lane's last commit" — scripts/hooks/check-lane-close.mjs "git(['show', `:${f}`]).stdout" — the artifacts are read from the index, so the lane's last commit may carry them.
+
+MET — §7 rule 1 "both mandatory per WF" — scripts/analysis/backlog-lane.mjs "for each list id L and each phase P (plan: material = ${ctx}; out: material = the diff file)" — compliance is run at plan and at output for each attached list.
+
+MET — §7 rule 4 "NEVER run one generic pass" — scripts/analysis/backlog-lane.mjs "const plan = ['plan-review-deepseek', ...(code && surface ? ['ux'] : []), ...]" — the per-type lens set survives the compliance change.
+
+MET — §7 rule 4 note "one Claude grounder adjudicates every finding as round 2" — scripts/hooks/check-lane-close.mjs "for (const f of findings) { const v = verdicts.get(f.id); if (!v) errors.push(" — one verdict line is required per finding id.
+
+REJECT — §11.5 "CLI models (Gemini/DeepSeek raw) are DEMOTED to whole-file audit generators" — the change is accused of letting raw DeepSeek lens output block a commit — the 2026-11-19 note to §7 rule 4 makes the DeepSeek lens set the compliance substrate and puts every finding before a separate grounder, and §11.5 stays scoped to diff reviews of backend/pipeline work.
+
+REJECT — §7 rule 7 "Never run all ~12 roles on one change" — the change is accused of a fixed roster per task — the per-type lens line is unchanged; the added runs are one compliance run per attached list, which is the list the data attaches, not a role.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 6
+
+---
+⏱  131210ms (131.2s)
+📊 Tokens — total: 49799, input: 23939, output: 25860, reasoning: 24347

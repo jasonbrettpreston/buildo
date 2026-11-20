@@ -1,0 +1,39 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/in-out-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10562 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22652 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34171 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45111 chars, answer 0 chars, 60s
+BUG severity=CRIT — 5.3 Red-Green "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — scripts/analysis/rule-lists.mjs:149 "export function resolveTask({ table, root, body, type, letter, tracked }) {" — the material adds two new modules (rule-lists.mjs 282 lines, check-lane-close.mjs 110 lines) and alters two more, and contains not one test file, so no failing test preceded any of this code — land the failing logic test and the failing hook test first, then the implementation.
+
+BUG severity=HIGH — 5.2 "| `*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic |" — scripts/analysis/rule-lists.mjs:60 "export function sectionText(text, selector) {" — the new derivation surface (headings, sectionText, splitUnits, filesEntries, candidates, findingsIn, resolveTask) ships with no `*.logic.test.ts` — add `rule-lists.logic.test.ts` proving section slicing, split-at-bound, and row matching on happy and edge inputs.
+
+BUG severity=HIGH — 5.2 "API routes, DB queries, external calls | New API route / DB mutation (unhappy path first, §5.3)" — scripts/hooks/check-lane-close.mjs:95 "if (gr && norm(gr) === norm(laneName)) errors.push(`GROUNDER.md: Grounder \"${gr}\" is the lane (${laneName}); a separate agent must ground`);" — the new commit gate shells git and refuses commits, and none of its refusals (part gap, missing VERDICT, grounder equal to lane, missing finding verdict, REJECTED with no reason) is exercised by any test — add `check-lane-close.infra.test.ts` that drives those refusals first and only then the pass case.
+
+BUG severity=MED — README rule list item 5, at close "holds one compliance lens output per attached list (`out-compliance-<list id>.txt`, or parts `-p1..-pK`" — scripts/hooks/check-lane-close.mjs:65 "const phases = build ? ['out'] : ['plan', 'out'];" — for a non build/fix task the hook accepts `plan-compliance-<id>.txt` where the documented clause names `out-compliance-<id>.txt`, so the stated rule is not the enforced rule — either restrict the README line to plan-or-out for other types or make the hook require `out-` always.
+
+DEFER severity=MED — 5.2 "When altering/deleting code the Regression Guardian flags as a fence" — scripts/lib/review-template.js:76 "const values = { PLAN: plan, SPECS: specs, DATA_CONTEXT: dataContext };" — the diff replaces the sequential replacers and retires the generic `compliance` entry from the plan/out lens arrays (scripts/analysis/backlog-lane.mjs:147) with no `*.regression.test.ts` pinning either behavior — add a regression test for single-pass literal substitution and for the once-per-list compliance line.
+
+DEFER severity=MED — 5.5 "Any dual-surface or generated artifact (drift guard)" — scripts/analysis/rule-lists.mjs:87 "if (typeof l.generated_by !== 'string' || !l.generated_by) bad.push(`list ${id}: generated_by missing (a generator path or \"hand-written\")`);" — the table records a generator per list, but nothing regenerates a list to a buffer and diffs the committed file, and no parity test is added — add a parity case that runs each non hand-written list's `generated_by` and diffs the output against the committed list.
+
+DEFER severity=LOW — the material's own claim "the list first, whole, then the material" (README, rule list item 3) — scripts/analysis/rule-lists.mjs:21 "export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');" — cannot see `scripts/analysis/rule-lists.json` in this diff, so every row, list and `no_files_default` the change rests on is unverified here and the hook returns 0 when the table is absent — confirm the table file is committed in this lane, or the reader and the close check are untested data.
+
+DEFER severity=LOW — 5 clause scope, "the lens-compliance judges against the pasted clauses only" — scripts/analysis/rule-lists.mjs:10 "// Rules: Spec 08 section 7 rule 4 and section 5.3 (08_agents.md), 00_engineering_standards.md section 14, operator 2026-11-20" — cannot see Spec 08 section 7 rule 4, section 5.3, 00_engineering_standards.md section 14 or the 2026-11-20 operator entries pasted into this run, so the code's own citations are unverified — paste those clauses with the code or drop the citation claim.
+
+MET — 5.1 "You MUST always import typed factories from `src/tests/factories.ts`." — scripts/analysis/rule-lists.mjs:1 — the diff adds no test doubles or untyped inline mocks, so 5.1 has nothing to reject today; the mandated tests that land must use the factories.
+
+MET — 5.2 DB replay row "Any migration touching schema/constraints/indexes (run before push)" — whole diff — no migration, constraint or index is touched, so DB replay is not triggered.
+
+MET — 5.5 "seed JSON ↔ TS `LOGIC_VAR_DEFAULTS`" — whole diff — no logic-var seed or TS defaults are altered, so that parity battery is not triggered.
+
+REJECT — 5.4 Test Data Seeding — that no `scripts/seed-[scenario].js` was added — the change sets up no DB scenario for tests or demos, so the rule is not triggered.
+
+REJECT — 5.5 "a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three" — accused of shipping value-derivation without DB-replay — no schema constraint is added, so the conjunctive rule is not triggered; the regression-lock and parity halves are raised separately above.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 5
+
+---
+⏱  73494ms (73.5s)
+📊 Tokens — total: 32570, input: 17540, output: 15030, reasoning: 13605

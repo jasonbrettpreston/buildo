@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/material.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10396 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21076 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31918 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42848 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53548 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 64060 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 74771 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 90466 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 104649 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 114973 chars, answer 0 chars, 150s
+[deepseek-review] deepseek-reasoner working… reasoning 125344 chars, answer 0 chars, 165s
+[deepseek-review] deepseek-reasoner working… reasoning 135411 chars, answer 0 chars, 180s
+[deepseek-review] deepseek-reasoner working… reasoning 147487 chars, answer 0 chars, 195s
+[deepseek-review] deepseek-reasoner working… reasoning 158554 chars, answer 0 chars, 210s
+[deepseek-review] deepseek-reasoner working… reasoning 169068 chars, answer 0 chars, 225s
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:260 "const r = resolveTask({ table, root, body: `Files: ${str('files', '')}`, type: str('type', ''), letter });" — the resolve branch has no try/catch, so any table fault that throws (rowGlobs on a missing globs_from file or key, table.rows missing, a row naming an undefined list) escapes as an uncaught TypeError with a stack and exit 1, while the header promises "exit 3 with one line when refused" and the lens-input branch below wraps its call — wrap it: try { r = resolveTask(...) } catch (e) { die(3, e.message); }
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:155 "const d = table.lists[id];" — dereferenced with no guard, so a row (or increment_docs entry) naming a missing list throws "Cannot read properties of undefined (reading 'file')", and backlog-lane.mjs:73 then reports it as "cannot read the rule-list table or one of its path maps under ${board}" naming neither the row nor the list id — guard it: if (!d) throw new Error(`row ${rowId}: list ${id} is not defined`)
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:257 "console.log(`rule-lists: ok ${Object.keys(table.lists).length} lists, ${table.rows.length} rows`);" — validateTable never checks table.rows (it loops table.rows ?? []), so a table with no rows array validates clean and this line throws a TypeError; resolveTask's table.rows.map then throws later for the same table — add if (!Array.isArray(table.rows)) bad.push('rows: missing')
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:177 "if (letter !== undefined) {" — the increment requirements document is attached only when a letter is found, and milestoneLetter returns undefined at line 119 "if (!milestone || !fs.existsSync(dir)) return undefined;" for a milestone title without a [G] suffix, so such a task silently loses that list while an unknown letter refuses at line 179 and the launch note says groups defaults to F — default the letter to F or refuse with the milestone named, do not skip
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs:142 "const files = /\bFiles:\s*(.+)$/m.exec(descriptionOf(task))?.[1] ?? '';" — a third hand-rolled Files grammar next to the resolver's scripts/analysis/rule-lists.mjs:112 "const m = /(?:^|\s)Files:[ \t]*(.*)$/m.exec(String(body));": \bFiles: reads a bolded or bracketed marker and \s*(.+) reads a path on the next line, the resolver's (?:^|\s) and [ \t]* read neither, so a task is refused at launch as having no Files line that the lens line itself would have parsed — export filesEntries and use that one function in lensLine
+
+DEFER severity=NIT — scripts/hooks/check-lane-close.mjs:23 "const git = (a) => spawnSync('git', ['-c', 'core.quotepath=false', ...a], { encoding: 'utf8', maxBuffer: 1 << 28 });" — the result is never status-checked and every caller reads .stdout (line 30 "const top = git(['rev-parse', '--show-toplevel']).stdout.trim() || process.cwd();"), so when git cannot run, stdout is null and the hook dies with a TypeError stack instead of a named check-lane-close line (it still fails closed) — make git() throw a named Error on r.status !== 0 or r.stdout == null and let check() return fail([...])
+
+VERDICT: PASS on code correctness
+
+---
+⏱  229100ms (229.1s)
+📊 Tokens — total: 80530, input: 31562, output: 48968, reasoning: 48101

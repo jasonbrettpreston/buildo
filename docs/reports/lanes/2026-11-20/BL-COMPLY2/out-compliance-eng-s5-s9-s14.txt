@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/in-out-compliance-eng-s5-s9-s14.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10533 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20700 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32674 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43333 chars, answer 0 chars, 60s
+BUG severity=HIGH — 5.3 Red-Green Test Cycle "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — scripts/analysis/rule-lists.mjs:2 "COMPLY.2 (task-366): the path to rule-list table reader." — the diff lands 306 lines of new derivation logic plus a 162-line commit gate and not a single test file appears anywhere in it, so no red light can have been run for any of it — add the failing test first (resolveTask refusals, sectionText single-match, splitUnits, findingsIn ordinals) in a `*.logic.test.ts`, run it red, then implement.
+
+BUG severity=HIGH — 5.2 "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" and 5.5 "Un-pinned derivation logic silently changes value." — scripts/analysis/rule-lists.mjs:122 "export function lensSet({ type, files }) {" — which lenses a task must run, which rule lists attach, and which finding ids the close gate demands are pure derivations (lensSet, resolveTask, filesEntries, findingsIn, sectionText, splitUnits) with no pinning test, so a change here silently alters what is gated with a green suite — add `rule-lists.logic.test.ts` for those functions plus a `check-lane-close` fixture test (missing GROUNDER.md, edited output hash, quote not on the cited line).
+
+DEFER severity=MED — 5.2 "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — scripts/analysis/rule-lists.mjs:86 "bad.push(`list ${id}: generated_by missing" — validate only asserts that a generator path is named; nothing regenerates a generated list and diffs it, so a list produced by a script can drift from its generator while validate prints ok — add a parity check or test that runs each named generator to a buffer and refuses on a diff with the committed list file.
+
+DEFER severity=MED — 14 registry "traceability rot; stale cross-refs" / "Every source/test file's `SPEC LINK` points at the spec AND the section (§N)" — scripts/analysis/backlog-lane.mjs:152 "Spec 08 section 7 rule 4, 08_agents.md:334" — the same diff inserts a two-line dated note into docs/specs/00-architecture/08_agents.md (at line 229), shifting the 08_agents.md:334 and :339 line citations the new and edited code still rely on — re-point those citations at section numbers, or re-check the line numbers after the insert, in this commit.
+
+DEFER severity=LOW — 14 registry "new couplings update **Cross-Spec Dependencies both directions**" — scripts/analysis/rule-lists.mjs:10 "// Rules: Spec 08 section 7 rule 4 and section 5.3 (08_agents.md), 00_engineering_standards.md section 14" — the header states the specs in prose rather than a `SPEC LINK` marker, and no Cross-Spec Dependencies edit for the scripts/analysis/rule-lists.json coupling appears in the diff (cannot see whether those sections exist elsewhere) — add a `SPEC LINK:` line naming spec and section to both new files and the cross-spec entries for Spec 08 and Spec 137.
+
+REJECT — 9.1 Transaction Boundaries, 9.2 PostgreSQL Parameter Limit, 9.4 Pipeline SDK Mandate, 9.5 Streaming Ingestion — the new scripts are accused of missing BEGIN/COMMIT, sub-batch chunking, `pipeline.run` and page streaming — neither file opens a pool, writes a row or fetches an external API (the SDK's createPool/emitSummary/emitMeta all presuppose a pool), so there is no mutation, parameter list or fetch for those clauses to bind.
+
+MET — 9.3 "All pipeline scripts MUST be safe to re-run." — scripts/analysis/rule-lists.mjs:297 "fs.rmSync(path.join(dir, f))" — lens-input deletes the stale base file and every `-pN` part before rewriting, so a re-run leaves no orphan part behind.
+
+MET — 14 "A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**" — docs/specs/00-architecture/137_mcqueue.md:132 "+Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2" — both specs the new code cites (08_agents.md and 137_mcqueue.md) and the lens README are updated in this same diff.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 4
+
+---
+⏱  73484ms (73.5s)
+📊 Tokens — total: 36487, input: 22021, output: 14466, reasoning: 13399

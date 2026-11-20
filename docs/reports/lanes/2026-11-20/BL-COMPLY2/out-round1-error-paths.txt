@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/material.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9182 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 18849 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 28909 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 38746 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 48930 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 59536 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 75089 chars, answer 0 chars, 105s
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:59 ".filter((f) => { const p = f.split('/'); return p.length === 6 && p[4] === laneName; })" with :61 "const textOf = (n) => files.find((f) => f.name === n)?.text;" — every date's dir for the lane is pooled and looked up by basename only, so a previous task's out-compliance-X.txt plus GROUNDER.md satisfy a later task's close, and a duplicate basename lets a stale verdict answer a fresh finding — scope the lookup to the task's own lane dir (or the newest date) and refuse when two dates carry the same basename.
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:99 "if (v) verdicts.set(v[1], { word: v[2], reason: v[4].trim() });" — verdict lines are keyed only by the positional id and surplus ids are never refused, so a re-run whose finding #1 became a different finding is covered by the old #1 verdict, which the stated limit (a missing id is refused) does not cover — key the id on a hash of the finding text, or refuse any verdict id that is not among the current findings.
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:182 "return result;" after :176 "if (result.unmatched.length) return { error: `refused: Files path(s) matched by no row ..` };" — entries that all land on exempt globs, or a row whose lists is empty, return lists: [] as success, then check-lane-close loops zero lists and demands no compliance output while the refusal text promises no silent "no rules apply" — refuse an empty lists result, and have :94 "for (const l of row.lists ?? []) if (!table.lists?.[l]) bad.push(..)" also reject a row with lists: [].
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:177 "if (letter !== undefined) {" — a milestone title with no trailing [X] makes milestoneLetter return undefined, so the increment requirements document is silently not attached and nothing refuses, while an unknown letter does refuse at :179 — default the letter the way backlog-lane.mjs does (groups defaults to F) or refuse naming the milestone.
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:112 "const m = /(?:^|\s)Files:[ \t]*(.*)$/m.exec(String(body));" — both callers pass the whole task file (check-lane-close.mjs:54 "r = resolveTask({ table: readTable(tableFile), root: top, body: now.stdout, .. })", backlog-lane.mjs:71 "resolveTask({ table: readTable(..), root: board, body: t.body, .. })"), so the first Files: anywhere, frontmatter or prose in a task about the Files line, decides the lists, and launch and close can attach or demand a different set than the lens line at backlog-lane.mjs:141 "const files = /\bFiles:\s*(.+)$/m.exec(descriptionOf(task))?.[1] ?? '';" — read the description the way lensLine does, or pin the line position.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:270 "buildLensInputs({ id, list, root, material: .., templateFile: .., ...(a.max ? { max: Number(a.max) } : {}) })" with :223 "if (unitMax < 200) throw" — a non-numeric --max gives NaN, both that guard and :238 "if (prompt > max) throw" compare false, so the 120000 bound is never enforced and an oversized input file is written; the failure surfaces only in the review call — reject a non-finite --max with exit 2.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:273 "for (const f of fs.readdirSync(dir)) if (f === `${base}.txt` || new RegExp(..).test(f)) fs.rmSync(path.join(dir, f));" — the existing inputs are deleted before :274 "for (const f of files) { const p = ..; fs.writeFileSync(p, f.text); console.log(p); }" writes the new set, so a write failure or a second run for the same prefix leaves a mixed or truncated part set that a later lens call consumes and check-lane-close cannot see as incomplete — write to temp names and rename, then drop stale parts.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:40 "if (now.status !== 0) return 0;" with :49 "if (!fs.existsSync(tableFile)) return 0;" — a failed read of the staged task file or a missing rule-lists.json is treated as exempt, so an index or table problem silently passes the close gate instead of erroring — fail closed with the reason when the table or the task file exists in HEAD.
+
+VERDICT: FAIL on error-path safety
+Paths walked: launch table read failure, no Files line, unmatched path, exempt-only Files line, milestone without [X], row with empty lists, section selector mismatch, material too large, no deeper heading, invalid --max, lens-input regenerate, missing VERDICT line, single plus parts, part gap, stale date dirs, duplicate basenames, re-run finding ids, extra verdicts, missing GROUNDER.md, grounder equals lane, REJECTED without reason, git read failure, missing table.   Unguarded: 8
+
+---
+⏱  116396ms (116.4s)
+📊 Tokens — total: 54308, input: 31579, output: 22729, reasoning: 21491

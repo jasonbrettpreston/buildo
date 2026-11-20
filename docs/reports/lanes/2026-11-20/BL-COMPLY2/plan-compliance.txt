@@ -1,0 +1,44 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/plan/PLAN.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11289 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22406 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33199 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45265 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 56385 chars, answer 1662 chars, 75s
+BUG severity=HIGH — operator 2026-11-20 pasted in the Rule basis "the infa freeze needs to be lifted again" and Spec 137 §6 "It is infrastructure work. It is carded for the infra-freeze lift and is not built now." — plan step 3 "3. scripts/hooks/check-lane-close.mjs, one line in .husky/commit-msg after check-task-files" — the plan builds a new commit gate, a new shared table and a helper CLI (infra) while no step records a by-name freeze lift, and its own rule basis says the lift is still owed — add a step that records the by-name lift (dated note naming this lane and these files) before the hook lands, or move the hook to the lift.
+
+BUG severity=HIGH — Spec 08 §7 rule 4 "NEVER run one generic pass" and "run the LENS SET in parallel, each a narrow prompt" — plan step 2 "change the lens line to one compliance run per list through the helper" — the brief's lens line, which the 2026-11-19 note says "names the lenses by task type", is replaced with compliance runs only, so security, idempotency and error-paths would no longer be named for a task — state that the per-type lens lines stay and the per-list compliance runs are added to them.
+
+BUG severity=HIGH — Spec 08 §7 rule 2 "Ground-truth gates Compliance (§5.1/§5.2): validate the spec against reality before checking code against the spec." and §5.1 "Run **Ground-truth (§5.2) FIRST**" — plan step 2 "each list: file, selection, why, status; READ WHOLE before planning" — the generated brief and the close hook require compliance runs against the pasted lists but no step requires a ground-truth pass on those lists first, so compliance is checked against specs that are never validated — add a ground-truth precondition (with a recorded output) to the brief block and to the close hook's evidence, or state where it already runs.
+
+DEFER severity=MED — Spec 08 §5.3 "Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8)." and §7 rule 3 "file rejections with reasons" — plan step 3 "one verdict line `<finding id> CONFIRMED|REJECTED <file:line>` per finding" — the enforced GROUNDER.md form carries a verdict word and a file:line but no reason field, so a REJECTED finding passes the hook with no reason recorded — require a reason on each REJECTED line or a REJECTED section with reasons.
+
+DEFER severity=MED — Spec 08 §11.4 "cases, fixtures, red/green expectations, invocation mode" and "are written INTO the plan and reviewed at PLAN altitude" — plan Tests "src/tests/backlog/rule-lists.logic.test.ts (table, resolve, lens-input)" — the plan names test files and one parenthetical, with no cases, fixtures, red/green expectations or invocation mode written into it — write the case list, fixtures and red/green expectations into the Tests section.
+
+DEFER severity=MED — operator 2026-11-20 "Add the tasks to incr 1b" — plan step 4 "task notes through the backlog CLI" — no step records that task-366 and its sibling tasks are assigned to the increment 1b milestone, the first half of the operator's words, and no line cites board evidence of it — add a step that sets the milestone to incr 1b for the named tasks and records the board evidence.
+
+DEFER severity=MED — operator 2026-11-20 "what is the point of building a mess - wasted effort" and PLAN-PROTOCOL.md:3 "simple, no scope creep" — plan step 5 "5. Enabling fix named: scripts/lib/review-template.js substitutePlaceholders uses String.replace with the text as replacement" — the step changes a shared review library that no pasted clause names, since no pasted clause requires lists pasted whole, expanding the build beyond the rule-list work — move it to its own task, or name the pasted clause that requires the template fix.
+
+DEFER severity=MED — Spec 08 §11.1 "a line citation is **read**, not remembered" and "No unexecuted executable claim" — plan Reuse "Spec 124 R-BA lives in 124a_step_standard_policy_appendix.md (section B10, V3 rows B12), not Spec 124" — the plan asserts tree facts (that location, the protected-paths.json keys, the String.replace behaviour) with no file:line and no recorded read or run — cite each claim with file:line, or drop the ones not re-read.
+
+MET — Spec 08 §7 rule 10 dated note 2026-11-19 "in `docs/reports/lanes/<date>/<lane>/` in the lane's last commit" — plan step 3 — the lens outputs and GROUNDER.md are required in docs/reports/lanes/<date>/<lane>/, so the close evidence lands in the repo copy.
+
+MET — Spec 08 §7 rule 4 dated note 2026-11-19 "one Claude grounder adjudicates every finding as round 2" — plan steps 2 and 3 — the grounder rule is written into the generated brief text and GROUNDER.md is refused without it at close.
+
+MET — 00_engineering_standards §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — plan step 4 — the operator words are recorded in 08_agents.md and 137_mcqueue.md in the same lane.
+
+MET — Spec 08 §11.3 "Every lock is proven in BOTH directions" — plan step 3 test "refuses missing lens output, missing grounder file, Grounder equal to Lane, finding id without a verdict line; passes when all present."
+
+MET — Spec 08 §11.3 red-first — plan step 2 "Test 2 (red first): mobile file + API route brief names every list of both rows; an unmatched path and a missing Files line are refused."
+
+MET — Spec 137 §4 rule 3 "There is no tool." — plan step 3 — no status-line tool is added, the hook checks lens output and GROUNDER.md only.
+
+MET — 00_engineering_standards §5.2 "*.logic.test.ts" — plan Tests — the pure resolve and listText logic is tested in .logic.test.ts files as the pattern mandates.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 21   Unmet: 8
+
+---
+⏱  78441ms (78.4s)
+📊 Tokens — total: 49768, input: 33469, output: 16299, reasoning: 14836

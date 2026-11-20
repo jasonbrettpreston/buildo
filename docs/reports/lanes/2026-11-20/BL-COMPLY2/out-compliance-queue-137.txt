@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11104 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21546 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32177 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43997 chars, answer 0 chars, 60s
+BUG severity=HIGH — Spec 137 §4 note 2026-11-20 "Which lists a task attaches is decided by `scripts/analysis/rule-lists.json` from the task's Files line" — scripts/hooks/check-lane-close.mjs:153 "return 0; // a repo that never had the table is not held to it" — the data file the clause names is not in this diff (only its reader, scripts/analysis/rule-lists.mjs, is), so until rule-lists.json lands in HEAD every close of a lane task passes unrefused, and the clause's "scripts/hooks/check-lane-close.mjs refuses the commit that sets BUILT or DONE without them" is unmet — add scripts/analysis/rule-lists.json to this same commit and fail closed when it is absent from HEAD instead of returning 0.
+
+BUG severity=HIGH — Spec 137 §4 note 2026-11-20 "`scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them" — scripts/hooks/check-lane-close.mjs:131 "if (!m) return 0;" — the hook only runs when the message carries a `Task: task-N` trailer, and the code trailer check (G3) demands one only for src/scripts/mobile/migrations commits, so a docs or spec commit that flips a task to BUILT or DONE is never checked — locate the staged `backlog/tasks/<id> - ...` file from the diff itself and run the check on the status move, not on the trailer.
+
+BUG severity=MED — Spec 137 §4 note 2026-11-20 "(the launch refuses a task whose Files line is missing or matches no row)" — scripts/analysis/rule-lists.mjs:180 "the task has no Files: line, so no rule lists can be attached (add \"Files: path, dir/, glob\" to the description; only a ${d ? d.types.join('/') : 'record-only'} task defaults to the queue lists)" — a task whose Files line is missing is launched with the queue lists instead of being refused, so the clause's refusal does not hold for record-only types — either refuse every task without a Files line or add the Spec 08 parenthetical "a record-only task gets the queue lists" to the Spec 137 note.
+
+DEFER severity=MED — Spec 137 §4 note 2026-11-20 "now also needs, in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`), one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding" — scripts/hooks/check-lane-close.mjs:148 "but has no @lane-* assignee, so there is no lane report to check" — the hook also refuses on a missing @lane assignee, on the code lens set (out-code-review, out-error-paths, out-ux, out-security) and on a missing plan-*.txt, none of which the clause names — name those refusals in the Spec 137 note or drop them from the hook, so the clause and the gate say the same thing.
+
+DEFER severity=MED — Spec 137 §4 note 2026-11-20 "(the launch refuses a task whose Files line is missing or matches no row)" — scripts/analysis/rule-lists.mjs:205 "refused: no increment requirements document for milestone group [${letter}] in increment_docs of scripts/analysis/rule-lists.json" — the launch adds a third refusal, an increment document per milestone group, that no pasted clause names and that .claude/review-templates/README.md does not list among the table keys — document increment_docs and no_files_default in the README table description and name the refusal in the note, or drop it.
+
+DEFER severity=LOW — Spec 137 §4 note 2026-11-20 "with a verdict line per finding" — scripts/analysis/rule-lists.mjs:213 "export const FINDING_LINE = /^\s*[-*]?\s*(BUG|DEFER)\s+severity=/;" — a finding a lens writes in any other form is invisible to findingsIn, so it gets no verdict line and the close still passes, while the clause reads per finding — make the line form binding on every lens template the gate accepts, or widen the pattern and say so.
+
+MET — Spec 137 §6 "its three conditions (missing status line, missing expiry, DROPPED without a quoted ruling) stay deferred" — scripts/hooks/check-lane-close.mjs — the new hook tests neither expiry nor a DROPPED ruling, so the deferred conditions stay unbuilt as the amended §6 requires.
+
+MET — Spec 137 §4 note 2026-11-20 "a `GROUNDER.md` from an agent that is not the lane" — scripts/hooks/check-lane-close.mjs:92 "if (gr && lh && norm(gr) === norm(lh)) errors.push(`GROUNDER.md: Grounder \"${gr}\" is the same as Lane" — the grounder is compared against the Lane header, the lane name and the task's assignees.
+
+MET — Spec 137 §4 note 2026-11-20 "one compliance lens output per rule list the task attaches" — scripts/hooks/check-lane-close.mjs:53 "for (const l of r.lists) {" — one output per resolved list id is required, with the -p1..-pK parts rule and a VERDICT line.
+
+MET — Spec 137 §5a Rule 13 "The board is a view; the row is the record." — no file in the diff writes to the board, the queue rows, or their status lines.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 6
+
+---
+⏱  70670ms (70.7s)
+📊 Tokens — total: 40453, input: 26740, output: 13713, reasoning: 12412

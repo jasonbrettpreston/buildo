@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9617 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20123 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31317 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41151 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 51482 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 63215 chars, answer 0 chars, 90s
+BUG severity=HIGH — doc-17 header "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18). The operator's rulings are the decisions." — scripts/analysis/rule-lists.mjs:74 "if (list.whole) return [{ label: 'whole file', text: text.endsWith('\n') ? text : `${text}\n` }];" — nothing in the table reader or in `validateTable` tests that a registered list is rulings and not readings, so a whole-file list such as this document is pasted whole as the governing clause set of a review (this very review's input is doc-17 passed whole as its rules), which the pasted header forbids — refuse a list whose head carries the readings header (or require a rulings-only section selector in the table) and re-issue this review against rulings.
+
+BUG severity=HIGH — RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record)" with the only pasted lift RR-0001 "Infra freeze lifted for the named list only; scratch-side parts now, repo checks after push 6" — .husky/commit-msg:8 "+node scripts/hooks/check-lane-close.mjs \"$1\" && \" and docs/specs/00-architecture/08_agents.md:229 "the infra freeze is lifted for it by name" — the change adds new repo-wide infra (a commit-msg gate that can refuse any commit) and rests its lift on an operator quote dated 2026-11-20 that is not in the pasted context while the pasted lift covers "the named list only" and that named list cannot be seen — paste the 2026-11-20 words and the named list that includes task-366, or hold the hook and the spec notes out of the repo commit.
+
+DEFER severity=MED — rule-lists.mjs:166 "Returns {lists, exempt, unmatched} on success, {error} (one line) when refused: no Files line, an unmatched path, or no increment document." — scripts/analysis/rule-lists.mjs:200 "if (letter !== undefined) {" — when the milestone title carries no [group] letter the increment document check is skipped silently instead of refused, so a task launched from such a milestone attaches no increment requirements document and the close check never misses it — always require an increment document, mapping a missing letter to a named default or a refusal.
+
+DEFER severity=MED — docs/specs/00-architecture/08_agents.md:229 "with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding" — scripts/hooks/check-lane-close.mjs:30 "const VERDICT = /^\s*[-*]?\s*(\S+)\s+(CONFIRMED|REJECTED|CONFLICT)\s+(\S+?):(\d+)\s+\"([^\"]*)\"\s*(.*)$/;" — the spec clause the lane is held to names a two-word verdict set while the hook accepts and reasons a third, CONFLICT, so a grounder that follows the spec note exactly is not what the hook checks — add CONFLICT (and its reason duty) to the spec note, or drop CONFLICT from the hook.
+
+DEFER severity=MED — .claude/review-templates/README.md:138 "**The table.** `scripts/analysis/rule-lists.json` maps path globs to rule lists" — scripts/hooks/check-lane-close.mjs:150 "return 0; // a repo that never had the table is not held to it" — the table the whole design rests on is not in this diff (cannot see it, its rows or its increment_docs), and the close check fails open when it never existed in HEAD, so at this commit none of the stated close requirements fire — add scripts/analysis/rule-lists.json to the change and show `rule-lists.mjs validate` passing over it.
+
+DEFER severity=LOW — .claude/review-templates/README.md:142 "each ends with a `VERDICT:` line" — scripts/hooks/check-lane-close.mjs:74 "else if (!/^VERDICT:/m.test(t)) errors.push(`${id}: ${n} has no VERDICT line (a failed run is not a lens output)`);" — the check matches a VERDICT line anywhere in the file, not the end, so a run truncated after its verdict still passes as a whole lens output — anchor the test to the last non-empty line, or soften the README to "holds a VERDICT: line".
+
+MET — doc-17 header "Readings and register entries of the rulings register." — scripts/lib/review-template.js:75 "const values = { PLAN: plan, SPECS: specs, DATA_CONTEXT: dataContext };" — the substitution is now a single literal pass, so pasted rule text carrying `$&` or `{{...}}` is inserted unexpanded and cannot rewrite itself.
+
+MET — RR-0002 "Lane tooling first (run-panel, guard, generated briefs, lane registry and pack cache, Spec 08 seat-K note draft)" — scripts/analysis/backlog-lane.mjs:161 "const ruleBlock = [" — the change is lane tooling and lands in the brief generator first, touching no product surface.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 2
+
+---
+⏱  99728ms (99.7s)
+📊 Tokens — total: 48569, input: 30023, output: 18546, reasoning: 17314

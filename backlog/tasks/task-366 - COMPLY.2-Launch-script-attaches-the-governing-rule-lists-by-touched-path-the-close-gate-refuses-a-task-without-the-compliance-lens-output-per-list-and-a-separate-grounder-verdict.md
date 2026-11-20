@@ -8,10 +8,13 @@ status: RUNNING
 assignee:
   - '@lane-BL-COMPLY2'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-20T13:54:00Z'
+updated_date: '2026-11-20T14:01:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-COMPLY2/REPORT.md
+  - docs/reports/lanes/2026-11-20/BL-COMPLY2/FINDINGS.md
 type: build
 ordinal: 66012
 ---
@@ -66,4 +69,6 @@ Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, script
 2026-11-20 BL-COMPLY2: plan lenses (compliance, code-review, error-paths) run and folded (TRIAGE.md in the lane report); red proven by a refused commit (40 failing tests, red.out); green commit carries rule-lists.json (the table), rule-lists.mjs, backlog-lane.mjs attach, check-lane-close.mjs (commit-msg), the notes in 08_agents.md and 137_mcqueue.md, the README Rule lists section. Reused: mcbylaws/protected-paths.json layer23 and frontend (globs_from). Task stays RUNNING: grounder owed.
 
 2026-11-20 BL-COMPLY2 round 1: output lenses run (compliance per list, code-review, error-paths); coordinator's grounder found the first close check satisfiable by shortcuts; hook rebuilt red-first (red3.out): lens set by type, Ruled sha256 and count per output, quote checked against the repo, grounder not the lane or any assignee, no exemption for code. Task stays RUNNING: grounder owed.
+
+2026-11-20 BL-COMPLY2 report in the repo: docs/reports/lanes/2026-11-20/BL-COMPLY2/ (REPORT.md, FINDINGS.md 128 findings by id, TRIAGE.md, plan and output lens outputs). Dogfood: closeErrors on this dir refuses only for the missing GROUNDER.md. STATUS ready, task RUNNING, grounder owed.
 <!-- SECTION:NOTES:END -->

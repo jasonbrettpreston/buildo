@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/plan/PLAN.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9831 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 18894 chars, answer 1025 chars, 30s
+BUG severity=HIGH — PLAN step 5 "substitutePlaceholders uses String.replace with the text as replacement (expands `{{PLAN}}`" — the stated cause is impossible as written, a string replacement never re-expands the search token, so the single test described (dollar-sign expansion) can pass while the recursion visible in this very prompt survives — name the real re-entry path, a loop over the placeholder map or a repeat-until-stable pass, and assert that a value containing the literal token is substituted exactly once, before the function-replacer assertion.
+
+BUG severity=HIGH — PLAN step 3 "docs/reports/lanes/<date>/<lane>/ holding, per attached list, a compliance lens output" — the source of `<date>` is never defined (commit date, local vs UTC, task lane date) so the gate can look in yesterday's directory, find nothing, and refuse a valid commit, or find unrelated evidence and pass — define the date once (the lane directory the task's own lane note records) and quote that definition in the hook.
+
+DEFER severity=MED — PLAN step 3 "with -pN parts contiguous, each ending in a VERDICT line" — contiguity has no defined base case (is the unsuffixed `out-compliance-<id>.txt` part 1, does numbering start at 0 or 1, is a duplicate `-p2` contiguous), so the check can accept a gap or reject a legitimate single-part output — state that the unsuffixed file is part 1 and `-p2..-pN` must each exist with no missing or repeated index.
+
+DEFER severity=MED — PLAN step 3 "id = <file stem>#<n>" — `n` has no defined basis (line number in the file, ordinal of all lines, ordinal of BUG/DEFER lines only), so a grounder cannot know which finding a verdict line addresses and a `<stem>#3` matching the wrong BUG line passes silently — define `n` as the 1-based ordinal among BUG and DEFER lines of that file, as the lens output format numbers them.
+
+DEFER severity=MED — PLAN step 2 "`listText` (whole file or sections, fence aware)" against PLAN step 1 "every section selector resolves to exactly one heading" — the test resolves headings without fence state while `listText` resolves with it, so a fenced example containing a matching heading satisfies one rule and breaks the other at runtime — make the test resolve headings through the same fence-aware function `listText` uses, not a second implementation.
+
+DEFER severity=MED — PLAN step 1 "every row glob matches at least one tracked path" — `globs_from` keys are never validated, so a mistyped key in `mcbylaws/protected-paths.json` yields an empty glob set and every Files entry under that row silently becomes unmatched, refusing the task with a misleading reason — add one assertion that each `globs_from` key exists and yields at least one glob.
+
+DEFER severity=MED — PLAN step 1 "`exempt` globs (docs/reports/lanes, docs/reports/reviews)" — no acceptance criterion or test says what an exempt path resolves to (zero lists, or a distinct exempt marker), so the caller cannot distinguish "exempt" from "unmatched" and either refuses exempt paths or silently treats both as no rule lists — state that exempt entries resolve to an empty list with an explicit exempt flag and add one test asserting the difference.
+
+DEFER severity=LOW — PLAN step 1 "`rows` [{id, globs | globs_from, imports_from?, lists[], why}]" — `imports_from` is declared with no Build step, caller, or test that reads it, so it is a dead field the first validator pass will not exercise — either name the criterion that consumes it (what a matched entry imports) or drop it from the schema.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The substitution fix is aimed at a cause that cannot produce the observed defect, so the enabling fix is unproven
+- The `<date>` directory in check-lane-close is undefined, so the gate can pass or refuse against the wrong lane directory
+- Part contiguity and finding-id numbering are under-specified, so the close gate can accept a gap or mismatch a verdict line
+
+---
+⏱  33559ms (33.6s)
+📊 Tokens — total: 10870, input: 5251, output: 5619, reasoning: 4686

@@ -1,0 +1,41 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9629 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20224 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31062 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41362 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 52123 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 61922 chars, answer 1976 chars, 90s
+BUG severity=HIGH — inc-S built state "Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page." — backlog-lane.mjs diff "+const ruleBlock = [" and the new scripts/hooks/check-lane-close.mjs — the material adds a rule-list table reader, a per-list compliance run and a commit-blocking close gate, behaviour no clause of the pasted list names, while satisfying none of its clauses — confirm the attached list is the one the task's Files line governs, and record in the task which list produced this run.
+
+BUG severity=HIGH — 08_agents dated note "(3) `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list" — check-lane-close.mjs:49 "if (!fs.existsSync(tableFile)) return 0;" and the material never adds scripts/analysis/rule-lists.json — the promised refusal vanishes when the table is absent, while backlog-lane refuses every launch in that same tree, so launch and close disagree — ship scripts/analysis/rule-lists.json here, or make the hook refuse naming the missing path instead of returning 0.
+
+BUG severity=HIGH — rule-lists.mjs "add(id, 'increment', 'every task also gets the requirements document of its increment (the milestone group letter)');" — the material makes the whole increment requirements document a governing list for every task in the increment, which is how this diff lands under "RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1" and counts 16 NOT BUILT search-page elements against tooling changes — attach the increment document only to tasks whose Files paths sit inside it, or carry it as context the lens is told not to score.
+
+DEFER severity=MED — README item 2 "No Files line (a record-only task gets the queue lists) or a path no row matches: refused with the path named." — rule-lists.mjs "if (cands.some((c) => matchesAny(table.exempt ?? [], c))) result.exempt.push(entry); else result.unmatched.push(entry);" — an undocumented table-level `exempt` glob list lets a Files path skip every list with no refusal, on top of a rule that says no path goes unmatched — document `exempt` in README item 1 with its purpose, or drop it and let the refusal speak.
+
+DEFER severity=MED — README item 5 "holds one compliance lens output per attached list (`out-compliance-<list id>.txt`, or parts `-p1..-pK`; each ends with a `VERDICT:` line)" — check-lane-close.mjs "const phases = build ? ['out'] : ['plan', 'out'];" and "const noVerdict = names.filter((n) => !/^VERDICT:/m.test(textOf(n) ?? ''));" — a non-build task closes on a plan-phase lens alone and a VERDICT anywhere in the file counts, both looser than the written rule, and the lens template itself ends with "Clauses checked", so "ends with" is unenforceable as written — restate the rule as the code enforces it (out only for build and fix, a VERDICT line anywhere) and drop "ends with".
+
+DEFER severity=MED — 08_agents dated note "puts the governing lists into the brief (READ each whole before planning)" — backlog-lane.mjs diff "letter: milestoneLetter(board, t.fm.milestone)" against the existing "const letter = /\[([^\]]+)\]\s*$/.exec(String(msTitle ?? ''))?.[1];" — the increment document is picked from the board's milestone title while the groups letter comes from the worktree's, so a stale worktree title attaches the wrong increment document, and with no group letter the brief still says "groups defaults to F" while resolveTask attaches no increment document at all — compute the letter once and pass the same value to both.
+
+DEFER severity=LOW — the pasted list head "part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs." — rule-lists.mjs splitUnits and the "-pN" naming in README item 3 — when a list is split at its own headings, a contradiction between two clauses that straddle a part boundary cannot be seen by any single run, and the "Known tool limits" paragraph does not say so — add that limit beside the two already stated.
+
+MET — operator ruling 2026-11-20 "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." — docs/specs/00-architecture/08_agents.md dated note — quoted verbatim, task-366 placed in Increment 1·B, freeze lifted by name.
+
+MET — 08_agents dated note "a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane)" — check-lane-close.mjs "if (gr && norm(gr) === norm(laneName))" and "if (gr && lh && norm(gr) === norm(lh))" — both separation checks are enforced, plus REJECTED-without-reason is caught.
+
+MET — README item 1 "every section selector names exactly one heading" — rule-lists.mjs sectionText "if (hit.length > 1) throw new Error(`selector \"${selector}\" matches ${hit.length} headings" — a selector matching zero or many headings fails validate.
+
+MET — lens-compliance.md "in review mode this block holds the material under review, the file named on the command line" — the template no longer tells the reviewer the block reads {{PLAN}} as a plan.
+
+REJECT — inc-S A.4, A.5, A.11, C.1, D.9 (NOT BUILT elements) — accused of leaving direction and unit parsing, the clear button and the lot heading unbuilt — not a violation by this diff: it touches no search page file, so those clauses are out of its reach, not breached by it.
+
+REJECT — README item 3 "a list is split by its own headings into `-p1..-pN`" — accused of trimming the rule list to fit the bound — the cut is at the list's own headings, the head line names the part, and no text is removed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 6
+
+---
+⏱  94556ms (94.6s)
+📊 Tokens — total: 39847, input: 22538, output: 17309, reasoning: 15793

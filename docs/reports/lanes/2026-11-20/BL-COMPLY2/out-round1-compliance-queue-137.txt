@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10653 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22237 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33109 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44553 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 55041 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 68647 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 82468 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 94966 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 108094 chars, answer 0 chars, 135s
+BUG severity=HIGH — Spec 137 §4 rule 3 "When work lands for a row, the commit that lands it edits that row's status line." — scripts/hooks/check-lane-close.mjs:38 "if (!taskFile) return 0;" — this material lands task-366's work (new hook, new table reader, commit-msg wiring, two spec notes) and carries no backlog/tasks/task-366 status line, and the new check exempts exactly that omission — add task-366's front matter change to the same commit (RUNNING with "grounder owed", or BUILT once the close artifacts are in).
+
+BUG severity=HIGH — Spec 137 §4 (2026-11-20 note) "the launch refuses a task whose Files line is missing or matches no row" — scripts/analysis/rule-lists.mjs:167 "for (const l of row.lists) add(l, row.id, `${row.why} (no Files line: the record-only default)`);" — a task with no Files line whose type is in no_files_default.types is not refused, it is given the queue lists and launched — drop the no-Files default from the table, or amend the 137 note to carry the record-only exemption that Spec 08's note in this same diff states.
+
+BUG severity=MED — Spec 137 §4 (2026-11-20 note) "a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding; `scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them" — scripts/hooks/check-lane-close.mjs:85 "if (build || findings.length > 0) {" — a non-build, non-fix lane task with zero findings sets BUILT or DONE with no GROUNDER.md at all, which the note does not allow — require GROUNDER.md for every lane close, or state the narrowing in the 137 note.
+
+BUG severity=MED — Spec 137 §4 (2026-11-20 note) "Which lists a task attaches is decided by `scripts/analysis/rule-lists.json` from the task's Files line" — scripts/analysis/rule-lists.mjs:179 "if (!id) return { error: `refused: no increment requirements document for milestone group [${letter}] ...` };" — a list is also attached from the milestone group letter and the launch is refused when that document is absent, neither of which the clause names — amend the note to name the increment document, or take that attachment and refusal out of the launch.
+
+DEFER severity=MED — Spec 137 §4 (2026-11-20 note), the operator words pasted there "(the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table)" — scripts/analysis/rule-lists.mjs:2 "DATA (scripts/analysis/rule-lists.json), not code, decides which rule lists govern a task." — the table those rows go into is not in this diff, so the operator-named rows cannot be seen and readTable throws when the file is absent — include scripts/analysis/rule-lists.json in this diff.
+
+DEFER severity=MED — Spec 137 §6 "It is infrastructure work. It is carded for the infra-freeze lift and is not built now." — docs/specs/00-architecture/137_mcqueue.md:132 "the infra freeze is lifted for it by name" — the only operator words quoted beside that claim say the freeze "needs to be lifted again", not that it is lifted for COMPLY.2, while the diff wires a new commit-msg hook into every commit — quote the operator's lift, or the ruling that names COMPLY.2, in the note.
+
+DEFER severity=LOW — Spec 137 §1 item 4 "No rule here is new except where §3 and §4 say the operator ruled it on 2026-11-14." — docs/specs/00-architecture/137_mcqueue.md:132 "Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2, lane BL-COMPLY2, Increment 1·B;" — a new §4 requirement rests on a 2026-11-20 ruling while §1 item 4 admits new rules from 2026-11-14 rulings only — amend §1 item 4 to admit the later dated notes, as it already does for the McLane amendment.
+
+MET — Spec 137 §4 (2026-11-20 note) "`scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE" — .husky/commit-msg:8 — the hook is wired into commit-msg.
+MET — Spec 137 §4 (2026-11-20 note) "in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`)" — scripts/hooks/check-lane-close.mjs:59 — the index is read at exactly docs/reports/lanes/<date>/<lane>/<file>.
+MET — Spec 137 §4 (2026-11-20 note) "a `GROUNDER.md` from an agent that is not the lane" — scripts/hooks/check-lane-close.mjs:94 — a Grounder equal to the Lane, or to the task's lane, is refused.
+MET — Spec 137 §4 rule 3 "This goes into every lane brief" — scripts/analysis/backlog-lane.mjs:154 — the brief names the per-list compliance outputs and the close refusal.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 7
+
+---
+⏱  141946ms (141.9s)
+📊 Tokens — total: 55536, input: 24001, output: 31535, reasoning: 30279

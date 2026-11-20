@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11142 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22147 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32830 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43017 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 55978 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 66225 chars, answer 0 chars, 90s
+```
+BUG severity=HIGH — 08_agents §5.3 dated note (1) "`scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code, decides which rule lists (whole files, or whole sections where the file itself separates rules from history) govern a touched path" — NONE: this change shows both new modules as new files (`scripts/analysis/rule-lists.mjs`, `scripts/hooks/check-lane-close.mjs`) but no `scripts/analysis/rule-lists.json`, only references to it, e.g. "export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');" (scripts/analysis/rule-lists.mjs:21) — the data file the clause makes load-bearing is absent, so readTable throws and backlog-lane refuses every launch, validate has nothing to check, and the operator's required rows ("the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table") cannot be there — add scripts/analysis/rule-lists.json (lists, rows, exempt, increment_docs, the operator-named rows) in this same change, or paste it in the material.
+BUG severity=HIGH — 08_agents §5.3 dated note (3) "refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md`" — scripts/hooks/check-lane-close.mjs:49 "if (!fs.existsSync(tableFile)) return 0;" — when the table is absent the hook returns 0 (allow), so the mandated refusal fails open and a lane can close BUILT with no lens output and no grounder (which is exactly the state finding 1 describes) — replace that line with fail(['cannot read scripts/analysis/rule-lists.json, so the close cannot be checked']) so absence refuses rather than passes.
+DEFER severity=MED — 08_agents §5.3 dated note (3) "holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:`" — scripts/hooks/check-lane-close.mjs:85 "if (build || findings.length > 0) {" — for a non build/fix task whose lenses returned no BUG or DEFER, no GROUNDER.md is required, while both pasted spec notes (08_agents 5.3 and 137) state the close is refused without one; the carve-out exists only in .claude/review-templates/README.md — either require GROUNDER.md unconditionally or add the carve-out ("for other types only when a lens returned a finding") to the 5.3 dated note and the 137 note so spec and hook agree.
+DEFER severity=MED — 137_mcqueue §4 dated note added by this change "the launch refuses a task whose Files line is missing or matches no row" — scripts/analysis/rule-lists.mjs:164 "const row = d && d.types.map((x) => x.toLowerCase()).includes(String(type ?? '').toLowerCase()) ? table.rows.find((r) => r.id === d.row) : null;" — a record-only task with no Files line is given the queue lists, not refused, so the 137 note contradicts both the code and the 08_agents note ("a record-only task gets the queue lists") in the same change — amend the 137 sentence to carry the record-only exception.
+MET — 08_agents §5.3 note (2) "refuses a task with no Files line ... or an unmatched path with the path named" — scripts/analysis/backlog-lane.mjs:74 — resolveTask returns one error line naming every unmatched Files entry and backlog-lane refuses before any write.
+MET — 08_agents §5.3 note (2) "puts the governing lists into the brief (READ each whole before planning)" — scripts/analysis/backlog-lane.mjs:160 — the first brief input is the resolved list block with the whole-file/sections and why per list.
+MET — 08_agents §5.3 note (2) "a list is split by its own headings when list plus material pass the review tool bound, never trimmed" — scripts/analysis/rule-lists.mjs:210 — splitUnits cuts at the list's own headings and throws when a section cannot fit rather than trimming.
+MET — 08_agents §5.3 note (3) "one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding" — scripts/hooks/check-lane-close.mjs:101 — every finding id from findingsIn must carry a verdict line, and a REJECTED with no reason is refused at :104.
+MET — 08_agents §5.3 note (3) "with a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane)" — scripts/hooks/check-lane-close.mjs:94 — both equality checks are present, against the Lane header and against the task's @lane assignee.
+MET — 08_agents §5.3 note (3) "(commit-msg)" — .husky/commit-msg:7 — "node scripts/hooks/check-lane-close.mjs \"$1\"" is wired into the commit-msg chain.
+REJECT — 08_agents §5.3 note (2) — that backlog-lane does not itself "run" the compliance lens, only emits the command into the brief — the brief is the lane's instruction channel (its own header keeps the Agent call with the orchestrator) and the close hook makes the output mandatory, so the clause's outcome is enforced.
+REJECT — 08_agents §5.2 — that this change edits two spec files with no Ground-truth pass visible — whether the spec is still true against the live tree is the Ground-truth lens (5.2 / A9), not this one; not raised here.
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 4
+```
+
+---
+⏱  103453ms (103.5s)
+📊 Tokens — total: 38326, input: 17669, output: 20657, reasoning: 19305

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10366 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22846 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33977 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45427 chars, answer 0 chars, 60s
+BUG severity=HIGH — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)." — .claude/review-templates/README.md:138 "A list is a rule file used whole, or whole sections of it where the file itself separates rules from history. Never a hand-picked clause." — the table attaches doc-17, a readings register whose own first paragraph says it is not a ruling, whole as a governing rule list (this run's header reads "RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file)" and instructs "Judge the material under review against the rules in this part"), so readings are fed to the compliance lens as rules, the one thing the clause forbids — fix: drop doc-17 (and every readings/register file) from the lists in scripts/analysis/rule-lists.json and pass it only as labelled non-binding context, or make validateTable refuse a list whose own text declares its entries are not rulings.
+
+DEFER severity=MED — doc-17 "never feed a review as a ruling" — scripts/analysis/rule-lists.mjs:4 "every list file exists, every section selector names exactly one heading and every glob matches a tracked path" — the only gate a list passes is existence and shape, so nothing stops a reading, or a register entry with empty operator words (doc-17 RR-0113 "2026-11-17: \"\""), from entering the lens prompt as a clause the lane must satisfy — fix: have validateTable reject or strip entries with empty operator text and mark any file without decision entries as non-binding context rather than a list.
+
+DEFER severity=MED — doc-17 "The operator's rulings are the decisions." — scripts/analysis/backlog-lane.mjs:12 "COMPLY.2 (task-366): the task's `Files:` line is resolved through scripts/analysis/rule-lists.json" — no pasted decision or ruling names a path-to-rule-list table, a compliance run per list, a separate grounds pass, or a commit-msg close gate; the 2026-11-20 operator words the diff rests on are not in the pasted context (the pasted list ends at 2026-11-19, RR-0218) and cannot be seen — fix: paste the 2026-11-20 MORNING-DECISIONS.md entries (the freeze lift and "yes to McStorage and 1,2,3") into the review context so the authority for the new behaviour is checkable.
+
+MET — doc-17 "Readings and register entries ... are NOT the operator's words as a ruling" (the diff must not turn a reading into a decision inside the specs) — docs/specs/00-architecture/08_agents.md:229 — the dated note keeps the prior text ("prior text kept") and adds the gate as a labelled dated note rather than rewriting a reading into a rule.
+
+REJECT — RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record)" — the change adds new infrastructure, so the freeze blocks it — RR-0110 sits under "## Readings" in the pasted list and doc-17 states readings "never feed a review as a ruling", so it cannot refuse this change here; whether the 2026-11-20 lift is real is not pasted and is not mine to judge.
+
+REJECT — RR-0008 to RR-0109 (storage, suite size, theme, lot views, garden-suite readings) — the change allegedly leaves them unaddressed — every one is a reading, not a ruling, and none touches a script, a hook or a review template, so none binds this diff.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 2   Unmet: 1
+
+---
+⏱  70604ms (70.6s)
+📊 Tokens — total: 41262, input: 27284, output: 13978, reasoning: 13101

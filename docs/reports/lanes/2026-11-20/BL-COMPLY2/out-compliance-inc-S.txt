@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9300 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19245 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29369 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 39799 chars, answer 0 chars, 60s
+BUG severity=HIGH — operator ruling 2026-11-20 as cited in the material, "yes to McStorage and 1,2,3 yes as recommended" (the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table) — scripts/analysis/rule-lists.mjs:2 "COMPLY.2 (task-366): the path to rule-list table reader. DATA (scripts/analysis/rule-lists.json), not code, decides which rule lists govern a task." — the path table the cited ruling puts the specs 126, 127, 128 and the Spec 135 rows into is absent from the diff, so the ruling is unmet and both readers load a file that does not exist — add scripts/analysis/rule-lists.json (rows for 126/127/128, the Spec 135 rows, increment_docs, exempt, no_files_default) in this same change.
+
+BUG severity=HIGH — docs/specs/00-architecture/08_agents.md added note in the material, "`scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code, says which rule lists (whole files, or whole sections where the file itself separates rules from history) govern a touched path" — scripts/analysis/backlog-lane.mjs:72 "try { resolved = resolveTask({ table: readTable(path.resolve(home(str('rule-lists', DEFAULT_TABLE)))), root: board, body: t.body," — with no table in the tree readTable throws and the catch refuses before any write, so this commit refuses every lane launch, which the note's own claim (built in the repo) does not allow — ship the table, or fall back to the table in HEAD, in the same commit.
+
+DEFER severity=MED — operator ruling 2026-11-20 as cited in the material, "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." — NONE — no hunk adds any task to an increment document (no backlog/tasks or backlog/docs/increments change), the diff only asserts the freeze is lifted "by name" in two dated notes — add the COMPLY.2 tasks to the Increment 1b document within this change.
+
+DEFER severity=MED — pasted rule list inc-S, "counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}" — scripts/hooks/check-lane-close.mjs:2 "COMPLY.2 close check (task-366; Spec 08 section 7 rule 4 and section 5.3, 08_agents.md:" — the pasted Increment S list names no rule-list table, lens input, close hook or review template, so the material adds behaviour no pasted clause names and this paste cannot judge it — attach the list that governs .claude/review-templates, scripts/analysis and scripts/hooks and re-run before a compliance verdict is claimed.
+
+REJECT — pasted rule list inc-S, elements A.4, A.5, A.6, C.5, C.7, D.9, D.10, E.2, E.3, F.1, G.2 — the change is accused of leaving those NOT BUILT — not a real issue: the pasted list records the Increment S search-page state and no clause in it binds review tooling, those elements belong to the increment's own lanes.
+
+REJECT — operator ruling 2026-11-20, "the infa freeze needs to be lifted again" — the change is accused of asserting a freeze lift without operator words — not a real issue: both dated notes quote the operator's 2026-11-20 words verbatim and mark the lift as by name for task-366.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 2
+
+---
+⏱  66324ms (66.3s)
+📊 Tokens — total: 36847, input: 25277, output: 11570, reasoning: 10710

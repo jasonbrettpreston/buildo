@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10676 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21544 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32274 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43239 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 54307 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 65179 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 76395 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 87782 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 99062 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 107761 chars, answer 4009 chars, 150s
+BUG severity=HIGH — §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" and §7 rule 4 "run the LENS SET in parallel, each a narrow prompt" — scripts/analysis/rule-lists.mjs:28 "export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');" — the diff adds both readers of scripts/analysis/rule-lists.json and the spec line claiming the table exists, but not the table itself, so backlog-lane.mjs readTable throws ENOENT and refuses every launch and check-lane-close.mjs returns 0, so neither the lens set nor the close lock runs — add scripts/analysis/rule-lists.json to the diff and show node scripts/analysis/rule-lists.mjs validate green
+
+DEFER severity=MED — §7 rule 4 "Run the set at plan AND output for WF1/WF2; at output for WF3." — scripts/hooks/check-lane-close.mjs:55 "const phases = build ? ['out'] : ['plan', 'out'];" — a build or fix task closes without any plan-phase compliance output per list (the generic plan-*.txt may be plan-review-deepseek) and a record-only task can close with plan only, so neither altitude matches rule 4 — require plan-compliance-<list id>.txt and out-compliance-<list id>.txt for build/fix, out only for record-only, or file the DEFER with reason
+
+DEFER severity=MED — §7 rule 10 dated note 2026-11-19 "The lane close step copies the lane's REPORT.md (and its TRIAGE.md and the review output, when they exist) into docs/reports/lanes/<date>/<lane>/" — scripts/analysis/backlog-lane.mjs:152 "copy plan-*.txt, out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/" — the brief instructs an unnamed FINDINGS.md and omits REPORT.md and TRIAGE.md, and the close check requires neither — name REPORT.md and TRIAGE.md in the copy instruction and drop FINDINGS.md or cite the clause that authorises it
+
+DEFER severity=MED — §7 rule 4 "Every DeepSeek finding is adjudicated by a tool-having grounder before folding" — scripts/hooks/check-lane-close.mjs:20 "every docs/reports/lanes/*/<lane>/ counts (no date is computed)" — the close check reads every date's outputs for the lane, so a later task close that adds no new outputs reuses an earlier close's compliance outputs and GROUNDER.md and passes without its own findings adjudicated — require the outputs to be added or modified in the closing task's commit or in the commit date dir
+
+DEFER severity=MED — §11.2 "one grounder re-executes every claim in the fold + one cross-read adversary checks the folded decisions PAIRWISE" — .claude/review-templates/README.md:141 "The grounder, an agent that is not the lane and not any assignee of the task, writes `GROUNDER.md`" — only the grounder pass is mandated, no cross-read or pairwise check is required, so the fold-validation step is half-built — add a cross-read adversary output and require it at close, or record why it is DEFER
+
+DEFER severity=LOW — §7 rule 7 "Security fires only on money/auth/PII/admin" — scripts/analysis/rule-lists.mjs:109 "const sec = /entitlement|auth|stripe|metered/i.test(files);" — an admin or PII surface never gets the security lens though rule 7 names admin and PII as triggers — add admin and pii to the regex
+
+DEFER severity=LOW — §7 rule 6 "Findings triage (WF6): BUG → WF3 before Green Light; DEFER → review_followups.md with reasons." — scripts/hooks/check-lane-close.mjs:127 "if (v.word !== 'CONFIRMED' && !v.reason)" — a CONFIRMED DEFER needs no reason and no review_followups.md entry, so the DEFER half of rule 6 is not enforced at close — require each CONFIRMED DEFER to name its review_followups.md line
+
+MET — §7 rule 4 "Every DeepSeek finding is adjudicated by a tool-having grounder before folding" — scripts/hooks/check-lane-close.mjs — one CONFIRMED, REJECTED or CONFLICT verdict per finding id is required, with a reason for REJECTED and CONFLICT.
+MET — §7 rule 10 "No recommendation goes to the operator without its rule quoted with file:line" — scripts/hooks/check-lane-close.mjs — every verdict carries a repo path, a line number and a quote checked against that line.
+MET — §11.1 "a line citation is read, not remembered" — scripts/hooks/check-lane-close.mjs — the quote is compared with the cited line of the repo file, so a remembered line fails.
+MET — §7 rule 4 dated note 2026-11-19 "the repo lens set is five narrow DeepSeek templates" — scripts/analysis/rule-lists.mjs — lensSet returns compliance, code-review, ux, error-paths, security and plan-review-deepseek by task type and Files line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 7
+
+---
+⏱  150586ms (150.6s)
+📊 Tokens — total: 56872, input: 26678, output: 30194, reasoning: 28988

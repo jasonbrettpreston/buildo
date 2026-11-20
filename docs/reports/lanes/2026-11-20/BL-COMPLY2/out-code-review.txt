@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/material-code.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10638 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21561 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32313 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42512 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 52552 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 62560 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 73022 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 83523 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 93717 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 104165 chars, answer 0 chars, 150s
+[deepseek-review] deepseek-reasoner working… reasoning 114650 chars, answer 0 chars, 165s
+BUG severity=HIGH — scripts/analysis/rule-lists.mjs "export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');" — the new launch and close code depend on a data file this diff does not add (cannot see `scripts/analysis/rule-lists.json` in the pasted diff); if it is absent, `readTable` throws and `backlog-lane` refuses every launch, while check-lane-close's `if (!fs.existsSync(tableFile)) { ... return 0 }` makes the whole hook a silent no-op (fails open) — confirm the JSON is committed in this change, not assumed.
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs ".filter((f) => { const p = f.split('/'); return p.length === 6 && p[4] === laneName; });" — lane report discovery matches the assignee name case-sensitively, while every other identity comparison in the file goes through `norm` (which lowercases); an assignee `@lane-Alice` with directory `alice` finds no files and refuses with a misleading "no compliance output" — normalize the directory segment before comparing (e.g. `norm(p[4]) === norm(laneName)`).
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs "if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(" — the plan-stage gate is satisfied by any `plan-*.txt`, and `plan-compliance-<id>.txt` matches it, so a build task whose only plan output is compliance passes the "plan reviewed before the build" check even though no `plan-review-deepseek`/`plan-error-paths` lens ran — exclude `plan-compliance-*` or require the specific `set.plan` files.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "return imps.some((i) => new RegExp(`(?:from\\s*|require\\s*\\(\\s*|import\\s*\\(\\s*)['\"][^'\"]*${i.replace(" — the `[^'\"]*` prefix lets `imports_from` match a substring of a module specifier, so `imports_from: ['auth']` also matches `from './oauth'` or `from '@x/author'`, wrongly attaching the row's lists — anchor the module path (whole specifier or glob) instead of an unanchored suffix.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "const row = d && d.types.map((x) => x.toLowerCase()).includes(String(type ?? '').toLowerCase())" — `validateTable` never checks that `no_files_default.types` is an array, so a malformed table throws `Cannot read properties of undefined (reading 'map')` (caught upstream as a raw TypeError) rather than a clean validation message — validate `types` in `validateTable`, or guard `Array.isArray(d.types)` here.
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs "root: board, body: t.body, type: String(t.fm.type ?? ''), letter: milestoneLetter(board, t.fm.milestone)" — the Files line is now read from `t.body` for the rule lists and lens set, while the neighbouring code still reads `descriptionOf(t)` for `goal`; if `t.body` and `descriptionOf(t)` are not the same field the two paths resolve different Files text — use `descriptionOf(t)` (or the same accessor) so launch, lens set and close agree.
+
+REJECT — scripts/lib/review-template.js "return userTemplate.replace(/\{\{(PLAN|SPECS|DATA_CONTEXT)\}\}/g, (_m, key) => values[key]);" — the single pass looks like it drops the original per-token cascade (a value containing another `{{TOKEN}}` is no longer re-expanded, and `$` sequences are no longer treated as replacements) — that is the stated fix (literal insertion, no dollar expansion, no re-scan); all three keys are always present in `values`, so no token is left undefined.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none, verdict is PASS (the failure-open dependency on `rule-lists.json`, if unconfirmed, is the one to check first)
+
+---
+⏱  173351ms (173.4s)
+📊 Tokens — total: 64707, input: 30750, output: 33957, reasoning: 32998

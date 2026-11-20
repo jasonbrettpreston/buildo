@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out/material-code.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9227 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20469 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31971 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41632 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 51042 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 65479 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 79565 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 89608 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 99353 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 107522 chars, answer 3441 chars, 150s
+BUG severity=HIGH — scripts/hooks/check-lane-close.mjs:44 "const textOf = (n) => files.find((f) => f.name === n)?.text;" — lane files are collected from every docs/reports/lanes/*/<lane>/ date dir and matched by basename only, so a later close by the same lane name is satisfied by an earlier task's outputs and GROUNDER.md (the Ruled hashes recompute against those same stale files, and the finding ids come from them too), zero new lens work, silently — scope the report dir to the task (docs/reports/lanes/<date>/<lane>/<task-id>/) or refuse when a required basename appears in more than one date dir
+
+BUG severity=MED — scripts/analysis/rule-lists.mjs:27 "const r = spawnSync('git', ['-c', 'core.quotepath=false', 'ls-files', '-z'], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 28 });" — the commit-msg gate calls git with no timeout (same in check-lane-close.mjs:25), so a stalled git on a network or FUSE checkout hangs every commit with no bound and no message — pass timeout: 20000 and treat a killed child as a refusal that names the timeout
+
+BUG severity=MED — scripts/analysis/rule-lists.mjs:198 "if (letter !== undefined) {" — when milestoneLetter returns undefined (task with no milestone, milestone file not found, or a title with no trailing [X]) the increment requirements document is silently not attached at launch or close, while the launch still files the task under group F (backlog-lane.mjs:167 groups: [letter ?? 'F']), so an F task closes with no F increment list — resolve the letter once and refuse (or default to F) on both sides so a missing letter cannot drop the increment list
+
+BUG severity=MED — scripts/analysis/rule-lists.mjs:207 "export const FINDING_LINE = /^\s*[-*]?\s*(BUG|DEFER)\s+severity=/;" — a lens that emits a bolded or colon-form finding line (for example **BUG** severity=CRIT or BUG: severity=CRIT) counts as findings:0, so on a non build/fix task GROUNDER.md is not required at all and on a build/fix task no verdict line is required, and the Ruled count recomputed here agrees with the miss — refuse an output whose BUG/DEFER text yields no parseable finding, or widen the matcher and keep the count strict
+
+BUG severity=MED — scripts/hooks/check-lane-close.mjs:128 "const m = /^Task:\s*(task-\d+)\s*$/im.exec(fs.readFileSync(msgFile, 'utf8'));" — the trailer must end immediately after the id and only the first match is read, so a trailer line with a note after the id, or a second Task: trailer closing a second task in the same commit, is skipped with no warning — match ^Task:\s*(task-\d+)\b, collect every trailer, and run the check for each task id
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:182 "const rows = table.rows.map((row) => ({ row, globs: rowGlobs(row, root) }));" — every row's globs and every globs_from JSON map is read eagerly, so one broken or missing map on a row unrelated to this task refuses the launch (exit 3) and refuses every closing commit (closeErrors returns on the throw), a global block from a local defect — read globs lazily per row so only a task whose Files could reach that row is refused, with the row id named
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:297 "for (const f of files) { const p = path.join(dir, `${base}${f.suffix}.txt`); fs.writeFileSync(p, f.text); console.log(p); }" — the old inputs were already deleted a few lines above and the writes are direct, not atomic, so a crash, ENOSPC or SIGINT between delete and write loses the previously written lens inputs, and a retry started while a run is live can interleave — write to temp names and rename into place, removing stale suffixes only after all writes succeed
+
+REJECT — scripts/lib/review-template.js:77 "return userTemplate.replace(/\{\{(PLAN|SPECS|DATA_CONTEXT)\}\}/g, (_m, key) => values[key]);" — inserted material containing $& or $1, or text containing a second {{PLAN}}, looks unsafe — handled: the single pass with a function replacer inserts the value literally and never rescans it
+
+VERDICT: FAIL on error-path safety
+Paths walked: launch resolve (backlog-lane, table and globs_from read), lens-input CLI (missing list, missing material, bad --max, oversize material, delete then write), findings id counting and Ruled hash recomputation, close check (trailer parse, table absent from tree and HEAD, lane dir selection, compliance parts and gaps, GROUNDER headers, verdict quote lookup), review-template substitution, husky chain wiring   Unguarded: 3
+
+---
+⏱  151263ms (151.3s)
+📊 Tokens — total: 61836, input: 30767, output: 31069, reasoning: 29914
