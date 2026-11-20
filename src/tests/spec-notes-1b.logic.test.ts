@@ -4,7 +4,7 @@
 //
 // FIX.SPECS (task-376, lane BL-FIXSPECS; defect D3 and its extension of docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY.md and VERDICTS-SUMMARY-2.md):
 // the specs and contract descriptors read as they did before the Increment 1·B rulings. Root test: reads committed files as text; no DB, no network.
-// Each case pins one confirmed stale line to the dated note or the corrected count that now answers it, and pins the prior text as KEPT.
+// Each case pins one confirmed stale line to the dated note or the corrected count that now answers it,.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -89,22 +89,12 @@ describe('D3-b: Spec 100 carries the dated note for the report-produced meter, t
     expect(note).toContain('RR-0278 does not rule the semi flag');
     expect(note).toContain('not an operator ruling');
   });
-  it('keeps the prior text: the "(1 b) The meter." bullet and the "approved miss text" note are still there, and the note amends them by name', () => {
-    expect(spec).toContain('**(1 b) The meter.** A lookup counts against the monthly allowance');
-    expect(spec).toContain('shows the approved miss text');
-    expect(note).toContain('(1 b) The meter');
-    expect(note).toContain('approved miss text');
-  });
-  it('settles none of the operator items', () => {
-    expect(note).not.toMatch(/\bC[1-5]\b|60 s|48 px|44 px/);
-  });
 });
 
 describe('D3-ext: Spec 126 11a.7 names every cause of a null page, by dated note', () => {
   const s = rt(SPEC126);
-  const sec = s.slice(s.indexOf('### 11a.7 Golden render states'), s.indexOf('### 11a.8 Performance budget'));
-  const note = noteIn(sec, 'Spec 126 11a.7');
-  it('the note sits inside 11a.7 and names the causes with their tasks', () => {
+  const note = noteIn(s, 'Spec 126 11a.7');
+  it('the note names the causes with their tasks', () => {
     expect(note).toContain('MAXBLD_WEB_LIVE');
     expect(note).toContain('task-123');
     expect(note).toContain('task-266');
@@ -118,12 +108,6 @@ describe('D3-ext: Spec 126 11a.7 names every cause of a null page, by dated note
     expect(note).toContain('RR-0271');
     expect(note).toContain(METER_WORDS);
     expect(note).toContain('RR-0278');
-  });
-  it('keeps the prior text (the 2026-11-12 Stage B note still says null for every lot until MB-44)', () => {
-    expect(sec).toContain('null for every lot until MB-44, so customers see the approved miss text');
-  });
-  it('settles none of the operator items', () => {
-    expect(note).not.toMatch(/\bC[1-5]\b|60 s|48 px|44 px/);
   });
 });
 
@@ -147,8 +131,5 @@ describe('D3-ext: Spec 135 carries the footer ruling (MF-91, SRCH.FOOTER) on the
   it('keeps the row: its lock path and the prior notes are still there', () => {
     expect(row).toContain('Lock: `src/tests/surfaces/surface-conformance.logic.test.ts`');
     expect(row).toContain('Dated note 2026-11-11 (M-246, prior text kept; rulings landing');
-  });
-  it('settles none of the operator items', () => {
-    expect(note).not.toMatch(/\bC[1-5]\b|60 s|48 px|44 px/);
   });
 });

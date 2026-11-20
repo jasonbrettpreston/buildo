@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXSPECS'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T15:31:00Z'
+updated_date: '2026-11-20T15:42:00Z'
 labels:
   - McFix
 milestone: m-1
@@ -22,7 +22,7 @@ ordinal: 76012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY.md and GROUNDER.md (task-368), on the handbook pass of the pushed 1·B change. Operator 2026-11-20 (verbatim): "essential we have a non compliance build again - the entire reason for this approach". Scope now: D3 a behaviour-changing ruling updates all cited specs in the same commit (engineering standards section 14, :463): scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:7 says six fields, the route sends seven (src/app/api/parcels/entitlement/types.ts:12-18); docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:116 the meter rule does not mention the report-produced meter, the held page for an unsure lot (task-360) or the semi flag (RR-0278): dated notes in the M-246 form from the recorded decisions (decision-81 and the rulings register), prior text kept; regenerate generated files by their scripts. Do NOT write notes for the four conflicts C1 to C4: they wait on the operator. Records only; no product code. Files: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json
+Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY.md and GROUNDER.md (task-368), on the handbook pass of the pushed 1·B change. Operator 2026-11-20 (verbatim): "essential we have a non compliance build again - the entire reason for this approach". Scope now: D3 a behaviour-changing ruling updates all cited specs in the same commit (engineering standards section 14, :463): scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json:7 says six fields, the route sends seven (src/app/api/parcels/entitlement/types.ts:12-18); docs/specs/03-mobile/100_mobile_parcel_cost_tool.md:116 the meter rule does not mention the report-produced meter, the held page for an unsure lot (task-360) or the semi flag (RR-0278): dated notes in the M-246 form from the recorded decisions (decision-81 and the rulings register), prior text kept; regenerate generated files by their scripts. Do NOT write notes for the four conflicts C1 to C4: they wait on the operator. Records only; no product code. Files: docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json, docs/specs/02-web-admin/126_maxbld_surface_standard.md, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, docs/specs/00-architecture/00_system_map.md, docs/reports/generated/127-surface-registry.md, scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json, scripts/surfaces/_schema/census/contracts.json, scripts/surfaces/_schema/surface-rule-map.json, src/tests/spec-notes-1b.logic.test.ts
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -61,4 +61,6 @@ Plan (BL-FIXSPECS, stage 1). Confirmed on head: D3-a contract_parcels_entitlemen
 2026-11-20 taken on the board at lane launch (lane BL-FIXSPECS, worktree /Users/brettpreston_macmini/Buildo-wt-fixspecs, branch wf1/inc1b-fixspecs), RR-0240
 
 2026-11-20 BL-FIXSPECS: defects confirmed on head with file:line (REPORT.md); notes and corrections written; 12 --check scripts before/after in checks-*.out; red.out then commit.out; compliance lens per resolved list (21), findings untriaged in FINDINGS.md; grounder owed; conflicts C1-C5, 48/44 px and the 60 s wait untouched. AC left unchecked: AC3 needs the separate grounder verdict.
+
+2026-11-20 grounder fold fixes (coordinator): dropped the mobile legal-line clause from the Spec 135 footer note (operator ruled C3 b; BL-LEGAL task-389 writes the new position in Spec 100); removed the vacuous or brittle test cases (19 -> 14); deleted the closing sentence of the Spec 100 note; item (1) meter wording made precise.
 <!-- SECTION:NOTES:END -->
