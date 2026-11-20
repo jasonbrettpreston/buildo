@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T17:35:58.247Z file_sha256=db30ccb7e9a2c7cdb646a954519d5dac5a77af5472456b3491bfb98ee87c2aab prompt_sha256=6746099af19f4454ac60518bff65bc5043332a8494a3981f80099ddde354c97b
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LAYOUT/DIFF.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:132 "write ${phases.join(' or ')}-compliance-${l.id}.txt${why.length ? ` (${why.join('; ')})` : ''}; ${layout}" — the brief promises the compliance lens may split an over-bound diff into parts -p1..-pN ("a diff over the review tool's bound is split into parts -p1..-pN", scripts/analysis/backlog-lane.mjs:149), but this refusal names only the single-file form and no test proves the close check accepts out-compliance-<id>-pN.txt; the acceptance branch sits above the diff and cannot be seen — name the -pN part form in the message and add one close test that a -pN compliance part is accepted — if the acceptance branch does take parts the remedy text is incomplete; if it does not, lanes that follow the brief are refused with no hint (cannot see the ok-detection code above the diff).
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:92 "const layout = `put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK directly in ${dirNote}" — the same layout facts (folder, plan-/out-/in- names, subfolder never read, fix-*.txt never read, -r2 form) now live in two files, and no test asserts the two copies stay in agreement: the close test matches only /subfolder/ (check-lane-close.logic.test.ts LAYOUT) while the brief test matches the backlog-lane.mjs copy, so one copy can drop the -r2 or fix-*.txt clause without a failure — extract one shared string, or add one test asserting a common key phrase in both texts — drift means a lane is told two different things, the exact failure this task fixes.
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts "in-out-compliance-first-r2.txt': l['in-out-compliance-first.txt'] as string" — two unchecked `as string` casts over a Lane value that may be missing or null; if the fixture key is absent the cast hides it and hdr() hashes undefined, so the round-2 test passes or fails for the wrong reason — read the value once and assert it is a non-empty string before building r2.
+
+REJECT — scripts/analysis/backlog-lane.mjs:149 "docs/reports/lanes/${date}/${lane}/ directly" — `${date}` and `${lane}` look unbound inside `lensLine = (task, ctx, lists) => {`, which has neither as a parameter (a would-be ReferenceError) — they are module-level bindings used just below in `const ctxRel = \`...${date}...\`` and `lane: ${lane}` in the ticket line, `lensLine` runs after module init, and the new lensBrief test asserts a concrete `\d{4}-\d{2}-\d{2}` date so it would throw if either were unbound.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none (PASS)
+
+---
+⏱  84318ms (84.3s)
+📊 Tokens — total: 36695, input: 20009, output: 16686, reasoning: 15968

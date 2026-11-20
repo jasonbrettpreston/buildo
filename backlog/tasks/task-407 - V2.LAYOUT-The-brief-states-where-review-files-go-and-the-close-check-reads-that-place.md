@@ -7,12 +7,14 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LAYOUT'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-20T17:33:00Z'
+updated_date: '2026-11-20T17:38:00Z'
 labels:
   - McFix
   - McFix V2
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-V2LAYOUT/REPORT.md
 type: build
 ordinal: 107012
 ---
@@ -57,4 +59,6 @@ Not done: no change to what the check requires; no move of other lanes' files; n
 PRIORITY, operator 2026-11-20 verbatim: "I also need certainty within the tasks that a rpiority is getting the right information about compliance to the reviewer.  Put extra stree" (MORNING-DECISIONS.md, entry "Operator APPROVES the McFix V2 launch"). The brief sentence also says: the compliance lens reviews the whole change; a diff over the bound is split, never trimmed.
 
 2026-11-20 taken on the board at lane launch (lane BL-V2LAYOUT, worktree /Users/brettpreston_macmini/Buildo-wt-v2layout, branch wf1/inc1b-v2layout), RR-0240
+
+2026-11-20 lane BL-V2LAYOUT ready: commits 5cc4ae052 (check message, own commit) and 0f3c32a61 (brief sentence); Files line extended with src/tests/backlog/backlog-lane.logic.test.ts; lens outputs and untriaged FINDINGS.md in docs/reports/lanes/2026-11-20/BL-V2LAYOUT; task left RUNNING, grounder owed.
 <!-- SECTION:NOTES:END -->

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:35:58.326Z file_sha256=91f4f5b85993f393c4192e72bdb55caf25bd6ca7eff59bc605eb75b9458ffc57 prompt_sha256=cd51958306ee6c8cd31d40d308dc772809471840b0ee836370dc90924a38a94a
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LAYOUT/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 08 §7 rule 10 "Claims and briefs are checked before they leave the orchestrator" — scripts/analysis/backlog-lane.mjs:153 "outputs r1-<lens>.txt (plan-<lens>.txt and out-<lens>.txt in the lane report dir)" against scripts/analysis/backlog-lane.mjs:151 "a name not starting plan- or out- (fix-*.txt) is never read" — one brief now carries two output names for the same file, and the close check accepts only out-<lens>.txt, so the r1- instruction cannot be followed — delete the r1-<lens>.txt form in this same edit and name only plan-/out- names.
+DEFER severity=LOW — Spec 08 §11.3 "Red must land at the DESIGNED assertion" — src/tests/backlog/check-lane-close.logic.test.ts:246 "'in-out-compliance-first-r2.txt': l['in-out-compliance-first.txt']" — the round-2 input is byte-identical to the round-1 input, so the test passes whichever input the check hashes and does not prove the brief's promise "with its in-<same name>" — give the round-2 input distinct content and assert the refusal when it is absent or does not match the output.
+DEFER severity=LOW — Spec 08 §7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — scripts/analysis/backlog-lane.mjs:151 "REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly" — the new brief sentence states a close-check requirement with no rule id, anchor or file:line, while the sentence it was inserted into carries "08_agents.md:334" — cite the close-check rule with its id and file:line in that sentence.
+DEFER severity=LOW — Spec 08 §7 rule 10 (a) "a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha" — scripts/hooks/check-lane-close.mjs:90 "(scripts/hooks/check-lane-close.mjs: lane files at path depth 6, plan-*.txt / out-*.txt, in- beside them)" — the comment asserts the read scope with a file name and no line, so the claim carries no checkable anchor — cite the enumerating line (the `laneFiles` filter) by file:line.
+DEFER severity=LOW — Spec 08 §11.9 TKT-1 "`max_fix_rounds:` a number; when the header omits it the default is 2" — scripts/analysis/backlog-lane.mjs:151 "a later (fix) round is filed beside them as out-<lens>[-<list id>]-r2.txt" — only one later round is named, so a second fix round allowed under the default 2 has no named file and a lane may overwrite r2 — name the -rN form once and state that r3 and later follow it.
+REJECT — Spec 08 §7 rule 4 "NEVER run one generic pass" — the change is accused of altering the lens panel — the plan/out lens lists and the per-list compliance loop are unchanged, only a layout sentence is inserted between them.
+MET — Spec 08 §7 rule 10 dated note, lane reports live in `docs/reports/lanes/<date>/<lane>/` — scripts/analysis/backlog-lane.mjs:151 and scripts/hooks/check-lane-close.mjs:92 — both new strings name exactly that directory.
+MET — Spec 08 §11.3 "Survive-the-fix locks (green-both) are stated as such per case" — src/tests/backlog/check-lane-close.logic.test.ts:245 — both new non-red tests are titled SURVIVE-THE-FIX and the comment says "green-both: it holds before and after this task's edit".
+MET — Spec 08 §11.1 "a census grep runs at the full scope its conclusion covers" — src/tests/backlog/check-lane-close.logic.test.ts:225 — the "no subfolder is read" claim is exercised against lens-out/, stage2/, lens-plan/ and a bare x/ dir, plus the TASK-file case.
+MET — Spec 08 §11.9 TKT-1 dated note "The review context file for a task is written ... to `docs/reports/reviews/<task>/context-<date>.md`" — scripts/analysis/backlog-lane.mjs:154 "const ctxRel = `docs/reports/reviews/${taskId}/context-${date}.md`" — the path is kept unchanged by the edit.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  97630ms (97.6s)
+📊 Tokens — total: 33732, input: 13570, output: 20162, reasoning: 19081

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:35:58.439Z file_sha256=6c14ca1f0aaec6929df783fd4cf9eddd6b5b29a9dfdead56cd5336632a135a22 prompt_sha256=c51c7662061e6395b86552dc73b578546c8cf68e16f287aafe609b3032a32b6c
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LAYOUT/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+MET — doc-17 header, "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — scripts/analysis/backlog-lane.mjs:150 — the added brief text rests only on "task-407 (V2.LAYOUT)" and "Spec 08 section 7 rule 4"; no reading from the pasted list is cited or applied as a ruling, so the one operative clause of the pasted document is not breached by the brief.
+
+MET — doc-17 header, "never feed a review as a ruling" — scripts/hooks/check-lane-close.mjs:91 — the added refusal suffix `put every plan-<lens>[-<list id>][-pN].txt, out-<lens>...` is layout text only; it neither cites nor enforces any RR-00xx reading, so no reading is converted into an enforced rule.
+
+DEFER severity=LOW — doc-17 header, "They are NOT the operator's words as a ruling" — scripts/analysis/backlog-lane.mjs:149 "// task-407 (V2.LAYOUT): the one place the close check reads (scripts/hooks/check-lane-close.mjs: lane files at path depth 6, plan-*.txt / out-*.txt, in- beside them), said in every brief" — the authority the change actually rests on (task-407, McFix V2 step 2, Spec 08 section 7 rule 4) is not in the pasted context, so compliance with the governing authority cannot be confirmed here, only that nothing pasted is violated — paste the task-407 card and Spec 08 section 7 rule 4 into the context so the layout change is judged against the clause that authorises it.
+
+REJECT — RR-0002 "lane tooling first (run-panel, guard, generated briefs, results gate, lane registry and pack cache, Spec 08 seat-K note draft)" — accused of changing generated briefs and the results gate without an authorising ruling — RR-0002 is an undated reading logged in doc-17 and doc-17's own first line forbids it feeding a review as a ruling, so it binds nothing here.
+
+REJECT — RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record)" — accused of adding lane-tooling work under an infra freeze — it is a memory-record reading, and RR-0001 in the same pasted document records the freeze "lifted for the named list only" on 2026-11-18; neither is an operator ruling I may apply as a clause.
+
+REJECT — RR-0051 "One lot-size box recalculates every option; no per-card Improve accuracy button" and the surrounding report-face readings (RR-0021, RR-0025, RR-0030, RR-0054..RR-0057) — accused of not being honoured by this diff — none of them is a ruling (all are readings), and none touches lane report filenames or close-check refusals, so they do not bind this change.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 1 (the doc-17 non-ruling rule; the 100+ RR-00xx readings are excluded by that same rule)   Unmet: 0
+
+---
+⏱  18127ms (18.1s)
+📊 Tokens — total: 20189, input: 16910, output: 3279, reasoning: 2527

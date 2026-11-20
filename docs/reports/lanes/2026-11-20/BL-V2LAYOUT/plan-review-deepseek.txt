@@ -1,0 +1,43 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-20T17:28:31.443Z file_sha256=4209b81187f374d0728ac3a77ae753ded46308bc9c12f197a256395f09ecedcc prompt_sha256=446f462829d5a18d36171f878964b72fd32b55bbdbe4479cc2a631f5ab6c19aa
+🔍 Lens review of docs/reports/reviews/task-407/context-2026-11-20.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN "Facts read" + step 1(b) — the plan asserts "the check ALREADY reads `out-<lens>-r2.txt`" as fact, verified only by a test that may itself be red ("red then green"); if `isLensOutput` (rule-lists.mjs:224) anchors to `^out-<lens>\.txt$` it excludes `-r2`, the round-2 direction in the brief is fiction, and the "no check change needed" claim collapses — run `grep -n "isLensOutput" scripts/analysis/rule-lists.mjs` now, paste the regex, and if `-r2` doesn't match widen `isLensOutput` (or change the round-2 form) inside step 2.
+
+BUG severity=HIGH — PLAN step 3 + "Acceptance" — race: RR-0298 (status changes only by the launch script) + RR-0154 (next task starts at once) mean a lane launched between plan approval and the step-3 merge gets the OLD brief template and files into a subfolder again; the acceptance criterion fails silently for one more cycle — declare "no lane launches until step 3 merges", or land step 3 in the same commit as steps 1–2.
+
+BUG severity=HIGH — PLAN step 2 — step 2 appends a layout clause to four refusal messages (no compliance output, no lens output, no plan output, TASK) but step 1(a) only plants a `lens-out/` subfolder, exercising one path; an untested message-template in a protected-path hook can throw for any lane that hits it, silently blocking that lane's close with no attribution — add one fixture per refusal reason (compliance, lens, plan, TASK) or a table-driven test, and wrap the clause in a try/catch fallback to the original message.
+
+BUG severity=MED — PLAN step 1 "Test commit A (red then green, own commit)" — commit A lands a failing test for a message clause that only arrives in step 2, so any test gate rejects commit A; test-first across two commits is not stated as allowed — state that commit A is a WIP commit exempted from the gate, or land test + step-2 message change in one commit.
+
+BUG severity=MED — PLAN step 1(b) — the fixture does not say whether `in-<lens>-r2.txt` is planted beside `out-<lens>-r2.txt`; if the check requires the `in-` file for a review to be read at all, test (b) passes for the wrong reason (missing in-file, not missing verdict) — plant both files and assert the refusal message names the finding id.
+
+BUG severity=MED — PLAN step 2 — "append one layout clause to the three refusal messages" reads as static text; if it says "the lane dir" without interpolating the actual path, a lane on a later date still won't know whether the date segment is included — interpolate the actual lane dir (`docs/reports/lanes/<date>/<lane>/`) from the check's `p` into the message.
+
+BUG severity=MED — PLAN step 3 — the brief sentence as specified lists "plan-/out-/in- with -pN and -r2, no subfolder, fix-*.txt never read, compliance reviews the WHOLE change", but omits the plan's own Fact rule "it does not replace the round-1 file"; a lane filing only `out-compliance-1-r2.txt` gets refused with no hint — add "round 2 does not replace round 1" to the brief sentence and to the no-compliance-output message.
+
+DEFER severity=MED — PLAN "Not done: no move of other lanes' files" — the existing reviews of BL-PAGETABLE and BL-GATES remain unread at depth 6 and BL-FIXSPECS has none; the operator's "how will I know it is actually working daily" is factually unanswered for those lanes — record the one-time annotation/exception in the McFix V2 follow-up, not in this task.
+
+DEFER severity=MED — PLAN step 4 — "a real LATER task pasted" is unnamed and the lane-bundle date is unnamed; if no later task exists in this milestone yet, the `--dry-run` sample is synthetic and the proof step is void — name the specific task id (and its date), or mark the step synthetic.
+
+DEFER severity=LOW — PLAN step 3 — the `out-` match is a case-sensitive string compare; a lane that writes `Out-foo.txt` / `OUT-foo.txt` (or a case-insensitive local FS) is silently dropped and never told why — defer; note "filenames are case-sensitive, use lowercase" in the brief, or add a case-insensitive fallback.
+
+DEFER severity=LOW — PLAN step 3 — edge not modelled: a reviewer who finds nothing files `out-<lens>.txt` with zero findings; the check "needing a Ruled line and a verdict per finding" — is the empty file accepted or refused? — check the check's behavior on a no-finding file and add a test or a one-line note.
+
+DEFER severity=LOW — PLAN "Not done: no grounder file" — the clause is added to the hook with no daily assertion that it is still firing; if step 2 is reverted tomorrow no one notices until a lane mis-files — defer to the McFix V2 monitoring step, but name it explicitly so the operator's question is answered somewhere.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- Untested refusal-message paths in a protected-path hook (step 2) can throw and block any lane's close with no attribution.
+- The round-2 read relies on an unverified `isLensOutput` regex; the "no check change needed" claim collapses if the test is red.
+- Race between step 3 landing and the next lane launch (RR-0298 + RR-0154) makes the acceptance criterion fail silently for one more cycle.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- `isLensOutput` accepts `out-<lens>-r2.txt` (and excludes `fix-*.txt`) — verify with `grep -n "isLensOutput" scripts/analysis/rule-lists.mjs` and paste the regex definition.
+- BL-PAGETABLE / BL-GATES lane dirs hold subfolder outputs only and BL-FIXSPECS has none at depth 6 — verify with `git ls-tree -r --name-only HEAD -- docs/reports/lanes/ | grep -E "BL-(PAGETABLE|GATES|FIXSPECS)"`; also name the bundle date.
+- `lensLine` interpolates the actual `docs/reports/lanes/<date>/<lane>/` path (date templated, not hardcoded) — verify with `grep -n "lensLine\|docs/reports/lanes" scripts/analysis/backlog-lane.mjs`.
+
+---
+⏱  65524ms (65.5s)
+📊 Tokens — total: 33547, input: 20629, output: 12918, reasoning: 11384

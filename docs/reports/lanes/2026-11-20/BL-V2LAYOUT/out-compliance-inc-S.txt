@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:35:58.517Z file_sha256=bd01eeae8e2c7b4e881f5d768f7febb73cc5c2abdcfeeec10c46a289a089befa prompt_sha256=e38e002704927e16ebb524022607ab811a954ac5edef4f3522bedbe005c92037
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LAYOUT/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — walk step 4 "A change that adds behaviour no pasted clause or ruling names is a finding (nothing added that the card or ruling did not name)" — scripts/hooks/check-lane-close.mjs:92 "put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK directly in ${dirNote}" — the diff adds behaviour (a fixed lane-report folder layout, a layout suffix on five refusals, r2 naming, six new tests) that no pasted clause names — record only: the pasted rule list governs the Increment S search pages and names no lane, brief, r2 or close-check behaviour, so this is work from another card, not a violation of a pasted clause.
+
+REJECT — elements table rows A.4 "NOT-BUILT (parser) | 1.4 | NOT BUILT", A.6 "NOT-BOUND | SRCH.A6", A.11 "NOT TRACED", C.12 "NOT-BOUND", E.2 "NOT BUILT", D.9 "NOT-BUILT" — accused of not building the direction and unit parser, the reports-left line, the clear button, the map help link, the web footer or the semi distance input — rejected: those rows bind the search pages and the diff touches only scripts/analysis/backlog-lane.mjs, scripts/hooks/check-lane-close.mjs, src/tests/backlog/backlog-lane.logic.test.ts and src/tests/backlog/check-lane-close.logic.test.ts, so no row is in scope and none is claimed.
+
+REJECT — Spec 08 section 7 rule 4 — scripts/analysis/backlog-lane.mjs:148 "Spec 08 section 7 rule 4, 08_agents.md:334 \"NEVER run one generic pass\"" — accused of departing from the lane-review rule and the close check it drives — rejected: that spec is not pasted here (pasted context reads "(no pasted context provided)"; the pasted rule list is Increment-S requirements), so it is not mine to rule on.
+
+MET — built state "Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page" — scripts/analysis/backlog-lane.mjs:149, scripts/hooks/check-lane-close.mjs:90-141 — the diff touches no search page file and leaves every listed NOT BUILT element untouched, so the pasted built state is neither contradicted nor falsely claimed.
+
+MET — elements table "counts: {\"BUILT\":42,\"BUILT-NO-DATA\":7,\"NOT BUILT\":16}" — src/tests/backlog/backlog-lane.logic.test.ts:213-224 — the added test asserts only brief wording and no element status, count or page state changes.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 0 (no pasted clause binds a lane-tooling diff; 65 element rows and 8 section statements read)   Unmet: 0
+
+---
+⏱  28739ms (28.7s)
+📊 Tokens — total: 17616, input: 12157, output: 5459, reasoning: 4718

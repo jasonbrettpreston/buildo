@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:28:31.587Z file_sha256=4aab7dfc6ffa2dc2a5b65e7a6bded02d656115201407c50427edc8b6534bf358 prompt_sha256=69d5e66f82f75d0a055262f24c0b39edae8b543981809413e5ca772decdc27f2
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LAYOUT/in-plan-compliance-eng-s5-s9-s14.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — plan step 3 "scripts/analysis/backlog-lane.mjs lensLine: add one sentence ... One test in src/tests/backlog/backlog-lane.logic.test.ts pins the sentence" — the lensLine sentence is ordered before its test, so no red state is ever demonstrated for the brief-text half of the change — reorder step 3 to run the backlog-lane test first (assert the sentence is absent from the lens-set text, watch it fail), then add the sentence.
+
+DEFER severity=MED — §5.5 "The pure function computes the right value on happy + edge inputs." — plan step 2 "append one layout clause to the three refusal messages that say a file is missing (no compliance output, no lens output, no plan output) and the TASK message" — only the subfolder case is planted, so three of the four changed refusal messages are unpinned and can later lose the layout clause with the suite still green — add one assertion per changed message (no compliance output, no lens output, no plan output, no TASK) to check-lane-close.logic.test.ts.
+
+DEFER severity=MED — §14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions**" — plan steps 1 to 3 NONE — the plan touches two scripts and two test files and creates a new brief-to-check layout coupling, with no step for SPEC LINK (spec and §N) or for the cross-spec dependency rows in both directions — add a step that updates the SPEC LINK line on each touched file and the Cross-Spec Dependencies entries both ways for the layout coupling.
+
+DEFER severity=MED — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — plan opening "Rule: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3, 4 and section 11.1" — the plan names those sections as the rule basis but no step writes the folder/name sentence into them, so after this change the brief and the specs it cites will say different things — add a step that lands the same folder, plan-/out-/in-, no-subfolder sentence in 08_agents.md §7, §11.1 and Spec 126 11b.2 in the same commit.
+
+MET — §5.2 — plan step 1 "in src/tests/backlog/check-lane-close.logic.test.ts (a) planted defect" — the new check tests sit under the mandated `*.logic.test.ts` pattern for the path and name logic, not a stray file.
+
+MET — §5.3 — plan step 1 "Test commit A (red then green, own commit, no status move)" — the hook message change is preceded by a failing refusal test written unhappy-path first.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 4
+
+---
+⏱  35703ms (35.7s)
+📊 Tokens — total: 20467, input: 13455, output: 7012, reasoning: 6320

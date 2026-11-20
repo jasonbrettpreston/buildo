@@ -1,0 +1,149 @@
+LIST agents-s5-1to3 sha256:be92afaacf4acc939b88110b6e2fb525a3a1d12a727dc9265f57a539e72f910b material sha256:db30ccb7e9a2c7cdb646a954519d5dac5a77af5472456b3491bfb98ee87c2aab part 1 of 1
+RULE LIST agents-s5-1to3 (docs/specs/00-architecture/08_agents.md, sections 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+### 5.1 Compliance (spec → code)
+**Question:** *Given a spec and the implementation, does the code SATISFY every clause of the spec's Behavioral Contract + Auth Matrix?* Item-by-item, spec-clause → code-line, PASS/FAIL.
+**Substrate:** DeepSeek CLI at plan altitude (`spec <path>`), or a `general-purpose` agent for the code diff.
+**Distinct from A3/A5 because:** Code Reviewer asks "is the code good?"; Integration asks "does it match the *codebase*?"; Compliance asks "does it match the *spec*?" — a clause the spec mandates but the code omits (e.g. Spec 21 §6's phantom `stripe_cancel_failed` directory filter, which the spec promised and the code never built) is a Compliance finding no other role owns.
+**HARD DEPENDENCY:** Compliance is only meaningful if the spec is TRUE. Run **Ground-truth (§5.2) FIRST**; a stale spec makes compliance-checking a check against fiction (manual §8.3).
+
+### 5.2 Ground-truth (reality → spec)
+**Question:** *Is the SPEC still true?* For each load-bearing claim in the spec, verify it against the live code / DB / behavior; report every drift as "spec §X says A; reality is B."
+**Substrate:** `general-purpose` (main tree + live DB) — it needs to read code AND query the schema/data.
+**Absorbs "spec-freshness enforcement":** you do NOT need a separate up-to-dateness agent — spec drift IS this agent's primary output. Enforcement = (a) Ground-truth runs at the START of any WF that touches a spec-governed area, and (b) a **standing periodic Ground-truth sweep** (a scheduled routine — see §7) that diffs high-traffic specs against reality and files drift to `review_followups.md`. This directly serves CLAUDE.md Prime Directive #10 (spec-first, no assumptions).
+**Why:** the manual's single most-cited failure (§8.3) is planning against a stale spec. Spec 20 described unbuilt routes; Spec 95/97 described a retired immediate-cancel design after the period-end ruling. Ground-truth is the antibody.
+
+### 5.3 Round-2 adjudication — FORMALIZE the existing practice
+**Substrate: DeepSeek CLI produces the pass; Integration (`general-purpose`, main tree) is its grounder** — already practised, now stamped (§A/§B).
+Not a new agent — a **mandatory second pass**. After the panel returns findings, run **DeepSeek + Integration against the *proposed findings/changes*** (not the code): for each finding, is the premise true, is the ruling already settled, does the fix cost less than the risk? This operationalizes manual §6.3 (⅓ false premises). Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8). Round-2 is cheap (DeepSeek) and catches the eager-fix (§8.4).
+
+Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2, lane BL-COMPLY2, Increment 1·B; the infra freeze is lifted for it by name; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the 2026-11-20 entries: "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." and "yes to McStorage and 1,2,3 yes as recommended" (the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table)): the mechanical half of section 7 rule 4 and section 5.3 is built in the repo. (1) `scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code, says which rule lists (whole files, or whole sections where the file itself separates rules from history) govern a touched path; it reuses the path maps of `mcbylaws/protected-paths.json` (`layer23`, `frontend`) instead of copying them. (2) `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through it, refuses a task with no Files line (a record-only task gets the queue lists) or an unmatched path with the path named, puts the governing lists into the brief (READ each whole before planning) and runs the compliance lens once per list with the list pasted whole ahead of the plan or diff (`scripts/analysis/rule-lists.mjs lens-input`; a list is split by its own headings when list plus material pass the review tool bound, never trimmed). (3) `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane) with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding of the lens outputs; presence and form only, the judgement stays with the grounder (rule 4: a separate grounder rules on every finding; this section: rejections carry reasons). The lane that wrote the work leaves the task RUNNING with "grounder owed".
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
+index 91d8530a6..b7b0d4ee9 100644
+--- a/scripts/analysis/backlog-lane.mjs
++++ b/scripts/analysis/backlog-lane.mjs
+@@ -146,8 +146,10 @@ const lensLine = (task, ctx, lists) => {
+   const cmd = 'DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review';
+   const ids = lists.map((l) => l.id);
+   const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed): for each list id L and each phase P (plan: material = ${ctx}; out: material = the diff file), \`node scripts/analysis/rule-lists.mjs lens-input --list L --material <material> --out <lane dir>/in-P-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md > P-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'plan-compliance-' + i + '.txt, out-compliance-' + i + '.txt').join('; ')}. Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list, an out-<lens>.txt for every other output lens named above, a plan-stage output (plan-<lens>.txt), and the grounder file below (scripts/hooks/check-lane-close.mjs).`;
++  // task-407 (V2.LAYOUT): the one place the close check reads (scripts/hooks/check-lane-close.mjs: lane files at path depth 6, plan-*.txt / out-*.txt, in- beside them), said in every brief
++  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders: a file in lens-plan/, lens-out/ or stage2/ is never read), named plan-<lens>[-<list id>][-pN].txt and out-<lens>[-<list id>][-pN].txt with their in-<same name> inputs beside them, plus the file TASK; a later (fix) round is filed beside them as out-<lens>[-<list id>]-r2.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: a diff over the review tool's bound is split into parts -p1..-pN and every part is reviewed, never trimmed to core files.`;
+   const grounder = ' Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy plan-*.txt, out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY plan-*.txt and out-*.txt (rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote on that line>" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it.';
+-  return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Plan review lenses: ${plan.map(f).join(', ')}, each \`${cmd} ${ctx} --template .claude/review-templates/<lens file> --context <pasted-context file>\` (the context file is the plan and its pasted rulings; the pasted-context file holds the spec clauses and rulings, the same file as for the output lenses; without --context a lens sees "(no pasted context provided)"). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> --context <pasted-context file>\`. ${per} Run the lenses of each review in parallel, one call each, outputs r1-<lens>.txt (plan-<lens>.txt and out-<lens>.txt in the lane report dir); then every finding is adjudicated as round 2 by a grounder (KEEP or REJECT with the opened file:line, TRIAGE.md).${grounder}`;
++  return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Plan review lenses: ${plan.map(f).join(', ')}, each \`${cmd} ${ctx} --template .claude/review-templates/<lens file> --context <pasted-context file>\` (the context file is the plan and its pasted rulings; the pasted-context file holds the spec clauses and rulings, the same file as for the output lenses; without --context a lens sees "(no pasted context provided)"). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> --context <pasted-context file>\`. ${per}${layout} Run the lenses of each review in parallel, one call each, outputs r1-<lens>.txt (plan-<lens>.txt and out-<lens>.txt in the lane report dir); then every finding is adjudicated as round 2 by a grounder (KEEP or REJECT with the opened file:line, TRIAGE.md).${grounder}`;
+ };
+ const ctxRel = `docs/reports/reviews/${taskId}/context-${date}.md`;
+ const ticket = (!dry && /^Ticket:.*$/m.exec(g1r.stdout)?.[0]) || `Ticket: ${taskId} (<label from the G1 ticket>) · lane ${lane} · stage ${stage}`;
+diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
+index 727f9efe5..2470ecb37 100644
+--- a/scripts/hooks/check-lane-close.mjs
++++ b/scripts/hooks/check-lane-close.mjs
+@@ -87,9 +87,11 @@ export function closeErrors(i) {
+   // the lane report, scoped by its TASK file
+   const dirs = new Map();
+   for (const f of i.laneFiles) { if (!dirs.has(f.dir)) dirs.set(f.dir, []); dirs.get(f.dir).push(f); }
+-  const mine = [...dirs.entries()].filter(([, fs_]) => fs_.some((f) => f.name === 'TASK' && f.text.trim().toLowerCase() === id));
+   const dirNote = `docs/reports/lanes/<date>/${laneName}/`;
+-  if (mine.length === 0) return [...errors, `${id}: no ${dirNote} holds a TASK file naming exactly ${id} (a lane report dir is scoped to one task: write the task id in TASK; a dir used for another task does not count)`];
++  // task-407 (V2.LAYOUT): the one place the check reads, named in every refusal that says a file is missing
++  const layout = `put every plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> and TASK directly in ${dirNote}: a file in a subfolder (lens-out/, stage2/) or named fix-*.txt is never read; a later round is out-<lens>[-<list id>]-r2.txt`;
++  const mine = [...dirs.entries()].filter(([, fs_]) => fs_.some((f) => f.name === 'TASK' && f.text.trim().toLowerCase() === id));
++  if (mine.length === 0) return [...errors, `${id}: no ${dirNote} holds a TASK file naming exactly ${id} (a lane report dir is scoped to one task: write the task id in TASK; a dir used for another task does not count); ${layout}`];
+   const files = mine.flatMap(([, fs_]) => fs_);
+   const textOf = (n) => files.find((f) => f.name === n)?.text;
+ 
+@@ -127,7 +129,7 @@ export function closeErrors(i) {
+       if (bad.length) { why.push(bad.join('; ')); continue; }
+       ok = true;
+     }
+-    if (!ok) errors.push(`${id}: list ${l.id} (${l.file}) has no valid compliance lens output in ${dirNote}: write ${phases.join(' or ')}-compliance-${l.id}.txt${why.length ? ` (${why.join('; ')})` : ''}`);
++    if (!ok) errors.push(`${id}: list ${l.id} (${l.file}) has no valid compliance lens output in ${dirNote}: write ${phases.join(' or ')}-compliance-${l.id}.txt${why.length ? ` (${why.join('; ')})` : ''}; ${layout}`);
+   }
+   // (a') the rest of the lens set a build or fix task calls for, and a plan-stage output
+   if (build) {
+@@ -135,10 +137,10 @@ export function closeErrors(i) {
+     for (const lens of set.out) {
+       const n = `out-${lens}.txt`;
+       const t = textOf(n);
+-      if (t === undefined) errors.push(`${id}: the lens set of a ${type} task needs ${n} in ${dirNote} (Spec 08 section 7 rule 4: never one generic pass)`);
++      if (t === undefined) errors.push(`${id}: the lens set of a ${type} task needs ${n} in ${dirNote} (Spec 08 section 7 rule 4: never one generic pass); ${layout}`);
+       else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, null).map((x) => `${id}: ${x}`));
+     }
+-    if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7)`);
++    if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7); ${layout}`);
+   }
+ 
+   // finding lines: a loose reading must count the same as the strict one
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index 708d7def0..42a3d3e7e 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -210,6 +210,17 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+     expect(e).toMatch(/round 2/);
+     expect(e).toContain('NEVER run one generic pass');
+   });
++  // task-407 (V2.LAYOUT): the close check reads lens outputs only directly in docs/reports/lanes/<date>/<lane>/ (plan-/out-/in- names); two lanes filed in subfolders because the brief never said so.
++  it('every brief, build or record-only, states the one folder, the file names, the round-2 form and that the compliance lens reviews the whole change (split, never trimmed)', () => {
++    for (const e of [lensBrief('build', 'scripts/analysis/x.mjs, src/tests/'), lensBrief('record', 'docs/specs/00-architecture/08_agents.md')]) {
++      expect(e).toMatch(/REVIEW FILES GO IN ONE PLACE: docs\/reports\/lanes\/\d{4}-\d{2}-\d{2}\/\S+\/ directly \(no subfolders/);
++      expect(e).toContain('plan-<lens>[-<list id>][-pN].txt and out-<lens>[-<list id>][-pN].txt');
++      expect(e).toContain('in-<same name>');
++      expect(e).toContain('out-<lens>[-<list id>]-r2.txt');
++      expect(e).toContain('fix-*.txt');
++      expect(e).toMatch(/compliance lens reviews the WHOLE change: a diff over[^\n]*split into parts[^\n]*never trimmed to core files/);
++    }
++  });
+   // task-375 FIX.TOOLS D11 (Spec 08 section 7 rule 4 dated note, 08_agents.md:338; scripts/deepseek-review.js:189 fills "(no pasted context provided)" when --context is absent):
+   // every plan lens command carries --context, as the output lens commands do.
+   it('every plan lens command carries --context, and the --context value is not a flag', () => {
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index 8bf92d670..cf6fed2fd 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -213,6 +213,43 @@ describe('close check: the lens outputs are the review tool\'s, on the committed
+   });
+ });
+ 
++// task-407 (V2.LAYOUT; McFix V2 step 2): the check reads lane files only directly in docs/reports/lanes/<date>/<lane>/ (path depth 6) and only plan-*.txt / out-*.txt (+ in-). Lanes that filed
++// their outputs in a subfolder (lens-out/, stage2/) were told nothing; the refusal now names the layout, and the brief (backlog-lane.mjs) states the same sentence. What the check requires is unchanged.
++describe('close check: where the lane report files go (task-407 V2.LAYOUT)', () => {
++  const into = (dir: string, names: string[]) => (l: Lane): Lane => {
++    const o: Lane = {};
++    for (const [n, t] of Object.entries(l)) o[names.includes(n) ? `${dir}/${n}` : n] = t;
++    return o;
++  };
++  const LAYOUT = /directly in docs\/reports\/lanes\/<date>\/BL-COMPLY2\/[^\n]*subfolder/;
++  const outputs = ['out-compliance-first.txt', 'in-out-compliance-first.txt', 'out-compliance-inc-F.txt', 'in-out-compliance-inc-F.txt', 'out-code-review.txt', 'out-error-paths.txt', 'plan-code-review.txt'];
++  it('PLANTED DEFECT: every output in a subfolder of the lane dir is refused, and the refusal names the layout (the lane dir itself, no subfolder, plan-/out-/in- names)', () => {
++    const r = scenario({ mutate: into('lens-out', outputs) });
++    refused(r, LAYOUT, 11);
++    expect(r.stderr).toMatch(/plan-<lens>|out-<lens>/);
++    expect(r.stderr).toMatch(/in-/);
++  });
++  it('each missing-file refusal carries the layout: compliance output, a lens of the set, the plan-stage output, the TASK file', () => {
++    refused(scenario({ mutate: into('lens-out', ['out-compliance-first.txt', 'in-out-compliance-first.txt']) }), /list first[\s\S]*out-compliance-first\.txt[\s\S]*subfolder/);
++    refused(scenario({ mutate: into('stage2', ['out-code-review.txt']) }), /needs out-code-review\.txt[^\n]*subfolder/);
++    refused(scenario({ mutate: into('lens-plan', ['plan-code-review.txt']) }), /no plan-stage lens output[^\n]*subfolder/);
++    refused(scenario({ mutate: (l) => into('x', ['TASK'])(l) }), /no docs\/reports\/lanes\/<date>\/BL-COMPLY2\/ holds a TASK file[^\n]*subfolder/);
++  });
++  it('the same files directly in the lane dir pass (the layout the message names is the one the check reads)', () => {
++    expect(scenario().status).toBe(0);
++  });
++  // the form the brief gives for a later round: out-<lens>[-<list id>]-r2.txt beside the round-1 file (green-both: it holds before and after this task's edit; it pins what the brief now promises)
++  it('SURVIVE-THE-FIX: a round-2 file out-<lens>-r2.txt is read like any out- file: its finding needs a verdict (refused by id), and with the verdict the lane passes; round 1 is not replaced', () => {
++    const r2 = (l: Lane): Lane => ({ ...l, 'out-code-review-r2.txt': hdr('lens-code-review.md', null) + body(true), 'in-out-code-review-r2.txt': 'input of the round-2 review\n', 'out-compliance-first-r2.txt': hdr('lens-compliance.md', l['in-out-compliance-first.txt'] as string) + body(true), 'in-out-compliance-first-r2.txt': l['in-out-compliance-first.txt'] as string });
++    expect(scenario({ mutate: r2 }).status).toBe(0);
++    refused(scenario({ mutate: r2, g: { verdict: (id, k) => (id.includes('-r2#') ? null : `CONFIRMED src/a.ts:${k} "${quoteAt(k)}"`) } }), /out-code-review-r2#1[^\n]*no complete verdict/);
++    refused(scenario({ mutate: (l) => ({ ...r2(l), 'out-code-review.txt': null }) }), /needs out-code-review\.txt/);
++  });
++  it('SURVIVE-THE-FIX: a fix-*.txt output is never read (a finding in it needs no verdict and counts as no review)', () => {
++    expect(scenario({ mutate: (l) => ({ ...l, 'fix-code-review.txt': hdr('lens-code-review.md', null) + body(true) }) }).status).toBe(0);
++  });
++});
++
+ describe('close check: scope of the lane report, the diff and who may close', () => {
+   it('ATTACK 1: every finished status triggers the check (MERGED as well as BUILT and DONE)', () => {
+     refused(scenario({ status: 'MERGED', g: { headers: false } }), /Grounder:/, 1);
+

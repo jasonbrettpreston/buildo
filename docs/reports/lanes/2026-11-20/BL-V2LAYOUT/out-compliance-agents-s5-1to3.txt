@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:35:58.290Z file_sha256=834dd84670659bcec6f6f12bd462aaec009f19eb596bbdac097028e167914412 prompt_sha256=4048f26c1cbefb3e6cba84c54fb910ed6cbfbe3e66c4fb5b2a834218be2abf50
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LAYOUT/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 08 §5.3 note (2) "a list is split by its own headings when list plus material pass the review tool bound, never trimmed" — scripts/analysis/backlog-lane.mjs:150 "The compliance lens reviews the WHOLE change: a diff over the review tool's bound is split into parts -p1..-pN and every part is reviewed, never trimmed to core files." — the brief now names the diff as the split unit and never repeats the clause's rule that the split follows the list's own headings, so a lane can chunk the list arbitrarily and still be inside its brief — add "when list plus material pass the 120000 bound, the list is split by its own headings into -p1..-pN; nothing is trimmed" to the same sentence
+
+DEFER severity=LOW — Spec 08 §5.3 note (3) "one compliance lens output per attached list and a `GROUNDER.md`" (the only file forms the note names) — scripts/hooks/check-lane-close.mjs:92 "a later round is out-<lens>[-<list id>]-r2.txt" — the layout guidance, the round-2 name and the fix-*.txt exclusion are added to every refusal but no pasted clause or ruling names them, and card task-407 (V2.LAYOUT) is not pasted, so their authority is cannot see — paste the card or cite it in the layout sentence so the new refusal text traces to a ruling
+
+DEFER severity=NIT — Spec 08 §5.3 note (2) "a list is split by its own headings" (the split part naming the brief promises) — scripts/analysis/backlog-lane.mjs:150 "named plan-<lens>[-<list id>][-pN].txt and out-<lens>[-<list id>][-pN].txt" against "out-<lens>[-<list id>]-r2.txt" — a later round that is also split has no stated composed name, so the lane must guess the name the close check will read — state the composed name (for example out-<lens>[-<list id>][-pN]-r2.txt) explicitly
+
+MET — Spec 08 §5.3 note (3) "one compliance lens output per attached list" — scripts/hooks/check-lane-close.mjs:132 — the per-list refusal keeps the same required file name, layout text is only appended after it
+
+MET — Spec 08 §5.3 "rejections carry reasons" — scripts/analysis/backlog-lane.mjs:151 — the grounder sentence still carries "[reason: needed for REJECTED and CONFLICT]"
+
+MET — Spec 08 §5.3 note (2) "runs the compliance lens once per list with the list pasted whole ahead of the plan or diff" — scripts/analysis/backlog-lane.mjs:148 — the per-list sentence "each pasted WHOLE ahead of the material; a list is never trimmed" is unchanged and the layout text is appended after it
+
+REJECT — Spec 08 §5.3 note (3) "one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding" — that the brief adds a CONFLICT verdict the note does not name — that sentence is unchanged context in this diff, neither added nor removed, so it is not behaviour this change introduces, and the note sets a minimum form
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  80443ms (80.4s)
+📊 Tokens — total: 22680, input: 7300, output: 15380, reasoning: 14586

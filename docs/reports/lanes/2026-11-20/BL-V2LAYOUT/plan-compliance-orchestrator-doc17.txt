@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:28:31.623Z file_sha256=8f1801b47954dd0702b1be06937086c29005d9a1738b42e9e54726d9eefbd2ed prompt_sha256=a56c585e9ac6394e30ea00adc63e4dd121eb8f36b56c31040645e950fc99a297
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LAYOUT/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — doc-17 readings rule "Readings and register entries of the rulings register ... are NOT the operator's words as a ruling and never feed a review as a ruling" — "## Rulings ... (RR-0176, supersedes RR-0174 which said 35,000 ms)" — the material quotes RR ids as rulings, but none of the RR ids it relies on (RR-0005, RR-0172, RR-0174, RR-0176, RR-0178, RR-0179, RR-0180, RR-0182, RR-0184) appears in the pasted Readings or Register entries lists, so cannot see whether they are readings — do not change the plan; supply these ids as decisions (not readings) before they are used to judge the layout sentence — 
+DEFER severity=LOW — task card scope "Scope: one sentence in the brief text the launch script writes ... and a planted-defect test ... Files: scripts/analysis/backlog-lane.mjs, scripts/hooks/check-lane-close.mjs, src/tests/backlog/check-lane-close.logic.test.ts" — "Files line of the task extended through the CLI for that test file" — the plan adds a fourth file and edits the task's own Files line, which the card does not name — keep it only if the sentence in lensLine cannot be pinned from check-lane-close.logic.test.ts, otherwise drop step 3's new file —
+
+MET — doc-17 scope of this part "Judge the material under review against the rules in this part" — plan text "Rule: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3, 4 and section 11.1; PLAN-PROTOCOL.md:3" — the plan rests on spec sections that are not pasted, so no pasted clause is broken by it; layout, brief sentence, refusal message, -r2 form and the planted-defect test are not governed by any clause in this part.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 2   Unmet: 0
+
+---
+⏱  27730ms (27.7s)
+📊 Tokens — total: 26993, input: 21454, output: 5539, reasoning: 5068

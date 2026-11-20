@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:28:31.481Z file_sha256=2ef56ada828db2bf8c999f2fb0c9d542d86a57ce7c84c6b22887c666503476da prompt_sha256=94334e2209dfd5e89a55b8c9fb5efbc9d9ebfc3b9e1af63a84ecfa049cca0189
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LAYOUT/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Files line "Files: scripts/analysis/backlog-lane.mjs, scripts/hooks/check-lane-close.mjs, src/tests/backlog/check-lane-close.logic.test.ts" — plan step 3 "One test in src/tests/backlog/backlog-lane.logic.test.ts pins the sentence (Files line of the task extended through the CLI for that test file)." — the plan writes a fourth file the card's Files: line does not carry, and the pasted note makes the path table "refuses ... an unmatched path with the path named", so that write has no attached list and is not resolved — keep the pin test inside check-lane-close.logic.test.ts, or get the Files: line extended and the lane re-briefed before any write to backlog-lane.logic.test.ts.
+
+BUG severity=HIGH — 5.3 "After the panel returns findings, run DeepSeek + Integration against the proposed findings/changes" — plan "Not done: no change to what the check requires; no move of other lanes' files; no verdicts, no grounder file." — the plan has no round-2 adjudication step and no place where rejected findings are written with reasons, both of which 5.3 makes mandatory for the lane that wrote the work — add a step that runs the second pass on this plan's returned findings and records each rejection and its reason in the plan.
+
+DEFER severity=MED — card acceptance "Acceptance: the brief of the next launched lane carries the sentence (open BRIEF.md and paste it); the test." — plan step 4 "Proof: --dry-run on a real LATER task pasted" — a dry run prints the text but does not open the BRIEF.md a launched lane actually carries, so the named proof is not the proof the card asks for — run the launch for the next real lane and paste the sentence out of the written BRIEF.md.
+
+DEFER severity=MED — card Scope "one sentence in the brief text the launch script writes (the exact folder, the plan-/out-/in- names, a fix round filed as out-<lens>-r2 or the form the check can read: decide the smallest)" — plan step 3 "compliance reviews the WHOLE change (split into parts, never trimmed)" — the sentence tells lanes the change is split, while the pasted note splits the rule list, not the change ("a list is split by its own headings when list plus material pass the review tool bound, never trimmed"), and the card names neither — cut the sentence to the card's three contents or restate it as the list being split, never trimmed.
+
+DEFER severity=LOW — note (3) "The lane that wrote the work leaves the task RUNNING with "grounder owed"." — plan step 1 "Test commit A (red then green, own commit, no status move)" — the plan records only that no status move happens and never records the grounder owed the clause names — state in the plan that task-407 stays RUNNING with "grounder owed" until a separate grounder files GROUNDER.md.
+
+DEFER severity=NIT — card Scope "a planted-defect test that a lane directory with outputs in a subfolder is refused with a message that names the layout" — plan step 2 "and the TASK message" — the card names the layout refusal message, not the missing-TASK message, so that edit is text the card did not name — drop the TASK message edit or file it under its own card.
+
+MET — card "a planted-defect test that a lane directory with outputs in a subfolder is refused with a message that names the layout" — plan step 1(a) "planted defect: lane dir has TASK plus outputs only in a subfolder (lens-out/) -> refused and the message names the layout" — test and message text are both planned.
+
+MET — card "No change to what the check requires." — plan step 2 "Text only; what the check requires does not change" — the check's required set is explicitly held.
+
+MET — card "a fix round filed as out-<lens>-r2 or the form the check can read: decide the smallest" — plan "Smallest form for a later round: out-<lens>[-<list id>]-r2.txt with in-<same name> beside it." — the smallest readable form is decided and named.
+
+MET — note (2) "a list is split by its own headings when list plus material pass the review tool bound, never trimmed" — plan keeps the split untouched, no step edits rule-lists.mjs or the split logic.
+
+MET — note (3) "presence and form only, the judgement stays with the grounder" — plan "no verdicts, no grounder file" — the lane adds no judging machinery to the check.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 6
+
+---
+⏱  49541ms (49.5s)
+📊 Tokens — total: 22138, input: 11844, output: 10294, reasoning: 9233

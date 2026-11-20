@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:28:31.551Z file_sha256=47abe910e3f4d025f86f1bc69663944c13dbd6943bde11065aa1e1c0adfebadd prompt_sha256=19b88427f4eeda1069e0dadedbd4e08b673414be5396938442d446241656d8ba
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LAYOUT/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §4 dated note 2026-11-20 (COMPLY.2) "one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding; `scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them" — plan step 3 "add one sentence to the lens-set text: exact folder, names plan-/out-/in- with -pN and -r2, no subfolder, fix-*.txt never read" — the sentence a lane will follow names no GROUNDER.md, so a lane that files exactly what the brief says is still refused at close — add GROUNDER.md (non-lane agent, one verdict line per finding, same folder) to the sentence, and to the planted test's expectation.
+
+BUG severity=HIGH — Spec 137 §1 note, Rule 3 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — plan step 1 "Test commit A (red then green, own commit, no status move)" — none of steps 1 to 3 says the commit carries the `Task: task-407` trailer and the task-407 file in the same diff, and step 1 rules the task file out, while all three commits change `src/tests/` or `scripts/` — state in each of steps 1 to 3 that the commit carries `Task: task-407` and the task-407 file in the same diff.
+
+DEFER severity=MED — Spec 137 §4 dated note 2026-11-20 "Which lists a task attaches is decided by `scripts/analysis/rule-lists.json` from the task's Files line (the launch refuses a task whose Files line is missing or matches no row)" — plan step 3 "Files line of the task extended through the CLI for that test file" — the plan adds `src/tests/backlog/backlog-lane.logic.test.ts` to the Files line without saying that path matches a rule-lists.json row, and a no-match entry makes the launch refuse task-407 — confirm the row exists and name it in the step.
+
+DEFER severity=MED — Spec 137 §4 dated note 2026-11-20 "`scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them" — plan step 2 "append one layout clause to the three refusal messages that say a file is missing (no compliance output, no lens output, no plan output) and the TASK message" — the hook's GROUNDER.md refusal message is left without the layout clause, so a lane refused for the one artifact this note adds gets no message naming the place — add the same clause to the GROUNDER.md message.
+
+DEFER severity=LOW — task-407 description "Acceptance: the brief of the next launched lane carries the sentence (open BRIEF.md and paste it); the test." — plan step 4 "Proof: --dry-run on a real LATER task pasted" — a dry-run print is not the launched lane's BRIEF.md that the acceptance names, so the acceptance is proved only by inspection of the script's output — add one step that opens the BRIEF.md a real launch wrote (or the dry-run's written output file) and pastes the line.
+
+DEFER severity=LOW — Spec 137 §1 note, §3 "for a Backlog task the status line is its front matter: `status` is the word; the due date is `expires`" — task-407 block "status: RUNNING · milestone: m-1 · assignee: @lane-BL-V2LAYOUT · labels: McFix, McFix V2" — no `expires` appears on this open task, which under §4 rule 7 "Each open row carries an opened date and an expiry 7 days later" would be a no-expiry row — have the plan name the due date it writes, or the operator-set exception.
+
+MET — Spec 137 §4 dated note 2026-11-20 "one compliance lens output per rule list the task attaches" — plan step 2 "Text only; what the check requires does not change." — the per-list compliance requirement is left exactly as the hook enforces it.
+
+MET — Spec 137 §1 note, Rule 3 "It checks that a task is named, not that the right one is." — plan "Not done: no change to what the check requires" — the plan adds no right-task check, only message text.
+
+MET — task-407 description "a planted-defect test that a lane directory with outputs in a subfolder is refused with a message that names the layout" — plan step 1 "(a) planted defect: lane dir has TASK plus outputs only in a subfolder (lens-out/) -> refused and the message names the layout" — the planted test matches the scope item word for word, with no requirement relaxed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  52044ms (52.0s)
+📊 Tokens — total: 29200, input: 18479, output: 10721, reasoning: 9590

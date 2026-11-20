@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:28:31.686Z file_sha256=4108fe8d5f8f1bae6915ee8d04fed68c8283c90d3dd6e54aa6fa098be77184c3 prompt_sha256=e24f2c69a0f6fda4e40ea07d93b87a8eae0e7cda1baafc18fe998c8dce377109
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LAYOUT/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-407 Acceptance "Acceptance: the brief of the next launched lane carries the sentence (open BRIEF.md and paste it); the test." — plan "4. Proof: --dry-run on a real LATER task pasted; git ls-tree of BL-PAGETABLE and BL-GATES lane dirs, read-only, list what the check reads and does not." — a --dry-run writes no BRIEF.md, so no launched lane brief is opened and the acceptance evidence is absent from the plan — add a step that runs the launch script for one real lane, opens that lane's BRIEF.md, and pastes the sentence into the task.
+
+DEFER severity=MED — task-407 Files "Files: scripts/analysis/backlog-lane.mjs, scripts/hooks/check-lane-close.mjs, src/tests/backlog/check-lane-close.logic.test.ts" — plan "One test in src/tests/backlog/backlog-lane.logic.test.ts pins the sentence (Files line of the task extended through the CLI for that test file)." — the plan writes a fourth file and rewrites the card's own Files line, which the card did not name — keep the sentence pin inside check-lane-close.logic.test.ts or get operator words to extend Files, do not self-extend.
+
+DEFER severity=LOW — task-407 Scope "one sentence in the brief text the launch script writes (the exact folder, the plan-/out-/in- names, a fix round filed as out-<lens>-r2 or the form the check can read: decide the smallest)" — plan "add one sentence to the lens-set text: exact folder, names plan-/out-/in- with -pN and -r2, no subfolder, fix-*.txt never read, compliance reviews the WHOLE change (split into parts, never trimmed)." — the sentence adds "compliance reviews the WHOLE change (split into parts, never trimmed)", content the card did not name — drop that clause or log operator words for it.
+
+DEFER severity=LOW — task-407 Scope "a fix round filed as out-<lens>-r2 or the form the check can read: decide the smallest" — plan "Smallest form for a later round: out-<lens>[-<list id>]-r2.txt with in-<same name> beside it." — the named form still carries an optional -<list id> segment, so it is not the smallest — state the single form out-<lens>-r2.txt and drop the list-id variant.
+
+MET — task-407 Scope "one sentence in the brief text the launch script writes" — plan step 3 — the launch script's lens-set text gets the sentence, so every launched brief carries it.
+MET — task-407 Scope "a planted-defect test that a lane directory with outputs in a subfolder is refused with a message that names the layout" — plan step 1(a) — the named test and the layout-naming message clause are both planned.
+MET — task-407 Scope "the form the check can read" — plan step 1(b) — test b reads an out-<lens>-r2.txt finding and refuses it by id, proving the r2 name is read.
+MET — task-407 "No change to what the check requires." — plan step 2 — the check's requirement set is left unchanged, text only.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 1
+
+---
+⏱  110152ms (110.2s)
+📊 Tokens — total: 40686, input: 16701, output: 23985, reasoning: 23228

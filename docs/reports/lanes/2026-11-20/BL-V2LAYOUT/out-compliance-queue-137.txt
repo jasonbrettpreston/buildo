@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T17:35:58.363Z file_sha256=7541f96cb4cd5d3e8f41413b0cffac759ffe97daf77b6315bd3c35729fe4765d prompt_sha256=7d6093bdc5b0f57bce31f79ae67e8cfcc7e5e9ec5341e7eb48ce2cf63796e1b5
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LAYOUT/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §1 Rule 3 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" and §4 rule 3 "The status line changes in the same commit as the work" — scripts/analysis/backlog-lane.mjs:145 "diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs" — the change touches `scripts/` and `src/tests/` and the diff carries no `backlog/tasks/task-407*` file, so neither the task file G3 demands nor the §3 front-matter status line ("for a Backlog task the status line is its front matter: `status` is the word") is in this commit — add the task-407 file with its front-matter status edit to the same diff and the `Task: task-407` trailer.
+DEFER severity=LOW — Spec 137 §4 rule 12 dated note 2026-11-20 "one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding" — scripts/analysis/backlog-lane.mjs:150 "a later (fix) round is filed beside them as out-<lens>[-<list id>]-r2.txt with its in-<same name>" — the brief now states round-2 naming and that "a name not starting plan- or out- (fix-*.txt) is never read", which no clause pasted here names — cite the clause that fixes the `-r2` and `fix-*.txt` naming, or drop those two sentences from the brief text.
+MET — Spec 137 §4 rule 12 note "one compliance lens output per rule list the task attaches" — scripts/hooks/check-lane-close.mjs:132 — the refusal still demands `${phases.join(' or ')}-compliance-${l.id}.txt` per attached list; the diff only appends "; ${layout}".
+MET — Spec 137 §4 rule 12 note "`scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them" — scripts/hooks/check-lane-close.mjs:142 — the missing-lens refusal ("the lens set of a ${type} task needs ${n}") still returns an error before any pass; no requirement was removed or weakened.
+MET — Spec 137 §4 rule 12 note, plan stage kept — scripts/hooks/check-lane-close.mjs:145 — "no plan-stage lens output (plan-<lens>.txt)" check still fires, only with the layout sentence appended.
+MET — Spec 137 §4 rule 12 note "in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`)" — scripts/hooks/check-lane-close.mjs:90 — `dirNote` is unchanged and is the same path the new layout sentence names, so the refusal text points at the spec's directory and not another.
+REJECT — Spec 137 §4 rule 12 note "in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`)" — accusation that the new "no subfolders" layout is stricter than the spec — not a real issue: the spec path ends at `<lane>/` with no subfolder, so refusing `lens-out/`, `stage2/` and `lens-plan/` is exactly the spec's directory.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 1
+
+---
+⏱  50364ms (50.4s)
+📊 Tokens — total: 24207, input: 13935, output: 10272, reasoning: 9452

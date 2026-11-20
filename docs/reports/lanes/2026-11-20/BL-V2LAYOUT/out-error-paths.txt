@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T17:35:58.248Z file_sha256=db30ccb7e9a2c7cdb646a954519d5dac5a77af5472456b3491bfb98ee87c2aab prompt_sha256=20ab57abd81f339bd19ffa213aff04d8f4266683d2f7e9c876c922fcc5a0f75e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2LAYOUT/DIFF.patch (model: deepseek-reasoner)
+
+BUG severity=<none> — none raised to CRIT or HIGH; the three items below are DEFER and safe to defer.
+
+DEFER severity=MED — scripts/analysis/backlog-lane.mjs:152 "outputs r1-<lens>.txt (plan-<lens>.txt and out-<lens>.txt in the lane report dir)" — the brief still names r1-<lens>.txt as the output while the new layout sentence only warns about fix-*.txt, so a lane that follows the first clause writes a name the check never reads and gets the close refused, the exact path task-407 exists to close — change the clause to "outputs plan-<lens>.txt and out-<lens>.txt" or add r1- to the never-read list in the layout sentence.
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:92 "a later round is out-<lens>[-<list id>]-r2.txt" plus scripts/analysis/backlog-lane.mjs:150 "split into parts -p1..-pN and every part is reviewed, never trimmed to core files" — the missing-compliance refusal names out-<lens>[-<list id>][-pN].txt without saying all parts p1..pN must be present, so a lane whose part -p3 call failed and which commits -p1 and -p2 only is refused nothing, a diff reviewed in part (the check's part logic is outside this diff, cannot see it) — state in both messages that the parts are all-or-nothing, or derive the required parts from the material size at close.
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs:150 "the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays" — a finding restated in the r2 file gets a new id (their own test expects out-code-review-r2#1) and needs a second verdict, and verdicts are keyed by file name plus ordinal with no cross-file dedup, so CONFIRMED in round 1 and REJECTED in round 2 for the same issue are both accepted — key verdicts by finding text, or refuse an r2 file whose finding lines restate a round-1 file.
+
+DEFER severity=NIT — scripts/hooks/check-lane-close.mjs:92 "a file in a subfolder (lens-out/, stage2/)" — the refusal's example set omits lens-plan/, which the brief names and the new test plants (into('lens-plan', ['plan-code-review.txt'])), so a lane that filed there does not see its folder in the message — use the same folder list (lens-plan/, lens-out/, stage2/) in the brief and in every refusal.
+
+REJECT — scripts/analysis/backlog-lane.mjs:152 "never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes)" — a lens call that fails, times out or writes an empty file looks like an unhandled retry path — it is handled: no out-<lens>.txt means the close refuses (fail closed), and a re-run under the same out- name with its in- name is idempotent because the recomputed header hash is the key, not a counter.
+
+REJECT — scripts/hooks/check-lane-close.mjs:93 "const files = mine.flatMap(([, fs_]) => fs_);" — the added text looks like it could count something twice on a re-sent close — closeErrors is a pure read of i.laneFiles grouped by dir and writes nothing, so a double-submitted close cannot create, count or duplicate a file; the only artefact of a repeat is the same refusal text.
+
+VERDICT: PASS on error-path safety
+Paths walked: error (missing TASK, missing compliance output, missing lens output, missing plan output), empty (lane dir with TASK only, undefined text from textOf), retry (re-run of a failed lens under the same name), time-out (lens call yields no output file), double-submit (close check run twice, round-2 file beside round-1), degrade-safety (close refuses rather than passing on partial review), idempotency (file name plus REVIEW header hash as the key, no counter anywhere)   Unguarded: 0
+
+---
+⏱  60837ms (60.8s)
+📊 Tokens — total: 31014, input: 20026, output: 10988, reasoning: 10032
