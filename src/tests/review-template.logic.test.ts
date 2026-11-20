@@ -187,3 +187,18 @@ describe('loadReviewNotesBlock — sibling <stem>.notes.json → prompt block (S
     expect(result.block).toContain('<!-- end review notes -->');
   });
 });
+
+// task-366 (COMPLY.2, enabling fix): a pasted rule list or plan is inserted LITERALLY. Measured 2026-11-20: a plan containing the dollar-quote
+// replacement pattern re-inserted the template tail (a 317388 character prompt against the 120000 bound), and values were re-scanned for later tokens.
+describe('substitutePlaceholders — values are inserted literally, once', () => {
+  const tpl = 'A:{{PLAN}}|B:{{SPECS}}|C:{{PLAN}}|D:{{DATA_CONTEXT}}';
+  it("dollar patterns in a value stay literal (the dollar-quote, dollar-ampersand, dollar-dollar and backtick forms)", () => {
+    const plan = "x $' y $& z $$ w $` v $1";
+    const out = substitutePlaceholders(tpl, { plan, specs: 'S', dataContext: 'D' });
+    expect(out).toBe(`A:${plan}|B:S|C:${plan}|D:D`);
+  });
+  it('a placeholder token inside a value is not substituted again', () => {
+    const out = substitutePlaceholders(tpl, { plan: 'P {{SPECS}} {{DATA_CONTEXT}}', specs: 'S {{PLAN}}', dataContext: '' });
+    expect(out).toBe('A:P {{SPECS}} {{DATA_CONTEXT}}|B:S {{PLAN}}|C:P {{SPECS}} {{DATA_CONTEXT}}|D:');
+  });
+});

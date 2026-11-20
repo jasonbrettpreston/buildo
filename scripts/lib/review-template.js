@@ -72,10 +72,9 @@ function splitTemplate(template) {
  * @returns {string} substituted prompt.
  */
 function substitutePlaceholders(userTemplate, { plan, specs, dataContext = '' }) {
-  return userTemplate
-    .replace(/\{\{PLAN\}\}/g, plan)
-    .replace(/\{\{SPECS\}\}/g, specs)
-    .replace(/\{\{DATA_CONTEXT\}\}/g, dataContext);
+  // task-366 (COMPLY.2): ONE pass with function replacers, so a value is inserted literally: no dollar-sequence expansion and no re-scan of inserted text for tokens.
+  const values = { PLAN: plan, SPECS: specs, DATA_CONTEXT: dataContext };
+  return userTemplate.replace(/\{\{(PLAN|SPECS|DATA_CONTEXT)\}\}/g, (_m, key) => values[key]);
 }
 
 /**

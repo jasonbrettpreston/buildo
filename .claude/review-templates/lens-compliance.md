@@ -29,7 +29,7 @@ Do not duplicate another lens. Quote file:line or the pasted line; a finding wit
 
 I am reviewing a change against ONE question only: Does the plan or diff satisfy every clause of the governing spec and every operator ruling pasted in the context?
 
-**Plan file (plan mode only; in review mode this block reads {{PLAN}} and the material is the File block of the prompt):**
+**Plan file (plan mode only; in review mode this block holds the material under review, the file named on the command line):**
 ```
 {{PLAN}}
 ```

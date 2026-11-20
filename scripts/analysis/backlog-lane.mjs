@@ -9,6 +9,7 @@
 //   4. write the G1 ticket (backlog-brief.mjs --root <worktree>) into the lane dir;
 //   5. write task.json from the task (or use --spec) and run panel-tools/brief.mjs;
 //   6. print `BRIEF-FILE: <path> sha256=<hex>` as the last line. The Agent call stays the orchestrator's (Spec 08 rule 9, 08_agents.md:339).
+// COMPLY.2 (task-366): the task's `Files:` line is resolved through scripts/analysis/rule-lists.json (data decides, --rule-lists overrides the table path): the brief names every governing rule list (READ whole before planning) and the compliance lens runs once per list. A task with no Files line (a record-only task gets the queue lists) or a Files path no row matches is refused before any write, the path named.
 // Refusals (exit 3, one line): task not LATER or WAITS, worktree exists or its parent is missing, branch exists, board dirty outside backlog/,
 // backlog binary or an input missing; all before any write except two checks after the take (the 4 minute wait ran out, or the task is not RUNNING for the lane after the commit), which also exit 3 and name the undo command. Usage errors exit 2. A failure after the take exits 1 and prints the command that undoes the take.
 // --dry-run prints every command (cd <dir> && <command>) and the task.json, writes nothing.
@@ -19,6 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { args, asList, descriptionOf, home, parseFM, readItems, REPO, sha256, today } from './backlog-lib.mjs';
+import { DEFAULT_TABLE, milestoneLetter, readTable, resolveTask } from './rule-lists.mjs';
 
 const a = args();
 const str = (k, d) => (a[k] && a[k] !== true ? String(a[k]) : d);
@@ -66,6 +68,9 @@ if (!path.isAbsolute(wt) || !fs.existsSync(path.dirname(wt))) refuse(`worktree p
 if (fs.existsSync(wt)) refuse(`worktree ${wt} already exists`);
 if (git('check-ref-format', `refs/heads/${branch}`).status !== 0) refuse(`branch name ${branch} is not a valid git branch name`);
 if (git('show-ref', '--verify', '--quiet', `refs/heads/${branch}`).status === 0) refuse(`branch ${branch} already exists`);
+let resolved;
+try { resolved = resolveTask({ table: readTable(path.resolve(home(str('rule-lists', DEFAULT_TABLE)))), root: board, body: t.body, type: String(t.fm.type ?? ''), letter: milestoneLetter(board, t.fm.milestone) }); } catch (e) { refuse(`${taskId}: cannot read the rule-list table or one of its path maps under ${board}: ${String(e.message).split('\n')[0]}`); }
+if (resolved.error) refuse(`${taskId}: ${resolved.error.replace(/^refused: /, '')}`);
 const st = git('status', '--porcelain');
 if (st.status !== 0) refuse(`git status failed on ${board}: ${st.stderr.trim().split('\n')[0]}`);
 const dirty = st.stdout.split('\n').filter(Boolean).map((l) => l.slice(3).replace(/^.* -> /, '').replace(/^"(.*)"$/, '$1')).filter((p) => !p.startsWith('backlog/') && !/(^|\/)node_modules\/?$/.test(p)); // the node_modules links of a worktree are untracked (the .gitignore pattern has a trailing slash and a link is not a directory)
@@ -133,23 +138,32 @@ const msTitle = milestone && fs.existsSync(msDir) ? fs.readdirSync(msDir).filter
 const letter = /\[([^\]]+)\]\s*$/.exec(String(msTitle ?? ''))?.[1];
 if (!letter && !specGiven) process.stderr.write(`backlog-lane: note: no [group] letter in the title of milestone ${milestone || '(none)'}; groups defaults to F\n`);
 // task-358 (REVIEW.LENSES): the review line names the Spec 08 lens set (08_agents.md:334 "NEVER run one generic pass"; section 7 rules 4, 7), chosen by task type and the Files line.
-const lensLine = (task, ctx) => {
+const lensLine = (task, ctx, lists) => {
   const files = /\bFiles:\s*(.+)$/m.exec(descriptionOf(task))?.[1] ?? '';
   const code = ['build', 'fix'].includes(String(task.fm.type ?? '').toLowerCase());
   const surface = /\bmobile\/|src\/app\/|src\/components\/|surfaces\//.test(files);
   const sec = /entitlement|auth|stripe|metered/i.test(files);
-  const plan = ['plan-review-deepseek', 'compliance', ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])];
-  const out = ['compliance', ...(code ? ['code-review'] : []), ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])];
+  const plan = ['plan-review-deepseek', ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])];
+  const out = [...(code ? ['code-review'] : []), ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])];
   const f = (l) => (l === 'plan-review-deepseek' ? 'plan-review-deepseek.md' : `lens-${l}.md`);
   const cmd = 'DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review';
-  return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Plan review lenses: ${plan.map(f).join(', ')}, each \`${cmd} ${ctx} --template .claude/review-templates/<lens file>\` (the context file is the plan and its pasted rulings). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> --context <pasted-context file>\`. Run the lenses of each review in parallel, one call each, outputs r1-<lens>.txt; then triage every finding as round 2 (one grounder, KEEP or REJECT with the opened file:line, TRIAGE.md).`;
+  const ids = lists.map((l) => l.id);
+  const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed): for each list id L and each phase P (plan: material = ${ctx}; out: material = the diff file), \`node scripts/analysis/rule-lists.mjs lens-input --list L --material <material> --out <lane dir>/in-P-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md > P-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'plan-compliance-' + i + '.txt, out-compliance-' + i + '.txt').join('; ')}. The close of this task is refused without an out-compliance output per list (scripts/hooks/check-lane-close.mjs).`;
+  const grounder = ' Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy plan-*.txt, out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there (headers `Grounder: <name>` and `Lane: <lane>`, one line `<finding id> CONFIRMED|REJECTED <file:line> [reason when REJECTED]` per finding; the grounder opens each cited file:line). The commit that sets the task BUILT is refused without both.';
+  return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Plan review lenses: ${plan.map(f).join(', ')}, each \`${cmd} ${ctx} --template .claude/review-templates/<lens file>\` (the context file is the plan and its pasted rulings). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> --context <pasted-context file>\`. ${per} Run the lenses of each review in parallel, one call each, outputs r1-<lens>.txt (plan-<lens>.txt and out-<lens>.txt in the lane report dir); then every finding is adjudicated as round 2 by a grounder (KEEP or REJECT with the opened file:line, TRIAGE.md).${grounder}`;
 };
 const ctxRel = `docs/reports/reviews/${taskId}/context-${date}.md`;
 const ticket = (!dry && /^Ticket:.*$/m.exec(g1r.stdout)?.[0]) || `Ticket: ${taskId} (<label from the G1 ticket>) · lane ${lane} · stage ${stage}`;
+const ruleBlock = [
+  `THE RULE LISTS THAT GOVERN THIS TASK (Rule lists that govern this task; resolved from the Files line through scripts/analysis/rule-lists.json: data decides; ${resolved.lists.length} lists; READ each whole before planning, never hand-pick a clause):`,
+  ...resolved.lists.map((l) => `- ${l.id}: ${l.file} (${l.whole ? 'whole file' : `sections: ${l.sections.join('; ')}`}) [${l.generated_by}${l.status ? `; status: ${l.status}` : ''}] why: ${l.why.join(' | ')}`),
+  ...(resolved.exempt.length ? [`- Files entries with no rule list (records the lane writes itself, the hooks always allow them): ${resolved.exempt.join(', ')}`] : []),
+].join('\n');
 const spec = {
   lane,
   goal: `${t.fm.title}\n\n${descriptionOf(t).trim()}`.trim(),
   inputs: [
+    ruleBlock,
     `THE TASK: cd ${wt} && node_modules/.bin/backlog task view ${taskId} --plain; the G1 ticket ${g1} (its context file ${path.join(wt, ctxRel)} is in the worktree, uncommitted: commit it with the work)`,
     ...asList(t.fm.references).map((r) => `Reference: ${r}`),
     ...asList(t.fm.documentation).map((d) => `Document: ${d}`),
@@ -157,7 +171,7 @@ const spec = {
   outputs: [...new Set([...pathy.map(abs), path.join(laneDir, 'REPORT.md')])],
   groups: [letter ?? 'F'],
   writeScope: [laneDir, wt],
-  extra: [ticket, `Review (review mode, from the worktree): DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review ${ctxRel} --context .claude/review-templates/plan-review-deepseek.md`, lensLine(t, ctxRel)],
+  extra: [ticket, `Review (review mode, from the worktree): DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review ${ctxRel} --context .claude/review-templates/plan-review-deepseek.md`, lensLine(t, ctxRel, resolved.lists)],
 };
 const specPath = specGiven ?? path.join(laneDir, 'task.json');
 if (!specGiven) {

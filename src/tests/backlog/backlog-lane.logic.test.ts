@@ -13,16 +13,18 @@ const AC = 'Writes scripts/analysis/thing.mjs and the notes file docs/out/NOTES.
 const SCRIPT = path.join(__dirname, '../../../scripts/analysis/backlog-lane.mjs');
 
 type Fx = { board: string; base: string; wt: string; main: string; pt: string; task: string; args: string[] };
-function fixture(opts: { status?: string; hook?: boolean } = {}): Fx {
+function fixture(opts: { status?: string; hook?: boolean; files?: string | null; type?: string; letter?: string } = {}): Fx {
   const board = makeProject(), base = tmp('lane');
   fs.mkdirSync(path.join(board, 'backlog/milestones'), { recursive: true });
-  fs.writeFileSync(path.join(board, 'backlog/milestones/m-0 - foundations.md'), '---\nid: m-0\ntitle: "Increment 1·A Foundations [F]"\n---\n\n## Description\n\nx\n');
+  fs.writeFileSync(path.join(board, 'backlog/milestones/m-0 - foundations.md'), `---\nid: m-0\ntitle: "Increment 1·A Foundations [${opts.letter ?? 'F'}]"\n---\n\n## Description\n\nx\n`);
   fs.writeFileSync(path.join(board, '.gitignore'), '.board/\n.cursor/active_task*\n');
   fs.mkdirSync(path.join(board, '.cursor'), { recursive: true });
   fs.writeFileSync(path.join(board, '.cursor/active_task.md'), '# Active Task: the plan\n');
+  fs.mkdirSync(path.join(board, 'mcbylaws'), { recursive: true }); // the table reuses this path map (globs_from)
+  fs.copyFileSync(path.join(__dirname, '../../../mcbylaws/protected-paths.json'), path.join(board, 'mcbylaws/protected-paths.json'));
   fs.mkdirSync(path.join(board, 'mobile'), { recursive: true });
   fs.writeFileSync(path.join(board, 'mobile/.keep'), '');
-  const task = mk(board, 'Launch me', ['-d', 'Launch description text.', '--ac', AC, '--ref', 'docs/a.md', '--doc', 'docs/b.md', '-m', 'm-0', ...(opts.status ? ['-s', opts.status] : [])]);
+  const task = mk(board, 'Launch me', ['-d', `Launch description text.${opts.files === null ? '' : `\n\nFiles: ${opts.files ?? 'scripts/analysis/thing.mjs'}`}`, ...(opts.type ? ['--type', opts.type] : []), '--ac', AC, '--ref', 'docs/a.md', '--doc', 'docs/b.md', '-m', 'm-0', ...(opts.status ? ['-s', opts.status] : [])]);
   git(board, 'add', '-A'); git(board, 'commit', '-q', '-m', 'fixture');
   if (opts.hook) { const h = path.join(board, '.git/hooks/pre-commit'); fs.writeFileSync(h, '#!/bin/sh\nexit 1\n'); fs.chmodSync(h, 0o755); }
   const main = path.join(base, 'main');
@@ -222,5 +224,55 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     const e = lensBrief('record', 'docs/specs/00-architecture/08_agents.md');
     expect(e).toContain('lens-compliance.md');
     for (const l of ['lens-code-review.md', 'lens-ux.md', 'lens-error-paths.md', 'lens-security.md']) expect(e).not.toContain(l);
+  });
+});
+
+// task-366 (COMPLY.2): the launch resolves the task's Files line through scripts/analysis/rule-lists.json (data decides) and attaches the governing rule lists.
+describe('backlog-lane attaches the rule lists by touched path (task-366)', () => {
+  const TABLE = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../scripts/analysis/rule-lists.json'), 'utf8')) as { lists: Record<string, { file: string }>; rows: { id: string; lists: string[] }[] };
+  const dry = (o: Parameters<typeof fixture>[0]) => {
+    const f = fixture(o);
+    const r = lane(f, ['--dry-run']);
+    const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null');
+    return { f, r, spec, inputs: (spec?.inputs ?? []).join('\n') as string, extra: (spec?.extra ?? []).join('\n') as string };
+  };
+  it('a mobile file plus an API route: the brief names every list of both rows, each with its file, READ whole before planning (AC #2)', () => {
+    const { r, inputs } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts' });
+    expect(r.status, r.stderr).toBe(0);
+    expect(inputs).toContain('Rule lists that govern this task');
+    expect(inputs).toMatch(/READ each whole before planning/);
+    for (const row of ['mobile', 'api-lib', 'storage']) for (const l of TABLE.rows.find((x) => x.id === row)!.lists) {
+      expect(inputs, row + ': ' + l).toContain(TABLE.lists[l]!.file);
+      expect(inputs).toContain(l + ':');
+    }
+    expect(inputs).toContain('draft, operator to confirm it binds');
+    expect(inputs).toContain('backlog/docs/increments/doc-1 - Increment-F-requirements.md');
+  });
+  it('the lens line runs the compliance lens once per list through the helper, other lenses stay, and the separate-grounder rule is written in', () => {
+    const { extra } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' });
+    for (const l of ['mobile-98', 'eng-s2-s4-s10-s11', 'storage-doc16', 'inc-F']) {
+      expect(extra).toContain('plan-compliance-' + l);
+      expect(extra).toContain('out-compliance-' + l);
+    }
+    expect(extra).toContain('scripts/analysis/rule-lists.mjs lens-input');
+    expect(extra).toContain('lens-code-review.md');
+    expect(extra).toContain('lens-error-paths.md');
+    expect(extra).toMatch(/a separate grounder rules on every finding/);
+    expect(extra).toContain('GROUNDER.md');
+  });
+  it('a Files path no row matches is refused at launch with the path named (exit 3, one line, nothing written)', () => {
+    const f = fixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' });
+    refused(lane(f), /zzz-nothing\/new\.txt/);
+    expect(fs.existsSync(f.wt)).toBe(false);
+    expect(statusOf(f)).toBe('LATER');
+  });
+  it('a task with no Files line is refused, but a record-only task gets the queue lists', () => {
+    refused(lane(fixture({ files: null })), /no Files/);
+    const { r, inputs } = dry({ files: null, type: 'record' });
+    expect(r.status, r.stderr).toBe(0);
+    expect(inputs).toContain('137_mcqueue.md');
+  });
+  it('a milestone letter with no increment requirements document is refused naming the letter', () => {
+    refused(lane(fixture({ letter: 'Q' })), /increment.*Q|Q.*increment/);
   });
 });

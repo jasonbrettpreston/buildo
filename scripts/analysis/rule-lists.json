@@ -1,0 +1,120 @@
+{
+  "$comment": [
+    "COMPLY.2 (task-366): the path to rule-list table. DATA, not code, decides which rule lists govern a task: scripts/analysis/backlog-lane.mjs resolves a task's `Files:` line through it at launch, scripts/hooks/check-lane-close.mjs resolves it again at close. Operator, verbatim, 2026-11-20: \"Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort.\" (record ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, the 2026-11-20 entries).",
+    "A list is used WHOLE: `whole` = the file, `sections` = whole sections picked by heading (a heading text is matched at its start, after leading emoji and punctuation; the section runs to the next heading of the same or a higher level); a section is allowed only where the file itself separates rules from history or narrative. Never a hand-picked clause.",
+    "A row maps path globs to lists. `globs` are literal; `globs_from` REUSES an existing path map (mcbylaws/protected-paths.json keys layer23 = by-law code and frontend = McFrontend surface paths; Spec 133 R-KP / R-LD, Spec 128 section 4.11) instead of copying it; `imports_from` makes the row fire only for a file that imports from that path. Several rows may match: the lists are the union.",
+    "`exempt` globs are records the lane writes itself (the commit hooks always allow them, check-task-files.mjs): they resolve to NO list and the brief says so. A Files entry no row and no exempt glob matches is refused at launch with the path named. `no_files_default`: a task of that type with no Files line gets the named row (record-only tasks get the queue lists). `increment_docs`: every task also gets the requirements document of its milestone group letter."
+  ],
+  "contract_version": 1,
+  "lists": {
+    "step-132": { "file": "docs/specs/01-pipeline/132_step_standard_handbook.md", "sections": ["2. Every step", "3. By archetype", "4. Cross-cutting", "6. Rules with no or partial machine check"], "generated_by": "scripts/generate-step-handbook.mjs" },
+    "airtight-124a": { "file": "docs/specs/01-pipeline/124a_step_standard_policy_appendix.md", "sections": ["Appendix §B10", "Appendix §B12"], "generated_by": "hand-written" },
+    "airtight-v3-122": { "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md", "sections": ["5.5 Condition 4"], "generated_by": "hand-written" },
+    "airtight-v2-122": { "file": "docs/specs/01-pipeline/122_pipeline_step_optimization.md", "sections": ["6.6.1 Registry and ledger truth"], "generated_by": "hand-written" },
+    "airtight-122a": { "file": "docs/specs/01-pipeline/122a_step_optimization_appendix.md", "sections": ["Appendix §A26", "Appendix §A27"], "generated_by": "hand-written" },
+    "eng-s3-s9": { "file": "docs/specs/00_engineering_standards.md", "sections": ["3. Database Management", "9. Pipeline & Script Safety"], "generated_by": "hand-written" },
+    "eng-s2-s4-s10-s11": { "file": "docs/specs/00_engineering_standards.md", "sections": ["2. Error Handling", "4. Security & API Contracts", "10. Frontend/Backend Boundary", "11. Plan Compliance Checklist"], "generated_by": "hand-written" },
+    "eng-s5-s9-s14": { "file": "docs/specs/00_engineering_standards.md", "sections": ["5. Testing Standards", "9. Pipeline & Script Safety", "14. The Prevention Loop"], "generated_by": "hand-written" },
+    "eng-s5": { "file": "docs/specs/00_engineering_standards.md", "sections": ["5. Testing Standards"], "generated_by": "hand-written" },
+    "bylaw-133": { "file": "docs/specs/01-pipeline/133_bylaw_handbook.md", "sections": ["2. Rules by provision family"], "generated_by": "scripts/generate-bylaw-handbook.mjs" },
+    "storage-doc16": { "file": "backlog/docs/doc-16 - McStorage-policy-v2.md", "whole": true, "generated_by": "hand-written", "status": "draft, operator to confirm it binds" },
+    "surface-136": { "file": "docs/specs/02-web-admin/136_mcfrontend_handbook.md", "sections": ["2. Rules"], "generated_by": "scripts/surfaces/generate-surface-handbook.mjs" },
+    "surface-126": { "file": "docs/specs/02-web-admin/126_maxbld_surface_standard.md", "whole": true, "generated_by": "hand-written" },
+    "surface-127": { "file": "docs/specs/02-web-admin/127_surface_conversion_procedure.md", "whole": true, "generated_by": "hand-written" },
+    "surface-135": { "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md", "whole": true, "generated_by": "hand-written" },
+    "surface-128": { "file": "docs/specs/02-web-admin/128_surface_standard_policy.md", "whole": true, "generated_by": "hand-written" },
+    "mobile-90": { "file": "docs/specs/03-mobile/90_mobile_engineering_protocol.md", "whole": true, "generated_by": "hand-written" },
+    "mobile-98": { "file": "docs/specs/03-mobile/98_mobile_testing_protocol.md", "whole": true, "generated_by": "hand-written" },
+    "mobile-99": { "file": "docs/specs/03-mobile/99_mobile_state_architecture.md", "whole": true, "generated_by": "hand-written" },
+    "mobile-100": { "file": "docs/specs/03-mobile/100_mobile_parcel_cost_tool.md", "whole": true, "generated_by": "hand-written" },
+    "mobile-96": { "file": "docs/specs/03-mobile/96_mobile_subscription.md", "whole": true, "generated_by": "hand-written" },
+    "queue-137": { "file": "docs/specs/00-architecture/137_mcqueue.md", "whole": true, "generated_by": "hand-written" },
+    "agents-s7-s11": { "file": "docs/specs/00-architecture/08_agents.md", "sections": ["7. Rules & economics", "11. Grounded Verification Protocol"], "generated_by": "hand-written" },
+    "agents-s5-1to3": { "file": "docs/specs/00-architecture/08_agents.md", "sections": ["5.1 Compliance", "5.2 Ground-truth", "5.3 Round-2 adjudication"], "generated_by": "hand-written" },
+    "orchestrator-doc17": { "file": "backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md", "whole": true, "generated_by": "hand-written" },
+    "inc-F": { "file": "backlog/docs/increments/doc-1 - Increment-F-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-S": { "file": "backlog/docs/increments/doc-2 - Increment-S-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-1-2": { "file": "backlog/docs/increments/doc-3 - Increment-1-2-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-1": { "file": "backlog/docs/increments/doc-4 - Increment-1-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-3": { "file": "backlog/docs/increments/doc-5 - Increment-3-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-4": { "file": "backlog/docs/increments/doc-6 - Increment-4-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-5": { "file": "backlog/docs/increments/doc-7 - Increment-5-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-6": { "file": "backlog/docs/increments/doc-8 - Increment-6-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-6c": { "file": "backlog/docs/increments/doc-9 - Increment-6c-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-7": { "file": "backlog/docs/increments/doc-10 - Increment-7-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-8": { "file": "backlog/docs/increments/doc-11 - Increment-8-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-9": { "file": "backlog/docs/increments/doc-12 - Increment-9-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-10": { "file": "backlog/docs/increments/doc-13 - Increment-10-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-L": { "file": "backlog/docs/increments/doc-14 - Increment-L-requirements.md", "whole": true, "generated_by": "hand-written" },
+    "inc-AL": { "file": "backlog/docs/increments/doc-15 - Increment-AL-requirements.md", "whole": true, "generated_by": "hand-written" }
+  },
+  "rows": [
+    {
+      "id": "step-pipeline",
+      "globs": ["scripts/*.js", "scripts/**/*.descriptor.json", "scripts/lib/compute/**", "scripts/lib/step/**", "scripts/quality/**", "migrations/**"],
+      "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a", "eng-s3-s9"],
+      "why": "pipeline step shells, descriptors, compute, step library, quality and migrations are governed by the step handbook (Spec 132), the Airtight sources (Spec 124 R-BA, 122 V3 checklist and V2, 122a A26 and A27) and engineering standards sections 3 and 9"
+    },
+    {
+      "id": "bylaw",
+      "globs_from": { "file": "mcbylaws/protected-paths.json", "key": "layer23" },
+      "lists": ["bylaw-133"],
+      "why": "by-law rows and the by-law engine: the paths the McBylaws gate already classifies as by-law code (protected-paths.json layer23, Spec 133 R-LD) are governed by the by-law handbook rules"
+    },
+    {
+      "id": "api-lib",
+      "globs": ["src/app/api/**", "src/lib/**"],
+      "lists": ["eng-s2-s4-s10-s11"],
+      "why": "API routes and src/lib are governed by engineering standards sections 2, 4, 10 and 11"
+    },
+    {
+      "id": "storage",
+      "globs": ["src/lib/parcels/**", "src/lib/report-projection/**", "src/app/api/parcels/**"],
+      "lists": ["storage-doc16"],
+      "why": "a report computed or stored under src/lib/parcels, src/lib/report-projection or src/app/api/parcels is governed by the McStorage policy (doc-16; DRAFT, attached anyway: the operator confirms it binds)"
+    },
+    {
+      "id": "compute-import",
+      "globs": ["src/**/*.ts", "src/**/*.tsx"],
+      "imports_from": ["scripts/lib/compute"],
+      "lists": ["step-132", "airtight-124a", "airtight-v3-122", "airtight-v2-122", "airtight-122a"],
+      "why": "a src file that imports from scripts/lib/compute gets the step standard and Airtight lists, because the compute gates scan scripts/lib/compute by path only"
+    },
+    {
+      "id": "surfaces",
+      "globs_from": { "file": "mcbylaws/protected-paths.json", "key": "frontend" },
+      "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135"],
+      "why": "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\")"
+    },
+    {
+      "id": "mobile",
+      "globs": ["mobile/**"],
+      "lists": ["mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "surface-136", "surface-126", "surface-127", "surface-128", "surface-135"],
+      "why": "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files"
+    },
+    {
+      "id": "queue-records",
+      "globs": ["backlog/**", ".cursor/*QUEUE*", "docs/specs/00-architecture/**"],
+      "lists": ["queue-137", "agents-s7-s11"],
+      "why": "queue, board and records are governed by Spec 137 and Spec 08 sections 7 and 11"
+    },
+    {
+      "id": "lane-tools",
+      "globs": ["scripts/analysis/**", "scripts/hooks/**", "scripts/deepseek-review.js", "scripts/lib/review-template.js", ".husky/**", ".claude/**"],
+      "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-s5-s9-s14", "orchestrator-doc17"],
+      "why": "ADDED by COMPLY.2 (not in the starting rows, else its own Files line is refused): lane tools, hooks and review templates are governed by Spec 08 sections 5.1 to 5.3, 7 and 11, Spec 137, engineering standards sections 5, 9 and 14, and doc-17 (orchestrator readings are not rulings)"
+    },
+    {
+      "id": "tests",
+      "globs": ["src/tests/**"],
+      "lists": ["eng-s5"],
+      "why": "ADDED by COMPLY.2 (not in the starting rows): test files are governed by engineering standards section 5 (testing)"
+    }
+  ],
+  "exempt": ["docs/reports/lanes/**", "docs/reports/reviews/**"],
+  "no_files_default": { "types": ["record"], "row": "queue-records" },
+  "increment_docs": {
+    "F": "inc-F", "S": "inc-S", "1-2": "inc-1-2", "1": "inc-1", "3": "inc-3", "4": "inc-4", "5": "inc-5", "6": "inc-6",
+    "6c": "inc-6c", "7": "inc-7", "8": "inc-8", "9": "inc-9", "10": "inc-10", "L": "inc-L", "AL": "inc-AL"
+  }
+}

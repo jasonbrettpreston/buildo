@@ -96,3 +96,12 @@ describe('the five lens templates (AC #1)', () => {
     expect(r).toContain('verified');
   });
 });
+
+// task-366 (COMPLY.2): lens-compliance.md carried the plan placeholder twice (once in its own prose), so the material was sent twice and the 120000 bound applied to the doubled prompt.
+describe('lens-compliance.md sends the material once (task-366)', () => {
+  it('the file under review appears exactly once in the user prompt', () => {
+    const file = tmpFile('m.txt', 'MARK_ONCE_MATERIAL\n');
+    const m = dryRun([file, '--template', `${TEMPLATES}/lens-compliance.md`]);
+    expect((m[1]!.content.match(/MARK_ONCE_MATERIAL/g) ?? []).length).toBe(1);
+  });
+});
