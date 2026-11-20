@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GROUND'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-20T13:30:00Z'
+updated_date: '2026-11-20T13:59:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -15,6 +15,8 @@ references:
   - docs/reports/lanes/2026-11-20/BL-GROUND/REPORT.md
   - docs/reports/lanes/2026-11-20/BL-GROUND/GROUNDER.md
   - docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY.md
+  - docs/reports/lanes/2026-11-20/BL-GROUND/GROUNDER-2.md
+  - docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY-2.md
 type: build
 ordinal: 68012
 ---
@@ -57,4 +59,6 @@ Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze need
 2026-11-20 taken on the board at lane launch (lane BL-GROUND, worktree /Users/brettpreston_macmini/Buildo-wt-ground, branch wf1/inc1b-ground), RR-0240
 
 2026-11-20 BL-GROUND (grounder): 101 CRIT and HIGH ruled in 24 groups: 22 ids CONFIRMED in 12 defects (D1-D12), 7 ids CONFLICT in 4 groups (C1-C4), 72 REJECTED (33 ruling exists, 22 already enforced, 16 rule does not bind or claim not true, 1 empty); MED sample 2 of 30 confirmed. Scan-scope, the three readings and the two review-tool defects answered in GROUNDER.md. No code fixed, no task created: AC2 (fix tasks and operator drafts) is the orchestrator's. Task left RUNNING.
+
+2026-11-20 BL-GROUND second job (BL-COMPLY3, FINDINGS-2): 154 CRIT/HIGH ids: 22 CONFIRMED (14 extend D3, 3 D13, 5 D14), 3 CONFLICT (C4 again x2, new C5 FE-39 vs LOAD.1 gate), 129 REJECTED (59 enforced, 52 not bound or not true, 17 ruling, 1 empty); sample 20 of 431: 5 confirmed (new D15). Corrects the first report on one point: Spec 126 P4 and Spec 128 Rule 3 do bind phone tunables (D14). No code fixed, no task created. Task left RUNNING.
 <!-- SECTION:NOTES:END -->
