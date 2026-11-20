@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LIST'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-20T18:32:00Z'
+updated_date: '2026-11-20T18:34:00Z'
 labels:
   - McFix
   - McFix V2
@@ -68,4 +68,6 @@ Operator 2026-11-20, verbatim (MORNING-DECISIONS.md:1494): "Correct this - Phone
 2026-11-20 BL-V2LIST round 2: review templates fixed (material sent once).
 
 2026-11-20 BL-V2LIST round 2: milestone guard in the helper and the launch.
+
+2026-11-20 BL-V2LIST round 2: table rows (eng-all on mobile and surfaces, panel records, generated 124 list, policy row).
 <!-- SECTION:NOTES:END -->

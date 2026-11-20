@@ -64,7 +64,8 @@
     "ms-9": { "file": "backlog/milestones/m-11 - increment-9-merged-measure-(the-25,-coa-172,-4d)-[.md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
     "ms-10": { "file": "backlog/milestones/m-12 - increment-10-mcproof-proof-set-[10].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
     "ms-L": { "file": "backlog/milestones/m-13 - launch-gate-[l].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
-    "ms-AL": { "file": "backlog/milestones/m-14 - after-launch-[al].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" }
+    "ms-AL": { "file": "backlog/milestones/m-14 - after-launch-[al].md", "sections": ["Project objectives", "Increment objectives"], "generated_by": "hand-written" },
+    "policy-124-s2-s5": { "file": "docs/specs/01-pipeline/124_step_standard_policy.md", "sections": ["2. The rules", "5. Register of rulings"], "generated_by": "hand-written" }
   },
   "rows": [
     {
@@ -121,14 +122,14 @@
     {
       "id": "surfaces",
       "globs_from": { "file": "mcbylaws/protected-paths.json", "key": "frontend" },
-      "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135"],
-      "why": "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\")"
+      "lists": ["surface-136", "surface-126", "surface-127", "surface-128", "surface-135", "eng-all"],
+      "why": "surface schema, content, bindings and generated surface files (the paths the McBylaws gate already lists as frontend, protected-paths.json frontend, Spec 128 section 4.11) are governed by Spec 136 section 2 (every McFrontend rule), the contract Spec 126, the procedure Spec 127, Spec 128 and the full rows of the Spec 135 register (operator 2026-11-20: \"yes to McStorage and 1,2,3 yes as recommended\"). V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a surface path that is not a descriptor had none"
     },
     {
       "id": "mobile",
       "globs": ["mobile/**"],
-      "lists": ["mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "surface-136", "surface-126", "surface-127", "surface-128", "surface-135"],
-      "why": "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files"
+      "lists": ["mobile-90", "mobile-98", "mobile-99", "mobile-100", "mobile-96", "surface-136", "surface-126", "surface-127", "surface-128", "surface-135", "eng-all"],
+      "why": "the mobile app is governed by Specs 90, 98, 99, 100, 96 and Spec 136, plus the surface contract and register (Specs 126, 127, 128, 135) for its surface files. V2.LIST round 2 (task-406): the engineering standards are attached whole (eng-all): a phone task had none"
     },
     {
       "id": "queue-records",
@@ -144,9 +145,28 @@
     },
     {
       "id": "generated-reports",
-      "globs": ["docs/reports/generated/**", "docs/reports/policy/**"],
-      "lists": ["surface-127", "agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
-      "why": "V2.LIST (task-406, coverage review 2026-11-20): generated reports (docs/reports/generated) are governed by the surface conversion procedure (Spec 127: surface-127); docs/reports/policy has no governing spec found, so the lane-tools lists are attached as the nearest (to verify); both were unmatched"
+      "globs": ["docs/reports/generated/**"],
+      "not": ["docs/reports/generated/127-*"],
+      "lists": ["policy-124-s2-s5", "agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
+      "why": "V2.LIST (task-406, round 2): generated reports (docs/reports/generated, except the 127-* files) are governed by Spec 124 Rule 13 (every generated doc has a generator with a drift check, gate J: scripts/analysis/gates/generated-docs.mjs) and the role banner rule R-GW (list policy-124-s2-s5: sections 2 and 5 of Spec 124), with the lane-tools lists as before"
+    },
+    {
+      "id": "generated-127",
+      "globs": ["docs/reports/generated/127-*"],
+      "lists": ["surface-127", "policy-124-s2-s5", "agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
+      "why": "V2.LIST (task-406, round 2): the generated 127-* reports (the surface registry and review queue) keep the surface conversion procedure (Spec 127: surface-127) and also get the Spec 124 Rule 13 list and the lane-tools lists"
+    },
+    {
+      "id": "policy-reports",
+      "globs": ["docs/reports/policy/**"],
+      "lists": ["agents-s5-1to3", "agents-s7-s11", "queue-137", "eng-all", "orchestrator-doc17"],
+      "why": "V2.LIST (task-406, round 2): docs/reports/policy has nearest lists, no governing spec: operator ruling owed (no spec names the ledger; scripts/analysis/policy-checks.mjs cites an operator ruling at MORNING-DECISIONS.md:725, not a spec). The lane-tools lists are attached as the nearest and are NOT presented as governing"
+    },
+    {
+      "id": "panel-records",
+      "globs": ["docs/reports/panels/**"],
+      "lists": ["surface-128", "surface-126", "agents-s7-s11", "queue-137"],
+      "why": "V2.LIST (task-406, round 2): the panel record docs/reports/panels/MF-n.json is named by Spec 128 line 182 (\"both panel records (docs/reports/panels/MF-n.json, D-3)\"), so the surface standard policy (Spec 128), the surface contract (Spec 126), Spec 08 sections 7 and 11 and Spec 137 govern it"
     },
     {
       "id": "specs-docs",
