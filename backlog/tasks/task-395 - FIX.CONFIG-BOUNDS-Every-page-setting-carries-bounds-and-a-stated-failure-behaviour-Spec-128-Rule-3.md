@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-CFGBOUNDS'
 created_date: '2026-11-20T15:54:00Z'
-updated_date: '2026-11-20T18:31:00Z'
+updated_date: '2026-11-20T18:51:00Z'
 labels:
   - McFix
   - McFix A
@@ -48,4 +48,6 @@ Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the
 2026-11-20 taken on the board at lane launch (lane BL-CFGBOUNDS, worktree /Users/brettpreston_macmini/Buildo-wt-cfgbounds, branch wf1/inc1b-cfgbounds), RR-0240
 
 Operator 2026-11-20, verbatim: "yes follow the rules register them." (MORNING-DECISIONS.md:1494), answering whether page settings with bounds in the page schema are acceptable or must be registered (Spec 128 Rule 3). The six settings are registered logic variables; the earlier grounder resolution (schema bounds with a dated note) is superseded. The area factor moved to task-411.
+
+From the task-378 retro review (2026-11-20): one defect is NOT closed by this task as built: a page setting carrying the string UNRESEARCHED (schema x-draft-optional) passes the generator's bounds check (it skips non-numbers) and the phone's module-scope sliceNumber reads then throw at bundle load. Add: the schema or emitter refuses UNRESEARCHED for a registered page setting, with a planted-defect test. Goes in this task's next round.
 <!-- SECTION:NOTES:END -->

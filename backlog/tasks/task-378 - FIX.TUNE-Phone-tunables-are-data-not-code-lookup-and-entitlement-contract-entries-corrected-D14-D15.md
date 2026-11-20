@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXTUNE'
 created_date: '2026-11-20T14:00:00Z'
-updated_date: '2026-11-20T16:06:00Z'
+updated_date: '2026-11-20T18:51:00Z'
 labels:
   - McFix
   - McFix A
@@ -64,4 +64,6 @@ FIX.TUNE plan. D14: add optional config keys continue_wait_ms (semi surface, 600
 2026-11-20 fold round (coordinator grounder A to E): retry and both stale times in the search surface config, one slice reader, massing formatter takes the factor, cites :161; phone area-factor copies stopped (schema refuses a non-integer config value); new lens findings untriaged in FINDINGS.md.
 
 2026-11-20 fold round 2: formatHeight N/A guard, test retitled, min_query_len read through sliceNumber, cite :162; client-reach claim corrected in the report.
+
+Retro review by a separate grounder 2026-11-20 (task-405), code as on the board; GROUNDER.md at ~/Buildo-scratch/lanes-20261119/inc1b/retro/BL-FIXTUNE/GROUNDER.md (sha256 dead04318ac8…, 125 findings: 45 CONFIRMED, 80 REJECTED): DEFECTS before a push: (1) Spec 128 Rule 3 not met for the four page settings: owner task-395 (built, registers them). (2) the four module-scope sliceNumber reads throw at bundle load if a key carries the string UNRESEARCHED, which the schema allows and no gate refuses: a bad slice would crash every screen importing the hook; task-395's check skips non-numbers, so it is NOT closed there. (3) continue_wait_ms accepts 0 and the stale times have no maximum: closed by task-395's bounds. (4) red.out and commit.out cited by the report are not in the lane directory; round-1 red unproven. (5) the 11 web search goldens had a hash replaced by sed, no capture run. (6) behaviour change: a permits payload with no feet_per_metre shows N/A for height. (7) the plan stage was never reviewed (1 file with no REVIEW header); four compliance lists are stale and five outputs missing: the lens set is owed again. (8) src/tests/ui.test.tsx:652 retypes the formatter with 3.28084 (a copy test); scripts/lib/units.js:34 and scripts/seed-parcels.js:36 hold typed copies of the factor.
 <!-- SECTION:NOTES:END -->
