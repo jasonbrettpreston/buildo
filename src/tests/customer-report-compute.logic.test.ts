@@ -243,7 +243,13 @@ describe('C6 the fence: pool, projection, switch, the miss rule; lazy core and c
   it('the route is the only importer of the entry; the entry is imported by nothing else outside the tests', () => {
     const walk = (d: string): string[] => fs.readdirSync(path.join(ROOT, d), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? (e.name === 'node_modules' ? [] : walk(path.join(d, e.name))) : /\.(ts|tsx)$/.test(e.name) ? [path.join(d, e.name)] : []));
     const importers = walk('src').filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-compute.ts' && /from '[^']*lib\/parcels\/report-compute'/.test(read(f)));
-    expect(importers).toEqual(['src/app/api/parcels/lookup/route.ts']);
+    expect(importers).toEqual(['src/lib/parcels/lookup-flow.ts']); // STD.ROUTE (task-383): the flow file moved out of the route; the route imports the flow
+  });
+  it('RED plant: an importer outside the flow file is caught', () => {
+    const IMPORTS = (s: string): boolean => /from '[^']*lib\/parcels\/report-compute'/.test(s);
+    expect(IMPORTS("import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';")).toBe(true);
+    expect(IMPORTS("import { readCustomerPageResponse } from '@/lib/parcels/report-page';")).toBe(false);
+    expect(['src/lib/parcels/lookup-flow.ts', 'src/app/api/parcels/other/route.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts']);
   });
 });
 

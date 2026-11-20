@@ -394,7 +394,10 @@ describe('T10 importers: report-page.ts is server code, imported by the lookup r
   it('no component, mobile source or other lib file imports it; the non-test importers are the route and the compute entry', () => {
     const files = [...walk('src'), ...walk('mobile/src'), ...walk('mobile/app')].filter((f) => !f.startsWith('src/tests/') && f !== 'src/lib/parcels/report-page.ts');
     expect(files.length).toBeGreaterThan(500);
-    expect(files.filter((f) => IMPORTS(read(f)))).toEqual(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/report-compute.ts']); // LOAD.1 (task-266): the compute entry applies the same miss rule (pageForVerdict), the one place
+    expect(files.filter((f) => IMPORTS(read(f)))).toEqual(['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']); // STD.ROUTE (task-383): the lookup flow file, not the route, reads the page // LOAD.1 (task-266): the compute entry applies the same miss rule (pageForVerdict), the one place
+  });
+  it('RED plant: the route importing report-page again is caught (the list names the flow file, not the route)', () => {
+    expect(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']);
   });
   it('the fence is not vacuous', () => {
     expect(IMPORTS("import { readCustomerPageResponse } from '@/lib/parcels/report-page';")).toBe(true);

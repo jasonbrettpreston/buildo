@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:45:52.043Z file_sha256=8c372eb1cd02389fa2e54e42db6163ac882ec199275362324e1e5541633a8838 prompt_sha256=c9e45593aad14bd77f7c4c0fd8379c8da9846ff6446d54b524854058d6b0e127
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-eng-s2-s4-s10-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Eng Standards §2.3 "If using `!`, you must document why in an inline comment." — src/lib/parcels/lookup-flow.ts:37 ": await resolveAddress(q!, { classifyUnlinked: true, matchMistyped: true });" — the newly created module carries the non-null assertion with no inline comment, and the validation that would guarantee q (the exactly-one-of q|parcelId zod parse) now lives in route.ts, not in this function — add the inline comment naming the route's schema parse as the guarantee, or type the input as a discriminated union so q is narrowed without `!`
+
+DEFER severity=MED — Eng Standards §10.3 "New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route." — src/lib/parcels/lookup-flow.ts:17 "import { ConsumerParcelLookupResponseSchema, type ConsumerParcelLookupResponse } from '@/app/api/parcels/lookup/types';" — the new shared lib now depends on a route-owned types module instead of a src/lib types file, inverting the layering this clause sets — move the query/response interfaces and the strict schema to src/lib/parcels/types.ts and have the route import them from there
+
+DEFER severity=MED — §11 API Route Modified checklist "Unhappy-path test cases listed: 400, 404, 500 (§2.1)" — plan step "4. Tests: the six locks are re-pointed to the flow file in the same commit, same strength, each with a red-then-green plant ... a new test file for the helper (three arms)." — the plan modifies two API routes but lists no 400/404/500 cases, and the infra-test edit adds only source-shape plants — add the unhappy-path cases (400 bad query, dangling id as 200 miss, 500 from a thrown read or compute with no meter) to the plan
+
+DEFER severity=MED — task-383 Description, operator-set gate condition "Each gate or scan: a committed planted-defect test, red first through the real hooks" — src/tests/customer-report-read.logic.test.ts:399 "expect(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']);" — this plant compares two literal arrays and never runs the real walk/IMPORTS filter, so it cannot go red for the claimed reason; the compute-test plant at customer-report-compute.logic.test.ts:251 has the same shape — plant against the real filter (inject an importer path into the same filtering expression) so the plant fails when the true lock is broken
+
+DEFER severity=LOW — Eng Standards §10.3 "Business logic belongs in `src/lib/`, not in route handlers." — plan notes "This departs from the resolution's words 'resolve through meter and log'; grounder to rule." — the lookup route still holds the meter decision, the openReport call and the refusal mapping after this change, and the plan locks with that conflict unresolved — record the grounder ruling on the meter placement before plan-lock rather than deferring it to the report
+
+MET — §10.3 "API routes must be thin, validate input, call a lib function, return the result." — src/app/api/parcels/lookup/route.ts:94 "const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi });" — resolve through boundary parse is now one lib call
+MET — §4.1 "All endpoints within `src/app/api/` must be analyzed for protection." — src/app/api/parcels/lookup/route.ts:72 "const access = await parcelToolAccess(pool, ctx);  if (access === null) return forbiddenSubscription();" — the entitlement gate still runs before any parcel DB work on both routes
+MET — §2.2 "MUST have an overarching `try-catch` block wrapping the entire handler body." — src/app/api/parcels/lookup/route.ts:94 "try {" — no new route is added and the existing handler's try/catch still wraps the flow call; flow errors propagate into it
+MET — §4.4 "All API routes must return a consistent envelope: `{ data, error, meta }`." — src/app/api/parcels/lot-size/route.ts keeps "return forbiddenSubscription()" inside the envelope helpers; response shape unchanged
+MET — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — no scripts/ or migrations/ hunk appears in the diff, and plan step 5 states "ALLOWED_REACHERS is not on this base, so the owed list edit is stated in the report"
+
+REJECT — §4.1 amended "the authoritative gate for every `/api/admin/**` route is `verifyAdminAuth(request)` as the FIRST statement" — the change does not add verifyAdminAuth to the parcel lookup and lot-size handlers — these are consumer routes under /api/parcels/, not /api/admin/**, so the clause's enforcement arm does not reach them
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 4
+
+---
+⏱  56361ms (56.4s)
+📊 Tokens — total: 26997, input: 16275, output: 10722, reasoning: 9523

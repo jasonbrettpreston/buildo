@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:45:52.076Z file_sha256=d5200a7313e0ad4b44b18464e283bf3507d3db2b43ec03f16f0b3fd6412bf4fa prompt_sha256=1d186cab64348b87b6ed426690a2327a4e2f3a05c198f7f2b135ae570937b994
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Build step 2 "holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line; it returns {body, refusal|null} where refusal is a descriptor the route maps with the existing reportLimitReached / forbiddenSubscription" — src/lib/parcels/lookup-flow.ts "+  return { response, body, parcelRef, pageSource, computeMs };" — the built flow carries no `access`, no meter decision, no log line and no refusal return, so the plan of record in this same diff and the code disagree — amend Build step 2 to the narrowed shape, or move the meter and log line as written.
+
+BUG severity=HIGH — RR-0331 as pasted "plan lens round raised RR-0331 (decision-116, operator \"2. y\", MORNING-DECISIONS.md:1432: the report meter stays in the lookup route)" — backlog/tasks/task-383 "This departs from the resolution's words \"resolve through meter and log\"; grounder to rule." — the departure rests on a bare operator "y" plus a lane gloss, the ruling is still owed, and the operator words name only the meter while the log line and lot_form_unsure pin also stay on the route — paste the verbatim operator answer and the grounder's ruling, or move the log line.
+
+DEFER severity=MED — Build step 4 "each with a red-then-green plant" — src/tests/customer-report-read.logic.test.ts "expect(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts'])" — a literal-versus-literal comparison exercises no detector, as does the third expect in customer-report-compute's plant, so these two plants cannot go red for the stated reason — drive the plant through the same walk/IMPORTS helper the lock uses.
+
+DEFER severity=LOW — Build step 5 "ALLOWED_REACHERS is not on this base, so the owed list edit is stated in the report" — NONE in the material — no owed `compute-reach.mjs` list edit is stated anywhere in this diff, only the intention to state it — record the owed edit in the notes or the report the same commit relies on.
+
+DEFER severity=LOW — Build step 4 "the import-line pin (parcels-lookup-page:187) and the readLotForm( token pin are dropped and said so" — src/tests/parcels-lookup-page.logic.test.ts "expect(read('src/lib/parcels/lookup-flow.ts')).toContain(\"import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';\")" — the pin is re-pointed, not dropped, and the Implementation Plan text in this same diff still says dropped — correct Build step 4 to "re-pointed", matching the notes.
+
+MET — Build step 1, the one shared gate helper — src/lib/parcels/tool-gate.ts "export async function parcelToolAccess(db: Queryable, ctx: { uid: string; subscription_status?: string | null }): Promise<ParcelToolAccess | null>" — both routes call it and hold no status set of their own.
+
+MET — card ruling "Lines moved, not new behaviour: no response, meter or golden may change" — src/lib/parcels/lookup-flow.ts "An unknown parcelId (dangling id / direct path) is a 200 miss, NOT a 404 (§2.6)." — the moved body is the removed route lines verbatim, boundary parse still before the route's meter.
+
+MET — Files line scope — every touched path (both routes, lookup-flow.ts, tool-gate.ts, the six named tests, the task file) appears on the Files list.
+
+MET — Build step 4 "the six locks are re-pointed to the flow file in the same commit" — src/tests/customer-report-compute.logic.test.ts "expect(importers).toEqual(['src/lib/parcels/lookup-flow.ts']); // STD.ROUTE (task-383)".
+
+MET — gate-before-DB lock strength preserved — src/tests/consumer-parcel-lookup.infra.test.ts "expect(gateBeforeFlow(src)).toBe(true);" with "g < f" ordering plus the RED plant for flow-before-gate.
+
+MET — §9 Core Logic 4 "Assemble the projection server-side" — the assembly now sits in a server lib invoked by the route; no client-side logic or second declaration is added.
+
+REJECT — §5.0 "A validator in a test that re-implements the rules is banned; the test imports the same module the engine does" — accused of re-implementing rules in tests via gateBeforeFlow/flowHoldsMiss/usesSharedGate — §5.0 governs the descriptor and schema fan-out, and no generating module emits route thinness or the miss shape, so there is nothing to import.
+
+REJECT — §5.2 "Use the logic-variable-groups form (§5.0), not the docs/specs/_contracts.json grep-assertion form" — accused of adding more grep asserts to the parcel estate — this diff declares no contract and adds no second declaration of the parcel cost contract.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  62873ms (62.9s)
+📊 Tokens — total: 41527, input: 29353, output: 12174, reasoning: 10970

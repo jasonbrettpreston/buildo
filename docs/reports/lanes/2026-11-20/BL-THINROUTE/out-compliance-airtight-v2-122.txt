@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:45:52.053Z file_sha256=2fdc161422cc60dba159cad953c4120039d27fa330a70e760978e99ccd265afb prompt_sha256=9ca7ecefaeacf320513dbc71ca6f8c9f11b858dc7fc975c6cd7b8e527a4413e2
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-airtight-v2-122.txt (model: deepseek-reasoner)
+
+BUG severity=none — no pasted clause is unmet, no BUG finding is raised (see REJECT lines).
+DEFER severity=none — no pasted clause governs this change, no DEFER finding is raised.
+
+MET — 6.6.1(e) "`scripts/analysis/src-sql-ledger.mjs --check`, run by `.husky/pre-commit`, fails on any column the ledger records as read or written on a table that `docs/reports/witness/_catalog.json` lists but whose column list lacks it ... enforced only for statically parsed `src/` SQL" — src/lib/parcels/lookup-flow.ts:8 "This module imports no meter, entitlement or usage code and writes nothing" and src/lib/parcels/tool-gate.ts:14 "No write." — neither new `src/` file carries a SQL literal, so the catalog-membership check gains no new statement, column or table to enforce.
+
+MET — 6.6.1(c) "Until this programme lands, no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed" — src/tests/parcel-tool-gate.logic.test.ts:2 "STD.ROUTE (task-383, Increment 1·B) · the one parcel-tool gate helper" — the change adds no descriptor, no `pipeline_meta`, and no registry or ledger row, and makes no accuracy claim about one, so the prohibition has no subject in this diff.
+
+REJECT — 6.6.1(a) "A step is V2-built when its captures run under the Phase 1 witness ... the four-part step registry ... and the §6 cross-step ledger ... are 100% mechanical ... 100% accurate" — accused of landing a sources-chain registry/ledger row without generation or witness — no sources-chain step, descriptor, capture or ledger row is touched: the diff moves an API route's flow into `src/lib/parcels/` and adds a shared entitlement helper, so (a) has no subject here.
+
+REJECT — 6.6.1(e) "The Phase 1 WITNESS gate (#44) must carry the exact string `R-BF WITNESS GATE (#44)` in `scripts/analysis/step-validate.mjs`" — accused of missing or breaking the #44 marker — `scripts/analysis/step-validate.mjs` is absent from the diff (contents cannot see), and the marker clause governs that gate file, not route or lib code, so its absence here is not an unmet clause for this change.
+
+REJECT — 6.6.1(f) "The ≤ 12 prose cap is fast invariant #45 NOTES-CAP over each declaring notes file" — accused of adding unbounded prose to a declaring notes file — `backlog/tasks/task-383 ... .md` is a backlog task file, not one of the spec's declaring notes files, and the clause names `scripts/analysis/gates/notes-cap.mjs` enforcement, which is not in the diff.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6 (a, b, c, d, e, f; 0 bind this change, 2 checked vacuously)   Unmet: 0
+
+---
+⏱  23916ms (23.9s)
+📊 Tokens — total: 20405, input: 16304, output: 4101, reasoning: 3399

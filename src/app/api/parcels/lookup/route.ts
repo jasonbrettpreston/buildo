@@ -46,19 +46,12 @@ import {
   reportLimitReached,
   unauthorized,
 } from '@/features/leads/api/error-mapping';
-import { ACTIVE_SUBSCRIPTION_STATUSES, getEntitlementStatus, openReport } from '@/lib/entitlements';
+import { openReport } from '@/lib/entitlements';
 import { logInfo, logWarn } from '@/lib/logger';
-import { resolveAddress, fetchParcelById, fetchCoaProjects } from '@/lib/admin/parcel-lookup';
-import { assembleConsumerPayload, assembleLotMap, hasEvaluatedOption } from '@/lib/parcels/consumer-lookup';
-import { resolveLotMap } from '@/lib/parcels/lot-map';
-import { readLotForm } from '@/lib/parcels/lot-form';
-import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';
-import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';
-import {
-  ConsumerParcelLookupQuerySchema,
-  ConsumerParcelLookupResponseSchema,
-  type ConsumerParcelLookupResponse,
-} from './types';
+import { hasEvaluatedOption } from '@/lib/parcels/consumer-lookup';
+import { runLookupFlow } from '@/lib/parcels/lookup-flow';
+import { parcelToolAccess } from '@/lib/parcels/tool-gate';
+import { ConsumerParcelLookupQuerySchema } from './types';
 
 const TAG = '[api/parcel-lookup]';
 const SLOW_QUERY_MS = 500;
@@ -76,11 +69,8 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
   //    parcel_tool first (metered everywhere); else the lead_gen status (ctx.subscription_status, the
   //    LEAD_GEN_ENTITLEMENT_JOIN) on the transitional App A path, unmetered until MF-50 removes it.
   //    ACTIVE_SUBSCRIPTION_STATUSES is the one Spec 96 §10 status set, shared by both arms.
-  const parcelTool = await getEntitlementStatus(pool, ctx.uid, 'parcel_tool');
-  let access: 'parcel_tool' | 'lead_gen_transitional';
-  if (parcelTool && ACTIVE_SUBSCRIPTION_STATUSES.has(parcelTool.status)) access = 'parcel_tool';
-  else if (ACTIVE_SUBSCRIPTION_STATUSES.has(ctx.subscription_status ?? '')) access = 'lead_gen_transitional';
-  else return forbiddenSubscription();
+  const access = await parcelToolAccess(pool, ctx);
+  if (access === null) return forbiddenSubscription();
 
   // 3. Validate query — exactly one of q | parcelId.
   const sp = new URL(request.url).searchParams;
@@ -101,74 +91,8 @@ export const GET = withApiEnvelope(async function GET(request: NextRequest) {
 
   const t0 = Date.now();
   try {
-    // Resolution: direct id (candidate click) bypasses address parsing.
-    const resolved = parcelId
-      ? { match: { parcelId, matchType: 'direct' as const, address: '' }, candidates: [], truncated: false, resolution: 'unique' as const, lotMap: null }
-      : await resolveAddress(q!, { classifyUnlinked: true, matchMistyped: true });
-
-    // The map read runs only on the resolver's own seed (never on the parcelId path).
-    const map = resolved.lotMap ? assembleLotMap(await resolveLotMap(resolved.lotMap)) : null;
-
-    let response: ConsumerParcelLookupResponse = {
-      match: resolved.match,
-      candidates: resolved.candidates,
-      warnings: resolved.truncated ? ['more matches exist — refine the address (e.g. add a unit number)'] : [],
-      parcel: null,
-      resolution: resolved.resolution,
-      map,
-      page: null,
-      lotForm: null,
-    };
-
-    // The matched parcels.parcel_id of the fetched row: the meter's subject_key (R-04 parcel_ref), never request text.
-    let parcelRef: string | null = null;
-    let pageSource: 'stored' | 'computed' | 'none' = 'none'; // LOAD.1: where the page came from (logged, never its content)
-    let computeMs: number | null = null;
-    if (resolved.match) {
-      const row = await fetchParcelById(resolved.match.parcelId);
-      if (!row) {
-        // An unknown parcelId (dangling id / direct path) is a 200 miss, NOT a 404 (§2.6).
-        response = { match: null, candidates: [], warnings: [], parcel: null, resolution: 'no_match', map: null, page: null, lotForm: null };
-      } else {
-        const nbhdId = row.neighbourhood_id == null ? null : Number(row.neighbourhood_id);
-        const coaProjects = await fetchCoaProjects(nbhdId); // NULL-neighbourhood → []
-        const { payload, warnings } = assembleConsumerPayload(row, coaProjects);
-        parcelRef = String(row.parcel_id);
-        // MF-48 Stage B (B-3 a): the report page view from the lot's producer response, through MF-57's core; null while no producer has the lot
-        // (every customer lot until MB-44). A core error throws to the catch below (500), never a half page.
-        // LOAD.1 (task-266, integrated with the board head): W first; on its miss the one-lot compute (the same pure core the pipeline step runs; no write). It answers null while the web
-        // live switch is off, for a lot with no Layer 2 stamp, and for no such parcel. A compute error throws to the catch below (500): no page, no meter.
-        // SEMI-B: the lot form from the view (one indexed read), so the app can ask the one question BEFORE the report shows when it is unsure.
-        const lotForm = await readLotForm(parcelRef);
-        // SRCH.METER-2 (task-360, RR-0278): an unsure lot's page is HELD until the semi answer (semi=answered, the task-319 flag): a page that is sent must be a page that
-        // is counted, so neither the stored read nor the compute runs for a held lot (the compute can take many seconds) and `page` is null; the meter below labels it
-        // semi_pending and the app asks the question. `unsure` is the server's own read of the view, never request text; the flag can only make the caller's own lot count.
-        const held = lotForm?.unsure === true && semi !== 'answered';
-        let pageResponse = held ? null : await readCustomerPageResponse(parcelRef);
-        if (pageResponse !== null) pageSource = 'stored';
-        else if (!held) {
-          const c0 = Date.now();
-          pageResponse = await computeCustomerPageResponse(parcelRef);
-          computeMs = Date.now() - c0; // the time of a compute that ends in a miss is logged too (the slow case is the one to see)
-          if (pageResponse !== null) pageSource = 'computed';
-        }
-        const page = pageResponse === null ? null : mobilePageView(pageResponse);
-        response = {
-          match: { ...resolved.match, address: resolved.match.address || String(row.__display_address ?? '') },
-          candidates: [],
-          warnings,
-          parcel: payload,
-          resolution: 'unique',
-          map: null,
-          page,
-          lotForm,
-        };
-      }
-    }
-
-    // Boundary validation of OUR OWN assembled shape — the .strict() parse rejects any Tier-3 leak.
-    // It runs BEFORE the meter, so a response that fails it charges nothing (MF-45 fold 3).
-    const body = ConsumerParcelLookupResponseSchema.parse(response);
+    // The flow (resolve, map, lot row, page, response, boundary parse) lives in src/lib/parcels/lookup-flow.ts (Standard 10.3); the meter and the log stay here (RR-0331).
+    const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi });
 
     // Meter (MF-45; RR-0278 2026-11-19): only a hit whose report is produced (`page` sent) on the parcel_tool path counts. Candidates, a miss, a
     // map or a dangling id show no report and count nothing; nor does an unsure lot before its semi question (SEMI-B, the app asks it before the

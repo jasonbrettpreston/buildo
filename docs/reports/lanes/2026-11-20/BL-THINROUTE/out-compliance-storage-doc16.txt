@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:45:52.062Z file_sha256=6ce8159caab240b07347830d93ce988440b440da3e08d42b805b50a3fcd498c5 prompt_sha256=a870dc0c74b3b0245e87ea92075edf97bc07b2383b86856c5baf29c57bcbb65e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-storage-doc16.txt (model: deepseek-reasoner)
+
+MET — P1 / A-ST5 compute on first open — src/lib/parcels/lookup-flow.ts:78 "pageResponse = await computeCustomerPageResponse(parcelRef);" — the pure core still runs on the stored-read miss for a first open, moved unchanged, so P1's compute trigger is intact.
+MET — P4 read guard, no stale number served — src/lib/parcels/lookup-flow.ts:74 "let pageResponse = held ? null : await readCustomerPageResponse(parcelRef);" — stored read first, recompute on miss, page null otherwise, so no old value is served while a record is stale.
+MET — P5 no record for a lot nobody opened — src/lib/parcels/lookup-flow.ts:9 "This module imports no meter, entitlement or usage code and writes nothing" — the moved flow still writes no record, matching P5 and the pre-MB-38 state.
+MET — P7 / P9 / A-S88 cost not in the record — src/lib/parcels/lookup-flow.ts:82 "const page = pageResponse === null ? null : mobilePageView(pageResponse);" — no lineCost, price or new stored column is added by the move, cost stays at read.
+MET — section 5 row S Search "nothing; the search hit starts the compute" — src/lib/parcels/lookup-flow.ts:94 "const body = ConsumerParcelLookupResponseSchema.parse(response);" — the pick path still only assembles and returns, nothing is persisted at the search hit.
+MET — A-126 closed status list unchanged — src/lib/parcels/tool-gate.ts:10 "export type ParcelToolAccess = 'parcel_tool' | 'lead_gen_transitional';" — the new helper returns access words, not a lifecycle status, so no status is added or stored.
+REJECT — A-ST5 "are then stored with their stamp" — that this diff leaves the first-open compute with no write — the policy itself reads "null while no producer has the lot (every customer lot until MB-44)" and the record table lands with MB-38; the diff moves the line unchanged and introduces no new storage gap.
+REJECT — operator ruling MORNING-DECISIONS.md:703 "we need to run a panel on the tasks this impacts" — that task-383 needed a storage panel before this route change — that ruling directs the McStorage policy text and its panel, and no pasted clause names a route refactor.
+REJECT — label line "Labels: MEASURED, ESTIMATE (arithmetic from a measured figure), GUESS (a plan figure), UNMEASURED." — that the plan's "about 70 lines of flow" is unlabelled — that line governs the STORAGE-POLICY lane's own figures, not the task-383 notes.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 0
+
+---
+⏱  51925ms (51.9s)
+📊 Tokens — total: 35388, input: 25057, output: 10331, reasoning: 9694

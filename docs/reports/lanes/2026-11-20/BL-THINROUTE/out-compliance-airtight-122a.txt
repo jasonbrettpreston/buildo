@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:45:52.044Z file_sha256=e985c2148bae6a0c0a3f0f18446e33f6887491e2e80885c50749a25bd780af23 prompt_sha256=68c13105d2e0abc62035f95240df762f3b9d8ffdca755a7b74462b1481104ade
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-airtight-122a.txt (model: deepseek-reasoner)
+
+BUG: none found against the pasted clauses.
+
+MET — §A26 G5 `compute-direct-write` — src/lib/parcels/lookup-flow.ts:1-100 — the new module contains no `.query(` call and no DML text; every read goes through readLotForm, readCustomerPageResponse, computeCustomerPageResponse, so no closed-seam bypass is introduced.
+
+MET — §A26 G9, G10, G11, G12 (ast-grep shape codes) — src/lib/parcels/lookup-flow.ts:1-100 and src/lib/parcels/tool-gate.ts:1-17 — no `http(s)://` literal, no `require`/`import(`/descriptor require, no function-scope numeric const, no SQL clock or interval literal.
+
+MET — §A26 G13 `compute-no-swallow` — src/lib/parcels/lookup-flow.ts:31-99 — no `catch` is introduced and none is placed on the moved statements; the route's existing catch stays where it was, and the flow lets a thrown read or compute error propagate.
+
+MET — §A26 G7 `compute-decides` — src/lib/parcels/tool-gate.ts:14-16 — the only decision operators are `ACTIVE_SUBSCRIPTION_STATUSES.has(...)` calls, no `<`/`>`/`<=`/`>=` with a `ctx.config` operand or alias.
+
+MET — §A27 item 2 RLS — src/lib/parcels/lookup-flow.ts:13 — the flow performs no write, so the change adds no write target that would need `rls_bypass_or_policy`.
+
+MET — §A27 item 13 db test naming — src/tests/parcel-tool-gate.logic.test.ts:13-14 (entitlements mocked, `const DB = {} as never`) — the new test needs no Postgres, so it is correctly not named `*.db.test.ts` and not placed under `src/tests/db/`.
+
+REJECT — §A26 "Proof of no runtime change" — that the diff changes runtime code (route.ts, lookup-flow.ts, tool-gate.ts) — that clause proves the A26 gate landing changes gates, ledger and specs only; it does not forbid this separate route-thinning card, which is not a gates/ledger/spec landing.
+
+REJECT — §A26 G1-G4, "Ledger key and locks", "Witness attribution" — that the change alters purity codes, ledger keys or witness rows without the required `why`, key grammar or C2/C3 locks — the diff touches no file under scripts/analysis/gates and adds no ledger row, so those clauses have no site here to judge.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  32199ms (32.2s)
+📊 Tokens — total: 23088, input: 16913, output: 6175, reasoning: 5562

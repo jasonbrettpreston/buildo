@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T18:39:39.007Z file_sha256=dae9715e23186a182b41c5839c155a05b98a2594635dcc4c47b32a7284313690 prompt_sha256=dadae64da62d494747d0cdb54070206f79c7e9c402ee21043c0146284c6371ba
+🔍 Lens review of docs/reports/reviews/task-383/context-2026-11-20.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — lane plan, Build 1 "Lookup route calls it right after auth and answers forbiddenSubscription() on null before any DB work" — the helper is placed ahead of query parse and the two rate buckets, whereas today the gate sits inside the flow at lookup/route.ts:79-83, so a malformed request or a rate-limited request from a lapsed account moves from 400/429 to 403, a refusal-order change the card forbids ("No response, meter or golden may change") — call the helper at the same position relative to query parse and the two rate buckets as the inline gate occupies today, and pin the order in a test (429 and 400 win over 403).
+
+BUG severity=HIGH — lane plan, Build 2 "it returns {body, refusal|null} where refusal is a descriptor the route maps with the existing reportLimitReached / forbiddenSubscription" — the flow also takes over "boundary parse", but the refusal union names only two descriptors, so a parse failure must either still throw to the route's catch or arrive as an unmapped descriptor; if the route switch has no default it answers 200 with a null body, i.e. fails open — state that parse and compute throws still propagate to internalError, and make the route's refusal map exhaustive with a default that maps to internalError.
+
+BUG severity=HIGH — lane plan, Build 4 "route calls the helper before the flow call; the helper holds the status set" — the replacement for the gate-before-DB pin is a source-text order assertion, and the existing behavioural lapsed-account test (parcel-lookup-gate.infra.test.ts:153) is not in the six re-pointed locks, so after the move the 403-before-any-query error path can pass vacuously or be unpinned — name that test in the re-point list with a red-then-green plant against the moved call.
+
+BUG severity=HIGH — lane plan, Build 2 "held/stored/compute page, response, boundary parse, meter decision and the log line" — the meter decision moves into the flow while this task's decisions in force carry RR-0331 "Report meter stays in the lookup route", and in every reading the plan names no key that stops a re-sent or double-tapped request from producing and counting the report twice — keep the meter decision in the route or get RR-0331 amended in this task, and name the dedup key (parcel id plus stamp) with a two-call test asserting one count per production.
+
+DEFER severity=MED — lane plan, Build 4 "a new test file for the helper (three arms)" — the three arms cover parcel_tool, lead_gen_transitional and null but not the subscription query throwing or returning zero rows, so the gate's DB-failure arm is unpinned on both routes and a blip either 500s or silently 403s every paying user — add a throw arm and state, once, whether it propagates to internalError or collapses into null.
+
+DEFER severity=MED — lane plan, Build 2 "resolve, map, fetch, held/stored/compute page, response" — the empty path (lookup resolves zero parcels, a fetch returns no rows) has no descriptor in {body, refusal|null}, so the empty body must come back byte-identical and nothing in the plan pins it — add a flow-level test for a zero-row lookup asserting the same status and body as the current route.
+
+REJECT — lane plan, Build 2 "the two rate buckets and the catch to internalError stay in the route" — a throw from compute or the DB inside the flow could escape as an unhandled 500 — it is caught, the catch to internalError is explicitly kept in the route, so the throw path is unchanged by the move.
+
+VERDICT: FAIL on error-path safety
+Paths walked: entitlement null and transitional, refusal mapping, boundary parse, empty lookup, gate DB throw, rate-limit vs gate ordering, double-submit and meter count, retry, timeout, degrade (fail closed)   Unguarded: 5
+
+---
+⏱  43803ms (43.8s)
+📊 Tokens — total: 28987, input: 21102, output: 7885, reasoning: 7019

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:39:39.437Z file_sha256=f401ef35c444cc264434e6b4c2053868c41f707acbd92eb68e80a82cd4d1510a prompt_sha256=ce7a194142e8166f393cb33a8840ceaa9e635721e4474dbb6035cb350f46440f
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-plan-compliance-airtight-v2-122.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0331 "Report meter stays in the lookup route" — plan Build step 2 "holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line" — the plan moves the meter decision out of lookup/route.ts into src/lib/parcels/lookup-flow.ts, contradicting the ruling in force, and never reconciles it — keep the meter decision in route.ts and pass its outcome into the flow, or obtain an operator ruling superseding RR-0331 before plan lock.
+
+BUG severity=HIGH — Spec 122 6.6.1(a) "CONSUMERS (every reader of the step's tables/columns and `records_meta` keys, across all chains and `src/`)" — plan Build step 5 "the flow file is a new transitive caller of the compute core; ALLOWED_REACHERS is not on this base, so the owed list edit is stated in the report" — a new `src/` reader of step tables is knowingly left unregistered with only a report note, so CONSUMERS is not accurate for this change — add the new reader to the CONSUMERS registry row and the reach list in the same commit, or hold the move until the registry covers it.
+
+DEFER severity=MED — Spec 122 6.6.1(e) "`scripts/analysis/src-sql-ledger.mjs --check`, run by `.husky/pre-commit`, fails on any column the ledger records as read or written on a table that `docs/reports/witness/_catalog.json` lists but whose column list lacks it" — plan fact line "src-sql-ledger.mjs is at scripts/analysis/" and no Build step regenerates the ledger — the statically parsed `src/` SQL for the stored/held reads moves to lookup-flow.ts while the committed ledger still attributes it to route.ts, so declared and observed part company silently — add a step that regenerates the ledger and runs `src-sql-ledger.mjs --check` in the same commit.
+
+DEFER severity=MED — task brief "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN." — plan Build step 4 "each with a red-then-green plant" — the plan names planted reds but no separate attack and no refused or STILL OPEN report for the shared gate and the re-pointed locks — add the attack step and its report line to the plan.
+
+DEFER severity=LOW — engineering standards 10.3 "Business logic belongs in `src/lib/`, not in route handlers." — plan Build step 2 "Auth, query parse, the two rate buckets and the catch to internalError stay in the route." — the rate bucket decisions are stateful business logic kept in the handler — record the reason in the report and track moving the buckets behind a lib function as a follow-up.
+
+MET — engineering standards 10.3 "API routes must be thin" — plan Build steps 1-2 — the gate helper and the whole lookup flow both move to src/lib/parcels, leaving validate input, call lib, return result in the route.
+
+MET — task brief "Lines moved, not new behaviour: no response, meter or golden may change." — plan Build step 3 "No response, meter, log key or golden changes." — the invariant is declared and the six locks are re-pointed at the flow file in the same commit.
+
+REJECT — Spec 122 6.6.1(b) "The Phase 1 WITNESS gate (#44) must carry the exact string `R-BF WITNESS GATE (#44)` in `scripts/analysis/step-validate.mjs`" — the change is accused of nothing here — the plan touches no pipeline step descriptor, step-validate.mjs, witness trace or witness gate, so this marker clause does not bind.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+
+---
+⏱  54549ms (54.5s)
+📊 Tokens — total: 24075, input: 13385, output: 10690, reasoning: 9826

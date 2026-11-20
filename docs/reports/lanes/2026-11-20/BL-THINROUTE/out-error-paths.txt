@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T18:45:51.641Z file_sha256=99b8270d49ce4f3746729c3a4b5ad08c57cd185ef416cc678ca25418c131aa2d prompt_sha256=aa2f2b2a8f038f4025417d661e56ffdcdc81cfbf4d3e2d916f2d35a75756476f
+🔍 Lens review of docs/reports/reviews/task-383/change-2026-11-20.diff (model: deepseek-reasoner)
+
+BUG severity=<none> — n/a
+
+REJECT — src/app/api/parcels/lookup/route.ts:72 "const access = await parcelToolAccess(pool, ctx);" — the entitlement read sits outside the route's try, so a thrown read leaves the handler before the try — handled: it was equally outside the try before this change (the inlined getEntitlementStatus at the same spot), the helper contract says a throw is never read as "not entitled", test G5 pins the rejection, and the envelope makes it a 500 not a 403, no parcel DB work, no meter.
+
+REJECT — "// A thrown entitlement read propagates (the caller's catch or the envelope makes it a 500); it is never read as \"not entitled\". No write." — the shared helper has no catch of its own — handled: both callers rely on the throw to fail closed (no access granted, no read, no insert), which is the safe direction for a gate when the entitlement DB is down.
+
+REJECT — "const body = ConsumerParcelLookupResponseSchema.parse(response);" — the boundary parse moved into the flow and can throw out of it — handled: it still runs before the route's meter ("It runs BEFORE the meter (the route's), so a response that fails it charges nothing"), and the throw reaches the route's catch as a 500 with no page sent and no count.
+
+REJECT — "const held = lotForm?.unsure === true && semi !== 'answered';" — the held path skips both the stored read and the multi-second compute — handled: a held lot returns page null and pageSource 'none', so the meter guard body.page === null cannot count it; the degrade direction is show nothing, charge nothing, and an unparseable lotForm falls to held false exactly as before.
+
+REJECT — src/app/api/parcels/lot-size/route.ts:56 "if ((await parcelToolAccess(pool, ctx)) === null) {" — a thrown entitlement read escapes before the done('forbidden', null) telemetry line — handled: the throw happens before insertLotSizeEntry, so no write and no partial state; the missing forbidden metric is unchanged from the inlined read at this same spot.
+
+DEFER severity=LOW — ": await resolveAddress(q!, { classifyUnlinked: true, matchMistyped: true });" — the flow's input declares q optional and dereferences it with q!, so a caller passing neither q nor parcelId raises a TypeError inside the route's try and becomes a 500 rather than a 400 — only the route's zod stops it, bounded, no wrong number or charge; either narrow the flow input to a discriminated q|parcelId or keep a guard.
+
+DEFER severity=MED — "/** The matched parcels.parcel_id of the fetched row: the meter's subject_key (R-04 parcel_ref), never request text. Null on a miss. */" — a client time-out during the multi-second compute, a reload, or a re-sent ?semi=answered GET re-runs the flow and can meter the same parcel again; the only key visible here is parcelRef, which is identical on every repeat so it cannot by itself make the repeat a no-op — cannot see whether the route's meter dedups per parcel per period; confirm the meter key so a re-sent GET is a no-op.
+
+DEFER severity=LOW — "/** The same shape after the .strict() boundary parse: what the route sends. A parse failure throws, before the meter. */" — the flow now returns both the pre-parse response and the parsed body, and the diff stops before the route's send line — cannot see that the route sends body rather than response; if it sent response the strict parse would be decorative; grounder to confirm the send uses body.
+
+VERDICT: PASS on error-path safety
+Paths walked: entitlement read throw (lookup), entitlement null to 403, flow read or compute throw to 500 with no meter, boundary parse failure before meter, dangling parcelId 200 miss, multi-candidate match null, held lot no read no count, empty stored page to compute, re-sent semi=answered GET, lot-size gate throw before insert, lot-size double-submit   Unguarded: 0
+
+---
+⏱  80310ms (80.3s)
+📊 Tokens — total: 42215, input: 26938, output: 15277, reasoning: 14368

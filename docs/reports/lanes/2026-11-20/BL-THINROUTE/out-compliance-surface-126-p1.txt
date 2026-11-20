@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:45:52.063Z file_sha256=5e3ace00f0c28e52eaec7e107cf08df3d9c3e47f247afe570dc3d590b79b65d2 prompt_sha256=2197dbb9aa6f39797551b6980373f935a3880c3e28158a634bec1a0345401638
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §0b item 2 "pre-registration committed alone before the code (`prereg-MF-n-k.json`, Spec 128:171 and :183)" — src/lib/parcels/lookup-flow.ts:1 "new file mode 100644" — the material lands two new lib files and 117 new lines of production code, and no `prereg-MF-n-k.json` (locks, both-direction plants, rules cited) appears anywhere in the diff, so the pre-registration the clause puts before the code is absent — land the prereg commit first, alone, and cite it from the Implementation Notes.
+
+BUG severity=HIGH — §0b item 2 "red first, each lock proven in both directions (`08_agents.md:461`, §11.3; Spec 127:124, PH-7)" — src/tests/customer-report-read.logic.test.ts:399 "expect(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts'])" — the plant compares two literal arrays and never runs the re-pointed T10 `IMPORTS()` filter, so the lock is not proven in either direction — plant a real file list through the filter (one true importer, one non-importer) and assert the filter output, matching the sibling consumer-parcel-lookup plant.
+
+BUG severity=HIGH — §0b item 2 "red first, each lock proven in both directions (`08_agents.md:461`, §11.3; Spec 127:124, PH-7)" — src/tests/customer-report-compute.logic.test.ts:251 "expect(['src/lib/parcels/lookup-flow.ts', 'src/app/api/parcels/other/route.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts'])" — same defect on the sole-importer lock: array inequality of literals exercises neither the `walk()` nor the import regex, so the moved lock has no both-direction proof — assert the import predicate true for a route string and false for a non-importer, and assert the expected importer list includes the flow file.
+
+DEFER severity=MED — §0b item 6 "A ruling does not stay only in a scratch file: it lands with its row's next docs commit or a lane R docs commit." — src/app/api/parcels/lookup/route.ts:94 "The flow (resolve, map, lot row, page, response, boundary parse) lives in src/lib/parcels/lookup-flow.ts (Standard 10.3); the meter and the log stay here (RR-0331)." — RR-0331 is cited only to a source comment and `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1432`, and no Spec 135 FE row or dated note with prior text kept appears in the material — land the dated note (or FE row plus one lock) recording RR-0331 and cite it by file:line in the comment.
+
+DEFER severity=LOW — §0b item 1 "No McFrontend work starts without its row in `.cursor/MCFRONTEND-QUEUE.md`" — NONE — the material's only row is `backlog/tasks/task-383` labelled McFix and no queue-file line is in the diff, so queue membership cannot be seen — cite the `.cursor/MCFRONTEND-QUEUE.md` row id in the notes or add the row.
+
+MET — §0b item 2 "red first, each lock proven in both directions" — src/tests/consumer-parcel-lookup.infra.test.ts:57 — the `gateBeforeFlow` plant proves true for gate-then-flow and false for flow-then-gate and for a dropped 403 arm.
+
+MET — §0b item 2 "red first, each lock proven in both directions" — src/tests/parcel-tool-gate.logic.test.ts:55 — G7 proves `usesSharedGate` true for the helper call and false when a route re-writes the status set.
+
+MET — §2.2.1 P1 "never a parallel data path" — src/tests/consumer-parcel-lookup.infra.test.ts:112 — the re-pointed resolver test keeps the single `@/lib/admin/parcel-lookup` import in the flow and forbids a route-side import, so no forked normalizer is introduced.
+
+REJECT — §0b item 2 (locks re-pointed, same strength) — that `parcel-tool-meter.logic.test.ts:215-223` and `customer-report-read.logic.test.ts:344` were not re-pointed — the `openReport` call, the `body.page === null` guard and the log line stay in `route.ts` under RR-0331, so those locks still hold on the file they pin.
+
+REJECT — §0b item 9 (no rule, no decision on the side) — that the build departs from the grounder resolution to move resolve through meter and log — the operator ruling RR-0331 (operator 2026-11-20, MORNING-DECISIONS.md:1432) is cited in the same notes as the reason the meter stays, so the departure is ruled rather than taken on the side.
+
+REJECT — §2.2.1 P11 "Architecture boundaries enforced mechanically, not by review" — that the new transitive compute caller lands without the `ALLOWED_REACHERS` edit — the material states the gate file is not on this base and the owed edit is recorded, which is what its own instruction 4 permits; the gate is not visible to judge further.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 4
+
+---
+⏱  61296ms (61.3s)
+📊 Tokens — total: 45374, input: 33083, output: 12291, reasoning: 11002

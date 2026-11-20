@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:39:39.451Z file_sha256=b7b27f8b7c0fef2b2291072dcd61d5e619c1a5c9a3db167208014966c12fe01b prompt_sha256=38d9a93f35f6168157e38902bda4e1f7d0bd00b408b17c3a800dcaffb667deaf
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-plan-compliance-eng-s1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0331 "RR-0331 Report meter stays in the lookup route" — plan step 2 "holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line" — the plan moves the meter decision out of lookup/route.ts into src/lib/parcels/lookup-flow.ts, so the ruling that the report meter stays in the lookup route is unmet — keep the meter decision and its log line in lookup/route.ts and have runParcelLookup return only the body, or get operator words superseding RR-0331 before lock.
+
+BUG severity=HIGH — task-383 "Lines moved, not new behaviour: no response, meter or golden may change" — plan step 1 "parcelToolAccess(pool, ctx) returns 'parcel_tool' | 'lead_gen_transitional' | null" together with "Lookup route calls it right after auth and answers forbiddenSubscription() on null before any DB work" — a shared helper whose second arm is admitted by a null-only check widens the lookup gate to lead_gen_transitional unless lookup already admits that arm today, which is new behaviour, and the plan gives no per-route arm comparison — write out the statuses each route admits today and map the returned arm per route so the lookup route's admitted set is unchanged.
+
+DEFER severity=MED — task-383 "Each gate or scan: a committed planted-defect test, red first through the real hooks" — plan step 4 "the six locks are re-pointed to the flow file in the same commit, same strength" but also "the import-line pin (parcels-lookup-page:187) and the readLotForm( token pin are dropped and said so" and "the gate-before-DB pin becomes 'route calls the helper before the flow call'" — two of the six named locks are dropped while same strength is claimed, and the new gate pin no longer asserts that no DB read precedes the gate now that the stored read lives in the flow — re-point all six locks into lookup-flow.ts and make the gate pin assert the helper returns before the flow's first pool query.
+
+DEFER severity=LOW — "McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md (not readable: ENOENT)" — NONE — the increment requirements, McFrontend elements and storage-policy blocks are unreadable in this context, so any clause from them is cannot see and was not checked — restore those three document blocks before plan-lock so the next pass can judge them.
+
+MET — MD:1476 "Let the grounder resolve them all as long as the result is compliant" — plan line "Grounder resolution on the task (verified): build as carded, narrowed." — the resolution is recorded and each build step serves the carded item.
+
+MET — task-383 "the entitlement gate is written twice (lookup/route.ts:79-83, lot-size/route.ts:56-58)" — plan step 1 "src/lib/parcels/tool-gate.ts: parcelToolAccess(pool, ctx)" — one helper holds the ACTIVE_SUBSCRIPTION_STATUSES test and both routes call it, subject to the arm finding above.
+
+MET — Section 1.2 "Shared UI components (src/components/ui/) must remain pure and stateless" — plan step 1 "src/lib/parcels/tool-gate.ts" and step 2 "src/lib/parcels/lookup-flow.ts" — the change adds lib modules only and touches no src/components/ui file.
+
+MET — plan step 3 "No response, meter, log key or golden changes." — plan step 2 "it returns {body, refusal|null} where refusal is a descriptor the route maps with the existing reportLimitReached / forbiddenSubscription" — responses and log keys stay as today, subject to the RR-0331 location finding.
+
+REJECT — 1.1 Mobile-First UI Mandate "All Tailwind CSS styling MUST be written mobile-first" — the change is accused of desktop-first styling — the change edits src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lot-size/route.ts and adds src/lib/parcels modules, no Tailwind class is added.
+
+REJECT — 1.3 Touch Targets "All Pressable and TouchableOpacity elements must satisfy a minimum tappable area of 44px x 44px" — the change is accused of undersized tap targets — no Pressable, TouchableOpacity or interactive element is added or edited.
+
+REJECT — 1.3 TanStack Query Hardening "onlineManager.setEventListener must be called synchronously at app boot" — the change is accused of breaking cold-boot offline or the 401 interceptor — no client query code, MMKV hydration or fetchWithAuth code is in the material.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  40834ms (40.8s)
+📊 Tokens — total: 19149, input: 11276, output: 7873, reasoning: 6810

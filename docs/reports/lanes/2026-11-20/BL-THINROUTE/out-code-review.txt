@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T18:45:51.607Z file_sha256=99b8270d49ce4f3746729c3a4b5ad08c57cd185ef416cc678ca25418c131aa2d prompt_sha256=b72b6cb8374561d73ab97ca2885072d669467bd77a8dcd3c8132ec4e17aec289
+🔍 Lens review of docs/reports/reviews/task-383/change-2026-11-20.diff (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/customer-report-compute.logic.test.ts:252 "expect(['src/lib/parcels/lookup-flow.ts', 'src/app/api/parcels/other/route.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts']);" — a literal array compared to a literal array can never fail and never touches IMPORTS or the walk, so the claimed RED plant proves nothing — run the plant through the real detector, e.g. expect(['src/lib/parcels/lookup-flow.ts', 'src/app/api/parcels/other/route.ts'].filter((f) => f !== 'src/lib/parcels/lookup-flow.ts')).toEqual(['src/app/api/parcels/other/route.ts']).
+
+DEFER severity=MED — src/tests/customer-report-read.logic.test.ts:400 "expect(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']);" — same tautology as above, the second direction of the :397 lock is never exercised — feed a fake file list through the same IMPORTS filter and assert the stray route path is retained.
+
+DEFER severity=LOW — src/lib/parcels/lookup-flow.ts:38 ": await resolveAddress(q!, { classifyUnlinked: true, matchMistyped: true });" — the exported input type makes both q and parcelId optional, so this non-null assertion carries an invariant the module boundary no longer receives; a caller passing neither compiles and throws at runtime — type the input as { parcelId: string } | { q: string } (plus semi) and drop the "!".
+
+DEFER severity=LOW — src/lib/parcels/lookup-flow.ts:18 "import { ConsumerParcelLookupResponseSchema, type ConsumerParcelLookupResponse } from '@/app/api/parcels/lookup/types';" — a src/lib module now imports a runtime value from the app route directory, the inverse of the direction Standard 10.3 asks for, while the route keeps its query schema in './types' — move the response schema and type to src/lib/parcels (or a shared module) and import them from both sides.
+
+NIT — src/lib/parcels/tool-gate.ts:11 "export type ParcelToolAccess = 'parcel_tool' | 'lead_gen_transitional';" — exported but imported by no file in the diff and both call sites compare the result to null — drop the export keyword unless a caller needs the type.
+
+NIT — src/tests/parcel-tool-gate.logic.test.ts:12 "const DB = {} as never;" — "as never" silences the helper's Queryable parameter instead of modelling it, so a signature drift on parcelToolAccess would not be caught — use a minimal typed stub (or {} as unknown as Queryable) imported from '@/lib/entitlements'.
+
+REJECT — src/tests/consumer-parcel-lookup.infra.test.ts:32 "const g = src.indexOf('await parcelToolAccess(');" — a textual indexOf ordering looks weaker than the old forbiddenSubscription-before-resolveAddress check — it is correct, because runLookupFlow is now the route's only DB read, so pinning the gate call before the flow call pins it before all DB work.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  69707ms (69.7s)
+📊 Tokens — total: 40424, input: 26921, output: 13503, reasoning: 12734

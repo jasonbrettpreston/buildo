@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:39:39.463Z file_sha256=297a8bf6c8751f123d60f8a579157cc2483f937f566f12c0d12169ea05d5705f prompt_sha256=ddcf3c31bec6c486d070ac43c086bc255a208cf1e18796a63dd6d7e6984c693c
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-plan-compliance-eng-s2-s4-s10-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0331 (decisions in force) "Report meter stays in the lookup route" — plan B3 item 2 "holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line" — the plan relocates the meter decision out of `src/app/api/parcels/lookup/route.ts` into `src/lib/parcels/lookup-flow.ts`, which contradicts the in-force ruling that the report meter stays in the lookup route — keep the meter decision in route.ts, or record an operator ruling that supersedes RR-0331 before lock.
+
+BUG severity=HIGH — §10.3 "New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route." — plan B3 item 2 "it returns {body, refusal|null} where refusal is a descriptor the route maps" — the plan defines the response/refusal shape inside the flow module and names no `src/lib/parcels/types.ts` — add the Request/Response interfaces to `src/lib/parcels/types.ts` and import them.
+
+BUG severity=HIGH — §11 "Unhappy-path test cases listed: 400, 404, 500 (§2.1)" — plan B3 item 4 "a new test file for the helper (three arms)" — the plan lists only re-pointed locks and three helper arms, no 400/404/500 error-path cases for the two modified routes — add explicit 400, 404 and 500 test cases to the plan's test list.
+
+DEFER severity=MED — §10.2 "any modification requires `npx vitest related` to verify no API regression" — plan B3 item 4 "the six locks are re-pointed to the flow file in the same commit" and Files "src/lib/parcels/report-compute.ts" — no `npx vitest related` step is planned for the shared lib module — add `npx vitest related` for `src/lib/parcels/report-compute.ts` to the build steps.
+
+DEFER severity=MED — §11 "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)" — plan B3 item 2 "meter decision" — moving the meter threshold decision into `lookup-flow.ts` is planned with no contracts-key or `contracts.infra.test.ts` step — cite the `_contracts.json` key and keep or add the consumer row in `src/tests/contracts.infra.test.ts`.
+
+DEFER severity=LOW — §2.2 "The catch block MUST return `{ error: 'Human-readable message' }` with an appropriate HTTP status (e.g., 500) and log the raw error server-side only." — plan B3 item 2 "the catch to internalError stay in the route" — the plan does not state the retained catch calls `logError(tag, err, context)` and does not expose `err.message` — state the retained catch's log and return shape in the plan.
+
+MET — §10.3 "API routes must be thin — validate input, call a lib function, return the result." — plan B3 items 1 and 2 — flow moves to `src/lib/parcels`, with auth, query parse, rate buckets and catch left in the route.
+
+MET — §4.1 "All authorization must be enforced server-side in API routes or middleware" — plan B3 item 1 "Lookup route calls it right after auth" — auth remains server-side in the route.
+
+MET — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — Files line — only `src/app/api/parcels/*` and `src/lib/parcels/*` are touched.
+
+MET — §11 "No `.env` secrets exposed to client components (§4.3)" — plan B3 items 1 and 2 — the new modules are server-side lib code, no `use client` change.
+
+REJECT — §4.1 admin gate — accused of moving the auth gate away from `verifyAdminAuth` — these are `/api/parcels` routes, not `/api/admin/**`, so `verifyAdminAuth` does not apply.
+
+REJECT — §10.1 data-flow direction — accused of writing to pipeline tables — the plan only relocates server-side read and compute flow into `src/lib`.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  44050ms (44.0s)
+📊 Tokens — total: 22313, input: 13356, output: 8957, reasoning: 7949

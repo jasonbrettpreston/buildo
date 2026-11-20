@@ -162,7 +162,8 @@ describe('the lookup payload', () => {
     expect(r.success).toBe(false);
   });
   it('the route reads the view once per hit and logs the outcome, never the answer text', () => {
-    expect(ROUTE).toContain('readLotForm(');
+    // STD.ROUTE (task-383): the readLotForm( token pin on the route is dropped (the read moved to the flow file, which keeps it once per hit); the log pin stays on the route.
+    expect(fs.readFileSync(path.resolve(__dirname, '../lib/parcels/lookup-flow.ts'), 'utf8').match(/readLotForm\(/g)).toHaveLength(1);
     expect(ROUTE).toMatch(/lot_form_unsure/);
   });
 });

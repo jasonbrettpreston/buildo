@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:39:39.450Z file_sha256=ec25119d2101b5596026c3d4377cbbef27c1bd5138281e7316dad61ea2d56589 prompt_sha256=afd8a7f86d13a6c3ddc4cd7d44c206c875a6653e435eb869c8d62b70bbaf34b3
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-plan-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0331 "Report meter stays in the lookup route" — lane plan Build step 2 "holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line" — the plan moves the meter decision out of `lookup/route.ts` into `src/lib/parcels/lookup-flow.ts`, so the meter no longer stays in the lookup route, and no step reconciles RR-0331 — keep the meter decision and its call in `lookup/route.ts`, or record an operator ruling that the flow helper is the lookup route for RR-0331.
+DEFER severity=MED — Task "Lines moved, not new behaviour: no response, meter or golden may change." — lane plan Build step 4 "the import-line pin (parcels-lookup-page:187) and the readLotForm( token pin are dropped and said so" — dropping the two pins removes the assertions that the page import line and the lot-form read did not change, so the no-response-change clause is not proven — replace each dropped pin with an equivalent assertion in the new flow test, or keep the pins.
+DEFER severity=MED — Spec 126 §0b item 6 "Every operator ruling is recorded verbatim, dated, landed and cited." — lane plan "Operator 2026-11-20 (verbatim): \"1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine\"" — the quote uses an ellipsis in place of the operator's words, so the ruling is not recorded verbatim and no record path is given for the omitted text — quote the full ruling or cite the record path with the omitted text.
+DEFER severity=MED — Spec 126 §0b item 9 "No rule, no decision on the side. Where no rule governs, the nearest related rules are cited and the question goes to the operator as a ruling." — lane plan Build step 1 "src/lib/parcels/tool-gate.ts: parcelToolAccess(pool, ctx) returns 'parcel_tool' | 'lead_gen_transitional' | null; it holds the ACTIVE_SUBSCRIPTION_STATUSES test" — the plan puts the active-status test in a new helper without citing the ENTITLEMENT registry (`seeds/entitlements.json`) or a ruling that the helper is the single source — cite the registry rule and import the closed set, or raise the question.
+MET — engineering standards 10.3 "API routes must be thin" — lane plan Build steps 1-2 — the routes keep auth, query parse, the rate buckets and the catch, and call `tool-gate.ts` and `lookup-flow.ts`.
+MET — Task "one shared parcel-tool gate helper for lookup and lot-size" — lane plan Build step 1 — `tool-gate.ts` is called by both the lookup and lot-size routes.
+MET — Task "the flow moves into src/lib/parcels" — lane plan Build step 2 — `lookup-flow.ts` holds resolve, map, fetch, stored/compute page, response, boundary parse, meter decision and the log line.
+MET — Task "no response, meter, log key or golden changes" — lane plan Build step 3 — the plan states "No response, meter, log key or golden changes."
+MET — RR-0315 "Plan: go on sections A and B" — lane plan "Build as carded, narrowed" — the task is section B3 and the plan stays within B3.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+
+---
+⏱  101123ms (101.1s)
+📊 Tokens — total: 53519, input: 33566, output: 19953, reasoning: 19154

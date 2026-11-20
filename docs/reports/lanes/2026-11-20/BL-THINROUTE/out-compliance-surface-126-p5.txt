@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:45:52.153Z file_sha256=e9a3505b368283f104c548839e2391ec91f655dcc949ba2be9c9c8a6cfe65fae prompt_sha256=10b1223db695860b0846082a520002009c032c3a8a5f80a31048467de959a9b8
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-126-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §13 "a RED canary per lock, on the logic-variable-groups.infra.test.ts tampered-file model, proving each check fires" — src/tests/customer-report-read.logic.test.ts:398 "expect(['src/app/api/parcels/lookup/route.ts', 'src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts', 'src/lib/parcels/report-compute.ts'])" — this "RED plant" is a tautology over two literal arrays, it reads no file and never runs the T10 IMPORTS/filter, so it cannot prove the re-pointed importer lock fires, the clause is satisfied only by the test name — replace it with a tampered-file case fed through the same IMPORTS/filter used by the lock, asserting the locked-list condition fails.
+
+BUG severity=MED — Spec 126 §13 "a RED canary per lock ... proving each check fires" — src/tests/customer-report-compute.logic.test.ts:250 "expect(['src/lib/parcels/lookup-flow.ts', 'src/app/api/parcels/other/route.ts']).not.toEqual(['src/lib/parcels/lookup-flow.ts'])" — the plant asserts a second tautology and the preceding lines test a private copy of the regex rather than the lock's walk plus filter, so drift in the real lock is invisible — drive the plant through the lock's own walk/filter with a planted importer path.
+
+DEFER severity=MED — Spec 126 §13 "a RED canary per lock ... proving each check fires" — src/tests/consumer-parcel-lookup.infra.test.ts:116 "expect(route()).not.toContain(\"from '@/lib/admin/parcel-lookup'\");" — this newly added lock assertion has no RED plant at all, so per §13 it is unproven — add a tampered-route string case that makes this assertion fail.
+
+DEFER severity=MED — Spec 126 §13 "a RED canary per lock ... proving each check fires" — src/tests/parcel-lot-form.logic.test.ts:165 "expect(fs.readFileSync(path.resolve(__dirname, '../lib/parcels/lookup-flow.ts'), 'utf8').match(/readLotForm\\(/g)).toHaveLength(1);" — the re-pointed once-in-flow lock has no plant showing the assertion can fail — add a fixture string with two readLotForm( calls and assert length 2.
+
+MET — Spec 126 §14 "no linkage to LeadDetail, the flight board, or the lead feed" — src/lib/parcels/lookup-flow.ts:9 "import { resolveAddress, fetchParcelById, fetchCoaProjects } from '@/lib/admin/parcel-lookup';" — the moved flow adds no LeadDetail, flight-board or lead-feed module and reads no lead_parcels, the resolver dependency was already the route's.
+
+MET — Spec 126 §13 "Logic: *.logic.test.ts" — src/tests/parcel-tool-gate.logic.test.ts:2 "STD.ROUTE (task-383, Increment 1·B) · the one parcel-tool gate helper" — the new helper test uses the mandated logic suffix and exercises the entitlement arms G1 through G5 plus the share lock G6 through G7.
+
+MET — Spec 126 §13 "Infra: *.infra.test.ts" — src/tests/consumer-parcel-lookup.infra.test.ts:108 "const src = flow();" — the re-pointed route and flow locks stay in the infra suite with the mandated suffix.
+
+REJECT — Spec 126 §14 "Target Files ... src/surfaces/_schema/surface.schema.json" — the change is accused of editing no listed Spec 126 target file — not a real issue: §14 names the files this spec authors, and a task-383 thin-route change is outside Spec 126 authoring while touching no file on the out-of-scope list.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 1
+
+---
+⏱  130217ms (130.2s)
+📊 Tokens — total: 43367, input: 16726, output: 26641, reasoning: 25726

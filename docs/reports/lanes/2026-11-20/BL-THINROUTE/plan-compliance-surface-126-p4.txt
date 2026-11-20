@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:39:39.494Z file_sha256=448839aa0b025899cca88dec7b90e8f237b11a368fa46f5c9f7dab736a711460 prompt_sha256=22b565309e01a7aae6025a07daf4d15d4d2faa2efb30c9620348e6b3b16a353c
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-plan-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+BUG none.
+
+DEFER severity=MED — RR-0331 (decision in force, title only, operator words not pasted) "RR-0331 Report meter stays in the lookup route" — lane plan step 2 "runParcelLookup({ctx uid, access, q, parcelId, semi}) holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line" — the meter decision leaves lookup/route.ts into src/lib/parcels/lookup-flow.ts while a live ruling says the meter stays in the lookup route, and no supersession is recorded — either keep the meter call in the route and pass the result in, or record the ruling that supersedes RR-0331 in the same commit.
+
+DEFER severity=MED — §11b.1 "Per-feature code is named in its queue row: CONTRACT routes for writes, migrations, product gates, the entitlement read contract, the host allow-list." — task Files line "Files: src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lot-size/route.ts, src/lib/parcels/report-compute.ts" versus plan step 1/2 "src/lib/parcels/tool-gate.ts" and "src/lib/parcels/lookup-flow.ts" — two new per-feature modules are created but are not named on the queue row — add both paths to the task Files line before the code lands.
+
+DEFER severity=MED — card clause "Lines moved, not new behaviour: no response, meter or golden may change." — lane plan step 1 "Lookup route calls it right after auth and answers forbiddenSubscription() on null before any DB work" — calling the gate "right after auth" puts it ahead of the two rate buckets that stay in the route, and the plan never shows today's lookup/route.ts:79-83 position relative to those buckets, so identical error precedence for a lapsed account is asserted, not shown — state the current line order and keep it, or prove the ordering with the existing parcel-lookup-gate.infra.test.ts:153 case in the same commit.
+
+DEFER severity=LOW — card clause "Each gate or scan: a committed planted-defect test, red first through the real hooks" — lane plan step 4 "the import-line pin (parcels-lookup-page:187) and the readLotForm( token pin are dropped and said so" — two scans are removed and no planted-defect replacement is named for either — name a replacement assertion per dropped pin, or record why the scan no longer has a subject.
+
+MET — §11b.2 "REPORT goldens are unchanged" — lane plan step 3 "No response, meter, log key or golden changes." — every golden, response body and log key is left byte-identical by the move.
+
+MET — §13 infra "a RED canary per lock, on the `logic-variable-groups.infra.test.ts` tampered-file model, proving each check fires" — lane plan step 4 "the six locks are re-pointed to the flow file in the same commit, same strength, each with a red-then-green plant" — each re-pointed lock keeps a red-then-green proof.
+
+MET — §14 Out-of-Scope Files "`migrations/**`" and "`src/app/api/quality/**`, `src/lib/quality/**` — held by another programme" — lane plan files "src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lot-size/route.ts, src/lib/parcels/report-compute.ts" — no migration and no quality-programme path is touched.
+
+REJECT — §11b.1 "Our code is limited to the descriptor → library binding (one per archetype per platform, thin config), the generators, the gates and the landed web REPORT renderer." — the change is accused of adding per-feature read code outside the closed list — the lookup and lot-size routes already exist, the plan adds no capability ("Lines moved, not new behaviour") and the gate plus entitlement read are named per-feature classes in the same clause.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  48687ms (48.7s)
+📊 Tokens — total: 42898, input: 33485, output: 9413, reasoning: 8499

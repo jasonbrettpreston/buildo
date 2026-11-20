@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:39:39.472Z file_sha256=a3adb0d578063e16098de6d76df7fd2b4110e1e23e4806050ad8d46558f10499 prompt_sha256=214aec46f463cf3c4eb61ec8b92dfa613025bc8dd4894d4b9346dd910665562e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-plan-compliance-step-132.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0331 "Report meter stays in the lookup route" — Lane plan item 2 "holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line" — the meter decision is relocated out of the route into src/lib/parcels/lookup-flow.ts and the plan nowhere cites RR-0331 — fix: keep the meter decision in the route, or add a register row reading RR-0331 to cover the flow file before plan-lock.
+
+BUG severity=HIGH — task card "a separate agent attacks it, results reported as refused or STILL OPEN" — Lane plan item 4 "each with a red-then-green plant" — the plan has no adversarial pass and no refused/STILL OPEN report path for the helper test or the re-pointed locks — fix: add the separate attacker step and its report location to the plan.
+
+BUG severity=HIGH — task card "Each gate or scan: a committed planted-defect test, red first through the real hooks" — Lane plan item 4 "the import-line pin (parcels-lookup-page:187) and the readLotForm( token pin are dropped and said so" — two of the six named locks are removed, so "same strength" two clauses earlier is false and two gates lose their plant — fix: re-point both pins at lookup-flow.ts, or declare the drop as a deviation citing the ruling that authorises it.
+
+DEFER severity=MED — RR-0190 "only operator words feed reviews as rulings" — Lane plan "Grounder resolution on the task (verified): build as carded, narrowed" — the narrowing rests on an orchestrator reading, not on an operator line or an RR row — fix: cite the RR id for the narrowing, or mark it UNVERIFIED in the plan.
+
+DEFER severity=LOW — eng standards 10.3 "Business logic belongs in src/lib/, not in route handlers." — Lane plan item 2 "Auth, query parse, the two rate buckets and the catch to internalError stay in the route" — the two rate buckets are rate-limit policy and stay route-resident with no stated reason — fix: state why the buckets stay, or move them to a lib helper in the same commit.
+
+MET — eng standards 10.3 "Business logic belongs in src/lib/, not in route handlers." — Lane plan items 1 and 2 — resolve, hold, stored read, compute, page and response move into src/lib/parcels, the route keeps auth, parse, buckets and the catch.
+MET — task card "Lines moved, not new behaviour: no response, meter or golden may change" — Lane plan item 3 "No response, meter, log key or golden changes".
+MET — task title "one shared parcel-tool gate helper for lookup and lot-size" — Lane plan item 1 "src/lib/parcels/tool-gate.ts: parcelToolAccess(pool, ctx)" and lot-size "calls it after the settings switch (same order as today)".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 5
+
+---
+⏱  46912ms (46.9s)
+📊 Tokens — total: 33859, input: 24907, output: 8952, reasoning: 8281

@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:45:52.068Z file_sha256=cab87b7c515822518e0c213b69e85ee6e458bc7e3d108c3a5ffa39dd66fe10d1 prompt_sha256=ec100fed68e04dac5007d0d36bcbf5a51c57ba6aaaa2190348e30549486b0238
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — §11b.6 "Understandability | one home: this section; rules in Spec 135 FE-31, FE-32; tasks in `.cursor/MCFRONTEND-QUEUE.md`." — backlog/tasks/task-383 "...one-shared-parcel-tool-gate-helper...md" "## Implementation Plan" — the work is recorded only in the backlog card; no `.cursor/MCFRONTEND-QUEUE.md` line appears anywhere in the diff, so the task has no home in the file this clause names — add the row (or a one-line pointer) to `.cursor/MCFRONTEND-QUEUE.md` under the MF-44/MF-48 surface it serves.
+
+MET — §11b.1 "Per-feature code is named in its queue row: CONTRACT routes for writes, migrations, product gates, the entitlement read contract, the host allow-list." — src/lib/parcels/tool-gate.ts:14 "export async function parcelToolAccess(db: Queryable, ctx: { uid: string; subscription_status?: string | null }): Promise<ParcelToolAccess | null> {" — the shared gate is exactly the named product gate / entitlement read, and the card's Files line now names both new lib files.
+
+MET — §11b.1 "REPORT keeps the landed renderer" — src/lib/parcels/lookup-flow.ts "const page = pageResponse === null ? null : mobilePageView(pageResponse);" — the report page is still produced by the landed mobilePageView over MF-57's core; only its file location moved.
+
+MET — §11b.1 "Import boundary. Library imports are allowed only in the declared binding modules." — src/lib/parcels/lookup-flow.ts:10 "import { resolveAddress, fetchParcelById, fetchCoaProjects } from '@/lib/admin/parcel-lookup';" — no Mantine, RJSF, datatable or vendored RNR import is added anywhere in `src/lib`, only internal modules.
+
+MET — §11b.1 "Auth and checkout are existing or hosted, not converted." — src/lib/parcels/tool-gate.ts "const parcelTool = await getEntitlementStatus(db, ctx.uid, 'parcel_tool');" — the gate reads the existing entitlement, no sign-in or checkout path is touched.
+
+MET — §11b.3 (MF-45 note) "The server computes every count, the reports left and the limit-reached flag; pages bind to them (FE-05)." — src/app/api/parcels/lookup/route.ts "// The flow (resolve, map, lot row, page, response, boundary parse) lives in src/lib/parcels/lookup-flow.ts (Standard 10.3); the meter and the log stay here (RR-0331)." — the meter, openReport and refusal mapping remain server-side in the route; the flow imports no meter or usage code.
+
+MET — §11b.2 "REPORT goldens are unchanged" — no file under `src/tests/fixtures/` appears in the diff — the boundary parse still runs before the meter, so no reachable state or golden input changes.
+
+REJECT — §11b.5 "The first consumer of an archetype on a platform adds its binding entry, golden shape, one planted-defect case, one render smoke and its `frontend` path globs; nothing else." — accused of adding five RED plant tests, two new test files and re-pointed locks beyond the per-archetype allowance — the clause scopes what the first consumer of an archetype adds; this change adds no binding entry, golden shape, render smoke or path glob, and the plants are red-first evidence for existing route locks, not new archetype infrastructure.
+
+REJECT — §11b.2 Gate "the REPORT arms and the success line are unchanged" — accused of touching the surface gate — `scripts/surfaces/...` and `surface-validate.mjs` appear nowhere in the diff; every guard edited is a route/lib source-shape lock in `src/tests`, outside that gate.
+
+REJECT — §11b.1 "Our code is limited to the descriptor to library binding ..., the generators, the gates and the landed web REPORT renderer." — accused of adding per-feature code by moving the lookup flow to `src/lib/parcels/lookup-flow.ts` — the bytes are the same flow moved out of route.ts, the archetypes, targets and their §11b.3 rows are unchanged, and the gate helper is the named product-gate code.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  55256ms (55.3s)
+📊 Tokens — total: 43411, input: 33091, output: 10320, reasoning: 9310

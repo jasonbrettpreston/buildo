@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T18:39:39.001Z file_sha256=dae9715e23186a182b41c5839c155a05b98a2594635dcc4c47b32a7284313690 prompt_sha256=5c6e23741d2d2de335136f66fb27f64b29b42464d2f325e6cf9253f39782031f
+🔍 Lens review of docs/reports/reviews/task-383/context-2026-11-20.md (model: deepseek-reasoner)
+
+BUG/DEFER/REJECT lines below; every finding rests on a pasted line.
+
+```
+DEFER severity=MED — Lane plan item 2 "holds resolve, map, fetch, held/stored/compute page, response, boundary parse, meter decision and the log line" vs pasted deliverable "Q-GAP-0 image hold R-IMG1..3 LIFTED (dated note owed, M-246 form)" — the flow still selects a held page, so a person could still be stopped on an image-hold screen the design text says is lifted — have the report name which lots, if any, still reach the held branch, or that it is unreachable (cannot see the code)
+DEFER severity=MED — Lane plan item 2 "meter decision" inside src/lib/parcels/lookup-flow.ts vs decision in force RR-0331 "Report meter stays in the lookup route" — the reports-left count the person reads is unchanged only if the meter decision and its refusal mapping are byte-identical to today, and the plan asserts that without showing it — state the departure from RR-0331 in the report with a dated note, or leave the meter decision in the route; RR-0331 is a reading, not operator words (RR-0190), so it can be superseded on the record, not silently
+DEFER severity=LOW — Lane plan item 2 "it returns {body, refusal|null} where refusal is a descriptor the route maps with the existing reportLimitReached / forbiddenSubscription" — no plant is named for either refusal string, so a lapsed person or a person at zero reports could land on a generic error instead of the message the design gives — add one red-then-green plant per refusal that the returned body and status are byte-identical (design text: "No response, meter, log key or golden changes")
+REJECT — Task note item 2 "the meter guard body.page === null (customer-report-read.logic.test.ts:344)" — the C2 "Try again, not counted" state looks unproven after the move, but this guard is one of the six locks re-pointed with a plant, so the person who sees the error screen is still not counted against their reports
+REJECT — Lane plan item 1 "lot-size route calls it after the settings switch (same order as today)" — the lapsed person's refusal now comes from a shared helper, which reads like a reordered gate, but the order and the 403 answer match today, so the person sees the same refusal on both routes
+```
+
+VERDICT: PASS on the person's experience
+States checked: first view (search), loading (animation runs to completion, RR-0176), answered (report plus See details), refused lapsed account 403, refused at zero reports, failed compute with Try again not counted, empty/no lot, re-opened lot (stored record read), back, repeat visit — the change draws none of them by design ("No response, meter, log key or golden changes") and re-plumbs three: lapsed refusal, report-limit refusal, failed compute. Dead ends found: 0
+
+---
+⏱  45511ms (45.5s)
+📊 Tokens — total: 28564, input: 21101, output: 7463, reasoning: 6804

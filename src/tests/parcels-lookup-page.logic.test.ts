@@ -184,7 +184,8 @@ describe('T-B3 (7) the meter is unchanged by a page today (owner MB-94 c / MB-44
 
 describe('T-B3 (5) the imports', () => {
   it('the route reads the page through src/lib/parcels/report-page.ts; that module uses MF-57 core and never the admin preview producer (L1)', () => {
-    expect(read('src/app/api/parcels/lookup/route.ts')).toContain("import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';");
+    // STD.ROUTE (task-383): the exact import-line pin on the route is dropped (the import moved to src/lib/parcels/lookup-flow.ts); the importer-list lock is customer-report-read.logic.test.ts T10.
+    expect(read('src/lib/parcels/lookup-flow.ts')).toContain("import { mobilePageView, readCustomerPageResponse } from '@/lib/parcels/report-page';");
     const lib = read('src/lib/parcels/report-page.ts');
     expect(lib).toContain("import { buildPage, pageViewOf } from '@/lib/surfaces/report/core';");
     expect(lib).not.toMatch(/from '[^']*report-preview-live/);

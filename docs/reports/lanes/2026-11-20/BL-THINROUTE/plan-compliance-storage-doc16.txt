@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:39:39.449Z file_sha256=4a1cce945ac6d76c5bf8a7444a2183de6e55691b75b5fc930a6989db179b6136 prompt_sha256=7812b5ecf432e84c44019c76434b7c5e3eb11081661dcacac04416a031ee8bf8
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-plan-compliance-storage-doc16.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings, then MET lines.
+
+DEFER severity=MED — doc-16 section 4 "Stale-stamp guard | Compare the stamp on every read; mismatch means recompute; test it red first (an older-stamp record is injected, the report must not show it). | P4; seat G's incident" — plan step 4 "the six locks are re-pointed to the flow file in the same commit, same strength, each with a red-then-green plant" — none of the six named locks is identified as the older-stamp injection test while plan step 2 moves "held/stored/compute page" into lookup-flow.ts, so P4's red-first guard can be left pointing at code the route no longer runs — name the stale-stamp test in step 4 and re-point it (or add it) with a red plant in the same commit as the move
+DEFER severity=MED — doc-16 P12 "SUPERSEDED 2026-11-20 by RR-0176 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) for the 35 s ... no 35 s cap; LOAD.3 not needed" — task brief Storage set-up "Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3); skipped for a re-opened lot (its record is read); no screen for owner input or the Tracked Lots list" — the brief still instructs the lane with the superseded 35,000 ms cap and LOAD.3, which the governing clause removed — regenerate that bullet (and the first Storage bullet "behind the 35 s loading screen") from the RR-0176 text before the lane reads it
+DEFER severity=LOW — doc-16 A-ST4 "when the owner enters the house (or a lot size), the rows are computed for that lot on entry by the same pure core and stored with their stamp (the third trigger of ST-5)" — plan step 4 "the import-line pin (parcels-lookup-page:187) and the readLotForm( token pin are dropped and said so" — the only lock on the owner-input entry read is dropped with no stated replacement, so the third trigger loses its planted-defect coverage even though its behaviour is unchanged — replace the token pin with an assertion that the lot-size route still enters the owner-input path, or name the lock that now covers it
+DEFER severity=NIT — doc-16 "A conflicting ruling is marked SUPERSEDED, names the rule that supersedes it, and keeps its text." — task brief Storage set-up "ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts)" — the line keeps the prior text but does not name the rule that supersedes it, which the M-246 form requires — add "by P1 to P7 / A-ST5" to the line
+
+MET — P1 "Compute on first open: the pure core ... runs once when a lot is first opened from the search page" — plan step 2 "held/stored/compute page" — the first-open compute is moved verbatim into src/lib/parcels/lookup-flow.ts under "Lines moved, not new behaviour: no response, meter or golden may change"
+MET — P2 "Triggers: first open, track, owner input. Each runs the same compute-and-store path." — plan step 1 "lot-size route calls it after the settings switch (same order as today)" — the owner-input trigger keeps its route, its order and its store path
+MET — P5 "No record for a lot nobody opened or tracked; no all-lot headline fill; MB-38 has no fill job." — plan step 3 "No response, meter, log key or golden changes" — the plan adds no write path and no fill
+MET — P6 "ONE record per (parcel, option) (unique key (parcel, option); the stamp is a column, a recompute replaces the row)" — plan step 2 "held/stored/compute page" — the stored read and compute move as one unit, the key and the stamp column are untouched
+MET — P9 "Cost: computed for the opened lot ... at each open (arithmetic, not stored), joined by (parcel, option)" — plan step 2 "boundary parse" and "response" — the response path including the lineCost join is moved as-is, the price stays out of the record
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+
+---
+⏱  72872ms (72.9s)
+📊 Tokens — total: 36064, input: 22138, output: 13926, reasoning: 12919

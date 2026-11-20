@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:45:52.066Z file_sha256=3b49942650e6013c4aeb6107c7a7213144aeee57865edd195d4ccdc264528221 prompt_sha256=d5554217235840800b7f8e25db1df919b839ee6f5e61d0be46bb2abb36b63bab
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-THINROUTE/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+MET — Inc-S G.6 "Report meter: a hit counts one report; report limit page when exhausted" — src/app/api/parcels/lookup/route.ts:93-94 "the meter and the log stay here (RR-0331)" / "const { response, body, parcelRef, pageSource, computeMs } = await runLookupFlow({ q, parcelId, semi });" — the meter decision, openReport call, refusal mapping and log line stay in the route and the flow returns exactly the five values the route already held, so the metering rule is untouched.
+MET — Inc-S D.1 "Page shown only when the lot is unsure (before the report)" — src/lib/parcels/lookup-flow.ts:73 "const held = lotForm?.unsure === true && semi !== 'answered';" — the unsure hold is carried verbatim, so a held lot still gets page null and no stored read or compute.
+MET — Inc-S D.2 "Lot form on the lookup hit (detected, basis, unsure)" — src/lib/parcels/lookup-flow.ts:70 "const lotForm = await readLotForm(parcelRef);" — one lot-form read per hit, moved line for line, and src/tests/parcel-lot-form.logic.test.ts pins the count at exactly one.
+MET — Inc-S F-LOOKUP-RESOLVER "Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification: ON ORIGIN" — src/lib/parcels/lookup-flow.ts:37 ": await resolveAddress(q!, { classifyUnlinked: true, matchMistyped: true });" — the same resolver call with the same options, no fork or reimplementation of the normalizers.
+MET — Inc-S G.1 "Unique match goes straight to the report (no extra page)" — src/app/api/parcels/lookup/route.ts:94 "await runLookupFlow({ q, parcelId, semi })" — the flow returns the same single assembled response, which the boundary parse in src/lib/parcels/lookup-flow.ts:98 ".parse(response)" still produces, so no new hop or response field is introduced.
+MET — Inc-S "The lookup route, resolver, meter and the report hand-off contract are on origin." — src/app/api/parcels/lot-size/route.ts:56 "if ((await parcelToolAccess(pool, ctx)) === null) {" — the two gate arms are the same ACTIVE_SUBSCRIPTION_STATUSES set in the same order, so both routes keep the identical 403 boundary the increment records.
+REJECT — Inc-S G.6 — accused of moving the meter into a lib module — src/lib/parcels/lookup-flow.ts:9 "This module imports no meter, entitlement or usage code and writes nothing" and the route keeps the meter block at route.ts:95-98, so the accusation has no quoted support.
+REJECT — Inc-S D.8 "Owner answer stored (a reopened lot does not ask again)" — accused of changing what is stored for the semi answer — the flow returns lotForm unchanged and adds no write (lookup-flow.ts:9 "writes nothing"), so the BOUND-NOT-STORED status is exactly as before.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  70021ms (70.0s)
+📊 Tokens — total: 33706, input: 19560, output: 14146, reasoning: 13415
