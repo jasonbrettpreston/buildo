@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-STN1'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-20T13:57:00Z'
+updated_date: '2026-11-20T14:00:00Z'
 due_date: '2026-11-26'
 labels:
   - '6'
@@ -94,4 +94,6 @@ Landing commit 2 (ST.N1): dated M-246 notes at 69a:696-699 (ST-5 first repo home
 AC1 evidence: pre-registration committed alone, 905741d7f. AC3: write_scope declared in the brief (lane dir and ~/Buildo-wt-stn1). Landing 587c98a50. AC2 and AC6 not applicable (no new check or test, no script changed); AC4 partial (compliance lens per rule list only); AC5 owed (separate grounder); AC7 repo copies in docs/reports/lanes/2026-11-20/BL-STN1; AC8 not applicable. Task left RUNNING: grounder owed.
 
 Commit 4: grounder-round fixes (status cells separate operator words from doc-16 policy text; OPEN items moved out of ruling text; doc-16 body lines marked SUPERSEDED in place). Task stays RUNNING.
+
+Correction (2026-11-20): the earlier notes and the doc-16 header named commits by sha (587c98a50, 905741d7f); a rebase renumbered them, so shas are not used. The commits are: 'docs(69a_mcbylaw_register): ST.N1 pre-registration of the expected moves for the McStorage policy v2 landing, committed alone (task-90)' and 'docs(69a_mcbylaw_register): McStorage policy v2 amendments landed, prior text kept (ST.N1)', both 2026-11-20 on wf1/inc1b-stn1.
 <!-- SECTION:NOTES:END -->
