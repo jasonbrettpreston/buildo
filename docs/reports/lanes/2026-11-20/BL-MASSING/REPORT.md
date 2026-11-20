@@ -17,4 +17,11 @@
 - Not done by brief: no GROUNDER.md (owed, separate grounder); task left RUNNING; milestone untouched; no push, no DB, no migration.
 - Report gaps UNVERIFIED: the Spec 126 P4 text on the storey heights is flagged by many plan findings (the storey heights stay typed in src); the brief ordered them listed only.
 
+## Follow-up round (grounder ruled 92 findings: 3 CONFIRMED, 81 REJECTED, 8 CONFLICT)
+- The settings seed scripts/seeds/logic_variables.json has no rule-list row; owner task-406 (V2.LIST, which replaced task-403).
+- B13 (massing.logic.test.ts:406-415) gained three value assertions on the compute function: (10,[10],20,60) primary; (80,[150,80],20,60) other; (100,[100,100],20,60) primary. All hold against scripts/lib/compute/link-massing.js:330-337.
+- The task description's operator quote "you need to resolve these?": grep -n -i "resolve these" over ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md finds nothing; not found there (description not edited).
+- After `git rebase wf2/board` the commit shas changed; the work commit is now c40c5406d.
+- GROUNDER.md copied byte for byte (sha256 2de8c8e557e95acbbfd85386e573080a34aebe04b52f7a9d9dfba9b6930b85e0).
+
 STATUS: BL-MASSING task-396 ready for grounder; commit 602534215 on wf1/inc1b-massing, task RUNNING, grounder owed.

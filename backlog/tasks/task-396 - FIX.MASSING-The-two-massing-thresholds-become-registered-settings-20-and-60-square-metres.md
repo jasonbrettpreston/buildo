@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MASSING'
 created_date: '2026-11-20T15:54:00Z'
-updated_date: '2026-11-20T17:38:00Z'
+updated_date: '2026-11-20T17:50:00Z'
 labels:
   - McFix
   - McFix A
@@ -54,4 +54,6 @@ Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the
 2026-11-20 taken on the board at lane launch (lane BL-MASSING, worktree /Users/brettpreston_macmini/Buildo-wt-massing, branch wf1/inc1b-massing), RR-0240
 
 2026-11-20 BL-MASSING: grep over src, mobile, scripts found no run-time caller or importer of the src classifyStructure, SHED_THRESHOLD_SQM or GARAGE_MAX_SQM (only src/tests/massing.logic.test.ts); scripts/lib/compute/link-massing.js has its own classifyStructure taking the registered seed values as arguments. Deleted them and the test block; the compute lock (link-massing.infra.test.ts:84-85) is retained and a src lock added beside it. Storey heights (STORY_HEIGHT_M, STORY_HEIGHT_BY_USE_TYPE) left alone. Lens outputs in docs/reports/lanes/2026-11-20/BL-MASSING/, findings untriaged, grounder owed.
+
+2026-11-20 follow-up: the settings seed scripts/seeds/logic_variables.json has no rule-list row; owner task-406 (V2.LIST, which replaced task-403). B13 in src/tests/massing.logic.test.ts gained three value assertions on the compute classifyStructure (10,[10] primary; 80,[150,80] other; 100,[100,100] primary). The description's quote 'you need to resolve these?' was not found by grep in MORNING-DECISIONS.md.
 <!-- SECTION:NOTES:END -->

@@ -410,6 +410,9 @@ describe('link_massing query shape — the B13 guarantee, re-homed to the comput
     expect(compute.classifyStructure(300, [300, 40], 20, 60)).toBe('primary');
     expect(compute.classifyStructure(15, [300, 15], 20, 60)).toBe('shed');
     expect(compute.classifyStructure(45, [300, 45], 20, 60)).toBe('garage');
+    expect(compute.classifyStructure(10, [10], 20, 60)).toBe('primary');
+    expect(compute.classifyStructure(80, [150, 80], 20, 60)).toBe('other');
+    expect(compute.classifyStructure(100, [100, 100], 20, 60)).toBe('primary');
     expect(lmSql(), 'the nearest fallback is still a declared pass').toMatch(/ST_DWithin/);
   });
 
