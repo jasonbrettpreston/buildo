@@ -229,7 +229,7 @@
     },
     {
       "path": "scripts/seeds/logic_variables.json",
-      "sha256": "a30b83d943d3562d"
+      "sha256": "86b6714326e51661"
     },
     {
       "path": "scripts/surfaces/_schema/report-fields.decl.json",
