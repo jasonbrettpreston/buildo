@@ -7,13 +7,15 @@ status: RUNNING
 assignee:
   - '@lane-BL-MASSING'
 created_date: '2026-11-20T15:54:00Z'
-updated_date: '2026-11-20T17:37:00Z'
+updated_date: '2026-11-20T17:38:00Z'
 labels:
   - McFix
   - McFix A
 milestone: m-1
 dependencies:
   - TASK-378
+references:
+  - docs/reports/lanes/2026-11-20/BL-MASSING/REPORT.md
 type: fix
 ordinal: 96012
 ---
