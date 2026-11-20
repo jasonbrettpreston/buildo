@@ -1,0 +1,13 @@
+== before
+src/app/api/parcels/lookup/route.ts :: surface-126=false surface-128=false :: eng-all storage-doc16 five-words plan-protocol inc-S ms-S
+src/app/api/admin/media/route.ts :: surface-126=false surface-128=false :: eng-all five-words plan-protocol inc-S ms-S
+src/app/api/admin/stats/route.ts :: surface-126=false surface-128=false :: eng-all five-words plan-protocol inc-S ms-S
+src/app/api/leads/detail/[id]/route.ts :: surface-126=false surface-128=false :: eng-all five-words plan-protocol inc-S ms-S
+== after
+src/app/api/parcels/lookup/route.ts :: surface-126=true surface-128=true :: eng-all surface-126 surface-128 storage-doc16 five-words plan-protocol inc-S ms-S
+src/app/api/admin/media/route.ts :: surface-126=true surface-128=true :: eng-all surface-126 surface-128 five-words plan-protocol inc-S ms-S
+src/app/api/admin/stats/route.ts :: surface-126=false surface-128=false :: eng-all five-words plan-protocol inc-S ms-S
+src/app/api/leads/detail/[id]/route.ts :: surface-126=false surface-128=false :: eng-all five-words plan-protocol inc-S ms-S
+== surface-128 lens input, material = the last commit touching src/app/api/parcels/lookup/route.ts
+32:| 2 | Compute contains domain logic only — no gating, ledger, lock, emission, logging side-channel, environment read, or policy comment. 
+50:Rule 2 ("the client is just glass") is the one rule whose boundary must be written down rather than inferred, because "everything server-

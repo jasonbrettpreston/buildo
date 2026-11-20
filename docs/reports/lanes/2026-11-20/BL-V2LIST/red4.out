@@ -1,0 +1,36 @@
+RED attempt (round 4) 2026-11-20: commit with only the drift test and the task file staged (real hooks); refused, exit 1. Tail:
++ Received
+
+- ArrayContaining [
+-   "surface-126",
+-   "surface-128",
++ Array [
++   "eng-all",
++   "storage-doc16",
++   "five-words",
++   "plan-protocol",
++   "inc-S",
++   "ms-S",
+  ]
+
+ ❯ src/tests/backlog/rule-lists-table.logic.test.ts:105:58
+    103|   });
+    104|   it('the lookup route and a parcel_admin route gain surface-126 and s…
+    105|     expect(lists('src/app/api/parcels/lookup/route.ts')).toEqual(expec…
+       |                                                          ^
+    106|     expect(lists('src/app/api/admin/media/route.ts')).toEqual(expect.a…
+    107|     const lead = lists('src/app/api/leads/detail/[id]/route.ts');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 8 passed (10)
+   Start at  14:53:48
+   Duration  2.70s (transform 2ms, setup 4ms, collect 2ms, tests 327ms, environment 0ms, prepare 18ms)
+
+exit 1
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > V2.LIST round 4: the surface-contract-routes row equals the census (drift test) > the lookup route and a parcel_admin route gain surface-126 and surface-128; an e
+ FAIL  src/tests/backlog/rule-lists-table.logic.test.ts > V2.LIST round 4: the surface-contract-routes row equals the census (drift test) > the real row lists exactly the route files the census names for parcel_product a
+ACCURATE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13; findings 135
+report-fields current (1 rendered fields); gates FAIL (report-only): RF-2, RF-4, RF-6, RF-7, RF-9
+UNDERSTANDABLE: FAIL (complete 1612 / in_scope 4123; pending 2511 (phase1 0 / phase2 2511; stale 0); failed 0; draft_failures unknown; disagreements unknown; disclosed_defects 162; gates pass 9 / run 9 / total 13)
