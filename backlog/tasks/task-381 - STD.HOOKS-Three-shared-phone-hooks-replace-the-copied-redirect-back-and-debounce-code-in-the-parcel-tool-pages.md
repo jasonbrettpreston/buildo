@@ -3,10 +3,11 @@ id: TASK-381
 title: >-
   STD.HOOKS Three shared phone hooks replace the copied redirect, back and
   debounce code in the parcel-tool pages
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-HOOKS3'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-20T18:32:00Z'
 labels:
   - McFix
   - McFix B
@@ -35,3 +36,9 @@ Plan section B1. Page-runner measurement: redirect-once-on-settled, back-with-ca
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-20 taken on the board at lane launch (lane BL-HOOKS3, worktree /Users/brettpreston_macmini/Buildo-wt-hooks3, branch wf1/inc1b-hooks3), RR-0240
+<!-- SECTION:NOTES:END -->
