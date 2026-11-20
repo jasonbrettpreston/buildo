@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T14:18:35.023Z file_sha256=3ad68a10dd605a7e5cea16cd43495477b9471edbbb65aa3b7a0086bda9c28934 prompt_sha256=df2d15a9b5d77e9a9338503fb350b423455ee783baa065375baf886baee01be6
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out3/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10570 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 25095 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 36189 chars, answer 0 chars, 45s
+BUG severity=HIGH — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)." — scripts/analysis/rule-lists.mjs:269 "Judge the material under review against the rules in this part" — every attached list is handed to the compliance lens as "the rules" with no provenance test, so a readings document is fed as a ruling set, which this run's own header shows happening: "RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file)" — carry list provenance in the table (the operator ruling id and its source line per list) and refuse, in validateTable and buildLensInputs, any list whose document declares itself readings or a register entry, or whose provenance is not an operator ruling.
+
+BUG severity=HIGH — doc-17 "The operator's rulings are the decisions." — scripts/hooks/check-lane-close.mjs:3 "operator 2026-11-20, see scripts/analysis/rule-lists.json $comment" — the only authority the change rests on is an operator statement of 2026-11-20, which appears in no pasted ruling (the pasted register stops at RR-0218, 2026-11-19) and in no file in this diff, so nothing pasted names this gate — paste the 2026-11-20 operator ruling verbatim with its source line into the rulings register before this gate is advertised as a ruling-backed check.
+
+DEFER severity=MED — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling" — scripts/analysis/rule-lists.mjs:21 "export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');" — the table that decides which documents feed a review as rules is not part of the material under review (nor is .claude/review-templates/lens-compliance.md, which check-lane-close.mjs requires by name), so the ruling/reading boundary cannot be verified at all — include scripts/analysis/rule-lists.json and the compliance lens template in the change so each attached list and its provenance are reviewable.
+
+REJECT — doc-17 readings (for example RR-0111 "Permit step conversion stays frozen (Spec 137 rule 11)") — the change is accused of not honouring a frozen permit conversion — doc-17 states readings never feed a review as a ruling, so no RR item can be a clause this diff must meet.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 2   Unmet: 2
+
+---
+⏱  51182ms (51.2s)
+📊 Tokens — total: 41499, input: 31098, output: 10401, reasoning: 9813

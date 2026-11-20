@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T14:18:35.024Z file_sha256=b00a5600b5f5b96b5f3244650d5f8f542918276f0168d2c4e0818be392e641ce prompt_sha256=9c010ea69e061293a7291318b8e15276b21b306c1c4c5f639411bf16be1c038f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out3/in-out-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9643 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 23411 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34881 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45813 chars, answer 0 chars, 60s
+BUG severity=CRIT — 5.3 Red-Green Test Cycle "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — scripts/analysis/rule-lists.mjs:176 "export function resolveTask({ table, root, body, type, letter, tracked }) {" — the diff lands a new resolver/CLI, a new commit-msg gate and a new review-tool header with zero test files, so no failing test was written or run before the code — write and run a failing .logic.test.ts for the resolver functions and a failing unhappy-path test for the gate first, then the implementation.
+
+BUG severity=HIGH — 5.2 Test File Pattern "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — scripts/analysis/rule-lists.mjs:124 "export function lensSet({ type, files }) {" — the pure derivation surface (headings, sectionText, listBlocks, filesEntries, lensSet, coveredBy, resolveTask, findingsIn, parseLensInput, buildLensInputs) has no .logic.test.ts and the gate's refusals have no .infra.test.ts unhappy-path test — add rule-lists.logic.test.ts (no Files line, unmatched path, section selector matching two headings, list split at headings) and a check-lane-close.infra.test.ts refusing a close with no lane assignee, no GROUNDER.md and a stale Ruled sha.
+
+BUG severity=HIGH — 5.5 Test-Layer Map "Parity battery | Two surfaces that MUST agree stay in lockstep: dual code paths (§7), seed JSON ↔ TS `LOGIC_VAR_DEFAULTS`, and **generated doc ↔ its generator** (the drift guard ...) | `npm run test` | Silent divergence" — scripts/hooks/check-lane-close.mjs:95 "const phases = build ? ['out'] : ['plan', 'out'];" — the generated launch brief at scripts/analysis/backlog-lane.mjs:148 states "The close of this task is refused without an out-compliance output per list, an out-<lens>.txt for every other output lens named above, a plan-stage output (plan-<lens>.txt)" while the check accepts a single plan-compliance output for any non build/fix task and requires no out-<lens> there, so two surfaces that must agree already diverge with no parity battery — add a parity test that derives the brief's required file list and the check's required file list from one source and diffs them.
+
+DEFER severity=MED — 5.2 Test File Pattern "`*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence" — scripts/lib/review-template.js:76 "const values = { PLAN: plan, SPECS: specs, DATA_CONTEXT: dataContext };" — the substitution helper every review template runs through is re-implemented (string replace with dollar-sequence expansion, to one pass with a function replacer) with no test pinning either the new literal semantics or the retired expansion, and whether the Regression Guardian flagged this fence cannot be seen in the pasted material — add a .logic.test.ts asserting that a {{PLAN}} value containing "$&" or "$1" is inserted literally and that all three tokens substitute.
+
+DEFER severity=LOW — 5.5 Test-Layer Map "Parity battery | Two surfaces that MUST agree stay in lockstep" — scripts/analysis/rule-lists.mjs:218 "const FINDING_LOOSE = /^[\s>*_`\"'\-\d.):]*\b(bug|defer)\b[\s*_`\"':]*\s*(severity|crit|high|med|low|nit)/i;" — the strict FINDING_LINE and the loose FINDING_LOOSE are two parallel readings of one output format whose agreement is only compared at run time, so a format drift that both miss counts zero findings and passes silently — pin both readings against a captured review-tool output in a .logic.test.ts.
+
+MET — 5.2 Test File Pattern (parity row, shared implementation) — scripts/analysis/backlog-lane.mjs:144 "const { code, plan, out } = lensSet({ type: task.fm.type, files: filesText(task.body) }); // one lens-set function, shared with the close check (rule-lists.mjs)" — the lens set is not duplicated between the brief and the close check.
+
+MET — 5.5 Test-Layer Map (DB replay row) — the diff touches only .husky/commit-msg "node scripts/hooks/check-lane-close.mjs \"$1\" && \\" and scripts/*.mjs/js modules, no migration or schema constraint, so DB replay is not owed.
+
+MET — 5.1 Typed Factories Only — the diff adds no inline untyped object standing in for a domain entity and no mock at all, so 5.1 has nothing to bind.
+
+MET — 5.4 Test Data Seeding — the new gate reads the git index and the backlog board, not a database, so no scripts/seed-[scenario].js is owed by this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 3
+
+---
+⏱  66083ms (66.1s)
+📊 Tokens — total: 35102, input: 21354, output: 13748, reasoning: 12565

@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T14:18:34.991Z file_sha256=4cad7fe5496bb5e62b99141a912c23f2546aa0ecb22c46aa221838412480bfaa prompt_sha256=e57f3d600f9463835916c750f851fc64862b110817c7712e18d5f0bd8c4b7eb7
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out3/material-code.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10353 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21108 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31529 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42422 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53697 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 69626 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 82514 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 92966 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 103580 chars, answer 0 chars, 135s
+BUG severity=HIGH — scripts/hooks/check-lane-close.mjs:207 "try { table = readTable(tableFile); }" — the gate reads rule-lists.json from the working tree, so an unstaged edit (empty finished_statuses, rule-lists.json removed from protected_paths, changed base_ref) changes the verdict for the same commit on a re-run, and a table edit staged together with the closing task is trusted by the very commit it should police — read the staged blob (git show :scripts/analysis/rule-lists.json, else HEAD) and fail closed when the table is in neither.
+
+BUG severity=MED — scripts/hooks/check-lane-close.mjs:214 "if (now.status !== 0) continue;" — a staged backlog/tasks file whose index blob cannot be read is silently skipped, so a status move to DONE escapes every check while the other git failures in the same function (merge-base, base_ref, table) refuse the commit — push a refusal line instead of continue.
+
+BUG severity=MED — scripts/analysis/rule-lists.mjs:140 "if (!milestone || !fs.existsSync(dir)) return undefined;" — a missing backlog/milestones dir, a milestone file that is gone, or a title without a [X] suffix yields letter undefined, and resolveTask's "if (letter !== undefined)" then drops the increment document from the lens set silently, so the close passes without the increment compliance output — return a refusal when the task sets a milestone but no letter can be read.
+
+BUG severity=MED — scripts/analysis/rule-lists.mjs:222 "export const FINDING_LINE = /^\s*[-*]?\s*(BUG|DEFER)\s+severity=/;" — a model output with a decorated finding header (**BUG severity=HIGH** or a numbered/bulleted prefix the loose pattern was written to accept) counts 0 strict and 1 loose, and check-lane-close.mjs:148 "if (strict !== loose) errors.push(...)" then refuses a close in which nothing was altered — normalize decoration out of the text once and compare counts on the normalized text, not on two disagreeing readers.
+
+BUG severity=MED — scripts/hooks/check-lane-close.mjs:241 "const id = String(mv.fm.id ?? mv.f).toLowerCase().replace(/^task-0*/, 'task-');" — the fallback is the full staged path, so a task file with no frontmatter id gets an id no TASK file can equal (line 89 compares f.text.trim().toLowerCase() === id), and a numeric id becomes a bare number that names no task-<n>, both refusing a correctly laned close — fall back to path.basename(mv.f) stripped of ".md" and the " - ..." tail, and prefix a bare numeric id with task-.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:197 "const row = d && d.types.map((x) => x.toLowerCase()).includes(String(type ?? '').toLowerCase()) ? table.rows.find((r) => r.id === d.row) : null;" — a table whose no_files_default lacks types passes validateTable (line 105-106 only checks row) and then throws a TypeError here, which closeErrors reports as "cannot read the rule-list table or one of its path maps", pointing the operator at the wrong cause — validate types as a non-empty array, or guard with (d.types ?? []).
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:331 "fs.writeFileSync(p, f.text); console.log(p);" — lens-input deletes the previous outputs (line 330) before writing the new set, so a write failure midway (ENOSPC, permissions) destroys the prior good set and leaves a partial one, forcing a full regeneration though the close check still refuses — write to temp names and rename into place, then remove only the stale parts once the new set is complete.
+
+REJECT — scripts/deepseek-review.js:192 "console.log(lensHeader(systemInstruction, userPrompt));" — the REVIEW header is emitted before the API call, so a failed or aborted run leaves a file that starts with a valid header — check-lane-close.mjs:56 "if (!/^VERDICT:/m.test(text))" requires a VERDICT line and reviewErrors compares file_sha256 to the committed in-<name>, so a header without a completed body is refused, not accepted.
+
+VERDICT: FAIL on error-path safety
+Paths walked: empty Files line, unmatched Files path, no increment doc, missing milestone letter, missing frontmatter id, lens-input bound throw, lens-input delete-then-write, missing material file, review-tool header before call, dry-run output, table read and table absent, staged task read failure, base_ref and merge-base failure, TASK file match, lens output header and VERDICT, part gap and whole-list recheck, strict vs loose finding count, grounder ruled/verdict form, git show of in- and repo files   Unguarded: 2
+
+---
+⏱  141069ms (141.1s)
+📊 Tokens — total: 61811, input: 31735, output: 30076, reasoning: 28980

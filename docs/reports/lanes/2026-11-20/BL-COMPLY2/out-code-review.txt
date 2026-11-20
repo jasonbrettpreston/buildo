@@ -1,0 +1,42 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T14:18:34.977Z file_sha256=4cad7fe5496bb5e62b99141a912c23f2546aa0ecb22c46aa221838412480bfaa prompt_sha256=4f9465ac6c2b0fac1bd895546798bed7dfa6bee39266f14d7e81db2c40c76eef
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out3/material-code.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9453 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20334 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31415 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42346 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 52922 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 63815 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 75000 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 85886 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 99897 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 112258 chars, answer 0 chars, 150s
+BUG/DEFER/REJECT findings only, quoted, one line each.
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:36 "const git = (a) => { const r = spawnSync('git', ['-c', 'core.quotepath=false', ...a], { encoding: 'utf8', maxBuffer: 1 << 28 }); return { status: r.status ?? 1, stdout: r.stdout ?? '' }; };" — r.stderr and r.error are dropped, and check() reads only stdout at line 229, so a failed "git diff --cached" (or a missing git) yields staged=[], moves=[], and the hook returns 0 with nothing logged — the gate fails open silently — return stderr with the status and refuse when the diff/ls-files call exits non-zero, as trackedFiles does at scripts/analysis/rule-lists.mjs:29.
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:197 "const row = d && d.types.map((x) => x.toLowerCase()).includes(String(type ?? '').toLowerCase()) ? table.rows.find((r) => r.id === d.row) : null;" — no_files_default.types is never validated (validateTable checks only d.row at line 106), so a table with {row} and no types passes `validate` and then every no-Files task throws "Cannot read properties of undefined (reading 'map')" instead of the intended one-line refusal — add an Array.isArray(d.types) check to validateTable and use (d?.types ?? []) here.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:234 "if (now.status !== 0) continue;" — a staged task file that git cannot read is skipped with no message and no counter, so a move to BUILT/DONE/MERGED in that file escapes every check below — record the failure as an error line (git status plus the path) instead of continuing.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:296 "export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');" — nothing in this diff references it; check-lane-close.mjs:124 rebuilds the same expression inline ("whole = listBlocks(i.table.lists[l.id], i.root, l.id).map((b) => b.text).join('')"), so the exported helper and the gate can drift — delete it, or import it at check-lane-close.mjs:124 and use it there.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:62 " * @param {{id:string, taskText:string, fm:object, assignees:string[], headAssignees:string[], type:string, table:object, root:string, letter?:string," — fm is passed at the call site ("fm: mv.fm") but closeErrors never reads i.fm; taskText already carries the parsed fields it uses — drop fm from the typedef and from the call, or read the fields from it.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:114 "const m = /(?:^|\s)Files:[ \t]*(.*)$/m.exec(String(body));" — the first "Files:" anywhere wins, including mid-sentence prose, so a task body that says "the Files: line must list every changed path" resolves the entries "line must list every changed path" and resolveTask refuses the task — prefer an anchored "^Files:" line and fall back to the inline form only when no anchored line exists.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:244 "const id = String(mv.fm.id ?? mv.f).toLowerCase().replace(/^task-0*/, 'task-');" — the fallback is the whole path ("backlog/tasks/task-1 - x.md"), so the ^task-0* normalization never applies and the TASK file can never name it, while error lines print a path — use path.basename(mv.f, '.md') as the fallback.
+
+REJECT — scripts/analysis/rule-lists.mjs:292 "const material = text.slice(mi + MARKER.length).replace(/\n$/, '');" — looks like it eats a real trailing newline of the material and would break the sha256 check — it is correct: buildLensInputs appends exactly one "\n" after the material ("${p}${MARKER}${material}\n"), so removing exactly one restores the original bytes and p.materialSha compares equal.
+
+VERDICT: FAIL on code correctness
+
+Top 3 defects (if FAIL):
+- The git wrapper drops stderr and spawn errors while check() treats empty stdout as "nothing staged", so a broken git lets a closing commit through with no message
+- no_files_default.types is unvalidated: `validate` passes the table, then resolveTask throws a TypeError in place of the designed refusal
+- wholeListText is dead and check-lane-close re-implements the same whole-list expression inline, so the two can drift apart
+
+---
+⏱  162795ms (162.8s)
+📊 Tokens — total: 66532, input: 31718, output: 34814, reasoning: 33690

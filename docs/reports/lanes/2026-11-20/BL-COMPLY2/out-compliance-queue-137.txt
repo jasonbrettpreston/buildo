@@ -1,0 +1,49 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T14:18:35.024Z file_sha256=a10b1529e96112ecfc7ba26c73c4f0da12bcdeecd2e1b84932cf2795c78fb3b4 prompt_sha256=d172c2dfbc19a5fec6f3fd8cefb5822f221901adb430705a61bc39c224eb65fa
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out3/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10540 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22651 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34326 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 45709 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 56271 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 69688 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 83935 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 97159 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 108806 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 119402 chars, answer 0 chars, 150s
+[deepseek-review] deepseek-reasoner working… reasoning 132454 chars, answer 0 chars, 165s
+BUG severity=HIGH — Spec 137 §4 note 2026-11-20 "`scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them." — scripts/hooks/check-lane-close.mjs:207 "if (!fs.existsSync(tableFile) && !tableInHead) return 0;" — the hook passes every commit when scripts/analysis/rule-lists.json is absent from both worktree and HEAD, and that table cannot be seen anywhere in this diff, so a commit that sets BUILT or DONE with no compliance output and no GROUNDER.md is accepted — ship scripts/analysis/rule-lists.json in this change and make a missing table a refusal (fail closed), as a corrupt one already is at :209.
+
+BUG severity=HIGH — Spec 137 §4 note 2026-11-20 "(the launch refuses a task whose Files line is missing or matches no row)" — scripts/analysis/rule-lists.mjs:199 "for (const l of row.lists) add(l, row.id, `${row.why} (no Files line: the record-only default)`);" — a task with no Files line is accepted and given the no_files_default row's lists, not refused, whenever its type is listed in no_files_default.types (the table is not pasted, cannot see whether it is) — return the no-Files error unconditionally as the clause reads, or bring back an operator ruling that names the record-only default.
+
+DEFER severity=MED — Spec 137 §4 note 2026-11-20 "Which lists a task attaches is decided by `scripts/analysis/rule-lists.json` from the task's Files line" — scripts/analysis/rule-lists.mjs:213 "add(id, 'increment', 'every task also gets the requirements document of its increment (the milestone group letter)');" — a list is attached from the milestone letter, not the Files line, and :212 refuses any launch whose group letter has no increment_docs entry, a refusal ground the clause does not name — reach the increment document through a table row matched by the Files line, or amend the clause; make an unmapped letter a warning, not a refusal.
+
+DEFER severity=MED — Spec 137 §4 note 2026-11-20 "refuses the commit that sets BUILT or DONE without them" — scripts/hooks/check-lane-close.mjs:142 "if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7)`);" — a commit that carries exactly what the clause names (one compliance output per attached list and a GROUNDER.md) is still refused for want of a plan-stage output, and the same holds for the @lane assignee and the Files-against-diff refusals the clause never names — get an operator ruling that names these close conditions, or move them to a separate gate.
+
+DEFER severity=MED — Spec 137 §3 word list "The line reads `MERGED into <id>` and points to it; the work is tracked there." — scripts/hooks/check-lane-close.mjs:210 "const finished = new Set((table.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));" — MERGED is in the default finished set, so a task marked MERGED (no lane work closes there) is refused without a lane report and a GROUNDER, while the clause names only BUILT or DONE — default the set to BUILT and DONE, letting the table add MERGED only on an operator ruling.
+
+DEFER severity=MED — Rule 13 "for plan tasks the operator edits on the Backlog board (browser, port 6421) and the edit is committed through the real hooks by the board-commit job" — scripts/hooks/check-lane-close.mjs:5 "whatever the commit message or its Task: trailers say (a wrong trailer, no trailer or the board's auto-commit does not avoid it)." — a conforming `docs(137_mcqueue): board edits <date>` commit that moves a build or fix task to DONE is refused when the lane report or GROUNDER is absent, so the operator's board edit does not commit and rule 13's board-commit path fails for status closes — exempt the conforming board-edit commit from the close check, or rule that the operator may not close a lane task on the board.
+
+DEFER severity=MED — Spec 137 §4 note 2026-11-20 "(the launch refuses a task whose Files line is missing or matches no row)" — scripts/analysis/rule-lists.mjs:206 "if (cands.some((c) => matchesAny(table.exempt ?? [], c))) result.exempt.push(entry); else result.unmatched.push(entry);" — a Files entry that matches no row is accepted when it matches table.exempt, so "matches no row" is not the refusal ground the clause states — refuse every unmatched entry, or have the operator name the exempt list in the clause.
+
+DEFER severity=LOW — Spec 137 §4 note 2026-11-20 "Which lists a task attaches is decided by `scripts/analysis/rule-lists.json` from the task's Files line" — scripts/analysis/backlog-lane.mjs:73 "a different table would decide which rule lists apply, so it is refused (the tests set RULE_LISTS_ALLOW_OVERRIDE=1)" — with RULE_LISTS_ALLOW_OVERRIDE=1 in the environment the launch accepts another table, so the deciding file is not fixed for that run — bind the override to a test-only path, or drop it from the launch script.
+
+MET — Spec 137 §4 note 2026-11-20 "one compliance lens output per rule list the task attaches" — scripts/hooks/check-lane-close.mjs:98 — closeErrors loops r.lists and requires <phase>-compliance-<id>.txt plus its committed in- input, and backlog-lane.mjs prints "Files to produce, one per list".
+
+MET — Spec 137 §4 note 2026-11-20 "a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding" — scripts/hooks/check-lane-close.mjs:177 — a Grounder/Lane header clash check against the lane and every assignee, and one verdict line required per parsed finding id.
+
+MET — Spec 137 §4 note 2026-11-20 "refuses the commit that sets BUILT or DONE without them" (wiring) — .husky/commit-msg:8 — "node scripts/hooks/check-lane-close.mjs "$1" && \" is added to the commit-msg chain.
+
+MET — Spec 137 §4 note 2026-11-20 "Which lists a task attaches is decided by `scripts/analysis/rule-lists.json` from the task's Files line" (read happens before any write) — scripts/analysis/backlog-lane.mjs:74-76 — resolveTask reads the table and refuses on resolved.error before the take.
+
+MET — Rule 3 "The status line changes in the same commit as the work." — scripts/hooks/check-lane-close.mjs:218 — "if (was.status === 0 && String(headFm.status ?? '').toUpperCase() === status) continue;" keys the close on the status word changing in the commit, not on the message or trailers.
+
+REJECT — Spec 137 §6 "its three conditions (missing status line, missing expiry, DROPPED without a quoted ruling) stay deferred" — accused of building the deferred commit check — the hook never reads expiry and DROPPED is not in the finished set, so the three conditions remain deferred.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 5
+
+---
+⏱  176892ms (176.9s)
+📊 Tokens — total: 65602, input: 28123, output: 37479, reasoning: 35708

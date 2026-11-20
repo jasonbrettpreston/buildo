@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-COMPLY2'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-20T14:25:00Z'
+updated_date: '2026-11-20T14:26:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -75,4 +75,6 @@ Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, script
 2026-11-20 BL-COMPLY2 round 2 (grounder attacks, 13 got through): close check now runs for every staged task file that moves to a finished status (any trailer or none, the board job included); REVIEW header from the review tool bound to the committed input and the whole-list hash; TASK-scoped lane dir; Files against the diff; no-assignee and dropped-assignee refused; self-edit rule; grounder name clash, quote and reason minimums, loose finding count; launch: table override refused, exempt-only Files refused, rows for components, app, middleware, package.json, .github and surface importers. Red: red4.out. Task stays RUNNING: grounder owed.
 
 2026-11-20 BL-COMPLY2: table rows may exclude paths (not): scripts/deepseek-review.js and scripts/gemini-review.js are lane tools, not step shells (red5.out, then green). Task stays RUNNING: grounder owed.
+
+2026-11-20 BL-COMPLY2 round 3 report in the repo (docs/reports/lanes/2026-11-20/BL-COMPLY2/): attack table, 178 findings by id, round-3 lens outputs with REVIEW headers and committed inputs, TASK file. Dogfood: only GROUNDER.md missing. Task stays RUNNING: grounder owed.
 <!-- SECTION:NOTES:END -->

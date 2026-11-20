@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T14:18:35.044Z file_sha256=990b897fcaa14116591e449eba76bb7b73c2ba79270491585b6d0286507c91ef prompt_sha256=8e1fd00d0c6357e68478339c093a69e855e9dd69b8fb35302d34ca3056b6feaa
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out3/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10179 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21158 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33449 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43172 chars, answer 0 chars, 60s
+BUG severity=HIGH — inc-S, the only governing list pasted ("RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1") — scripts/analysis/rule-lists.mjs:10 "// Rules: Spec 08 section 7 rule 4 and section 5.3 (08_agents.md), 00_engineering_standards.md section 14, operator 2026-11-20 (see the table's $comment); PLAN-PROTOCOL.md:3 simple." — the diff adds a rule-list table resolver, a per-list compliance lens, a REVIEW header and a commit-time close gate on authority (Spec 08, 00_engineering_standards section 14, operator 2026-11-20, task-366) that is not pasted anywhere, and inc-S names no rule-list table, no lens set, no REVIEW header and no close gate, so the added behaviour is named by no pasted clause (walk step 4) — paste the COMPLY.2 / task-366 operator ruling into the context file, or land this change under a list that carries it.
+
+BUG severity=MED — inc-S Built state "Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page." — scripts/analysis/rule-lists.mjs:213 "add(id, 'increment', 'every task also gets the requirements document of its increment (the milestone group letter)');" — the diff touches only .husky/commit-msg, scripts/analysis, scripts/hooks and scripts/lib (no src, mobile or surface path), yet its own resolver attaches the increment requirements document to every task of group [S], so tooling lanes are judged against the 65 search-page elements and deliver none of the 16 not-built ones (A.4, A.5, A.6, A.11, B.3, B.10, C.5, C.12, D.9, D.10, E.2 to E.6, G.5) — scope the increment-doc attachment to tasks whose Files line touches the increment's surfaces, or exempt tooling rows from it.
+
+REJECT — inc-S A.4 "| A.4 | A Search page · Typed street direction (E/W/N/S) kept in the match | details | NOT-BUILT (parser) | 1.4 | NOT BUILT |" — accused of failing to keep typed direction and unit numbers in the match — the deliverer is task 1.4 and the diff declares no search-page path, so the clause belongs to that task, not this material.
+
+REJECT — inc-S E.2 "| E.2 | E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | details | AVAILABLE · MISSED by the sweep | MF-44 MF-46 | NOT BUILT |" — accused of not building the web footer — deliverers MF-44 and MF-46 own it and a scripts-only diff cannot satisfy or break it.
+
+REJECT — inc-S D.8 "| D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA |" — accused of leaving the semi answer unstored — the row records the tree's state (GAP.12) and this diff adds no lookup or report code, so nothing in it stores or unstores the answer.
+
+MET — inc-S Built state "All of it is the old dark look (zinc and #0e0e10), not Daylight." — .husky/commit-msg:8 — the diff adds one commit-msg line and scripts only, no surface, stylesheet or Tailwind token, so the recorded rendering state is unchanged by this material.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 72   Unmet: 2
+
+---
+⏱  73172ms (73.2s)
+📊 Tokens — total: 40486, input: 26345, output: 14141, reasoning: 13237

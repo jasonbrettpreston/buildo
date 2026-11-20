@@ -1,0 +1,44 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T14:18:35.062Z file_sha256=32fa8a168bd579be170128cbe70817427209857c6bae8389c21f042cfcc76fe8 prompt_sha256=fb9e42b2be61920f3afa64206a2dff0318725a6a9f9df0f1607ae864dd3d2adc
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply2/out3/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10978 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22166 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33831 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44937 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 56532 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 67882 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 79746 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 91229 chars, answer 0 chars, 120s
+[deepseek-review] deepseek-reasoner working… reasoning 103200 chars, answer 0 chars, 135s
+[deepseek-review] deepseek-reasoner working… reasoning 114488 chars, answer 0 chars, 150s
+[deepseek-review] deepseek-reasoner working… reasoning 126661 chars, answer 0 chars, 165s
+[deepseek-review] deepseek-reasoner working… reasoning 140100 chars, answer 0 chars, 180s
+[deepseek-review] deepseek-reasoner working… reasoning 154781 chars, answer 0 chars, 195s
+[deepseek-review] deepseek-reasoner working… reasoning 164601 chars, answer 3003 chars, 210s
+BUG severity=HIGH — §7 rule 1 and rule 4 "both mandatory per WF" and "Run the set at plan AND output for WF1/WF2" — scripts/hooks/check-lane-close.mjs:96 "const phases = build ? ['out'] : ['plan', 'out'];" — the close check accepts one compliance phase per list (out only for build/fix, either plan or out otherwise), while the launch brief requires plan-compliance-<id>.txt AND out-compliance-<id>.txt for every list, so the plan-altitude compliance review can be skipped — require both phases per attached list, or the exact files the brief names, and fail the close when either is missing.
+
+BUG severity=HIGH — §7 rule 4 note 2026-11-19 "the lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit, and the task's references point at that repo copy" — scripts/hooks/check-lane-close.mjs:89 "const mine = [...dirs.entries()].filter(([, fs_]) => fs_.some((f) => f.name === 'TASK' && f.text.trim().toLowerCase() === id));" — the check requires only a TASK file plus the lens outputs, and never requires REPORT.md or TRIAGE.md in the lane dir nor that the task references point at the repo copy, so the ruling's copied report can be missing — require REPORT.md, and TRIAGE.md when findings exist, in the lane dir and validate the task references resolve to it.
+
+DEFER severity=MED — §7 rule 4 dated note "plus `plan-review-deepseek.md` as the failure-modes lens" and "Run the set at plan AND output" — scripts/hooks/check-lane-close.mjs:140 "if (!files.some((f) => /^plan-.+\.txt$/.test(f.name)))" — any plan-*.txt, including plan-compliance-<id>.txt, satisfies the plan-stage requirement, and a non build task needs no plan-stage output at all, so the named plan-review-deepseek failure-modes lens is not enforced — require plan-review-deepseek.txt (or the plan lenses lensSet names) for every task type the brief names.
+
+DEFER severity=MED — §11.8 MCINC-4 dated note "the base is the current mb-rul tip once that tip is suite-green and push-ready, and need not be on origin" — scripts/hooks/check-lane-close.mjs "const mb = git(['merge-base', 'HEAD', baseRef]);" — the Files-against-diff check takes one table `base_ref` as the lane branch point; if that value is the origin tip rather than the mb-rul tip, the diff includes other lanes' commits and the task's Files line is failed for paths it never touched; cannot see the table's base_ref — set base_ref to the mb-rul tip (the P3 base) or derive the branch point from the lane branch.
+
+DEFER severity=LOW — §7 rule 4 "one Claude grounder adjudicates every finding as round 2" — scripts/hooks/check-lane-close.mjs:25 "THIS CHECK CANNOT PROVE THAT THE GROUNDER DID THE WORK WELL, that a quote bears on its finding, or that the grounder is truly a different agent." — the check enforces a differing name and a repo quote, but not that the grounder is a Claude, tool-having agent; a fabricated GROUNDER.md with a plausible quote passes — require the grounder to record its model or provider, or attach a tool transcript.
+
+MET — §7 rule 4 "Every DeepSeek finding is adjudicated by a tool-having grounder before folding" — scripts/hooks/check-lane-close.mjs:175 "for (const f of findings) { const v = verdicts.get(f.id);" — each BUG/DEFER finding needs a verdict line in GROUNDER.md.
+
+MET — §11.1 "a line citation is read, not remembered" — scripts/hooks/check-lane-close.mjs:191 "if (!cited.includes(q)) errors.push(`${GROUNDER.md: finding ${f.id}: the quote is not on ${v.file}:${v.line}`)" — the quote is checked on the cited repo line.
+
+MET — §11.9 TKT-4 "An empty or truncated reply is `failed`" — scripts/hooks/check-lane-close.mjs:56 "if (!/^VERDICT:/m.test(text)) e.push(`${name}: no VERDICT line (a failed run is not a lens output)`)" — a no-verdict output is refused.
+
+MET — §7 rule 3 "file rejections with reasons" — scripts/hooks/check-lane-close.mjs:183 "if (v.word !== 'CONFIRMED' && v.reason.length < 30)" — REJECTED and CONFLICT need a reason.
+
+MET — §11.9 TKT-1 "The review context file for a task is written by the same tool to `docs/reports/reviews/<task>/context-<date>.md`" — scripts/analysis/backlog-lane.mjs "const ctxRel = `docs/reports/reviews/${taskId}/context-${date}.md`;" — the context file path is retained.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  211315ms (211.3s)
+📊 Tokens — total: 72686, input: 27758, output: 44928, reasoning: 43718
