@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T21:20:00Z'
+updated_date: '2026-11-20T21:21:00Z'
 labels:
   - McFix
   - McFix V2
@@ -94,4 +94,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 round 4: check-lane-close.mjs reads base_ref, finished_statuses, protected_paths and exempt from refs/heads/wf2/board and searches the launch commit there (H1); milestone from the launch copy (H4); prompt builder and review tool may not differ from the base unless the launch Files line covers them (H3).
 
 2026-11-20 correcting dated note added to 08_agents.md (what the close check enforces after round 4).
+
+2026-11-20 round 4 landed: 98c9f9a8e (check-lane-close.mjs H1 H3 H4), 3852f74e9 (correcting dated note). Lens set re-run on the final range. Task stays RUNNING, grounder owed.
 <!-- SECTION:NOTES:END -->
