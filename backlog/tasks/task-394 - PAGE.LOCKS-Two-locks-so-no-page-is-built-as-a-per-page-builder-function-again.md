@@ -4,9 +4,10 @@ title: PAGE.LOCKS Two locks so no page is built as a per-page builder function a
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:24:00Z'
-updated_date: '2026-11-20T15:26:00Z'
+updated_date: '2026-11-20T15:37:00Z'
 labels:
   - McFix
+  - McFix G
 milestone: m-1
 dependencies: []
 type: build

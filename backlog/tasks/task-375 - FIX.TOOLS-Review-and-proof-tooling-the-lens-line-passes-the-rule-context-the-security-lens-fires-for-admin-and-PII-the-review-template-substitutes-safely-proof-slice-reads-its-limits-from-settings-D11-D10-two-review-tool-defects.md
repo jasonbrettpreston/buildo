@@ -8,9 +8,10 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXTOOLS'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T15:28:00Z'
+updated_date: '2026-11-20T15:36:00Z'
 labels:
   - McFix
+  - McFix A
 milestone: m-1
 dependencies: []
 references:

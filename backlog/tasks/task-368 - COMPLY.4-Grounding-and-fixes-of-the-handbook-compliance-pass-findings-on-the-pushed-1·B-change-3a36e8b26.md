@@ -7,8 +7,9 @@ status: RUNNING
 assignee:
   - '@lane-BL-GROUND'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-20T13:59:00Z'
-labels: []
+updated_date: '2026-11-20T15:36:00Z'
+labels:
+  - McFix E
 milestone: m-1
 dependencies: []
 references:
