@@ -240,7 +240,7 @@ describe('MF-58 the legal line on the search page (ruling 2026-11-10 items 16 an
   it('the content key search.legal holds the ruled text verbatim', () => {
     expect(SEARCH_SLICE.content['search.legal']).toBe(LEGAL_TEXT);
   });
-  // Dated 2026-11-20 (task-389; operator, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b), "5. Do the legal-line move (389) now as a small code change"; v8 search.html:267-269): the legal line is the LAST
+  // Dated 2026-11-20 (task-389; operator, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b); timing: orchestrator recommendation item 5 ("Do the legal-line move (389) now as a small code change", MORNING-DECISIONS.md:1421), approved by the operator with "approved [the five items pasted] - remember the app is not beign used - we are in development" (:1422); v8 search.html:267-269): the legal line is the LAST
   // block of the column, after the chips, notices, address list and the tail; it replaces the 2026-11-10 placement under the input. The reports-left line stays right after the input.
   it('in every golden and every named case the line is the last column child, drawn once', () => {
     for (const k of [...Object.values(goldens).map((g) => g.situation as string), ...NAMED_CASES]) {

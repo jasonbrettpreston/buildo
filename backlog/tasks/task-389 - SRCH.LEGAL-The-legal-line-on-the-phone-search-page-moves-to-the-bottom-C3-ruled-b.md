@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-LEGAL'
 created_date: '2026-11-20T15:16:00Z'
-updated_date: '2026-11-20T15:34:00Z'
+updated_date: '2026-11-20T15:41:00Z'
 labels:
   - McFix
 milestone: m-1
@@ -21,7 +21,7 @@ ordinal: 89012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Operator rulings 2026-11-20, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b: the legal line on the phone search page goes at the bottom as in the later mock, ~/Buildo-scratch/mcfrontend/small-pages-v8/search.html:267-269; it sits under the search box today) and "Phone retires yes and web search yes" (the web search page legal line also goes at the bottom, the same as the phone, if the web page shows that line: confirm in the plan) and "5. Do the legal-line move (389) now as a small code change". Record: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20. Evidence: docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md (C3). Smallest change in the existing bindings and their goldens; text unchanged (content key); on the web the shared footer builder already carries a legal line: do not show the line twice, say what the web shows before and after. Files: mobile/src/components/surfaces/SearchBinding.tsx, src/components/surfaces/web/SearchBinding.tsx
+Operator rulings 2026-11-20, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b: the legal line on the phone search page goes at the bottom as in the later mock, ~/Buildo-scratch/mcfrontend/small-pages-v8/search.html:267-269; it sits under the search box today) and "Phone retires yes and web search yes" (the web search page legal line also goes at the bottom, the same as the phone, if the web page shows that line: confirm in the plan) and "5. Do the legal-line move (389) now as a small code change". Record: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20. Evidence: docs/reports/lanes/2026-11-20/BL-VERIFYC/VERIFY.md (C3). Smallest change in the existing bindings and their goldens; text unchanged (content key); on the web the shared footer builder already carries a legal line: do not show the line twice, say what the web shows before and after. Files: mobile/src/components/surfaces/SearchBinding.tsx, src/components/surfaces/web/SearchBinding.tsx, mobile/__tests__/parcelScreens.golden.test.ts, docs/specs/03-mobile/100_mobile_parcel_cost_tool.md, src/tests/fixtures/surfaces/mobile_parcel_search/, mobile/__tests__/fixtures/surfaces/mobile_parcel_search.goldens.json
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -49,7 +49,7 @@ Operator rulings 2026-11-20, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b: the
 <!-- SECTION:PLAN:BEGIN -->
 # PLAN task-389 SRCH.LEGAL (lane BL-LEGAL)
 Rule: Spec 126 section 0a principle 1 and 11b.2 (one binding per archetype, refs only); Spec 100 section 4 dated note 2026-11-10 (legal line under the input, now moved by the 2026-11-20 ruling); 08_agents.md section 7 rules 3, 4; PLAN-PROTOCOL.md:3.
-Operator words (verbatim): "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b: legal line at the bottom as in v8 search.html:267-269), "Phone retires yes and web search yes", "5. Do the legal-line move (389) now as a small code change".
+Operator words (verbatim): "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b: legal line at the bottom as in v8 search.html:267-269), "Phone retires yes and web search yes". Timing: orchestrator recommendation item 5 ("Do the legal-line move (389) now as a small code change", MORNING-DECISIONS.md:1421), approved by the operator with "approved [the five items pasted] - remember the app is not beign used - we are in development" (:1422).
 
 Finding: the web search binding already shows the legal sentence once, in the footer, last child (src/components/surfaces/web/SearchBinding.tsx:64,136; MF-91). The line under the input is already gone on the web. So web before = once at the bottom (footer); web after = unchanged. No web change, no web golden moves. (Confirmed: grep "legal" in web binding gives only footer lines 64,68,131,136,143,248.)
 

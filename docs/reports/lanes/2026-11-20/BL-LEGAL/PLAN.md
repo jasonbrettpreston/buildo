@@ -1,6 +1,6 @@
 # PLAN task-389 SRCH.LEGAL (lane BL-LEGAL)
 Rule: Spec 126 section 0a principle 1 and 11b.2 (one binding per archetype, refs only); Spec 100 section 4 dated note 2026-11-10 (legal line under the input, now moved by the 2026-11-20 ruling); 08_agents.md section 7 rules 3, 4; PLAN-PROTOCOL.md:3.
-Operator words (verbatim): "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b: legal line at the bottom as in v8 search.html:267-269), "Phone retires yes and web search yes", "5. Do the legal-line move (389) now as a small code change".
+Operator words (verbatim): "1 a 2 b 3 a 4 a 5 c 6 accept" (C3 b: legal line at the bottom as in v8 search.html:267-269), "Phone retires yes and web search yes". Timing: orchestrator recommendation item 5 ("Do the legal-line move (389) now as a small code change", MORNING-DECISIONS.md:1421), approved by the operator with "approved [the five items pasted] - remember the app is not beign used - we are in development" (:1422).
 
 Finding: the web search binding already shows the legal sentence once, in the footer, last child (src/components/surfaces/web/SearchBinding.tsx:64,136; MF-91). The line under the input is already gone on the web. So web before = once at the bottom (footer); web after = unchanged. No web change, no web golden moves. (Confirmed: grep "legal" in web binding gives only footer lines 64,68,131,136,143,248.)
 
