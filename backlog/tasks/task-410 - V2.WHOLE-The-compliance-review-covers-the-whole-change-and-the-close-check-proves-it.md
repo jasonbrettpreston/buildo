@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T22:09:00Z'
+updated_date: '2026-11-20T22:27:00Z'
 labels:
   - McFix
   - McFix V2
@@ -120,4 +120,8 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 third correcting dated note added to 08_agents.md (type and lane assignee from the board copy).
 
 2026-11-20 round 6 landed: a8a3ca2db (rule-lists.mjs diff pins), f6f8b5944 (check-lane-close.mjs H9), b808b371b (third correcting dated note). Lens set re-run on the final range.
+
+2026-11-20 round 7 started (grounder r6: H10). Tests first.
+
+2026-11-20 round 7: check-lane-close.mjs refuses a null board copy (no fallback), finds the board task by number and takes the launch commit from the board path, and refuses a close from a branch whose tree lacks a board lane build or fix task file whose lane directory it carries (H10).
 <!-- SECTION:NOTES:END -->

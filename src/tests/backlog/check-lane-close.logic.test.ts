@@ -64,7 +64,7 @@ type Opts = {
   status?: string; before?: string; type?: string; files?: string | null; assignees?: string[]; beforeAssignees?: string[]; trailer?: string | false; msg?: string; table?: 'keep' | 'delete' | 'never';
   tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
   split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
-  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
+  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
   mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
 };
 function scenario(o: Opts = {}) {
@@ -80,19 +80,20 @@ function scenario(o: Opts = {}) {
   w('src/a.ts', AFILE); w('src/long.ts', Array.from({ length: 40 }, (_, i) => `export const L${i} = ${i};`).join('\n') + '\n');
   w('backlog/milestones/m-0 - inc.md', '---\nid: m-0\ntitle: "Increment 1·A Foundations [F]"\n---\n');
   w(TASK, taskText({ status: o.before ?? 'RUNNING', type: o.beforeType ?? o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees }));
-  if (o.otherTask) w(OTHER, taskText({ id: 'TASK-8', status: 'RUNNING' }));
+  if (o.otherTask) w(OTHER, taskText({ id: 'TASK-8', status: 'RUNNING', type: o.otherType, assignees: o.otherAssignees }));
   for (const [p, x] of LENS_TEMPLATES) w(p, x);
   g('add', '-A'); g('commit', '-qm', 'base'); g('branch', 'wf2/board');
   const baseSha = g('rev-parse', 'HEAD').stdout.trim();
   const laneWork = o.laneWork ?? { 'src/a.ts': `${AFILE}// lane work\n` };
-  if (Object.keys(laneWork).length) { for (const [f, t] of Object.entries(laneWork)) w(f, t); g('add', '-A'); g('commit', '-qm', 'lane work'); }
+  if (Object.keys(laneWork).length || o.laneDelete) { for (const [f, t] of Object.entries(laneWork)) w(f, t); for (const p of o.laneDelete ?? []) fs.rmSync(path.join(d, p)); g('add', '-A'); g('commit', '-qm', 'lane work'); }
   if (o.tagAtHead) g('tag', o.tagAtHead);
   if (o.folded) g('branch', '-f', 'wf2/board', 'HEAD');
   if (o.noBoard) g('branch', '-D', 'wf2/board');
   if (o.afterFold) { for (const [f2, t2] of Object.entries(o.afterFold)) w(f2, t2); g('add', '-A'); g('commit', '-qm', 'fix after the fold'); }
   if (o.table === 'delete') fs.rmSync(path.join(d, 'scripts/analysis/rule-lists.json'));
   for (const [f, t] of Object.entries(o.staged ?? {})) w(f, t);
-  if (!o.noTaskFile) w(TASK, o.taskFileText ?? `${taskText({ status: o.status ?? 'BUILT', type: o.type, files: o.finalFiles ?? o.files, assignees: o.assignees, milestone: o.finalMilestone })}notes\n`);
+  if (o.finalTaskPath && fs.existsSync(path.join(d, TASK))) fs.rmSync(path.join(d, TASK));
+  if (!o.noTaskFile) w(o.finalTaskPath ?? TASK, o.taskFileText ?? `${taskText({ status: o.status ?? 'BUILT', type: o.type, files: o.finalFiles ?? o.files, assignees: o.assignees, milestone: o.finalMilestone })}notes\n`);
   // the lane report: inputs written by the real lens-input, outputs carrying the review tool's header
   const lane: Lane = { TASK: 'task-7\n' };
   // V2.WHOLE (task-410): the material is the REAL diff of the task range (the command the brief gives), so the close check's path and text recompute has something true to compare
@@ -554,5 +555,21 @@ describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () =>
     const ok = scenario({ tableEdit: xtra, files: 'src/a.ts, docs/x.md', laneWork: lw });
     expect(ok.status, ok.stderr).toBe(0);
     refused(scenario({ tableEdit: xtra, files: 'src/a.ts, docs/x.md', finalFiles: 'src/a.ts', laneWork: lw, mutate: (l) => { const o = { ...l }; for (const k of Object.keys(o)) if (/xtra/.test(k)) o[k] = null; return o; } }), /list xtra/, 49);
+  });
+  it('H10 PLANTED DEFECT: a task file renumbered to a number the board never held, unassigned and typed doc, closes nothing: refused in the closing commit and when the renumber came in two earlier commits', () => {
+    const lane = ['@lane-BL-COMPLY2'];
+    const doc9 = (status: string) => taskText({ id: 'TASK-9999', status, type: 'doc', assignees: [] });
+    refused(scenario({ beforeType: 'build', beforeAssignees: lane, type: 'doc', assignees: [], finalTaskPath: 'backlog/tasks/task-9999 - Lane work.md', taskFileText: `${doc9('BUILT')}notes\n` }), /holds no copy of this task file/, 50);
+    refused(scenario({ beforeType: 'build', beforeAssignees: lane, type: 'doc', assignees: [], laneWork: { 'src/a.ts': `${AFILE}// x\n`, 'backlog/tasks/task-9999 - Lane work.md': doc9('RUNNING') }, laneDelete: [TASK], finalTaskPath: 'backlog/tasks/task-9999 - Lane work.md', taskFileText: `${doc9('BUILT')}notes\n` }), /holds no copy of this task file/, 50);
+  });
+  it('H10 PLANTED DEFECT: a branch that deleted the lane task file closes nothing, even another task: refused; the same close with the file present passes (control)', () => {
+    const closeOther: Opts = { otherTask: true, beforeType: 'build', beforeAssignees: ['@lane-BL-COMPLY2'], otherType: 'record', otherAssignees: ['@human'], noTaskFile: true, type: 'record', assignees: ['@human'], staged: { [OTHER]: `${taskText({ id: 'TASK-8', status: 'BUILT', type: 'record', assignees: ['@human'] })}notes\n` } };
+    const ok = scenario({ ...closeOther });
+    expect(ok.status, ok.stderr).toBe(0);
+    refused(scenario({ ...closeOther, laneDelete: [TASK] }), /has no task-7 file/, 51);
+  });
+  it('H10 control: a same-number retitle of the task file is not refused (the task is found by its number, the launch commit by the board path)', () => {
+    const ok = scenario({ finalTaskPath: 'backlog/tasks/task-7 - Lane work retitled.md' });
+    expect(ok.status, ok.stderr).toBe(0);
   });
 });
