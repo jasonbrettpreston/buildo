@@ -7,11 +7,14 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXSPECS'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T15:26:00Z'
+updated_date: '2026-11-20T15:31:00Z'
 labels:
   - McFix
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-FIXSPECS/REPORT.md
+  - docs/reports/lanes/2026-11-20/BL-FIXSPECS/FINDINGS.md
 type: build
 ordinal: 76012
 ---
@@ -44,10 +47,18 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+Plan (BL-FIXSPECS, stage 1). Confirmed on head: D3-a contract_parcels_entitlement.descriptor.json:7 and :216 say six fields, types.ts:12-18 has seven and inputs.field_whitelist lists seven; D3-b Spec 100 line 116 (1 b meter bullet) and line 138 (settled with no page shows the miss text) predate RR-0278 (decision-81), the held page (task-360, route.ts:~140-150) and the semi flag semi=answered (types.ts:44-45); D3-ext Spec 126 11a.7 note 2026-11-12 says page null for every lot until MB-44; footer MF-91/SRCH.FOOTER (RR-0270, RR-0273) is in no spec; contract_parcels_lookup.descriptor.json:6 says It reads no table today and changes no meter. Fix: (1) one new logic test src/tests/spec-notes-1b.logic.test.ts red first; (2) descriptor six->seven in the descriptor and its hand-kept census mirror (locked equal by search-reports-left.logic.test.ts:137); (3) lookup descriptor false sentence corrected by a dated correction that keeps the quoted prior text, descriptor and mirror; (4) dated notes M-246 in Spec 100 (3.2 end), Spec 126 11a.7 end, Spec 135 FE-31 row (footer). Operator words quoted verbatim with register ids; the semi flag and held page are written as task-360 lane design, not ruled (task-360 text: RR-0278 does not rule the semi flag). Not settled, listed: C1-C5, 48 vs 44 px, 60 s wait, D15 descriptor cite :96 (locked by an existing test), other D-groups. Rules: Spec 00 s14 :463; Spec 126:77 0b item 6; Spec 137 rule 10 (M-246); 08_agents.md s7 rules 3-4.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 grounder second job (docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY-2.md) extends D3: the footer ruling MF-91 / SRCH.FOOTER is in no spec (git grep finds nothing under docs/specs); Spec 126 11a.7 still names one cause of a null page; contract_parcels_lookup.descriptor.json:6 still says 'It reads no table today and changes no meter.' Add to scope: dated notes (M-246 form) in Spec 126 11a.7 and Spec 135, and correct the false descriptor sentence. Rule: Spec 126:77 section 0b item 6.
 
 2026-11-20 taken on the board at lane launch (lane BL-FIXSPECS, worktree /Users/brettpreston_macmini/Buildo-wt-fixspecs, branch wf1/inc1b-fixspecs), RR-0240
+
+2026-11-20 BL-FIXSPECS: defects confirmed on head with file:line (REPORT.md); notes and corrections written; 12 --check scripts before/after in checks-*.out; red.out then commit.out; compliance lens per resolved list (21), findings untriaged in FINDINGS.md; grounder owed; conflicts C1-C5, 48/44 px and the 60 s wait untouched. AC left unchecked: AC3 needs the separate grounder verdict.
 <!-- SECTION:NOTES:END -->

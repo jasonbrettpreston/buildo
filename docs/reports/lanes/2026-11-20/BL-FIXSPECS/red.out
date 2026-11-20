@@ -1,0 +1,60 @@
+230:57  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+231:29  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+235:28  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+333:35  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+373:43  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+426:37  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+435:70  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+541:51  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/steps/load_centreline/violations.test.ts
+374:24  Warning: '_dropped' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/load_zoning/violations.test.ts
+1145:10  Warning: 'writeByTable' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/steps/refresh_snapshot/violations.test.ts
+172:10  Warning: 'git' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/surfaces/report-generator-fields.logic.test.ts
+219:189  Warning: '_note' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+221:84  Warning: '_note' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/update-tracked-projects.infra.test.ts
+348:11  Warning: 'txEnd' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./src/tests/write-class-disposition.infra.test.ts
+88:31  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+331:78  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./src/tests/write-set-null-unless.logic.test.ts
+68:50  Warning: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /Users/brettpreston_macmini/Buildo-wt-fixspecs
+
+ ❯ src/tests/spec-notes-1b.logic.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/tests/spec-notes-1b.logic.test.ts [ src/tests/spec-notes-1b.logic.test.ts ]
+AssertionError: Spec 100: the Dated note 2026-11-20 (M-246, prior text kept; FIX.SPECS · task-376 note is missing: expected -1 to be greater than -1
+ ❯ noteIn src/tests/spec-notes-1b.logic.test.ts:29:55
+     27| const noteIn = (text: string, label: string): string => {
+     28|   const at = text.indexOf(MARK);
+     29|   expect(at, `${label}: the ${MARK} note is missing`).toBeGreaterThan(…
+       |                                                       ^
+     30|   const end = text.indexOf('\n', at);
+     31|   return text.slice(at, end === -1 ? text.length : end);
+ ❯ src/tests/spec-notes-1b.logic.test.ts:73:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  10:18:34
+   Duration  3.08s (transform 2ms, setup 4ms, collect 0ms, tests 0ms, environment 0ms, prepare 20ms)
+
+exit=1

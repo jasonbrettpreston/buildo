@@ -4,7 +4,7 @@
   "docs": {
     "purpose": "Tells a signed-in MaxBLD user which plan they hold and how many of this month's reports they have used and have left, and when the count resets, so the search page can say \"N of 20 reports left\" and the Account page can show the month's use.",
     "data_story": "It reads 3 tables — `entitlements` (the caller's `parcel_tool` row), `logic_variables` (the two monthly allowances) and `usage_events` (the distinct lots opened this billing month) — and writes nothing. Every value, including the reports left and the limit-reached flag, is computed on the server. No `parcel_tool` row is a 200 with every field null. One caller today: the app search page line \"N of M reports left until <date>\" (SRCH.A6, task-320, a follow-up to MF-35; operator RR-0307) through mobile/src/hooks/useParcelLookup.ts; MF-52 (Account) and MF-49 (the app gate) read it when they build.",
-    "under_126": "A CONTRACT descriptor of archetype `QUERY`, born converted-shape: its response is an explicit `.strict()` whitelist of six fields, its auth class is authenticated, its rate bucket is per uid, `outputs.writes` is none and it is never a gate (the lookup's 403 `REPORT_LIMIT_REACHED` is the gate)."
+    "under_126": "A CONTRACT descriptor of archetype `QUERY`, born converted-shape: its response is an explicit `.strict()` whitelist of seven fields (corrected 2026-11-20, M-246, FIX.SPECS · task-376: this line counted six until the seventh, `resetsOnDisplay`, was added with the reset-date label, RR-0310; the route sends seven, src/app/api/parcels/entitlement/types.ts:12-18), its auth class is authenticated, its rate bucket is per uid, `outputs.writes` is none and it is never a gate (the lookup's 403 `REPORT_LIMIT_REACHED` is the gate)."
   },
   "evidence": {
     "files": [
@@ -213,7 +213,7 @@
       "severity": "FAIL",
       "blocking": false,
       "when": "post",
-      "why": "The response is the .strict() ParcelToolEntitlementResponseSchema (src/app/api/parcels/entitlement/types.ts:10-19) of exactly the six inputs.field_whitelist names; an extra key fails the parse (locked by parcels-entitlement.infra.test.ts)."
+      "why": "The response is the .strict() ParcelToolEntitlementResponseSchema (src/app/api/parcels/entitlement/types.ts:10-19) of exactly the seven inputs.field_whitelist names; an extra key fails the parse (locked by parcels-entitlement.infra.test.ts)."
     },
     {
       "id": "contract_parcels_entitlement__schema_declared",

@@ -1,0 +1,35 @@
+== scripts/violations/generate-surface-registry.mjs --check
+[surface-registry] clean — no drift (171 rows, 171 descriptors)
+exit=0
+== scripts/surfaces/surface-validate.mjs --check
+surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 426 strings)
+exit=0
+== scripts/generate-step-handbook.mjs --check
+[step-handbook] docs/specs/01-pipeline/132_step_standard_handbook.md is up to date
+exit=0
+== scripts/analysis/report-fields.mjs --check
+report-fields current (1 rendered fields); gates FAIL (report-only): RF-2, RF-4, RF-6, RF-7, RF-9
+exit=0
+== scripts/analysis/report-schema.mjs --check
+report-schema current; RS-0 PASS · RS-1 PASS · RS-2 PASS · RS-3 PASS · RS-4 PASS · RS-5 PASS · RS-6 PASS · RS-7 PASS · RS-8 PASS · RS-9 PASS · RS-11 PASS
+exit=0
+== scripts/analysis/spec-split-check.mjs --check
+[spec-split-check] clean — 43 move(s) verified, 11503 citations checked, 0 dangling, budgets held, 0 reader breaks, totality holds, every spec has a role.
+exit=0
+== scripts/analysis/decision-log.mjs --check
+[decision-log] clean — 137 log(s), 860 decision(s), 443 register row(s), 1446 citation(s), 0 owed by another lane, 16 no_ruling resting on an existing row; every approved decision has a register row or is owed, and every log matches its raw record
+exit=0
+== scripts/analysis/gates/generated-docs.mjs
+PASS — 13 live doc(s)
+exit=0
+== scripts/violations/generate-conversion-roadmap.mjs --check
+[generate-conversion-roadmap] clean — no drift
+exit=0
+== scripts/violations/generate-programme-backlog.mjs --check
+[generate-programme-backlog] clean — no drift
+exit=0
+== scripts/analysis/generate-target-files.mjs --check
+exit=0
+== scripts/surfaces/generate-surface-handbook.mjs --check
+[surface-handbook] docs/specs/02-web-admin/136_mcfrontend_handbook.md is up to date (44 rules)
+exit=0
