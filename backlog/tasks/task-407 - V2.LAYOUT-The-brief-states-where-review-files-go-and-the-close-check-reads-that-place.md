@@ -3,10 +3,11 @@ id: TASK-407
 title: >-
   V2.LAYOUT The brief states where review files go and the close check reads
   that place
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-V2LAYOUT'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-20T17:22:00Z'
+updated_date: '2026-11-20T17:23:00Z'
 labels:
   - McFix
   - McFix V2
@@ -40,4 +41,6 @@ Operator, 2026-11-20, verbatim: "That works. Let;s this - the 10th plan today on
 
 <!-- SECTION:NOTES:BEGIN -->
 PRIORITY, operator 2026-11-20 verbatim: "I also need certainty within the tasks that a rpiority is getting the right information about compliance to the reviewer.  Put extra stree" (MORNING-DECISIONS.md, entry "Operator APPROVES the McFix V2 launch"). The brief sentence also says: the compliance lens reviews the whole change; a diff over the bound is split, never trimmed.
+
+2026-11-20 taken on the board at lane launch (lane BL-V2LAYOUT, worktree /Users/brettpreston_macmini/Buildo-wt-v2layout, branch wf1/inc1b-v2layout), RR-0240
 <!-- SECTION:NOTES:END -->
