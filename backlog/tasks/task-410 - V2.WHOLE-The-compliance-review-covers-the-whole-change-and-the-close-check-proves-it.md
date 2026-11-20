@@ -108,4 +108,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 round 5 landed: 7116dabbc (check-lane-close.mjs H8 and the board read after the moves check), 065f85a02 (second correcting dated note). Lens set re-run on the final range. Task stays RUNNING, grounder owed.
 
 2026-11-20 operator ruling on the CONFLICT, verbatim (MORNING-DECISIONS.md entry '2026-11-20 · Operator AGREES the Rule 3 amendment and RULES on material too large to review'): put to him "amend Spec 137 Rule 3 so a lane task closes in a separate commit after its code — yes (recommended) or no?"; "agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close." Dated notes added in 137_mcqueue.md (Rule 3 and a correction of this task's earlier note). The material-too-large half of his sentence is not built here.
+
+2026-11-20 round 5 final: 7116dabbc, 065f85a02, 13dd26b45 (Rule 3 note). Lens set re-run on the final range.
 <!-- SECTION:NOTES:END -->
