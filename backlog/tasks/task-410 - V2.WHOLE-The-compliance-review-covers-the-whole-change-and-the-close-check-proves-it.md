@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T22:37:00Z'
+updated_date: '2026-11-20T22:39:00Z'
 labels:
   - McFix
   - McFix V2
@@ -128,4 +128,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 round 7: the brief layout sentence on the two-commit close (backlog-lane.mjs).
 
 2026-11-20 fourth correcting dated note added to 08_agents.md: the check is an omission guard; forgery routes owned by task-401 and task-402. Operator entry quoted: put to him 'after this round, fold 410 as an omission guard, named as that, with the forgery routes recorded on tasks 401 and 402 — yes (recommended) or no?'; his words 'Finsih it!'.
+
+2026-11-20 round 7 landed: 4de8fb86f (check-lane-close.mjs H10), bb08d47b5 (brief two-commit sentence), 4d105c3f6 (fourth correcting dated note, omission guard), 67fef6b93 (forgery routes on task-401 and task-402). Lens set re-run on the final range. Task stays RUNNING, grounder owed; the closing commit follows the grounder's ruling.
 <!-- SECTION:NOTES:END -->
