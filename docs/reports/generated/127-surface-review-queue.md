@@ -4587,7 +4587,7 @@ Spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/s
 
 **8. What is still unresearched?**
 
-Nothing — every field is answered with a why and a citation.
+**4 field(s).** They are the literal `UNRESEARCHED` in the descriptor; §2.2 of the registry groups them by reason.
 
 **9. What would removing it delete?**
 

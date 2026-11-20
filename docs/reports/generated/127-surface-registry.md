@@ -233,19 +233,19 @@ Converting the pilot moves its row here: the category answers stop reading `_una
 
 ### 2.2 Research progress
 
-**33 of 172 rows fully researched · 139 still open · 439 unresearched fields in total.**
+**32 of 172 rows fully researched · 140 still open · 443 unresearched fields in total.**
 
 Every open field is the literal string `UNRESEARCHED` in the census — never a blank and never a guess — so the number below is a count of real work, not an estimate.
 
 | Shard | Rows | Fully researched | Rows with an open field | Unresearched fields |
 |---|---:|---:|---:|---:|
 | `mobile-product.json` | 41 | 11 | 30 | 63 |
-| `web-product.json` | 22 | 12 | 10 | 88 |
+| `web-product.json` | 22 | 11 | 11 | 92 |
 | `admin-existing.json` | 15 | 0 | 15 | 74 |
 | `admin-new.json` | 17 | 9 | 8 | 15 |
 | `contracts.json` | 71 | 1 | 70 | 168 |
 | `jobs.json` | 6 | 0 | 6 | 31 |
-| **total** | **172** | **33** | **139** | **439** |
+| **total** | **172** | **32** | **140** | **443** |
 
 **What is left, grouped by REASON.** Every remaining field is open for one of a small number of reasons, and they are not equally actionable — three are lookups a researcher can finish, and one is an escalation that needed a ruling.
 
@@ -254,11 +254,11 @@ Every open field is the literal string `UNRESEARCHED` in the census — never a 
 | **no owner spec** | 42 | The file carries no `SPEC LINK` header and the System Map has no row for it — so there is nothing to cite. Closing it means **writing or assigning a spec**, not finding one. Three of these cite a spec path that does not exist (a dead citation is filed as a defect, not resolved here). |
 | **no lineage producer** | 25 | The table is absent from `docs/reference/data-lineage-map.md`, so no pipeline step declares it as a write. Either it is written by an API route or a migration seed (answer `none`), or a step writes it without declaring it — which is a pipeline defect, not a research gap. |
 | **no declared owner** | 15 | Nobody is recorded as owning it. This is an organisational answer, not a measurable one. |
-| **vocabulary escalation** | 113 | The closed menu lacked a value and the researcher escalated rather than inventing one — exactly the rule. **All are now ruled** and land as Spec 128 §6 `ASK-15` … `ASK-23`; the rows are re-answered on the next research pass. |
+| **vocabulary escalation** | 114 | The closed menu lacked a value and the researcher escalated rather than inventing one — exactly the rule. **All are now ruled** and land as Spec 128 §6 `ASK-15` … `ASK-23`; the rows are re-answered on the next research pass. |
 | **archetype profile field, newly required** | 52 | ASK-22 made the archetype profiles REAL, so these fields became required AFTER the research pass ran. The field must now be present; it may hold the sentinel. Each is a short, well-defined lookup — the pagination idiom, the poll interval, the debounce, the resume key. |
 | **measurement not yet made** | 23 | An ordinary lookup nobody has done yet — read the query, name the columns, cite the line. |
-| **other** | 169 | Fields at paths this grouping does not name: see the per-row badges. |
-| | **439** | |
+| **other** | 172 | Fields at paths this grouping does not name: see the per-row badges. |
+| | **443** | |
 
 ### 2.3 By status
 
@@ -278,9 +278,9 @@ A reader opening this document sees 137 entries and cannot tell the parcel cost 
 |---|---|---:|---:|---:|---|
 | **A** | `parcel_product` | 19 | 16 (84%) | 13 | yes |
 | **B** | `parcel_admin` | 26 | 9 (35%) | 20 | yes |
-| **C** | `platform_shared` | 80 | 8 (10%) | 43 | yes |
+| **C** | `platform_shared` | 80 | 7 (9%) | 43 | yes |
 | **D** | `estate_other` | 47 | 0 (0%) | 41 | **no** — inventory + seam only (R-03) |
-| | **total** | **172** | **33** | | |
+| | **total** | **172** | **32** | | |
 
 **The pilot is [`S-001`](#s-001) `mobile_parcel_detail`** — The full story of one building lot, assembled for a homeowner or buyer. It is the one surface in the estate marked `programme.pilot: true`.
 
@@ -425,7 +425,7 @@ One line per entry in scopes A, B and C, organised **scope → type → build or
 | [`S-087`](#s-087) | surface | `binding_web_static` | `STATIC` | `F14` navigation-shells | 3145 | 100% | [detail](#s-087) |
 | [`S-079`](#s-079) | surface | `shared_mobile_surface_binding` | `SEARCH` | `F14` navigation-shells | 3145 | 100% | [detail](#s-079) |
 | [`S-083`](#s-083) | surface | `binding_mobile_list` | `LIST` | `F14` navigation-shells | 3146 | 100% | [detail](#s-083) |
-| [`S-095`](#s-095) | surface | `binding_web_report` | `REPORT` | `F14` navigation-shells | 3146 | 100% | [detail](#s-095) |
+| [`S-095`](#s-095) | surface | `binding_web_report` | `REPORT` | `F14` navigation-shells | 3146 | 88% | [detail](#s-095) |
 | [`C-027`](#c-027) | contract | `contract_products` | `QUERY` | `F15` user-profile-settings | 3152 | 88% | [detail](#c-027) |
 | [`C-034`](#c-034) | contract | `contract_trades` | `QUERY` | `F15` user-profile-settings | 3152 | 94% | [detail](#c-034) |
 | [`C-035`](#c-035) | contract | `contract_user_profile` | `MUTATION` | `F15` user-profile-settings | 3152 | 94% | [detail](#c-035) |
@@ -7276,7 +7276,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Under Spec 126.** **OWNER ENTRY** (task-384 STD.REPORT-OWN, dated 2026-11-20): a platform_shared census entry that owns the web REPORT renderer files so R-13 totality holds for them. The files stay a component (Spec 126 section 11b.1, :923). They are not yet listed in bindings.json modules, so the FE-31 text (C-2b) and component (C-8) checks do not judge them: C-3 needs their module root to be a frontend glob in mcbylaws/protected-paths.json (operator question).
 
-**kind** SURFACE · **archetype** `REPORT` · **platforms** `web` · **status** new · **shard** `web-product` · **researched** ✅ every field
+**kind** SURFACE · **archetype** `REPORT` · **platforms** `web` · **status** new · **shard** `web-product` · **unresearched fields: 4**
 
 **Gate.** auth class **entitled** (Its consumer is the MaxBLD report page behind the parcel_tool gate; each consumer declares its own guard.) · role **shared**
 
@@ -7302,7 +7302,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | `emits` | — |
 | `spec_refs` | `docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 — REPORT keeps the landed renderer` |
 
-<details><summary>21 category answers — 21 answered, 0 unresearched</summary>
+<details><summary>21 category answers — 20 answered, 1 unresearched</summary>
 
 | # | Category | Answer (closed vocabulary) | Why / evidence |
 |---:|---|---|---|
@@ -7324,7 +7324,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 | 16 | `config` | `none` | No tunable of its own: the binding consumes no registered logic variable; the layout row (report-layout.json) is read by the server projection, not here. — `src/components/report/ReportPage.tsx — no config read` |
 | 17 | `sharing` | `shared` | Every web REPORT surface (the MaxBLD report page). — `scripts/surfaces/_schema/bindings.json — modules` |
 | 18 | `a11y` | `UNRESEARCHED` | **UNRESEARCHED** |
-| 19 | `deviations` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
+| 19 | `deviations` | **UNRESEARCHED** | _to be researched — see the closed vocabulary for `deviations` in [the schema](../../../scripts/surfaces/_schema/surface.schema.json)_ |
 | 20 | `limitations` | `UNRESEARCHED` | **UNRESEARCHED** |
 | 21 | `interpretation` | none | _derived from the census measurement; a researcher replaces this with the closed value + why_ |
 
@@ -7332,7 +7332,7 @@ _No table is reached by this entry — every value it shows arrives through a co
 
 **Links.** schema: [`scripts/surfaces/_schema/surface.schema.json`](../../../scripts/surfaces/_schema/surface.schema.json) · owning spec: [`docs/specs/02-web-admin/126_maxbld_surface_standard.md`](../../../docs/specs/02-web-admin/126_maxbld_surface_standard.md) · files: `src/components/report/ReportPage.tsx` · `src/components/report/ReportView.tsx` · `src/components/report/ReportPageToggles.tsx`
 
-> ⚠️ task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last).
+> ⚠️ task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): limitations states the three files are outside C-2b, C-8 and C-9; deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here).
 
 <a id="c-027"></a>
 

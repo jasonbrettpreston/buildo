@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-REPORTOWN'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T16:02:00Z'
+updated_date: '2026-11-20T16:09:00Z'
 labels:
   - McFix
   - McFix B
@@ -69,4 +69,6 @@ Rules served: Spec 126 section 0a principle 1 and 11b.2; 128 R-13; standardized,
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-REPORTOWN, worktree /Users/brettpreston_macmini/Buildo-wt-reportown, branch wf1/inc1b-reportown), RR-0240
+
+2026-11-20 grounder follow-up (BL-REPORTOWN): binding_web_report limitations/deviations/a11y corrected to say the three files are outside C-2b, C-8, C-9 (UNRESEARCHED where unmeasured); measure output saved in the lane report; trailer MF-57.
 <!-- SECTION:NOTES:END -->

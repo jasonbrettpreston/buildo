@@ -5571,17 +5571,23 @@
       "varies_by_surface": "Only the page view and content passed in."
     },
     "a11y": {
-      "touch_target_min_px": 44,
-      "labels": "complete",
-      "dark_mode": "hardcoded",
+      "touch_target_min_px": "UNRESEARCHED",
+      "labels": "UNRESEARCHED",
+      "dark_mode": "UNRESEARCHED",
       "reduced_motion": "none",
       "i18n": "none",
       "safe_area": "none"
     },
-    "deviations": "none",
-    "limitations": [],
+    "deviations": "UNRESEARCHED",
+    "limitations": [
+      {
+        "what": "The three owned files (src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx) are outside the FE-31 text check C-2b, the component check C-8 and the 44 px check C-9: none of them reads these files. C-2b and C-8 read only the files listed in bindings.json mounts and modules, and these three are not listed (owed: C-3 needs src/components/report/ as a frontend glob in mcbylaws/protected-paths.json, an operator item). C-9 reads golden nodes, not source files.",
+        "measured": "Ownership only (Spec 128 R-13). Treated as web REPORT modules, a lane measure run raised 108 C-2b and 213 C-8 findings (docs/reports/lanes/2026-11-20/BL-REPORTOWN/measure-before.txt); no 44 px measure exists.",
+        "check_id": "C-2b, C-8, C-9"
+      }
+    ],
     "interpretation": "none",
-    "notes": "task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last).",
+    "notes": "task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): limitations states the three files are outside C-2b, C-8 and C-9; deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here).",
     "x-draft": {
       "shard": "web-product",
       "files": [

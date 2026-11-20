@@ -19,3 +19,8 @@
 - Not run: backlog doctor result below; gate.mjs below.
 
 STATUS: BL-REPORTOWN task-384 RUNNING, ownership landed (29cde4a7c, no push), listing + C-2b/C-8 judging BLOCKED on the protected frontend glob; report ready, grounder owed. Question: may `src/components/report/**` be added to the frontend list in mcbylaws/protected-paths.json?
+
+## Addendum 2026-11-20 (grounder follow-up, same lane)
+- The census entry binding_web_report no longer states unmeasured things: `limitations` says the three files are outside C-2b, C-8 and C-9 and that listing is owed; `deviations`, `a11y.touch_target_min_px`, `a11y.labels` and `a11y.dark_mode` carry the schema value UNRESEARCHED (surface.schema.json: each is `x-draft-optional` with a `UNRESEARCHED` const). Rebased onto wf2/board first (clean, no conflict).
+- The measure output quoted above is now saved: measure-before.txt in this directory (the lane script output; the script itself is not in the repo).
+- The C-3 refusal text quoted in item 2 ("C-3 src/components/report/ is not a frontend glob in mcbylaws/protected-paths.json") is UNVERIFIED in any saved file: the hook output of that attempt was overwritten. The rule that produces it is surface-conformance.logic.test.ts:162 (`for (const r of [...b.module_roots, ...]) if (!isFrontend(policy, ...)) out.push(\`C-3 ${r} is not a frontend glob in mcbylaws/protected-paths.json\`)`) and the policy file's frontend list (nine globs, none under src/components/report/).
