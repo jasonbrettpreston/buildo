@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:55:39.197Z file_sha256=e96908032eb24eaa88da4c18228ee126b5a600b66fb88a55a55da5b3c55c3a38 prompt_sha256=2a4c5f5ac0e8dcdd6ffb1eb83deab669386d8bccb7e0b66fcdc8b871ad1e0e56
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/in-out-compliance-surface-126-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 126 §14 Out-of-Scope Files "`scripts/manifest.json` and every `scripts/**/*.descriptor.json`" — src/tests/surfaces/surface-conformance.logic.test.ts (new C-12 case) "const file = path.join(REPO, 'scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json');" and the lane plan "its descriptor file emitted beside it (same text as the census entry, as binding_web_static)" — the change emits and asserts a `scripts/**/*.descriptor.json`, which §14 places outside this programme's slot, and §14 nowhere lists a descriptor path as a Target File — keep ownership in `scripts/surfaces/_schema/census/web-product.json` + `bindings.json` only, drop the descriptor emission and the byte-equal assertion, or obtain an operator ruling that re-scopes descriptors and paste it.
+
+DEFER severity=MED — no pasted clause or operator ruling names a self-recorded finding baseline — src/tests/surfaces/surface-conformance.logic.test.ts (C-2b real-tree case) "const lines = files.filter((f: string) => !Object.hasOwn(REPORT_RENDERER_PINNED, f)).flatMap(" — the three files are excluded from the real-tree C-2b and C-8 assertions and only compared against the counts the same commit records, so the enforcement the task exists for is not in force for them and the exemption rests on a ruling that is not pasted, nothing in the pasted §14 authorises it, paste the operator ruling for REPORT_RENDERER_PINNED or make the checks fail.
+
+DEFER severity=MED — no pasted clause or operator ruling names a new promoted shared binding entry — scripts/surfaces/_schema/census/web-product.json (new entry) "\"ref\": \"S-095\"" and "\"build_order\": 3146" — the change adds a platform_shared promoted entry (F14, phase B2, ledger ref S-095) and rewrites the unowned-set lock to exactly 11 files, none of which any pasted clause names, and §14 Target Files lists no census shard — paste the clause or ruling authorising the new binding entry and its ID-ledger claim, or defer the entry.
+
+DEFER severity=LOW — the clauses the plan says it serves are not pasted — backlog/tasks/task-384 (PLAN section) "Rules served: Spec 126 section 0a principle 1 and 11b.2; 128 R-13" — compliance with 126 §0a.1, §11b.2, §11b.1 (:923-924) and 128 R-13 cannot be assessed from this context, cannot see them — paste those clauses in the next run so the pin and the kept-renderer decision can be checked against their actual text.
+
+MET — 126 §14 Out-of-Scope "`scripts/steps/_schema/step.schema.json` — the pipeline's contract; this spec MIRRORS it and must never edit it" — diff, no hunk under scripts/steps/_schema/ — the step contract is untouched.
+
+MET — 126 §14 Out-of-Scope "`migrations/**` — no migration is authored by this spec" — diff, no hunk under migrations/ — no migration added.
+
+MET — 126 §14 Out-of-Scope "`scripts/dispatch-notifications.js` (and `scripts/lib/push-dispatch.js`) and `scripts/classify-lifecycle-phase.js`" — diff, no hunk for any of the three, no JOB descriptor added — the DISPATCH members are untouched and ungated by ASK-01.
+
+MET — 126 §14 Out-of-Scope "`src/app/api/quality/**`, `src/lib/quality/**` — held by another programme" — diff, no hunk under src/app/api/quality/ or src/lib/quality/ — that programme's paths are untouched.
+
+MET — 126 §14 Out-of-Scope "`mobile/app/(auth)/*.tsx` (1,302 lines)" — diff, no hunk under mobile/app/(auth)/ — the Supabase Auth screens stay undescribed.
+
+MET — 126 §14 Out-of-Scope "Spec 100 stays fenced: **no linkage to LeadDetail, the flight board, or the lead feed.**" — diff, census entry `"surfaces": []`, no lead_parcels or fifth-vocabulary reference — the new entry creates no Spec 100 linkage.
+
+REJECT — 126 §14 Target Files "`scripts/violations/generate-spec-mirror.mjs` — the mirror generator (`--check`, `--self-test`)" — the change is accused of regenerating registry docs instead of the spec mirror — the pasted §14 lists generated registry docs nowhere as forbidden, and this lens does not judge which generator a task uses.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  31355ms (31.4s)
+📊 Tokens — total: 18589, input: 12713, output: 5876, reasoning: 4781

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:55:39.175Z file_sha256=60344ba9f707f3f26ca99366705ac8354214101110e38ddcb85df1bfaf810a4b prompt_sha256=b582f120125572a48840a7ede52839fe3f422809b3b63734083884c2a3625b69
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/in-out-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §11b.2 Content "every user-visible string comes from a content file; library default strings (e.g. \"No records\") are overridden from content" and MF-48 note "every shown text stays a ref (FE-18, FE-32)" — src/tests/surfaces/surface-conformance.logic.test.ts "c2b: { 'display attribute label': 2, 'string child': 5" and "'JSX text': 3" — the diff pins ~10 hardcoded user-visible strings as an accepted baseline instead of sourcing them from content keys, so about ten visible strings bypass the content rule — bind those strings to content refs (or record a dated operator exemption) rather than locking them in a pin.
+
+DEFER severity=MED — Spec 126 §11b.1 "Our code is limited to the descriptor → library binding (one per archetype per platform, thin config), the generators, the gates and the landed web REPORT renderer." — scripts/surfaces/_schema/bindings.json "\"promoted_entries\": [ ..., \"binding_web_report\"]" with census "it is a component, not a library binding" — a component the diff itself declares is not a library binding is registered as a promoted binding entry, conflating the two closed categories §11b.1 keeps distinct — register it as an ownership entry without promoted-binding status, or get an explicit ruling.
+
+DEFER severity=LOW — Spec 126 §12 "**P2** | **B1 — REPORT**" and "**P3** | **B2 — SEARCH + DETAIL**" — scripts/surfaces/_schema/census/web-product.json "\"phase\": \"B2\"" — a REPORT entry is labelled phase B2 while §12 assigns REPORT to P2/B1 and B2 to SEARCH+DETAIL — set the phase to B1/P2 (or the correct McFrontend Phase 2 label).
+
+DEFER severity=LOW — Spec 126 §11b.2 Goldens "one props golden per reachable state per declared target ... each `covers` a state" — scripts/surfaces/_schema/census/web-product.json "\"states\": [ { \"name\": \"hit\", \"golden\": \"none\" } ]" — the entry declares one state with golden none for a screen target while §11b.2 requires a golden per reachable state (error, unauthorized, offline, rate_limited) — declare the reachable states with their goldens, or record why the kept renderer carries none.
+
+MET — Spec 126 §11b.1 "REPORT keeps the landed renderer (§11a; Spec 135 FE-24)" — src/components/report/ReportPage.tsx listed in bindings.json modules — renderer kept as a component, nothing converted.
+
+MET — Spec 126 §11b.2 Goldens "REPORT goldens are unchanged" — surface-conformance.logic.test.ts count lock [13,8,25] only — no golden file edited by the diff.
+
+MET — Spec 126 §11b.1 "the landed web REPORT renderer" as our code — census under_126 "PROMOTED BINDING ENTRY ... so R-13 totality holds for them" — the renderer now has a named owner.
+
+REJECT — Spec 126 §11b.1 "REPORT keeps the landed renderer" — accused of converting the REPORT renderer — not a real issue: the three files stay a component, the diff states "it is a component, not a library binding".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+
+---
+⏱  71662ms (71.7s)
+📊 Tokens — total: 47683, input: 33198, output: 14485, reasoning: 13698

@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:55:39.168Z file_sha256=c6c5cbccea3c797a77ca21fdacf516d8148f674ce479e49a980b406adab70c04 prompt_sha256=415d7cd27ba0c9fe9406ed217c766af503fb7f42c60cec03ac08810fd66f7456
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/in-out-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 126 §3.1 SURFACE REPORT profile "plausibility[] ≥1" — scripts/surfaces/_schema/census/web-product.json, new `binding_web_report` entry: "plausibility": "none", — the entry declares archetype REPORT, so the profile makes at least one plausibility row mandatory, and none is declared — declare one plausibility entry (with its `sql` string, §4 row 9) or stop calling the row a REPORT.
+
+BUG severity=HIGH — 126 §2.0 item 2 "all 137 are emitted and all 137 are validated" — src/tests/surfaces/surface-conformance.logic.test.ts: "const file = path.join(REPO, 'scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json');" — the change adds the census row but the descriptor file it reads and the two regenerated registry docs are not in the diff, so the entry is tagged, not emitted, and C-12 throws on the missing file — add the byte-equal descriptor file plus docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md to this change.
+
+BUG severity=HIGH — 126 §4 row 12 "{from, why, adjudicated_by, date}" and row 13 "{what, measured, check_id}" — scripts/surfaces/_schema/census/web-product.json: "deviations": "none", and "limitations": [], — the 108 C-2b and 213 C-8 findings the tests pin are a deviation from the standard held only in a test constant, so the descriptor claims a clean row while its files fail the checks it is now under — declare the deviation and limitation on the entry with the check ids and the operator adjudication date.
+
+DEFER severity=MED — 126 §4 row 5 "carries a required `why`" — scripts/surfaces/_schema/census/web-product.json: "rate_bucket": "none" (and entitlement, flag, permission, disclosure) — five guard answers are bare "none" strings with no `why`, which the category makes mandatory — attach a reason to each none guard.
+
+DEFER severity=MED — 126 §4 row 20 "each pinned by a named golden" and §0b item 10 "Goldens per state per target" — scripts/surfaces/_schema/census/web-product.json: "golden": "none" — the entry's single state `hit` is not pinned by a named golden — name the golden or record why this entry carries no rendered state.
+
+DEFER severity=MED — 126 §0b item 2 "red first, each lock proven in both directions" — src/tests/surfaces/surface-conformance.logic.test.ts: "describe('C-12 the web report renderer is owned and listed (Spec 126 §11b.1: kept as a component, not converted)'" — the two pin blocks each ship a planted-defect RED case, the new C-12 lock ships none, so it is not proven in the failing direction — add a C-12 RED case that drops a module or the owner and asserts the failure.
+
+DEFER severity=LOW — 126 §4 row 19 "which surfaces render this contract" — scripts/surfaces/_schema/census/web-product.json: "surfaces": [], — sharing answers "shared" and names the consumer only in the prose `why`, leaving the data field empty — fill surfaces[] with the consuming surface ids or answer none with a why.
+
+DEFER severity=LOW — 126 §0b item 1 "Wider scope than the row is a new row, not a longer brief" — task-384 plan: "the Files line is extended through the backlog CLI" — nine files beyond the original brief are folded into the existing row instead of a new row — open the added scope as its own row or record the operator ruling that widens task-384.
+
+MET — 126 §4 row 3 "forced `none` on REPORT/GATE/SLOT/STATIC/SHELL" — scripts/surfaces/_schema/census/web-product.json — outputs answers none with a why, as the archetype forces.
+
+MET — 126 §4 row 1 "owns.components[]" (required on a web SURFACE, R-13) — scripts/surfaces/_schema/census/web-product.json — owns.components lists exactly the three report renderer files.
+
+MET — 126 §4 row 7 "never `none`" — scripts/surfaces/_schema/census/web-product.json — checks carries a real row, `binding_web_report_components_owned`, severity FAIL.
+
+MET — 126 §2.0 item 3 "The pilot is exactly one surface" — scripts/surfaces/_schema/census/web-product.json — the new programme block carries no pilot flag.
+
+MET — 126 §0b item 11 "Local state is for disclosure only" — scripts/surfaces/_schema/census/web-product.json: "the open panels and the detail sheet are page-local UI state toggled by ReportPageToggles.tsx, never persisted" — panels and sheets are the disclosure cases that item allows.
+
+MET — 126 §0b item 4 "nothing new is built where an existing one serves" — scripts/surfaces/_schema/bindings.json: "{ "path": "src/components/report/ReportPage.tsx", "platform": "web"" — the change lists existing files and builds no component or library.
+
+REJECT — 126 §2.1 D-2 dated note "the web and admin archetype set is Mantine 9 + @rjsf/mantine + mantine-datatable" — the change keeps a hand-built renderer of intrinsic elements, the pinned C-8 findings — the keeping of the landed REPORT renderer rests on §11b.1, which is not in the pasted part, so it is not mine to judge and I raise no finding on it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 8
+
+---
+⏱  105704ms (105.7s)
+📊 Tokens — total: 53591, input: 31313, output: 22278, reasoning: 20975

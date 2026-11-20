@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:50:46.530Z file_sha256=788e25e49d6525a5ba9baefbec690ddc86445367c927448c5c55ec4428eb1eb6 prompt_sha256=d76ff73e85ae4c0a35da415308221ac50a333c62521b03f715182676b4e120a9
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/in-plan-compliance-surface-127.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 127 §5 fast invariants "the descriptor has a `SPEC LINK:` header" — lane plan step 1 "one new entry binding_web_report (archetype REPORT, platform web, scope platform_shared) with identity.owns.components = the three files" — no plan step sets the new descriptor's `SPEC LINK:` header and no plan step runs the gate that checks it (surface-validate is never invoked) — name the SPEC LINK target (Spec 126 §11b.1 / Spec 135 FE-24) in the census row and add `node scripts/surfaces/surface-validate.mjs --check` to the commit.
+
+BUG severity=HIGH — Spec 127 §8.2 "a file claimed by none is listed here, and this section must be empty" — lane plan step 3 "the registry section 5 falls from 14 to 11 unowned files; the it.fails at src/tests/surface-registry.infra.test.ts:198 stays (red for the other 11)" — the clause requires the section empty; the plan ships it non-empty and keeps the lock red with no card named for the remaining 11 — name one follow-up card per remaining unowned group (or their owner entries) with a date by which §4 reads empty.
+
+BUG severity=HIGH — Spec 127 §5 fast invariants "every `states[]` entry has a golden pair" — lane plan "C-9 judges golden nodes (component + props.size), not source files, so no data edit puts the three files under it" — the new REPORT entry declares no `states[]` and no goldens are produced or cited, so the fast invariant cannot be scored for it, and C-9 reach is deferred rather than declared — declare the entry's `states[]` (or `_unanswered_` per §8.3) and show each state has its golden under `src/tests/fixtures/surfaces/report/<state>.<target>.json` per the 2026-11-08 note.
+
+DEFER severity=MED — Spec 127 §9.3 "Each descriptor carries `programme.review`" and "Set it in the census shard and regenerate" — lane plan step 1 "one new entry binding_web_report (archetype REPORT, platform web, scope platform_shared)" — the new row's `programme.review` status, reviewer and date are never stated, so the entry lands in an undeclared review state — set `status` from `unreviewed | reviewed | needs_change` with reviewer and date in the shard before emitting.
+
+DEFER severity=MED — task-384 "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN" — lane plan "Tests (red first through the real hooks; commit attempt with only tests + task file staged)" — red-first is covered, the separate adversarial agent and its refused/STILL OPEN record are not named for C-12 or for the pinned C-2b/C-8 cases — name the attacking agent per gate and record its verdict in the lane report.
+
+DEFER severity=MED — Spec 127 §9.4 "Leakage and product questions are recorded with evidence and routed, to the defect ledger, or to the operator as a ruling (Spec 128 §4)" — lane plan "This pin is a baseline: it is the one exemption, listed for the operator with each count and the reason" — the 321 findings exemption is recorded only as a test pin, with no ruling id or defect-ledger entry, so it becomes permanent by default — land the pin with an RR id (or a Defect Ledger id for the display-text findings) before merge.
+
+DEFER severity=LOW — Spec 127 §7 "Every inventory claim, 'these are the surfaces', 'these are the constants', must be verified from the MAIN tree" — lane plan "Measured before any edit (lane measure script, a transpile of the real test file functions...)" — the 14-to-11 unowned count and the three-file inventory are not stated as read from the MAIN tree — re-run the unowned-set read from the MAIN tree and cite it in the plan.
+
+MET — Spec 127 §8.4 "Correcting the registry means correcting the census and regenerating" — lane plan step 3 "Regenerate the two generated registry docs" — the census is the edit and the docs are regenerated, not hand-patched.
+
+MET — Spec 127 §8.5 "the conversion commit updates the census row for the surface" — lane plan step 1 "census web-product.json: one new entry binding_web_report ... identity.owns.components = the three files" — ownership is recorded in the census row, not in prose.
+
+REJECT — operator 2026-11-20 "d. just add the review enforcement not the others" — accused of adding check runs beyond review enforcement — listing the three files in bindings.json is the enforcement, and the pin keeps the raised findings recorded rather than fixed, so the ruling is not exceeded.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+
+---
+⏱  49125ms (49.1s)
+📊 Tokens — total: 33340, input: 24018, output: 9322, reasoning: 8203

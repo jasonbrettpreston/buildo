@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:50:46.544Z file_sha256=9053a350c67da04f8098effd6da355467f8105afe00016a37adccdd1740e2c73 prompt_sha256=2d7c77fd19ed1b6cccfbc7a7c852099f4729b6d06486772ae862da6c22f83351
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/in-plan-compliance-surface-135-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 126 (contract, §0a and §11a) "Spec 126 (contract, §0a and §11a)" — plan (goal) "REPORT keeps the landed renderer (§11a; Spec 135 FE-24)" — the §11a / §11b.1 text the whole plan rests on is not pasted, so "kept, not converted" cannot be verified against the clause it invokes — paste docs/specs/02-web-admin/126_maxbld_surface_standard.md:923-924 into the review context, or mark that quote UNVERIFIED
+DEFER severity=MED — Spec 128 (policy, §2.2a and §4.9-§4.11) "Spec 128 (policy, §2.2a and §4.9-§4.11)" — plan (rules served) "Rules served: Spec 126 section 0a principle 1 and 11b.2; 128 R-13." — the plan claims compliance with 128 R-13, which is outside the pasted dependency sections and whose text is not pasted — cite the §2.2a clause text instead, or paste R-13
+DEFER severity=LOW — .cursor/MCFRONTEND-QUEUE.md "the one source of MF task ids" — plan (files beyond the task Files line) "the Files line is extended through the backlog CLI" — the plan extends task-384's Files line by a path other than the one pasted id source and never states where the id itself comes from — state that the id and the Files edit resolve in .cursor/MCFRONTEND-QUEUE.md
+MET — Target Files (Spec 135 register, documents only) — plan (files) "Files: src/components/report/ReportPage.tsx, src/components/report/ReportView.tsx, src/components/report/ReportPageToggles.tsx, scripts/surfaces/_schema/bindings.json, src/tests/surfaces/surface-conformance.logic.test.ts" — no write lands on docs/specs/02-web-admin/135_mcfrontend_decisions_register.md; writes are src/components/report/*, census and bindings data, docs/reports/generated/* and tests
+MET — Out-of-Scope Files (McBylaws gate and policy, freeze lift) — plan (tests) "Tests (red first through the real hooks; commit attempt with only tests + task file staged)" — the real hooks are executed, not edited, and no plan line names gate.mjs, cite-parse.mjs, prereg-name.mjs, arm Q, mcbylaws/protected-paths.json or .husky/*
+MET — Spec 136 (generated handbook, MF-18) — plan (data edit step 3) "Regenerate the two generated registry docs" — the regenerated files are 127-surface-registry.md and 127-surface-review-queue.md, not the Spec 136 handbook
+MET — task text "findings the checks then raise are fixed or brought to the operator" — plan (pins) "This pin is a baseline: it is the one exemption, listed for the operator with each count and the reason" — the 321 pinned findings are brought to the operator with per-file counts and the reason, not silently suppressed
+REJECT — Out-of-Scope Files (McBylaws gate and policy) — the pins added in surface-conformance.logic.test.ts accused of being frozen gate work — that file is not in the pasted enumeration "`gate.mjs`, `cite-parse.mjs`, `prereg-name.mjs`, arm Q, `mcbylaws/protected-paths.json`, `.husky/*`"
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  38272ms (38.3s)
+📊 Tokens — total: 18747, input: 10797, output: 7950, reasoning: 7120

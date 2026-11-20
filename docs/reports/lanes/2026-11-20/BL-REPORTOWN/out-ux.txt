@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-ux.md model=deepseek-reasoner at=2026-11-20T15:55:38.818Z file_sha256=6c97c898d3589b500bc0e484d7ad671660d9a9922e1ae4dd38cfcf775a0795ee prompt_sha256=4f1ee768eebccc26e8a37df46cda0d25dae6601a9683dbcf5c445d4fc429b9a1
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/diff-task-384.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/surfaces/_schema/census/web-product.json added entry, `"deviations": "none",` and `"limitations": [],` vs plan "C-2b raises 108 findings (ReportPage 92, ReportView 16, ReportPageToggles 0) and C-8 raises 213 (171, 41, 1)" — the register the operator reads says this renderer has no deviations while the person's report page carries 321 pinned findings, 3 of them text they read — record the pinned counts as this entry's limitations so the page's real state is visible in the register.
+
+BUG severity=HIGH — scripts/surfaces/_schema/census/web-product.json added entry, `"touch_target_min_px": 44,` and `"labels": "complete",` vs the task title "The web report renderer gets a census owner and comes under the existing text, component and 44 px checks" and the plan "C-9 judges golden nodes (component + props.size), not source files, so no data edit puts the three files under it" — the person tapping the report controls (the pinned C-8 counts 7 buttons and 3 inputs for ReportPage.tsx) gets no measured 44 px target, yet the entry declares 44 and complete labels with no evidence field, so the promise in the title is not delivered and the register says it is — either bring the files under a 44 px measurement or drop the claim and record the control sizes as unmeasured.
+
+BUG severity=MED — scripts/surfaces/_schema/census/web-product.json added entry, `"states": [ { "name": "hit", "golden": "none" } ]` vs the same entry's evidence `"docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.7"` — the loading screen the person waits on (RR-0176) and the load-failure state (RR-0179) have no state row and no golden, so nothing guards what they see while waiting or when the report fails — add the reachable states (loading, load failure, empty) each with a golden or an explicit "none, unchecked".
+
+BUG severity=MED — plan "Only 3 of the C-2b findings are display text (ReportView.tsx:19 twice, :121)" and the pin comment "a fixed one, or a swap to another kind turns it red" — the three strings the person reads stay hardcoded in source, and fixing them turns the gate red until the pin is edited in the same commit, so nothing in this change moves that copy toward the approved design text — fix those three strings in this change and pin only the structural remainder.
+
+DEFER severity=LOW — scripts/surfaces/_schema/census/web-product.json added entry, `"why": "Every web REPORT surface (the MaxBLD report page).",` with `"surfaces": [],` — the register marks the renderer shared but names no consumer surface — fill surfaces with the report page so it is traceable whose person sees this rendering and which page owns the guards.
+
+DEFER severity=LOW — scripts/surfaces/_schema/census/web-product.json added entry, `"dark_mode": "hardcoded",` inside an a11y block that carries no evidence key — the person's dark-mode preference is governed by hardcoded colours and nothing in this change verifies them — the pasted design text is silent on the report's dark mode, so record it as unmeasured rather than as a settled value.
+
+REJECT — scripts/surfaces/_schema/bindings.json `{ "path": "src/components/report/ReportPage.tsx", "platform": "web", "archetypes": ["REPORT"], "owner": "binding_web_report", "exports": ["ReportPage"] },` — the listing changes no markup, so the first view, answered and repeat-visit states render exactly as before — it matches the approved text "REPORT keeps the landed renderer (§11a; Spec 135 FE-24)"; the renderer is listed, not converted.
+
+VERDICT: FAIL on the person's experience
+States checked: first view, loading, answered, error, empty, offline, back, repeat visit (this diff draws none of them: it changes register data, one census entry and tests only)   Dead ends found: 0
+
+---
+⏱  31565ms (31.6s)
+📊 Tokens — total: 37364, input: 31288, output: 6076, reasoning: 5142

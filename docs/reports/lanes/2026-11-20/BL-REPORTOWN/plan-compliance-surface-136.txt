@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:50:46.562Z file_sha256=7c94796adfc3e7e2f94e1253c9117bdc6a91e13c10a0179c42aaf13c49c974c1 prompt_sha256=7f968d7786c7d4d57de2115a3de9c5e2f5df3ab8fa168f379aeb906aeb0fc0b0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/in-plan-compliance-surface-136.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.15 "the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria" — plan "## Acceptance criteria" (block left empty) — the acceptance criteria block carries nothing, so canaries a-f are absent from the plan's criteria — add canaries a-f as executable criteria (planted defect exits non-zero, clean copy exits zero) before lock
+
+BUG severity=HIGH — fe.33 "every displayed string, library default strings and form error messages included, comes from content" — plan "Only 3 of the C-2b findings are display text (ReportView.tsx:19 twice, :121)" — three displayed strings stay hardcoded in ReportView and are pinned as a baseline instead of being moved to content — bind ReportView.tsx:19 (twice) and :121 to content and drop them from the pin
+
+BUG severity=HIGH — operator 2026-11-20 "d. just add the review enforcement not the others" — plan "This pin is a baseline: it is the one exemption, listed for the operator with each count and the reason" — the plan adds an exemption baseline (108 C-2b and 213 C-8 findings pinned) that the operator words do not name — remove the exemption pin or put it to the operator as its own decision before lock
+
+DEFER severity=MED — fe.03 "golden states; both-directions locks; observability inside" — plan "C-9 reach (needs a rule on what to judge in a hand-built renderer)" — no golden-state proof is added for the three newly owned files, C-9 reach is left open — add the golden/state check for the three files or record an operator ruling exempting it
+
+DEFER severity=MED — fe.02 "a screen is a descriptor; the only code is the shared archetype components" — plan "the renderer is hand-built by design" — a coded page with local components and no descriptor is kept, resting on Spec 126 section 11b.1 which is not pasted — paste the 11b.1 text as the ruling or record the conversion task
+
+DEFER severity=MED — fe.01 "Surface paths are held (pending globs) until Phase 1 opens" — plan "bindings.json: module_roots += src/components/report/; modules += the three files (platform web, archetypes REPORT, owner binding_web_report)" — the plan adds surface path globs while nothing pasted shows Phase 1 open or the freeze lifted by name — add the dated operator line that opens Phase 1 for these paths
+
+DEFER severity=LOW — fe.07 "parity compares each target's real output" — plan "mapping.web gets NO REPORT list (the renderer is not a library binding)" — the newly owned web modules join no parity list, so parity has no web REPORT entry to compare — add the web target to the parity comparison or state in the plan why it is out
+
+MET — operator/task "The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision" — plan "Not done, left for the operator: the landing embed exception (C-8 SHARED_REPORT_RENDERERS, surface-conformance.logic.test.ts:532) stays as is, written up as a question" — the exception is not silently folded
+
+REJECT — fe.14 "LEAN: the report page converts first (generator, one REPORT renderer, goldens, locks)" — accused of not converting the report page — fe.14 orders the conversion queue, it does not require conversion inside this census-enforcement card
+
+REJECT — fe.12, fe.17, fe.21, fe.25, fe.26, fe.39, fe.44 (OWED) — accused of leaving owed locks unbuilt — none of these clauses names census ownership of the web REPORT renderer, so this change can neither meet nor break them
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 44   Unmet: 3
+
+---
+⏱  70070ms (70.1s)
+📊 Tokens — total: 29221, input: 14483, output: 14738, reasoning: 13845

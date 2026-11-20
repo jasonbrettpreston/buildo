@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:50:46.506Z file_sha256=9a00576bcc13c4f79087401c383baae2cc30664cddd09ebf2686ebc886c66950 prompt_sha256=ca429d7b8a5ecd32f82a3981023e608f99fd6b55a84a9fe4dc3d24531e350411
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/in-plan-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 5.2 Parity battery row "Any dual-surface or generated artifact (drift guard)" / "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — plan "Regenerate the two generated registry docs; the registry section 5 falls from 14 to 11 unowned files" — no regenerate-and-diff parity case is named for either regenerated doc, the only named registry assertion is the unowned-set check, so a hand-edited or stale committed doc can pass — add a case that runs the registry generator to a buffer and diffs docs/reports/generated/127-surface-registry.md and 127-surface-review-queue.md.
+
+BUG severity=HIGH — task-384 Description "comes under the existing text, component and 44 px checks" — plan "C-9 reach (needs a rule on what to judge in a hand-built renderer)" — the 44 px check the card names (C-9, the third of the three named checks) is deferred with no pasted operator ruling, so one named check still never runs on the three files — keep C-9 in scope or get the operator's words on record before lock.
+
+BUG severity=MED — 5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code" — plan "the measured findings PINNED per file and per check (exact count, both directions: a new finding or a fixed one turns it red)" and "This pin is a baseline: it is the one exemption" — a pin encoding today's 108 C-2b and 213 C-8 findings is green on creation, so it has no Red Light and the plan's blanket "red first" claim cannot cover it — record a red run by planting one extra finding so the pin fails, then revert, before lock.
+
+DEFER severity=MED — 5.5 "Pick the layer that proves the claim; a green suite in the wrong layer is false confidence." — plan "Only 3 of the C-2b findings are display text (ReportView.tsx:19 twice, :121); the rest are structural attributes" — pinning 321 findings proves the counts did not move, not that the renderer conforms, so "coming under" C-2b/C-8 is not proven by the named tests — label the pin a drift lock in the plan and state plainly that conformance is not claimed until the findings are fixed or ruled out.
+
+DEFER severity=LOW — 5.1 "You MUST always import typed factories from `src/tests/factories.ts`." — NONE — the new C-12 and pin tests name no factory import, and census/module fixture shapes are exactly what gets hand-rolled — state in the plan that any test fixture is built from src/tests/factories.ts.
+
+REJECT — 5.2 DB replay row "Any migration touching schema/constraints/indexes (run before push)" — the change edits scripts/surfaces/_schema/bindings.json and census/web-product.json, which could be read as a schema change needing BUILDO_TEST_DB=1 — these are surface-census JSON, not a migration touching DB schema/constraints/indexes, so the DB replay row does not bind.
+
+MET — 5.2 `*.logic.test.ts` row "Pure functions, scoring, classification" — plan "C-12 (new, surface-conformance.logic.test.ts)" — the census ownership and listing check is a pure derivation and lands in the mandated logic layer.
+
+MET — 5.5, `*.regression.test.ts` row "(a documented fence ...) is preserved across a change" — plan "the unowned set is exactly the other 11 (so the it.fails stays honest: it cannot pass or be dropped silently)" — the existing it.fails at surface-registry.infra.test.ts:198 is preserved as a fence, not retired.
+
+MET — 5.4 "To set up specific DB scenarios for testing or demos, create `scripts/seed-[scenario].js`." — plan lists only census, bindings, generated docs and test files — no DB scenario is set up, so the seeding clause does not bind this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  47579ms (47.6s)
+📊 Tokens — total: 20834, input: 11708, output: 9126, reasoning: 8202

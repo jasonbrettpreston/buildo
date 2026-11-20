@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:50:46.526Z file_sha256=e5b624bb7a677115c010dc6b657f85acf96ac1fdf9706b915cfee2a1cc07d880 prompt_sha256=ff166f96dc0cf33fb0eecca42c7d70803e4745832f26d9b2f0b2375d69ea8854
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/in-plan-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 126 §11b.2 Content "every user-visible string comes from a content file; library default strings (e.g. "No records") are overridden from content" — "Not done, left for the operator: ... the 3 display-text findings and the structural attributes" — three user-visible strings (ReportView.tsx:19 twice, :121) stay in code while the plan lists them to the operator instead of moving them to content — move the three strings into the content file (or record an operator ruling with the three exact strings) before the pin lands in a green test.
+
+BUG severity=HIGH — Spec 126 §11b.5 "The first consumer of an archetype on a platform adds its binding entry, golden shape, one planted-defect case, one render smoke and its `frontend` path globs; nothing else" — "bindings.json: module_roots += src/components/report/; modules += the three files (platform web, archetypes REPORT, owner binding_web_report)" — the plan pays only the entry and the globs: no golden shape, no planted-defect case, no render smoke for web REPORT, so a new archetype-in-use on web is registered without its first-use infrastructure — add the three items to the lane, or cite the earlier row that already paid each of them.
+
+BUG severity=HIGH — Spec 126 §11b.2 "A converted-surfaces manifest has two-direction totality against the MaxBLD-scope descriptors marked converted; an empty manifest is a finding" — "one new entry binding_web_report (archetype REPORT, platform web, scope platform_shared) with identity.owns.components = the three files" — the new owner names no descriptor and no target, so nothing ties it to the §11b.3 row "| `mobile_parcel_detail` | REPORT | web: the landed renderer on a web route ... | MF-44, MF-48 |" and the manifest totality has no row to check for web REPORT — name the descriptor and target the entry renders and state whether `converted-surfaces.json` lists it.
+
+DEFER severity=MED — Spec 126 §11b.1 MF-76 note "The binding (`src/components/surfaces/web/StaticBinding.tsx`) renders the new kinds ... and embeds the shared `ReportView`, its `Picture` and `ReportPage` by exact name and module (named exception of the FE-31 C-8 lock and of the MF-44 component fence ...)" — "the landing embed exception (C-8 SHARED_REPORT_RENDERERS, surface-conformance.logic.test.ts:532) stays as is, written up as a question" — the plan spends an operator round on an exception the pasted note already rules as named — leave it as is and cite the MF-76 note instead of asking.
+
+DEFER severity=MED — Spec 126 §11b.1 "A wrapper component anywhere else (`src/app`, `mobile/app`, `src/lib`, the vendor folder) fails" — "This pin is a baseline: it is the one exemption, listed for the operator with each count and the reason (no one-line fix exists; renderer kept by 11b.1)" — a 108 + 213 finding baseline is committed as a passing lock before any ruling exists, and no pasted clause or operator ruling names a numeric pin as an exemption — take the exemption to the operator as its own decision (RR) before the pin turns the arm green, or keep the arm red for the three files.
+
+DEFER severity=MED — Section 13 "descriptor↔`surface_descriptors` bidirectional seed drift ... **a RED canary per lock**" — "its descriptor file emitted beside it (same text as the census entry, as binding_web_static)" — a new descriptor file is emitted with no statement that the bidirectional seed-drift lock and its canary are updated, so that lock cannot be shown green for the new entry — name the drift lock and its canary result, or show the regenerated registry keeps it clean.
+
+MET — Spec 126 §11b.1 "REPORT keeps the landed renderer (§11a; Spec 135 FE-24)" — "They stay a component; nothing is converted (Spec 126 section 11b.1 ...)" — the plan converts no surface and keeps the renderer as our declared code.
+
+MET — Spec 126 §11b.1 "the landed web REPORT renderer" (on the list of our code) — "census web-product.json: one new entry binding_web_report" — the renderer is declared as our code through a census entry, which is the form the clause names.
+
+MET — Spec 126 §11b.2 "REPORT goldens are unchanged" — no golden edit appears in the plan's step list — the plan leaves REPORT goldens alone.
+
+REJECT — Spec 126 §11b.1 "No hand-built standard component" — the change is accused of keeping a hand-built component — REPORT is not in that archetype list and the clause's own sentence says the report keeps the landed renderer, so this is not a real issue.
+
+REJECT — Spec 126 §11b.1/§11b.5 — the change is accused of converting the report screen — the plan states "nothing is converted" and edits no descriptor, so the conversion-lock accusation does not apply.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 3
+
+---
+⏱  52554ms (52.6s)
+📊 Tokens — total: 43526, input: 33169, output: 10357, reasoning: 9184

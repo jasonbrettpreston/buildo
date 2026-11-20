@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T15:55:38.828Z file_sha256=6c97c898d3589b500bc0e484d7ad671660d9a9922e1ae4dd38cfcf775a0795ee prompt_sha256=18cd5af5a375a664262eb2382e7fc5c0594c507507de76fb1d09d0ccdf9f101e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/diff-task-384.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — src/tests/surfaces/surface-conformance.logic.test.ts "expect(fs.readFileSync(file, 'utf8')).toBe(`${JSON.stringify(entry, null, 2)}\n`);" — the C-12 block reads scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json, a file the pasted change does not add, so the read throws ENOENT and the whole block is red instead of asserting — add the descriptor file, byte-equal to the census entry, in the same change.
+
+DEFER severity=MED — task-384 plan "Regenerate the two generated registry docs; the registry section 5 falls from 14 to 11 unowned files" — neither docs/reports/generated/127-surface-registry.md nor 127-surface-review-queue.md appears in the change, so "the registry RENDERS the unowned set rather than hiding it, and the rendered count equals the measured count" (src/tests/surface-registry.infra.test.ts) stays red and the rendered registry still lists the three files as unowned — regenerate both docs in this change.
+
+DEFER severity=MED — src/tests/surfaces/surface-conformance.logic.test.ts "for (const d of DESCRIPTORS.values()) if (d.identity.id !== 'binding_web_report') expect([d.identity.id, (d.identity.owns?.components ?? []).filter((c: string) => FILES.includes(c))]).toEqual([d.identity.id, []]);" — the no-other-owner check passes vacuously when DESCRIPTORS is empty or short, with no size floor, so a second owner added later goes undetected — assert DESCRIPTORS.size or that binding_web_report itself is in the map before the loop.
+
+DEFER severity=MED — src/tests/surfaces/surface-conformance.logic.test.ts "counted per finding kind (line numbers and attribute values dropped)" — the pin tolerates a same-kind swap at a different line, so fixing one aria-label finding and adding one elsewhere leaves the drift lock green — retain the line number for a small subset of keys, or add a distinct-line count to the pin.
+
+DEFER severity=LOW — src/tests/surfaces/surface-conformance.logic.test.ts "console.log(`C-2b: ${files.length} files`);" — files still counts the three pinned paths the new filter removes, so the run log reports files the gate did not judge (same for "console.log(`C-8: ${mods.length} web modules`);") — log the filtered length.
+
+DEFER severity=LOW — src/tests/surfaces/surface-conformance.logic.test.ts "expect(tally(mappingProblems(planted, f, [], B.libraries.web, {}))).toEqual({ 'intrinsic element <div>': 1, 'intrinsic element <table>': 1 });" — the planted red proof passes an empty allowed set and empty shared map instead of allowedFor(m)/sharedFor(m), so it does not run the same hook as the pinned assertion it claims to protect — call it with allowedFor(m), sharedFor(m).
+
+DEFER severity=LOW — src/tests/surface-registry.infra.test.ts "expect(allComponentFiles().filter((f) => !owner.has(f))).toEqual([" — the 11 unowned files are compared positionally against an unsorted enumeration, so a change in scan order turns it red with no ownership change and hides the it.fails behind an unrelated red — sort both sides.
+
+REJECT — src/tests/surfaces/surface-conformance.logic.test.ts ".filter((f: string) => !Object.hasOwn(REPORT_RENDERER_PINNED, f))" — looks like C-2b and C-8 are switched off for the three renderer files — handled: C-12 pins the exemption set to exactly those three paths ("expect(Object.keys(REPORT_RENDERER_PINNED).sort()).toEqual([...FILES].sort());"), so the skip list cannot grow silently.
+
+VERDICT: FAIL on error-path safety
+Paths walked: C-12 descriptor read (missing file), C-12 descriptor uniqueness loop (empty), C-12 bindingsProblems, C-2b real-tree filter, C-2b pin compare, C-2b planted red, C-8 real-tree filter, C-8 pin compare, C-8 planted red, census/descriptor emit, generated registry docs, unowned-set assertion, count lock [13,8,25]   Unguarded: 2
+
+---
+⏱  54089ms (54.1s)
+📊 Tokens — total: 41675, input: 31289, output: 10386, reasoning: 9405

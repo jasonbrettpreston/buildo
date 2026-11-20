@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-20T15:49:21.338Z file_sha256=46453044173b1103e6a8d38083db8c4951e0e702ec2e88f1f4fea9d805137797 prompt_sha256=f3bb186fa36da37f60249a6a95d50fa309fe2d9194ebc301b79bf768ed498f50
+🔍 Lens review of docs/reports/reviews/task-384/context-2026-11-20.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — measure-before paragraph / Tests bullet 2 — the pinned 108 (92/16/0) and 213 (171/41/1) counts come from "a transpile of the real test file functions," a simulation, not the real C-2b/C-8 hooks, so "red first through the real hooks" can be calibrated to whatever the real run prints — derive the committed pin values from the actual real-tree red run and record both outputs, explaining any divergence, or the pin is theater — pin both outputs side-by-side.
+BUG severity=HIGH — Tests bullet 2 ("exact count, both directions") — an exact-count pin does not catch a same-file same-count *swap* (one finding fixed, one introduced) and leaves the check green, silently missing a regression on files this task exists to start checking — pin the finding-set identity (hash of the sorted finding list per file+check) rather than only the integer.
+DEFER severity=MED — Smallest data edit steps 2–3 (bindings.json + both 127-*.md) — bindings.json, the census, and the two regenerated registry docs are shared write targets; parallel 1·B lanes (RR-0248) regenerating them from branches without each other's entries produce regen-dirty docs or merge conflicts — serialize census/bindings edits or mandate regen-after-merge with a `--check` gate in CI.
+DEFER severity=MED — Tests bullet 2 (pin) vs imminent report work (RR-0044 page-level lot info, RR-0178 W module) — these three files are about to be actively edited, and every legitimate edit tips a pinned count, inviting "just bump the pin" laundering that erodes the check — require a one-line justification for any count increase and name the lane that owns pin upkeep.
+DEFER severity=MED — Not done bullet ("the 3 display-text findings … left for the operator") + measure-before — the "only 3 display-text" classification (ReportView.tsx:19 x2, :121) is unverified, and those 3 real customer-facing text defects get pinned into the *pass* baseline, normalizing them — verify the count from measure-before.txt and either fix the 3 now (cheap) or obtain explicit written operator acceptance before pinning them as exempt.
+DEFER severity=MED — measure-before paragraph ("C-9 judges golden nodes … not source files") — this is asserted as fact; if C-9 actually iterates bindings modules it would pull the three files under the 44 px check with no baseline and unreviewed findings — read the C-9 selector in surface-conformance.logic.test.ts and confirm it keys on golden-node input, not the module list, before relying on it.
+DEFER severity=MED — Not done bullet ("landing embed exception (C-8 SHARED_REPORT_RENDERERS, surface-conformance.logic.test.ts:532) stays as is") — new ownership of these three files may widen/narrow the :532 exception set silently, changing which renderers C-8 judges — read :532 and confirm its membership is invariant to adding binding_web_report and does not reference these three files.
+DEFER severity=MED — Smallest data edit step 3 / "it.fails stays (red for the other 11)" — the same root cause (unowned renderer escapes C-2b/C-8) still bites the other 11 unowned files; the plan only acknowledges them, so D8's class is half-closed — list the section-5 unowned files and confirm each has an owning task or an explicit deferral, else name them in this task's writeup.
+DEFER severity=LOW — Smallest data edit step 3 ("section 5 falls from 14 to 11") — assumes the current unowned set is exactly 14 and includes these three; if it is 13 or 15 the "exactly the other 11" assertion and the it.fails honesty design mis-calibrate — count section-5 rows and confirm the three paths are present before pinning 11.
+DEFER severity=LOW — Smallest data edit step 2 ("mapping.web gets NO REPORT list") — absence of mapping.web.REPORT may cause a consumer to silently skip rather than error, hiding a future gap — read the conformance code that consumes mapping.web and confirm no consumer expects the key.
+DEFER severity=LOW — Tests bullet 4 ("[10,7,25] becomes [13,8,25]") — only one count lock is named; per-archetype, per-platform, and generated-doc locks or snapshots may also move — run the full conformance + registry suite and enumerate every diff before committing, not "any test count lock."
+DEFER severity=LOW — measure-before (ReportPageToggles: 0 C-2b, 1 C-8) — a 0 could be a not-parsed/omitted false-negative in the transpile rather than a genuinely clean file — confirm in the real run that ReportPageToggles is parsed and exhibits its 1 C-8 finding (sentinel or presence check).
+DEFER severity=LOW — Smallest data edit step 1 (descriptor "same text as the census entry") — no rollback is stated and the descriptor is a dual source that drifts if hand-written — confirm the descriptor is generator-emitted with `--check` (RR-0203) and state rollback = revert the single cohesive commit + regen, with bindingsProblems/C-12 holding it together.
+REJECT — src/tests/surface-registry.infra.test.ts:198 — "three files leaving the unowned set could flip the it.fails to an unexpected pass" — 11 files remain unowned so it still fails-as-expected, and the new "exactly the other 11" assertion guards the transition; no action needed.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- Pin values sourced from a transpile simulation rather than the real-hook red run; red-first can be calibrated away (BUG HIGH, measure-before / Tests bullet 2).
+- Count-only pin lets a same-count un-fix+new-finding swap pass silent, defeating the point of putting these files under the checks (BUG HIGH, Tests bullet 2).
+- Deeply-pinned 108+213 counts on files that are about to be actively edited (RR-0044/RR-0178) invite pin-bump laundering on every legitimate change (DEFER MED).
+
+Top 3 unverified data premises:
+- The pinned counts (108/213; per-file 92/16/0 and 171/41/1) — run C-2b/C-8 real-tree on the three files and diff against the measurement: `grep -nE 'ReportPage|ReportView|ReportPageToggles' ~/Buildo-scratch/lanes-20261119/inc1b/reportown/measure/measure-before.txt`.
+- "Only 3 display-text C-2b findings (ReportView.tsx:19 x2, :121)" — `grep -nE 'ReportView\.tsx:(19|121)' …/measure-before.txt` and confirm no other entry is a text node.
+- "unowned set is 14 and these three are in it" — count section-5 rows and check membership: `awk '/^## 5/{f=1;next}/^## 6/{f=0}f' docs/reports/generated/127-surface-registry.md | grep -c '^|'` and confirm the three paths appear.
+
+---
+⏱  85072ms (85.1s)
+📊 Tokens — total: 35956, input: 20615, output: 15341, reasoning: 13712

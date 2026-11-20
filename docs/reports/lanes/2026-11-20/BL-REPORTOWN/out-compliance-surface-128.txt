@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:55:39.205Z file_sha256=fa1979a708c613ae12ae8afc69b1acb531aca832eaa6dc4f84bd4db1b9aa9810 prompt_sha256=c00ef2ea2fe5c299c6adc53e2f3ec9556ac0ae167dfff1dcd22739f3394a7095
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/in-out-compliance-surface-128.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §2 rule 4 "**Projection rule declared** ... which fields render, in which order, with which labels, is a declaration the server owns" — src/tests/surfaces/surface-conformance.logic.test.ts "export const REPORT_RENDERER_PINNED ... 'display attribute data-section': 12 ... 'hand-built component': 94" — the diff freezes 108 C-2b and 213 C-8 findings as expected values, so section/part/label structure stays component-implicit knowledge and the entry still declares `"deviations": "none"` — file a `deviations[]` row naming adjudicator and date for the hand-built projection, or make the projection the declaration rule 4 requires.
+
+BUG severity=HIGH — §4 protocol step 2 "**A different party adjudicates — never the pass that discovered it.** This is a **policy rule**" — src/tests/surfaces/surface-conformance.logic.test.ts "files.filter((f: string) => !Object.hasOwn(REPORT_RENDERER_PINNED, f)).flatMap(...)" with plan line "This pin is a baseline: it is the one exemption, listed for the operator with each count and the reason" — the exemption from two checks is recorded in this commit and re-applied as a filter before any adjudication, so the pass that discovered the fence also rules on it — hold the pin out of the commit until the operator ruling is dated and recorded, or land it as a `deviations[]` row with its decidER.
+
+BUG severity=HIGH — §2.2a Rule 19 "Generated output is byte-identical to a regenerate (`--check`, pre-commit and CI, the 132/133 pattern)" — src/tests/surfaces/surface-conformance.logic.test.ts "const file = path.join(REPO, 'scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json');" and task-384 plan step "3. Regenerate the two generated registry docs" — the emitted descriptor and `docs/reports/generated/127-surface-registry.md` / `127-surface-review-queue.md` are named in the Files line and read by C-12 but are absent from the diff, so the regenerate is not byte-identical in this change — include the descriptor file and both regenerated docs in the diff.
+
+DEFER severity=MED — §2 rule 6 "Every category is present, and every field inside it is answered — `"none"` is legal but must be written, never omitted" — scripts/surfaces/_schema/census/web-product.json "\"answer\": \"shared\", ... \"surfaces\": []" with why "Every web REPORT surface (the MaxBLD report page)" — the field is left as an empty array while the prose names exactly one consumer, so the shared answer is written but its field is not answered — write the consumer surface id in `sharing.surfaces` or answer `"none"` with a why.
+
+DEFER severity=MED — §2.1 "Anything else computed client-side is a Rule 2 violation and needs a `deviations[]` row with an adjudicator and a date" — census "No store: the open panels and the detail sheet are page-local UI state toggled by ReportPageToggles.tsx, never persisted" paired with `"deviations": "none"` — client-held panel/detail state is not one of the five named exceptions and carries no deviations row — name the exception it falls under in `state.why` or file the deviations row.
+
+DEFER severity=MED — ASK-19 "`n/a` is legal for those three cases **and requires a `why`** ... A measured value **below 44 is a FINDING, not a setting**" — census `"touch_target_min_px": 44` against plan "C-9 judges golden nodes (component + props.size), not source files, so no data edit puts the three files under it" — a 44 is declared on files holding seven `<button>`s that no 44 px check measures, so a below-44 value could never surface as the finding the clause defines — declare `n/a` with a why, or route a 44 px check to these files.
+
+DEFER severity=LOW — ASK-22 "REPORT `inputs.field_whitelist` + forced `outputs`/`state` = `none` ... The fields are **required-but-may-be-`UNRESEARCHED`**" — census `"field_whitelist": []` with why "The page view, the lifecycle state and the content strings arrive as props from the page" — a REPORT entry answers the mandatory field with an empty list that is neither filled nor marked UNRESEARCHED — fill the whitelist the renderer displays or mark it UNRESEARCHED with its why.
+
+MET — §2 rule 7 — census/web-product.json `"outputs": { "answer": "none"` and `"state": { "answer": "none"` — REPORT forces both to `none`, as the profile requires.
+
+MET — §2 rule 5 — census/web-product.json `"checks": [ { "id": "binding_web_report_components_owned", ... "severity": "FAIL"` — checks is not `"none"`.
+
+MET — R-13 totality both directions — src/tests/surface-registry.infra.test.ts "expect(allComponentFiles().filter((f) => !owner.has(f))).toEqual([...11 files...])" — the three files leave the unowned set and no other file's ownership moves.
+
+REJECT — R-13(b) promotion — the change is accused of listing page components instead of promoting them — it creates its own census entry (`binding_web_report`, scope platform_shared) rather than hanging them on a page, which is the promotion R-13(b) asks for and the shape `binding_mobile_report` already has.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 30   Unmet: 7
+
+---
+⏱  64730ms (64.7s)
+📊 Tokens — total: 45310, input: 32804, output: 12506, reasoning: 11199

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:55:39.199Z file_sha256=ad5d40150272263bafca3070d1660a6c0fdbdfdb9dfa115ac3dffe69eb96265e prompt_sha256=186c4961afb47a5d03accd1fa1fa2fa1017fafa4f3e9bab5c08abeffd4eead48
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/in-out-compliance-surface-135-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 135 role line + rule 2: "The live register of McFrontend rulings (`FE-nn` rows)." / "A rule without a lock is not yet a rule (Spec 124 section 4.4). ONE lock per row; the Lock is in the LAST cell with the status (arm C reads it)." — src/tests/surfaces/surface-conformance.logic.test.ts (pasted line): "This is a DRIFT LOCK, not a conformance claim" and "It is the one exemption of this task; the operator question is in the lane report." — the change creates a new McFrontend exemption ruling (321 pinned findings, REPORT_RENDERER_PINNED) with no `FE-nn` row, so arm C cannot read it, and the pasted line "**Next free id:** `FE-45`" is left unused by a ruling dated 2026-11-20 — add FE-45 for the web REPORT renderer exemption with src/tests/surfaces/surface-conformance.logic.test.ts as its ONE lock in the LAST cell, a dated note with prior text kept, and move the line to FE-46.
+
+BUG severity=HIGH — Spec 135 rule 1: "Protocol: Spec 124 section 4 inherited (the Spec 128 §4 mirror). A different party adjudicates." — pasted line (plan): "This pin is a baseline: it is the one exemption, listed for the operator with each count and the reason (no one-line fix exists; renderer kept by 11b.1)." — the lane adjudicates its own exemption and locks it green in this diff while the operator question is only written up (census `"review": { "status": "unreviewed" }`), so the exemption is decided by the party it benefits — land the pin as PROPOSED (red or skipped) from this diff and turn it green only after the operator's ruling, or hold the pin commit until the ruling lands.
+
+DEFER severity=MED — Spec 135 rule 5: "a RULED row's lock paths must exist" — src/tests/surfaces/surface-conformance.logic.test.ts (pasted line): "expect(fs.readFileSync(file, 'utf8')).toBe(`${JSON.stringify(entry, null, 2)}\n`);" over "scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json" — the lock requires a path the diff does not add (Files line names it, plan step 1 says "its descriptor file emitted beside it"); cannot see the file, so the row's named paths cannot be shown to exist — include the descriptor file in the same diff or drop the byte-equality assertion.
+
+MET — Spec 135 rule 2 "ONE lock per row" — src/tests/surfaces/surface-conformance.logic.test.ts (pasted line): "expect([f, tally(textProblems(text, f, B.non_display_keys))]).toEqual([f, pin.c2b]);" — the pin is asserted in both directions (new finding or fixed finding turns it red), so the exemption has a real lock rather than a comment or a test name.
+
+MET — Spec 135 rule 5 "must be a valid `src/tests/surfaces/*.test.ts`" — src/tests/surfaces/surface-conformance.logic.test.ts and src/tests/surface-registry.infra.test.ts — both lock paths are existing logic/infra tests, no `.db.test.ts` lock is added, so the test.yml naming clause is not triggered.
+
+REJECT — Spec 135 land order "FE ids are not matched by its `ID_RE`" — the diff cites FE-31 and FE-24 in the census `under_126` text and in test comments — prose citation is not ID_RE matching and the register file is untouched here, so the land-order precondition is neither helped nor broken by this diff.
+
+REJECT — Spec 135 rule 2 "ONE lock per row" — the change filters the three files out of the existing real-tree C-2b and C-8 loops — the intent is not to weaken checks: the separate pinned cases assert the exact per-file, per-kind tally, so any drift still fails, and no other file is exempted.
+
+---
+⏱  52710ms (52.7s)
+📊 Tokens — total: 23184, input: 13508, output: 9676, reasoning: 8754

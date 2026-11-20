@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:50:46.509Z file_sha256=d7cf30fde1a3f37fbf2fa0bfce237da3f1c5d23525326c9b339c6e2343357c87 prompt_sha256=79e91c25b302664dd920afbaae8984a0a84a2d5c78bbb151fc02de34d2f7385e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/in-plan-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 11a.1 "Labels, help text and legal copy are NOT an exception: they are content fields and bind like any field" — plan: "Only 3 of the C-2b findings are display text (ReportView.tsx:19 twice, :121)" and "Not done, left for the operator: ... the 3 display-text findings" — three displayed strings in the web REPORT renderer stay unbound to `content` and the plan routes them to the operator, while 11a.1 admits no exception for display text — bind all three strings to `content` inside this task, or take an operator amendment to 11a.1 plus a lock, not a deferral.
+BUG severity=MED — 11a.1 "Adding a source or a member needs a register row and a panel" — plan: "promoted_entries += binding_web_report" and "one new entry binding_web_report (archetype REPORT, platform web, scope platform_shared)" — the plan adds a promoted census binding entry plus three bindings.json module entries with no register row (Spec 135 FE-xx) and no panel record cited for the added members — name the register row and the panel id in the plan before lock.
+DEFER severity=MED — 11a.7 "The honest check scans every node of every golden for the required fields" — plan: "C-9 reach (needs a rule on what to judge in a hand-built renderer)" — after ownership lands the newly owned web renderer is still in no golden-node honest check, so the clause's scan has no coverage on the files this task owns — land the C-9 scope rule through a panel in this task, or record it as an owed amendment with a dated note rather than an open end.
+DEFER severity=LOW — 11a.10 "Every slot carries the \"Sponsored\" disclosure" — plan: "C-8 findings are intrinsic elements and local components: the renderer is hand-built by design" — cannot see whether the Sponsored disclosure and the slot-outside-card placement hold in ReportPage.tsx; the plan pins the C-2b and C-8 counts instead of asserting the ad-slot clause on the newly owned file — add one assertion on ReportPage.tsx for the Sponsored text and R-17 rendering.
+DEFER severity=LOW — 11a.9 "The entry switch stays OFF (D-6)" — plan: "identity.owns.components = the three files" with "ReportPageToggles.tsx" included and its findings pinned (0 C-2b, 1 C-8) — the newly owned toggle component has no assertion that the lot-size entry switch stays OFF, so the switch-off ruling is untouched by the ownership change — add the switch-off assertion to the new C-12 case.
+REJECT — 126 §11b.1 / 11b.2 (not pasted) — the plan keeps the landed renderer as a component rather than converting it to declared data — the pasted material is part 3 of 4 and carries no §11b, so no pasted clause requires the conversion, and the plan's own quote of 126:923 keeps the renderer.
+MET — 11a.1 "The CLOSED binding set (`source`)" — plan — no source value is added; `scripts/surfaces/_schema/binding-sources.json` is untouched, so the closed sixth-member set stands.
+MET — 11a.1 "never into the generated `report-v2.decl.json`" — plan — only "the two generated registry docs" are regenerated, no seed or decl.json write.
+MET — 11a.3 "`coa_required:<clause>` is NOT in the list; it is added by amendment at the McBylaws increment that lands that route" — plan — no status, disclosure code or later-increment route is pulled forward.
+MET — 11a.6 "The UI computes none of these. A sum in any file is a Rule 16 failure" — plan — the change adds census ownership, module listings and test data only, no computation to the renderer.
+MET — 11a.7 "A golden = the pair in Spec 127 §4.3 ... A screenshot is never a golden" — plan — no golden, `states.json` or fixture path is edited.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  52504ms (52.5s)
+📊 Tokens — total: 33913, input: 23074, output: 10839, reasoning: 9886

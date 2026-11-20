@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:55:39.203Z file_sha256=2efa1c9466ea334f34f14bf4faa7adcf5226fa3e8df71ecb6f5eab0126fe8475 prompt_sha256=1bf9ac732177bcae0302c3d22bb4a7fca342acf3796b4491f1e1c206cb35182a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/reportown/in-out-compliance-surface-127.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 127 §8.4 "… --check | fails on registry drift and on descriptor drift, in both directions: a planned file that is missing or stale, and an emitted file no census row declares" — src/tests/surfaces/surface-conformance.logic.test.ts:975 "const file = path.join(REPO, 'scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json');" — the descriptor the new census row declares is in the task Files line "scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json" but no hunk adds it, so this new test reads a file that does not exist and the both-directions drift arm is one-directional — add the descriptor by running the emitter, and keep the byte-equality assertion only as the lock, not as the means of producing the file.
+
+BUG severity=HIGH — Spec 127 §8.3 "The `--check` arm makes a stale artifact a failure, and the RED canaries prove that arm fires" — backlog/tasks/task-384:23 "docs/reports/generated/127-surface-registry.md, docs/reports/generated/127-surface-review-queue.md, src/tests/surface-registry.infra.test.ts" — both generated documents are named as files this task changes (census gained a row, so section 5 must fall from 14 to 11 and the queue gains a card) yet no hunk regenerates either, so the committed artifacts are stale and `--check` fails — regenerate 127-surface-registry.md and 127-surface-review-queue.md from the census in this same commit.
+
+BUG severity=HIGH — Spec 127 §8.2 §4 "a file claimed by none is listed here, and **this section must be empty**" — src/tests/surface-registry.infra.test.ts:209 "expect(allComponentFiles().filter((f) => !owner.has(f))).toEqual([ 'mobile/src/components/auth/OtpInputField.tsx', … 11 files ])" — the new test freezes the unowned section at 11 entries as the expected green state, turning a must-be-empty clause into an assertion that the violation persists — assert only the three now-owned files here, and let the existing registry-render test plus the it.fails record the remainder until they are owned.
+
+BUG severity=HIGH — Spec 127 §8.3 "`_unmeasured_` is never a guess. Where a sweep could not determine a fact, the cell says `_unmeasured_``" — scripts/surfaces/_schema/census/web-product.json:+5387 "\"a11y\": { \"touch_target_min_px\": 44, \"labels\": \"complete\", \"dark_mode\": \"hardcoded\", \"reduced_motion\": \"none\" … }" — six a11y facts are stated with no evidence, and the plan states "<the checks> never run on them … C-9 judges golden nodes (component + props.size), not source files, so no data edit puts the three files under it", so 44/labels/dark_mode were not measured by anything this change runs — set them to `_unmeasured_` or attach the measurement and evidence entry for each.
+
+DEFER severity=MED — Spec 127 §8.3 "`_unanswered — assessment_` is a state, not a hole … It is the difference between a descriptor that is incomplete and a document that is vague" — scripts/surfaces/_schema/census/web-product.json:+5387 "\"deviations\": \"none\", \"limitations\": []," — the row claims no deviation and no limitation in the same commit whose plan says "This pin is a baseline: it is the one exemption, listed for the operator", so the registry will render a clean row over 321 pinned findings — record the exemption as the row's `deviations`/`limitations` entry.
+
+DEFER severity=MED — Spec 127 §3.2a "targets = mobile, web, admin, pdf (the whole declaration; no \"where declared\" escape)" and "A state with no golden for a target is a FAIL, not a WARN" — scripts/surfaces/_schema/census/web-product.json:+5387 "\"targets\": [ \"screen\" ] … \"states\": [ { \"name\": \"hit\", \"golden\": \"none\" } ]" — a REPORT-archetype row declares a target token outside the four the spec names and one state with no golden, so S-golden cannot be read off this row — use the spec's target token for the renderer and list the real lifecycle states with `_unmeasured_` goldens until captured.
+
+DEFER severity=MED — Spec 127 §8.3 "the RED canaries prove that arm fires" — src/tests/surfaces/surface-conformance.logic.test.ts:975 "describe('C-12 the web report renderer is owned and listed (Spec 126 §11b.1: kept as a component, not converted)'" — the new ownership arm has no planted-defect case, while the C-2b and C-8 pins each carry one ("RED (task-384): a planted <table/> in a pinned file turns the C-8 pin red") — add a RED case that drops `binding_web_report` from `promoted_entries` in memory and asserts `bindingsProblems` reports it.
+
+DEFER severity=MED — Spec 127 §4.4 "This table is the programme's ONE sequence. … If a batch moves, it moves here." — scripts/surfaces/_schema/census/web-product.json:+5387 "\"phase\": \"B2\", \"feature\": \"F14\"" — B2's row is "`parcel_search` · `permits/[id]` · `builders/[id]`" and carries no `platform_shared` binding, so this row assigns itself a batch the one sequence does not contain — either add the binding to §4.4's batch table in the same commit or set the row's phase to what the table actually declares for `platform_shared`.
+
+MET — Spec 127 §8.2 §4 "Every component file … must appear in exactly one surface's owns.components[]" — src/tests/surfaces/surface-conformance.logic.test.ts:975 "for (const d of DESCRIPTORS.values()) if (d.identity.id !== 'binding_web_report') expect([d.identity.id, …])" — the second direction, no other surface owning the three files, is asserted.
+
+MET — Spec 127 §8.5 "The registry is a **PH-0 input**, not a PH-0 output" — scripts/surfaces/_schema/census/web-product.json:+5387 — the change edits the census row rather than hand-writing the registry page content for the entry.
+
+MET — Spec 127 §4.4 "Scope first: this table batches `parcel_product`, `parcel_admin` and `platform_shared` ONLY" — scripts/surfaces/_schema/census/web-product.json:+5387 "\"scope\": \"platform_shared\"" — the row's scope is one of the three batched scopes, not scope D.
+
+MET — Spec 127 §9.3 "`status` is `unreviewed` | `reviewed` | `needs_change`" — scripts/surfaces/_schema/census/web-product.json:+5387 "\"review\": { \"status\": \"unreviewed\" }" — a legal vocabulary value, so the queue renders a card rather than a blank.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 8
+
+---
+⏱  61764ms (61.8s)
+📊 Tokens — total: 37840, input: 25109, output: 12731, reasoning: 11079
