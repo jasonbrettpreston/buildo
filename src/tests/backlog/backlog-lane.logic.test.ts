@@ -284,6 +284,21 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     const e = fixture({ files: 'docs/reports/lanes/x/', type: 'build' });
     refused(lane(e), /no rule list/);
   });
+  it('a real launch with --spec (what the orchestrator runs) still writes the rule-list block and the per-list lens line into the brief it tells the lane to read', () => {
+    const f = fixture({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' });
+    const spec = path.join(f.base, 'mine.json');
+    fs.writeFileSync(spec, JSON.stringify({ lane: 'BL-T1', goal: 'g', inputs: ['own input'], outputs: ['o'], writeScope: [f.base], groups: ['F'], extra: ['own extra'] }));
+    const r = lane(f, ['--no-launchd', '--spec', spec]);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    const brief = fs.readFileSync(path.join(f.base, 'lane-dir/BRIEF.md'), 'utf8');
+    expect(brief).toContain('Rule lists that govern this task');
+    expect(brief).toContain('mobile-98: docs/specs/03-mobile/98_mobile_testing_protocol.md');
+    expect(brief).toContain('storage-doc16');
+    expect(brief).toContain('plan-compliance-mobile-98');
+    expect(brief).toContain('own input');
+    expect(brief).toContain('own extra');
+    expect(fs.readFileSync(spec, 'utf8')).not.toContain('Rule lists that govern'); // the orchestrator's own file is not rewritten
+  });
   it('a milestone letter with no increment requirements document is refused naming the letter', () => {
     refused(lane(fixture({ letter: 'Q' })), /increment.*Q|Q.*increment/);
   });

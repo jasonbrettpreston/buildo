@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-COMPLY2'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-20T15:26:00Z'
+updated_date: '2026-11-20T15:32:00Z'
 labels:
   - McFix
 milestone: m-1
@@ -25,7 +25,7 @@ ordinal: 66012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." Record: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, entry "Operator: compliance tooling tasks into 1·B". Scope now: (1) a data table mapping path globs to rule lists, used whole: pipeline steps, compute and migrations -> Spec 132 handbook, the Airtight V1 to V3 sources, Spec 133 for by-law rows, engineering standards; src/app/api and src/lib -> engineering standards sections 2, 4, 10, 11, McStorage policy when a report is computed or stored, fe.38 and fe.39 on the lookup; scripts/surfaces, content, bindings -> Spec 136 (all 44 rules) and Spec 128; mobile/ -> Specs 90, 98, 99, 100, 96 and Spec 136; queue and records -> Spec 137 and Spec 08. (2) scripts/analysis/backlog-lane.mjs reads the task Files line, attaches the lists to the brief and the lens line; (3) the close refuses BUILT unless a compliance lens output exists per attached list and a grounder verdict file written by an agent that is not the lane; (4) reuse the existing rule maps where they already map file to rule (task-365 reports which do). No hand-picked clauses anywhere. Waits on: task-365 report.
 
-Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, scripts/hooks/check-lane-close.mjs, scripts/lib/review-template.js, scripts/deepseek-review.js, .husky/commit-msg, src/tests/backlog/, src/tests/review-template.logic.test.ts, src/tests/hooks-composition.infra.test.ts, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, .claude/review-templates/lens-compliance.md, src/tests/review-lens-template.infra.test.ts
+Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, scripts/hooks/check-lane-close.mjs, scripts/hooks/check-task-files.mjs, scripts/lib/review-template.js, scripts/deepseek-review.js, .husky/commit-msg, src/tests/backlog/, src/tests/review-template.logic.test.ts, src/tests/hooks-composition.infra.test.ts, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, .claude/review-templates/lens-compliance.md, src/tests/review-lens-template.infra.test.ts
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -80,4 +80,6 @@ Files: scripts/analysis/rule-lists.json, scripts/analysis/rule-lists.mjs, script
 2026-11-20 BL-COMPLY2 round 3 report in the repo (docs/reports/lanes/2026-11-20/BL-COMPLY2/): attack table, 178 findings by id, round-3 lens outputs with REVIEW headers and committed inputs, TASK file. Dogfood: only GROUNDER.md missing. Task stays RUNNING: grounder owed.
 
 2026-11-20 BL-COMPLY2: three rows (specs-docs, specs-mobile, specs-web-admin) so a task that edits spec files resolves (task-376); red6.out then green.
+
+2026-11-20 BL-COMPLY2: defect fixed: a --spec launch dropped the generated rule-list block (the given spec replaced the generated one); now a merged copy task.merged.json goes to brief.mjs. One Files reading (rule-lists.mjs filesEntries) used by the launch and check-task-files (inline form accepted). red7.out then green.
 <!-- SECTION:NOTES:END -->

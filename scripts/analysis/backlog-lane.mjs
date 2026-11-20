@@ -170,10 +170,24 @@ const spec = {
   writeScope: [laneDir, wt],
   extra: [ticket, `Review (review mode, from the worktree): DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review ${ctxRel} --context .claude/review-templates/plan-review-deepseek.md`, lensLine(t, ctxRel, resolved.lists)],
 };
-const specPath = specGiven ?? path.join(laneDir, 'task.json');
+let specPath = specGiven ?? path.join(laneDir, 'task.json');
 if (!specGiven) {
   if (dry) console.log(`TASK-JSON ${specPath}: ${JSON.stringify(spec)}`);
   else fs.writeFileSync(specPath, JSON.stringify(spec, null, 2) + '\n');
+} else {
+  // task-366 fix: a --spec the orchestrator supplies used to REPLACE the generated spec, so its rule-list block and per-list lens line never reached the brief (six launches, 2026-11-20).
+  // The given spec is kept as it is; a merged copy (rule block first in inputs, lens line last in extra, each only when not already there) is what brief.mjs reads. The given file is not rewritten.
+  const given = JSON.parse(fs.readFileSync(specGiven, 'utf8'));
+  const inputs = Array.isArray(given.inputs) ? given.inputs : [];
+  const extra = Array.isArray(given.extra) ? given.extra : [];
+  const merged = {
+    ...given,
+    inputs: inputs.some((x) => /Rule lists that govern this task/.test(String(x))) ? inputs : [spec.inputs[0], ...inputs],
+    extra: extra.some((x) => /Compliance lens, ONCE PER RULE LIST/.test(String(x))) ? extra : [...extra, spec.extra[spec.extra.length - 1]],
+  };
+  specPath = path.join(laneDir, 'task.merged.json');
+  if (dry) console.log(`TASK-JSON ${specPath}: ${JSON.stringify(merged)}`);
+  else fs.writeFileSync(specPath, JSON.stringify(merged) + '\n');
 }
 const briefOut = path.join(laneDir, 'BRIEF.md');
 step('brief.mjs', laneDir, ['node', path.join(pt, 'brief.mjs'), '--spec', specPath, '--out', briefOut]);

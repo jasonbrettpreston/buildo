@@ -36,6 +36,17 @@ function go(decl: string | undefined, files: Record<string, string>) {
 }
 
 describe('CHK.1 check-task-files (task-3)', () => {
+  it('task-366: a Files: text inline at the end of the description is read (one reading, shared with the launch): outside files fail, inside files pass, no WARN', () => {
+    const inline = `---\nid: TASK-1\n---\n\n## Description\nsome prose, then the scope. Files: src/a.ts, scripts/hooks/\n`;
+    const run1 = (files: Record<string, string>) => { const { d, g } = repo(); stage(d, g, { [TASK]: inline + 'edited\n', ...files }); return check(d); };
+    const ok = run1({ 'src/a.ts': 'export const a = 2;\n' });
+    expect(ok.status, ok.stderr).toBe(0);
+    expect(ok.stderr).not.toMatch(/WARN/);
+    const bad = run1({ 'src/a.ts': 'export const a = 2;\n', 'src/b.ts': 'b\n' });
+    expect(bad.status).toBe(1);
+    expect(bad.stderr).toContain('src/b.ts');
+  });
+
   it('passes a commit whose changed files are inside the declaration', () => {
     const r = go('src/a.ts, scripts/hooks/', { 'src/a.ts': 'export const a = 2;\n', 'scripts/hooks/x.mjs': 'x\n' });
     expect(r.status, r.stderr).toBe(0);
