@@ -75,7 +75,7 @@ let ruleTable;
 const letterOf = milestoneLetter(board, t.fm.milestone);
 try { ruleTable = readTable(path.resolve(home(str('rule-lists', DEFAULT_TABLE)))); resolved = resolveTask({ table: ruleTable, root: board, body: t.body, type: String(t.fm.type ?? ''), letter: letterOf }); } catch (e) { refuse(`${taskId}: cannot read the rule-list table or one of its path maps under ${board}: ${String(e.message).split('\n')[0]}`); }
 if (resolved.error) refuse(`${taskId}: ${resolved.error.replace(/^refused: /, '')}`);
-const missingLists = verifyResolved(ruleTable, resolved, letterOf); // V2.LIST (task-406): a launch whose lists lack the five words, the plan protocol or the milestone objectives is refused
+const missingLists = verifyResolved(ruleTable, resolved, letterOf, String(t.fm.type ?? '')); // V2.LIST (task-406): a launch whose lists lack the five words, the plan protocol or the milestone objectives is refused
 if (missingLists.length) refuse(`${taskId}: the resolved rule lists are incomplete: ${missingLists.join('; ')}`);
 const st = git('status', '--porcelain');
 if (st.status !== 0) refuse(`git status failed on ${board}: ${st.stderr.trim().split('\n')[0]}`);

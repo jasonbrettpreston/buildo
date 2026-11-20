@@ -320,7 +320,7 @@ describe('findings: ids are <file stem>#<ordinal among BUG and DEFER lines>', ()
 // Rule: Spec 126 section 0a principle 1 and section 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1; PLAN-PROTOCOL.md:3 (docs/specs/00-architecture/plan-protocol.md) simple, no scope creep.
 type Table = { every_task?: string[]; milestone_docs?: Record<string, string[]>; increment_docs: Record<string, string>; lists: Record<string, { file: string; sections?: string[]; whole?: boolean }>; rows: { id: string; lists: string[]; globs?: string[] }[]; kinds?: { id: string }[] };
 const real = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as Table;
-const mod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<{ verifyResolved: (t: Table, r: { lists: { id: string }[] }, letter?: string) => string[] }>;
+const mod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<{ verifyResolved: (t: Table, r: { lists: { id: string }[] }, letter?: string, type?: string) => string[] }>;
 
 describe('V2.LIST: every task gets the five words, the plan protocol and its milestone objectives (data, not a hand-pick)', () => {
   it('the table names every_task = five-words (Spec 132 Glossary) and plan-protocol (the repo copy), and no removed engineering list id is left anywhere', () => {
@@ -465,5 +465,29 @@ describe('V2.LIST: the generated page of what each kind of work receives', () =>
     const stale = script(CLI, ['page', '--check', '--root', f.d, '--table', f.table]);
     expect(stale.status).toBe(1);
     expect(stale.stderr).toContain('rule-lists-by-kind.md');
+  });
+});
+
+// V2.LIST round 2 (task-406): the milestone guard. A build or fix task with no milestone cannot get its objectives and is refused; a missing milestone_docs key or entry counts as missing lists.
+describe('V2.LIST round 2: the milestone guard', () => {
+  it('resolve refuses a build or fix task with no milestone letter (one line naming the milestone); a record task and the control with a letter resolve', () => {
+    const noLetter = script(CLI, ['resolve', '--files', 'scripts/analysis/rule-lists.mjs', '--type', 'build']);
+    expect(noLetter.status, noLetter.stdout).toBe(3);
+    expect(noLetter.stderr).toMatch(/no milestone/);
+    expect(script(CLI, ['resolve', '--files', 'scripts/analysis/rule-lists.mjs', '--type', 'fix']).status).toBe(3);
+    expect(script(CLI, ['resolve', '--files', 'scripts/analysis/rule-lists.mjs', '--type', 'build', '--letter', 'S']).status).toBe(0);
+    expect(script(CLI, ['resolve', '--files', 'docs/specs/00-architecture/137_mcqueue.md', '--type', 'record']).status).toBe(0);
+  });
+  it('verifyResolved: a table with no milestone_docs key, or no entry for the letter, names the missing milestone lists; a build task with no letter is named', async () => {
+    const { verifyResolved } = await mod();
+    const t = real();
+    const good = JSON.parse(script(CLI, ['resolve', '--files', 'scripts/analysis/rule-lists.mjs', '--type', 'build', '--letter', 'S']).stdout) as Res;
+    expect(verifyResolved(t, good, 'S', 'build')).toEqual([]);
+    const noKey = { ...t } as Table;
+    delete noKey.milestone_docs;
+    expect(verifyResolved(noKey, good, 'S', 'build').join('|')).toMatch(/milestone_docs/);
+    expect(verifyResolved({ ...t, milestone_docs: { F: ['ms-F'] } }, good, 'S', 'build').join('|')).toMatch(/milestone_docs.*S/);
+    expect(verifyResolved(t, good, undefined, 'build').join('|')).toMatch(/no milestone/);
+    expect(verifyResolved(t, good, undefined, 'record')).toEqual([]);
   });
 });

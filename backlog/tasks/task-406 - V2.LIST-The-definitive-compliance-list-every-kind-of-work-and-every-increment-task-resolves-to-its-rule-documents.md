@@ -66,4 +66,6 @@ Operator 2026-11-20, verbatim (MORNING-DECISIONS.md:1494): "Correct this - Phone
 2026-11-20 BL-V2LIST: build commits: table, helper, check-tasks, generated page and plan protocol copy first; the close check edit in its own commit (protected path). Task left RUNNING, grounder owed.
 
 2026-11-20 BL-V2LIST round 2: review templates fixed (material sent once).
+
+2026-11-20 BL-V2LIST round 2: milestone guard in the helper and the launch.
 <!-- SECTION:NOTES:END -->

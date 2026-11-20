@@ -13,7 +13,7 @@ const AC = 'Writes scripts/analysis/thing.mjs and the notes file docs/out/NOTES.
 const SCRIPT = path.join(__dirname, '../../../scripts/analysis/backlog-lane.mjs');
 
 type Fx = { board: string; base: string; wt: string; main: string; pt: string; task: string; args: string[] };
-function fixture(opts: { status?: string; hook?: boolean; files?: string | null; type?: string; letter?: string } = {}): Fx {
+function fixture(opts: { status?: string; hook?: boolean; files?: string | null; type?: string; letter?: string; noMilestone?: boolean } = {}): Fx {
   const board = makeProject(), base = tmp('lane');
   fs.mkdirSync(path.join(board, 'backlog/milestones'), { recursive: true });
   fs.writeFileSync(path.join(board, 'backlog/milestones/m-0 - foundations.md'), `---\nid: m-0\ntitle: "Increment 1·A Foundations [${opts.letter ?? 'F'}]"\n---\n\n## Description\n\nx\n`);
@@ -24,7 +24,7 @@ function fixture(opts: { status?: string; hook?: boolean; files?: string | null;
   fs.copyFileSync(path.join(__dirname, '../../../mcbylaws/protected-paths.json'), path.join(board, 'mcbylaws/protected-paths.json'));
   fs.mkdirSync(path.join(board, 'mobile'), { recursive: true });
   fs.writeFileSync(path.join(board, 'mobile/.keep'), '');
-  const task = mk(board, 'Launch me', ['-d', `Launch description text.${opts.files === null ? '' : `\n\nFiles: ${opts.files ?? 'scripts/analysis/thing.mjs'}`}`, ...(opts.type ? ['--type', opts.type] : []), '--ac', AC, '--ref', 'docs/a.md', '--doc', 'docs/b.md', '-m', 'm-0', ...(opts.status ? ['-s', opts.status] : [])]);
+  const task = mk(board, 'Launch me', ['-d', `Launch description text.${opts.files === null ? '' : `\n\nFiles: ${opts.files ?? 'scripts/analysis/thing.mjs'}`}`, ...(opts.type ? ['--type', opts.type] : []), '--ac', AC, '--ref', 'docs/a.md', '--doc', 'docs/b.md', ...(opts.noMilestone ? [] : ['-m', 'm-0']), ...(opts.status ? ['-s', opts.status] : [])]);
   git(board, 'add', '-A'); git(board, 'commit', '-q', '-m', 'fixture');
   if (opts.hook) { const h = path.join(board, '.git/hooks/pre-commit'); fs.writeFileSync(h, '#!/bin/sh\nexit 1\n'); fs.chmodSync(h, 0o755); }
   const main = path.join(base, 'main');
@@ -332,6 +332,19 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     expect(brief).toContain('own input');
     expect(brief).toContain('own extra');
     expect(fs.readFileSync(spec, 'utf8')).not.toContain('Rule lists that govern'); // the orchestrator's own file is not rewritten
+  });
+  // V2.LIST round 2 (task-406): launch refuses an incomplete resolved set and a build task with no milestone (its objectives cannot be attached)
+  it('launch refuses a build task with no milestone, and a table whose every_task is empty; the control launches (dry-run)', () => {
+    expect(lane(fixture(), ['--dry-run']).status).toBe(0);
+    refused(lane(fixture({ noMilestone: true, type: 'build' }), ['--dry-run']), /no milestone/);
+    const f = fixture();
+    const t = JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/analysis/rule-lists.json'), 'utf8')) as Record<string, unknown>;
+    t.every_task = [];
+    const fake = path.join(f.base, 'empty-every-task.json');
+    fs.writeFileSync(fake, JSON.stringify(t));
+    const r = run('node', [SCRIPT, ...f.args, '--dry-run', '--rule-lists', fake], { env: { ...ID, RULE_LISTS_ALLOW_OVERRIDE: '1' } });
+    expect(r.status, r.stdout + r.stderr).toBe(3);
+    expect(r.stderr).toMatch(/every_task/);
   });
   it('a milestone letter with no increment requirements document is refused naming the letter', () => {
     refused(lane(fixture({ letter: 'Q' })), /increment.*Q|Q.*increment/);

@@ -118,7 +118,7 @@ export function validateTable(table, root) {
   }
   for (const k of table.kinds ?? []) {
     if (!k.id || !k.label || !k.files) bad.push(`kinds: ${k.id ?? '?'} needs id, label and files`);
-    else { try { const r = resolveTask({ table, root, body: `Files: ${k.files}`, type: k.type ?? 'build', letter: k.letter, tracked }); if (r.error) bad.push(`kinds ${k.id}: ${r.error}`); else { const miss = verifyResolved(table, r, k.letter); if (miss.length) bad.push(`kinds ${k.id}: ${miss.join('; ')}`); } } catch (e) { bad.push(`kinds ${k.id}: ${String(e.message).split('\n')[0]}`); } }
+    else { try { const r = resolveTask({ table, root, body: `Files: ${k.files}`, type: k.type ?? 'build', letter: k.letter, tracked }); if (r.error) bad.push(`kinds ${k.id}: ${r.error}`); else { const miss = verifyResolved(table, r, k.letter, k.type ?? 'build'); if (miss.length) bad.push(`kinds ${k.id}: ${miss.join('; ')}`); } } catch (e) { bad.push(`kinds ${k.id}: ${String(e.message).split('\n')[0]}`); } }
   }
   return bad;
 }
@@ -222,6 +222,7 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
   }
   if (result.unmatched.length) return { error: `refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json: ${result.unmatched.join(', ')} (add a row to the table, or fix the Files line); no silent "no rules apply"` };
   if (entries.length > 0 && rowHits === 0 && ['build', 'fix'].includes(String(type ?? '').toLowerCase())) return { error: `refused: the Files line of a ${type} task resolves to no rule list (only exempt paths: ${result.exempt.join(', ')}); a build or fix task must touch at least one governed path` };
+  if (letter === undefined && ['build', 'fix'].includes(String(type ?? '').toLowerCase())) return { error: 'refused: the task has no milestone (a build or fix task needs one: its milestone objectives are attached to every review; set the milestone with the backlog CLI)' };
   for (const id of table.every_task ?? []) add(id, 'every-task', 'every task also gets the lists of every_task in scripts/analysis/rule-lists.json (the five words and the plan protocol)');
   if (letter !== undefined) {
     const id = table.increment_docs?.[letter];
@@ -240,12 +241,15 @@ export function resolveTask({ table, root, body, type, letter, tracked }) {
  * What a resolved set is missing: the every_task lists and the milestone lists of the letter (task-406). [] when complete; the table's own every_task key being empty is a problem too.
  * Shared by validate, check-tasks and the close check, so the always-attached lists cannot be skipped by one of them.
  */
-export function verifyResolved(table, result, letter) {
+export function verifyResolved(table, result, letter, type) {
   const have = new Set((result?.lists ?? []).map((l) => l.id));
   const out = [];
   if (!Array.isArray(table.every_task) || table.every_task.length === 0) out.push('the table has no every_task lists (the five words and the plan protocol must be attached to every task)');
   for (const id of table.every_task ?? []) if (!have.has(id)) out.push(`every_task list ${id} is not attached`);
-  if (letter !== undefined && table.milestone_docs !== undefined) for (const id of table.milestone_docs[letter] ?? []) if (!have.has(id)) out.push(`milestone list ${id} is not attached`);
+  if (letter === undefined) { if (['build', 'fix'].includes(String(type ?? '').toLowerCase())) out.push('a build or fix task has no milestone: its milestone objectives cannot be attached'); }
+  else if (!table.milestone_docs || typeof table.milestone_docs !== 'object') out.push('the table has no milestone_docs (the objectives of each milestone must be attached)');
+  else if (!Array.isArray(table.milestone_docs[letter]) || table.milestone_docs[letter].length === 0) out.push(`milestone_docs has no entry for milestone group [${letter}]`);
+  else for (const id of table.milestone_docs[letter]) if (!have.has(id)) out.push(`milestone list ${id} is not attached`);
   return out;
 }
 
@@ -341,7 +345,7 @@ export function checkTasks({ table, root }) {
     let r;
     try { r = resolveTask({ table, root, body: t.body, type: String(t.fm.type ?? ''), letter, tracked }); } catch (e) { out.bad.push(`${t.id}: cannot resolve: ${String(e.message).split('\n')[0]}`); continue; }
     if (!r.error) {
-      const miss = verifyResolved(table, r, letter);
+      const miss = verifyResolved(table, r, letter, String(t.fm.type ?? ''));
       if (miss.length) out.bad.push(`${t.id}: resolves but ${miss.join('; ')}`); else out.resolve.push(t.id);
       continue;
     }
