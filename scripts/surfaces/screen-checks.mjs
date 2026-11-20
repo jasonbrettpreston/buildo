@@ -452,12 +452,23 @@ export function pageProblems(id, screen, supplied, content, contractIds) {
   }
   return out;
 }
+const PAGE_BUILDER = 'mobile/src/components/surfaces/PageTableBinding.tsx';
+/** The mobile binding modules (bindings.json) that call the page builder: one screen is expected for each. */
+export function pageCallers(ctx) {
+  const mods = Array.isArray(ctx.bindings?.modules) ? ctx.bindings.modules : [];
+  const paths = [...new Set(mods.filter((m) => m.platform === 'mobile' && m.path !== PAGE_BUILDER).map((m) => m.path))];
+  return paths.filter((p) => { try { return /\bpageProps\(/.test(fs.readFileSync(path.join(ctx.root, p), 'utf8')); } catch { return false; } });
+}
 export function pageArm(ctx) {
   const waits = waitsNote(ctx, 'S-page');
   const out = [];
-  const table = tryJson(path.join(ctx.root, PAGE_TABLE));
-  const screens = ctx.ok && table?.screens && typeof table.screens === 'object' ? table.screens : {};
+  const expected = pageCallers(ctx).length;
+  const table = ctx.ok ? tryJson(path.join(ctx.root, PAGE_TABLE)) : undefined;
+  const screens = table?.screens && typeof table.screens === 'object' ? table.screens : {};
   const ids = Object.keys(screens);
+  // The arm must not pass on nothing: fewer screens than binding modules that draw from the table (an unreadable or empty table, a failed context) is a finding.
+  if (ids.length === 0 && expected > 0) out.push(`SV-PAGE ${PAGE_TABLE}: no readable screens (expected ${expected} screen(s) from the binding modules that call the page builder, found 0)`);
+  else if (ids.length < expected) out.push(`SV-PAGE ${PAGE_TABLE}: ${ids.length} screen(s) read, ${expected} expected (the binding modules that call the page builder)`);
   for (const id of ids) {
     const e = ctx.inScope.get(id);
     if (!e || !convertedOf(ctx).includes(id)) { out.push(`SV-PAGE ${id}: not a converted surface`); continue; }
@@ -468,7 +479,7 @@ export function pageArm(ctx) {
     if (content === undefined) { out.push(`SV-PAGE ${id}: content file missing`); continue; }
     out.push(...pageProblems(id, screens[id], supplied, content, [...ctx.contracts.keys()]));
   }
-  return { findings: out, note: waits ?? `S-page ok (${ids.length} screens)` };
+  return { findings: out, note: waits ?? `S-page ok (${ids.length} of ${expected} screens)` };
 }
 
 export const ARMS = [['S-desc', 'DESC', descArm], ['S-screen', 'SCREEN', screenArm], ['S-sbind', 'SBIND', sbindArm], ['S-page', 'PAGE', pageArm]];

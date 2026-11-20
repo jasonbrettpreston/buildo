@@ -7,11 +7,14 @@
 //   P2 each planted wrong name is refused, and the SAME mutation with a valid name passes: a flag in `when`, a part's `when`, `busy`, a choices `list` and
 //      `select`, a button `target`, a `vars` path, the screen `contract`, a content key that is missing, a content key that is only a PREFIX (not a leaf),
 //      and a choices row whose content prefix lacks the leaf of one supplied answer;
+//   P4 the arm cannot pass on nothing: it expects one screen per binding module that calls the page builder; an unreadable table, an empty one, a failed
+//      context and fewer screens than expected are each a finding naming the file and both counts; the real table is the passing control;
 //   P3 the supplied names are read from the binding's exports (data lists), and a binding without them is refused.
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
-import { pageProblems, supplyOf } from '../../../scripts/surfaces/screen-checks.mjs';
+import os from 'node:os';
+import { pageArm, pageProblems, supplyOf } from '../../../scripts/surfaces/screen-checks.mjs';
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any -- JSON documents
 const ROOT = process.cwd();
@@ -74,5 +77,38 @@ describe('P3 the supplied names are the binding exports', () => {
     expect(() => supplyOf('export const NOTHING = 1;')).toThrow(/FLAG_NAMES/);
     const s = supplyOf("export const A_FLAG_NAMES = ['x', 'y'] as const;\nexport const A_VALUE_NAMES = ['v'] as const;\nexport const A_VAR_PATHS = ['p.q'] as const;\nexport const A_CHOICES = { v: ['a', 'b'] } as const;\nexport const A_CONTRACT = 'c_one';");
     expect(s).toEqual({ flags: ['x', 'y'], values: ['v'], vars: ['p.q'], choices: { v: ['a', 'b'] }, contract: 'c_one' });
+  });
+});
+
+describe('P4 the arm fails on an unreadable or empty table', () => {
+  const BUILDER = 'mobile/src/components/surfaces/PageTableBinding.tsx';
+  const TABLE_PATH = 'scripts/surfaces/_schema/static-page.json';
+  const DESC = `scripts/surfaces/parcel_product/F01/surfaces/${ID}.descriptor.json`;
+  const files = [TABLE_PATH, SCREEN.binding, BUILDER, DESC, `scripts/surfaces/parcel_product/F01/surfaces/${ID}.content.json`];
+  const rootWith = (table: string | null): string => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'page-arm-'));
+    for (const f of files) { fs.mkdirSync(path.dirname(path.join(root, f)), { recursive: true }); fs.copyFileSync(path.join(ROOT, f), path.join(root, f)); }
+    if (table === null) fs.rmSync(path.join(root, TABLE_PATH)); else fs.writeFileSync(path.join(root, TABLE_PATH), table);
+    return root;
+  };
+  const ctxOf = (root: string, ok = true) => ({
+    root, ok, manifest: { converted: [ID] }, inScope: new Map([[ID, { d: rj(DESC), file: DESC }]]), contracts: new Map([['contract_parcels_lookup', {}]]),
+    bindings: { modules: [{ path: SCREEN.binding, platform: 'mobile' }, { path: BUILDER, platform: 'mobile' }] },
+  });
+  it('the real table is the passing control: one screen expected, one found, no finding', () => {
+    expect(pageArm(ctxOf(rootWith(read(TABLE_PATH)))).findings).toEqual([]);
+  });
+  it('RED: a missing table, an empty screens map and a failed context are each a finding', () => {
+    const missing = pageArm(ctxOf(rootWith(null))).findings;
+    expect(missing).toEqual([`SV-PAGE ${TABLE_PATH}: no readable screens (expected 1 screen(s) from the binding modules that call the page builder, found 0)`]);
+    expect(pageArm(ctxOf(rootWith(JSON.stringify({ pages: {}, screens: {} })))).findings).toEqual(missing);
+    expect(pageArm(ctxOf(rootWith(read(TABLE_PATH)), false)).findings).toEqual(missing);
+  });
+  it('RED: a second caller of the builder with no screen in the table is a finding with both counts', () => {
+    const root = rootWith(read(TABLE_PATH));
+    const other = 'mobile/src/components/surfaces/OtherBinding.tsx';
+    fs.writeFileSync(path.join(root, other), 'export const x = pageProps(a, b, c, d);\n');
+    const c = ctxOf(root); c.bindings.modules.push({ path: other, platform: 'mobile' });
+    expect(pageArm(c).findings).toEqual([`SV-PAGE ${TABLE_PATH}: 1 screen(s) read, 2 expected (the binding modules that call the page builder)`]);
   });
 });
