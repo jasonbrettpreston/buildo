@@ -331,14 +331,17 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
     'node scripts/analysis/report-schema.mjs --check',
     // Spec 124 R-IL (operator chat batch J, 2026-10-21): the resolve_bylaws Layer 1 input file is current (file-only hashes).
     'node scripts/generate-bylaw-layer2-input.mjs --check',
+    // task-406 (V2.LIST; operator "yes to all", MORNING-DECISIONS.md:1504, item 2): the generated page of what each kind of work receives (rule-lists.json and the documents it names) is current.
+    'node scripts/analysis/rule-lists.mjs page --check',
   ];
 
-  it('GREEN — runs all 18 chain-era generator --check arms once each, after the McBylaw check and before step-validate (R-DJ)', () => {
+  it('GREEN — runs all 19 chain-era generator --check arms once each, after the McBylaw check and before step-validate (R-DJ)', () => {
     // integrate-12: handbook-1 (generate-step-handbook) and tooling-fix-1 (generate-last-measured, R-GQ) each took 12 -> 13; merged, 14.
     // layer2-spec (R-HK): decision-log --check, 15. integrate-13 (R-HM): report-schema --check, 16.
     // layer2-build-2 (R-IL): generate-bylaw-layer2-input --check, 17.
     // spec-133 (R-IY): generate-bylaw-handbook --check, 18.
-    expect(CHAIN_ERA_GENERATOR_CHECKS).toHaveLength(18);
+    // task-406 (V2.LIST): rule-lists page --check, 19.
+    expect(CHAIN_ERA_GENERATOR_CHECKS).toHaveLength(19);
     const code = stripComments(PRE_COMMIT);
     const bylaw = code.indexOf('node scripts/generate-bylaw-provisions.mjs --check');
     const sv = code.indexOf('step-validate.mjs --staged --fast');
@@ -384,7 +387,7 @@ describe('hooks-composition (R-AG gate J) — pre-commit generated-doc + system-
 // file-only by fast invariant #52. Timing never runs at commit, so machine load cannot flake it.
 describe('pre-commit budget (R-EC) — registered, observed, keyed to the hook text', () => {
   const evidence = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, budget.EVIDENCE_REL_PATH), 'utf8'));
-  const budgets = { docs_only_s: 25.3, registry_s: 27.5 };
+  const budgets = { docs_only_s: 25.3, registry_s: 33.2 }; // registry_s re-pinned 27.5 to 33.2 on 2026-11-20 (task-406; migration 334)
 
   it('GREEN — live: the committed evidence matches the live hook and is inside both pinned budgets', () => {
     const r = budget.checkPrecommitBudget(REPO_ROOT);
