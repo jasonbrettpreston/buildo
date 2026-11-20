@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-2.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 00 §5.2 test-layer map: "`*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic" — src/lib/report-projection/project.ts:180 "export function projectStoredPage(input: ProjectInput): { response: PageResponse; lineage: Lineage }" (and format.ts:36 "export function formatPageRule(rule: string, n: number): Formatted | null") — the diff's six files contain no test file, yet it adds pure derivation (formatter, freshness verdict, projection) and a new gated read path (report-page.ts:57 "if (!MAXBLD_WEB_LIVE) return null;"); the only evidence of coverage is comment text, and §5.3 "You MUST write and run a failing test ... BEFORE writing any feature or fix code" cannot be shown — add a `*.logic.test.ts` in this change (switch-off returns null, pageForVerdict per verdict, formatPageRule refusals) red first, or the clause is unmet.
+
+BUG severity=MED — Spec 00 §12.10 cross-layer contracts: "Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files" — src/lib/report-projection/format.ts:15 "export const SQFT_PER_M2 = 10.7639;" and project.ts:114 "export const LOT_SIZE_PLAUSIBLE_M2 = Object.freeze({ min: 50, max: 5000 });" — the diff introduces two thresholds as literals and says itself the factor is a duplicate of another file (format.ts:13 "It shares only the 10.7639 factor ... of mobile/src/lib/parcelCostFormat.ts"), with no `_contracts.json` row and no `contracts.infra.test.ts` entry in the diff — add the keys to `_contracts.json` and map them in `src/tests/contracts.infra.test.ts` in the same commit, or source the values.
+
+DEFER severity=MED — Spec 00 §5.2 parity battery: "Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator)" — src/lib/report-projection/seed-shas.ts:13 "the scope.ts / storey-extract.js twin pattern): src/tests/admin-report-preview-live.logic.test.ts asserts both give the same hex." — two new twins (canonicalJson/sha256 vs scripts/lib/compute/maxbld/catalogue.js, formatter vs mobile/src/lib/parcelCostFormat.ts) are pinned only by a comment naming an existing test, and no parity test is added in the diff; per the walk rule a clause satisfied only by a comment is unmet — add the two parity assertions in this change.
+
+DEFER severity=MED — no pasted clause names a landing footer: "NONE" — src/lib/surfaces/maxbld-landing.ts:147 "const report: StaticReport = { sample: view, footer: pickFooterText(SEARCH_CONTENT), ...}" — a new footer plus a new import (footerNode, SEARCH_CONTENT) rides inside an MB-44 customer-producer diff with no pasted clause or ruling authorising it — cite the operator ruling for the landing footer or split it out of this change.
+
+DEFER severity=LOW — Spec 00 §11 pre-review self-checklist: "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests" — NONE — the material under review carries no per-item PASS/FAIL checklist for the governing sections (the diff comments assert outcomes, not a walked checklist) — include the checklist output with the change or state where it lives.
+
+DEFER severity=LOW — Spec 00 §8.2 target gotchas: "The project `tsconfig.json` targets **ES2017**" — src/lib/report-projection/format.ts:62 "if (rule === 'confidence') return typeof v === 'string' && Object.hasOwn(CONFIDENCE_WORDS, v) ? (CONFIDENCE_WORDS[v] as string) : null;" — `Object.hasOwn` is ES2022 and I cannot see the tsconfig `lib`, so this may not typecheck under the stated target — use `Object.prototype.hasOwnProperty.call` or state the lib setting.
+
+MET — Spec 00 §4.2 "String concatenation for dynamic queries (especially via `order by` or search terms) is forbidden unless rigorously validated against a static whitelist" — src/lib/report-projection/read-stored.ts:36 "for (const c of PARCEL_COLUMNS) if (!PARCEL_SELECTED.includes(c)) throw new Error(...)" — all four statements are static and bind "$1", and the only dynamic element (bound column names) is checked against a static list at load.
+
+MET — Spec 00 §4.3 "Never `SELECT *` — always project specific columns" — src/lib/report-projection/read-stored.ts:38 "SELECT building_type, field_id, increment, status, value, unit, reason, flags, content_sha," — every statement lists its columns explicitly.
+
+MET — Spec 00 §6.1 "never bare `console.error()` in API routes or lib modules" — src/lib/parcels/report-page.ts:35 "import { logWarn } from '@/lib/logger';" — logging goes through the shared logger module, not a bare console call.
+
+MET — Spec 00 §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — diff file list (six paths under src/lib) — only `src/lib/` files change; `scripts/` seeds and schemas are imported read-only.
+
+REJECT — Spec 00 §4.2 "Raw SQL statements must utilize Drizzle parameterized queries" — accusation that read-stored.ts uses pg rather than Drizzle — not a real issue here, the statements are static text with `$1` bind parameters and no concatenation, so the injection risk the clause targets is closed.
+
+REJECT — Spec 00 §6.1 "All server-side error logging MUST use `logError()` from `src/lib/logger.ts`" — accusation over `logWarn(TAG, 'scenario table absent: every lot is a miss', ...)` — not a real issue, the call comes from the mandated logger module and is a warning on a refused read, not an error path.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 4
+
+---
+⏱  54749ms (54.7s)
+📊 Tokens — total: 41003, input: 30944, output: 10059, reasoning: 8597

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-1.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — m.214 "Forms not modelled are disclosed." — src/lib/parcels/report-compute.ts "flags: (r.flags ?? null) as string[] | null," beside "switches: (typeof r.switches === 'string' ? JSON.parse(r.switches) : r.switches ?? null)," — the computed path parses `switches` from JSON text but casts `flags` bare, so if the core hands flags the same JSON-text shape the disclosure flags reach the projection as a string and the disclosed rows vanish, leaving m.214 and m.169 unmet on the computed path — parse `flags` through the same branch as `switches`, or throw when its type is not an array of strings.
+
+DEFER severity=MED — RR-0278 / SRCH.METER-2, not pasted, cannot see — src/app/api/parcels/lookup/route.ts "SRCH.METER-2 (task-360, RR-0278): an unsure lot's page is HELD until the semi answer," — the only statement of the clause this hold implements is the diff's own comment, so by rule 3 the hold is UNMET against the pasted context: I cannot check which lots are held, nor that "a page that is sent is a page that is counted" is the ruled sentence — paste RR-0278 (and task-319 / MF-93 stage 2) verbatim before lock.
+
+DEFER severity=MED — RR-0310 / SRCH.A6, not pasted, cannot see — src/lib/parcels/lot-size-entry.ts "SRCH.A6 reset label (task-351, RR-0310): the Toronto calendar date as the v8 draws it, \"9 Dec 2026\"" — the served label's exact shape (no leading zero, fixed month table, Toronto calendar) rests on a comment citing a ruling that is not in the pasted context, so the new wire field `resetsOnDisplay` cannot be judged clause by clause — paste RR-0310 with its exact required string form.
+
+DEFER severity=MED — D-1 (task-348), unruled, quoted in the diff, cannot see a pasted authorisation — src/lib/parcels/report-compute.ts "decision D-1 (who sees numbers before launch, task-348) is not ruled, so this adds no session gate, no admin condition and no new switch." — the change ships a request-time page-serving compute whose own governing decision it declares unruled, and no pasted clause or ruling authorises that path, so the behaviour is added unnamed — paste the operator ruling behind LOAD.1 / "task 341 approved" or hold the entry until D-1 is ruled.
+
+DEFER severity=LOW — m.455 "post-signing edits to the MB-64 increment-1 key from the McProof sign-off, as one ledger row (cases PERM-10, FY-1, ... FOOT-14, FOOT-16, FOOT-18, ...)." — src/components/report/ReportPage.tsx "{ role: 'link', content: 'footer.terms', href: '/terms' }, { role: 'link', content: 'footer.privacy', href: '/privacy' }, { role: 'link', content: 'footer.help', href: '/help' }," — the rendered footer content changes (three links added, copyright re-parented) while the pasted footer cases FOOT-14/FOOT-16/FOOT-18 are still OWED to MB-80 lane T, and the diff names none of them — name the FOOT cases this render touches and confirm they move with the m.455 ledger row.
+
+MET — m.176 "MaxBLD answers the maximum-build case." — src/lib/parcels/report-compute.ts "const out = materializeRows([row], { config, lookups });" — the computed page is built by the step's own core, not a second formula.
+
+MET — m.404 "S-1: storeys from height use cited logic variables" — src/lib/parcels/report-compute.ts "const { values: config } = await resolveConfig(pool, descriptor);" — cited variables come from the seeded config, none are hard-coded in the entry.
+
+MET — m.214 "Forms not modelled are disclosed." — src/lib/parcels/report-compute.ts "return pageForVerdict(stored);" — computed rows go through the same projection and verdict as the stored read, so disclosure and not-evaluated rows follow one place.
+
+MET — m.183 "An exemption that removes every candidate answers \"does not apply\", never \"not evaluated\"." — src/app/api/parcels/lookup/route.ts "if (!row || Number(row.id) !== lot.id || !row.parcel || !row.lot) return null;" — a lot with no batch row, no parcels row or no Layer 2 stamp is a miss (no page), so the apply/not-evaluated distinction stays with the unchanged core.
+
+REJECT — m.189 "Max-build scenarios are a net-new V3 step, one row per parcel × scenario." — the change is accused of writing scenario rows outside the step — the entry writes nothing: "Nothing is written (the record write is ST.P1, task-265)," and the read is the step's own batch statement with the population set to the one lot.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 3
+
+---
+⏱  54189ms (54.2s)
+📊 Tokens — total: 42468, input: 33387, output: 9081, reasoning: 7887

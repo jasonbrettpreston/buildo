@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-2.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — x-rulings.1 "Cited ids must resolve." — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:121 "/** LOAD.1 (task-266): moved here unchanged from runtime-loader.logic.test.ts so the customer compute test builds the same batch rows." — the cited id LOAD.1 (task-266) does not appear anywhere in the pasted clauses, so the authority for this extraction cannot be resolved from what is pasted — paste the LOAD.1 ruling or 124a register row (or replace the citation with the register id that names this move) so the id resolves.
+
+DEFER severity=MED — x-rulings.2 "add a both-directions test and re-run the golden capture" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:122 "const expected = readJsonl(`${G25}/expected.jsonl`);" — the "unchanged" claim is contradicted: the removed hunk in runtime-loader.logic.test.ts begins at "const MZ = req(path.join(ROOT, 'scripts/lib/bylaw-materialize.js')) as Json;" and contains no expected.jsonl read, so the moved body is not the moved text and the caller now builds rows from a per-call read — either make the move byte-identical or show the golden capture re-run plus the both-directions test for the shared helper.
+
+DEFER severity=MED — x-rulings.2 "Route each learning to the most enforced artifact that can hold it." — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:17 "import { goldenBatch } from './golden25-harness';" — the diff adds a second consumer of the golden 25 batch shape (the customer compute test) with no pasted clause or ruling naming that consumer, so nothing pasted bounds what that consumer asserts — name the ruling/card clause the customer compute test enforces before merge.
+
+DEFER severity=LOW — x-rulings.4 "`--check` at pre-commit fails on an uncovered decision or a citation of an unknown one." — NONE — no decision-log row or `<log stem>#<decision id>` citation appears in the pasted diff, and the "customer compute test" motivation reads like an operator ruling — cannot see whether the branch adds the docs/reports/decisions row; if the move came from a ruling, cite it in the docstring or commit body.
+
+MET — x-tooling.1 — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:17 — "Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`" is not triggered: the change stays inside a `.logic.test.ts` file and the moved helper reads fixtures, not the DB.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  32635ms (32.6s)
+📊 Tokens — total: 17244, input: 11809, output: 5435, reasoning: 4788

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 00 §1.1 "All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of 44px x 44px." — src/components/report/ReportPage.tsx:241 "link: 'text-report-soft underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-report-amber'" — the three new footer links (terms, privacy, help) render through this class with no 44px minimum — add min-h-[44px] min-w-[44px] inline-flex items-center to the link class.
+BUG severity=HIGH — Spec 00 §4.4 "Do not embed UI-specific logic (pagination styles, component-shaped responses) in the API layer. Return normalized data; let each client transform it." — src/app/api/parcels/entitlement/types.ts:18 "resetsOnDisplay: z.string().nullable()," — a pre-formatted display date now enters the strict public contract beside the ISO instant it is derived from — serve the normalized instant only and format on the client, or paste the ruling that authorises a display field.
+BUG severity=HIGH — Spec 00 §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — diff file list "files: ... src/lib/parcels/report-compute.ts" (no test file in the ten changed paths) — new pure logic (formatDateDmyFixed), the new 400 branch (semi without parcelId), the held-page branch and the changed component all land with no red-first test — add the .logic, .infra and .ui tests before the code.
+BUG severity=MED — Spec 00 §10.3 "API routes must be thin, validate input, call a lib function, return the result. Business logic belongs in `src/lib/`, not in route handlers." — src/app/api/parcels/lookup/route.ts:146 "const held = lotForm?.unsure === true && semi !== 'answered';" — the page-source selection rule and the hold rule (stored, then compute, then null) sit inline in the handler — extract one lib function and have the route call it.
+BUG severity=MED — Spec 00 §11 "Request/Response TypeScript interface in `src/lib/[feature]/types.ts` (§10.3)" — src/app/api/parcels/lookup/types.ts:45 "semi: z.literal('answered').optional()," — the new request field is declared in the route-local types file, not src/lib — declare the contract in src/lib/parcels/types.ts and re-export from the route-local file.
+DEFER severity=MED — no pasted clause names this behaviour — src/app/api/parcels/lookup/types.ts:44 "// SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): the semi question page sets this on its Continue fetch" — a client-supplied flag now lifts a metering hold, and neither RR-0278 nor task-319 is in the pasted context — paste the ruling or drop the param.
+DEFER severity=MED — Spec 00 §5.2 "Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator)" — src/components/report/ReportPage.tsx:236 "The mobile binding keeps its own footer" — web now renders the shared footer tree while mobile keeps a hand-rolled footer, with no parity test in the diff — bind both to footerNode or add a parity battery entry.
+DEFER severity=LOW — Spec 00 §10.2 "If a `src/lib/` module is imported by both API routes and frontend components, any modification requires `npx vitest related` to verify no API regression." — src/lib/parcels/lot-size-entry.ts:121 "export const formatDateDmyFixed = (d: Date): string => {" — a shared src/lib module gains a new export with no cross-boundary run recorded — run and record npx vitest related for lot-size-entry.ts.
+
+MET — Spec 00 §4.3 "Never `SELECT *` — always project specific columns." — src/lib/parcels/report-compute.ts:34 — both new lookup reads name their columns (unit_key, unit_id; text_key, text).
+MET — Spec 00 §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — src/lib/parcels/report-compute.ts:4 — the new file only imports scripts/ code and no scripts/ path appears in the changed file list.
+MET — Spec 00 §4.4 "All API routes must return a consistent envelope: `{ data, error, meta }`." — src/app/api/parcels/lookup/route.ts:88 — the handler stays inside withApiEnvelope.
+MET — Spec 00 §8.1 "route.ts files may ONLY export HTTP handler functions" — src/app/api/parcels/lookup/types.ts:45 — the new schema field lives in types.ts, no non-handler export added to the route file.
+MET — Spec 00 §4.1 "The authoritative gate for every `/api/admin/**` route is `verifyAdminAuth(request)`" — src/app/admin/report-preview/page.tsx:16 — the modified admin page keeps requireAdminPage.
+
+VERDICT: FAIL
+Clauses checked: 14   Unmet: 5
+
+---
+⏱  49430ms (49.4s)
+📊 Tokens — total: 39422, input: 30122, output: 9300, reasoning: 8102

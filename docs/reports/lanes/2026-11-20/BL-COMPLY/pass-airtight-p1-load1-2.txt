@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-2.patch (model: deepseek-reasoner)
+
+REJECT — R-BZ / R-CA (122a §A26 G0-G13): "The purity codes run over compute and its AST `require` closure" — accused of compute-purity violations for calling `MZ.materializeBatch(parcels, env)` — the changed files are test files (`src/tests/steps/compute_maxbld_scenarios/`), outside the gate's scope `scripts/lib/compute/**`; the required modules `scripts/lib/bylaw-materialize.js`, `bylaw-lot-row.js`, `bylaw-resolution.js` are not compute closures either.
+REJECT — R-BZ gate E / G9 "A function-scope tunable const": "`mPerDegLat = 111320` (load_parcels, metres per degree of latitude) is a `physical_constant`" — accused of the literals `neighbour_id: 900000 + i`, `id: 800000 + i`, `shared_len_m: 10` — they are fixture data inside a test harness, not a compute module outcome bound, and the numeric const is not a tunable deciding any check in `scripts/lib/compute/**`.
+REJECT — Spec 122 §5.5 compute shape: "**A dispatch table, `{ \[checkId\]: fn }`** ... exported as `module.exports.checks`" — accused of violating compute shape (dispatch table, `ctx.report`, `ctx.config`, file order) — §5.5's scope is stated as `scripts/hooks/check-step-shape.mjs`, "the directory IS the scope" over `scripts/lib/compute/**`, and no file in that directory is touched.
+REJECT — R-DT / R-EY nine conditions: "`standardFor` ... returns `V3` only when the step has zero purity rows ... AND zero `standard-gates-ledger.json` rows" — accused of moving a step's standard label — the label derives from descriptors, purity rows, gate ledger rows, #44 and scorecard signals; the diff authors none of these.
+REJECT — R-BF / 122 §6.6.1 (a): "the four-part step registry ... and the §6 cross-step ledger ... are **100% mechanical** ... and **100% accurate**: declared == observed" — accused of hand-keeping registry or ledger truth — no descriptor `inputs.reads`, no `pipeline_meta`, no witness trace and no ledger row is authored here; a test-local helper is outside that clause's subject.
+REJECT — R-BA gate K: "gate K red-first proof is a committed vitest JSON artifact, never the bare word RED" — accused of weakening a prove-red proof by relocating `goldenBatch()` — the change commits no assertion, no proof artifact and no gate output; the function body is relocated, apart from the one local `const expected = readJsonl(...)` line (cannot see the removed module-scope `expected` declaration, so the comment's "moved here unchanged" cannot be verified either way, and no pasted clause governs that comment).
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  26599ms (26.6s)
+📊 Tokens — total: 19788, input: 15234, output: 4554, reasoning: 3869

@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-2.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — lc.53 "Verified by named lock; no partial green." — golden25-harness.ts added body "const expected = readJsonl(`${G25}/expected.jsonl`);" — the comment claims "moved here unchanged", but that line does not exist anywhere in the removed hunk, so the fixture the named lock reads now comes from a new read inside a shared harness no lock in this diff exercises — fix: either say so in the comment ("expected.jsonl is read here now, previously module scope in the lock") or pass `expected` in as an argument so the body is genuinely the moved one.
+
+DEFER severity=LOW — m.511 "CITE-2 cite by id and anchor." — golden25-harness.ts "/** LOAD.1 (task-266): moved here unchanged ... */" — the only authorisation cited for a new exported helper is "LOAD.1 (task-266)", an id that appears in no pasted clause, so nothing pasted can be checked against it — fix: anchor the comment to a pasted ruling or to the plan section that names the customer compute test.
+
+DEFER severity=LOW — m.500 "golden-25 gains the houseplex class (RP-G25H)" — golden25-harness.ts "abutters: (line.abutments || []).map((a: Json, i: number) => ({ parcel_id: lot.parcel_id, neighbour_id: 900000 + i, ..." — exporting goldenBatch makes one fixed, synthetic shaping (neighbour 900000+i, street 800000+i, zone [], ring_edges []) the shared input for every consumer, so the export cannot later stand for the RP-G25H houseplex rows — fix: keep the comment scoped to increment 1 and 2, or take the neighbour and street shapes as parameters.
+
+MET — lc.53 — runtime-loader.logic.test.ts "+import { goldenBatch } from './golden25-harness';" — the lock still runs the same builder and the removed hunk is the only copy deleted, so no duplicate fixture remains to drift.
+
+MET — m.483 "the values are unchanged and JavaScript stays hex" — golden25-harness.ts "lot: { parcel_id: lot.parcel_id, lot_gate: lot.lot_gate ?? null, permitted: lot.permitted, permitted_text_ids: lot.permitted_text_ids ?? null, table_version: lot.table_version, evaluator_version: lot.evaluator_version }" — no bytea boundary and no re-encoding is introduced by the move.
+
+MET — lc.16 "The scenario set (closed): detached house; detached houseplex; ..." — golden25-harness.ts "const out = MZ.materializeBatch(parcels, env);" — the row set is still materialized from the same parcels-rows.json, so no scenario is added or removed.
+
+REJECT — lc.68 "Layer 2 design-choice flags follow the golden-lot defaults" — accused of altering design-choice flags by dropping option_name — not a real issue: "const { option_name: _n, ...rest } = d;" is carried over verbatim from the removed hunk and changes no flag.
+
+REJECT — m.449 "An unseeded setting makes the run refuse to start (SB-4); no silent default." — accused of silently defaulting the zone list — not a real issue: the rule binds the compute step, not this test fixture builder, and "readJson('scripts/seeds/logic_variables.json').resolve_bylaws_population_zone_classes.default" is carried unchanged.
+
+REJECT — m.451 "LV-7 and LV-8 are kept, tagged for increment 5 (garden suite)." — accused of touching the increment-5 tagging — not a real issue: the diff moves one helper between two test files and names no layer 3 row.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  26742ms (26.7s)
+📊 Tokens — total: 18278, input: 13921, output: 4357, reasoning: 3495

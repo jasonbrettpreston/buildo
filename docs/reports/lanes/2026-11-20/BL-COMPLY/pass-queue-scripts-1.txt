@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-scripts-1.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — Rule 3 "When work lands for a row, the commit that lands it edits that row's status line." — diff file list "files: scripts/analysis/backlog-lane.mjs, scripts/analysis/proof-slice.mjs, scripts/analysis/proof-slices.json, scripts/analysis/src-sql-ledger.mjs, scripts/deepseek-review.js" together with backlog-lane.mjs:136 "// task-358 (REVIEW.LENSES)" and proof-slice.mjs:6 "// task-68 PROOF.TOOL, stage 2 (minimum)" — this DIFF PART lands work for task-358, task-68 and task-266 yet carries no backlog task file, and I cannot see whether a later part of 9f04d9074..3a36e8b26 edits the three rows — confirm all three status lines are edited inside the same commit range before merge.
+
+DEFER severity=LOW — Rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form: `Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: "<words>")`." — scripts/analysis/src-sql-ledger.mjs:111 "'src/lib/parcels/report-compute.ts', // LOAD.1 (task-266, dated note 2026-11-19): the batch statement text is built by the Layer 3 step's own core" — the entry calls its rationale a "dated note" while using no M-246 form and quoting no operator words, so a reader cannot tell whether a ruling sits on task-266's row — rename it in the comment to engineering rationale, or write the M-246 dated note on task-266's status line and have the comment point at it.
+
+DEFER severity=LOW — Rule 3 "This goes into every lane brief and the commit checklist." — scripts/analysis/backlog-lane.mjs:160 "extra: [ticket, `Review (review mode, from the worktree): ... plan-review-deepseek.md`, lensLine(t, ctxRel)]," — the lane brief gains a review lens line while this hunk adds no same-commit status-line sentence, and the unchanged part of the file cannot be seen here — add the Rule 3 sentence to `spec.extra` if it is not already present.
+
+DEFER severity=LOW — no pasted clause names review lenses (walk step 4) — backlog-lane.mjs:136 "// task-358 (REVIEW.LENSES): the review line names the Spec 08 lens set (08_agents.md:334 "NEVER run one generic pass"; section 7 rules 4, 7)" — the authority quoted for the new lens line and for `--template` in scripts/deepseek-review.js is Spec 08 section 7 and .claude/review-templates/README.md, neither pasted, so the added behaviour cannot be checked against a pasted clause — paste Spec 08 section 7 and the README lens table into the next context block.
+
+MET — Rule 13 "The board is a view; the row is the record. ... Nobody edits the board." — scripts/analysis/backlog-lane.mjs:160 — the added text goes into the lane spec's `extra` array, not into a queue row or the board, and no board-write path is added.
+
+MET — Rule 9 "The DB writer is ONE lane, runs on an operator go, and holds the DB lock." — scripts/analysis/proof-slice.mjs:10 "Commits nothing; reads and writes no database." — the new runner spawns argv rows only and holds no DB lock.
+
+MET — §6 "A commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling. It is infrastructure work. It is carded for the infra-freeze lift and is not built now." — proof-slice.mjs:139 "try { spec = JSON.parse(io.readFile(DATA)); }" and proof-slices.json:7 "argv": ["node", "scripts/analysis/policy-checks.mjs", "--all"] — the new tool calls existing checks and builds no status-line/expiry/DROPPED commit check.
+
+MET — Rule 1 "Word list (closed; nine words)" — scripts/analysis/proof-slice.mjs:25 "const STATUSES = ['PASS', 'FAIL', 'NOT BUILT', 'GAP'];" — these are proof-row results in a runner, not the single `Status:` line of a queue row or card, so the closed list is not extended.
+
+REJECT — Rule 1 word list "Word list (closed; nine words)" — proof-slices.json is accused of misusing the closed status word in `"waits": "WAITS CHK.3"` — §3 "Where the line sits" limits the closed list to the one `Status:` line on queue rows, cards and claimed ids, not a JSON data key inside a proof runner, so this is not a clause breach.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 0
+
+---
+⏱  67458ms (67.5s)
+📊 Tokens — total: 34383, input: 21243, output: 13140, reasoning: 12010

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-2.patch (model: deepseek-reasoner)
+
+MET — m.189 "Max-build scenarios are a net-new V3 step, one row per parcel × scenario." — golden25-harness.ts:144 "id: lot.parcel_id," — the relocated builder still emits one row per parcel lot from materializeBatch output, so the row keying downstream is unchanged by the move.
+
+MET — m.176 "MaxBLD answers the maximum-build case." — golden25-harness.ts:134 "const out = MZ.materializeBatch(parcels, env);" — the maximum-build material (lot, permitted, permitted_text_ids, decoded cells and options) is byte-identical to the block deleted at runtime-loader.logic.test.ts:51-94; only the hosting file changed.
+
+MET — m.465 "height_m, main_wall_height_m and upper_storey_setback_m are stored for a flat or shallow roof and for a pitched roof" — golden25-harness.ts:146 "lot: { parcel_id: lot.parcel_id, lot_gate: lot.lot_gate ?? null, permitted: lot.permitted, ..." — the Phase 2 stored-row surface the harness exposes is not filtered or reshaped, so the roof-form arm rows still reach the step under test.
+
+REJECT — m.256 "Averaging with a missing or excluded neighbour estimate answers "needs survey", never the zone default." — accused of fabricating neighbour estimates (golden25-harness.ts:149 "neighbour_id: 900000 + i, shared_len_m: 10, est: a.est") — not a real issue: those are fixture input rows for the harness, not the front-yard chain's answer, and the clause governs the chain's output, which this diff does not touch.
+
+REJECT — m.189 "one row per parcel × scenario" — accused of adding a new row-producing surface outside the V3 step by exporting goldenBatch from the shared harness ("export function goldenBatch()") — not a real issue: the function body is the same builder the V3 step test already ran, moved, so no new behaviour is introduced for the step to satisfy.
+
+DEFER severity=LOW — no pasted clause — the docstring provenance golden25-harness.ts:121 "LOAD.1 (task-266)" — the cited card is not in the pasted context, so the "unchanged" claim cannot be tied to a governing line — safe to defer: the substantive claim is verifiable from the diff itself and no pasted clause depends on the citation.
+
+DEFER severity=LOW — no pasted clause — golden25-harness.ts:123 "const expected = readJsonl(`${G25}/expected.jsonl`);" — this line does not appear in the removed block, so "moved here unchanged" is not literally true — safe to defer: behaviour is equivalent, and comment accuracy is not a pasted-clause obligation.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  29992ms (30.0s)
+📊 Tokens — total: 22397, input: 17281, output: 5116, reasoning: 4476

@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-2.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — prompt rule "A change that adds behaviour no pasted clause or ruling names is a finding" — mobile/src/hooks/useParcelLookup.ts:@@ -68,17 +76,65 @@ "SRCH.A6 (task-320; RR-0307): the caller's plan and this month's report count, read from GET /api/parcels/entitlement" — the entire entitlement feature (fetchParcelEntitlement, useParcelEntitlement, ParcelToolEntitlementSchema, the ['parcel-entitlement'] cache key, the persistFilter entry, SearchSituation.entitlement) is authorized only by SRCH.A6/RR-0307 references written into code comments, which are not in the pasted context, so no pasted clause is met or checkable — paste SRCH.A6 and operator ruling RR-0307 verbatim before merge, or hold these hunks
+
+BUG severity=HIGH — prompt rule "A clause satisfied only by a comment, a TODO or a test name is UNMET" plus deleted constraint "_// it leaves the app for the browser (Linking.openURL, a leave-the-origin move, never a router push)_" — mobile/src/lib/maxbldHelp.ts:@@ -1,18 +1,28 @@ "task-362 SRCH.LOTMAP-2 (small-pages-v8 search.html:235 ...): the page opens in the in-app browser sheet through expo-web-browser" — the diff switches leave-the-origin Linking.openURL to WebBrowser.openBrowserAsync and deletes the leave-the-origin constraint, and the only authority cited is unpasted task-362 plus Spec 126 §11b.3/§11b.7 which are not pasted — paste SRCH.LOTMAP-2 and the §11b.3 dated note, or keep Linking.openURL
+
+BUG severity=HIGH — prompt rule "A change that adds behaviour no pasted clause or ruling names is a finding" — mobile/src/lib/semiQuestion.ts:@@ -12,6 +12,27 @@ "SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report)" — SEMI_CONTINUE_WAIT_MS, SemiContinueTimeoutError, boundedWait and the new busy field rest on an unpasted task and on an operator item the comment itself says is only "in the lane report", so no pasted clause fixes 60s or requires the timeout; the consuming mount file is not in the diff, cannot see whether submitting is passed — paste SRCH.SEMI-3 and the operator item, or drop the boundedWait hunk
+
+DEFER severity=LOW — §5.2 "Subscription status? `useUserProfile().data.subscription_status` (canonical) — NEVER mirrored locally" — mobile/src/lib/schemas.ts:@@ -439,3 +439,16 @@ "status: z.string().nullable(), ... reportsLimitReached: z.boolean().nullable()," — the diff threads a second device-side copy of plan state into parcelSearchMatch's SearchSituation, the struct that also carries route; today parcelSearchRoute does not read it, so no routing decision yet breaches §5.2 — keep entitlement out of every route derivation, or let the unpasted RR-0307 text declare this endpoint canonical for the reports-left line only
+
+DEFER severity=LOW — §B4 "if (isUidChange) { void queryClient.invalidateQueries({ queryKey: ['user-profile'] }); }" — mobile/src/hooks/useParcelLookup.ts:@@ -68,17 +76,65 @@ "queryKey: ['parcel-entitlement']" — the new user-scoped key is not invalidated on a genuine UID change, only purged by the §B5 sign-out clear, so any uid change not preceded by the sign-out fan-out would show the previous account's count — add ['parcel-entitlement'] to the B4 uid-change invalidation, or state in the unpasted clause that the B5 clear is sufficient
+
+DEFER severity=LOW — prompt rule "A clause satisfied only by a comment, a TODO or a test name is UNMET" — mobile/src/lib/lotForm.ts:@@ -5,7 +5,8 @@ "it travels as a route param (OVERRIDE_PARAM) to the report, which does not apply it yet: nothing outside this file reads the param or calls `lotFormEffective`" — this hunk changes only a comment and now records that the P5.7 application is unimplemented; P5.7 and the "semi all y" / "semi ask a" rulings are not pasted, cannot see whether any pasted clause requires the override to take effect — paste P5.7 before this file's assertion is treated as compliant
+
+MET — §6.1 "Components MUST select only the primitives or stable references they need" — mobile/src/hooks/useParcelLookup.ts:@@ -68,17 +76,65 @@ — both new hooks read the token atomically via useAuthStore((s) => s.accessToken), no whole-store read added
+
+MET — §6.5 "Gate conditions MUST be stable signals" — mobile/src/lib/parcelSearchCore.ts:@@ -62,3 +62,19 @@ "reportsLeftShown(e: EntitlementLine | null | undefined): e is ShownEntitlement" — the only new draw/no-draw condition binds served fields, not isFetching or isError, so it does not toggle on refetch
+
+MET — §B5 "the MMKV-persisted TanStack cache (`mmkvPersister`, 24h `maxAge`) survives the sign-out" — mobile/src/lib/persistFilter.ts:@@ -24,5 +24,8 @@ "const NOT_PERSISTED = ['user-profile', 'parcel-entitlement'];" — the new user-scoped count is excluded from the persister blob, closing the PIPEDA rehydrate path for this key
+
+MET — §B5 "queryClient.clear(); // §9.10, purge ALL TanStack queries" — mobile/src/hooks/useParcelLookup.ts:@@ -68,17 +76,65 @@ — the new ['parcel-entitlement'] key is purged by the existing clear; the §B5 enumeration duty is scoped to Zustand stores and no new store is added
+
+MET — §5.3 "This subsection is the canonical AuthGate matrix" and §5.1 "Other layouts ... MUST NOT have routing `useEffect`s" — mobile/src/lib/parcelSearchMatch.ts:@@ -349,5 +353,7 @@ "route: parcelSearchRoute(outcome, { parcelId: data?.match?.parcelId ?? null, query: debounced })," — route computation and the 9 arms are unchanged; entitlement is appended, never consulted
+
+REJECT — §7.2 — accused of writing cache without the paired cancel/invalidate telemetry — the diff's only direct cache write is queryClient.setQueryData in useSetParcelLookup, and §7.2 binds invalidateQueries calls only
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  47657ms (47.7s)
+📊 Tokens — total: 29528, input: 20129, output: 9399, reasoning: 7816

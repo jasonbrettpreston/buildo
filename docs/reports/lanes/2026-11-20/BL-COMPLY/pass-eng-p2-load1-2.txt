@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-2.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — prompt walk item 4, "A change that adds behaviour no pasted clause or ruling names is a finding (nothing added that the card or ruling did not name)" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:123 "const expected = readJsonl(`${G25}/expected.jsonl`);" — this fixture read is not in the removed copy (the removed body begins "const MZ = req(path.join(ROOT, 'scripts/lib/bylaw-materialize.js')) as Json;"), so the new function differs from the code it replaced and no pasted clause or card authorizes the difference; the task-266 card is not pasted, so the claim "so the customer compute test builds the same batch rows" cannot be checked — either confirm the module-scope `expected` this inlines was the identical `readJsonl(`${G25}/expected.jsonl`)` or drop the "unchanged" wording.
+
+DEFER severity=MED — §14 registry row, "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:121 "LOAD.1 (task-266): moved here unchanged from runtime-loader.logic.test.ts" — the diff cites a task id and asserts a pure move, but neither the task-266 card nor the spec section it belongs to is pasted, so the clause's own check (cited specs updated with the ruling) cannot be performed — paste the task-266 card and the spec/runbook section it cites.
+
+DEFER severity=LOW — §14 registry row, "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:121 "LOAD.1 (task-266)" — the relocated helper is labelled with a task id, not a spec section; the harness file header is not pasted so I cannot see whether a file-level SPEC LINK already covers it — add the spec §N to the moved block's citation or confirm the header link.
+
+MET — 12.10 — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts and runtime-loader.logic.test.ts — the diff touches only test-harness TS files and adds no migration, CHECK constraint, FK cascade or PostGIS expression, so "Every NEW migration that adds a CHECK constraint..." does not attach.
+
+MET — 12.13 — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts and runtime-loader.logic.test.ts — "The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`)" are not in this diff, so the ≥50% mutation gate and its per-PR trigger do not apply.
+
+MET — 12.12 — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:122-160 — the move adds no new pure function carrying an arithmetic invariant; it only assembles fixture rows from the already-tested materialize/decode modules, so "MUST have at least one `fast-check` property test" is not triggered.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  29523ms (29.5s)
+📊 Tokens — total: 14821, input: 9673, output: 5148, reasoning: 4411

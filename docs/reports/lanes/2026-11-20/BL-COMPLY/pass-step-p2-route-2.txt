@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-2.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — x-rulings.1 "Cited ids must resolve." — src/lib/report-projection/format.ts:53 "K2 (operator 2026-11-13" — the id K2 resolves in the pasted handbook (section 6 table) to "K2 | none | x-tooling.3 | no machine check: programme stop criterion; UNCERTAIN who checks", not to a yes/no page-rule ruling, so the citation that justifies TEXT_RULES does not resolve to the pasted id — fix: cite the decisions-log stem and decision id for the 2026-11-13 yes/no ruling, and stop labelling it K2.
+
+BUG severity=HIGH — x-rulings.4 "each set of rulings ... is committed verbatim as docs/reports/decisions/<date>-<slug>.json" and "every approved decision becomes a register row ... that cites <log stem>#<decision id>" — src/lib/parcels/report-page.ts:9 "MORNING-DECISIONS.md:789" — the operator words and the 2026-11-11/11-12/11-13 dated rulings are cited as raw file line refs, and no decisions log or register row appears in the six files (the same pattern recurs at project.ts:6 and format.ts:53) — fix: cite <log stem>#<decision id> and land the docs/reports/decisions log plus register row in the same commit, or the pre-commit --check fails on an uncovered decision.
+
+BUG severity=HIGH — x-rulings.1 "the same commit adds the both-directions test and amends the spec" — src/lib/report-projection/format.ts:56 "export const TEXT_RULES = ['yes_no', 'confidence'] as const;" — two new page rules are added off a bare operator quote with no spec amendment and no both-directions test anywhere in the diff (no test file among the six) — fix: add the spec clause/register row and the two-direction test in this commit, or drop TEXT_RULES from this change.
+
+BUG severity=HIGH — x-rulings.2 "add a both-directions test and re-run the golden capture" — src/lib/report-projection/seed-shas.ts:6 "src/tests/admin-report-preview-live.logic.test.ts asserts both give the same hex." — the hex-parity lock and the L1 lock are asserted only by comments naming tests that are not in the diff, which is UNMET by the walk rule, and the new pageForVerdict miss branch has no both-directions test — fix: land the named tests (or the diff hunks that add them) and the golden capture in this commit.
+
+DEFER severity=MED — x-verify.1 "The report lives at docs/reports/verification/<branch>.md and every integrate commit cites it" — src/lib/parcels/report-page.ts:17 "(Integrated with the board head, merge ba7953933.)" — an integration claim is made with no verification report citation in the diff and the report is not visible, cannot see docs/reports/verification/route-2.md — fix: cite the verification report in the integrate commit or remove the integration claim from the module header.
+
+DEFER severity=MED — Scope check, "A change that adds behaviour no pasted clause or ruling names is a finding" — src/lib/surfaces/maxbld-landing.ts:147 "footer: pickFooterText(SEARCH_CONTENT)" — a landing footer is injected by this diff; no pasted clause, ruling or the MB-44/MB-93 material names a landing footer, so this is an unadjudicated addition riding in the same change — fix: split it out or paste the card that names it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+
+---
+⏱  49525ms (49.5s)
+📊 Tokens — total: 38333, input: 28737, output: 9596, reasoning: 8760

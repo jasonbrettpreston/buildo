@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-1.patch (model: deepseek-reasoner)
+
+MET — doc-16 §6.13 "See details loads with the main page" — src/app/api/parcels/lookup/route.ts — "pageResponse = await computeCustomerPageResponse(parcelRef);" the full page is built and returned in the same lookup response on a stored miss, so the detail loads with the main page at first open, not on a later tap.
+MET — doc-16 §7.2 "tracked lots recompute lazily on next open (no re-warm job)" — src/app/api/parcels/lookup/route.ts — "pageResponse = await computeCustomerPageResponse(parcelRef);" a missing lot is computed at the open itself, with no re-warm job and no write-back path in this diff.
+DEFER severity=MED — doc-16 §6.13 "See details loads with the main page" — src/lib/parcels/report-compute.ts "if (!MAXBLD_WEB_LIVE) return null;" — while the switch is off a missed lot still returns page null, so the clause holds only post-switch — dark-code-at-landing is deliberate until D-1/task-348 is ruled, bounded blast radius.
+DEFER severity=MED — doc-16 §7.2 "confirm that p95 <= 1 s also applies to an owner-input recompute once 5.11 is measured" — src/app/api/parcels/lookup/route.ts "the compute can take many seconds" — the change serves an unbounded multi-second compute synchronously at the pick, and the only pasted latency text is an unconfirmed open point — §7.2 is an open point about owner-input recompute, not a ruling, so it cannot be judged met or unmet here.
+DEFER severity=LOW — doc-16 §7.3 "Cost: confirm cost is computed at each open from the record's size (not stored)" — src/lib/parcels/report-compute.ts "// Nothing is written (the record write is ST.P1, task-265)." — cost and stored-size handling are absent from this compute-only diff and the clause is an unconfirmed open point — out of scope for a landing whose write is a separate task, no pasted ruling to measure against.
+REJECT — doc-16 §6.1 "computed on demand ... superseded by P1 to P7 / A-ST5" — accused of failing P1 store-on-open because the entry writes nothing — the operative P1 to P7 rule text is not pasted in this context, so no pasted clause imposes the write on this diff (the write is ST.P1, task-265).
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  37588ms (37.6s)
+📊 Tokens — total: 30463, input: 23371, output: 7092, reasoning: 6502

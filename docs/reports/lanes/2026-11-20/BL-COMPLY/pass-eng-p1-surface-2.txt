@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-surface-2.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — §10.2/§11 Frontend Boundary Check "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/` (§10.2)" — diff header "diff --git a/scripts/surfaces/parcel_product/F02/contracts/contract_parcels_lookup.descriptor.json" (also F01 mobile_parcel_search.descriptor.json, F02 contract_parcels_entitlement.descriptor.json, F06 web_landing.sample.json) — a frontend WF edits four files under scripts/, which the pasted checklist forbids for every frontend WF — split the descriptor/sample edits into a surface-spec WF, or record the waiver in the plan before lock.
+
+BUG severity=HIGH — §5.2 "`*.ui.test.tsx` | React component rendering, interactions | Any new/changed component" — src/components/surfaces/web/SearchBinding.tsx:270 "...(reportsLeftShown(s.entitlement) ? { [ENTITLEMENT]: { reportsLeft: s.entitlement.reportsLeft" (no test file appears anywhere in the diff) — the changed search and static bindings ship with no ui test for the reports-left line, the footer or the new Button href branch — add *.ui.test.tsx cases for the drawn and not-drawn line and the footer tree before merge.
+
+BUG severity=MED — contract_parcels_entitlement.descriptor.json under_126 "its response is an explicit `.strict()` whitelist of six fields" vs the same hunk adding "resetsOn" , "resetsOnDisplay" — the descriptor's own projection clause still says six fields while the projected list now names seven — update the under_126 count or the projection so the two halves of the same artifact agree.
+
+BUG severity=MED — contract_parcels_lookup.descriptor.json data_story "It reads 9 tables" — same paragraph, dated 2026-11-19 note "the Layer 2 results `bylaw_resolution_results` and `bylaw_resolution_option_results`, the lookups `bylaw_resolution_units` and `bylaw_resolution_texts`, `parcel_abutments`, `parcel_maxbld_population`" — six further tables are named that are not in the declared nine, so the declared read set is not the read set — enumerate every table once in the reads list, or state the count as "9 plus the Layer 3 set below".
+
+DEFER severity=MED — §1.1 "Dense metadata rows MUST use `flex-wrap`." — src/components/surfaces/web/SearchBinding.tsx:66 "footerLinks: 'gap-2'," — three footer links sit in one non-wrapping row with no mobile stacking — add flex-wrap (or flex-col md:flex-row) and cover 375px in the test plan.
+
+DEFER severity=MED — §2.3 "Before accessing nested object properties, explicitly check for `null` or `undefined`." — src/components/surfaces/web/SearchBinding.tsx:270 "reportsLeftShown(s.entitlement) ? { [ENTITLEMENT]: { reportsLeft: s.entitlement.reportsLeft, reportsLimit: s.entitlement.reportsLimit, resetsOnDisplay: s.entitlement.resetsOnDisplay } }" — the dereference is safe only if reportsLeftShown is a type predicate, and that declaration is not in this diff (cannot see) — declare it as `(e?: EntitlementLine | null): e is EntitlementLine` and keep the guarded spread.
+
+DEFER severity=LOW — §5.5 "Two parallel implementations stay in sync (§7 dual-path ...)" — src/components/surfaces/web/SearchBinding.tsx:248 "without the legal line, which is in the footer (last child, MF-91)" and the removed "−    legal()," — the web and mobile search trees now diverge (legal line moved, footer added on web only) and the ruling that approves it is quoted only inside the diff, not in the pasted context (cannot see) — paste the MF-91 operator verbatim into the review context, or record the divergence in the mobile descriptor.
+
+DEFER severity=LOW — §5.5 "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json "scripts/surfaces/_schema/report-presentation.json": "e151b5ccd11cd137" — the sample records a new hash for a schema file that is not in this diff part (cannot see whether it changed) — confirm the schema file changed in the same change set, else regenerate the sample.
+
+MET — §1.1 mobile-first base classes — src/components/surfaces/web/SearchBinding.tsx:65 "footer: 'mt-auto w-full gap-3 border-t border-zinc-800 px-4 py-6'" — base utilities only, no desktop-first prefixes.
+MET — §1.1 touch targets — src/components/surfaces/web/footerNode.ts:58 "href: p.href, size: 'lg', variant: 'subtle', color: 'gray'" — every footer link is a Button at size lg, above the 44px minimum.
+MET — §1.2 component isolation — src/components/surfaces/web/footerNode.ts:40 "export const footerNode = (s: FooterSection, L: FooterLayout, prefix: string): FooterNode" — pure stateless tree builder, no fetch and no context.
+MET — §2.3 null guard on server values — src/components/surfaces/web/StaticBinding.tsx:392 "const footerOf2 = (report: StaticReport): FooterText => report.footer ?? fail('no footer text (the server leaves this part out)')" — explicit absence check before use.
+MET — §10.3 stable field names, projected values — src/components/surfaces/web/SearchBinding.tsx:100 "const entitlement = (field: string): Ref => ({ contract: `${ENTITLEMENT}.${field}` });" — refs address named contract fields, not raw columns.
+
+REJECT — §1.3 font-mono reserved for data values — that the footer adds mono text — the only mono class in the region, "chip: 'rounded-full font-mono text-xs font-normal'", is unchanged by this diff.
+REJECT — §4.4 response envelope, §4.1 route guarding — that the entitlement/lookup contracts changed server shape and auth — this diff part touches no route or lib file, so those clauses have nothing to judge here.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 4
+
+---
+⏱  50267ms (50.3s)
+📊 Tokens — total: 36546, input: 27432, output: 9114, reasoning: 7641

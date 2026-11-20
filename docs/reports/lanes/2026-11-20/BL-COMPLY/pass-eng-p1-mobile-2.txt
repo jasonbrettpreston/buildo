@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-2.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 00 §5.3 (with §5.2) "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — parcelSearchCore.ts "+export function reportsLeftShown(e: EntitlementLine | null | undefined): e is ShownEntitlement {" (also parcelLookupParams, boundedWait, the new `busy` field, the entitlement spread in buildSearchSituation) — five new pure/derivation behaviours ship in a diff whose file list contains no test file, so neither the Red Light step nor the §5.2 row "Any pure/derivation logic" is met — add parcelSearchCore.logic.test.ts, semiQuestion.logic.test.ts and useParcelLookup.logic.test.ts covering reportsLeftShown (0 counts as present, empty label, null), parcelLookupParams (semi only when exactly 'answered'), boundedWait (reject path) and busy, written and run failing first.
+
+DEFER severity=MED — pasted instruction, What to walk 4 "A change that adds behaviour no pasted clause or ruling names is a finding" — useParcelLookup.ts "SRCH.A6 (task-320; RR-0307): the caller's plan and this month's report count, read from GET /api/parcels/entitlement" — every new behaviour here rests on rulings cited only in comments and not pasted (RR-0307 entitlement line, RR-0278 semi=answered, RR-0310 resetsOnDisplay, task-362 in-app browser sheet, SUITE.FIX-2 hook move, the 60s SEMI_CONTINUE_WAIT_MS "operator item"), so compliance with them is cannot see — paste RR-0278, RR-0307, RR-0310 and the task-361/362 wording into the context before lock.
+
+DEFER severity=LOW — Spec 00 §2.3 "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — useParcelLookup.ts "queryFn: () => fetchParcelLookup(parcelLookupParams(parcelId!, semi))" — the assertion is rewritten into a new call shape with no inline comment naming the `enabled: !!parcelId` guard that makes it safe — add one clause-long comment at the `parcelId!` site stating the guard.
+
+MET — Spec 00 §12.2 — useParcelLookup.ts "queryFn: fetchParcelEntitlement," — the entitlement read goes through useQuery, not useEffect.
+MET — Spec 00 §4.4 — useParcelLookup.ts "fetchWithAuth<{ data: unknown }>('/api/parcels/entitlement')" — the client consumes the `{ data }` envelope, no ad-hoc shape.
+MET — Spec 00 §10.2 — diff header "files: mobile/src/hooks/useParcelLookup.ts, mobile/src/lib/lotForm.ts, ..." — no file under scripts/, migrations/ or scripts/lib/ is touched.
+MET — Spec 00 §4.3 — maxbldHelp.ts "export const MAXBLD_HELP_URL = 'https://maxbld.ca/help';" — no API key, credential or connection string is introduced into client code.
+MET — Spec 00 §2.3 — parcelSearchCore.ts "e.reportsLeft !== null && e.reportsLeft !== undefined" — null and undefined are checked before the fields are bound.
+
+REJECT — Spec 00 §6.1 — maxbldHelp.ts logs the failed sheet open with a bare console.warn instead of logError — §6.1 bans bare console.error in server API routes and server lib modules, this is React Native client code and the call is console.warn, which the clause does not name.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 3
+
+---
+⏱  37584ms (37.6s)
+📊 Tokens — total: 26460, input: 19814, output: 6646, reasoning: 5756

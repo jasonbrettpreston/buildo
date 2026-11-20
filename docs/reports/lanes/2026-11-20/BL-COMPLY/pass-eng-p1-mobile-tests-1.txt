@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-tests-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — walk step 4 (no pasted clause names the behaviour) — "A change that adds behaviour no pasted clause or ruling names is a finding (nothing added that the card or ruling did not name)." — mobile/__tests__/parcelScreens.golden.test.ts:246 "+    expect(SEARCH_SLICE.content['search.input.placeholder']).toBe('Enter a Toronto address');" — the diff retires a previously pinned operator-verbatim string ("Enter lot address", small pages v7.1 item 9) on the strength of a note that is not in the pasted context (RR-0313, MORNING-DECISIONS.md:1216), so the supersession cannot be checked — paste RR-0313 (and RR-0314) verbatim into the context, or leave the pinned copy unchanged.
+
+BUG severity=MED — Spec 00 §2.3 — "Do NOT use the non-null assertion operator (!) unless the value's existence is mathematically guaranteed by a prior validation step. If using !, you must document why in an inline comment." — mobile/__tests__/lotMapScreens.golden.test.ts:142 "const hint = byTestID(t, 'parcel-lotmap-pick-hint')!;" — a new ! on a lookup that can return undefined, with no inline comment, repeated at reportScreens.golden.test.ts:90 "if (!touch[n.component]!.some((x) => tk.includes(x)) || mins.length !== 1)" and reportScreen.mount.behaviour.test.tsx "screen.getByText(LIFE.loading!)" — guard each with an explicit expect(...).toBeTruthy() before dereference, or add the required inline comment.
+
+DEFER severity=MED — walk step 4 (no pasted clause names the behaviour) — "A change that adds behaviour no pasted clause or ruling names is a finding (nothing added that the card or ruling did not name)." — mobile/__tests__/lotMapScreens.golden.test.ts:139 "expect(LOT_MAP_SLICE.content['select.hint']).toBe('Pick a lot on the map or in the list.');" — the new hint copy, the open_help in-app browser behaviour, the semi-question fetch/cache/busy flow and the held-report loading state are sourced only from strings quoted inside the diff (choose-lot.html:278, search.html:235, task-319/360/361/362 ACs), none of which is pasted — paste those design lines and ACs so the copy and behaviour are checkable.
+
+DEFER severity=LOW — Spec 00 §5.2 — "| `*.ui.test.tsx` | React component rendering, interactions | Any new/changed component |" — mobile/__tests__/lotMapPage.behaviour.test.tsx and mobile/__tests__/semiQuestionScreens.golden.test.ts — the new component render/interaction assertions sit in behaviour/golden files outside the §5.2 pattern table — add the equivalent *.ui.test.tsx coverage or record the mobile-app naming exemption against §5.2 so the layer claim is auditable.
+
+DEFER severity=LOW — Spec 00 §5.1 — "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories" — mobile/__tests__/reportScreen.mount.behaviour.test.tsx:105 "const unsureHit = (page: Json | null) => ({ ...hit(page), lotForm: { detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true } });" — an untyped literal for the new lotForm shape, so a schema change cannot fail the test at compile time — type the fixture, or build it through the shared schema factory.
+
+MET — Spec 00 §2.1 — mobile/__tests__/maxbldHelp.test.ts:35 "a rejecting openBrowserAsync is caught and logged with the topic only, not thrown" plus semiQuestionPage.behaviour.test.tsx "a failed fetch at Continue shows the built error state" asserting the safe text and not Error('boom'); failure forced at the deepest layer, raw message not surfaced.
+
+MET — Spec 00 §1.1 — mobile/__tests__/semiQuestionScreens.golden.test.ts:60 "some((c) => c === 'min-h-[44px]' || c === 'min-h-[48px]')": the 48 px allowance still meets the 44 px minimum tappable area.
+
+MET — Spec 00 §4.3 — mobile/__tests__/maxbldHelp.test.ts:41 "expect(JSON.stringify(warn.mock.calls)).not.toContain('5 Elm St');" together with the fragment-encoding test at :22: the user-typed address is neither logged nor placed in a query string.
+
+MET — Spec 00 §12.10 — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:14 "import { SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';": the bounded-wait threshold is read from the module, not duplicated as a literal in the test.
+
+REJECT — Spec 00 §6.1 — "All server-side error logging MUST use logError() from src/lib/logger.ts — never bare console.error()" — the change logs via console.warn in @/lib/maxbldHelp: this is the mobile client module, not a server route or server-side lib, so the §6.1 server-side mandate does not reach it.
+
+VERDICT: FAIL
+Clauses checked: 15   Unmet: 5
+
+---
+⏱  68219ms (68.2s)
+📊 Tokens — total: 45091, input: 31586, output: 13505, reasoning: 12273

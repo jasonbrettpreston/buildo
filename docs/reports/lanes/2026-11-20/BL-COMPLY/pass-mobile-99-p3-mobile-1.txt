@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — no pasted clause (the diff cites SRCH.A6, task-320, RR-0307, RR-0310, search.html:267; none is in the pasted context) "SRCH.A6 (task-320; RR-0307): the reports-left line reads the served count ... printed as served" — mobile/app/(app)/parcel-tool/index.tsx "entitlement: entitlement ? { reportsLeft: entitlement.reportsLeft, reportsLimit: entitlement.reportsLimit, resetsOnDisplay: entitlement.resetsOnDisplay } : null," — a new server read plus a new visible line is added and no pasted clause names it, so the required shape (served-vs-computed values, no line on loading/failure/no-plan, Toronto reset date) is unverifiable — paste SRCH.A6, RR-0307, RR-0310 and the contract_parcels_entitlement fields before merge, or drop the line.
+
+BUG severity=HIGH — no pasted clause (the diff cites SRCH.SEMI stage 2, task-319, MF-93, RR-0278; none is pasted) "SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): Continue first fetches the same lookup with the one flag `semi: 'answered'`, which lets the server count the lot once its report is produced" — mobile/app/(app)/parcel-tool/semi-question.tsx "result = await boundedWait(fetchParcelLookup({ parcelId: id, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);" — the counting semantics, the ordering (answered lookup before report) and the cache-write key are asserted only by a comment; the pasted clauses say nothing about them, so compliance cannot be established — paste RR-0278 and the SRCH.SEMI stage 2 clause.
+
+BUG severity=HIGH — no pasted clause (the diff cites SRCH.METER-2, task-360, UX-2c; none is pasted) "SRCH.METER-2 (task-360, UX-2c): the server holds an unsure lot's page (null) until the answer, so while the question is owed the screen shows the loading state, never the miss text" — mobile/app/(app)/parcel-tool/[parcelId].tsx "const { view, lifecycle } = reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError });" — suppressing the not-found view while a question is owed is new behaviour with no pasted clause behind it, and I cannot see whether an error path still renders correctly under it — paste SRCH.METER-2 and the report-screen state clause.
+
+DEFER severity=MED — no pasted clause (the diff cites SRCH.C12, B.7, C.11, C.12, choose-lot.html:278-279; none is pasted) "SRCH.C12 / B.7: the v8 link to Help & Support, prefilled with the typed query (the existing action open_help)" — mobile/src/components/surfaces/LotMapBinding.tsx "return [unlinkedNotice(), helpLink('address_match'), ...mapView(s)];" — which states carry a help link, which content key each uses (both topics pass content('help.address.link')), and the new pick hint and help row cannot be checked against the approved design text — paste the v8 choose-lot design text and SRCH.C12 before merge.
+
+DEFER severity=LOW — no pasted clause (the diff cites plan v3 §2.2 via the in-file comment; that section is not pasted) "The closed icon table (plan v3 §2.2)." — mobile/src/components/surfaces/SurfaceRenderer.tsx "export const ICONS = { Search, MapPin, AlertTriangle, RefreshCw, Lock, Ban, User, Check, ArrowRight, X, ChevronLeft, Info };" — adding ChevronLeft and Info extends a table the code itself calls closed; the authority to extend it is not in the pasted context — paste plan v3 §2.2, or confirm the table's amendment rule.
+
+MET — Spec 99 §9.15 atomic-selector mandate "flags any `useXStore()` zero-arg whole-store read per §6.1" — mobile/app/(app)/parcel-tool/index.tsx "const accessToken = useAuthStore((s) => s.accessToken);" — the only added store read is a single-field selector, not a whole-store read.
+
+MET — Spec 99 §8.5 store-enumeration "assert that `signOut()` ... calls `use<Name>Store.getState().reset()` for every discovered store" — diff file block "files: mobile/app/(app)/parcel-tool/[parcelId].tsx, ... mobile/src/constants/parcelSearch.ts" — no file under mobile/src/store/ is added or changed, so no reset call or exemption is owed.
+
+REJECT — Spec 99 §10 Out-of-Scope Files — the change is accused of touching out-of-scope files — none of §10's out-of-scope paths (`mobile/src/store/*.ts`, `mobile/app/**/_layout.tsx`, `mobile/app/(onboarding)/*.tsx`, `useUserProfile.ts`, `stateDebug.ts`) appears in the diff, and §10's target list governs Spec 99's own amendment work, not parcel-tool feature work.
+
+VERDICT: FAIL on compliance with the pasted clauses, no pasted clause is violated, but three substantive added behaviours rest on rulings absent from the pasted context so their compliance cannot be established
+Clauses checked: 5   Unmet: 3
+
+---
+⏱  43352ms (43.4s)
+📊 Tokens — total: 35761, input: 27373, output: 8388, reasoning: 7139

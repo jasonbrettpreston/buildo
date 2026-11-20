@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-2.patch (model: deepseek-reasoner)
+
+```
+BUG severity=HIGH — doc-16 section 6 (whole list) plus the only pasted operator lines name nothing for the web landing page — src/lib/surfaces/maxbld-landing.ts:38 "+import { pickFooterText } from '@/components/surfaces/web/footerNode';" and :147 "+  const report: StaticReport = { sample: view, footer: pickFooterText(SEARCH_CONTENT), ..." — this diff adds customer-facing landing footer behaviour that no pasted clause or ruling names (the cited MORNING-DECISIONS.md:789 and :1160 are not pasted) — move the landing footer change out of the MB-44 W diff, or paste the clause that names it
+DEFER severity=MED — doc-16 section 6.12 "~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:694 (client timer reading) and MF-51 plan.v2 line 58: amended or superseded as in section 3" (the only MORNING-DECISIONS line pasted) — src/lib/parcels/report-page.ts:10 "MORNING-DECISIONS.md:789, and "task 341 approved", :1160" — the authority the change rests on is not in the pasted context, cannot see whether :789 or :1160 says what the comment claims — paste those two operator lines before the switch-on is relied on
+DEFER severity=MED — doc-16 section 6.1 "superseded by P1 to P7 / A-ST5" — src/lib/report-projection/read-stored.ts:45 "FROM parcel_maxbld_scenarios WHERE parcel_id = $1 ORDER BY building_type, field_id" — the operative rules P1 to P12 and A-ST5 are counted in this list ("this is part 2 of 2", 12 rules by /^\| P\d+ \|/) but none is pasted, so the read the customer page now shares cannot be checked against them — paste P1 to P7 and A-ST5
+DEFER severity=LOW — doc-16 section 7.1 "Name the ceiling (lots or MiB) and approve purging untracked, un-owned records not opened for N days" — src/lib/report-projection/read-stored.ts:70 "const rows = present ? (await db.query<StoredRow>(ROWS_SQL, [id])).rows : null;" — the open point asks for a named ceiling and purge before these records are consumed citywide, and this diff adds that consumer with neither named, cannot see any — record the ceiling and purge ruling (or the PIN-bounded exposure) next to the switch
+DEFER severity=LOW — doc-16 section 7.4 "Confirm A-ST5b, the bounded addition to ST-5's cohort clause: until MB-38, a tester's owner-entered rows are kept in the 309 form for that lot" — src/lib/parcels/report-page.ts:48 "case 'not_stored': // D2" — an unconfirmed point, so a tester lot whose owner rows live in the 309 form today falls to a miss and a compute, and the ruling that would decide it is not pasted and not confirmed — confirm A-ST5b before MB-94 part (f) lands behind its switch
+MET — doc-16 section 6.13 "See details loads with the main page (MORNING-DECISIONS.md:700)" — src/lib/report-projection/project.ts:279 — one page response carries every bound value including the reason_text sentence, no second fetch
+MET — doc-16 section 6.1 superseded text "Layer 3 persists one headline record per (parcel, option)" — src/lib/report-projection/project.ts:150 "const rowOf = (bt: string, field: string): StoredRow | undefined => stored.find((r) => r.building_type === bt && r.field_id === field);" — values come from per-field stored rows, not a single headline per option
+MET — doc-16 section 7.1 "a purged record is just recomputed on next open" — src/lib/parcels/report-page.ts:48 — not_stored maps to null, which LOAD.1 reads as compute
+MET — doc-16 section 7.3 "M-67 keeps price out of Layer 3" — src/lib/report-projection/read-stored.ts:44 "SELECT building_type, field_id, increment, status, value, unit, reason, flags, content_sha," — the shared read selects stored scenario values only, no price or cost column is read here
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+```
+
+---
+⏱  55734ms (55.7s)
+📊 Tokens — total: 34059, input: 24059, output: 10000, reasoning: 8960

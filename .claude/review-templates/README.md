@@ -130,3 +130,17 @@ DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/co
 ```
 
 `review --template` is the one runner change of task-358 (a lens cannot reach the model in strict form through `--context`); `plan --template` already existed. Add `--dry-run` to print the two messages without a call.
+
+## Handbook clause packs
+
+Packs are verbatim copies of the rule lists the handbooks hold, in `.claude/review-templates/packs/`. Nothing is trimmed or paraphrased: each file starts with a header naming its source file and line range, its generator (or "hand-written"), the number of rules in the whole list and its part number, then the copied lines. A list over about 33000 characters is split by heading into parts (`-p1`, `-p2`, ...). The packs: `fe` (Spec 136, generated from Spec 135), `step` (Spec 132 sections 2-4 and 6, generated), `bylaw` (Spec 133 section 2, generated), `storage` (backlog doc-16), `queue` (Spec 137), `spec08` (Spec 08 sections 7 and 11), `airtight` (McDonald's Airtight V1/V2/V3: Spec 124a R-BA, R-BF, R-BZ, R-CA, R-DT, R-EY, Spec 122 sections 5.5 and 6.6.1, Spec 122a A26 and A27), `mobile-core`, `mobile-99`, `mobile-100`, `mobile-96` (the mobile specs and `.claude/domain-admin.md`), `eng` (`docs/specs/00_engineering_standards.md`). A pack is a copy: when its source line range moves, cut it again; the header says where it came from.
+
+The compliance lens (`lens-compliance.md`) judges "against the pasted clauses only", so it needs a pack to judge a handbook: with no pack it can only judge what its own caller pasted. Put the pack in `--context` and the diff part in the file:
+
+```bash
+DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config \
+  scripts/deepseek-review.js review <diff part> --context .claude/review-templates/packs/<pack>.md \
+  --template .claude/review-templates/lens-compliance.md
+```
+
+Size and tool limits found by the COMPLY.1 pass (task-365; findings in `docs/reports/lanes/2026-11-20/BL-COMPLY/FINDINGS.md`): the lens template carries `{{PLAN}}` twice, so the file under review is sent twice and the 120000 bound is on the doubled prompt (keep a diff part to 38000 characters or less with a 33000 character pack); and `scripts/lib/review-template.js` `substitutePlaceholders` passes the text to `String.replace` as a replacement string, so a `$` sequence in a pack or diff expands into other text, and a literal placeholder token inside a diff is substituted again. Double each `$` in the inputs and neutralise any placeholder token until the tool is fixed. The lens returns at most 8 findings per run, so cut a diff into parts rather than sending one large one.

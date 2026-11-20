@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-tests-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — §13.3 "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`. ESLint enforces." — mobile/__tests__/maxbldHelp.test.ts "const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);" and "expect(warn).toHaveBeenCalledTimes(1);" — the new case pins a bare console.warn as the caught-error channel of openHelp instead of the logger the clause names, so merging it enshrines a violation of the catch-block rule — mock and assert the logger (logWarn/logError from src/lib/logger.ts, or the mobile equivalent with a justified suppression) in place of console.warn.
+
+DEFER severity=MED — rule 3 "A clause satisfied only by a comment, a TODO or a test name is UNMET" — mobile/__tests__/semiQuestionScreens.golden.test.ts "// SRCH.SEMI stage 2: Continue and Try again are 48 px (the mock)" — the button-size gate is widened from exactly min-h-[44px] to 44 or 48 px for every Button on the page on the strength of a code comment, and no quoted mock line in this diff establishes 48 px — quote the mock rule that sets 48 px, or keep the single min-h-[44px] token.
+
+DEFER severity=MED — search.html:235 "in-app browser sheet (B10): Help, Terms, Privacy open the web page with Done" — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "fireEvent.press(screen.getByTestId('parcel-search-report'));" — only the Help link is pinned on either page, the Terms and Privacy links the quoted line names get no assertion and their call sites are not in this part (cannot see) — add the two press assertions, or record Terms and Privacy as explicitly out of scope for task-362.
+
+DEFER severity=LOW — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — mobile/__tests__/parcelScreens.golden.test.ts "expect(SEARCH_SLICE.content['search.input.placeholder']).toBe('Enter a Toronto address');" — this part carries no spec or runbook text change for the placeholder ruling, and the other parts of 9f04d9074..3a36e8b26 are not visible — confirm the cited spec sections and runbooks that quote "Enter lot address" are updated inside the same commit range.
+
+MET — §14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — mobile/__tests__/maxbldHelp.test.ts:1 — "docs/specs/02-web-admin/126_maxbld_surface_standard.md 11b.3" names spec and section.
+
+MET — design text choose-lot.html:278 "disabled aria-describedby=\"pick-hint\">Choose a lot</button><p class=\"small\" id=\"pick-hint\">Pick a lot on the map or in the list.</p>" — mobile/__tests__/lotMapScreens.golden.test.ts — the hint is drawn only in the disabled choose-a-lot states, sits exactly one node after the button, and is absent on the picked and other states.
+
+MET — semi-question.html:130 ".btn.p[aria-busy=\"true\"] { opacity:.85" — mobile/__tests__/semiQuestionScreens.golden.test.ts — busy true with opacity-[0.85] only while submitting, and the idle Continue carries no busy key.
+
+REJECT — §12.12 "Pure functions with arithmetic invariants ... MUST have at least one `fast-check` property test" — no fast-check property for parcelLookupParams — the rule is scoped to arithmetic invariants and this function carries a string sentinel, not an arithmetic invariant.
+
+REJECT — §13.5 "Any new user-facing feature MUST be wrapped in a feature flag check at the route level" — the pick hint, busy Continue and in-app help sheet are clause-level fidelity fixes inside existing pages, not a new user-facing feature.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 4
+
+---
+⏱  75373ms (75.4s)
+📊 Tokens — total: 40565, input: 27243, output: 13322, reasoning: 12391

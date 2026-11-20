@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-2.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 100 Known Failure Modes, "**No-match-is-a-result** — treating a miss or an unknown `parcelId` as a 404 breaks the client state machine. Guard: the §2.6 200-with-null contract + the `.db` unknown-`parcelId` case." — mobile/src/hooks/useParcelLookup.ts:36 "params: { q: string } | { parcelId: string; semi?: 'answered' }" — the only pasted clause governing /api/parcels/lookup fixes it as a §2.6 200-with-null read, and the diff adds a request parameter whose stated effect is a server side count ("the server counts the lot once its report is produced"), a write the pasted contract does not name, on the authority of RR-0278 which is not pasted — paste the RR-0278 / contract_parcels_lookup clause into the context, or move the counting call out of this diff.
+
+DEFER severity=MED — no pasted clause (the only authority cited is RR-0278, not pasted) "RR-0278): `semi: 'answered'` is the one optional flag the semi question page sends at Continue" — mobile/src/lib/lotForm.ts:8 "it travels as a route param (OVERRIDE_PARAM) to the report, which does not apply it yet: nothing outside this file reads the param or calls `lotFormEffective`" — the same change asks the server to count a reported lot while this comment records the owner's answer reaches no consumer, so a report is counted whose form the answer never changed — paste the P5.7 / task-209 clause, or hold the `semi` count until the override is applied.
+
+DEFER severity=MED — Spec 100 §8 "a distinct home-looker persona, entitlement, and pricing (and an optional `parcel_view_events` trial counter) are a later product decision" — mobile/src/lib/schemas.ts:445 "export const ParcelToolEntitlementSchema = z.object({" — the diff ships an entitlement read, schema, cache key, persist-filter entry and line in v1, while the only pasted text that names entitlement defers it and RR-0307 that would authorize the line is not pasted — paste RR-0307 (SRCH.A6) or drop useParcelEntitlement, ParcelToolEntitlementSchema, EntitlementLine and the persistFilter entry from this change.
+
+DEFER severity=MED — no pasted clause (Spec 126 §11b.3 and small-pages-v8 search.html:235 are cited but not pasted) "the page opens in the in-app browser sheet through expo-web-browser, the same call as useSubscribeCheckout.ts:61, instead of leaving the app through Linking" — mobile/src/lib/maxbldHelp.ts:13 "import * as WebBrowser from 'expo-web-browser';" — the change reverses the recorded leave-the-origin decision (removed line "it leaves the app for the browser (Linking.openURL, a leave-the-origin move, never a router push)") with no pasted clause in front of the reviewer — paste §11b.3 and the search.html:235 line, or keep Linking.openURL.
+
+DEFER severity=MED — no pasted clause (the diff itself calls it "a timeframe; operator item in the lane report", and LX-E1 is not pasted) "SRCH.SEMI-3 (task-361, LX-E1): how long Continue waits for the answered lookup" — mobile/src/lib/semiQuestion.ts:16 "export const SEMI_CONTINUE_WAIT_MS = 60_000;" — a 60 second user facing wait is introduced with no pasted operator wording, number or ruling — paste the operator timeframe or drop boundedWait from this diff.
+
+DEFER severity=LOW — no pasted clause names cache seeding, and Spec 100 §4 key hygiene is cited in the file but not pasted "Depends ONLY on `['parcel-lookup', parcelId]`" — mobile/src/hooks/useParcelLookup.ts:97 "queryClient.setQueryData(['parcel-lookup', parcelId], result)" — a result fetched by the semi page with `semi=answered` is written under the same key a request without `semi` reads with staleTime 60_000, so the key no longer identifies one request and no pasted clause authorizes the seeding — paste the SUITE.FIX-2 / task-353 ruling and include `semi` in the key, or invalidate ['parcel-lookup', parcelId] on report mount.
+
+MET — Spec 100 Known Failure Modes, "**Raw `q` in logs.** ... logging it is a hygiene regression. Guard: the observability logs `outcome` + `parcelId` + `matchType` only" — mobile/src/lib/maxbldHelp.ts:22 "console.warn(`[maxbldHelp] could not open Help & Support (topic ${topic})`)" — the failure log carries the topic only, never the typed address.
+
+MET — Spec 100 Known Failure Modes, "**Tier-stratified degradation** ... Guard: independent `safeParse` per tier" — mobile/src/hooks/useParcelLookup.ts:111 "const parsed = ParcelToolEntitlementSchema.safeParse(raw.data);" — the entitlement blob is parsed by its own schema and its own safeParse, so a drifted entitlement cannot blank the lookup payload.
+
+MET — Spec 100 Known Failure Modes, "**Whitelist leak (NEW).** ... Guard: the §3.2 explicit pick-by-name assembler + the `.infra` whitelist test" — mobile/src/lib/schemas.ts:440 "A plain object, not .strict(): the contract is additive_only" — no server response assembler, `.infra` whitelist test or Tier-3 column list is touched by this diff.
+
+MET — Spec 100 §8 "Future (reserved, no v1 code beyond the null placeholder)" — NONE — no SponsorSlot, ad section, sponsor flag (EXPO_PUBLIC_PARCEL_SPONSORS) or map pane / centroid_lat/lng exposure is added by this diff.
+
+MET — Spec 100 Known Failure Modes, "**Sponsor-slot empty DOM (NEW).** ... an ad section with no ad value draws nothing (no empty box)" — NONE — the diff creates no ad or report page rendering path that could draw an empty sponsorship box.
+
+REJECT — Spec 100 Known Failure Modes, Whitelist leak — the change is accused of loosening the response schema by adding a non-strict z.object — the pasted guard is the server's pick-by-name assembler and the `.infra` test, and this diff touches only the mobile client parse.
+
+REJECT — Spec 100 Known Failure Modes, No-match-is-a-result — the change is accused of turning a miss or stray param into an error — useParcelLookup.ts:82 "return semi === 'answered' ? { parcelId, semi: 'answered' } : { parcelId };" only drops a non-matching param and never converts a no-match into a failure.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 2
+
+---
+⏱  58256ms (58.3s)
+📊 Tokens — total: 23306, input: 12572, output: 10734, reasoning: 9145

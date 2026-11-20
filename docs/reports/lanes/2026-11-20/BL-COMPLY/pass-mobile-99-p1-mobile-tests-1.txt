@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-tests-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 99 §4 B1 query-key registry "| `['parcel-lookup', parcelId]` | `useParcelLookup` (Spec 100) | the parcel detail; depends ONLY on `parcelId` (query-key hygiene)" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:88 "expect(mockSetQueryData.mock.calls).toEqual([[['parcel-lookup', 'PCL-S1'], data(form(true))]])" and mobile/__tests__/useParcelLookup.test.ts:107 "await fetchParcelLookup({ parcelId: 'PIN-777', semi: 'answered' })" — the answered page and the held (no-semi, page null) response now share one cache entry under a key that no longer identifies the request the server sees — put the variant into the key (`['parcel-lookup', parcelId, semi]`) with a registry row, or keep the answered page out of the shared entry.
+
+DEFER severity=MED — Spec 99 §4 preamble "These are the only allowed cross-layer flows. A seventh pattern requires a spec amendment." and §4 B1 "Every server fetch MUST go through TanStack Query — never raw `fetch()` in components." — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:33 "useSetParcelLookup: () => (id: string, result: unknown) => mockSetQueryData(['parcel-lookup', id], result)" — the Continue press runs fetchParcelLookup then a hand-rolled queryClient.setQueryData write from the page, which is neither B1 (useQuery) nor B3 (useMutation with onSettled invalidate); the app code is not in this diff part, so whether it is wrapped in useMutation cannot be seen — wrap it in useMutation per B3 or paste the §4 amendment.
+
+DEFER severity=MED — operator ruling RR-0313 (not pasted; cited only in a comment) — mobile/__tests__/parcelScreens.golden.test.ts:242 "Dated note 2026-11-19 (RR-0313, MORNING-DECISIONS.md:1216, operator verbatim: \"c. can't we put in the search box. Enter a Toronto address\"; task-356)" — the new placeholder "Enter a Toronto address" is satisfied only by a test comment, and the companion ruling RR-0314 for the outside-Toronto notice is also not pasted, so neither verbatim wording can be checked — paste RR-0313/RR-0314 into the context.
+
+DEFER severity=LOW — no pasted clause or ruling names this behaviour (walk step 4) — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:150 "await act(async () => { jest.advanceTimersByTime(SEMI_CONTINUE_WAIT_MS - 1); });" — a bounded wait, an error state on Continue failure, a busy Continue and a double-press guard are added on the strength of SRCH.SEMI-3 / task-361, quoted only inside comments and not in the pasted context — paste task-361/task-319 in, or drop the unruled additions.
+
+DEFER severity=LOW — no pasted clause or ruling names this behaviour (walk step 4) — mobile/__tests__/lotMapPage.behaviour.test.tsx:178 "expect(mockOpenBrowser.mock.calls).toEqual([['https://maxbld.ca/help#topic=lot_match&q=5%20Elm%20St']]);" — the in-app browser sheet, the lot_match topic and the pick hint are added on task-362 AC1/AC2/AC5, which are named but not pasted — paste the task-362 ACs so the URL shape and the hint text can be checked clause by clause.
+
+MET — Spec 99 §4 B1 "Validation: every response MUST be parsed through a Zod schema before TanStack stores it" — mobile/__tests__/useParcelLookup.test.ts:107 — the value Continue stores is the output of fetchParcelLookup, the function the Zod-boundary block pins.
+MET — Spec 99 §3.4c recentSearchesStore sign-out/reset contract — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx:43 — "useRecentSearchesStore.getState().reset()" runs in the new help-link case too.
+MET — Spec 99 §4 B1 "never on the search string" — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx:151 — the typed address goes only into the help URL fragment, not into a lookup key.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 3
+
+---
+⏱  53085ms (53.1s)
+📊 Tokens — total: 41456, input: 31796, output: 9660, reasoning: 8610

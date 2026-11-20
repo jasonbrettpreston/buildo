@@ -1,0 +1,13 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-tests-1.patch (model: deepseek-reasoner)
+
+MET — Spec 99 §10 Operating Boundaries, out-of-scope list "All `mobile/src/store/*.ts` … `mobile/src/hooks/useUserProfile.ts` … `mobile/src/lib/debug/stateDebug.ts` (modified only via §9.5b)" — whole diff — no hunk touches any out-of-scope path; every file is under `mobile/__tests__/` and no store, layout, onboarding, useUserProfile or stateDebug file is modified
+MET — Spec 99 §8.5 "assert that `signOut()` … calls `use<Name>Store.getState().reset()` for every discovered store" — NONE — this change adds no store under `mobile/src/store/` and does not touch `signOut()`, so the reset-coverage mandate is neither triggered nor broken
+MET — Spec 99 §8.6 "parse the Zod object keys from `mobile/src/lib/userProfile.schema.ts` … asserting setEqual" — NONE — no schema or §3.1 table change, so the drift check remains valid
+DEFER severity=LOW — pasted-context boundary — cannot see — mobile/__tests__/lotMapPage.behaviour.test.tsx "task-362 AC2 (choose-lot.html:278 …)" — the governing cards/rulings cited in the diff (task-362, task-360, task-356, task-361, task-319, RR-0313, RR-0278) are not pasted, so the changed behaviour cannot be judged against them, only against Spec 99 — paste those ACs and RR entries at invocation to make them judgeable
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 0
+
+---
+⏱  24348ms (24.3s)
+📊 Tokens — total: 33312, input: 28853, output: 4459, reasoning: 4084

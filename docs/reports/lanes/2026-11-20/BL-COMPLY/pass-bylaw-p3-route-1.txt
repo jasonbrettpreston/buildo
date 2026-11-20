@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-1.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — m.213 "**m.213** Heritage, ravine, holding and Chapter 900 gate or disclose." — src/lib/admin/report-preview-live/stored-page.ts:52 (deleted) "// K2: a heritage / ravine yes-no column is NOT NULL DEFAULT false, so a never-enriched lot would read "No"; the lineage column nulls it (the page then shows the dash)." and src/lib/parcels/report-compute.ts:74 "const lot = await readLotFacts(pool, parcelRef);" — the gate-or-disclose column nulling now lives in src/lib/report-projection/read-stored.ts and src/lib/report-projection/project.ts, neither in the diff, so m.213's disclosure for a never-enriched lot cannot be shown as preserved on either the stored or the computed path — cannot see those files; add the moved read and the K2 null rule to the review material or a witness test so m.213 is checked, not assumed.
+DEFER severity=MED — m.385 "**m.385** Undecided never means zero (R3-01)." — src/lib/parcels/report-compute.ts:99 "rows: out.rows.e1.map(toStoredRow)," — the stored read passes rows: null when nothing is stored ("every option takes the not-evaluated path", stored-page.ts header) while the compute passes an array that can be empty, so a lot the core evaluated to nothing may project as an answered page instead of the not-evaluated path; project.ts is not in the diff, cannot see it — decide the empty-e1 case explicitly (map an empty e1 to rows: null, as W does) and pin it with a test that quotes m.385.
+NIT — m.328 "**m.328** Every by-law rule and decision passes the five words, adds no scope, and shows its handbook ruling." — src/lib/parcels/report-compute.ts:2 "docs/specs/01-pipeline/69a_mcbylaw_register.md M-384 (Layer 3 is the step's own pure" vs the pasted ruling "**m.384** Phase 3 is tables, not code (CARD P3-DATA-MODEL and the narrowed CARD-L3-REBUILD)." — the SPEC LINK restates M-384 in words the ruling does not use, which is a ruling shown with added scope — quote the ruling's own text in the header, as m.328 requires.
+
+MET — m.386 — src/lib/parcels/report-compute.ts:59 "flags: (r.flags ?? null) as string[] | null" carries the core row's flags into the projection instead of dropping them.
+MET — m.231 — src/lib/parcels/report-compute.ts:98 "stamp: { lot_gate: stamp.lot_gate ?? null, table_version: stamp.table_version ?? null, evaluator_version: stamp.evaluator_version ?? null }" puts the lot gate onto the computed page's stamp, so an unauthored exception can still gate the lot.
+MET — m.384 — src/lib/parcels/report-compute.ts:80 "const materializeRows = exported<Core['materializeRows']>(core, 'materializeRows');" reuses the step's own core rather than adding a second coded formula layer.
+
+REJECT — m.384 — that running the one-lot compute in the web request path is "code, not tables" — the ruling forbids a second coded formula model, and this file imports the step's own materializeRows and buildSourceSql and adds no formula, with the ruling's enforcement OWED to MB-31 and not to this diff.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  56574ms (56.6s)
+📊 Tokens — total: 43435, input: 32925, output: 10510, reasoning: 9671

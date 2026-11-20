@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-surface-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — bindings note "The check C-9m still requires exactly one min-h- token on the list; nothing under 44 is listed." plus "orchestrator decision under the pre-approved criteria, MORNING-DECISIONS.md:1227 (not an operator ruling)" — scripts/surfaces/_schema/bindings.json:73 "Button": ["min-h-[44px]", "min-h-[48px]"], "Input": ["min-h-[44px]"] — the same added note pins one min-h- token per entry and disclaims operator authority for the 48 px variant, and Button now lists two tokens, so the lock the note cites cannot pass and the allowance rests on a decision the note says is not an operator ruling — hold min-h-[48px] until an operator ruling is recorded, and keep one token per entry or amend C-9m in the same change.
+
+BUG severity=HIGH — no pasted clause or ruling names footer content on the mobile search surface; the mobile notes enumerate "mounts gains the search screen", "mounts gains the map page", "non_display_keys gains the react-native-maps prop names that carry no display text" and never a mobile footer — mobile/src/generated/surfaces/mobile_parcel_search.json:9 "footer.help": "Help & Support" (with footer.copyright, footer.privacy, footer.terms) — four new content keys enter a live surface, and their link targets are the web STATIC pages, with nothing naming them for mobile — remove them or add the ruling that names them and their route targets.
+
+BUG severity=HIGH — the MF-53 note names only "modules gains mobile/src/components/surfaces/LotMapBinding.tsx ... mounts gains the map page; non_display_keys gains the react-native-maps prop names" — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:14 "select.hint": "Pick a lot on the map or in the list." and :25-26 "help.lot.prompt", "help.address.link" — three content keys and a help link land on S-071 with no naming clause — drop them or name them in the surface's dated note.
+
+DEFER severity=MED — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI" — scripts/surfaces/_schema/census/contracts.json:22971 "resetsOnDisplay" — a new field is added to the entitlement response whitelist and no file in the diff touches mobile/src/lib/schemas.ts or mobile/src/hooks/useParcelLookup.ts, so the parse that must accept it cannot be seen — add the schema or hook change to the diff.
+
+DEFER severity=MED — contracts.json:22892 "its response is an explicit `.strict()` whitelist of six fields" against the same entry now listing "resetsOnDisplay" beside "resetsOn" — the descriptor's own cardinality statement is left at six while a seventh key is added — update the count or keep the whitelist at six.
+
+DEFER severity=MED — bindings ref_kinds clause "a golden value {"contract": "<contract_id>.<field>"} names a field of a CONTRACT descriptor's inputs.field_whitelist" — scripts/surfaces/_schema/census/mobile-product.json:7887 {"name": "hit", "golden": "reports_left"} — a golden is named and "/api/parcels/entitlement" added to contract_ref, but no golden file and no contract-ref value appear in the diff, so the reset-date binding to resetsOnDisplay is asserted nowhere visible — add the reports_left golden carrying {"contract": "...resetsOnDisplay"}.
+
+DEFER severity=LOW — scripts/surfaces/_schema/seed-report-v2.mjs:600 "'not_evaluated:not_in_engine_population': 'Not yet evaluated', // MB-94 (c), Spec 126 11a.3 dated note 2026-11-12 (R-2 literal)" — the clause the literal claims to satisfy is not pasted, so the literal cannot be checked here — paste the Spec 126 11a.3 note when this line is reviewed.
+
+MET — domain-admin rule 6 "Do not change the response shape without a contract note" — contracts.json data_story and mobile-product.json why field — the entitlement shape change carries dated notes (RR-0310, task-351) in the same diff.
+
+MET — generated/source parity — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.content.json:1-4 and mobile/src/generated/surfaces/mobile_parcel_search.json:9-12 — identical new keys with the input_sha bumped.
+
+MET — Spec 90 §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`" — bindings.json mobile Input "min-h-[44px]" and Button retaining "min-h-[44px]" — the 44 px floor is still listed for both.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 3
+
+---
+⏱  53239ms (53.2s)
+📊 Tokens — total: 41680, input: 31790, output: 9890, reasoning: 8768

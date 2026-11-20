@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-1.patch (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> — none raised.
+DEFER severity=MED — m.384 "Phase 3 is tables, not code (CARD P3-DATA-MODEL and the narrowed CARD-L3-REBUILD)." — src/lib/parcels/report-compute.ts:2 "docs/specs/01-pipeline/69a_mcbylaw_register.md M-384 (Layer 3 is the step's own pure" — the pasted M-384 row does not carry the words the header attributes to it, and the customer page is produced by a read-time code path rather than from the Phase 3 tables — cite the pasted M-384 text verbatim, or cite the clause that authorizes a read-time compute (Spec 100 §3.2, Spec 126 §11a.7 are not pasted).
+DEFER severity=MED — m.348 "Two Phase 3 gates are fixed: the shadow gate blocks on Layer 2 defects, the hidden-number check blocks at Phase 3 close." — src/lib/parcels/report-compute.ts:74 "if (!MAXBLD_WEB_LIVE) return null;" with header line ":10" "decision D-1 (who sees numbers before launch, task-348) is not ruled, so this adds no session gate" — a customer-visible numbers path lands gated by one switch while the change itself states the who-sees-numbers decision is unruled, and no pasted clause authorizes it — keep the compute dark at landing and assert the switch false in the same change until D-1 is ruled.
+DEFER severity=MED — m.328 "Every by-law rule and decision passes the five words, adds no scope, and shows its handbook ruling." — src/app/api/parcels/lookup/route.ts:146 "const held = lotForm?.unsure === true && semi !== 'answered';" — a new visibility and metering decision (SRCH.METER-2, task-360) is bundled into LOAD.1, its ruling is not in the pasted context, and no handbook row is shown for it — land task-360 under its own pasted ruling text, or drop the `semi` parameter from this diff.
+DEFER severity=LOW — m.415 "The runRow seam and the rounding contract." — src/lib/parcels/report-compute.ts:86 "const plan = buildSourceSql(descriptor, { ...config, [POPULATION_SETTING]: [String(lot.id)] }, {});" — the one-lot run is assembled by overwriting the step's population setting and driving the batch statement with the keyset bind, and a descriptor edit then throws inside a customer request at ":87" "throw new Error('report-compute: the core batch statement no longer binds last_key and batch_size')" — call runRow if that is the named seam, or record in the header why the batch statement is driven directly and make the drift a test failure rather than a request 500.
+MET — m.385 — src/lib/parcels/report-compute.ts:93 — "if (!row || Number(row.id) !== lot.id || !row.parcel || !row.lot) return null;" answers a miss, never a zero row, for an undecided lot.
+MET — m.378 — src/lib/parcels/report-compute.ts:84 — "const { values: config } = await resolveConfig(pool, descriptor);" the page is produced by the step's own core with the switchboard-resolved config, not a private formula set.
+MET — m.328 — src/lib/parcels/report-compute.ts:86 — "[POPULATION_SETTING]: [String(lot.id)]" binds the compute to the one requested lot, adding no population scope.
+MET — m.402 — src/tests/customer-report-compute.logic.test.ts:198 — "the entry runs all types" the computed page is built from the full core row set, so no feasible option class is filtered out before projection.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  79668ms (79.7s)
+📊 Tokens — total: 48109, input: 33059, output: 15050, reasoning: 14158

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-2.patch (model: deepseek-reasoner)
+
+BUG/DEFER findings
+
+```
+DEFER severity=MED — m.0 "each change says what it replaces" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:122 "/** LOAD.1 (task-266): moved here unchanged from runtime-loader.logic.test.ts so the customer compute test builds the same batch rows." — the moved body is not unchanged: it gains a new first statement, so the change's own claim of what it replaces is false and the substitution is invisible to a reviewer — reword the comment to name the added read (e.g. "adds its own read of the golden expected.jsonl so the builder no longer relies on the test file's module scope") or pass `expected` in as an argument so the body really is unchanged
+DEFER severity=MED — m.0 "each change says what it replaces" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:124 "const expected = readJsonl(`${G25}/expected.jsonl`);" — the removed function read `expected` from the test file's module scope ("const e = expected.find((x) => x.parcel_id === lot.parcel_id) as Json;") whose definition is outside this diff, so whether the harness reads the same file, the same way, cannot see, and equality of the golden 25 rows before and after the move is unverified — cite the module-scope definition's file:line in the comment, or show the removed and added reads side by side in the commit body
+DEFER severity=LOW — m.0 "Every field, gate, file and mode names the mistake it prevents or the reader it serves" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:122 "LOAD.1 (task-266)" — the authority for the new exported surface is a task card whose clauses are not pasted, so nothing here can be checked against the card that licenses it — paste the LOAD.1 / task-266 clauses (or quote the card line in the harness comment) so the export is judged against the requirement it serves
+```
+
+MET
+
+```
+MET — m.1 "The single source of truth is the committed generated JSON" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:126 "const SCOPE = readJson('scripts/seeds/bylaw/layer2-scope.json');" — every input (scope, vocab, layer2 input, map, zone list, parcels rows) is read from the committed JSON, no hand-copied values added
+MET — m.63 "A closed scenario catalogue; every scenario is computed for every parcel; no user choice." — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:136 "const rows = out.rows.lots.map((lot: Json) => {" — one row per materialized lot, no filter on a user selection and no per-case choice
+MET — m.1 "The single source of truth is the committed generated JSON" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:151 "bylaw_resolution_units: out.rows.units," — the raw view returns the batch statement's own rows rather than a re-derived expectation
+```
+
+REJECT
+
+```
+REJECT — m.64 "Only permitted scenarios are shown; every other scenario is recorded, counted and never displayed." — the change is accused of displaying non-permitted scenarios through the shared builder — it renders nothing, it is a fixture builder moved from a test file to a test harness, and no display path is touched
+REJECT — m.32 "Pre-commit runs generate-bylaw-provisions.mjs --check" — the change is accused of drifting the generated provisions — no bylaw-provisions.json or generator input appears in this diff
+```
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  30436ms (30.4s)
+📊 Tokens — total: 22316, input: 16723, output: 5593, reasoning: 4728

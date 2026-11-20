@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-2.patch (model: deepseek-reasoner)
+
+BUG severity=MED — core.14 "Declared equals witnessed" and the diff's own claim "**LOAD.1 (task-266): moved here unchanged from runtime-loader.logic.test.ts**" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:124 "const expected = readJsonl(`${G25}/expected.jsonl`);" — the moved body is not unchanged: the removed block contained no `expected` declaration (it read a module-level `expected` at "const e = expected.find((x) => x.parcel_id === lot.parcel_id) as Json;"), so the shared harness now performs its own per-call parse and the two tests no longer provably read the same array — either keep one source of `expected` for both files or amend the "unchanged" declaration so declared equals witnessed
+DEFER severity=MED — core.10 "its compute lock builds that ctx through the real dispatch, stubbing only DB and network answers" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:133 "const env = MZ.makeEnv({ body: INPUT.body, map: MAP, scope: SCOPE, vocab: VOCAB, zoneList, versions: { table_version: INPUT.table_version, evaluator_version: INPUT.evaluator_version } });" — the diff exists so "the customer compute test builds the same batch rows", but that customer compute test is not in the pasted diff, so whether its ctx comes from the real dispatch or from this hand-built `makeEnv`/fixture rows cannot be seen — show the new consumer's ctx build (dispatch-derived) before merge
+DEFER severity=LOW — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:150 "shared_len_m: 10, est: a.est" — a fixed 10 m shared frontage and synthetic ids (900000+i, 800000+i) are now shared with a second test rather than living in one fixture reader — acceptable as fixture data, but name it once in the harness so both consumers cannot drift
+REJECT — link.4 / Q-B1 "A reader must not read a parcel with no abutment pairs (deleted until the next run by R-CR's trigger) as 'no neighbours'" — accused of emitting "abutters: (line.abutments || []).map(...)" as an empty neighbour set — this is the fixture's own declared abutments copied verbatim, not a post-trigger runtime state, and Q-B1 governs step readers, not goldens
+REJECT — x-captures.3 "Every diff is explained only in docs/reports/golden/<slug>/explained-diffs.json" — accused of an unexplained golden differential — the diff changes no produced output, only where a test helper lives, so no differential exists to explain
+MET — x-captures.5 "Tests write before-images into a per-file sandbox, never the real golden tree" — golden25-harness.ts:124-139 — the added helper only reads committed files and writes nothing into the golden tree
+MET — x-captures.1 "Captures are reproducible from committed data alone" — golden25-harness.ts:128-131 — every input is a committed repo path (scripts/seeds/bylaw, docs/reference/bylaw-layer2-input.json, the G25 fixtures)
+MET — core.9 "The runner owns every read set-up, write, transaction" — golden25-harness.ts:135 "const out = MZ.materializeBatch(parcels, env);" — the diff adds no compute code and no DB/transaction path, it calls the existing library from test level
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+
+---
+⏱  53175ms (53.2s)
+📊 Tokens — total: 23784, input: 14622, output: 9162, reasoning: 8309

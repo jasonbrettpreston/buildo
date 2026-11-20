@@ -1,0 +1,16 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-1.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 96 Operating Boundaries, out of scope "Pricing tier display in-app — managed on web only" — mobile/app/(app)/parcel-tool/index.tsx:78 "entitlement: entitlement ? { reportsLeft: entitlement.reportsLeft, reportsLimit: entitlement.reportsLimit, resetsOnDisplay: entitlement.resetsOnDisplay } : null," — the change prints the plan's report allowance and reset date inside the app, and the only pasted boundary on plan display in-app assigns it to the web — get the operator to say a reports-left count is not the out-of-scope tier display, or drop the line.
+DEFER severity=MED — Spec 96 declared scope "Mobile subscription (Spec 96, whole; governs the no-plan and limit states)" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:53 "? [notice('entitlement', 'Info', L.noticeIconNeutral, [node('AlertDescription', { key: 'entitlement-text', className: L.noticeTextNeutral }, [content('state.entitlement')])])]" — a limit state is now drawn as a neutral Info notice, and the only limit-state treatment the pasted body names is "'expired'` → `<PaywallScreen>`", so no pasted clause authorizes softening it — paste the ruling that makes this notice informational, or keep the Lock treatment.
+DEFER severity=MED — pasted context names no clause governing the added parcel behaviour — mobile/app/(app)/parcel-tool/semi-question.tsx:11 "// SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): Continue first fetches the same lookup with the one flag `semi: 'answered'`" — every clause this diff claims to satisfy (SRCH.A6 task-320 RR-0307, SRCH.C12 task-321, SRCH.SEMI/SEMI-3 task-319/361, SRCH.METER-2 task-360, S-093, Spec 78 O-4, Spec 99 §6.5) is cited but not pasted, so compliance with them cannot be judged here — paste those clauses into the next review pack before merge.
+MET — Spec 96 Step 2 "Subscription gate in app layout" — mobile/app/(app)/_layout.tsx (absent from diff) — the gate, its six status values and the loading guard are untouched by this change.
+MET — Spec 96 Step 1 and Step 3 — mobile/src/components/paywall/PaywallScreen.tsx and (tabs)/index.tsx, (tabs)/flight-board.tsx (absent from diff) — paywall, stagger, banner and blur work are untouched.
+MET — Spec 96 out of scope "In-app purchase (Apple IAP) — deliberately excluded" — no IAP path, store product id or receipt handling is added by the diff.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+
+---
+⏱  24224ms (24.2s)
+📊 Tokens — total: 30504, input: 26187, output: 4317, reasoning: 3665

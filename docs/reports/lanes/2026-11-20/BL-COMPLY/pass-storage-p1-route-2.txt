@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-2.patch (model: deepseek-reasoner)
+
+BUG severity=CRIT — P3 "Stamp: every stored record carries Layer 2 table_version, evaluator_version and the settings sha" and A-ST5 "A stored record whose stamp differs from the current stamp is never served; it is recomputed" — src/lib/report-projection/project.ts "if (rows.some((r) => r.layer2_table_version !== stamp.table_version)) moved.push('layer2'); if (rows.some((r) => r.catalogue_sha !== current.catalogue_sha)) moved.push('catalogue');" with src/lib/report-projection/seed-shas.ts "Object.freeze({ catalogue_sha: sha256(catalogue), switchboard_sha: sha256(switchboard) })" — the stamp comparison never checks evaluator_version or the settings sha, so a record computed by an older evaluator or under older settings is judged 'current' and served, which is the stale number P4 forbids — add the evaluator version and current settings sha to SeedShas/StoredRow and compare both in freshnessOf.
+
+DEFER severity=MED — doc-16 section 4 "Stale-stamp guard | Compare the stamp on every read; mismatch means recompute" — src/lib/report-projection/project.ts "if (stamp?.lot_gate) return { ...base, verdict: 'gated', gate: stamp.lot_gate };" with src/lib/parcels/report-page.ts "case 'gated': return stored.response" — a gated lot returns before any stamp comparison and its stored page is served regardless of stamp, so the stamp is not compared on every read — run the stamp comparison first and only suppress engine values for a gated lot, never skip the guard.
+
+DEFER severity=MED — P9 "Cost is NOT in the record (computed at each open by lineCost)" and A-S88 "worked out at each open and joined by (parcel, option)" — src/lib/parcels/report-page.ts "return pageForVerdict(stored);" — the customer producer serves the stored page with no lineCost join on the record's size at read, so any cost bound to this page is absent — join lineCost at read here (parcel, option) before returning the page.
+
+DEFER severity=MED — doc-16 section 1 line 3 "The result is saved with its stamp ... for that user and for everyone else who opens the lot later" and A-LAT "opening the report (main page and See details) from a stored record" — src/lib/parcels/report-page.ts "if (!MAXBLD_WEB_LIVE) return null;" — while the live switch is off no saved record is ever read, so the stored result serves nobody and the 1 s stored-read path never runs; no pasted clause names this switch — name the pasted clause or ruling that lifts the switch and its date, or make the switch gate only the tester feed.
+
+DEFER severity=MED — P6 "ONE record per (parcel, option) (unique key (parcel, option); the stamp is a column, a recompute replaces the row)" — src/lib/report-projection/read-stored.ts "FROM parcel_maxbld_scenarios WHERE parcel_id = $1 ORDER BY building_type, field_id" and project.ts "stored.find((r) => r.building_type === bt && r.field_id === field)" — the shared read is keyed per (building_type, field_id) rows, not the policy's (parcel, option) record, so when the P6 record lands this read answers nothing and every lot falls to not_evaluated — read the (parcel, option) record and its stored values, keeping the per-field form only for the bounded cohorts.
+
+DEFER severity=LOW — P3 stamp list does not name a catalogue or switchboard sha — src/lib/report-projection/project.ts "if (rows.some((r) => r.switchboard_sha !== current.switchboard_sha)) moved.push('switchboard');" — the guard adds two stamp components no pasted clause names, which turns records stale on any seed change — cite the pasted clause that names them or drop them from the customer verdict.
+
+DEFER severity=LOW — no pasted clause names a landing footer — src/lib/surfaces/maxbld-landing.ts "const report: StaticReport = { sample: view, footer: pickFooterText(SEARCH_CONTENT), ...(demo ? { demo } : {})" — behaviour unrelated to the storage policy enters the reviewed diff with its governing card not pasted — cannot see the clause that authorises it; show it or split it out of this route.
+
+MET — P5 "No record for a lot nobody opened or tracked; no all-lot headline fill" — src/lib/report-projection/read-stored.ts "No write, no meter, no entitlement, no usage, no user id" — the producer reads only and writes no record.
+
+MET — P7 "the page producer formats both units at read" — src/lib/report-projection/format.ts "export const SQFT_PER_M2 = 10.7639;" and "case 'area_sqft_m2_paren': return { value: `${sqft} sq ft (${m2})` };" — both units are formatted server-side from the stored metric number.
+
+MET — A-126 "Lots outside the engine keep not_evaluated:not_in_engine_population" — src/lib/report-projection/project.ts "export const NOT_IN_ENGINE_POPULATION = 'not_in_engine_population';" — a lot with no stored rows keeps that closed reason.
+
+MET — P4 "a record whose stamp differs from the current stamp is never served" — src/lib/parcels/report-page.ts "case 'out_of_date': return null;" — a detected stale record is turned into a miss for the compute path, not served.
+
+REJECT — P4 "never blank, 0 or the old number" — accused of showing the miss/not-evaluated page for a no-record lot — report-page.ts "case 'not_stored': return null;" returns a miss the route recomputes, which is the ruled recompute path, not a served old page.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 5
+
+---
+⏱  75562ms (75.6s)
+📊 Tokens — total: 45262, input: 31854, output: 13408, reasoning: 12047

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-1.patch (model: deepseek-reasoner)
+
+BUG severity=CRIT/HIGH findings: none demonstrated against a pasted clause.
+
+DEFER severity=MED — RR-0278 / task-360 / task-319 / LOAD.1 task-266 (cited, text not pasted) "SRCH.METER-2 (task-360, RR-0278): an unsure lot's page is HELD until the semi answer (semi=answered, the task-319 flag)" — src/app/api/parcels/lookup/route.ts:145 "const held = lotForm?.unsure === true && semi !== 'answered';" — the only authority quoted for withholding a customer page and for the new `semi` query flag is a task id; I cannot read the ruling text, so the hold and the `semi=answered` lift are unverifiable here — paste RR-0278, task-360 and task-319's verbatim text (or the Spec 100 §3.2 dated line) before merge.
+
+DEFER severity=MED — Spec 100 §3.2 / D-1 gate claim "THE GATE is the existing web live switch ALONE ... the compute is dark code at landing, as W is." — src/lib/parcels/report-compute.ts:75 "if (!MAXBLD_WEB_LIVE) return null;" — cannot see the switch's current value in the pasted context, and the diff says the same switch already governs W, which serves customer pages today, so "dark at landing" holds only if that switch is off in production at merge — state the switch's launch value in the plan, or land the entry behind the D-1 ruling (not pasted).
+
+DEFER severity=MED — m.256 "Averaging with a missing or excluded neighbour estimate answers \"needs survey\", never the zone default." and m.245 "No zone-default floor under the averaged front yard." — src/lib/parcels/report-compute.ts:93 "const row = (await pool.query<Json>(plan.batch_sql, [lot.id - 1, 1])).rows[0];" — cannot see whether the core's batch statement, run over a single-element population, still carries the neighbour/ring inputs the front-yard average needs; the parity test compares the entry to a projection of the same single-row output, so a divergence from the pipeline's stored rows would not surface — add one assertion against the pipeline's stored e1 rows for a golden lot, not against the compute's own output re-projected.
+
+DEFER severity=LOW — route.ts header ruling "SRCH.METER-2 ... a page that is sent must be a page that is counted" — src/app/api/parcels/lookup/route.ts:180 "if (access === 'parcel_tool' && body.parcel && parcelRef !== null && !hasEvaluatedOption(body.parcel)) meter = 'not_evaluated';" — the stated invariant is already false for the operator "1 b 2 a" arm (a page is sent and nothing is counted), so the rationale for the hold reads absolute where the meter is not — reword the comment to except the not_evaluated arm.
+
+DEFER severity=LOW — m.169 "A condition no data can decide is taken as not holding, and its impact is disclosed." — src/app/api/parcels/lookup/route.ts:145 "const held = lotForm?.unsure === true && semi !== 'answered';" — for an unsure lot the diff withholds the whole page instead of serving it with the condition disclosed; this may be exactly what RR-0278 rules (not pasted), so it cannot be judged — cite the ruling text so the disclosure clause and the hold are shown to be reconciled.
+
+MET — m.189 "Max-build scenarios are a net-new V3 step, one row per parcel × scenario." — src/lib/parcels/report-compute.ts:9 — "Nothing is written (the record write is ST.P1, task-265)"; the entry only reads and projects, so it creates no row outside the step.
+
+MET — m.176 "MaxBLD answers the maximum-build case." — src/lib/parcels/report-compute.ts:96 — the page comes from the step's own "materializeRows([row], { config, lookups })" over the step's own batch row, then projectStoredPage, so the maximum-build output is the step's, not a reimplementation.
+
+MET — m.214 "Forms not modelled are disclosed." — src/lib/parcels/report-compute.ts:51 — the entry runs the full building-type list (test C8 note: "the entry runs all types"), so the disclosure set is the step's own and is not narrowed at the lookup.
+
+MET — m.207 "Lot viability gates the new-build rows." — src/lib/parcels/report-compute.ts:94 "if (!row || Number(row.id) !== lot.id || !row.parcel || !row.lot) return null;" — a lot without its Layer 2 stamp (where the gating lives) is a miss, never a page computed from partial layer-2 state.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  76180ms (76.2s)
+📊 Tokens — total: 47545, input: 33521, output: 14024, reasoning: 12898

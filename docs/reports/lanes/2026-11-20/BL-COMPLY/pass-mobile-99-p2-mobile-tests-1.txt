@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-tests-1.patch (model: deepseek-reasoner)
+
+BUG severity=<none raised as BUG> — converting: the one unmet clause is reported below as DEFER MED per bounded blast radius. Findings:
+
+DEFER severity=MED — §8.3 "Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate. Pattern: render the layout twice (once with isFetching=true, once with =false) — both must produce the same JSX." — mobile/__tests__/reportScreen.mount.behaviour.test.tsx:28 "type Hook = { data: unknown; isError: boolean; refetch: jest.Mock };" (and the new case "mockHook = { data: unsureHit(null), isError: false, refetch: jest.fn() };", which never carries isFetching) — the new held-report render gate (unsure lot, page null, unanswered renders LIFE.loading instead of the miss text) has no isFetching-toggle stability test, and this mock type cannot even express one — add a case rendering the same unsure/page-null data with isFetching true and again with false and assert byte-identical render output (and the same for the unsure/page-VIEW answered case)
+
+DEFER severity=LOW — clause NONE in the pasted context names it — mobile/__tests__/maxbldHelp.test.ts:4 "task-362 SRCH.LOTMAP-2 (AC1, AC5; small-pages-v8 search.html:235 "in-app browser sheet (B10): Help, Terms, Privacy open the web page with Done")" — the switch of openHelp from Linking.openURL to expo-web-browser openBrowserAsync is justified only by the diff's own comment; AC1/AC5 and small-pages-v8 search.html/choose-lot.html are not pasted, so compliance cannot be verified — paste the card text and the small-pages-v8 lines, or mark the change as not-yet-governed
+
+DEFER severity=LOW — clause NONE in the pasted context names it — mobile/__tests__/parcelScreens.golden.test.ts:242 "Dated note 2026-11-19 (RR-0313, MORNING-DECISIONS.md:1216, operator verbatim: "c. can't we put in the search box. Enter a Toronto address"; task-356)" — the placeholder copy is changed from a previously ruled verbatim string ("Enter lot address") to a new one on the strength of a ruling that appears only inside the diff; no pasted operator ruling supersedes the old wording — paste RR-0313 and RR-0314 verbatim so the replacement and the retained outside-Toronto notice are checkable
+
+DEFER severity=LOW — clause NONE in the pasted context names it — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:29 "// SRCH.SEMI stage 2 (task-319): Continue stores the answered lookup in the report's cache entry (through useSetParcelLookup since task-353; same key and value)" — the diff adds behaviour no pasted clause describes: Continue now calls fetchParcelLookup then writes the report's query cache entry, plus a busy accessibilityState and a bounded-wait error state (semi-question.html:130 is cited only in the diff); SRCH.SEMI-3 and SRCH.METER-2 are not pasted, so none of it is checkable against a governing clause — paste those card items or record the change as outside the pasted spec
+
+DEFER severity=LOW — §6.5 "Adding a new permitted carve-out requires extending this enumeration in the same commit; reviewers MUST reject any unenumerated carve-out." — NONE (app/(app)/parcel-tool/[parcelId].tsx is not in this diff part, so the held-report gate's inputs cannot be seen) — if that gate reads isFetching or fetchStatus rather than settled data plus the `semi` route param, it is an unenumerated isFetching carve-out that must be rejected; the test name "on the settled render" leaves this open — include the gate's condition in a later diff part, or state in the test that the gate reads data and route param only
+
+MET — §7.2 "Every `queryClient.invalidateQueries` call MUST be paired with" breadcrumb and DEV track — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:33 "mockSetQueryData(['parcel-lookup', id], result)" — the new cache write is setQueryData, not invalidateQueries, so the telemetry pairing mandate does not trigger
+
+MET — §5.1 "the mobile app has exactly TWO routing boundaries" with AuthGate and AppLayout as sole authorities — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:78 "await waitFor(() => expect(mockReplace.mock.calls).toEqual([[route]]))" — the routes exercised are parcel-tool screen navigations; no layout/AuthGate/AppLayout routing effect is added or modified
+
+MET — §7.3 "ONLY these four routing events emit telemetry" applies to "every `router.replace` / `router.push` from AuthGate or AppLayout" — mobile/__tests__/reportScreen.mount.behaviour.test.tsx:105 "mockReplace.mock.calls).toEqual([['/(app)/parcel-tool/semi-question?parcelId=PIN-777']]" — the new replaces originate in a screen, not AuthGate/AppLayout, so no route_decision telemetry obligation attaches
+
+REJECT — §8.1 "Each bridge in §4 MUST have a Jest test asserting that calling it twice with identical input produces zero observable mutations on the second call" — accused of skipping a bridge idempotency test for the Continue fetch-and-cache — the Continue action is a user-initiated screen fetch, not a pasted §4 bridge (B4/B5/B6 are untouched), and the diff's double-press case already asserts one fetch and one replace for two presses
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 1
+
+---
+⏱  48559ms (48.6s)
+📊 Tokens — total: 41029, input: 31901, output: 9128, reasoning: 7794

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-tests-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 100 whole list, "this is part 3 of 3", the SRCH clauses the diff cites are not in the pasted part — mobile/__tests__/parcelScreens.golden.test.ts "expect(SEARCH_SLICE.content['search.input.placeholder']).toBe('Enter a Toronto address');" — the ruled placeholder is replaced on the authority of "RR-0313, MORNING-DECISIONS.md:1216", not pasted, and the superseded wording exists only as a comment ("should be enter lot address"), so nothing pasted authorizes the new copy — fix: paste RR-0313 verbatim into the context, or keep the previous key value
+
+BUG severity=HIGH — Spec 100 whole list, "this is part 3 of 3", no pasted clause names the mobile Help exit — mobile/__tests__/maxbldHelp.test.ts "it('openHelp opens that URL in the in-app browser sheet and does not leave the app through Linking', async () => {" — the exit from Linking to expo-web-browser is pinned only against a comment citing "small-pages-v8 search.html:235" and task-362 AC1/AC5, neither pasted, so the behaviour change has no pasted authority — fix: paste search.html:235 and AC1/AC5, or revert openHelp to Linking until they are pasted
+
+BUG severity=HIGH — Spec 100 whole list, "this is part 3 of 3", no pasted clause names a pick hint or its accessibility binding — mobile/__tests__/lotMapScreens.golden.test.ts "expect(keys.slice(-3)).toEqual(['continue', 'pick-hint', 'help-row']);" — a new node, a new content key "select.hint" and an accessibilityHint on Continue are added on the authority of "choose-lot.html:278" and "task-362 AC2, AC6", not pasted — fix: paste AC2/AC6 and the choose-lot.html line, or drop the hint node
+
+BUG severity=HIGH — Spec 100 whole list, "this is part 3 of 3", no pasted clause names the Continue flow added here — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(mockFetchLookup.mock.calls).toEqual([[{ parcelId: 'PCL-S1', semi: 'answered' }]]);" — a fetch on Continue, a cache write, a bounded-wait "(SEMI_CONTINUE_WAIT_MS)" error state and a double-press guard are added on the authority of task-319, task-361 and "UX-4, CR-1, LX-R2, LX-E1 of BL-TRIAGE/VERDICTS.md", none pasted — fix: paste the SRCH.SEMI stage-2 clause and the triage items, or scope the diff to behaviour the pasted clauses name
+
+BUG severity=HIGH — Spec 100 whole list, "this is part 3 of 3", no pasted clause allows a second Button min height — mobile/__tests__/semiQuestionScreens.golden.test.ts "some((c) => c === 'min-h-[44px]' || c === 'min-h-[48px]')" with the comment "SRCH.SEMI stage 2: Continue and Try again are 48 px (the mock)" — a golden guard is loosened to accept a token on comment-only authority, so the exception is unmet — fix: paste the mock rule that draws 48 px, or keep the single allowed token
+
+DEFER severity=MED — No-match-is-a-result, "treating a miss or an unknown parcelId as a 404 breaks the client state machine", "Guard: the §2.6 200-with-null contract" — mobile/__tests__/reportScreen.mount.behaviour.test.tsx "expect(mockReplace.mock.calls).toEqual([['/(app)/parcel-tool/semi-question?parcelId=PIN-777']]);" — a settled 200-with-null page for an unsure lot is now replaced by a redirect rather than shown as a result, and the exception's authority (RR-0278, SE-1) is not pasted, leaving one clear-lot test as the only pin on the pasted contract — rationale: paste RR-0278/SE-1, or reach the question without overriding the null-page result
+
+DEFER severity=MED — §8 "a map pane with the parcel + example pins, a map-search mode" is listed under "Future (reserved)" and "is out of v1 scope" — mobile/__tests__/lotMapPage.behaviour.test.tsx "expect(screen.getByText('Pick a lot on the map or in the list.')).toBeTruthy();" — the diff pins a lot map surface whose ruled copy points at a map, while the pasted §8 keeps a map pane out of v1 and requires "a conscious whitelist extension" for centroid data — rationale: confirm against a pasted clause that this choose-lot map is in v1 and not the reserved 23C pane, or record it as deferred
+
+REJECT — Raw q in logs, "logging it is a hygiene regression" — the change is accused of logging the typed address — the new test pins the opposite: "expect(JSON.stringify(warn.mock.calls)).not.toContain('5 Elm St')"
+
+MET — Sponsor-slot empty DOM — mobile/__tests__/reportScreens.golden.test.ts — the named guards ("page_no_ad has no ad ref", "no ad value, no ad box") are untouched, the diff edits only the min-h message inside reportLayoutProblems
+MET — Whitelist leak — mobile/__tests__/useParcelLookup.test.ts — the new flag is request-side only: "expect(mockFetch).toHaveBeenLastCalledWith('/api/parcels/lookup?parcelId=PIN-777&semi=answered')", no new response key is asserted or spread
+MET — No-match-is-a-result — mobile/__tests__/reportScreen.mount.behaviour.test.tsx — the clear-lot null page still renders the result: "expect(screen.getByText(LIFE.miss!)).toBeTruthy();"
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 5
+
+---
+⏱  66287ms (66.3s)
+📊 Tokens — total: 36666, input: 24344, output: 12322, reasoning: 10935

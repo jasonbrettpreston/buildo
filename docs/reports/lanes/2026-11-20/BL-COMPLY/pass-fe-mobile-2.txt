@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-2.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — fe.32 "contract is a binding kind: a displayed value may bind to a field of a declared CONTRACT descriptor's response projection; the member must exist in that descriptor; any other value fails." — mobile/src/lib/schemas.ts "+// SRCH.A6 (task-320; RR-0307): GET /api/parcels/entitlement (contract_parcels_entitlement, src/app/api/parcels/entitlement/types.ts)." — the three displayed members are tied to a contract descriptor only by this comment and that descriptor is not pasted, so the member-exists requirement cannot be confirmed — paste the contract_parcels_entitlement response projection entry naming reportsLeft, reportsLimit and resetsOnDisplay.
+
+DEFER severity=LOW — fe.33 "every displayed string, library default strings and form error messages included, comes from content" — mobile/src/hooks/useParcelLookup.ts "SRCH.A6 (task-320; RR-0307): the caller's plan and this month's report count, read from GET /api/parcels/entitlement (the line "N of M reports left until <date>")" — the line's literal copy exists only in this comment and no content key for it is visible in the diff, so comment-only cannot satisfy the clause — name the content key that supplies the line text and its date slot.
+
+DEFER severity=LOW — no pasted clause names the in-app browser sheet — mobile/src/lib/maxbldHelp.ts "-import { Linking } from 'react-native';" / "+import * as WebBrowser from 'expo-web-browser';" — the switch from Linking.openURL to WebBrowser.openBrowserAsync changes what the person sees (the page now opens inside the app) and the authorizing text (task-362, SRCH.LOTMAP-2, small-pages-v8 search.html:235) is not pasted, so the requirement cannot be checked — paste the ruling or the small-pages line for the sheet.
+
+REJECT — fe.36 — the Help change is accused of moving the user without the platform router — the target is an external web page presented by the OS browser sheet, not an app view swapped by local state, so the route rule does not reach it.
+
+REJECT — fe.02 — the diff is accused of coding screens instead of declaring descriptors — no screen file is in the diff; the changed files are shared libs and hooks consumed by the existing mobile app.
+
+MET — fe.05 — mobile/src/lib/parcelSearchCore.ts "+// reset date already written in Toronto time as `resetsOnDisplay` (FE-05, RR-0310); the page only prints them, no date is derived on the device." — the line binds three served fields and reportsLeftShown only tests presence, so no number or date is derived or computed on the device.
+
+MET — fe.37 — mobile/src/lib/parcelSearchCore.ts "return !!e && e.reportsLeft !== null && e.reportsLeft !== undefined" — a null field from a failed or planless read leaves the part out (no line) rather than rendering a placeholder or throwing, matching the pasted clause's failed-read pattern.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  52974ms (53.0s)
+📊 Tokens — total: 24893, input: 15712, output: 9181, reasoning: 8466

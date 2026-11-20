@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-1.patch (model: deepseek-reasoner)
+
+BUG severity=CRIT — P4 "if the compute fails it shows the closed not_evaluated:<reason> (lifecycle `error`); never blank, 0 or the old number." — src/lib/parcels/report-compute.ts:14 "A thrown query or a core error propagates (the route's error boundary makes it a 500 with no page and no meter); it is never read as a miss." — the clause's failed-compute path is a closed not_evaluated reason, the code makes it a 500 with no page, and A-126 repeats "a failed compute is the lifecycle `error` with a closed not_evaluated:<reason>" — catch in the entry and return the closed not_evaluated reason so the report renders lifecycle error with a reason instead of a 500.
+
+BUG severity=HIGH — P1 "the pure core ... runs once when a lot is first opened from the search page" and P3 "every stored record carries Layer 2 table_version, evaluator_version and the settings sha" — src/lib/parcels/report-compute.ts:9 "Nothing is written (the record write is ST.P1, task-265)." — the served page comes from a compute that writes no record and no stamp, so the compute runs again on every open (P1 "once" unmet) and P6 "ONE record per (parcel, option) ... read by every user" has no record to read — land this diff together with the ST.P1 record write and its stamp, or do not serve the computed page until the record exists.
+
+DEFER severity=MED — P1 "the pure core (buildParcelRows, the whole report, all options in scope, main page and See details)" — src/lib/parcels/report-compute.ts:7 "computes THAT lot's rows in memory with the Layer 3 step's OWN pure core (materializeRows and buildSourceSql, the exports the pipeline step runs)" — the clause names buildParcelRows and the whole report plus See details, the diff names different exports and their equivalence to P1's core rests only on its own comment, so the clause is UNMET on the text shown — paste a test or ruling showing materializeRows yields P1's core output, or call the core P1 names.
+
+DEFER severity=MED — P1 "runs once when a lot is first opened from the search page, behind the loading screen" — src/lib/parcels/report-compute.ts:19 "if (!MAXBLD_WEB_LIVE) return null;" — no pasted clause or ruling names a live-switch gate on the first-open compute, and while the switch is off the first open runs no compute and the route serves page null with meter not_produced — paste the switch's governing ruling or gate nothing here.
+
+DEFER severity=MED — P1 "Compute on first open ... runs once when a lot is first opened from the search page" — src/app/api/parcels/lookup/route.ts:147 "const held = lotForm?.unsure === true && semi !== 'answered';" — the SRCH.METER-2 hold sends no page and runs no compute on an unsure lot's first open, behaviour no pasted clause or ruling names — paste the task-360 / RR-0278 ruling in the context, or hold only the display and still run the P1 compute on the open.
+
+DEFER severity=LOW — not pasted (SRCH.FOOTER, the report footer) — src/components/report/ReportPage.tsx:405 "export function ReportPage({ view, footer }: { view: PageView; footer: FooterText }): ReactElement {" — the MF-91 footer rewiring and the now-required footer prop belong to a card whose ruling (MORNING-DECISIONS.md:1066) is not in the pasted context, so its clauses cannot be judged and none of it touches the storage policy — split it out or paste the SRCH.FOOTER card and ruling.
+
+DEFER severity=LOW — not pasted (SRCH.A6 / RR-0310, the reset label) — src/app/api/parcels/entitlement/types.ts:18 "resetsOnDisplay: z.string().nullable(), // the same instant as the Toronto date" — the new wire field and the formatDateDmyFixed helper are governed by RR-0310, which is not pasted, so their compliance is unjudgeable here — paste RR-0310 or land the label with its own clause.
+
+MET — P5 "No record for a lot nobody opened or tracked; no all-lot headline fill; MB-38 has no fill job." — src/lib/parcels/report-compute.ts:9 — the entry computes one picked lot and writes nothing, so no all-lot fill is added.
+
+MET — section 5 "S Search | nothing; the search hit starts the compute | pick on the search page" — src/app/api/parcels/lookup/route.ts:139-141 — the one-lot compute is called at the lookup pick, on the stored read's miss.
+
+MET — A-LAT "p95 <= 1 s applies to opening the report ... from a stored record. A first open (no record, or a stale record) is covered by the loading screen." — src/app/api/parcels/lookup/route.ts:148 "let pageResponse = held ? null : await readCustomerPageResponse(parcelRef);" — the stored read stays first and the compute runs only on its miss.
+
+MET — P4 "while it recomputes the report shows the loading screen or the 'updating' state (the existing lifecycle `loading`, no new state)" — src/lib/parcels/report-compute.ts:95 "return pageForVerdict(stored);" — the page is built inside the request and no new display state or stored status is introduced.
+
+REJECT — A-MF62 "waits for the numbers up to the set maximum (35,000 ms, raised from the seed's 30,000 by task LOAD.3)" — accused: LOAD.1 lands a compute measured to 33.6 s with no visible raise of the screen maximum — not a real issue: A-MF62 itself allows "the report opens with the 'updating' state, never an old number" when the numbers are not ready at the maximum, and the 35,000 raise is task LOAD.3's own change.
+
+REJECT — P9 "Cost: computed for the opened lot ... at each open (arithmetic, not stored)" — accused: the computed page is served with a price and no record — not a real issue: the diff writes no record at all, so it cannot bake a price into a stored record here.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 5
+
+---
+⏱  82991ms (83.0s)
+📊 Tokens — total: 46070, input: 31032, output: 15038, reasoning: 13567

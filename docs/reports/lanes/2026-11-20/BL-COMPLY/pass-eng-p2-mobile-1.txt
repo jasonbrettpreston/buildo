@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-1.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — SRCH.SEMI stage 2 / RR-0278 (cited in code, not pasted) "SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): Continue first fetches the same lookup with the one flag `semi: 'answered'`" — semi-question.tsx:9 — the cited card and ruling text is not in the pasted context, so the answered lookup, the cache write and the busy look cannot be judged clause by clause; this is "cannot see", not a pass — paste the SRCH.SEMI, SRCH.A6 and SRCH.C12 cards plus RR-0278, RR-0307, RR-0310
+DEFER severity=MED — §14 registry "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — "# DIFF PART mobile-1: git diff 9f04d9074..3a36e8b26, files: mobile/app/(app)/parcel-tool/[parcelId].tsx, ... mobile/src/constants/parcelSearch.ts" — the range cites RR-0278, RR-0307, RR-0310 and operator rulings and changes behaviour (report held while the semi is owed, counted answered lookup, reports-left line) yet carries no docs/specs or runbook file — add the spec and runbook updates for those rulings to this same commit
+DEFER severity=LOW — 13.5 "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — SearchBinding.tsx "+      ...reportsLeft(s)," — the new reports-left meter and the new Help & Support links ship unconditionally, gated only by served data, no flag at the route — confirm the rule does not reach mobile or record an operator waiver
+DEFER severity=LOW — 13.3 "All catch blocks use `logError(tag, err, context)`." — semi-question.tsx "+    } catch (e) {\n+      if (mountedRef.current) setSubmitError(e);" — a failed answered lookup is shown to the user but never logged, so a failed count leaves no trace anywhere — emit the structured log for the submit failure
+MET — 12.11 rule 1 silent-catch-fallback — semi-question.tsx "+      if (mountedRef.current) setSubmitError(e);" — the new catch surfaces the built error state instead of returning [] / null / emptyResult()
+MET — 12.12 — semi-question.tsx "+  const continueToReport = useCallback(async (route: string) => {" — the added functions are predicates and a bounded promise race, no arithmetic invariant, so no fast-check property is owed
+MET — 13.2 — SearchBinding.tsx "+const reportsLeft = (s: SearchSituation): PropsNode[] =>" — no route error boundary is added or edited in the range, so the captureException rule has no target here
+REJECT — 13.1 — that helpLink carries the typed address as `q` into a third-party URL — 13.1's PII rule names `captureEvent` event properties, the help link is a browser-sheet URL, and third-party address exposure is lens-security, not a pasted clause
+REJECT — 12.11 rule 3 comment-rot — the new "never throws" comment at semi-question.tsx "+  // Continue: the answered lookup, stored under the report's key, then the report; never throws" — the callback's only await sits inside try/catch and adds no throw, and the rule's stated scope is src/features/leads and src/lib, not mobile/app
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  49197ms (49.2s)
+📊 Tokens — total: 34769, input: 25763, output: 9006, reasoning: 8186

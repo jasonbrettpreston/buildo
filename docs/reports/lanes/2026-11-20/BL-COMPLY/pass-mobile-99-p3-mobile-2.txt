@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-2.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — pasted context (none) — mobile/src/hooks/useParcelLookup.ts "// SRCH.A6 (task-320; RR-0307): the caller's plan and this month's report count" — every clause this diff claims to satisfy (RR-0278, RR-0307, SRCH.SEMI, SRCH.A6, SRCH.METER-2, SRCH.LOTMAP-2, MF-93, tasks 319/320/353/360/361/362) is cited only in comments and none is pasted, so those clauses are cannot-see and unverifiable — paste those operator rulings and SRCH clauses before relying on this PASS.
+
+DEFER severity=MED — walk rule "A change that adds behaviour no pasted clause or ruling names is a finding (nothing added that the card or ruling did not name)" — mobile/src/lib/maxbldHelp.ts "import * as WebBrowser from 'expo-web-browser';" — the switch away from "it leaves the app for the browser (Linking.openURL, a leave-the-origin move)" is named only by task-362 SRCH.LOTMAP-2 and small-pages-v8 search.html:235, neither pasted — paste SRCH.LOTMAP-2 / small-pages-v8 to close this clause.
+
+DEFER severity=LOW — §8.6 "A pre-commit script `mobile/scripts/check-spec99-matrix.mjs` MUST parse the Zod object keys from `mobile/src/lib/userProfile.schema.ts` and the §3.1 markdown table, asserting setEqual" — mobile/src/lib/schemas.ts "export const ParcelToolEntitlementSchema = z.object({" — the new server-contract parser lands in a file the only drift check the spec names does not parse, so no CI guard ties its keys to any contract table — extend the drift-check glob or add a sibling check for the entitlement contract.
+
+REJECT — §9.18 "bumped persister `buster` to `'wf3-pii-strip-1'` to flush the pre-WF3 persisted blob from existing clients on cold-boot, since `shouldDehydrateQuery` does NOT filter rehydration READS" — accused of changing the dehydrate predicate without a buster bump — not a real issue: 'parcel-entitlement' first exists in this same diff, so no installed client can hold a persisted blob of it to flush.
+
+REJECT — §9.10 "Implemented as `queryClient.clear()` in `mobile/src/store/authStore.ts`" — accused of leaving the new ['parcel-entitlement'] cache unpurged on sign-out — not a real issue: clear() is unscoped and purges every query key, so the new account-scoped count goes with it.
+
+MET — §9.18 — mobile/src/lib/persistFilter.ts "const NOT_PERSISTED = ['user-profile', 'parcel-entitlement'];" — the PII strip the spec mandates is preserved by the rewrite, the exclusion is extended, not narrowed.
+MET — §9.10 — mobile/src/hooks/useParcelLookup.ts "queryKey: ['parcel-entitlement']," — account-scoped key, so the spec's queryClient.clear() on signOut covers it with no new purge path.
+MET — §9.15 atomic-selector mandate — mobile/src/hooks/useParcelLookup.ts "useAuthStore((s) => s.accessToken);" — atomic selector, not a zero-arg whole-store read.
+MET — §8.5 and §10 Out-of-Scope Files — the diff file list — no new store is added under mobile/src/store/ and none of mobile/src/store/*.ts, app/**/_layout.tsx, (onboarding)/*.tsx or useUserProfile.ts is touched.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  32646ms (32.6s)
+📊 Tokens — total: 23274, input: 17081, output: 6193, reasoning: 5344

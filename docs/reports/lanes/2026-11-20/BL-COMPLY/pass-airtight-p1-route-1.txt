@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — R-BF §6.6.1(a) "are **100% mechanical**: generated from code/runtime or witnessed from executed SQL, never hand-authored" — src/lib/parcels/report-compute.ts:36 "const UNITS_SQL = 'SELECT unit_key, unit_id FROM bylaw_resolution_units';" and the file's own "A drift from the descriptor's declared lookup tables and columns fails src/tests/customer-report-compute.logic.test.ts (C2)" — the new compute entry hand-writes relation SQL and its only declared==observed guard is a test name, which the walk rule says is UNMET — fix: have the entry reuse the descriptor/core's own lookup read (generated), or move the relation reads inside the gated scope so a closed-answer gate witnesses them.
+
+BUG severity=MED — Spec 122 §5.5 item 6 "Every tunable goes through `ctx.config` ... applies `min`/`max` + `on_invalid` ... an undeclared name is *unreachable*, not merely unvalidated" — src/lib/parcels/report-compute.ts "const plan = buildSourceSql(descriptor, { ...config, [POPULATION_SETTING]: [String(lot.id)] }, {});" — the value that selects the batch row is injected into the resolved config after the projection, so min/max/on_invalid and the declared-name check never see it — fix: resolve the population setting through the declared config path, or pass the lot id as a plan opt/bind instead of overriding config.
+
+DEFER severity=LOW — Spec 122 §5.5 "a bare numeric or SQL literal deciding a check's outcome — a hard-coded `INTERVAL`/date/numeric bound or `UPPER_SNAKE` constant is Rule 3 (tunables externalized) violated from inside compute rather than the descriptor" — src/lib/parcels/report-compute.ts "if (plan.batch_binds.join() !== 'last_key,batch_size') throw new Error(...)" and "pool.query<Json>(plan.batch_sql, [lot.id - 1, 1])" — the entry hard-codes the core's bind names and the keyset window with no declared variable and no ledger row — fix: derive the bind names from the plan object and take the window from the descriptor.
+
+DEFER severity=LOW — R-BF (e) "fails on any column the ledger records as read or written on a table that `docs/reports/witness/_catalog.json` lists but whose column list lacks it" — src/lib/parcels/report-compute.ts:36 "SELECT text_key, text FROM bylaw_resolution_texts" — these statements now enter the statically parsed src SQL ledger, and whether `_catalog.json` carries unit_key/unit_id/text_key/text cannot see — rationale: pre-commit `src-sql-ledger.mjs --check` may red on a catalog table missing a listed column.
+
+MET — R-CA (ii) "Spec 122 §5.6 “never writes a row” STANDS" — src/lib/parcels/report-compute.ts "Nothing is written (the record write is ST.P1, task-265)"; the only pool call is the core's batch SELECT — the entry performs no DML, DDL or txn.
+
+MET — R-BZ "compute-purity.mjs over compute and its `require` closure" — no file under scripts/lib/compute/** appears in the diff, and the new file states "this file imports scripts/ code, it modifies none" — no step's purity rows or `standard:` label changes.
+
+REJECT — R-BZ G11/G12 (`import(` and `*.descriptor.json` require) — the new entry's `await import(...)` of the core, config and descriptor are accused of breaching the dynamic-require and descriptor-require bans — §5.5 fixes the shape rules' scope at `scripts/lib/compute/**` ("the directory IS the scope, no `converted.json` entry needed"), so this src file is not judged by them; the gap is the scope question in finding 1, not a G11/G12 breach.
+
+REJECT — no pasted clause — the footer, `resetsOnDisplay` and `semi=answered` hunks are accused of adding behaviour no pasted ruling names — the pasted context is only the McDonald's Airtight list (R-BA, R-BF, R-BZ, R-CA, R-DT, R-EY, §5.5, A26) and none of them speaks to footer, entitlement-label or semi-flag behaviour, so there is nothing pasted to check them against.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  56666ms (56.7s)
+📊 Tokens — total: 41538, input: 31340, output: 10198, reasoning: 9155

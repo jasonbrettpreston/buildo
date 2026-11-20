@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-1.patch (model: deepseek-reasoner)
+
+BUG severity=<none raised> — m.64 "Only permitted scenarios are shown; every other scenario is recorded, counted and never displayed." — the display arm is met (report-compute.ts:98,104 "const stored = projectStoredPage({ … return pageForVerdict(stored);") but see the DEFER below for the record/count arm — no blocking breach found in the pasted clauses.
+
+DEFER severity=MED — m.64 "Only permitted scenarios are shown; every other scenario is recorded, counted and never displayed." — src/lib/parcels/report-compute.ts:9 "Nothing is written (the record write is ST.P1, task-265)." — the compute path suppresses non-permitted scenarios through the shared projection but records and counts none of them at the lookup, so the clause's "recorded, counted" arm rests entirely on a later task — log the count of suppressed scenarios (or cite task-265's coverage of computed pages) before MAXBLD_WEB_LIVE goes on.
+
+DEFER severity=LOW — m.71 "No live report column moves before its shadow passes." — src/app/api/parcels/lookup/route.ts:151 "pageResponse = await computeCustomerPageResponse(parcelRef);" — lots that had no stored page are now served a computed page live with no shadow round or round record naming that content, the only brake is the web live switch (report-compute.ts:75 "if (!MAXBLD_WEB_LIVE) return null;") — state where the shadow/round record for a computed page lives, or hold LOAD.1 behind the switch until it exists.
+
+DEFER severity=LOW — m.0 "Every field, gate, file and mode names the mistake it prevents or the reader it serves" — src/app/api/parcels/lookup/route.ts:90 "semi: sp.get('semi') ?? undefined," — ConsumerParcelLookupQuerySchema's declaration of `semi` is not in this diff (cannot see it); if the schema does not declare the field, Zod strips it and `semi === 'answered'` is never true, so the SRCH.SEMI hold never lifts — paste the schema line showing `semi` accepted, with its allowed values.
+
+DEFER severity=LOW — operator ruling cited by the change, MORNING-DECISIONS.md:1061 / RR-0271, not pasted in this context — src/lib/parcels/report-compute.ts:5 "operator \"2. y\", MORNING-DECISIONS.md:1061, RR-0271, and \"task 341 approved\", :1160" — the operator words that authorise the one-lot compute and the semi hold are cited only inside the diff, so I cannot verify the change against them (cannot see MORNING-DECISIONS.md or RR-0271/RR-0278) — paste those lines if this review is to bind them.
+
+MET — m.61 "Layer 3 report fields are declared formulas, run by the one evaluator." — src/lib/parcels/report-compute.ts:82 "const materializeRows = exported<Core['materializeRows']>(core, 'materializeRows');" — the page's fields come from the step's own evaluator export and no formula is restated (C7 pins it).
+
+MET — m.63 "A closed scenario catalogue; every scenario is computed for every parcel; no user choice." — src/lib/parcels/report-compute.ts:85 "const { values: config } = await resolveConfig(pool, descriptor);" — the closed catalogue/config is read whole and the only substitution is the population list of that one lot (line 87), no scenario is narrowed or chosen.
+
+MET — m.20 "Spec 68/69 own the table; Spec 58 owns ingestion; Spec 65 owns computation" — src/lib/parcels/report-compute.ts:78 "const core = await import('../../../scripts/lib/compute/compute-maxbld-scenarios.js');" — computation stays in the owning step's module, imported not copied, and the entry modifies no scripts/ file.
+
+MET — m.45 "Absent and stale rows are pending, never failed." — src/app/api/parcels/lookup/route.ts:151 "pageResponse = await computeCustomerPageResponse(parcelRef);" — a stale stored record is treated as pending and recomputed, then served or a null miss (report-compute.ts:94), never a failed page.
+
+MET — m.27 "Parcels with no 569-2013 zone polygon … are disclosed \"not evaluated\" rather than evaluated under 569-2013" — src/lib/parcels/report-compute.ts:96 "const out = materializeRows([row], { config, lookups });" — the same core carries the no-polygon not-evaluated arm, so the computed page cannot evaluate those parcels under 569-2013.
+
+REJECT — m.63 "no user choice" — accused of letting a caller pick what they see or get charged for via the new `semi` field — it selects no scenario or building type; the catalogue read and the core call are unchanged (report-compute.ts:85,96) and the flag only lifts a hold inside the route (route.ts:146 "const held = lotForm?.unsure === true && semi !== 'answered';").
+
+REJECT — m.64 "never displayed" — accused of displaying non-permitted scenarios through the new compute path — the computed rows pass through projectStoredPage and pageForVerdict (report-compute.ts:98,104), the same filter W uses, so display stays permitted-only; only the record/count arm is open (DEFER above).
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  100458ms (100.5s)
+📊 Tokens — total: 52204, input: 32963, output: 19241, reasoning: 17981

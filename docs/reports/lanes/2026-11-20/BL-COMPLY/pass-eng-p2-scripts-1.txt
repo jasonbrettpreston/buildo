@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-scripts-1.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — §14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — proof-slice.mjs:2-3 "// SPEC LINK: docs/specs/02-web-admin/127_surface_conversion_procedure.md (the S-gate table whose rows this runner calls), / //            docs/specs/02-web-admin/126_maxbld_surface_standard.md," — the new file's SPEC LINK names two specs with no §N (only 08_agents.md:490, a line locator, not a section) — add the §N of the S-gate table in 127 and of the 126 clause the runner leans on, or drop the claim that 126 is cited.
+
+DEFER severity=MED — §13.3 "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`." — proof-slice.mjs:146 "} catch (e) { console.error(`proof-slices.json unreadable or malformed: ${e.message}`); return 2; }" and :148 "} catch (e) { console.error(`proof-slice: cannot create --out ${outDir} (${e?.code ?? e?.message ?? 'error'})`); return 2; }" — two catch blocks in the new script log through bare console.error with no tag, and the script is lane-run so the pipeline-logger rule (same §13.3) applies to it — route both through logError/pipeline.log with a tag.
+
+DEFER severity=MED — §14 "A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**" — src-sql-ledger.mjs:78-80 "SQL-bearing files: 41 static, 29 interpolated, 2 not_postgres); LOAD.1 (task-266, / * 2026-11-19) adds the 30th: src/lib/parcels/report-compute.ts" — the ruling that adds the 30th interpolated file leaves the cited measurement one line above reading "29 interpolated" and "72 SQL-bearing files", the exact drift class the clause names — state the post-change totals (30 interpolated, 73 total) next to the dated measurement.
+
+DEFER severity=LOW — §14 "new couplings update **Cross-Spec Dependencies both directions**" — deepseek-review.js:374 "const tIdx = args.indexOf('--template');" plus backlog-lane.mjs:145 naming ".claude/review-templates/lens-*.md" — the review tool gains a hard dependency on the lens template files' placeholder names, and the diff file list ("files: scripts/analysis/backlog-lane.mjs, ..., scripts/deepseek-review.js") contains no spec doc, so I cannot see the Cross-Spec Dependencies entry updated — add the entry both directions or cite the existing one in the commit.
+
+DEFER severity=LOW — pasted-clause test, walk step 4 "A change that adds behaviour no pasted clause or ruling names is a finding" — backlog-lane.mjs:135 "// task-358 (REVIEW.LENSES): the review line names the Spec 08 lens set (08_agents.md:334 \"NEVER run one generic pass\"; section 7 rules 4, 7)" and deepseek-review.js:178 "// task-358 (REVIEW.LENSES) — lens mode" — the new lens-line and lens-mode behaviour is authorised only by an in-code comment; 08_agents.md:334 and section 7 rules 4,7 are not pasted, so I cannot see the ruling it rests on — paste the card or the ruling so the lens set can be checked clause by clause.
+
+REJECT — 08_agents.md:334 "NEVER run one generic pass" — that the chosen lens set is incomplete or ordered wrong against the Spec 08 lens table — the lens table and section 7 are not in the pasted context, so that question is not mine to judge.
+
+MET — §12.11 "silent-catch-fallback — bans `try/catch { return [] / null / emptyResult() }`" — proof-slice.mjs:86 — the only catch in the run path returns "status: 'GAP', cause: `pass file unreadable (...)`", a named failure, not an empty result.
+
+MET — §12.10 real-DB rule "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts`" — proof-slice.mjs:10 — the runner states "Commits nothing; reads and writes no database" and the diff adds no migration, so no db test is owed.
+
+MET — §12.13 "The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`) and their `.test.ts` siblings are the mutation surface" — the diff's file list touches none of the four, so the 50% gate is not engaged.
+
+MET — §14 "Every **privileged mutation + its audit row** commit in ONE `withTransaction`" — proof-slice.mjs:10 "reads and writes no database" — no mutation is added, so the one-transaction rule is not engaged.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 5
+
+---
+⏱  67915ms (67.9s)
+📊 Tokens — total: 32908, input: 19623, output: 13285, reasoning: 12112

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-tests-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — §3 "GET /api/parcels/lookup?q=<address> | ?parcelId=<id>" and "Exactly one of q / parcelId (400 otherwise)" — mobile/__tests__/useParcelLookup.test.ts "expect(mockFetch).toHaveBeenLastCalledWith('/api/parcels/lookup?parcelId=PIN-777&semi=answered');" — the request now carries a semi param the frozen endpoint definition does not name, so the client sends a query the pasted contract does not define — land a §3 amendment naming semi (request grammar and the 400 rule) before merge, or source the hold flag another way.
+
+DEFER severity=MED — §3 frozen "ConsumerParcelLookupResponse" (no lotForm field) — mobile/__tests__/reportScreen.mount.behaviour.test.tsx "const unsureHit = (page: Json | null) => ({ ...hit(page), lotForm: { detected: 'semi_half', basis: 'o4_two_parcel_abut', unsure: true } });" — the held-screen state is driven off a lotForm field absent from the pasted frozen response interface — name lotForm in the frozen response contract or read a field the contract actually declares.
+
+DEFER severity=LOW — RR-0313 (not pasted) "Enter a Toronto address" — mobile/__tests__/parcelScreens.golden.test.ts "expect(SEARCH_SLICE.content['search.input.placeholder']).toBe('Enter a Toronto address');" — the ruling authorizing this wording is not in the pasted context, cannot see whether the text is verbatim — paste RR-0313 or cite its spec line so the placeholder change is judgeable.
+
+DEFER severity=LOW — task-362 / search.html:235 (Spec 126, not pasted) — mobile/__tests__/maxbldHelp.test.ts "expect(open).toHaveBeenCalledWith('https://maxbld.ca/help#topic=address_match&q=1%20Main%20St');" — the in-app browser sheet behaviour is named only by a spec not pasted, cannot judge it — paste Spec 126 §11b.3 (or the ruling naming the sheet) so the openHelp change is in scope.
+
+DEFER severity=LOW — no pasted clause names 48 px or aria-busy — mobile/__tests__/semiQuestionScreens.golden.test.ts "!String(n.props.className ?? '').split(/\s+/).some((c) => c === 'min-h-[44px]' || c === 'min-h-[48px]')" — the golden relaxes the touch-target check to accept 48 px and adds a busy state on no pasted rule — cite the mock/spec line that rules 48 px and the busy Continue.
+
+MET — §2.8 "never the raw search text q" — mobile/__tests__/maxbldHelp.test.ts "expect(JSON.stringify(warn.mock.calls)).not.toContain('5 Elm St');" — the new help-failure log excludes the typed address, consistent with log-hygiene.
+
+REJECT — §2.6 "A miss is a result, not an error" — the held report screen showing loading instead of the miss text for an unsure lot with page null — not a violation, because the hit carries match, and only match:null with parcel:null is the miss per §2.6, the unsure hold is a distinct state.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 1
+
+---
+⏱  53696ms (53.7s)
+📊 Tokens — total: 37356, input: 27240, output: 10116, reasoning: 9331

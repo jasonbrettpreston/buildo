@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-2.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — §2.3 "Before accessing nested object properties, explicitly check for `null` or `undefined`" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:135-146 "const line = lines.find((l) => l.case === e.case) as Json;" ... "abutters: (line.abutments || []).map((a: Json, i: number) =>" — `line` and `e` are unguarded `find()` results now consumed by two suites, so a fixture miss crashes both instead of one — change to "const line = lines.find((l) => l.case === e.case) as Json | undefined; if (!line) throw new Error(...)" and same for `e` before `e.case`
+DEFER severity=MED — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:143 "abutters: (line.abutments || []).map((a: Json, i: number) => ({ parcel_id: lot.parcel_id, neighbour_id: 900000 + i, shared_len_m: 10, est: a.est," — untyped object literals stand in for row shapes in a shared harness — declare named row interfaces (or a factory) in the harness and type the literals, or record why the golden-fixture builder is exempt
+DEFER severity=LOW — no pasted clause or ruling names a shared `goldenBatch` export; the only stated justification is a comment — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:122 "LOAD.1 (task-266): moved here unchanged from runtime-loader.logic.test.ts so the customer compute test builds the same batch rows." — a comment naming task-266 is not a pasted clause, so the added export has no governing clause in context — paste the LOAD.1 card text or restate the change as behaviour-neutral extraction with no new export surface
+DEFER severity=LOW — §11 "Before declaring Green Light, generate a 5-10 item self-skeptical checklist ... Output PASS/FAIL per item in the response BEFORE running tests." — NONE — no per-item PASS/FAIL checklist accompanies this diff in the pasted material — cannot see; supply the checklist output with the diff
+DEFER severity=LOW — §4.4 "All API routes must return a consistent envelope: `{ data, error, meta }`." and §2.2 "Every newly created API route ... MUST have an overarching `try-catch`" — NONE — no route is touched, so the clause is inert here; listed only to record that the diff's new export is a test-harness function, not a handler — no action
+MET — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — diff header "files: src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts, src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts" — only test files changed
+MET — §5.5 parity battery "Two surfaces that MUST agree stay in lockstep" — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:17 "import { goldenBatch } from './golden25-harness';" — the duplicated builder now has one source, removing the drift risk between the two suites
+MET — §5.2 "`*.logic.test.ts` | Pure functions, scoring, classification" — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:17 — the moved helper stays consumed by the logic-layer suite, no layer change
+MET — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — runtime-loader.logic.test.ts still asserts via `goldenBatch` after the extraction, so identical output remains pinned; no behaviour change to test
+MET — §3.2 "Every migration file in `migrations/` MUST contain both `UP` and `DOWN` blocks" and §11 Database/Migration Check — NONE — no migration added or altered
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+Note: the FAIL rests on one HIGH (§2.3 null/undefined guard on `e`/`line`) plus four deferred items; fixing the guard clears the gate.
+
+---
+⏱  24921ms (24.9s)
+📊 Tokens — total: 18162, input: 14016, output: 4146, reasoning: 3115

@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — §14 "A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**" — src/app/api/parcels/lookup/route.ts (hunk @@ -15,6 +15,8 @@) "+//   SRCH.METER-2 (task-360, 2026-11-19): that unsure lot's `page` is not sent either (null; neither the stored read nor the compute runs, meter semi_pending) until" — the ruling changes the mobile response contract (an unsure lot's `page` was sent, now null) and the compute now serves a page where none existed, yet no file under docs/specs/ (Spec 100 §3.2, Spec 126 §11b.2) or any runbook appears in the pasted diff — add the Spec 100 §3.2 dated note and the affected runbook edits to this same commit
+DEFER severity=MED — §13.5 "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — src/lib/parcels/report-compute.ts "if (!MAXBLD_WEB_LIVE) return null;" — the only gate on the newly served computed page lives inside the lib entry, the route performs no flag check, so the flag is not "at the route level" — add the flag check in route.ts (or attach the operator ruling that names MAXBLD_WEB_LIVE as the route-level flag for this surface)
+DEFER severity=LOW — §14 "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions**" — src/lib/parcels/report-compute.ts:4 "// core); docs/specs/00_engineering_standards.md (parameterised SQL; Standard 10.2: this file imports scripts/ code, it modifies none)." — that link carries no §N form, and the new src/lib to scripts/lib/compute coupling records no both-directions Cross-Spec Dependencies update in the pasted diff — write §10.2 and add the dependency entries to both specs
+MET — §12.11 rule 1 (silent-catch-fallback) — src/lib/parcels/report-compute.ts "A thrown query or a core error propagates (the route's error boundary makes it a 500 with no page and no meter); it is never read as a miss" — the entry holds no try/catch, so no swallowed error returns null
+MET — §12.11 rule 4 (silent-row-drop) — src/lib/parcels/report-compute.ts "rows: out.rows.e1.map(toStoredRow)," — no `.filter((x): x is ...)` null drop; every null path is an explicit return
+MET — §12.11 rule 5 (pool-boundary) — src/lib/parcels/report-compute.ts "import { pool } from '@/lib/db/client';" — no `new Pool(` instantiation in the diff
+REJECT — §12.10 — a new one-lot compute shipped without a `*.db.test.ts` — the clause triggers only for a NEW migration adding a CHECK constraint, FK with cascade or PostGIS expression, and the diff adds no migration
+REJECT — §12.12 — no `fast-check` property test for the new file — the clause names scoring formulas, key normalizers, distance/unit conversions and cursor comparators; the entry adds no such pure arithmetic function
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 3
+
+---
+⏱  47674ms (47.7s)
+📊 Tokens — total: 35109, input: 25913, output: 9196, reasoning: 8408

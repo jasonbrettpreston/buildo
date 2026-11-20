@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-1.patch (model: deepseek-reasoner)
+
+BUG severity=MED — A27 #5 "Emits: every key the compute emits is a declared `emits[]` entry (gate C, measured at capture)." — src/lib/parcels/report-compute.ts:51 "function toStoredRow(r: Json): StoredRow {" — the core's output is re-mapped at a second caller by a hand-written 14-field list, so an emits key added after the capture is silently dropped here and gate C, which measures at capture only, never witnesses this path — build the row from the descriptor's declared emits[] and throw on a key the core emits that the list does not consume.
+BUG severity=MED — A27 #13 "A test that needs Postgres is `*.db.test.ts` ... under `src/tests/db/`, or beside its step under `src/tests/steps/<slug>/`." — src/lib/parcels/report-compute.ts:32 "fails src/tests/customer-report-compute.logic.test.ts (C2)" — the only test named for this module that runs three live statements is a logic test outside both DB paths, and the diff adds no `*.db.test.ts`, so UNITS_SQL, TEXTS_SQL and plan.batch_sql have no DB witness — add a `*.db.test.ts` under `src/tests/db/` (or `src/tests/steps/`) covering the three reads, or state in the file that the logic test never reaches Postgres.
+DEFER severity=LOW — not pasted (RR-0278, SRCH.METER-2, task-360) — src/app/api/parcels/lookup/route.ts:144 "const held = lotForm?.unsure === true && semi !== 'answered';" — the ruling that makes an unsure lot's page held and countable on a caller-supplied flag is not in the pasted context, so the metering change cannot be judged clause by clause — paste RR-0278/task-360 before lock.
+DEFER severity=LOW — not pasted (SRCH.A6, RR-0310) — src/lib/entitlements/index.ts:625 "/** resetsOn as the Toronto calendar date, "9 Dec 2026" (SRCH.A6, RR-0310)" — the field is additive on a `.strict()` response, but the ruling that fixes the exact label is not pasted — paste RR-0310 and check "9 Dec 2026" against it.
+DEFER severity=LOW — not pasted (MF-91/SRCH.FOOTER, MORNING-DECISIONS.md:1066) — src/components/report/ReportPage.tsx:404 "export function ReportPage({ view, footer }: { view: PageView; footer: FooterText }): ReactElement {" — a now-required prop on a shared component rests on operator words that are not in the pasted context — paste the MORNING-DECISIONS.md:1066 line if the shared-footer clause is meant to bind.
+REJECT — "Proof of no runtime change" "`git diff --stat <main> -- scripts/lib scripts/*.js scripts/quality/*.js scripts/steps/_schema/step.schema.json` is empty" — accused of landing runtime code under the step closure — the diff touches no path under scripts/, so the clause's own check is empty and `computeLibFingerprint()` is unchanged; the new file imports the core, it does not alter it.
+MET — A27 #2 "every write target on an RLS-enabled table declares `rls_bypass_or_policy`" — src/lib/parcels/report-compute.ts:17 "Server only: no meter, no entitlement, no usage, no user id, no write." — no write target is added, so no RLS declaration is due.
+MET — A27 #3 "rows × bound columns per upsert ≤ 65,535" — src/lib/parcels/report-compute.ts:93 "const row = (await pool.query<Json>(plan.batch_sql, [lot.id - 1, 1])).rows[0];" — two bound values, one row, no fan-out upsert.
+MET — A27 #1 "Net-new steps stay `pending`" — src/lib/parcels/report-compute.ts:11 "THE GATE is the existing web live switch ALONE" — no new step, descriptor or census row is introduced.
+MET — Ledger "Collision lock (C2)" "two violations sharing one key with one ledger row is RED" — src/lib/parcels/report-compute.ts (whole file) — no ledger row and no ledger key is added by the diff.
+MET — A27 #8 "The harness overwrites only tracked goldens" — src/lib/parcels/report-compute.ts (whole file) — no capture or harness call appears in the diff.
+MET — "`computeLibFingerprint()` is equal before and after" — file list of the diff — no file under scripts/lib is present in the changed set.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 2
+
+---
+⏱  55916ms (55.9s)
+📊 Tokens — total: 34788, input: 24234, output: 10554, reasoning: 9437

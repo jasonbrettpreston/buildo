@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-1.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — m.483 "row_sha, table_version and evaluator_version on bylaw_resolution_lots are stored as bytea(32) at the database boundary (migration 295) and read as hex through the view bylaw_resolution_lot_stamps; the values are unchanged and JavaScript stays hex." — src/lib/parcels/report-compute.ts "const stamp = row.lot as { lot_gate?: string | null; table_version?: string | null; evaluator_version?: string | null };" — the compute path takes table_version and evaluator_version from the core's batch row object, not from the bylaw_resolution_lot_stamps view, and the batch_sql that populates row.lot is not in this diff (cannot see), so compliance with the hex-through-the-view boundary is unverified — fix: cite the batch statement's stamp source or read the stamp through the same view that W (readCustomerPageResponse) uses before projectStoredPage.
+
+DEFER severity=LOW — m.454 "An out-of-bounds setting refuses the run before compute (follows R-G); amends M-428." — src/lib/parcels/report-compute.ts "const { values: config } = await resolveConfig(pool, descriptor);" — the entry delegates the bounds refusal to scripts/lib/step/config.js, which is not in the diff (cannot see), so the second caller's compliance with M-454 rests on an unpasted module — fix: quote config.js's bounds refusal in the header or add a test where an out-of-bounds setting rejects the web entry.
+
+DEFER severity=LOW — no pasted clause or ruling names this new request behaviour; the change cites SRCH.METER-2 (task-360) which is not in the pasted context — src/app/api/parcels/lookup/route.ts "semi: sp.get('semi') ?? undefined," and "page_source: pageSource, // LOAD.1: stored, computed or none" — the semi=answered hold/lift, the semi_answered log field and compute_ms telemetry are behaviours no pasted clause authorises, so scope compliance cannot be seen — fix: attach the SRCH.METER-2 / task-360 ruling text (and confirm ConsumerParcelLookupQuerySchema accepts `semi`, also not in the diff) to the review material.
+
+MET — lc.28 "One shared pure calculation... which the step and the app both call" — src/lib/parcels/report-compute.ts "const materializeRows = exported<Core['materializeRows']>(core, 'materializeRows');" — the app path calls the step's own exports instead of copying the calculation.
+
+MET — lc.14 "report fields as declared formulas over Layer 2; the scenario catalogue" — src/lib/parcels/report-compute.ts "const plan = buildSourceSql(descriptor, { ...config, [POPULATION_SETTING]: [String(lot.id)] }, {});" — the page is produced from the descriptor's declared statement and the step's materializer, not a redeclared formula.
+
+MET — m.449 "An unseeded setting makes the run refuse to start (SB-4); no silent default." — src/lib/parcels/report-compute.ts "const { values: config } = await resolveConfig(pool, descriptor);" — no catch in the entry, so a missing config value propagates as a refusal rather than a silent default.
+
+MET — lc.53 "Verified by named lock; no partial green." — src/tests/customer-report-compute.logic.test.ts "describe('C1 the gate: the existing web live switch only', () => {" — the change lands with named C1 to C9 locks in one file.
+
+REJECT — m.516 "every Layer 2 night and every Layer 3 write night sizes storage twice" — the change is accused of a write night — it writes nothing, "Nothing is written (the record write is ST.P1, task-265)", so ST-3 does not apply.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  57735ms (57.7s)
+📊 Tokens — total: 40285, input: 30161, output: 10124, reasoning: 9227

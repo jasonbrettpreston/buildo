@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-2.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — McStorage policy v2 rule list (P1 to P7, A-ST5, A-ST6, A-ST3, A-FE39, A-MB38, A-MB75, A-MB76, A-S88 are named but not pasted) "Rules in the whole list: 12 (counted by pattern /^\| P\d+ \|/) · this is part 2 of 2" — NONE — the rules that would bind the batch and headline path sit in part 1 of 2, so compliance of this diff against them is cannot see — paste part 1 of 2 and the A-ST ruling texts with the diff.
+
+DEFER severity=LOW — no pasted clause names task-266 or LOAD.1 — "LOAD.1 (task-266): moved here unchanged from runtime-loader.logic.test.ts so the customer compute test builds the same batch rows." — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:122 — the card authorizing the extraction is not pasted, so its clauses are cannot see — paste the LOAD.1 card text.
+
+REJECT — ST-5 / MB-38, "Layer 3 persists one headline record per (parcel, option)" — accused of persisting or reshaping Layer 3 headlines — the diff relocates a test helper that assembles the golden 25 rows in memory, no Layer 3 write occurs.
+
+REJECT — section 7 point 3, "cost is computed at each open from the record's size (not stored)" — accused of storing cost on the row — "permitted: lot.permitted, permitted_text_ids: lot.permitted_text_ids ?? null, table_version: lot.table_version, evaluator_version: lot.evaluator_version" carries no cost field.
+
+REJECT — walk item "A change that adds behaviour no pasted clause or ruling names is a finding" — accused of adding an unnamed export — "export function goldenBatch(): { rows: Json[]; raw: Json }" is a relocation of an existing helper, no new runtime behaviour.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+
+---
+⏱  27587ms (27.6s)
+📊 Tokens — total: 12312, input: 7131, output: 5181, reasoning: 4707

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-2.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — m.64 "Only permitted scenarios are shown; every other scenario is recorded, counted and never displayed." — src/lib/report-projection/project.ts:206 "if (shownAs === 'not_evaluated') notEvaluated.push(o.id);" — every non-permitted option (stored not_evaluated, an unknown status, no row, a gated lot) is put in the rendered not_evaluated list and project.ts:219 "if (typeof sentence === 'string' && sentence !== '') values[b.key] = sentence;" writes its sentence into values, so a non-permitted scenario is displayed rather than counted — route every non-permitted status into the counted hidden channel (or a counted list the page does not render) and keep the reason in lineage only.
+
+DEFER severity=MED — m.68 "Every non-law number a formula uses is an admin logic variable; nothing is hidden." — src/lib/report-projection/format.ts:13 "export const SQFT_PER_M2 = 10.7639;" — this factor and project.ts:76 "LOT_SIZE_PLAUSIBLE_M2 = Object.freeze({ min: 50, max: 5000 })" are inline non-law numbers in code, not declared logic variables — move both into the committed logic-variable JSON and read them, so changing either is a data edit.
+
+DEFER severity=MED — m.1 "The single source of truth is the committed generated JSON" — src/lib/report-projection/format.ts:56 "const CONFIDENCE_WORDS: Record<string, string> = { high: 'High confidence', medium: 'Medium confidence', ..." — the confidence vocabulary and project.ts:166 "const LOST: Record<string, string> = {" prose are hardcoded while the sibling status text is read from report-presentation.json, so one register has two sources — read both from the committed JSON.
+
+DEFER severity=LOW — m.69 "Report-field totality: output ⇄ registry ⇄ rendered." — src/lib/report-projection/project.ts:102 "if (hits.length !== 1) throw new Error(`MB-93: page field ${p.field} is not declared exactly once`);" — only page to registry is asserted at load; nothing asserts registry to page, so a declared or stored field with no page part is dropped from values and from lineage.fields (project.ts:152 "const BOUND_FIELDS = new Set(BINDINGS.flatMap(...))") without being counted — add a load-time assertion that every declared field is bound to a page part or named in a counted exception list.
+
+DEFER severity=LOW — no pasted clause or operator ruling names a landing footer — src/lib/surfaces/maxbld-landing.ts:147 "const report: StaticReport = { sample: view, footer: pickFooterText(SEARCH_CONTENT), ...(demo ? { demo } : {}), ...(picture ? { picture } : {}) };" — this adds a rendered footer element that nothing in the pasted context asks for — name the clause or ruling for the landing footer in the change, or split the hunk out.
+
+MET — m.45 "Absent and stale rows are pending, never failed." — src/lib/parcels/report-page.ts:46 "case 'out_of_date': return null;" — a stale or absent record becomes a miss that LOAD.1 recomputes, never an error or a half page.
+
+MET — m.71 "No live report column moves before its shadow passes." — src/lib/parcels/report-page.ts:57 "if (!MAXBLD_WEB_LIVE) return null;" — the customer path stays dark behind the pinned switch.
+
+REJECT — m.61 "Layer 3 report fields are declared formulas, run by the one evaluator." — the change is accused of recomputing Layer 3 numbers rather than reading them — projectStoredPage reads only stored rows and formats them, no formula is evaluated anywhere in the diff.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 4
+
+---
+⏱  83617ms (83.6s)
+📊 Tokens — total: 51621, input: 33651, output: 17970, reasoning: 17089

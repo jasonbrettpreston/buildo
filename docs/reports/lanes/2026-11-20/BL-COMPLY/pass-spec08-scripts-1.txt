@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-scripts-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 08 §7 rule 4 dated note 2026-11-19 "run with `scripts/deepseek-review.js review <file> --template <lens> --context <pasted context>`" — scripts/analysis/backlog-lane.mjs:145 "each \`${cmd} ${ctx} --template .claude/review-templates/<lens file>\` (the context file is the plan and its pasted rulings)" — the plan-altitude lens commands pass the context file as the file under review and pass no --context, so deepseek-review.js:185 "specs: context ?? '(no pasted context provided)'" hands every plan lens the placeholder instead of the pasted clauses and the compliance lens, whose driver is "judge against the pasted clauses only", returns a vacuous result — build the plan command as `${cmd} ${ctx} --template .claude/review-templates/<lens file> --context ${ctx}` so {{SPECS}} is populated.
+
+BUG severity=MED — Spec 08 §7 rule 2 "Ground-truth gates Compliance (§5.1/§5.2): validate the spec against reality before checking code against the spec" — scripts/analysis/backlog-lane.mjs:145 "then triage every finding as round 2 (one grounder, KEEP or REJECT with the opened file:line, TRIAGE.md)" — the added review line names DeepSeek lenses first and its only grounder after them in round 2, so no reality check is named before compliance runs, inverting rule 2 for a diff whose own citations (08_agents.md:490, Spec 127 rows) are spec claims — name the ground-truth seat ahead of the compliance lens in the plan-review line.
+
+BUG severity=MED — Spec 08 §7 rule 7 "Security fires only on money/auth/PII/admin" — scripts/analysis/backlog-lane.mjs:140 "const sec = /entitlement|auth|stripe|metered/i.test(files);" — two of the four named trigger domains (admin, PII) never fire lens-security.md, so a task whose Files line names src/app/api/admin/... or a PII surface gets no security lens — add the missing domains to the regex.
+
+DEFER severity=LOW — Spec 08 §7 rule 6 "Findings triage (WF6): BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons." — scripts/analysis/backlog-lane.mjs:145 "triage every finding as round 2 (one grounder, KEEP or REJECT with the opened file:line, TRIAGE.md)" — the added triage instruction has two outcomes and one destination; a deferred non-bug finding has no named home — state the DEFER branch and its review_followups.md destination in the same line.
+
+DEFER severity=NIT — Spec 08 §7 rule 10 dated note (C2) "a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`)" — scripts/analysis/backlog-lane.mjs:135 "the review line names the Spec 08 lens set (08_agents.md:334 \"NEVER run one generic pass\"; section 7 rules 4, 7)" — the anchor is right but the line number carries no commit-sha date, so the hint cannot be checked against the tree — write the cite as "Spec 08 §7 rule 4 (:334 at <sha>)".
+
+REJECT — Spec 08 §7 rule 4 "(3) idempotency/dedup" — accused of omitting an idempotency lens from the set — the 2026-11-19 dated note to the same rule fixes the repo lens set as five templates plus plan-review-deepseek.md, none of which is an idempotency lens, and rule 7 forbids inventing roles off the menu.
+
+REJECT — Spec 08 §11.5 "CLI models (Gemini/DeepSeek raw) are DEMOTED to whole-file audit generators. Their yield files to `review_followups.md`, never folds into a diff review." — accused of folding DeepSeek lens output into the diff review — the later 2026-11-19 dated note to §7 rule 4 expressly authorises the lens set at plan and output with "one Claude grounder adjudicates every finding as round 2", and the added line keeps that grounder.
+
+MET — Spec 08 §7 rule 4 dated note "the lane brief written by `backlog-lane.mjs` names the lenses by task type" — scripts/analysis/backlog-lane.mjs:141 — the lens lists are built from task.fm.type plus the Files line.
+MET — Spec 08 §7 rule 4 "Every DeepSeek finding is adjudicated by a tool-having grounder before folding" — scripts/analysis/backlog-lane.mjs:145 — the line ends with the round-2 single grounder, KEEP or REJECT with the opened file:line.
+MET — Spec 08 §7 rule 7 "The roster is a MENU, not a checklist" — scripts/analysis/backlog-lane.mjs:141 — a 1 to 5 lens subset is named, never the full roster.
+MET — Spec 08 §11.9 TKT-1 dated note "The review context file for a task is written by the same tool to `docs/reports/reviews/<task>/context-<date>.md`" — scripts/analysis/backlog-lane.mjs:147 — "const ctxRel = `docs/reports/reviews/${taskId}/context-${date}.md`;" is the file the new lens line consumes.
+MET — Spec 08 §7 rule 4 dated note "run with `scripts/deepseek-review.js review <file> --template <lens> --context <pasted context>`" — scripts/deepseek-review.js:180 — template mode is added and both placeholders are substituted for the output-altitude call.
+MET — Spec 08 §11.8 MCINC-4 dated note 2026-11-17 "the base is the current mb-rul tip once that tip is suite-green and push-ready" — scripts/analysis/proof-slices.json:11 — the suite row reads the station pass file keyed to HEAD instead of re-running a stale suite.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 3
+
+---
+⏱  112562ms (112.6s)
+📊 Tokens — total: 44595, input: 23517, output: 21078, reasoning: 19649

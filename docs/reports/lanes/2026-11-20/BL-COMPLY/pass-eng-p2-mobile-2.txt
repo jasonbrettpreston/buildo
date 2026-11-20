@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-2.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — §13.5 "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — mobile/src/hooks/useParcelLookup.ts (+new) "export function useParcelEntitlement() {" — the new reports-left line (schema, hook, situation key, persist filter) ships with no feature-flag gate in this diff part, the screen/route file is not pasted so cannot see — add the flag check where the line is drawn, or cite the line in this commit that carries it.
+
+DEFER severity=MED — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — mobile/src/lib/maxbldHelp.ts (+new) "the page opens in the in-app browser sheet through expo-web-browser, the same call as useSubscribeCheckout.ts:61, instead of leaving the app through Linking." — a behaviour change against the cited docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.3/§11b.7, and no spec edit appears in this mobile-only diff part, cannot see — land the §11b.3/§11b.7 wording change in the same commit or show the spec already reads in-app browser sheet.
+
+DEFER severity=LOW — §13.3 "All catch blocks use logError(tag, err, context). NEVER bare `console.error`. ESLint enforces." — mobile/src/lib/maxbldHelp.ts (+new) "console.warn(`[maxbldHelp] could not open Help & Support (topic ${topic})`);" — the new catch logs through bare console, not logError(tag, err, context) — route the catch through the app logger or record in the plan why §13.3 does not reach mobile/src/lib.
+
+DEFER severity=NIT — §14 "Every source/test file's `SPEC LINK` points at the spec AND the section (§N)" — mobile/src/lib/parcelSearchCore.ts (+new) "// ── The reports-left line (SRCH.A6, task-320; operator RR-0307, MORNING-DECISIONS.md:1182)" — the new export block names a task id and a rulings file, no spec path and §N, and the file header is not in this hunk, cannot see — add the spec path and §N to the new block or confirm the header carries it.
+
+REJECT — §12.11 rule 1 "bans `try/catch { return [] / null / emptyResult() }`" — the new catch in maxbldHelp.ts is accused of silent-catch-fallback — openHelp returns Promise<void> and returns no fallback value; the banned pattern is a returned empty result, and this catch logs the topic instead.
+
+MET — §13.1 "Never include user names, emails, addresses in event properties." — mobile/src/lib/maxbldHelp.ts (+new) — the failure log carries the topic only, "never the typed address", so the typed q stays out.
+
+MET — §14 SPEC LINK row "points at the spec AND the section (§N)" — mobile/src/lib/maxbldHelp.ts:1-2 — the header names docs/specs/02-web-admin/126_maxbld_surface_standard.md and §11b.3 plus §11b.7.
+
+MET — §13.2 "All app/[...]/error.tsx route boundaries call `Sentry.captureException(error ...)`" — mobile/src/hooks/useParcelLookup.ts (+new) — the drifted entitlement shape goes through Sentry.captureException before the re-throw, same wiring as the lookup.
+
+MET — §12.13 "The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`)" — no such file in this diff part — the mutation surface and its score gate are untouched.
+
+MET — §12.10 "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression" — no migration in this diff part — no db test is owed.
+
+MET — §12.11 rule 3 "any file with `// never throws` / `// always returns` AND a `throw` statement is flagged" — mobile/src/lib/maxbldHelp.ts (+new) — the file has no throw and neither banned literal, so comment-rot does not fire.
+
+VERDICT: PASS on compliance with the pasted clauses, no CRIT and no HIGH
+Clauses checked: 14   Unmet: 3
+
+---
+⏱  46740ms (46.7s)
+📊 Tokens — total: 24069, input: 15471, output: 8598, reasoning: 7614

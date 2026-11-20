@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-1.patch (model: deepseek-reasoner)
+
+BUG severity=MED — §11 "Unhappy-path test cases listed: 400, 404, 500 (§2.1)" — src/app/api/parcels/lookup/route.ts:140 "A compute error throws to the catch below (500): no page, no meter." — the modified API route ships no route-level test in the diff, so the new 500 path and the held branch are unproven at the envelope level, and the catch block itself is not pasted (cannot see whether it logs via logError and returns no err.message) — add infra cases to the route's *.infra.test.ts: held (page null, meter semi_pending), semi=answered (page sent, counted once), compute throw (500, no page, no meter).
+
+DEFER severity=MED — §5.2 "*.infra.test.ts | API routes, DB queries, external calls | New API route / DB mutation" — src/tests/customer-report-compute.logic.test.ts:6 "No database: the pool is a scripted fake." — the new module issues three SQL statements (report-compute.ts:92-95) yet is proven only by a *.logic.test.ts with a faked pool, which §5.5 reserves for pure functions — add an *.infra.test.ts exercising the three reads against the real query layer, or state in the plan why the scripted pool proves the query shapes.
+
+DEFER severity=MED — §10.3 "API routes must be thin, validate input, call a lib function, return the result. Business logic belongs in src/lib/, not in route handlers" — src/app/api/parcels/lookup/route.ts:146 "const held = lotForm?.unsure === true && semi !== 'answered';" — the hold rule plus the stored-then-computed source selection (route.ts:147-154) is billing-bearing policy written inline in the handler — move the hold and the two-source fallback into src/lib/parcels (e.g. next to pageForVerdict) and have the route call one function.
+
+DEFER severity=MED — no pasted clause or ruling names SRCH.METER-2 or LOAD.1 — src/app/api/parcels/lookup/route.ts:143 "SRCH.METER-2 (task-360, RR-0278): an unsure lot's page is HELD until the semi answer" — the new `semi` query param, the withheld page and the re-ordered meter condition are authorised only by task-360, RR-0278 and task-266, none of them pasted, so no pasted clause covers the added behaviour — paste RR-0278 and the Spec 100 §3.2 dated note with this change, or drop the behaviour.
+
+DEFER severity=LOW — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`" — src/tests/customer-report-compute.logic.test.ts:70 "const parcelRow = (row: Json): Json => ({" — the new test fabricates parcels rows and the C9 lot object inline and imports nothing from src/tests/factories.ts — add the parcels/lot shapes to factories.ts (or reuse an existing typed factory) and build the fixtures from it.
+
+DEFER severity=LOW — §4.2 "String concatenation for dynamic queries ... is forbidden unless rigorously validated against a static whitelist" — src/lib/parcels/report-compute.ts:89 "const plan = buildSourceSql(descriptor, { ...config, [POPULATION_SETTING]: [String(lot.id)] }, {});" — the lot id reaches the batch SQL text (test asserts "unnest((ARRAY[${LOT_ID}]::int[]))") with no guard before interpolation; validation is only the ::int[] cast and the post-hoc check at report-compute.ts:96 — add `if (!Number.isSafeInteger(lot.id)) return null;` before buildSourceSql.
+
+DEFER severity=LOW — §11 "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item" — src/tests/customer-report-compute.logic.test.ts:5 "Red first (Spec 08 08_agents.md:490, RR-0225)" — the pasted material carries an enumerated C1 to C9 list, not a PASS/FAIL walk against the governing spec, and the governing clauses (§3.2, §11a.7, M-384) are not pasted so the walk cannot be verified — attach the PASS/FAIL walk per clause before merge.
+
+REJECT — §3.3 "Unbounded `SELECT *` without `LIMIT` is strictly forbidden" — the two lookup reads at src/lib/parcels/report-compute.ts:35 "const UNITS_SQL = 'SELECT unit_key, unit_id FROM bylaw_resolution_units';" are explicit-column reads from the bounded bylaw lookup tables, not `SELECT *`, and the clause names permits and coa_applications only.
+
+MET — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — src/lib/parcels/report-compute.ts:3 "Standard 10.2: this file imports scripts/ code, it modifies none" — no file under scripts/, migrations/ or scripts/lib/ appears in the diff; the core is imported unchanged.
+
+MET — §4.3 "Never `SELECT *` — always project specific columns" — src/lib/parcels/report-compute.ts:35-36 explicit column lists; no wildcard select is added by the diff.
+
+MET — §8.1 "route.ts files may ONLY export HTTP handler functions" — src/app/api/parcels/lookup/route.ts:56 "import { computeCustomerPageResponse } from '@/lib/parcels/report-compute';" — the route adds no export, only an import and handler-body lines.
+
+MET — §6.1 "All server-side error logging MUST use `logError()` ... never bare `console.error()`" — src/lib/parcels/report-compute.ts contains no console call and adds none; the route keeps its existing logWarn/logError paths.
+
+MET — §10.2 "If a `src/lib/` module is imported by both API routes and frontend components, any modification requires `npx vitest related`" — src/tests/customer-report-compute.logic.test.ts:255 "expect(importers).toEqual(['src/app/api/parcels/lookup/route.ts']);" — the new lib module is route-only, so the shared-module path does not apply.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 5
+
+---
+⏱  92343ms (92.3s)
+📊 Tokens — total: 48313, input: 30256, output: 18057, reasoning: 16566

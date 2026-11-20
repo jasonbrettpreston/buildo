@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-surface-2.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — domain-admin.md Rule 6 "Do not change the response shape without a contract note." — scripts/surfaces/parcel_product/F02/contracts/contract_parcels_entitlement.descriptor.json docs.under_126 "its response is an explicit `.strict()` whitelist of six fields" vs the same diff adding `"resetsOnDisplay"` to evidence.fields — the served response gains a seventh field while the descriptor's own contract statement still says six, and the data_story note names only the new caller, never the new field or its Toronto-time formatting — fix: raise under_126 to seven fields (or "six plus resetsOnDisplay") and add a dated note in data_story naming resetsOnDisplay, RR-0310 and task-351.
+
+BUG severity=HIGH — pasted context names no ruling for the footer work, the only authority being a code comment — src/components/surfaces/web/footerNode.ts:7 "MF-91 (SRCH.FOOTER, task-332; operator, verbatim, 2026-11-19: "1. once  -approved" (MORNING-DECISIONS.md:1061) and "this is a shared component" (MORNING-DECISIONS.md:1066))" — none of the pasted spec clauses or operator rulings mentions MF-91, SRCH.FOOTER or RR-0270, so the new shared module, the search-page footer, the `footer` prop forced onto ReportPage and the static-page footer gaining `line`/`copyright` parts are behaviour no pasted clause names — fix: paste MORNING-DECISIONS.md:1061/1066 and RR-0270 into the governing context, or split the footer out of this change.
+
+DEFER severity=MED — no pasted ruling names the reports-left line — src/components/surfaces/web/SearchBinding.tsx "SRCH.A6 (task-320; RR-0307; v8 search.html:320): the mobile line, the same refs" — the line, the added `/api/parcels/entitlement` contract_ref and the new `hit`/`reports_left` golden all rest on RR-0307 and task-320, neither pasted here — rationale: bounded to one conditional Text node and one contract ref, but the authority for it is not in the context I may judge against.
+
+DEFER severity=MED — pasted operator ruling "approved except for 9 - the report should still show with the google street view photo if its not available - just the photo space should not show" (Spec 98 §4 dated note) — scripts/surfaces/parcel_product/F06/surfaces/web_landing.sample.json:1996 "\"scripts/surfaces/_schema/report-presentation.json\": \"e151b5ccd11cd137\"" — the presentation schema the sample was re-hashed against is not in the diff, so whether the photo-space behaviour this ruling governs survived it cannot be seen — rationale: the hash bump proves the schema changed; the change itself is invisible in the reviewed material.
+
+DEFER severity=MED — StaticBinding now hard-requires footer text the pasted sample diff does not supply — src/components/surfaces/web/StaticBinding.tsx "return <ReportPage key={k} view={reportOf(p.view, 'sample', ctx.report)} footer={footerOf2(ctx.report)} />" with "report.footer ?? fail('no footer text (the server leaves this part out)')" — every landing sample now throws without a `footer` value, and the only landing-sample line pasted changes the schema hash — rationale: the sample's runtime content is not in the diff and no pasted clause names this requirement.
+
+DEFER severity=LOW — an operator-adjudicated deviation record is extended without a new adjudication — scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_search.descriptor.json deviation why "The reset date of the reports-left line (SRCH.A6) is not a derived name ... and it binds as a contract value." while "adjudicated_by": "operator 2026-11-09 ... \"approved except for 9 ...\"" and "date": "2026-11-10" stay unchanged — rationale: the record now carries a claim the 2026-11-09 wording does not contain; a later dated entry would keep the record auditable.
+
+DEFER severity=LOW — Spec 90 §10 "Unit Testing (Jest): Jest + React Native Testing Library for logic hooks. Minimum 80% coverage threshold." — the diff adds new mobile/web logic `reportsLeftShown`, `pickFooterText`, `footerNode` and no test file appears in the diff — rationale: the new golden `{ "name": "hit", "golden": "reports_left" }` implies a harness I cannot see, so coverage of the new functions is unverifiable from the pasted material.
+
+MET — Spec 90 §3 "MUST NOT perform complex data mutation, geographic PostGIS math, or algorithmic sorting" — mobile_parcel_search.descriptor.json "the server serves it already written in Toronto time as resetsOnDisplay (RR-0310, task-351) and it binds as a contract value" — the reset date is served, not date-mathed on the client.
+
+MET — domain-admin.md Rule 6 "Do not change the response shape without a contract note." — contract_parcels_lookup.descriptor.json "Dated 2026-11-19 (LOAD.1, task-266, M-246): ... it writes nothing (the record write is ST.P1), adds no response key" — the reads change carries a dated note and explicitly adds no key.
+
+MET — Spec 90 §5 "NO Web Libraries: Never import `shadcn/ui`, `@tremor/react`, `framer-motion`, or `lucide-react`." — SearchBinding.tsx "import { footerNode, type FooterLayout, type FooterSection } from './footerNode';" — no banned library is imported by the new module or the two bindings.
+
+REJECT — Spec 90 §5 "NO HTML/DOM: Never use `<div>`, `<span>`, `<a>`, `<p>`, or `<button>`." — accused: `<Button ... component={Link} href={p.href}>` emits an anchor — not a real issue: Spec 90 §2 dated note 2026-11-09 places these surfaces under Next.js RSC and the file already renders routes this way for `open_help`.
+
+REJECT — domain-admin.md "The only Next.js frontend is the admin panel — an internal desktop-first tool." — accused: the diff builds a public Next.js search page — not a real issue: the pasted Spec 90 §2 dated note 2026-11-09 states "descriptor-governed web surfaces render as Next.js RSC (Spec 126 §5.3; Spec 128 R-22)".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+
+---
+⏱  57304ms (57.3s)
+📊 Tokens — total: 38487, input: 28041, output: 10446, reasoning: 8909

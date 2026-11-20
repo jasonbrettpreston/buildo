@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-2.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — SRCH.A6 / RR-0307, cited by the change, is not in the pasted context, so the new reports-left behaviour has no pasted clause to satisfy — "SRCH.A6 (task-320; RR-0307): the caller's plan and this month's report count" — mobile/src/hooks/useParcelLookup.ts:112-118 "export async function fetchParcelEntitlement(): Promise<ParcelToolEntitlement> {" — a new endpoint read, Zod boundary, cache key and non-persistence land with no pasted clause or ruling naming any of them (walk step 4) — paste SRCH.A6 and RR-0307 before merge so the display, the null-when-no-plan rule and the "display, never a gate" claim can be checked clause by clause
+
+DEFER severity=MED — SRCH.A6 "re-read on focus" is satisfied only by the docstring, not visibly by the hook — mobile/src/hooks/useParcelLookup.ts:113 "re-read on focus." — mobile/src/hooks/useParcelLookup.ts:126-131 "staleTime: 0, retry: shouldRetryParcelLookup," — the hook sets staleTime and retry but no focus/AppState refetch option appears in the pasted code, so the clause rests on a comment (walk step 3) — add the explicit focus refetch (refetchOnWindowFocus or a focusManager subscription) or drop the claim
+
+DEFER severity=MED — SRCH.SEMI-3 "a timeframe; operator item in the lane report" is not pasted, so the waited duration has no pasted ruling behind it — "how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report)" — mobile/src/lib/semiQuestion.ts:16 "export const SEMI_CONTINUE_WAIT_MS = 60_000;" — the 60_000 value is asserted only by the code comment citing an unpasted operator item — paste the lane-report operator item that names the wait, or mark the value as provisional
+
+DEFER severity=MED — task-362 / small-pages-v8 search.html:235, the clause for the Help sheet, is not pasted; the only pasted browser clause binds the subscribe URL, not Help — mobile/src/lib/maxbldHelp.ts:6-7 "the page opens in the in-app browser sheet through expo-web-browser, the same call as useSubscribeCheckout.ts:61" — mobile/src/lib/maxbldHelp.ts:22 "await WebBrowser.openBrowserAsync(helpUrl(topic, q));" — the switch from Linking.openURL to the in-app sheet rests on a clause not in the pasted context — paste §11b.3/§11b.7 and the small-pages line so the sheet, the Done behaviour and the fragment-only prefill can be checked
+
+DEFER severity=LOW — the semi override's deferral (OVERRIDE_PARAM not read, effect owned by task-209) is asserted by a comment only, and the governing P5.7 / task-209 text is not pasted — "it travels as a route param (OVERRIDE_PARAM) to the report, which does not apply it yet: nothing outside this file reads the param or calls `lotFormEffective`" — mobile/src/lib/lotForm.ts:8-9 "nothing outside this file reads the param or calls `lotFormEffective`" — a clause-shaped statement stands on a comment with no pasted clause behind it — paste the P5.7 text or the task-209 card so the "not applied yet" state is a ruled deferral rather than a comment
+
+MET — Spec 96 §5, external web page opened with the in-app browser — mobile/src/lib/maxbldHelp.ts:22 — uses WebBrowser.openBrowserAsync, the call the pasted clause prescribes, and not openAuthSessionAsync
+
+MET — Spec 96 §9, Webhook Delay Refresh, "The timeout must be cleared" — mobile/src/lib/semiQuestion.ts:25-27 "clearTimeout(timer); resolve(v)," / "clearTimeout(timer); reject(e);" — the timer is cleared on either settle, matching the pasted cleanup requirement
+
+REJECT — Spec 96 dated note 2026-11-11, status set — the change is accused of accepting statuses outside {trial, active, past_due, admin_managed} in "status: z.string().nullable()," — that note governs the server lookup gate, not a client display schema, and the diff states the contract is additive_only for an installed app, so no pasted clause binds the client enum
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+
+---
+⏱  42060ms (42.1s)
+📊 Tokens — total: 24793, input: 17397, output: 7396, reasoning: 6354

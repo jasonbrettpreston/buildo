@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-surface-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — no pasted operator ruling names the new copy (walk item 4, "A change that adds behaviour no pasted clause or ruling names is a finding") — mobile/src/generated/surfaces/mobile_parcel_search.json:9 "\"footer.copyright\": \"© MaxBLD\"," and mobile_parcel_disambiguation_map.content.json "\"help.address.link\": \"Get help with an address\"" — four footer keys, two help keys, select.hint and the placeholder rewrite "Enter lot address" -> "Enter a Toronto address" are added with no pasted spec clause and no pasted operator ruling naming them; the only support in the change is its own $comment quote "All recommendations accepted ... Ensure the least amount of code and use schema's", which names no footer or help copy and no placeholder — cite the ruling id (RR/decision) for each key or drop the keys.
+
+BUG severity=HIGH — bindings touch_targets authority, the change's own stated basis — scripts/surfaces/_schema/bindings.json:73 "\"Button\": [\"min-h-[44px]\", \"min-h-[48px]\"]" against its own note "(not an operator ruling)" and "The check C-9m still requires exactly one min-h- token on the list" — a closed list is extended on a self-declared orchestrator decision, nothing pasted authorises min-h-[48px], and the same $comment now asserts "exactly one min-h- token on the list" while the list carries two, so C-9m cannot pass as described — either get the operator ruling pasted for the 48 px value or keep touch_targets.mobile.Button at ["min-h-[44px]"] and reword the C-9m sentence to say one token per usage.
+
+BUG severity=MED — §13.5 Feature Flags "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — mobile/src/generated/surfaces/mobile_parcel_search.json:31 "\"search.reports_left\": \"{left} of {allowance} reports left until {reset}\"" plus the four footer navigation keys — a new user-facing line and new navigation are added to the search surface with no flag anywhere in the diff file list — add the route-level flag check (or paste the clause exempting copy-only additions) before merge.
+
+BUG severity=MED — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — scripts/surfaces/_schema/bindings.json:1 "task-353 SUITE.FIX-2 ... Spec 126 line 351, Spec 128 line 265 ... MORNING-DECISIONS.md:1199 ... MORNING-DECISIONS.md:1227" and seed-report-v2.mjs:600 "Spec 126 11a.3 dated note 2026-11-12 (R-2 literal)" — every cited spec and runbook line is absent from the diff file list, so the same-commit update rule is unmet in the change as presented (cannot see whether those files already carry the notes) — add the Spec 126/Spec 128/decision-file edits to this commit or cite the commit that landed them.
+
+BUG severity=MED — contracts descriptor self-description, "its response is an explicit `.strict()` whitelist of six fields" — scripts/surfaces/_schema/census/contracts.json:22971 "+        \"resetsOnDisplay\"" while the same descriptor's under_126 still reads "whitelist of six fields" — the whitelist gains one entry and the declared count is unchanged, so the descriptor now contradicts its own shape — update the count to seven (and the a11y/consumers text that repeats it) in the same edit.
+
+DEFER severity=LOW — §14 "Every source/test file's SPEC LINK points at the spec AND the section (§N); new couplings update Cross-Spec Dependencies both directions" — scripts/surfaces/_schema/report-presentation.json:26 "+    \"not_evaluated:not_in_engine_population\": \"Not yet evaluated\"," — the twin line in seed-report-v2.mjs carries "Spec 126 11a.3 dated note 2026-11-12 (R-2 literal)" and this schema file carries no section citation, and the literal cannot be checked because Spec 126 11a.3 is not pasted — add the same section citation beside the key, or confirm the schema file is generated and must not carry one.
+
+MET — §12.10 "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts` file" — diff file list — no migration added, so no db test is owed by this change.
+
+MET — §12.13 "The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`) and their `.test.ts` siblings are the mutation surface" — diff file list — none of the four targets or their tests is touched.
+
+MET — §13.1 "Never include user names, emails, addresses in event properties." — no captureEvent call or event property object is added anywhere in the diff — no PII is introduced into telemetry.
+
+MET — §14 "Every source/test file's SPEC LINK points at the spec AND the section (§N)" — scripts/surfaces/_schema/seed-report-v2.mjs:600 "// MB-94 (c), Spec 126 11a.3 dated note 2026-11-12 (R-2 literal)" — the one new source comment names both the spec and the section.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 6
+
+---
+⏱  49370ms (49.4s)
+📊 Tokens — total: 35756, input: 26838, output: 8918, reasoning: 7678

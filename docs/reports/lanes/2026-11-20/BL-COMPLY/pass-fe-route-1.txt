@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.36 "a control that moves the user uses the platform router (web <Link>, redirect(), router.push/replace after an action;" — src/components/report/ReportPage.tsx "case 'Button': return <a key={key} href={String(p.href)} className={cls}>{kids}</a>;" — the new footer links (/terms, /privacy, /help) navigate with a plain anchor, not the platform router — render them with next/link Link on web (mobile keeps its own router control)
+BUG severity=HIGH — fe.02 "P1 Declared, not coded: a screen is a descriptor; the only code is the shared archetype components." — src/components/report/ReportPage.tsx "const section: FooterSection = { id: s.id, parts: [" — the footer's parts, its three link contents and their hrefs are coded in the component, not declared in the page table — move the footer parts and hrefs into the declared page table and have ReportFooter read only s
+DEFER severity=MED — fe.07 "P6 Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output." — src/components/report/ReportPage.tsx "The mobile binding keeps its own footer (mobile/src/components/surfaces/ReportBinding.tsx): its G4 part is unchanged." — web gains three links plus caller-supplied copyright while mobile keeps its own footer; parity of the new footer parts across targets cannot see — prove or add the same footer parts on mobile and pdf, or state which target is exempt
+DEFER severity=MED — fe.27 "A column that is not in the migrations, or a path not on the whitelist, fails." — src/lib/admin/report-preview-live/stored-page.ts "-for (const c of PARCEL_COLUMNS) if (!PARCEL_SELECTED.includes(c)) throw new Error(`MB-93: page field source parcels:${c} is not in the static parcels read`);" — the load-time parcels column check is deleted here and the replacement inside readStoredPage cannot see — confirm lib/report-projection/read-stored keeps the same failing check, else restore it
+DEFER severity=MED — fe.32 "a displayed value may bind to a field of a declared CONTRACT descriptor's response projection; the member must exist in that descriptor; any other value fails." — src/app/api/parcels/entitlement/types.ts "resetsOnDisplay: z.string().nullable(), // the same instant as the Toronto date, "9 Dec 2026" (RR-0310); the page prints it" — a new displayed contract member is added on the wire and its presence in the declared contract descriptor cannot see — add resetsOnDisplay to the entitlement contract descriptor in the same change
+MET — fe.05 — src/lib/entitlements/index.ts "resetsOnDisplay: resetLabel(u.resetsOn)," — the Toronto date label is computed server side, no date derivation in the page
+MET — fe.24 — src/components/report/ReportPage.tsx "default: throw new Error(`ReportPage footer: unmapped component "${n.component}"`);" — the footer renderer throws on an unknown component and on an unknown text key
+REJECT — fe.04 — the one-lot compute adding seconds to the lookup path is alleged to breach the REPORT budget — fe.04 is OWED, its lock is owed and the clause states "Numbers are measured first, then ruled (Q-MF5)", so no pasted number binds this change
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 3
+
+---
+⏱  35529ms (35.5s)
+📊 Tokens — total: 32469, input: 26020, output: 6449, reasoning: 5654

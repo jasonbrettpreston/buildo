@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-2.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — diff LOAD.1 declaration (no pasted spec clause governs fixture parity) "moved here unchanged from runtime-loader.logic.test.ts so the customer compute test builds the same batch rows" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:124 "const expected = readJsonl(`${G25}/expected.jsonl`);" — the new body is not unchanged: the removed block (runtime-loader.logic.test.ts:48-93) opens with "const MZ = req(...)" and uses a module-scope "expected", so this read is an addition and the "same batch rows" premise is unverified (the old module-level declaration cannot see from this diff) — say where the test got `expected` and reuse that exact declaration, or drop the added line and export the test's existing one.
+
+MET — §A27 item 13 "A test that needs Postgres is `*.db.test.ts` ... under `src/tests/db/`, or beside its step under `src/tests/steps/<slug>/`" — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:17 "import { goldenBatch } from './golden25-harness';" — the test stays a `.logic.test.ts` beside its step under `src/tests/steps/compute_maxbld_scenarios/` and the helper is not a `*.test.ts`, so it never reaches `npm run test:db`.
+
+MET — Proof of no runtime change "`git diff --stat <main> -- scripts/lib scripts/*.js scripts/quality/*.js scripts/steps/_schema/step.schema.json` is empty; `computeLibFingerprint()` is equal before and after" — diff file list "src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts, src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts" — only test files move, so no script under `scripts/lib` or `scripts/*.js` is touched and the fingerprint is unchanged by construction.
+
+MET — §A27 item 8 "The harness overwrites only tracked goldens" — goldenBatch reads "readJsonl(`${G25}/expected.jsonl`)" and "`${G25}/parcels-rows.json`" only — every golden access in the moved helper is a read, no `--overwrite` path exists here.
+
+REJECT — Ledger key grammar / Collision lock (C2) / Expiry tripwire (C3) — accused of minting or re-using a ledger key — the change contains no SQL literal and no ledger row, so there is no key to collide or expire.
+
+REJECT — Witness attribution (A3) "an empty `runnerFingerprints`, or a trace statement with no fingerprint, is RED" — accused of an unattributed runner template — the diff adds no step, no runner closure member and no trace statement, only a TypeScript test helper.
+
+REJECT — §A27 items 1, 2, 3, 4, 6, 7, 11, 12 — accused of a step conversion or capture defect (pending status, RLS, bind limit, invalidators, explained-diffs, descriptor staleness, invariants replay) — the diff performs no conversion and no golden capture, so none of these traps have a subject to violate.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+
+---
+⏱  45944ms (45.9s)
+📊 Tokens — total: 16939, input: 8128, output: 8811, reasoning: 8054

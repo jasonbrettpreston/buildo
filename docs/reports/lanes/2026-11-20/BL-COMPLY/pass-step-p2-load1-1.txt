@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-1.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — x-rulings.1 "the same commit adds the both-directions test and amends the spec" — src/app/api/parcels/lookup/route.ts "+    else if (access === 'parcel_tool' && body.parcel && parcelRef !== null && body.lotForm?.unsure === true && semi !== 'answered') meter = 'semi_pending';" — this diff part changes the page and the meter for every unsure lot (hold until semi=answered) but adds no test for either direction; the new test file covers only computeCustomerPageResponse C1 to C9 — add a route-level logic test for held (page null, semi_pending) and lifted (page produced, counted once), or cite the part that carries it.
+
+DEFER severity=MED — x-rulings.4 "`--check` at pre-commit fails on an uncovered decision or a citation of an unknown one" — src/lib/parcels/report-compute.ts "+// LOAD.1 (task-266, Increment 1·B; operator "2. y", MORNING-DECISIONS.md:1061, RR-0271, and "task 341 approved", :1160)" — the diff cites RR-0271 and RR-0278 (route.ts "SRCH.METER-2 (task-360, 2026-11-19)") but ships no decision log or register row and I cannot see either id resolve — cite the existing register rows in the header, or add the decisions log in the same commit.
+
+DEFER severity=MED — SRCH.SEMI stage 2 (task-319, MF-93) "the semi page's Continue fetches again with `semi=answered`, which lifts that hold" — src/app/api/parcels/lookup/route.ts "+    semi: sp.get('semi') ?? undefined," — ConsumerParcelLookupQuerySchema is not in this diff; a zod object strips keys it does not declare, so if `semi` is absent the flag is dropped before `const { q, parcelId, semi } = parsed.data;` and the hold can never lift, cannot see the schema — declare `semi` in that schema here and lock it with the test above.
+
+DEFER severity=LOW — x-verify.1 "The report lives at `docs/reports/verification/<branch>.md` and every integrate commit cites it" — src/lib/parcels/report-compute.ts "+// Integrated with the board head (2026-11-19, merge ba7953933): the related run of the merge commit re-proves C1 to C9 on that head." — the re-proving run is self-reported and no verification report path is cited, cannot see one — cite the verification report before any integrate commit cites this file.
+
+MET — x-tooling.1 "Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`" — src/tests/customer-report-compute.logic.test.ts "+ // 08_agents.md:490, RR-0225), written from docs/reports/lanes/2026-11-19/BL-LOAD1/PLAN.md section 4 (C1 to C9). No database: the pool is a scripted fake." — the new suite is `.logic.test.ts` and stubs the pool, so it needs no Postgres.
+
+MET — x-rulings.2 "add a both-directions test and re-run the golden capture" — src/tests/customer-report-compute.logic.test.ts "+  it('the fence is not vacuous: planted imports are caught', () => {" — the import fence is asserted both ways (allow-list accepted, planted barred imports rejected).
+
+MET — x-rulings.2 "add a both-directions test" — src/tests/customer-report-compute.logic.test.ts "+    expect(computed).toEqual(w);" — the compute and the stored read are asserted equal on the same rows, and C3 asserts the miss side.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 3
+
+---
+⏱  84321ms (84.3s)
+📊 Tokens — total: 43686, input: 28049, output: 15637, reasoning: 14741

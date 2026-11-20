@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-tests-1.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — no pasted clause names the new placeholder copy (RR-0313 is cited in the diff, not pasted) — "// Dated note 2026-11-19 (RR-0313, MORNING-DECISIONS.md:1216, operator verbatim: c. can't we put in the search box. Enter a Toronto address; task-356)" — mobile/__tests__/parcelScreens.golden.test.ts:243 "expect(SEARCH_SLICE.content['search.input.placeholder']).toBe('Enter a Toronto address');" — the user-visible string rests on an unpasted ruling so its verbatim wording cannot be checked — paste RR-0313 or confirm the exact string before merge.
+DEFER severity=MED — pasted context contains no clause authorising these behaviours — "// task-362 SRCH.LOTMAP-2 (AC1, AC5; small-pages-v8 search.html:235 in-app browser sheet (B10)...)" — mobile/__tests__/maxbldHelp.test.ts:6 "// task-362 SRCH.LOTMAP-2 (AC1, AC5; small-pages-v8 search.html:235 ..." — the diff pins in-app-browser help, the pick hint, busy Continue, the semi cache write and the held report screen whose cards/rulings (task-362, SRCH.SEMI-3, SRCH.METER-2, RR-0278) are cited but not pasted, so compliance cannot be confirmed — paste those cards/rulings or confirm they are in force.
+DEFER severity=LOW — Spec 90 §4 "You must strictly adhere to the following stack" (expo-web-browser is not in the pasted list) plus domain-admin "No new dependency without a Spec 33 amendment naming it" — mobile/__tests__/maxbldHelp.test.ts:9 "import * as WebBrowser from 'expo-web-browser';" — cannot see mobile/package.json to tell whether expo-web-browser is an existing dependency or a new one needing an amendment — confirm it is already declared before merge.
+MET — Spec 90 §9 "Touch targets for all interactive elements MUST be a minimum of 44px by 44px" — mobile/__tests__/semiQuestionScreens.golden.test.ts:60 "c === 'min-h-[44px]' || c === 'min-h-[48px]'" — both accepted sizes are at or above the 44 px minimum, so the relaxation does not breach the floor.
+MET — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema" — mobile/__tests__/useParcelLookup.test.ts:110 "await fetchParcelLookup({ parcelId: 'PIN-777', semi: 'answered' });" — the added case still flows through fetchParcelLookup, whose Zod parse the untouched boundary tests cover.
+MET — Spec 98 §4.1 "drift → ParcelLookupSchemaError; ... shouldRetryParcelLookup skips 400/403/429/drift" — mobile/__tests__/useParcelLookup.test.ts — the named useParcelLookup boundaries are retained, the additions are pure appends.
+MET — domain-admin rule 1 "every async call must be awaited or chained with .catch()" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "await act(async () => { done(data(form(true))); });" — new async test paths await by act/waitFor, no bare promise left unhandled.
+MET — Spec 98 §4 "UI component snapshot testing is deliberately excluded" — mobile/__tests__/lotMapScreens.golden.test.ts:151 "expect(keys.slice(-3)).toEqual(['continue', 'pick-hint', 'help-row']);" — additions are explicit named-case equality assertions, not toMatchSnapshot.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  85101ms (85.1s)
+📊 Tokens — total: 48735, input: 32195, output: 16540, reasoning: 15662

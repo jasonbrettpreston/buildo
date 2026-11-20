@@ -4,14 +4,17 @@ title: >-
   COMPLY.1 Handbook compliance pass on the unpushed 1·B change: clause packs for
   Spec 122, McFrontend, McStorage, McIncrement and McLanes, one DeepSeek
   compliance run per handbook, findings for a separate grounder
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-COMPLY'
 created_date: '2026-11-20T12:38:00Z'
-updated_date: '2026-11-20T12:39:00Z'
+updated_date: '2026-11-20T13:08:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-COMPLY/REPORT.md
+  - docs/reports/lanes/2026-11-20/BL-COMPLY/FINDINGS.md
 type: build
 ordinal: 65012
 ---
@@ -24,10 +27,10 @@ Operator 2026-11-20 (verbatim): 'Definitely, essential we have a non compliance 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Each pack quotes only verbatim clauses, each with file:line that resolves
-- [ ] #2 One compliance lens output per handbook committed in the lane report dir
-- [ ] #3 FINDINGS.md lists every finding untriaged with the clause and the diff line
-- [ ] #4 No file under src, mobile or scripts changed
+- [x] #1 Each pack quotes only verbatim clauses, each with file:line that resolves
+- [x] #2 One compliance lens output per handbook committed in the lane report dir
+- [x] #3 FINDINGS.md lists every finding untriaged with the clause and the diff line
+- [x] #4 No file under src, mobile or scripts changed
 <!-- AC:END -->
 
 ## Definition of Done
@@ -44,8 +47,20 @@ Operator 2026-11-20 (verbatim): 'Definitely, essential we have a non compliance 
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Locate handbooks; write five packs of verbatim clauses with file:line and mechanical check (AC1). 2. Cut the diff into parts (route+compute, mobile, surface content+schema, scripts) excluding generated/golden/fixtures; run compliance lens per pack and part, outputs into the lane report dir (AC2). 3. FINDINGS.md lists every finding untriaged with clause and diff line (AC3). 4. Confirm no file under src, mobile, scripts changed; README section; one docs commit (AC4).
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-COMPLY, worktree /Users/brettpreston_macmini/Buildo-wt-comply, branch wf1/inc1b-comply), RR-0240
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Packs (24 files, whole handbook rule lists with source/generator/count headers) in .claude/review-templates/packs; 104 compliance lens runs (pass files) and FINDINGS.md (491 untriaged findings, coverage table, Airtight scope question) in docs/reports/lanes/2026-11-20/BL-COMPLY; README section added; no file under src, mobile or scripts changed. Commit sha in commit.out and the lane report. Hooks: see commit.out.
+<!-- SECTION:FINAL_SUMMARY:END -->

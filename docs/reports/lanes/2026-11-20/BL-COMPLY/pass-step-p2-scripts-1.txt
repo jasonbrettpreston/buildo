@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-scripts-1.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — x-rulings.2 "resolve at the first fitting rung (descriptor, declared check, logic variable, library change, shape rule, new schema field)" — scripts/analysis/src-sql-ledger.mjs:111 "'src/lib/parcels/report-compute.ts', // LOAD.1 (task-266, dated note 2026-11-19): the batch statement text is built by the Layer 3 step's own core" — a set the file itself describes as one that "may not grow (`grew:`)" grows by one entry, so the `grew:` signal is resolved by amending the baseline rather than at a named rung, and the diff carries no both-directions test for the new interpolation nor a re-run capture, while the header still prints 72 SQL-bearing files against 41 static + 30 interpolated + 2 not_postgres = 73 — state the rung that fits and why, add the both-directions test for report-compute's batch statement, and correct the header total to 73.
+
+DEFER severity=MED — x-rulings.4 "each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`" — scripts/analysis/backlog-lane.mjs:136 "// task-358 (REVIEW.LENSES): the review line names the Spec 08 lens set (08_agents.md:334 \"NEVER run one generic pass\"; section 7 rules 4, 7), chosen by task type and the Files line." — the lens-selection policy (task type, the Files regexes, the security keyword list) is a decision implemented in code, and the diff commits no decisions log entry or register-row citation for it, so if any part of this selection is an operator ruling it has been transferred by hand — either commit the ruling verbatim under docs/reports/decisions and cite `<log stem>#<decision id>` in the comment, or mark the whole selection as Spec 08 text with a resolvable line.
+
+DEFER severity=LOW — x-rulings.1 "Cited ids must resolve." — scripts/analysis/proof-slice.mjs:42 "for (const k of Object.keys(r ?? {})) if (!KEYS.includes(k)) problems.push(`${at}: unknown key ${k}`);" — checkSpec validates shape and key names only, it never resolves the ids the data file cites (scripts/analysis/proof-slices.json:12 "Design fit (RS-12): every stored value maps to a designed element (RR-0306: printed as not built)", plus S-gen, S-golden, S-parity, CHK.3, CHK.5, task-*), so "cited ids must resolve" is unenforced by the only validator this data passes through — add a resolution step for the cited ids (register row, spec line or board task) to checkSpec or to the slice run and fail closed on an unresolvable id.
+
+MET — x-tooling.1 "Pre-commit is file-only, staged-scoped and inside a pinned time budget (#52)" — scripts/analysis/proof-slice.mjs:12 — "Caller: the PROOF.S lane (task-268) runs it as its acceptance command; no hook, station step or CI job calls it", so no pre-commit or pre-push budget is changed by the new runner.
+
+MET — x-tooling.1 "Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`" — scripts/analysis/proof-slices.json:11 — every suite_files entry is a .logic.test.ts, so the runner never pulls a DB test into its pass-file read.
+
+MET — x-tooling.3 "a programme-gate precondition is locked both directions, never a printed count" — scripts/analysis/proof-slice.mjs:11 — "exit 0 every row PASS · 1 any FAIL · 2 usage, bad data file or an --out that cannot be created · 3 no FAIL but a row is NOT BUILT or GAP", and the code computes that exit, so the slice verdict is a machine lock and not the printed tally.
+
+REJECT — x-tooling.1 — the new proof-slice runner is accused of running the full suite inside the hook budget — "RE: never runs the suite" (scripts/analysis/proof-slice.mjs:12) and the suite row only reads a station pass file, while no hook calls the script.
+
+REJECT — x-tooling.3 — the proof-slice table is accused of replacing a locked gate precondition with a printed count — the lock is the process exit code 0/1/2/3, the counts line is display only.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  84455ms (84.5s)
+📊 Tokens — total: 37973, input: 21759, output: 16214, reasoning: 15146

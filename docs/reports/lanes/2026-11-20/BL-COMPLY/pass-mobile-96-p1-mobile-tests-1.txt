@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-tests-1.patch (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 96 §5 "The app opens this URL via `WebBrowser.openBrowserAsync()` from `expo-web-browser`" — mobile/__tests__/maxbldHelp.test.ts:31 "expect(open).toHaveBeenCalledWith('https://maxbld.ca/help#topic=address_match&q=1%20Main%20St')" — the diff's only browser-mechanism assertion is on the maxbld.ca help URL, a surface no pasted clause names, while the pasted clause scopes openBrowserAsync to the buildo.com checkout URL; AC1/AC5 (task-362, small-pages-v8 search.html:235) are not pasted, cannot verify the sheet is the ruled exit — cite the governing card for the help link in the change record, or state plainly that no pasted clause binds it.
+
+DEFER severity=LOW — Spec 96 §5 "no UID or email in the URL (avoids PII exposure in server logs, browser history, and referrer headers)" — mobile/__tests__/maxbldHelp.test.ts:31 "https://maxbld.ca/help#topic=address_match&q=1%20Main%20St" — the typed street address is placed into a URL the OS in-app browser records, and the pasted clause's stated rationale is exactly PII in browser history, though its scope is the subscribe nonce URL — record why the fragment is acceptable for the help URL (it is not sent to the server) in the change note rather than leaving the two URL rules unexplained.
+
+DEFER severity=LOW — no pasted clause fixes the mobile touch minimum; the only pasted design text that binds sizes is Spec 96 §5's NativeWind table — mobile/__tests__/semiQuestionScreens.golden.test.ts:60 "some((c) => c === 'min-h-[44px]' || c === 'min-h-[48px]')" — the golden rule is widened from exactly min-h-[44px] to also accept min-h-[48px] on the grounds of "the mock" (SRCH.SEMI stage 2), and that mock rule is not pasted, cannot verify — quote the 48 px mock line (semi-question.html) in the comment, as the sibling cases do for their cited lines.
+
+DEFER severity=LOW — no pasted clause names search placeholder copy; the pasted behaviour is limited to the paywall and subscription surfaces — mobile/__tests__/parcelScreens.golden.test.ts:246 "expect(SEARCH_SLICE.content['search.input.placeholder']).toBe('Enter a Toronto address');" — the wording change rests on RR-0313 (2026-11-19), which is not pasted, and the test also replaces the previous 2026-11-11 ruling's asserted string — quote the RR-0313 verbatim line in the change record so the newer ruling is verifiable against the string asserted.
+
+DEFER severity=LOW — Spec 96 dated note 2026-11-11 "`GET /api/parcels/lookup` admits a `parcel_tool` entitlement in {trial, active, past_due, admin_managed} ... else 403 `SUBSCRIPTION_REQUIRED`" — mobile/__tests__/useParcelLookup.test.ts:109 "expect(mockFetch).toHaveBeenLastCalledWith('/api/parcels/lookup?parcelId=PIN-777&semi=answered')" — a new `semi` query param is added to the gated endpoint and no pasted clause names it, the pasted clause governs only the entitlement outcome, so the gate is untouched but the param's contract (SE-1, SE-2, RR-0278) is not pasted — record the server-side acceptance of `semi` in the change note, since nothing pasted confirms the endpoint honours or ignores it.
+
+DEFER severity=LOW — a clause satisfied only by a test name is unmet; the whole pasted diff is test files — mobile/__tests__/lotMapPage.behaviour.test.tsx:161 "task-362 AC1, AC5: Get help with an address opens Help in the in-app browser sheet" — the production lines these tests pin (mobile/lib/maxbldHelp.ts, disambiguate.tsx, index.tsx, semi-question.tsx, useParcelLookup.ts) are not in this diff part, cannot see them, so every behavioural clause here is asserted but unverifiable from the pasted material — confirm the source diff parts are pasted alongside before sign-off.
+
+MET — Spec 96 §5 "`openAuthSessionAsync` is for OAuth redirect flows only — it expects an auth callback URL scheme" — mobile/__tests__/maxbldHelp.test.ts:14 "jest.mock('expo-web-browser', () => ({ openBrowserAsync: jest.fn() }));" — the change uses openBrowserAsync and asserts Linking.openURL is not called, never openAuthSessionAsync, matching the pasted rule.
+
+MET — Spec 96 §7 "opens Stripe Customer Portal in `expo-web-browser`" — mobile/__tests__/maxbldHelp.test.ts:32 "expect(link).not.toHaveBeenCalled()" — the diff keeps expo-web-browser as the single in-app web exit and asserts the Linking path is gone, consistent with the pasted portal/checkout mechanism.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 0
+
+---
+⏱  32560ms (32.6s)
+📊 Tokens — total: 35159, input: 29169, output: 5990, reasoning: 4785

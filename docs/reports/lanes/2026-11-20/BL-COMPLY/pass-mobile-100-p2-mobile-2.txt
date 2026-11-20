@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-mobile-2.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 100 §3.2 dated note 2026-11-12, "1 b" meter rule: "A lookup counts against the monthly allowance (the MF-45 `usage_events` row through `openReport`) only when at least one option has an evaluated value" and "While the legacy menu is withheld no lookup counts" — mobile/src/hooks/useParcelLookup.ts "`semi: 'answered'` is the one optional flag the semi question page sends at Continue, so the server counts the lot once its report is produced" — the diff adds a second counting trigger for a parcelId lookup that the pasted 1 b rule does not name and that contradicts the evaluated-option test, so the clause is not satisfied as written — paste the operator ruling that authorises the answered-lot count (RR-0278 is not in the pasted context) or drop the flag and keep the 1 b rule.
+
+DEFER severity=MED — Spec 100 §3.2 dated note 2026-11-13, semi item (2): "The answer is a route param applied in the app (`lot_form_user_override`; O-12: the pipeline never reads it)" — mobile/src/lib/lotForm.ts "which does not apply it yet: nothing outside this file reads the param or calls `lotFormEffective`" — the pasted clause requires the override be applied in the app, and the diff records that nothing applies it, so the clause is unmet — task-209 is named for the effect, the comment is corrected rather than the behaviour, defer only with that card linked.
+
+DEFER severity=MED — Spec 100 §4: "`useParcelLookup(parcelId)` — the detail depends **only** on `['parcel-lookup', parcelId]` (query-key hygiene, Spec 99 §4)" — mobile/src/hooks/useParcelLookup.ts "it changes the request, not the key (the semi page stores its answered result under the same key, useSetParcelLookup)" — with `staleTime: 60_000` a plain lookup cached moments earlier satisfies the answered query without calling `fetchParcelLookup`, so the `semi=answered` request is never sent and the server neither counts nor releases the lot — force the answered fetch at Continue (invalidate or refetch on that key) while leaving the single pasted key intact.
+
+DEFER severity=MED — Spec 100 §3.2: "**Any future reader of `parcels` owes the same explicit allow-list**" — mobile/src/hooks/useParcelLookup.ts "read from GET /api/parcels/entitlement (the line \"N of M reports left until <date>\")" — no pasted clause names an entitlement endpoint, and the Operating Boundaries Target Files list only "`src/app/api/parcels/lookup/{route.ts,types.ts}`", so the whitelist obligation of this new reader cannot be checked from the pasted text — the server route, its projection and its lock are not in this diff part, cannot see them, produce them before lock.
+
+DEFER severity=LOW — Spec 100 §4 dated note 2026-11-19 (RR-0313): "the reports-left slot is unchanged" — mobile/src/lib/parcelSearchMatch.ts "SRCH.A6 (task-320): the served count fields the reports-left line binds" — the situation now carries three served fields but the drawing slot is not in this diff part, so "unchanged" cannot be verified — the screen that renders `reportsLeftShown` is outside the pasted files, cannot see it, confirm the slot's markup is untouched.
+
+DEFER severity=LOW — Spec 100 §4 dated note 2026-11-10 (MF-35): "the \"Report incorrect address match\" link is added by MF-46 with its Help & Support page (P35-D18 a)" — mobile/src/lib/maxbldHelp.ts "opens in the in-app browser sheet through expo-web-browser ... instead of leaving the app through Linking" — the pasted clause names only that the link opens the Help page, no pasted clause authorises the in-app browser sheet (task-362, small-pages-v8 are not pasted) — content and URL are unchanged, the presentation change is the only delta, so it is low risk but unsourced in the pasted text.
+
+DEFER severity=NIT — Spec 100 §3.2 dated note 2026-11-13, semi item (2): "When `unsure` is true the app shows one question before the report" — mobile/src/lib/semiQuestion.ts "how long Continue waits for the answered lookup before it ends in the built error state (a timeframe; operator item in the lane report)" — the 60 000 ms window is attributed to an operator item that is not pasted, so its provenance cannot be checked — one constant, one screen, safe to defer behind that missing record.
+
+REJECT — Spec 100 §3.2 dated note 2026-11-12 (MF-48 Stage B): "Every level is `.strict()`" — `ParcelToolEntitlementSchema` being a plain object is not a breach — that sentence governs the `page` view schema and its levels, not a different endpoint's response, and the diff's own comment states the entitlement contract is additive_only.
+
+MET — Spec 100 §4 query-key hygiene — mobile/src/hooks/useParcelLookup.ts — the detail key is still exactly `['parcel-lookup', parcelId]` with the search query never entering it.
+
+MET — Spec 100 §4 Zod boundary — mobile/src/hooks/useParcelLookup.ts — `fetchParcelEntitlement` parses `raw.data` through `safeParse` and throws `ParcelLookupSchemaError` on drift, the same boundary as the lookup.
+
+MET — Spec 100 §3.2 dated note 2026-11-13 semi item (2) — mobile/src/lib/lotForm.ts / useParcelLookup.ts — `parcelLookupParams` sends the flag only for exactly `'answered'`, so every other answer path is unchanged.
+
+MET — Spec 100 §4 dated note 2026-11-12 (MF-48 Stage B) — mobile/src/lib/persistFilter.ts — the offline persisted cache behaviour is preserved, only `user-profile` and `parcel-entitlement` stay out of the dehydrated set.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  52429ms (52.4s)
+📊 Tokens — total: 30124, input: 20949, output: 9175, reasoning: 7756

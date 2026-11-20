@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-2.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — 12.12 "MUST have at least one `fast-check` property test asserting the invariant" (unit conversions, key normalizers) — src/lib/report-projection/format.ts:35 "const sqft = grouped(Math.round(n * SQFT_PER_M2));" — the new m2 to sq ft conversion/rounding (and src/lib/report-projection/seed-shas.ts:16 "Object.keys(o).sort()") lands with no property test file in the diff, only comments citing test names ("a parity test pins the two", "logic.test.ts asserts both give the same hex"), which the walk rule counts as UNMET — add src/tests/property/report-projection-format.property.test.ts (non-negative, monotone, int-rule integrality) and one order-invariance test for canonicalJson.
+
+BUG severity=HIGH — card scope ruling "the customer producer is W below" (report-page.ts:8, operator "task 341 approved") — src/lib/surfaces/maxbld-landing.ts:147 "const report: StaticReport = { sample: view, footer: pickFooterText(SEARCH_CONTENT), ...(demo ? { demo } : {}), ...(picture ? { picture } : {}) };" — the diff also changes the web landing report (new footer, new imports from components/ and maxbld-web) and no pasted clause or ruling names a landing footer — split this hunk into its own card/diff or cite the ruling that names it.
+
+DEFER severity=MED — 13.5 "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — src/lib/parcels/report-page.ts:58 "if (!MAXBLD_WEB_LIVE) return null;" — the new customer report capability is gated by a module constant inside the producer, not by a route-level flag check, and MAXBLD_WEB_LIVE is a pinned constant rather than a PostHog flag — confirm and cite the route that holds the flag check (the route file is not in this diff, so cannot see).
+
+DEFER severity=MED — 14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — src/lib/parcels/report-page.ts:8 "the customer producer is W below" (replacing the removed "The customer producer is NONE today") — the customer contract changes from always-null to a live stored read, and no file under docs/specs/ is in this diff; cannot see whether 135 FE-05/FE-34, 126 11a.7, 128 rule 16 and 69a M-384 got their dated notes — add the dated note to each cited spec in this commit.
+
+DEFER severity=LOW — 14 "points at the spec AND the section (§N)" — src/lib/report-projection/read-stored.ts:1 "docs/specs/00_engineering_standards.md (parameterised SQL)" — SPEC LINK cites a spec with no section number (also seed-shas.ts:2 "docs/specs/01-pipeline/78_optimal_lot_configuration.md (compute_maxbld_scenarios step identity)") — add the section number to each cited doc.
+
+MET — 14 "every SELECT feeding a typed client includes every field the client type declares" — src/lib/report-projection/read-stored.ts:31 — ROWS_SQL selects every StoredRow field (content_sha and switches included) and STAMP_SQL matches LotStamp exactly.
+
+MET — 12.11 pool-boundary "bans `new Pool(` instantiation outside src/lib/db/" — src/lib/parcels/report-page.ts (import line) — the new code imports the shared pool from @/lib/db/client and never constructs a Pool.
+
+MET — 12.11.1 silent-catch-fallback "bans `try/catch { return [] / null / emptyResult() }`" — src/lib/parcels/report-page.ts:55 — the new read path adds no try/catch; the comment and code agree that a thrown query propagates to the route's 500.
+
+MET — 12.10 "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts`" — NONE — the diff adds no migration, so the rule is not triggered.
+
+REJECT — 13.3 "API routes MUST emit at least one `logInfo` per successful request" — the new customer read emits only a logWarn on table absence — the clause binds API routes and this is a lib producer whose callers (session, plan, rate limit, meter) wrap it; the route is not in this diff, so cannot see.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 4
+
+---
+⏱  110721ms (110.7s)
+📊 Tokens — total: 49206, input: 26601, output: 22605, reasoning: 21557

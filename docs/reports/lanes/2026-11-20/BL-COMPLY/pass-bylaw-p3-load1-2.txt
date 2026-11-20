@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-2.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — task-266 / LOAD.1 (the authorising card is not pasted into the context) "/** LOAD.1 (task-266): moved here unchanged from runtime-loader.logic.test.ts so the customer compute test builds the same batch rows." — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:122 "+export function goldenBatch(): { rows: Json[]; raw: Json } {" — no pasted clause or ruling names a new shared export or the "same batch rows" requirement, so the change's stated obligation cannot be checked against the pasted set — paste the task-266 LOAD.1 text (or the ruling naming it) into the context before merge
+DEFER severity=MED — m.380 "Expected answers are the authority and are protected." — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:123 "+  const expected = readJsonl(`${G25}/expected.jsonl`);" — the moved body is not unchanged: the removed block used an undeclared (module level) `expected` in "const e = expected.find((x) => x.parcel_id === lot.parcel_id) as Json;" and the harness copy instead re-reads the fixture, so two suites now source the authority independently and the original declaration is not pasted, cannot see — confirm the test file's module level `expected` reads `${G25}/expected.jsonl` unchanged, or alias the harness one to it
+DEFER severity=LOW — m.411 "Where the increment-1 loop data and pending tests live." / "protected-paths.json lists the three globs" — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts:17 "+import { goldenBatch } from './golden25-harness';" — cannot see protected-paths.json, so I cannot tell whether src/tests/steps/compute_maxbld_scenarios/** is one of the three protected globs this diff now edits — paste the three globs and confirm the edit is permitted
+MET — m.409 — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:150 — the moved "cells: lr.decodeLotResults({ lot, pairs, classes: SCOPE.classes, map: MAP, dicts, optionPairs }).filter((d: Json) => !d.option).map(view)," is character-identical to the removed line, so the compared golden for the storage_within_budget audit row is unaffected
+MET — m.380 — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:123 — the harness only reads "${G25}/expected.jsonl" through readJsonl and writes nothing, so the expected answers are not edited by this diff
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 0
+
+---
+⏱  30232ms (30.2s)
+📊 Tokens — total: 22047, input: 16819, output: 5228, reasoning: 4591

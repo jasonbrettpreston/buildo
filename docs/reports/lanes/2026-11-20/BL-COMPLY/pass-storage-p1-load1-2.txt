@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-2.patch (model: deepseek-reasoner)
+
+BUG severity=CRIT — NONE — NONE
+DEFER severity=MED — A-MF62 "the loading screen starts the one-lot compute at the search pick, waits for the numbers up to the set maximum (35,000 ms, raised from the seed's 30,000 by task LOAD.3 ...)" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts "+export function goldenBatch(): { rows: Json[]; raw: Json } {" — this part is labelled LOAD.1 (task-266) but contains only a fixture helper, no search-pick compute start, no 35,000 ms maximum and no skip for a re-opened lot, so it cannot carry A-MF62 — keep LOAD.1 open and paste the part that holds the gate plus the seed max change before claiming LOAD.1 closes.
+DEFER severity=MED — A-MB38 "The L3b sweep opens N sampled lots through the real path and asserts: a record with the current stamp exists, a second open reads an equal record (content_sha), and a record with an older stamp is recomputed." — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts "+  const out = MZ.materializeBatch(parcels, env);" — the helper rebuilds batch rows by calling makeEnv and materializeBatch directly instead of opening a lot through the search pick, so it can never show the stamp guard or the equal second read — label the helper as fixture parity only and keep the real-path L3b sweep as the A-MB38 proof.
+DEFER severity=LOW — doc-16 section 5 "S Search | nothing; the search hit starts the compute" read with the new comment "so the customer compute test builds the same batch rows" — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts "moved here unchanged from runtime-loader.logic.test.ts" against "+  const expected = readJsonl(`${G25}/expected.jsonl`);" — the function is not unchanged, the source version resolved `expected` from module scope and the harness now reads the file inside the helper, so the parity claim rests on an unstated assumption — say in the comment that `expected` is now read in the helper and that the module value it replaced came from this same file.
+MET — P8 "The migration-309 long form stays for bounded cohorts only: the 25, the MB-35 preview cohort and the MB-28 proof set." — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts "+  const expected = readJsonl(`${G25}/expected.jsonl`);" — the helper reads only the golden-25 fixture, a pasted-permitted bounded cohort.
+MET — P11 "Proof: MB-38 shadow, MB-75, MB-76 and the McProof / McTest sweeps run on a sample or a stream; no stored all-lot table feeds them." — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts "+  return { rows, raw };" — the helper returns in-memory rows for 25 lots and feeds no stored all-lot table.
+REJECT — P5 "No record for a lot nobody opened or tracked; no all-lot headline fill; MB-38 has no fill job." — the new exported goldenBatch builds batch rows for the 25 fixture lots — the 25 is a pasted-permitted bounded cohort (P8) and the helper returns rows in memory, it does not fill the store.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  38962ms (39.0s)
+📊 Tokens — total: 21976, input: 14926, output: 7050, reasoning: 6247

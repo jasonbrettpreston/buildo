@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-load1-2.patch (model: deepseek-reasoner)
+
+DEFER severity=LOW — fe.25 "The 25 golden lots render end to end the McBylaws answer-key numbers on every target. Runs as a db-type test in a named CI step." — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts "+import { goldenBatch } from './golden25-harness';" — the one new consumer of the shared harness is a logic test, so fe.25's owed db-type answer-key lock stays unmet by this diff — keep fe.25 OWED and consume goldenBatch from src/tests/surfaces/answer-key-e2e.db.test.ts when that lock lands.
+
+DEFER severity=NIT — no pasted clause or ruling names a shared goldenBatch export — golden25-harness.ts "+/** LOAD.1 (task-266): moved here unchanged from runtime-loader.logic.test.ts so the customer compute test builds the same batch rows." — the comment asserts "unchanged" but the added body introduces "const expected = readJsonl(`${G25}/expected.jsonl`);" which the deleted body did not declare locally, so equivalence cannot be confirmed from the pasted diff — either make the body byte-identical to the deleted one or reword the comment to state where expected now comes from.
+
+REJECT — fe.03 — that the moved goldenBatch fails "declarations checked against live contracts and the catalogue; golden states; both-directions locks" — fe.03 governs surface declarations and their goldens, and this file builds compute batch rows, so the clause does not reach it.
+
+REJECT — fe.05 — that a fixture builder assembling lot rows duplicates front-end derivation ("no maths in the UI") — the pasted diff contains no report rendering, no UI and no displayed number, so P4 does not bind.
+
+MET — fe.25 — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts "+export function goldenBatch(): { rows: Json[]; raw: Json }" — the golden 25 fixture builder now has one home instead of a private copy inside a test, which is the reuse fe.25 depends on.
+
+MET — fe.01 — src/tests/steps/compute_maxbld_scenarios/runtime-loader.logic.test.ts "+import { goldenBatch } from './golden25-harness';" — the change touches only src/tests/steps, so the held McFrontend surface paths are untouched.
+
+MET — fe.40 — src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts "const lines = readJsonl(`${G25}/inputs.jsonl`);" — no e2e catalogue row in tests/e2e/scenarios.json is added or renamed, so the "data; no test code names a case" clause is not disturbed.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 44   Unmet: 0
+
+---
+⏱  23883ms (23.9s)
+📊 Tokens — total: 14078, input: 9914, output: 4164, reasoning: 3540

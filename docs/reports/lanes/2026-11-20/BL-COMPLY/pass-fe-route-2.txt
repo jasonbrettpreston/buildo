@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/comply/runs/esc/diff-route-2.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.44 "the conversion factor is content/settings, never code" — src/lib/report-projection/format.ts:14 "export const SQFT_PER_M2 = 10.7639;" — the sq ft factor is hardcoded in code, so the clause is unmet for every area rule the new customer producer formats — read the factor from content/settings and pass it into formatPageRule.
+BUG severity=HIGH — fe.01 "the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name" — src/lib/parcels/report-page.ts:9 "MB-44 W (task-123, 1.3; operator '1. it has to happen now - read the objectives', MORNING-DECISIONS.md:789, and 'task 341 approved', :1160)" — the lift by name rests only on this code comment; the cited operator ruling is not in the pasted context, so fe.01 is unmet on the material shown — paste the ruling that lifts the freeze by name or hold the build code.
+DEFER severity=MED — fe.39 "cost comes from the Spec 88 scenario lines, joined by the producer" — src/lib/report-projection/read-stored.ts:35 "FROM parcel_maxbld_scenarios WHERE parcel_id = $1 ORDER BY building_type, field_id" — the producer that now answers customers reads no Spec 88 line, so no cost value can ever be sent — join the Spec 88 lines or record the cost gap against fe.39 before MAXBLD_WEB_LIVE turns on.
+DEFER severity=MED — fe.33 "every displayed string, library default strings and form error messages included, comes from content" — src/lib/report-projection/format.ts:56 "const CONFIDENCE_WORDS: Record<string, string> = { high: 'High confidence', medium: 'Medium confidence'" — displayed text ('High confidence', 'Yes', 'No', 'sq ft', 'm²') lives in code, not content — move those strings into the content tables the renderer already reads.
+DEFER severity=MED — fe.27 "A column that is not in the migrations, or a path not on the whitelist, fails" — src/lib/report-projection/read-stored.ts:27 "CASE WHEN heritage_dataset_version_when_enriched IS NULL THEN NULL ELSE is_heritage_designated END AS is_heritage_designated," — the Spec 100 §3.2 whitelist is not pasted, so the heritage and ravine columns now read on the customer path cannot be verified — paste the whitelist or cite the line listing these columns.
+DEFER severity=LOW — fe.24 "the renderer throws on an unknown field or status" — src/lib/report-projection/project.ts:174 "let shownAs: 'shown' | 'hidden' | 'not_evaluated' = 'not_evaluated';" — a stored status outside the closed list falls through to a not-evaluated card instead of being refused — throw on any status not in the presentation list.
+DEFER severity=LOW — fe.31 "Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema" — src/lib/surfaces/maxbld-landing.ts:147 "const report: StaticReport = { sample: view, footer: pickFooterText(SEARCH_CONTENT), ..." — a footer is added to the landing with no pasted clause or page-table part naming it and a component module imported into a server lib — split it out or cite the card and the declared landing part it serves.
+MET — fe.05 — src/lib/report-projection/format.ts:10 "no maths in the UI: the SERVER formats" — every value reaches the client as a server-formatted string, no client maths.
+MET — fe.18 — src/lib/report-projection/project.ts:105 "if (!name || (kind !== 'catalogue' && kind !== 'parcels' && kind !== 'user_input')) throw new Error(" — a source outside the closed binding set is refused at load.
+MET — fe.07 — src/lib/report-projection/read-stored.ts:10 "shared OUT of the admin preview producer" — customer and admin run the same SQL and the same projection, so one declaration reaches both targets.
+REJECT — fe.05 — the change performing area conversion on the server — FE-05 requires the server to format every number and the UI to do none, so the server-side sq ft text is the ruled shape; where the factor lives is fe.44, raised above.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 6
+
+---
+⏱  49308ms (49.3s)
+📊 Tokens — total: 36342, input: 26842, output: 9500, reasoning: 8466
