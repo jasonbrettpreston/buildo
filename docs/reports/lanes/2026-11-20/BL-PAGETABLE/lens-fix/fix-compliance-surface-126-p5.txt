@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:19:39.326Z file_sha256=689e1f8d4ad43cf5ef154163ed3bf1a2089265a04508fc037400dec003f96a00 prompt_sha256=3d5fcda586babf5112dba037e03002d52f759a32de907c77a1cea513874ca0f0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/fix/in-fix-compliance-surface-126-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §14 Out-of-Scope "`scripts/manifest.json` and every `scripts/**/*.descriptor.json` — the `app_outputs` step (§6.3.1) is Backend/Pipeline work on the pipeline programme's own slot." — scripts/surfaces/platform_shared/F14/surfaces/binding_mobile_list.descriptor.json:34 "+        \"mobile/src/components/surfaces/PageTableBinding.tsx\"" — the diff hand-edits a `scripts/**/*.descriptor.json` (and its census copy) to add a component to owns.components, a file class §14 declares out of scope and §12 Placement defers to the pipeline slot ("and anything else under `scripts/` waits for the pipeline slot") — revert the descriptor and census hunks and land the owns.components row on the pipeline programme's slot.
+
+BUG severity=MED — §13 Infra "a RED canary per lock, on the `logic-variable-groups.infra.test.ts` tampered-file model, proving each check fires" — scripts/surfaces/screen-checks.mjs:458 "const screens = ctx.ok && table?.screens && typeof table.screens === 'object' ? table.screens : {};" — an unreadable or renamed table yields zero screens and the green note `S-page ok (0 screens)`, and the new canaries call pageProblems/supplyOf directly, never pageArm, so nothing proves the arm's own table-load path fires — make a missing or non-object `screens` an SV-PAGE finding and add a canary that drives pageArm with the table absent.
+
+BUG severity=MED — §13 Logic "`platforms[]` gating" and §13 UI "every archetype renderer against its golden rendered-tree snapshot, per declared state" — mobile/src/components/surfaces/PageTableBinding.tsx:47 "if (screen.targets !== undefined && !screen.targets.includes('mobile')) throw new Error('page table: the screen is not drawn on mobile');" — the diff introduces a second platform gate (`targets`) beside the descriptor's `identity.platforms`; the S-page arm never cross-checks the two, and the new renderer behaviour is asserted only in src/tests/surfaces/page-table.logic.test.ts:90 "describe('B6 names the builder is given that no value supplies'" with no `*.ui.test.tsx` golden — assert screen targets against descriptor identity.platforms in pageArm with a RED canary, and cover the disabled/throw states in the page renderer's UI golden.
+
+DEFER severity=MED — §12 Phases "There is ONE sequence in this programme, and it lives in Spec 127 §4.4" — scripts/surfaces/_schema/static-page.schema.json:5 "Dated note 2026-11-20 (PAGE.TABLE fix round, task-390): a screen names its `binding`" — the authority for this change (§0a principle 1, §11b.2, the 2026-11-20 operator approval) is cited only inside the material's own $comment and is not in the pasted part, so its phase placement (P1 validator work versus a LIST conversion sitting in P4/B3) cannot be confirmed — paste §0a, §11b.2 and the 2026-11-20 ruling with the next run.
+
+DEFER severity=LOW — §14 Out-of-Scope "`migrations/**` — no migration is authored by this spec" — whole diff — no path under migrations/ appears, and no `src/app/api/quality/**` or `src/lib/quality/**` path appears, so the held programmes are untouched.
+
+DEFER severity=LOW — §14 Out-of-Scope "`scripts/steps/_schema/step.schema.json` — the pipeline's contract; this spec MIRRORS it and must never edit it" — whole diff — the step contract and `scripts/manifest.json` are not touched; only surface tooling and one surface descriptor are.
+
+DEFER severity=LOW — §14 Target Files "`scripts/violations/generate-spec-mirror.mjs` ... `scripts/surfaces/surface-validate.mjs`" — scripts/surfaces/screen-checks.mjs:409 "// ---- SV-PAGE (PAGE.TABLE, task-390 fix round)" — the new arm body lives in a file §14 does not list, while listing surface-validate.mjs only, so the implementing file is outside the declared target set — either add screen-checks.mjs to §14 Target Files or place the arm body in surface-validate.mjs.
+
+MET — §12 "never ... `mobile/app/(auth)/{sign-in,sign-up,confirm}.tsx` (1,302 lines)" — whole diff — no file under mobile/app/(auth) is touched.
+
+MET — §13 "Logic: `*.logic.test.ts` ... that a missing required field throws" — src/tests/surfaces/static-page.logic.test.ts:81 "['a screen with no binding', (t) => { delete t.screens.mobile_parcel_semi_question.binding; }]" — the newly required `binding` field has a plant that must fail validation.
+
+REJECT — §12.1 "Eligibility is declared data per Spec 127 §4.4" — accused of converting mobile_parcel_semi_question ahead of its phase — the screen rows already exist in static-page.json before this diff; the change only adds binding, targets and arg to an existing conversion.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 3
+
+---
+⏱  91884ms (91.9s)
+📊 Tokens — total: 35523, input: 16790, output: 18733, reasoning: 17512

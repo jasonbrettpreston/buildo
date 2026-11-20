@@ -24,10 +24,10 @@ export type PageSection = Gate & (
   | { kind: 'status'; id: string; content: string }
   | { kind: 'text'; id: string; role: 'header'; content: string }
   | { kind: 'notice'; id: string; tone: 'error' | 'neutral'; icon: string; parts: NoticePart[] }
-  | { kind: 'choices'; id: string; list: string; select: string; content: string; action: string }
+  | { kind: 'choices'; id: string; list: string; select: string; content: string; action: string; arg: string }
   | ({ kind: 'button'; id: string } & ButtonRow)
 );
-export type PageScreen = { prefix: string; contract: string; sections: PageSection[] };
+export type PageScreen = { prefix: string; contract: string; binding: string; targets?: ReadonlyArray<'web' | 'mobile'>; sections: PageSection[] };
 export type PageValues = Record<string, string | readonly string[] | null>;
 export type PageStyles = {
   screen: string; scroll: string; column: string; bottomPadding: number; maxWidth: number;
@@ -43,14 +43,20 @@ const content = (key: string): Ref => ({ content: key });
 
 /** The whole tree of one render. */
 export function pageProps(screen: PageScreen, flags: Readonly<Record<string, boolean>>, values: PageValues, styles: PageStyles): PageNode {
+  if (screen.targets !== undefined && !screen.targets.includes('mobile')) throw new Error('page table: the screen is not drawn on mobile');
   const on = (name: string | undefined): boolean => {
     if (name === undefined) return true;
     if (!Object.hasOwn(flags, name)) throw new Error(`page table: the flag ${name} is not supplied`);
     return flags[name] === true;
   };
   const drawn = (g: Gate): boolean => (g.targets === undefined || g.targets.includes('mobile')) && on(g.when);
+  // A name no value supplies throws by name (like a flag); a supplied null is the legal "disabled" state.
+  const val = (name: string): PageValues[string] => {
+    if (!Object.hasOwn(values, name)) throw new Error(`page table: the value ${name} is not supplied`);
+    return values[name] as PageValues[string];
+  };
   const str = (name: string): string | null => {
-    const v = values[name];
+    const v = val(name);
     return typeof v === 'string' ? v : null;
   };
   const testID = (id: string): string => `${screen.prefix}-${id}`;
@@ -96,7 +102,7 @@ export function pageProps(screen: PageScreen, flags: Readonly<Record<string, boo
         }))];
       }
       case 'choices': {
-        const list = values[s.list];
+        const list = val(s.list);
         if (!Array.isArray(list)) throw new Error(`page table: the list ${s.list} is not supplied`);
         const selected = str(s.select);
         return (list as readonly string[]).map((a, i) => {
@@ -109,7 +115,7 @@ export function pageProps(screen: PageScreen, flags: Readonly<Record<string, boo
             role: 'radio',
             accessibilityState: { checked },
             accessibilityLabel: content(`${s.content}.${a}`),
-            onPress: { action: s.action, parcelId: { derived: `${s.id}.${i}` } },
+            onPress: { action: s.action, [s.arg]: { derived: `${s.id}.${i}` } },
           }, [node('View', { key: 'card-row', className: styles.card.row }, [
             node('View', { key: 'card-dot', className: checked ? styles.card.dotChecked : styles.card.dotIdle }),
             node('Text', { key: 'card-title', className: styles.card.text }, [content(`${s.content}.${a}`)]),
@@ -122,7 +128,7 @@ export function pageProps(screen: PageScreen, flags: Readonly<Record<string, boo
   };
 
   const shown = screen.sections.filter(drawn);
-  const navigate = str('navigate');
+  const navigate = typeof values.navigate === 'string' ? values.navigate : null;
   return node('SafeAreaView', { className: styles.screen, edges: { top: 'additive' }, testID: testID('screen'), ...(navigate !== null && navigate !== '' ? { navigate } : {}) }, [
     ...shown.filter((s) => s.kind === 'bar').flatMap(section),
     node('ScrollView', {

@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:18:38.719Z file_sha256=d2068da049d5708dd0e9aeb989bb0178fbd159bcbb2579289c9c701eadba8d65 prompt_sha256=b07f7b9618e3c581806a1c09dc699207b37d5badf65bd5f80274eade178b7ff0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/fix/in-fix-compliance-mobile-99-p1.txt (model: deepseek-reasoner)
+
+REJECT — §3 "Adding a field to the mobile app requires adding a row here." — accused of adding `binding`, `targets`, `arg` with no §3.1 row — `mobile/src/components/surfaces/PageTableBinding.tsx:30 "export type PageScreen = { prefix: string; contract: string; binding: string; targets?: ..."` — these are page-descriptor fields in the surface schema, not the mobile state (server/auth/onboarding/engagement) fields the matrix governs, so no §3.1 row is due.
+
+REJECT — §1 "Adding a new Zustand store, a new MMKV blob, a new hydration bridge, or a new routing `useEffect` requires either matching an existing pattern in §3-§5 or amending this spec." — accused of adding a new state surface — NONE (the diff touches only schema JSON, `PageTableBinding.tsx`/`SemiQuestionBinding.tsx` constant exports, `screen-checks.mjs`, `surface-validate.mjs`, tests) — no store, MMKV blob, hydrate bridge or router effect is added, so the gate-keeper clause is not triggered.
+
+REJECT — §2.1 "Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`." — accused of bypassing the persistence boundary — NONE (no `mobile/src/store/*` or `mmkvPersister.ts` file in the diff) — no direct MMKV read and no Layer-3 mirror is introduced.
+
+MET — §5.1 "The mobile app has exactly TWO routing boundaries... `(auth)/_layout.tsx`, `(onboarding)/_layout.tsx`... MUST NOT have routing `useEffect`s." — `mobile/src/components/surfaces/PageTableBinding.tsx` (changed file) — the change adds no routing `useEffect` and leaves the AuthGate/AppLayout boundaries untouched.
+
+MET — §8.5 "A vitest... MUST... assert that `signOut()`... calls `use<Name>Store.getState().reset()` for every discovered store." — `mobile/src/store/*` (no change in diff) — no new store is added, so the store-enumeration count is unaffected and no `.reset()` is due.
+
+MET — §8.6 "the Zod object keys from `mobile/src/lib/userProfile.schema.ts` and the §3.1 markdown table, asserting setEqual" — `mobile/src/lib/userProfile.schema.ts` (no change in diff) — no server/`user_profiles` field is added, so no schema-vs-matrix drift row is due from this change.
+
+DEFER severity=LOW — governing-spec link not in pasted context — `src/tests/surfaces/page-arm.logic.test.ts:1 "SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §0a principle 1 and §11b.2 ... docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-05, FE-18, FE-31; docs/specs/02-web-admin/127_surface_conversion_procedure.md §3.2a (SV arms)."` — the spec that actually governs this surfaces/page-table change (Specs 126/127/128, FE-05/18/31) is not pasted, so compliance against it cannot be judged here — I judge only the pasted Spec 99, which names none of this behaviour; obtain the surfaces spec for a real check.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  40889ms (40.9s)
+📊 Tokens — total: 38521, input: 30731, output: 7790, reasoning: 6997

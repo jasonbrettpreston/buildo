@@ -14873,7 +14873,8 @@
       "owns": {
         "components": [
           "mobile/src/components/surfaces/LotMapBinding.tsx",
-          "mobile/src/components/surfaces/SemiQuestionBinding.tsx"
+          "mobile/src/components/surfaces/SemiQuestionBinding.tsx",
+          "mobile/src/components/surfaces/PageTableBinding.tsx"
         ]
       },
       "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",

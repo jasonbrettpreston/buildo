@@ -16,6 +16,7 @@ import slice from '@/generated/surfaces/mobile_parcel_semi_question.json';
 import { LOT_MAP_BOTTOM_PADDING, LOT_MAP_HEX as H, LOT_MAP_LAYOUT as L, LOT_MAP_SIZES as Z } from '@/constants/lotMap';
 import { SEARCH_MAX_WIDTH } from '@/constants/parcelSearch';
 import type { SemiQuestionSituation } from '@/lib/semiQuestion';
+import type { SemiAnswer } from '@/lib/lotForm';
 import type { PropsNode } from '@/components/surfaces/SearchBinding';
 import { pageProps, type PageScreen, type PageStyles } from '@/components/surfaces/PageTableBinding';
 
@@ -29,9 +30,15 @@ export const SEMI_QUESTION_DERIVED_NAMES = [/^answer\.(0|[1-9][0-9]*)$/];
 
 /** The closed list of flag names a `when` of the rows may name (static-page.logic.test.ts T9 checks the rows against it). */
 export const SEMI_QUESTION_FLAG_NAMES = ['loading', 'ask', 'rate_limited', 'entitlement', 'unexpected', 'plain_error', 'schema_drift', 'busy'] as const;
+/** The closed lists of the other names the rows may use: the values the binding passes, the contract paths it resolves, the leaves a choices row expands to, and its contract id
+ *  (read by the S-page arm of scripts/surfaces/surface-validate.mjs; data, not logic). */
+export const SEMI_QUESTION_VALUE_NAMES = ['answers', 'selected', 'route', 'navigate'] as const;
+export const SEMI_QUESTION_VAR_PATHS = ['errors.429.retryAfterSeconds'] as const;
+export const SEMI_QUESTION_CHOICES: Record<string, readonly SemiAnswer[]> = { answers: ['yes', 'no', 'not_sure'] };
+export const SEMI_QUESTION_CONTRACT = 'contract_parcels_lookup';
 type SemiQuestionFlags = Record<(typeof SEMI_QUESTION_FLAG_NAMES)[number], boolean>;
 
-const CONTRACT = 'contract_parcels_lookup';
+const CONTRACT = SEMI_QUESTION_CONTRACT;
 
 /** The typed per-platform class table (the MF-53 layout table; the rows never carry a class). */
 const STYLES: PageStyles = {

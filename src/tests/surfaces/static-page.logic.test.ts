@@ -76,6 +76,11 @@ describe('T1 the page table against the contract', () => {
       ['a when that is a list of flags', (t) => { t.screens.mobile_parcel_semi_question.sections[1].when = ['loading', 'ask']; }],
       ['a target outside web and mobile', (t) => { t.screens.mobile_parcel_semi_question.sections[1].targets = ['tablet']; }],
       ['a field the kind does not name', (t) => { t.screens.mobile_parcel_semi_question.sections[1].href = '/help'; }],
+      ['a choices row with no payload key', (t) => { delete t.screens.mobile_parcel_semi_question.sections[6].arg; }],
+      ['a choices payload key outside the list', (t) => { t.screens.mobile_parcel_semi_question.sections[6].arg = 'anything'; }],
+      ['a screen with no binding', (t) => { delete t.screens.mobile_parcel_semi_question.binding; }],
+      ['a screen binding outside the surfaces folder', (t) => { t.screens.mobile_parcel_semi_question.binding = '../x.tsx'; }],
+      ['a screen target outside web and mobile', (t) => { t.screens.mobile_parcel_semi_question.targets = ['tablet']; }],
       ['a screen with no sections', (t) => { t.screens.mobile_parcel_semi_question.sections = []; }],
     ];
     for (const [why, f] of plants) { const t = clone(TABLE); f(t); expect([why, validate(t)]).toEqual([why, false]); }
@@ -96,37 +101,13 @@ describe('T9 the interactive screens (PAGE.TABLE, task-390)', () => {
   const BINDING = 'mobile/src/components/surfaces/SemiQuestionBinding.tsx';
   const ID = 'mobile_parcel_semi_question';
   const SCREENS = TABLE.screens as Json;
-  const names = (src: string, list: string): string[] => [...(new RegExp(`export const ${list} = \\[([^\\]]*)\\]`).exec(src)?.[1] ?? '').matchAll(/'([a-z0-9_]+)'/g)].map((m) => m[1] as string);
-  const flagsOf = (s: Json): string[] => [s.when, s.busy, ...(s.parts ?? []).flatMap((p: Json) => [p.when])].filter((x): x is string => typeof x === 'string');
-  const problems = (screens: Json, flagNames: string[], content: Record<string, string>): string[] => {
-    const out: string[] = [];
-    for (const [id, screen] of Object.entries(screens)) for (const s of (screen as Json).sections as Json[]) {
-      for (const f of flagsOf(s)) if (!flagNames.includes(f)) out.push(`${id} ${s.id}: flag ${f} is not in the declared list`);
-      const keys = [s.content, s.label, s.idle, ...(s.parts ?? []).flatMap((p: Json) => [p.content, p.label])].filter((x): x is string => typeof x === 'string');
-      for (const k of keys) if (!(k in content) && !Object.keys(content).some((c) => c.startsWith(`${k}.`))) out.push(`${id} ${s.id}: content key ${k} is not in the content file`);
-    }
-    return out;
-  };
-  const content = rj(`scripts/surfaces/parcel_product/F01/surfaces/${ID}.content.json`) as Record<string, string>;
-  it('every screen is a converted LIST surface of the phone, with its row set copied to the generated slice', () => {
+  it('every screen is a converted LIST surface of the phone, drawn on the phone only, with its row set copied to the generated slice', () => {
     expect(Object.keys(SCREENS)).toEqual([ID]);
     const d = rj(`scripts/surfaces/parcel_product/F01/surfaces/${ID}.descriptor.json`);
     expect([MANIFEST.converted.includes(ID), d.identity.archetype, d.identity.platforms]).toEqual([true, 'LIST', ['mobile']]);
+    expect(SCREENS[ID].targets).toEqual(['mobile']);
+    expect(SCREENS[ID].binding).toBe(BINDING);
     expect(rj(`mobile/src/generated/surfaces/${ID}.json`).page).toEqual(SCREENS[ID]);
-  });
-  it('every flag a row names is in the closed list the binding declares; every content key is in the content file; none is a typed text', () => {
-    const flagNames = names(read(BINDING), 'SEMI_QUESTION_FLAG_NAMES');
-    expect(flagNames.length).toBeGreaterThan(0);
-    expect(problems(SCREENS, flagNames, content)).toEqual([]);
-  });
-  it('RED: an undeclared flag and a missing content key are caught', () => {
-    const t = clone(SCREENS) as Json;
-    t[ID].sections[1].when = 'nearest_lot';
-    t[ID].sections[1].content = 'state.nothing';
-    expect(problems(t, names(read(BINDING), 'SEMI_QUESTION_FLAG_NAMES'), content)).toEqual([
-      `${ID} loading: flag nearest_lot is not in the declared list`,
-      `${ID} loading: content key state.nothing is not in the content file`,
-    ]);
   });
   it('the binding keeps flags and values only: no JSX element names and no content key typed in it', () => {
     const b = read(BINDING);

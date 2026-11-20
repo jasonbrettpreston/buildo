@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:18:01.206Z file_sha256=72399660f5a04ccc544205cad98f29ed3633a7aba59c369d5ddbe87cae4ea5f0 prompt_sha256=a03dcee01c2d569a9faafb87ebcf0cb14959ddc177bddecf57f02f39faae25ba
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/fix/in-fix-compliance-mobile-96.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — spec 96, dated note 2026-11-11 "Nothing in this spec's Buildo trial, paywall or lead-gen gate changes." — scripts/surfaces/_schema/static-page.schema.json:5 "Dated note 2026-11-20 (PAGE.TABLE fix round, task-390): a screen names its `binding` ... and a choices row names its action payload key `arg`" — the diff adds `binding`, screen `targets`, choices `arg` and the S-page build arm, none of which any pasted clause or ruling names, so compliance is unjudgeable here — route to the run that pastes the cited authority (Spec 126 §11b.2, Spec 135 FE-31, task-390 ruling), which is not pasted in this context.
+
+DEFER severity=LOW — spec 96 whole file (no pasted clause binds this change) "Nothing in this spec's Buildo trial, paywall or lead-gen gate changes." — src/tests/surfaces/page-table.logic.test.ts:104 "arg: 'lotId'" vs scripts/surfaces/_schema/static-page.schema.json:893 "\"enum\": [ \"parcelId\" ]" — the binding widens the payload key to any string and the new test asserts a key the schema's closed list rejects, a contract conflict the diff introduces — narrow `arg` in PageTableBinding to the schema's closed list, or state that the schema is the only guard and drop the `lotId` assertion.
+
+REJECT — spec 96 §11 "**Target files:**" — accused of editing files outside Spec 96's target file list — not a real issue: that list names the files Spec 96 itself adds, it is not a prohibition on other surfaces' files.
+
+MET — spec 96, dated note 2026-11-11 "The app half (the App A gate in `mobile/app/(app)/_layout.tsx`) stays MF-49." — diff file list, no hunk on `mobile/app/(app)/_layout.tsx` — the App A gate file is untouched.
+
+MET — spec 96, dated note 2026-11-11 "The status set is the one constant of section 10." — no hunk names trial, active, past_due, expired, admin_managed or cancelled_pending_deletion — the entitlement set is neither added to nor renamed.
+
+MET — spec 96, dated note 2026-11-11 "else 403 `SUBSCRIPTION_REQUIRED`" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:32 "export const SEMI_QUESTION_FLAG_NAMES = ['loading', 'ask', 'rate_limited', 'entitlement', ..." — the `entitlement` flag that renders the 403 path is kept unchanged.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  32419ms (32.4s)
+📊 Tokens — total: 29398, input: 23344, output: 6054, reasoning: 5416

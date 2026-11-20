@@ -7,6 +7,7 @@
 //   B2 a section whose targets omit mobile is not drawn; no targets means both;
 //   B3 a button with a target value is disabled, idle-labelled and has no action while the value is null; it carries the value once set;
 //   B4 busy adds the busy class and the busy accessibility state; choices check only the selected answer; the bar draws before the scroll;
+//   B6 an unknown button target, choices select or screen target throws by name; the choices payload key is a row field;
 //   B5 a part inside a notice shows under its own flag; the redirect value joins the root only when set.
 import { describe, expect, it } from 'vitest';
 import { pageProps, type PageScreen, type PageStyles } from '../../../mobile/src/components/surfaces/PageTableBinding';
@@ -19,14 +20,14 @@ const S: PageStyles = {
   button: { default: { className: 'b', busyClassName: 'b busy', text: 'bt' }, outline: { className: 'o', busyClassName: 'o busy', text: 'ot' } },
 };
 const SCREEN: PageScreen = {
-  prefix: 'p', contract: 'c1',
+  prefix: 'p', contract: 'c1', binding: 'mobile/src/components/surfaces/X.tsx', targets: ['mobile'],
   sections: [
     { kind: 'bar', id: 'header', parts: [{ role: 'back', icon: 'ChevronLeft', content: 'back.label', action: 'back' }] },
     { kind: 'status', id: 'loading', when: 'loading', content: 'state.loading' },
     { kind: 'text', id: 'question', when: 'ask', role: 'header', content: 'question.title' },
     { kind: 'text', id: 'webonly', targets: ['web'], role: 'header', content: 'web.only' },
     { kind: 'text', id: 'both', targets: ['web', 'mobile'], role: 'header', content: 'both.title' },
-    { kind: 'choices', id: 'answer', when: 'ask', list: 'answers', select: 'selected', content: 'answer', action: 'select' },
+    { kind: 'choices', id: 'answer', when: 'ask', list: 'answers', select: 'selected', content: 'answer', action: 'select', arg: 'parcelId' },
     { kind: 'button', id: 'continue', when: 'ask', variant: 'default', label: 'select.label', content: 'select.go', idle: 'select.none', action: 'push', target: 'route', busy: 'busy' },
     { kind: 'notice', id: 'error', when: 'unexpected', tone: 'error', icon: 'AlertTriangle', parts: [
       { role: 'text', content: 'state.error', when: 'plain' },
@@ -83,6 +84,22 @@ describe('B3 and B4 buttons, busy, choices, bar', () => {
     ]);
     expect((t.children[0] as N).props.key).toBe('header');
     expect((t.children[1] as N).props.key).toBe('scroll');
+  });
+});
+
+describe('B6 names the builder is given that no value supplies', () => {
+  it('RED: an unknown button target, an unknown choices select and a screen not drawn on the phone each throw by name', () => {
+    const ask = { ...FLAGS, ask: true };
+    expect(() => pageProps(SCREEN, ask, { answers: [], navigate: null } as never, S)).toThrow(/selected/);
+    expect(() => pageProps(SCREEN, ask, { answers: [], selected: null, navigate: null } as never, S)).toThrow(/route/);
+    expect(() => pageProps({ ...SCREEN, targets: ['web'] }, FLAGS, VALUES, S)).toThrow(/mobile/);
+  });
+  it('a null value is the legal disabled state, not an unknown name', () => {
+    expect(() => pageProps(SCREEN, { ...FLAGS, ask: true }, { ...VALUES, answers: [] }, S)).not.toThrow();
+  });
+  it('the choices payload key is the row field arg', () => {
+    const c = column(pageProps({ ...SCREEN, sections: [{ kind: 'bar', id: 'header', parts: [] as never }, { kind: 'choices', id: 'answer', list: 'answers', select: 'selected', content: 'answer', action: 'select', arg: 'lotId' }] }, FLAGS, { ...VALUES, answers: ['yes'] }, S))[0]!;
+    expect(c.props.onPress).toEqual({ action: 'select', lotId: { derived: 'answer.0' } });
   });
 });
 

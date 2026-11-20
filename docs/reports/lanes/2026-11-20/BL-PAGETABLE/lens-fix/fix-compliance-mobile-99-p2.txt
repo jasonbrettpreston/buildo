@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:18:39.841Z file_sha256=ad50e7128ea18ae0edb762cb88da15dd341a012f37aadc19d03c072bc991dca7 prompt_sha256=990da7f4aa38802147c0265b5e928f3472f7665d9ebbade40806c5370e767c44
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/fix/in-fix-compliance-mobile-99-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 99 §10 "### Target Files - `docs/specs/03-mobile/99_mobile_state_architecture.md` (this file, the spec)" and "### Out-of-Scope Files - All `mobile/src/store/*.ts`" — "scripts/surfaces/screen-checks.mjs:409" "// ---- SV-PAGE (PAGE.TABLE, task-390 fix round)" — every file the change touches (surfaces bindings, generated slice, scripts/surfaces/_schema, src/tests/surfaces) sits outside both of Spec 99's file lists, so the pasted clauses neither authorize nor forbid it and the rulings it does cite are absent — re-run this pass with Spec 126 §0a principle 1, §11b.2 and Spec 127 §3.2a pasted, or paste the WF1 ruling that authorizes the screen `binding`/`targets`/`arg` schema extension.
+
+MET — Spec 99 §10 "All `mobile/src/store/*.ts` - modified in §9.3 / §9.5 followups, not here" — mobile/src/components/surfaces/PageTableBinding.tsx:27 — no store module appears in the diff, the state layer is untouched.
+
+MET — Spec 99 §10 "any change to §3 (Field Ownership Matrix), §4 (Bridge Patterns), or §5 (Routing Authority Rules) requires a WF1 amendment with adversarial review" — src/tests/surfaces/page-table.logic.test.ts:23 — the diff adds no row to §3/§4/§5 and does not modify docs/specs/03-mobile/99_mobile_state_architecture.md at all.
+
+MET — Spec 99 §10 "This spec is a dependency of: every future mobile WF that adds state, a store, or a router." — mobile/src/components/surfaces/SemiQuestionBinding.tsx:35 — the new exports are plain data constants (VALUE_NAMES, VAR_PATHS, CHOICES, CONTRACT), no state, store, hook or router branch is added.
+
+MET — Spec 99 §9.15 "atomic-selector mandate - globs `mobile/app/**/*.tsx` + `mobile/src/components/**/*.tsx`; flags any `useXStore()` zero-arg whole-store read per §6.1" — mobile/src/components/surfaces/PageTableBinding.tsx:45 — pageProps remains a pure function with no hook call, so the router-hygiene lint contract for component files still holds.
+
+REJECT — Spec 99 §9.20 "Knip baseline reduced from 4 unused exports to 3" — the change adds four exports no module imports (SEMI_QUESTION_VALUE_NAMES, SEMI_QUESTION_VAR_PATHS, SEMI_QUESTION_CHOICES, SEMI_QUESTION_CONTRACT) — §9.20 is a DONE row recording a past sweep, not a standing prohibition, and dead code is lens-code-review's question; the four are read as source text by screen-checks.mjs at build time, so they are not "no consumers".
+
+REJECT — Spec 126 §0a/§11b.2 and Spec 127 §3.2a — accused of not conforming to the PAGE.TABLE rulings (names checked against the binding, row payload key closed) — those rulings are not in the pasted context, cannot see, and the compliance question is judged against pasted clauses only.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  33146ms (33.1s)
+📊 Tokens — total: 24866, input: 18446, output: 6420, reasoning: 5646

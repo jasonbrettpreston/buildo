@@ -1206,6 +1206,10 @@
   "mobile_parcel_semi_question": {
    "prefix": "parcel-semi",
    "contract": "contract_parcels_lookup",
+   "binding": "mobile/src/components/surfaces/SemiQuestionBinding.tsx",
+   "targets": [
+    "mobile"
+   ],
    "sections": [
     {
      "kind": "bar",
@@ -1296,7 +1300,8 @@
      "list": "answers",
      "select": "selected",
      "content": "answer",
-     "action": "select"
+     "action": "select",
+     "arg": "parcelId"
     },
     {
      "kind": "button",

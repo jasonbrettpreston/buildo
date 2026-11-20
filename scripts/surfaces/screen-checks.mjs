@@ -406,7 +406,72 @@ export function sbindArm(ctx) {
   return { findings: out, note: waits ?? `S-sbind ok (${ids.length} surfaces, ${strings} strings)` };
 }
 
-export const ARMS = [['S-desc', 'DESC', descArm], ['S-screen', 'SCREEN', screenArm], ['S-sbind', 'SBIND', sbindArm]];
+// ---- SV-PAGE (PAGE.TABLE, task-390 fix round) ---------------------------------------------------------------------------------------------
+// Every screen row of scripts/surfaces/_schema/static-page.json (`screens`) is checked at build time against what the screen's binding supplies, so a wrong name
+// fails the hook and not a render. The binding exports closed data lists (suffixes _FLAG_NAMES, _VALUE_NAMES, _VAR_PATHS, _CHOICES, _CONTRACT), read as source text.
+const PAGE_TABLE = `${SCHEMA_DIR}/static-page.json`;
+const listOf = (src, suffix) => {
+  const m = new RegExp(`export const \\w+_${suffix}\\b[^=]*= \\[([^\\]]*)\\]`).exec(src);
+  if (!m) throw new Error(`the binding exports no *_${suffix} list`);
+  return [...m[1].matchAll(/'([^']*)'/g)].map((x) => x[1]);
+};
+/** The names a binding supplies, from its source text. Throws (naming the missing list) when one is absent. */
+export function supplyOf(src) {
+  const flags = listOf(src, 'FLAG_NAMES');
+  const c = /export const \w+_CHOICES\b[^=]*= \{([^}]*)\}/.exec(src);
+  if (!c) throw new Error('the binding exports no *_CHOICES list');
+  const choices = Object.fromEntries([...c[1].matchAll(/(\w+):\s*\[([^\]]*)\]/g)].map((m) => [m[1], [...m[2].matchAll(/'([^']*)'/g)].map((x) => x[1])]));
+  const k = /export const \w+_CONTRACT\b[^=]*= '([^']*)'/.exec(src);
+  if (!k) throw new Error('the binding exports no *_CONTRACT id');
+  return { flags, values: listOf(src, 'VALUE_NAMES'), vars: listOf(src, 'VAR_PATHS'), choices, contract: k[1] };
+}
+/** Problem lines of one screen: each name against what the binding supplies; each content key an EXACT leaf of the content file. */
+export function pageProblems(id, screen, supplied, content, contractIds) {
+  const out = [];
+  const at = (s) => `SV-PAGE ${id} ${s.id ?? 'screen'}`;
+  if (!contractIds.includes(screen.contract)) out.push(`${at({})}: contract ${screen.contract} is not a known contract id`);
+  else if (screen.contract !== supplied.contract) out.push(`${at({})}: contract ${screen.contract} is not the binding's ${supplied.contract}`);
+  const flag = (s, n) => { if (n !== undefined && !supplied.flags.includes(n)) out.push(`${at(s)}: flag ${n} is not in the binding's flag list`); };
+  const value = (s, n) => { if (n !== undefined && !supplied.values.includes(n)) out.push(`${at(s)}: value ${n} is not in the binding's value list`); };
+  const leaf = (s, k) => { if (k !== undefined && !Object.hasOwn(content, k)) out.push(`${at(s)}: content key ${k} is not a leaf of the content file`); };
+  for (const s of Array.isArray(screen.sections) ? screen.sections : []) {
+    flag(s, s.when); flag(s, s.busy);
+    value(s, s.select); value(s, s.target);
+    for (const k of [s.content, s.label, s.idle]) if (s.kind !== 'choices') leaf(s, k);
+    if (s.kind === 'choices') {
+      value(s, s.list);
+      const answers = supplied.choices[s.list];
+      if (answers === undefined) out.push(`${at(s)}: list ${s.list} has no answers in the binding's choices`);
+      else for (const a of answers) leaf(s, `${s.content}.${a}`);
+    }
+    for (const p of Array.isArray(s.parts) ? s.parts : []) {
+      flag(s, p.when);
+      leaf(s, p.content); leaf(s, p.label);
+      for (const v of Object.values(p.vars ?? {})) if (!supplied.vars.includes(v)) out.push(`${at(s)}: vars path ${v} is not in the binding's var list`);
+    }
+  }
+  return out;
+}
+export function pageArm(ctx) {
+  const waits = waitsNote(ctx, 'S-page');
+  const out = [];
+  const table = tryJson(path.join(ctx.root, PAGE_TABLE));
+  const screens = ctx.ok && table?.screens && typeof table.screens === 'object' ? table.screens : {};
+  const ids = Object.keys(screens);
+  for (const id of ids) {
+    const e = ctx.inScope.get(id);
+    if (!e || !convertedOf(ctx).includes(id)) { out.push(`SV-PAGE ${id}: not a converted surface`); continue; }
+    const content = tryJson(path.join(ctx.root, contentPath(e.file, id)));
+    const bfile = screens[id].binding;
+    let supplied;
+    try { supplied = supplyOf(fs.readFileSync(path.join(ctx.root, String(bfile)), 'utf8')); } catch (err) { out.push(`SV-PAGE ${id}: binding ${bfile}: ${err.message}`); continue; }
+    if (content === undefined) { out.push(`SV-PAGE ${id}: content file missing`); continue; }
+    out.push(...pageProblems(id, screens[id], supplied, content, [...ctx.contracts.keys()]));
+  }
+  return { findings: out, note: waits ?? `S-page ok (${ids.length} screens)` };
+}
+
+export const ARMS = [['S-desc', 'DESC', descArm], ['S-screen', 'SCREEN', screenArm], ['S-sbind', 'SBIND', sbindArm], ['S-page', 'PAGE', pageArm]];
 
 // ---- the queue-state check (FE-31 lock C-1 only; never the gate, plan.min M-0) --------------------------------------------------------------
 

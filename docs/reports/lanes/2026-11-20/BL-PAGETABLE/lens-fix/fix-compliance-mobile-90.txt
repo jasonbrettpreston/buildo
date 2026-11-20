@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:18:01.205Z file_sha256=0183dca184e77ddba1c20bfd64574448007ad16666858d7c46b20caf922825e3 prompt_sha256=1a73893fa39177789b6dd65be3e812f4884f55dbcfcf2f890beb51fd2e935d0a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/fix/in-fix-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+```
+REJECT — governing clauses for this change (Spec 126 §0a principle 1 and §11b.2, Spec 127 §3.2a, Spec 135 FE-05/FE-18/FE-31, quoted only inside the diff's own `"$comment"` lines) — the change is accused of adding `arg`, `binding`, screen `targets`, the `val()` throw, the navigate exemption and the SV-PAGE arm with no authority — none of those documents is pasted here, so they are not mine to invent; the review below is against Spec 90 only, which does not name the page table at all.
+REJECT — §2 "2. **Tablet (iPad/Android):** UI must be responsive. Use NativeWind breakpoints (e.g., `md:flex-row`)" — the closed list `"enum": ["web","mobile"]` in scripts/surfaces/_schema/static-page.schema.json is accused of dropping the tablet environment — not a real issue: §2 makes tablet the responsive rendering of the mobile target, and `pageProps` draws every screen whose targets include `mobile`.
+REJECT — §2 "NativeWind `dark:` variants are required for all UI components" — the changed choices row still emits `"className: checked ? styles.card.dotChecked : styles.card.dotIdle"` with no `dark:` variant — not a real issue for this diff: those className lines are unchanged context, and the MF-42 dated note leaves how RN Reusables carry dark values to MF-35.
+MET — §5 "NO HTML/DOM ... NO Web Libraries ... NO DOM APIs" — mobile/src/components/surfaces/PageTableBinding.tsx — the diff still emits only `node('View'|'Text'|'SafeAreaView'|'ScrollView')` and imports nothing from the web tree.
+MET — §4 Tech Stack Constraints — mobile/src/components/surfaces/SemiQuestionBinding.tsx — the one new import is `import type { SemiAnswer } from '@/lib/lotForm'`; no dependency is added to the stack.
+MET — §3 "This mobile application is a \"Dumb Glass\" client" — mobile/src/components/surfaces/PageTableBinding.tsx — the added code is a `targets.includes('mobile')` guard and a name lookup; no mutation, geo math or sorting enters the client.
+MET — §9 "Accommodate device Safe Areas using `react-native-safe-area-context`" — mobile/src/components/surfaces/PageTableBinding.tsx — the root `node('SafeAreaView', { className: styles.screen, edges: { top: 'additive' }, ...` is retained unchanged.
+MET — §12 "`estimatedItemSize` is **removed from the public API**" — mobile/src/components/surfaces/PageTableBinding.tsx — the diff creates or configures no FlashList and passes no size prop; the screen still renders through `ScrollView`.
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 0
+```
+
+---
+⏱  54041ms (54.0s)
+📊 Tokens — total: 27526, input: 17098, output: 10428, reasoning: 9767

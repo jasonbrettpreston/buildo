@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:20:43.682Z file_sha256=bb2f08c0f0d8a909d18ae19e00bbdef0a889c62e6ad09d6e6b3ab248f5720872 prompt_sha256=d0950a121cb7870518274970c958918829b318a555a40f7880b27a3e864511e8
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/fix/in-fix-compliance-surface-128-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — ASK-21 "an edge to a designed thing **renders dashed rather than being refused**" — scripts/surfaces/screen-checks.mjs:429 "if (!contractIds.includes(screen.contract)) out.push(`${at({})}: contract ${screen.contract} is not a known contract id`);" — the new build-time arm refuses any screen contract id absent from ctx.contracts, and whether `status: "designed"` ids enter that map is not visible in the diff, so a screen may be build-refused for naming its own future dependency — resolve by treating designed-status contract ids as known (emit a note, not a finding) and asserting that case in page-arm.logic.test.ts.
+
+DEFER severity=LOW — ASK-15 "**Membership is measured** (the tables reached by a `public` route), never listed by hand" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:34 "export const SEMI_QUESTION_VALUE_NAMES = ['answers', 'selected', 'route', 'navigate'] as const;" — the arm's ground truth for what the screen may name is a hand-kept list beside the code, so a name the binding really supplies but the list omits is refused while a stale entry still passes — rationale: the standard's measured-not-remembered rule applied analogically, no live defect today, but derive or assert the list against the binding's actual usage.
+
+MET — ASK-12 — no hunk under `src/lib` reaper files or `src/tests/db/admin-stats-reaper.db.test.ts` — "reapStaleRunningRows + src/tests/db/admin-stats-reaper.db.test.ts are RETAINED and locked as present" is untouched, nothing deletes them.
+
+MET — §8 Out-of-Scope "scripts/steps/_schema/step.schema.json — frozen at C3" — scripts/surfaces/_schema/static-page.schema.json:2 "static-page.schema.json" — the schema edited is the surfaces page-table schema, not the frozen step schema, so the freeze is not spent.
+
+MET — ASK-22 "an absent field is a build failure while an unfilled one is a counted state" — scripts/surfaces/_schema/static-page.schema.json:544 "\"binding\"" (in the screen `required` list) — the new field is required, so an absent `binding` fails the build rather than passing silently, consistent with the absent-versus-unfilled rule.
+
+REJECT — ASK-13 "each route needs an explicit ruling, never a silent deletion" — accused of silently deleting the T9 flag/content checks from static-page.logic.test.ts — not a real issue: the same checks move to the S-page arm and are re-proved RED at src/tests/surfaces/page-arm.logic.test.ts:47; no route or call site is deleted.
+
+REJECT — ASK-17 "`outputs: "direct_db"` — the latter deliberately **not** available to a SURFACE" — accused of a screen writing state directly via the new choices payload — not a real issue: mobile/src/components/surfaces/PageTableBinding.tsx:118 "onPress: { action: s.action, [s.arg]: { derived: `${s.id}.${i}` } }" dispatches a declared action with a derived payload, it writes no DB.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 30   Unmet: 0
+
+---
+⏱  54050ms (54.0s)
+📊 Tokens — total: 27571, input: 16987, output: 10584, reasoning: 9829

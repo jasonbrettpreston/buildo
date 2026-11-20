@@ -1,0 +1,30 @@
+note: compute-purity: no declared set for scripts/lib/parcels-csv-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/safe-math.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/tag-product-matrix.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/units.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/vocab-coverage.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/zoning-attr-drift.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for scripts/lib/zoning-precedence.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for src/features/leads/lib/archetype-cost-map.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+note: compute-purity: no declared set for src/features/leads/lib/cost-model-shared.js (no sibling descriptor, no DECLARED literal) — G2 skipped for this file
+footgun[step-shape] (info): 29/37 unconverted manifest step files violate the frozen shape (Spec 122 §5.1). This is the expected pre-conversion state and does NOT gate — see scripts/steps/_schema/converted.json.
+footgun[step-shape] (info): scripts/load-coa.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/quality/assert-coa-freshness.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/link-coa-to-parcels.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/enrich-coa-zoning.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/classify-coa-scope.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/classify-coa-trades.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/compute-coa-cost-estimates.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+footgun[step-shape] (info): scripts/load-coa-notices.js is shape-clean but NOT in scripts/steps/_schema/converted.json — if its conversion landed, add it there so the gate arms.
+✅ Step-shape gate clean (29 converted step file(s) enforced; 42 compute module(s) enforced against scripts/ast-grep-rules/compute-shape.yml; 1 compute-purity site(s), all ledger-allowed).
+✅ Footgun gate clean (silent-catch-fallback, env-default-in-lib, comment-rot, silent-row-drop, pool-boundary, direct-advisory-lock, bare-mutation, multi-transaction, sql-now, loop-query, unbounded-push-in-stream, step-shape)
+
+> buildo@0.1.0 typecheck
+> tsc --noEmit
+
+src/tests/surfaces/page-arm.logic.test.ts(14,10): error TS2305: Module '"../../../scripts/surfaces/screen-checks.mjs"' has no exported member 'pageProblems'.
+src/tests/surfaces/page-arm.logic.test.ts(14,24): error TS2305: Module '"../../../scripts/surfaces/screen-checks.mjs"' has no exported member 'supplyOf'.
+src/tests/surfaces/page-table.logic.test.ts(30,125): error TS2353: Object literal may only specify known properties, and 'arg' does not exist in type 'Gate & { kind: "choices"; id: string; list: string; select: string; content: string; action: string; }'.
+src/tests/surfaces/page-table.logic.test.ts(95,41): error TS2353: Object literal may only specify known properties, and 'targets' does not exist in type 'PageScreen'.
+src/tests/surfaces/page-table.logic.test.ts(101,163): error TS2353: Object literal may only specify known properties, and 'arg' does not exist in type 'Gate & { kind: "choices"; id: string; list: string; select: string; content: string; action: string; }'.
+exit=1

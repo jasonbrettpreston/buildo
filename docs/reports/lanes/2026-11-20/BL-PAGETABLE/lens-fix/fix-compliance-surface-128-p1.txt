@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T16:20:32.504Z file_sha256=0b386964fb0250dbf42ba47639ba2c13ad13cae6176542865ec55cd5e7c1bf66 prompt_sha256=89e2da0123ea0bbcd85d6758783e1b81147314dde74f12c32a808ba744a292c2
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/fix/in-fix-compliance-surface-128-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §2 rule 4 "The measured defect: one contract declared at four sites, locked at one." — src/tests/surfaces/static-page.logic.test.ts:110 "expect(SCREENS[ID].targets).toEqual(['mobile']);" — the new screen-level "targets": ["mobile"] restates the descriptor's identity.platforms ['mobile'] and pageProblems never compares the two, so the render-target fact sits at two sites with a literal-vs-literal assert and no cross-check — make pageArm fail when screens[id].targets is not a subset of that surface descriptor's identity.platforms.
+
+BUG severity=HIGH — §2 rule 12 "An unhandled state is a FAIL, not a blank screen." — mobile/src/components/surfaces/PageTableBinding.tsx:46 "if (screen.targets !== undefined && !screen.targets.includes('mobile')) throw new Error('page table: the screen is not drawn on mobile');" — the schema admits targets ["web"] (static-page.schema.json, items enum web,mobile, "$comment": "`targets` is a subset of web and mobile") and pageProblems never reads the screen's targets, so a legal row passes the build arm and throws in render with no declared posture — add a pageProblems finding when a screen's targets omit mobile.
+
+DEFER severity=MED — §2 rule 1 "no surface behaviour lives only in a component" — mobile/src/components/surfaces/PageTableBinding.tsx:131 "const navigate = typeof values.navigate === 'string' ? values.navigate : null;" — which declared value may be absent is component-only knowledge: SEMI_QUESTION_VALUE_NAMES lists navigate beside route, yet only route goes through val and throws, so the optional subset is undeclared — declare the optional names (or have the binding always pass navigate: null) and drop the carve-out.
+
+DEFER severity=MED — §4.5 "a ruling that only lives in a pilot report or a defect-ledger row has not yet reached policy" — scripts/surfaces/_schema/static-page.schema.json:5 "Dated note 2026-11-20 (PAGE.TABLE fix round, task-390)" — the 2026-11-20 ruling that grows the screen vocabulary (binding, targets, arg) is recorded only in that $comment, no docs/specs file is in the diff, and the pasted §5 has no row or dated note of that date — amend Spec 128 (§2 and §5) in the same commit as the lock, or cite the register row id.
+
+DEFER severity=MED — §2.2a note MF-42 "Rule 16's scope gains the binding modules listed in `scripts/surfaces/_schema/bindings.json` (`modules`): the FE-05 lock reads them as files and fails closed" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:20 "import { pageProps, type PageScreen, type PageStyles } from '@/components/surfaces/PageTableBinding';" — the diff edits two binding modules and adds PageTableBinding.tsx to a surface's owned components, but bindings.json is untouched, so if FE-05's file list is that file's modules the edited modules stay outside the no-maths lock — add both paths to bindings.json modules (cannot see its current list).
+
+MET — §2 rule 13 "ONE command generates the scorecard and the policy-coverage matrix from artifacts" — scripts/surfaces/surface-validate.mjs:72 "for (const arm of ['DESC', 'SCREEN', 'SBIND', 'PAGE'])" — the new check runs inside the one validating command, not a separate track.
+
+MET — §2 rule 1 "no surface behaviour lives only in a component" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:35 "export const SEMI_QUESTION_VALUE_NAMES = ['answers', 'selected', 'route', 'navigate'] as const;" — the names a row may use are now declared data read at build time.
+
+MET — §2 rule 4 (contract half) — scripts/surfaces/screen-checks.mjs:429 "else if (screen.contract !== supplied.contract) out.push(...)" — the page table's contract is compared with the binding's contract, so that name is locked rather than restated.
+
+MET — §2.2a rule 19 "Generated output is byte-identical to a regenerate" — mobile/src/generated/surfaces/mobile_parcel_semi_question.json:2 "input_sha 73bf8691f4b8c22d" — the slice is regenerated, and T9 asserts page equals the table row.
+
+MET — R-13 "every component file in those trees appears in exactly one surface's `owns.components[]`" — scripts/surfaces/_schema/census/mobile-product.json:14876 "mobile/src/components/surfaces/PageTableBinding.tsx" — the file is owned by one surface, updated in both the census and the F14 descriptor.
+
+MET — §2.2a rule 16 "it does not add, subtract, round or compare to produce a displayed number" — mobile/src/components/surfaces/PageTableBinding.tsx:118 "onPress: { action: s.action, [s.arg]: { derived: `${s.id}.${i}` } }" — a string template only, no arithmetic.
+
+REJECT — §2.2a rule 20 "Every displayed field's `source` is in the closed set" — the new binding property is accused of adding a field source outside the closed set — Rule 20 governs a displayed field's declared source in a REPORT projection, not the module a page row names for its closed name lists.
+
+REJECT — Spec 128 header "Status: DRAFT ... Not authorized for implementation." — the change is accused of implementing an unauthorized draft — the same pasted document carries operator rulings dated 2026-11-04 to 2026-11-15 that put the programme in implementation, so the header is stale, not a bar.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 2
+
+---
+⏱  205559ms (205.6s)
+📊 Tokens — total: 55114, input: 31140, output: 23974, reasoning: 22641

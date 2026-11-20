@@ -4545,7 +4545,7 @@ Nothing — every field is answered with a why and a citation.
 
 **9. What would removing it delete?**
 
-It is 1 of 12 entr(ies) in feature `F14`. Removing it deletes 2 owned component(s): `mobile/src/components/surfaces/LotMapBinding.tsx` · `mobile/src/components/surfaces/SemiQuestionBinding.tsx`. Every table it touches is touched by something else, so removing it orphans none.
+It is 1 of 12 entr(ies) in feature `F14`. Removing it deletes 3 owned component(s): `mobile/src/components/surfaces/LotMapBinding.tsx` · `mobile/src/components/surfaces/SemiQuestionBinding.tsx` · `mobile/src/components/surfaces/PageTableBinding.tsx`. Every table it touches is touched by something else, so removing it orphans none.
 
 ---
 

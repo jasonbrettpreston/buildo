@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T16:21:32.442Z file_sha256=21de845fdb3121bdd56e3c95e85de20c6fa95727684dc4d1159fa509730757a2 prompt_sha256=b8bdff02a276ec2c8c003b3b67bbbe69d1ca3bda6f92e8a8bcf9cdee87c1393d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/fix/DIFF.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/surfaces/screen-checks.mjs:447 "const screens = ctx.ok && table?.screens && typeof table.screens === 'object' ? table.screens : {};" — if static-page.json is corrupt (tryJson returns undefined) or its `screens` map is empty, ids=[] and the arm returns `S-page ok (0 screens)`, so the very gate meant to catch bad names passes green on the failure it exists for — emit a finding when the table or `screens` is missing/empty instead of an empty ok.
+
+BUG severity=MED — mobile/src/components/surfaces/PageTableBinding.tsx:52 "if (!Object.hasOwn(values, name)) throw new Error(`page table: the value ${name} is not supplied`);" — `str()` now routes through `val()`, so a render where the caller omits `selected` (choices) or `route` (button target) throws an uncaught error and the whole screen fails to render instead of showing the designed disabled state (a supplied null is fine, an absent key crashes) — treat an absent key as null at render, or only throw in dev, so the disabled degrade still works.
+
+BUG severity=MED — mobile/src/components/surfaces/PageTableBinding.tsx:118 "onPress: { action: s.action, [s.arg]: { derived: `${s.id}.${i}` } }" — there is no runtime guard that `s.arg` is a string; a stale generated slice lacking `arg` yields the payload `{ action: 'select', undefined: {...} }` (key stringified to "undefined"), a silently wrong-onPress payload rather than a throw — throw by name when `s.arg` is not a non-empty string, mirroring the flag/value throws.
+
+DEFER severity=LOW — mobile/src/components/surfaces/PageTableBinding.tsx:131 "const navigate = typeof values.navigate === 'string' ? values.navigate : null;" — `navigate` is exempted from the `val()` throw while `route`/`selected` are not, so the "every missing value throws by name" rule is inconsistent: a screen degrades silently for navigate but crashes for a target, and the arm's VALUE_NAMES check cannot see the difference — decide one rule for all values and apply it.
+
+DEFER severity=LOW — scripts/surfaces/screen-checks.mjs:437 "value(s, s.select); value(s, s.target);" — the S-page arm never checks a choices row's `arg` against any list (it trusts the AJV enum), so a table edited without rerunning AJV (T1) can pass the build arm with an invalid payload key — add the `arg` to the arm's checked names or a closed list in the binding.
+
+DEFER severity=MED — mobile/src/components/surfaces/PageTableBinding.tsx:118 "[s.arg]: { derived: `${s.id}.${i}` }" — the write key is positional (`answer.0`), not the answer value (`yes`/`not_sure`); if `answers` ever reorders between renders the same visible answer carries a different derived id, so a repeat/double submit is not deduped by the answer — key the derived value by the answer value if downstream treats it as a count.
+
+Paths walked: missing value key at render, absent answers list, empty answers array, screen targets not mobile, corrupt/empty page table, binding file missing, binding export lists missing, stale slice without arg, repeated choice tap   Unguarded: 4
+
+VERDICT: FAIL on error-path safety
+
+---
+⏱  44554ms (44.6s)
+📊 Tokens — total: 33044, input: 25590, output: 7454, reasoning: 6677

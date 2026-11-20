@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T16:21:11.254Z file_sha256=21de845fdb3121bdd56e3c95e85de20c6fa95727684dc4d1159fa509730757a2 prompt_sha256=da1eeffe36b8dca2a76cfee781c76193bde2ac09011aa1eb44d5a033e929937b
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/fix/DIFF.patch (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/surfaces/screen-checks.mjs "const screens = ctx.ok && table?.screens && typeof table.screens === 'object' ? table.screens : {};" — if the page table fails to parse (tryJson returns undefined) or ctx.ok is false, screens becomes {} and the arm falls through to `note: waits ?? \`S-page ok (${ids.length} screens)\`` reporting ok with 0 screens, so a broken table passes this arm with no finding — push a finding when table?.screens is not an object, before the loop.
+
+DEFER severity=MED — src/tests/surfaces/page-arm.logic.test.ts "import { pageProblems, supplyOf } from '../../../scripts/surfaces/screen-checks.mjs';" — the new test never calls pageArm, so the arm's file read, ctx.ok/screens gating and contentPath wiring are unexercised and the silent-pass above is undetected — add a case that drives pageArm with an unreadable table and asserts a finding.
+
+DEFER severity=LOW — mobile/src/components/surfaces/PageTableBinding.tsx "onPress: { action: s.action, [s.arg]: { derived: `${s.id}.${i}` } }," — arg is typed `string`, so arg === 'action' silently overwrites the action key in the payload; B6 passes an arbitrary 'lotId' proving unvalidated values reach here — narrow arg to the schema union or assert `s.arg !== 'action'`.
+
+DEFER severity=LOW — src/tests/surfaces/page-table.logic.test.ts "expect(() => pageProps(SCREEN, ask, { answers: [], navigate: null } as never, S)).toThrow(/selected/);" — PageValues is `Record<string, string | readonly string[] | null>`, so this object is already assignable and the `as never` is unnecessary, defeating the value-name typing this change adds — drop the cast.
+
+NIT — src/tests/surfaces/page-arm.logic.test.ts "const sec = (s: Json, id: string): Json => s.sections.find((x: Json) => x.id === id);" — find can return undefined but the return type claims Json, so a wrong id throws "Cannot set properties of undefined" instead of a clear failure — return `Json | undefined` and assert.
+
+REJECT — mobile/src/components/surfaces/SemiQuestionBinding.tsx "export const SEMI_QUESTION_VALUE_NAMES = ['answers', 'selected', 'route', 'navigate'] as const;" — looks like a dead export (no in-code reader; same for VAR_PATHS and CHOICES) — supplyOf() in screen-checks.mjs reads these lists from the binding's source text at build time, so they are consumed.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL): none, all findings are MED/LOW/NIT and safe to defer
+
+---
+⏱  104803ms (104.8s)
+📊 Tokens — total: 45165, input: 25573, output: 19592, reasoning: 18959
