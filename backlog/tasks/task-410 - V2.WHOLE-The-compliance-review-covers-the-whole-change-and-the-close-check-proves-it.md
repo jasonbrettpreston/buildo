@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T21:48:00Z'
+updated_date: '2026-11-20T21:50:00Z'
 labels:
   - McFix
   - McFix V2
@@ -106,4 +106,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 second correcting dated note added to 08_agents.md (the assignee sentence; a close needs the board ref).
 
 2026-11-20 round 5 landed: 7116dabbc (check-lane-close.mjs H8 and the board read after the moves check), 065f85a02 (second correcting dated note). Lens set re-run on the final range. Task stays RUNNING, grounder owed.
+
+2026-11-20 operator ruling on the CONFLICT, verbatim (MORNING-DECISIONS.md entry '2026-11-20 · Operator AGREES the Rule 3 amendment and RULES on material too large to review'): put to him "amend Spec 137 Rule 3 so a lane task closes in a separate commit after its code — yes (recommended) or no?"; "agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close." Dated notes added in 137_mcqueue.md (Rule 3 and a correction of this task's earlier note). The material-too-large half of his sentence is not built here.
 <!-- SECTION:NOTES:END -->
