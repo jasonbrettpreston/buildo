@@ -7,12 +7,14 @@ status: RUNNING
 assignee:
   - '@lane-BL-HOOKS3'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T18:42:00Z'
+updated_date: '2026-11-20T18:46:00Z'
 labels:
   - McFix
   - McFix B
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-HOOKS3/REPORT.md
 type: build
 ordinal: 81012
 ---
@@ -47,4 +49,6 @@ Add useSettledRedirect, useGoBack, useDebouncedValue to mobile/src/hooks/useParc
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-HOOKS3, worktree /Users/brettpreston_macmini/Buildo-wt-hooks3, branch wf1/inc1b-hooks3), RR-0240
+
+2026-11-20 BL-HOOKS3: built in 5614c611b (test) and 5b744d820 (hooks + pages); index.tsx redirect left as code (not the same code); lens outputs and FINDINGS.md in docs/reports/lanes/2026-11-20/BL-HOOKS3/; grounder owed; phone-test green only from Mobile CI.
 <!-- SECTION:NOTES:END -->
