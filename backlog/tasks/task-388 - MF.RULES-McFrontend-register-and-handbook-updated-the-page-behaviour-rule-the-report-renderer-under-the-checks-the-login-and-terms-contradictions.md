@@ -3,10 +3,11 @@ id: TASK-388
 title: >-
   MF.RULES McFrontend register and handbook updated: the page-behaviour rule,
   the report renderer under the checks, the login and terms contradictions
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-MFRULES'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-20T17:23:00Z'
 labels:
   - McFix
   - McFix E
@@ -40,4 +41,6 @@ Operator 2026-11-20: "is the McFront-end updated - what does it mean when I say?
 
 <!-- SECTION:NOTES:BEGIN -->
 Correction: the register file is docs/specs/02-web-admin/135_mcfrontend_decisions_register.md (the Files line above names it wrongly; the launch brief must use this path).
+
+2026-11-20 taken on the board at lane launch (lane BL-MFRULES, worktree /Users/brettpreston_macmini/Buildo-wt-mfrules, branch wf1/inc1b-mfrules), RR-0240
 <!-- SECTION:NOTES:END -->
