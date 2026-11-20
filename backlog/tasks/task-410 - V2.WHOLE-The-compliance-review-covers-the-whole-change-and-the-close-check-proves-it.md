@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T20:08:00Z'
+updated_date: '2026-11-20T20:09:00Z'
 labels:
   - McFix
   - McFix V2
@@ -72,4 +72,6 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 fix round part 3: backlog-lane.mjs brief (git -c core.quotepath=false, refs/heads base, glob exclusions from the table exempt).
 
 2026-11-20 operator ruling, verbatim (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md, entry '2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)'): "1-5 y"; item 4 as put to him: "Keep the split for code review, error paths, UX and security" (the no-list split of lens-input stays; the four CONFLICT findings on that scope are settled by it). Item 3 as put to him: "Exempt generated snapshots from review material": existing lists found (table exempt = docs/reports/lanes/**, docs/reports/reviews/**; golden folders src/tests/fixtures/surfaces/<id>/<state>.<target>.json validated by report-checks.mjs goldenProblems and screen-checks.mjs screenArm; generated-docs gate list; no .gitattributes in the repo); NOT landed in the table: widening exempt in this lane is refused by the new base-table rule (F7), halted for the orchestrator.
+
+2026-11-20 fix round landed: f82b84339 (rule-lists.mjs), a92c11503 (check-lane-close.mjs), de431c6d7 (backlog-lane.mjs), 406bbb5af (dated notes in 08_agents.md and 137_mcqueue.md). Lens set re-run on the new whole diff; superseded round-1 outputs listed in SUPERSEDED.txt. Task stays RUNNING, grounder owed.
 <!-- SECTION:NOTES:END -->
