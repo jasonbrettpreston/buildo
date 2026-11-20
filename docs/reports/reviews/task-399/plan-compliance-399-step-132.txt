@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:51:27.267Z file_sha256=1de9c5f40e91e651f0d0c062a0929ea93f6c84fac041bf843339e0944aa391ff prompt_sha256=ae1654a80a8cc2ff2b20219c004f9e986c1a05b6c0193e2775de7e6c9fdfbb06
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-399-step-132.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero. ... Runner and gate numbers are pinned `step_*` / `gate_*` / `tooling_*` variables." — PLAN-399:2(d) "the 60-character minimum below is a literal under core.8, named for that card (task-N: to be created), no migration inside this task" — the 60-character minimum, the bulk `count:<n>` thresholds and the per-severity limits ship as literals in a hook, registration deferred to a card that has no id, so core.8 is unmet at plan-lock by the plan's own admission — fix: create that card in this plan with its real task id and register each number as a `tooling_*` variable with `on_invalid: fail`, or record an operator deviation as a register row (x-v3.2 condition 9) before plan-lock.
+
+DEFER severity=MED — x-rulings.4 "each set of rulings ... is committed verbatim as `docs/reports/decisions/<date>-<slug>.json` ... `--check` at pre-commit fails on an uncovered decision or a citation of an unknown one" — PLAN-399:2 "(b) records the cited 2026-11-20 rulings as backlog decisions (backlog-decision.mjs)" while the Files line at PLAN-399:3 lists no `docs/reports/decisions/` file — the 2026-11-20 rulings arrive only as backlog decisions, with no verbatim log and no `decision-log.mjs --check` coverage — add the decisions JSON to the Files line and run `decision-log.mjs --write` then `--check`.
+
+DEFER severity=MED — x-rulings.1 "Cited ids must resolve." — PLAN-399:4.3 "The line ends \"; not reviewed (exempt): <k> paths\", k recomputed by the check as the changed paths of the range that the table's exempt globs leave out of the review material (operator, :1522 item 3: generated snapshots exempt, \"their own fingerprint check being their proof\")" — the one operator line quoted for :1522 is "you are probaley rebuilding stuff that already exists you do this all the time", which contains no exemption instruction, so a new final-summary field rests on an item that is not quoted and cannot be resolved from the plan — quote item 3 verbatim in the plan or drop the field.
+
+DEFER severity=MED — x-captures.5 "A live test proves its child process completed before asserting on its output." — PLAN-399:5 "red first through the real hooks ... each lock proven in both directions" — the tests that invoke the real commit-msg hook and assert on its output state no child-completion step, and R-CP is cited only for the manual acceptance run at PLAN-399:7(b) "The run exits 0 and prints the count before it asserts" — state in section 5 that every hook-invoking test asserts exit status before reading output, naming R-CP.
+
+DEFER severity=LOW — x-tooling.1 "Pre-commit is file-only, staged-scoped and inside a pinned time budget (#52)" — PLAN-399:4.1 "no commit in the range carries \"This reverts commit <sha>\": git log --grep" — the check adds ancestor and `git log --grep` work per confirmed id (36 ids on the measured task-381 material) inside the commit-msg path with no measured hook cost — state the measured hook cost for the 36-id case, or batch the git facts into one call.
+
+REJECT — core.6 — that the new refusals push into `errors` and exit 1 instead of producing PASS/WARN/FAIL check rows — that clause governs a pipeline step's verdict and its `checks_failed` counters, not a lane-close hook, so it is out of scope here.
+
+REJECT — x-tooling.3 — that acceptance (b)'s printed "checked 36 ids" breaches "a programme-gate precondition is locked both directions, never a printed count" — that clause binds programme-gate preconditions in `programme-items.json`, not acceptance evidence pasted on a task.
+
+MET — x-tooling.1 — PLAN-399:3 — the new test file is `src/tests/backlog/check-lane-close.logic.test.ts` with no Postgres, matching "Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`".
+
+MET — x-v3.2 — PLAN-399:2 — the plan records the cited operator rulings as decision rows before any step cites them, per "An operator decision found only in a plan or assessment ... is recorded as a register row before a step can cite it".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 63   Unmet: 4
+
+---
+⏱  43614ms (43.6s)
+📊 Tokens — total: 27326, input: 19157, output: 8169, reasoning: 7087

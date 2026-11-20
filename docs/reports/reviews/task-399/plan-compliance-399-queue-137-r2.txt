@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T23:41:48.639Z file_sha256=469e32721dd8706494bd5d77c2f574cc0643b55673273de18ebaada5725b4948 prompt_sha256=85bfcd8d190ee0a6536a18a1444c9b1734aef6ce7bb7330fe7f77a05557db628
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/v3/in-plan-compliance-399-queue-137-r2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 137 §4 Rule 12 dated note 2026-11-20 (task-366) "Which lists a task attaches is decided by `scripts/analysis/rule-lists.json` from the task's Files line (the launch refuses a task whose Files line is missing or matches no row)." — PLAN-399-v3 §3 "the lane re-measures with the two added files (UNVERIFIED)" — the two added Files paths (scripts/analysis/backlog-brief.mjs and its test) are unresolved against rule-lists.json before the step-10 launch that refuses on an unmatched row, and the lane cannot re-measure because the launch refuses before a lane exists — run rule-lists.mjs resolve for the two added files and paste the output before the launch hand step.
+
+DEFER severity=MED — 137 §4 Rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form" and Rule 10 "with the date, the row id and the queue" — PLAN-399-v3 §2 step 5 "Record each verbatim ruling of section 0 as a backlog decision (backlog-decision.mjs), then add each RR number to the task text with --append-notes" — task-399's row receives RR numbers and a decision file, not the M-246 dated note with the verbatim words, and section 0 gives no date for :1517, :1522, :1546, :1557 — append one M-246 dated note per ruling to task-399 carrying date, row id, queue and the verbatim words, and give each cited line its date.
+
+DEFER severity=MED — 137 §3 "Where the line sits" "A card carries it as the first line of the card file." with Rule 2 "A card, or a claimed id, gets a status line too." — PLAN-399-v3 §9 "Cards to open (hand step 5; none built here): the review_followups.md table row (:1557 item 1, after 375; Spec 137 rule 2)" — the five cards this task opens are given no status line as the first line of the card file — add the Status line (word, since, expires, next) as line 1 of each card file, and a row in the home of the review_followups item.
+
+DEFER severity=MED — 137 §3 McLane note "for a Backlog task the status line is its front matter: `status` is the word; the due date is `expires`" with Rule 7 "Each open row carries an opened date and an expiry 7 days later." — PLAN-399-v3 §4.2 "backlog task edit task-N --check-ac <n> ... --final-summary \"<what landed>\" --append-final-summary \"<block>\" -s BUILT" — the close sets BUILT, an open word, and never sets the expires (due) date, so the row lands with no expiry — name the expires date in the closing command or in the hand step that precedes it and state it for BUILT rows.
+
+DEFER severity=MED — 137 §5a dated note 2026-11-19 (task-306 R8a) "an open decision reaches the operator as a Backlog task in status OPERATOR carrying two lines, `Grounded:` (the issue verified against its sources, cite) and `Recommendation:`" — PLAN-399-v3 §8 "OPERATOR ITEMS: P1 to P5 are listed once, at the end of this file" — five open decisions reach the operator as plan text, not as an OPERATOR task with the two description lines, so backlog-next.mjs cannot list or flag them — open the OPERATOR task with a `Grounded:` and a `Recommendation:` line per item and cite it from the plan.
+
+DEFER severity=MED — 137 §4 Rule 12 dated note 2026-11-20 (task-366) "a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding" — PLAN-399-v3 closing block "the forms, the Seat line, the CLI mode and the severity grammar are additions of the orchestrator" — TRIAGE.md, the five outcome forms, the severity grammar and `--outcomes` are required by the check but named by no pasted 137 clause — land the 137 §4 dated note of 4.5 before the build commit so the requirement has a spec row, or paste the :1572 and :1580 words as governing clauses.
+
+MET — 137 §4 Rule 3 dated note 2026-11-20 (task-410) "the closing commit stages only the lane's report directory, the task's review context directory, task files and decision records" — PLAN-399-v3 §9 "the closing commit stages only the lane directory, the review records, task files and decisions".
+
+MET — 137 §4 Rule 3 dated note 2026-11-20 "the status moves in a separate closing commit that carries only the lane's records" — PLAN-399-v3 §9 "A second, records-only commit closes the task (Rule 3 two-commit form, :1546".
+
+MET — 137 §1 McLane note Rule 3 "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — PLAN-399-v3 §9 "Each code commit carries the trailer \"Task: task-399\" and the task file in the same diff".
+
+MET — 137 §1 McLane note Rule 3 "docs, spec, queue-row, backlog-only and merge commits are exempt" — PLAN-399-v3 §2 step 9 "git commit with a docs(08_agents): message (no Task trailer: docs commits are exempt)".
+
+MET — 137 §4 Rule 12 dated note 2026-11-20 (task-366) "in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`) ... a `GROUNDER.md` from an agent that is not the lane" — PLAN-399-v3 §4.1 "TRIAGE.md in the lane directory (docs/reports/lanes/<date>/<lane>/, beside GROUNDER.md)" and WHO DOES WHAT b "The orchestrator launches the separate grounder".
+
+REJECT — 137 §6 "A commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling ... is not built now" — the plan is accused of building the deferred check — it is not, its refusal is an outcome check; the three deferred conditions stay deferred per the §1 §6 note.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 6
+
+---
+⏱  90236ms (90.2s)
+📊 Tokens — total: 37643, input: 17793, output: 19850, reasoning: 18357

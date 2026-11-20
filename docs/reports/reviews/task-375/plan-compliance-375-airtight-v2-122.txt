@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:45:44.465Z file_sha256=277b2494b381b0ad7ffb29ec73685035ff633feab76a36fccdca8f18753a3221 prompt_sha256=396c5d4114370646f7ddce338b1826ea5aa02673d18aef84094694dbb5c89efa
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-375-airtight-v2-122.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — 122 §6.6.1(f) "The ≤ 12 prose cap is fast invariant #45 NOTES-CAP over each declaring notes file (`scripts/analysis/gates/notes-cap.mjs`, hard; `src/tests/gate-notes-cap.infra.test.ts`)." — plan: "a dated note under section 3 of 137_mcqueue.md for the new close refusals (compliance references, reports referenced, the plan gate), quoting :1557 and :1570" — the plan adds prose to 137_mcqueue.md and never states that #45 NOTES-CAP was run over that file; I cannot see from the pasted text whether 137_mcqueue.md is a declaring notes file, so the cap may red the closing commit — add a step to the commit list: run `scripts/analysis/gates/notes-cap.mjs` over 137_mcqueue.md before the dated note commits, or state in the plan that the file declares no notes.
+
+REJECT — 122 §6.6.1(a) "100% mechanical: generated from code/runtime or witnessed from executed SQL, never hand-authored" — the plan is accused of resting on hand-pasted counts (17 to 38 calls, 88 calls, 17 calls, 32,698 characters) — (a) binds the four-part step registry and the §6 cross-step ledger, not review-context measurements, and the plan's acceptance item 2 re-runs every one of the 15 lists and pastes exit code and call counts on the task.
+
+REJECT — 122 §6.6.1(a) "verified by a gate with closed answers, zero allowlist, strict zero (R-BC)" — the plan's D6 `gate_from` key is accused of being an allowlist — R-BC governs the registry/ledger truth gate, whose status (c) stays NOT MET and which this plan does not touch, while `gate_from` exempts whole tasks launched before task-375 folds from a review-evidence gate, a different gate with a different subject.
+
+REJECT — 122 §6.6.1(b) "The Phase 1 WITNESS gate (#44) must carry the exact string `R-BF WITNESS GATE (#44)` in `scripts/analysis/step-validate.mjs`" — the plan is accused of disturbing #44 because it edits gate-running scripts (backlog-lane.mjs, rule-lists.mjs, check-lane-close.mjs) — `scripts/analysis/step-validate.mjs`, `scripts/analysis/gates/witness.mjs` and `src/tests/spec124-register-rulings.logic.test.ts` are absent from the plan's FILES line, so the marker and the both-directions R-BF lock are left as they are.
+
+MET — 122 §6.6.1(c) "Until this programme lands, no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed." — plan section 0: "Serves: supporting function, the compliance review every Increment 1·B task passes through; advances none of doc-2 elements A to G." — the plan claims no registry or ledger accuracy, names no registry file, and leaves (c) at NOT MET.
+
+MET — 122 §6.6.1(e) "`scripts/analysis/src-sql-ledger.mjs --check`, run by `.husky/pre-commit`, fails on any column the ledger records as read or written on a table that `docs/reports/witness/_catalog.json` lists but whose column list lacks it" — FILES line (no `.husky/pre-commit`, no `scripts/analysis/src-sql-ledger.mjs`) and D5 "no new hook is wired" — the pre-commit catalog-membership check continues to run unmodified.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  47524ms (47.5s)
+📊 Tokens — total: 19291, input: 10484, output: 8807, reasoning: 7954

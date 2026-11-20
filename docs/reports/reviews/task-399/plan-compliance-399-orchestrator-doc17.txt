@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:51:09.020Z file_sha256=0c4e6e1fe270a15e323d12f08ccbf4271750b78653717a8525742cb3746febf3 prompt_sha256=5600d2d482a9cb2351a0c53e359605debe65e7c97eb8fc414d54053ae7b26675
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-399-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-17 header "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18). The operator's rulings are the decisions." — PLAN-399 header "Operator lines (MORNING-DECISIONS.md, 2026-11-20 entries; the entry heading governs when lines move): :1517 \"don't makr the task complete until it actually works\"; :1522 ...; :1546 ...; :1556-1557 items 0-8 \"approved\"; :1570 entry ..." — every operative requirement the plan obeys rests on 2026-11-20 MORNING-DECISIONS lines, while the pasted list ends at 2026-11-19 register entries (RR-0218), so nothing pasted shows those lines are decisions rather than register entries, which the header forbids feeding a review as a ruling — fix: in §9 RULES CITED, name the decision record (decision file / RR id) for each :1517, :1522, :1546, :1556-1557, :1570 line so its status as a decision, not an entry, is on the page.
+
+MET — doc-17 header "The operator's rulings are the decisions." — PLAN-399 §6 "THE BUILT-TO-DONE RULE: AWAITS OPERATOR (M16)" — the BUILT-to-DONE question is held open with a question and a recommendation instead of being settled from a reading, so no reading is promoted to a ruling.
+
+MET — doc-17 header "never feed a review as a ruling" — PLAN-399 §9 "RULES CITED (board 4fda5187d)" — the cited-authority list contains only 08_agents.md, 137_mcqueue.md, 124a, Spec 132, plan-protocol.md and check-task-files.mjs line references; no RR id from doc-17 is cited as authority anywhere in the plan.
+
+REJECT — doc-17 header — the plan is accused of not carrying out RR-0002 "lane tooling first" and RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit" — both sit under "## Readings" and the header says they never feed a review as a ruling, so they impose nothing on PLAN-399's scope or file list.
+
+REJECT — doc-17 header — the plan is accused of bypassing RR-0013 "Launch means users on the live customer report, not tester preview", RR-0107 and RR-0108 launch-level items, and RR-0105 "All-lot store is one headline record per parcel and option" — readings only, none a decision, and none touches a lane close check, so their absence from §4 SCOPE is not a gap.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 1   Unmet: 0
+
+---
+⏱  21095ms (21.1s)
+📊 Tokens — total: 19377, input: 15644, output: 3733, reasoning: 3078

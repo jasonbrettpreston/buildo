@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:44:57.501Z file_sha256=246cb95d2fbe01224abf31a68551111f94d78b9b7fb164f74a680515104c83a9 prompt_sha256=78bee71e0fdbc539517b3654db6e9fedac9d2c8634595d4504fc9d6e78775ed9
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-375-airtight-122a.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §A27 item 13 "A test that needs Postgres is `*.db.test.ts` ... under `src/tests/db/`, or beside its step under `src/tests/steps/<slug>/`. `npm run test` excludes `**/*.db.test.ts` and `npm run test:db` runs `.db.test.ts`" — PLAN-375 §TESTS "Each item A to D has a failing .logic.test.ts under src/tests/backlog/ run before its source change" together with "D10b: proof-slice reads its timeout from the variable (needs the DB GO)" — the D10b test needs Postgres and is planned as a logic test under src/tests/backlog/, so it lands in the lane that excludes DB tests — rename it to proof-slice.db.test.ts under src/tests/db/, state it runs only under `npm run test:db`, and amend acceptance 8 to that path.
+
+DEFER severity=MED — §A27 item 10 "worktree DB env via `DOTENV_CONFIG_PATH` for one process" — PLAN-375 §TESTS "D10b: proof-slice reads its timeout from the variable (needs the DB GO)" — acceptance 8 reads a DB-registered variable from a lane worktree and the plan names no DOTENV_CONFIG_PATH invocation and no target DB — add the one-process DOTENV_CONFIG_PATH invocation to the D10b acceptance step so the run does not read the base checkout's DB.
+
+DEFER severity=LOW — §A26 "Proof of no runtime change" "`git diff --stat <main> -- scripts/lib scripts/*.js scripts/quality/*.js scripts/steps/_schema/step.schema.json` is empty" — PLAN-375 §FILES line "scripts/lib/review-template.js" — the plan edits a path §A26 classes as runtime (scripts/lib) and states no computeLibFingerprint or step-validate equality for its own landing — add one line proving computeLibFingerprint() equal and step-validate --all --fast unchanged, or state that review-template.js falls outside that fingerprint (cannot see whether it does).
+
+REJECT — §A26 "Proof of no runtime change" — that touching scripts/lib at all is forbidden here — the clause describes the A26 landing's own diff, not a standing prohibition, and the plan changes no pipeline runtime.
+
+REJECT — the operator rulings the plan quotes (MORNING-DECISIONS.md :1517, :1522, :1541, :1546, :1557, :1570) — that the plan misstates or misses them — the pasted context reads "(no pasted context provided)", so those lines are not mine to judge; I record "cannot see" and do not guess.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 1
+
+---
+⏱  46916ms (46.9s)
+📊 Tokens — total: 20333, input: 11093, output: 9240, reasoning: 8616

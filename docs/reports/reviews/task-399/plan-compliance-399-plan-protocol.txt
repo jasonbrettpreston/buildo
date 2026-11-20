@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:51:09.099Z file_sha256=0c4927b48836906ccce5fccb808a15863ce92a6a886106bcc252f9bc0cc095cc prompt_sha256=1270dbe0536b22b2d957f60cc49e4608b69af95912839dc30f713dc9163764fc
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-399-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan-protocol §3 "Rulings: only when a search of the record finds none; the search is quoted." — PLAN-399 §6 "Question for the operator: \"Should a task that already closed BUILT through the lane check be allowed to move to DONE without the lane proof running again?\" Recommendation: yes." — M16 is put to the operator with a recommendation and no quoted search of MORNING-DECISIONS.md, 137_mcqueue.md or the Spec 08 notes, so the "genuinely open" test of §2 step F ("rulings only where a rule is genuinely open (searched first)") and the operator's "Dont make more ungrounded recommendations" are both unmet — paste the search command and its output at the head of §6, or record the ruling the search finds and delete the question and the recommendation.
+
+BUG severity=MED — plan-protocol §2 step B "Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE." — PLAN-399 "Serves: supporting function, the compliance review every Increment 1·B task passes through; advances none of doc-2 elements A to G." — no S1-S8 or NONE tag is given, so the task cannot be placed or defended on the removal list under step B — replace "supporting function" with the exact tag, SUPPORT S<n> plus one line of evidence, or NONE with the grep.
+
+BUG severity=MED — plan-protocol §3 "Every step reports: tasks before, added (with source), removed-candidate, after. The count must not grow without a source per task." — PLAN-399 §2 "(d) opens one card for registering the review-gate literals as tooling_ variables" and "(e) opens the card for the review_followups.md table row" — two cards are added to the plan and no before/added/removed-candidate/after count is reported for the increment — add the count line (before, added 2 with the two sources, removed-candidate, after) and name the two card ids, or drop the cards to the sitting.
+
+BUG severity=MED — plan-protocol §4 "status/dependsOn changes with reason" — PLAN-399 §2 "Launch AFTER task-410 is folded onto wf2/board ... BEFORE task-375." — the order exists only as prose in the plan; no dependsOn delta (399 dependsOn 410, 375 dependsOn 399) is named for the patch or the board, so the order is unenforceable once the patch is applied — add the explicit dependsOn edits and their one-line reasons to this plan's delta.
+
+DEFER severity=LOW — plan-protocol dated note 2026-11-20 item 4 "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce" — PLAN-399 "PLAN-399 (consolidated build plan, for the full panel; board head 4fda5187d..." — "for the full panel" does not name the Spec 08 section 7 lens set or its separate grounder, so the reviewer set for this single lane task is unstated — name the lens set (rule-lists.mjs lensSet) and the grounder in the §6 review-records line; bounded, since GROUNDER.md and GROUNDER-NOTES.md are already in that line.
+
+MET — plan-protocol §5 item 5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — PLAN-399 "Estimate: GUESS one lane day, not timed." — labelled GUESS.
+MET — plan-protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — PLAN-399 §9 "08_agents.md section 5.3 :227; section 7 rule 1 :334, rule 3 :336" — sources given as file:line throughout.
+MET — plan-protocol §2 step D "Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands." — PLAN-399 §7 "(a) The planted-defect tests above, red first, then green, through the real hooks" — red-first named with the hook command.
+
+REJECT — plan-protocol §4 "Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only...)" — accused of not being delivered in seq-patch.json form — not a real issue: the material is the task-level build plan that feeds the increment patch; the patch and SITTING.md are orchestrator artifacts produced after this plan passes.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 5
+
+---
+⏱  55487ms (55.5s)
+📊 Tokens — total: 18098, input: 7051, output: 11047, reasoning: 9989

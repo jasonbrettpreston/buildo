@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:50:01.739Z file_sha256=6417c33f3b82db5f628dd069c013ac47e2db07475cb42bc8d583e6b604b903ec prompt_sha256=94ab68e5eed96074268f5ddd681d467956e638e50d5ffbd28900c8d71c34c02c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-399-airtight-v2-122.txt (model: deepseek-reasoner)
+
+REJECT — 6.6.1(a) "the four-part step registry ... and the §6 cross-step ledger ... are **100% mechanical** ... never hand-authored" — accused of hand-authoring a registry or ledger row — the only new artifact is a lane TRIAGE.md of review outcomes (plan item 4.1 "One line per CONFIRMED or CONFLICT id of GROUNDER.md"), which is neither the FILES/DATA/CONSUMERS/TESTS registry nor the §6 ledger; no descriptor, catalog or ledger row is written.
+
+REJECT — 6.6.1(c) "Until this programme lands, no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed." — accused of asserting registry or ledger rows as accurate — the plan asserts no registry or §6 ledger row; its numbers are re-runnable check outputs on non-registry files ("36 CONFIRMED and 0 CONFLICT ids by the check's own VERDICT regex, measured 2026-11-20") and rule-list resolves ("Resolved lists with these files: 9, measured on the board with `rule-lists.mjs resolve`"), both outside the registry/ledger.
+
+REJECT — 6.6.1(e) "hard-stopping only a pending slug; converted slugs are report-only until slice B fixes their known gaps" — accused of tightening a converted step's WITNESS gate — the refusal is on task-status moves ("The close is refused naming every id with no line or with two lines"), and neither `scripts/analysis/gates/witness.mjs` nor `scripts/ai/analysis/step-validate.mjs` nor any descriptor appears in the Files line.
+
+REJECT — 6.6.1(d) "`load_wsib` ③ lands first (V1; witnessed with the converted fleet in Phase 1)" — accused of reordering the phase sequence — the plan cuts no capture and touches no converted step; its order clause is about task-410/task-375 lane sequencing only ("Launch AFTER task-410 is folded onto wf2/board ... BEFORE task-375").
+
+REJECT — 6.6.1(f) "Enforced (each lock runs in the pre-push `npm run test`)" — accused of adding a lock outside the enforced pre-push set — the new lock is `src/tests/backlog/check-lane-close.logic.test.ts` under `src/tests/`, and the plan states it is proven "red first through the real hooks" (plan item 5), so no `pending_remediation`-style exemption is introduced.
+
+MET — 6.6.1(b) "The Phase 1 WITNESS gate (#44) must carry the exact string `R-BF WITNESS GATE (#44)` in `scripts/analysis/step-validate.mjs`; the R-BF lock in `src/tests/spec124-register-rulings.logic.test.ts` holds (c) at NOT MET while that marker is absent" — Files line "scripts/hooks/check-lane-close.mjs, src/tests/backlog/check-lane-close.logic.test.ts, .claude/review-templates/README.md, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md" — neither the marker file nor the R-BF lock is in the set, so neither direction of the two-way lock is disturbed and (c) is not flipped by this task.
+
+MET — 6.6.1(c) "Gate C (emits≡declared) passes only via 58 `pending_remediation` rows in `standard-gates-ledger.json`." — plan NOT IN SCOPE "compliance references, the reviewer context and the plan gate (task-375)" — the plan adds no ledger row and removes no remediation row, so the declared==observed accounting it is judged on is untouched.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  18132ms (18.1s)
+📊 Tokens — total: 10783, input: 7635, output: 3148, reasoning: 2274

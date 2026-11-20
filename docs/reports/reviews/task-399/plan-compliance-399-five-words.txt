@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:50:18.550Z file_sha256=1248a7ebab579cfb67c1b9562b7df1d3c04eef1126162bcffd572c736f05cb0a prompt_sha256=5c7a39a59fbab6c0df8adaba85649fbff05266a9182c3d318c2d8ee186ee87b9
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-399-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — rule list, part 1 of 1 "Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs." — PLAN-399 §4 item 2 "Bulk: <output file> <severity> count:<n> REJECTED ..." and §1 "It makes the close refuse unless every CONFIRMED or CONFLICT finding of GROUNDER.md has an outcome, so a finding cannot drop." — no pasted clause names any behaviour this plan adds: the TRIAGE.md outcome lines (fixed:, task:, ruling:, wontfix:), the Bulk forms, the 60-character floor, the outcome limits, the round line and the exempt k count all rest on 08_agents.md :336,:340,:227,:451 and operator :1570, none of which is in the pasted context, so compliance cannot be established from this part — Fix: paste those 08_agents.md lines and operator :1517,:1522,:1546,:1556-1557,:1570, or hold plan-lock until the part that carries them runs.
+
+BUG severity=MED — "#NN: A `step-validate` fast invariant ... Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates." — PLAN-399 §5 "AC #2 of the task binds" and §4 item 1 "the id exactly as the grounder writes it (<file stem>#<n>, unique inside a lane dir)" — the reserved #NN token is used for an acceptance criterion and for finding ids, so a reader resolves #2 against step-validate and the grounder id collides with the invariant notation — Fix: write 'acceptance criterion (b)' and state in the README correction and both dated notes that <file stem>#<n> is not the step-validate #NN.
+
+BUG severity=MED — "lock / lock-db / check / hook ... a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook." — PLAN-399 §4 "SCOPE (in check-lane-close.mjs; a new block placed after the GROUNDER verdict block, pushing into `errors`, never returning early)" and §4 item 4 "the check's VERDICT form, check-lane-close.mjs VERDICT" — the plan calls a commit-msg hook script a check, and that usage is written into README.md:109 and two dated notes, seeding a vocabulary collision with step-validate checks that later readers will inherit — Fix: call it the close hook in the plan, the README line and both notes, and reserve check for step-validate invariants and gate tokens.
+
+BUG severity=MED — "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — PLAN-399 §5 "test names carry the rule they enforce" — the locks are bound to handbook lines and the plan names no rule id or declared alias anywhere, its only identifier set being rule-list names "agents-s5-1to3 agents-s7-s11" — Fix: name the rule id or declared alias in each test title and list the ids in section 5 and section 9.
+
+DEFER severity=LOW — operator line :1522 "you are probaley rebuilding stuff that already exists you do this all the time" — PLAN-399 §4 item 3 "operator, :1522 item 3: generated snapshots exempt, \"their own fingerprint check being their proof\"" — the same line number yields two different verbatim quotes and the entry is not pasted, so the attribution of the exempt-globs ruling cannot be checked, yet the round line's k count depends on it — cite the entry by heading and item, not by line.
+
+MET — "lock / lock-db / check / hook" (placement half) — PLAN-399 §3 "src/tests/backlog/check-lane-close.logic.test.ts" — the lock lands under src/tests/ as a plain *.test.ts, so it is an npm test lock and not a lock-db.
+
+MET — "lock / lock-db / check / hook" (names and asserts) — PLAN-399 §5 "Planted-defect tests, each with a passing control" — every lock is asserted in both directions rather than merely labelled.
+
+REJECT — five words (Gate V) "STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates." — accused of never scoring the five words — gate V scores a converted step's behaviour and this task converts no step, its Files line holding one hook script, one test and three docs.
+
+REJECT — RE-FREEZE #N "A field is added or deleted only by one." — accused of amending the frozen vocabulary with the TRIAGE.md outcome tokens fixed:, task:, ruling:, wontfix:, Bulk: — those are lane-file line forms, and step.schema.json and template-freeze.json gain no field.
+
+REJECT — PH-0 … PH-8 and class-A — accused of shipping with no assessment phase or risk class — the phases and the PH-4 risk class attach to a step conversion, and no step is converted here.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 29   Unmet: 4
+
+---
+⏱  68630ms (68.6s)
+📊 Tokens — total: 18691, input: 6227, output: 12464, reasoning: 11295

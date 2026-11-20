@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:46:54.771Z file_sha256=42b1d3de69baa45525ff26c1cc15feadc9b56ac5ef3a69c5acf58fe0d031a53a prompt_sha256=fc0eec854d566b8a41a23ce67fa0c2f0e9e740f338f5109f467a44dcfb44d5a7
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-375-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=none-applicable — not emitted.
+
+DEFER severity=MED — operator rulings the plan rests on (MORNING-DECISIONS.md:1422, :1517, :1522, :1541, :1546, :1557, :1570), not pasted — "(no pasted context provided)" — plan: "Marked AWAITS OPERATOR lines in this plan: N20 (section 0), M16 pointer (section 0), D-exempt (section D)." — compliance with the operator authority the plan invokes (the "or split smaller" reading at A7, the :1570 gate mandate at D, N20 and D-exempt) cannot be judged from this run, and the plan itself leaves three lines open — paste those entries verbatim as --context and record :1541, :1546, :1557 as decisions on task-375 before plan-lock.
+
+MET — doc-2 "Built state" not-built inventory — "Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page." — plan FILES line: "scripts/analysis/backlog-lane.mjs, scripts/analysis/backlog-brief.mjs, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/deepseek-review.js, scripts/lib/review-template.js, .claude/review-templates/lens-compliance.md (stays on the line and is NOT edited), scripts/analysis/proof-slice.mjs, docs/specs/00-architecture/137_mcqueue.md, scripts/analysis/rule-lists.json" — no search-page source and no doc-2 deliverer task is on the Files line, so no NOT BUILT element is claimed as delivered.
+
+MET — doc-2 element table deliverer column (A.6 "SRCH.A6 LS.12 LS.3", C.12 "SRCH.C12 LS.12 LS.6", D.8 "GAP.12") — plan: "Serves: supporting function, the compliance review every Increment 1·B task passes through; advances none of doc-2 elements A to G." — the card declares itself non-delivering, so no deliverer status in doc-2 is asserted or contradicted by this plan.
+
+REJECT — doc-2 elements A to G (whole table) — the change is accused of advancing none of the S search-page elements — doc-2 is a status inventory of the Increment S search surfaces and names no review, close-check or proof tooling, so a tooling card cannot owe an A to G element.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 2   Unmet: 0
+
+---
+⏱  31936ms (31.9s)
+📊 Tokens — total: 19400, input: 13740, output: 5660, reasoning: 5033

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:46:32.037Z file_sha256=cbb753e29606d97ff89265c4656ff1c205d4252cf4aa3cad894ad7e0d97281e8 prompt_sha256=ba71bd906de43e6a98ed6b60e3e6fe8a7d53959259bfe0fd68a8021f1fca6aed
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-375-airtight-v3-122.txt (model: deepseek-reasoner)
+
+BUG finding count: 0. No pasted clause binds this material, since every clause in the pasted list is scoped to `scripts/lib/compute/**` or to step conversion, and the plan's Files line holds no file under either scope. The four REJECT lines below record the accusations that a careless read would raise, so the panel sees they were considered and dismissed on scope, not overlooked.
+
+```
+REJECT — 5.5 rules 1 to 6 "A dispatch table, `{ [checkId]: fn }`" and "Every tunable goes through `ctx.config`" — accused of violating compute shape in the files it edits (no dispatch table, no `ctx.report`, no `ctx.config`, hard-coded section names and thresholds) — the pasted rules are enforced "over `scripts/lib/compute/**`" by `scripts/ast-grep-rules/compute-shape.yml`, and the plan's Files line is "scripts/analysis/backlog-lane.mjs, scripts/analysis/backlog-brief.mjs, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/deepseek-review.js, scripts/lib/review-template.js", none of which is under that directory
+REJECT — gate E "`scripts/analysis/gates/compute-literals.mjs` scans every `scripts/lib/compute/**` module for that closed rule set" — accused of writing new literal thresholds with no `config.logic_variables[]` entry and no `standard-gates-ledger.json` row — the clause governs compute modules only, and the plan already names the registration route "any new literal threshold this task writes into a gate or tool is named for registration by the card opened for task-399's 60-character minimum"
+REJECT — conversion checklist "every future and unconverted step passes the six-part V3 package" — accused of adding or converting a step without the V3 package, G0 to G13 purity, and `step-validate standard: V2|V3` — the plan creates no step and touches no `scripts/steps/**` file; its stated purpose is "This task makes the scripts do what Spec 08 and the README already rule", review and proof tooling
+REJECT — rule 2 "there is **no `console.*`**" — accused of adding stdout narration and error printing in backlog-lane, backlog-brief and check-lane-close refusals instead of a `ctx.log` seam — the `console.*` ban is inside the compute shape rule set, so it does not reach `scripts/analysis/**`, and "refuses printing every error" is the plan's stated mechanism for a CLI, not a compute observation path
+```
+
+```
+MET — §5.5 scope clause "Enforced by `scripts/ast-grep-rules/compute-shape.yml` over `scripts/lib/compute/**`" — PLAN-375 FILES line "scripts/lib/review-template.js, .claude/review-templates/lens-compliance.md (stays on the line and is NOT edited)" — the only `scripts/lib` file on the line is `review-template.js`, which the shape rule and the literals gate do not scan
+MET — rule 1 isolation property "exported as `module.exports.checks` so a test can call one check without running the rest" — PLAN-375 D3 "One exported function planGateErrors({id, taskText, files, table, root, lane, readAt, callbacks}) in check-lane-close.mjs" — the plan's own new logic is a single exported function with injected inputs, which is the shape rule's intent applied to a non-compute module (no clause requires more)
+MET — rule 6 "Every tunable goes through `ctx.config`" as applied to the one threshold the plan admits — PLAN-375 section C "D10b: proof-slice.mjs reads its timeout from the registered variable (needs the operator's DB GO and an id claim)" — the plan registers the timeout rather than inlining it, and holds the work behind the DB GO instead of shipping a literal
+```
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  22658ms (22.7s)
+📊 Tokens — total: 13428, input: 9008, output: 4420, reasoning: 3519

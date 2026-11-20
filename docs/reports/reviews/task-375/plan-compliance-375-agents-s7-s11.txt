@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:44:57.500Z file_sha256=ce3c4a968a88b1ebef2d8d11ef209cede54fd53cd7c6b1ca6bd0c9379ef58909 prompt_sha256=544a9e2ee34ac91bd504ffe017fada18cd8affca094ae1d432b25307a9410ee6
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-375-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 7 rule 10 dated note 2026-11-19 (RR-0232 (c), RR-0235) "the lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit, and the task's references point at that repo copy" — plan B3 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir (GROUNDER.md is a close artifact named by 137_mcqueue.md:132 and by this task's AC #3; 08_agents.md:347 names REPORT.md and, when they exist, TRIAGE.md and the review output); the close check refuses when one is missing." — the refusal set drops the review output the ruling names (and that the plan's own :347 citation lists) while adding GROUNDER.md — add the review output to B3's required set and to the close refusal, keeping GROUNDER.md alongside it.
+
+BUG severity=HIGH — 7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — plan section D "AWAITS OPERATOR (D-exempt): "Tasks launched before task-375 folds have no plan evidence: should they be exempt from the plan gate (yes), or refused at close until relaunched (no)?" Recommendation: yes (they were launched under the old rules; refusing would stop every open lane)." — the D-exempt recommendation goes to the operator with no rule id and no file:line (N20 quotes RR-0328 at MORNING-DECISIONS.md:1422, D-exempt quotes nothing) — paste the governing rule and its file:line into the D-exempt card before it is sent.
+
+BUG severity=MED — 7 rule 6 "DEFER → `review_followups.md` with reasons" — plan D1 "TRIAGE.md in task-399's form (an outcome per CONFIRMED or CONFLICT plan finding; for a plan finding `fixed:<sha> <task file path>`, the sha touching the task file)" — the gate's triage vocabulary has no DEFER outcome and no review_followups.md destination, and the plan lists "the review_followups.md row (card after 375)" as NOT IN SCOPE — add a DEFER outcome that writes the review_followups.md row, or name the ruling that defers it.
+
+BUG severity=MED — 11.8 (MCINC-8, M-515) "Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere" — plan section D "D1. Evidence, in docs/reports/reviews/<id>/ on the board (flat; the directory 08_agents.md:347 names for review records, always allowed by check-task-files.mjs:70)" through D7 and D-exempt — the plan mints D1 to D7 as new D numbers with no ledger claim and no owner file — claim each D number in `~/Buildo-scratch/ids` before the plan ships, or relabel the sections so they are not D numbers.
+
+BUG severity=MED — 11.9 (TKT-1) "The first lines of every brief and prompt (after any front-matter block) are: `Ticket: MB-nn · lane X · stage N` (queue Process 11); `Rule:` the rule quoted with file:line; `Scope:` the files or targets; `Done-condition:`; `max_fix_rounds:` a number" — plan A2 "The reviewer's context is these headings of that file only, exact texts: "Task", "Description", "Acceptance criteria", "Decisions naming this task", "Implementation Notes"." — the lens prompt the plan composes from A2/A3 carries none of the five header lines and no other source for them is named — add the TKT-1 header (ticket id, lane, stage, rule with file:line, scope, done-condition, max_fix_rounds, default 2) to the prompt built in A2/A3.
+
+BUG severity=MED — 11.2 "one cross-read adversary checks the folded decisions PAIRWISE and walks every checklist line for staleness against the fold" — plan D1 "plus two lines: `Cross-read: <name>` (the adversary of 11.2)" — the gate's whole evidence of the cross-read is a name string, so the pairwise collision check and the checklist staleness walk the clause requires leave no record — require a cross-read note (collisions or a per-checklist "no collision" line) beside GROUNDER.md and have planGateErrors read it.
+
+DEFER severity=LOW — 11.9 (TKT-2) "Every reply ends with one line `STATUS: ready|blocked|failed|dropped` and carries at most one question." — plan "Marked AWAITS OPERATOR lines in this plan: N20 (section 0), M16 pointer (section 0), D-exempt (section D)." — the document put in front of the operator carries three questions and ends at "RULES CITED (board 4fda5187d)" with no STATUS line — ask one question per reply and close with `STATUS: blocked` naming D-exempt.
+
+MET — 7 rule 2 "Ground-truth gates Compliance (§5.1/§5.2): validate the spec against reality before checking code against the spec." — plan section D "Grounded first (what exists, why it does not already do this): Spec 08 section 11.2 (:463) already RULES it" — the gate design is preceded by a grounded inventory of what exists and why nothing enforces the order today.
+
+MET — 7 rule 4 dated note 2026-11-19 "run with `scripts/deepseek-review.js review <file> --template <lens> --context <pasted context>`" — plan A3 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — the dated note's invocation form is enforced on every lens command, including the compliance command that passes no context today.
+
+MET — 11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed" — plan TESTS "each lock proven both ways, 08_agents.md:467" with "Planted refusals, each with a passing control" — each new refusal carries a both-ways proof plus a passing control.
+
+MET — 11.1 "a census grep runs at the **full scope its conclusion covers**" — plan A2 "Measured (task-381's 15 resolved lists, v2whole buildLensInputs, material = its diff of 19,138 bytes ...): the whole context file (32,698 characters) raises the compliance calls from 17 to 38" — the section-selection claim is measured at full scope and its output kept in GROUNDER-NOTES.md Appendix 1.
+
+MET — 7 rule 7 "Security fires only on money/auth/PII/admin" — plan C "D11b: the security regex at rule-lists.mjs:142 on the board (:161 at 1dd061188) misses admin and PII (README.md:104 and lens-security.md:48 say it fires for both)" — the fix is scoped to admin and PII, matching the clause's fire list.
+
+REJECT — 11.5 "CLI models (Gemini/DeepSeek raw) are DEMOTED to whole-file audit generators." — accused of making DeepSeek lens outputs a hard close gate via A5 — the later dated note under rule 4 (2026-11-19, task-358 REVIEW.LENSES) seats DeepSeek in the compliance seat with one Claude grounder adjudicating every finding, and D1/D3 require that grounder's file, so nothing is elevated that the later ruling did not name.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 27   Unmet: 7
+
+---
+⏱  95486ms (95.5s)
+📊 Tokens — total: 34629, input: 15153, output: 19476, reasoning: 17680

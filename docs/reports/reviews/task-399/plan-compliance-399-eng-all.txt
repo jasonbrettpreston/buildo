@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:50:14.718Z file_sha256=91b51d5e7321527bf8ef29197a3163484930600cd0760e53ae49bcca2fc0a6f8 prompt_sha256=020e9f42c1109ac819b92029a3cb4283d13b0facd677cbe85f3edacb5c2652e6
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-399-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — eng-all §11 Pre-Review Self-Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change (Behavioral Contract / API Endpoints / Operating Boundaries / §4 Edge Cases). Walk each item against the ACTUAL diff. Output PASS/FAIL per item in the response BEFORE running tests." — PLAN-399 section 7 "Do not mark BUILT until the output of (a) to (c) is pasted on this task (operator :1517)" — sections 1 to 9 of the plan list tests, locks and acceptance runs but contain no 5-10 item PASS/FAIL self-checklist from the governing spec (Spec 08 section 7 rules 3 and 6, section 5.3), and §11 states these items are not optional when the condition applies — add a plan section that enumerates 5-10 items from 08_agents.md section 7 rules 3/6 and section 5.3, each walked against the diff with PASS/FAIL before the red-first test run.
+
+DEFER severity=MED — eng-all §11 Cross-Layer Contracts "If a new threshold is introduced, a row is added to src/tests/contracts.infra.test.ts mapping the JSON key to its consumer file(s) so drift becomes a CI failure" — PLAN-399 section 2 "(d) ... the 60-character minimum below is a literal under core.8, named for that card (task-N: to be created), no migration inside this task" — the 60-character minimum is a new threshold with at least three consumers named in this plan (check-lane-close.mjs, README.md item 4, 08_agents.md note item 5) and no contracts row lands with this change, so the drift window opens at merge — either land the contracts.infra.test.ts row in this task (the value has no SQL/Zod/migration leg, so the DB GO does not block it) or add the row to the same card and state the intervening drift risk explicitly.
+
+DEFER severity=MED — eng-all §14 registry "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — PLAN-399 section 8 "Own commit for the check change and tests, before any close ... README and the two dated notes in their own commits" — the new refusals become reachable in the first commit while the two specs and README that describe them land only in later commits of the same task, so a bisect sees a gate that refuses for reasons no committed doc states — land README.md item 4 and the two dated notes (item 5) in the same commit as the check change, keeping only the records in the closing commit (the two-commit close at :1546 is unaffected).
+
+DEFER severity=LOW — eng-all §12.12 "Pure functions with arithmetic invariants — scoring formulas, key normalizers, distance/unit conversions, cursor comparators — MUST have at least one fast-check property test asserting the invariant." — PLAN-399 section 4 "n is recomputed from the file, so it cannot undercount" and section 5 "Planted-defect tests, each with a passing control" — the plan pins count reconciliation only with example-based planted defects, though "parsed count equals recomputed matching lines" is a forAll invariant over TRIAGE.md text and is exactly the arithmetic-invariant class this rule exists for — add one property test over generated line sets asserting reported count equals recomputed count for both the plain and the DEFERRED bulk forms.
+
+REJECT — eng-all §5.1 "You MUST always import typed factories from src/tests/factories.ts" — untyped inline mocks — PLAN-399 section 5 "no typed domain factory applies: it builds text lines" — the fixtures are file-content strings for a text parser, not untyped domain-object mocks, and they reuse the existing helpers in check-lane-close.logic.test.ts; this is not the bug class the clause names.
+
+REJECT — eng-all §9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`) for infrastructure concerns." — no pipeline.run/withTransaction — check-lane-close.mjs is a commit-message hook under scripts/hooks, takes no pool, writes no rows, and the plan cites no DB write for it; the SDK mandate is scoped to DB-writing pipeline scripts.
+
+MET — eng-all §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — PLAN-399 section 5 "red first through the real hooks; AC #2 of the task binds" and section 7(a) "red first, then green, through the real hooks" — red-first ordering is explicit and gated on pasted hook output.
+
+MET — eng-all §5.2 test-layer table "`*.logic.test.ts` | Pure functions, scoring, classification" — PLAN-399 FILES "src/tests/backlog/check-lane-close.logic.test.ts" — the pure `outcomeErrors(...)` block is proven in the logic layer the table names for pure derivation.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+
+---
+⏱  54220ms (54.2s)
+📊 Tokens — total: 26318, input: 16576, output: 9742, reasoning: 8605

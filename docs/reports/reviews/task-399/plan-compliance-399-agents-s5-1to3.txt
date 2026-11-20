@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:48:08.535Z file_sha256=b05075ac63ea85e68159b851ae7c5517bbc26edb2bb18285cf2aaa3e74071ae3 prompt_sha256=7ffc4260b8406e7d38de60e5710c4ac2ea70153678bd8b34e31c4bc0cde73633
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-399-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 08 §5.3 dated note 2026-11-20 item (3) "refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md`" — plan §6 "Recommendation: yes. If yes, add: "check() skips a move whose HEAD copy already holds a finished status; the lane proof runs when a task first reaches one."" — the plan recommends, and offers to build, a skip that lets a BUILT to DONE move through with no lane proof, while the pasted ruling names DONE explicitly; the AWAITS OPERATOR tag does not cure it, the plan's own recommendation is contrary to the ruling — strike the "yes" recommendation, and if the operator wants the skip require a dated note amending §5.3 item (3) before any code change.
+
+DEFER severity=MED — Spec 08 §5.3 "Rejected findings are written to the plan with reasons so they don't return every round (§8.8)." — plan §4 item 2 "This weakens MED and below (no per-finding quote): stated, not hidden." — the bulk line names no finding ids, so a MED rejection is not written per finding and its reason cannot be matched back to an id — require the bulk line to carry the ids it counts, or one line per MED id.
+
+DEFER severity=MED — Spec 08 §5.3 dated note item (3) "one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding" — plan §4 item 4 "CONFIRMED, REJECTED or CONFLICT ... in GROUNDER.md; the lane's TRIAGE.md holds the outcome lines of item 1" and item 1 "a CONFLICT id takes ruling: only" — the pasted ruling defines only CONFIRMED and REJECTED, and the plan makes CONFLICT a third id class with its own outcome rule, behaviour no pasted clause names; check-lane-close.mjs VERDICT and 08_agents.md:347 are not pasted, cannot see — quote the VERDICT regex line and :347 in the plan, or drop CONFLICT from item 1 and item 4.
+
+DEFER severity=MED — Spec 08 §5.3 "After the panel returns findings, run DeepSeek + Integration against the proposed findings/changes (not the code)" — plan §4 item 6 "Review records of this plan: docs/reports/reviews/task-399/ (panel outputs, GROUNDER-NOTES.md, GROUNDER-NOTES-2.md, the audit)" — the mandatory second pass and its rejection reasons live in a directory not in the material, so from the plan body I cannot confirm round-2 ran or which findings it rejected and why — paste the round-2 verdicts, one CONFIRMED or REJECTED with reason per finding, into the plan before plan-lock.
+
+DEFER severity=MED — Spec 08 §5.2 "a standing periodic Ground-truth sweep (a scheduled routine — see §7) that diffs high-traffic specs against reality and files drift to `review_followups.md`" — plan §2 "(e) opens the card for the review_followups.md table row (operator :1556 "Yes, after 375"; Spec 137 rule 2)" with §4 item 1 "docs/reports/review_followups.md ... is refused" — the plan lands new refusals while the spec's only filing home for the drift the plan itself reports (30 tasks at BUILT that "none could move to DONE after 410 and this task", the refused review_followups.md path) is deferred to a card the plan leaves as "task-N: to be created" — name that card id, or a named interim filing path, before plan-lock.
+
+DEFER severity=LOW — Spec 08 §5.3 dated note item (3) "The lane that wrote the work leaves the task RUNNING with "grounder owed"." — plan §4 item 3 "`backlog task edit task-399 ... --append-final-summary "Review round N: ..." -s BUILT`" — the plan's close sequence and acceptance (c) go to BUILT in one command and never state the interim RUNNING with grounder owed step the ruling requires, so a lane following item 3 has no named state in which the grounder works — add the RUNNING / grounder owed step to ORDER and to acceptance (c).
+
+MET — Spec 08 §5.3 dated note item (2) "runs the compliance lens once per list with the list pasted whole ahead of the plan or diff ... never trimmed" — plan §3 "Resolved lists with these files: 9 ... no path unmatched." — every attached list is named and this review carries agents-s5-1to3 "part 1 of 1" whole ahead of the plan.
+
+MET — 08_agents.md:340 rule 6, quoted in the plan ":340 "DEFER -> review_followups.md with reasons"" — plan §4 item 1 with the quoted operator ruling ":1556-1557, item 1: ... "Until then a deferral goes to a named task. Yes, after 375."" — the task: substitution for a DEFER is authorized by a pasted operator line, not invented.
+
+MET — Spec 08 §5.1 "HARD DEPENDENCY: Compliance is only meaningful if the spec is TRUE. Run Ground-truth (§5.2) FIRST" — plan §9 "every claim here that could be run was run: the resolve lists, the 36 ids, the BUILT count" — the load-bearing counts were measured on the board and the plan reports the drift ("the lines are 6 higher on the task-410 branch").
+
+MET — Spec 08 §5.3 "Rejected findings are written to the plan with reasons" — plan §4 item 1 "<id> wontfix:"<60+ characters>" (a rejection with reasons, rule 3 and 5.3)" — a HIGH or CRITICAL rejection cannot close without 60+ characters of reason.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+
+---
+⏱  57851ms (57.9s)
+📊 Tokens — total: 17789, input: 6034, output: 11755, reasoning: 10366

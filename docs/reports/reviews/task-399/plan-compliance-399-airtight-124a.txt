@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:49:24.660Z file_sha256=f9889eeed2b4c9c6b09dab82f8dc11ab2780a58d04650169b84309ceff9e8d3a prompt_sha256=036ed8c40e30ce6d02d728155de1ec65684678c8fa866b724f52e411845d1364
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-399-airtight-124a.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — 124a R-CP "no spawn error, no signal, an expected exit code, the summary header, and at least one score row per converted step (`notLookedReasons(run, convertedCount)` ... returns `[]`)" — plan §7(b) "The run exits 0 and prints the count before it asserts \"none\" (124a:296 R-CP)" or NONE for the hook invocations — the plan's R-CP proof arm names exit status and the id count only, and acceptance (a) "through the real hooks (commit-msg runs check-lane-close.mjs; paste the hook output)" names no spawn-error/signal assertion or spawn timeout for those invocations, so a crashed or killed hook that emitted the count line can still pass the absence assertion — state in §5 and §7(a) that each hook spawn asserts no spawn error, no signal and the expected exit code before any stdout assertion, with the timeout set above the measured hook run time.
+
+MET — 124a R-CP "A live test asserts that its child process completed before it asserts on that process's output" — plan §7(b) "Before a TRIAGE.md exists: exit 1, one error per CONFIRMED or CONFLICT id ... After a real TRIAGE.md written for it: exit 0, \"checked 36 ids\", no error" — both directions assert exit status and the recomputed count before any absence claim.
+
+MET — 124a R-BC(e)(2) "pre-commit checks are FILE-ONLY (no DB, no network; DB checks belong to `npm run test:db` or `npm run cloud:pre`)" — plan §4 "Git facts ... arrive as callbacks in closeErrors' input, as diffOf and readBase do, so closeErrors stays pure of git" — the added block reads files and takes injected git facts, no DB and no network.
+
+REJECT — 124a R-AX/R-AY/R-AZ — accused of adding execution.* posture dispositions, a product-population bound or a row cap — not a real issue: the plan's Files line names only a hook, a test, two docs and a README; no posture enum, priced output or `--limit` appears anywhere in the material.
+
+REJECT — 124a R-BA/R-BF/R-BH — accused of adding a step-standard gate, a registry row or a golden capture without a machine check — not a real issue: the plan claims no gate, registry row or capture; its subject is TRIAGE.md outcome lines in `scripts/hooks/check-lane-close.mjs`.
+
+REJECT — 124a R-BZ…R-CN — accused of touching compute purity, ledger reads, ctx seams or gate-E ledger keys — not a real issue: no compute file, descriptor, golden or `standard-gates-ledger.json` row is in the Files line or in any plan item.
+
+REJECT — 124a R-BC(e)(1) — accused of adding a commit-time check that is not locked by extending `src/tests/hooks-composition.infra.test.ts` — not a real issue: e(1) covers fast invariants and generated-artifact drift checks introduced during a chain; this is a refusal inside an existing commit-msg hook, and the plan adds no pre-commit line.
+
+REJECT — 124a R-BC(e)(2) wall-time budget — accused of adding gate cost without a before/after measurement — not a real issue: the clause names pre-commit wall time and this block lives in the commit-msg hook, with the git reads behind injected callbacks.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 0
+
+---
+⏱  46109ms (46.1s)
+📊 Tokens — total: 24509, input: 15882, output: 8627, reasoning: 7826

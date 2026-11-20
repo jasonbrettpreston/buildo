@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:47:26.794Z file_sha256=887338a21d0888966d3fb87ff78d8502893ebb3924d9364fca4e42496e98326b prompt_sha256=5eb0621f2bfc39a67d53b153d6d343f01ecd4f4445005b3a6033619696b14586
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-375-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Project objectives, "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — plan line "D. THE PLAN GATE (operator, :1570: "a grounder checks the folded plan before any build starts, so I cannot launch a build on an unchecked plan")" — Section D ships behaviour the card does not name: a new exported planGateErrors, a new plan-sha command, a launch refusal ("No flag or environment variable turns it off"), a close re-proof at L and a new gate_from key, none of which appear in the plan's own scope sections A to C, which it labels "Still open in this task, original approved scope" — Fix: split D onto its own card, or paste :1570 as a governing clause of this task and cut every part of D it does not name.
+
+BUG severity=HIGH — Increment objectives, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796 "Maybe the search portion done now with the page." — plan line "Other open lanes run their reviews AFTER this folds (operator item 8, :1556)." plus "Order: launch AFTER task-410 and task-399 are folded." — the plan sits inside the increment-1·b-search milestone ("advances none of doc-2 elements A to G") and puts every other lane's reviews, including search work, behind up to three lane days of tooling, so the search portion is not done now — Fix: name which of elements A to G or the search page this unblocks, and launch it after that element rather than before the other lanes.
+
+DEFER severity=MED — Objectives, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652 "we need one plan - we can only execute one plan" — plan line "Marked AWAITS OPERATOR lines in this plan: N20 (section 0), M16 pointer (section 0), D-exempt (section D)." and "Order: launch AFTER task-410 and task-399 are folded." — the plan cannot be locked or executed alone: it carries three undecided operator questions, one of them another plan's line (M16 of PLAN-399), and blocks on two other plans folding — Fix: decide or drop N20, the M16 pointer and D-exempt now, so one plan executes.
+
+DEFER severity=MED — Project objectives, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635 "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page" — plan line "Serves: supporting function, the compliance review every Increment 1·B task passes through; advances none of doc-2 elements A to G." — the supporting function claimed is the review process itself, not a supporting function of the report, details or search page the database exists for — Fix: state for each of A to D which report, detail or search capability it supports, or drop the part that supports none.
+
+DEFER severity=MED — Project objectives, "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — plan line "This task's own launch precedes the gate: its plan check is this panel (the same records), manual." — the task builds a standardization (one context file, one extractSections, one gate) and exempts its own fix-task launch from it, so the standard ships unapplied to the change that introduces it and the accuracy claim is unproven on the case at hand — Fix: run the plan gate on task-375's own launch as a dry run and paste the result in acceptance 9, or record why the exemption is safe.
+
+MET — Project objectives, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652 "our objective is to finish a completed project ie a database that works and is ready" — plan line "If the DB GO is not given, A, B and D still ship and the task is NOT marked complete" — the plan refuses to call the task finished while D10b is unlanded and unproven.
+
+MET — Increment objectives, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796 "the semi calculation stays in Increment 7 (7.25)" — plan line "advances none of doc-2 elements A to G." — no section of A to D computes, changes or moves a semi lot calculation.
+
+MET — Project objectives, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635 "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — plan line "Serves: supporting function, the compliance review every Increment 1·B task passes through" — the plan names its ground explicitly instead of claiming a designed element, so the relevance test is answered rather than skipped.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 4
+
+---
+⏱  38362ms (38.4s)
+📊 Tokens — total: 15784, input: 8286, output: 7498, reasoning: 6374

@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:46:33.031Z file_sha256=1650580c51801bc0c320b284dd9caf0123fbae3978be773b09c761030c44bc4b prompt_sha256=96e48e0467df2548370a02c122716d92b61e0ac7cfb67b0b6d12ec47c13c073c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-375-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> — none found; see DEFER lines below for the clause gaps that do not reach the severity gate.
+
+DEFER severity=MED — §11 Cross-Layer Contracts Check "If a new threshold is introduced, a row is added to `src/tests/contracts.infra.test.ts` mapping the JSON key to its consumer file(s) so drift becomes a CI failure" — PLAN-375 FILES line "any new literal threshold this task writes into a gate or tool is named for registration by the card opened for task-399's 60-character minimum, task-N: to be created" — the plan writes new gate literals (the 12-hex plan hash in D2, the 120000-character prompt cap in AC #1) and routes their registration to a card that does not yet exist, so no contracts.json row and no CI drift guard covers them at fold time — register each new literal in docs/specs/_contracts.json with its contracts.infra.test.ts row inside this task, or show in the plan that each literal is derived from an already-registered value.
+
+DEFER severity=MED — §11 Pre-Review Self-Checklist "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change" — PLAN-375 ACCEPTANCE "Do not mark the task complete until 0 to 9 are on the task (operator :1517)." — the always-applies self-check is absent from the plan entirely: ACCEPTANCE 0 to 9 has no item that outputs a PASS/FAIL checklist walked against the diff before tests run, and the WF3 sibling-bug item ("list 3-5 sibling bugs that could share the same root cause") is likewise unnamed — add acceptance item 10 requiring the 5-10 item PASS/FAIL checklist (and the WF3 sibling list for D11b) pasted on the task before the green light.
+
+DEFER severity=MED — §12.12 Property-Based Tests "Pure functions with arithmetic invariants ... MUST have at least one `fast-check` property test asserting the invariant" — PLAN-375 §D2 "`rule-lists.mjs plan-sha --task task-N` prints the `Plan:` line: sha256 (12 hex) of the task title plus the whole body after the front matter ... whitespace squashed, with any line matching \"taken on the board at lane launch\" removed" — the one pure normalizer this task adds, which a launch and a close gate both depend on, gets only example-based tests (one-word edit differs, take-note append passes) and no property test, so §12.12 is unmet for planSha — add src/tests/property/plan-sha.property.test.ts asserting squash idempotence and planSha(squash(t)) === planSha(t) before the gate ships.
+
+DEFER severity=MED — §14 registry row "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions**" — PLAN-375 FILES line "08_agents.md is not on the line: this task edits no Spec 08 text." — D3 and D5 create a new coupling (check-lane-close.mjs and backlog-lane.mjs now enforce 08_agents.md §11.2 at :463 and rule 4 at :337 at launch and at close) while the plan takes 08_agents.md off the touch line, so the both-directions dependency is recorded in no spec — add a step that records the new coupling in 08_agents.md Cross-Spec Dependencies, or state in the plan why §11.2 already names the enforcing tool and needs no edit.
+
+DEFER severity=LOW — §5.1 Typed Factories Only "You MUST always import typed factories from `src/tests/factories.ts`." — PLAN-375 TESTS "Each item A to D has a failing .logic.test.ts under src/tests/backlog/ run before its source change. Planted refusals, each with a passing control: placeholder context; context without the Description" — the plan enumerates planted task, evidence and reference fixtures and never commits to typed factories for the task/evidence objects, so §5.1 is unmet on the face of the plan — name the factory functions the backlog tests will use, or state that every fixture is a file blob and no object mock is constructed.
+
+MET — §5.3 Red-Green Test Cycle "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — PLAN-375 TESTS — "Each item A to D has a failing .logic.test.ts ... run before its source change" plus AC #7 and #8 "red first then green".
+
+MET — §5.2 Test File Pattern "Any pure/derivation logic" — PLAN-375 TESTS — the named suites (src/tests/backlog/*.logic.test.ts, proof-slice.logic.test.ts, review-template.logic.test.ts) are the mandated layer for the derivation logic A, B and D add.
+
+MET — §2.1 The "Unhappy Path" Test Mandate "You MUST include tests for error paths and silent failures." — PLAN-375 TESTS — "Planted refusals, each with a passing control", including a context overwritten in a later round and a plan-only set.
+
+MET — §14 "a NO-GO the machine reads cannot be shipped past; a guideline eventually will" — PLAN-375 §D4 — "No flag or environment variable turns it off (the precedent: the McBylaws gate in .husky/pre-commit)", which promotes the operator line to a machine-read gate rather than a guideline.
+
+MET — operator :1517 "don't makr the task complete until it actually works" — PLAN-375 ACCEPTANCE and SCOPE C — "If the DB GO is not given, A, B and D still ship and the task is NOT marked complete" and "Do not mark the task complete until 0 to 9 are on the task".
+
+MET — operator :1546 "or split smaller" and the two-commit close — PLAN-375 §A7 and the commit rule — splitUnits cuts blocks between table rows or paragraphs, and "the closing commit holds records only".
+
+REJECT — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — the change is accused of a frontend workflow editing scripts/ — task-375 is FIX.TOOLS review tooling, not a frontend WF, so the boundary rule does not reach it.
+
+REJECT — §11 If API Route Created/Modified (envelope, verifyAdminAuth first statement, try-catch, logError) — the change is accused of adding or modifying an API route without those items — the FILES line names only scripts/ and src/tests/ files, and no src/app/api/ route is created or touched.
+
+REJECT — §9.4 Pipeline SDK Mandate "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — the change is accused of editing scripts/deepseek-review.js without pipeline.run, withTransaction and emitSummary — §9.4 governs DB infrastructure concerns (Pool, transactions, structured logging), and the plan shows this script performs no database I/O.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 23   Unmet: 5
+
+---
+⏱  75555ms (75.6s)
+📊 Tokens — total: 33948, input: 19425, output: 14523, reasoning: 12927

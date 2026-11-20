@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:49:06.431Z file_sha256=ed51ee42c1f280fd084336abd3d9f4696fcc1fb2708cbd41b66a0e5870b7fe8a prompt_sha256=1e0a5eb6e498ad6bddeb74a028505ccbed78c65e8ecf0e858fb1009f7f979513
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-399-airtight-122a.txt (model: deepseek-reasoner)
+
+REJECT — Appendix §A26 G9 "A function-scope tunable const; **extends** `compute-no-module-numeric-const` to function scope" — the plan places a 60-character minimum as a constant inside check-lane-close.mjs, accused of an unlisted local tunable — G9 is scoped to compute functions and the plan routes the literal elsewhere: "the 60-character minimum below is a literal under core.8, named for that card" (Spec 132 core.8, not pasted, so not mine to judge)
+REJECT — Appendix §A26 "The landing changes gates, ledger rows and specs only — no runtime code." — accused of violating the no-runtime-change clause, because task-399 adds a new refusal block to a commit hook (`scripts/hooks/check-lane-close.mjs`, plan FILES line) — that proof is written for the 122a purity landing over the path set "`git diff --stat <main> -- scripts/lib scripts/*.js scripts/quality/*.js scripts/steps/_schema/step.schema.json` is empty", which excludes scripts/hooks; applying it to task-399 invents scope the clause does not carry
+REJECT — Appendix §A26 "the codes judge the parse tree and the AST, never keyword-matched prose" — the plan matches TRIAGE.md outcomes as text: "its text contains the id or the cited path" — that clause binds the purity codes' AST judgement only; a lane prose file has no parse tree to judge, so no clause in the pasted set is violated
+REJECT — Appendix §A27 "Every new step and every conversion walks this list before its first capture." — accused of not walking the trap list (items 1 to 13) — task-399 is a hook change plus dated spec notes with no step, no descriptor, no capture and no golden, so items 1 through 12 have no object to bind and item 13 is addressed below
+REJECT — not pasted (Spec 08 :336, :340, :347; Spec 132 core.8; plan-protocol.md:12, :44) — accused of unverified rule citations across section 9 "RULES CITED" — those clauses are absent from the pasted context, so per the review contract they are not mine to check, and the verdict here says nothing about them
+MET — Appendix §A26 G0 "The purity codes run over compute **and its AST `require` closure**" — plan FILES line "scripts/hooks/check-lane-close.mjs, src/tests/backlog/check-lane-close.logic.test.ts, .claude/review-templates/README.md, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md. No new script." — no compute module is added or edited, so the closure set, the empty-closure RED and the dynamic-require RED are untouched
+MET — Appendix §A26 "Every site answers exactly one token: `PASS | FAIL:<CODE>:<file>:<line>`." — plan 4.1 "On refusal print one line per missing id: rule list id (from the output file name), the rule the finding cites, file:line." — the new close refusals carry their own grammar and neither reuse nor mutate the purity answer token
+MET — Appendix §A27 13 "A test that needs Postgres is `*.db.test.ts`" — plan 5 "Fixtures are built from the existing helpers in src/tests/backlog/check-lane-close.logic.test.ts (no typed domain factory applies: it builds text lines)." — the added test needs no Postgres, so the `.db.test.ts` naming and the `test` / `test:db` split are not engaged
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  72074ms (72.1s)
+📊 Tokens — total: 16214, input: 8244, output: 7970, reasoning: 7123

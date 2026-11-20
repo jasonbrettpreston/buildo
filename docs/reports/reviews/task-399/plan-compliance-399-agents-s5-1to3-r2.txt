@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T23:40:45.404Z file_sha256=1aea244f6b594cae4ac73ff3e851d857abf264adbbf2b4fee7b9910a30505e43 prompt_sha256=6e824ae960afe3b140e86c1b57b63d5715ae009f5fec9663d77e763e27da10e0
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/v3/in-plan-compliance-399-agents-s5-1to3-r2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 5.1 HARD DEPENDENCY "Compliance is only meaningful if the spec is TRUE. Run Ground-truth (§5.2) FIRST; a stale spec makes compliance-checking a check against fiction" — PLAN-399-v3 step 7 "Re-run the plan compliance lens for agents-s5-1to3 and queue-137 on the v3 text (their files changed in the task-410 fold after the panel ran; the fold validator measured those two as the stale ones, 7 of 9 pass)" — the plan re-runs compliance against two spec files edited after the Ground-truth seat ran and schedules no 5.2 pass on the new text, so the hard dependency is unmet — insert a Ground-truth run on 08_agents.md and 137_mcqueue.md at c15fab7ec, reported as "spec §X says A; reality is B", ahead of step 7 and paste it.
+
+BUG severity=HIGH — task-366 note (3) "refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md`" — P2 "May a task already BUILT move to DONE (any finished-to-finished move) without the proof running again? Recommend yes." with section 8 "P2 (BUILT to DONE) and P4 (WHO DOES WHAT) bind this plan." — the plan binds a yes under which a commit setting DONE passes with no lens output and no GROUNDER.md check, contradicting the DONE half of the pasted refusal — keep the presence check on every DONE commit and limit P2 to skipping the recompute, or recommend no and say so.
+
+DEFER severity=MED — task-366 note (2) "refuses a task with no Files line ... or an unmatched path with the path named" and (3) "one compliance lens output per attached list" — section 3 "the lane re-measures with the two added files (UNVERIFIED)" — the seven-path Files line is locked without the resolve run, so an unmatched added test path refuses the launch and a miscount leaves an attached list with no compliance output at close — run `node scripts/analysis/rule-lists.mjs resolve` on the seven files at c15fab7ec and paste the count and matched lists before launch.
+
+DEFER severity=MED — 5.3 "Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8)" — step 8 "Plan review round 1: <a> folded, <b> task, <c> ruling, <d> wontfix, <e> pile; grounder docs/reports/reviews/task-399/GROUNDER-PANEL2.md", then only "per CONFIRMED HIGH or MED finding" — the round block carries counts and confirmed lines but no reasoned line for a rejected second-pass finding, which lives only in GROUNDER-PLANS.md and FILED-LOW.md, so it can return next round — append one "<id> REJECTED <reason>" line per rejected finding to the plan text.
+
+DEFER severity=LOW — 5.2 "a **standing periodic Ground-truth sweep** (a scheduled routine, see §7) that diffs high-traffic specs against reality" — section 9 "Cards to open (hand step 5; none built here): the review_followups.md table row ...; the golden before-image exemption ...; re-run only the chunks that changed ...; H6 ...; the registration of existing gate literals" — the only scheduled sweep named in the pasted clause has no card here, so spec drift detection stays ad hoc — add a card for the periodic Ground-truth sweep to section 9 with owner and cadence.
+
+MET — task-366 note (3) — 4.7 "the lane leaves the task RUNNING and does not stage a finished status; it adds the GROUNDER.md reference to the task as soon as the grounder has ruled" — the "grounder owed" interim state is preserved.
+
+MET — task-410 note (2) — section 9 "the closing commit stages only the lane directory, the review records, task files and decisions" — the staged-set restriction is carried through.
+
+MET — omission-guard note — 4.5 "forgery routes are tasks 401 and 402" and section 1 "Not on a fold by merge (check() returns 0 on MERGE_HEAD; tasks 401 and 402 own that)" — the unscoped forgery and merge routes are named and left to the owning tasks.
+
+MET — 5.3 "run DeepSeek + Integration against the proposed findings/changes (not the code)" — v3 basis "v3 = v2 corrected by the second pass (FOLD-VALIDATION.md fv#1-18 and CROSS-READ.md xr#1-29, all ruled in GROUNDER-PLANS.md under SECOND PASS)", with seat-integration-2.md listed in step 6 — the mandatory second pass ran on the findings.
+
+REJECT — task-366 note (3) "presence and form only, the judgement stays with the grounder" — accused: the plan's fixed: git facts (ancestor, touches path, revert body) judge whether the fix is real — not a real issue, they test the form of the recorded line and WHAT THIS CAN AND CANNOT PROVE states "It cannot prove that a fix is right", leaving that judgement with the grounder.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 4
+
+---
+⏱  155554ms (155.6s)
+📊 Tokens — total: 46500, input: 12771, output: 33729, reasoning: 32502

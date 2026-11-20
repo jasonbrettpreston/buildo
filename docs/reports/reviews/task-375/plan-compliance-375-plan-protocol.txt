@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:47:37.734Z file_sha256=c66bac44dd59b5b4c63d251a24c542b1c6e9a7c36fbeed0d7b35acc12f960c37 prompt_sha256=e14c8280e118314b1fd5cbd2e034aa7e5595f9763c6fb624e31d073ee02436e8
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-375-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan-protocol §5.2 LAUNCH-SHARED home "work that serves the finished product but no single scenario (search fixes, McFrontend launch list MCFRONTEND-QUEUE.md:498 - billing, account, tracked lots, landing, lawyer check -, McTest harness, the shared pieces) lives in increment "1-2 shared" or the Launch gate, from the gap register and the launch list only." — PLAN-375 "Serves: supporting function, the compliance review every Increment 1·B task passes through; advances none of doc-2 elements A to G." — shared tooling that advances no slice part is filed under Increment 1·B with no gap-register or launch-list row cited, so its home and its source are both missing — move task-375 to increment "1-2 shared" (or the Launch gate) and cite the gap-register/launch-list row that created it before the panel.
+
+BUG severity=HIGH — plan-protocol §4 step 3 "BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step)" — PLAN-375 "Each source file change in its own commit (protected paths); no task status move in them; the closing commit holds records only (Rule 3, two-commit form, :1546)" — the plan gives commit granularity only, with no numbered pushes, no per-push suite and gates, no commit-msg trailers, no ids and no operator tty step, so the push review the ruling requires does not exist — add a push list, one line per push: contents, suite, gates, trailers, ids, operator tty step.
+
+DEFER severity=MED — plan-protocol §2 step B "Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE. NONE goes on a removal list with its evidence (grep), not deleted." — PLAN-375 "Serves: supporting function, the compliance review every Increment 1·B task passes through; advances none of doc-2 elements A to G." — the task is called a supporting function but carries no SUPPORT S1-S8 tag and no grep evidence, so seat X's design-fit check has nothing to check — name the S1-S8 function it fills, or put task-375 on the removal list with its grep evidence.
+
+DEFER severity=MED — plan-protocol §2 step D "Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines" — PLAN-375 "scripts/analysis/backlog-lane.mjs, scripts/analysis/backlog-brief.mjs, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, ..." — the FILES line lists bare paths with no file:line and no lens is named per artifact, and the gate output is pasted acceptance output, not PASS lines — give each artifact its file:line and the lens that runs on it, and name the PASS line each acceptance step must print.
+
+DEFER severity=MED — plan-protocol §3 "Rulings: only when a search of the record finds none; the search is quoted." — PLAN-375 "AWAITS OPERATOR (D-exempt): "Tasks launched before task-375 folds have no plan evidence: should they be exempt from the plan gate (yes), or refused at close until relaunched (no)?"" — the D-exempt ruling is put to the operator with a recommendation but no quoted search of the record, unlike N20 which does quote RR-0328 — quote the search (files and greps run, result empty) beside D-exempt or record it as already ruled.
+
+DEFER severity=MED — plan-protocol §4 "Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason) + SITTING.md + PASS lines." — PLAN-375 "ACCEPTANCE ON REAL INPUTS (run the commands, paste the output on this task; no figure is taken from a lane report)" — the plan's output is pasted acceptance output on the task only, with no inc-plan/1b seq-patch.json, no SITTING.md and no PASS lines named as outputs — add the inc-plan/1b delta patch and the SITTING line to the plan's outputs.
+
+DEFER severity=LOW — plan-protocol principles "keep it simple; no scope creep" and §5.6 "INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule) and is listed in the plan as tasks with sources" — PLAN-375 "D5. The close re-proves it. closeErrors gets planGate input read at L ... a task launched by a raw `backlog task edit -s RUNNING` (not the script) has no evidence at L and cannot reach BUILT or DONE" — the only pasted operator line for the gate names a pre-build grounder check (:1570 "a grounder checks the folded plan before any build starts"), while D5 adds a close-time refusal and the gate_from key that line does not name — split D5 to its own card, or get its ruling pasted, so the frozen scope stays one mechanism.
+
+MET — plan-protocol §5.5 TIME "every task carries an estimate (MEASURED with source, or GUESS labelled)" — PLAN-375 "Estimate: GUESS three lane days, not timed" — the estimate is present and labelled GUESS.
+
+MET — plan-protocol §3 "One lane per increment at a time; increment 1-2 (detached house) first, the others queue behind it." — PLAN-375 "Order: launch AFTER task-410 and task-399 are folded." — lanes are serialised behind the increment 1-2 tasks.
+
+MET — plan-protocol §3 "Rulings: only when a search of the record finds none; the search is quoted." — PLAN-375 "The operator's own words (RR-0328, decision-113, MORNING-DECISIONS.md:1422) are only: "remember the app is not beign used - we are in development"." — N20 quotes the searched record and refuses the orchestrator's earlier reading as a ruling.
+
+MET — plan-protocol §2 step D "red-first tests named, exact commands" — PLAN-375 "Each item A to D has a failing .logic.test.ts under src/tests/backlog/ run before its source change." — red-first tests and the commands to run them are named.
+
+MET — plan-protocol §4 step 1 "REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict)" — PLAN-375 "This task's own plan check is this panel (the same records), manual." — the task's plan is put to the panel before launch.
+
+REJECT — plan-protocol §0 "The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board)." — accused of writing a second plan off the board — the dated note 2026-11-20 already supersedes this bullet ("the board is the plan"), and PLAN-375 is put on the board through the backlog CLI (FILES line, --ac, decisions), not a new sequence.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 6
+
+---
+⏱  73297ms (73.3s)
+📊 Tokens — total: 24673, input: 9900, output: 14773, reasoning: 13128

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:44:57.499Z file_sha256=8c87456238aab8da096db07feb6ef8f59ffb114824dcbdafc3aac716b5f3a66b prompt_sha256=cf1cb5e7ff25ca0c2c5b468fb2a534873afa445e4559611d7e784d22153b6b8f
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-compliance-375-airtight-124a.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — R-CP "A test that spawns `step-validate.mjs` (or another long CLI) first proves the run finished: no spawn error, no signal, an expected exit code, the summary header, and at least one score row per converted step ... An absence-only assertion (`not.toMatch(FAIL)`, `not.toContain(downgrade)`) is never sufficient alone." — PLAN-375 TESTS "check-tasks re-run prints nothing and exits 0 on the live board (B2)" and "Planted refusals, each with a passing control" — every test this plan adds spawns a long CLI (check-tasks, rule-lists.mjs lens-input, backlog-lane.mjs --dry-run) yet the only stated completion proof is an exit code plus an absence, and no spawn timeout above measured run time is stated — require each spawned-CLI test to assert no spawn error, no signal, expected exit code, a positive look guard (a counted row or header, `notLookedReasons`-style `[]`), and a timeout set above the measured run, before any output assertion.
+
+BUG severity=HIGH — R-BA "never a bare literal or an unenforced checklist line" — PLAN-375 section 0 "opens the card for the gate literals (Spec 132 core.8, 132:154; any new literal threshold this task writes into a gate or tool is named for registration by the card opened for task-399's 60-character minimum, task-N: to be created)" — the plan states it writes new literal thresholds into a gate but names no literal, no declared variable and no existing ledger row, and defers registration to a card that does not exist — enumerate every literal this task introduces (the room limit used in A7, the 12-hex truncation in D2, any section/call bound in A4) and bind each to a declared variable or a landed dated row before the gate ships.
+
+BUG severity=MED — R-BH "a descriptor value a machine can derive or check is gated; a value nothing checks is labelled declared-only" — PLAN-375 D "an omission guard, not a forgery guard" — the Cross-read name and the grounder identity are written into GROUNDER.md as gate inputs that nothing observes, and the plan records that only in its own prose, not as a declared-only label on the artifact or in the gate output — mark those two fields declared-only where they are written and in the 137_mcqueue.md note.
+
+DEFER severity=MED — R-BC "(2) pre-commit checks are FILE-ONLY (no DB, no network; DB checks belong to `npm run test:db` or `npm run cloud:pre`), and measured pre-commit wall time stays ≤ +10% vs the chain-start baseline, measured before/after (the budget)" — PLAN-375 D5 "Costs per ordinary commit: none." and "no new hook is wired" — the cost claim is an assertion, not the before/after measurement the clause requires, and D "the existing check-lane-close tests are green before and after" does not extend `src/tests/hooks-composition.infra.test.ts` for the new close-time block — add one measured before/after pre-commit timing and the hooks-composition lock for the close-time plan gate.
+
+DEFER severity=LOW — Spec 08 §11.2 as cited by the plan, "After folding any review round, and BEFORE implementation: one grounder re-executes every claim in the fold" — NONE — the clauses that mandate sections A, B and D (08_agents.md:334, :337, :347, :463; lens-compliance.md:12, :14, :30; operator lines :1517, :1541, :1546, :1557, :1570) are not pasted, cannot see, so the plan's authority for its central behaviour cannot be confirmed here — paste those lines into the review context at the next round.
+
+MET — R-BA "`limit_from_config`/a declared variable" — PLAN-375 C "D10b: proof-slice.mjs reads its timeout from the registered variable (needs the operator's DB GO and an id claim)" — the one literal the plan would otherwise harden is bound to a registered variable rather than a constant.
+
+MET — R-BA "a step-standard item that no machine checks is not part of the standard" — PLAN-375 TESTS "Each item A to D has a failing .logic.test.ts under src/tests/backlog/ run before its source change" — each refusal this plan adds is a machine run, not a checklist line.
+
+MET — R-BC "(2) pre-commit checks are FILE-ONLY (no DB, no network" — PLAN-375 D4 "reads the evidence from the board HEAD (git ls-tree and show on the board checkout) and the task from the board file" — the launch gate touches only the git tree, no database or network.
+
+MET — R-CO "A test never writes a before-image into the real golden tree" — PLAN-375 TESTS "under src/tests/backlog/" — the new tests run in the per-file sandbox and no golden or before-image path is written by this task.
+
+REJECT — R-BB — the plan edits docs/specs/00-architecture/137_mcqueue.md without staging a census owner spec — R-BB fires only on a change set that appends a file to converted.json `converted[]`, and this plan appends no converted row.
+
+REJECT — R-BZ "A function-scope tunable const is a bypass (Rule 3, Q5)" — the plan's "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" accused of being a bypass const — it is a closed list of heading names, not a tunable threshold, and gate E governs compute code.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 28   Unmet: 4
+
+---
+⏱  99751ms (99.8s)
+📊 Tokens — total: 37469, input: 18731, output: 18738, reasoning: 17449

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T22:52:04.676Z file_sha256=f95c02e8604f92abddb2200fc9bdd9bf1af36048c4bbab73605c4d567e2d3051 prompt_sha256=95786c8c98f953fd2c6bea6b24165d159dbecfcd738924a8073dcedf548c57c6
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/in-plan-error-paths-399.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN-399 §6 M16 "BUILT to DONE is a move to a finished status (table finished_statuses: BUILT, DONE, MERGED), so the whole check re-runs against old lane files. 30 tasks sit at BUILT with a lane assignee" — the second submit of an already-closed lane task re-runs the whole lane proof against lane files it cannot satisfy, so 30 tasks and any board auto-commit that touches one of them are refused with no escape, while §8 lands the check before M16 is answered — make the skip when the HEAD copy already holds a finished status part of the same commit as the check, or block that commit on the operator answer.
+
+BUG severity=HIGH — PLAN-399 §4 "The function takes the file set and the verdict map as arguments and assumes no lane directory, so task-375's plan gate calls it unchanged on the plan-time records" — the empty case is never stated: with an empty verdict map, or a lane with no GROUNDER.md, item 1 still demands TRIAGE.md lines, so a clean lane close is refused instead of passing — state "0 ids and no TRIAGE.md passes, prints 'checked 0 ids'" and add a planted test of a lane with no findings and no TRIAGE.md.
+
+BUG severity=HIGH — PLAN-399 §4.1 "the id exactly as the grounder writes it (<file stem>#<n>, unique inside a lane dir)" with "The close is refused naming every id with no line or with two lines." — the outcome key carries no round and a TRIAGE line for an id that is not in the current GROUNDER.md is never refused, so a round-1 line satisfies a renumbered id in round 2 and a re-found finding closes on another round's evidence, the exact drop this task forbids — refuse any line whose id is not in the current verdict map and key it by round.
+
+BUG severity=MED — PLAN-399 §4.2 "Bulk: <output file> <severity> count:<n> REJECTED ... n is recomputed from the file, so it cannot undercount" — nothing refuses two Bulk lines for the same output file and severity, or a bulk line plus a full line covering the same MED id, so (e) counts one finding twice and the final-summary cross-check recomputes from the same duplicated text — state one bulk line per (output file, severity) and that a bulk-covered id must have no full line, both refused.
+
+BUG severity=MED — PLAN-399 §4.1 "<id> fixed:<sha> <path>  (sha is an ancestor of HEAD, not of the range base, touches <path>" against §2 "the fold is a merge or a rebase then fast-forward" — after any rebase of the lane branch every recorded sha stops being an ancestor of HEAD, so all fixed lines fail and the close is refused with no stated recovery — state the sha is matched by commit message across the lane range, or that lines are re-recorded after the final rebase, and name the recovery.
+
+BUG severity=MED — PLAN-399 §4 "Git facts ... arrive as callbacks in closeErrors' input, as diffOf and readBase do, so closeErrors stays pure of git." — what a throwing or empty callback becomes (unknown sha, shallow clone, no diff, no HEAD) is unstated, so the gate either throws out of the commit hook with no per-id line or receives empty facts and refuses for the wrong reason — state that each callback error becomes one error line tied to its id, with a planted test where the callback throws.
+
+BUG severity=MED — PLAN-399 §4.1 "wontfix: and the bulk REJECTED form cover MED, LOW and NIT, never CRITICAL or HIGH" with "task:task-N closes only a finding whose lens line begins DEFER" — no default is stated for a missing or unparsable lens line or severity, so the tier and the task: eligibility come from text that failed to parse and an unrecognised severity can land in the MED tier and be dropped by a bulk line — default unknown or missing lens and severity to the strictest tier, refuse, and print the rule list id, the cited rule and file:line.
+
+REJECT — PLAN-399 §4.3 "a round line appended in an earlier command is wiped by the brief's Close line, backlog-brief.mjs:171" with "--final-summary replaces" — what looks unsafe is a retried close command appending a second Review round N line and double counting — handled, because --final-summary replaces the summary body before --append-final-summary appends, so re-running the one command is a no-op on the round line.
+
+VERDICT: FAIL on error-path safety
+Paths walked: missing TRIAGE.md, zero-finding GROUNDER.md, duplicate id line, stale extra id line, bulk recount and overlap, sha after rebase, git callback failure, unparsable severity and lens, close-command retry, BUILT to DONE re-close, board auto-commit, final-summary count mismatch   Unguarded: 7
+
+---
+⏱  68232ms (68.2s)
+📊 Tokens — total: 16349, input: 4547, output: 11802, reasoning: 10695
