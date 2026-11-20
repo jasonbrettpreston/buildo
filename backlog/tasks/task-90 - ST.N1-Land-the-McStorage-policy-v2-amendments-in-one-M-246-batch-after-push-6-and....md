@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-STN1'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-20T14:00:00Z'
+updated_date: '2026-11-20T15:41:00Z'
 due_date: '2026-11-26'
 labels:
   - '6'
@@ -96,4 +96,6 @@ AC1 evidence: pre-registration committed alone, 905741d7f. AC3: write_scope decl
 Commit 4: grounder-round fixes (status cells separate operator words from doc-16 policy text; OPEN items moved out of ruling text; doc-16 body lines marked SUPERSEDED in place). Task stays RUNNING.
 
 Correction (2026-11-20): the earlier notes and the doc-16 header named commits by sha (587c98a50, 905741d7f); a rebase renumbered them, so shas are not used. The commits are: 'docs(69a_mcbylaw_register): ST.N1 pre-registration of the expected moves for the McStorage policy v2 landing, committed alone (task-90)' and 'docs(69a_mcbylaw_register): McStorage policy v2 amendments landed, prior text kept (ST.N1)', both 2026-11-20 on wf1/inc1b-stn1.
+
+Operator 2026-11-20, verbatim: "Task 370 yes . approved" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1427; the table put to him is quoted in that entry). Closes after task-387 corrects Spec 126:810 ("failed compute shows a closed reason"), overturned by the operator ruling C2 (a) of 2026-11-20.
 <!-- SECTION:NOTES:END -->

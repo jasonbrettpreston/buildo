@@ -7,7 +7,7 @@ status: LATER
 assignee:
   - '@lane'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-19T14:58:00Z'
+updated_date: '2026-11-20T15:41:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -98,4 +98,6 @@ dependency not a plan task, dropped: MF-53
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-19 1·B validation (R10, RR-0257, task-316): KEPT (LATER, deps none): MF-53 is DONE (queue :394) so the wait named on MF-60 is closed (queue :453 'MF-53 now landed'); the reference #L451 was the MF-60 row before later edits, the row is at #L453 (added). Deferred by operator words: W5 on the web RR-0170 'ONE-35 b', recent-search chips E.6 RR-0180 '3. This can stay defferred for now'. Elements B.10 (marked REMOVED by the design) E.4 E.6. No panel ran on this task (readiness: panel, build pass, open item); owed when it is un-deferred.
+
+Operator 2026-11-20, verbatim: "Task 370 yes . approved" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1427; the table put to him is quoted in that entry). When built: rows of the page table (McFix G form), not builder code.
 <!-- SECTION:NOTES:END -->

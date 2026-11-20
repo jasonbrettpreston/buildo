@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-20T15:41:00Z'
 labels:
   - McFix
   - McFix E
@@ -42,4 +42,6 @@ Plan section E2. Retire candidates (grounder-verified stale): Spec 90 :46 and :7
 Operator ruling 2026-11-20, verbatim: "1 a 2 b 3 a 4 a 5 c 6 accept" (the six decisions; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entry "Operator RULES on the six decisions"). To write as dated notes citing those words, AFTER task-376 folds (same spec files): C2 (a) error screen with Try again, not counted: correct Spec 126:810, Spec 100:123 stands; C3 (b) legal line at the bottom of the phone search page (the build is its own task); D13 (a) 48 px on the semi page Continue and Try again is now an operator ruling (bindings.json touch_targets note says orchestrator decision: correct it); C5 (a) every paying user at once when the web switch flips: dated note on FE-39 through the register generator (with task-388). Semi page cache write accepted as built. C1 and C4 as verified in BL-VERIFYC. STILL OPEN for the operator: the phone's 3 retries before the error screen.
 
 Operator ruling 2026-11-20, verbatim: "Phone retires yes and web search yes" (MORNING-DECISIONS.md entry "phone retries and the web search legal line"). C2 addition: the phone keeps its 3 retries before the error screen shows (orchestrator reading of 'Phone retires yes': the recommendation put was to keep them).
+
+Operator 2026-11-20, verbatim: "Task 370 yes . approved" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1427; the table put to him is quoted in that entry). Also in this task: enter the operator rulings of 2026-11-20 into the rulings register and the Backlog decisions with scripts/analysis/backlog-decision.mjs (next id after RR-0314), each with its verbatim quote and MORNING-DECISIONS.md line: the six decisions; phone retries and web search; the conversion approval; the plan rulings (go on A and B, fold, d, e); task-370 dropped and task-348 answered (:1427), so those two statuses move by the ruling record, not by hand.
 <!-- SECTION:NOTES:END -->

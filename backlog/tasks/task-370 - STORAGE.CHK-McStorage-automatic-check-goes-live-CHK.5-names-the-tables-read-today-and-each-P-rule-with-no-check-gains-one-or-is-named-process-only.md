@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T13:23:00Z'
-updated_date: '2026-11-20T15:37:00Z'
+updated_date: '2026-11-20T15:41:00Z'
 labels:
   - McFix E
   - McFix
@@ -42,3 +42,9 @@ Operator 2026-11-20 (verbatim): "yes to McStorage and 1,2,3 yes as recommended".
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Operator 2026-11-20, verbatim: "Task 370 yes . approved" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1427; the table put to him is quoted in that entry). DROPPED from this increment by the operator words above (the recommendation put: "Task 370 (storage automatic check): I recommend dropping it from this increment"). Status move owed through the ruling record (task-387); do not launch.
+<!-- SECTION:NOTES:END -->
