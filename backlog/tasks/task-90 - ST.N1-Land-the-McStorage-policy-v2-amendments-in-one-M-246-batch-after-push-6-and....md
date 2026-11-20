@@ -7,11 +7,12 @@ status: WAITS
 assignee:
   - '@lane-R'
 created_date: '2026-11-19T04:57:00Z'
+updated_date: '2026-11-20T13:23:00Z'
 due_date: '2026-11-26'
 labels:
   - '6'
   - plan:ST.N1
-milestone: m-7
+milestone: m-1
 dependencies:
   - TASK-62
 references:
@@ -64,3 +65,9 @@ who (plan text): McBylaws lane R (rulings text), operator reads first
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-20 operator, verbatim: "yes to McStorage and 1,2,3 yes as recommended" (item 3: land the McStorage policy v2 amendments now, in Increment 1·B, so the rule records are not stale). Earlier the same day: "the McStroage policy was recently updated with the new direction - I just want to ensure the rules were updated as well. I dont want to be bound with stale McStorage". The amendments that wait on the open points ST-OP1, ST-OP3 and ST-OP4 still wait on the operator.
+<!-- SECTION:NOTES:END -->
