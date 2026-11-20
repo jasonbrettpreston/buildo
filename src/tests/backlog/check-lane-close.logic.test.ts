@@ -18,8 +18,8 @@ const taskText = (o: { id?: string; status: string; type?: string | undefined; f
   `---\nid: ${o.id ?? 'TASK-7'}\ntitle: Lane work\nstatus: ${o.status}\n${o.assignees && o.assignees.length === 0 ? 'assignee: []' : `assignee:\n${(o.assignees ?? ['@lane-BL-COMPLY2']).map((a) => `  - '${a}'`).join('\n')}`}\nmilestone: m-0\ntype: ${o.type ?? 'build'}\n---\n\n## Description\n\n<!-- SECTION:DESCRIPTION:BEGIN -->\nprose\n${o.files === null ? '' : `Files: ${o.files ?? 'src/a.ts'}\n`}<!-- SECTION:DESCRIPTION:END -->\n`;
 const TABLE = {
   contract_version: 1, base_ref: 'lane-base', finished_statuses: ['BUILT', 'DONE', 'MERGED'], protected_paths: ['scripts/hooks/check-lane-close.mjs', 'scripts/analysis/rule-lists.*', '.husky/*'],
-  lists: { first: { file: 'docs/a.md', whole: true, generated_by: 'hand-written' }, 'inc-F': { file: 'docs/inc.md', whole: true, generated_by: 'hand-written' }, ev: { file: 'docs/ev.md', whole: true, generated_by: 'hand-written' } },
-  every_task: ['ev'],
+  lists: { first: { file: 'docs/a.md', whole: true, generated_by: 'hand-written' }, 'inc-F': { file: 'docs/inc.md', whole: true, generated_by: 'hand-written' }, ev: { file: 'docs/ev.md', whole: true, generated_by: 'hand-written' }, msf: { file: 'docs/ms.md', whole: true, generated_by: 'hand-written' } },
+  every_task: ['ev'], milestone_docs: { F: ['msf'] },
   rows: [{ id: 'src', globs: ['src/**'], lists: ['first'], why: 'src' }], exempt: ['docs/reports/lanes/**'], increment_docs: { F: 'inc-F' },
 };
 const AFILE = Array.from({ length: 9 }, (_, i) => `export const value0${i + 1} = 'alpha quote number 0${i + 1}';`).join('\n') + '\n';
@@ -62,7 +62,7 @@ function scenario(o: Opts = {}) {
   const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
   o.tableEdit?.(table);
   if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
-  w('docs/a.md', '# A\nrule one text\nrule two text\n'); w('docs/ev.md', '# Ev\nthe five words and the plan protocol\n'); w('docs/inc.md', '# Inc\nincrement text\n');
+  w('docs/a.md', '# A\nrule one text\nrule two text\n'); w('docs/ev.md', '# Ev\nthe five words and the plan protocol\n'); w('docs/ms.md', '# Ms\nthe milestone objectives\n'); w('docs/inc.md', '# Inc\nincrement text\n');
   w('src/a.ts', AFILE);
   w('backlog/milestones/m-0 - inc.md', '---\nid: m-0\ntitle: "Increment 1·A Foundations [F]"\n---\n');
   w(TASK, taskText({ status: o.before ?? 'RUNNING', type: o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees }));
@@ -75,7 +75,7 @@ function scenario(o: Opts = {}) {
   // the lane report: inputs written by the real lens-input, outputs carrying the review tool's header
   const lane: Lane = { TASK: 'task-7\n' };
   fs.writeFileSync(path.join(d, '.git/material.txt'), 'MATERIAL UNDER REVIEW: a diff\n');
-  for (const id of ['first', 'inc-F', ...((table.every_task as string[] | undefined) ?? [])]) {
+  for (const id of ['first', 'inc-F', ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
     const out = path.join(d, LD, `in-out-compliance-${id}`);
     const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out], { cwd: d });
     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
@@ -127,7 +127,7 @@ describe('close check: the lens set (AC #3)', () => {
     refused(scenario({ mutate: (l) => ({ ...l, 'out-compliance-first.txt': null, 'out-compliance-first-p1.txt': l['out-compliance-first.txt'] as string, 'out-compliance-first-p3.txt': l['out-compliance-first.txt'] as string }) }), /p2/);
   });
   it('a record-only task needs compliance lens outputs (plan or out) per list and no lens set; a grounder only when a lens returned a finding', () => {
-    const rec = (finding: boolean) => scenario({ type: 'record', lensFinding: finding, mutate: (l) => ({ TASK: l.TASK as string, 'in-out-compliance-first.txt': l['in-out-compliance-first.txt'] as string, 'in-out-compliance-inc-F.txt': l['in-out-compliance-inc-F.txt'] as string, 'out-compliance-first.txt': l['out-compliance-first.txt'] as string, 'out-compliance-inc-F.txt': l['out-compliance-inc-F.txt'] as string, 'in-out-compliance-ev.txt': l['in-out-compliance-ev.txt'] as string, 'out-compliance-ev.txt': l['out-compliance-ev.txt'] as string, ...(finding ? {} : { 'GROUNDER.md': null }) }) });
+    const rec = (finding: boolean) => scenario({ type: 'record', lensFinding: finding, mutate: (l) => ({ TASK: l.TASK as string, 'in-out-compliance-first.txt': l['in-out-compliance-first.txt'] as string, 'in-out-compliance-inc-F.txt': l['in-out-compliance-inc-F.txt'] as string, 'out-compliance-first.txt': l['out-compliance-first.txt'] as string, 'out-compliance-inc-F.txt': l['out-compliance-inc-F.txt'] as string, 'in-out-compliance-ev.txt': l['in-out-compliance-ev.txt'] as string, 'out-compliance-ev.txt': l['out-compliance-ev.txt'] as string, 'in-out-compliance-msf.txt': l['in-out-compliance-msf.txt'] as string, 'out-compliance-msf.txt': l['out-compliance-msf.txt'] as string, ...(finding ? {} : { 'GROUNDER.md': null }) }) });
     const none = rec(false);
     expect(none.status, none.stderr).toBe(0);
     refused(scenario({ type: 'record', mutate: (l) => ({ TASK: l.TASK as string, 'in-out-compliance-first.txt': l['in-out-compliance-first.txt'] as string, 'out-compliance-first.txt': l['out-compliance-first.txt'] as string, 'GROUNDER.md': null }) }), /inc-F/);
@@ -308,5 +308,20 @@ describe('close check: the every_task lists (V2.LIST)', () => {
   it('a table with no every_task (or an empty one) is refused at close, not skipped (fails closed: nobody switches the lists off)', () => {
     refused(scenario({ tableEdit: (t) => { delete t.every_task; } }), /every_task/, 12);
     refused(scenario({ tableEdit: (t) => { t.every_task = []; } }), /every_task/);
+  });
+});
+
+// V2.LIST round 2 (task-406): the milestone guard at close. The close check calls verifyResolved: a table with no milestone_docs key or no entry for the task's letter, and a build task with no milestone, are refused; planted defects plus the passing control.
+describe('close check: the milestone guard (V2.LIST round 2)', () => {
+  it('control: a build task with its milestone list (msf) among the compliance outputs passes', () => {
+    const r = scenario();
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('PLANTED DEFECT: the milestone list output missing is refused naming the list', () => {
+    refused(scenario({ mutate: (l) => ({ ...l, 'out-compliance-msf.txt': null, 'in-out-compliance-msf.txt': null }) }), /list msf[\s\S]*out-compliance-msf\.txt/, 13);
+  });
+  it('a table with no milestone_docs key, or none for the letter of the task, is refused as missing lists', () => {
+    refused(scenario({ tableEdit: (t) => { delete t.milestone_docs; } }), /milestone_docs/, 14);
+    refused(scenario({ tableEdit: (t) => { t.milestone_docs = { Z: ['msf'] }; } }), /milestone_docs|milestone objectives/);
   });
 });

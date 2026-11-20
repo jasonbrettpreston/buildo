@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LIST'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-20T18:34:00Z'
+updated_date: '2026-11-20T18:37:00Z'
 labels:
   - McFix
   - McFix V2
@@ -70,4 +70,8 @@ Operator 2026-11-20, verbatim (MORNING-DECISIONS.md:1494): "Correct this - Phone
 2026-11-20 BL-V2LIST round 2: milestone guard in the helper and the launch.
 
 2026-11-20 BL-V2LIST round 2: table rows (eng-all on mobile and surfaces, panel records, generated 124 list, policy row).
+
+2026-11-20 BL-V2LIST round 2: rule-lists page --check wired into pre-commit (Spec 124 R-DJ).
+
+2026-11-20 BL-V2LIST round 2: the close check calls verifyResolved (milestone guard). Pre-commit wiring of page --check HALTED: the pre-commit budget evidence (R-EC) re-measures registry_s 31.84 s against the pinned 27.5 s, not caused by the new stage (0.08 s); operator item.
 <!-- SECTION:NOTES:END -->

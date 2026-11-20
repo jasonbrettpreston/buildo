@@ -31,7 +31,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { asList, parseFM } from '../analysis/backlog-lib.mjs';
-import { coveredBy, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
+import { coveredBy, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
 import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
 
 const git = (a) => { const r = spawnSync('git', ['-c', 'core.quotepath=false', ...a], { encoding: 'utf8', maxBuffer: 1 << 28 }); return { status: r.status ?? 1, stdout: r.stdout ?? '' }; };
@@ -79,10 +79,11 @@ export function closeErrors(i) {
   try { r = resolveTask({ table: i.table, root: i.root, body: i.taskText, type, letter: i.letter }); } catch (e) { return [`${id}: cannot read the rule-list table or one of its path maps: ${String(e.message).split('\n')[0]}`]; }
   if (r.error) return [`${id}: ${r.error.replace(/^refused: /, '')}`];
   const errors = [];
-  // V2.LIST (task-406): the every_task lists (the five words, the plan protocol) are required of every task like any list; a table that names none is refused, not skipped (nobody switches them off by leaving the key out)
-  const every = i.table.every_task;
-  if (!Array.isArray(every) || every.length === 0) return [`${id}: the rule-list table has no every_task lists: the five words and the plan protocol must be attached to every task (scripts/analysis/rule-lists.json)`];
-  for (const e of every) if (!r.lists.some((l) => l.id === e)) errors.push(`${id}: the every_task list ${e} is not among the resolved lists (a task always gets it; the table or the resolver was altered)`);
+  // V2.LIST (task-406): the every_task lists (the five words, the plan protocol) and the milestone lists are required of every task like any list; verifyResolved is the one reading shared with validate, check-tasks and the launch.
+  // A table with no every_task is refused (fails closed: nobody switches the lists off by leaving the key out); a missing milestone_docs key or entry counts as missing lists; a build task with no milestone is refused by resolveTask above.
+  const missing = verifyResolved(i.table, r, i.letter, type);
+  if (!Array.isArray(i.table.every_task) || i.table.every_task.length === 0) return [`${id}: the rule-list table has no every_task lists: the five words and the plan protocol must be attached to every task (scripts/analysis/rule-lists.json)`];
+  for (const m of missing) errors.push(`${id}: ${m} (a task always gets them; the table or the resolver was altered)`);
 
   // Files against the diff
   const entries = filesEntries(i.taskText);
