@@ -1,0 +1,102 @@
+101 CRIT/HIGH
+F-001 HIGH src/lib/parcels/report-compute.ts:35 exact=[] samefile=0 | the entry hand-copies the step descriptor's two role-lookup reads as static SQL and becomes a new `src/` reade
+F-006 HIGH src/lib/parcels/report-compute.ts:36 exact=[] samefile=0 | the new compute entry hand-writes relation SQL and its only declared==observed guard is a test name, which the
+F-010 HIGH src/lib/parcels/report-page.ts:9 exact=[] samefile=0 | the entire new customer read path (stored read, freshness serving rule, LOAD.1 miss rule) rests on operator ru
+F-014 HIGH scripts/analysis/src-sql-ledger.mjs:111 exact=[] samefile=0 | the 30th interpolated-SQL ledger row is justified by hand-written prose, and the pasted text says the ledger's
+F-017 HIGH src/app/api/parcels/lookup/route.ts:180 exact=[] samefile=9 compute-no-wall-clock@102,compute-no-wall-clock@150,compute-no-wall-clock@152 | the change moves who is charged (an unsure lot now counts on the retry instead of staying semi_pending) and it
+F-018 HIGH src/app/api/parcels/lookup/route.ts:90 exact=[] samefile=9 compute-no-wall-clock@102,compute-no-wall-clock@150,compute-no-wall-clock@152 | `ConsumerParcelLookupQuerySchema` is untouched by the diff and the repo's Zod objects strip undeclared keys, s
+F-028 HIGH src/lib/surfaces/maxbld-landing.ts:147 exact=[] samefile=0 | the landing footer text is new runtime behaviour in a file this change otherwise does not touch for its stated
+F-029 HIGH src/lib/parcels/report-page.ts:44 exact=[] samefile=0 | the serve-or-miss decision for every stored record rests on clauses that are not pasted, so compliance with th
+F-033 HIGH undefined:NaN exact=[] samefile=0 | scripts/analysis/src-sql-ledger.mjs:111 "src/lib/parcels/report-compute.ts', // LOAD.1 (task-266, dated note 2
+F-066 HIGH src/lib/report-projection/project.ts:206 exact=[] samefile=0 | every non-permitted option (stored not_evaluated, an unknown status, no row, a gated lot) is put in the render
+F-080 HIGH src/lib/report-projection/project.ts:68 exact=[] samefile=0 | the producer serves the customer page (report-page.ts returns only `stored.response`) and the response has no 
+F-092 HIGH undefined:NaN exact=[] samefile=0 | the new compute entry lands with every lock named only in a comment, no test file appears in the diff, so the 
+F-093 HIGH undefined:NaN exact=[] samefile=0 | the population setting is supplied by the route even when the resolved config never seeded it, so the run cann
+F-097 HIGH undefined:NaN exact=[] samefile=0 | the evidence pointer is never selected or carried and the page gets one collapsed weakest word, not the confid
+F-098 HIGH undefined:NaN exact=[] samefile=0 | flags reach only the admin lineage, the customer PageResponse is "values: Record<string, string>; hidden: stri
+F-110 HIGH src/tests/steps/compute_maxbld_scenarios/golden25-harness.ts:135 exact=[] samefile=0 | `line` and `e` are unguarded `find()` results now consumed by two suites, so a fixture miss crashes both inste
+F-115 HIGH mobile/src/components/surfaces/SearchBinding.tsx:99 exact=[] samefile=0 | four changed components ship in the pasted file list with no `*.ui.test.tsx` anywhere in it, so the changed re
+F-116 HIGH undefined:NaN exact=[] samefile=0 | the feature code (entitlement line, help links, answered lookup on Continue) is pasted with no red-light evide
+F-122 HIGH undefined:NaN exact=[] samefile=0 | five new pure/derivation behaviours ship in a diff whose file list contains no test file, so neither the Red L
+F-125 HIGH undefined:NaN exact=[] samefile=0 | mobile/__tests__/parcelScreens.golden.test.ts:246 "+    expect(SEARCH_SLICE.content['search.input.placeholder'
+F-130 HIGH src/components/report/ReportPage.tsx:241 exact=[] samefile=0 | the three new footer links (terms, privacy, help) render through this class with no 44px minimum
+F-131 HIGH src/app/api/parcels/entitlement/types.ts:18 exact=[] samefile=0 | a pre-formatted display date now enters the strict public contract beside the ISO instant it is derived from
+F-132 HIGH undefined:NaN exact=[] samefile=0 | new pure logic (formatDateDmyFixed), the new 400 branch (semi without parcelId), the held-page branch and the 
+F-138 HIGH src/lib/report-projection/project.ts:180 exact=[] samefile=0 | the diff's six files contain no test file, yet it adds pure derivation (formatter, freshness verdict, projecti
+F-144 HIGH scripts/analysis/src-sql-ledger.mjs:111 exact=[] samefile=0 | the §4.2 whitelist exception for a newly interpolated-SQL src file is asserted only in the ledger comment; the
+F-145 HIGH scripts/analysis/proof-slice.mjs:30 exact=[] samefile=0 | new pure derivation logic (checkSpec shape problems, runSlice exit-code derivation 0/1/2/3, GAP-on-missing-exp
+F-149 HIGH scripts/surfaces/_schema/census/contracts.json:22970 exact=[] samefile=0 | the same descriptor's under_126 line at :22894 still reads "its response is an explicit `.strict()` whitelist 
+F-157 HIGH undefined:NaN exact=[] samefile=0 | a frontend WF edits four files under scripts/, which the pasted checklist forbids for every frontend WF
+F-158 HIGH src/components/surfaces/web/SearchBinding.tsx:270 exact=[] samefile=0 | the changed search and static bindings ship with no ui test for the reports-left line, the footer or the new B
+F-165 HIGH undefined:NaN exact=[] samefile=0 | the ruling changes the mobile response contract (an unsure lot's `page` was sent, now null) and the compute no
+F-179 HIGH undefined:NaN exact=[] samefile=0 | the new case pins a bare console.warn as the caught-error channel of openHelp instead of the logger the clause
+F-183 HIGH src/app/api/parcels/lookup/route.ts:18 exact=[] samefile=9 compute-no-wall-clock@102,compute-no-wall-clock@150,compute-no-wall-clock@152 | the diff states the prior behaviour differs, yet it cites docs/specs/100 §3.2, 126 §11a.7/§11b.2, 69a M-384 an
+F-188 HIGH src/lib/report-projection/format.ts:35 exact=[] samefile=0 | the new m2 to sq ft conversion/rounding (and src/lib/report-projection/seed-shas.ts:16 "Object.keys(o).sort()"
+F-189 HIGH src/lib/surfaces/maxbld-landing.ts:147 exact=[] samefile=0 | the diff also changes the web landing report (new footer, new imports from components/ and maxbld-web) and no 
+F-198 HIGH mobile/src/generated/surfaces/mobile_parcel_search.json:9 exact=[] samefile=0 | four footer keys, two help keys, select.hint and the placeholder rewrite "Enter lot address" -> "Enter a Toron
+F-199 HIGH scripts/surfaces/_schema/bindings.json:73 exact=[] samefile=0 | a closed list is extended on a self-declared orchestrator decision, nothing pasted authorises min-h-[48px], an
+F-204 HIGH undefined:NaN exact=[] samefile=0 | the descriptor's own statement of its response shape is left stale while the commit adds a response field and 
+F-205 HIGH undefined:NaN exact=[] samefile=0 | every static page's ReportPage now hard-requires a new footer string set, and the landing sample adds no `repo
+F-215 HIGH undefined:NaN exact=[] samefile=0 | the props tree of every touched state changed (spinner node and testID `parcel-semi-spinner` deleted, new `hel
+F-216 HIGH undefined:NaN exact=[] samefile=0 | four content keys are newly referenced (`help.address.link`, `help.lot.prompt`, `select.hint` at "node('Text',
+F-229 HIGH undefined:NaN exact=[] samefile=0 | the new footer links (/terms, /privacy, /help) navigate with a plain anchor, not the platform router
+F-230 HIGH undefined:NaN exact=[] samefile=0 | the footer's parts, its three link contents and their hrefs are coded in the component, not declared in the pa
+F-234 HIGH src/lib/report-projection/format.ts:14 exact=[] samefile=0 | the sq ft factor is hardcoded in code, so the clause is unmet for every area rule the new customer producer fo
+F-235 HIGH src/lib/parcels/report-page.ts:9 exact=[] samefile=0 | the lift by name rests only on this code comment; the cited operator ruling is not in the pasted context, so f
+F-241 HIGH undefined:NaN exact=[] samefile=0 | the list now carries two min-h- tokens while the note and the unchanged C-9m check (screen-checks.mjs is not i
+F-242 HIGH undefined:NaN exact=[] samefile=0 | three mobile link labels are added with no destination declared: bindings.json mounts the static pages only on
+F-246 HIGH src/components/surfaces/web/StaticBinding.tsx:392 exact=[] samefile=0 | the sample report's footer strings are read at render time with no tree part gating them, so a failed footer r
+F-255 HIGH mobile/src/hooks/useParcelLookup.ts:84 exact=[] samefile=3 U3-retry-count@59,U4-query-option-number@74,U4-query-option-number@98 | the plan makes the ledger write client-optional (only the semi page sends the flag, and per lotForm.ts "clear 
+F-259 HIGH undefined:NaN exact=[] samefile=0 | the request now carries a semi param the frozen endpoint definition does not name, so the client sends a query
+F-264 HIGH undefined:NaN exact=[] samefile=0 | a SETTLED lookup is now drawn as loading whenever the question is owed, contradicting both halves of the claus
+F-265 HIGH undefined:NaN exact=[] samefile=0 | the report's request/key gains a `semi` dimension the pasted clauses do not allow, while the pasted SEMI-B not
+F-266 HIGH undefined:NaN exact=[] samefile=0 | counting is decided by the payload's evaluated option in the pasted rule, not by a client flag, and MF-53 note
+F-267 HIGH undefined:NaN exact=[] samefile=0 | the reports-left line is inserted between the address input and the legal line, so the legal line is no longer
+F-273 HIGH undefined:NaN exact=[] samefile=0 | the diff adds a second counting trigger for a parcelId lookup that the pasted 1 b rule does not name and that 
+F-280 HIGH mobile/__tests__/reportScreen.mount.behaviour.test.tsx:104 exact=[] samefile=0 | the new case pins a settled no-page lookup to the loading state, so the pasted miss rule is unmet for the unsu
+F-285 HIGH mobile/app/(app)/parcel-tool/index.tsx:56 exact=[] samefile=0 | this change ships a v1 entitlement surface (the served reports-left line) and, on Continue, a lookup flag that
+F-289 HIGH undefined:NaN exact=[] samefile=0 | mobile/src/hooks/useParcelLookup.ts:36 "params: { q: string } | { parcelId: string; semi?: 'answered' }"
+F-295 HIGH undefined:NaN exact=[] samefile=0 | the ruled placeholder is replaced on the authority of "RR-0313, MORNING-DECISIONS.md:1216", not pasted, and th
+F-296 HIGH undefined:NaN exact=[] samefile=0 | the exit from Linking to expo-web-browser is pinned only against a comment citing "small-pages-v8 search.html:
+F-297 HIGH undefined:NaN exact=[] samefile=0 | a new node, a new content key "select.hint" and an accessibilityHint on Continue are added on the authority of
+F-298 HIGH undefined:NaN exact=[] samefile=0 | a fetch on Continue, a cache write, a bounded-wait "(SEMI_CONTINUE_WAIT_MS)" error state and a double-press gu
+F-299 HIGH undefined:NaN exact=[] samefile=0 | a golden guard is loosened to accept a token on comment-only authority, so the exception is unmet
+F-321 HIGH undefined:NaN exact=[] samefile=0 | the pasted limit-state clauses name only the PaywallScreen for 'expired' and the inline blur banners; this cha
+F-322 HIGH undefined:NaN exact=[] samefile=0 | mobile/src/lib/parcelSearchCore.ts "export type EntitlementLine = { reportsLeft: number | null; reportsLimit: 
+F-331 HIGH undefined:NaN exact=[] samefile=0 | a new account-scoped server read (GET /api/parcels/entitlement) is introduced with no registry row in the past
+F-332 HIGH undefined:NaN exact=[] samefile=0 | the answered lookup is issued imperatively from a screen's callback and hand-written via "storeLookup(id, resu
+F-337 HIGH undefined:NaN exact=[] samefile=0 | the diff introduces a new server query and no registry row for ['parcel-entitlement'] appears anywhere in the 
+F-338 HIGH undefined:NaN exact=[] samefile=0 | the request now varies with `semi` while the key stays "['parcel-lookup', parcelId]", so two different request
+F-344 HIGH mobile/__tests__/semiQuestionPage.behaviour.test.tsx:88 exact=[] samefile=0 | the answered page and the held (no-semi, page null) response now share one cache entry under a key that no lon
+F-353 HIGH undefined:NaN exact=[] samefile=0 | the entire entitlement feature (fetchParcelEntitlement, useParcelEntitlement, ParcelToolEntitlementSchema, the
+F-354 HIGH undefined:NaN exact=[] samefile=0 | the diff switches leave-the-origin Linking.openURL to WebBrowser.openBrowserAsync and deletes the leave-the-or
+F-355 HIGH undefined:NaN exact=[] samefile=0 | SEMI_CONTINUE_WAIT_MS, SemiContinueTimeoutError, boundedWait and the new busy field rest on an unpasted task a
+F-364 HIGH undefined:NaN exact=[] samefile=0 | a new server read plus a new visible line is added and no pasted clause names it, so the required shape (serve
+F-365 HIGH undefined:NaN exact=[] samefile=0 | the counting semantics, the ordering (answered lookup before report) and the cache-write key are asserted only
+F-366 HIGH undefined:NaN exact=[] samefile=0 | suppressing the not-found view while a question is owed is new behaviour with no pasted clause behind it, and 
+F-378 HIGH undefined:NaN exact=[] samefile=0 | mobile/src/lib/maxbldHelp.ts "console.warn(`[maxbldHelp] could not open Help & Support (topic ${topic})`);"
+F-387 HIGH scripts/surfaces/_schema/bindings.json:73 exact=[] samefile=0 | the same added note pins one min-h- token per entry and disclaims operator authority for the 48 px variant, an
+F-388 HIGH mobile/src/generated/surfaces/mobile_parcel_search.json:9 exact=[] samefile=0 | four new content keys enter a live surface, and their link targets are the web STATIC pages, with nothing nami
+F-389 HIGH scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_disambiguation_map.content.json:14 exact=[] samefile=0 | three content keys and a help link land on S-071 with no naming clause
+F-394 HIGH undefined:NaN exact=[] samefile=0 | the served response gains a seventh field while the descriptor's own contract statement still says six, and th
+F-395 HIGH src/components/surfaces/web/footerNode.ts:7 exact=[] samefile=0 | none of the pasted spec clauses or operator rulings mentions MF-91, SRCH.FOOTER or RR-0270, so the new shared 
+F-405 HIGH scripts/analysis/backlog-lane.mjs:145 exact=[] samefile=0 | the plan-altitude lens commands pass the context file as the file under review and pass no --context, so deeps
+F-410 HIGH src/lib/parcels/report-compute.ts:87 exact=[] samefile=0 | the step's source statement is built here and executed at line 93 by a web route, a read set-up the runner doe
+F-418 HIGH src/lib/parcels/report-compute.ts:93 exact=[] samefile=0 | a web route performs the runner's read set-up, config read and source-statement execution outside the runner
+F-419 HIGH src/lib/parcels/report-compute.ts:33 exact=[] samefile=0 | two SQL statements the step now runs are re-typed in the caller and witnessed only by a test name, with no des
+F-425 HIGH src/lib/report-projection/project.ts:78 exact=[] samefile=0 | the implausible-lot-size window that drives the admin lineage flag (`lot_size_implausible`) is two code litera
+F-429 HIGH scripts/analysis/proof-slice.mjs:21 exact=[] samefile=0 | an operator-tunable tool number and two bounds live only as literals in code, no `tooling_*` variable is decla
+F-433 HIGH undefined:NaN exact=[] samefile=0 | this diff part changes the page and the meter for every unsure lot (hold until semi=answered) but adds no test
+F-441 HIGH src/lib/parcels/report-compute.ts:17 exact=[] samefile=0 | the integration and re-proof claims are satisfied only by a code comment, no verification report path or cited
+F-446 HIGH src/lib/report-projection/format.ts:53 exact=[] samefile=0 | the id K2 resolves in the pasted handbook (section 6 table) to "K2 | none | x-tooling.3 | no machine check: pr
+F-447 HIGH src/lib/parcels/report-page.ts:9 exact=[] samefile=0 | the operator words and the 2026-11-11/11-12/11-13 dated rulings are cited as raw file line refs, and no decisi
+F-448 HIGH src/lib/report-projection/format.ts:56 exact=[] samefile=0 | two new page rules are added off a bare operator quote with no spec amendment and no both-directions test anyw
+F-449 HIGH src/lib/report-projection/seed-shas.ts:6 exact=[] samefile=0 | the hex-parity lock and the L1 lock are asserted only by comments naming tests that are not in the diff, which
+F-455 HIGH src/lib/parcels/report-compute.ts:12 exact=[] samefile=0 | the compute builds a page and discards it, so no lot ever holds a record and every open, including a re-open, 
+F-456 HIGH src/app/api/parcels/lookup/route.ts:141 exact=[] samefile=9 compute-no-wall-clock@102,compute-no-wall-clock@150,compute-no-wall-clock@152 | a failed compute is a 500 with no page, not the closed not_evaluated:<reason> page the clause names
+F-459 CRIT undefined:NaN exact=[] samefile=0 | 
+F-463 CRIT src/lib/parcels/report-compute.ts:14 exact=[] samefile=0 | the clause's failed-compute path is a closed not_evaluated reason, the code makes it a 500 with no page, and A
+F-464 HIGH src/lib/parcels/report-compute.ts:9 exact=[] samefile=0 | the served page comes from a compute that writes no record and no stamp, so the compute runs again on every op
+F-470 CRIT undefined:NaN exact=[] samefile=0 | the stamp comparison never checks evaluator_version or the settings sha, so a record computed by an older eval
+F-487 HIGH src/lib/surfaces/maxbld-landing.ts:38 exact=[] samefile=0 | this diff adds customer-facing landing footer behaviour that no pasted clause or ruling names (the cited MORNI
+F-349 HIGH mobile/app/(app)/parcel-tool/[parcelId].tsx:35 exact=[] samefile=0 | the diff introduces a new loading-versus-report render gate whose stated purpose is to stop a flip, and the di

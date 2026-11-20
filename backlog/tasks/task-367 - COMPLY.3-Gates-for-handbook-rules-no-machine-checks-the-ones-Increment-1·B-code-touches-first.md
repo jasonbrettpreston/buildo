@@ -7,10 +7,12 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATES'
 created_date: '2026-11-20T13:04:00Z'
-updated_date: '2026-11-20T13:13:00Z'
+updated_date: '2026-11-20T13:23:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-GATES/REPORT.md
 type: build
 ordinal: 67012
 ---
@@ -41,6 +43,12 @@ Operator 2026-11-20 (verbatim): "Add the tasks to incr 1b - the infa freeze need
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Gate A (compute-reach): list src/ and mobile/ files that import scripts/lib/compute or scripts/lib/step; apply the reused compute-shape rule data (compute-literals RULE_FILE) to each; red test on a planted reacher, green on a clean one; run on pushed 1.B tree. 2. Gate B (mobile-literals): numbers in time/count/size/limit positions in mobile/src and mobile/app, scoped to the rule that binds mobile code (fe.44, fe.05; core.8 read first). 3. Gate C (mobile-never-do): Spec 90 section 5 as data rows; reuse existing lint/test where one exists. 4. All report-only (--strict exits non-zero); no wiring. Run on real tree, proof table and cross-check against BL-COMPLY FINDINGS, stage-2 draft in REPORT.md. Task stays RUNNING: grounder owed.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
