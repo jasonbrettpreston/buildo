@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixproj/plan.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10690 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21611 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32586 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43084 chars, answer 423 chars, 60s
+BUG severity=HIGH — Spec 05 §5.3 "You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — plan line "Tests first: red via a commit attempt with only the new tests and the task file staged." read with "No stored value and no golden moves: factor and window values are identical." — the only named test (D6) proves formatting that already passes on today's typed constant, so no red is demonstrable for D2/D9, and a commit attempt is not §5.3's "Run the test and confirm it fails" — name a `format.logic.test.ts` and `project.logic.test.ts` red (for example, drive a different pinned value through the seed in the harness and assert output follows, plus a missing-variable throw case), run `npm run test` on those files, paste the failure before any fix code lands.
+DEFER severity=MED — Spec 05 §5.2 parity battery "(seed-JSON ↔ TS defaults; generated doc ↔ generator) | Any dual-surface or generated artifact (drift guard)" — "scripts/seeds/logic_variables.json (two new variables), generated registries, tests." — two new seed variables and regenerated registries are listed with no named drift-guard test and no TS `LOGIC_VAR_DEFAULTS` entry for either variable — add or name a `logic-vars-registry.infra.test.ts` assertion that both new variables exist, are pinned (min = max = default), and that the regenerated registry/doc diff is empty.
+DEFER severity=MED — Spec 05 §10.2 "If a `src/lib/` module is imported by both API routes and frontend components, any modification requires `npx vitest related` to verify no API regression." — "Files under change: src/lib/report-projection/format.ts, src/lib/report-projection/project.ts" with no `npx vitest related` step named — the mandatory shared-module regression check is absent from the plan — add the `npx vitest related` run on both modules to the test-first sequence and record its result.
+DEFER severity=LOW — 2026-11-14 units ruling "The conversion factor lives in content/settings, never in code." — "The two phone files (mobile/src/lib/leadDetailFormat.ts:15 and mobile/src/lib/parcelCostFormat.ts:11) and src/lib/parcels/geometry.ts:3 carry the same typed factor and are NOT in this task: listed only." — the ruling is whole-report, so the clause stays unmet while three typed copies survive this change — file the follow-up card (or extend task-372) naming those three files, since the plan already enumerates them.
+MET — 2026-11-14 units ruling "The conversion factor lives in content/settings, never in code." — plan D2 — the factor is read from the registered pinned parcels_sqm_to_sqft (seed :8182, min = max = default) with a load-time pin check, and the value is identical so no output moves.
+MET — ONE-13 a "lots under 50 m2 or over 5,000 m2 show Not yet evaluated" — plan D9 — 50 and 5000 are kept, pinned as definitional variables, values unchanged.
+MET — Spec 05 §12.12 "Pure functions with arithmetic invariants ... MUST have at least one `fast-check` property test" — plan D6 — the property asserts grouped digits equal Math.round(n * factor), monotone in n, and within 1 sq ft of the exact product.
+REJECT — 2026-11-18 storage ruling "a record whose stamp differs from the current one is never served and is recomputed" — change accused of leaving the stamp comparison unimplemented — the pasted task scope says "D1 stopped for the operator" and the plan cites the missing evaluator_version column (read-stored.ts:31-34), so the stop plus the operator decision draft is the scoped action.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 1
+
+---
+⏱  63141ms (63.1s)
+📊 Tokens — total: 21499, input: 10089, output: 11410, reasoning: 10507

@@ -1,0 +1,11 @@
+# D1 operator decision draft (task-372): freshness must compare settings sha and evaluator version
+
+Grounded: the compare is project.ts:179-184 (src/lib/report-projection/project.ts freshnessOf): layer2_table_version against the stamp, catalogue_sha and switchboard_sha against CURRENT_SEED_SHAS; settings_sha is selected (read-stored.ts:33) and stored (project.ts:38) but never compared. Rule: doc-16:32 P3 "every stored record carries Layer 2 table_version, evaluator_version and the settings sha" (doc-16 is DRAFT; ruling text MORNING-DECISIONS.md:704). Opened on the head:
+- The stored Layer 3 row has NO evaluator_version column: ROWS_SQL (read-stored.ts:31-34) and the step descriptor columns (compute step descriptor, names parcel_id .. layer2_table_version, computed_at) carry layer2_table_version and settings_sha only. The lot stamp (bylaw_resolution_lot_stamps) carries evaluator_version, and the committed Layer 1 input docs/reference/bylaw-layer2-input.json carries the current one.
+- The current settings sha is a hash over DB-resolved config: scripts/lib/compute/<the maxbld scenarios core>.js lookupsFor (settings_sha = cat.sha256(cat.settingVals(CATALOGUE, logicVariables))) fed by scripts/lib/step/config.js resolveConfig(pool, descriptor) (several SELECTs). The compare (freshnessOf) is pure, no I/O, and the stored read has no current settings sha to compare to.
+So no existing source for the current settings sha can be read where the compare runs, and the record has no evaluator_version to compare: built nothing for D1.
+Recommendation: UNVERIFIED (not reviewed by the repo review, no DB run). Options for the operator:
+ (a) compare the lot stamp's evaluator_version to the committed Layer 1 input's, and call resolveConfig + lookupsFor once per stored read (adds config reads to each read; p95 <= 1 s budget doc-16 P12 to be measured), no migration;
+ (b) store evaluator_version and settings_sha on the record at the record write (ST.P1, push 12; a column + writer change) and compare both to values the read gets from one cached current-stamp read;
+ (c) leave as is until ST.P1 (dark today: no record is stored until ST.P1 lands, so nothing stale can be served now).
+Lane reading: (b) fits P3 literally and keeps the read pure; this is a storage decision, so the operator rules.

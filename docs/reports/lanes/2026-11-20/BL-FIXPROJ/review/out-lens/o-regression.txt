@@ -1,0 +1,46 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixproj/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9424 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19472 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29233 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 37034 chars, answer 2968 chars, 60s
+BUG severity=HIGH — `scripts/seeds/logic_variables.json` rows `maxbld_report_lot_size_implausible_{min,max}_sqm` (description: "visible in admin but not tunable … The DB mirror row (a migration) is owed; nothing reads it") — the live Control Panel renders from the DB `logic_variables` table, so with the mirror owed these two variables are absent from the "MaxBLD Lot Size" group at merge and the stated operator-visibility outcome is false — ship the mirror migration in this same PR, or delete the "visible in admin" claim and the group.
+
+BUG severity=MED — `src/lib/report-projection/format.ts:14` and `project.ts:78` read the *frozen bundled seed*, but an admin edits the *DB* `logic_variables` row; if the DB `parcels_sqm_to_sqft` row is not itself pinned (min≠max) an operator change is silently ignored by the report — verify the DB row is min=max=default and, if not, treat DB/seed divergence as a read-path bug (or assert DB parity in `report-projection-settings.logic.test.ts`).
+
+BUG severity=MED — `scripts/generate-logic-variable-groups.mjs:1332-1333` appends both keys to the same array as `user_lot_size_*` variables, yet the seed declares `admin.group: "MaxBLD Lot Size"`; if `GROUP_ORDER` is keyed per group these are mis-grouped and the generated Control Panel ordering is wrong — move them under the MaxBLD Lot Size group array and confirm the control-panel generation/order test is green.
+
+BUG severity=HIGH — `src/tests/property/report-sqft-rounding.property.test.ts:23,26` `area = fc.double({ min: 0, … })` combined with `shown(n)` throwing `refused ${n}` when `formatPageRule` returns null — if `formatPageRule('area_sqft', 0)` refuses `0` (the classic falsy trap), every property that samples near 0 throws at generation and the suite is red before green — confirm `formatPageRule('area_sqft', 0)` returns `{ value: '0' }`; if not, start the generator above 0 or special-case 0.
+
+DEFER severity=MED — `format.ts:14` / `project.ts:78` call `pinnedSetting` at module top-level, so a future seed rename (core.8 R-FC `<slug>_<name>` end-state, e.g. `parcels_sqm_to_sqft`) makes importing `format.ts`/`project.ts` throw at load and 500s every consumer of the report projection at once — acceptable as fail-closed, but add a test that merely importing `format.ts` and `project.ts` never throws for the committed seed and note the rename coupling.
+
+DEFER severity=LOW — `report-sqft-rounding.property.test.ts:30` epsilon `0.5 + 1e-9` is smaller than the double ULP of `1e6 * 10.7639` (~2.2e-9), so a boundary sample can fail the "within half a square foot" property spuriously — widen the slack to `1e-6`.
+
+DEFER severity=LOW — `src/lib/report-projection/format.ts` now imports the full `scripts/seeds/logic_variables.json` (~8k lines); if the projection is ever pulled into a client/edge bundle the entire seed ships with it — confirm the projection is server-only (project.ts already imports schema JSON + the seed, so dedupe is fine, but confirm no client import path).
+
+DEFER severity=LOW — sibling: `mobile/src/lib/parcelCostFormat.ts` still types `SQM_TO_SQFT = 10.7639`; the parity test pins it against the server value, so a future repin of `parcels_sqm_to_sqft` will drift from the mobile literal and break parity — extend the parity test to read the seed, or note the coupling.
+
+DEFER severity=MED — sibling sweep on the same root cause (typed literal that core.8 wants externalized): `src/lib/report-projection/*` may still carry other numeric literals (the half-up `.5` path in `format.ts`, any constants left in `project.ts`) — grep the projection dir for bare numeric literals and either externalize or document why each is an allowed exact constant.
+
+DEFER severity=LOW — `src/lib/report-projection/pinned-settings.ts:3-5` comment cites `lot-view.ts` and `placements/contract.ts` as precedent, but does not assert those readers enforce the identical strict `min === max === default` rule — verify the three readers agree, so a value cannot pass one and fail another.
+
+REJECT — `src/lib/report-projection/pinned-settings.ts:11` `typeof row !== 'object'` — one might fear a JSON array row slips the object guard — an array has no `.default`, so `d` is `undefined`, the finite/pinned check throws correctly; not a gap.
+
+REJECT — `project.ts:77` comment "4,297 lots under 50 m², 1,923 over 5,000 m² (reality F-3)" — this distribution claim is not re-verified — it is an inline comment with no runtime dependency; the *window* itself (50/5,000) is pinned by ONE-13 a, so the counts need no check.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- The admin "MaxBLD Lot Size" group is not rendered at merge because the DB mirror migration is owed — the plan's stated operator-visibility outcome is undelivered.
+- `parcels_sqm_to_sqft` is read from the frozen bundled seed while admin edits the DB row; if that DB row is tunable (min≠max) the change is a silent no-op.
+- `report-sqft-rounding.property.test.ts` samples `n = 0` and will be red before green if `formatPageRule('area_sqft', 0)` refuses `0`.
+
+Top 3 unverified data premises (column names to confirm via `information_schema.columns WHERE table_name='logic_variables'`):
+- Premise: DB `logic_variables` has `parcels_sqm_to_sqft` pinned min=max=default=10.7639 → `SELECT * FROM logic_variables WHERE key = 'parcels_sqm_to_sqft';` (confirm it is not tunable).
+- Premise: the two new keys do not already exist in the DB (no collision with a prior migration, e.g. 324) → `SELECT * FROM logic_variables WHERE key IN ('maxbld_report_lot_size_implausible_min_sqm','maxbld_report_lot_size_implausible_max_sqm');`
+- Premise: the live Control Panel sources variable groups from DB, not the seed (decides whether "visible in admin" holds) → check the Control Panel data loader's source table/view, not just the seed-backed `control-panel.logic.test.ts`.
+
+---
+⏱  63440ms (63.4s)
+📊 Tokens — total: 31271, input: 19961, output: 11310, reasoning: 9735

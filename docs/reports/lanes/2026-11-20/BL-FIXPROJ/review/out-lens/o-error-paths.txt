@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixproj/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9001 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 18683 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29072 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 38506 chars, answer 713 chars, 60s
+BUG severity=HIGH — src/lib/report-projection/project.ts "min: pinnedSetting(seed as unknown as Record<string, unknown>, 'maxbld_report_lot_size_implausible_min_sqm'), max: pinnedSetting(..., 'maxbld_report_lot_size_implausible_max_sqm')" — each half is validated (finite, pinned) but the pair is never checked, so a pinned window with min > max (both individually lawful) makes every lot "outside" and every report shows "Not yet evaluated", a silently wrong state that the throw was meant to prevent; no test reads the pair order either since the test only asserts the exported object equals literal 50/5000 — add a pair check after the two reads that throws naming both keys when min > max.
+
+DEFER severity=MED — src/lib/report-projection/format.ts "export const SQFT_PER_M2: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_sqm_to_sqft');" — the throw runs at module evaluation, not per call, so one absent or drifted seed row fails the import of format.ts, then project.ts, then every report route that imports them; the fail-closed refusal replaces the ruled null dash for one value with a module error for the whole surface — confirm an error boundary renders a refusal rather than a blank/500 (cannot see the route boundary here), otherwise read the factor lazily and catch at the render site.
+
+DEFER severity=LOW — scripts/generate-logic-variable-groups.mjs '"user_lot_size_side_max_m", "maxbld_report_lot_size_implausible_min_sqm", "maxbld_report_lot_size_implausible_max_sqm"' — the two keys are appended inside the existing key array (adjacent to user_lot_size_*) while the seed declares "group": "MaxBLD Lot Size"; if that array names a different group, the generated admin lists them under the wrong group and the declared "MaxBLD Lot Size" group renders empty (cannot see the array's group name) — put them in a "MaxBLD Lot Size" group entry, or add that group with these keys.
+
+NIT — src/lib/report-projection/pinned-settings.ts "if (row === undefined || row === null || typeof row !== 'object') throw new Error(`report-projection: logic variable ${key} is not in the seed`);" — a row that exists but is a scalar is reported as "is not in the seed", and an array row passes the object test then falls through to "is not pinned"; the message names the wrong failure — say "is not a row" so an operator is not sent to the wrong file while debugging.
+
+REJECT — src/lib/report-projection/project.ts "export const LOT_SIZE_PLAUSIBLE_M2 = Object.freeze({" — reads as a per-request setting that could re-read or double-apply on retry/double-submit — it is a module constant computed once from a static seed and frozen, pure and idempotent, so a re-sent report request and concurrent requests all read the same min/max and no dedup key is needed.
+
+VERDICT: PASS on error-path safety
+Paths walked: import-time pinned read (missing row, non-object row, unpinned row, NaN row), pinned min>max window, empty/degenerate seed, repeat and concurrent request (module constant), property-test refusal branch, admin group generation.   Unguarded: 1
+
+---
+⏱  63013ms (63.0s)
+📊 Tokens — total: 29332, input: 18977, output: 10355, reasoning: 9608

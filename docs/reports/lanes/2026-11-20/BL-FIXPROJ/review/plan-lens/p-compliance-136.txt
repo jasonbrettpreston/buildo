@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixproj/plan.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10161 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20379 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30997 chars, answer 0 chars, 45s
+BUG severity=HIGH — MORNING-DECISIONS.md:702-706 "a record whose stamp differs from the current one is never served and is recomputed" — plan "D1 (project.ts:179-184 and read-stored.ts). STOPPED, no code." — the RULED stamp compare (evaluator_version, settings sha) ships no code; an "operator decision draft" is not a ruling, so the clause is unmet at plan-lock — implement the compare (migration adding evaluator_version, writer stamps it, read path recomputes on mismatch) or obtain a dated operator amendment superseding the 2026-11-18 ruling for Layer 3.
+
+BUG severity=HIGH — fe.44 "The conversion factor lives in content/settings, never in code" — plan "The two phone files (mobile/src/lib/leadDetailFormat.ts:15 and mobile/src/lib/parcelCostFormat.ts:11) and src/lib/parcels/geometry.ts:3 carry the same typed factor and are NOT in this task: listed only." — three typed copies of the factor and the client-side maths survive this change, so the ruling stays unmet for those paths — claim a follow-up card by id for the three paths and record an operator deferral, or bring them into this lane; a listing in the plan is not compliance.
+
+DEFER severity=MED — fe.44 "The conversion factor lives in content/settings, never in code" — plan "Files under change: ... scripts/seeds/logic_variables.json (two new variables), generated registries" and "reads parcels_sqm_to_sqft, throws at load if it is not a finite pinned number (min equal to max equal to default)" — a pinned seed constant compiled into generated registries, with "the migration is NOT written here", still ships as a compiled literal, not a settings value an operator can touch — either claim the ledger id and write the settings row, or get the operator to rule that a pinned seed definition satisfies the clause.
+
+DEFER severity=LOW — MORNING-DECISIONS.md:702-706 "their stamp (Layer 2 table_version, evaluator_version, settings sha)" — plan "readers use the pinned seed value so nothing depends on the row" — cannot see whether the settings sha (a hash over DB-resolved config) covers a seed-only variable; if it does not, a seed edit changes output with no stamp move — state in the plan whether resolveConfig includes seed-only variables and cover it with a test.
+
+MET — ONE-13 a (MORNING-DECISIONS.md:738 "lots under 50 m2 or over 5,000 m2 show Not yet evaluated") — plan D9 "Values unchanged (50 and 5000, ONE-13 a)" — the 50 and 5000 window is carried over exactly into the two new pinned variables, no threshold moves.
+
+MET — fe.25 "The 25 golden lots render end to end the McBylaws answer-key numbers" — plan "No stored value and no golden moves: factor and window values are identical." — the answer-key numbers cannot move because factor and window values are identical.
+
+REJECT — core.8 — the plan justifies the pinned window by "a definitional window per core.8" — core.8 is not in the pasted context, so it is not a clause I can raise a finding on.
+
+REJECT — fe.39 "one stored headline per lot and option" — the change could be accused of moving a stored engine input — the factor and window values are identical and no stored headline key changes, so nothing here touches the headline bind.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 4
+
+---
+⏱  57430ms (57.4s)
+📊 Tokens — total: 17523, input: 7271, output: 10252, reasoning: 9458

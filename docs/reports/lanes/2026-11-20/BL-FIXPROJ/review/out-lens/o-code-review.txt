@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixproj/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10205 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21278 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31924 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42369 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53109 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 64173 chars, answer 317 chars, 90s
+DEFER severity=MED — src/lib/report-projection/format.ts:18 "export const SQFT_PER_M2: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_sqm_to_sqft');" — the double cast and the `string` key parameter throw away the JSON module's literal key type, so a renamed or mistyped variable compiles cleanly and only blows up as a module-load throw; make the reader generic and key-checked: `pinnedSetting<T extends Record<string, unknown>>(seed: T, key: keyof T & string)` and drop `as unknown as` at both call sites (same at project.ts:80-81).
+
+DEFER severity=LOW — src/lib/report-projection/project.ts:80 "min: pinnedSetting(seed as unknown as Record<string, unknown>, 'maxbld_report_lot_size_implausible_min_sqm')," — nothing asserts the window is ordered, so two swapped pinned rows (min 5000, max 50) yield an inverted window that flags every lot as implausible with no error raised; add `if (!(min < max)) throw new Error(...)` next to the two reads or inside the reader.
+
+DEFER severity=MED — scripts/generate-logic-variable-groups.mjs:1332 "\"maxbld_report_lot_size_implausible_min_sqm\"," — both keys were appended to the key list whose last member is `"user_lot_size_side_max_m"`, while the seed rows declare `"group": "MaxBLD Lot Size"`; I cannot see the enclosing GROUP_ORDER label, so verify it is "MaxBLD Lot Size" or add a group entry, otherwise the generated admin grouping contradicts the seed and the generated-doc/code drift gate fails.
+
+DEFER severity=LOW — src/tests/control-panel.logic.test.ts:269 "'maxbld_report_lot_size_implausible_min_sqm'," — the expected-key list places the two new keys after `user_lot_size_side_max_m`, but the seed inserts them after a row closing with `"group": "Source Ingestion"` and before `parcels_m_to_ft`; I cannot see the comparator, so if EXPECTED_LOGIC_VAR_KEYS is compared order-sensitively against the seed keys the list no longer matches, move the entries or confirm the comparison sorts.
+
+DEFER severity=LOW — src/lib/report-projection/pinned-settings.ts:13 "if (typeof d !== 'number' || !Number.isFinite(d) || min !== d || max !== d) throw new Error(" — the row's declared `"type": "number"` (seed rows and the test's `Row` type both carry it) is never checked, so a row typed `"string"` with numeric default/min/max passes as a pinned number; add `row.type !== 'number'` to the refusal condition.
+
+DEFER severity=NIT — src/tests/report-projection-settings.logic.test.ts "expect(SQFT_PER_M2).toBe(SEED[FACTOR_KEY]!.default);" — the non-null assertion converts a missing key into a TypeError instead of a readable failure; use `expect(SEED[FACTOR_KEY]?.default).toBe(SQFT_PER_M2)` (the preceding toMatchObject does mask it today, so this is hygiene only).
+
+REJECT — src/lib/report-projection/pinned-settings.ts:11 "if (row === undefined || row === null || typeof row !== 'object') throw new Error(" — the null branch looks redundant after a cast to `{...} | undefined` — it is correct: a `null` seed value is `typeof 'object'` and would otherwise reach the destructure, so the check is needed.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none blocking; the cast-and-string-key signature in format.ts:18 and project.ts:80 is the weakest typing (DEFER MED)
+- no ordered-window invariant on LOT_SIZE_PLAUSIBLE_M2 (DEFER LOW)
+- generator group label vs seed `admin.group` needs confirmation (DEFER MED, cannot see the label)
+
+---
+⏱  93731ms (93.7s)
+📊 Tokens — total: 37203, input: 18960, output: 18243, reasoning: 17332

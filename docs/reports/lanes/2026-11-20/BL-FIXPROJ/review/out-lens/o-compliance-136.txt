@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixproj/diff.patch (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10237 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21072 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31570 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42653 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53269 chars, answer 0 chars, 75s
+DEFER severity=MED — MORNING-DECISIONS.md:738 "(ONE-13 a: lots under 50 m2 or over 5,000 m2 show Not yet evaluated)" — src/lib/report-projection/project.ts "outside them the banner flags it" (seed row text: "A lot outside the window sets the admin lineage flag lot_size_implausible") — the ruling names a shown report status, the diff carries only the window and no diffed line maps an out-of-window lot to not_evaluated, so the status half cannot be seen — fix: cite the project.ts line that sets not_evaluated for out-of-window lots, or add that mapping in this change
+
+DEFER severity=MED — MORNING-DECISIONS.md:704 "stored with their stamp (Layer 2 table_version, evaluator_version, settings sha)" — NONE (settings-sha derivation is not in the diff) — two new registered settings rows may move the settings sha and force every stored report to recompute, and the diff does not say whether the sha covers them — fix: state the sha basis in the change text or confirm the recompute is the ruled outcome
+
+DEFER severity=LOW — task scope "D9 project.ts:76 window 50 and 5000 typed" — scripts/generate-logic-variable-groups.mjs:1332 "maxbld_report_lot_size_implausible_min_sqm" appended to the list already holding "user_lot_size_side_max_m" — the seed declares "group": "MaxBLD Lot Size" and the owning group id sits above the hunk, so whether the generated group equals the declared group cannot be seen — fix: show the group id line or add the "MaxBLD Lot Size" group explicitly
+
+DEFER severity=LOW — 132 core.8 quoted in the diff "unit constants and definitional windows are pinned, min = max" — src/lib/report-projection/pinned-settings.ts:1 "SPEC LINK: docs/specs/01-pipeline/132_step_standard_handbook.md core.8" — core.8 is not in the pasted context, so the pinning form the whole change exists to satisfy cannot be checked clause by clause — fix: paste core.8
+
+MET — fe.44 "the conversion factor is content/settings, never code" — src/lib/report-projection/format.ts "export const SQFT_PER_M2: number = pinnedSetting(seed as unknown as Record<string, unknown>, 'parcels_sqm_to_sqft');" — the typed 10.7639 is gone from format.ts code and the factor is read from the registered variable
+
+MET — operator 2026-11-14 units ruling "The conversion factor lives in content/settings, never in code." — src/lib/report-projection/format.ts:12 "import seed from '../../../scripts/seeds/logic_variables.json';" — the conversion value now comes from the settings seed, not a code literal
+
+MET — task scope D2 "the registered pinned variable parcels_sqm_to_sqft (scripts/seeds/logic_variables.json:8182, min = max = 10.7639) already exists" — src/tests/report-projection-settings.logic.test.ts "expect(SQFT_PER_M2).toBe(SEED[FACTOR_KEY]!.default);" — the read resolves to the existing pinned value, unchanged
+
+MET — task scope D9 "project.ts:76 window 50 and 5000 typed" — src/lib/report-projection/project.ts "min: pinnedSetting(seed ..., 'maxbld_report_lot_size_implausible_min_sqm'), max: pinnedSetting(seed ..., 'maxbld_report_lot_size_implausible_max_sqm')" — no typed window remains
+
+MET — task scope D6 "D6 property test" — src/tests/property/report-sqft-rounding.property.test.ts "fc.assert(fc.property(area, (n) => {" — a fast-check property test exists for area_sqft rounding
+
+MET — MORNING-DECISIONS.md:738 ONE-13 a values — scripts/seeds/logic_variables.json "default": 50 and "default": 5000 with min and max equal to each — the ruled window values are carried unchanged
+
+REJECT — task scope, seed-only rows "The DB mirror row (a migration) is owed; nothing reads it." — accused of registering the two variables without a DB migration — not a real issue, the pasted card treats the committed seed entry as the registered variable ("the registered pinned variable parcels_sqm_to_sqft (scripts/seeds/logic_variables.json:8182, min = max = 10.7639) already exists") and D1 is stopped for the operator
+
+REJECT — fe.44 "the conversion factor is content/settings, never code" — accused of typing the factor in the new property test at "const FACTOR = 10.7639;" — not a real issue, it is a test-only independent reference in unshipped code and the sibling logic test pins it back to the seed row
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  85003ms (85.0s)
+📊 Tokens — total: 31849, input: 16195, output: 15654, reasoning: 14525

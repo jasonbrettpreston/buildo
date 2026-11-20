@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixproj/plan.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10006 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20559 chars, answer 0 chars, 30s
+BUG severity=HIGH — core.8 "A missing `logic_variables` row fails the run" — PLAN-D9 "the migration is NOT written here (operator or orchestrator claim owed); readers use the pinned seed value so nothing depends on the row" — two new variables ship with no row, so core.8's registered-row test and core.16 "#53 each logic variable shows whether it is in effect" cannot be met and the seed/DB parity (R-AW direction) is broken by this change — claim the migration number in the ID ledger before plan-lock, or hold D9 until the row ships with the same commit.
+BUG severity=HIGH — storage ruling "a record whose stamp differs from the current one is never served and is recomputed" — PLAN-D1 "STOPPED, no code ... Written as an operator decision draft" — the ruling's evaluator_version / settings sha comparison has no executor anywhere in the change, and a written draft is a comment, which the walk rules call UNMET — get the operator decision on 372-D1 recorded before lock, and state either the migration+writer scope or an explicit dated amendment of the storage ruling that suspends the stamp check.
+DEFER severity=MED — core.8 "`on_invalid` is `fail` for any verdict- or write-affecting variable" — PLAN-D9 "two new pinned logic variables in scripts/seeds/logic_variables.json (min = max = value, a definitional window per core.8), group \"MaxBLD Lot Size\"" — the plan enumerates the seed fields it will set and never names on_invalid, and these two values decide whether a lot is evaluated at all — state `on_invalid: fail` for both seed entries in the plan.
+DEFER severity=MED — units ruling "The conversion factor lives in content/settings, never in code" — PLAN-D2 "The two phone files (mobile/src/lib/leadDetailFormat.ts:15 and mobile/src/lib/parcelCostFormat.ts:11) and src/lib/parcels/geometry.ts:3 carry the same typed factor and are NOT in this task: listed only" — the ruling binds the whole report, so three literals survive this change with no task named to remove them — name the follow-up task ids for those three file:line literals in this plan so the ruling clause is scheduled, not merely noted.
+DEFER severity=LOW — core.8 "Step variables are named `<slug>_<name>`; a name shared by two or more steps comes only from the closed `SHARED_LOGIC_VARIABLES` map" — PLAN-D9 "two new pinned logic variables" — the two names are not stated, so the naming rule and the shared-name rule cannot be checked, and src/lib/report-projection plus the listed mobile readers may share them — print both variable names and either the single consumer or the SHARED_LOGIC_VARIABLES entry.
+MET — ONE-13 a "lots under 50 m2 or over 5,000 m2 show Not yet evaluated" — PLAN-D9 "Values unchanged (50 and 5000, ONE-13 a)" — the plausibility window is preserved exactly.
+MET — core.8 "Unit constants and definitional windows are pinned (min = max)" — PLAN-D2 "min = max = 10.7639, \"a unit definition, not a tunable\"" and PLAN-D9 "min = max = value, a definitional window per core.8" — both carry the pinned shape.
+MET — Operator 2026-11-20 "essential we have a non compliance build again" — PLAN "Tests first: red via a commit attempt with only the new tests and the task file staged" — the red-first build is the committed procedure.
+REJECT — core.6 "A uniqueness invariant is a check row, not a throw" — accused of: D2 throwing at load instead of reporting a check row — format.ts is a report projection module with no descriptor, no checks[] and no verdict, so core.6 does not reach it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 5
+
+---
+⏱  37781ms (37.8s)
+📊 Tokens — total: 21892, input: 15280, output: 6612, reasoning: 5727

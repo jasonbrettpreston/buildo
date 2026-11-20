@@ -8,10 +8,14 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXPROJ'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T13:39:00Z'
+updated_date: '2026-11-20T13:49:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-FIXPROJ/REPORT.md
+  - docs/reports/lanes/2026-11-20/BL-FIXPROJ/FINDINGS.md
+  - docs/reports/lanes/2026-11-20/BL-FIXPROJ/D1-OPERATOR-DRAFT.md
 type: build
 ordinal: 72012
 ---

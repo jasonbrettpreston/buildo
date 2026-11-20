@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixproj/plan.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 8855 chars, answer 1118 chars, 15s
+BUG severity=HIGH — plan D2 "reads parcels_sqm_to_sqft, throws at load if it is not a finite pinned number (min equal to max equal to default)" — the guard is specified only over the row's shape, not over the row's existence, so a renamed or absent seed key resolves to `undefined` and the pinned check surfaces as a TypeError on an undefined property read instead of the intended loud, named failure — resolve the row by id first, throw a named error that quotes `parcels_sqm_to_sqft` when the lookup returns undefined, then run the pinned check on the resolved row.
+
+BUG severity=HIGH — plan D6 "for any non-negative finite metre value the digits equal Math.round(n * factor) grouped" — an unconstrained non-negative finite domain admits values near and above ~1e305 where `n * factor` overflows to Infinity, so `Math.round` returns Infinity and the digit grouping produces garbage, failing the property on an input fast-check is entitled to generate — bound the generator (`fc.double({min: 0, max: <documented limit>})` or a max of `Number.MAX_SAFE_INTEGER / factor`) and assert the overflow boundary as an explicit example, not a property.
+
+DEFER severity=MED — plan D6 "the digits equal Math.round(n * factor) grouped" — recomputing the expectation with the same formula the formatter uses makes the assertion a mirror of the implementation (a surviving-mutant test, Spec 05 §12.13's stated failure mode) rather than a check on output — strip the group separators from the formatted string, `Number()` it, and compare against the exact product, with the grouping asserted separately on one frozen fixture.
+
+DEFER severity=MED — plan D9 "the DB mirror row of a new variable is a migration... readers use the pinned seed value so nothing depends on the row." — seed JSON and generated registries are declared under change while the DB row is not, so the seed-JSON to registry parity battery (Spec 05 §5.2, `logic-vars-registry.infra.test.ts`) is the gate that decides whether this can go green; the plan names no one to confirm it before merge — state in the plan whether that parity test passes on the generated registries alone, and if not, land the row in this commit or claim the migration number first.
+
+DEFER severity=MED — plan D2 "The two phone files (mobile/src/lib/leadDetailFormat.ts:15 and mobile/src/lib/parcelCostFormat.ts:11) and src/lib/parcels/geometry.ts:3 carry the same typed factor and are NOT in this task: listed only." — four typed copies of 10.7639 survive the change, so the defect class is closed on one surface only and the copies drift unsupervised — add a parity test asserting each listed constant equals the seed `parcels_sqm_to_sqft` default, so a future edit to the seed fails loudly at the copies.
+
+DEFER severity=LOW — plan "throws at load if it is not a finite pinned number (min equal to max equal to default)" — the only new test named in the plan is the D6 property test, so the new throw branch has no red-green evidence and ships unexercised (Spec 05 §5.3) — name a test that asserts the module load throws for an unpinned row (min not equal to max), staged before the guard lands.
+
+DEFER severity=LOW — plan "the stored Layer 3 row has no evaluator_version column (ROWS_SQL, read-stored.ts:31-34; descriptor columns)" — the D1 stop rests on column lines that are not in the pasted material, cannot see them, so the "STOPPED, no code" conclusion is unverified from here — have the grounder confirm `read-stored.ts:31-34` carries no `evaluator_version` before the stop is accepted as final.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The pinned check is specified for the value shape only; a missing seed key surfaces as a raw TypeError instead of the named loud error the plan promises.
+- The D6 property generator admits inputs where `n * factor` overflows to Infinity, so the property fails on valid generated input.
+- The D6 assertion recomputes the expectation with the implementation's own formula, so it cannot catch a wrong factor or wrong rounding.
+
+---
+⏱  18667ms (18.7s)
+📊 Tokens — total: 13053, input: 10036, output: 3017, reasoning: 2073

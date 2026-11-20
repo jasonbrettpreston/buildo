@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixproj/plan.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9072 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19120 chars, answer 0 chars, 30s
+```
+DEFER severity=MED — pasted "for any non-negative finite metre value the digits equal Math.round(n * factor) grouped" — the property test is scoped to finite non-negative metre input, so an absent, null, NaN or Infinity area_sqft still reaches formatPageRule and prints "NaN" in the digits (a wrong number shown, not fail-closed) with no guard and no test — add NaN / Infinity / null / undefined cases to the D6 property test and define the empty render (a dash, not NaN)
+DEFER severity=MED — pasted "the current settings sha is a hash over DB-resolved config (compute core lookupsFor, resolveConfig)" — the two new pinned vars get no DB row here, so either they are outside the settings sha and a later edit to the pinned window never invalidates a stored record, or they enter the resolved config and this commit shifts the sha and every stored record recomputes, which contradicts "Same value, so no output moves."; cannot see which — state the branch in the plan and add a test that the settings sha is byte-identical before and after this commit
+DEFER severity=MED — "LOT_SIZE_PLAUSIBLE_M2 = { min: 50, max: 5000 } typed" with ruling "lots under 50 m2 or over 5,000 m2 show Not yet evaluated" — D9 gets no test and the plan states no inclusivity at the bounds, so a `>=` to `>` or `<` to `<=` edit at exactly 50 or exactly 5000 m2 silently flips a lot between evaluated and Not yet evaluated, and a null lot_size passes both comparisons into evaluation — add a logic test at 49.9 / 50 / 5000 / 5000.1 / null and state the comparison operators
+DEFER severity=LOW — "throws at load if it is not a finite pinned number (min equal to max equal to default)" — the throw fires at module import, not at call, so every consumer that imports format.ts or project.ts only for the digit grouping (and every suite importing them) dies with the same import error, and the red-phase commit cannot isolate the new tests from the existing ones — move the check behind a checked accessor or a call-time guard that names the variable
+DEFER severity=LOW — "reads parcels_sqm_to_sqft, throws at load if it is not a finite pinned number" — the absent-key path is not stated: if the entry is renamed or dropped, reading `.default` off undefined throws a TypeError naming a property, not the variable, and if it is read as `row?.default` it becomes undefined and Math.round(n * undefined) yields NaN — assert presence first with an error that names parcels_sqm_to_sqft
+REJECT — "Same value, so no output moves." — a re-run or double submit looks like it could double-apply the conversion — there is no write and no counted event in this change, only a constant read whose value is fixed by min = max = default, so a repeat is a no-op by construction
+REJECT — "format.ts imports the seed JSON (the lot-view.ts and placements/contract.ts pattern: seedJson import)" — a retry or time-out path on the factor — the seed is a static build-time import, there is no network call at request time and therefore no timeout to expire, and a failed import fails deterministically on every retry
+VERDICT: PASS on error-path safety
+Paths walked: error (seed key absent, seed value unpinned, seed read at import), empty (NaN / null / Infinity area_sqft, null lot_size, lot exactly at 50 and 5000), retry and time-out (static seed import, no timeout), double-submit (no write, no counted event), degrade-safety (hard throw vs NaN render), idempotency and dedup (settings sha as the stored-record key; no row for the two new vars)   Unguarded: 2
+```
+
+---
+⏱  40469ms (40.5s)
+📊 Tokens — total: 16557, input: 10053, output: 6504, reasoning: 5650

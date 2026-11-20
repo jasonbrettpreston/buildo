@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixproj/plan.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9738 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20478 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31344 chars, answer 0 chars, 45s
+BUG severity=HIGH — P3 "Stamp: every stored record carries Layer 2 table_version, evaluator_version and the settings sha." — src/lib/report-projection/read-stored.ts:31-34 "the stored Layer 3 row has no evaluator_version column (ROWS_SQL, read-stored.ts:31-34; descriptor columns), so P3 evaluator_version on the record cannot be compared without a migration and a writer change" — the plan stops D1, so no stored record can carry or compare evaluator_version; a draft decision is not a ruling — claim the migration number and add the column plus writer, or land a dated operator ruling that amends P3 for Layer 3 records
+BUG severity=HIGH — P4 "a record whose stamp differs from the current stamp is never served and is recomputed" and "test it red first (an older-stamp record is injected, the report must not show it)" — src/lib/report-projection/project.ts:179-184 "D1 (project.ts:179-184 and read-stored.ts). STOPPED, no code." — the read guard and its red older-stamp test are not implemented, and read-stored.ts is not even in the files under change — land the dated operator ruling that amends P4 or bring read-stored.ts and the compare into scope with the injected older-stamp test
+DEFER severity=MED — MORNING-DECISIONS.md:239-241 "The conversion factor lives in content/settings, never in code." — mobile/src/lib/leadDetailFormat.ts:15 "The two phone files (mobile/src/lib/leadDetailFormat.ts:15 and mobile/src/lib/parcelCostFormat.ts:11) and src/lib/parcels/geometry.ts:3 carry the same typed factor and are NOT in this task: listed only." — three sites still type 10.7639 in code, so the clause is not met across the whole report — schedule the same pinned-seed read for those three files under a named follow-up task id
+MET — MORNING-DECISIONS.md:239-241 "The conversion factor lives in content/settings, never in code." — src/lib/report-projection/format.ts:14 "format.ts imports the seed JSON (the lot-view.ts and placements/contract.ts pattern: seedJson import), reads parcels_sqm_to_sqft" — the typed 10.7639 at this site is replaced by the registered pinned variable scripts/seeds/logic_variables.json:8182
+MET — MORNING-DECISIONS.md:738 ONE-13 a "lots under 50 m2 or over 5,000 m2 show Not yet evaluated" — scripts/seeds/logic_variables.json (two new variables) "Values unchanged (50 and 5000, ONE-13 a)" — the two new pinned variables keep exactly 50 and 5000, so the threshold behaviour is untouched
+MET — P6 "the compute is deterministic, so two simultaneous first opens write the same bytes (content_sha equal)" — NONE "No stored value and no golden moves: factor and window values are identical." — both the factor and the window read the same numeric values, so no content_sha or golden output moves
+MET — P7 "the page producer formats both units at read" — src/lib/report-projection/format.ts:35 "One fast-check property test over formatPageRule area_sqft: for any non-negative finite metre value the digits equal Math.round(n * factor) grouped" — the producer-side imperial formatting is pinned by the property test while the stored form stays metric
+REJECT — MORNING-DECISIONS.md:239-241 "The conversion factor lives in content/settings, never in code." — importing the seed JSON into format.ts turns the factor into a build-time constant rather than live settings — the variable is pinned (min = max = default 10.7639), so no runtime value can differ from the imported one and the retired typed literal is the actual target of the clause
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 3
+
+---
+⏱  50869ms (50.9s)
+📊 Tokens — total: 22672, input: 13557, output: 9115, reasoning: 8232
