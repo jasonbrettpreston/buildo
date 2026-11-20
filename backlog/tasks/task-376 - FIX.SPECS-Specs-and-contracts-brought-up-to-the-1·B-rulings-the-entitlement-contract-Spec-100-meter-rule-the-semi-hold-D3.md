@@ -3,10 +3,11 @@ id: TASK-376
 title: >-
   FIX.SPECS Specs and contracts brought up to the 1·B rulings: the entitlement
   contract, Spec 100 meter rule, the semi hold (D3)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-FIXSPECS'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T14:00:00Z'
+updated_date: '2026-11-20T15:13:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -46,4 +47,6 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 grounder second job (docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY-2.md) extends D3: the footer ruling MF-91 / SRCH.FOOTER is in no spec (git grep finds nothing under docs/specs); Spec 126 11a.7 still names one cause of a null page; contract_parcels_lookup.descriptor.json:6 still says 'It reads no table today and changes no meter.' Add to scope: dated notes (M-246 form) in Spec 126 11a.7 and Spec 135, and correct the false descriptor sentence. Rule: Spec 126:77 section 0b item 6.
+
+2026-11-20 taken on the board at lane launch (lane BL-FIXSPECS, worktree /Users/brettpreston_macmini/Buildo-wt-fixspecs, branch wf1/inc1b-fixspecs), RR-0240
 <!-- SECTION:NOTES:END -->
