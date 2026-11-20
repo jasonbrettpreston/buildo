@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-LEGAL'
 created_date: '2026-11-20T15:16:00Z'
-updated_date: '2026-11-20T15:42:00Z'
+updated_date: '2026-11-20T18:54:00Z'
 labels:
   - McFix
   - McFix A
@@ -67,4 +67,6 @@ Checks: every --check the hooks run for these files before and after (search-gol
 
 <!-- SECTION:NOTES:BEGIN -->
 BL-LEGAL: legal() moved last in mobile searchProps; 10 mobile goldens + mobile copy regenerated (position only); web unchanged (already once in footer, MF-91); Spec 100 dated note added. Red not obtained through hooks (commit b9575315f landed: related run skips mobile/__tests__). Phone-test green UNPROVEN until Mobile CI. Lens outputs, FINDINGS.md untriaged, REPORT.md in docs/reports/lanes/2026-11-20/BL-LEGAL/. Grounder owed.
+
+Retro review by a separate grounder 2026-11-20 (task-405); GROUNDER.md at ~/Buildo-scratch/lanes-20261119/inc1b/retro/BL-LEGAL/GROUNDER.md (sha256 4c815811ba5b…, 195 findings: 37 CONFIRMED, 158 REJECTED). The move is correct: the legal line is present once and last in all 11 phone states; goldens differ only by the moved node; web already had it last. DEFECTS before a push: (1) red never proven (commit 669de1246 skipped the related run). (2) Spec 100: the 2026-11-11 note at :150 still says the line is under the address input; the new note quotes 'Phone retires yes', which answers the retries question, not the legal line; no file:line for the operator words (MORNING-DECISIONS.md:1399, :1409). (3) stale prose saying 'under the input': src/components/surfaces/web/SearchBinding.tsx:132, mobile/src/constants/parcelSearch.ts:160, mobile/__tests__/parcelScreens.golden.test.ts:110, src/tests/surfaces/site-footer.logic.test.ts:8 and :76; src/tests/surfaces/search-parity.golden.test.ts:105 asserts only 'after the input': assert legal is the last key. (4) four compliance outputs stale (surface-126, 135, 136, mobile-100) and inc-S never run. (5) the grounder file is not committed. For task-392: notices, list, tail and a bottom legal row are not named as kinds on its card.
 <!-- SECTION:NOTES:END -->
