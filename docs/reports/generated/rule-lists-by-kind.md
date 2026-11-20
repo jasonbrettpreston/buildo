@@ -95,7 +95,7 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
 
 | list | document | selection | characters | parts |
 | --- | --- | --- | ---: | ---: |
-| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 7,314 | 1 |
+| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 9,113 | 1 |
 | agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 27,384 | 1 |
 | queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 28,593 | 1 |
 | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
@@ -104,7 +104,7 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 9 lists | | 178,507 | 9 |
+| total | 9 lists | | 180,306 | 9 |
 
 ## spec-only
 
