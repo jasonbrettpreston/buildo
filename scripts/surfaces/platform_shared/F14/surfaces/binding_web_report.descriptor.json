@@ -1,0 +1,220 @@
+{
+  "kind": "SURFACE",
+  "status": "new",
+  "docs": {
+    "purpose": "The web REPORT renderer: ReportPage.tsx draws the v21 report page view (sections, parts, the detail sheet, the footer) for the MaxBLD report page; ReportView.tsx draws the earlier report view and the Picture; ReportPageToggles.tsx is the client toggle script of the page. It is the landed renderer Spec 126 section 11b.1 keeps (\"REPORT keeps the landed renderer\"); it is a component, not a library binding.",
+    "data_story": "It reads nothing itself: the page passes the page view (built and checked on the server by buildPage / pageViewOf) and the content strings.",
+    "under_126": "**OWNER ENTRY** (task-384 STD.REPORT-OWN, dated 2026-11-20): a platform_shared census entry that owns the web REPORT renderer files so R-13 totality holds for them. The files stay a component (Spec 126 section 11b.1, :923). They are not yet listed in bindings.json modules, so the FE-31 text (C-2b) and component (C-8) checks do not judge them: C-3 needs their module root to be a frontend glob in mcbylaws/protected-paths.json (operator question)."
+  },
+  "evidence": {
+    "files": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 (:923-924)"
+    ],
+    "contracts": [],
+    "tables": [],
+    "gate": [],
+    "states": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11a.7 — the report lifecycle states"
+    ],
+    "emits": []
+  },
+  "identity": {
+    "id": "binding_web_report",
+    "archetype": "REPORT",
+    "platforms": [
+      "web"
+    ],
+    "owns": {
+      "components": [
+        "src/components/report/ReportPage.tsx",
+        "src/components/report/ReportView.tsx",
+        "src/components/report/ReportPageToggles.tsx"
+      ]
+    },
+    "owner": "Admin domain (Spec 126 §14 Target Files) — the conversion programme owns the row; no individual owner is named by Specs 126/127/128.",
+    "spec": "docs/specs/02-web-admin/126_maxbld_surface_standard.md",
+    "spec_refs": [
+      "docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b.1 — REPORT keeps the landed renderer"
+    ],
+    "spec_version": "0-draft",
+    "versioning": {
+      "answer": "none",
+      "why": "The renderer has no wire contract of its own: its input is the page view (report-page.schema.json) and its output is markup. A change shows up as a golden or render-smoke failure.",
+      "evidence": [
+        "src/tests/surfaces/surface-conformance.logic.test.ts — C-12 holds the ownership"
+      ]
+    },
+    "ref": "S-095"
+  },
+  "inputs": {
+    "answer": "props",
+    "why": "The page view, the lifecycle state and the content strings arrive as props from the page.",
+    "evidence": [
+      "src/components/report/ReportPage.tsx",
+      "src/components/report/ReportView.tsx"
+    ],
+    "contract_ref": [],
+    "query_key": [],
+    "field_whitelist": []
+  },
+  "outputs": {
+    "answer": "none",
+    "why": "The renderer writes nothing.",
+    "evidence": [
+      "src/components/report/ReportPage.tsx",
+      "src/components/report/ReportView.tsx"
+    ],
+    "contract_ref": [],
+    "tables": [],
+    "rollback": "n/a"
+  },
+  "state": {
+    "answer": "none",
+    "why": "No store: the open panels and the detail sheet are page-local UI state toggled by ReportPageToggles.tsx, never persisted.",
+    "evidence": [
+      "src/components/report/ReportView.tsx"
+    ],
+    "fields": []
+  },
+  "staleness": {
+    "answer": "none",
+    "why": "It renders what it is given.",
+    "evidence": [
+      "src/components/report/ReportPage.tsx",
+      "src/components/report/ReportView.tsx"
+    ],
+    "offline": "none"
+  },
+  "guards": {
+    "session": {
+      "answer": "entitled",
+      "why": "Its consumer is the MaxBLD report page behind the parcel_tool gate; each consumer declares its own guard.",
+      "evidence": [
+        "scripts/surfaces/parcel_product/F02/surfaces/mobile_parcel_detail.descriptor.json — the report surface"
+      ]
+    },
+    "rls_class": {
+      "answer": "B",
+      "why": "It renders the report page view the consumer already read; it reads no table itself.",
+      "evidence": [
+        "src/lib/surfaces/report/core.ts — pageViewOf, the server projection"
+      ]
+    },
+    "disclosure": "none",
+    "entitlement": "none",
+    "flag": "none",
+    "permission": "none",
+    "rate_bucket": "none"
+  },
+  "render": {
+    "targets": [
+      "screen"
+    ],
+    "projection": "detail",
+    "breakpoints": "mobile_first",
+    "export": "none"
+  },
+  "checks": [
+    {
+      "id": "binding_web_report_components_owned",
+      "kind": "components_owned",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "The three files are owned by this entry (Spec 128 R-13 totality); listing them in bindings.json modules is owed (see docs)."
+    }
+  ],
+  "invariants": "none",
+  "plausibility": "none",
+  "states": [
+    {
+      "name": "hit",
+      "golden": "none"
+    }
+  ],
+  "errors": {
+    "answer": "none",
+    "why": "Errors belong to the consuming page.",
+    "evidence": [
+      "src/components/report/ReportPage.tsx",
+      "src/components/report/ReportView.tsx"
+    ]
+  },
+  "emits": {
+    "answer": "none",
+    "why": "Rendering emits nothing.",
+    "evidence": [
+      "src/components/report/ReportPage.tsx",
+      "src/components/report/ReportView.tsx"
+    ]
+  },
+  "offers": {
+    "answer": "none",
+    "why": "It renders the ad sections the server placed (their Sponsored disclosure as sent); it decides no placement.",
+    "evidence": [
+      "src/components/report/ReportPage.tsx — the ad section case"
+    ]
+  },
+  "metering": {
+    "answer": "none",
+    "why": "Rendering is not a metered product action.",
+    "evidence": [
+      "src/components/report/ReportPage.tsx",
+      "src/components/report/ReportView.tsx"
+    ]
+  },
+  "config": {
+    "answer": "none",
+    "why": "No tunable of its own: the binding consumes no registered logic variable; the layout row (report-layout.json) is read by the server projection, not here.",
+    "evidence": [
+      "src/components/report/ReportPage.tsx — no config read"
+    ],
+    "logic_variables": [],
+    "retired": []
+  },
+  "sharing": {
+    "answer": "shared",
+    "why": "Every web REPORT surface (the MaxBLD report page).",
+    "evidence": [
+      "scripts/surfaces/_schema/bindings.json — modules"
+    ],
+    "surfaces": [],
+    "varies_by_surface": "Only the page view and content passed in."
+  },
+  "a11y": {
+    "touch_target_min_px": 44,
+    "labels": "complete",
+    "dark_mode": "hardcoded",
+    "reduced_motion": "none",
+    "i18n": "none",
+    "safe_area": "none"
+  },
+  "deviations": "none",
+  "limitations": [],
+  "interpretation": "none",
+  "notes": "task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last).",
+  "x-draft": {
+    "shard": "web-product",
+    "files": [
+      "src/components/report/ReportPage.tsx",
+      "src/components/report/ReportView.tsx",
+      "src/components/report/ReportPageToggles.tsx"
+    ],
+    "role": "shared",
+    "generated": "binding",
+    "net_new_tables": [],
+    "designed": true
+  },
+  "programme": {
+    "scope": "platform_shared",
+    "phase": "B2",
+    "why": "Shared rendering infrastructure: the renderer every web REPORT page draws through (owner entry only).",
+    "feature": "F14",
+    "build_order": 3146,
+    "leakage": "none",
+    "product_questions": "none",
+    "review": {
+      "status": "unreviewed"
+    }
+  }
+}

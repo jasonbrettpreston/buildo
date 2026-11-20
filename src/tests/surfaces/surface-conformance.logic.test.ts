@@ -489,7 +489,7 @@ describe('C-7 schema closedness and the cutover (the closed render vocabulary gr
     // MF-48 (dated 2026-11-11; D-2 a): +1 promoted binding entry (binding_mobile_report).
     // MF-46 stage C (restacked onto 34520a43b, dated 2026-11-11): the first web STATIC surfaces web_help, web_terms, web_privacy, web_maxbld_error (+4 converted) and the binding binding_web_static join.
     // MF-76 (dated 2026-11-11; plan v3 §12 fold 15): +1 SURFACE (web_buildo_landing, scope D: the old src/app/page.tsx knowledge; web_landing is repointed).
-    expect(all.length).toBe(171); // MF-19 plan v3 (2026-11-15): +1 SURFACE (report_lot_size_entry_area). SEMI-B (dated 2026-11-13): +1 SURFACE (mobile_parcel_semi_question). MF-19: +2 SURFACE (admin_lot_size_revert, report_lot_size_entry), +2 CONTRACT (contract_parcels_lot_size_entry, contract_admin_lot_size_revert). MF-53: +1 promoted binding entry (binding_mobile_list); MF-48: +1 promoted binding entry; MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
+    expect(all.length).toBe(172); // task-384 STD.REPORT-OWN (dated 2026-11-20): +1 SURFACE (binding_web_report, the owner of the web report renderer files). MF-19 plan v3 (2026-11-15): +1 SURFACE (report_lot_size_entry_area). SEMI-B (dated 2026-11-13): +1 SURFACE (mobile_parcel_semi_question). MF-19: +2 SURFACE (admin_lot_size_revert, report_lot_size_entry), +2 CONTRACT (contract_parcels_lot_size_entry, contract_admin_lot_size_revert). MF-53: +1 promoted binding entry (binding_mobile_list); MF-48: +1 promoted binding entry; MF-44: +1 promoted binding entry (binding_web_search); MF-45: +1 CONTRACT (contract_parcels_entitlement, operator 2026-11-11 "4. ... we have the tokens now"); MF-37: +3 SURFACE, +3 CONTRACT, +2 promoted binding entries (was 141 at MF-42); MF-35: +1 promoted binding entry (shared_mobile_surface_binding); MF-40: +2 SURFACE, +3 CONTRACT
     expect(all.filter((f) => v(rj(f)).length > 0)).toEqual([]);
     // MF-40 converted admin_placements; the non-generated FORM control is now binding_web_form (status new, no render.form).
     // Regression guardian LOW-1 (MF-40 OUTPUT panel): binding_web_form is a platform_shared promoted binding entry, not a pending user-facing surface;
@@ -920,5 +920,22 @@ describe('C-9m the mobile 44 px case (MF-35; min-h-[44px] or another listed size
       'C-9m g/children/6: Button ["min-h-[40px]"] (needs exactly one of min-h-[44px]|min-h-[48px])',
       'C-9m g/children/7: Input ["min-h-[48px]"] (needs exactly one of min-h-[44px])',
     ] });
+  });
+});
+
+// ---- C-12 (task-384 STD.REPORT-OWN; dated 2026-11-20) ---------------------------------------------------------------------------------------------
+// The web report renderer files have a census owner (R-13). Listing them as bindings.json modules (so C-2b and C-8 judge them) is BLOCKED: C-3 needs
+// their module root to be a frontend glob in mcbylaws/protected-paths.json, a protected policy file this lane does not edit (operator question in the lane report).
+describe('C-12 the web report renderer files have a census owner (Spec 126 section 11b.1: kept as a component, not converted)', () => {
+  const FILES = ['src/components/report/ReportPage.tsx', 'src/components/report/ReportView.tsx', 'src/components/report/ReportPageToggles.tsx'];
+  it('the census entry owns exactly the three files, its descriptor file is byte-equal to it, and no other surface owns them', () => {
+    const shard = rj(path.join(REPO, SCHEMA, 'census/web-product.json')) as Json[];
+    const entry = shard.find((r) => r.identity.id === 'binding_web_report');
+    expect(entry).toBeDefined();
+    expect(entry?.identity.owns.components).toEqual(FILES);
+    expect(entry?.programme.scope).toBe('platform_shared');
+    const file = path.join(REPO, 'scripts/surfaces/platform_shared/F14/surfaces/binding_web_report.descriptor.json');
+    expect(fs.readFileSync(file, 'utf8')).toBe(`${JSON.stringify(entry, null, 2)}\n`);
+    for (const d of DESCRIPTORS.values()) if (d.identity.id !== 'binding_web_report') expect([d.identity.id, (d.identity.owns?.components ?? []).filter((c: string) => FILES.includes(c))]).toEqual([d.identity.id, []]);
   });
 });

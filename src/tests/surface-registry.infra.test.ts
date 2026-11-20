@@ -206,6 +206,25 @@ describe('surface registry — R-13 component ownership totality (both direction
     },
   );
 
+  it('task-384: the three web report renderer files are owned (by binding_web_report) and the unowned set is exactly the other 11, so the it.fails above stays red for them and cannot pass or be dropped silently', () => {
+    const owner = new Map<string, string>();
+    for (const r of loadCensus()) for (const f of componentsOwnedBy(r)) owner.set(f, idOf(r));
+    for (const f of ['src/components/report/ReportPage.tsx', 'src/components/report/ReportView.tsx', 'src/components/report/ReportPageToggles.tsx']) expect([f, owner.get(f)]).toEqual([f, 'binding_web_report']);
+    expect(allComponentFiles().filter((f) => !owner.has(f))).toEqual([
+      'mobile/src/components/auth/OtpInputField.tsx',
+      'mobile/src/components/auth/PhoneInputField.tsx',
+      'mobile/src/components/onboarding/ProgressStepper.tsx',
+      'mobile/src/components/paywall/InlineBlurBanner.tsx',
+      'mobile/src/components/settings/TradeReadOnlyRow.tsx',
+      'mobile/src/components/shared/SaveButton.tsx',
+      'src/components/admin/LeadDetailInspector.tsx',
+      'src/components/admin/lead-inspector/CoaClassificationPanel.tsx',
+      'src/components/admin/lead-inspector/LifecycleTimelinePanel.tsx',
+      'src/components/ui/Badge.tsx',
+      'src/components/ui/ScoreBadge.tsx',
+    ]);
+  });
+
   it('the registry RENDERS the unowned set rather than hiding it, and the rendered count equals the measured count', () => {
     const owner = new Set<string>();
     for (const r of loadCensus()) for (const f of componentsOwnedBy(r)) owner.add(f);
