@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/output.diff (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 99 §8.3 "Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate." — mobile/app/(app)/parcel-tool/semi-question.tsx:~28 "const { data, isFetching, error, refetch } = useParcelLookup(id || undefined);" — the change edits this screen, the screen consumes isFetching, and the only new §8.3 test targets `parcel-tool/[parcelId].tsx`; whether that read feeds a render branch cannot be seen, so the semi screen's gate has no toggling test — add a double-render case for the semi screen (same data/error, isFetching true then false) or show in the diff that isFetching is not a render input there.
+
+DEFER severity=MED — Spec 99 §6.5 "REQUIRED, gate only on stable signals: `if (isLoading || profile == null || profile.subscription_status == null)`" — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:31 "type Hook = { data: unknown; isError: boolean; isFetching: boolean; refetch: jest.Mock };" — the mock supplies no isLoading/isPending/status, so the "loading (pending, nothing cached)" case is only "data undefined" and a loading gate that reads a stable loading signal is never exercised; the four cases can be mis-simulated — add isLoading (and the status field) to the mock, true while data is undefined and false once data exists, then re-run the toggling.
+
+DEFER severity=MED — Spec 99 §6.5 "A render gate condition ... MUST evaluate to the same value across consecutive renders unless an *intentional* state transition occurred" — reportScreen.gateStability.behaviour.test.tsx:45 "['the served page while a refetch runs after an error (offline cache)', hit(VIEW), true]" — this case is compared only to itself, so a route that swaps the cached page for the error text on a failed refetch still passes, and "the served page" rests on the test name alone — assert the served-page marker (its testID) inside the rendered tree in both renders of that case.
+
+DEFER severity=LOW — pasted §B5 "the MMKV-persisted TanStack cache (`mmkvPersister`, 24h `maxAge`) survives the sign-out and rehydrates on next mount" — docs/specs/03-mobile/99_mobile_state_architecture.md:236 "+| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) | ... not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED) |" — the row documents SRCH.A6/task-320 with no persistFilter.ts edit and no test in this diff, so the NOT_PERSISTED assertion is unverified (persistFilter.ts cannot be seen), and it is behaviour this change's own card (FIX.SEMI, D5/D12) does not name — land the row with the NOT_PERSISTED entry plus a test that asserts the key is excluded, or split it into its own commit.
+
+MET — Spec 99 §8.3 — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:47-52 "mockHook = { data, isError, isFetching: true, refetch: jest.fn() }; const fetching = render(<Screen />); ... expect(treeFetching).toBe(treeSettled);" — each report-route state is rendered twice on the same data/isError with isFetching toggled and the two trees are asserted identical.
+
+MET — Spec 99 §6.5 enumeration item 3 "Adding a new permitted carve-out requires extending this enumeration in the same commit" — mobile/src/hooks/useParcelLookup.ts:131-133 "return useMutation(buildAnswerParcelLookupOptions());" — the change adds a mutation with networkMode 'always', not an isFetching-paired render branch, so no new carve-out is created and nothing is owed to the enumeration.
+
+REJECT — Spec 99 §4 B1 99:219 "Every server fetch MUST go through TanStack Query" (that clause appears only inside the diff's own comment, it is not in the pasted context) — accused of leaving the semi Continue on a raw fetch — the page now runs "result = await answerLookup(id);" through the mutation hook, and since B1 is not pasted it is not mine to enforce; no pasted clause forbids the mutation.
+
+REJECT — Spec 99 §8.1 "Each bridge in §4 MUST have a Jest test asserting that calling it twice with identical input produces zero observable mutations on the second call" — accused of shipping the answered lookup with a double-invocation hole — the answered lookup is not one of the pasted §4 bridges (B4/B5/B6), and the double-press guard belongs to the error-paths lens, so no pasted clause is unmet here.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  80436ms (80.4s)
+📊 Tokens — total: 34667, input: 19892, output: 14775, reasoning: 13625

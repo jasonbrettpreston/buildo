@@ -1,0 +1,7 @@
+# Plan task-373 FIX.SEMI
+D5 semi-question.tsx:64 awaits fetchParcelLookup imperatively (Spec 99:219 every server fetch through TanStack Query). Fix: new hook useAnswerParcelLookup in mobile/src/hooks/useParcelLookup.ts = useMutation (same kind as useSaveLead/useRemoveFromBoard), mutationFn = boundedWait(fetchParcelLookup({parcelId, semi:'answered'}), SEMI_CONTINUE_WAIT_MS) (constant imported where it lives, not moved or changed). Page calls mutateAsync; keeps submittingRef latch, setSubmitting busy state, empty-id guard, mountedRef guard, storeLookup via useSetParcelLookup after the mounted check, router.replace(route).
+D4 add row ['parcel-entitlement'] | useParcelEntitlement (Spec 100) to Spec 99 section 4 B1 registry table (99:230-235).
+D12 add a test: report screen [parcelId].tsx rendered with isFetching true then false for loading, miss and error states; rendered tree identical (Spec 99 8.3).
+Tests: cases added only; existing semi page cases keep assertions (mock factory gains the new hook export); pure mutation fn tested in useParcelLookup.test.ts.
+No push, no DB; phone tests unproven until Mobile CI.
+Plan changes after round 1: mutation options pinned retry 0 and networkMode 'always' (offline must fail at once, task-361 behaviour); module-scope exports answeredParcelLookup(parcelId) and buildAnswerParcelLookupOptions(); page keeps try/catch/finally; D12 compares isFetching true vs false per state (loading, miss, served page, error), never across states; D4 row has Notes cell; AC3 step: lens set at output, grounder owed.

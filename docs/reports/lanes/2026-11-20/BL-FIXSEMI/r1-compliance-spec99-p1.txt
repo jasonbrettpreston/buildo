@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/plan.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 99 §6.5 "gate conditions must be stable; never gate on `isFetching`" — plan D12 "report screen [parcelId].tsx rendered with isFetching true then false for loading, miss and error states; rendered tree identical (Spec 99 8.3)" — the plan names no stable signal that renders the loading / miss / error branches, so §6.5 rests only on a test name (walk rule 3: a clause satisfied only by a test name is UNMET); if loading is derived from `isFetching` the identical-tree assertion is self-contradictory — fix: name the signal in the plan (e.g. `data === undefined` plus `isPending` of the lookup query, or a handler-set state) and assert the tree derives from it, not from `isFetching`
+
+DEFER severity=MED — Spec 99 §4 "These are the only allowed cross-layer flows. A seventh pattern requires a spec amendment." with B1 "Every server fetch MUST go through TanStack Query" — plan D5 "mutationFn = boundedWait(fetchParcelLookup({parcelId, semi:'answered'}), SEMI_CONTINUE_WAIT_MS)" — an answered parcel read carried by `useMutation` is neither B1's `useQuery` pattern nor B3's Zustand-write mutation, and no registry row is added for it while the pasted registry says "| `['parcel-lookup', parcelId]` | `useParcelLookup` (Spec 100) | ... depends ONLY on `parcelId` (query-key hygiene ...)|" — fix: state in the plan which bridge authorizes read-through-mutation, or get that written as an operator ruling instead of asserting "same kind as useSaveLead/useRemoveFromBoard" (not pasted)
+
+DEFER severity=MED — B1 "Adding a new server query requires a row here" and "`queryKey` MUST be a stable, parameterized array" against table header "| Query key | Owner hook | Notes |" — plan D4 "add row ['parcel-entitlement'] | useParcelEntitlement (Spec 100)" — the row drops the Notes cell and its key carries no parameter, so if entitlement is parcel-scoped one cache entry serves every parcel — fix: write `['parcel-entitlement', parcelId]` with a Notes cell stating persistence / PII status, or state why the key is legitimately param-free
+
+DEFER severity=MED — B1 "Validation: every response MUST be parsed through a Zod schema before TanStack stores it (Spec 90 §13 Zod Boundary)." — plan D5 "mutationFn = boundedWait(fetchParcelLookup({parcelId, semi:'answered'}), SEMI_CONTINUE_WAIT_MS)" or NONE — the plan names no Zod parse for the answer response that the mutation now stores, and whether `fetchParcelLookup` parses internally cannot be seen — fix: state in the plan that `fetchParcelLookup`'s schema is the boundary, or parse in the mutationFn before returning
+
+DEFER severity=LOW — Spec 99 §8.3, cited by D12 "rendered tree identical (Spec 99 8.3)" — NONE — cannot see: the pasted context is "part 1 of 3" and ends inside §4 B4, so the §8.3 test mandate the D12 test is written against is not in scope here — fix: paste §8.3 (and any §8 mandate covering "cases added only") before plan-lock
+
+DEFER severity=LOW — B2 "Routing happens in §5 routers, not in hydrate effects." and §1.1 "§6.4 (lazy `getState()` for state read in router effects)" — plan D5 "storeLookup via useSetParcelLookup after the mounted check, router.replace(route)" — the plan does not say whether `router.replace` runs in the mutation callback or a `useEffect`, so §5 / §6.4 compliance cannot be checked and a store-write-then-route in one callback is the incident-1 shape — fix: state the call site explicitly (mutation success handler, no effect) in the plan
+
+MET — B1 "Every server fetch MUST go through TanStack Query — never raw `fetch()` in components." — plan D5 "Page calls mutateAsync" — the imperative await at semi-question.tsx:64 is removed and no component-level fetch remains
+
+MET — B3 "Rollback MUST be paired with every optimistic write." — plan D5 — no `onMutate` / optimistic store write is added, so no rollback pair is owed
+
+MET — Spec 99 §2.1 "Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`." — plan tail "No push, no DB" — no new MMKV blob or SecureStore surface is introduced
+
+MET — Spec 99 §3 "Adding a field to the mobile app requires adding a row here." — plan D5 "storeLookup via useSetParcelLookup" — no new Layer-3 field is introduced, the existing parcel-lookup writer is reused
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+
+---
+⏱  60527ms (60.5s)
+📊 Tokens — total: 21388, input: 10125, output: 11263, reasoning: 10100

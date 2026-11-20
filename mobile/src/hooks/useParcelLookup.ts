@@ -10,11 +10,12 @@
 // errors (ApiError/RateLimitError/NetworkError) stay in `isError` for inline handling.
 
 import { useCallback } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Sentry from '@sentry/react-native';
 import { fetchWithAuth } from '@/lib/apiClient';
 import { AccountDeletedError, ApiError, RateLimitError } from '@/lib/errors';
 import { useAuthStore } from '@/store/authStore';
+import { boundedWait, SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
 import {
   ConsumerParcelLookupResultSchema,
   ParcelToolEntitlementSchema,
@@ -111,6 +112,28 @@ export function useSetParcelLookup() {
     (parcelId: string, result: ConsumerParcelLookupResult) => { queryClient.setQueryData(['parcel-lookup', parcelId], result); },
     [queryClient],
   );
+}
+
+/**
+ * FIX.SEMI (task-373, grounder D5; Spec 99 section 4 B1 99:219 "Every server fetch MUST go through TanStack Query"): the semi question page's Continue lookup,
+ * the same lookup with the one flag `semi: 'answered'` (SRCH.SEMI stage 2, task-319), bounded by SEMI_CONTINUE_WAIT_MS (task-361, LX-E1: a lookup that does not
+ * settle ends in the page's built error state). The Zod boundary is fetchParcelLookup's own parse.
+ */
+export function answeredParcelLookup(parcelId: string): Promise<ConsumerParcelLookupResult> {
+  return boundedWait(fetchParcelLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);
+}
+
+/**
+ * Options of the Continue mutation. retry 0: a failed answer is not re-sent by the library (the page's Try again is the retry). networkMode 'always': the
+ * default 'online' pauses a mutation while offline, so the bounded wait would never start and the page would stay busy; offline it must fail at once, as task-361 built it.
+ */
+export function buildAnswerParcelLookupOptions() {
+  return { mutationFn: answeredParcelLookup, retry: 0, networkMode: 'always' } as const;
+}
+
+// Callers use mutateAsync inside try/catch (the semi page does): the hook sets no onError.
+export function useAnswerParcelLookup() {
+  return useMutation(buildAnswerParcelLookupOptions());
 }
 
 /**

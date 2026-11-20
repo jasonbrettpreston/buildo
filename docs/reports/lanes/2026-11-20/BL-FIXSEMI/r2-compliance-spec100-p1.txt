@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/output.diff (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 100 dated note 2026-11-12 (MF-48 Stage B) "a page rides only a response with a parcel." — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:44 "const hit = (page: unknown) => ({ match: { parcelId: 'PIN-777', matchType: 'direct', address: '26 Hurlingham Cres' }, candidates: [], warnings: [], parcel: null, resolution: 'unique', map: null, page });" — the two served-page cases ("the served page", "the served page while a refetch runs after an error") pin the gate on a payload the clause forbids, page non-null with parcel null, and the "miss text" case carries a non-null match, which is not one of §2 item 6's exact payloads, so the lock does not exercise the shipped hit shape — build the fixture with a non-null parcel for the page cases and, for the miss case, the §2 item 6 shape (match null, candidates [], parcel null).
+
+DEFER severity=MED — Spec 100 §3.2 cross-reference "Any future reader of `parcels` owes the same explicit allow-list" plus the absent SRCH.A6 ruling — docs/specs/03-mobile/99_mobile_state_architecture.md:236 "| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) | the caller's plan and this month's report count" — the diff carries no code for that key, no `NOT_PERSISTED` entry is shown, and no pasted clause or operator ruling names SRCH.A6/task-320, so the spec edit asserts behaviour this diff does not establish (persistFilter.ts cannot see) — drop the row from this task or land it with the code and the ruling that names it.
+
+DEFER severity=LOW — Spec 99 §4 B1 99:219 "Every server fetch MUST go through TanStack Query" (asserted only inside the diff's own comments; Spec 99 text is not pasted) — mobile/src/hooks/useParcelLookup.ts:118 "FIX.SEMI (task-373, grounder D5; Spec 99 section 4 B1 99:219" — the governing clause for the mutation conversion and for the new gate-stability test is not in the pasted context, so whether `useAnswerParcelLookup` and the §8.3 lock satisfy it cannot be verified here — paste Spec 99 §4 B1 and §8.3 with the change.
+
+DEFER severity=LOW — no pasted clause names `networkMode` or `retry` — mobile/src/hooks/useParcelLookup.ts:128 "return { mutationFn: answeredParcelLookup, retry: 0, networkMode: 'always' } as const;" — these two options are behaviour added on the diff's own reasoning (offline failure, no library re-send) with no pasted clause naming them — cite the task-361 ruling in the pasted context or leave the options out.
+
+DEFER severity=LOW — Spec 100 dated note 2026-11-12 (EI-D1) "The mobile parcel screen shows none of the withheld values. Its \"What it costs\" slot reads \"Not yet evaluated\"" — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:38 "const VIEW = (JSON.parse(fs.readFileSync(path.join(REPO, 'src/tests/fixtures/report-page/props/page_v21.mobile.json'), 'utf8')) as { view: unknown }).view;" — the served-page fixture is not pasted, so whether the rendered tree in the gate test is free of withheld cost/envelope values cannot be checked (cannot see the fixture) — state the fixture's provenance and that it carries no withheld value.
+
+MET — Spec 100 dated note 2026-11-11 (MF-45) "a hit for a `parcel_tool` user writes one `property_view` row" — mobile/src/hooks/useParcelLookup.ts:128 "retry: 0" — the library cannot re-send the answered lookup, so Continue sends one metered request per press.
+MET — Spec 100 §2 item 6 "No match → HTTP **200** ... Errors are reserved for" — mobile/app/(app)/parcel-tool/semi-question.tsx:65 "result = await answerLookup(id);" — only a thrown failure reaches the error branch; a 200 miss/dangling id still stores and replaces, unchanged.
+MET — Spec 100 §3 "Exactly one of `q` / `parcelId` (400 otherwise)" — mobile/src/hooks/useParcelLookup.ts:122 "return boundedWait(fetchParcelLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);" — the answered lookup stays on the parcelId path only.
+MET — Spec 100 dated note 2026-11-11 (MF-53) "A `map` block is sent ONLY for `multi_parcel` and `unlinked`" — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:44 "resolution: 'unique', map: null" — the fixture keeps a unique resolution without a map block.
+MET — Spec 100 dated note 2026-11-12 (MF-48 Stage B) "The app parses `page` optional and plain (the MF-53 form) and never rebuilds it." — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:38 "as { view: unknown }).view" — the route renders the server view as parsed, nothing in the diff rebuilds it.
+
+REJECT — Spec 100 §2 item 1 "Creates, derives, and mutates **nothing**" — accused of mutating state by moving the lookup into `useMutation` — the clause binds the server payload assembly, not the client's transport choice, and the answer still writes only the app-side route param (O-12).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 1
+
+---
+⏱  59078ms (59.1s)
+📊 Tokens — total: 42713, input: 31399, output: 11314, reasoning: 9948

@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/plan.md (model: deepseek-reasoner)
+
+BUG findings: none at CRIT/HIGH on the pasted text; the items below are verification gaps where the pasted clause binds but the plan (or the pasted context) does not let me certify it.
+
+DEFER severity=MED — Spec 99 §6.5 "Adding a new permitted carve-out requires extending this enumeration in the same commit; reviewers MUST reject any unenumerated carve-out." — plan D12 line "add a test: report screen [parcelId].tsx rendered with isFetching true then false for loading, miss and error states" — the plan never states whether [parcelId].tsx has an isFetching-keyed loading branch, and D4 adds only a §4 B1 registry row, no §6.5 enumeration entry, so an unenumerated carve-out on that screen would survive this plan — add one line: name the screen's gate signals, and if isFetching is one, either drop it or add the §6.5 enumeration entry in the same commit.
+DEFER severity=MED — Spec 99 §8.3 "Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate." — plan D5 "D5 semi-question.tsx:64 awaits fetchParcelLookup imperatively" against D12 "[parcelId].tsx" — the plan tests only the report screen and never says whether semi-question.tsx is that same file, so §8.3 coverage for the changed page's own gate is unproven — name the file(s) and the gate(s) D12 covers.
+DEFER severity=MED — Spec 99 §4 B1 table (99:230-235) and 99:219 are not in the pasted context — plan "add row ['parcel-entitlement'] | useParcelEntitlement (Spec 100) to Spec 99 section 4 B1 registry table (99:230-235)" and "Spec 99:219 every server fetch through TanStack Query" — cannot see the table, Spec 100, or line 219, so the registry row shape, whether the new useAnswerParcelLookup from D5 also needs a row, and whether useMutation satisfies the cited clause's letter are unverified — check D4 and D5 against those literal texts before lock.
+DEFER severity=LOW — Spec 99 §7.2 "Every `queryClient.invalidateQueries` call MUST be paired with: `Sentry.addBreadcrumb({ category: 'query', message: 'invalidate', data: { key } })`" — plan D5 "keeps ... storeLookup via useSetParcelLookup after the mounted check" — plan names no invalidation and therefore no breadcrumb or DEV `track('query_invalidate')`, so if useSetParcelLookup invalidates a lookup key the §7.2 pairing is unnamed — state whether any invalidate is triggered and, if so, its breadcrumb and DEV track sites.
+MET — Spec 99 §8.3 — plan D12 — adds a test rendering with isFetching true then false and asserting the rendered tree is identical, which is the mandate's stated pattern.
+MET — Spec 99 §6.5 — plan D5 — the retained busy signal is `setSubmitting` set by a user-initiated submit (an intentional transition), not a transient `isFetching`/`isError` gate.
+MET — Spec 99 §6.1 — plan D5 — the page consumes the new hook's mutateAsync; no whole-store read or object-returning selector is added at the call site.
+REJECT — Spec 99 §8.1 "Each bridge in §4 MUST have a Jest test asserting that calling it twice with identical input produces zero observable mutations" — accused of missing an idempotency double-call test for useAnswerParcelLookup — not a real issue: the pasted §4 bridges are the B4 to B6 auth/listener bridges, and a mutation hook is not one of them.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  69233ms (69.2s)
+📊 Tokens — total: 22831, input: 9912, output: 12919, reasoning: 12026

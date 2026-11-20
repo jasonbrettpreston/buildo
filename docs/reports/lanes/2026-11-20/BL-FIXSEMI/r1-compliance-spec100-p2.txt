@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/plan.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 100 dated note 2026-11-12 "pending with nothing cached shows loading; an error with nothing cached shows the error text and Retry ("Try again")" — plan D12 "report screen [parcelId].tsx rendered with isFetching true then false for loading, miss and error states; rendered tree identical (Spec 99 8.3)" — the planned test pins loading, miss and error to one identical rendered tree, the exact opposite of the three distinct state outputs the note requires — rewrite D12 to assert per-state output: loading indicator, approved miss text, error text plus the "Try again" retry control, and assert they differ.
+
+BUG severity=HIGH — Spec 100 dated note 2026-11-12 "States: a page shows the v21 page ... then `ReportPageHost` (MF-48 Stage A) over the served `page`" — plan D12 "rendered with isFetching true then false for loading, miss and error states" — the served-page state is never exercised, so the primary state of the report surface goes untested — add a served page fixture case to D12 (page present renders the v21 page, not the miss text).
+
+BUG severity=HIGH — Spec 100 §4 "`ConsumerParcelLookupResultSchema` mirroring the server contract; the hook parses `raw.data` through it (Spec 90 §13 Zod boundary)" — plan D5 "mutationFn = boundedWait(fetchParcelLookup({parcelId, semi:'answered'}), SEMI_CONTINUE_WAIT_MS)" — the new hook's data path is specified end to end with no Zod parse, so the answered payload returns across the boundary unparsed — name the `raw.data` parse through `ConsumerParcelLookupResultSchema` inside `useAnswerParcelLookup` and cover it with a rejected-drift case in `useParcelLookup.test.ts`.
+
+BUG severity=HIGH — Spec 100 §8 "a distinct home-looker persona, entitlement, and pricing (and an optional `parcel_view_events` trial counter) are a later product decision", under "Future (reserved — no v1 code beyond the null placeholder)" — plan D4 "add row ['parcel-entitlement'] | useParcelEntitlement (Spec 100) to Spec 99 section 4 B1 registry table (99:230-235)" — registers a hook as Spec 100 output that no pasted Spec 100 clause names, while §8 reserves entitlement to a later decision, so the row cites a source that does not exist — drop D4, or cite the operator ruling that created `useParcelEntitlement` and show the hook exists.
+
+DEFER severity=MED — Spec 100 §6 "Mobile Jest (`mobile/__tests__/`, jest-node — no render tree per Spec 98)" — plan D12 "report screen [parcelId].tsx rendered with isFetching true then false" — D12 mandates a render-tree test where §6 forbids render trees in Mobile Jest — state that the 2026-11-12 note's render guard (`reportPage.behaviour.test.tsx`) supersedes §6 for this route, or move D12 into that suite.
+
+DEFER severity=MED — plan D5 "(Spec 99:219 every server fetch through TanStack Query)" — NONE — the clause the whole fix rests on, and the Spec 99 8.3 clause D12 cites, are not in the pasted context, so compliance with them cannot be judged — paste Spec 99 §4/219 and Spec 99 §8.3 for this review.
+
+MET — Spec 100 dated note 2026-11-19 "there is no session gate, no admin condition and no new switch" — plan "No push, no DB; phone tests unproven until Mobile CI" — the change introduces no switch, gate or admin condition.
+
+MET — Spec 100 §6 "Mobile Jest (`mobile/__tests__/`" — plan "pure mutation fn tested in useParcelLookup.test.ts" — the new pure function gets a jest-node test in the §6 location.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 4
+
+---
+⏱  36373ms (36.4s)
+📊 Tokens — total: 13552, input: 6377, output: 7175, reasoning: 6255

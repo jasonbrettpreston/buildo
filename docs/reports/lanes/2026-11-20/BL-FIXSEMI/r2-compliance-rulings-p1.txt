@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/output.diff (model: deepseek-reasoner)
+
+DEFER severity=MED — AC2 "tests red first then green through the real hooks" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "useAnswerParcelLookup: () => ({ mutateAsync: (parcelId: string) => { mockAnswerCalls.push(parcelId); return boundedWait(mockFetchLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS); } })" — in the pasted diff the real hook is never mounted: the page test replaces it with a hand-rolled bounded wait and useParcelLookup.test.ts pins only answeredParcelLookup and buildAnswerParcelLookupOptions, so the useMutation seam itself (the one line AC2 asks to be green through the hook) is unpinned, and the rest of that test file cannot be seen — add one renderHook case over useAnswerParcelLookup (mutations go offline through networkMode 'always', no retry) so the seam is covered by the real hook, not by its replacement.
+
+DEFER severity=LOW — Spec 99 §8.3 "Each render gate condition (per §6.5) MUST have a test asserting that toggling `isFetching` does NOT flip the gate." — mobile/app/(app)/parcel-tool/semi-question.tsx:28 "const { data, isFetching, error, refetch } = useParcelLookup(id || undefined);" — the other screen this diff touches also destructures isFetching (its quiet loading line per the approved mock) and no §8.3 case is added for it; its render branches cannot be seen — either extend the D12 note to state why that page has no gated branch, or add the twin toggling case for it.
+
+MET — Spec 99 99:219 "Every server fetch MUST go through TanStack Query" — mobile/src/hooks/useParcelLookup.ts "export function useAnswerParcelLookup() { return useMutation(buildAnswerParcelLookupOptions()); }" — Continue's answered lookup is now issued as a mutation and the page keeps no raw fetch ("expect(src).not.toMatch(/fetchParcelLookup/)").
+
+MET — TRIAGE "mutation retry 0, networkMode 'always' (offline fails at once as task-361 built it)" — mobile/src/hooks/useParcelLookup.ts "return { mutationFn: answeredParcelLookup, retry: 0, networkMode: 'always' } as const;" — both pinned by a test that reads the options object.
+
+MET — Brief "do not change or move the 60 s constant (SEMI_CONTINUE_WAIT_MS, mobile/src/lib/semiQuestion.ts:16)" — mobile/src/hooks/useParcelLookup.ts "return boundedWait(fetchParcelLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);" — the constant is imported and applied, and lib/semiQuestion.ts is absent from the diff.
+
+MET — Brief "Take the form of the nearest existing hook in mobile/src/hooks (useSaveLead / useRemoveFromBoard use useMutation)" — mobile/src/hooks/useParcelLookup.ts "import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';" — the new path is a mutation hook, not a hand-rolled fetch.
+
+MET — TRIAGE "page keeps the try/catch/finally latch and mount guard" — mobile/app/(app)/parcel-tool/semi-question.tsx "} catch (e) { if (mountedRef.current) setSubmitError(e); return; }" — the mount guard and the submittingRef latch around "result = await answerLookup(id);" are kept, and the double-press case is untouched.
+
+MET — TRIAGE "cache write stays through useSetParcelLookup after the mount check (unmount stores nothing)" — mobile/app/(app)/parcel-tool/semi-question.tsx "storeLookup(id, result);" — the cache write still follows the awaited lookup through the same storeLookup, unmoved.
+
+MET — AC4 "existing cases stay as they are" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx — only the jest.mock factory and beforeEach gain mockAnswerCalls, no existing it-block body was edited.
+
+MET — Ruling "The semi question mock is approved as drawn (full-width heading, chevron, info icon, secondary Try again, quiet loading line)" — mobile/app/(app)/parcel-tool/semi-question.tsx — the diff touches only the import list, the Continue call and the dep array; the actions useMemo and the render tree are not changed.
+
+REJECT — Brief "do not change or move the 60 s constant" — accused: moving the bounded wait out of the page into answeredParcelLookup relocates the timeout — not a real issue: the constant stays at mobile/src/lib/semiQuestion.ts:16 (not in the diff) and the same value bounds the same call inside the hook.
+
+REJECT — task-323 "Increment 1·B builds the semi question page as page, mock and link only" — accused: task-373 edits the page beyond page/mock/link — not a real issue: task-323 scopes Increment 1·B, and task-373's AC4 explicitly governs this page's busy state, bounded wait and empty-id guard.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  113723ms (113.7s)
+📊 Tokens — total: 33393, input: 12060, output: 21333, reasoning: 20126

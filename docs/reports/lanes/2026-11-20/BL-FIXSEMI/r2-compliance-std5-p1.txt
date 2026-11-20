@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/output.diff (model: deepseek-reasoner)
+
+BUG severity=HIGH — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:30 "const hit = (page: unknown) => ({ match: { parcelId: 'PIN-777', matchType: 'direct', address: '26 Hurlingham Cres' }, candidates: [], warnings: [], parcel: null, resolution: 'unique', map: null, page });" — the entire parcel-lookup result is hand-written inline in the new test and no factory is imported anywhere in the file — import the lookup-result typed factory from src/tests/factories.ts and pass the page into it
+BUG severity=MED — §5.1 "You MUST always import typed factories from `src/tests/factories.ts`." — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:21 "type Hook = { data: unknown; isError: boolean; isFetching: boolean; refetch: jest.Mock };" — the hook return shape is declared locally (a second copy already lives at semiQuestionPage.behaviour.test.tsx:27) instead of coming from a typed factory — export the hook-result factory from src/tests/factories.ts and import it in both tests
+BUG severity=MED — §5.1 "Never write untyped inline mocks" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:39 "useAnswerParcelLookup: () => ({ mutateAsync: (parcelId: string) => { mockAnswerCalls.push(parcelId); return boundedWait(mockFetchLookup(...), SEMI_CONTINUE_WAIT_MS); } })" — the mutation hook's return object is constructed inline in the module mock rather than from a typed factory — build it from a factory in src/tests/factories.ts so the mocked mutateAsync signature is checked against the real hook
+DEFER severity=LOW — §5.2 "`*.ui.test.tsx` | React component rendering, interactions | Any new/changed component" — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:1 "// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §8.3" — the new file renders the route screen (line 47 "<Screen />") but its name `*.behaviour.test.tsx` matches no pattern in the §5.2 table — rename to reportScreen.ui.test.tsx or cite the pattern that admits it
+DEFER severity=LOW — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — mobile/src/hooks/useParcelLookup.ts:117 "export function answeredParcelLookup(parcelId: string)" — the diff shows the implementation and its tests in the same change, red-light ordering cannot see — attach the failing run for the new answeredParcelLookup case before merge
+DEFER severity=LOW — no pasted clause names it (walk step 4) — docs/specs/03-mobile/99_mobile_state_architecture.md:236 "| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) |" — this spec-table row describes SRCH.A6/task-320 entitlement state, unrelated to task-373 FIX.SEMI and to no pasted clause — split it out of this card or show the card line that names it
+MET — §5.2 — mobile/__tests__/useParcelLookup.test.ts:216-224 — unhappy paths are pinned for the new answer lookup (failed lookup, schema drift, timeout) rather than only the happy path
+MET — §5.5 — mobile/__tests__/useParcelLookup.test.ts:226-231 — the mutation options are pinned by value ("expect(o.networkMode).toBe('always')"), not only asserted by a test name or comment
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 2
+
+---
+⏱  41988ms (42.0s)
+📊 Tokens — total: 21086, input: 12761, output: 8325, reasoning: 7401

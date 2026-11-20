@@ -1,0 +1,98 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of docs/reports/reviews/task-373/context-2026-11-20.md (model: deepseek-reasoner)
+
+# Adversarial review — `docs/reports/reviews/task-373/context-2026-11-20.md`
+
+Note on refs: the artifact is generated markdown with no stable line numbers; I cite by section heading + bullet, and by the embedded `file:line` citations it carries. Everything below is about the generator's output (`backlog-brief.mjs`) and the attached review template, since that is the "code" under review.
+
+---
+
+## Critical
+
+- **[CRITICAL]** (§ Document sections → all three blocks): Every named document failed to resolve — `backlog/docs/increments/doc-2 - Increment-S-requirements.md` (×2) and `backlog/docs/doc-16 - McStorage-policy-v2.md` are all `ENOENT`, yet the brief still emits a full 120 KB context and the lane is `RUNNING`. The lane therefore starts with **zero** governing requirement, elements table, or storage policy. A brief whose entire purpose is to carry context must hard-fail (`exit 1`, no artifact) when *all* named documents are missing, rather than degrade silently. Fix: resolve-then-emit; on any ENOENT, list the missing paths and abort.
+
+- **[CRITICAL]** (§ References / § Documents / § Document sections): The task's primary governing spec is **absent**. The description cites Spec 99 at `:219`, `:226` and "section 8.3", and one of the four files to edit is `docs/specs/03-mobile/99_mobile_state_architecture.md` — but `## References` says `(none)`, `## Documents` says `(none)`, and no block for Spec 99 appears anywhere in "Document sections". The agent cannot check the registry row format, the §8.3 stability-test definition, or the Spec-99:219 query rule before editing. Fix: derive the document set from the task's `Files:` list (any `*.md` under `docs/specs/`), not from the milestone document list alone.
+
+- **[CRITICAL]** (§ Storage set-up ¶1–2 vs § Rulings RR-0176 vs § Problems): The document carries two directly contradictory operator rulings and puts the *superseded* one in the authoritative-looking place. ¶2 asserts "waits for the numbers up to **35,000 ms** (LOAD.1 to LOAD.3)"; RR-0176 says the opposite ("no 35 s cap… LOAD.3 is not needed now"), and ¶1 says "behind the 35 s loading screen". RR-0174 is listed in § Decisions in force (decision-42) with **no supersession marker**, while § Rulings and § Problems both say it was superseded. A lane reading top-down will re-implement the cap the operator removed — and the task's own wording ("keeping the bounded wait") reinforces the wrong reading. Fix: annotate `SUPERSEDED BY RR-0176` inline on RR-0174 and on every Storage set-up line that depends on it, or delete the stale lines.
+
+- **[CRITICAL]** (§ Deliverable): The deliverable is not a deliverable — it is an unrelated, mid-sentence ruling digest: `"Readings: (1) Q-GAP-0 image hold R-IMG1..3 LIFTED (dated note owed, M-246 form). (2) Q-GAP-2 "Most space": every option, a tie goes to the l"`. The extraction read the wrong line of `MORNING-DECISIONS.md:682` (off-by-N citation) and truncated mid-word. The actual deliverable (address/lot confusion → the report; D. semi question wiring) never appears. Fix: assert the deliverable block contains the milestone deliverable's keywords before emitting; treat a mid-word truncation as a failure, not a display concern.
+
+---
+
+## High
+
+- **[HIGH]** (§ Problems, self-report): The stated defect counts are wrong. It says "two Storage set-up lines … end with the word undefined"; **four** do (all four bullets in § Storage set-up, including ST-5 AMENDED). It says "four Register rulings lines end with the word undefined"; **zero** do in the rendered § Register rulings. Either the renderer or the counter is lying, and the counter is the thing the operator is being asked to trust. Compute counts from the rendered output, never hard-code them.
+
+- **[HIGH]** (§ Storage set-up, § Register rulings, § Problems): A literal `"undefined"` sits in the operator-quote slot at the point of use. RR-0190 states only operator words feed reviews as rulings; an unmarked `undefined` is not marked `UNVERIFIED` and reads like an operator statement. The warning lives in a distant § Problems bullet, which nobody scans while implementing. Fix: substitute `[quote missing — backlog-brief.mjs defect, see Problems]` at write time; a bare `undefined` in a quote slot should fail the generator.
+
+- **[HIGH]** (§ Dependencies): `(none)` is false. The acceptance criteria bind this task to **task-361** ("behaves as task-361 built it… its existing cases stay as they are") and the Source line binds it to **task-368**'s grounder verdicts. On the board this task can now start, and finish, out of order relative to both. Fix: parse `task-\d+` from Description + AC + Source and populate the dependency set (excluding self).
+
+- **[HIGH]** (§ Prior reviews and lane reports): `task-373 (this task) — (none)` contradicts § Task, which sources the work from `docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY.md` (task-368) and names the findings D5/D4/D12. Those verdicts *are* the prior review and the confirmation required by AC#1. Fix: resolve the `docs/reports/lanes/**` paths named in the Description and attach them, or at minimum list them.
+
+- **[HIGH]** (§ Acceptance criteria #2 vs #4): The criteria are mutually unsatisfiable. #2 demands "Tests red first, then green" for all three defects; #4 demands task-361's existing cases "stay as they are and pass". D4 is a documentation row (Spec 99:226) — it can never produce a red test. D5 is a behaviour-preserving refactor (fetch+`writeQuery` → `fetchQuery`/mutation) — writing a red test for it means changing behaviour or editing existing cases, which #4 forbids. Only D12 plausibly yields a red test. Fix: scope #2 to D12 explicitly ("new `isFetching` stability test red first") and state that D5/D4 are green-through-existing-tests.
+
+- **[HIGH]** (Meta — attached template `plan-review-deepseek.md`): The template is written for "a plan-locked Active Task before implementation begins" and demands `VERDICT: PASS or FAIL on plan-readiness`; this artifact declares "no plan id" and `status: RUNNING`. The verdict is structurally unrenderable, and the template explicitly disclaims the spec-compliance and test-coverage axes — which is precisely where this brief fails (missing Spec 99, contradictory rulings, unsatisfiable ACs). Fix: attach a brief-completeness template for RUNNING tasks; do not route a context doc through a plan-lock reviewer.
+
+- **[HIGH]** (§ Storage set-up / § Rulings): "Bounded wait" is the load-bearing phrase in AC#4 ("keeping the bounded wait") and it is undefined, while RR-0176 removed the only bound anyone had named. Two lanes will implement two different things. Fix: state the bound (value, unit, source RR) or delete the phrase and say "no cap; wait until ready".
+
+---
+
+## Medium
+
+- **[MEDIUM]** (§ Decisions in force): Nine entries carry the byte-identical title "2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready" (RR-0012, 0060, 0080, 0081, 0086, 0087, 0088, 0092, 0099), and RR-0005 / RR-0044 carry identical text ("…page-level lot information in increme"). Either the register has duplicate rows or the join is fanning out. Duplicate decision IDs destroy auditability, which is the whole point of RR-0190/RR-0202. Fix: de-duplicate by RR id and flag collisions as a generator error.
+
+- **[MEDIUM]** (§ Decisions in force, header): The heading promises "the ones this task names carry the operator's words", yet **no entry carries words** — titles only. Worse, the entries most relevant to task-373 are title-only and therefore un-checkable: RR-0264 "Semi page placeholder in 1·B" (does this task replace that placeholder, or conflict with it?), RR-0307 "A.6 is built now from the existing entitlement read" (the very query key D4 registers), RR-0308/0309 (approved semi mock). Fix: render the operator words for any RR whose title shares a noun with the task's Files/labels.
+
+- **[MEDIUM]** (§ Decisions in force, volume): ~60 rulings are dumped for a 4-file refactor, including "six lot-size bands", "purge rule", "McLane is the lane policy name". This is context dilution: the two rulings that actually gate the task (RR-0176, RR-0182) are indistinguishable from noise. Fix: rank by token overlap with the task, cap at N, and print an "omitted M rulings" counter.
+
+- **[MEDIUM]** (§ Document sections, block headings): The headings are corrupt: `### McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md (not readable: ENOENT; read it at McFrontend elements: the Elements section of that doc (…)` — the directive is embedded in the heading, parentheses are unbalanced, and the recovery instruction says "read it at *<the section title again>*" instead of **a path**. An agent following the instruction loops. Fix: emit `### <path>#L27` as the heading and `(ENOENT: <path>)` as the body; the recovery instruction must be a resolvable path.
+
+- **[MEDIUM]** (§ Project objectives, § Increment objectives, § Rulings, § Storage set-up, passim): Citations point to `~/Buildo-scratch/…` — an untracked, absolute, home-directory path outside the repo. This contradicts RR-0203 (generator runs from a *committed raw snapshot*), makes every ruling unverifiable by anyone else or by CI, and leaks local filesystem layout into a committed review artifact. Fix: import scratch sources into `docs/reports/plan-import/raw/<date>/` and cite those.
+
+- **[MEDIUM]** (§ Compliance codes in use): The claim "no 1·B task carries a `comp:` label" is computed over `task-12, 13, 14, 68, 69, 266, 267, 268, and task-317 to task-325` — **task-373 is not in the list**. The statement is about other tasks. Fix: always include the briefed task id in every "checked on" enumeration, or the reader cannot tell whether the check covers it.
+
+- **[MEDIUM]** (§ Task header, § Milestone): Board fields required by RR-0202/RR-0205 are missing: no priority/ordinal, no research IDs, no authorized plan id, no worktree/branch. RR-0190 requires "an authorized plan for any repo worktree they write". The lane id (`@lane-BL-FIXSEMI`) is present; nothing authorizes it. Fix: emit plan id, ordinal, and research refs, or state explicitly that they are absent and why.
+
+- **[MEDIUM]** (§ Document sections, cap line): "Cap: 120 KB in total, 12 KB per block … an omitted block costs its notice against the total" — but there is no byte accounting anywhere, no omitted-block list, and no total. The reader cannot tell whether content was silently dropped. Fix: print `used N KB / 120 KB` and an explicit omitted list.
+
+- **[MEDIUM]** (§ Acceptance criteria #4, #3): "pass on Mobile CI" and "a separate grounder verdict on file" name no artifact — no workflow name, no command, no target path. The ACs are ungradable by a machine and by a fresh reviewer. Fix: name `mobile/package.json` script + workflow file; name the verdict output path.
+
+- **[MEDIUM]** (§ Increment objectives / § Objectives): The same operator quote appears twice with two different mid-word truncations (`…details as well as t`), and one copy is prefixed with `Operator, verbatim:` *inside* the quotation marks. That is a nested-quote bug: a naive citation extractor will attribute "Operator, verbatim:" to the operator. Fix: strip speaker prefixes before quoting; truncate on word boundaries with a marker.
+
+- **[MEDIUM]** (§ Storage set-up ¶2 vs ¶3, citations): `MORNING-DECISIONS.md:696` is cited for two distinct rules (loading-screen range and "search shows addresses only"). At least one is wrong. Single-line citations reused across claims are the exact failure mode that produced the § Deliverable garbage. Fix: require a per-claim citation and reject duplicate (line → claim) pairs.
+
+- **[MEDIUM]** (§ Description, D12): "the report screen gate has its stability test" — `isFetching` **stability** is never defined. Stability against what: flake under fake timers, toggle across re-renders, or a double-render flash? The one test the AC names has no specified assertion, so any test satisfies it. Fix: state the invariant (e.g. "the gate does not re-mount across N identical re-renders").
+
+---
+
+## Low / NIT
+
+- **[LOW]** (§ Task): `labels: ` — empty value with a trailing space, and no `·` terminator consistency with the other fields. Malformed line; will confuse a naive field parser.
+- **[LOW]** (§ Documents vs § Milestone → Documents vs § Document sections): Three sections named "Documents", at `##` and `###`, one saying `(none)` and one listing three paths. Any agent merging these gets a contradictory set. Fix: one canonical heading.
+- **[LOW]** (§ Milestone → Problems): It documents that `doc-16 …:108` still reads "LOAD.1 to LOAD.3" — but the doc-16 block is ENOENT here, so the reader is told about a defect in a file they cannot open. Also "a draft task on backlog-brief.mjs" is referenced with no id/link, so the generator defect cannot be tracked.
+- **[LOW]** (§ Task): `status: RUNNING` with no start timestamp, attempt count, or run id. For a re-runnable lane you cannot distinguish a first attempt from a stuck retry.
+- **[NIT]** (§ Header): "written 2026-11-20 by backlog-brief.mjs" — no generator version, commit SHA, or input snapshot hash. RR-0203 mandates a `--check` guarantee; the artifact carries nothing to check against.
+- **[NIT]** (§ Deliverable/Objectives): fixed-width truncation with no ellipsis (`…in increme`, `…as well as t`) makes the text look corrupted and breaks `grep`/dedupe on titles.
+- **[NIT]** (Template, severity guide): `BUG` permits only `CRIT|HIGH`; every genuine MED defect must be mislabeled `DEFER`. This systematically inflates BUG severity and hides real, bounded bugs in a "defer" bucket.
+- **[NIT]** (§ Increment objectives, citation): `(docs/reports/plan-import/raw/2026-11-19/search-brief.json inc; …)` — `inc` is not a JSON pointer. Use a JSONPath.
+
+---
+
+## Sibling risks the brief fails to pin down (for the actual code change)
+
+These are the edges the context doc should have forced into the ACs, and did not:
+
+- **Key-string drift.** semi-question.tsx:74 writes the cache by hand; `useParcelLookup.ts:134` holds `parcel-entitlement`; D4 asks for a *registry row* containing that string. Three places now hold the literal. A typo in the registry row or in the hand-written key silently yields a cold cache on the report page with no test failing (D12 tests `isFetching`, not key equality). Fix: import one exported key constant; add an AC that no literal `'parcel-entitlement'` remains outside it.
+- **Bounded-wait vs retry interaction.** `fetchQuery` retries by default; a bounded wait wrapping `fetchQuery` will now wait for *retries*, changing the user-visible timeout. Not mentioned anywhere.
+- **Unmount mid-wait.** Manual `writeQuery` plus a timer survives nothing; `fetchQuery` cancelled on unmount drops the write and the report page reads cold. Not mentioned.
+- **Empty-id guard ordering.** AC#4 says keep the "empty-id guard"; a hook refactor can move the guard *after* the query is constructed, producing a `fetchQuery` on an empty key. Not mentioned.
+
+---
+
+## Overall verdict
+
+This is not a context document; it is a dump with a table of contents. Three required documents are missing and the one spec that governs the change (Spec 99) was never attached, the governing rulings contradict each other while the superseded one sits in the authoritative position, the deliverable is an unrelated truncated quote pulled from the wrong line, dependencies and prior verdicts are reported as "none" when the prose names two task ids and a verdict file, and the acceptance criteria cannot all be satisfied by any implementation. It also fails its own governing rulings: RR-0203 (committed snapshot — this cites `~/Buildo-scratch`), RR-0190 (per-row operator-words marking — the block is blanket-labelled and contains a bare `undefined`), and RR-0202/RR-0205 (board fields — priority, ordinal, research ids and plan authorization are all absent). The single worst structural defect is the silent ENOENT degradation: the generator knew the documents were unreadable, printed a notice, and shipped the brief anyway, so a lane is `RUNNING` against nothing. Do not hand this to an implementing agent; fix the generator's fail-closed behaviour, its citation offsets, and its supersession handling first, then regenerate. The attached DeepSeek plan-review template is the wrong lens for a RUNNING, plan-less task and disclaims the two axes (spec compliance, test coverage) where this artifact is most broken — swap the template, don't just rerun it.
+
+---
+⏱  76068ms (76.1s)
+📊 Tokens — total: 23323, input: 10499, output: 12824, reasoning: 8692

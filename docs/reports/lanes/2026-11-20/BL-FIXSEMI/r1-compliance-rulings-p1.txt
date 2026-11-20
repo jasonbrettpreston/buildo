@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/plan.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC2 "AC2 tests red first then green through the real hooks" — plan:Tests "pure mutation fn tested in useParcelLookup.test.ts" — AC2 is unmet, no test renders semi-question.tsx through the real useAnswerParcelLookup, only the pure fn is exercised — add a page test that mounts the screen with the real hook and is red before the hook exists.
+BUG severity=HIGH — AC1 "AC1 each defect confirmed on the head with file:line" — plan:D4 "D4 add row ['parcel-entitlement'] | useParcelEntitlement (Spec 100) to Spec 99 section 4 B1 registry table (99:230-235)" — D4 and D12 cite spec line ranges, not a head file:line, so AC1 holds for only one of three defects — paste the head line proving the missing registry row and the missing 8.3 case.
+BUG severity=HIGH — task-323 "Increment 1·B builds the semi question page as page, mock and link only (SRCH.SEMI)" — plan:D4 "D4 add row ['parcel-entitlement'] | useParcelEntitlement (Spec 100) to Spec 99 section 4 B1 registry table (99:230-235)" — a spec registry edit is not page, mock or link and no pasted ruling names a registry row — drop D4 or obtain an operator ruling that names the registry edit.
+BUG severity=MED — AC4 "AC4 the semi page behaves as task-361 built it" — plan:D12 "D12 add a test: report screen [parcelId].tsx rendered with isFetching true then false for loading, miss and error states; rendered tree identical (Spec 99 8.3)" — D12 tests a screen the ACs do not name and rests on Spec 99 8.3 which is not pasted (cannot see), so "rendered tree identical" cannot be judged against any pasted clause — drop D12 or paste Spec 99 8.3 plus the head line showing the defect.
+BUG severity=HIGH — AC3 "AC3 compliance lens once per governing rule list with the list whole, separate grounder verdict" and operator "essential we have a non compliance build again - the entire reason for this approach" — NONE — the plan body has no step that runs the compliance lens with the rule list whole and a separate grounder verdict, AC3 is named nowhere in D5, D4, D12 or Tests — add an explicit AC3 step naming the governing rule list run whole plus the separate grounder verdict.
+DEFER severity=LOW — AC4 "existing cases stay as they are and pass on Mobile CI" — plan "No push, no DB; phone tests unproven until Mobile CI" — the AC4 green condition is deferred, not demonstrated — acceptable deferral, but record the Mobile CI run as a merge gate.
+REJECT — MORNING-DECISIONS.md:1199 "Mock approved. Looks good!" — change accused of altering the approved mock (quiet loading line, secondary Try again) through the new hook — D5 keeps the page render and no mock edit appears in the plan, so the approved mock is untouched.
+MET — Brief "do not change or move the 60 s constant (SEMI_CONTINUE_WAIT_MS, mobile/src/lib/semiQuestion.ts:16)" — plan:D5 "constant imported where it lives, not moved or changed" — the constant stays at semiQuestion.ts:16 and is imported.
+MET — Brief "Take the form of the nearest existing hook in mobile/src/hooks (useSaveLead / useRemoveFromBoard use useMutation)" — plan:D5 "new hook useAnswerParcelLookup ... = useMutation (same kind as useSaveLead/useRemoveFromBoard)" — the new hook is a useMutation.
+MET — AC4 "busy state, bounded wait, empty-id guard" — plan:D5 "keeps submittingRef latch, setSubmitting busy state, empty-id guard" and "boundedWait(fetchParcelLookup({parcelId, semi:'answered'}), SEMI_CONTINUE_WAIT_MS)" — all three named behaviours are kept.
+MET — AC4 "existing cases stay as they are and pass on Mobile CI" — plan:Tests "existing semi page cases keep assertions (mock factory gains the new hook export)" — assertions are untouched, only the mock factory export is added.
+MET — AC1 "AC1 each defect confirmed on the head with file:line" — plan:D5 "semi-question.tsx:64 awaits fetchParcelLookup imperatively" — the first defect carries a head file:line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 4
+
+---
+⏱  44584ms (44.6s)
+📊 Tokens — total: 10599, input: 1989, output: 8610, reasoning: 7575

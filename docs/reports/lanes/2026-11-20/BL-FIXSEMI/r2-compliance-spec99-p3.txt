@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/output.diff (model: deepseek-reasoner)
+
+BUG severity=HIGH — §10 Cross-Spec Dependencies, "Authorized amendment process" "any change to §3 (Field Ownership Matrix), §4 (Bridge Patterns), or §5 (Routing Authority Rules) requires a WF1 amendment with adversarial review." — docs/specs/03-mobile/99_mobile_state_architecture.md:236 "+| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) |" — the §4 B1 query-key table is amended in place with no WF1 amendment or adversarial review evidenced anywhere in the pasted material — land the row through a WF1 amendment that cites the review record, or drop it from this change.
+
+DEFER severity=MED — §10 Cross-Spec Dependencies "This spec is a dependency of: every future mobile WF that adds state, a store, or a router." — mobile/src/hooks/useParcelLookup.ts:134 "+export function useAnswerParcelLookup() { return useMutation(buildAnswerParcelLookupOptions()); }" — the change adds a new TanStack mutation to the mobile state layer, yet the only §4 edit documents an unrelated entitlement query key, so no spec text covers the pattern being introduced — add one §4 B1 line naming the semi Continue lookup as a mutation (through the WF1 amendment), or cite the existing pasted pattern it instantiates.
+
+DEFER severity=MED — §9.18 "initial fix via `dehydrateOptions.shouldDehydrateQuery` filter excluding the user-profile query — only filters WRITES to MMKV" — docs/specs/03-mobile/99_mobile_state_architecture.md:236 "not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED)" vs NONE (persistFilter.ts is not in the diff; its contents cannot see) — the row asserts a persistence exemption this change does not make true, so the spec can be false the moment it lands — add `['parcel-entitlement']` to NOT_PERSISTED in the same change, or drop the parenthetical.
+
+DEFER severity=LOW — §10 Cross-Spec Dependencies "This spec depends on: Spec 90 (engineering stack), Spec 93 (auth + AuthGate), Spec 94 (onboarding flow), Spec 95 (server profile = canonical), Spec 96 (subscription gate)" — docs/specs/03-mobile/99_mobile_state_architecture.md:236 "a display, never a gate; the caller's own, so no parameter" — the row's two normative claims are sourced to Spec 100 SRCH.A6, which is not in the pasted context, so their accuracy cannot be checked here — cite the pasted Spec 100 clause in the change record or mark the claim as unchecked.
+
+MET — §8.5 "A vitest at `mobile/__tests__/storeReset.coverage.test.ts` MUST glob `mobile/src/store/*.ts` ... assert that `signOut()` ... calls `use<Name>Store.getState().reset()`" — mobile/src/hooks/useParcelLookup.ts:134 — no Zustand store is added (a `useMutation` hook is not a store), so no new reset call or exemption is owed.
+
+MET — §8.6 "MUST parse the Zod object keys from `mobile/src/lib/userProfile.schema.ts` and the §3.1 markdown table, asserting setEqual" — mobile/src/hooks/useParcelLookup.ts:117 — no `userProfile.schema.ts` field is added, and the new markdown row sits in the §B1 query-key table, not §3.1, so the drift check is unaffected.
+
+MET — §10 Out-of-Scope Files "All `mobile/src/store/*.ts` — modified in §9.3 / §9.5 followups, not here" and "All `mobile/app/**/_layout.tsx`" — the diff touches neither path.
+
+MET — §9.21 "Hardcoded `MANDATES` array means adding a new spec mandate requires explicitly adding a row" — docs/specs/03-mobile/99_mobile_state_architecture.md:236 — the added row is a query-key inventory line, not a §7 or §8 mandate, so no `MANDATES` row is owed.
+
+REJECT — §8.3 — accused of covering only five states of one route — the normative text of §8.3 appears only inside the diff's own comment header and is not in the pasted clauses, so it is not mine to judge; cannot see the clause text.
+
+REJECT — §9.4a — accused of leaving `isFetching` in the AppLayout loading gate — that P0 row names a separate WF at `mobile/app/(app)/_layout.tsx:202`, not this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 3
+
+---
+⏱  46582ms (46.6s)
+📊 Tokens — total: 26217, input: 16938, output: 9279, reasoning: 8207

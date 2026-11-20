@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/plan.md (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 99:219, Spec 99 8.3, Spec 99 99:230-235 (none pasted) — pasted context contains only "## 🛢️ 9. Pipeline & Script Safety" and no clause of Spec 99 or Spec 100 — plan "D5 semi-question.tsx:64 awaits fetchParcelLookup imperatively (Spec 99:219 every server fetch through TanStack Query)" — the clauses the plan is written against are not in the pasted context, so the central claim (mutation-shaped TanStack Query, boundedWait, registry row, 8.3 identical-tree test) is unverifiable here, cannot see — paste Spec 99:219, Spec 99 8.3, Spec 99:230-235 and Spec 100 before compliance can be judged.
+DEFER severity=MED — 9.6 — "The UI (`FreshnessTimeline.tsx`) exports chain/registry data that must stay consistent with the manifest. Test coverage validates that every manifest entry points to an existing script file and that chain definitions match the UI registry." — plan "D4 add row ['parcel-entitlement'] | useParcelEntitlement (Spec 100) to Spec 99 section 4 B1 registry table (99:230-235)." — if the B1 registry table is the registry the UI exports, adding a row with no `scripts/manifest.json` entry and no consistency test leaves the clause unmet; I cannot see FreshnessTimeline.tsx or manifest.json to tell — state in the plan whether the B1 row mirrors the manifest, and if it does, add the manifest entry and the consistency test.
+MET — 9.1 — plan "No push, no DB; phone tests unproven until Mobile CI." — no `scripts/*.js` and no multi-row DB mutation in the change, transaction-boundary rule not triggered.
+MET — 9.2 — plan "new hook useAnswerParcelLookup in mobile/src/hooks/useParcelLookup.ts" — no batch INSERT and no added column, parameter-limit rule not triggered.
+MET — 9.3 — plan "Tests: cases added only; existing semi page cases keep assertions" — no pipeline script added or modified, re-run safety rule not triggered.
+MET — 9.4 — plan "D5 semi-question.tsx:64 ... new hook useAnswerParcelLookup" — change is mobile TypeScript under `mobile/src/`, so the Pipeline SDK mandate for `scripts/*.js` is not triggered.
+MET — 9.5 — plan "new hook useAnswerParcelLookup ... mutationFn = boundedWait(fetchParcelLookup({parcelId, semi:'answered'}), SEMI_CONTINUE_WAIT_MS)" — single-record lookup, not a paged external loader, streaming rule not triggered.
+MET — 9.7 — plan "No push, no DB" — no change to `scripts/lib/pipeline.js` or `scripts/lib/tracing.js`, opt-in tracing clause not triggered.
+
+VERDICT: PASS on compliance with the pasted clauses (none of the pasted Section 9 clauses binds, or is breached by, this mobile change; the Spec 99 and Spec 100 clauses the plan cites are not pasted and were not judged)
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  12549ms (12.5s)
+📊 Tokens — total: 4910, input: 2693, output: 2217, reasoning: 1493

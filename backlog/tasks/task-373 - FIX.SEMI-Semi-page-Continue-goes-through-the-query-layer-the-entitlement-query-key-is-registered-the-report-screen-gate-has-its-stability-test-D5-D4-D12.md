@@ -8,10 +8,12 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXSEMI'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T13:37:00Z'
+updated_date: '2026-11-20T13:47:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-FIXSEMI/REPORT.md
 type: build
 ordinal: 73012
 ---
@@ -54,4 +56,6 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-FIXSEMI, worktree /Users/brettpreston_macmini/Buildo-wt-fixsemi, branch wf1/inc1b-fixsemi), RR-0240
+
+BL-FIXSEMI: D5 mutation useAnswerParcelLookup, D4 registry row, D12 gate test built; typecheck mobile 16 before (13 env) / 14 after (13 env + new test file module line); phone tests unproven until Mobile CI; grounder owed; task left RUNNING.
 <!-- SECTION:NOTES:END -->

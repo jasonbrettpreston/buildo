@@ -1,0 +1,18 @@
+
+> mobile@1.0.0 typecheck
+> tsc --noEmit
+
+__tests__/lotMapPage.behaviour.test.tsx(14,43): error TS2307: Cannot find module '@testing-library/react-native' or its corresponding type declarations.
+__tests__/parcelSearchScreen.behaviour.test.tsx(11,48): error TS2307: Cannot find module '@testing-library/react-native' or its corresponding type declarations.
+__tests__/reportPage.behaviour.test.tsx(16,51): error TS2307: Cannot find module '@testing-library/react-native' or its corresponding type declarations.
+__tests__/reportPage.behaviour.test.tsx(40,94): error TS7006: Parameter 't' implicitly has an 'any' type.
+__tests__/reportScreen.gateStability.behaviour.test.tsx(13,24): error TS2307: Cannot find module '@testing-library/react-native' or its corresponding type declarations.
+__tests__/reportScreen.mount.behaviour.test.tsx(18,51): error TS2307: Cannot find module '@testing-library/react-native' or its corresponding type declarations.
+__tests__/semiQuestionPage.behaviour.test.tsx(13,57): error TS2307: Cannot find module '@testing-library/react-native' or its corresponding type declarations.
+__tests__/semiQuestionPage.behaviour.test.tsx(73,49): error TS7006: Parameter 'n' implicitly has an 'any' type.
+__tests__/surfaceRenderer.smoke.test.tsx(12,51): error TS2307: Cannot find module '@testing-library/react-native' or its corresponding type declarations.
+__tests__/trackedLotRowLegacyHide.behaviour.test.tsx(11,32): error TS2307: Cannot find module '@testing-library/react-native' or its corresponding type declarations.
+src/vendor/rnr/components/ui/button.tsx(3,40): error TS2307: Cannot find module 'class-variance-authority' or its corresponding type declarations.
+src/vendor/rnr/components/ui/text.tsx(2,22): error TS2307: Cannot find module '@rn-primitives/slot' or its corresponding type declarations.
+src/vendor/rnr/components/ui/text.tsx(3,40): error TS2307: Cannot find module 'class-variance-authority' or its corresponding type declarations.
+src/vendor/rnr/lib/utils.ts(2,25): error TS2307: Cannot find module 'tailwind-merge' or its corresponding type declarations.

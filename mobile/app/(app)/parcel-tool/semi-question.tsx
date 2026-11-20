@@ -8,16 +8,16 @@
 // from the binding (SemiQuestionBinding.tsx), the shared renderer and the content file. It reads the SAME query as the report (['parcel-lookup', id]),
 // so opening it adds no lookup of its own; the one lookup it issues is the answered one on Continue (below). Nothing is selected at open. The answer is the owner's lot_form_user_override, carried to the report as a route param
 // (lotForm.ts; O-12: the pipeline never reads it, no server store); Continue REPLACES this page with the report so Back from the report never returns here.
-// SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): Continue first fetches the same lookup with the one flag `semi: 'answered'`, which lets the server count
+// SRCH.SEMI stage 2 (task-319, MF-93; RR-0278): Continue first runs the same lookup (the mutation of useAnswerParcelLookup, FIX.SEMI task-373) with the one flag `semi: 'answered'`, which lets the server count
 // the lot once its report is produced, stores the result in the report's cache entry, then opens the report. A failed fetch shows the built error
 // state and does not navigate; Try again clears it and the chosen answer is still there.
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
 import { SEMI_QUESTION_SLICE, semiQuestionData, semiQuestionProps } from '@/components/surfaces/SemiQuestionBinding';
-import { fetchParcelLookup, useParcelLookup, useSetParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+import { useAnswerParcelLookup, useParcelLookup, useSetParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
 import { SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
-import { boundedWait, buildSemiQuestionSituation, SEMI_CONTINUE_WAIT_MS } from '@/lib/semiQuestion';
+import { buildSemiQuestionSituation } from '@/lib/semiQuestion';
 import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
 
 export default function SemiQuestionScreen() {
@@ -27,6 +27,7 @@ export default function SemiQuestionScreen() {
   const [selected, setSelected] = useState<SemiAnswer | null>(null);
   const { data, isFetching, error, refetch } = useParcelLookup(id || undefined);
   const storeLookup = useSetParcelLookup();
+  const { mutateAsync: answerLookup } = useAnswerParcelLookup();
   const [submitError, setSubmitError] = useState<unknown>(null);
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
@@ -61,7 +62,7 @@ export default function SemiQuestionScreen() {
     setSubmitting(true);
     let result;
     try {
-      result = await boundedWait(fetchParcelLookup({ parcelId: id, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);
+      result = await answerLookup(id);
     } catch (e) {
       if (mountedRef.current) setSubmitError(e);
       return;
@@ -74,7 +75,7 @@ export default function SemiQuestionScreen() {
     storeLookup(id, result);
     redirectedRef.current = true;
     router.replace(route);
-  }, [id, storeLookup, router]);
+  }, [id, answerLookup, storeLookup, router]);
 
   const actions = useMemo(
     () => ({

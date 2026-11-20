@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/output.diff (model: deepseek-reasoner)
+
+DEFER severity=MED — §1.1 (via §6.5) "§6.5 (gate conditions must be stable; never gate on `isFetching`)" — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:6 "`isFetching` only holds the semi redirect effect, never a render branch" — the change records a navigation decision conditioned on `isFetching`, the unstable signal the pasted rule forbids, and the new test compares only rendered trees so a redirect that re-fires on every refetch would pass it unnoticed — assert `mockReplace` call parity (count and args) across the true/false toggle, or move the redirect off `isFetching`
+DEFER severity=MED — §3 "Adding a field to the mobile app requires adding a row here" — docs/specs/03-mobile/99_mobile_state_architecture.md:236 "the caller's plan and this month's report count" — the change files the entitlement query in the §4 B1 registry but adds no §3 matrix row for the fields it surfaces (plan, count, period end) though §3 is declared normative for exactly that — add the §3 row(s) (Owner Layer Server, no Local Mirror, reader `useParcelEntitlement` display only, Bridge B1) or a dated note saying why none is due
+DEFER severity=LOW — §2.1 "excluded from MMKV persistence** via `dehydrateOptions.shouldDehydrateQuery` on the `PersistQueryClientProvider` (`mobile/app/_layout.tsx`)" — docs/specs/03-mobile/99_mobile_state_architecture.md:236 "not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED)" — the exclusion is asserted only in a table parenthetical (no diff line implements it) and cites a mechanism/file the pasted §2.1 does not name, so by the walk rule it is unmet until code shows it (persistFilter.ts: cannot see) — land the NOT_PERSISTED entry in this change or cite the actual exclusion site
+MET — §4 B1 "Every server fetch MUST go through TanStack Query" — mobile/app/(app)/parcel-tool/semi-question.tsx:65 "result = await answerLookup(id);" — the raw `boundedWait(fetchParcelLookup(...))` call is gone from the component; the fetch now runs as a TanStack mutation
+MET — §4 B1 "Validation: every response MUST be parsed through a Zod schema before TanStack stores it" — mobile/src/hooks/useParcelLookup.ts:123 "return boundedWait(fetchParcelLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);" — the value stored by `storeLookup` is fetchParcelLookup's own parse, pinned by the drift test
+MET — §4 B1 "Adding a new server query requires a row here" — docs/specs/03-mobile/99_mobile_state_architecture.md:236 "| `['parcel-entitlement']` | `useParcelEntitlement`" — the registry row for the entitlement query is added
+REJECT — §4 B1 "queryKey MUST be a stable, parameterized array" — accused of leaving the answered lookup without a registry key — it is a useMutation, mutations carry no key, and its parsed result is written to the already registered `['parcel-lookup', parcelId]` entry by `useSetParcelLookup`
+REJECT — §8.3 gate-stability test mandate — accused of not matching §8.3 — §8.3 is not pasted, so its shape cannot be judged here; only the §1.1-quoted `isFetching` rule binds and is handled above
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  89660ms (89.7s)
+📊 Tokens — total: 37440, input: 20105, output: 17335, reasoning: 16478

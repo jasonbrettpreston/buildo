@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/output.diff (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 99 §4 B1 (cited in the diff, text not pasted) "Every server fetch MUST go through TanStack Query" — mobile/src/hooks/useParcelLookup.ts:134 "export function useAnswerParcelLookup() {" — the clause the whole change is built to satisfy is absent from the pasted context, so its satisfaction cannot be judged — paste Spec 99 §4 B1 before this diff is judged.
+DEFER severity=LOW — Spec 99 §8.3 (cited in the diff, text not pasted) "Spec 99 §8.3: toggling isFetching does not flip the report route gate" — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:34 "describe('Spec 99 §8.3: toggling isFetching does not flip the report route gate', () => {" — a new test file asserts a rule no pasted clause contains, so nothing pasted authorises or bounds it — paste Spec 99 §8.3 or drop the file from this change.
+DEFER severity=LOW — Spec 100 / SRCH.A6 (named in the diff, text not pasted) "the caller's plan and this month's report count" — docs/specs/03-mobile/99_mobile_state_architecture.md:236 "| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) |" — a cache-entry clause is added whose governing spec text and the NOT_PERSISTED wiring it cites (mobile/src/lib/persistFilter.ts) are not pasted, so neither can be checked — paste Spec 100 SRCH.A6 and the NOT_PERSISTED entry, or drop the row.
+REJECT — §9.1 Transaction Boundaries "multi-row mutations in explicit transactions" — the change is accused of unguarded DB writes — the diff touches no scripts/*.js and contains no SQL: "diff --git a/mobile/src/hooks/useParcelLookup.ts".
+REJECT — §9.2 PostgreSQL Parameter Limit "Batch `INSERT` statements in pipeline scripts MUST use sub-batch chunking" — the change is accused of exceeding the 65,535 parameter limit — no INSERT or column addition appears in the diff: "diff --git a/mobile/__tests__/useParcelLookup.test.ts".
+REJECT — §9.3 Idempotent Scripts "All pipeline scripts MUST be safe to re-run" — the change is accused of a non-idempotent script — no pipeline script is added or modified: "diff --git a/mobile/app/(app)/parcel-tool/semi-question.tsx".
+REJECT — §9.4 Pipeline SDK Mandate "No inline `new Pool({...})` instantiation" — the change is accused of bypassing the shared Pipeline SDK — it adds a React hook, not a script: "export function answeredParcelLookup(parcelId: string): Promise<ConsumerParcelLookupResult> {".
+REJECT — §9.5 Streaming Ingestion / §9.6 Pipeline Manifest / §9.7 Pipeline Observability "Data loaders that fetch from external APIs ... MUST NOT accumulate all records in memory" — the change is accused of touching ingestion, manifest or tracing — the diff has no generator, no scripts/manifest.json entry and no tracing bootstrap: "return boundedWait(fetchParcelLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);".
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7 (none binding this change)   Unmet: 0
+
+---
+⏱  19093ms (19.1s)
+📊 Tokens — total: 16375, input: 12673, output: 3702, reasoning: 2901

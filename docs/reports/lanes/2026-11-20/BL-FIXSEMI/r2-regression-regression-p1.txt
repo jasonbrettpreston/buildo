@@ -1,0 +1,59 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/output.diff (model: deepseek-reasoner)
+
+## Axis 1 — Failure Modes & Rollback
+
+The plan is a pure client-side refactor: `semi-question.tsx` stops calling raw `fetchParcelLookup` and instead calls `useAnswerParcelLookup().mutateAsync()`. No schema change, no migration, no persisted-state dependency. Rollback = `git revert` + OTA/bundle reload. TanStack cache poisoning is bounded to the single `['parcel-lookup', id]` key; `storeLookup` only fires on the *success* branch, so a failed/timed-out mutation cannot poison the cache. The one risk that survives: `boundedWait` caps the client wait at 60 s, but the underlying `fetchWithAuth` promise keeps running and the *server* still counts the Stage-2 lot — retry then double-counts. That risk pre-dates this plan.
+
+## Axis 2 — Data Reality Verification
+
+No live DB in play. Three spec/doc claims are asserted without a HEAD check (fixture path, `persistFilter.ts` NOT_PERSISTED membership, `useParcelEntitlement` using `useQuery` not raw `fetchWithAuth`). Listed as premises below.
+
+## Axis 3 — Sibling Bugs & Edge Cases
+
+WF classification = bug fix (FIX.SEMI). Siblings of "raw `fetchParcelLookup` bypassing 99:219" and edge-cases of the new mutation path enumerated below.
+
+---
+
+DEFER severity=MED — `reportScreen.gateStability.behaviour.test.tsx:18-22` — the `@/hooks/useParcelLookup` module mock provides only `useParcelLookup`; if `[parcelId].tsx` imports `useParcelEntitlement` (added to Spec 99 §B1 by this same plan) the route crashes on first render and all five `it.each` cases fail — grep the route's imports and add `useParcelEntitlement` (and any other hook) to the mock.
+
+DEFER severity=MED — `mobile/src/hooks/useParcelLookup.ts:121-123` — `answeredParcelLookup` does not accept or forward TanStack's `mutationFn` context `signal`; on a 60 s timeout the underlying fetch keeps running server-side, and Try again re-issues a second counted lookup (worst case: "0 of M reports left" after one report) — accept `{ signal }` and pipe it into `fetchWithAuth`/fetch (pre-existing from task-361, but this is the natural place to close it).
+
+DEFER severity=MED — `useParcelLookup.test.ts:~196-206` — the success-path test runs under real timers while `boundedWait` arms a 60 s `setTimeout`; unless `boundedWait` clears it on resolve, the test worker is left with a live handle ("open handles" warning / delayed exit) — use `jest.useFakeTimers` + `advanceTimersByTimeAsync(0)` to flush, or make `boundedWait` cancel its timer on settle.
+
+DEFER severity=MED — `docs/specs/03-mobile/99_mobile_state_architecture.md:236` — the plan claims `useParcelEntitlement` reads `/api/parcels/entitlement` and is NOT_PERSISTED, but neither is verified at HEAD — grep `export function useParcelEntitlement` in `useParcelLookup.ts` (must use `useQuery`, else the *same* 99:219 raw-fetch bug lives in the entitlement path) and grep NOT_PERSISTED in `mobile/src/lib/persistFilter.ts`.
+
+DEFER severity=MED — `mobile/__tests__/semiQuestionPage.behaviour.test.tsx:29-40` — this file now depends on the mock exporting `useAnswerParcelLookup`; any *other* test that mounts `semi-question.tsx` with the old mock shape (only `useParcelLookup`) will now crash on `answerLookup is not a function` — grep `semi-question` + `jest.mock('@/hooks/useParcelLookup'` across `mobile/__tests__` and update every consumer.
+
+DEFER severity=MED — `mobile/app/` sibling sweep — the plan's fix is one screen; run `grep -rn "fetchWithAuth\|fetchParcelLookup" mobile/app mobile/src/hooks` — if `disambiguate.tsx`, `parcel-search`, or any other route still issues a raw lookup outside TanStack, the same 99:219 violation survives and the plan's guard test only pins one file.
+
+DEFER severity=MED — `mobile/src/hooks/useParcelLookup.ts:~134` — `useAnswerParcelLookup` exposes raw `mutateAsync` with no `onError`, so any future caller that omits `try/catch` produces an unhandled promise rejection (RN surfaces this loudly) — document the "always catch" contract on the hook or return a wrapped variadic that never throws.
+
+DEFER severity=LOW — `reportScreen.gateStability.behaviour.test.tsx:44` — `expect(treeFetching.length).toBeGreaterThan(100)` is an arbitrary serialization-size proxy; a lean loading spinner (data undefined, isError false) can serialize under that and turn a healthy tree red — assert on a specific `testID` (`screen.getByTestId('report-loading')`) rather than string length.
+
+DEFER severity=LOW — `reportScreen.gateStability.behaviour.test.tsx:31` — the fixture path is version-pinned (`page_v21.mobile.json`); a future fixture bump silently breaks (or worse, passes against stale data) — note the version in the SPEC LINK comment or resolve by globbing `page_v*.mobile.json` and erroring if >1.
+
+DEFER severity=LOW — `semiQuestionPage.behaviour.test.tsx:33` — the mock defines a *local* `class ParcelLookupSchemaError extends Error {}`, a different class identity from what the screen imports for its `instanceof` check; today no case routes through it, but any future case exercising real `answeredParcelLookup` schema drift will fail with a class-identity miss — export the real class via `jest.requireActual('@/hooks/useParcelLookup').ParcelLookupSchemaError`.
+
+DEFER severity=LOW — `useParcelLookup.test.ts:~216` — `expect(o.mutationFn).toBe(answeredParcelLookup)` pins the function reference; wrapping `answeredParcelLookup` for the abort-signal fix (see MED above) needlessly breaks this — assert on `retry === 0`, `networkMode === 'always'`, and behavior instead of identity.
+
+DEFER severity=LOW — `semiQuestionPage.behaviour.test.tsx:~96` — the integration path never actually exercises TanStack's mutation (`useAnswerParcelLookup` is fully mocked as `boundedWait(mockFetchLookup(...))`), so retry-0 / networkMode-always are only pinned by the pure-options test — that's a coverage gap that will surface the day someone removes `retry: 0`; the only defense is the options test in `useParcelLookup.test.ts`.
+
+DEFER severity=LOW — `semi-question.tsx:78` — on `storeLookup` → `router.replace` the effect also clears `submitting`, but the mutation's own error state (from `mutateAsync`) is never `reset()`, and if a later change starts reading `useAnswerParcelLookup().error` instead of local `submitError` (as `situation` does for `useParcelLookup().error`), the two error states will disagree — keep local `submitError` as the single source, or add `.reset()` to the Try-again handler.
+
+REJECT — `useParcelLookup.ts:126` — "the default 'online' pauses a mutation while offline, so the bounded wait would never start" — the claim that `networkMode: 'always'` is required for offline fail-fast is correct per TanStack v5 mutation semantics; not a risk.
+
+---
+
+VERDICT: PASS on plan-readiness for implementation
+
+Top 3 unverified data premises (regardless of verdict):
+
+- The `@/hooks/useParcelLookup` mock in `reportScreen.gateStability.behaviour.test.tsx` must match every symbol `[parcelId].tsx` pulls from that module — verify with: `grep -nE "from '@/hooks/useParcelLookup'" mobile/app/\(app\)/parcel-tool/\[parcelId\].tsx` — if `useParcelEntitlement` or `useSetParcelLookup` appears, extend the mock (otherwise all 5 `it.each` cases crash).
+- `useParcelEntitlement` (task-320, referenced in Spec 99 §B1) must itself route through TanStack — verify with: `grep -A 25 "export function useParcelEntitlement" mobile/src/hooks/useParcelLookup.ts | grep -E "useQuery|fetchWithAuth"` — must show `useQuery`; a raw `fetchWithAuth` reintroduces the 99:219 bug in the entitlement path.
+- The `NOT_PERSISTED` claim for `['parcel-entitlement']` — verify with: `grep -n "NOT_PERSISTED" -A 8 mobile/src/lib/persistFilter.ts` — `'parcel-entitlement'` must be listed (and `'parcel-lookup'` must *not* be), else the "N of M" display shows stale counts across a restart or the lookup is wrongly filtered.
+- The `page_v21.mobile.json` fixture is actually present with a `.view` — verify with: `jq -e '.view' src/tests/fixtures/report-page/props/page_v21.mobile.json` — a missing file or missing `.view` fails the new test at `readFileSync`/`JSON.parse` before any assertion runs.
+
+---
+⏱  106276ms (106.3s)
+📊 Tokens — total: 33187, input: 13018, output: 20169, reasoning: 17955

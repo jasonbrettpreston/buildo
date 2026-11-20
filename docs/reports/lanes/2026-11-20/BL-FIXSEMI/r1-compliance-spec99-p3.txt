@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/plan.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 99 §10 "Authorized amendment process: any change to §3 (Field Ownership Matrix), §4 (Bridge Patterns), or §5 (Routing Authority Rules) requires a WF1 amendment with adversarial review." — plan "D4 add row ['parcel-entitlement'] | useParcelEntitlement (Spec 100) to Spec 99 section 4 B1 registry table (99:230-235)." — D4 edits §4 (Bridge Patterns) yet the plan names no WF1 amendment and no adversarial review anywhere in its text — Fix: relabel D4 as a WF1 §4 amendment item with adversarial review recorded, or land the registry row only under a separately authorized §4 amendment and drop it from this change.
+
+DEFER severity=MED — Spec 99 8.3 (cited by the plan, not pasted, cannot see) "rendered tree identical (Spec 99 8.3)" — plan "D12 add a test: report screen [parcelId].tsx rendered with isFetching true then false for loading, miss and error states; rendered tree identical" — the clause the test property rests on is not in the pasted context, so the property cannot be checked, and a loading state that branches on isFetching would by construction make the trees differ — Fix: paste §8.3 before lock so the identical-tree assertion can be verified, or restate D12 as identical-between-true-and-false only.
+
+MET — Spec 99 §10 Out-of-Scope "All `mobile/src/store/*.ts`" — plan — no store file is touched; the new hook is placed at mobile/src/hooks/useParcelLookup.ts.
+
+MET — Spec 99 §10 Out-of-Scope "`mobile/src/hooks/useUserProfile.ts` — modified in §9.1 / §9.2 / §9.4" — plan "new hook useAnswerParcelLookup in mobile/src/hooks/useParcelLookup.ts" — useUserProfile.ts is not modified.
+
+MET — Spec 99 §10 Out-of-Scope "All `mobile/app/**/_layout.tsx`" — plan — D12 renders mobile/app/.../[parcelId].tsx only, no _layout.tsx is edited.
+
+MET — Spec 99 §8.5 "Adding a store without a reset call OR exemption fails CI" — plan — no new store is added, so no signOut reset or exemption obligation is triggered.
+
+MET — Spec 99 §8.6 "asserting setEqual (every server field has exactly one §3.1 row)" — plan — no userProfile schema field is added or renamed, so the drift check has nothing new to match.
+
+MET — Spec 99 §9.4a "Strip `isFetching` from AppLayout loading gate" — plan "rendered tree identical" — the change touches no loading gate keyed on isFetching and leaves _layout.tsx:202 alone.
+
+MET — Spec 99 §9.21 "Hardcoded `MANDATES` array means adding a new spec mandate requires explicitly adding a row" — plan "Tests: cases added only" — no new §7/§8 mandate is introduced, so the mandate lint rows stay valid.
+
+REJECT — §9.4a — accused of extending the isFetching-flicker class via D12 — D12 renders the report screen, not AppLayout, so the gate at _layout.tsx:202 is out of this change's blast radius.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 1
+
+---
+⏱  26274ms (26.3s)
+📊 Tokens — total: 11718, input: 6958, output: 4760, reasoning: 3986

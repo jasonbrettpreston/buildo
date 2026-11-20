@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/output.diff (model: deepseek-reasoner)
+
+BUG severity=MED — Spec 90 §7 "Mutations (like saving a lead) made while offline MUST be queued using TanStack Query's offline mutation cache, backed by MMKV, ensuring they flush to the server upon reconnection." — mobile/src/hooks/useParcelLookup.ts "@@ return { mutationFn: answeredParcelLookup, retry: 0, networkMode: 'always' } as const;" — the answered lookup is now a TanStack mutation deliberately configured to run while offline instead of entering the offline mutation cache, and no pasted clause or operator ruling authorises the exception — obtain a ruling/amendment for the fail-fast answered lookup or route it through the offline mutation cache.
+
+DEFER severity=MED — Spec 90 §7 "All Zustand stores, MMKV blobs, TanStack Query keys, and cross-layer bridges MUST conform to Spec 99 ... or a Spec 99 amendment" with the added row "not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED)" — docs/specs/03-mobile/99_mobile_state_architecture.md "+| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320)" — no diff line touches mobile/src/lib/persistFilter.ts, so cannot see whether the key is in NOT_PERSISTED — add 'parcel-entitlement' to NOT_PERSISTED with a test, or drop the persistence claim from the row.
+
+DEFER severity=LOW — Spec 90 §7 "Adding a new field, store, or bridge requires either matching an existing pattern in Spec 99 §3-§5 or a Spec 99 amendment." — mobile/src/hooks/useParcelLookup.ts "@@ export function useAnswerParcelLookup() { return useMutation(buildAnswerParcelLookupOptions()); }" — the amendment in this diff names only the entitlement query key, so the new mutation hook has no Spec 99 line naming it — add the mutation to the Spec 99 amendment or cite the §3-§5 pattern it matches.
+
+DEFER severity=LOW — no pasted clause names gate-stability tests, and the guarded file is not in the diff — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx "// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §8.3 (gate-stability tests) and §6.5 (gate conditions must be stable signals);" — the new file rests on Spec 99 §8.3/§6.5 and Spec 100 §3.2/§4, none of which is pasted, and it exercises mobile/app/(app)/parcel-tool/[parcelId].tsx which this change does not touch — drop it from this change or land it with the report-route change it guards.
+
+MET — Spec 90 §5 "NO `useEffect` for Fetching: Never fetch API data inside a `useEffect`. Always use TanStack Query." — mobile/app/(app)/parcel-tool/semi-question.tsx "@@ result = await answerLookup(id);" — Continue's lookup moves from a direct fetch call to the useAnswerParcelLookup mutation.
+
+MET — Spec 90 §13 "The Zod Boundary: Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI" — mobile/src/hooks/useParcelLookup.ts "@@ return boundedWait(fetchParcelLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);" — the parse stays inside fetchParcelLookup and the drift case is pinned by mobile/__tests__/useParcelLookup.test.ts "await expect(answeredParcelLookup('PIN-777')).rejects.toBeInstanceOf(ParcelLookupSchemaError);".
+
+MET — Spec 90 §7 "TanStack Query keys ... MUST conform to Spec 99" via amendment — docs/specs/03-mobile/99_mobile_state_architecture.md "+| `['parcel-entitlement']` | `useParcelEntitlement` (Spec 100; SRCH.A6, task-320) | ... no parameter; not persisted across a restart" — the new key is recorded in the Spec 99 table as §7 requires.
+
+MET — Spec 90 §10 "Unit Testing (Jest): Jest + React Native Testing Library for logic hooks." — mobile/__tests__/useParcelLookup.test.ts "@@ describe('FIX.SEMI answeredParcelLookup and the options of useAnswerParcelLookup'" — the new hook functions and their options are covered by Jest/RNTL tests.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  49432ms (49.4s)
+📊 Tokens — total: 24473, input: 15223, output: 9250, reasoning: 8204

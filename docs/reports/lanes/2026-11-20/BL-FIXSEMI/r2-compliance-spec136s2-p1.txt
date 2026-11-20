@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/output.diff (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 99 §4 B1 99:219 (not pasted) "Every server fetch MUST go through TanStack Query" — mobile/src/hooks/useParcelLookup.ts:117 "MUST go through TanStack Query" is quoted only by the diff's own comment — the clauses this diff answers to (Spec 99 §8.3 gate stability, 99:219 @B1, Spec 100 §3.2 and §4 dated notes) are absent from the pasted context, cannot see whether the mutation, the networkMode and the bounded wait meet them — paste those clauses plus task-373's card with the diff before a verdict on them.
+
+DEFER severity=MED — Spec 136 fe.01 "McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name; scope mobile, web, admin and PDF." — mobile/app/(app)/parcel-tool/semi-question.tsx:65 "result = await answerLookup(id);" — this is mobile product code, the build fe.01 holds behind increment 2 closing and a by-name freeze lift, and the pasted context shows neither — record the increment 2 closure and the by-name lift for this work, or hold the diff.
+
+MET — fe.36 — mobile/app/(app)/parcel-tool/semi-question.tsx:77 "router.replace(route);" — Continue moves the user by the platform router after the answered lookup, no view is swapped by local state to navigate.
+
+MET — fe.28 — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:40 "'the error text (error, nothing cached)'" — the route's states stay the closed set (loading, miss, error) plus the served reading page, asserted as four different screens, none added.
+
+MET — fe.33 — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:30 "src/tests/fixtures/report-page/props/page_v21.mobile.json" — the mobile platform's run renders the v21 page props golden (jest-expo), which is the per-platform render smoke this clause asks for.
+
+MET — fe.02 — mobile/app/(app)/parcel-tool/semi-question.tsx:13 "import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';" — the screen stays declared and rendered by the shared renderer, the change adds shared query plumbing only, no bespoke screen renderer.
+
+REJECT — fe.01 — the diff is accused of shipping surfaces while McFrontend is documents only — whether increment 2 has closed and the freeze was lifted by name is not in the pasted context, so this is cannot see, not a proven breach; it is raised as a DEFER to be closed from the task record.
+
+VERDICT: PASS on compliance with the pasted clauses (Spec 136 fe.01 to fe.44); the change's own governing clauses are not pasted and cannot be judged here
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  54678ms (54.7s)
+📊 Tokens — total: 25717, input: 15528, output: 10189, reasoning: 9514

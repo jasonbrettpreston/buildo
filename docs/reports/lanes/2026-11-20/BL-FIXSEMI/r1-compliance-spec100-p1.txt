@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/plan.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 100 §2 item 6 "A miss is a result, not an error (Spec 89 §5 exact payloads)" and "An unknown `parcelId` → 200 with `match: null, parcel: null` (NOT 404, the shape drives the client state machine)" — plan line "D12 add a test: report screen [parcelId].tsx rendered with isFetching true then false for loading, miss and error states; rendered tree identical (Spec 99 8.3)" — if one identical rendered tree is pinned across loading, miss and error, the report screen can never present a miss as a result distinct from an error, which is exactly what the clause reserves the 200 null shape for — fix: pin tree identity only across the isFetching true/false flip within each state and assert a different tree for miss versus error (or drop D12 from this card).
+
+DEFER severity=MED — Spec 100 dated note 2026-11-13 item 2 "The answer is a route param applied in the app (`lot_form_user_override`; O-12: the pipeline never reads it)" — plan "mutationFn = boundedWait(fetchParcelLookup({parcelId, semi:'answered'}), SEMI_CONTINUE_WAIT_MS)" — the answer travels into a server lookup request parameter, and the pasted §3 request contract names only `q` and `parcelId` ("Exactly one of `q` / `parcelId` (400 otherwise)") — defer pending the ruling that names the `semi` request parameter; without it the plan should fetch with `parcelId` alone and keep the answer app-side.
+
+DEFER severity=MED — Spec 100 dated note 2026-11-13 item 2 "not sure writes nothing and shows the semi view" — plan "Page calls mutateAsync; keeps submittingRef latch, setSubmitting busy state, empty-id guard, mountedRef guard, storeLookup via useSetParcelLookup after the mounted check, router.replace(route)" — the plan names one mutateAsync path and never states that the not-sure answer skips mutateAsync, storeLookup and the route override — defer to the existing semi page cases, which the plan says keep their assertions; the plan should still name the not-sure branch because the new hook export changes its mock.
+
+DEFER severity=MED — Spec 100 2026-09-15 amendment item 2 "The current gate at `src/app/api/parcels/lookup/route.ts:46-59` is a boolean over the *global* `subscription_status`, not a per-product entitlement and not a meter" and §2 item 7 "Server-side subscription gate" — plan "D4 add row ['parcel-entitlement'] | useParcelEntitlement (Spec 100) to Spec 99 section 4 B1 registry table (99:230-235)" — no pasted line names a mobile `useParcelEntitlement` hook or a `parcel-entitlement` query key, so the row cites Spec 100 for an item Spec 100 does not contain — defer only if the naming ruling is pasted; otherwise D4 adds an entry no pasted clause or ruling names.
+
+DEFER severity=LOW — Spec 100 dated note 2026-11-13 item 3 "The log line gains `lot_form` and `lot_form_unsure`; never the address" — plan "Page calls mutateAsync" (no log step in D5) — the plan does not say whether the lookup call that now carries `semi:'answered'` emits `lot_form` / `lot_form_unsure` or whether the address stays out of that line — defer because the field is emitted server-side, but D5 changes the call that feeds it.
+
+DEFER severity=LOW — plan "D5 semi-question.tsx:64 awaits fetchParcelLookup imperatively (Spec 99:219 every server fetch through TanStack Query)" — Spec 99:219, Spec 99 section 4 B1 (99:230-235) and Spec 99 8.3 are not in the pasted context — cannot see whether the imperative await breaks 99:219, whether the registry row format matches 99:230-235, or whether D12 matches 99 8.3 — defer only because the governing clauses for D5, D4 and D12 are not pasted; paste them with the plan.
+
+MET — Spec 100 dated note 2026-11-13 item 2 "The answer is a route param applied in the app" — plan "router.replace(route)" — the app-side route write of the answer survives the hook refactor.
+
+MET — Spec 100 dated note 2026-11-13 item 2 "on a page modelled on the 'choose your lot' page" — plan "keeps submittingRef latch, setSubmitting busy state, empty-id guard, mountedRef guard" — the page guards are kept, not replaced by the mutation.
+
+MET — Spec 100 §3 "`parcelId` path bypasses resolution" — plan "fetchParcelLookup({parcelId, semi:'answered'})" — the answer call stays on the parcelId path, no resolution or `q` path change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 1
+
+---
+⏱  70392ms (70.4s)
+📊 Tokens — total: 24729, input: 11439, output: 13290, reasoning: 12126

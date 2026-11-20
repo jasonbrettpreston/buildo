@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/output.diff (model: deepseek-reasoner)
+
+DEFER severity=MED, Spec 100 Operating Boundaries Target Files "`mobile/app/(app)/parcel-tool/{_layout.tsx,index.tsx,[parcelId].tsx}`", mobile/app/(app)/parcel-tool/semi-question.tsx "result = await answerLookup(id);", the diff changes a parcel-tool route the pasted Target Files do not list and no pasted clause names (the semi question page and `semi=answered` appear in none of the pasted notes), so authorization for this file is not confirmable from the pasted material, paste the Spec 99 or task-373 ruling that authorizes the route or extend Target Files to name it
+
+DEFER severity=LOW, Spec 100 §6 "the §6 test files", mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx "describe('Spec 99 §8.3: toggling isFetching does not flip the report route gate'", the new test file is not one of the §6 named mobile Jest tests and enforces a clause (Spec 99 §8.3) that is not pasted, so nothing in the pasted clauses requires it, paste §8.3 and §6.5 or fold the assertion into a §6 named test
+
+DEFER severity=LOW, Spec 100 §4 dated note 2026-11-19 "the reports-left slot is unchanged", docs/specs/03-mobile/99_mobile_state_architecture.md "+| `['parcel-entitlement']` ... not persisted across a restart (`mobile/src/lib/persistFilter.ts` NOT_PERSISTED)", the added row asserts cache properties (no parameter, NOT_PERSISTED, a named file) that no pasted clause states and the diff does not touch persistFilter.ts, so the assertion rests on spec text alone, paste the persistFilter NOT_PERSISTED entry or drop the parenthetical until it can be seen
+
+DEFER severity=LOW, Spec 99 §4 B1 99:219 as the diff quotes it "Every server fetch MUST go through TanStack Query", mobile/src/hooks/useParcelLookup.ts "+ * FIX.SEMI (task-373, grounder D5; Spec 99 section 4 B1 99:219", the compliance claim for the new mutation rests on a clause that appears only in the diff's own comments and not in the pasted context, so this review cannot verify it, paste Spec 99 §4 B1 so the clause can be checked
+
+REJECT, Spec 100 §6 "no render tree per Spec 98", the new gateStability test renders a tree under mobile/__tests__ against that line, the later pasted dated note 2026-11-12 "Guard now: the MF-48 mobile props goldens and render test" makes a render test the ruled guard, so the jest-node line is superseded rather than violated
+
+MET, Spec 100 §4 dated note 2026-11-12 "an error with nothing cached shows the error text and Retry", mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx "['the error text (error, nothing cached)', undefined, true]", the test exercises exactly the pasted route states (loading, miss, served page, error, cached page) plus the offline cached refetch
+
+MET, Spec 100 §4 "the hook parses `raw.data` through it (Spec 90 §13 Zod boundary)", mobile/src/hooks/useParcelLookup.ts "return boundedWait(fetchParcelLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);", the answered lookup keeps fetchParcelLookup's own Zod parse as its only boundary
+
+MET, Spec 100 §5 "Parcel lookups do **not** touch the permit-shaped trial counter", mobile/src/hooks/useParcelLookup.ts "export function answeredParcelLookup(parcelId: string): Promise<ConsumerParcelLookupResult>", the new function reads no trial counter and no entitlement gate
+
+MET, Spec 100 §4 "the detail depends **only** on `['parcel-lookup', parcelId]`", mobile/src/hooks/useParcelLookup.ts "export function useAnswerParcelLookup() { return useMutation(buildAnswerParcelLookupOptions()); }", the added hook is a mutation, it introduces no second query key into the detail's dependency set
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  65830ms (65.8s)
+📊 Tokens — total: 29364, input: 16357, output: 13007, reasoning: 12020

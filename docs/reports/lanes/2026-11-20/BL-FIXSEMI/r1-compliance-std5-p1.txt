@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/plan.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §5.2 "*.logic.test.ts | Pure functions, scoring, classification | Any pure/derivation logic" — plan "pure mutation fn tested in useParcelLookup.test.ts" — the filename matches no row of the §5.2 pattern table, so the layer that proves the mutation fn is unnamed — rename to useParcelLookup.logic.test.ts for boundedWait and useParcelLookup.infra.test.ts for the fetchParcelLookup call (external call row), or split into both.
+
+BUG severity=HIGH — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — plan "Tests: cases added only; existing semi page cases keep assertions (mock factory gains the new hook export)" and "phone tests unproven until Mobile CI." — the plan sequences the fix and the tests together and admits the tests were never run, so no failing run precedes the hook or page edit — add an explicit step: write the failing test, run it, paste the red output, then implement the hook and page change.
+
+BUG severity=MED — §5.3 "For new API routes and database mutations, the failing test MUST be an .infra.test.ts that exercises the unhappy path (error responses, invalid input, missing auth)." — plan "pure mutation fn tested in useParcelLookup.test.ts" — the new mutation crosses the server boundary via fetchParcelLookup and boundedWait, yet no unhappy path (reject, timeout, boundedWait exceeded before the answer lands) is named as the first failing case — add a red-first case where fetchParcelLookup rejects or SEMI_CONTINUE_WAIT_MS elapses, asserting no storeLookup and no router.replace.
+
+BUG severity=MED — §5.2 "*.ui.test.tsx | React component rendering, interactions | Any new/changed component" — plan "D12 add a test: report screen [parcelId].tsx rendered with isFetching true then false for loading, miss and error states" — the test file is never named and semi-question.tsx gains new mutateAsync wiring (latch, timeout, empty-id) with no new ui case, only "existing semi page cases keep assertions" — name the *.ui.test.tsx files for both [parcelId].tsx and semi-question.tsx and add a case for the mutateAsync path.
+
+DEFER severity=MED — §5.1 "You MUST always import typed factories from src/tests/factories.ts." — plan "mock factory gains the new hook export" — the only factory the plan names is a jest module mock, and it never says the parcel fixtures behind the D12 loading/miss/error tree come from typed factories — state that every fixture in the new cases is imported from src/tests/factories.ts.
+
+DEFER severity=MED — §5.5 "Pick the layer that proves the claim; a green suite in the wrong layer is false confidence." — plan "No push, no DB; phone tests unproven until Mobile CI." — the only stated proof for the mobile layers is a CI run the plan does not observe, so the change is presented with an unproven layer — record the Mobile CI run against task-373 as part of the plan exit criteria, not as an afterthought.
+
+DEFER severity=LOW — Spec 99:219 (not pasted) "every server fetch through TanStack Query" — plan "useMutation (same kind as useSaveLead/useRemoveFromBoard)" — whether useMutation satisfies a clause written as TanStack Query, and whether the D4 registry row text and D12 "rendered tree identical (Spec 99 8.3)" match their clauses, cannot be checked because Spec 99, its section 4 B1 table (99:230-235) and Spec 100 are not pasted — paste Spec 99:215-240, 99 8.3 and the Spec 100 row text at review.
+
+MET — §5.4 "To set up specific DB scenarios for testing or demos, create scripts/seed-[scenario].js." — plan "No push, no DB" — no DB scenario is created, so seeding does not bind.
+MET — §5.2 DB replay row "Any migration touching schema/constraints/indexes (run before push)" — plan "No push, no DB" — no migration in the diff, so no BUILDO_TEST_DB replay is owed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 4
+
+---
+⏱  32787ms (32.8s)
+📊 Tokens — total: 8526, input: 2781, output: 5745, reasoning: 4757

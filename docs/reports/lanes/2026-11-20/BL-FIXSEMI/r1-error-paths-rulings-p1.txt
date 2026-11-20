@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/plan.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan D5 "Page calls mutateAsync; keeps submittingRef latch, setSubmitting busy state, empty-id guard, mountedRef guard" — no catch/finally is specified for mutateAsync, so when mutationFn rejects (network error, expired boundedWait) the latch stays set and setSubmitting(true) is never cleared, leaving the page permanently busy and every later tap a no-op — specify try/catch/finally that clears submittingRef and setSubmitting in finally, and sets an error state before re-enabling.
+
+BUG severity=HIGH — plan D5 "Page calls mutateAsync" against the approved mock "secondary Try again" — the plan names no error state, no error text and no handler bound to the approved Try again button, so the drawn retry path has nothing to call and the failure is invisible to the user — state in the plan which state variable the error renders from, that Try again calls the same mutateAsync with latch re-checked, and that the failure is logged.
+
+DEFER severity=MED — plan D5 "= useMutation (same kind as useSaveLead/useRemoveFromBoard)" — the mutation's retry policy is inherited, not pinned; if the shared QueryClient sets a mutation retry default, one rejected answer is re-sent N times, each a server write, and the submittingRef latch cannot stop intra-mutation retries — set retry: 0 explicitly on useAnswerParcelLookup.
+
+DEFER severity=MED — plan D5 "mutationFn = boundedWait(fetchParcelLookup({parcelId, semi:'answered'}), SEMI_CONTINUE_WAIT_MS)" — boundedWait races a timer but no AbortController/AbortSignal is named, so on expiry the underlying fetch keeps running while the page moves on, and a later re-answer of the same question writes a second time; the plan names no idempotency key (the only key visible is {parcelId, semi:'answered'}, and whether the server treats that pair as unique is cannot see) — pass a signal through to fetchParcelLookup and name the dedup key so a repeat is a no-op.
+
+DEFER severity=MED — plan D5 "constant imported where it lives, not moved or changed" plus boundedWait — the plan does not restate what boundedWait does at expiry (reject or resolve with a continue sentinel); the whole error path flips on that: reject means a slow network always ends in the error state, resolve means the page continues with no answer recorded and a later tap double-writes — state the expiry semantics in the plan and cover both in the pure mutation fn test.
+
+DEFER severity=MED — plan D12 "report screen [parcelId].tsx rendered with isFetching true then false for loading, miss and error states; rendered tree identical" — a case that asserts the tree is identical for loading, miss and error cannot go red if the error path shows the user nothing, so it does not cover error observability and contradicts AC2 red-first — assert what distinguishes the error render (the error line or retry affordance) and leave the layout-identity assertion to the states that are meant to be identical.
+
+DEFER severity=MED — plan D5 "storeLookup via useSetParcelLookup after the mounted check, router.replace(route)" — if the screen unmounts while the mutation is in flight, storeLookup and router.replace are skipped but the server call is not cancelled, so an answer the server recorded never reaches the local store and the next open reads stale state (whether storeLookup is the record or only a cache is cannot see) — move the record write into the mutation's onSuccess so it survives unmount, or abort on unmount.
+
+REJECT — plan D5 "empty-id guard" — an empty or undefined parcelId could fire fetchParcelLookup with an undefined id — handled, the guard returns before mutateAsync, so no request is sent and the user stays on the page.
+
+VERDICT: FAIL on error-path safety
+Paths walked: mutation rejection (network/timeout), error UI and retry binding, expiry semantics of boundedWait, in-flight request after timeout, retry policy dedup, unmount-during-flight, D12 error-state test, empty-id path   Unguarded: 3
+
+---
+⏱  31218ms (31.2s)
+📊 Tokens — total: 6887, input: 1953, output: 4934, reasoning: 4025

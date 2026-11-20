@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/output.diff (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:23 "jest.mock('@/hooks/useParcelLookup', () => ({ useParcelLookup: () => mockHook }));" — the mocked module also exports useSetParcelLookup and useParcelEntitlement (the SRCH.A6 hook whose table row this same diff adds), so if [parcelId].tsx reads either one the mock hands back undefined and the render throws before any tree is compared (cannot see the route's imports) — stub every hook the route imports before this §8.3 pin can run.
+
+DEFER severity=LOW — mobile/__tests__/semiQuestionPage.behaviour.test.tsx:102 "expect(src).not.toMatch(/fetchParcelLookup/);" — a source-text assertion stands in for behaviour: any comment or renamed helper mentioning fetchParcelLookup fails it, and a re-introduced raw fetch under another name passes — assert the wiring instead: expect(mockFetchLookup.mock.calls).toEqual([[{ parcelId: 'PCL-S1', semi: 'answered' }]]).
+
+DEFER severity=LOW — mobile/src/hooks/useParcelLookup.ts:135 "return useMutation(buildAnswerParcelLookupOptions());" — the options pin only checks the factory's output, nothing asserts this hook actually feeds those options to useMutation, so dropping retry 0 or networkMode 'always' from this line keeps the new test green — pin it by rendering the hook against a MutationCache spy, or assert the observer's options.
+
+DEFER severity=LOW — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:40 "])('%s: the same tree with isFetching true and false', (_name, data, isError) => {" — it.each supplies the callback's arguments as any, so the third element is never checked against Hook's isError: boolean and a non-boolean case value (a string) would be silently truthy — type the table, it.each<[string, unknown, boolean]>([...]).
+
+DEFER severity=NIT — mobile/__tests__/reportScreen.gateStability.behaviour.test.tsx:31 "beforeEach(() => { mockReplace.mockClear(); });" — mockReplace is cleared but never asserted anywhere in this file, so the setup is dead — either drop the clear or assert the semi redirect effect does not fire for the isFetching=true render.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  156900ms (156.9s)
+📊 Tokens — total: 43141, input: 12007, output: 31134, reasoning: 30590

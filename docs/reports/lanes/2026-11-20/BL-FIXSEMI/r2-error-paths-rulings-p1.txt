@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/output.diff (model: deepseek-reasoner)
+
+BUG/DEFER/REJECT findings only, on the pasted diff.
+
+DEFER severity=MED — mobile/src/hooks/useParcelLookup.ts:~124 "return boundedWait(fetchParcelLookup({ parcelId, semi: 'answered' }), SEMI_CONTINUE_WAIT_MS);" — when the bound fires the fetch is not aborted, so the first GET can still reach the server, and the page's Try again sends a second semi=answered GET for the same parcelId; no client idempotency key beyond parcelId and whether the server count dedupes on (parcelId, semi=answered) cannot be seen — pass an AbortSignal into fetchParcelLookup and abort it when the bound expires, or have the grounder confirm the count is keyed by the produced report, not the request.
+
+DEFER severity=LOW — mobile/__tests__/useParcelLookup.test.ts:~229 "expect(o.networkMode).toBe('always');" — the offline path is pinned only as an options literal, never exercised, so a future TanStack change to what 'always' means would leave the page busy forever with this test still green — add one behaviour case where the fetch rejects offline and mutateAsync (or the page error state) settles at once.
+
+DEFER severity=LOW — mobile/app/(app)/parcel-tool/semi-question.tsx:~65 "result = await answerLookup(id);" — the empty path cannot be seen: the AC4 empty-id guard is not in the pasted hunk, and if Continue is reachable with an empty id the mutation still fires (networkMode 'always' means no library short-circuit) with parcelId= rather than ending locally — grounder to confirm the Continue action is disabled on an empty id, or short-circuit inside answeredParcelLookup before the fetch.
+
+REJECT — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "it('a double press while the fetch runs sends one fetch and one replace', async () => {" — useMutation does not dedupe concurrent mutateAsync calls, so two taps could send two answered lookups and two cache writes — handled by the page's submittingRef latch, retained unchanged by this diff and asserted by this case.
+
+REJECT — mobile/src/hooks/useParcelLookup.ts:~135 "return { mutationFn: answeredParcelLookup, retry: 0, networkMode: 'always' } as const;" — the library re-sending a failed answer or pausing it offline would double the request or hang the busy state — retry 0 and networkMode 'always' reproduce the task-361 fail-at-once behaviour, and the cache write storeLookup(id, result) is a same-key overwrite so a repeat Continue is a no-op.
+
+DEFER severity=NIT — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "useAnswerParcelLookup: () => ({ mutateAsync: (parcelId: string) => { mockAnswerCalls.push(parcelId);" — the mock hands back a fresh mutateAsync on every render, unlike the stable one useMutation returns, so these cases cannot fail on an identity-churn (re-created onContinue) regression — build the mock object once outside the render callback.
+
+DEFER severity=NIT — mobile/__tests__/useParcelLookup.test.ts:~225 "await jest.advanceTimersByTimeAsync(SEMI_CONTINUE_WAIT_MS - 1);" — the timeout case proves rejection fires but asserts nothing about the orphaned fetch, so the timed-out request surviving into a retry is invisible to the suite — assert the fetch promise is aborted or add a case that a second answeredParcelLookup after a timeout is a distinct single request.
+
+VERDICT: PASS on error-path safety
+Paths walked: fetch reject, schema drift, bounded-wait timeout, offline fail-fast, Try again retry, double press, unmount mid-flight (cache write, cannot see), empty id (cannot see), repeat Continue cache write, server-side answered count (cannot see)
+Unguarded: 2
+
+---
+⏱  80993ms (81.0s)
+📊 Tokens — total: 26993, input: 12024, output: 14969, reasoning: 14088

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/plan.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 90 §7 "Mutations (like saving a lead) made while offline MUST be queued using TanStack Query's offline mutation cache, backed by MMKV" — plan line "new hook useAnswerParcelLookup in mobile/src/hooks/useParcelLookup.ts = useMutation (same kind as useSaveLead/useRemoveFromBoard)" — the plan models a server fetch as a useMutation and names neither the offline mutation cache nor MMKV backing nor the error path when the device is offline, and no pasted ruling exempts a lookup-answer mutation from the queue — fix: state in the plan whether this mutation registers in the Spec 90 §7 offline mutation cache (and how the offline case is surfaced to the user), or cite the operator ruling that exempts it.
+
+BUG severity=HIGH — Spec 90 §7 "Three render-loop incidents in 2026-05-02 traced to dual-source-of-truth violations precipitated this requirement." — plan line "storeLookup via useSetParcelLookup after the mounted check" — the mutation result and the store write now both hold the lookup payload and the plan names no single authority and no Spec 99 §3-§5 section for the write, so the incident pattern this clause forbids is left undecided — fix: name the authoritative source (mutation result or store) and the Spec 99 section the store write matches, or drop the store write.
+
+DEFER severity=MED — Spec 90 §7 "Adding a new field, store, or bridge requires either matching an existing pattern in Spec 99 §3-§5 or a Spec 99 amendment." — plan line "D4 add row ['parcel-entitlement'] | useParcelEntitlement (Spec 100) to Spec 99 section 4 B1 registry table (99:230-235)." — the plan adds a registry row for an unrelated Spec 100 hook but no row or §3-§5 citation for the bridge it actually creates, so the registry treatment is inconsistent across the same edit — fix: add the useAnswerParcelLookup row (or cite the matched section with file:line), and split the Spec 100 row out of this FIX.SEMI card.
+
+DEFER severity=MED — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI" — plan line "mutationFn = boundedWait(fetchParcelLookup({parcelId, semi:'answered'}), SEMI_CONTINUE_WAIT_MS)" — the plan does not say where the Zod parse of the lookup response happens on the new mutation path, and the function body cannot see — fix: state the parse site (mutationFn or fetchParcelLookup) with file:line.
+
+DEFER severity=MED — Spec 90 §10 "Jest + React Native Testing Library for logic hooks. Minimum 80% coverage threshold." — plan line "Tests: cases added only; existing semi page cases keep assertions (mock factory gains the new hook export)" — the page's switch from imperative await to mutateAsync is covered only by kept assertions on the old path, and the only new screen test named targets "[parcelId].tsx", a screen the diff does not touch — fix: add a semi-question case asserting mutateAsync is called once, the empty-id guard blocks it, and the store write follows the mounted check.
+
+MET — Spec 90 §5 "NO `useEffect` for Fetching ... Always use TanStack Query." — plan line "Page calls mutateAsync" — the imperative fetch call site is replaced by a TanStack Query hook, which is the clause's requirement.
+MET — Spec 90 §4 "Server State: `@tanstack/react-query` (v5)." — plan line "= useMutation (same kind as useSaveLead/useRemoveFromBoard)" — server state goes through the mandated library.
+MET — Spec 90 §3 "Fetching pre-calculated JSON from the backend." — plan line "mutationFn = boundedWait(fetchParcelLookup({parcelId, semi:'answered'}), SEMI_CONTINUE_WAIT_MS)" — the client still only fetches and routes, no client-side computation added.
+
+REJECT — Spec 90 §3 "MUST NOT perform complex data mutation" — accused of keeping client boundedWait compute — boundedWait is the existing timeout wrapper preserved as is, not new client-side logic.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 5
+
+---
+⏱  45912ms (45.9s)
+📊 Tokens — total: 13370, input: 5243, output: 8127, reasoning: 7154

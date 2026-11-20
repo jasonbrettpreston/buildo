@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/fixsemi/plan.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan D5 "Page calls mutateAsync; keeps submittingRef latch, setSubmitting busy state, empty-id guard, mountedRef guard" — no try/catch/finally is named anywhere in the plan, so a rejected mutateAsync (boundedWait timeout, network fail) is an unhandled rejection that leaves submittingRef latched true and setSubmitting(true) for the life of the page — wrap the await in try/catch/finally, log the caught error, reset submittingRef and setSubmitting(false) in finally, and return before storeLookup/router.replace on reject.
+DEFER severity=MED — plan D4 "add row ['parcel-entitlement'] | useParcelEntitlement (Spec 100) to Spec 99 section 4 B1 registry table" — the row names a hook this plan does not create and gives no file:line, so the registry can point at an export that does not exist — cite the file and export of useParcelEntitlement (with the hook actually present) before adding the row, otherwise the row is a dead reference.
+DEFER severity=MED — plan D5 "mutationFn = boundedWait(fetchParcelLookup({parcelId, semi:'answered'}), SEMI_CONTINUE_WAIT_MS)" with "pure mutation fn tested in useLookup.test.ts" — a closure written inside useMutation's options is not a pure function and boundedWait is time-bound, so the promised pure test cannot reach it without hoisting — state the module-scope exported fn name and signature the test will import, and that the test drives fake timers.
+DEFER severity=LOW — plan D5 "mountedRef guard, storeLookup via useSetParcelLookup after the mounted check" — the unmounted early return discards the resolved lookup with no log line, so a dropped result is invisible in production — emit one log line before returning so a lost lookup is distinguishable from a bug.
+DEFER severity=LOW — plan D5 "semi:'answered'" appears as a bare string literal in the mutationFn — if fetchParcelLookup types semi as a union, the literal bypasses the page's semi value and any future variant silently answers on the wrong path — type the argument against fetchParcelLookup's own parameter type rather than restating a literal.
+NIT severity=NIT — plan D12 "rendered with isFetching true then false for loading, miss and error states; rendered tree identical" — three states asserted in one test, a failure will not say which state diverged, and one legitimate divergence will read as a spec breach — split into three cases or label the assertion with the state name.
+REJECT — plan D5 "new hook useAnswerParcelLookup in mobile/src/hooks/useParcelLookup.ts = useMutation (same kind as useSaveLead/useRemoveFromBoard)" — a server read through useMutation looks like the wrong TanStack primitive — it is correct here because the brief pins the shape to the nearest existing hook (useSaveLead, useRemoveFromBoard both use useMutation) and Spec 99:219 only requires the fetch go through TanStack Query.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The File block pastes only the plan, no diff: the hook body, the page call site and the mutation fn are not visible, so nothing below file:line can be checked, cannot see the code.
+- mutateAsync has no stated reject path: no catch, no finally, so the submittingRef latch and busy state are never released on failure and the rejection is unlogged.
+- The registry row for useParcelEntitlement (D4) and the "pure mutation fn" test (D5) both reference artifacts this plan does not show, one of which can end up a dead reference.
+
+---
+⏱  23306ms (23.3s)
+📊 Tokens — total: 5893, input: 1936, output: 3957, reasoning: 3145
