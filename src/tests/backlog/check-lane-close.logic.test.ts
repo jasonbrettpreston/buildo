@@ -52,6 +52,7 @@ function grounder(lane: Lane, o: G = {}): string {
 type Opts = {
   status?: string; before?: string; type?: string; files?: string | null; assignees?: string[]; beforeAssignees?: string[]; trailer?: string | false; msg?: string; table?: 'keep' | 'delete' | 'never';
   tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
+  split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean };
   mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
 };
 function scenario(o: Opts = {}) {
@@ -74,16 +75,34 @@ function scenario(o: Opts = {}) {
   if (!o.noTaskFile) w(TASK, o.taskFileText ?? `${taskText({ status: o.status ?? 'BUILT', type: o.type, files: o.files, assignees: o.assignees })}notes\n`);
   // the lane report: inputs written by the real lens-input, outputs carrying the review tool's header
   const lane: Lane = { TASK: 'task-7\n' };
-  fs.writeFileSync(path.join(d, '.git/material.txt'), 'MATERIAL UNDER REVIEW: a diff\n');
+  // V2.WHOLE (task-410): the material is the REAL diff of the task range (the command the brief gives), so the close check's path and text recompute has something true to compare
+  const dArgs = ['diff', '--no-ext-diff', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];
+  const mb = g('merge-base', 'HEAD', 'lane-base').stdout.trim();
+  const realDiff = g(...dArgs, mb, 'HEAD', '--', '.', ':(exclude)docs/reports/lanes', ...(o.split?.skip ? [`:(exclude)${o.split.skip}`] : [])).stdout;
+  const material = realDiff ? (o.split?.alter ? o.split.alter(realDiff) : realDiff) : 'MATERIAL UNDER REVIEW: a diff\n';
+  fs.writeFileSync(path.join(d, '.git/material.txt'), material);
+  fs.writeFileSync(path.join(d, '.git/tpl.md'), '## System persona\nsys\n\n## User prompt\nPLAN:\n{{PLAN}}\nSPECS:\n{{SPECS}}\n');
+  const splitArgs = o.split ? ['--max', String(o.split.max), '--template', path.join(d, '.git/tpl.md')] : [];
   for (const id of ['first', 'inc-F', ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
     const out = path.join(d, LD, `in-out-compliance-${id}`);
-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out], { cwd: d });
+    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
-    const inText = fs.existsSync(`${out}.txt`) ? fs.readFileSync(`${out}.txt`, 'utf8') : '';
-    lane[`in-out-compliance-${id}.txt`] = inText;
-    lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', inText) + body(id === 'first' && o.lensFinding !== false);
+    for (const p of r.stdout.split('\n').filter(Boolean)) {
+      const nm = path.basename(p);
+      const inText = fs.readFileSync(p, 'utf8');
+      lane[nm] = inText;
+      lane[nm.replace(/^in-/, '')] = hdr('lens-compliance.md', inText) + body(id === 'first' && o.lensFinding !== false);
+    }
+    if (r.status !== 0) { lane[`in-out-compliance-${id}.txt`] = ''; lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', '') + body(id === 'first' && o.lensFinding !== false); }
   }
   lane['out-code-review.txt'] = hdr('lens-code-review.md', null) + body(false);
+  if (o.split?.lens) {
+    // the non-compliance lenses split by the same tool: no --list, a lens template; the outputs are out-<lens>-pN.txt, each with its committed input
+    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--material', path.join(d, '.git/material.txt'), '--out', path.join(d, LD, 'in-out-code-review'), ...splitArgs], { cwd: d });
+    if (r.status !== 0) throw new Error(`lens-input (no list): ${r.stderr}`);
+    lane['out-code-review.txt'] = null;
+    for (const p of r.stdout.split('\n').filter(Boolean)) { const nm = path.basename(p); const inText = fs.readFileSync(p, 'utf8'); lane[nm] = inText; lane[nm.replace(/^in-/, '')] = hdr('lens-code-review.md', inText) + body(false); }
+  }
   lane['out-error-paths.txt'] = hdr('lens-error-paths.md', null) + body(false);
   lane['plan-code-review.txt'] = body(false);
   let l = o.mutate ? o.mutate(lane, d) : lane;
@@ -323,5 +342,55 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
   it('a table with no milestone_docs key, or none for the letter of the task, is refused as missing lists', () => {
     refused(scenario({ tableEdit: (t) => { delete t.milestone_docs; } }), /milestone_docs/, 14);
     refused(scenario({ tableEdit: (t) => { t.milestone_docs = { Z: ['msf'] }; } }), /milestone_docs|milestone objectives/);
+  });
+});
+
+// V2.WHOLE (task-410): the close check proves the review saw the WHOLE change. It recomputes the changed paths of the task range (merge-base to HEAD, minus the table's exempt paths), reads the
+// chunk stamps of the committed out-phase inputs, and refuses when the union of the chunk path lists is not that list, when a chunk's text is not what git prints for its paths, or when a
+// stamp was edited. PLANTED DEFECTS each have a passing control (the same scenario untouched).
+const F5 = Object.fromEntries(['f1', 'f2', 'f3', 'f4', 'f5'].map((n) => [`src/${n}.ts`, Array.from({ length: 25 }, (_, i) => `export const ${n}v${i} = 'value number ${i} of ${n}';`).join('\n') + '\n']));
+// a lane that edits an input and runs the review again: the REVIEW header's file_sha256 then matches the edited input, so only the chunk proof can refuse it
+const reReview = (l: Lane, stem: string, edit: (x: string) => string): Lane => { const inn = edit(l[`in-out-compliance-${stem}.txt`] as string); return { ...l, [`in-out-compliance-${stem}.txt`]: inn, [`out-compliance-${stem}.txt`]: hdr('lens-compliance.md', inn) + body(false) }; };
+const SPLIT = { files: 'src/', lensFinding: false, laneWork: F5, split: { max: 4000 } } as const;
+describe('close check: the review material is the whole change (V2.WHOLE)', () => {
+  it('control: a change too big for one input, split into chunks by lens-input, with every file in one chunk, closes', () => {
+    const r = scenario({ ...SPLIT });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('control: a small change in one unsplit input (stamped chunk 1 of 1) closes', () => {
+    const r = scenario({ files: 'src/', laneWork: { 'src/one.ts': 'export const one = 1;\n' } });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('PLANTED DEFECT: a chunk set missing one changed file is refused, naming the file', () => {
+    refused(scenario({ ...SPLIT, split: { max: 4000, skip: 'src/f3.ts' } }), /src\/f3\.ts/, 15);
+    refused(scenario({ files: 'src/', laneWork: { 'src/one.ts': 'export const one = 1;\n', 'src/two.ts': 'export const two = 2;\n' }, split: { max: 100000, skip: 'src/two.ts' } }), /src\/two\.ts/, 15);
+  });
+  it('PLANTED DEFECT: a whole diff passed off as material that is not a diff (no file headers) is refused', () => {
+    refused(scenario({ files: 'src/', laneWork: { 'src/one.ts': 'export const one = 1;\n' }, split: { max: 100000, alter: () => 'MATERIAL UNDER REVIEW: a diff of one.ts\n' } }), /src\/one\.ts/, 16);
+  });
+  it('PLANTED DEFECT: a chunk whose text differs from the diff (re-stamped, so its own hash holds) is refused', () => {
+    refused(scenario({ ...SPLIT, split: { max: 4000, alter: (d) => d.replace("export const f2v3 = 'value number 3 of f2';", "export const f2v3 = 'value number 3 of f2 softened';") } }), /f2|differ|not what git prints/i, 17);
+  });
+  it('PLANTED DEFECT: a hand-edited chunk stamp (chunk number) is refused', () => {
+    refused(scenario({ ...SPLIT, mutate: (l) => reReview(l, 'first-p2', (x) => x.replace(/ chunk 2 of (\d+)\n/, ' chunk 1 of $1\n')) }), /chunk/, 18);
+  });
+  it('PLANTED DEFECT: a hand-edited path list in a chunk stamp is refused', () => {
+    refused(scenario({ ...SPLIT, mutate: (l) => reReview(l, 'first-p2', (x) => x.replace(/ paths: \["src\/f2\.ts"\]\n/, ' paths: ["src/f3.ts"]\n')) }), /stamped path list/, 19);
+  });
+  it('a chunk set with the last chunk deleted (all its list parts) is refused: the stamps say m chunks, and a file is missing', () => {
+    refused(scenario({ ...SPLIT, mutate: (l) => { const o = { ...l }; for (const k of Object.keys(o)) if (/-first-p5\.txt$/.test(k)) o[k] = null; return o; } }), /first|chunk|src\/f5\.ts/, 20);
+  });
+  it('a file left out of ONE rule list review is refused too: the check runs per list', () => {
+    refused(scenario({ ...SPLIT, mutate: (l) => { const o = { ...l }; for (const k of Object.keys(o)) if (/-ev-p5\.txt$/.test(k)) o[k] = null; return o; } }), /ev|chunk|src\/f5\.ts/, 21);
+  });
+  it('the paths staged in the closing commit itself (outside the exempt paths and the task files) are refused: they are in no chunk', () => {
+    refused(scenario({ files: 'src/', staged: { 'src/late.ts': 'export const late = 1;\n' } }), /late\.ts/, 22);
+  });
+  it('the non-compliance lenses split by the same tool (lens-input with a lens template and no --list): out-<lens>-pN.txt with committed inputs closes (control)', () => {
+    const r = scenario({ ...SPLIT, split: { max: 4000, lens: true } });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('PLANTED DEFECT: a split code-review run with its last chunk missing is refused, naming the lens', () => {
+    refused(scenario({ ...SPLIT, split: { max: 4000, lens: true }, mutate: (l) => { const o = { ...l }; for (const k of Object.keys(o)) if (/code-review-p3\.txt$/.test(k)) o[k] = null; return o; } }), /code-review/, 23);
   });
 });
