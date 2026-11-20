@@ -265,6 +265,9 @@ const EXPECTED_LOGIC_VAR_KEYS = [
   // MF-19 plan v3 (operator 2026-11-15 R-5 a): the side range of the width and depth entry, migration 324
   'user_lot_size_side_min_m',
   'user_lot_size_side_max_m',
+  // FIX.PROJ (task-372, D9; core.8): the report projection's pinned lot-size window, group "MaxBLD Lot Size" (seed only; the DB mirror migration is owed)
+  'maxbld_report_lot_size_implausible_min_sqm',
+  'maxbld_report_lot_size_implausible_max_sqm',
   // MB-93 the internal preview switch (operator 2026-11-11 "D-1 b and D-2 to D-8 a", D-3 a): admin group "MaxBLD Internal Preview", migration 308
   'maxbld_internal_preview_enabled',
   'footprint_shape_factor',

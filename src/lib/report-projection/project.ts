@@ -20,6 +20,8 @@ import reportPage from '../../../scripts/surfaces/_schema/report-page.json';
 import decl from '../../../scripts/surfaces/_schema/report-v2.decl.json';
 import presentation from '../../../scripts/surfaces/_schema/report-presentation.json';
 import { CONFIDENCE_ORDER, PAGE_RULES, formatPageRule, formatTextRule, TEXT_RULES } from './format';
+import seed from '../../../scripts/seeds/logic_variables.json';
+import { pinnedSetting } from './pinned-settings';
 import type { SeedShas } from './seed-shas';
 
 /** One stored parcel_maxbld_scenarios row (migration 287 draft columns; NUMERIC arrives from pg as a string). */
@@ -72,8 +74,14 @@ type Json = Record<string, unknown>;
 type Source = { kind: 'catalogue'; field_id: string } | { kind: 'parcels'; column: string } | { kind: 'user_input'; member: string };
 export interface Binding { section: string; building_type: string | null; key: string; unitPart: boolean; rule: string; field: string; source: Source }
 
-/** Plausible lot size bounds in m² (operator D-7 a, reality F-3: 4,297 lots under 50 m², 1,923 over 5,000 m²); outside them the banner flags it. */
-export const LOT_SIZE_PLAUSIBLE_M2 = Object.freeze({ min: 50, max: 5000 });
+/** Plausible lot size bounds in m² (operator D-7 a, reality F-3: 4,297 lots under 50 m², 1,923 over 5,000 m²; ONE-13 a); outside them the banner flags it.
+ *  FIX.PROJ (task-372, D9; core.8): two registered pinned logic variables, read from the seed by pinnedSetting. */
+export const LOT_SIZE_PLAUSIBLE_M2 = (() => {
+  const min = pinnedSetting(seed as unknown as Record<string, unknown>, 'maxbld_report_lot_size_implausible_min_sqm');
+  const max = pinnedSetting(seed as unknown as Record<string, unknown>, 'maxbld_report_lot_size_implausible_max_sqm');
+  if (!(min < max)) throw new Error(`report-projection: the lot-size window is inverted (min ${min}, max ${max})`);
+  return Object.freeze({ min, max });
+})();
 const LOT_SIZE_COLUMN = 'lot_size_sqm';
 
 const declFields = (): Json[] => {

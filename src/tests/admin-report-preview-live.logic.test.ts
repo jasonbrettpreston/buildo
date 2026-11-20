@@ -131,12 +131,14 @@ describe('F: the FE-05 server formatter (outside the no-maths directories)', () 
       expect(fmt('area_m2', m)).toBe(formatSqm(m));
     }
   });
-  it('lives outside the four directories the no-maths lock scans, and the formatter imports nothing', () => {
+  it('lives outside the four directories the no-maths lock scans, and the formatter imports only the pinned seed reader and the seed (FIX.PROJ task-372 D2: the factor is the registered variable parcels_sqm_to_sqft)', () => {
     const lock = fs.readFileSync('src/tests/surfaces/report-no-maths.logic.test.ts', 'utf8');
     const dirs = JSON.parse(((/const DIRS = (\[[^\]]*\])/.exec(lock) as RegExpExecArray)[1] as string).replace(/'/g, '"')) as string[];
     expect(dirs.length).toBe(4);
     for (const d of dirs) { expect(DIR.startsWith(d)).toBe(false); expect(PROJ.startsWith(d)).toBe(false); }
-    expect(fs.readFileSync(`${PROJ}/format.ts`, 'utf8')).not.toMatch(/^\s*import\b|require\(/m);
+    const imports = fs.readFileSync(`${PROJ}/format.ts`, 'utf8').split('\n').filter((l) => /^\s*import\b/.test(l)).map((l) => /from '([^']+)'/.exec(l)?.[1]);
+    expect(imports).toEqual(['../../../scripts/seeds/logic_variables.json', './pinned-settings']);
+    expect(fs.readFileSync(`${PROJ}/format.ts`, 'utf8')).not.toMatch(/require\(/);
     expect(fs.existsSync(`${PROJ}/format.ts`)).toBe(true);
   });
 });

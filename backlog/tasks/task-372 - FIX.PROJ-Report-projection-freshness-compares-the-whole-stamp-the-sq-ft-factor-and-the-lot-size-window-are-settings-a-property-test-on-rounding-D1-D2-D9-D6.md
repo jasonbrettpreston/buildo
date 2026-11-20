@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXPROJ'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T13:34:00Z'
+updated_date: '2026-11-20T13:39:00Z'
 labels: []
 milestone: m-1
 dependencies: []
@@ -43,6 +43,12 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. (AC1) Confirm D1, D2, D6, D9 on the head with file:line (done in the lane notes). 2. (AC2) Tests first, red through the pre-commit related run: D2 formatter reads the registered pinned variable parcels_sqm_to_sqft (no typed 10.7639); D9 window read from two registered pinned variables; D6 one fast-check property test on the sq ft rounding. D1 stopped: no stored-record evaluator_version column and no current-settings source readable in the pure compare; operator decision draft written. 3. Fixes green through the real hooks; the variables registry, estate literals, consumer registry and rule-map checks before and after. 4. (AC3) Lens set at plan and output with each rule list whole plus the pasted rulings; findings by id for a separate grounder. 5. (AC4) No golden or stored value moves: the factor and window values are unchanged.
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 

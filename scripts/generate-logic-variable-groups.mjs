@@ -1329,7 +1329,9 @@ const GROUP_ORDER = [
       "user_lot_size_city_ratio_max",
       "user_lot_size_entries_per_day",
       "user_lot_size_side_min_m",
-      "user_lot_size_side_max_m"
+      "user_lot_size_side_max_m",
+      "maxbld_report_lot_size_implausible_min_sqm",
+      "maxbld_report_lot_size_implausible_max_sqm"
     ]
   },
   {

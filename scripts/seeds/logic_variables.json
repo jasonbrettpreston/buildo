@@ -8189,6 +8189,26 @@
       "group": "Source Ingestion"
     }
   },
+  "maxbld_report_lot_size_implausible_min_sqm": {
+    "default": 50,
+    "type": "number",
+    "min": 50,
+    "max": 50,
+    "description": "FIX.PROJ (task-372, D9; Spec 132 core.8: a definitional window is pinned, min = max; ONE-13 a, MORNING-DECISIONS.md:738 \"lots under 50 m2 or over 5,000 m2 show Not yet evaluated\"; operator D-7 a): the smallest plausible lot size in m2 of the report projection. A lot outside the window sets the admin lineage flag lot_size_implausible. Pinned at 50: not tunable (min = max). CONSUMED by src/lib/report-projection/project.ts (LOT_SIZE_PLAUSIBLE_M2, read from this seed by pinnedSetting). The DB mirror row (a migration, number to be claimed) is owed for admin visibility; nothing reads it.",
+    "admin": {
+      "group": "MaxBLD Lot Size"
+    }
+  },
+  "maxbld_report_lot_size_implausible_max_sqm": {
+    "default": 5000,
+    "type": "number",
+    "min": 5000,
+    "max": 5000,
+    "description": "FIX.PROJ (task-372, D9; Spec 132 core.8: a definitional window is pinned, min = max; ONE-13 a, MORNING-DECISIONS.md:738 \"lots under 50 m2 or over 5,000 m2 show Not yet evaluated\"; operator D-7 a): the largest plausible lot size in m2 of the report projection. A lot outside the window sets the admin lineage flag lot_size_implausible. Pinned at 5000: not tunable (min = max). CONSUMED by src/lib/report-projection/project.ts (LOT_SIZE_PLAUSIBLE_M2, read from this seed by pinnedSetting). The DB mirror row (a migration, number to be claimed) is owed for admin visibility; nothing reads it.",
+    "admin": {
+      "group": "MaxBLD Lot Size"
+    }
+  },
   "parcels_m_to_ft": {
     "default": 3.28084,
     "type": "number",
