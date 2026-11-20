@@ -1,0 +1,40 @@
+
+stdout | src/tests/surfaces/surface-conformance.logic.test.ts > C-2 the import boundary (one tier: libraries only in binding modules, providers, tests and the vendor dir) > the real tree: no finding; the pinned D-2/D-3 libraries are listed; the walk examined files
+C-2: examined 2035 files, 5917 import sites, 23 allowed
+
+stdout | src/tests/surfaces/surface-conformance.logic.test.ts > C-2b no display text in mount files and binding modules (the exempt list: tests, the vendor dir, non_display_keys attributes) > the real tree: the mount files and binding modules bindings.json lists hold no display text (MF-37: 4 mounts, 2 modules)
+C-2b: 35 files
+
+stdout | src/tests/surfaces/surface-conformance.logic.test.ts > C-3 bindings.json integrity > the real tree: no finding; the MF-37 modules, owners, promoted entries and mounts hold; the shape is valid
+C-3: 10 modules
+
+stdout | src/tests/surfaces/surface-conformance.logic.test.ts > C-5 the vendored Reusables manifest (unmodified, both directions) > the real tree: the manifest exists and is valid; MF-35 vendored 6 files (5 CLI parts with their registry sha256, the docs cn helper), no waits
+C-5: vendored 6 files
+
+stdout | src/tests/surfaces/surface-conformance.logic.test.ts > C-8 the web closed mapping (every JSX element of a web binding module is a listed library component) > the real tree: each web module renders only mapping.web names for its archetypes
+C-8: 4 web modules
+
+stdout | src/tests/surfaces/surface-conformance.logic.test.ts > C-9 the web 44 px case (golden nodes of a sized component carry a 44 px size) > the real tree: every converted web golden passes, with a non-vacuous count per archetype
+C-9: sized nodes per archetype {"LIST":17,"FORM":146,"SEARCH":68,"STATIC":47}
+
+stdout | src/tests/surfaces/surface-conformance.logic.test.ts > C-8m the mobile closed table (MF-35; every element of a mobile binding module comes through COMPONENTS = mapping.mobile) > the real tree: the mobile modules render only through a COMPONENTS table equal to mapping.mobile for their archetypes (SEARCH; the renderer SEARCH and LIST); no FlashList
+C-8m: 6 mobile modules
+
+stdout | src/tests/surfaces/surface-conformance.logic.test.ts > C-9m the mobile 44 px case (MF-35; min-h-[44px] or another listed size of at least 44 px, because NativeWind rem is 14 here and min-h-11 is 38.5 px) > the real tree: every Button and Input of every converted mobile golden carries exactly one min-h- token and it is on the touch_targets.mobile list
+C-9m: 76 sized nodes
+
+ ✓ src/tests/surfaces/surface-conformance.logic.test.ts (55 tests) 1505ms
+   ✓ C-2 the import boundary (one tier: libraries only in binding modules, providers, tests and the vendor dir) > the real tree: no finding; the pinned D-2/D-3 libraries are listed; the walk examined files 963ms
+
+ Test Files  1 passed (1)
+      Tests  55 passed (55)
+   Start at  13:42:48
+   Duration  4.25s (transform 3ms, setup 4ms, collect 215ms, tests 1.51s, environment 0ms, prepare 19ms)
+
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 10 file(s)
+[wf1/inc1b-cfgbounds 29912ef52] fix(128_mcfrontend): the six page settings are registered logic variables; slice numbers resolved from the seed rows (FIX.CONFIG-BOUNDS round 2)
+ 63 files changed, 676 insertions(+), 418 deletions(-)
+ create mode 100644 docs/reports/lanes/2026-11-20/BL-CFGBOUNDS/red2.out
+ create mode 100644 docs/reports/red-evidence/task-395/restamp-fingerprint-only.txt
