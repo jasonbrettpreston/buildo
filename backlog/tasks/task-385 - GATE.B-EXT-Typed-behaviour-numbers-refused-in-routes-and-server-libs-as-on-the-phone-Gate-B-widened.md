@@ -6,7 +6,9 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-labels: []
+updated_date: '2026-11-20T15:33:00Z'
+labels:
+  - McFix
 milestone: m-1
 dependencies: []
 type: build
@@ -16,7 +18,7 @@ ordinal: 85012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Plan section C; after task-367 and task-378. Plan grounder: Gate B (scripts/analysis/gates/mobile-literals.mjs:64-68, U1-U4) scans mobile only. Add roots src/app/api, src/lib/parcels, src/lib/report-projection, src/components/surfaces and the by-value conversion-factor class; shrink-only dated baseline only after task-378. State, do not hide: exact zero is allowed (Spec 128); arithmetic forms such as 60 * 1000 are not seen. Rule: Spec 126 P4 (:189), Spec 128 Rule 3 (:30). Files: scripts/analysis/gates/mobile-literals.mjs, src/tests/gate-mobile-compliance.infra.test.ts Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane.
+Plan section C; after task-367 and task-378. Plan grounder: Gate B (scripts/analysis/gates/mobile-literals.mjs:64-68, U1-U4) scans mobile only. Add roots src/app/api, src/lib/parcels, src/lib/report-projection, src/components/surfaces and the by-value conversion-factor class; shrink-only dated baseline only after task-378. State, do not hide: exact zero is allowed (Spec 128); arithmetic forms such as 60 * 1000 are not seen. Rule: Spec 126 P4 (:189), Spec 128 Rule 3 (:30). Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: scripts/analysis/gates/mobile-literals.mjs, src/tests/gate-mobile-compliance.infra.test.ts
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done

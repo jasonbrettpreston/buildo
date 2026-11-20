@@ -7,8 +7,9 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXTUNE'
 created_date: '2026-11-20T14:00:00Z'
-updated_date: '2026-11-20T15:10:00Z'
-labels: []
+updated_date: '2026-11-20T15:26:00Z'
+labels:
+  - McFix
 milestone: m-1
 dependencies: []
 type: build

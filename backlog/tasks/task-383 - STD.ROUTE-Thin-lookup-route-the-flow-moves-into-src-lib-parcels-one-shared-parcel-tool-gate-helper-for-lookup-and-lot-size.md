@@ -6,7 +6,9 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-labels: []
+updated_date: '2026-11-20T15:33:00Z'
+labels:
+  - McFix
 milestone: m-1
 dependencies: []
 type: build
@@ -16,7 +18,7 @@ ordinal: 83012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Plan section B3; after the section A fixes settle on these files. Engineering standards 10.3 (docs/specs/00_engineering_standards.md:228-229): API routes must be thin. Measurement: lookup/route.ts carries about 70 lines of flow (resolve, hold, stored read, compute, meter decision); the entitlement gate is written twice (lookup/route.ts:79-83, lot-size/route.ts:56-58). Lines moved, not new behaviour: no response, meter or golden may change. Files: src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lot-size/route.ts, src/lib/parcels/report-compute.ts Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane.
+Plan section B3; after the section A fixes settle on these files. Engineering standards 10.3 (docs/specs/00_engineering_standards.md:228-229): API routes must be thin. Measurement: lookup/route.ts carries about 70 lines of flow (resolve, hold, stored read, compute, meter decision); the entitlement gate is written twice (lookup/route.ts:79-83, lot-size/route.ts:56-58). Lines moved, not new behaviour: no response, meter or golden may change. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/app/api/parcels/lookup/route.ts, src/app/api/parcels/lot-size/route.ts, src/lib/parcels/report-compute.ts
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done

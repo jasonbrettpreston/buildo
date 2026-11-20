@@ -6,8 +6,9 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T15:16:00Z'
-labels: []
+updated_date: '2026-11-20T15:33:00Z'
+labels:
+  - McFix
 milestone: m-1
 dependencies: []
 type: fix
@@ -17,7 +18,7 @@ ordinal: 80012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Plan section A. Confirmed defect D1 (docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY.md): freshnessOf compares table_version, catalogue_sha, switchboard_sha only. WAITS on the operator option (a), (b) or (c) in ~/Buildo-scratch/lanes-20261119/inc1b/fixproj/D1-OPERATOR-DRAFT.md. Files: src/lib/report-projection/project.ts, src/lib/report-projection/read-stored.ts Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane.
+Plan section A. Confirmed defect D1 (docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY.md): freshnessOf compares table_version, catalogue_sha, switchboard_sha only. WAITS on the operator option (a), (b) or (c) in ~/Buildo-scratch/lanes-20261119/inc1b/fixproj/D1-OPERATOR-DRAFT.md. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/lib/report-projection/project.ts, src/lib/report-projection/read-stored.ts
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done

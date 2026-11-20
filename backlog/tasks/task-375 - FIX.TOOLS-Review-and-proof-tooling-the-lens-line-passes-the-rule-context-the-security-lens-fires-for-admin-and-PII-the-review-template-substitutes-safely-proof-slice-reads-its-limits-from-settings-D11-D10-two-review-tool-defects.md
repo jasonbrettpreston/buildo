@@ -8,8 +8,9 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXTOOLS'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T15:09:00Z'
-labels: []
+updated_date: '2026-11-20T15:28:00Z'
+labels:
+  - McFix
 milestone: m-1
 dependencies: []
 type: build
@@ -48,4 +49,6 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-FIXTOOLS, worktree /Users/brettpreston_macmini/Buildo-wt-fixtools, branch wf1/inc1b-fixtools), RR-0240
+
+Grounder verdict 2026-11-20 (separate read-only agent, launched by the orchestrator): SAFE TO FOLD as a PARTIAL fix; folded onto wf2/board. Fixed: D10 buffer (proof-slice.mjs reads tooling_spawn_max_buffer_mb). STILL OPEN, task not done: D10 timeout DEFAULT_TIMEOUT_MS = 120000 typed (needs a migration number from the ID ledger, seed row, registry doc; operator typed GO for the DB); D11b security lens terms for admin and PII at scripts/analysis/rule-lists.mjs:128; the plan-lens --context token is a placeholder, not a path. The commit subject "proof runner tunables registered" overstates: one existing variable is read, none registered.
 <!-- SECTION:NOTES:END -->

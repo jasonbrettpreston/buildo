@@ -6,7 +6,9 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-labels: []
+updated_date: '2026-11-20T15:33:00Z'
+labels:
+  - McFix
 milestone: m-1
 dependencies: []
 type: check
@@ -16,7 +18,7 @@ ordinal: 86012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Plan section E1; after sections A, B, C. Every governing rule list whole (rule-lists.json), rulings pasted; every finding ruled CONFIRMED, REJECTED or CONFLICT by a separate grounder with a file:line quote (the first two passes left about 770 lower-severity findings unruled). Output: per rule list: machine-checked, reviewed, not checked; confirmed defects become fix tasks before the push. No code change in this task. Files: docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY.md Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane.
+Plan section E1; after sections A, B, C. Every governing rule list whole (rule-lists.json), rulings pasted; every finding ruled CONFIRMED, REJECTED or CONFLICT by a separate grounder with a file:line quote (the first two passes left about 770 lower-severity findings unruled). Output: per rule list: machine-checked, reviewed, not checked; confirmed defects become fix tasks before the push. No code change in this task. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done

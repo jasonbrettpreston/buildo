@@ -6,8 +6,9 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T15:08:00Z'
-labels: []
+updated_date: '2026-11-20T15:33:00Z'
+labels:
+  - McFix
 milestone: m-1
 dependencies: []
 type: build
@@ -17,7 +18,7 @@ ordinal: 88012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Operator 2026-11-20: "is the McFront-end updated - what does it mean when I say? Enforce McFront-end?". The McFrontend register (Spec 135, rendered into docs/specs/02-web-admin/136_mcfrontend_handbook.md by its generator: 44 rules, 8 OWED) gains, through the generator only: the rule that a mount or binding file holds no fetch, timer, query or cache call (lock: the STD.SCAN test); the rule that every renderer file is owned and listed (lock: STD.REPORT-OWN). Put to the operator, not decided here: Spec 126:920 counts web login as a MaxBLD page while :924 says auth is not converted; terms-accept is a separate hand-built page while section 11b.3 says a checkbox in the sign-up form; the per-page TypeScript builder form (MF-35 a, MF-48 D-2 a) as the standing meaning of schema-driven. Files: docs/specs/02-web-admin/135_mcfrontend_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, docs/specs/02-web-admin/126_maxbld_surface_standard.md Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane.
+Operator 2026-11-20: "is the McFront-end updated - what does it mean when I say? Enforce McFront-end?". The McFrontend register (Spec 135, rendered into docs/specs/02-web-admin/136_mcfrontend_handbook.md by its generator: 44 rules, 8 OWED) gains, through the generator only: the rule that a mount or binding file holds no fetch, timer, query or cache call (lock: the STD.SCAN test); the rule that every renderer file is owned and listed (lock: STD.REPORT-OWN). Put to the operator, not decided here: Spec 126:920 counts web login as a MaxBLD page while :924 says auth is not converted; terms-accept is a separate hand-built page while section 11b.3 says a checkbox in the sign-up form; the per-page TypeScript builder form (MF-35 a, MF-48 D-2 a) as the standing meaning of schema-driven. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, docs/specs/02-web-admin/126_maxbld_surface_standard.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done

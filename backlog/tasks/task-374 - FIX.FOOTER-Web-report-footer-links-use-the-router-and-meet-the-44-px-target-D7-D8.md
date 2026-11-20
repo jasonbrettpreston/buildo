@@ -7,8 +7,9 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXFOOT'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T15:08:00Z'
-labels: []
+updated_date: '2026-11-20T15:32:00Z'
+labels:
+  - McFix
 milestone: m-1
 dependencies: []
 type: build
@@ -47,4 +48,6 @@ Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMA
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-FIXFOOT, worktree /Users/brettpreston_macmini/Buildo-wt-fixfoot, branch wf1/inc1b-fixfoot), RR-0240
+
+Grounder verdict 2026-11-20 (separate read-only agent, launched by the orchestrator): FOLD AFTER the width fix; D7 fixed; D8 report link fixed in height and, after commit 205f67424, width (min-w-11); the static footer part of D8 was not a defect (Mantine Button lg, 50 px). Folded onto wf2/board. Open note for the operator: committed under McFrontend row MF-91 using that row earlier prereg and panel records (defensible, disclosed). The lane report copy describes the height-only state: superseded by this note.
 <!-- SECTION:NOTES:END -->

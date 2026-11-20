@@ -6,7 +6,9 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-labels: []
+updated_date: '2026-11-20T15:33:00Z'
+labels:
+  - McFix
 milestone: m-1
 dependencies: []
 type: build
@@ -16,7 +18,7 @@ ordinal: 82012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Plan section B2; after STD.HOOKS. Form: the nav-by-route lock (src/tests/surfaces/nav-by-route.logic.test.ts): compiler API, planted case per rule with a passing sibling, fail-closed allow-list. Scope: every file in scripts/surfaces/_schema/bindings.json mounts[] and modules[]; add mobile/app/(app)/parcel-tool/[parcelId].tsx to mounts[] (not listed today, so C-2 never scans it). Refuses: fetch, fetchWithAuth, setTimeout, setInterval, useQuery, useMutation, queryClient calls, setQueryData, AbortController. Rule home: Spec 99 B1 (:220), Spec 128 Rule 2 (:29), Spec 126 section 0b item 3 (:74); the new rule line goes into the McFrontend register by its generator (task MF.RULES). Files: src/tests/surfaces/nav-by-route.logic.test.ts, scripts/surfaces/_schema/bindings.json, mobile/app/(app)/parcel-tool/[parcelId].tsx Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane.
+Plan section B2; after STD.HOOKS. Form: the nav-by-route lock (src/tests/surfaces/nav-by-route.logic.test.ts): compiler API, planted case per rule with a passing sibling, fail-closed allow-list. Scope: every file in scripts/surfaces/_schema/bindings.json mounts[] and modules[]; add mobile/app/(app)/parcel-tool/[parcelId].tsx to mounts[] (not listed today, so C-2 never scans it). Refuses: fetch, fetchWithAuth, setTimeout, setInterval, useQuery, useMutation, queryClient calls, setQueryData, AbortController. Rule home: Spec 99 B1 (:220), Spec 128 Rule 2 (:29), Spec 126 section 0b item 3 (:74); the new rule line goes into the McFrontend register by its generator (task MF.RULES). Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/tests/surfaces/nav-by-route.logic.test.ts, scripts/surfaces/_schema/bindings.json, mobile/app/(app)/parcel-tool/[parcelId].tsx
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done

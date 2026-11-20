@@ -6,7 +6,9 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-labels: []
+updated_date: '2026-11-20T15:33:00Z'
+labels:
+  - McFix
 milestone: m-1
 dependencies: []
 type: build
@@ -16,7 +18,7 @@ ordinal: 84012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Plan section B4. Page-by-page check: src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx are owned by no surface (docs/reports/generated/127-surface-registry.md section 5; src/tests/surface-registry.infra.test.ts:198 it.fails) and are in no bindings.json list, so C-2b, C-8 and C-9 never run on them (defect D8 sat there). Census owner entry plus listing; findings the checks then raise are fixed or brought to the operator. The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision. Files: src/components/report/ReportPage.tsx, src/components/report/ReportView.tsx, src/components/report/ReportPageToggles.tsx, scripts/surfaces/_schema/bindings.json, src/tests/surfaces/surface-conformance.logic.test.ts Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane.
+Plan section B4. Page-by-page check: src/components/report/ReportPage.tsx, ReportView.tsx, ReportPageToggles.tsx are owned by no surface (docs/reports/generated/127-surface-registry.md section 5; src/tests/surface-registry.infra.test.ts:198 it.fails) and are in no bindings.json list, so C-2b, C-8 and C-9 never run on them (defect D8 sat there). Census owner entry plus listing; findings the checks then raise are fixed or brought to the operator. The landing embed exception (C-8 SHARED_REPORT_RENDERERS) is put to the operator as its own decision. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: src/components/report/ReportPage.tsx, src/components/report/ReportView.tsx, src/components/report/ReportPageToggles.tsx, scripts/surfaces/_schema/bindings.json, src/tests/surfaces/surface-conformance.logic.test.ts
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done
