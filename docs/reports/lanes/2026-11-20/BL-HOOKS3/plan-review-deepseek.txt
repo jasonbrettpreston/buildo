@@ -1,0 +1,49 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-20T18:36:06.731Z file_sha256=4831eb3b0ec06165575740e8c87b1ecf28de0185f0efa225bb437e09abb91bf8 prompt_sha256=46bc0589c2cc0918aec8b92a1d93f00e8feb4039eddfc5004538a3dce1ae3817
+🔍 Lens review of docs/reports/reviews/task-381/context-2026-11-20.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Lane plan · Change §1 ("returns void; … returns a `markRedirected` function") — the hook's return contract contradicts itself (void vs. a function), and semi-question's Continue is the only consumer, so any reviewer has no fixed shape to hold "no behaviour change" against — pick one form (`const markRedirected = useSettledRedirect(target, isFetching)`) and write the exact three call-site forms (disambiguate/[parcelId] ignore the return) before code.
+
+BUG severity=HIGH — Lane plan · Tests ("red first, through the real hooks via the pre-commit related run") vs. closing line ("Phone jest cannot run locally: green for phone tests comes only from Mobile CI") — the red-first gate the task requires ("a committed planted-defect test, red first") cannot be executed where the plan places it; either the pre-commit related run silently skips phone tests (no red evidence exists) or it fails the commit outright — state that red is demonstrated in the Mobile CI job against a branch push, link the run, and make the merge conditional on that job.
+
+BUG severity=HIGH — Lane plan · Change §0 ("the three hooks are added there… beside useSetParcelLookup") — putting `useRouter`/`PARCEL_TAB_ROUTE` imports inside `mobile/src/hooks/useParcelLookup.ts` rewires that module's import graph for every existing test that imports it, contradicting the same plan's "existing page tests assert unchanged"; either prove expo-router is mocked globally in jest setup or put the three hooks in `mobile/src/hooks/parcelNavigation.ts` (still inside the permitted `@/hooks/` import root).
+
+DEFER severity=MED — Lane plan · Change (no commit/rollback statement) — the plan never says the hook additions and the four page edits ship in one commit, so a partial revert leaves pages calling a missing export or a dead hook; state one commit containing hook + all four page edits, revert = `git revert`, and that no flag/schema exists so revert is the whole rollback.
+
+DEFER severity=MED — Lane plan · Change §3 ("initial value = value (the page's input starts empty, so the first debounced value is '' as before)") — parity with today's `useState('')` debounced slot only holds if index.tsx's search input is genuinely '' on mount with no route-param/recent-search/hydration writer; if it is seeded, the first search fires immediately instead of after `ms` — see unverified premise 1.
+
+DEFER severity=MED — Lane plan · Change §1 (signature `useSettledRedirect(target, isFetching)`) — if any of the three pages passes a composite boolean (e.g. `lod.isFetching || question.isFetching` in [parcelId]) rather than a single query's `isFetching`, the shared signature changes which renders gate the redirect and test (a) proves a path the page does not take; show each page's exact argument expression before/after in the lane plan.
+
+DEFER severity=MED — Lane plan · Change §1 ("[parcelId] passes null while parcelId is empty and while no question is owed, which keeps its `!parcelId` guard") — the hook only sees `target`/`isFetching`, so if the query's `enabled`/`skip` expression is currently driven by the same booleans the hook now consumes, the ordering of the early return can shift when the lookup fetch fires; paste the query `enabled` expression unchanged in the plan.
+
+DEFER severity=MED — Lane plan · Change §1 ("replaces once, on settled data") — the ref never resets on a *different* target, so a route-param change that does not remount [parcelId] (or a reused semi-question screen) will not redirect again; parity today, but the shared-hook API invites the bug — add a test asserting a changed target does not re-fire and a one-line comment naming that as deliberate.
+
+DEFER severity=MED — Lane plan · Change §2 ("returns a stable callback") — stability depends on `useRouter()` returning a referentially stable object in the pinned expo-router version; if it does not, the claim is false and any consumer using the callback in a deps array re-runs — implement as `useCallback(fn, [router])` and assert the callback identity survives a rerender in test (d).
+
+DEFER severity=LOW — Lane plan · Facts ("retry-to-refetch … is left alone") — four divergent retry arrows remain (semi-question's has the submitError branch) and nothing detects future drift; file a one-line follow-up task rather than leave the fourth copy unowned.
+
+DEFER severity=LOW — Lane plan · Facts ("that part is FALSE … it stays as written and is reported") — "reported" has no named destination, so the task text still claims four redirect copies at index.tsx:96-105 and the next agent will act on the stale line; name the concrete artifact (task-description correction / generator defect row).
+
+DEFER severity=LOW — Lane plan · Change §3 ("clears the timer on a new value") — unmount cleanup is not named; without returning `clearTimeout` from the effect, a late `setDebounced` fires after unmount and can perturb fake-timer/StrictMode test runs silently.
+
+NIT — Lane plan · Facts ("index.tsx:94-105 is NOT the same code") vs. task text ("index.tsx:96-105") — the two line ranges disagree; if either was read against a different tip the "three copies not four" finding could be wrong — reconfirm both ranges at the branch tip before building.
+
+REJECT — Description ("retry-to-refetch are each written four times") — the plan drops the retry extraction — not a real gap: the task title scopes three hooks, the retry arrow is a one-liner with a differing error branch, and folding it in would grow the diff against a "no behaviour change" contract.
+
+REJECT — Lane plan · Change §3 (debounce extraction) — "moving useState/useEffect into a hook changes the render schedule" — not a real issue: the state slot moves within the same component's hook order, so the page's render count and order are identical.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- `useSettledRedirect`'s return contract is written two ways (void vs. `markRedirected`); the plan cannot be implemented or reviewed as "no behaviour change" until one signature is fixed.
+- The red-first planted-defect gate is placed on a pre-commit run that the plan itself says cannot run phone jest locally — the only real signal is Mobile CI after merge, so main is exposed for the first cycle.
+- Placing the three navigation hooks inside `useParcelLookup.ts` pulls expo-router and `PARCEL_TAB_ROUTE` into the data-hook module, which breaks "existing page tests assert unchanged" unless expo-router is already globally mocked.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- *index.tsx's search input starts empty with no mount-time writer* — check: `sed -n '1,60p' 'mobile/app/(app)/parcel-tool/index.tsx'` and `grep -nE "useLocalSearchParams|useState|setInput|setQuery" 'mobile/app/(app)/parcel-tool/index.tsx'` (look for any route-param/recent-search/hydration write before the first debounce tick).
+- *Expo-router is mocked for every test that transitively loads useParcelLookup.ts* — check: `grep -rn "expo-router" mobile/jest.config.* mobile/jest.setup.* mobile/package.json` and `grep -rln "useParcelLookup" mobile --include='*.test.ts*'`.
+- *The new test file path is collected by jest* — check: `node -e "console.log(require('./mobile/package.json').jest)"` (or `mobile/jest.config.*`) for `rootDir`/`testMatch`, and `ls mobile/__tests__` to confirm the directory exists and matches the glob.
+
+---
+⏱  79083ms (79.1s)
+📊 Tokens — total: 34309, input: 21019, output: 13290, reasoning: 11495

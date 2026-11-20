@@ -1,0 +1,675 @@
+LIST mobile-96 sha256:9efb3f3c29b5de2bfb80f2db3a24e2c9e8815434f5dc02f4e2844d2001ee5ba7 material sha256:4831eb3b0ec06165575740e8c87b1ecf28de0185f0efa225bb437e09abb91bf8 part 1 of 1
+RULE LIST mobile-96 (docs/specs/03-mobile/96_mobile_subscription.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+# Spec 96 — Mobile Subscription & Paywall
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
+> Dated note 2026-11-09 (McFrontend Phase 2, MF-41; M-246, prior text kept; spec review R-4, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`; product names per the operator ruling "MAxbld stays a seperate app ...", record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`): this spec governs the lead-gen product's (Buildo) trial, paywall and subscription gate. The per-product entitlement model is Spec 116 §4 N2-N3; `user_profiles.subscription_status` is dropped (`migrations/229_uid_uuid_fk_conversion.sql:129`); product ownership is the Spec 116 §1 table (dated note 2026-11-09). Deferral, stated: Spec 116 (Cross-Spec Dependencies) binds a "Spec 96 rewrite (N2/N3)"; N3 is unmet today for the parcel shelf, which passes the Buildo app gate in `mobile/app/(app)/_layout.tsx` (the lead-gen status). The rewrite is owned by MF-45 and MF-49 and is in their done-conditions. Path B (§ "Path B — Web First", :49) was never built (Spec 20).
+
+> Dated note 2026-11-11 (M-246, prior text kept; MF-45 · McFrontend queue · lane E; operator, verbatim: "a" (D-1), "all five a" (D-2..D-6) and "y" (the MB-44 wait dropped, build starts); record `~/Buildo-scratch/mcfrontend/MF-45/DECISIONS.md` and `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "2026-11-11 MF-45: operator \"y\""; plan `~/Buildo-scratch/mcfrontend/MF-45/plan.md` with its section 12 folds): the server half of the rewrite owned by MF-45 lands: the parcel lookup gate is per product. `GET /api/parcels/lookup` admits a `parcel_tool` entitlement in {trial, active, past_due, admin_managed} (metered, Spec 126 section 11b.7 dated note 2026-11-11), else the `lead_gen` status in the same set (the App A shelf, unmetered, a declared deviation MF-50 removes), else 403 `SUBSCRIPTION_REQUIRED`. The status set is the one constant of section 10. The app half (the App A gate in `mobile/app/(app)/_layout.tsx`) stays MF-49. Nothing in this spec's Buildo trial, paywall or lead-gen gate changes. The text above is unchanged.
+
+> Dated note 2026-11-14 (M-246, prior text kept; MF-47 · McFrontend queue · lane B1; operator, verbatim: "I'll accept the recommendation for both WF-83 and MF-47 - as long as it complaint and the new ruling if required is recorded" (2026-11-14); record `~/Buildo-scratch/mcfrontend/MF-47/DECISIONS.md`, "Ruled 2026-11-14 under the operator's acceptance", and the seat `~/Buildo-scratch/mcfrontend/MF-47/reality-check-1114.md`; build plan `~/Buildo-scratch/mcfrontend/MF-47/build-plan.md`): the shared webhook mapping now reads Stripe `trialing` as `trial` (MaxBLD's card-up-front trial); Buildo sells no Stripe trial, so nothing changes for Buildo, whose trial stays the in-app `initTrialEntitlement`. Reconcile derives active > trial > past_due > expired, so a trialing-only customer no longer derives `expired`. Spec 20 note 2026-11-14 has the detail.
+
+**Status:** ACTIVE
+**Cross-references:** Spec 90 (Engineering Protocol), Spec 93 (Auth), Spec 91 (Lead Feed), Spec 95 (User Profiles)
+
+## 1. Goal & User Story
+
+**Goal:** Gate access to the lead feed and flight board behind a 14-day free trial and a Stripe-powered subscription, with zero Apple commission by keeping all payment on the web.
+**User Story:** As a new user who just downloaded the app, I want to explore real leads for free before committing to a subscription — and when I'm ready to pay, I want it to be straightforward.
+
+## 2. Subscription Status Model
+
+`user_profiles.subscription_status` is checked on every app launch after auth. Four states:
+
+| Status | Who | Experience |
+|--------|-----|-----------|
+| `trial` | New users, first 14 days | Full access — feed, flight board, all features |
+| `active` | Paid subscribers | Full access |
+| `past_due` | Payment failed, in Stripe dunning | Full access — Stripe retrying payment |
+| `expired` | Trial ended / subscription cancelled | Paywall screen — no feed access |
+| `admin_managed` | Manufacturers | Full access — no payment flow |
+| `cancelled_pending_deletion` | Account deletion requested | No access — redirect to sign-in |
+
+## 3. Discovery Paths
+
+### Path A — App First (App Store discovery)
+
+```
+User downloads app
+  → Signs up (Spec 93)
+  → Completes onboarding (Spec 94)
+  → Server writes trial_started_at + subscription_status = 'trial' on first /api/user-profile fetch post-onboarding
+  → Full access for 14 days
+  → [Phase 2] Day 10: reminder email — "4 days left on your trial"
+  → [Phase 2] Day 13: reminder email + push — "Trial ends tomorrow"
+  → Day 14: subscription_status computed as 'expired' on API read (Phase 1)
+  → Paywall screen on next app open
+  → User pays at buildo.com (browser, authenticated via signed link)
+  → Stripe webhook → subscription_status = 'active'
+  → Full access restored on next app open or foreground
+```
+
+**Phase 1 note:** Day 10/13 reminder emails are deferred to Phase 2 (Cloud Functions). Phase 1 ships without trial reminders — users whose trials expire will see the paywall without advance warning. This is a known UX gap for launch.
+
+### Path B — Web First (website discovery)
+
+```
+User visits buildo.com
+  → Signs up + pays (Stripe)
+  → subscription_status = 'active' written immediately
+  → Receives "Download the app" email with App Store link
+  → Downloads app → signs in with same Firebase credentials
+  → Full access immediately — no trial period
+```
+
+Firebase Auth is the bridge. Same UID on web and mobile — no second sign-up.
+
+## 4. Free Trial Mechanics
+
+- **Duration:** 14 days from `trial_started_at`
+- **Credit card:** Not required to start trial
+- **Access:** Full — no feature limitations during trial
+- **Reminders:** Automated emails at day 10 and day 13 (triggered by Cloud Functions)
+- **Day 13 push:** Single push notification — *"Your free trial ends tomorrow. Continue at buildo.com."*
+- **No auto-renewal (trial):** The 14-day trial ends cleanly. No credit card is required and no payment is automatically initiated.
+- **Auto-renewal (paid subscription):** The paid subscription (post-trial, initiated via `buildo.com`) IS auto-renewing monthly by default. Cancellation is via the Stripe Customer Portal. This distinction must be communicated clearly on the `buildo.com` checkout page — not in-app. Users who cancel retain access through the end of their paid billing period (`cancel_at_period_end = true` configured in Stripe — see §7).
+
+## 5. Paywall Screen
+
+Shown when `subscription_status = 'expired'` on app open or foreground resume.
+
+```
+┌──────────────────────────────────────┐
+│                                      │
+│   Your free trial has ended.         │
+│                                      │
+│   You saw [X] leads in 14 days.      │
+│                                      │
+│   [ Continue at buildo.com → ]       │
+│                                      │
+│   [ Maybe later ]                    │
+│                                      │
+└──────────────────────────────────────┘
+```
+
+**Lead count:** Fetched from `user_profiles` (tracked during trial — increment on each unique lead viewed). Makes the trial value concrete at the highest-friction moment.
+
+**"Continue at buildo.com →":** The app requests a checkout URL from `POST /api/subscribe/session` (Firebase Bearer token required). The server generates a **single-use, server-side nonce** and stores it as `subscribe_nonces(nonce TEXT PK, user_id TEXT, expires_at TIMESTAMPTZ DEFAULT NOW() + INTERVAL '15 minutes')`. The URL is `buildo.com/subscribe?nonce={nonce}` — no UID or email in the URL (avoids PII exposure in server logs, browser history, and referrer headers). The web checkout page exchanges the nonce server-to-server to look up the Firebase UID, immediately invalidates the nonce (DELETE), then pre-fills email in Stripe checkout and links the resulting Stripe customer to the correct Firebase UID. On payment success, Stripe webhook updates `subscription_status = 'active'`. The app opens this URL via `WebBrowser.openBrowserAsync()` from `expo-web-browser`. (`openAuthSessionAsync` is for OAuth redirect flows only — it expects an auth callback URL scheme. Stripe checkout is a standard browser redirect, not an OAuth flow. Using `openAuthSessionAsync` here would cause the browser session to terminate incorrectly.)
+
+**⚠️ App Store compliance note:** Apple App Store Review Guideline 3.1.1 restricts buttons or links that direct users to external purchasing mechanisms for digital content/services. The "Continue at buildo.com →" CTA may be flagged during App Store review. This is a known risk acknowledged at build time. Mitigation options include: (a) using Apple-approved neutral language like "Learn more" instead of "Continue at buildo.com →"; (b) relying on the App Store's reader app exemption if Buildo qualifies; (c) a separate iOS build variant that hides the CTA. This decision requires legal and product review before iOS submission — do NOT submit to App Store without resolving this.
+
+**"Maybe later":** Dismisses paywall temporarily. User can browse the app but feed and flight board show an inline banner: `"Trial ended — subscribe to see new leads."` All lead cards blurred/locked. User can re-trigger the paywall by tapping the banner.
+
+**NativeWind classes:**
+- Container: `bg-zinc-950 flex-1 items-center justify-center px-8`
+- Headline: `text-zinc-100 text-2xl font-bold text-center mb-2`
+- Lead count: `text-amber-400 font-mono text-4xl font-bold text-center mb-6`
+- Primary CTA: `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 px-8 w-full items-center`
+- Secondary: `text-zinc-500 text-sm mt-4`
+
+## 6. Post-Payment Access Restoration
+
+After Stripe payment on web:
+
+1. Stripe webhook fires → `subscription_status = 'active'`, `stripe_customer_id` written to `user_profiles`
+2. On next app open or foreground (`AppState` change listener): app re-fetches `user_profiles`
+3. If `subscription_status` changed to `active`: dismiss paywall, reload feed
+4. **Typical delay:** ~30 seconds when app is in foreground (webhook latency + foreground poll). If app is backgrounded or Stripe webhook is delayed, access restoration may take several minutes.
+5. **Webhook delay fallback:** The paywall screen includes a subtle "Refresh" link below "Maybe later" — visible only if the user has been on the paywall for > 60 seconds without status change. Tapping it re-fetches profile immediately. This is the user's self-recovery path for webhook delays.
+
+The AppState listener is the primary access restoration path. A manual "Already paid? Refresh status" link is provided as a fallback (visible after 60 seconds on the paywall — see §9 Webhook Delay Refresh) for cases where the listener fires but the Stripe webhook has not yet been processed.
+
+## 7. Subscription Management
+
+All billing management occurs on the web — no in-app payment UI. This is intentional to avoid Apple's in-app purchase requirement and associated commission.
+
+**In-app:** Settings → Subscription → *"Manage subscription at buildo.com →"* opens Stripe Customer Portal in `expo-web-browser`.
+
+**Cancellation:** User cancels via Stripe Customer Portal on web. Subscriptions are configured with `cancel_at_period_end = true` — the user retains access through the end of their paid period, then `subscription_status = 'expired'` is written by the `customer.subscription.deleted` webhook. User sees paywall on next app open after the billing period ends.
+
+**Resubscription:** User re-subscribes via `buildo.com` — same flow as initial payment. A returning subscriber gets a NEW Stripe customer id; the webhook's metadata-primary path re-activates authoritatively (the P26 re-subscriber fix — Spec 20 §4.2).
+
+> **Canonical money-loop spec:** the full server route family (`/api/subscribe/session` → `/exchange` → `/portal-session`, the `/api/webhooks/stripe` event map, delete-time period-end cancel, the admin subscription-ops routes) is owned and kept-to-truth in **Spec 20 (Stripe Web Checkout)**; this spec covers the mobile-facing surface only. The mobile `usePortalSession` hook (26C) replaces the static billing URL with `POST /api/subscribe/portal-session`. Operator validation: `docs/runbook/stripe_webhook_smoke.md`.
+
+## 8. Manufacturer Accounts
+
+Manufacturers have `subscription_status = 'admin_managed'`. They:
+- Never see the paywall screen
+- Never see the trial countdown
+- Never see subscription management in Settings
+- Access is controlled entirely by Buildo admin
+
+When Buildo admin deactivates a manufacturer account, the server sets `onboarding_complete = false` (not `subscription_status = 'expired'`). This is critical: setting `subscription_status = 'expired'` would route the manufacturer to the consumer paywall — an inappropriate screen for a B2B account. Instead, setting `onboarding_complete = false` triggers the Spec 94 `(onboarding)/_layout.tsx` gate, which detects `account_preset = 'manufacturer' AND onboarding_complete = false` and renders the holding screen. The manufacturer sees the holding screen (Spec 94 §7) on next app open. `subscription_status` remains `'admin_managed'` throughout — it is never changed by deactivation.
+
+## 9. Design & Interface
+
+### Design Language
+
+Spec 96 presents the highest-stakes screen in the app: the paywall moment. The design must communicate value (what the user earned in their trial), create urgency without being hostile, and make the subscription path feel trustworthy and low-friction. The aesthetic stays within the established industrial-utilitarian dark mode language — `bg-zinc-950` screen, `text-zinc-100` headlines, `amber-500` primary CTA — but the layout is intentionally centred and breathable (unlike the dense feed). This is a deliberate tonal shift: the rest of the app is information-dense; the paywall gives the user space to make a decision.
+
+---
+
+### PaywallScreen Layout
+
+**Container:** `<SafeAreaView className="bg-zinc-950 flex-1">` wrapping `<View className="flex-1 items-center justify-center px-8">`. SafeAreaView is required to prevent the headline from rendering behind the device notch on notched iPhones.
+
+**Stagger sequence (Reanimated `withTiming`):**
+
+| Element | Delay | Transform |
+|---------|-------|-----------|
+| Icon lock `text-amber-500` (`<Lock size={32} color="#f59e0b" />` from `lucide-react-native`) | 0ms | opacity 0→1 + `translateY: 12→0` |
+| Headline "Your free trial has ended." | 80ms | opacity 0→1 + `translateY: 12→0` |
+| Lead count `[X] leads in 14 days` | 160ms | opacity 0→1 + `translateY: 12→0` |
+| Primary CTA button | 240ms | opacity 0→1 + `translateY: 8→0` |
+| "Maybe later" secondary | 320ms | opacity 0→1 |
+
+All: `withDelay(N, withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }))` on `useSharedValue(0)` instances. `withTiming` first arg = target value (1), not duration. Secondary ("Maybe later") has **opacity only** — no `translateY` transform.
+
+**NativeWind classes by element:**
+
+| Slot | Classes |
+|------|---------|
+| Lock icon container | `mb-8 items-center` |
+| Headline | `text-zinc-100 text-2xl font-bold text-center mb-2` |
+| Sub-headline (count) | `text-amber-400 font-mono text-4xl font-bold text-center mb-8` |
+| Count caption | `text-zinc-500 text-sm text-center mb-10` — "viewed in your 14-day trial" |
+| Primary CTA | `bg-amber-500 active:bg-amber-600 rounded-2xl py-4 px-8 w-full items-center mb-3` |
+| CTA label | `text-zinc-950 text-base font-bold` |
+| Secondary ("Maybe later") | `text-zinc-500 text-sm mt-4` |
+| Refresh link (60s reveal) | `text-zinc-600 text-xs mt-2` — "Already paid? Refresh status" |
+
+**Accessibility:** `accessibilityRole="header"` on headline. Primary CTA: `accessibilityLabel="Continue subscription at buildo.com"`. Refresh link: `accessibilityLabel="Refresh subscription status"` (appears after 60s).
+
+---
+
+### Loading Guard (Before Status Resolves)
+
+**Rule:** Never flash the paywall while `subscription_status` is `null` or `undefined`. The layout renders a full-screen loading guard instead.
+
+**Loading guard:** `bg-zinc-950 flex-1 items-center justify-center` with `<ActivityIndicator size="large" color="#f59e0b" />` (amber-400 equivalent). No text, no logo — just the spinner. This matches the initial app boot spinner pattern (Spec 93) so the transition into the gate feels part of the same loading sequence.
+
+**Transition:** Once `subscription_status` resolves, the loading guard unmounts instantly. If status is `'trial'` / `'active'` / `'past_due'` / `'admin_managed'`, the feed renders. If `'expired'`, `<PaywallScreen>` fades in via a single `opacity: 0 → 1` `withTiming(1, { duration: 200 })` on `useSharedValue(0)` (no stagger needed — the spinner already provided the anticipatory pause).
+
+---
+
+### Inline Blur State (Dismissed Paywall)
+
+When `paywallStore.dismissed = true` AND `subscription_status === 'expired'`, the feed and flight board enter inline blur mode — the paywall is dismissed but the content is locked.
+
+**Banner:** Pinned at top of the tab content area.
+- Container: `bg-zinc-900/95 flex-row items-center justify-between px-4 py-3 border-b border-zinc-800`
+- Text: `text-zinc-300 text-sm flex-1` — "Trial ended — subscribe to see new leads."
+- CTA chip: `bg-amber-500/15 border border-amber-500/30 rounded-full px-3 py-1` with `text-amber-400 text-xs font-semibold` — "Subscribe →"
+- Tapping anywhere on the banner: `paywallStore.show()` — reopens `<PaywallScreen>`
+
+**Lead card blur:** `<BlurView intensity={8} tint="dark" style={StyleSheet.absoluteFill}>` from `expo-blur` placed as an **absolute sibling over the card content**, not as a parent wrapper. The card content `<View>` gets `style={{ opacity: 0.1 }}`. The combination makes cards visibly present but illegible. **Android degradation:** `BlurView` requires Android API level 31+ (Android 12). On API < 31, `expo-blur` silently renders a transparent view — apply a fallback `<View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(9,9,11,0.85)' }]}>` for Android API < 31, detected via `Platform.OS === 'android' && Platform.Version < 31`.
+
+**Empty feel prevention:** Show at least 4 blurred card placeholders so the feed doesn't look broken. Use skeleton-shaped `bg-zinc-900 rounded-2xl h-28 w-full` blocks with a `style={{ opacity: 0.15 }}` inline prop (NativeWind v4 arbitrary `opacity-[0.15]` may not JIT-compile — use inline style for this value) if the actual feed query is also blocked.
+
+**Scroll-to-top on entering blur mode:** When `paywallStore.dismiss()` is called (switching from `<PaywallScreen>` to inline-blur), call `feedScrollRef.current?.scrollToOffset({ offset: 0, animated: false })` so the banner is immediately visible at the top of the list.
+
+---
+
+### Webhook Delay Refresh (60-Second Reveal)
+
+The "Already paid? Refresh status" link is hidden initially and revealed after 60 seconds on the paywall screen without a status change.
+
+**Implementation:** `useEffect` with `setTimeout(60_000)` → set `showRefresh = true`. **The timeout must be cleared in the cleanup return:** `return () => clearTimeout(timerId)` — prevents `setState` on an unmounted component if the paywall unmounts before the 60s fires (e.g., user pays and paywall closes). The link fades in via `withTiming(1, { duration: 400 })` opacity transition on `useSharedValue(0)`. On tap: calls `queryClient.invalidateQueries(['user-profile'])` + shows `<ActivityIndicator size="small" color="#71717a" />` inline next to the link text while refetching. If status comes back `'active'`, paywall dismisses. If still `'expired'`, a `text-zinc-500 text-xs` message appears: "Still showing trial ended — please check buildo.com."
+
+---
+
+### `paywallStore` State Machine
+
+File: `mobile/src/store/paywallStore.ts`
+
+| State field | Type | Meaning |
+|-------------|------|---------|
+| `visible` | boolean | Full paywall screen is showing |
+| `dismissed` | boolean | User tapped "Maybe later" — inline blur mode |
+| `show()` | action | Set `visible: true`, `dismissed: false` |
+| `dismiss()` | action | Set `visible: false`, `dismissed: true` |
+| `reset()` | action | Set both false — called when `subscription_status` changes to `'active'` OR on sign-out (renamed from `clear()` on 2026-05-03 per Spec 99 §3.4 + §9.19 for §B5 naming uniformity) |
+
+`paywallStore` is not persisted in MMKV — always starts fresh on app open so a returning subscriber is never stuck in inline blur mode.
+
+**Sign-out reset (critical):** `paywallStore.reset()` MUST be called in the sign-out action (Spec 93 Step 2 `signOut()` action) alongside the other Zustand `.reset()` calls in the Spec 99 §B5 `clearLocalSessionState` fan-out. Without this, a User A who dismissed the paywall and then signed out on a shared device would leave `paywallStore.dismissed = true` in memory, causing User B to see the inline blur mode immediately on sign-in (before their status is even checked). Since `paywallStore` is not MMKV-persisted, this only affects same-session shared-device scenarios — but those occur with family or team phone hand-offs.
+
+---
+
+## 10. Implementation
+
+### Cross-Spec Build Order
+
+This spec is step 4 of 5. **Spec 95 `user_profiles.subscription_status` column and GET endpoint must exist, and Spec 93 AuthGate must be operational** before the subscription gate can function.
+
+```
+Spec 95 (DB + API) → Spec 93 (Auth) → Spec 94 (Onboarding) → Spec 96 (Subscription gate) → Spec 97 (Settings)
+```
+
+### Build Sequence
+
+**Step 1 — PaywallScreen component**
+- File: `mobile/src/components/paywall/PaywallScreen.tsx`
+- NativeWind classes and stagger animation sequence per §9. Lead count sourced from `user_profiles.lead_views_count` (passed as prop from the layout gate).
+- **Stagger animation:** Five `useSharedValue(0)` instances (icon, headline, count, primaryCTA, secondary), each animated via `withDelay(N, withTiming(1, { duration: 300, easing: Easing.out(Easing.ease) }))`. `useAnimatedStyle` drives both `opacity` and `transform: [{ translateY: interpolate(sv, [0, 1], [12, 0]) }]` (8px for CTA, 0 for secondary).
+- **`lead_views_count` display:** Rendered as `{count} leads` in `text-amber-400 font-mono text-4xl font-bold text-center` with a caption `text-zinc-500 text-sm text-center` below: "viewed in your 14-day trial". **Zero-count edge case:** When `lead_views_count === 0`, replace the number+caption block with a single line: `text-zinc-400 text-sm text-center mb-8` — "Explore real leads in your area." Do not display "0 leads" — that framing undermines the value proposition.
+- "Continue at buildo.com →" calls `POST /api/subscribe/session` (Firebase Bearer token) to get the nonce-based checkout URL. Server creates a single-use nonce in `subscribe_nonces` table (TTL 15 minutes) and returns `{ url: "https://buildo.com/subscribe?nonce=..." }`. No UID or email in the URL. Opens via `WebBrowser.openBrowserAsync()` (not `openAuthSessionAsync` — Stripe checkout is a standard browser flow, not an OAuth redirect). Show an inline `ActivityIndicator size="small"` inside the button while the session request is in-flight; replace with "Continue at buildo.com →" text once the URL is received. On `POST /api/subscribe/session` failure: show toast `"Couldn't open checkout — try again"`, re-enable the button.
+- "Maybe later" calls `paywallStore.dismiss()` — does not fully hide paywall, switches to inline-blur mode.
+- **60-second Refresh link:** `useEffect(() => { const t = setTimeout(() => setShowRefresh(true), 60_000); return () => clearTimeout(t); }, [])`. Fades in via `withTiming(1, { duration: 400 })` on `useSharedValue(0)`. Tap: `queryClient.invalidateQueries(['user-profile'])`. See §9 for full interaction spec.
+
+**Step 2 — Subscription gate in app layout**
+- File: `mobile/app/(app)/_layout.tsx`
+- On mount + on `AppState change` to `'active'`: call `queryClient.invalidateQueries(['user-profile'])` to re-fetch profile.
+- **Loading guard (design-critical):** While `subscription_status` is `null` or `undefined` (initial fetch in progress), render a full-screen loading guard: `bg-zinc-950 flex-1 items-center justify-center` with `<ActivityIndicator size="large" color="#f59e0b" />`. Do NOT flash the paywall during this window. Only render `<PaywallScreen>` after the fetch resolves to `'expired'`. Loading guard → `<PaywallScreen>` transition: `opacity: 0 → 1` `withTiming(1, { duration: 200 })` on `useSharedValue(0)` on the `PaywallScreen` mount.
+- **When `subscription_status` changes from `'expired'` to `'active'`** (post-payment webhook): call `paywallStore.reset()`, then `queryClient.invalidateQueries(['leads'])` so the feed reloads with real data. The paywall screen should fade out (opacity `1 → 0`, `withTiming(0, { duration: 200 })`) before unmounting.
+**Gate execution order:** `(app)/_layout.tsx` is the SUBSCRIPTION gate. It executes AFTER the AuthGate in `_layout.tsx` (Spec 93) and BEFORE the onboarding gate in `(onboarding)/_layout.tsx` (Spec 94). The sequence is: Auth → Subscription → Onboarding. The subscription gate must handle `admin_managed` by granting full access and deferring to the onboarding gate to render the holding screen if `onboarding_complete = false`.
+
+**Loading guard animation note:** Set `pointerEvents="none"` on the `<PaywallScreen>` wrapper during the mount fade-in (`opacity: 0 → 1`, `withTiming(1, { duration: 200 })`) to prevent accidental taps on the primary CTA before the screen is fully visible.
+
+Six status values handled (all values from Spec 95 §2.3 enum):
+  - `'trial'` → full access, no paywall
+  - `'active'` → full access, no paywall; `paywallStore.reset()` called if previously dismissed
+  - `'past_due'` → full access, no paywall (user is in Stripe dunning grace period)
+  - `'expired'` → `<PaywallScreen>` (if `paywallStore.dismissed`, render feed with inline blur)
+  - `'admin_managed'` → full access, no paywall, subscription section hidden in Settings; onboarding gate handles holding screen if `onboarding_complete = false`
+  - `'cancelled_pending_deletion'` → call `firebase.auth().signOut()` and redirect to `/(auth)/sign-in`. This status means deletion is confirmed; the user must not be shown any app content. Add this case to `mobile/__tests__/subscriptionGate.test.ts`.
+
+**Step 3 — Inline blur banners**
+- Files: `mobile/app/(app)/(tabs)/index.tsx`, `mobile/app/(app)/(tabs)/flight-board.tsx`
+- Rendered when `paywallStore.dismissed = true` AND `subscription_status === 'expired'`.
+- **Banner layout (design per §9):** `bg-zinc-900/95 flex-row items-center justify-between px-4 py-3 border-b border-zinc-800`. Left: `text-zinc-300 text-sm flex-1` text "Trial ended — subscribe to see new leads." Right: `bg-amber-500/15 border border-amber-500/30 rounded-full px-3 py-1` chip with `text-amber-400 text-xs font-semibold` "Subscribe →". Full row `onPress`: `paywallStore.show()`.
+- **Lead card blur (design per §9):** Wrap each `LeadCard` in `<BlurView intensity={8} tint="dark" style={StyleSheet.absoluteFill}>` from `expo-blur`. The card content underneath gets `style={{ opacity: 0.1 }}`. Show at minimum 4 blurred card placeholders (`bg-zinc-900 rounded-2xl h-28 w-full opacity-[0.15]`) if the feed query returned no results or was blocked.
+- **Flight board:** Same banner. Individual flight board rows blurred with same `BlurView intensity={8}` + `opacity: 0.1` on content.
+
+**Step 4 — Trial started_at write (server-side)**
+- File: `src/app/api/user-profile/route.ts` (PATCH handler — guarded field path in Spec 95 Step 3) + GET handler fallback
+- The server, not the client, initiates the trial. **Preferred (race-condition-safe):** Write `{ trial_started_at: NOW(), subscription_status: 'trial' }` atomically within the same DB transaction as the `onboarding_complete = true` PATCH (i.e., at the end of onboarding, when the client sends `PATCH { onboarding_complete: true }`). The server checks: if `onboarding_complete` is being set to `true` AND `trial_started_at IS NULL` AND `account_preset != 'manufacturer'` → write both fields in the same transaction. This eliminates the race condition where a GET fires immediately after the onboarding PATCH commits but before the trial is written.
+- **Fallback (GET handler):** If `onboarding_complete = true` AND `trial_started_at IS NULL` AND `subscription_status IS NULL` AND `account_preset != 'manufacturer'` on a GET — the trial write was missed (e.g., old client, app crash during PATCH). Write atomically using `UPDATE ... WHERE trial_started_at IS NULL RETURNING *` (idempotent — if two concurrent GETs race, only one write succeeds; the other reads the already-written value). The client always receives a profile with `subscription_status` set.
+- **Phase 1 trial expiration logic (same PATCH/GET handlers):** When `subscription_status = 'trial'` AND `trial_started_at + INTERVAL '14 days' <= NOW()` (note: `<=` inclusive — user gets the full 14th day; `< NOW()` would expire at midnight of day 14, cutting the last day short): write `subscription_status = 'expired'` to the DB row (not just the response). A computed-only response that leaves DB state as `'trial'` creates a split where admin dashboards and analytics see the user as active when they are locked out.
+- This prevents client-side gaming: a user cannot block the trial start or reset it by clearing app data.
+
+**Step 4b — POST /api/subscribe/session**
+- File: `src/app/api/subscribe/session/route.ts`
+- Authenticated route. Wrap handler with `withApiEnvelope` (§00 §2.2). Extract Firebase UID via `getUserIdFromSession(request)` from `src/lib/auth/get-user.ts`. Return 401 if UID is null. Returns a single-use nonce URL for the Stripe checkout web flow.
+- **Implementation:**
+  ```typescript
+  const nonce = crypto.randomUUID();
+  await db.insert(subscribeNonces).values({
+    nonce,
+    user_id: uid,
+    expires_at: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
+  });
+  return { url: `https://buildo.com/subscribe?nonce=${nonce}` };
+  ```
+- No UID or email in the URL — avoids PII in server logs, browser history, and referrer headers. The web checkout exchanges the nonce server-to-server to look up the Firebase UID.
+- **Nonce expiry cleanup:** Expired nonces may be purged by a separate periodic job. The web checkout endpoint must `SELECT ... WHERE expires_at > NOW()` and reject expired nonces with 400.
+- Returns 401 for unauthenticated request. Returns 400 if `subscription_status` is already `'active'` or `'admin_managed'` (no checkout needed). Try-catch + `logError`.
+- **Route guard:** classify as `authenticated`. Add to `src/lib/auth/route-guard.ts`.
+- **Test:** `src/tests/subscribe-session.infra.test.ts` (referenced in Testing Gates) — POST creates nonce row; URL contains nonce but no UID/email; unauthenticated request returns 401; already-active user returns 400.
+
+**Phase 1 trial expiration:** When `subscription_status = 'trial'` AND `trial_started_at + 14 days < NOW()`: write `subscription_status = 'expired'` to the DB (not just the response). A computed-only response that leaves DB state as `'trial'` creates a split where customer support dashboards, analytics, and admin panels see a user as active when they are locked out. Writing to DB is the correct approach. The Phase 2 Cloud Function (Step 6) handles batch processing and reminder emails — Phase 1 just needs to write the expiry correctly on first detection.
+
+**Step 5 — Stripe webhook handler**
+- File: `src/app/api/webhooks/stripe/route.ts`
+- **Install `stripe` backend package** (root, not `mobile/`): `npm install stripe`. Required by this handler and by Spec 95 Step 3a (deletion endpoint). Do this before implementing either.
+- **Route guard:** Add `/api/webhooks/stripe` to `PUBLIC_PREFIXES` in `src/lib/auth/route-guard.ts`. Without this, the fail-closed default classifies the route as `'authenticated'` — every Stripe webhook call will receive 401 from middleware and be silently rejected. This is a required step before webhooks will function in any environment.
+- Public route (no Firebase auth — Stripe calls it). Verify `Stripe-Signature` header via `stripe.webhooks.constructEvent(body, sig, STRIPE_WEBHOOK_SECRET)`. Invalid signature → 400.
+- **Idempotency (must be in an explicit `db.transaction()`):** The deduplication INSERT and the `user_profiles` UPDATE must execute inside a single atomic transaction — not two separate auto-commit statements:
+  ```typescript
+  await db.transaction(async (tx) => {
+    const [inserted] = await tx.insert(stripeWebhookEvents)
+      .values({ event_id: event.id })
+      .onConflictDoNothing()
+      .returning({ event_id: stripeWebhookEvents.event_id });
+    if (!inserted) return; // Already processed — exit transaction, return 200
+    await tx.update(userProfiles)
+      .set({ subscription_status: newStatus, ... })
+      .where(eq(userProfiles.stripe_customer_id, customerId));
+  });
+  ```
+  Wrapping in `db.transaction()` prevents TOCTOU races under concurrent Stripe retries — two parallel webhook deliveries will race on the INSERT; only one will see a row returned; the other will exit without updating the profile.
+- `customer.subscription.created` / `customer.subscription.updated` with `status: 'active'` → UPDATE `subscription_status = 'active'` + write `stripe_customer_id` to `user_profiles`.
+- `invoice.payment_failed` → UPDATE `subscription_status = 'past_due'`. User retains access during Stripe's dunning retry period. Access revoked only on final `customer.subscription.deleted`.
+- `customer.subscription.deleted` → UPDATE `subscription_status = 'expired'`.
+- Unknown event types → 200 no-op.
+- Wrap handler with `withApiEnvelope` for the outer try-catch boundary (§00 §2.2); note the response format for webhook handlers is plain `{ received: true }` rather than the standard data envelope — return it directly inside the handler. `logError` on unexpected errors.
+- **`subscription_status` write ownership note:** `subscription_status` is NEVER written via `PATCH /api/user-profile`. It is written only by: (a) this webhook handler (direct DB UPDATE), (b) the GET/PATCH handler for trial initiation (Step 4 above), and (c) the reactivation PATCH in Spec 97 §3.2 (a separate guarded server action — not the same endpoint as the user-editable PATCH). If a developer needs to update `subscription_status` for testing, use a direct DB command or a dedicated admin endpoint.
+
+**Step 6 — Day 10/13 reminders**
+- **TODO: Phase 2** — Cloud Function daily sweep checks `trial_started_at` and sends reminder emails at day 10 and push + email at day 13. Cloud Functions infra not yet set up. Backend logic to implement: `NOW() - trial_started_at >= INTERVAL '10 days'` → trigger email; `>= INTERVAL '13 days'` → trigger email + push.
+
+### Testing Gates
+
+- **Unit:** `mobile/__tests__/subscriptionGate.test.ts` — gate passes (no paywall) for `'trial'`, `'active'`, `'past_due'`, `'admin_managed'`; shows `<PaywallScreen>` for `'expired'`; `cancelled_pending_deletion` triggers sign-out + redirect to sign-in; `admin_managed` never shows paywall; loading guard shown while `subscription_status = null`; AppState `'active'` event triggers re-fetch.
+- **Infra:** `src/tests/stripe-webhook.infra.test.ts` — valid `subscription.created` event updates status to `'active'`; duplicate event ID returns 200 without re-processing; invalid signature returns 400; `subscription.deleted` sets `'expired'`; `invoice.payment_failed` sets `'past_due'`; unknown event type returns 200.
+- **Security:** `src/tests/stripe-webhook.security.test.ts` — missing `Stripe-Signature` header returns 400; forged signature string returns 400; replayed event ID is rejected (idempotency); request without any payload returns 400; no raw Stripe error message leaked in 4xx/5xx response.
+- **Infra:** `src/tests/subscribe-session.infra.test.ts` (new) — `POST /api/subscribe/session` creates nonce row in `subscribe_nonces`; returns URL with nonce parameter (no UID/email); expired nonce rejected by web checkout; unauthenticated request returns 401.
+- **Security:** `src/tests/subscribe-session.security.test.ts` — nonce URL contains no UID or email; two requests from the same user produce two distinct nonces; nonce is single-use (second exchange attempt returns 400); already-active subscriber returns 400 without creating a nonce.
+
+---
+
+## 11. Operating Boundaries
+
+**Target files:**
+- `src/app/api/user-profile/route.ts` — subscription_status read + trial initiation
+- `src/app/api/webhooks/stripe/route.ts` — Stripe webhook handler (new)
+- `src/app/api/subscribe/session/route.ts` — nonce-based checkout URL endpoint (new, Step 4b)
+- `mobile/app/(app)/_layout.tsx` — subscription_status gate on every screen
+- `mobile/src/components/paywall/PaywallScreen.tsx` — new component
+- `mobile/src/store/paywallStore.ts` — new store
+
+**Out of scope:**
+- In-app purchase (Apple IAP) — deliberately excluded
+- Pricing tier display in-app — managed on web only
+- Team/org subscription billing — Phase 2
+
+**Cross-spec dependencies:**
+- Spec 93 — Firebase UID links Stripe customer to app user
+- Spec 91 — lead feed blocked when `subscription_status = 'expired'`
+- Spec 77 — flight board blocked when `subscription_status = 'expired'`
+- Spec 95 — `subscription_status`, `trial_started_at`, `stripe_customer_id` live in `user_profiles`
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+# Review context for task-381 (no plan id) written 2026-11-20 by backlog-brief.mjs
+
+## Task
+task-381 STD.HOOKS Three shared phone hooks replace the copied redirect, back and debounce code in the parcel-tool pages
+status: RUNNING · milestone: m-1 · assignee: @lane-BL-HOOKS3 · labels: McFix, McFix B
+
+## Description
+Plan section B1. Page-runner measurement: redirect-once-on-settled, back-with-canGoBack and retry-to-refetch are each written four times (index.tsx:96-105, disambiguate.tsx:36-40, semi-question.tsx:49-53, [parcelId].tsx:29-33); debounce timer at index.tsx:41-44. Build useSettledRedirect, useGoBack, useDebouncedValue in the form of the nearest existing hook; one test that a background fetch cannot re-fire the redirect; no behaviour change; existing page tests assert unchanged. Phone-test green is proven only by Mobile CI. Operator 2026-11-20 (verbatim): "1. yes. add the tasks to incr 1b and remove the ones we dont need 2. fold ... d. just add the review enforcement not the others. e. fine". Plan: ~/Buildo-scratch/lanes-20261119/inc1b/enforce/PLAN-3-ONE-PLAN.md; reviewer evidence in ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md entries of 2026-11-20 (plan grounder; page-runner measurement; page-by-page schema check). Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN. Lens set with the rule lists whole and the rulings pasted; grounder launched by the orchestrator, never the lane. Files: mobile/src/hooks/useParcelLookup.ts, mobile/app/(app)/parcel-tool/index.tsx, mobile/app/(app)/parcel-tool/disambiguate.tsx, mobile/app/(app)/parcel-tool/semi-question.tsx, mobile/app/(app)/parcel-tool/[parcelId].tsx
+
+## Acceptance criteria
+
+## References
+- (none)
+
+## Documents
+- (none)
+
+## Decisions in force (titles; the ones this task names carry the operator's words)
+- RR-0005 2026-11-18 · Operator direction: page-level lot information in increme
+- RR-0087 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0315 Plan: go on sections A and B; tasks added to Increment 1B
+- RR-0316 Plan: close check folded as built
+- RR-0317 Plan: review enforcement only
+- RR-0318 Plan: section E accepted
+- RR-0319 C2 failed compute: error screen with Try again, not counted
+- RR-0320 C3 legal line at the bottom of the phone search page
+- RR-0321 D13 semi page buttons 48 px is the operator ruling
+- RR-0322 C5 engine numbers to every paying user at once
+- RR-0323 D1 freshness compare left until stored records exist
+- RR-0324 Semi page cache write accepted as built
+- RR-0088 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0325 Phone keeps its 3 retries (reading)
+- RR-0326 Web search legal line at the bottom (reading)
+- RR-0327 Page structure to table-driven pages: the five items go ahead
+- RR-0328 The app is not in use, in development
+- RR-0329 Task 370 dropped from Increment 1B (reading of the answer)
+- RR-0330 Six-row table as put, including task-348 answered (reading)
+- RR-0331 Report meter stays in the lookup route
+- RR-0332 A McFix task may file under the McFrontend row that built what it fixes
+- RR-0092 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0099 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0136 Operator: start Increment 1·A
+- RR-0137 Operator: completeness, holistic and per-increment optimisation
+- RR-0139 Operator: push 6, re-sort, answer page
+- RR-0140 Operator: faster pushes and GOs asked
+- RR-0141 Operator: Q-LT-1
+- RR-0143 Operator answer IMG-1: six lot-size bands
+- RR-0012 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0144 Operator answer PRG-1: purge rule
+- RR-0145 Operator answer TRK-1: tracked lots refresh
+- RR-0146 Operator answer PG-1: pushes and GOs
+- RR-0147 Operator answer NAME-1
+- RR-0149 Increment 1·A tooling location
+- RR-0150 Infra freeze named list
+- RR-0152 Increment 1·A re-use and drops
+- RR-0154 Work pulling
+- RR-0156 Push 6 literal test
+- RR-0157 Push 6 R-MD
+- RR-0014 McSTORAGE-RULINGS.md:5
+- RR-0159 Push 6 recapture; 1·A panel scope
+- RR-0161 Work pulling
+- RR-0162 Answer ONE-1
+- RR-0163 Answer ONE-2
+- RR-0164 Answer ONE-4
+- RR-0165 Answer ONE-5
+- RR-0166 Answer ONE-12
+- RR-0167 Answer ONE-13
+- RR-0168 Answer ONE-21
+- RR-0169 Answer ONE-22
+- RR-0028 open-questions.md:1088
+- RR-0170 Answer ONE-35
+- RR-0172 Search lot map street name
+- RR-0174 Loading screen
+- RR-0176 Loading screen
+- RR-0178 MB-44 W timing
+- RR-0179 Load-failure page
+- RR-0180 Web recent-search chips
+- RR-0182 Search identification and semi wiring
+- RR-0184 Semi question page design
+- RR-0186 Inc6 protection window
+- RR-0044 2026-11-18 · Operator direction: page-level lot information in increme
+- RR-0188 Push 6 recapture
+- RR-0190 Enforcement
+- RR-0192 Operator oversight scope
+- RR-0193 McRecommendations
+- RR-0195 Push CHK.5/CHK.3
+- RR-0196 Push CHK.5/CHK.3
+- RR-0198 Push 6 recapture
+- RR-0200 Recommendation tracking tools
+- RR-0202 Backlog working board
+- RR-0203 Backlog working board
+- RR-0060 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0205 Backlog home of the plan
+- RR-0207 Backlog: use all features, bring content and process over, ensure use
+- RR-0208 Gates: assess necessity; Backlog to make the process followed and reviews validated
+- RR-0210 McLane is the lane policy name
+- RR-0212 Backlog plan v8 scope: loader + three gates
+- RR-0214 1·A not replaced; relevancy pass after the move
+- RR-0215 Images round 4 directions
+- RR-0217 Concept gallery scope
+- RR-0219 Backlog plan v8 approved
+- 2026-11-18 re-use ruling: drop INFRA.2 guard.mjs and CHK.4 (operator words)
+- RR-0080 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- Q-H2 drop the J5 storeys backfill chain (7.7-7.9, 7.23)
+- RR-0232 Open decisions: grounding and verified recommendation
+- RR-0233 Operator expertise scope
+- RR-0235 McLane brief: full context from milestone, reviews and decisions
+- RR-0242 One-command lane launch
+- RR-0248 Increment 1·A parallel lanes
+- RR-0264 Semi page placeholder in 1·B
+- RR-0270 Web search footer: once, approved
+- RR-0273 Shared footer component
+- RR-0271 LOAD.1 drives the report now, ST.P1 split
+- RR-0081 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0277 Search fuzzy matching reuses the permit address spec
+- RR-0278 Report meter counts on report production only
+- RR-0281 No clear-search button (A.11 not required)
+- RR-0282 Daylight restyle token substitutions stay as built
+- RR-0284 Lot map: two data reads allowed (C.5 footprint, C.7 card line)
+- RR-0299 SRCH.C12 support address is a placeholder until launch
+- RR-0300 1·B blockers as OPERATOR tasks
+- RR-0298 Status changes only by the launch script
+- RR-0301 task-341 approved: run tasks 121, 122, 123 now, then LOAD.1, LOAD.2, LOAD.4
+- RR-0302 Loose ends task per milestone
+- RR-0086 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0303 design-elements file: produce now if not a big job
+- RR-0306 task-342 answered: the proof tool does not wait for the design-fit check
+- RR-0307 task-340 answered: A.6 is built now from the existing entitlement read, compliant and researched first
+- RR-0308 Semi question mock approved (task-319)
+- RR-0309 Regenerated semi mock approved (task-319 stage 2)
+- RR-0310 A.6 reset date served as a Toronto-time label (task-320)
+- RR-0311 A.6 zero reports left still shows the line (task-352 question 1)
+- RR-0312 No plan: an error page with a way to sign up (task-352 question 2)
+- RR-0313 Search box says Enter a Toronto address (task-352 question 3)
+- RR-0314 Outside-Toronto notice stays
+
+## Milestone
+m-1 Increment 1·B Search [S]
+
+### Description
+
+Increment S (re-opened, scenario slice)
+
+### Problems
+- None named in the S brief (docs/reports/plan-import/raw/2026-11-19/search-brief.json carries inc, deliverable and specs only).
+- Found by the R10 validation pass (task-316, 2026-11-19), text left as found: the first two Storage set-up lines below still say a 35 s loading screen and LOAD.3; RR-0176 (decision-43, supersedes RR-0174) rules no 35 s cap and LOAD.3 dropped (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- Found by the R10 validation pass: two Storage set-up lines and four Register rulings lines end with the word undefined where a quote belongs (generator defect, draft task on backlog-brief.mjs); doc-16 section 5 row S still reads LOAD.1 to LOAD.3 (backlog/docs/doc-16 - McStorage-policy-v2.md:108)
+
+### Project objectives
+- Objective: finish a completed project, a database that works and is ready (operator 2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "our objective is to finish a completed project ie a database that works and is ready"
+- The database exists to service the designed report, details and search page (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page"
+- A task that serves neither a designed element nor a supporting function is most likely not relevant (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code"
+- Five principles, keep it simple, no scope creep (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep"
+- One plan only (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "we need one plan - we can only execute one plan"
+
+### Increment objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion (docs/reports/plan-import/raw/2026-11-19/search-brief.json inc; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report; the semi calculation stays in Increment 7 (7.25) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report) (backlog/docs/increments/doc-2 - Increment-S-requirements.md:27) "| id | element | where | status | deliverers | built |"
+
+### Objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+
+### Deliverable
+- A user types any Toronto address, resolves address or lot confusion through the designed pages (choose your lot, and the three states: intersection, no lot linked, many lots), and lands on the report (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682) "Readings: (1) Q-GAP-0 image hold R-IMG1..3 LIFTED (dated note owed, M-246 form). (2) Q-GAP-2 "Most space": every option, a tie goes to the l"
+- The search pages follow the Daylight product standard (small pages v8); today they are still old dark on origin (mobile/src/constants/parcelSearch.ts:58) (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1100) "R-D1 Daylight is the product standard: small pages (v8), landing (v10+), report (B v3: summary + concept gallery), demo "
+
+### Specs
+- Spec 89 parcel cost model tool (search parser rules): origin:docs/specs/02-web-admin/89_parcel_cost_model_tool.md
+- Spec 126 MaxBLD surface standard: origin:docs/specs/02-web-admin/126_maxbld_surface_standard.md
+- Current search (latest rendering + later rulings): ~/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md
+- MORNING-DECISIONS.md: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md
+- McFrontend phase1 open-questions.md (search and small-pages rulings): ~/Buildo-scratch/mcfrontend/phase1/open-questions.md
+- PROTOCOL.md: ~/Buildo-scratch/panel-tools/PROTOCOL.md
+
+### Rulings
+- Search pages come first in the plan, before increment 1 (RR-0005) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "the search pages should be even before the increment 1"
+- Search parser: fix the street direction guard and the unit-token strip before launch (RR-0166) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-12 a"
+- W5 choose your parcel on the web is deferred and the web live switch stays off (RR-0170) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-35 b"
+- Lot map: the street name on the road comes from the map's own road labels (RR-0172) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:775) "Map's road labels (Recommended)"
+- The 'faces the street' rule question was withdrawn by the operator (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:774) "why does this matter? do you not know how to do the lookup?"
+- Loading screen: the animation keeps its own length and always runs to completion; the button waits for the report AND See details; LOAD.3 not needed (RR-0176, supersedes RR-0174 which said 35,000 ms) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- The customer read module W (1.3) is built now in Increment 1 (RR-0178) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "1. it has to happen now - read the objectives"
+- A load-failure page is a task, built from the other small pages (RR-0179) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "2. Add it as a task using the othr mini pages as a template"
+- Web recent-search chips (E.6) stay deferred (RR-0180) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "3. This can stay defferred for now"
+- 1·B builds A.6 and C.12 as their own tasks and identifies the semi lot; the semi calculation stays in 7.25 (RR-0182) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- The semi question page is designed like the other small pages: a v8 mock for approval, then built (RR-0184) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:801) "also need a semi question page similar to a min page"
+- Small pages: Daylight ("modern") is the product standard (R-D1) (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1098) "Just looking at the small pages - love it! Let's go with modern."
+- Increment 1·B starts as a validation pass of its tasks, the semi page placeholder, the McFrontend fields and page tasks, dependencies and the prior panel records (RR-0257) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1019) "This work has been done - just validation."
+
+### Storage set-up
+- McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md) "undefined"
+- Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3); skipped for a re-opened lot (its record is read); no screen for owner input or the Tracked Lots list (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696; ~/Buildo-scratch/mcfrontend/MF-62/plan.md:44) "undefined"
+- Search shows addresses only; the pick (lookup hit) starts the one-lot compute (LOAD.1) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696) "undefined"
+- ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts) (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126) "undefined"
+
+### Register rulings of this group (operator words)
+- RR-0005 2026-11-18: Search pages first in the plan, before increment 1 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- RR-0137 2026-11-18: For increments 1b-10: all tasks present to fulfil each increment's objectives and deliverables (rulings most relevant, McStorage policy, compliance, project objectives; ensure relevancy); tasks optimised holistically, then within each increment, updated in the plan (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:729) "ensure all tasks are present to fufill the increments objectives and deliverables"
+- RR-0144 2026-11-18: Stored lot records are purged after 90 days unopened (operator answer PRG-1 a); tracked lots are never purged while tracked (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "PRG-1 a (purge after 90 days unopened)"
+- RR-0145 2026-11-18: Tracked lots are refreshed in the background when the stamp moves (operator answer TRK-1 a) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "TRK-1 a (background refresh of tracked lots when the stamp moves)"
+- RR-0154 2026-11-18: When a task completes the next ready task starts at once; a task blocked on an operator question goes to the answer page and work moves to the next unblocked task; nothing waits idle. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:754) "it should pull the next task as something completes or move to the next task if a question remains"
+- RR-0166 2026-11-18: Search parser (1.4): fix the two defects before launch (street direction guard, unit-token strip), with two labels and one dated note on Spec 89 line 33 (ONE-12 a) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-12 a"
+- RR-0170 2026-11-18: W5 (choose your parcel) on the web: deferred; the web live switch stays off (ONE-35 b) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-35 b"
+- RR-0172 2026-11-18: Lot map: the street name on the road comes from the map's own road labels; no new data read or drawing code. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:775) "Map's road labels (Recommended)"
+- RR-0174 2026-11-18: Loading screen: the animation always runs its full set length (report_check_min_ms = 35,000 ms, default and maximum); the button to open the report shows when the lot's numbers are ready, at any time after the animation completes. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:779) "the animation still needs to be complete.. the button shows when its ready - anytime after the animation completes"
+- RR-0176 2026-11-18: Loading screen: the animation keeps its own length (23 s today, may change later) and always runs to completion; the button to open the report shows only when the report AND See details are loaded, however long that takes (no 35 s cap); the 35,000 ms setting change (LOAD.3) is not needed now. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- RR-0178 2026-11-18: MB-44: T now, per-increment checks now, and the customer read module W (1.3) built NOW in Increment 1 (not after J9 in increment 8), because McStorage policy v2 computes at the search pick (MD:704). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "1. it has to happen now - read the objectives"
+- RR-0179 2026-11-18: New task: the load-failure page shown when a lot's report or See details fails to load, built from the other small pages (small-pages-v8) as its template. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "2. Add it as a task using the othr mini pages as a template"
+- RR-0180 2026-11-18: Web recent-search chips (E.6) stay deferred. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "3. This can stay defferred for now"
+- RR-0182 2026-11-18: Increment 1·B builds A.6 (reports-left line, app search page) and C.12 (help link) as their own tasks; the search identifies two-or-more parcels, a mis-typed address, or a possible semi lot; the search portion and the semi question page are done now with the wiring (link) to the report; the semi calculation stays in Increment 7 (7.25). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- RR-0184 2026-11-18: The semi question page is designed like the other small pages (small-pages-v8 Daylight): a mock from the v8 template for operator approval, then built (SRCH.SEMI). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:801) "also need a semi question page similar to a min page"
+- RR-0186 2026-11-18: Increment-6 protection rules 1, 3, 7 and 9 are closed (D7 done); suites and pushes only through the push station and the operator; DB jobs only on the operator typed GO; rules 2, 4, 5, 6, 8, 10, 11 stay until push 6 lands. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:805) "y and your not following the McQueue rules"
+- RR-0190 2026-11-18: Lane launches need an authorized plan for any repo worktree they write; every register row is marked operator words or orchestrator reading and only operator words feed reviews as rulings; orchestrator replies that recommend or name a ruling must cite file:line, an RR id or UNVERIFIED (enforced by hooks). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:813) "close the gap.  fix teh register"
+- RR-0192 2026-11-18: Questions come to the operator only on database structure, the frontend, the user experience and storage; everything else is decided under the six-criteria rule, reviewed and logged as a McRecommendation card for audit. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:819) "I dont provide oversight on questions beyond the databse strcuture, the frontend the user experience and storage"
+- RR-0193 2026-11-18: McRecommendations: every recommendation is a card in the repo decision log with customer / UX / space / DB-logic framing, options, rulings (operator words only), sources, research kept separate from the recommendation status (judgment only, reviewed, proven), five principles, what it serves, computed confidence and outcome. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:817) "the recommendation should be framed with an explanation that speaks to what I know"
+- RR-0202 2026-11-18: The increment plan moves into the repo queue rows (Spec 137); the Backlog board generated from them is the working board, showing per task its increment, decisions and research (review/run) IDs. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:837) "I need to be able to see the board and the categories and the decisions and the research ids for each"
+- RR-0203 2026-11-18: The move of the increment plan into the repo queues is done by a committed generator with --check, from a committed raw snapshot; nothing hand-copied. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:839) "use a generator"
+- RR-0205 2026-11-18: The increment plan lives in Backlog.md in the repo (milestones = increments, assignees = lanes, priority/ordinal, dependencies, decision and research refs per task); the operator organises on the board; queue rows stay and are linked by id; loaded once by an import script. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:843) "yes of course"
+- RR-0207 2026-11-19: Backlog: every feature is used; each increment's objectives, rulings, citations and storage objectives move over; the existing process (handbooks, Spec 08) is carried over; process documents are updated; the move is structured so the system is actually used. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:847) "Make sure opus actually uses the system"
+- RR-0208 2026-11-19: The board data exists in the artifact and the procedures in Spec 08; the failure is scratch work, made-up responses and wrong reviewer context; hence the gates and full Backlog use. Each new gate is assessed as necessary or not, with how to do it right. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:848) "determine if the new gates etc are necessary and how to do this right"
+- RR-0210 2026-11-19: The lane policy is named McLane in the Spec 08 and Spec 137 dated notes of the Backlog-home plan; McDecision is not adopted. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:852) "Let's stick with McLane for a name."
+- RR-0212 2026-11-19: The Backlog-home plan is the loader plus the three enforcement pieces, with Backlog's own browser as the board; the v7 board job, mirror synchroniser, import verifier and structural gate are dropped (simple, no scope creep). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:867) "we needd the loader and the three gates"
+- RR-0214 2026-11-19: Increment 1·A is not replaced by the Backlog plan; after the move every task on the board is re-checked for relevancy against the plan (kept / merged / changed) before 1·B starts. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:857) "ensure the tasks are updated and relevancy determined in light of the plan"
+- RR-0219 2026-11-19: Backlog-home plan v8 is authorized (PLAN LOCKED): loader + three gates + Backlog's browser; D1-D5, D7-D10 as recommended; every relevant spec note lands; every imported task carries all available information; the 1·A tasks are updated or removed against the plan through the panel. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:871) "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the tasks"
+
+### Compliance codes in use
+- None named: no 1·B task (task-12, 13, 14, 68, 69, 266, 267, 268, and the promoted and created task-317 to task-325) carries a comp: label (checked on the task files, 2026-11-19).
+
+### Decisions
+Every file in backlog/decisions whose Groups line names S or whose Tasks named line names a 1·B plan id (checked 2026-11-19, R10):
+- decision-1: RR-0005 2026-11-18 · Operator direction: page-level lot information in increme
+- decision-15: RR-0137 Operator: completeness, holistic and per-increment optimisation
+- decision-20: RR-0144 Operator answer PRG-1: purge rule
+- decision-21: RR-0145 Operator answer TRK-1: tracked lots refresh
+- decision-27: RR-0154 Work pulling
+- decision-36: RR-0166 Answer ONE-12
+- decision-40: RR-0170 Answer ONE-35
+- decision-41: RR-0172 Search lot map street name
+- decision-42: RR-0174 Loading screen
+- decision-43: RR-0176 Loading screen
+- decision-44: RR-0178 MB-44 W timing
+- decision-45: RR-0179 Load-failure page
+- decision-46: RR-0180 Web recent-search chips
+- decision-47: RR-0182 Search identification and semi wiring
+- decision-48: RR-0184 Semi question page design
+- decision-49: RR-0186 Inc6 protection window
+- decision-51: RR-0190 Enforcement
+- decision-52: RR-0192 Operator oversight scope
+- decision-53: RR-0193 McRecommendations
+- decision-58: RR-0202 Backlog working board
+- decision-59: RR-0203 Backlog working board
+- decision-60: RR-0205 Backlog home of the plan
+- decision-61: RR-0207 Backlog: use all features, bring content and process over, ensure use
+- decision-62: RR-0208 Gates: assess necessity; Backlog to make the process followed and reviews validated
+- decision-63: RR-0210 McLane is the lane policy name
+- decision-64: RR-0212 Backlog plan v8 scope: loader + three gates
+- decision-65: RR-0214 1·A not replaced; relevancy pass after the move
+- decision-68: RR-0219 Backlog plan v8 approved
+
+### Documents
+- Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md
+- McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md#L27) and docs/reports/plan-import/raw/2026-11-19/elements-by-inc.json#S
+- McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md#L108-L108 and docs/reports/plan-import/raw/2026-11-19/storage-by-group.json#S
+
+## Document sections
+Cap: 120 KB in total, 12 KB per block (document blocks below; an omitted block costs its notice against the total); a block that would pass the total is listed as omitted. Sections named in a link (#L<n>-<m> or a section title) are read; with none named, the first 12 KB.
+
+### Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md (not readable: ENOENT; read it at Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md)
+
+### McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md (not readable: ENOENT; read it at McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md)
+
+### McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md (not readable: ENOENT; read it at McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md)
+
+## Decisions naming this task
+- (none)
+
+## Prior reviews and lane reports
+### task-381 (this task)
+- (none)
+
+## Dependencies
+- (none)
+
+## Lane plan (BL-HOOKS3, written before any code)
+Facts opened and checked (files at origin tip of this branch):
+- back copies: index.tsx:115, disambiguate.tsx:53, semi-question.tsx:90, [parcelId].tsx:38 are the same expression `router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)`. TRUE, four identical copies.
+- settled-redirect copies: disambiguate.tsx:34-40, semi-question.tsx:47-53, [parcelId].tsx:29-33 are the same shape: a boolean ref, `if (isFetching || target null || ref) return; ref = true; router.replace(target)`. TRUE, three copies. semi-question.tsx:76 also sets the ref by hand inside continueToReport before its own router.replace.
+- index.tsx:94-105 is NOT the same code: the ref holds the last ROUTE string, the effect resets it to null when the route goes away (so retyping navigates again), and it calls navigate(route) = addRecent + router.push, not replace. The task text counts it as a fourth copy: that part is FALSE. Build nothing for it; it stays as written and is reported.
+- debounce: index.tsx:41-44 is the only copy (one useEffect + setTimeout over useState). TRUE, one copy; useDebouncedValue replaces it.
+- retry-to-refetch (`void refetch()`) is a one-line arrow in each page and semi-question's differs (submitError branch); it is not one of the three hooks named, so it is left alone.
+- mounts may import only framework packages, binding modules and @/hooks/ (useParcelLookup.ts:113-114 cites bindings.json mount_internal, FE-31 C-2), so the three hooks live under mobile/src/hooks. The task Files line names mobile/src/hooks/useParcelLookup.ts only: the three hooks are added there (no new file, no new kind), beside useSetParcelLookup, the nearest existing hook that wraps one mount concern.
+Change:
+1. useSettledRedirect(target, isFetching): returns void; replaces once, on settled data, never on a background refetch; returns a `markRedirected` function used by semi-question's Continue (same effect as its hand-set ref). Used by disambiguate, semi-question and [parcelId] ([parcelId] passes null while parcelId is empty and while no question is owed, which keeps its `!parcelId` guard).
+2. useGoBack(): returns a stable callback with the same canGoBack/back/replace(PARCEL_TAB_ROUTE.lookup) expression; used by the four pages.
+3. useDebouncedValue(value, ms): useState + useEffect/setTimeout/clearTimeout, initial value = value (the page's input starts empty, so the first debounced value is '' as before); used by index.tsx.
+Tests (red first, through the real hooks via the pre-commit related run): one new test file mobile/__tests__/parcelPageHooks.test.tsx rendering the REAL hooks with expo-router mocked: (a) a background refetch (isFetching true then false again with the same target) cannot re-fire the redirect; (b) the redirect does not fire while isFetching; (c) markRedirected stops a later redirect; (d) useGoBack goes back when it can and replaces with the Lookup route when it cannot; (e) useDebouncedValue holds the old value until ms pass and clears the timer on a new value. No golden, no page test is edited.
+No behaviour change: the pages' rendered tree, actions and effects are unchanged; goldens (parcelScreens, lotMapScreens, daylightSearchPages) are not touched.
+Not changed: index.tsx redirect effect (different semantics), retry arrows, selectedParcelId reset effect.
+Phone jest cannot run locally: green for phone tests comes only from Mobile CI.
+

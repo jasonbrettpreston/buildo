@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:42:40.766Z file_sha256=aa136b2985379d42680071e2f9ea1a434497228a3c7096265e6b3196ddeac563 prompt_sha256=1f2afd10e3f7f85a468d4683511e6087ac4e8312470df428789f435758db6c35
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — A.11 "A.11 | A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT" — mobile/app/(app)/parcel-tool/index.tsx:41 "const debounced = useDebouncedValue(input, SEARCH_DEBOUNCE_MS);" — the search page this diff rewrites still renders no clear (x) button, so A.11 stays unmet — deliverer GAP.13 is named in the spec, this refactor neither closes nor regresses it.
+
+DEFER severity=LOW — A.6 "A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT" — NONE — the touched search page binds no reports-left line, so A.6 stays unmet — deliverer SRCH.A6 is named in the spec, outside this diff's card.
+
+DEFER severity=LOW — D.8 "D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA" — mobile/app/(app)/parcel-tool/semi-question.tsx:70 "markRedirected();" — the continue path still stores no owner answer, so a reopened lot can still ask again — deliverer GAP.12 is named in the spec, and this diff only latches the redirect.
+
+REJECT — A.3 "A.3 | A Search page · Typeahead resolution of the typed text (street-prefix, up to 10) | main | AVAILABLE | | BUILT" — that replacing the inline setTimeout with useDebouncedValue changes the typeahead timing — not a real issue, the hook keeps the same delay and the same start value, mobile/src/hooks/useParcelPageHooks.ts:34 "const [debounced, setDebounced] = useState(value);" with ":36" "const t = setTimeout(() => setDebounced(value), ms);".
+
+MET — D.1 — mobile/app/(app)/parcel-tool/[parcelId].tsx:27 — the unsure lot still goes to the one question before the report, "useSettledRedirect(ask && parcelId ? semiQuestionRoute(parcelId) : null, isFetching);".
+
+MET — D.5 — mobile/app/(app)/parcel-tool/semi-question.tsx:70 — Continue still opens the report with the answer, "markRedirected();" then ":71" "router.replace(route);".
+
+MET — C.14 — mobile/app/(app)/parcel-tool/disambiguate.tsx:35 — the several-lots map page still replaces itself once on settled data, "useSettledRedirect(situation.navigate, isFetching);".
+
+MET — C.12 — mobile/app/(app)/parcel-tool/disambiguate.tsx:47 — the get-help action on the map page survives, "open_help: openHelp,".
+
+MET — C.2 — mobile/src/hooks/useParcelPageHooks.ts:29 — back/clear still returns to search on a cold open, "(router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup))".
+
+MET — G.1 — mobile/app/(app)/parcel-tool/index.tsx:113 — the search page's action set is unchanged apart from the hook swap, "back: goBack,".
+
+VERDICT: PASS
+Clauses checked: 10   Unmet: 0 (3 deferred to the deliverers the spec names: GAP.13, SRCH.A6, GAP.12)
+
+---
+⏱  56179ms (56.2s)
+📊 Tokens — total: 23979, input: 12746, output: 11233, reasoning: 10391

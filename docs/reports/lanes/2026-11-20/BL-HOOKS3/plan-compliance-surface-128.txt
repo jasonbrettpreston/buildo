@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:36:07.118Z file_sha256=06c632f7957bf08dbd56cc3893eb96f411ad210c4dc68f44cb5ec42bcf5919b1 prompt_sha256=061f70a5f91bf5c624173eb36dfe34c3f780afccf01c0fcbf632f62b85ccfcc4
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-plan-compliance-surface-128.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 128 §4.4 "the same commit that records the ruling adds a both-directions test (red on the old behaviour, green on the new) proving it" and the card's "Each gate or scan: a committed planted-defect test, red first through the real hooks" — plan "Tests (red first, through the real hooks via the pre-commit related run)" against plan "Phone jest cannot run locally: green for phone tests comes only from Mobile CI." — the RED half is asserted for a runner the plan itself says cannot run it locally, so the both-directions evidence does not resolve — name the CI job and the commit whose RED run is the evidence (a committed path), or state that the tests first run green in Mobile CI and the RED is not claimed.
+
+DEFER severity=MED — Spec 128 §2 rule 3 "every debounce, page size, stale time and rate limit is a registered logic variable with bounds and an `on_invalid` posture" — plan "useDebouncedValue(value, ms): useState + useEffect/setTimeout/clearTimeout, initial value = value" (the interval's source at mobile/app/(app)/parcel-tool/index.tsx:41-44 is cannot see) — the plan moves the debounce into a hook without stating the interval is a registered logic variable; a literal argument passed by the page would not satisfy rule 3 — state the registry row and its bounds that the page passes, or record the deviation.
+
+DEFER severity=LOW — Spec 128 §2 rule 1 "no surface behaviour lives only in a component — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field" — plan "index.tsx:94-105 is NOT the same code ... Build nothing for it; it stays as written and is reported." — after the change two redirect-once implementations coexist (the hook and index.tsx's effect) and the divergence is recorded only in the plan file, not in a declaration — record the divergent semantics as a declared note on the surface, or a `deviations[]` row with an adjudicator and a date.
+
+DEFER severity=LOW — card "Build useSettledRedirect, useGoBack, useDebouncedValue" — plan "returns a `markRedirected` function used by semi-question's Continue" — the hook gains a public mutator the card did not name, and the same sentence says "returns void" then "returns a markRedirected function" — justify the mutator as preserving the existing hand-set ref, or keep the hand-set ref in the page and return void.
+
+REJECT — Spec 128 §2 rule 2 — accused of computing client-side via the three hooks — not a real issue: `useSettledRedirect` and `useGoBack` are navigation position, one of §2.1's five named exceptions ("Navigation position — which route is mounted; `expo-router` owns it"), and `useDebouncedValue` produces no displayed value; rule 2 governs values the server projects.
+
+REJECT — Spec 128 §2 rule 15 — accused of breaking render-target parity — not a real issue: no projection or render target changes; the plan states "the pages' rendered tree, actions and effects are unchanged".
+
+MET — Spec 128 §2.1 "Navigation position — which route is mounted; `expo-router` owns it." — plan "useGoBack(): returns a stable callback with the same canGoBack/back/replace(PARCEL_TAB_ROUTE.lookup) expression; used by the four pages." — navigation stays inside the declared client-side exception.
+
+MET — card "one test that a background fetch cannot re-fire the redirect" — plan "(a) a background refetch (isFetching true then false again with the same target) cannot re-fire the redirect" — the specifically required test is present.
+
+MET — card "no behaviour change; existing page tests assert unchanged" — plan "No golden, no page test is edited." — page tests and goldens are untouched.
+
+MET — card "in the form of the nearest existing hook" — plan "beside useSetParcelLookup, the nearest existing hook that wraps one mount concern" — placement follows the named form and the named file `mobile/src/hooks/useParcelLookup.ts`.
+
+MET — RR-0190 "orchestrator replies that recommend or name a ruling must cite file:line, an RR id or UNVERIFIED" — plan "back copies: index.tsx:115, disambiguate.tsx:53, semi-question.tsx:90, [parcelId].tsx:38 are the same expression" — every measured fact in the plan carries file:line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+
+---
+⏱  82724ms (82.7s)
+📊 Tokens — total: 47368, input: 31912, output: 15456, reasoning: 14429

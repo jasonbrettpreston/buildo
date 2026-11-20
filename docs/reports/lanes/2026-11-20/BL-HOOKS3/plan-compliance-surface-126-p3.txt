@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:36:07.121Z file_sha256=92fc26fa8a1ca551faa0545d5bd63c5d0075f9fb8473c3ef05d5be81b6de0394 prompt_sha256=00354855ec6a326f9dd80d89833eff880fa8eaba2471e6f5a3999ed56231c149
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-plan-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+MET — 126 §11a.3 dated note 2026-11-20 (RULES.ACC, C2) "A failed compute shows the error screen with Try again and is not counted; no closed not_evaluated reason is shown for a failure." — PLAN-3-ONE-PLAN.md "retry-to-refetch (`void refetch()`) is a one-line arrow in each page and semi-question's differs (submitError branch); it is not one of the three hooks named, so it is left alone" — the Try again refetch path is unchanged by the refactor, so the C2 error-screen ruling is not disturbed.
+MET — 126 §11a.3 dated note 2026-11-20 (BL-STN1, cause (c)) "the report screen shows the loading state until it redirects to the question, not the miss text" — PLAN-3-ONE-PLAN.md "[parcelId] passes null while parcelId is empty and while no question is owed, which keeps its `!parcelId` guard" — the held-lot redirect target and the `!parcelId` guard are preserved, so the redirect-to-question path survives the hook extraction.
+MET — 126 §11a.7 (MF-12 tranche 3 / MF-57) "the report-state goldens are 64 files (16 states x 4 targets, plus `states.json`)" — PLAN-3-ONE-PLAN.md "goldens (parcelScreens, lotMapScreens, daylightSearchPages) are not touched" — no report golden file or `states.json` is added, edited or deleted.
+REJECT — 126 §11a.1 "Every displayed field binds to a source." — accused of adding an unbound displayed field — the change adds three navigation hooks in `useParcelLookup.ts` and alters no report field, source, seed row or schema, so the binding clause is untouched.
+REJECT — 126 §11a.2 "Ad slots stay outside the card list and outside `variants[]`." — accused of moving a variant or ad slot — no card, variant, `slots[]` entry or page-table section is touched by a back, redirect or debounce hook.
+REJECT — 126 §11a.9 "the report page shows the lot-size box and sheet only while the switch is on and nothing is entered" — accused of altering the lot-size entry or its provenance — no `user_input` field, contract or entry record is added or changed; the semi-question redirect is only moved into `useSettledRedirect` with the same target.
+REJECT — pasted operator rulings "(no pasted context provided)" — accused of breaching an operator ruling pasted for this run — the pasted context block is empty, so no operator ruling is governing text here; the RR rows shown in the file block are material under review, not pasted clauses.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  51855ms (51.9s)
+📊 Tokens — total: 33564, input: 23632, output: 9932, reasoning: 9285

@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:42:40.776Z file_sha256=d01298e1e79e673615af53080c94cd9d2dbe3707095f1e098fbe0d692da89940 prompt_sha256=15b68b0c4e243c3fd63a89d79f5922409dbef11731cfc09bfb2445db520d5b37
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-out-compliance-surface-127.txt (model: deepseek-reasoner)
+
+BUG severity=none (see findings)
+
+DEFER severity=MED — Spec 127 §2 PH-0 step 6 "every hand-written constant ... debounce values" and §4.2 "classified with the closed set" — mobile/src/hooks/useParcelPageHooks.ts:32 "The value after `ms` of no change (the search page's config.debounce_ms, so typeahead does not burn the rate bucket)." — the client debounce value is a transcription of `config.debounce_ms` with no lock, the identical shape to the spec's own worked example "COST_LINE_ORDER ... with a different order and no lock", and no Intent Ledger row for it is in the diff (the assessment report is not pasted, cannot see) — state the row's closed-vocabulary disposition (`encoded-as-descriptor-field` if the value is read from config, `preserved-in-runner` if it must stay a literal) and attach the lock that pins it to `config.debounce_ms`.
+
+DEFER severity=MED — Spec 127 §2 PH-0 step 1 "every file the surface renders from ... its hooks" and §8.5 "A conversion that does not move its registry row has not been recorded." — mobile/src/hooks/useParcelPageHooks.ts:15 "export function useSettledRedirect(target: string | null, isFetching: boolean): () => void {" — a new file now sits in four converted surfaces' render graph (report, disambiguate, search, semi-question), and no census/descriptor/registry move or boundary-freeze update accompanies it, so S0's enumeration no longer covers the surface's hooks — update the census row (`owns.components[]`, the category answers that stop being `_unanswered_`) and the emitted descriptor in the same commit, or state why a hook file is out of the freeze.
+
+DEFER severity=LOW — Spec 127 §3 S-shape "no inline `router.push` string where a declared navigation event belongs" — mobile/src/hooks/useParcelPageHooks.ts:29 "return useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);" — the navigation decision and its hard-coded destination now live in one shared client hook rather than in a declared navigation event on the surface, so the S-shape exit criterion is not moved by this refactor — either declare the back/fallback destination as the surface's navigation event in the descriptor, or record at S-shape why this nav stays client policy.
+
+DEFER severity=LOW — Spec 127 §1 "A surface's conversion is evidenced by artifacts, never by prose." / §6 item 2 "zero unexplained diffs" — mobile/app/(app)/parcel-tool/[parcelId].tsx "useSettledRedirect(ask && parcelId ? semiQuestionRoute(parcelId) : null, isFetching);" — the claim that the four screens render identically after the extraction rests on three hook unit tests, which prove hook behaviour, not the screens' rendered trees; no golden differential evidence for the route files is in the diff (whether one was run, cannot see) — attach the golden run (or a stated no-op reason per fingerprint) for the four touched route files.
+
+DEFER severity=LOW — pasted-context only rule, Spec 127 is the only pasted rule set — mobile/src/hooks/useParcelPageHooks.ts:5 "import only @/hooks/ (FE-31 C-2), so they live here." — the diff's authority for relocating shared mount behaviour (Spec 126 §11b, FE-31 C-2, Spec 99 §6.5, Spec 100 §4 dated note 2026-11-10) is cited but not pasted, so those clauses cannot be judged here and nothing in Spec 127 names this relocation — record the cited clauses in the next run's context so the hook-location and redirect-once rules are actually reviewable.
+
+MET — Spec 127 §4.3 "The fingerprint spans descriptor + contract descriptor + the archetype component + the format helpers" — no descriptor, contract descriptor, archetype component or format helper is touched, so no golden recapture is owed by that clause.
+
+MET — Spec 127 §4 C8 Peel "one policy concern per commit" — the diff is one concern (extract three mount concerns plus their tests), no guard, projection, state or metering change rides along.
+
+MET — Spec 127 §10 Infra "every `it.fails(` under a surface's test dir ties to a declared `pending` slug" — the new test file uses plain `it(` only, so it introduces no `it.fails(` needing a `pending` slug.
+
+REJECT — Spec 127 §6 acceptance run items 1-8 — that no generated scorecard, no `pending` deletion and no cutover registration ship with this change — this is not a conversion or cutover commit; the four surfaces' cutover state is not in the material and cannot be seen, so §6 does not reach it.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  65970ms (66.0s)
+📊 Tokens — total: 32134, input: 20065, output: 12069, reasoning: 10942

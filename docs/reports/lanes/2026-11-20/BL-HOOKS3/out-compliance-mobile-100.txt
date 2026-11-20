@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:42:40.782Z file_sha256=de91a70f51d3b9883886459c5b998244afa05d37437764f26ec739a9f29ce471 prompt_sha256=89f9e65089de0f06fb59ef4b817208269270c5c8b788c9a118e8eb1ddd3685c3
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-out-compliance-mobile-100.txt (model: deepseek-reasoner)
+
+BUG severity=MED — Operating Boundaries, Target Files "**Target Files:** ... `mobile/src/hooks/useParcelLookup.ts` ... · the §6 test files." — mobile/src/hooks/useParcelPageHooks.ts:12 "export function useSettledRedirect(target: string | null, isFetching: boolean): () => void {" (and mobile/__tests__/parcelPageHooks.test.tsx, new file) — the material adds a hook module and a test that the pasted Target Files fence does not name, so the declared footprint of the change is unmet — add both paths to Spec 100 Target Files (and to §6's named test set) in the same commit, per the pasted rule "Spec 00 section 14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit"".
+
+DEFER severity=LOW — §6 "**Mobile Jest (`mobile/__tests__/`, jest-node — no render tree per Spec 98)**" — mobile/__tests__/parcelPageHooks.test.tsx:7 "import { act, renderHook } from '@testing-library/react-native';" — the new parcel-tool test mounts a hook tree under jest, which the §6 test-plan line says is not the mobile Jest approach for this tool — either record the departure in the spec's §6 line or exercise the three helpers without a renderer.
+
+MET — §4 dated note 2026-11-10 (MF-35) "Kept: the 400 ms debounce" — mobile/app/(app)/parcel-tool/index.tsx "const debounced = useDebouncedValue(input, SEARCH_DEBOUNCE_MS);" — the debounce survives through the same constant (its value is not in the diff, cannot see).
+
+MET — §4 dated note 2026-11-12 (MF-48 Stage B) "Back goes back with history, else to the Lookup route (the MF-53 rule; navigation lock #3 closed)" — mobile/src/hooks/useParcelPageHooks.ts "return useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);" — the identical rule is kept and shared by all four pages.
+
+MET — §3 dated note 2026-11-13 (SEMI-B) "the app shows one question before the report" — mobile/app/(app)/parcel-tool/[parcelId].tsx "useSettledRedirect(ask && parcelId ? semiQuestionRoute(parcelId) : null, isFetching);" — still one redirect, gated on settled data and on a present id, as the removed effect was.
+
+MET — §3 dated note 2026-11-20 (FIX.SPECS item 4) "while the question is owed it shows the loading state, not the approved miss text" — mobile/app/(app)/parcel-tool/[parcelId].tsx "reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError })" — unchanged by the extraction.
+
+REJECT — §6 "jest-node — no render tree per Spec 98" — accused of rendering in the parcel-tool suite — the spec's own later notes name parcel-tool render tests (`mobile/__tests__/parcelDetailW0Hide.behaviour.test.tsx`, `reportPage.behaviour.test.tsx`), so the parenthetical is not an absolute bar and no fix is owed beyond the LOW above.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  69842ms (69.8s)
+📊 Tokens — total: 35780, input: 22234, output: 13546, reasoning: 12756

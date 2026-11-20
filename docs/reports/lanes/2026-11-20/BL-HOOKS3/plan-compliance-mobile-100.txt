@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:36:07.103Z file_sha256=8801b0d77d08fec95ae81b8e210245d1a43f5506a3172068f2f750643684d6c9 prompt_sha256=edacf2dbfd8525de1433458cafcc2f04450f7f8aa5350df9eda1a0e1c893db48
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-plan-compliance-mobile-100.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-381 gate clause "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN" — Lane plan "Tests (red first, through the real hooks via the pre-commit related run): one new test file mobile/__tests__/parcelPageHooks.test.tsx" — the plan commits only the real tests; it names no committed planted-defect test, no separate-agent attack and no refused/STILL OPEN result — add a planted-defect step (delete the redirect `ref` guard, prove red through the real hooks, restore) plus the attack/report step, grounder launched by the orchestrator.
+DEFER severity=MED — Spec 100 §6 "Mobile Jest (`mobile/__tests__/`, jest-node ... no render tree per Spec 98)" — Lane plan "rendering the REAL hooks with expo-router mocked" — the new `.tsx` file is never assigned to a Jest project, and as written it renders a tree in the tier the spec defines as render-tree free — name the project, or land the hook guards as pure functions tested node-side, or add the §6 dated note.
+DEFER severity=MED — Spec 100 §4 MF-35 note "Kept: the 400 ms debounce" — Lane plan "useDebouncedValue(value, ms)" with test (e) "holds the old value until ms pass" — no call site is pinned to 400 and no test asserts the value, so a page-side debounce drift passes green under a task whose only constraint is "no behaviour change" — write the page call as 400 and assert it in the page test or golden.
+DEFER severity=LOW — Spec 100 §3.2 dated note 2026-11-20 (3) "the semi page's Continue sends it, which lifts the hold, so the lot then counts once like any lot" — Lane plan "returns a `markRedirected` function used by semi-question's Continue (same effect as its hand-set ref)" — the plan edits Continue's body with no lock that the request still carries `semi=answered` beside `parcelId`, and dropping it leaves the lot held and uncounted — add that assertion to the new hook test or the existing semi page test.
+REJECT — task card "redirect-once-on-settled, back-with-canGoBack and retry-to-refetch are each written four times (index.tsx:96-105, disambiguate.tsx:36-40, semi-question.tsx:49-53, [parcelId].tsx:29-33)" — plan leaves index.tsx:94-105 as written — the plan's own measurement (last-route ref, reset on route change, navigate/push not replace) shows different semantics, and folding it into useSettledRedirect would break the card's "no behaviour change".
+MET — Spec 100 §4 Stage B "Back goes back with history, else to the Lookup route (the MF-53 rule; navigation lock #3 closed)" — Lane plan step 2 — useGoBack returns the same canGoBack/back/replace(PARCEL_TAB_ROUTE.lookup) expression used by the four pages.
+MET — Spec 100 §4 dated note 2026-11-20 (4) "while the question is owed it shows the loading state, not the approved miss text, until the redirect to the question" — Lane plan step 1 — [parcelId] passes null while no question is owed, so the redirect to the semi question still fires only when owed.
+MET — Spec 100 §4 Stage B "the MF-48 mobile props goldens and render test (`mobile/__tests__/reportScreens.golden.test.ts` ...)" — Lane plan "No golden, no page test is edited" — the named locks are untouched.
+MET — task card "one test that a background fetch cannot re-fire the redirect" — Lane plan test (a) "a background refetch ... cannot re-fire the redirect" — the card's one required assertion is named.
+MET — task card "Build useSettledRedirect, useGoBack, useDebouncedValue in the form of the nearest existing hook" — Lane plan "beside useSetParcelLookup, the nearest existing hook that wraps one mount concern" — the hooks land in mobile/src/hooks/useParcelLookup.ts, a listed Target File.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+
+---
+⏱  53442ms (53.4s)
+📊 Tokens — total: 36529, input: 26386, output: 10143, reasoning: 9162

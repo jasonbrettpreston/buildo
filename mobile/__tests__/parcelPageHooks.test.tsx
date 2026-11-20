@@ -2,19 +2,14 @@
 //            docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 (the parcel-tool pages) and its dated note 2026-11-10 (the search debounce)
 //            docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b (a mount holds hooks and callbacks; shared behaviour lives in @/hooks)
 //
-// STD.HOOKS (task-381): the three shared hooks that replaced the code copied into the parcel-tool mounts. The REAL hooks run here (only expo-router, the network
-// client, the auth store and Sentry are mocked, as in useAnswerParcelLookup.hook.test.tsx).
+// STD.HOOKS (task-381): the three shared hooks that replaced the code copied into the parcel-tool mounts. The REAL hooks run here (only expo-router
+// is mocked).
 import { act, renderHook } from '@testing-library/react-native';
 
 const mockRouter = { replace: jest.fn(), back: jest.fn(), canGoBack: jest.fn(() => true) };
 jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));
-jest.mock('@/lib/apiClient', () => ({ fetchWithAuth: jest.fn() }));
-jest.mock('@/store/authStore', () => ({
-  useAuthStore: Object.assign(jest.fn(() => 'tok-1'), { getState: () => ({ accessToken: 'tok-1' }), setState: jest.fn() }),
-}));
-jest.mock('@sentry/react-native', () => ({ captureException: jest.fn() }));
 
-import { useDebouncedValue, useGoBack, useSettledRedirect } from '@/hooks/useParcelLookup';
+import { useDebouncedValue, useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
 import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
 
 beforeEach(() => {

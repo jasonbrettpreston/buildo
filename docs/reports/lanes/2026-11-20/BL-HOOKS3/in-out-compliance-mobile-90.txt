@@ -1,0 +1,461 @@
+LIST mobile-90 sha256:a35f6359cce4cf196797496385e86ef15014b73d358a929c0d82c26ee37fe1e2 material sha256:7a34b2de7ac6616abcba8b9379264bacfb9d4fc375fdfb3a060ee516e426268f part 1 of 1
+RULE LIST mobile-90 (docs/specs/03-mobile/90_mobile_engineering_protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+# Spec 90 — Mobile Engineering Protocol & Architecture (The Pivot)
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 2** of `.cursor/active_task.md`.
+
+> **Prevention loop (frontend/mobile home):** the frontend-tagged rows of the prevention registry (`docs/specs/00_engineering_standards.md` §14) live here. New CRITICAL/HIGH review findings (Spec 08 roster — incl. the User-Advocate/UX lens) that yield a *mobile* rule become protocol requirements in this spec and, where deterministic, a gate.
+
+## 1. Goal & User Story
+**Goal:** Build a truly native Expo application for tradespeople, relying on the Next.js backend for all heavy lifting. This establishes the foundation for offline reliability, native push notifications, and elite list performance. *Note: Push infrastructure is a cross-domain dependency requiring coordination with the Next.js backend for token registration and payload triggering.*
+**User Story:** As a tradesperson standing in a concrete basement with poor cell service, I need my Lead Feed to open instantly without crashing, allow me to scroll through thousands of local permits flawlessly, and ping my lock-screen the second a high-value job changes phases.
+
+## 2. Platform & Device Matrix
+This single Expo codebase targets three environments (Minimum OS requirements: iOS 16+ / Android 10+):
+1. **Mobile (iOS/Android):** Primary target. UI must accommodate notches, dynamic islands, and safe areas.
+2. **Tablet (iPad/Android):** UI must be responsive. Use NativeWind breakpoints (e.g., `md:flex-row`) to convert stacked mobile cards into side-by-side or grid layouts.
+3. **Web (Expo Web):** Compiles to a PWA. *Fallback constraint:* `@shopify/flash-list` does not support Web. You must implement a standard `<FlatList>` or TanStack Virtual fallback for the web target.
+
+> Dated note 2026-11-09 (M-246, prior text kept; spec review R-8, `~/Buildo-scratch/mcfrontend/PROGRAMME/SPEC-REVIEW-mobile-web.md`): descriptor-governed web surfaces render as Next.js RSC (Spec 126 §5.3; Spec 128 R-22); the MaxBLD web pages use the web library of Spec 126 §11b.4. The Expo Web build target is unruled.
+
+**Theme Constraint:** The app must natively support System Dark Mode. NativeWind `dark:` variants are required for all UI components.
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): measured at `ffb6b0610`, no `.tsx` file under `mobile/src` or `mobile/app` uses a `dark:` class, and the brand-primary surfaces are dark-mode-only (Spec 117 §3.4). How the React Native Reusables components carry their dark values is MF-35's to rule (coordinator direction, pending operator confirmation). Measured fact only; no rule changes.
+
+## 3. The Prime Directive: "Dumb Glass" Architecture
+You are an expert React Native / Expo developer. You are operating strictly in the **Mobile Domain**. 
+This mobile application is a "Dumb Glass" client. It **MUST NOT** perform complex data mutation, geographic PostGIS math, or algorithmic sorting. All heavy computational lifting is handled entirely by the Next.js API Backend. 
+
+The mobile app's sole responsibility is:
+1. Capturing device state (GPS coordinates, push tokens).
+2. Fetching pre-calculated JSON from the backend.
+3. Rendering the UI at 60fps.
+
+*Clarification:* This prohibits server-authoritative computed state. Ephemeral **optimistic UI state** (e.g., toggling a "Save" icon instantly before the server confirms) is highly encouraged and expected.
+
+## 4. The Tech Stack Constraints
+You must strictly adhere to the following stack:
+* **Framework:** Expo SDK (React Native) utilizing Expo Router.
+* **Core Native UI:** `react-native-reanimated` v3 and `react-native-gesture-handler` (required for 60fps animations and swipe gestures).
+* **Styling:** NativeWind v4 (Tailwind CSS for React Native).
+> ⚠️ **AMENDMENT 2026-09-15 (WF1 "Spec 126/127/128 surface standard") — two measured prose-vs-code drifts in this section. Additive; the original lines are retained below, unedited.**
+>
+> 1. **Auth is Supabase, not Firebase.** Measured: `mobile/package.json` declares `@supabase/supabase-js 2.110.7` and **no `@react-native-firebase/*` dependency at all**. The "Firebase Auth via `@react-native-firebase/auth`" line below predates the Supabase migration (Spec 113) and was never updated. Token persistence via Keychain/Keystore is still accurate in substance — it is the provider that is wrong.
+> 2. **There is no monorepo and no `packages/shared-types`.** Measured: no workspace of that name exists in either tree. Zod schemas are **transcribed per tree** today, which is precisely the defect Spec 126 §5.2 closes by *generating* the mobile mirror from the CONTRACT descriptor — the parcel cost contract is currently declared at **four** sites and locked at **one**, and the two Zod declarations disagree in strictness (`src/app/api/parcels/lookup/types.ts` uses `.strict()` six times; `mobile/src/lib/schemas.ts` uses `.passthrough()`/`z.record` five times — the client is looser than the server it mirrors).
+>
+> **§3's "Dumb Glass" prime directive is unaffected and is reinforced** — Spec 126 §5.3 makes it enforceable rather than merely stated, and preserves its optimistic-UI carve-out verbatim.
+
+* **Auth:** Firebase Auth via `@react-native-firebase/auth` (native module). Native Keychain (iOS) / Keystore (Android) handles token persistence; Play Integrity (Android) and APN silent-push (iOS) handle phone-auth bot prevention — no JS-rendered reCAPTCHA. Native dev build required (Spec 98); Expo Go is not supported.
+* **Server State:** `@tanstack/react-query` (v5).
+* **Client State:** `zustand` v5.
+* **Local Persistence:** `react-native-mmkv` (Synchronous C++ storage).
+* **Hardware:** `expo-location`, `expo-notifications`, `expo-haptics`.
+* **Infrastructure:** EAS (Expo Application Services) for CI/CD builds (`eas build`) and Over-The-Air updates (`eas update`).
+
+## 5. Strict Anti-Patterns (NEVER DO THESE)
+If you attempt to use any of the following web paradigms in this project, you have failed:
+* **NO HTML/DOM:** Never use `<div>`, `<span>`, `<a>`, `<p>`, or `<button>`. 
+* **NO Web Libraries:** Never import `shadcn/ui`, `@tremor/react`, `framer-motion`, or `lucide-react`. 
+* **NO DOM APIs:** Never use `window`, `document`, `localStorage`, `navigator.geolocation`.
+* **NO `useEffect` for Fetching:** Never fetch API data inside a `useEffect`. Always use TanStack Query.
+* **NO Inline `renderItem`:** Never pass an inline arrow function to a FlashList/FlatList `renderItem`. Always use `useCallback` or extract the function.
+* **NO standard `<Image>`:** Never use the base React Native `<Image>` for external URLs.
+
+## 6. The Component Philosophy: React Native Reusables
+We do not npm-install generic UI components. We use **React Native Reusables** (via `npx rn-reusables add [component]`). The code lives inside our repository, giving us full ownership of Tailwind styling and native dependency adjustments without version conflicts.
+
+> Dated note 2026-11-09 (MF-42 · McFrontend queue · lane G; M-246, prior text kept; operator, verbatim: "P42 decisions approved" and "approved smaller version"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator ruling 2026-11-09: MF-42 decisions"): the command named above is not the CLI's package name: the CLI is `@react-native-reusables/cli` (version 0.7.1, registry `nativewind`; measured by the MF-42 plan lane), recorded in `scripts/surfaces/_schema/vendor-rnr.manifest.json`, with `mobile/components.json` aliases into the protected vendor dir `mobile/src/vendor/rnr/` (Spec 126 §11b.4). MF-35 runs it.
+
+> Dated note 2026-11-09 (McFrontend Phase 2; M-246, prior text kept; operator, verbatim: "D-0-D-4 approved D-3 we should used our existing components and approach as detailed in the mobile build specs"; record `~/Buildo-scratch/mcfrontend/phase1/open-questions.md`, "Operator rulings 2026-11-09: programme card v2.1 Part A, D-9"): React Native Reusables is confirmed as the mobile library for MaxBLD pages (D-3). The CLI output is generated and never edited; it is vendored unmodified under a protected manifest (the vendor folder and its rule: Spec 126 §11b.4). It is installed by MF-35.
+
+## 7. State & Data Flow Protocol
+* **The API Contract:** The Next.js `src/app/api/*` routes are the absolute source of truth.
+* **Validation (Monorepo):** Zod schemas are shared via a `packages/shared-types` monorepo workspace to guarantee the mobile app and Next.js backend are never out of sync.
+* **Offline Mutation Queue:** Mutations (like saving a lead) made while offline MUST be queued using TanStack Query's offline mutation cache, backed by MMKV, ensuring they flush to the server upon reconnection.
+* **State Architecture & Ownership:** All Zustand stores, MMKV blobs, TanStack Query keys, and cross-layer bridges MUST conform to **Spec 99 — Mobile State Architecture & Ownership Protocol** (`docs/specs/03-mobile/99_mobile_state_architecture.md`). Adding a new field, store, or bridge requires either matching an existing pattern in Spec 99 §3-§5 or a Spec 99 amendment. Three render-loop incidents in 2026-05-02 traced to dual-source-of-truth violations precipitated this requirement.
+
+## 8. Hardware & Geolocation Protocol
+1. **Foreground Only:** Request ONLY foreground location (`requestForegroundPermissionsAsync()`). Background location invokes heavy App Store privacy scrutiny and is unnecessary for this feature.
+2. **App Store Compliance:** Ensure `NSLocationWhenInUseUsageDescription` is explicitly defined in `app.json` under `expo.ios.infoPlist`.
+3. **Debounce Map Pan:** Do not fire a TanStack Query refetch on every millimeter of map movement; wait for a 500ms pause.
+
+## 9. UI & Styling Rules
+* Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`.
+* Use the established design system tokens from **Spec 74** (e.g., `bg-bg-feed`, `text-amber-hardhat`). 
+* **Font Loading:** Use `expo-font` to load custom fonts, keeping the Splash Screen visible until fonts are ready to prevent FOIT (Flash of Unstyled Text).
+* Accommodate device Safe Areas using `react-native-safe-area-context`.
+
+## 10. Testing Mandate
+* **E2E / UI Testing (Maestro):** Specs are written in YAML and run directly against the iOS Simulator/Android Emulator. *Operational Note: Maestro Cloud will be used for CI to avoid the 10x cost premium of macOS GitHub Action runners.*
+* **Unit Testing (Jest):** Jest + React Native Testing Library for logic hooks. Minimum 80% coverage threshold.
+* **Offline Resilience Test:** Maestro flows MUST include a step that executes `toggleAirplaneMode` to verify the MMKV offline cache and empty states render without crashing.
+
+## 11. Best-in-Class: Observability
+* **Native Crash Reporting:** `@sentry/react-native`. *Critical:* Sentry source maps MUST be uploaded automatically during EAS Build using the `@sentry/react-native/app-plugin` in `app.json`.
+* **Product Telemetry:** `posthog-react-native`. Track funnel events (`lead_viewed`, `job_claimed`). **Strip all PII**.
+
+## 12. Best-in-Class: Scaling & Performance
+* **FlashList Mastery:** Use `@shopify/flash-list` for native GPU memory recycling.
+  * **v1 (legacy):** required an explicit `estimatedItemSize` prop for the recycler to pre-size cells.
+  * **v2 (current — `^2.3.1` per `mobile/package.json`, since Spring 2026):** `estimatedItemSize` is **removed from the public API**. The new render engine auto-measures item heights at first render and reuses the measurements; passing the prop is now a TypeScript error (`Property 'estimatedItemSize' does not exist on type 'FlashListProps'`). Per-item-type recycling is still preserved via `getItemType` (e.g., `flight-board.tsx` tags 'header' vs 'card'). If a future version reintroduces the prop or exposes a `_estimatedItemSize` measurement override, this section becomes the canonical site to update.
+  * **Use the typed `AnimatedFlashList` wrapper** (`mobile/app/(app)/index.tsx` + `flight-board.tsx`) so generic narrowing survives `Animated.createAnimatedComponent` (resolved 2026-04-30 by H4 commit `21520d9`).
+* **Image Caching:** You MUST use `expo-image` for aggressive disk caching (SDWebImage/Glide).
+* **Cache Management:** Configure TanStack Query with strict timeouts. Recommended: `gcTime: 86400000` (24h) and `staleTime: 300000` (5m) for the main feed. The MMKV persister requires `@tanstack/query-async-storage-persister`.
+* **Bundle Optimization:** `react-native-maps` adds ~15MB. Use Expo's `metro.config.js` to exclude Apple Maps bundles from Android builds.
+
+## 13. Best-in-Class: Bug Prevention
+* **EAS Update (Over-The-Air Patches):** The ultimate bug prevention. JavaScript bundle fixes will bypass App Store review via Expo Application Services (EAS), allowing us to fix logical bugs in production in minutes.
+* **The Zod Boundary:** Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI to prevent fatal native app crashes from API drift.
+* **TypeScript Strictness:** `"strict": true` and `"noImplicitAny": true`. 
+
+## 14. Best-in-Class: User Experience (The "Native" Feel)
+* **Pull-to-Refresh:** Standard mobile expectation. Use `RefreshControl` combined with `queryClient.invalidateQueries()`.
+* **Empty States:** A new user in a low-permit area must see a "No leads in your area" state with an "Expand radius" CTA button.
+* **Optimistic Updates:** When a user taps "Save Lead", use `onMutate` to flip the UI instantly. Rollback on failure.
+* **Instant Rehydration:** Use `react-native-mmkv` to cache the feed. On cold boot, the app must paint page 1 from cache instantly, then fetch fresh data in the background silently.
+* **Tactile Feedback:** Use `expo-haptics` on major interactions.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/mobile/__tests__/parcelPageHooks.test.tsx b/mobile/__tests__/parcelPageHooks.test.tsx
+new file mode 100644
+index 000000000..fe022a40d
+--- /dev/null
++++ b/mobile/__tests__/parcelPageHooks.test.tsx
+@@ -0,0 +1,87 @@
++// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 (a redirect fires once, on the first settled data, never on a background refetch)
++//            docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 (the parcel-tool pages) and its dated note 2026-11-10 (the search debounce)
++//            docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b (a mount holds hooks and callbacks; shared behaviour lives in @/hooks)
++//
++// STD.HOOKS (task-381): the three shared hooks that replaced the code copied into the parcel-tool mounts. The REAL hooks run here (only expo-router
++// is mocked).
++import { act, renderHook } from '@testing-library/react-native';
++
++const mockRouter = { replace: jest.fn(), back: jest.fn(), canGoBack: jest.fn(() => true) };
++jest.mock('expo-router', () => ({ useRouter: () => mockRouter }));
++
++import { useDebouncedValue, useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
++import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
++
++beforeEach(() => {
++  jest.useFakeTimers();
++  mockRouter.replace.mockClear();
++  mockRouter.back.mockClear();
++  mockRouter.canGoBack.mockReset();
++  mockRouter.canGoBack.mockReturnValue(true);
++});
++afterEach(() => { jest.useRealTimers(); });
++
++describe('useSettledRedirect', () => {
++  it('replaces once on settled data and a background refetch cannot fire it again', () => {
++    const { rerender } = renderHook((p: { target: string | null; isFetching: boolean }) => useSettledRedirect(p.target, p.isFetching), {
++      initialProps: { target: '/x', isFetching: false },
++    });
++    expect(mockRouter.replace.mock.calls).toEqual([['/x']]);
++    rerender({ target: '/x', isFetching: true });
++    rerender({ target: '/x', isFetching: false });
++    rerender({ target: '/y', isFetching: true });
++    rerender({ target: '/y', isFetching: false });
++    expect(mockRouter.replace.mock.calls).toEqual([['/x']]);
++  });
++
++  it('does not fire while fetching or with no target, then fires once when the data settles', () => {
++    const { rerender } = renderHook((p: { target: string | null; isFetching: boolean }) => useSettledRedirect(p.target, p.isFetching), {
++      initialProps: { target: '/x' as string | null, isFetching: true },
++    });
++    rerender({ target: null, isFetching: false });
++    expect(mockRouter.replace).not.toHaveBeenCalled();
++    rerender({ target: '/x', isFetching: false });
++    expect(mockRouter.replace.mock.calls).toEqual([['/x']]);
++  });
++
++  it('markRedirected stops a later redirect (the semi page marks it before its own replace)', () => {
++    const { result, rerender } = renderHook((p: { target: string | null; isFetching: boolean }) => useSettledRedirect(p.target, p.isFetching), {
++      initialProps: { target: null as string | null, isFetching: false },
++    });
++    act(() => { result.current(); });
++    rerender({ target: '/x', isFetching: false });
++    expect(mockRouter.replace).not.toHaveBeenCalled();
++  });
++});
++
++describe('useGoBack', () => {
++  it('goes back when there is history', () => {
++    const { result } = renderHook(() => useGoBack());
++    result.current();
++    expect(mockRouter.back).toHaveBeenCalledTimes(1);
++    expect(mockRouter.replace).not.toHaveBeenCalled();
++  });
++
++  it('replaces with the Lookup route on a cold open (nothing to go back to)', () => {
++    mockRouter.canGoBack.mockReturnValue(false);
++    const { result } = renderHook(() => useGoBack());
++    result.current();
++    expect(mockRouter.back).not.toHaveBeenCalled();
++    expect(mockRouter.replace.mock.calls).toEqual([[PARCEL_TAB_ROUTE.lookup]]);
++  });
++});
++
++describe('useDebouncedValue', () => {
++  it('holds the old value until the delay passes, restarts on a new value, and starts from the first value', () => {
++    const { result, rerender } = renderHook((p: { v: string }) => useDebouncedValue(p.v, 400), { initialProps: { v: '' } });
++    expect(result.current).toBe('');
++    rerender({ v: 'ab' });
++    act(() => { jest.advanceTimersByTime(399); });
++    expect(result.current).toBe('');
++    rerender({ v: 'abc' });
++    act(() => { jest.advanceTimersByTime(399); });
++    expect(result.current).toBe('');
++    act(() => { jest.advanceTimersByTime(1); });
++    expect(result.current).toBe('abc');
++  });
++});
+diff --git a/mobile/app/(app)/parcel-tool/[parcelId].tsx b/mobile/app/(app)/parcel-tool/[parcelId].tsx
+index b49524f34..d45ba3db4 100644
+--- a/mobile/app/(app)/parcel-tool/[parcelId].tsx
++++ b/mobile/app/(app)/parcel-tool/[parcelId].tsx
+@@ -8,33 +8,27 @@
+ // the page view itself is built on the server by MF-57's core and sent as `page` (null for every lot until MB-44, so the approved miss text shows).
+ // Offline, the persisted query cache (mobile/app/_layout.tsx, 24 h) still serves a fetched page. Back goes back with history, else to the Lookup
+ // route (the MF-53 rule, NAV-AUDIT #3). The old hand-built screen, its sponsor slot and its phone formatting are retired (MF-74 Q2 i).
+-import React, { useCallback, useEffect, useRef } from 'react';
+-import { useLocalSearchParams, useRouter } from 'expo-router';
++import React, { useCallback } from 'react';
++import { useLocalSearchParams } from 'expo-router';
+ import { ReportPageHost } from '@/components/surfaces/ReportPageHost';
+ import { REPORT_SLICE, reportScreenState } from '@/components/surfaces/ReportBinding';
+ import { useParcelLookup } from '@/hooks/useParcelLookup';
+-import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
++import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+ import { needsSemiQuestion, semiQuestionRoute, SEMI_PARAM } from '@/lib/lotForm';
+ 
+ export default function ParcelReportScreen() {
+-  const router = useRouter();
+   const { parcelId, [SEMI_PARAM]: semi } = useLocalSearchParams<{ parcelId: string; semi?: string }>();
+   const semiParam = typeof semi === 'string' ? semi : undefined;
+   const { data, isError, isFetching, refetch } = useParcelLookup(parcelId, semiParam);
+   // SEMI-B (operator "semi ask a", 2026-11-13): an unsure lot (the doubt band of Spec 78 O-4) is asked the one question BEFORE the report shows. The
+   // redirect fires once, on the first settled data (Spec 99 §6.5), never on a background refetch; a `semi` param means it was answered, and an older
+   // server that sends no lotForm never asks. Clear semis and clear detached lots stay on the report.
+-  const askedRef = useRef(false);
+   const ask = needsSemiQuestion(data, semiParam);
+-  useEffect(() => {
+-    if (isFetching || !ask || askedRef.current || !parcelId) return;
+-    askedRef.current = true;
+-    router.replace(semiQuestionRoute(parcelId));
+-  }, [ask, isFetching, parcelId, router]);
++  useSettledRedirect(ask && parcelId ? semiQuestionRoute(parcelId) : null, isFetching);
+   // SRCH.METER-2 (task-360, UX-2c): the server holds an unsure lot's page (null) until the answer, so while the question is owed the screen shows the loading
+   // state, never the miss text, on the settled render before the redirect above fires.
+   const { view, lifecycle } = reportScreenState({ data: data && !ask ? { page: data.page ?? null } : undefined, isError });
+   const onRetry = useCallback(() => void refetch(), [refetch]);
+-  const onBack = useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);
++  const onBack = useGoBack();
+   return <ReportPageHost view={view} lifecycle={lifecycle} content={REPORT_SLICE.content} onRetry={onRetry} onBack={onBack} />;
+ }
+diff --git a/mobile/app/(app)/parcel-tool/disambiguate.tsx b/mobile/app/(app)/parcel-tool/disambiguate.tsx
+index eac1afef2..aa6cff49d 100644
+--- a/mobile/app/(app)/parcel-tool/disambiguate.tsx
++++ b/mobile/app/(app)/parcel-tool/disambiguate.tsx
+@@ -9,14 +9,15 @@
+ // parts) and the content file. It reads the SAME lookup query the search page filled (['parcel-search', q]), so the normal flow makes no
+ // extra request. Nothing is selected at open; the chosen lot opens through the one report route helper (lotMap.ts). The query is never
+ // logged or tracked, and picking a lot does not add a recent search (P35-D16 a: the search page recorded it when it opened this page).
+-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
++import React, { useCallback, useMemo, useState } from 'react';
+ import { useLocalSearchParams, useRouter } from 'expo-router';
+ import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
+ import { LOT_MAP_SLICE, lotMapData, lotMapProps } from '@/components/surfaces/LotMapBinding';
+ import { useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
++import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+ import { buildLotMapSituation } from '@/lib/lotMap';
+ import { openHelp } from '@/lib/maxbldHelp';
+-import { PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
++import { searchQueryArg } from '@/lib/parcelSearchMatch';
+ 
+ export default function ParcelDisambiguationScreen() {
+   const router = useRouter();
+@@ -31,13 +32,8 @@ export default function ParcelDisambiguationScreen() {
+   );
+ 
+   // The redirect state (the fetched outcome is not a map kind) replaces this page once, on settled data, never on a background refetch.
+-  const redirectedRef = useRef(false);
+-  const target = situation.navigate;
+-  useEffect(() => {
+-    if (isFetching || target === null || redirectedRef.current) return;
+-    redirectedRef.current = true;
+-    router.replace(target);
+-  }, [target, isFetching, router]);
++  useSettledRedirect(situation.navigate, isFetching);
++  const goBack = useGoBack();
+ 
+   const push = useCallback((route: string) => router.push(route), [router]);
+   const actions = useMemo(
+@@ -50,9 +46,9 @@ export default function ParcelDisambiguationScreen() {
+       // SRCH.C12 (task-321): the help link opens Help & Support in the in-app browser sheet (task-362) with the topic and the query (the same action as the search page).
+       open_help: openHelp,
+       // NAV-AUDIT-20261111 #64: a cold open (deep link, no history) has nothing to go back to, so Clear replaces with the Lookup route.
+-      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
++      back: goBack,
+     }),
+-    [refetch, push, router],
++    [refetch, push, goBack],
+   );
+ 
+   return (
+diff --git a/mobile/app/(app)/parcel-tool/index.tsx b/mobile/app/(app)/parcel-tool/index.tsx
+index 70d6120e6..64bbecbe4 100644
+--- a/mobile/app/(app)/parcel-tool/index.tsx
++++ b/mobile/app/(app)/parcel-tool/index.tsx
+@@ -24,7 +24,8 @@ import {
+   searchProps,
+ } from '@/components/surfaces/SearchBinding';
+ import { useParcelEntitlement, useParcelSearch, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+-import { buildSearchSituation, PARCEL_TAB_ROUTE, searchQueryArg } from '@/lib/parcelSearchMatch';
++import { useDebouncedValue, useGoBack } from '@/hooks/useParcelPageHooks';
++import { buildSearchSituation, searchQueryArg } from '@/lib/parcelSearchMatch';
+ import { openHelp } from '@/lib/maxbldHelp';
+ import { useRecentSearchesStore } from '@/store/recentSearchesStore';
+ import { useAuthStore } from '@/store/authStore';
+@@ -32,16 +33,12 @@ import { useAuthStore } from '@/store/authStore';
+ export default function ParcelSearchScreen() {
+   const router = useRouter();
+   const [input, setInput] = useState('');
+-  const [debounced, setDebounced] = useState('');
+   const [selectedParcelId, setSelectedParcelId] = useState<string | null>(null);
+   const recent = useRecentSearchesStore((s) => s.recent);
+   const addRecent = useRecentSearchesStore((s) => s.add);
+ 
+   // Debounce (config.debounce_ms) so typeahead exploration does not burn the 60/min rate bucket.
+-  useEffect(() => {
+-    const t = setTimeout(() => setDebounced(input), SEARCH_DEBOUNCE_MS);
+-    return () => clearTimeout(t);
+-  }, [input]);
++  const debounced = useDebouncedValue(input, SEARCH_DEBOUNCE_MS);
+ 
+   // P35-D17 a (nothing pre-checked; OUTPUT fold MEDIUM 1): a new debounced query clears the checked address card.
+   useEffect(() => {
+@@ -91,6 +88,7 @@ export default function ParcelSearchScreen() {
+ 
+   // `unique` navigates straight to the lot; the map kinds to the map surface. The ref stops the screen bouncing the user forward again when they
+   // navigate BACK with the query still in the box; it is cleared the moment the outcome stops being navigable, so retyping navigates again.
++  const goBack = useGoBack();
+   const navigatedForRef = useRef<string | null>(null);
+   const route = situation.route;
+   useEffect(() => {
+@@ -112,11 +110,11 @@ export default function ParcelSearchScreen() {
+       select: (parcelId: string) => setSelectedParcelId(parcelId),
+       push: (to: string) => navigate(to),
+       // The search page renders no back control; the action exists for the shared renderer's action set. Guarded as #64 so it can never strand a cold open.
+-      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
++      back: goBack,
+       // MF-46 follow-up (P35-D18 a): "Report incorrect address match" opens Help & Support in the in-app browser sheet (task-362; openBrowserAsync).
+       open_help: openHelp,
+     }),
+-    [refetch, navigate, router],
++    [refetch, navigate, goBack],
+   );
+ 
+   return (
+diff --git a/mobile/app/(app)/parcel-tool/semi-question.tsx b/mobile/app/(app)/parcel-tool/semi-question.tsx
+index 7b2c14b84..12d8cca09 100644
+--- a/mobile/app/(app)/parcel-tool/semi-question.tsx
++++ b/mobile/app/(app)/parcel-tool/semi-question.tsx
+@@ -16,9 +16,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
+ import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
+ import { SEMI_QUESTION_SLICE, semiQuestionData, semiQuestionProps } from '@/components/surfaces/SemiQuestionBinding';
+ import { useAnswerParcelLookup, useParcelLookup, useSetParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
++import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
+ import { SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
+ import { buildSemiQuestionSituation } from '@/lib/semiQuestion';
+-import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
+ 
+ export default function SemiQuestionScreen() {
+   const router = useRouter();
+@@ -44,13 +44,8 @@ export default function SemiQuestionScreen() {
+   );
+ 
+   // The redirect state (a lot that is not unsure) replaces this page once, on settled data, never on a background refetch.
+-  const redirectedRef = useRef(false);
+-  const target = situation.navigate;
+-  useEffect(() => {
+-    if (isFetching || target === null || redirectedRef.current) return;
+-    redirectedRef.current = true;
+-    router.replace(target);
+-  }, [target, isFetching, router]);
++  const markRedirected = useSettledRedirect(situation.navigate, isFetching);
++  const goBack = useGoBack();
+ 
+   // Continue: the answered lookup, stored under the report's key, then the report; never throws, a second press while it runs is ignored.
+   // No lookup with an empty id (the hook above is guarded the same way); the wait is bounded so the latch cannot stick (task-361, LX-R2, LX-E1):
+@@ -73,9 +68,9 @@ export default function SemiQuestionScreen() {
+     // Left the page while the fetch ran (the server has counted or not): do not open the report behind the user's back.
+     if (!mountedRef.current) return;
+     storeLookup(id, result);
+-    redirectedRef.current = true;
++    markRedirected();
+     router.replace(route);
+-  }, [id, answerLookup, storeLookup, router]);
++  }, [id, answerLookup, storeLookup, router, markRedirected]);
+ 
+   const actions = useMemo(
+     () => ({
+@@ -87,9 +82,9 @@ export default function SemiQuestionScreen() {
+         if ((SEMI_ANSWERS as readonly string[]).includes(answer)) setSelected(answer as SemiAnswer);
+       },
+       push: (route: string) => void continueToReport(route),
+-      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
++      back: goBack,
+     }),
+-    [refetch, router, submitError, continueToReport],
++    [refetch, goBack, submitError, continueToReport],
+   );
+ 
+   return (
+diff --git a/mobile/src/hooks/useParcelPageHooks.ts b/mobile/src/hooks/useParcelPageHooks.ts
+new file mode 100644
+index 000000000..ee1903152
+--- /dev/null
++++ b/mobile/src/hooks/useParcelPageHooks.ts
+@@ -0,0 +1,40 @@
++// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 (a redirect fires once, on the first settled data, never on a background refetch)
++//            docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 (the parcel-tool pages) and its dated note 2026-11-10 (the search debounce)
++//            docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b (a mount holds hooks and callbacks; shared behaviour lives in @/hooks)
++//
++// STD.HOOKS (task-381): the three mount concerns the parcel-tool pages used to copy (redirect once on settled data, go back, debounced value). A mount may
++// import only @/hooks/ (FE-31 C-2), so they live here. This is its own file, not useParcelLookup.ts: five page tests replace that whole module with a mock.
++import { useCallback, useEffect, useRef, useState } from 'react';
++import { useRouter } from 'expo-router';
++import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
++
++/**
++ * Redirect once, on settled data. Replaces this page with `target` the first time the fetch is not running and a target exists; a background refetch, or a
++ * later change of target, never fires it again (Spec 99 section 6.5). Returns `markRedirected`: the semi question page calls it before its own replace.
++ */
++export function useSettledRedirect(target: string | null, isFetching: boolean): () => void {
++  const router = useRouter();
++  const redirectedRef = useRef(false);
++  useEffect(() => {
++    if (isFetching || target === null || redirectedRef.current) return;
++    redirectedRef.current = true;
++    router.replace(target);
++  }, [target, isFetching, router]);
++  return useCallback(() => { redirectedRef.current = true; }, []);
++}
++
++/** NAV-AUDIT-20261111 #64: back when there is history; a cold open (deep link) replaces with the Lookup route so it can never strand the user. */
++export function useGoBack(): () => void {
++  const router = useRouter();
++  return useCallback(() => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)), [router]);
++}
++
++/** The value after `ms` of no change (the search page's config.debounce_ms, so typeahead does not burn the rate bucket). Starts at the first value. */
++export function useDebouncedValue<T>(value: T, ms: number): T {
++  const [debounced, setDebounced] = useState(value);
++  useEffect(() => {
++    const t = setTimeout(() => setDebounced(value), ms);
++    return () => clearTimeout(t);
++  }, [value, ms]);
++  return debounced;
++}
+

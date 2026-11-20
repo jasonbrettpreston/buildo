@@ -16,9 +16,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';
 import { SEMI_QUESTION_SLICE, semiQuestionData, semiQuestionProps } from '@/components/surfaces/SemiQuestionBinding';
 import { useAnswerParcelLookup, useParcelLookup, useSetParcelLookup, ParcelLookupSchemaError } from '@/hooks/useParcelLookup';
+import { useGoBack, useSettledRedirect } from '@/hooks/useParcelPageHooks';
 import { SEMI_ANSWERS, type SemiAnswer } from '@/lib/lotForm';
 import { buildSemiQuestionSituation } from '@/lib/semiQuestion';
-import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';
 
 export default function SemiQuestionScreen() {
   const router = useRouter();
@@ -44,13 +44,8 @@ export default function SemiQuestionScreen() {
   );
 
   // The redirect state (a lot that is not unsure) replaces this page once, on settled data, never on a background refetch.
-  const redirectedRef = useRef(false);
-  const target = situation.navigate;
-  useEffect(() => {
-    if (isFetching || target === null || redirectedRef.current) return;
-    redirectedRef.current = true;
-    router.replace(target);
-  }, [target, isFetching, router]);
+  const markRedirected = useSettledRedirect(situation.navigate, isFetching);
+  const goBack = useGoBack();
 
   // Continue: the answered lookup, stored under the report's key, then the report; never throws, a second press while it runs is ignored.
   // No lookup with an empty id (the hook above is guarded the same way); the wait is bounded so the latch cannot stick (task-361, LX-R2, LX-E1):
@@ -73,9 +68,9 @@ export default function SemiQuestionScreen() {
     // Left the page while the fetch ran (the server has counted or not): do not open the report behind the user's back.
     if (!mountedRef.current) return;
     storeLookup(id, result);
-    redirectedRef.current = true;
+    markRedirected();
     router.replace(route);
-  }, [id, answerLookup, storeLookup, router]);
+  }, [id, answerLookup, storeLookup, router, markRedirected]);
 
   const actions = useMemo(
     () => ({
@@ -87,9 +82,9 @@ export default function SemiQuestionScreen() {
         if ((SEMI_ANSWERS as readonly string[]).includes(answer)) setSelected(answer as SemiAnswer);
       },
       push: (route: string) => void continueToReport(route),
-      back: () => (router.canGoBack() ? router.back() : router.replace(PARCEL_TAB_ROUTE.lookup)),
+      back: goBack,
     }),
-    [refetch, router, submitError, continueToReport],
+    [refetch, goBack, submitError, continueToReport],
   );
 
   return (

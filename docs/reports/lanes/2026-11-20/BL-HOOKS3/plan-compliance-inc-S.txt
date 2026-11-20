@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:36:07.100Z file_sha256=87a256eb79101b93a5e9d5b213ba27cd27cd1415e2de69c601e28f679dca7885 prompt_sha256=7a96277c6df5101a8245df9b1578070659054dd6d533d944641c83e04820161f
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card task, "redirect-once-on-settled, back-with-canGoBack and retry-to-refetch are each written four times (index.tsx:96-105, disambiguate.tsx:36-40, semi-question.tsx:49-53, [parcelId].tsx:29-33)" — lane plan "Build nothing for it; it stays as written and is reported." — one of the four sites the card names as a redirect copy is deliberately not converted and the card text is left uncorrected — the measurement is right, but card and code will disagree until the correction is filed, and a later reviewer will read the plan as incomplete.
+
+DEFER severity=MED — doc-2 A.7 "Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q=" — lane plan "initial value = value (the page's input starts empty, so the first debounced value is '' as before)" — the empty start is asserted, not listed among the checked facts, and a chip or deep link arrives with q=, so initial = value can fire a typeahead lookup at mount that the timer used to delay — this is the one place the change can alter behaviour, and A.3 "Typeahead resolution of the typed text (street-prefix, up to 10)" sits on that same box.
+
+DEFER severity=MED — card task, "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN." — NONE — the plan names the red-first test but carries no step for the separate attack nor for recording refused or STILL OPEN — the gate can be built without the attack and still read as green.
+
+DEFER severity=MED — doc-2 D.5 "Continue button (Choose an answer when none picked; Open the report with this answer)" — lane plan "returns void; replaces once, on settled data, never on a background refetch; returns a `markRedirected` function used by semi-question's Continue" — the hook is defined as returning void and as returning markRedirected in the same sentence, so Continue's single open cannot be verified from the plan — an implementer can satisfy either reading, and the void reading risks a second replace once data settles on the semi page.
+
+MET — doc-2 G.6 "Report meter: a hit counts one report; report limit page when exhausted" — mobile/app/(app)/parcel-tool/[parcelId].tsx:29-33 — the once-only ref guard is kept and test (a) "a background refetch (isFetching true then false again with the same target) cannot re-fire the redirect" pins the single navigation that counts the hit.
+
+MET — doc-2 G.1 "Unique match goes straight to the report (no extra page)" — mobile/app/(app)/parcel-tool/disambiguate.tsx:34-40 — the same router.replace(target) on settled data, now carried by useSettledRedirect.
+
+MET — doc-2 B.1 "Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick" — lane plan "Used by disambiguate, semi-question and [parcelId]" — the candidate list, its pick state and the Select gate are not touched.
+
+MET — card task, "Phone-test green is proven only by Mobile CI." — lane plan "Phone jest cannot run locally: green for phone tests comes only from Mobile CI." — the plan states the same proof route as the card.
+
+REJECT — card task, "redirect-once-on-settled, back-with-canGoBack and retry-to-refetch are each written four times" — leaving the retry-to-refetch arrows unshared — the card names exactly three hooks, useSettledRedirect, useGoBack and useDebouncedValue, and none is a retry hook, so sharing retry would breach "Five principles, keep it simple, no scope creep" (PLAN-PROTOCOL.md:3).
+
+REJECT — card task, "Build useSettledRedirect, useGoBack, useDebouncedValue in the form of the nearest existing hook" — useSettledRedirect returning an extra markRedirected function — it reproduces the hand-set ref at semi-question.tsx:76 that the card's "no behaviour change" requires, so it adds no behaviour the card did not name.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 0
+
+---
+⏱  116481ms (116.5s)
+📊 Tokens — total: 39199, input: 16898, output: 22301, reasoning: 21316

@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:36:07.128Z file_sha256=db1d4d861a3bb9b01d7e354cd1d128bc0745c2b6c0d78e4916d8d7ca16a2f45e prompt_sha256=938937aed154e8257c8f6492230837febfc2a96ff55f078945e5428bb910ff09
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-plan-compliance-surface-135-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Spec 135 rule 5 "a `.db.test.ts` lock must be named in a CI step (test.yml)" — plan (Lane plan, Tests) "Phone jest cannot run locally: green for phone tests comes only from Mobile CI." — the new test's execution is asserted, no CI job or test path glob is named anywhere in the plan — add one plan line naming the Mobile CI job and the glob that collects mobile/__tests__/parcelPageHooks.test.tsx.
+DEFER severity=LOW — task-381 Description "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN" — plan (Tests) "Tests (red first, through the real hooks via the pre-commit related run): one new test file mobile/__tests__/parcelPageHooks.test.tsx rendering the REAL hooks with expo-router mocked" — a red-first run of the real test is named, no committed planted-defect artifact and no separate attacker result line is named — add the planted-defect file path and the attack result field to the test section (source line is the task Description, not operator words, hence LOW).
+REJECT — Spec 135 rule 5 "an OWED row's lock path must be a valid `src/tests/surfaces/*.test.ts` that does NOT yet exist" — accused: the new `mobile/__tests__/parcelPageHooks.test.tsx` is outside the lock path form — rule 5 governs register row lock cells, the plan adds no FE row and consumes no id, so this test's location is not in rule 5's scope.
+REJECT — Spec 135 rule 2 "A rule without a lock is not yet a rule (Spec 124 section 4.4). ONE lock per row; the Lock is in the LAST cell with the status (arm C reads it)." — accused: the hook change ships with no register lock — no row is added or re-statused by the plan, only a task-level test, and rule 2 addresses register rows.
+REJECT — Spec 135 rule 4 "`Six` cell: letters D P F S H E (the six principles of Spec 126 §0a), `pass`/`n/a`/`FAIL` (Spec 128 §4.9). Applies to FE rows only." — accused: the plan carries no Six cell — rule 4 applies to FE rows only and the plan creates none.
+REJECT — Spec 135 land order "This file must be in HEAD in an EARLIER commit than the gate registers-array change (Spec 128 §4.11 item 1)." — accused: the change disturbs the register landing order — the plan touches no spec file and no registers array.
+MET — Spec 135 rule 5 "a RULED row's lock paths must exist" — plan "No golden, no page test is edited." — no existing lock path, page test or golden is deleted or moved by the change.
+MET — Spec 135 "**Next free id:** `FE-45`." — plan "the three hooks are added there (no new file, no new kind)" — no FE row and no FE id are consumed, so the next-free-id line stays true.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+
+---
+⏱  53750ms (53.8s)
+📊 Tokens — total: 22523, input: 12616, output: 9907, reasoning: 9171

@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T18:42:40.375Z file_sha256=7a34b2de7ac6616abcba8b9379264bacfb9d4fc375fdfb3a060ee516e426268f prompt_sha256=9359eea4408e197cf7a41df6866c6a65d3a1a7a21147a6ce13e51f752d0ec637
+🔍 Lens review of docs/reports/reviews/task-381/change-2026-11-20.diff (model: deepseek-reasoner)
+
+DEFER severity=MED — mobile/src/hooks/useParcelPageHooks.ts:20 "    redirectedRef.current = true;" — the latch closes before router.replace(target) on the next line and nothing ever re-opens it, so if that replace does not navigate (unknown href, navigator not ready on the first settled render, a rejected transition) the page stays latched, shows the question/map state with no second attempt and no way for the user to reach the target, and only a remount re-arms it — latch after a confirmed navigation, or return a resetRedirect the page can call when it is still mounted with the same target on the next settled render.
+
+DEFER severity=MED — mobile/app/(app)/parcel-tool/semi-question.tsx:71 "    markRedirected();" — the answer write has already gone out at line 70, the latch is then closed before "    router.replace(route);" at line 72, so a replace that fails leaves the user on the page with a completed write; the only forward control is Continue again, which re-sends the answer, and no dedup key is visible in the diff for that write (cannot see useAnswerParcelLookup) — confirm the answer write is keyed by parcelId plus answer so a repeat is a no-op, or keep the latch open and re-replace without re-sending.
+
+DEFER severity=LOW — mobile/src/hooks/useParcelPageHooks.ts:38 "  }, [value, ms]);" — the copied effect depended on the input only; ms is now a dependency, so an unstable or non-finite delay (config.debounce_ms) restarts the timer every keystroke and setTimeout with a NaN or undefined delay fires at once, sending one request per keystroke and burning the 60/min rate bucket the debounce exists to protect — pin ms to a module constant or guard ms > 0 and finite in the hook.
+
+DEFER severity=LOW — mobile/src/hooks/useParcelPageHooks.ts:19 "    if (isFetching || target === null || redirectedRef.current) return;" — settled is inferred from isFetching alone, the hook never sees isError, so a target built from a cached response fires the replace while the latest refetch is failing and the page's retry state is skipped; no case in the test file drives a failing query — pass isError and skip the redirect while the latest attempt failed, with a test for that path.
+
+REJECT — mobile/app/(app)/parcel-tool/[parcelId].tsx:27 "  useSettledRedirect(ask && parcelId ? semiQuestionRoute(parcelId) : null, isFetching);" — it looks like the old "!parcelId" early return was dropped in the move, leaving a possible replace to a route with an empty id — handled, an empty parcelId makes the ternary yield null and the hook returns on target === null, which is the same guard as the removed line.
+
+VERDICT: PASS on error-path safety
+Paths walked: settled redirect fires once, fetch in flight, null target, later target change, background refetch, remount re-arm, markRedirected before the semi page's own replace, cold-open back with no history, back with history, debounce first value, timer restart on new value, unmount mid-timer, non-finite delay, empty parcelId   Unguarded: 2
+
+---
+⏱  69514ms (69.5s)
+📊 Tokens — total: 34160, input: 21407, output: 12753, reasoning: 12022

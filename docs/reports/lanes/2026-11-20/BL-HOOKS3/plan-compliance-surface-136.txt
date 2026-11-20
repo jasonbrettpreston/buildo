@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:36:07.125Z file_sha256=4e875b9a7f0dff9a5db8dd90a754bcf76a228b2aee24d4061d8184e2c341cceb prompt_sha256=ec062c00742c6902a9674a02d5ec60eebc82d40a2ec531b342b78bf23ab2aa0c
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-plan-compliance-surface-136.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task card gates "Each gate or scan: a committed planted-defect test, red first through the real hooks; a separate agent attacks it, results reported as refused or STILL OPEN" — Lane plan, Tests "one new test file mobile/__tests__/parcelPageHooks.test.tsx rendering the REAL hooks with expo-router mocked" — the plan gives five behaviour tests (a)-(e) and no planted-defect canary through the real hooks, and no independent attack step with a refused/STILL OPEN verdict — add one committed canary per hook (defect planted, red evidence) and the attack report as named plan steps.
+DEFER severity=MED — task card "Phone-test green is proven only by Mobile CI" — Lane plan, Tests "Tests (red first, through the real hooks via the pre-commit related run)" — red-first is claimed via a local run the same plan says cannot execute phone jest, so the red evidence has no route — name the Mobile CI job and the commits that will show red then green.
+DEFER severity=MED — fe.01 "McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name; scope mobile, web, admin and PDF" — Lane plan, Change 1 "the three hooks are added there (no new file, no new kind)" — the plan writes new mobile code without naming the authority that lifts the documents-only hold for these pages — add one line naming the authorization (Increment 1·B plan lock, or the McFix carve-out in the register) under which mobile code may be built now.
+DEFER severity=LOW — task card "redirect-once-on-settled, back-with-canGoBack and retry-to-refetch are each written four times (index.tsx:96-105, disambiguate.tsx:36-40, semi-question.tsx:49-53, [parcelId].tsx:29-33)" — Lane plan "index.tsx:94-105 is NOT the same code ... Build nothing for it; it stays as written and is reported" — one of the three named copies stays unrefactored and the corrected count lives only in the lane plan — record the correction on the task or a dated decision note so card and code agree before close.
+DEFER severity=LOW — fe.36 "a navigating pressable has a role…" — NONE — the pasted clause is truncated at this point, so the pressable-role half of fe.36 cannot be checked against the plan — paste the full fe.36 text or state that the refactor touches no navigating pressable.
+MET — fe.36 — Lane plan, Change 2 "returns a stable callback with the same canGoBack/back/replace(PARCEL_TAB_ROUTE.lookup) expression; used by the four pages" — navigation stays on expo-router with canGoBack() before back(), no view swapped by local state.
+MET — fe.05 — Lane plan "No behaviour change: the pages' rendered tree, actions and effects are unchanged; goldens (parcelScreens, lotMapScreens, daylightSearchPages) are not touched" — no arithmetic, no derived number added in the UI.
+REJECT — fe.02 — the plan is accused of adding screen code where "a screen is a descriptor; the only code is the shared archetype components" — not a real issue, the parcel-tool pages are pre-Phase-1 coded pages outside the converted manifest and the change adds hooks, not a screen; fe.02/fe.31 govern converted surfaces.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 44   Unmet: 0
+
+---
+⏱  55092ms (55.1s)
+📊 Tokens — total: 24907, input: 14681, output: 10226, reasoning: 9424

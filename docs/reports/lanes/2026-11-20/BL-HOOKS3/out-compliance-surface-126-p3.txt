@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:42:40.823Z file_sha256=5f8c52779966db6ab41941894a608f4dee5f8e63464c7f5393ef9e25ff278b37 prompt_sha256=1b8ea0bf62bdc2374b3d580862dab7adcba067b15b78a8ced0468638396585f3
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-HOOKS3/in-out-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §11b.1 "Our code is limited to the descriptor → library binding (one per archetype per platform, thin config), the generators, the gates and the landed web REPORT renderer. Per-feature code is named in its queue row" — mobile/src/hooks/useParcelPageHooks.ts:3 "126_maxbld_surface_standard.md §11b (a mount holds hooks and callbacks; shared behaviour lives in @/hooks)" — a new shared module of per-feature page behaviour (redirect latch, back fallback, debounce) is added outside the closed code set, and the sentence it claims from §11b does not appear anywhere in the pasted §11b.1/§11b.2, nor is the STD.HOOKS / task-381 queue row pasted (cannot see it) — paste the §11b sentence and the queue row that name hooks, or keep the three behaviours inside each mount.
+
+DEFER severity=LOW — §13 Testing Mandate "Logic: `*.logic.test.ts` ... UI: `*.ui.test.tsx` ... Infra: `*.infra.test.ts`" — mobile/__tests__/parcelPageHooks.test.tsx:5 "STD.HOOKS (task-381): the three shared hooks that replaced the code copied into the parcel-tool mounts." — the added test matches none of the three declared test kinds, so no pasted clause names this file — rename to a declared kind (`*.logic.test.ts`) or paste the mobile test convention that permits `.test.tsx`.
+
+MET — §11b.1 "No hand-built standard component." — mobile/app/(app)/parcel-tool/disambiguate.tsx:13 "import { SurfaceRenderer, type SurfaceTree } from '@/components/surfaces/SurfaceRenderer';" — all four pages still render through the shared renderer and the declared bindings; the diff writes no component.
+
+MET — §11b.4 "The CLI output is vendored unmodified in `mobile/src/vendor/rnr/` under a closed, protected manifest" — no diff hunk touches mobile/src/vendor/rnr/ — nothing added or edited under the protected manifest.
+
+MET — §14 "mobile/app/(auth)/*.tsx (1,302 lines) ... Deliberately out of scope." — the diff touches only mobile/app/(app)/parcel-tool/* and mobile/src/hooks/ — no `(auth)` file is edited.
+
+REJECT — §11b.1 operator words "we dont build any standard stuff ourselves - no code standardized approach" — accused of hand-building a standard part — the three hooks are page navigation plumbing, not a library component or archetype, and the pasted rule governs components and pages, so it does not reach them.
+
+REJECT — §11b.2 MF-48 note "`ReportPageHost.tsx` (the screen-local UI state and the bottom sheet)" — accused of moving screen-local state out of the host — the redirect latch was never in the host (it was a `useRef` in the page) and the host's `view`/`lifecycle` props are unchanged at [parcelId].tsx:30.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  58068ms (58.1s)
+📊 Tokens — total: 41121, input: 29590, output: 11531, reasoning: 10823
