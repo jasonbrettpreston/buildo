@@ -3,11 +3,10 @@ id: TASK-354
 title: >-
   MOBILE.CI-1 Mobile CI baseline on the pushed tip: 3 test files fail (lot map
   goldens, lot map page behaviour, report goldens), 5 of 777 tests
-status: RUNNING
-assignee:
-  - '@lane-BL-MOBILECI'
+status: LATER
+assignee: []
 created_date: '2026-11-19T21:37:00Z'
-updated_date: '2026-11-19T21:59:00Z'
+updated_date: '2026-11-20T12:55:00Z'
 labels: []
 milestone: m-1
 dependencies: []
