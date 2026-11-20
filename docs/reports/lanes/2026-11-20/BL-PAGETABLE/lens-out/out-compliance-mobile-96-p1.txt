@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:38:58.514Z file_sha256=ec94c2c96b7b44d047ade9ecc4f3c41bf616416d9b1f49e997fe48feda39e613 prompt_sha256=c78e9a6544c4da6e059f7943d5ac9aae58681e0fcb7f85fb45dff81dc13bd5f8
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-mobile-96-p1.txt (model: deepseek-reasoner)
+
+MET — Spec 96 dated note 2026-11-11 "`GET /api/parcels/lookup` admits a `parcel_tool` entitlement in {trial, active, past_due, admin_managed} ... else 403 `SUBSCRIPTION_REQUIRED`" — SemiQuestionBinding.tsx "+    entitlement: error && s.errors.entitlement," and static-page.json "+     \"content\": \"state.entitlement\"" — the 403 path still draws the neutral entitlement notice; only the drawing moved from JSX to rows.
+MET — Spec 96 §9 "Never flash the paywall while `subscription_status` is `null` or `undefined`. The layout renders a full-screen loading guard instead." — no hunk touches mobile/app/(app)/_layout.tsx or any paywall file — the loading guard and the app gate are untouched, so the refactor cannot affect the paywall flash rule.
+MET — Spec 96 §2 "`user_profiles.subscription_status` is checked on every app launch after auth." — PageTableBinding.tsx "+export const SEMI_QUESTION_FLAG_NAMES = ['loading', 'ask', 'rate_limited', 'entitlement', 'unexpected', 'plain_error', 'schema_drift', 'busy'] as const;" — the new flag vocabulary is page-render state only; no added line reads or writes subscription_status.
+MET — Spec 96 §5 "The paywall screen includes a subtle \"Refresh\" link below \"Maybe later\"." — NONE — no paywall component appears in the diff, so the refresh-link and paywallStore clauses are neither satisfied nor broken here.
+REJECT — Spec 96 §8 "Never see the paywall screen" — that the semi question entitlement notice is the consumer paywall shown to a manufacturer — it is a parcel-tool entitlement notice on the lookup page, not §5's PaywallScreen, and its text is unchanged context in the slice, not an added line.
+REJECT — Spec 96 §5 "The app opens this URL via `WebBrowser.openBrowserAsync()` from `expo-web-browser`." — that moving page structure into table rows rewires the checkout browser call — no paywall or subscribe file is in the diff.
+REJECT — no pasted clause — that the diff adds a page-table mechanism (`screens`, PageTableBinding.tsx, page-table.logic.test.ts) which Spec 96 never names — Spec 96 governs the trial, paywall and lead-gen gate, and its own dated note 2026-11-11 says "Nothing in this spec's Buildo trial, paywall or lead-gen gate changes"; the approval the diff cites ("Dated note 2026-11-20 (PAGE.TABLE, task-390; operator 2026-11-20 \"approved ...\")") is quoted only inside the diff and is not pasted, so cannot see whether the owning ruling covers it.
+DEFER severity=NIT — RULE LIST "part 1 of 2" — "RULE LIST mobile-96 (docs/specs/03-mobile/96_mobile_subscription.md, whole file), part 1 of 2." — NONE — clauses in part 2 are not pasted, cannot see them; this verdict covers part 1 only — re-run part 2 before locking.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  52282ms (52.3s)
+📊 Tokens — total: 41584, input: 31344, output: 10240, reasoning: 9500

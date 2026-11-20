@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:40:18.129Z file_sha256=ad25f2da31c73acbb375c9f8974a0cb8dc9c699fdc985ba9b09f435e8da90298 prompt_sha256=60670c96f641cca729097fe7aebeefa8f85b8dc0727b75267a173684858c5d4e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-mobile-99-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — operator ruling 2026-11-20 "approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule" — scripts/surfaces/_schema/static-page.schema.json "additionalProperties": { "$ref": "#/$defs/screen" } — the schema extension carries no binding form of the ruling's "stop rule" limb, so a second screen can be added under this same approval; the only stop in the change is a test pin, "expect(Object.keys(SCREENS)).toEqual([ID])" (src/tests/surfaces/static-page.logic.test.ts T9) — write the stop rule into the schema's PAGE.TABLE dated note ("one pilot screen until a further ruling") so a second `screens` entry must cite new words.
+
+MET — §10 Out-of-Scope Files "All `mobile/src/store/*.ts` ... `mobile/app/**/_layout.tsx` ... `mobile/src/hooks/useUserProfile.ts` ... `mobile/src/lib/debug/stateDebug.ts`" — diff file list — no changed path is under `mobile/src/store/`, `mobile/app/**/_layout.tsx`, `mobile/app/(onboarding)/`, `mobile/src/hooks/useUserProfile.ts` or `mobile/src/lib/debug/`; the change is confined to the surfaces lane and its schema/emitter/tests.
+MET — §7.6 "A fixed enumeration of product flow events MUST fire at canonical sites" — mobile/src/components/surfaces/SemiQuestionBinding.tsx "return pageProps(SEMI_QUESTION_SLICE.page, flagsOf(s), ..." — the closed §7.6 site list (lead detail, flight job, useSaveLead, PaywallScreen, flight-board) is untouched and no event is added or removed.
+MET — §7.3 "every `router.replace` / `router.push` from AuthGate or AppLayout MUST emit `track('route_decision', ...)`" — mobile/src/components/surfaces/PageTableBinding.tsx "(navigate !== null ? { navigate } : {})" — the change only passes a navigate value on the props tree; no AuthGate or AppLayout router call is added or altered.
+MET — §8.1 "Each bridge in §4 MUST have a Jest test asserting that calling it twice ... produces zero observable mutations" — new files PageTableBinding.tsx / page-table.logic.test.ts — no §4 bridge is added or modified, so no new idempotency obligation arises.
+MET — §8.5 "A vitest ... MUST glob `mobile/src/store/*.ts` ... assert that `signOut()` ... calls `use<Name>Store.getState().reset()`" — no file added under `mobile/src/store/` — the store enumeration set is unchanged.
+MET — §8.6 "parse the Zod object keys from `mobile/src/lib/userProfile.schema.ts` and the §3.1 markdown table" — no change to userProfile.schema.ts or the §3.1 table in the diff — the drift check's two inputs are unchanged.
+MET — §9.15 "globs `mobile/app/**/*.tsx` + `mobile/src/components/**/*.tsx`; flags any `useXStore()` zero-arg whole-store read per §6.1" — mobile/src/components/surfaces/PageTableBinding.tsx (new file under the glob) — the new component has no hooks at all, so the atomic-selector rule cannot be violated by it.
+MET — operator ruling 2026-11-20 "Go on the schema extension plus the semi pilot" — scripts/surfaces/_schema/static-page.json "screens": { "mobile_parcel_semi_question": { ... } } — one schema extension plus exactly one converted pilot screen, with the class table still typed per platform in SemiQuestionBinding.tsx "const STYLES: PageStyles" and derivation still code in "function flagsOf(s: SemiQuestionSituation)".
+
+REJECT — §7.6 — accused of adding a new interactive mobile screen with no PostHog funnel event for it — the §7.6 enumeration is a closed table and does not name the semi question page, so adding an event there would exceed the pasted spec, not satisfy it.
+REJECT — §7.2 — accused of an unpaired `queryClient.invalidateQueries` — the diff contains no invalidateQueries call at all, so the breadcrumb pairing clause has no trigger.
+REJECT — §10 Out-of-Scope Files — accused of touching spec-99 owned files — none of the enumerated paths (stores, layouts, onboarding screens, useUserProfile, stateDebug) appears in the diff.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+
+---
+⏱  60532ms (60.5s)
+📊 Tokens — total: 45013, input: 33967, output: 11046, reasoning: 10013

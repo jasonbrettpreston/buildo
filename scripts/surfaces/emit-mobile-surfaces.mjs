@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 export const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const MANIFEST = 'scripts/surfaces/_schema/converted-surfaces.json';
+const PAGE_TABLE = 'scripts/surfaces/_schema/static-page.json'; // PAGE.TABLE (task-390): `screens`, the rows of an interactive page
 const PRESENTATION = 'scripts/surfaces/_schema/report-presentation.json'; // MF-48 Stage B: the REPORT lifecycle texts
 const GOLDEN_ROOT = 'src/tests/fixtures/surfaces';
 export const SLICE_DIR = 'mobile/src/generated/surfaces';
@@ -43,13 +44,15 @@ const text = (v) => `${JSON.stringify(v, null, 2)}\n`;
 /** Every output file (repo-relative) -> its exact text. */
 export function buildOutputs(root = REPO) {
   const out = new Map();
+  const screens = rj(root, PAGE_TABLE).screens ?? {};
   for (const id of rj(root, MANIFEST).converted) {
     const file = descriptorFile(root, id);
     const d = rj(root, file);
     if (!(d.identity?.platforms ?? []).includes('mobile')) continue;
     const content = rj(root, path.posix.join(path.posix.dirname(file), `${id}.content.json`));
     const config = Object.fromEntries(CONFIG_KEYS.filter((k) => d.config?.[k] !== undefined).map((k) => [k, d.config[k]]));
-    const slice = { surface: id, config, content };
+    // PAGE.TABLE (task-390): a surface with a screen in the page table carries its rows in the slice (one source; the binding draws them).
+    const slice = { surface: id, config, content, ...(screens[id] === undefined ? {} : { page: screens[id] }) };
     out.set(`${SLICE_DIR}/${id}.json`, text({ $comment: `${COMMENT} (input_sha ${sha(slice)})`, ...slice }));
     const gdir = path.join(root, GOLDEN_ROOT, id);
     const names = fs.existsSync(gdir) ? fs.readdirSync(gdir).filter((f) => f.endsWith('.mobile.json')).sort() : [];

@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-20T15:46:09.896Z file_sha256=15a7b3aba87352de2b5f2bbf0259e0a0c88578caba8da046bbab9ad49eb6023d prompt_sha256=451eac7fba1814482e63b1f300ae5c3bfc5e48bce13acc9e522353e01a94ca3d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/DIFF.patch (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> — (none found; this is a faithful, well-tested pure refactor — see DEFER/REJECT below)
+
+DEFER severity=MED — PageTableBinding.tsx `section(s)` switch (new file ~L96-130) — the discriminated switch has no `default`, so an unknown `s.kind` reaching the runtime returns `undefined` and `flatMap(section)` silently injects `undefined` into the children array → opaque renderer crash instead of the promised fail-closed throw — add `default: throw new Error(\`page table: unknown kind ${(s as {kind:string}).kind}\`)` and have emit-mobile-surfaces.mjs AJV-validate `screens` before writing the slice (emit currently reads the table with no validation; only static-page.logic.test.ts T1 validates).
+
+DEFER severity=MED — SemiQuestionBinding.tsx `flagsOf(s)` (new ~L40-55) — an unmodeled `s.state` (e.g. a future 'empty'/'partial' value) makes every flag false, so `pageProps` draws ONLY the header bar — a blank page with a back button, which is exactly the "never a blank page" failure the plan says it prevents; the old `switch(s.state)` had no default either but spread `undefined` (a loud crash) — add an exhaustive guard that throws on an unknown `state` (or a `default_error` fallback notice) so drift is loud, not silent.
+
+DEFER severity=MED — PageTableBinding.tsx `choices` case (`parcelId: { derived: \`${s.id}.${i}\` }`, ~L112) — the pick ref is keyed on the section `id` while `SEMI_QUESTION_DERIVED_NAMES = [/^answer\.(0|[1-9][0-9]*)$/]` is keyed on the literal `answer`, and the label/content key is keyed on `s.content`; this is a landmine for the next increment — any choices row with `id !== 'answer'` emits a derived name outside the closed list (and can diverge from its `content`) — derive the pick from a dedicated field (or assert `id === content` for choices in T9 and schema).
+
+DEFER severity=LOW — PageTableBinding.tsx `on(name)` throw (~L48-52) — the throw is only reachable via binding/table drift (which T9 + the `Record<SEMI_QUESTION_FLAG_NAMES,boolean>` return type already catch pre-merge), but if it ever fires at runtime it crashes the whole screen; confirm the semi screen sits under an error boundary that degrades to the generic error surface rather than a white screen.
+
+DEFER severity=LOW — SemiQuestionBinding.tsx `slice as unknown as {...page: PageScreen}` (~L20-22) — the JSON `PageScreen` TS type and the `static-page.schema.json` `$defs.screen_*` are two independent hand-maintained definitions of the same contract and can silently drift (e.g. TS `action: string` is looser than schema `enum: [back,retry,push,select]`); consider generating the type from the schema or adding a runtime assertion that the drawn component names are all in `mapping.mobile.LIST`.
+
+DEFER severity=LOW — PageTableBinding.tsx section keys (e.g. `key: s.id`, `key: \`${s.id}-text\``) — the schema does not enforce unique section `id`s within a screen; two rows sharing an id would emit duplicate React keys and reconcile wrongly — add an id-uniqueness assertion in T9 (sibling of the existing per-kind checks).
+
+DEFER severity=LOW — PageTableBinding.tsx root `navigate !== null ? { navigate } : {}` (~L134) vs old `...(s.navigate ? {navigate: s.navigate} : {})` — an empty-string `navigate` (str() returns `''` as a string) is now emitted where the old code omitted it; harmless for real routes but a byte-diff if it ever occurs — use `navigate !== null && navigate !== ''` if bit-identical output is a hard requirement.
+
+DEFER severity=MED — SemiQuestionBinding.tsx `const CONTRACT = 'contract_parcels_lookup'` (kept ~L34) — after removing the `contract()` helper this const has no visible use in the diff; verify `semiQuestionData` (below the diff cutoff) still references it, otherwise `noUnusedLocals`/eslint `no-unused-vars` fails the mobile build — drop it if dead, since the contract ref is now built from `screen.contract` inside PageTableBinding.
+
+REJECT — network/retry/webhook/concurrency modes — `pageProps` is a pure, import-free transform with no I/O; upstream timeout, rate-limit, double-delivery and lock-contention categories do not apply here (they live in the semi-question fetch/derivation upstream, unchanged by this diff).
+
+REJECT — "goldens may change because prop insertion order differs" — traced key-by-key: the continue/back/notice/status/choices nodes emit the same keys, same values and same insertion order as the old hand-built tree, and vitest `toEqual` is key-order-independent regardless; not a real risk.
+
+VERDICT: PASS on plan-readiness for implementation
+
+Top 3 unverified data premises (regardless of verdict):
+- "Every answer code returned by `contract_parcels_lookup` has an `answer.<code>` content key" — T9 only proves the `answer.` prefix exists, not that each runtime answer value resolves; verify: `jq -r '.content|keys[]|select(startswith("answer."))' scripts/surfaces/parcel_product/F01/surfaces/mobile_parcel_semi_question.content.json` cross-referenced against the distinct `answers` values in `src/tests/fixtures/surfaces/mobile_parcel_semi_question/*.mobile.json` (and the contract's answer enum).
+- "The mobile props-tree goldens are byte-identical after the refactor" — asserted but no fixture appears in the diff; verify by running the golden builder and `git diff --exit-code src/tests/fixtures/surfaces/mobile_parcel_semi_question/` (this also proves the author did not regenerate goldens to mask a wrong tree).
+- "The committed slice `page` matches the source table" — T9 asserts `rj(generated).page == SCREENS[ID]`, but confirm emit determinism end-to-end: run `node scripts/surfaces/emit-mobile-surfaces.mjs` then `git diff --exit-code mobile/src/generated/surfaces/mobile_parcel_semi_question.json` (proves the `input_sha` and `page` block regenerate identically).
+
+---
+⏱  136876ms (136.9s)
+📊 Tokens — total: 51315, input: 26461, output: 24854, reasoning: 23351

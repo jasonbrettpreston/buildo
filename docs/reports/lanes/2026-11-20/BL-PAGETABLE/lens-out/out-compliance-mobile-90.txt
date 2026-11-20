@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:38:54.249Z file_sha256=453fe10a8a1382f33cd9a8c85c337eeb7b507b8fb6df616b742d8374b44b063b prompt_sha256=b80315054eda4c4986583ee8ab8d3f86cd6368f1ce8f0a17e5a4cb5bdfeaa378
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-mobile-90.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 90 §2 Theme Constraint "NativeWind `dark:` variants are required for all UI components." — mobile/src/components/surfaces/SemiQuestionBinding.tsx:32 "const STYLES: PageStyles = {" — the change moves the whole class table of the semi page into STYLES and adds the page builder, and no `dark:` token appears anywhere in the diff, so the new UI surface is built without a single dark variant — confirm the L.* tokens in mobile/src/constants/lotMap.ts carry `dark:` variants (not visible in this diff), or record the gap against MF-35 per the pasted 2026-11-09 note "How the React Native Reusables components carry their dark values is MF-35's to rule".
+
+DEFER severity=MED — operator ruling 2026-11-20 (NOT PASTED in context) "operator 2026-11-20 \"approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule\"" — scripts/surfaces/_schema/static-page.json:2 "Dated note 2026-11-20 (PAGE.TABLE, task-390; operator 2026-11-20 \"approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule\")" — the only authority cited for the new `screens` mechanism, the closed action/icon enums, and the `targets`/`idle`/`target`/`busy` fields is a JSON $comment inside the material, so the new behaviour cannot be checked against any pasted clause — paste the ruling or plan section that approves the schema extension and the semi pilot so the additions are judgeable.
+
+DEFER severity=LOW — Spec 90 §10 "Unit Testing (Jest): Jest + React Native Testing Library for logic hooks." — src/tests/surfaces/page-table.logic.test.ts:11 "import { describe, expect, it } from 'vitest';" — the new mobile module is covered only by a vitest file in the web test tree and no Jest test under mobile is added — the binding header says this mirrors the existing parcelSearchCore.ts pattern, so it is likely the repo's accepted layout for import-free helpers; cannot see the mobile Jest config to confirm.
+
+REJECT — Spec 90 §2 dated note "The Expo Web build target is unruled." — accused of adding a web rendering path for interactive screens via `targets: ['web','mobile']` defaulting to both — not a real issue: mobile/src/components/surfaces/PageTableBinding.tsx:51 "const drawn = (g: Gate): boolean => (g.targets === undefined || g.targets.includes('mobile')) && on(g.when);" draws only on the phone, and no consumer of `screens` outside the mobile slice exists in the diff.
+
+MET — Spec 90 §3 "MUST NOT perform complex data mutation, geographic PostGIS math, or algorithmic sorting" — mobile/src/components/surfaces/PageTableBinding.tsx:45 — pageProps maps table rows to props with no mutation, no geo math and no sorting; the situation to flags/values derivation stays in `flagsOf` in the binding.
+MET — Spec 90 §5 "NO Web Libraries: Never import `shadcn/ui`, `@tremor/react`, `framer-motion`, or `lucide-react`." — mobile/src/components/surfaces/PageTableBinding.tsx:41 — the builder is import-free and emits plain component-name strings only.
+MET — Spec 90 §9 "Accommodate device Safe Areas using `react-native-safe-area-context`." — mobile/src/components/surfaces/PageTableBinding.tsx:128 — the root node is `node('SafeAreaView', { className: styles.screen, edges: { top: 'additive' }, testID: testID('screen')`.
+MET — Spec 90 §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`." — mobile/src/components/surfaces/PageTableBinding.tsx:68 "className: busy ? st.busyClassName : st.className," — every interactive node still takes its class from the same typed L.* table (L.semiSelect, L.semiRetry, L.semiBack) as before the refactor, per "touch_targets.mobile.Button gains min-h-[48px] beside min-h-[44px]".
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+
+---
+⏱  83834ms (83.8s)
+📊 Tokens — total: 46623, input: 29393, output: 17230, reasoning: 16243

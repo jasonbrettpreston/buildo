@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:32:40.851Z file_sha256=f4239db10657f1f9699eb9abeaa45aeee6f40a00376007f46457ee29dec0f0ba prompt_sha256=8e70d4cd05b4ef303d0b8ac7d1f2b13930b84bb125303210fd67233d5aae3e6d
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/plan/in-plan-compliance-surface-135.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — FE-31 "one props golden per reachable state per declared target, each `covers` a state or check, every state covered" — plan step 1 "optional `targets` (subset of web, mobile; default both)" with step 2 "`screens.mobile_parcel_semi_question` = 8 sections" (targets unset) — a screen with no `targets` defaults to both, making web a declared target for which only the 8 `*.mobile.json` goldens exist, so FE-31's per-declared-target golden and FE-07 parity are unmet for web — set `targets: ["mobile"]` on this screen, or add the web props goldens and web parity.
+DEFER severity=MED — FE-31 "in the converted manifest (two-direction totality)" — plan step 3 "Registered in bindings.json modules (LIST, binding_mobile_list)" — the plan registers `bindings.json` but never says whether the converted screen enters `scripts/surfaces/_schema/converted-surfaces.json`, so the two-direction totality cannot be shown — add the screen to `converted-surfaces.json` or record the exemption in the plan.
+DEFER severity=MED — FE-31 "a new library, component kind or binding beyond the Spec 126 §11b.5 first-use costs is an operator ruling first" — plan step 3 "mobile/src/components/surfaces/PageTableBinding.tsx (new, import-free, pure)" — the operator ruling that authorizes this new binding is not in the pasted context (cannot see); only the plan's own narrative cites it — paste the 2026-11-20 operator ruling as governing context or add the FE row.
+DEFER severity=LOW — FE-06 "status words come from a closed list" — plan step 1 "status(loading)" — the new `status` section kind declares no closed value list, only a single instance, so status words are not proven closed — enumerate the closed status values in `static-page.schema.json`.
+MET — FE-02 — plan step 2 "`screens.mobile_parcel_semi_question` = 8 sections" and goal "through the UNCHANGED mobile SurfaceRenderer.tsx" — the screen is rows of data drawn by the shared renderer, not per-screen code.
+MET — FE-05 — plan step 1 "Every shown text is a content key, never a typed value or number" — no UI maths or derived numbers are added.
+REJECT — FE-02 — accused of keeping "the situation -> flags and values derivation" as code — this is input-state derivation for a static question, not the report scenario-per-code FE-02 forbids.
+REJECT — FE-36 — accused of introducing local-state view swaps via the action list `back, retry, push, select` — the renderer that would perform navigation is UNCHANGED and out of scope, so this change adds no local-state swap.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 3
+
+---
+⏱  96122ms (96.1s)
+📊 Tokens — total: 45362, input: 26644, output: 18718, reasoning: 18054

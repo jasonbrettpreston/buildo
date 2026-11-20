@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:38:19.313Z file_sha256=9e32960e6c44bfda10772387609efd3fa88c706307f7e6ad7cfd3aa0fd9cce78 prompt_sha256=e9f5561193a4939beb2099d8ff5c6a1e47ed16b15bdff2ca33de09441c9adc3b
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-mobile-100-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — SEMI-B dated note 2026-11-13 item (2) "Is this house one half of a semi-detached pair?": yes / no / not sure" — mobile/src/generated/surfaces/mobile_parcel_semi_question.json ""list": "answers"" — the three answer labels/values come from the situation (`s.answers`) which is not in this diff, so the yes / no / not sure set is cannot see here — include the answers source (the semiQuestion situation or its content keys) so the answer set is checkable against the clause.
+DEFER severity=LOW — SEMI-B dated note 2026-11-13 item (2) "The answer is a route param applied in the app (`lot_form_user_override` ...); not sure writes nothing and shows the semi view" — SemiQuestionBinding.tsx "return pageProps(SEMI_QUESTION_SLICE.page, flagsOf(s), { answers: s.answers, selected: s.selected, route: s.route, navigate: s.navigate }, STYLES);" — the page draws rows only; the override write and the not-sure branch are outside this diff, cannot see — add the situation/override code to the material or state that this diff does not touch it.
+MET — SEMI-B 2026-11-13 item (2) "the app shows one question before the report" — mobile/src/generated/surfaces/mobile_parcel_semi_question.json ""when": "ask"" on the question, choices and continue rows — exactly one question block, its answer cards and Continue, all drawn only in the ask state, the same structure the pre-diff binding drew.
+MET — SEMI-B 2026-11-13 item (2) "clear semis and clear detached lots go straight to the report" — mobile/src/components/surfaces/SemiQuestionBinding.tsx "ask: s.state === 'ask'" — the ask state still comes from the situation's state machine, unchanged by the row extraction, so who gets the question is unchanged.
+MET — Spec 100 §3.2 "The response is an **explicit allow-list**, not a deny-list" — mobile/src/components/surfaces/PageTableBinding.tsx "export type PageScreen = { prefix: string; contract: string; sections: PageSection[] }" — the builder reads content keys, flags and typed styles only; no parcel column and no lookup envelope field is added or read by this diff.
+REJECT — Spec 100 §3.2 "A future Tier-2 column MUST NOT leak by default" — the diff is accused of adding a response field by shipping a "page" key — it is the generated mobile slice's row set (mobile/src/generated/surfaces/mobile_parcel_semi_question.json ""page": {"), not `ConsumerParcelLookupResponse`; `src/app/api/parcels/lookup/types.ts` is not in the diff.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 0
+
+---
+⏱  39157ms (39.2s)
+📊 Tokens — total: 39522, input: 32250, output: 7272, reasoning: 6612

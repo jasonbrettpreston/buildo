@@ -1,0 +1,1 @@
+tsx compare old SemiQuestionBinding (HEAD) vs new, all fixture inputs x error kinds x busy: compared 180 situations, 0 differ; capture --check: semi-question goldens ok (8)

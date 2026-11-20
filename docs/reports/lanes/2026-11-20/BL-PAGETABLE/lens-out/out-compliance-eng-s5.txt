@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:38:19.321Z file_sha256=d736cf4079eff15dc60e4a3219278999a8fa04b8aca2e45d2648a89a83dd680a prompt_sha256=9d39d0951ebb673a10a0df7a3437839e6fba6a8595c35921ce9534eae5a64b69
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — 5.1 Typed Factories Only "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/surfaces/page-table.logic.test.ts:38 "const FLAGS = { loading: false, ask: false, unexpected: false, plain: false, drift: false, busy: false };" — the new logic test builds its flags and screen fixtures inline instead of importing typed factories — add PageScreen, PageStyles and flags factories to src/tests/factories.ts and use them in the test.
+
+BUG severity=HIGH — 5.3 Red-Green Test Cycle "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — src/tests/surfaces/page-table.logic.test.ts:49 "it('RED: a when naming no flag throws', () => {" — the only RED evidence is a test name; no failing run or red commit is pasted, so the golden rule is unmet — paste the failing-run output or split the change into a red commit before the implementation.
+
+BUG severity=HIGH — 5.5 Test-Layer Map "a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity" — mobile/src/components/surfaces/SemiQuestionBinding.tsx:39 "SRCH.SEMI-3 (task-361, UX-4): while the answered lookup runs Continue is busy" — the diff rewrites this load-bearing behavior and adds logic and parity tests but no .regression.test.ts regression lock — add src/tests/surfaces/*.regression.test.ts pinning the busy class/state and the schema-drift retry exclusion.
+
+REJECT — 5.2 .ui.test.tsx — the change is accused of lacking a UI test for SemiQuestionBinding.tsx — PageTableBinding and SemiQuestionBinding return props trees, not React elements, and SurfaceRenderer.tsx is unchanged, so the .ui.test.tsx row is not triggered.
+
+MET — 5.2 Test File Pattern — src/tests/surfaces/page-table.logic.test.ts:1 — the pure rows-to-props builder is tested in a .logic.test.ts.
+
+MET — 5.2 Test File Pattern (parity battery) — src/tests/surfaces/static-page.logic.test.ts:104 "expect(rj(mobile/src/generated/surfaces/${ID}.json).page).toEqual(SCREENS[ID]);" — the generated mobile slice is pinned to the page table.
+
+MET — 5.2 Test File Pattern (schema) — src/tests/surfaces/static-page.logic.test.ts:69 "['a screen section of an unknown kind', (t) => { t.screens.mobile_parcel_semi_question.sections[1].kind = 'banner'; }]," — the new screens schema is exercised by AJV plant cases.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 3
+
+---
+⏱  119938ms (119.9s)
+📊 Tokens — total: 52459, input: 26928, output: 25531, reasoning: 24845

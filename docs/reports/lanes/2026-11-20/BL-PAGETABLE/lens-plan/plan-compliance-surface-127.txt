@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:32:19.097Z file_sha256=bd7f1a5ce91f49dc9c70f444bf893104ac4611b51a41abc5238ff90ac9959042 prompt_sha256=1f6b7751aa185c3541c3d75a1fe24871756e534da61910a3b6958cf8872fc54c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/plan/in-plan-compliance-surface-127.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — operator ruling 2026-11-20 "Go on the schema extension plus the semi pilot, with the stop rule" — task-390 step 6 "the mobile jest golden test is UNVERIFIED locally (Mobile CI)" — the byte-for-byte golden reproduction the stop rule requires is not executed before lock, so the stop rule cannot fire and the no-visible-change claim rests on prose, not an artifact (Spec 127 §1 "conversion is evidenced by artifacts, never by prose") — run the mobile jest golden test (or the capture script's full byte diff) locally before plan-lock, and if bytes differ stop and report which bytes differ.
+
+BUG severity=HIGH — Spec 127 §4.3 "so any of those changing forces a recapture" — task-390 "Goldens expected to move: none." — the change adds screen rows to the descriptor data and adds PageTableBinding.tsx, which sit inside the fingerprint span (descriptor, archetype component, format helpers), so either the fingerprints move and the goldens are restamped, or the new data and binding are outside the lock; the plan silently claims the first is unnecessary — restamp the 8 goldens as a fingerprint-only change in the same commit, or name the fingerprint file list and show static-page.json and PageTableBinding.tsx are outside it.
+
+BUG severity=HIGH — Spec 127 §3.2a note 2026-11-09 "SV-DESC (the converted manifest and each converted descriptor), SV-SCREEN (one golden per state per declared target at src/tests/fixtures/surfaces/<surface_id>/<state>.<target>.json, covers, nothing stray, fresh fingerprints) and SV-SBIND (content keys, whitelisted columns, no display text in golden props)" — NONE — no step in the plan runs node scripts/surfaces/surface-validate.mjs --check or scripts/surfaces/screen-checks.mjs, so none of the three generic arms for non-REPORT surfaces is proven — add the SV-DESC/SV-SCREEN/SV-SBIND run to step 6 and make a non-zero exit the gate, in the same commit as the emitter change.
+
+BUG severity=HIGH — Spec 127 §8.2 §4 "Every component file under src/components/** or mobile/src/components/** must appear in exactly one surface's owns.components[]" — task-390 step 3 "mobile/src/components/surfaces/PageTableBinding.tsx (new, import-free, pure)": the new component is claimed by no surface and the plan touches no census row, so §4 cannot be empty and §8.5 "A conversion that does not move its registry row has not been recorded" is unmet — add the file to the owning surface's owns.components[] in the census shard, regenerate the registry and descriptors, and include the both-directions --check.
+
+DEFER severity=MED — Spec 127 §3.1 "the golden projections for each target are equal on the shared field set" — task-390 step 1 "targets (subset of web, mobile; default both)": all 8 sections default to a web target with no web golden and no parity comparison, so SV-SCREEN's per-declared-target obligation is claimed but unproven — declare targets ["mobile"] explicitly on all 8 sections, or produce the web goldens and run the parity check.
+
+DEFER severity=MED — Spec 127 §6 "npm run typecheck, npm run lint, and npx vitest related <changed files> --run pass (the admin Pre-Commit Gauntlet)" — NONE — the plan names a red-first commit attempt and a capture --check but no typecheck, lint, vitest related, or generate-spec-mirror --check run, so acceptance in "one command and one commit" is not stated — add the §6 acceptance block to the final step of the plan.
+
+DEFER severity=MED — Spec 127 §3 S-shape "no inline router.push string where a declared navigation event belongs" — task-390 step 1 "Closed lists for action (back, retry, push, select)": push carries no destination field, so the destination is either a typed string in the page table (the exact shape S-shape forbids) or the action cannot be honoured — add a field for the declared navigation event id, or drop push from the action list until the card names it.
+
+DEFER severity=MED — Spec 127 §2 PH-0 step 6 "every hand-written constant ... this list feeds S3" — task-390 step 4 "the declared closed flag list SEMI_QUESTION_FLAG_NAMES", "the typed PageStyles table": a new field whitelist and a new label/style table enter a converted surface with no S3/S4.2 disposition, and §4.2's vocabulary is closed — record both in the surface's constant list with an Intent Ledger disposition adjudicated by a different party per §4.1.
+
+MET — Spec 127 §2a — task-390 "Out of scope: ... any migration or compatibility code": no table is declared, so PH-1 is skipped by "PH-1 is skipped entirely for a surface that needs no new table".
+MET — Spec 127 §3.2a SV-SBIND — task-390 step 1 "Every shown text is a content key, never a typed value or number": display text is closed to content keys at the schema, which is the SV-SBIND content-key arm.
+MET — operator ruling 2026-11-20 "Go on the schema extension plus the semi pilot" — task-390 out-of-scope "the other three pages": the change is confined to the one pilot surface and its schema, no fan-out beyond the card.
+MET — Spec 127 §3.2a SV-SCREEN path convention — task-390 "src/tests/fixtures/surfaces/mobile_parcel_semi_question/*.mobile.json": the golden location matches <surface_id>/<state>.<target>.json for the mobile target.
+
+REJECT — Spec 127 §3.2a S-gen and S-golden — the change does not generate REPORT scenario fields or 4-target REPORT goldens — those are the REPORT-only steps added 2026-11-04 for McFrontend Phase 1 report surfaces; mobile_parcel_semi_question is not a REPORT surface, so the accusation does not apply.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 8
+
+---
+⏱  66858ms (66.9s)
+📊 Tokens — total: 28682, input: 15451, output: 13231, reasoning: 11828

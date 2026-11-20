@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:46:08.793Z file_sha256=8504c12ef27855ea2906a7dc3fd983fb82be29f0c61e4d03c27af9560d40ae11 prompt_sha256=042e7ff084aab79a6a44c1ae30ee7e1346b278f68c3bea40a9f0018ce76e7f61
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-surface-136.txt (model: deepseek-reasoner)
+
+BUG severity=MED — fe.07 "P6 Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output." — scripts/surfaces/_schema/static-page.schema.json `"targets": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": [ "web", "mobile" ] } }` — the new screen contract lets a single section be declared for a subset of targets (page-table.logic.test.ts B2 asserts the web-only block is not drawn on the phone), so one declaration no longer renders the same on every target, and no pasted clause names a per-block target gate — delete `targets` from `$defs/screen_*` and from `Gate` in PageTableBinding.tsx, keeping platform scope on the descriptor's `identity.platforms` only.
+
+BUG severity=MED — fe.03 "P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside." — src/tests/surfaces/static-page.logic.test.ts "for (const f of flagsOf(s)) if (!flagNames.includes(f)) out.push(`${id} ${s.id}: flag ${f} is not in the declared list`);" — T9 checks only flag names and content keys; a row's `list`, `select`, `target` and `navigate` value names are never checked against the values the binding supplies, and PageTableBinding.tsx "const str = (name: string): string | null => { const v = values[name]; return typeof v === 'string' ? v : null; };" turns an unknown name into a silent null, so a mistyped `select` or `target` renders an unchecked card or a disabled Continue instead of failing — declare the closed value-name list beside SEMI_QUESTION_FLAG_NAMES and have T9 check every list, select, target and navigate name against it.
+
+DEFER severity=LOW — fe.01 "McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name" — mobile/src/components/surfaces/PageTableBinding.tsx "// PAGE.TABLE (task-390, Increment 1·B)" — this is new production mobile code and I cannot see the record that McBylaws increment 2 has closed or the by-name freeze lift — cite the increment-2 close and the named lift in the page-table note (or land the rows as documents only) so the file's authority is on its face.
+
+DEFER severity=NIT — fe.31 "Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema" — scripts/surfaces/_schema/static-page.schema.json "THE one home of the static page contract: the page table scripts/surfaces/_schema/static-page.json holds one page per STATIC surface per state, in screen order" — the same contract now also holds a mobile LIST screen (`mobile_parcel_semi_question`), so its declared scope no longer matches its contents — name the `screens` scope in the schema title and first sentence, or give interactive screens their own schema file.
+
+MET — fe.02 — mobile/src/components/surfaces/PageTableBinding.tsx — block order, texts, actions and gates are rows of the `screens` entry; the only code is the shared builder and the binding's flag/value derivation.
+
+MET — fe.03 — src/tests/surfaces/static-page.logic.test.ts — T9 pins the screen set to the converted LIST mobile surface, asserts the generated slice `page` equals the table, and plants RED cases for an undeclared flag and a missing content key.
+
+MET — fe.05 — mobile/src/components/surfaces/PageTableBinding.tsx — no arithmetic on any displayed number; the choices argument is the name `{ derived: `${s.id}.${i}` }`, not a derived quantity.
+
+MET — fe.18 — scripts/surfaces/_schema/static-page.json — every shown text in the rows is a content key (`"content": "state.loading"`, `"label": "retry.label"`), and the contract vars stay a reference (`"errors.429.retryAfterSeconds"`).
+
+MET — fe.31 — scripts/surfaces/_schema/bindings.json — PageTableBinding.tsx is registered under the promoted owner `binding_mobile_list` with archetype LIST, and the semi binding's export list is updated in the same table.
+
+MET — fe.33 — mobile/src/components/surfaces/PageTableBinding.tsx — displayed strings are content refs only (`accessibilityLabel: content(b.label)`), no typed string and no library default text.
+
+MET — fe.36 — mobile/src/components/surfaces/PageTableBinding.tsx — "onPress: target === null ? null : { action: b.action, [b.target]: target }", navigation stays an action for the router, never a local view swap.
+
+REJECT — fe.05 — the `{ derived: `answer.${i}` }` ref accused of deriving a value in the UI — it is a declared name of the selected answer, not a computed number, and it predates this diff unchanged.
+
+REJECT — fe.18 — the notice `vars` `{ contract: `contract_parcels_lookup.errors.429.retryAfterSeconds` }` accused of binding outside the closed set — fe.32 names contract as a binding kind into a declared CONTRACT descriptor, and the ref is byte-identical to the pre-diff code.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  120224ms (120.2s)
+📊 Tokens — total: 51677, input: 29700, output: 21977, reasoning: 20730

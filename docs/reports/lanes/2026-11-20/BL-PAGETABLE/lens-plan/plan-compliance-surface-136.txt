@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:32:48.360Z file_sha256=9697529a75af43dcc4bc1956ca2aacac300ad145b9f0af5a130cca56d6ec0ef9 prompt_sha256=365da31566d1cddefcbc712ddaac35399c47f41d2f5268e728c89db393ea0ca2
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/plan/in-plan-compliance-surface-136.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — fe.14 "LEAN: the report page converts first (generator, one REPORT renderer, goldens, locks); reuse the back-end machinery; other screens convert on touch." — material "Goal: the phone semi question page (mobile_parcel_semi_question) is drawn from rows of the page table" — the first conversion here is the phone semi question page, not the report page; the 2026-11-20 operator words that would reorder the queue are quoted inside the plan, not pasted context, so the reorder is unverified — either add the report page to this lane or paste the operator ruling that names the semi pilot as first.
+
+BUG severity=HIGH — fe.01 "McFrontend is documents only now; the build starts after McBylaws increment 2 closes, with the 2026-11-02 infra freeze lifted for it by name" and "Surface paths are held (pending globs) until Phase 1 opens." — material "3. mobile/src/components/surfaces/PageTableBinding.tsx (new, import-free, pure)" and "2. static-page.json: `screens.mobile_parcel_semi_question` = 8 sections" — the plan writes mobile code and opens a screen path now, and never states increment 2 has closed or Phase 1 is open; the exception rests on a quote inside the plan, not a pasted ruling — state the increment 2 close and Phase 1 opening, or paste the ruling naming this build.
+
+BUG severity=HIGH — fe.18 "every displayed field binds to a source in the closed set catalogue / content / user_input / ad_slot (and external_embed, the fifth source, by FE-21)" — material "Closed section kinds bar, status, text, notice, choices, button, each with the optional `when` ... and optional `targets`" plus "pageProps(screen, flags, values, styles)" — no source key exists on any shown field, so a value arriving through `values` has no declared source and cannot be checked against the closed set (fe.27 parcels, fe.32 contract included) — add a required per-field source drawn from the closed set and check it in T9.
+
+BUG severity=HIGH — fe.07 "P6 Same everywhere: mobile, web, admin and PDF render the same declaration; parity compares each target's real output." — material "optional `targets` (subset of web, mobile; default both)" — the closed target list omits admin and PDF, so no screen can ever declare those targets and parity for them cannot be satisfied — make the closed list web, mobile, admin, pdf.
+
+BUG severity=HIGH — fe.15 "the McFront proof canaries a-f, EXECUTABLE (planted defect in a temp copy: non-zero exit; clean copy: zero), are in the plan's acceptance criteria." — material "Tests first: static-page.logic.test.ts T1 planted defects for screens + T9" and "Goldens proven by `tsx --tsconfig mobile/tsconfig.json scripts/surfaces/semi-question-golden-capture.ts --check`" — acceptance names T1, T9, B1-B5 and one capture check; canaries a-f appear nowhere — add canaries a-f as numbered acceptance criteria with non-zero on the planted copy and zero on the clean copy.
+
+DEFER severity=MED — fe.37 "its values are content templates with one {value} slot filled on the server with a server-formatted string, each from a read declared in the page table and the page's server module" — material "4. SemiQuestionBinding.tsx shrinks to: ... the situation -> flags and values derivation, the typed PageStyles table" — values are derived in the client binding, not filled on the server from a declared read, and the schema declares no reads; cannot see whether the page shows a stored value — state in the plan that this page shows no stored value, or declare the read in the page table and the server module.
+
+DEFER severity=MED — fe.10 "The generator lives in the spec: the REPORT section of Spec 126." — material "Out of scope: ... the Spec 126 dated note (task-388)" — the page table schema extension and the new `page` copy in emit-mobile-surfaces.mjs are generator changes whose spec home is deferred to another task — carry the Spec 126 note in this lane, or record in the plan why the schema extension needs no spec home.
+
+MET — fe.02 — material "2. static-page.json: `screens.mobile_parcel_semi_question` = 8 sections" — the screen is declared as rows, not as coded layout.
+MET — fe.03 — material "T9 (screen totality, flags in the declared list, content keys exist, slice equals table, binding keeps flags and values only)" — declarations are checked against the table in both directions with goldens held byte for byte.
+MET — fe.33 — material "Every shown text is a content key, never a typed value or number." — every displayed string on this screen comes from content.
+
+REJECT — fe.34 — that the new static-page.json plus static-page.schema.json creates a rival to the ONE report page contract — fe.34 scopes the v21 REPORT page tree and its contract report-page.schema.json, while fe.37 speaks of "the page table" for STATIC pages, which is this table, a distinct surface.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 5
+
+---
+⏱  46784ms (46.8s)
+📊 Tokens — total: 15312, input: 5913, output: 9399, reasoning: 8209

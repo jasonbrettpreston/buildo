@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:40:31.629Z file_sha256=2c5341bbc225ef9e52f0105f41d73f40357e491b7e94675fe6af3bad753f5981 prompt_sha256=ac521ccbfb30b17a0b017abd340f90208c5f50552ce50cc21da83878b1ddd086
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-surface-126-p10.txt (model: deepseek-reasoner)
+
+BUG check first: no pasted clause in §11b.7 is contradicted outright; the drawn tree, the selected-at-open rule and the look source all survive the refactor. What follows is the ownership conflict, the unverifiable authority, and the MET/REJECT lines.
+
+DEFER severity=MED — §11b.7 "Ownership. Spec 126 owns which pages exist and how they connect; Spec 117 owns how they look" and "Per-page layouts live in Spec 117 §6; the page set lives here." — scripts/surfaces/_schema/static-page.schema.json "one INTERACTIVE page per surface (surface id -> prefix, contract, sections), its block order, texts, actions and the block shown under a named flag are rows" — block order and which texts show is the per-page layout the pasted part places with Spec 117 §6, and this change moves it into a Spec 126 data table — record the split in §11b.7 (Spec 126 owns structure, 117 §6 owns look) before the next screen converts, or keep block order in 117 §6.
+
+DEFER severity=LOW — §11b.7 header "part 10 of 11. Judge the material under review against the rules in this part" — mobile/src/components/surfaces/PageTableBinding.tsx "// SPEC LINK: docs/specs/02-web-admin/126_maxbld_surface_standard.md §0a principle 1 and §11b.2" and scripts/surfaces/_schema/bindings.json "operator 2026-11-20 \"approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule\"" — the clause the change is built on (§0a principle 1, §11b.2) and the operator approval are not in this pasted part, so compliance with them is cannot see here — no action for this part, judged in the run that holds §11b.2.
+
+MET — §11b.7 A3 dated note 2026-11-11 "Nothing is selected at open." — mobile/src/components/surfaces/PageTableBinding.tsx "const checked = a === selected;" with SemiQuestionBinding.tsx "{ answers: s.answers, selected: s.selected, route: s.route, navigate: s.navigate }" — a null select value leaves every card unchecked, unchanged from the pre-table binding.
+
+MET — §11b.7 rule 11 "A rough sketch or an annotated screenshot is enough; the standard components set the look." — mobile/src/components/surfaces/SemiQuestionBinding.tsx "const STYLES: PageStyles = { screen: L.screen, scroll: L.scroll, column: L.column" — classes, hexes and sizes stay in the typed MF-53 table and the drawn props tree keeps the same keys and order, so the approved layout is not re-opened.
+
+MET — §11b.7 dated sub-note "Only the new report ... the old hand-built report screen is not used in MaxBLD." — scripts/surfaces/_schema/bindings.json "{ \"path\": \"mobile/src/components/surfaces/PageTableBinding.tsx\", \"platform\": \"mobile\", \"archetypes\": [\"LIST\"]" — the new builder is a LIST entry and REPORT stays on ReportBinding.tsx, so no second report renderer appears.
+
+MET — §11b.7 "Outside the MaxBLD set. Buildo's lead-gen pages are not MaxBLD pages and are not listed above" — scripts/surfaces/_schema/static-page.json "\"screens\": { \"mobile_parcel_semi_question\"" — the converted screen is the parcel-tool semi question, not a Buildo lead-feed page.
+
+REJECT — §11b.7 "Rule 1. The report detail is the expanded card; there is no separate detail page (A)." — the change could be read as adding a new screen beside the report — it converts the existing semi question pick screen into rows, adds no report page and no detail page.
+
+REJECT — §11b.7 "Rule 3 amended: in-app purchase." — the change could be read as touching the app purchase path — it touches only the parcel-tool question screen and the page table, no checkout or entitlement text.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  81887ms (81.9s)
+📊 Tokens — total: 49445, input: 33901, output: 15544, reasoning: 14597

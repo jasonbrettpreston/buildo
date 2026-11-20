@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:30:54.307Z file_sha256=33dfaeb9c4e10d591c1ae52d9a8ee15dc86b984e9617b66460c71759e540ed95 prompt_sha256=b326665357542b3b2bd14a117fc30f825f54d3b53bbbc2746def2de8508063d2
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/plan/in-plan-compliance-mobile-96.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan Rule line, Spec 126 §0a principle 1 / §11b.2 / fe.02 / operator 2026-11-20 — clause "Rule: Spec 126 section 0a principle 1 and 11b.2 (page structure is data; derivation, geometry, input state and fetch stay code; style class tables stay typed per platform); fe.02" — pasted context "(no pasted context provided)" — all six steps rest on clause text absent from this run, so the closed section kinds, "ONE positive flag name ... no expression, no negation, no list", "Every shown text is a content key, never a typed value or number" and the closed action (back, retry, push, select) and icon (ChevronLeft, AlertTriangle, Info) lists cannot be checked clause by clause, and the pasted Spec 96 names none of this change — fix: re-run with Spec 126 §0a.1, §11b.2, fe.02 and the operator verbatim pasted as the rule list; until then every compliance claim below the schema shape is unjudgeable.
+
+DEFER severity=MED — operator 2026-11-20 "with the stop rule" — clause "with the stop rule" — plan "the mobile jest golden test is UNVERIFIED locally (Mobile CI)" and "Goldens expected to move: none." — the stop rule can only fire where bytes are compared, yet the plan names one capture check, declares the jest golden gate unverified, and in step 5 changes the generator that feeds those goldens ("emit-mobile-surfaces.mjs: copies the screen rows into the generated slice (`page`) for a surface that has a screen; --check covers it.") — fix: name the exact command that diffs all 8 `*.mobile.json` byte for byte with its output, and make the Mobile CI jest golden test a merge gate rather than a note.
+
+DEFER severity=MED — Spec 96 dated note 2026-11-11 "The app half (the App A gate in `mobile/app/(app)/_layout.tsx`) stays MF-49." and "the status set is the one constant of section 10" — plan "3 notices (rate limit, entitlement, error with parts for plain error / schema drift / retry button)" with "the situation -> flags and values derivation" — the parcel page gains a client presented entitlement state while the pasted note keeps the parcel app half with MF-49 and the status set as one constant, and the plan never says where the entitlement flag value originates — fix: state that the flag comes from the server `GET /api/parcels/lookup` response/status field and reads the section 10 constant, or drop the entitlement notice from this pilot.
+
+MET — Spec 96 dated note 2026-11-11 "Nothing in this spec's Buildo trial, paywall or lead-gen gate changes." — plan Changes 1-6 — no step touches `mobile/app/(app)/_layout.tsx`, `PaywallScreen.tsx` or `paywallStore.ts`, so trial, paywall and lead-gen gate text stays as written.
+
+MET — operator 2026-11-20 "(no migration or fallback code)" — plan "Out of scope: SurfaceRenderer.tsx, semiQuestion.ts (lane BL-FIXTUNE), the other three pages, the reports, the web, the Spec 126 dated note (task-388), any migration or compatibility code." — migration and compatibility code are declared out, and step 1 keeps the existing rows untouched ("`pages` and the static kinds are untouched.").
+
+MET — Spec 96 §11 "Pricing tier display in-app — managed on web only" — plan "Every shown text is a content key, never a typed value or number." — no price, tier, checkout or payment string enters the page table; the new kinds carry content keys only.
+
+REJECT — Spec 96 §11 Target files — accused: writing `scripts/surfaces/_schema/static-page.json`, `mobile/src/components/surfaces/PageTableBinding.tsx` and `scripts/surfaces/emit-mobile-surfaces.mjs`, which §11 does not list — not a real issue: §11 names the files Spec 96's own build writes, not a closed set for another lane, and the plan modifies none of the six listed files.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12 (Spec 96) + 2 (rules quoted in the material)   Unmet: 2
+
+---
+⏱  59977ms (60.0s)
+📊 Tokens — total: 23406, input: 11852, output: 11554, reasoning: 10576

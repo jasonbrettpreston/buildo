@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:30:54.298Z file_sha256=0bbdc10377b9c5e7fa5be245dc8cbd0a00c8ad61dd59809a279073871c6dd253 prompt_sha256=67e5096b4a95aaa19888d70d34db36dacd64b731153049f25d6b98b66f329534
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/plan/in-plan-compliance-eng-s5.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings:
+
+DEFER severity=MED — Spec 05 §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code ... Run the test and confirm it fails" — plan step 6 "Red through a commit attempt with only tests and the task file staged." — a rejected commit can fail on a missing module, a lint gate or hook config rather than on the planted-defect assertion, and no red run output is recorded — paste the executed red output (failing assertion names) for T1, T9 and B1-B5 before steps 3-5 code is written.
+
+DEFER severity=MED — Spec 05 §5.2 "`*.ui.test.tsx` | React component rendering, interactions | Any new/changed component" — plan step 6 "the mobile jest golden test is UNVERIFIED locally (Mobile CI)" — the changed component `SemiQuestionBinding.tsx` has no named, locally run ui test, the only rendered-output proof is the capture script — name the `*.ui.test.tsx` that renders the semi question slice and record one local green run, or paste the capture `--check` byte-diff evidence as the explicit substitute.
+
+DEFER severity=MED — Spec 05 §5.5 "a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity, not just the one that is easiest to write" — plan step 6 "static-page.logic.test.ts T1 planted defects for screens + T9 ... new page-table.logic.test.ts B1-B5 for the builder" — parity is covered (T9 "slice equals table", emit `--check`) but no `*.regression.test.ts` is named even though step 4 "SemiQuestionBinding.tsx shrinks to:" retires an inline derivation — add a regression test pinning the 8 goldens, or state in the plan why the capture `--check` is the fence.
+
+DEFER severity=LOW — Spec 05 §5.1 "You MUST always import typed factories from `src/tests/factories.ts`" — plan step 6 "T1 planted defects for screens" — no factory additions are named for the screens, flags and values fixtures the two new test files require, so untyped inline literals are the default path — name the typed factory additions in `src/tests/factories.ts` in step 6.
+
+REJECT — Spec 05 §5.2 DB replay row — accused of adding a schema change without DB-replay — `static-page.schema.json` is a JSON Schema document and the plan puts "any migration or compatibility code" out of scope, so no Postgres IMMUTABLE/NOT NULL/FK/index is added.
+
+REJECT — Spec 126 §0a principle 1, §11b.2, fe.02, operator 2026-11-20 "approved ... Go on the schema extension plus the semi pilot" — accused of scope creep or of breaching the no-migration ruling — none of these clauses is pasted in this run, so they are not mine to judge.
+
+MET — Spec 05 §5.2 logic row — plan step 6 "new page-table.logic.test.ts B1-B5 for the builder" — builder and situation-to-flags derivation are pure, so the logic layer is the correct and named layer.
+
+MET — Spec 05 §5.3 "For pure logic, use `.logic.test.ts`" — plan step 3 "Throws on a when naming no flag", pinned by B1-B5 — the builder's failure path is exercised in the mandated layer.
+
+MET — Spec 05 §5.5 parity battery "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — plan step 5 "emit-mobile-surfaces.mjs: copies the screen rows into the generated slice (`page`) ... --check covers it" with T9 "slice equals table" — generated-slice parity is asserted inside `npm run test`.
+
+MET — Spec 05 §5.4 "To set up specific DB scenarios for testing or demos, create `scripts/seed-[scenario].js`" — no DB scenario or demo state is introduced by the plan, so no seed script is owed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 4
+
+---
+⏱  54277ms (54.3s)
+📊 Tokens — total: 13180, input: 3141, output: 10039, reasoning: 9096

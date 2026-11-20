@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:31:33.169Z file_sha256=c487f7d35bd306f0c92cbef43a886df001f1d8757c1d0dfbb43314d7752b78c6 prompt_sha256=d562c573e40b908ba347336e25b3b91d269d515caf7214495a13d55c4f0434ec
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/plan/in-plan-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 126 §0a principle 1 and 11b.2, fe.02, operator 2026-11-20 (not pasted) — plan "Rule: Spec 126 section 0a principle 1 and 11b.2 (page structure is data; derivation, geometry, input state and fetch stay code; style class tables stay typed per platform); fe.02; operator 2026-11-20" — NONE — cannot see any of those clauses or the operator words in the pasted context, so the schema extension, the closed kind lists and the "no migration or fallback code" choice cannot be judged against the rule the plan cites — paste 126 §0a/11b.2, fe.02 and the operator verbatim before plan-lock
+DEFER severity=MED — Spec 98 §4 "**Location:** `mobile/__tests__/`" — plan line "new page-table.logic.test.ts B1-B5 for the builder" — NONE — the plan gives no path for the test of a mobile module, so it may land beside the `scripts/surfaces/` tests and fall outside the `npm run test` gate Spec 98 §5 names — state the file as `mobile/__tests__/page-table.logic.test.ts`
+DEFER severity=MED — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — plan line "the mobile jest golden test is UNVERIFIED locally (Mobile CI)" — NONE — the plan never shows whether that jest golden assertion is fixture equality or a component snapshot (which §4 excludes), and it is not run in the environment the author is in — name the assertion form as fixture equality (no `toMatchSnapshot`) and show one local run
+DEFER severity=LOW — Spec 98 §4 dated note "@testing-library/react-native 13.3.3 with `react-test-renderer` 19.1.0" — plan line "PageTableBinding.tsx (new, import-free, pure)" — NONE — if any of B1-B5 renders a component, the dated note names RNTL as the tool and no other, and the plan does not name the runner for these cases — name the runner (pure node/tsx invocation, or RNTL) in step 6
+MET — Spec 98 §4 "Unit tests focus strictly on business logic, state machines, and Expo Router guards" — plan "new page-table.logic.test.ts B1-B5 for the builder" — the builder is a pure derivation, so no UI component test is added
+MET — Spec 98 §4.1 "§8.5 — store-enumeration grep test (`mobile/__tests__/storeReset.coverage.test.ts`)" — plan "Out of scope: SurfaceRenderer.tsx, semiQuestion.ts (lane BL-FIXTUNE)" — no new `create<*Store>(` is added, so the enumeration count is unchanged
+MET — Spec 98 §3.2 "The following YAML flows must pass cleanly before any production release" — plan "Goldens expected to move: none" with §4 dated note "No Maestro flow covers parcel-tool today" — the fixed launch-blocker list gains no flow for the semi question page, so no new Maestro suite is owed
+MET — Spec 98 §5 "`npm run test` (Jest unit tests)" — plan "the mobile jest golden test is UNVERIFIED locally (Mobile CI)" — Jest stays the PR gate that runs the golden assertion
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  41744ms (41.7s)
+📊 Tokens — total: 12714, input: 4937, output: 7777, reasoning: 6989

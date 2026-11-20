@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:42:45.547Z file_sha256=07e5b51bb5ee50204efeb5e51e9375e2d21551086e20a46cf2ff26d85b579571 prompt_sha256=08ee68f28e59ec346ae55ce9385e903038f248acfe5f45492efe8b928f6e3124
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-surface-126-p8.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §11b.2 Descriptor row "surface.schema.json gains `render.form` (a JSON Schema + uiSchema reference), `render.list.columns` and `render.wizard.steps` by one Spec 128 §4 escalation" — scripts/surfaces/_schema/static-page.schema.json "screens": { — the mobile LIST page structure (block order, texts, actions) is stored in the STATIC page table (static-page.json `screens`) with the schema still titled "archetype STATIC, web", not in the LIST descriptor's `render.list.columns`, so a second structure home the pasted pipeline does not name is created — move the interactive structure under the surface descriptor's render.list (or route it through the named Spec 128 §4 escalation) and regenerate validator, types and registry.
+
+DEFER severity=MED — §11b.2 dated note 2026-11-10 (MF-35) "ref_kinds gains `derived` (P35-D14 a, a declared per-surface deviation with a closed name list, not a binding source)" — mobile/src/components/surfaces/PageTableBinding.tsx "onPress: { action: s.action, parcelId: { derived: `${s.id}.${i}` } }" — the derived name is composed from the row's data `id`, so the declared closed list (SEMI_QUESTION_DERIVED_NAMES) is no longer the authority and a row id other than `answer` would name outside it — derive or validate the name against the surface's declared closed list.
+
+DEFER severity=MED — §11b.2 Content row "every user-visible string comes from a content file" and schema comment "every shown text is a content key" — scripts/surfaces/_schema/static-page.schema.json screen_choices "content": { "$ref": "#/$defs/id" } — a choices row names a bare id prefix (`^[a-z0-9_]+$`, no dot, not a `contentKey`) and the label is later built as `${s.content}.${a}`, so T9's prefix check cannot guarantee every rendered choice label is a content key — require the choices `content` to be a `contentKey` or check each runtime answer has its key.
+
+DEFER severity=LOW — §11b.2 Gate row "`surface-validate.mjs --check` gains the generic arms SV-DESC, SV-SCREEN, SV-SBIND" — src/tests/surfaces/static-page.logic.test.ts "describe('T9 the interactive screens (PAGE.TABLE, task-390)'" — the only screen validation added is a vitest case; no `surface-validate.mjs` SV-SCREEN arm is shown (cannot see the gate file) — confirm the SV-SCREEN arm reads static-page.json `screens`, or add it.
+
+MET — §11b.1 import boundary "Library imports are allowed only in the declared binding modules" — mobile/src/components/surfaces/PageTableBinding.tsx "Pure and import-free" plus scripts/surfaces/_schema/bindings.json modules entry — import-free builder declared as a module, no undeclared wrapper.
+
+MET — §11b.2 Binding row "one per archetype per platform" — scripts/surfaces/_schema/bindings.json PageTableBinding "owner": "binding_mobile_list" — the new module sits under the existing single LIST owner, not a new archetype binding.
+
+MET — §11b.2 Content row "every user-visible string comes from a content file" — mobile/src/components/surfaces/PageTableBinding.tsx "accessibilityLabel: content(b.label)" and "}, [content(s.content)])" — shown texts are emitted as content refs, not typed values.
+
+REJECT — §11b.1 "No hand-built standard component" — accused of writing components by hand — PageTableBinding renders only mapping.mobile.LIST library parts by props and is import-free, so it hand-builds nothing.
+
+REJECT — §11b.2 Goldens "one props golden per reachable state per declared target" — accused of breaking the semi-question goldens by routing through the table — the props carry "the one SemiQuestionBinding drew before the table (same keys, same order of props)", so the existing goldens still hold.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 4
+
+---
+⏱  100480ms (100.5s)
+📊 Tokens — total: 50955, input: 30799, output: 20156, reasoning: 19205

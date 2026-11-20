@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T15:39:21.836Z file_sha256=cfdadc82d490a3262bf8c03094c90af5a6af322da16aed40b0c176083da93040 prompt_sha256=52d174bb3e65250f518350fff16d9804e4c5d5d7cb5d5def4ff9f802d67c4978
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/pagetable/out/in-out-compliance-mobile-98.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 98 §4 "**Tool:** Jest + jest-expo" / "**Location:** `mobile/__tests__/`" — src/tests/surfaces/page-table.logic.test.ts:12 "import { pageProps, type PageScreen, type PageStyles } from '../../../mobile/src/components/surfaces/PageTableBinding';" — the builder's behaviour cases (B1 to B5) test mobile source from the web vitest suite, so the mobile Jest run the spec names never exercises them — re-add the B1 to B5 cases under mobile/__tests__ with jest-expo and keep only the AJV T9 case in src/tests.
+DEFER severity=LOW — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)." — src/tests/surfaces/page-table.logic.test.ts:69 "expect(c.children).toEqual([{ component: 'Text', props: { key: 'continue-text', className: 'bt' }, children: [{ content: 'select.none' }] }]);" — a literal deep-equality over a whole subtree pins component names and class tokens, the snapshot coupling the clause excludes and the dated note does not license — assert only the idle content key the case is about.
+DEFER severity=LOW — Spec 98 §4.1 "The normative test mandate set lives in **Spec 99 §8 (Test Mandates)** — every implementation MUST satisfy:" — NONE — the Spec 99 §8.1 to §8.4 text is not pasted, so whether this implementation meets the mandatory bridge, router and gate tests cannot be judged here — paste Spec 99 §8 before this diff is locked.
+REJECT — operator ruling 2026-11-20 quoted in scripts/surfaces/_schema/bindings.json "approved ... 1. Go on the schema extension plus the semi pilot, with the stop rule" — the change adds a page-table feature no pasted Spec 98 clause names — the ruling quoted in the material names exactly the schema extension and the semi pilot, and the diff stays inside them (one screen, mobile_parcel_semi_question).
+REJECT — Spec 98 §3.2 "The following YAML flows must pass cleanly before any production release" — the diff adds a page with no Maestro flow — that list does not include the parcel semi question page, and the pasted note records "No Maestro flow covers parcel-tool today".
+REJECT — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)." — the new test file is snapshot testing — the pasted dated note says "a render smoke (throws / renders non-empty / finds its test ids, labels and host props) and a screen-behaviour test are not snapshots", so asserting props is permitted; only the full-subtree equality above crosses the line.
+MET — Spec 98 §4.1 "**§8.5** — store-enumeration grep test (`mobile/__tests__/storeReset.coverage.test.ts`)" — scripts/surfaces/_schema/bindings.json:21 "{ \"path\": \"mobile/src/components/surfaces/PageTableBinding.tsx\", \"platform\": \"mobile\", \"archetypes\": [\"LIST\"], \"owner\": \"binding_mobile_list\", \"exports\": [\"pageProps\"] }" — the only registry addition is a pure component, no store file is created or renamed.
+MET — Spec 98 §4.1 "the §B5 fan-out above also calls `recentSearchesStore.reset()` (MF-35; Spec 99 §3.4c)" — src/tests/surfaces/page-table.logic.test.ts:12 "import { pageProps, type PageScreen, type PageStyles }" — the added suite imports no store, signOut or persister code, so the pinned fan-out is untouched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  69748ms (69.7s)
+📊 Tokens — total: 42086, input: 28724, output: 13362, reasoning: 12505
