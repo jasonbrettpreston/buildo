@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:39.990Z file_sha256=3e52a2ee683fd9bf5135f3138ba5ab20c3a603789ac2d188aae4804f1e257c1e prompt_sha256=a1971f4977966d243b871d6b464a8d0301e2a9fd235f3203e50e585bfdf80593
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-eng-all-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §5.2 "*.logic.test.ts | Pure functions, scoring, classification | Any pure/derivation logic" — scripts/analysis/rule-lists.mjs:33 "export function splitDiff(text) {" and scripts/analysis/rule-lists.mjs:30 "export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--text', ...]" — the new pure derivation logic (splitDiff, diffPaths, chunk packing) and the load-bearing DIFF_ARGS are pinned only by comments, with no *.logic.test.ts or *.regression.test.ts among this chunk's changed paths; if chunks 2-3 carry none the §5.2 mandate is unmet — add a logic test for splitDiff/diffPaths/parseLensInput round-trip and a regression test pinning DIFF_ARGS.
+
+DEFER severity=LOW — §5.5 "generated doc ↔ its generator (the drift guard — regenerate to a buffer, diff the committed file)" — docs/reports/generated/rule-lists-by-kind.md:21 "| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |" — the plan-protocol count rises 7,525 to 8,825 (+1,300) but plan-protocol.md is not among this chunk's paths (cannot see chunks 2-3); if that file is not in the change the committed generated doc diverges from its generator — confirm plan-protocol.md is in the change and regenerate via "node scripts/analysis/rule-lists.mjs page --write".
+
+MET — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — docs/specs/00-architecture/137_mcqueue.md (Rule 3 note "A lane build or fix task closes in TWO commits") and scripts/analysis/backlog-lane.mjs "A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks)" — the Rule 3 amendment lands in both the spec and the brief runbook in this commit.
+
+MET — §8.2 "Regex s flag (dotAll) requires ES2018+ — use [\s\S] instead" — scripts/analysis/rule-lists.mjs:31 "/^diff --git /gm" and scripts/analysis/rule-lists.mjs:401 "(?: chunk (\d+) of (\d+))?" — the new regexes use only g/m flags, no dotAll s flag.
+
+REJECT — §1.1 mobile-first and §4.3 frontend security — the change is accused of frontend/UI behavior — no file under src/ or src/features/ is touched; the diff is scripts/analysis and spec docs only.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  117954ms (118.0s)
+📊 Tokens — total: 51473, input: 28920, output: 22553, reasoning: 21922

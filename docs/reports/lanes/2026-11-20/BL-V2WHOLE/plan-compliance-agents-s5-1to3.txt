@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:56:55.697Z file_sha256=d20bb3a41ad58dec54c7f489391aba011ea37402193450bded9fbb91e74f3210 prompt_sha256=e575db2bc64e163d6b33df0cfc8b3d40553564ce418be4810a21b28d49298c47
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md §5.3 dated note (3) "holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:`" — plan, paragraph (c) "the union of the chunk path lists must be exactly the expected list with no path in two chunks" — the redesigned enumeration is keyed by chunk and by path only, it never requires one compliance output per attached list, so a lane that reviews the whole range against one of its lists covers every expected path and closes with zero outputs for the other attached lists, which clause (3) forbids — require, per attached list, its own chunk set whose union equals the expected list, and key the output names by list as well as by chunk.
+
+BUG severity=HIGH — 08_agents.md §5.3 dated note (2) "refuses a task with no Files line (a record-only task gets the queue lists)" with note (3) "one compliance lens output per attached list" — plan, paragraph (c) "Empty expected list: nothing to cover." — a records-only task has zero non-exempt changed paths, so under this rule the new check demands no lens output and no GROUNDER.md at all, while note (2) still attaches the queue lists to exactly that task and note (3) still demands one output per attached list — say plainly that an empty expected list still requires the per-list compliance outputs and the GROUNDER.md, or state which ruling waives them.
+
+DEFER severity=MED — 08_agents.md §5.1 "Item-by-item, spec-clause → code-line, PASS/FAIL" — plan, paragraph (b) "the TOOL cuts the diff at those headers (file boundaries only)" — a clause implemented across two files is judged twice, each time against half the material, so no single lens run sees the clause satisfied or broken whole and the PASS/FAIL is per chunk, not per clause — require each chunk input to carry the full expected path list (so the lens knows what it cannot see) and fold the per-chunk verdicts into one clause-level verdict before the close.
+
+DEFER severity=MED — 08_agents.md §5.3 "After the panel returns findings, run DeepSeek + Integration against the proposed findings/changes ... Rejected findings are written to the plan with reasons" — plan, paragraph (b) "files are -p1..-pN chunk-major (N = m x list parts)" — the plan multiplies lens outputs by chunk times list but has no step for the round-2 adjudication of the multiplied BUG/DEFER set, and no step writing rejections with reasons, so the grounder's one line per finding is owed against a set the plan never counts — add the round-2 pass and the measured finding count per chunk set to the acceptance, and state that the GROUNDER.md covers every BUG or DEFER of every chunk output.
+
+DEFER severity=MED — 08_agents.md §5.3 dated note (3) "presence and form only, the judgement stays with the grounder" — plan, paragraph (c) "each chunk material must equal git diff --no-renames merge-base HEAD -- <its paths>" — the plan moves the close check from presence and form to recomputing the diff and comparing its content, a boundary the pasted clause does not name, and it adds no dated note to that clause — add a dated note to §5.3 note (3) recording that the check now recomputes and compares material, with the operator words that carry it.
+
+DEFER severity=LOW — 08_agents.md §5.3 dated note (3) "The lane that wrote the work leaves the task RUNNING with \"grounder owed\"." — plan, last line "Each protected-path edit in its own commit, no status move." — the plan keeps the task RUNNING but nowhere says the lane stamps "grounder owed" before it stops, which is the half of the clause the close check cannot see — add the sentence to the lane report and the task note step in paragraph (d).
+
+DEFER severity=LOW — 08_agents.md §5.3 dated note (1) "`scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code ... it reuses the path maps of `mcbylaws/protected-paths.json` (`layer23`, `frontend`)" — plan, paragraph (c) "minus table exempt globs" — the plan subtracts "exempt globs" from a table whose pasted description names only the two reused path maps and no exempt field, so the subtraction either does nothing silently or rests on a field no clause names — name the field and its content, and if it does not exist in the table do not exempt, or add it to the table under a dated note.
+
+MET — 08_agents.md §5.3 dated note (2) "a list is split by its own headings when list plus material pass the review tool bound, never trimmed" — plan, paragraph (b) "A single file over the room is refused with one line naming the file and its size." — the list is never cut or dropped; the material is cut at file boundaries and an unfittable single file is refused, not truncated.
+
+MET — 08_agents.md §5.3 dated note (2) "with the list pasted whole ahead of the plan or diff" — plan, paragraph (b) "each chunk gets every list part" — every chunk carries the whole list part ahead of its material.
+
+MET — 08_agents.md §5.3 dated note (2) "runs the compliance lens once per list" — plan, paragraph (b) "files are -p1..-pN chunk-major (N = m x list parts)" — every list part is reviewed against every chunk, no list is skipped, and the plan states the cost "about three times today's review calls" to be measured.
+
+REJECT — 08_agents.md §5.3 dated note (2) "runs the compliance lens once per list" — accused of running the lens m times per list instead of once — not a real issue, the same note provides for splitting when list plus material pass the tool bound and the card's acceptance requires the whole task-390 diff run for real.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 7
+
+---
+⏱  49401ms (49.4s)
+📊 Tokens — total: 21982, input: 12440, output: 9542, reasoning: 8159

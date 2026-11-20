@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:56:55.933Z file_sha256=fa03a969fad38e1c6cb1ac730422e8d052882e8834f7ed0209a06bd473ce1cc2 prompt_sha256=82e6006447e1d89aaf38e6f5e7253da073aa58829d203006fd6e0931ddf27944
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — doc-2, whole pasted file, "RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1" — plan: "Rule: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1; PLAN-PROTOCOL.md:3" — cannot see the clauses the plan says it satisfies, the pasted list carries only search element statuses, so authority for the chunk split, the close-check path recomputation and the brief sentence is unverifiable in this run — re-run this review with Spec 126 section 0a and 11b.2, 08_agents.md section 7 and PLAN-PROTOCOL.md:3 pasted.
+
+DEFER severity=MED — doc-2 "## Built state" "counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}" — plan: "(b) rule-lists.mjs lens-input: when buildLensInputs throws for room ... the TOOL cuts the diff at those headers (file boundaries only) into chunks" — no pasted line and no pasted operator ruling names review-material chunking, a path-coverage close check or a brief sentence, so the plan adds behaviour with nothing pasted behind it (walk step 4) — paste the ruling or card that names the split mode before lock.
+
+DEFER severity=LOW — doc-2 "## Built state" "The lookup route, resolver, meter and the report hand-off contract are on origin." — task description: "Operator, 2026-11-20, verbatim: "I also need certainty within the tasks that a rpiority is getting the right information about compliance to the reviewer.  Put extra stree"" — cannot see the register entry or RR id that pastes those operator words as a ruling, so the one source that could authorize this change is quoted only inside the material under review — paste the RR row (file:line) that carries the operator words into the next run.
+
+DEFER severity=LOW — doc-2 "## Built state" "Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer" — plan: "NOT built: ... generated-file exclusion, bound change, task size limit." — the plan does not say whether any task in the pasted not-built list depends on the review-tool change it makes, and nothing pasted binds or excludes them — state in the plan that the change touches no element row, so the not-built list stays as recorded.
+
+MET — doc-2 element rows "| A.6 | ... | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |" through "| G.6 | ... | AVAILABLE | LS.12 | BUILT |" — plan "Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, .claude/review-templates/lens-code-review.md, ... src/tests/backlog/rule-lists.logic.test.ts" — none of the 65 element rows and none of the 65 current-state rows has its status, deliverer or task cell altered by the plan's file list.
+
+MET — doc-2 "## Built state" "counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}" — plan "Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs" — no mobile or web source file is touched, so the three bucket counts are consistent with the change.
+
+REJECT — doc-2 elements "| D.9 | ... distance from your wall to the shared line | NOT-BUILT | SRCH.SEMI MF-89 7.25 GAP.12 | NOT BUILT |" — accused of leaving search work unbuilt while changing review tooling — not a real issue under this lens: task-410 is the review-compliance card, no pasted line assigns D.9 to it.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 139 (1 built-state paragraph, 8 feature lines, 65 element rows, 65 current-state rows)   Unmet: 0
+
+---
+⏱  30554ms (30.6s)
+📊 Tokens — total: 23034, input: 17297, output: 5737, reasoning: 4735

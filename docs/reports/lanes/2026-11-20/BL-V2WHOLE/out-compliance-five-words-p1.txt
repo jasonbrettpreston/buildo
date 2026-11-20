@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:40.084Z file_sha256=ba1b1a7bce49f137ecfce1d34d9fd3a934237a9a72662bfd5c66a3f3269b760e prompt_sha256=60f8e926211c5c5e08015495d8aeb77cdd8a4d5142b6a359d786cc2356f2a2e5
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-five-words-p1.txt (model: deepseek-reasoner)
+
+BUG none at CRIT/HIGH is claimed; the entries below are DEFER because the pasted rule list is the Glossary of 132 (vocabulary clauses), not a behaviour clause set.
+
+DEFER severity=MED — Glossary "lock / lock-db / check / hook" "a lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`" — src/tests/backlog/backlog-lane.logic.test.ts:229 "describe('backlog-lane review line names the lens set (task-358)', () => {" and :241 "expect(e).toContain('The close check recomputes the changed paths of the task range');" — the whole new close behaviour (diff chunking in rule-lists.mjs, chunkErrors, board-ref pinning, two-commit close in check-lane-close.mjs) is asserted only by a brief-string test that names task-358, not the rule id or a declared alias, so by the pasted definition it is not a lock for that rule — add a test that names the rule id/alias and asserts chunkErrors and the board-ref refusal, or record in the rule map why this rule is hook-enforced only (the rule map is not pasted, so this cannot be fully verified).
+
+DEFER severity=LOW — Glossary "lock / lock-db / check / hook" "a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook" — docs/specs/00-architecture/137_mcqueue.md:102 "because the close check (scripts/hooks/check-lane-close.mjs) proves the review covered code that is already committed" — a commit-msg hook is named "the close check" in newly added spec text (same in the new brief line "The close check recomputes the changed paths of the task range", backlog-lane.mjs:160), which is the sense the glossary reserves for a `step-validate` invariant or gate token — call it "the close hook" in the spec note and the brief.
+
+DEFER severity=LOW — Glossary "phase" "One of the runner functions in table 1a that owns a step's reads, writes and transactions" — scripts/analysis/backlog-lane.mjs:152 "for each list id L and each phase P (plan: material = ${ctx}; out: material = the diff file)" — the rewritten brief uses "phase" for the plan/out review passes, a sense the pasted clause reserves for runner phases; "stage" cannot be reused either, the same glossary gives it to `converted.json` `pending[]` — rename to "each review pass P (plan, out)".
+
+DEFER severity=NIT — Glossary "Gate A … K, V" "Lettered R-BA gates (A…K, plus V), implemented in `scripts/analysis/gates/` or in `scripts/analysis/step-validate.mjs` (gates H, K and V live there)" — scripts/hooks/check-lane-close.mjs:130 "H1: the board ref the base, the launch commit and the deciding table keys are read from (a lane's table cannot name another)" and :377 "H10 (round 7): a close of a task number the board never held is refused" — H-numbered codes inside a hook collide with gate H, which the glossary places in step-validate.mjs, and are not in any pasted code family (PURITY-G#, SCORECARD-G#) — prefix them (e.g. V2WHOLE-H10) or write "grounder round 7".
+
+DEFER severity=NIT — Glossary "†" "An id or code pointer that lands with another branch (rule-map `meta.pending_integration`)" — docs/specs/00-architecture/08_agents.md:240 "Those routes are owned by the fold-time tasks task-401 and task-402 (grounder file sha256 b3425b2c1d6c…)" and "the hook point is `lensContexts` for task-375" — these are id/code pointers that land elsewhere, written without the † marker; `meta.pending_integration` is not pasted, so whether they qualify is cannot see — mark them per the rule map, or state in the note that they are not pending-integration pointers.
+
+REJECT — Glossary "five words" "STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates" — accused of changing what the five-words list carries — the diff does not touch docs/specs/01-pipeline/132_step_standard_handbook.md or scripts/analysis/step-validate.mjs, and the generated page still shows the Glossary selection at 5,367 characters (docs/reports/generated/rule-lists-by-kind.md:19).
+
+REJECT — Glossary "RE-FREEZE #N" "A field is added or deleted only by one" — accused of changing the frozen step vocabulary — no change to scripts/steps/_schema/step.schema.json, template-freeze.json or scripts/manifest.json appears in this chunk.
+
+MET — Glossary "slug" — docs/reports/generated/rule-lists-by-kind.md:100 "| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | ... | 13,405 | 1 |" — the diff only re-measures and re-orders list rows; no step name, key or identity field is touched.
+MET — Glossary "P0 … P3" "Not the assessment phases PH-0 … PH-8" — the added notes cite no P0/P1/PH-n code, so the two-vocabulary warning is not triggered by this change.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 3 (all MED/LOW/NIT, deferred)
+
+---
+⏱  65783ms (65.8s)
+📊 Tokens — total: 42400, input: 30081, output: 12319, reasoning: 11002

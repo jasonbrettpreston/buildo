@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:39.990Z file_sha256=00bc42f988c7f098b36954bbad0171fab8796a7cc4b6d61dc75ae92d63ff28f1 prompt_sha256=4ffbd8b87ba4b92a3d7938a0c65e8546329aae5baec60761b27b3010003fcd6f
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-eng-all-p2.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings follow; each quotes the clause and the code it rests on. Where the material is a 1-of-3 chunk, the claim is scoped to the material under review.
+
+DEFER severity=MED — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails." — scripts/hooks/check-lane-close.mjs:76 "export function chunkErrors({ label, items, expected, diffOf = () => null, optional = [] }) {" — the new pure chunk-proof logic (missing path, duplicate path, edited stamp, material mismatch, 1..m/1..n coverage) lands with no red test anywhere in this chunk; the only test edit asserts fragments of a help string — add failing chunkErrors cases (one file in no chunk, one file in two chunks, a stamp that disagrees with its material, m*n off by one) before the implementation and keep them in the same commit.
+
+DEFER severity=MED — §5.2 "Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard)" and §5.5 "Chesterton's-Fence: a diff silently drops a behavior that existed for a reason." — src/tests/backlog/backlog-lane.logic.test.ts:245 "expect(e).not.toMatch(/the diff is never split or trimmed to core files/);" — the change reverses a pinned fence (the diff is never split) into file-boundary chunking and no pasted ruling names the reversal, and no *.regression.test.ts pins the new fence (chunk union equals the task range) — cite the operator ruling or spec amendment that retires the old fence in the commit and add a regression test pinning "union of chunk paths equals the changed paths, less exempt".
+
+DEFER severity=MED — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — src/tests/backlog/backlog-lane.logic.test.ts:244 "expect(e).toContain('closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks)" — the material amends the close protocol (two-commit close, chunk proofs, board-copy and launch-commit sourcing) and cites Spec 137 Rule 3 and Spec 08 section 7 while no spec or runbook file appears in this chunk — if no other chunk carries those edits, the cited clauses are stale in this commit; land the Spec 08 and Spec 137 amendments in the same commit.
+
+DEFER severity=MED — pasted context "(no pasted context provided)" — src/tests/backlog/backlog-lane.logic.test.ts:238 "lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks" — the behaviours added here (V2.WHOLE task-410 chunking, the H1/H9/H10 board-ref and launch-commit sourcing, the F4/F12 records-only closing commit) are named by no pasted clause or operator ruling, so their scope cannot be judged against anything — paste the task-410 card or the operator wording that authorizes them.
+
+DEFER severity=LOW — §12.12 "Pure functions with arithmetic invariants ... MUST have at least one fast-check property test asserting the invariant." — scripts/hooks/check-lane-close.mjs:91 "if ((it.k ?? 1) !== (c - 1) * p.parts + p.part)" — the chunk/part to file-number arithmetic has no fast-check property test in this chunk — add src/tests/property/chunk-index.property.test.ts asserting the (c, part) to k mapping over arbitrary m, n.
+
+DEFER severity=LOW — §11 "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests." — material under review (no self-check pasted) — cannot see any PASS/FAIL self-check for this change, least of all for the new refusal branches (board table unreadable, launch commit not an ancestor, milestone moved, retyped task, table keys diverging from the board) — paste the checklist with the diff, item per refusal branch.
+
+MET — §5.2 "*.logic.test.ts | Pure functions, scoring, classification | Any pure/derivation logic" — src/tests/backlog/backlog-lane.logic.test.ts:233 "expect(e).toContain('The compliance lens reviews the WHOLE change');" — the derivation assertions stay in a logic test rather than being pushed into an infra test.
+
+MET — §2.3 "Use TypeScript Optional Chaining (`?.`) or explicit type guards. Do NOT use the non-null assertion operator (`!`)" — scripts/hooks/check-lane-close.mjs:85 "const c = p.chunk ?? 1;" — the added code guards with ?? and ?. and uses no ! assertion.
+
+MET — §8.2 "Regex `s` flag (dotAll) requires ES2018+ — use `[\s\S]` instead." — scripts/hooks/check-lane-close.mjs:53 "const REVIEW = /^REVIEW template=(\S+) model=(\S+) at=(\S+) file_sha256=([0-9a-f]{64}) prompt_sha256=([0-9a-f]{64})\s*$/m;" — the added and edited regexes carry m and i only, no dotAll and no ES2018 group syntax.
+
+MET — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/backlog/backlog-lane.logic.test.ts:242 "expect(e).toContain('one file alone over the room is refused naming the file and its size: report that to the orchestrator at once');" — the changed test lines add no inline object mocks.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  62724ms (62.7s)
+📊 Tokens — total: 36759, input: 24557, output: 12202, reasoning: 10845

@@ -4,7 +4,7 @@ title: FOLD.SCRIPT Folds go through one script that confirms what it did
 status: LATER
 assignee: []
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-20T17:12:00Z'
+updated_date: '2026-11-20T22:38:00Z'
 labels:
   - McFix
   - McFix Z
@@ -34,3 +34,9 @@ Validated before writing by a separate read-only grounder (2026-11-20; verdict r
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-20 FORGERY ROUTES owned here (task-410 grounder file ~/Buildo-scratch/lanes-20261119/inc1b/v2whole/GROUNDER.md, sha256 b3425b2c1d6c0b77f90dffc6065954ff0df8394e603c7245e7dadfa2af6a67b; operator entry '2026-11-20 · Operator ORDERS task-410 finished', 'Finsih it!'): task-410's close check is an omission guard (it refuses a skipped review, rule list, changed file, stale input or a close without a separate grounder's file). It does not stop a lane that sets out to forge: (1) a hand-written output with the right public hashes; (2) an earlier-commit edit of the lane's own working-tree copy of scripts/hooks/check-lane-close.mjs, scripts/analysis/rule-lists.mjs, scripts/analysis/mcbylaws/paths.mjs or the commit-msg hook; (3) a board ref moved by a forbidden command. Fold-time enforcement of (2) and (3) belongs to the fold script of this task.
+<!-- SECTION:NOTES:END -->

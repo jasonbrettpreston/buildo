@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:40.173Z file_sha256=b1b6a4a3f7f54d9e3db8a1b227e7446f153d0f94edf70d815910033f9323513b prompt_sha256=aceae88c6047a0479fe258eacc6c8f35f274110fa99ddb868a5c4508e6c24586
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+NIT — inc-S counts clause — "counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}" — NONE — the element rows pasted in the same part sum to BUILT 41, BUILT-NO-DATA 8, NOT BUILT 16 (65 rows, so the total matches and the split does not) — not caused by this diff, which does not touch doc-2; recorded so the split is not used as the rule of record.
+
+DEFER severity=MED — inc-S, part 1 of 1 — "RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part" — scripts/hooks/check-lane-close.mjs:1 "diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs" — the pasted list governs the Increment S search pages and elements A.1 to G.6, and none of its clauses binds any of the seven changed paths, so a pass here proves nothing about this change — attach the tooling lists the table gives for scripts/ (step-132, the airtight rows, queue-137, agents-s5-1to3, plan-protocol) to the same diff and rerun the compliance lens.
+
+DEFER severity=LOW — inc-S chunk header — "The material is chunk 1 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs." — docs/reports/generated/rule-lists-by-kind.md:20 "+| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |" — plan-protocol.md is counted 1,300 characters larger than the pre-change row (7,525) yet is not among this chunk's changed paths, so either its edit sits in chunk 2 and is unjudged here, or the report counts an unchanged file — confirm the plan-protocol.md edit is inside chunk 2 before this run is read as covering it.
+
+REJECT — inc-S scope — that the change adds whole-change review behaviour (diff chunking by lens-input, range proof in check-lane-close.mjs) that no pasted clause names — the pasted list is the search-page requirements and names no tooling at all, so nothing in it is contradicted; the authority for the added machinery is the operator ruling quoted in the diff itself at 137_mcqueue.md "+Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE; operator, verbatim, 2026-11-20 ... "agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close."" , which is not the inc-S card.
+
+MET — inc-S Built state — "Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, ..." — src/tests/backlog/backlog-lane.logic.test.ts:229 — this chunk changes no search page, mobile screen or component path, so the built status the list records is left as it stands.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 68   Unmet: 0
+
+---
+⏱  58101ms (58.1s)
+📊 Tokens — total: 46228, input: 34745, output: 11483, reasoning: 10712

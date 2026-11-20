@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:39.896Z file_sha256=f73b6a86fcd94a2be212477f38096832b72168aad2648b1830010fa012d9b4b4 prompt_sha256=0a45a7b43fced54a2e933415712185eea4753324446655986cc283373642fcdc
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-agents-s7-s11-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §11.1 "a line citation is **read**, not remembered" and §7 rule 10 (C2) "with the line number as a hint dated by the commit sha" — scripts/analysis/backlog-lane.mjs:158 "Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"" — the same commit inserts 10 lines at docs/specs/00-architecture/08_agents.md:233 (hunk "@@ -227,6 +227,16 @@"), so the rule-4 line the brief cites moves to 344 while the generator still prints 334, and every launched brief now points a lane at the wrong line — fix the number in this commit (or cite by id and anchor with the sha, the C2 form, so it does not need chasing).
+
+DEFER severity=LOW — §7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" and its heading "Claims and briefs are checked before they leave the orchestrator" — scripts/analysis/backlog-lane.mjs:156 "A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks)" — the new closing rule is asserted in the brief with no file:line, while the same brief cites 08_agents.md:334 for its other rule, so a lane cannot check the two-commit obligation it is now held to — append the 137_mcqueue.md line for the amended Rule 3 (and the task id) to that sentence.
+
+DEFER severity=MED — §11.2 "one grounder re-executes every claim in the fold" and §11.1 "Approved on paper is not a verification state" — docs/specs/00-architecture/08_agents.md:238 "the sentence above that the task type, the lane assignee and the milestone are read from the launch copy says more than the code did until this round" — the landing carries four successive corrections of one note (rounds 3 to 6, :236 "was too wide", :242 OMISSION GUARD), each stating the previously written claim about scripts/hooks/check-lane-close.mjs was untrue, and the material records no round in which the folded claims were re-executed as a set before the next one was written — state in the final note the validation round that ran the claims against the code, or replace the superseded sentences with the verified text so the pasted spec does not contain four claims the same commit calls false.
+
+DEFER severity=LOW — §11.1 "a census grep runs at the **full scope its conclusion covers**" — scripts/analysis/backlog-lane.mjs:156 "The compliance lens reviews the WHOLE change ... only the paths of the Files line are in it, and the exempt paths are left out" — the review's stated conclusion is the whole change, but the material it is run on is the Files-line pathspec minus exempt paths, so a file changed outside the Files line is never in a chunk and the close still passes, which is a narrower scope than the conclusion the output claims — either say in the brief that the diff is the Files-line scope (not the whole change) or add the off-Files changed paths to a chunk.
+
+MET — §11.1 (executable claim rests on code, not paper) — scripts/analysis/rule-lists.mjs:30 — DIFF_ARGS is exported with the flags pinned ("--diff-algorithm=myers", "--inter-hunk-context=0"), so the note's shared-diff-command claim is backed by a line a grounder can read.
+
+MET — §7 rule 4 "Every DeepSeek finding is adjudicated by a tool-having grounder before folding" — scripts/analysis/backlog-lane.mjs:157 — the brief still requires GROUNDER.md with one verdict line per finding for every build or fix task.
+
+MET — §7 rule 4 (2026-11-19 note) plus the operator item "Keep the split for code review, error paths, UX and security" — scripts/analysis/backlog-lane.mjs:156 — "the code-review, error-paths, ux and security lenses ... use the same tool with their own template and no --list", the four named lenses and no others.
+
+MET — §11.1 (data claim recomputed) — docs/reports/generated/rule-lists-by-kind.md — every plan-protocol row moves 7,525 to 8,825, every affected total moves by exactly +1,300 and tooling by +12,283 (8,678 + 2,305 + 1,300), and the tooling rows sum to the printed "| total | 9 lists | | 185,974 | 9 |".
+
+REJECT — §11.5 "CLI models (Gemini/DeepSeek raw) are DEMOTED to whole-file audit generators. Their yield files to `review_followups.md`, never folds into a diff review" — accused of turning DeepSeek diff output into a close gate — the 2026-11-19 dated note in §7 rule 4 requires exactly these five DeepSeek templates at output with "one Claude grounder adjudicates every finding as round 2", so the demotion does not reach the repo lens set.
+
+REJECT — §7 rule 7 "The roster is a MENU, not a checklist. Never run all ~12 roles on one change" — accused of flooding the panel by chunking — chunking multiplies runs per lens, not roles; no role is added and the lens set is still task-type derived.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 4
+STATUS: ready
+
+---
+⏱  138409ms (138.4s)
+📊 Tokens — total: 50715, input: 24648, output: 26067, reasoning: 24812

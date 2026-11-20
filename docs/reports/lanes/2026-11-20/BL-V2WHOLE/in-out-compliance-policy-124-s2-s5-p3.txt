@@ -1,0 +1,495 @@
+LIST policy-124-s2-s5 sha256:862c7ff5bc53ba68406a249e1ac31114df061ebe8c01ac032a0748b8be0d5de8 material sha256:b355b3ac6a360b077119e57bb79b927e42bc5c6deba03f26c3523bfe7fc28110 part 1 of 2 chunk 2 of 3
+RULE LIST policy-124-s2-s5 (docs/specs/01-pipeline/124_step_standard_policy.md, sections 2. The rules; 5. Register of rulings), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts"]
+
+## §2. The rules
+
+Thirteen rules (Rule 13 added by R-R, 2026-08-29). Each is enforced today, or marked ⚠ GAP with the artifact that would close it.
+
+---
+
+**1. Nothing about a step's behaviour may live only in code — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field.**
+- **Enforced by:** `checks` cannot be omitted (`step.schema.json:1095-1099`, `type:"array", minItems:1`); `scripts/ast-grep-rules/compute-shape.yml`'s five rules block the commonest hiding places (console, bare fetch, wall clock, `process.env`, forbidden `require`s) inside compute. **+ §5 R-BA gate A** (`step-validate.mjs` fast invariant #28): every `checks[].limit`/`warn_limit` is drawn from a CLOSED set (`limit_from_config` naming a declared variable, the exact string `viol == 0`, or a dated `standard-gates-ledger.json` row) — a bare number is behaviour hiding in descriptor prose instead of code, the same violation class under a different rung. **+ §5 R-BA gate C** (fast invariant #30): a step's declared `emits[]` must EQUAL the `records_meta` keys its own golden POST captures actually emit (minus the runner-owned `RUNNER_META_KEYS`, `scripts/lib/step/index.js`) — an emitted-but-undeclared key is behaviour hidden from the descriptor just as surely as a bare literal. **+ §5 R-BA gate I** (fast invariants #33-#36): banned-value coverage, staleness-disposition adjudication, census parity and defect-id uniqueness are each a closed registry a step cannot silently omit itself from.
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's four fences (`assert_schema`) were each moved to descriptor data or a named check rather than left as unexplained code. *(operator y 2026-10-20, rulings-8: under this rule and the IL-6 ruling, assert_data_bounds' `COST_MAG_ACCEPT` list moved from a compute-imported constant to `checks[].expect.accept_list`, which the compute reads from the descriptor; 124a §B19.)*
+- **Violation reads as:** a build failure at `pipeline.step()` construction (AJV) or a red `compute-shape` ast-grep scan in `.husky/pre-commit`.
+**M14 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B3 — GAP G-1 closure record (moved from Spec 124 §2 Rule 1) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B3 — GAP G-1 closure record (moved from Spec 124 §2 Rule 1) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure record of GAP G-1 (2026-08-29); Rule 1's text, Enforced-by and Violation lines stay live in Spec 124. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+
+**2. Compute contains domain logic only — no gating, ledger, lock, emission, logging side-channel, environment read, or policy comment.**
+- **Enforced by:** `compute-shape.yml` (6 rules — the original 5 plus `compute-no-postgis-branch`, R-W) + `check-step-shape.mjs` (blocking over `scripts/lib/compute/**`) + ~~`step-conformance.infra.test.ts:532-620`~~ **CORRECTED 2026-09-10 (measured, now `:611`/`:670`/`:699` — ~80 lines of drift; cite by greppable anchor, not line number, per Spec 124 §5 R-R's own lesson): `step-conformance.infra.test.ts`'s `COMPUTE_RULE_IDS` battery / "dispatch keys are exactly the descriptor's check ids" test** (dispatch keys ≡ declared check ids, proven to fire on a known-bad fixture).
+- **Archetype variance:** none, except ASSERT's compute never opens `ctx.pool` at all (its `outputs`, `recovery`, `counters` are forced `"none"`).
+- **Evidence:** the compute-shape gate's own blocking loop was found missing on 2026-08-25 (it scanned and reported but never failed the build) — fixed the same day; the incident is the strongest argument for keeping this a shape rule rather than a review checklist.
+- **Violation reads as:** a red ast-grep scan naming the file, line, and rule id.
+
+> **R-W addendum (2026-08-30).** Compute MUST NOT branch on PostGIS availability — `hasPostGIS`,
+> `pg_extension`, `postgis_version` (bare identifier, property access, or a string/SQL fragment naming one
+> of them), or a `try`/`catch` wrapped around a PostGIS-only call, are all the same anti-pattern: a second,
+> silently-selected algorithm hidden inside compute. `guards.requires: {kind: "extension", name: "postgis",
+> on_missing: "fail"}` is the only legal form — the step refuses before compute ever runs, and a database
+> genuinely missing the extension HALTS rather than silently degrading to a different answer. ~~Three
+> precedents on record~~ — **CORRECTED 2026-09-10 (measured): four** (R-W's own §5 register row, below, already
+> lists a fourth — `link_parcels` LP-D9 — this addendum text just never caught up): `link_massing` A-8 (in-memory grid/haversine fallback, retired), `compute_centroids`
+> A-1(a) (unweighted arithmetic-mean centroid fallback, retired), `link_parcels` A-1 (JS nearest-parcel
+> fallback, retired commit 7, 2026-08-30), `link_parcels` LP-D9 (Strategy 1a's `address_points_exact` predicate
+> gap, fixed commit 8a — see the §5 R-W row for the full fourth entry). **Enforced by:** a new ast-grep rule,
+> `compute-no-postgis-branch` (`compute-shape.yml`), wired through the same always-blocking
+> `check-step-shape.mjs` compute corpus as the other 8 rules — no separate wiring needed, since the driver
+> runs every rule in the file over `scripts/lib/compute/**`. Proven RED-first on
+> `scripts/steps/_schema/fixtures/compute/bad-compute-shape.js`'s `ctx.hasPostGIS` branch (added to the
+> fixture's known-violation set), GREEN on all six converted computes (`assert-schema.js`,
+> `compute-centroids.js`, `link-massing.js`, `link-parcel-addresses.js`, `link-wsib.js`, `load-ravines.js` —
+> none references `hasPostGIS`/`pg_extension`/`postgis_version` today), asserted by
+> `src/tests/step-conformance.infra.test.ts`'s `COMPUTE_RULE_IDS` prove-red battery.
+
+**3. Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal — PRESENCE of its `logic_variables` row is always FAIL (R-G), and VALIDITY is per-variable via the closed `on_invalid` enum: `fail` is MANDATORY for a verdict- or write-affecting variable, `default`/`clamp` are allowed only for the rest, each carrying a stated `why`.**
+- **Enforced by:** `compute-no-literal-url-tunable`/`-byte-window`/`-threshold` (`compute-shape.yml`) + `step-conformance.infra.test.ts:772-943` (declared ⊆ registry, declared ⊆ admin GROUPS, consumed ≡ declared, each direction proven RED) + `scripts/lib/step/config.js` (PRESENCE half: throws when a declared name has no `logic_variables` row, naming the remedy — LM-D15).
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's own first violation (`assert_schema` declared `config:"none"` while compute hard-coded `limit=20`, `Range: bytes=0-2048` and `bytes=0-8192`), remediated before pilot 2. **R-G's grounding:** the old P4 sentence ("no row ⇒ FAILED run") never distinguished presence from validity, and practice already contradicted its literal reading — `link-massing.descriptor.json` uses `on_invalid:"fail"` for only 3 of 6 variables, `load-ravines`/`assert-schema` use `default`/`clamp` for every one, each justified in `deviations[]`. This rule states the split that was already true.
+- **Violation reads as:** a red conformance test naming the literal, or a runtime throw naming the missing registry row (presence). No machine reads a validity failure yet.
+**M15 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B4 — GAP G-4 and GAP (R-D) closure records (moved from Spec 124 §2 Rule 3) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B4 — GAP G-4 and GAP (R-D) closure records (moved from Spec 124 §2 Rule 3) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure records of GAP G-4 (2026-08-29 / R-BA gate B 2026-09-26) and GAP (R-D) (2026-09-03); Rule 3's text and Enforced-by stay live; R-BA stays the live row. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+
+> **R-AU addendum (2026-09-21, operator-adjudicated).** This rule's reach is SCALAR TUNABLES.
+> Pricing DATA — a DB rate table, or a keyed catalogue of priced lines with its permitted-value
+> vocabulary — is not a tunable and is NOT externalized by porting it: it is carried byte-for-byte
+> and DECLARED in the descriptor as a NON-ADMIN SURFACE (`limitations[]`), so a reader can see that
+> the values exist, where they live, and that no admin surface edits them. Declaring them under
+> `config.logic_variables[]` would be a second source of truth for the same values and a false
+> claim of admin tunability. Every scalar the step consumes still obeys the rule above, unchanged.
+> **This is an INTERIM state carrying a named closing row, not a permanent exemption** — see §5 R-AU.
+> **CLOSED 2026-09-23 (batch-2 row 2.5, commits `7c3e85eb`/`d6cd1c7d`/`3bc1eee0`/`0f1f46fb`):** the admin
+> editor landed and the INTERIM state above no longer applies — see §5 R-AU for the closing text.
+
+**4. A rule kept in compute rather than declared data must still be written down — as a check's `why`, not a comment.**
+- **Enforced by:** nothing machine-checked. Applied narratively in the Intent Ledger, whose discoverer≠ adjudicator role split is Spec 123 §7.1 (§4.2 below states the *rule*).
+**M16 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B5 — GAP G-2 closure record (moved from Spec 124 §2 Rule 4) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B5 — GAP G-2 closure record (moved from Spec 124 §2 Rule 4) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure record of GAP G-2 (2026-08-29); Rule 4's text and Enforced-by stay live. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's coordinate-source OR-contract — kept in compute, its rule stated in the descriptor `checks[].why` and `limitations` by ruling, not by a check. *(operator y 2026-10-20, rulings-8: two gaps under this rule ride the bundled RE-FREEZE night, PIN REFREEZE-BUNDLE-1 (3)/(4) — neighbourhoods' U+2019 apostrophe normalisation and assert_global_coverage IL-11/IL-12's `has_bldg` scoping, each written today only in compute; 124a §B17, §B19.)*
+- **Violation reads as:** nothing today (this is exactly the ⚠ GAP).
+
+**5. `checks` may never be `"none"` — every step declares at least one.**
+- **Enforced by:** `step.schema.json:1095-1099` — `checks` is typed `array, minItems:1`; a step cannot construct without it.
+- **Archetype variance:** none — the one category every archetype leaves untouched, even ASSERT (which forces `outputs`/`recovery`/`counters` to `"none"` but not `checks`).
+- **Evidence:** all 3 converted steps carry 8–19 checks each; ASSERT (`assert_schema`) has the fewest live categories of any archetype but still declares 9.
+- **Violation reads as:** a schema-validation throw at `pipeline.step()` construction, before compute runs.
+
+**6. Every category is present, and every field inside it is answered — `"none"` is legal but must be written, never omitted.**
+- **Enforced by:** `step.schema.json`'s top-level `required` (~~18 categories~~ **CORRECTED 2026-09-10 (measured): 20**) plus per-field `required` arrays nested throughout.
+- **Archetype variance:** none.
+- **Evidence:** the schema itself is the enforcement; a descriptor missing any of the 18 fails AJV outright.
+- **Violation reads as:** a schema-validation throw naming the missing field.
+
+**7. A step's archetype determines which categories are live — a step may not omit a category its archetype requires, and may not answer a category its archetype forbids.**
+- **Enforced by:** `step.schema.json`'s `allOf` blocks keyed on `identity.archetype` (`step.schema.json:1373-1443`) — six profiles, one per non-degenerate archetype grouping.
+- **Archetype variance:** this rule *is* the variance mechanism — see §3 below.
+- **Evidence:** the schema comment on the ENRICHER profile names claim #54 (a `staleness.scope` on a lineage column implies a declared invalidator) as "the centroid defect made unexpressible."
+- **Violation reads as:** a schema-validation throw at construction naming the archetype and the forbidden or missing field.
+
+**8. A write target's discipline class, guard, and scope are declared per write target — never assumed for the whole step.**
+- **Enforced by:** `step.schema.json`'s `outputs.writes[].write_discipline` shape, with `if`/`then` blocks requiring `guard_why` when `guard:"none"` (`:279-280`) and `why` for `staging_full_replace` (`:291-292`).
+- **Archetype variance:** applies to INGESTOR/LINK/MATCHER/ENRICHER (any archetype whose `outputs` is an object); N/A for ASSERT (`outputs` forced `"none"`).
+- **Evidence:** `link_massing`'s E1/E2 targets declare two different disciplines (`set_based_scoped` guarded none, `guarded_upsert`) on two different write targets in the same step.
+- **Violation reads as:** a schema-validation throw naming the write target and the missing `why`.
+
+**9. A banned write shape (an unguarded set-based write, an insert-only step with no retraction) may ship only with a dated, committed, SHA-anchored ledger entry naming who approved it — a `why` string alone is not enough (promoted from pilot practice, R-I.2).**
+- **Enforced by:** `scripts/steps/_schema/grandfathered.json`, read by `assertGrandfathered` at `pipeline.step()` construction (before any pool opens) — refuses a banned value with no matching entry even when the schema's own `guard_why` is present.
+- **Archetype variance:** applies wherever `outputs` is an object; N/A for ASSERT.
+- **Evidence:** `link_massing`'s E1 target (`write_discipline.guard:"none"`) is grandfathered against commit `5bb31faf`, operator name, and date — the schema's own fixture for this shape is grandfathered the same way, so the rule cannot be satisfied by weakening the fixture.
+- **Violation reads as:** a construction-time throw refusing the descriptor, naming the ungrandfathered path.
+
+**10. The verdict is always derived from the declared checks' rows — never a parallel boolean, never a hardcoded literal.**
+- **Enforced by:** `scripts/lib/step/verdict.js` (`deriveVerdict(rows)`) is the only place a verdict is computed; `step-library.logic.test.ts:145-283` — "the verdict is ROW-DERIVED, and all three values are reachable."
+- **Archetype variance:** none — runner-owned, no archetype may opt out.
+- **Evidence:** AS-D1 (sources verdict read the raw error array, not the row set) and LM-D2 (a hand-rolled per-script cascade plus a boolean-driven severity) both closed by routing through this single function; a repo-wide grep for `'FAIL'`/`'WARN'` literals across the library returns exactly the rows inside `verdict.js` itself.
+- **Violation reads as:** a red `step-library.logic.test.ts` assertion, or (pre-conversion) a fleet-wide finding that a script structurally cannot emit WARN or FAIL.
+- **R-Q / R-R note (2026-08-29):** `step-library.logic.test.ts` is outside `step:validate`'s own run scope (spec-named as step-conformance + golden-fingerprint + `src/tests/steps/<slug>/` only), so `step:validate`'s policy matrix used to print this rule PROSE-ONLY per step rather than claiming a false enforced-green — a scope caveat, not a claim the rule is unenforced elsewhere. Separately, this commit's G6 ledger-normalization work fixed one concrete instance of a severity-conflated counter reaching the ledger (`LPA-D2`), the same defect class R-Q (`checks_failed`/`checks_warned` split, `LPA-D6`) closed in the library itself.
+- **Enforced by (WF2 "Rules 10/11/12 mechanical checkers", C1, 2026-09-03):** `scripts/analysis/step-validate.mjs`'s `checkVerdictSingleSource` closes the PROSE-ONLY gap above with a genuine mechanical checker over a closed corpus, `VERDICT_LIBRARY_CORPUS` (every `scripts/lib/step/*.js` file except `verdict.js` itself + `scripts/lib/pipeline.js` + `scripts/lib/source-version.js` — the files that see a full `rows` array and could hand-roll a second cascade). Two halves: **(a)** no unsanctioned second PASS/WARN/FAIL derivation anywhere in that corpus — `pipeline.js`'s `emitSummary` escalate-only recompute is the ONE declared, cited exception (`SANCTIONED_VERDICT_SITES`; not behaviour-identical to `deriveVerdict` — never downgrades, preserves SKIP/UNKNOWN), and `scripts/lib/source-version.js`'s prior hand-rolled duplicate was routed through `deriveVerdict` in this same commit (behaviour-identical, proven in `step-conformance.infra.test.ts`); `scripts/lib/step/plausibility.js`'s `verdictCascade` (a second duplicate, consumed by the live `assert_parcel_sanity` step) was retired outright, its one consumer now importing `deriveVerdict` directly. **(b)** a `SELF_SKIPPED` terminal's audit rows must fold to a verdict other than PASS, AND that verdict must be genuinely row-derived (≥1 declared non-INFO row, `verdict === deriveVerdict(rows)`) — **CLOSED 2026-09-09 (WF3 VRD-SKIP, Rule 10 ladder rung b, see §7 below and the `VRD-SKIP` row of `programme-items.json`, now `BUILT`):** `skipRecordsMeta`'s `status` row declares severity `WARN` with threshold `'ran'` (was `INFO`/`null`), so the checker now ships `enforced-green`. Was pinned `KNOWN-DEFECT` per Spec 123 §3.1 against `review_followups.md` ("A lock-skipped converted step verdicts as PASS", now RESOLVED) from 2026-09-03 until closure. Both halves proven both-directions: `--self-test-only` runs in-memory RED/GREEN proofs on every invocation (`step-validate.mjs`'s own `selfTest()`), and `compute-no-verdict-derivation` (`scripts/ast-grep-rules/compute-shape.yml`) bans a compute from ever assigning anything named `verdict`, proven on `scripts/steps/_schema/fixtures/compute/bad-verdict-parallel.js` + the extended `bad-compute-shape.js` battery.
+
+> **R-H addendum (2026-08-28).** Rule 10 governs HOW the verdict is derived, not WHICH severity a check should choose. That gap let pilot 3's ruling A-6 dispose `nearest_footprint_gt_lot_count` and `shared_primary_buildings` as INFO for a standing non-zero population — conflicting with Spec 48 §4.9 / `tasks/lessons.md:117`: **a metric expected to be permanently non-zero is WARN with a declared, machine-observable retighten condition — never FAIL, never INFO-by-taste.** INFO is legal ONLY for a purely descriptive counter no threshold could bound, and that exception must itself be declared in `checks[].why`. Consequence: **LM-D6/LM-D11 re-dispositioned OPEN → WARN + a declared retighten condition, carried to pilot 4** (defect ledger + review followups amended in the same commit). ⚠ **GAP G-5** — no check yet distinguishes "purely descriptive, no threshold possible" from "INFO chosen to avoid a red"; author judgment only, same class as G-2. **First closed instance (LG-29, WF3 VRD-SKIP, 2026-09-09):** a `SELF_SKIPPED` terminal is the maximal case of "a check the library could not evaluate" — zero declared checks ran — so `status:'INFO'` on the skip's own `status` row was exactly the "INFO chosen to avoid a red" failure mode G-5 names, not a purely descriptive counter (a threshold — `'ran'` — was possible all along). Closed by flipping that one row's declared severity to `WARN`; `skipRecordsMeta` (`scripts/lib/step/index.js`) is this addendum's named precedent for the self-skip case specifically.
+
+**11. A ruling that reorders a step's phases must re-derive every "before X" guarantee stated in that step's own governing spec, in the same commit (promoted from pilot practice, R-I.1).**
+- **Enforced by (STALE until this amendment — `checkOrderGuaranteesCited` existed since `b2a85079`, 2026-09-03, but this row was never updated to say so):** `scripts/analysis/step-validate.mjs`'s `checkOrderGuaranteesCited(descriptor)` — the DECLARED half only (GAP G-3's completeness half, below, stays open). Verifies every `checks[].when:"pre_write"` entry carries `order_guarantee{guarantee, spec_ref, anchor}` (schema-enforced, re-verified defensively), that `spec_ref` resolves to a real `docs/specs/**` file, that `anchor` is found LITERALLY in that file (a rotted citation REDs), and that `spec_ref` agrees with the descriptor's own `identity.spec` — a pre_write check's ordering guarantee must trace to THIS STEP's own governing spec, never an unrelated one. **Ask 6 amendment (pilot 9 commit 1, 2026-09-04):** `identity.spec` is single-valued, but a step's outputs can genuinely span more than one governing spec (`enrich_parcels`: `identity.spec` `"65"`, pass 5's own post-commit-read order_guarantee governed by Spec 78 §P3A.1 — grep-confirmed `comp_*`/`opt_*`/`optimal_config` appear only in Specs 78/88/89/100, never 55 or 65). `checkOrderGuaranteesCited` now accepts a spec-qualified anchor, `"<specnum>:<anchor text>"` — when present, the spec_ref-agreement check resolves against the QUALIFIER's own spec instead of `identity.spec`'s; an unqualified anchor is byte-for-byte the pre-existing behavior. Proven both directions against the real `docs/specs/` tree in `step-validate.mjs`'s own `selfTest()`: an unqualified anchor whose `spec_ref` disagrees with `identity.spec` still REDs (the qualifier, not the mere citation, is what licenses the disagreement); a qualified anchor naming the SAME spec `spec_ref` already points at GREENs; a qualifier naming a spec number that resolves to no file REDs.
+- ⚠ **GAP G-3** — the DECLARED half above is real and non-vacuous, but its own completeness is not proven: nothing re-checks a step's governing spec for "before X" language when the library's phase order changes generically (e.g. a future ordering change to LINK or a second ENRICHER), and nothing forces a `pre_write` check + `order_guarantee` to be AUTHORED in the first place merely because a step's spec states a "before X" guarantee — `enrich_parcels`'s own pass 5 (Spec 78 §P3A.1) needed this pilot to explicitly author `pass5_post_commit_read_order` before Rule 11 had anything to check.
+- **Archetype variance:** matters most for INGESTOR (acquire→validate→write→score) and any archetype using `checks[].when:"pre_write"`; N/A for ASSERT (no writes to order against). ENRICHER (pilot 9) is the first archetype whose post-commit phase order guarantee spans a SECOND spec beyond `identity.spec`.
+- **Evidence:** LR-D9 — converting `load_ravines` to the INGESTOR archetype silently retired Spec 59's write-order guarantee until the Regression Guardian caught it in a fold review, one commit after it shipped. `enrich_parcels` (pilot 9) — the multi-spec case above, closed by this amendment rather than left as a second per-incident fix.
+- **Violation reads as:** a `checkOrderGuaranteesCited` violation in `step:validate`'s Rule 11 matrix row (`enforced-red` when a real violation exists); GAP G-3's completeness half is still nothing today, absent a reviewer catching it by hand.
+
+**12. A write target with a destructive full retraction (`retract_when:full_only` or `retract:"all"`) declares a truthful crash-recovery posture — `"none"` is legal only with a stated why.**
+- **Enforced by:** `step.schema.json`'s `recovery.interrupted` field (required when a destructive retraction target exists) + ~~`step-conformance.infra.test.ts:1039-1073`~~ **CORRECTED 2026-09-10 (measured, now `:1647-1656` — ~600 lines of drift; cite by greppable anchor, per Spec 124 §5 R-R's own lesson): `step-conformance.infra.test.ts`'s "recovery.interrupted reddens against its destructive retraction target" battery** (RED on `"none"`, RED on missing).
+- **Archetype variance:** applies to LINK and any INGESTOR with a full-retraction write; N/A for ASSERT/RECORDER.
+- **Evidence:** a killed `link_massing` forced-FULL run left `parcel_buildings` at 29,330/520,492 rows; the next run's gate read "unchanged" and the hole persisted silently — this is the incident the rule exists to make undeclarable.
+- **Violation reads as:** a schema-validation throw at construction. *(Note, updated 2026-08-29: BOTH halves are now CLOSED. The DECLARATION half — `recovery.interrupted` and the paired `recovery.before_image` (R-M), both required, truthful, schema-enforced fields, R-M's before-image mechanism BUILT and LIVE-FIRED (`d07529af`, LG-17 — `link_massing`'s genuine forced-FULL wrote a 520,492-row before-image file before its retraction ran). The RUNTIME half — `staleness.detectInterruptedRetraction` auto-detects a `crashed`/stuck-`running` prior run for a step's own producer slugs and `selectMode` forces FULL unconditionally, wired into `runCascadePhase`/`runLinkPhase` (`LW-D20`/`LG-19`, Spec 122 R-B) — closed by a live kill-and-rerun proof against `link_wsib` that found and fixed two real bugs (a step self-detecting its own just-opened row; the check being unreachable behind the ledger gated-skip), both now regression-locked fast (fake-pool) and against real Postgres. "Declared" and "automatically enforced" are now the same posture.)*
+- **Enforced by (WF2 "Rules 10/11/12 mechanical checkers", C3, 2026-09-03) — `step:validate`'s own matrix, closing this rule's prior PROSE-ONLY gap from THAT tool's own vantage:** `scripts/analysis/step-validate.mjs`'s `checkInterruptedPostureTruthful(descriptor)`, two parts. **(a) Declaration** — the same "destructive retraction requires `force_full_on_next_run`" rule as the existing `step-conformance.infra.test.ts` R-B lock, re-verified here. **(b) Reachability** — a NEW, static, runner-derived claim beyond the declaration: for the descriptor's `execution.shape`, is `staleness.detectInterruptedRetraction` actually REACHABLE on every path through that shape's runner in `scripts/lib/step/index.js`? Derived from a source scan (`extractFunctionBody` + `runnerReachability`), never hand-listed — a runner behind a `staleness.ledgerGatedSkip` early-return is reachable only if its `bypassed` term folds in `interruptedRetraction.interrupted` BEFORE that call (the exact shape `runMaterializePhase` lacked until `febd0968`, closed AHEAD of this checker landing per Fold A item 2 of `.cursor/wf2_rules_10_12_checkers_active_task.md`); a runner with no such early-return instead reaches it via an unconditional `staleness.selectMode` call. Measured live over all 8 converted descriptors: `link`/`link_keyed`/`cascade` (the three declaring `force_full_on_next_run`) all REACHABLE; the other five declare `"none"` (no reachability claim to verify). Proven both directions via `selfTest()` (RED on the exact pre-fix `runMaterializePhase` shape reconstructed in-memory; GREEN on the post-fix shape, a LINK-shaped unconditional-`selectMode` runner, and a declaration-only violation; RED on a runner reaching neither `ledgerGatedSkip` nor `selectMode`). **Behavioural proof, WRITTEN but BLOCKED** (the DB-tier half beyond static reachability): `src/tests/db/step-crash-posture.db.test.ts` spawns a REAL `link_wsib` process, SIGTERMs it once its `pipeline_runs` row reads `running`, and asserts the row stays `running` (no SIGTERM handler exists anywhere in this codebase — grepped — so Node's default disposition abandons the in-flight `finalizeLedgerRow` call) AND the next `staleness.selectMode` call over the SAME descriptor/pool resolves `mode:"full", reason:"recover_interrupted_retraction"` — declared posture matching MEASURED behaviour, not just source reachability. Committed `describe.skip`-gated: measured live 2026-09-03 that a real converted step spawned against the ephemeral `BUILDO_TEST_DB` testcontainer always refuses at `assertDbTarget` (`scripts/lib/resolve-db.js`) — the container is named `buildo_test`, every descriptor's `database.assert_current_database` is the single literal `"postgres"` with no test-context override, and step scripts have no descriptor-path override hook either. Filed HIGH in `review_followups.md` ("WF2 Rule 12 behavioural half — no `db.test.ts` can spawn a REAL converted step against the ephemeral test container") as its own scoped WF2/WF3 — a deliberate production safety fence (Spec 122 §P0), not weakened under this WF2's time pressure. Until that lands, the STATIC reachability half above + the existing fake-pool unit lock (`src/tests/step-library.logic.test.ts`) are the enforced mechanisms. Scoped, once unblocked, to ONE archetype first (CASCADE via `link_wsib`, the same step LW-D20/LG-19 were originally found against) — the other two live shapes (`link`/`link_massing`, `link_keyed`/`link_parcels`) are `programme-items.json`'s `CRASH-BEHAV` (`nice_to_have`, `NOT_STARTED`).
+
+**13. A step validates itself — the Spec 123 §6 scorecard and this spec's own policy-coverage matrix are generated by one command, run for every converted step, and enforced (never a separate, hand-maintained track).**
+- **Enforced by:** `scripts/analysis/step-validate.mjs` (`npm run step:validate -- --step=<slug>` / `--all`): runs `validateDescriptor` (Rules 1, 5–9), the ast-grep shape gate scoped to the step's own file + compute (Rules 1–2), the step's own `src/tests/steps/<slug>/` + the shared conformance/golden-fingerprint suites, the golden-capture invocation/fingerprint/diff check (G8), and derives the full G0–G9 scorecard plus a Rules-1–13 coverage matrix — all from committed artifacts. `step-conformance.infra.test.ts` asserts every converted step's assessment report carries a `## Validation scorecard (generated)` block equal to a fresh run (drift is red). `.husky/pre-commit` runs `step:validate --all --fast` first (the vitest spawn skipped, everything else run, plus 7 always-on fast invariants); `.husky/pre-push` re-runs it plus `typecheck` (defeats a bare `--no-verify`). **+ §5 R-BA gates F/H/J/G (2026-09-26):** F floors the SCORE half (a converted step below 14/17, or a non-LF path, hard-stops without a dated ledger row — fast invariant #37); H closes the MATRIX's own status vocabulary (`MATRIX_STATUSES`, a closed enum — `computePolicyMatrix` throws on an out-of-set status); J and G close the PROCESS half the addendum below names — J at commit time (Spec-diff staged-or-declared, generated-doc freshness, `.husky/pre-commit`), G on the scorecard's own input freshness (nonzero capture per declared write target, `lib_fingerprint` staleness, explained-diff coverage — fast invariants #38-#40): Rule 13 no longer just runs the check, it proves the check's own inputs are current.
+- **Archetype variance:** none — every archetype's descriptor is validated, shape-gated, and scored the same way.
+- **Evidence:** pilots 1–5 backfilled by `step:validate --all --write` (R-R, 2026-08-29) — `link_parcel_addresses` scored 8/17 on the FIRST honest run (real hard-stop: `LPA-D2`'s ledger status wasn't literally `CLOSED`/`PIN`, and a later WF3 fix's `records_meta` shape change wasn't yet re-explained in the report), fixed by two real documentation commits rather than by loosening the gate — 14/17 after.
+- **Violation reads as:** a red `step-conformance.infra.test.ts` assertion naming the stale/missing scorecard block, or a non-zero `step:validate` exit (a hard stop on G6/G7/G8/G9 or a fast invariant) in `.husky/pre-commit`/`pre-push`.
+- **Rule 13's own boundary (R-T addendum, filed 2026-08-29, BUILT 2026-08-30 — this same programme's follow-on WF2).** `step:validate` conflates two different questions under one name: whether a step's *process* was followed (G0–G9, the policy coverage matrix) and whether a step's *data* is plausible (Spec 79/120/30 §5.4.1's bound doctrine — **not bare "§5"**, Fold B-6, 2026-08-30: Spec 30 §5 is the CI/CD section; §5.4.1 is the runtime verdict/halting-semantics section the bound doctrine actually lives in). **The rule: "the validator validates DATA (Spec 79/120/30 §5.4.1); the scorecard validates process, from structured artifacts."** Both halves are now BUILT: the scorecard half (G0–G9, as specified above) and the DATA half — `invariants[]`/`plausibility[]` bounds (threshold-derived/reachable/last-measured-value-beside-the-bound, §9 below), the seam-validation pass (`scripts/lib/step/seam.js` — over `inputs.reads.steps[]` declared step-edges, corrected from the original "`outputs.invalidates` edges" phrasing: that category is `{table,column,when}`-shaped, a step's own re-eligibility scope, not a producer→consumer edge — closes VAL-3/LDG-2/LDG-7's concern), chain-end synthesis automation (`scripts/analysis/chain-end-synthesis.mjs`, the `sources` chain's roll-up + the declared cloud trigger for `validate_only` invariants, Ask 6(b)), and R-U's chain-run correlation (`records_meta.chain_run_id`, below) that both the seam pass and chain-end synthesis join on. The layer table above states WHERE each half lives (descriptor declares, library executes, compute only measures). **The DATA/PROCESS split has a SECOND enforcement point, not just declaration (Fold B-3):** every synthetic invariant/plausibility row carries a REQUIRED, closed `source: check|invariant|plausibility` field distinct from `kind` (`scripts/lib/step/verdict.js`'s `checkRow`) — so a consumer reading only the EMITTED audit table (never the descriptor) can still tell a DATA row from a PROCESS row without re-deriving it from naming convention; chain-end synthesis and `step-validate.mjs`'s scorer both key off this field. **Scoped as BUILT, not fully DE-REGEXED**: the scorecard's own six prose-regex gates (`G0`/`G1`/`G3`/`G4`/`G5`/`G9`, `section()`/`splitTableRow()`-scraped from free-form report text) are UNCHANGED — only `G2`'s vacuous-green (Spec 123 §6's own documented defect) and the defect-ledger/`notes.json` strict-row-schema parse (`G6`/`G7`/`G4d`) were fixed, per Ask 3's own scoped default; the larger de-regex lift is filed as `nice_to_have` in `programme-items.json` (§9 below), not silently dropped. Programme item `VAL-WF2` (`batching_prereq`) CLOSES with this commit; `REGEXSC` is `SUPERSEDED` by it (unchanged from the original filing); `G2` is `PARTIAL` — the vacuous-green half closes here, the churn×complexity-plot BUILD half stays its own `S6b` item (operator ruling 2026-08-25 decision 2, `review_followups.md:2994`, unchanged).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
+index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..449f30cf4ebc60669163cd94135c6c3478dfd0d8 100644
+--- a/scripts/hooks/check-lane-close.mjs
++++ b/scripts/hooks/check-lane-close.mjs
+@@ -15,6 +15,11 @@
+ //    error-paths (ux, security by the Files line) and at least one plan-stage output. Each required output starts with the review tool's REVIEW header (template name matching the lens,
+ //    model, timestamp, file_sha256, prompt_sha256) and ends in a VERDICT: line. A compliance output's file_sha256 must be that of the committed input in-<output name> whose first line
+ //    `LIST <id> sha256:<hex> material sha256:<hex> part i of n` is recomputed here, and the parts together must carry the WHOLE rule list (so a list cannot be shortened or softened);
++//  * the WHOLE change (V2.WHOLE, task-410): the changed paths of the task range (merge-base with the table's base_ref to HEAD, minus the table's exempt paths) are recomputed here; the
++//    committed out-phase inputs (each compliance list, and a split code-review, error-paths, ux or security lens: out-<lens>-pN.txt with in-<same name>) carry the chunk stamps lens-input wrote
++//    ("chunk c of m" and the path list); the check refuses when the union of the chunk path lists is not that list (a file left out, or a path outside the change), when a path is in two
++//    chunks, when a stamp does not match its own material or its file name, when the chunks of a list are not 1..m with every list part, or when a chunk's text is not what
++//    git diff (rule-lists.mjs DIFF_ARGS) prints for its paths. A path staged in the closing commit itself is in no chunk and is refused (the closing commit holds records only).
+ //  * finding lines: a loose reading of every lens output must count the same BUG/DEFER lines as the strict one, else "finding lines altered or unparsable";
+ //  * GROUNDER.md, always for a build or fix task, for any other task when a lens output holds a finding. `Grounder: <name>` and `Lane: <name>`: the grounder is not the lane, the Lane
+ //    header or ANY assignee, compared with case, punctuation and digit separators removed, and not a name that contains or is contained in one (comply2-b, comply-2). `Ruled: <file>
+@@ -31,7 +36,7 @@ import fs from 'node:fs';
+ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ import { asList, parseFM } from '../analysis/backlog-lib.mjs';
+-import { coveredBy, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
++import { coveredBy, DIFF_ARGS, diffPaths, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
+ import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
+ 
+ const git = (a) => { const r = spawnSync('git', ['-c', 'core.quotepath=false', ...a], { encoding: 'utf8', maxBuffer: 1 << 28 }); return { status: r.status ?? 1, stdout: r.stdout ?? '' }; };
+@@ -46,25 +51,90 @@ const VERDICT = /^\s*[-*]?\s*(\S+)\s+(CONFIRMED|REJECTED|CONFLICT)\s+(\S+?):(\d+
+ const REVIEW = /^REVIEW template=(\S+) model=(\S+) at=(\S+) file_sha256=([0-9a-f]{64}) prompt_sha256=([0-9a-f]{64})\s*$/m;
+ 
+ /** The REVIEW header problems of one required lens output ([] when fine); `inputText` (or null) is the committed input it must have been run on. */
+-function reviewErrors(name, text, template, inputText) {
++function reviewErrors(name, text, template, inputText, opt = {}) {
+   const head = text.split('\n').slice(0, 15).join('\n');
+   const m = REVIEW.exec(head);
+   if (!m) return [`${name}: no REVIEW header in its first lines (the review tool writes it: template, model, timestamp, file_sha256, prompt_sha256); a body with only a VERDICT line is not a lens output`];
+   const e = [];
+   if (m[1] !== template) e.push(`${name}: the REVIEW header names template ${m[1]}, expected ${template}`);
+   if (Number.isNaN(Date.parse(m[3]))) e.push(`${name}: the REVIEW header timestamp ${m[3]} is not a date`);
+-  if (inputText !== null && m[4] !== sha(inputText)) e.push(`${name}: the REVIEW header file_sha256 is not the sha256 of the committed input in-${name} (the output was not produced from that input)`);
++  if (inputText !== null && m[4] !== sha(inputText)) e.push(`${name}: the REVIEW header file_sha256 is not the sha256 of ${opt.what ?? `the committed input in-${name}`} (the output was not produced from that file)`);
++  // F3: the prompt hash is recomputed from the repo template, the committed input and the context value the tool used; an arbitrary or hand-written value does not match
++  if (opt.templateText !== undefined && inputText !== null) {
++    if (opt.templateText === null) e.push(`${name}: the review template ${template} is not in the repo (index or HEAD), so prompt_sha256 cannot be recomputed (fail closed)`);
++    else if (!lensContexts().some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c }))) e.push(`${name}: the REVIEW header prompt_sha256 is not the hash of the prompt the review tool builds from ${template}, the committed input and the context (an output not made by the tool on that input, or an edited input)`);
++  }
+   if (!/^VERDICT:/m.test(text)) e.push(`${name}: no VERDICT line (a failed run is not a lens output)`);
+   return e;
+ }
+ 
++/**
++ * V2.WHOLE (task-410): the chunk proof for one output family. `items` [{name, k, p}] are the committed inputs (k: the -pN number in the name or null, p: parseLensInput's result); `expected` the changed
++ * paths of the task range minus the exempt ones; `diffOf(paths)` the text git prints for them. Returns the refusal lines ([] when the chunks together are exactly the change and each is true).
++ */
++export function chunkErrors({ label, items, expected, diffOf = () => null, optional = [] }) {
++  const safePaths = (m) => { try { return diffPaths(m); } catch { return null; } }; // F8 round: an unreadable header is a refusal line, never a stack trace
++  const e = [];
++  if (items.length === 0) return e;
++  const m = items[0].p.chunks ?? 1;
++  const n = items[0].p.parts;
++  const byChunk = new Map();
++  for (const it of items) {
++    const { p, name } = it;
++    const c = p.chunk ?? 1;
++    if ((p.chunks ?? 1) !== m || p.parts !== n) e.push(`${name}: stamped chunk ${c} of ${p.chunks ?? 1}, ${p.parts} list part(s); the other inputs of ${label} say ${m} chunk(s), ${n} part(s)`);
++    if (c < 1 || c > m) e.push(`${name}: chunk ${c} of ${m} is outside 1..${m}`);
++    const own = safePaths(p.material);
++    if (own === null) { e.push(`${name}: the material holds a diff file header this tool cannot read (a quoted name or a rename header): make the diff with the command in the brief`); continue; }
++    if (p.chunk !== undefined && (!p.paths || JSON.stringify(p.paths) !== JSON.stringify(own))) e.push(`${name}: the stamped path list ${JSON.stringify(p.paths)} is not the list of files in its own material ${JSON.stringify(own)} (the stamp was edited)`);
++    if ((it.k ?? 1) !== (c - 1) * p.parts + p.part) e.push(`${name}: the file number does not match its stamp (chunk ${c} of ${m}, part ${p.part} of ${p.parts} is file -p${(c - 1) * p.parts + p.part}; the stamp was edited or the file renamed)`);
++    if (!byChunk.has(c)) byChunk.set(c, []);
++    byChunk.get(c).push(it);
++  }
++  if (items.length !== m * n) e.push(`${label}: ${items.length} input file(s) but the stamps say ${m} chunk(s) x ${n} list part(s) = ${m * n}: a chunk or a part is missing or left over from an earlier run`);
++  const seen = new Map();
++  for (let c = 1; c <= m; c++) {
++    const its = byChunk.get(c) ?? [];
++    if (its.length === 0) { e.push(`${label}: chunk ${c} of ${m} has no input file`); continue; }
++    if (new Set(its.map((x) => x.p.materialSha)).size > 1) e.push(`${label}: the parts of chunk ${c} carry different material`);
++    if (its.map((x) => x.p.part).sort((a, b) => a - b).join() !== Array.from({ length: n }, (_, j) => j + 1).join()) e.push(`${label}: chunk ${c} does not hold list parts 1..${n} once each`);
++    const paths = safePaths(its[0].p.material) ?? [];
++    for (const q of paths) seen.set(q, [...(seen.get(q) ?? []), c]);
++    const want = diffOf(paths);
++    if (want === null || its[0].p.material !== want) {
++      const a = its[0].p.material; const b = want ?? '';
++      let at = 0; while (at < a.length && a[at] === b[at]) at++;
++      e.push(`${label}: chunk ${c} of ${m} (${paths.slice(0, 3).join(', ') || 'no file'}${paths.length > 3 ? ', ...' : ''}) is not what git diff prints for its paths (first difference at character ${at}; the diff is made with the command in the brief: rule-lists.mjs DIFF_ARGS, merge-base to HEAD)`);
++    }
++  }
++  const dup = [...seen].filter(([, cs]) => cs.length > 1).map(([q]) => q);
++  if (dup.length) e.push(`${label}: ${dup.length} path(s) are in more than one chunk: ${dup.slice(0, 5).join(', ')}`);
++  const exp = new Set(expected);
++  const missing = expected.filter((q) => !seen.has(q));
++  const opt = new Set(optional);
++  const extra = [...seen.keys()].filter((q) => !exp.has(q) && !opt.has(q));
++  if (missing.length) e.push(`${label}: ${missing.length} changed file(s) of the task range are in no chunk, so the review never saw them: ${missing.slice(0, 6).join(', ')}${missing.length > 6 ? ', ...' : ''}`);
++  if (extra.length) e.push(`${label}: ${extra.length} path(s) in the chunks are not in the task range (or are exempt paths): ${extra.slice(0, 6).join(', ')}${extra.length > 6 ? ', ...' : ''}`);
++  return e;
++}
++/** H1: the board ref the base, the launch commit and the deciding table keys are read from (a lane's table cannot name another). */
++export const BOARD_REFS = ['refs/heads/wf2/board', 'refs/remotes/origin/wf2/board'];
++const kOf = (name) => { const x = /-p(\d+)\.txt$/.exec(name); return x ? Number(x[1]) : null; };
++
+ /**
+  * Every refusal for one closing task, as lines. Pure of git: the caller supplies what it read.
+  * @param {{id:string, taskText:string, fm:object, assignees:string[], headAssignees:string[], type:string, table:object, root:string, letter?:string,
+- *          laneFiles:{dir:string,name:string,text:string}[], changed:string[], readRepo:(p:string)=>string|null}} i
++ *          laneFiles:{dir:string,name:string,text:string}[], changed:string[], expectedPaths?:string[], diffOf?:(paths:string[])=>string|null, readRepo:(p:string)=>string|null}} i
+  */
++/**
++ * HOOK POINT (task-375, the reviewer context): the context values a lens run may have used. Today the review tool is run with no --context, so its placeholder is the one value; when task-375 builds the
++ * context option, this returns the context text the lane passed (read from the committed pasted-context file) and prompt_sha256 is recomputed with it. Nothing else changes in the check.
++ */
++export const lensContexts = () => [undefined];
++
+ export function closeErrors(i) {
+   const { id, type, readRepo } = i;
++  const readBase = i.readBase ?? readRepo; // F10: templates come from the range base
+   const build = type === 'build' || type === 'fix';
+   const laneOf = (as) => as.map((a) => /^@lane-(.+)$/.exec(a)?.[1]).find(Boolean);
+   const laneName = laneOf(i.assignees);
+@@ -79,6 +149,9 @@ export function closeErrors(i) {
+   try { r = resolveTask({ table: i.table, root: i.root, body: i.taskText, type, letter: i.letter }); } catch (e) { return [`${id}: cannot read the rule-list table or one of its path maps: ${String(e.message).split('\n')[0]}`]; }
+   if (r.error) return [`${id}: ${r.error.replace(/^refused: /, '')}`];
+   const errors = [];
++  const expected = i.expectedPaths ?? []; // V2.WHOLE: the changed paths of the task range minus the exempt ones (check() computes them)
++  // F1: the proof is never skipped silently: a build or fix task whose range holds no file outside the exempt paths (the lane was folded into the base already, or the base is wrong) is refused
++  if (build && i.rangeEmpty) errors.push(`${id}: no file the task's Files line covers changed between the task's launch commit and HEAD, so the review cannot be proved to cover any change (the launch commit is the board commit that took the task for its lane assignee)`);
+   // V2.LIST (task-406): the every_task lists (the five words, the plan protocol) and the milestone lists are required of every task like any list; verifyResolved is the one reading shared with validate, check-tasks and the launch.
+   // A table with no every_task is refused (fails closed: nobody switches the lists off by leaving the key out); a missing milestone_docs key or entry counts as missing lists; a build task with no milestone is refused by resolveTask above.
+   const missing = verifyResolved(i.table, r, i.letter, type);
+@@ -120,17 +193,22 @@ export function closeErrors(i) {
+       for (const n of names) {
+         const input = textOf(`in-${n}`);
+         if (input === undefined) { bad.push(`${n}: the input in-${n} that the review tool read is not committed beside it`); continue; }
+-        bad.push(...reviewErrors(n, textOf(n) ?? '', 'lens-compliance.md', input));
++        bad.push(...reviewErrors(n, textOf(n) ?? '', 'lens-compliance.md', input, { templateText: readBase('.claude/review-templates/lens-compliance.md') }));
+         const p = parseLensInput(input);
+         if (!p) bad.push(`in-${n}: first line is not "LIST <id> sha256:<hex> material sha256:<hex> part i of n" (rule-lists.mjs lens-input writes it)`);
+         else if (p.id !== l.id) bad.push(`in-${n}: stamped for list ${p.id}, expected ${l.id}`);
+         else if (!p.ok) bad.push(`in-${n}: the stamped sha256 does not match the list text or the material in the file (the input was edited)`);
++        else if (renderLensInput({ id: p.id, list: i.table.lists[p.id], part: p.listPart, i: p.part, n: p.parts, material: p.material, paths: p.chunk === undefined ? null : p.paths, c: p.chunk, m: p.chunks }) !== input) bad.push(`in-${n}: not what lens-input writes for its own stamp (the head line, the paths or the text around the list part or the material was edited)`);
+         else listParts.push(p);
+       }
+       if (!bad.length) {
+         let whole;
+         try { whole = listBlocks(i.table.lists[l.id], i.root, l.id).map((b) => b.text).join(''); } catch (e) { bad.push(`list ${l.id}: ${String(e.message).split('\n')[0]}`); }
+-        if (whole !== undefined && listParts.map((p) => p.listPart).join('').replace(/\s+/g, '') !== whole.replace(/\s+/g, '')) bad.push(`the committed inputs do not carry the whole list ${l.id} (${l.file}) as it is now: the list was shortened, softened or is out of date`);
++        // V2.WHOLE: every chunk holds the whole list (its parts 1..n together); the coverage of the change is proved per list
++        const chunks = new Map();
++        for (const p of listParts) { const c = p.chunk ?? 1; chunks.set(c, [...(chunks.get(c) ?? []), p]); }
++        for (const [c, ps] of chunks) if (whole !== undefined && ps.sort((a, b) => a.part - b.part).map((p) => p.listPart).join('').replace(/\s+/g, '') !== whole.replace(/\s+/g, '')) bad.push(`the committed inputs${chunks.size > 1 ? ` of chunk ${c}` : ''} do not carry the whole list ${l.id} (${l.file}) as it is now: the list was shortened, softened or is out of date`);
++        if (ph === 'out' && expected.length) bad.push(...chunkErrors({ label: `${base}`, items: names.map((n, x) => ({ name: `in-${n}`, k: kOf(n), p: listParts[x] })), expected, diffOf: i.diffOf, optional: i.optionalPaths }));
+       }
+       if (bad.length) { why.push(bad.join('; ')); continue; }
+       ok = true;
+@@ -143,8 +221,34 @@ export function closeErrors(i) {
+     for (const lens of set.out) {
+       const n = `out-${lens}.txt`;
+       const t = textOf(n);
++      const lparts = files.map((f) => new RegExp(`^out-${esc(lens)}-p(\\d+)\\.txt$`).exec(f.name)).filter(Boolean).map((x) => Number(x[1])).sort((a, b) => a - b);
++      if (t === undefined && lparts.length) {
++        // V2.WHOLE: a lens whose prompt was over the bound is split by the same tool (lens-input with the lens template, no --list): out-<lens>-pN.txt, each with its committed in- input
++        const gapAt = lparts.findIndex((x, k) => x !== k + 1);
++        if (gapAt !== -1) { errors.push(`${id}: out-${lens}: parts ${lparts.join(',')} have a gap, out-${lens}-p${gapAt + 1}.txt is missing`); continue; }
++        const items = [];
++        for (const x of lparts) {
++          const nm = `out-${lens}-p${x}.txt`;
++          const input = textOf(`in-${nm}`);
++          if (input === undefined) { errors.push(`${id}: ${nm}: the input in-${nm} that the review tool read is not committed beside it`); continue; }
++          errors.push(...reviewErrors(nm, textOf(nm) ?? '', `lens-${lens}.md`, input, { templateText: readBase(`.claude/review-templates/lens-${lens}.md`) }).map((y) => `${id}: ${y}`));
++          const p = parseLensInput(input);
++          if (p && p.ok && p.id === 'none' && renderLensInput({ id: 'none', list: null, part: '', i: p.part, n: p.parts, material: p.material, paths: p.chunk === undefined ? null : p.paths, c: p.chunk, m: p.chunks }) !== input) errors.push(`${id}: in-${nm}: not what lens-input writes for its own stamp (the head line, the paths or the text around the material was edited)`);
++          else if (!p || p.id !== 'none' || !p.ok || p.listPart.trim() !== '') errors.push(`${id}: in-${nm}: not an input written by lens-input for a lens with no rule list (first line "LIST none sha256:... part 1 of 1 chunk c of m", stamps matching its text)`);
++          else items.push({ name: `in-${nm}`, k: x, p });
++        }
++        if (items.length === lparts.length && expected.length) errors.push(...chunkErrors({ label: `out-${lens}`, items, expected, diffOf: i.diffOf, optional: i.optionalPaths }).map((y) => `${id}: ${y}`));
++        continue;
++      }
++      if (t !== undefined && lparts.length) { errors.push(`${id}: ${n} and out-${lens}-pN.txt both exist (one file, or -p1..-pK): an unsplit file does not stand in for split parts`); continue; }
+       if (t === undefined) errors.push(`${id}: the lens set of a ${type} task needs ${n} in ${dirNote} (Spec 08 section 7 rule 4: never one generic pass); ${layout}`);
+-      else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, null).map((x) => `${id}: ${x}`));
++      else {
++        // F3: an unsplit lens output is bound to the whole range: its file_sha256 must be the sha256 of the recomputed diff text of every changed path (the file the lens read)
++        const whole = expected.length && i.diffOf ? i.diffOf(expected) : '';
++        if (expected.length === 0) errors.push(...reviewErrors(n, t, `lens-${lens}.md`, null).map((x) => `${id}: ${x}`));
++        else if (whole === null || whole === '') errors.push(`${id}: ${n}: the whole-range diff text cannot be recomputed, so the file the lens read cannot be proved`);
++        else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, whole, { what: 'the recomputed diff of the whole task range (the diff file the lens must have read, made with the command in the brief)', templateText: readBase(`.claude/review-templates/lens-${lens}.md`) }).map((x) => `${id}: ${x}`));
++      }
+     }
+     if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7); ${layout}`);
+   }
+@@ -214,7 +318,12 @@ function check(msgFile) {
+   if (!fs.existsSync(tableFile) && !tableInHead) return 0; // a repo that never had the table is not held to it
+   let table;
+   try { table = readTable(tableFile); } catch (e) { return fail([`cannot read scripts/analysis/rule-lists.json${tableInHead ? ' (it is in HEAD: the close check fails closed; restore it)' : ''}: ${String(e.message).split('\n')[0]}`]); }
+-  const finished = new Set((table.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
++  // H1 (V2.WHOLE round 4): the keys that decide what is checked (base_ref, finished_statuses, protected_paths, exempt) come from the BOARD ref, never from the lane's own table or from a ref the lane's table names
++  const boardRef = BOARD_REFS.find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0) ?? null;
++  let boardTable = null;
++  if (boardRef) { const bx = git(['show', `${boardRef}:scripts/analysis/rule-lists.json`]); try { boardTable = bx.status === 0 ? JSON.parse(bx.stdout) : null; } catch { boardTable = null; } }
++  // a commit that moves no task never needs the board (round 5): the finished statuses default until a move is found, then the board is required
++  const finished = new Set((boardTable?.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
+   const staged = git(['diff', '--cached', '--name-only', '--no-renames']).stdout.split('\n').filter(Boolean);
+   const taskFiles = staged.filter((f) => /^backlog\/tasks\/task-\d+( -.*)?\.md$/i.test(f));
+   const moves = [];
+@@ -230,30 +339,114 @@ function check(msgFile) {
+     moves.push({ f, now: now.stdout, fm, headFm, status });
+   }
+   if (moves.length === 0) return 0;
++  if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: a task close needs the board, because the keys that decide what is checked and the task's launch commit come from it (fail closed)`]);
+   const errors = [];
+   // self-edit: the check, its table, its helper, the review tool and the hooks may not change in a commit that also closes a task
+-  const prot = staged.filter((p) => matchesAny(table.protected_paths ?? [], p));
++  const prot = staged.filter((p) => matchesAny(boardTable.protected_paths ?? [], p));
+   if (prot.length) errors.push(`this commit changes protected path(s) (${prot.slice(0, 4).join(', ')}) and also moves ${moves.map((m) => path.basename(m.f).slice(0, 12)).join(', ')} to a finished status: land the check or hook change first, close the task in a later commit (self-edit rule, COMPLY.2)`);
+   // the diff since the lane branch point, plus what is staged
+-  const baseRef = table.base_ref;
+   let changed = [];
+-  if (!baseRef) errors.push('rule-lists.json has no base_ref: the lane branch point cannot be found (fail closed)');
+-  else {
+-    const mb = git(['merge-base', 'HEAD', baseRef]);
+-    if (mb.status !== 0) errors.push(`cannot find the lane branch point (git merge-base HEAD ${baseRef} failed): the Files line cannot be checked against the diff (fail closed)`);
+-    else changed = [...new Set([...git(['diff', '--name-only', '--no-renames', mb.stdout.trim(), 'HEAD']).stdout.split('\n'), ...staged].filter(Boolean))];
++  const full = boardRef;
++  let base = null;
++  let baseTable = null;
++  for (const k of ['base_ref', 'finished_statuses', 'protected_paths', 'exempt']) if (JSON.stringify(table[k] ?? null) !== JSON.stringify(boardTable[k] ?? null)) errors.push(`the ${k} of this branch's table (${JSON.stringify(table[k] ?? null)}) differs from the board's (${JSON.stringify(boardTable[k] ?? null)}): a lane may not change what decides what is checked or what the review need not cover (the check uses the board's)`);
++  {
++    const mb = git(['merge-base', 'HEAD', full]);
++    if (mb.status !== 0) errors.push(`cannot find the lane branch point (git merge-base HEAD ${full} failed): the Files line cannot be checked against the diff (fail closed)`);
++    else {
++      base = mb.stdout.trim();
++      // F10: the rest of the table (lists, rows, every_task) comes from the range base
++      const bt = git(['show', `${base}:scripts/analysis/rule-lists.json`]);
++      try { baseTable = bt.status === 0 ? JSON.parse(bt.stdout) : null; } catch { baseTable = null; }
++      if (!baseTable) errors.push(`scripts/analysis/rule-lists.json cannot be read at the range base ${base.slice(0, 9)}: the table cannot be taken from the board's copy (fail closed)`);
++      const rr = git(['diff', '--name-only', '--no-renames', base, 'HEAD']);
++      if (rr.status !== 0) errors.push(`git diff --name-only ${base.slice(0, 9)} HEAD failed (status ${rr.status}): the changed paths of the task range cannot be recomputed (fail closed)`);
++      changed = [...new Set([...rr.stdout.split('\n').filter(Boolean), ...staged].filter(Boolean))];
++    }
+   }
++  const exempt = boardTable.exempt ?? [];
+   const codeStaged = staged.filter((f) => /^(src|scripts|mobile|migrations)\//.test(f));
+   const readRepo = (p) => { for (const ref of [`:${p}`, `HEAD:${p}`]) { const x = git(['show', ref]); if (x.status === 0) return x.stdout; } return null; };
++  const readBase = (p) => { if (!base) return null; const x = git(['show', `${base}:${p}`]); return x.status === 0 ? x.stdout : null; }; // F10: lens templates from the range base
+   const lanePaths = git(['ls-files', '--cached', '-z', '--', 'docs/reports/lanes']).stdout.split('\0').filter(Boolean);
+   for (const mv of moves) {
+     const id = String(mv.fm.id ?? mv.f).toLowerCase().replace(/^task-0*/, 'task-');
+     const assignees = asList(mv.fm.assignee).map(String);
+-    const type = String(mv.fm.type ?? '').toLowerCase();
++    // H9 (round 6): type and lane assignee come from the BOARD copy of the task file (found by task id on the board ref the launch commit is searched on), never from the lane's own copy, whatever the lane did in earlier commits
++    const num = /task-0*(\d+)/i.exec(path.basename(mv.f))?.[1];
++    if (num && String(mv.fm.id ?? '').toLowerCase().replace(/^task-0*/, '') !== num) { errors.push(`${id}: the front matter id (${mv.fm.id}) is not the file's task number (${num}): the id scopes the lane report, a lane may not rename it`); continue; }
++    const boardFile = num ? git(['ls-tree', '--name-only', boardRef, 'backlog/tasks/']).stdout.split('\n').find((n) => new RegExp(`^backlog/tasks/task-0*${num}( -.*)?\\.md$`, 'i').test(n)) : null;
++    const bx = boardFile ? git(['show', `${boardRef}:${boardFile}`]) : null;
++    const boardFm = bx && bx.status === 0 ? parseFM(bx.stdout).fm : null;
++    // H10 (round 7): a close of a task number the board never held is refused, never a fallback to the lane's own copy (a renumbered, unassigned, retyped file would close unreviewed)
++    if (!boardFm) { errors.push(`${id}: the board (${boardRef}) holds no copy of this task file (task number ${num ?? '?'}): type and lane assignee are read from the board copy and a close has no fallback to the lane's own copy; a lane may not close a task number the board never held`); continue; }
++    const boardLane = boardFm ? asList(boardFm.assignee).map(String).find((a) => /^@lane-/.test(a)) : undefined;
++    const boardType = String(boardFm?.type ?? '').toLowerCase();
++    const stagedLane = assignees.find((a) => /^@lane-/.test(a));
++    if (boardLane && (boardType === 'build' || boardType === 'fix') && (stagedLane !== boardLane || !['build', 'fix'].includes(String(mv.fm.type ?? '').toLowerCase()))) { errors.push(`${id}: the board copy of this task is a ${boardType} task held by ${boardLane}; the closing copy has type ${mv.fm.type} and assignee ${assignees.join(', ') || '(none)'}: a lane build or fix task closes only as that lane's build or fix task (type and lane assignee are read from the board copy, not from the lane's own commits)`); continue; }
++    // the lane assignee: the board's, else the staged one, else the one the HEAD copy holds (H8)
++    const laneAssign = boardLane ?? stagedLane ?? asList(mv.headFm.assignee).map(String).find((a) => /^@lane-/.test(a));
+     const laneName = assignees.map((a) => /^@lane-(.+)$/.exec(a)?.[1]).find(Boolean);
++    // F8 + F11: the task as it was taken. L is the board commit that first holds the lane assignee on the task file (the lane cannot choose it); type, assignee and the Files line are read from that copy
++    let L = null;
++    let baseTask = null;
++    if (laneAssign && full) {
++      L = git(['log', full, '--first-parent', '--reverse', '--format=%H', `-S${laneAssign}`, '--', boardFile ?? mv.f]).stdout.split('\n').filter(Boolean)[0] ?? null;
++      if (!L) { errors.push(`${id}: no launch commit found: \`git log ${full} --first-parent --reverse -S${laneAssign} -- ${mv.f}\` returns nothing, so the task's recorded launch (the take on the board for its lane) cannot be proved (fail closed)`); continue; }
++      if (git(['merge-base', '--is-ancestor', L, 'HEAD']).status !== 0) { errors.push(`${id}: the launch commit ${L.slice(0, 9)} is not an ancestor of HEAD: this branch was not cut from the task's launch`); continue; }
++      const lx = git(['show', `${L}:${boardFile ?? mv.f}`]);
++      baseTask = lx.status === 0 ? lx.stdout : null;
++    }
++    const baseFm = baseTask ? parseFM(baseTask).fm : null;
++    const type = String(boardFm?.type ?? baseFm?.type ?? mv.fm.type ?? '').toLowerCase();
++    if (baseFm && String(baseFm.milestone ?? '') !== String(mv.fm.milestone ?? '')) errors.push(`${id}: the milestone is ${mv.fm.milestone} here but ${baseFm.milestone} at its launch: a lane may not move its task to another milestone (the milestone decides which objectives lists apply)`);
++    // H3: the prompt builder and the review tool decide what a recomputed prompt hash proves; they may not differ from the range base unless the task's launch Files line covers them
++    if (base && baseTask) for (const p of ['scripts/lib/review-template.js', 'scripts/deepseek-review.js']) if (git(['diff', '--quiet', base, 'HEAD', '--', p]).status === 1 && !coveredBy(filesEntries(baseTask) ?? [], p)) errors.push(`${id}: ${p} differs from the range base but the task's launch Files line does not name it: the recomputed prompt hash would only prove consistency with the lane's own prompt builder`);
++    if (baseFm && String(mv.fm.type ?? '').toLowerCase() !== type) errors.push(`${id}: the task type is ${mv.fm.type} here but ${baseFm.type} at its launch: a lane may not retype its task`);
+     if (!laneName && codeStaged.length && !(type === 'build' || type === 'fix' || type === 'check')) { errors.push(`${id} is set ${mv.status} by a commit that changes code (${codeStaged.slice(0, 3).join(', ')}) but has no @lane-* assignee: take it through the launch script (no exemption for code, COMPLY.2)`); continue; }
+     const laneFiles = laneName ? lanePaths.filter((f) => { const p = f.split('/'); return p.length === 6 && p[4] === laneName; }).map((f) => ({ dir: path.dirname(f), name: path.basename(f), text: git(['show', `:${f}`]).stdout })) : [];
+-    errors.push(...closeErrors({ id, taskText: mv.now, fm: mv.fm, assignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table, root: top, letter: milestoneLetter(top, mv.fm.milestone), laneFiles, changed, readRepo }));
++    // the coverage set: what changed between L and HEAD that the Files line covers (the launch Files and the current one together: narrowing hides nothing, widening adds review), minus the exempt paths
++    let expectedPaths = [];
++    let optionalPaths = [];
++    let rangeEmpty = false;
++    let diffOf = () => null;
++    if (L) {
++      const lr = git(['diff', '--name-only', '--no-renames', L, 'HEAD']);
++      if (lr.status !== 0) { errors.push(`${id}: git diff --name-only ${L.slice(0, 9)} HEAD failed (status ${lr.status}): the changed paths cannot be recomputed (fail closed)`); continue; }
++      const entries = [...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])];
++      const all = lr.stdout.split('\n').filter(Boolean);
++      const cov = all.filter((p) => coveredBy(entries, p));
++      rangeEmpty = cov.length === 0;
++      expectedPaths = cov.filter((p) => !matchesAny(exempt, p));
++      optionalPaths = all.filter((p) => !matchesAny(exempt, p) && (p.startsWith('docs/reports/') || p.startsWith('backlog/')));
++      diffOf = (paths) => { const r = git(['--literal-pathspecs', 'diff', ...DIFF_ARGS, L, 'HEAD', '--', ...paths]); return r.status === 0 ? r.stdout : null; };
++      // F4 + F12: a lane build or fix close holds records only: the lane's own report directory, the review context directory of the task, the task files and the decision record
++      if (['build', 'fix'].includes(type)) {
++        const rec = (p) => p.startsWith(`docs/reports/lanes/`) && p.split('/')[4] === laneName || p.startsWith(`docs/reports/reviews/${id}/`) || /^backlog\/tasks\/task-\d+/.test(p) || p.startsWith('backlog/decisions/');
++        const late = staged.filter((p) => !rec(p));
++        if (late.length) errors.push(`the closing commit of ${id} stages ${late.length} path(s) outside the reviewed task range: ${late.slice(0, 6).join(', ')}${late.length > 6 ? ', ...' : ''} (the closing commit of a lane build or fix task holds records only: its lane report directory, the task file, the decision record; commit the work first so the review covers it)`);
++      }
++    }
++    // F10: the table the task is judged by is the range base's; a task whose own Files line names the table is the one exception: it is judged by its branch table (so its own edit applies) with every field that decides what is reviewed (exempt, base_ref, finished_statuses, protected_paths, every_task) still the range base's
++    const ownsTable = coveredBy(filesEntries(baseTask ?? mv.now), 'scripts/analysis/rule-lists.json');
++    const pin = { exempt: boardTable.exempt, base_ref: boardTable.base_ref, finished_statuses: boardTable.finished_statuses, protected_paths: boardTable.protected_paths };
++    const judge = !baseTable ? { ...table, ...pin } : ownsTable ? { ...table, ...pin, every_task: baseTable.every_task } : { ...baseTable, ...pin };
++    // fields read from the lane's own copy, each pinned (round 6): the Files line the rule lists resolve from is the UNION of the launch copy and the staged one (narrowing it cannot drop a list), and the assignees the grounder must differ from are the staged, HEAD and board ones together
++    const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];
++    const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
++    const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
++    errors.push(...closeErrors({ id, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase }));
++  }
++  // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
++  const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
++  for (const lane of new Set(lanePaths.map((f) => f.split('/')).filter((p) => p.length === 6).map((p) => p[4]))) {
++    const hits = git(['grep', '-l', '--fixed-strings', '-e', `@lane-${lane}`, boardRef, '--', 'backlog/tasks/']).stdout.split('\n').filter(Boolean).map((l) => l.slice(boardRef.length + 1));
++    for (const bf of hits) {
++      const bm = git(['show', `${boardRef}:${bf}`]);
++      const fm = bm.status === 0 ? parseFM(bm.stdout).fm : {};
++      const n = /task-0*(\d+)/i.exec(path.basename(bf))?.[1];
++      if (['build', 'fix'].includes(String(fm.type ?? '').toLowerCase()) && asList(fm.assignee).map(String).includes(`@lane-${lane}`) && n && !idxNums.has(n)) errors.push(`this branch carries the lane directory of ${lane} but its tree has no task-${n} file: the board holds that task as a lane ${String(fm.type).toLowerCase()} task (${bf}); a branch that deletes or renumbers its task file cannot close anything`);
++    }
+   }
+   return errors.length ? fail(errors) : 0;
+ }
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index 518a4dff34f49c63f1a3833971d15a616594d700..d3a9ab087c1a99c8905b35915508573a4ccb5a58 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -229,8 +229,21 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+       expect(e).toContain('in-<same name>');
+       expect(e).toContain('out-<lens>[-<list id>]-rN.txt');
+       expect(e).toContain('fix-*.txt');
+-      // mechanism (rule-lists.mjs lens-input): the RULE LIST is split at its headings into -p1..-pN and the whole diff rides in every part; a diff is never split
+-      expect(e).toMatch(/compliance lens reviews the WHOLE change: lens-input splits the rule list at its headings into parts -p1\.\.-pN and puts the whole diff in every part; the diff is never split or trimmed to core files; a diff too large for one part is refused by lens-input: report that to the orchestrator at once/);
++      // V2.WHOLE (task-410): lens-input splits the rule list at its headings AND, when the diff leaves no room for a list part, the DIFF at file boundaries (the tool, never by hand)
++      expect(e).toContain('The compliance lens reviews the WHOLE change');
++      expect(e).toContain('git -c core.quotepath=false diff --no-ext-diff --no-textconv --text --full-index --diff-algorithm=myers --indent-heuristic --inter-hunk-context=0 --no-color --no-renames --src-prefix=a/ --dst-prefix=b/ -U3');
++      expect(e).toMatch(/\$\(git log refs\/heads\/\S+ --first-parent --reverse --format=%H -S@lane-\S+ -- 'backlog\/tasks\/[^']+' \| head -1\) HEAD -- /);
++      expect(e).toContain('the base is the task\'s launch commit on the board');
++      expect(e).toContain("':(exclude,glob)docs/reports/lanes/**' ':(exclude,glob)docs/reports/reviews/**'");
++      expect(e).toContain('lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file)');
++      expect(e).toContain('each chunk goes against every list part');
++      expect(e).toContain('stamped chunk c of m with its path list');
++      expect(e).toContain('out-<lens>-pN.txt');
++      expect(e).toContain('one file alone over the room is refused naming the file and its size: report that to the orchestrator at once');
++      expect(e).toContain('The close check recomputes the changed paths of the task range');
++      expect(e).toContain('closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane');
++      expect(e).not.toMatch(/the diff is never split or trimmed to core files/);
++      expect(e).not.toMatch(/puts the whole diff in every part/);
+       expect(e).not.toMatch(/a diff over the review tool's bound is split/);
+     }
+   });
+

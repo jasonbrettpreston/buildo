@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T22:39:39.739Z file_sha256=4a1da306630dcbceaeb5d1f2bbce96cdc0d44aeebd576a7013966e27152ed93e prompt_sha256=abb9b4fc39992535f28976d00e6e59aecf72e7328a42a72b18c02bc22cfd52d2
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/hooks/check-lane-close.mjs "export const lensContexts = () => [undefined];" — the brief in this same change tells the lane to run each output lens with `--context <pasted-context file>` (scripts/analysis/backlog-lane.mjs layout line), so that run's prompt_sha256 is computed over the context text, while the new F3 check only offers the placeholder value, and reviewErrors refuses the lane's out- lens output as "an output not made by the tool on that input, or an edited input": a lane that follows the brief cannot close — either have lensContexts return the committed context text, or take `--context` out of the brief in the same commit.
+
+BUG severity=MED — scripts/analysis/backlog-lane.mjs "git log ${baseFull} --first-parent --reverse --format=%H -S@lane-${lane} -- '${'backlog/tasks/' + path.basename(task.file)}' | head -1" — when that log prints nothing the `$()` expands empty and the command degrades to `git diff <DIFF_ARGS> HEAD -- paths`, a worktree-vs-HEAD diff that is empty once the work is committed, and lens-input accepts an empty material (it writes "material sha256:e3b0c442..." inputs with no refusal), so a whole lens round reviews nothing and the mistake surfaces only at close; a task file name containing a quote also breaks the shell — guard the expansion (`L=$(...); test -n "$L" || exit 1`) and refuse an empty material in lens-input.
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs "const cov = all.filter((p) => coveredBy(entries, p));" — a file changed between the launch commit and HEAD that the (launch ∪ staged) Files line does not name is not in expected, so it is neither demanded in a chunk nor reported as an extra: the whole-change proof passes while that file went unreviewed (cannot see whether the unshown part of closeErrors refuses it through `changed`) — add a refusal for a changed path outside the exempt and record sets that the Files line does not cover.
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs "const expected = i.expectedPaths ?? [];" with "if (expected.length === 0) errors.push(...reviewErrors(n, t, `lens-${lens}.md`, null).map((x) => `${id}: ${x}`));" — the whole-change proof is opt-in: a caller that does not pass expectedPaths, or a lane task whose range yields nothing, skips chunkErrors and binds an unsplit out- lens output to no text at all (inputText null, file_sha256 unchecked), where every other failure in this hook fails closed — require expectedPaths (or an explicit "no range" flag) for any lane task and refuse rather than skip.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "if (avail - RESERVE - listRoom < big.text.length) throw new Error(`file ${big.path} is ${big.text.length} characters of diff and cannot be split inside a file" — when the real cause is a rule-list section with no deeper heading (the catch sets listRoom to that section's size), this first check fires and the refusal names the largest diff file, sending the orchestrator after the wrong file — report the list side (section size, no deeper heading) in the same line.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs "const git = (a) => { const r = spawnSync('git', ['-c', 'core.quotepath=false', ...a], { encoding: 'utf8', maxBuffer: 1 << 28 });" — no `timeout`, so a git child that stalls (a filter, a dead network mount holding the index) hangs the commit with no bound and no message — set a timeout and turn the expiry into one refusal line.
+
+REJECT — scripts/hooks/check-lane-close.mjs "if (dup.length) e.push(`${label}: ${dup.length} path(s) are in more than one chunk: ${dup.slice(0, 5).join(', ')}`);" — looks like a re-run could double count a chunked change — chunk packing in buildLensInputs is deterministic (diff order, no clock, no randomness) so a second lens-input run writes the same -pN files, and the close check refuses a path in two chunks, so a repeat run or a re-submitted close is a no-op.
+
+VERDICT: FAIL on error-path safety
+Paths walked: empty material, empty expected range, missing launch commit expansion, prompt-hash recompute (lensContexts), chunk split and stamp round-trip, missing/duplicate chunk, unsplit out-lens binding, Files-line coverage, re-run of lens-input, commit hook re-run, git child timeout   Unguarded: 4
+
+---
+⏱  137483ms (137.5s)
+📊 Tokens — total: 53079, input: 28518, output: 24561, reasoning: 23472

@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:40.211Z file_sha256=8f1d5bdd594af52cae952e27f3eab807558b7d50851de3eb213d359f75813441 prompt_sha256=4594ea9622fe49ceb561d1e8e03123ab2cd34e57f2fd26229e1b0be4a8e3f8ce
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Increment objectives, "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — NONE — no line in either test file advances the search page, address confusion, or lot confusion; chunk 2 of 2 is entirely lane-close and rule-lists test machinery, so the ordering clause is unmet — land the search page work before task-410 or paste the operator ruling that reorders it.
+
+BUG severity=HIGH — Project objectives, "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — src/tests/backlog/check-lane-close.logic.test.ts:369 "// V2.WHOLE (task-410): the close check proves the review saw the WHOLE change." — the diff adds a whole V2.WHOLE proof plus chunk-splitting and ~35 planted-defect tests that no pasted clause names, which is scope added by this change — narrow the change to a clause-named deliverable or paste the ruling that authorizes V2.WHOLE.
+
+DEFER severity=MED — Increment objectives, "What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map)" — NONE — none of the seven named element groups A through G is delivered or touched by the diff — pair the test work with a named element or state which element it supports.
+
+DEFER severity=MED — Project objectives, "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page" — NONE — no line in the diff touches the report, details, or search page the database exists to serve — keep the review-tooling change out of the database-serving increment scope.
+
+DEFER severity=LOW — Project objectives, "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — src/tests/backlog/rule-lists.logic.test.ts:494 "+describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries'" — the supporting function this suite serves is not visible among the pasted clauses — state the supporting function it serves or move it out of this increment.
+
+REJECT — Project objectives, "we need one plan - we can only execute one plan" — accused of executing a second plan — the material is a single coherent change and no second plan is visible, so the clause is not violated.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 4
+
+---
+⏱  62382ms (62.4s)
+📊 Tokens — total: 29803, input: 17361, output: 12442, reasoning: 11870

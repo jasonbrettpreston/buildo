@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:40.211Z file_sha256=e6f4375fd65d1dfb9cccb4966b0169e37ab55acabdf291088b443a51eadbfca8 prompt_sha256=b6ac8ee03104a71d9ac33aec2f4fe47075d42c644152b0807d305d6953832407
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-ms-S-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — ms-S "Five principles ... standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — scripts/hooks/check-lane-close.mjs:99 "export function chunkErrors({ label, items, expected, diffOf = () => null, optional = [] }) {" — the diff ships a new general capability (diff chunking at file boundaries, chunk-stamp proof, prompt-hash recomputation, board-ref pinning of four deciding keys, board-copy task resolution, tree-vs-board deletion check) that no pasted objective names, and the same paragraph names four further tasks (375, 401, 402, 404) whose scope it partly assumes — land the extra capability under a task whose scope names it and keep this change to what the card named.
+
+BUG severity=HIGH — ms-S "we need one plan - we can only execute one plan" — docs/specs/00-architecture/137_mcqueue.md "Rule 3 is amended for lane build and fix tasks. The work lands first; the status moves in a separate closing commit" — the change rewrites a standing queue rule that binds every lane build and fix task on the strength of operator words that exist only inside the diff, no pasted clause or ruling authorizes the amendment — do not amend Rule 3 here; land the amendment under the ruled task with the operator's words in the pasted context.
+
+DEFER severity=MED — ms-S "A task that serves neither a designed element nor a supporting function the task most likely is not relevant or feeds old code" — scripts/analysis/rule-lists.mjs "export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--text', '--full-index', '--diff-algorithm=myers', '--indent-heuristic', '--inter-hunk-context=0', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];" — every path in the material is scripts, docs or tests, none is the report, details or search surface, and no pasted clause names the review pipeline as the supporting function — state the supporting-function link in the task note, otherwise the relevance clause is challenged every round.
+
+DEFER severity=MED — ms-S "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — scripts/hooks/check-lane-close.mjs "export const lensContexts = () => [undefined];" — the change delivers none of the elements A to G and the proof it claims for the whole change rests on a placeholder whose real value is deferred to unbuilt task-375 — land task-375 first or narrow the note so it does not read as a closed proof.
+
+DEFER severity=LOW — ms-S "understandability" — docs/specs/00-architecture/08_agents.md "fourth correction to the task-410 notes above, grounder round 6" — five successive paragraphs for one item (original, round 3, round 4, round 5, round 6) each say the previous sentence "was too wide" or "was not true", so the governing section states what the check does five different ways — fold to one current statement with the prior text kept once.
+
+MET — ms-S "standardization, observability, scalability, accuracy, understandability" — scripts/analysis/rule-lists.mjs "export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', ...]" — the reviewed text is pinned by explicit flags, so the same diff is judged the same way on every machine (standardization, observability).
+
+MET — ms-S Increment objectives "the semi calculation stays in Increment 7 (7.25)" — src/tests/backlog/backlog-lane.logic.test.ts "expect(e).not.toMatch(/the diff is never split or trimmed to core files/);" — nothing in the change computes a parcel, a semi lot or a search result; the semi scope is left untouched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  66331ms (66.3s)
+📊 Tokens — total: 41400, input: 29291, output: 12109, reasoning: 11207

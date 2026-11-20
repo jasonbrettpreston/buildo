@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:40.125Z file_sha256=f671055c24604e204a5b80133d7bca0d37af9ffc85c95674d5c8029240eb648e prompt_sha256=ca40191021e2908cf50d5eaeea7e1ebcca54874adf6134db5b0556cc6865ad73
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-plan-protocol-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan-protocol §2 step D "Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines" — src/tests/backlog/backlog-lane.logic.test.ts:241 "expect(e).toContain('each chunk goes against every list part');" — the build adds splitDiff, renderLensInput, lensPromptHash and chunkErrors (scripts/analysis/rule-lists.mjs:31-60, scripts/hooks/check-lane-close.mjs chunkErrors) with no red-first test named for any of them, the only test change asserts brief strings — name and add the red-first tests: chunkErrors with a missing path, a path in two chunks, a wrong chunk number and stale diff text; splitDiff with a quoted name and a rename header.
+
+BUG severity=MED — plan-protocol §3 "Rulings: only when a search of the record finds none; the search is quoted" and Principles "Dont make more ungrounded recommendations." — docs/specs/00-architecture/08_agents.md:239 "his words: "Finsih it!"; the entry marks the reading that this is a yes to the question as put as the orchestrator's, not his words" — the fold that closes task-410 rests on a one-word reply the note itself records as the orchestrator's reading, so the ruling is not quoted for the behaviour it authorises — hold the fold open, or quote an operator line that names the omission-guard fold.
+
+BUG severity=MED — plan-protocol Principles "keep it simple; no scope creep" — scripts/hooks/check-lane-close.mjs "a branch that deletes or renumbers its task file cannot close anything" — the diff adds refusals no pasted clause names (board-copy retype and renumber refusal, the branch-tree task check, the four board-pinned table keys), which the same note assigns to task-401 and task-402 — move them to those tasks or cite the ruling line that names them in this change.
+
+DEFER severity=LOW — plan-protocol §2 step C gate "check.mjs, check-cites, check-quotes PASS" — NONE — the reviewed material carries no PASS line for this change, so the panel gate cannot be shown met — paste the three PASS lines into the lane report for this chunk.
+
+DEFER severity=MED — plan-protocol §5.6 "INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule) and is listed in the plan as tasks with sources" — docs/specs/00-architecture/137_mcqueue.md:136 "task-410 V2.WHOLE, lane BL-V2WHOLE" — cannot see the plan entry: the material shows the spec notes only, no sequence.json patch item with a source file:line for this infrastructure work — paste the plan item with its source line beside the diff.
+
+MET — plan-protocol dated note item 4 "plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`)" — scripts/hooks/check-lane-close.mjs "GROUNDER.md, always for a build or fix task" — the lane lens set and the grounder that is not the lane stay enforced at close, now also over the split outputs.
+
+MET — plan-protocol §0 first bullet as amended "the board is the plan" — docs/specs/00-architecture/08_agents.md:237 "the task type and the lane assignee are read from the BOARD copy of the task file (found by task id on `refs/heads/wf2/board`" — the board, not the lane's own commits, decides what is reviewed, matching the amendment.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+
+---
+⏱  55894ms (55.9s)
+📊 Tokens — total: 41967, input: 30905, output: 11062, reasoning: 10205

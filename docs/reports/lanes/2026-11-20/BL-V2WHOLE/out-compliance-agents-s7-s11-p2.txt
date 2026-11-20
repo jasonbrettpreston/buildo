@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:39.893Z file_sha256=ee4e4ccd5280d0915f46723fb91a2b8bb69625372830dfd112aa9a91667c703c prompt_sha256=d636c8a4af721562a38767d0e1124d55b7f4905e9d895bbbf30a5d8be165d496
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-agents-s7-s11-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §11.2 "an expanded edit set kills every restated scope claim (\"the three SET terms. Nothing else.\" survived one fold past its own falsification)" — check-lane-close.mjs "//  * the WHOLE change (V2.WHOLE, task-410): the changed paths of the task range (merge-base with the table's base_ref to HEAD, minus the table's exempt paths)" vs "const lr = git(['diff', '--name-only', '--no-renames', L, 'HEAD']);" and "const full = boardRef;" — the header's scope claim survived the fold that replaced merge-base(base_ref) with the launch commit L and narrowed the covered set to Files-line paths; base_ref is pinned and compared but never used to compute a base — restate the header to L..HEAD restricted to the Files-line union, and either use base_ref or delete it.
+
+BUG severity=HIGH — §7 rule 4 dated note "run with `scripts/deepseek-review.js review <file> --template <lens> --context <pasted context>`" (with §11.9 TKT-1 dated note: the context file is written to docs/reports/reviews/<task>/context-<date>.md) — check-lane-close.mjs "export const lensContexts = () => [undefined];" and "// Today the review tool is run with no --context, so its placeholder is the one value" — the recomputed prompt_sha256 accepts only the no-context prompt, so a lane that runs the review with the pasted context the note names is refused at close — accept the committed context file for the task (fail closed when it is missing) instead of the single undefined value.
+
+BUG severity=HIGH — §11.3 "Red must land at the DESIGNED assertion; red-for-the-wrong-reason is a test defect found NOW" — check-lane-close.logic.test.ts "refused(scenario({ ...SPLIT, mutate: (l) => dropLast(l, 'compliance-first') }), /first|chunk|src\/f5\.ts/, 20);" (same shape at "/chunk|not what lens-input writes/" plant 18 and "/f2|differ|not what git prints/i" plant 17) — an alternation carrying "first", "chunk" or "f2" matches refusal lines produced for other reasons, so the lock can be red on the old shape for the wrong reason — pin each case to its own refusal text.
+
+DEFER severity=MED — walk item 4, no pasted clause or ruling names a board ref — check-lane-close.mjs "if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: a task close needs the board`])" with "export const BOARD_REFS = ['refs/heads/wf2/board', 'refs/remotes/origin/wf2/board'];" — the check adds a hard dependency on a fixed ref name that nothing pasted authorises, and a checkout without it refuses every task close — paste the card that names the board ref, or accept a documented fallback with the reason logged.
+
+DEFER severity=MED — no pasted clause names a two-commit close — backlog-lane.logic.test.ts "expect(e).toContain('closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane');" — the records-only refusal (F4/F12) rests on Spec 137, which is not pasted; the pasted lane-close ruling only says the report is copied "in the lane's last commit" — paste Spec 137 Rule 3 with file:line, or drop the records-only refusal.
+
+MET — §7 rule 10 dated note 2026-11-19 — check-lane-close.mjs "p.startsWith(`docs/reports/lanes/`) && p.split('/')[4] === laneName || p.startsWith(`docs/reports/reviews/${id}/`)" — the closing commit admits exactly the lane report directory and the task's review records directory, plus the task and decision files.
+
+MET — §7 rule 4, "the repo lens set is five narrow DeepSeek templates in `.claude/review-templates/`" — check-lane-close.mjs "readBase(`.claude/review-templates/lens-${lens}.md`)" — each lens template is read from the range base and the prompt hash recomputed from it, not from the lane's copy.
+
+REJECT — §11.5 "CLI models (Gemini/DeepSeek raw) are DEMOTED to whole-file audit generators. Their yield files to `review_followups.md`, never folds into a diff review" — the change binds DeepSeek lens outputs to the whole-range diff by file_sha256 — rule 7.4's dated note names lens-compliance as the A10 seat and the templates are the sanctioned repo set, so this is not a raw CLI diff review.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 3
+
+---
+⏱  84703ms (84.7s)
+📊 Tokens — total: 51901, input: 35747, output: 16154, reasoning: 15011

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:56:55.855Z file_sha256=b8b4dc4a0b5d2c3c0045cacfd87ffe8b803b09279c204e5d77f657abc1b908a1 prompt_sha256=c8e4751c0c3143bb71dd188a20502f8c47dc93ed4f332939b6629a7f633b8f90
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG/DEFER lines first, then MET, then REJECT.
+
+DEFER severity=LOW — lock / lock-db / check / hook "a lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — plan "src/tests/backlog/rule-lists.logic.test.ts" — the plan places the red tests under `src/tests/` but never states that any test names a rule id or a declared alias, so by the pasted definition the enforcement is not registrable as a lock — name the rule id (or declared alias) each of the three test files asserts, one line in the plan per file.
+
+DEFER severity=NIT — lock / lock-db / check / hook "a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook" — plan "each check or tool edit in its own commit, no status move in it" — the plan calls the check-lane-close.mjs edit a "check", but under the pasted definition a check lives in `scripts/analysis/step-validate.mjs`, and a hook is a `.husky` hook, so the enforcement kind of the close refusal is unnamed — add the `.husky` hook line that invokes `scripts/hooks/check-lane-close.mjs` so the enforcement kind is one of the four named kinds.
+
+MET — RE-FREEZE #N "A field is added or deleted only by one" — plan "(b) ... head line gains ` paths: <JSON array>`" — the two added stamp fields sit on review input files, not on `scripts/steps/_schema/step.schema.json` or `template-freeze.json`, so no frozen step-vocabulary field is added and no RE-FREEZE is owed.
+
+MET — #NN "Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates" — plan "Rule: Spec 126 section 0a principle 1 and 11b.2; 08_agents.md section 7 rules 3 and 4 and section 11.1" — the plan cites no `#NN` fast-invariant id, so the registry clause has nothing to bind.
+
+MET — PURITY-G0 … PURITY-G13 "Not rule ids; never the scorecard gates" and SCORECARD-G0 … SCORECARD-G9 "rule ids `G0`…`G9` carry these aliases" — plan "the close check accepts out-<lens>-pN.txt for them" — the plan introduces no PURITY code and no scorecard gate alias, so the id-confusion clauses are untouched.
+
+MET — five words "each PASS or FAIL from the mapped gates" — plan "NOT built: ... generated-file exclusion, bound change, task size limit" — nothing in the plan adds, drops or reweights a gate V mapping, so the five-words computation is unchanged.
+
+REJECT — lock / check / hook and #NN (scope side) — the change is accused of adding behaviour (material-split mode, stamped ` paths:`, close-check recomputation, brief sentence) that no pasted clause or ruling names — the pasted context is the step-pipeline vocabulary glossary and names no review-tooling behaviour at all, so this change's scope is judged against task-410's card items (a) to (d), not against these definitions.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 29   Unmet: 0
+
+---
+⏱  25964ms (26.0s)
+📊 Tokens — total: 17934, input: 12633, output: 5301, reasoning: 4533

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-20T22:39:39.736Z file_sha256=70d0569de513409231263739db7d8940cc9e7f80ceab82a30e1072dc38abea76 prompt_sha256=7d1c21a2b22504de6858b801f805c662fa4c41b1000adbfeb6047faa0fb65c4a
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-error-paths-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/backlog/check-lane-close.logic.test.ts:41 "const DIFF_FLAGS = (JSON.parse(run('node', ['-e', \"import('./scripts/analysis/rule-lists.mjs').then((m)=>console.log(JSON.stringify(m.DIFF_ARGS)))\"], { cwd: ROOT }).stdout) as string[]);" — this subprocess runs at import with no timeout and no exit-status check; if the eval prints nothing, JSON.parse('') throws at collection and every suite in the file (including the pre-existing V2.LIST tests) dies with "Unexpected end of JSON input", naming neither git nor rule-lists — assert status and non-empty stdout with a named error, or import the module directly in a beforeAll.
+
+DEFER severity=MED — src/tests/backlog/check-lane-close.logic.test.ts:117 "if (r.status !== 0) { lane[`in-out-compliance-${id}.txt`] = ''; lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', '') + body(id === 'first' && o.lensFinding !== false); }" — a failed lens-input is degraded into a fabricated, internally consistent pair (input '' plus an output whose file_sha256 is sha256 of ''), and r.stderr is discarded, so a genuine crash under table 'never' or 'delete' is indistinguishable from the intended missing-table failure — keep the stderr in the lane or throw with it, do not synthesize the pair.
+
+DEFER severity=MED — src/tests/backlog/check-lane-close.logic.test.ts:113 "const inText = fs.readFileSync(p, 'utf8');" — the chunk loop reads every path a run printed on stdout even when that run exited non-zero, so a partial write turns the scenario into a raw ENOENT stack instead of the assertion the test was written for; the replaced code guarded with fs.existsSync, so guard and throw a named error carrying r.status, r.stderr and the path.
+
+DEFER severity=MED — src/tests/backlog/check-lane-close.logic.test.ts:372 "const inn = edit(l[`in-out-compliance-${stem}.txt`] as string);" — reReview has no presence check on the input key, so when the measured room yields fewer chunks than the name assumes ('first-p2', the dropLast families) the mutation throws "Cannot read properties of undefined (reading 'replace')" out of the scenario builder and the planted-defect test never reaches its assertion — assert the key exists and throw an error naming the stem and the chunk count found.
+
+DEFER severity=MED — src/tests/backlog/check-lane-close.logic.test.ts:374 "Math.max(...Object.keys(l).map((k) => new RegExp(`^(?:in-)?out-${stem}-p(\\d+)\\.txt$`).exec(k)?.[1]).filter(Boolean).map(Number));" — with no matching chunk, Math.max over an empty spread is -Infinity, so dropLast builds a regex for p-Infinity, drops nothing and returns the lane untouched; a renamed family or a single unsplit input silently makes the "is refused" mutation a no-op with no line saying the chunk was not found — throw when the maximum is not a finite number.
+
+DEFER severity=MED — src/tests/backlog/check-lane-close.logic.test.ts:114 "lane[nm] = inText;" — the lane map is keyed by path.basename with last-write-wins and no dedup, so two chunk files sharing a basename (or the same list id run twice) silently collapse to one entry and the "missing file" refusal can be exercised against a set the harness never intended — key by the full path and throw when the key already exists.
+
+DEFER severity=MED — src/tests/backlog/check-lane-close.logic.test.ts:103 "const material = realDiff ? (o.split?.alter ? o.split.alter(realDiff) : realDiff) : 'MATERIAL UNDER REVIEW: a diff\n';" — an empty stdout is treated as "no change" and replaced with non-diff text; I cannot see whether the g helper asserts the exit status, and if it does not, a failed git diff (bad ref, bad exclude) is indistinguishable from an empty range and the scenario silently tests fabricated material — assert the diff command's status and only fall back when the range is genuinely empty.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts:506 "const materialOf = (t: string) => t.slice(t.indexOf('=== MATERIAL UNDER REVIEW (everything below this line) ===\n') + '=== MATERIAL UNDER REVIEW (everything below this line) ===\n'.length).replace(/\n$/, '');" — when the marker is absent indexOf returns -1 and the slice returns a tail of the input rather than failing, so a changed marker turns every chunk comparison into a comparison of garbage with a misleading diff — throw when the index is negative.
+
+VERDICT: PASS on error-path safety
+Paths walked: module-load fixtures (TEMPLATE_TEXT, LENS_TEMPLATES, DIFF_FLAGS), git diff for the task range, lens-input per list (success, non-zero exit with stdout, non-zero exit without stdout, empty range), split lens run, lane map keying, reReview/lastP/dropLast mutation helpers, materialOf parse, golden fixture lookup   Unguarded: 4
+
+---
+⏱  70328ms (70.3s)
+📊 Tokens — total: 29983, input: 16588, output: 13395, reasoning: 12186

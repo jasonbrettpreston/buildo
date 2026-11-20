@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:39.786Z file_sha256=da3ec8aa0c32c53c555d192ce991f55a5e6db403b9c86b245a495a47120d8854 prompt_sha256=f3cdd3fb29f4c4df377e89110e5568dda962151aee4f3987815c6772fd64d733
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — R-HK "Operator decisions are transferred mechanically (decision log + generator + coverage lock), never hand-copied" — docs/specs/00-architecture/137_mcqueue.md:99 "operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator AGREES the Rule 3 amendment and RULES on material too large to review"" — the 2026-11-20 rulings this change enacts are hand-copied out of a scratch queue file; this chunk commits no `docs/reports/decisions/2026-11-20-*.json` and adds no register row citing `<log stem>#<decision id>`, so R-HK's coverage lock has no approved decision to check and the change has no passed-in clause naming its behaviour — fix: `node scripts/analysis/decision-log.mjs --import` the MORNING-DECISIONS.md entries, commit the log with its `docs/reports/decisions/raw/` record, emit the routed rows with `--write` and cite `<log stem>#<decision id>` in the notes.
+
+DEFER severity=MED — R-HK "a later chat amendment is recorded in the log with its quote" — docs/specs/00-architecture/08_agents.md:241 "his words: "Finsih it!"; the entry marks the reading that this is a yes to the question as put as the orchestrator's, not his words" — a fold is recorded on an inferred yes that the note itself disowns, so there is no verifiable operator basis — rationale: R-HK's "ACCURATE no fake approval row, no lost decision" is exactly this case, and the honest note does not substitute for the record; record the item as `no_ruling` with `rests_on`, or get the verbatim yes.
+
+DEFER severity=MED — R-GW "Every other spec sits on the closed, shrink-only `role_banner_pending` list in `122_split_manifest.json` (108 at landing) until it gains a banner" — docs/specs/00-architecture/137_mcqueue.md:99 "Rule 3 is amended for lane build and fix tasks." — this chunk adds normative rule text to two bannerless specs (08 and 137) and I cannot see `122_split_manifest.json` in the material, so arm (vii) stays green only if both ids are still on the pending list — rationale: confirm both ids in the manifest inside this change; if either is absent, arm (vii) is RED and new rules landed in a spec with no declared role.
+
+DEFER severity=LOW — R-GR "or `OPEN · **PIN** <pin>` only while work is owed (a ruling, a library feature, a stage). Any third form is RED" — docs/specs/00-architecture/08_agents.md:237 "Known limits, not built here: a clause spanning two files is judged in two chunk runs; a hand-written output whose author computed the public hashes passes" — declared scope limits and the forgery routes owed to task-401/task-402 are recorded as spec prose with no `docs/reports/defect-ledger.md` row in either R-GR form — rationale: prose limits carry no pin, so nothing tells a later lane the work is still owed.
+
+MET — R-HK "a later chat amendment is recorded in the log with its quote" — docs/specs/00-architecture/137_mcqueue.md:138 — the corrected Rule 3 note carries the amendment quote verbatim ("agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close."), so the defect is the missing log and row, not a rewritten quote.
+
+MET — R-GU "it has a size cap, `122_split_manifest.json` `generated_size_caps["132"]` = 925 lines / 112,000 B with its measured why (arm (iv-b))" — docs/reports/generated/rule-lists-by-kind.md:35 "| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |" — nothing is added to Spec 132 and the page shows it well under the cap.
+
+REJECT — R-BF "R-BF generated/witnessed" — docs/reports/generated/rule-lists-by-kind.md was hand-edited, since rows moved and counts changed while the `page` renderer in rule-lists.mjs is untouched — the totals move by exactly the sum of each table's row deltas (plan-protocol +1,300 in every table; tooling +8,678 for agents-s5-1to3, +2,305 for queue-137, +1,300 for plan-protocol, giving +12,283 against the printed 185,974), which is a regeneration against the files grown in this diff, and the row order follows a table source outside this chunk.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 28   Unmet: 3
+
+---
+⏱  100917ms (100.9s)
+📊 Tokens — total: 54189, input: 34831, output: 19358, reasoning: 18200

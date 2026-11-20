@@ -1,0 +1,10 @@
+## thinroute: diff 60201 chars, 14 changed paths, largest files: backlog/tasks/task-383 - STD.ROUTE-Thin-lookup-route-the-flow-moves-into-src-lib-parcels-one-shared-parcel-tool-gate-helper-for-lookup-and-lot-size.md 12528; src/app/api/parcels/lookup/route.ts 7685; src/tests/consumer-parcel-lookup.infra.test.ts 7631
+compliance surface-135: files 6, chunks 2, list parts 3, every changed path in exactly one chunk: true, largest input 114009 bytes
+compliance surface-136: files 1, chunks 1, list parts 1, every changed path in exactly one chunk: true, largest input 75529 bytes
+compliance surface-126: files 6, chunks 1, list parts 6, every changed path in exactly one chunk: true, largest input 110696 bytes
+compliance surface-127: files 1, chunks 1, list parts 1, every changed path in exactly one chunk: true, largest input 112739 bytes
+compliance surface-128: files 2, chunks 1, list parts 2, every changed path in exactly one chunk: true, largest input 101811 bytes
+compliance eng-all: files 1, chunks 1, list parts 1, every changed path in exactly one chunk: true, largest input 107969 bytes
+lens code-review: files 1, chunks 1, list parts 1, every changed path in exactly one chunk: true, largest input 61472 bytes
+lens error-paths: files 1, chunks 1, list parts 1, every changed path in exactly one chunk: true, largest input 61472 bytes
+CALLS out phase (review-tool runs, the lists above plus the lenses above): 19

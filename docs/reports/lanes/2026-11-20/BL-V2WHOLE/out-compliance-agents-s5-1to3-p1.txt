@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:39.842Z file_sha256=1be0c18ac7e8f1f5d57f1d3300fe3794671d829da4d381328a5294b70ea628f0 prompt_sha256=83e3a6ef9cc5592d38c63d709ba65d800b5f3596592c1c2039a2785bc9396ba8
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-agents-s5-1to3-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents §5.3 note (grounder round 5) "the task type and the lane assignee are read from the BOARD copy of the task file" (and round 6: "type and lane assignee are read from the board copy, with no fallback to the lane's own copy") — scripts/hooks/check-lane-close.mjs:388 "const laneAssign = boardLane ?? stagedLane ?? asList(mv.headFm.assignee).map(String).find((a) => /^@lane-/.test(a));" — the board-only reading is not implemented: when the board copy carries no @lane tag the lane assignee, and with it the launch-commit search (-S${laneAssign} on the board ref), the record-path check and the lane report directory, are taken from the lane's own staged/HEAD copies, which is the superseded round-4 wording still marked "(H8)" in the comment above — fix: read the lane assignee from boardLane only, refuse a close whose board copy holds no lane assignee, and drop the staged/HEAD fallbacks.
+
+DEFER severity=LOW — 08_agents §5.3 note (grounder round 4) "a commit that moves no task does not read the board and is not refused for its absence" — scripts/hooks/check-lane-close.mjs:323 "const boardRef = BOARD_REFS.find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0) ?? null;" and the `git show ${boardRef}:scripts/analysis/rule-lists.json` read run before scripts/hooks/check-lane-close.mjs:341 "if (moves.length === 0) return 0;" — every commit reads the board twice even when no task moves, contrary to the note as written; fix: keep the behaviour (finished_statuses are needed to detect a move) and reword the note to "is not refused for its absence", or derive the move set before reading the board.
+
+DEFER severity=LOW — 08_agents §5.3 task-410 note (item 2) "requires that every file changed from L to HEAD that the Files line covers, minus the exempt paths, is in exactly one chunk whose text equals what `git diff` (the pinned flag set `DIFF_ARGS`) prints for it" — scripts/hooks/check-lane-close.mjs:154 "if (build && i.rangeEmpty) errors.push(`${id}: no file the task's Files line covers changed between the task's launch commit and HEAD, so the review cannot be proved to cover any change ...`);" — a refusal no pasted ruling names is added (a build or fix task whose covered change is empty, e.g. its work already folded into the board, can never close though the clause is vacuously satisfied); fix: drop the refusal or add it to the task-410 note so the ruling and the check say the same thing.
+
+MET — 08_agents §5.3 note (grounder round 5) "The shared diff flags also pin `--diff-algorithm=myers`, `--indent-heuristic` and `--inter-hunk-context=0`" — scripts/analysis/rule-lists.mjs:31 "export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--text', '--full-index', '--diff-algorithm=myers', '--indent-heuristic', '--inter-hunk-context=0', ...]" — one exported flag set is used by brief, lens-input and check.
+
+MET — 08_agents §5.3 note (grounder round 5) "the rule lists resolve from the union of the launch Files line and the staged one, so narrowing the line cannot drop a list" — scripts/hooks/check-lane-close.mjs "const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];" with resolveText written from that union.
+
+MET — 08_agents §5.3 note (grounder round 6) "a task number the board never held is refused at close" — scripts/hooks/check-lane-close.mjs:382 "if (!boardFm) { errors.push(`${id}: the board (${boardRef}) holds no copy of this task file ...`); continue; }" — no fallback to the lane's copy for type or lane assignee.
+
+MET — 08_agents §5.3 note (grounder round 3) "a lane whose own table differs from the board's in any of those four keys is refused" — scripts/hooks/check-lane-close.mjs:352 "for (const k of ['base_ref', 'finished_statuses', 'protected_paths', 'exempt']) if (JSON.stringify(table[k] ?? null) !== JSON.stringify(boardTable[k] ?? null)) errors.push(...)" — the four deciding keys are compared against the board copy and pinned into the judging table.
+
+MET — 08_agents §5.3 note (grounder round 3) "`scripts/lib/review-template.js` and `scripts/deepseek-review.js` ... may not differ from the range base unless the task's launch Files line covers them" — scripts/hooks/check-lane-close.mjs "if (git(['diff', '--quiet', base, 'HEAD', '--', p]).status === 1 && !coveredBy(filesEntries(baseTask) ?? [], p)) errors.push(...)" — both prompt-deciding files are checked against the range base and the launch Files line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+
+---
+⏱  184867ms (184.9s)
+📊 Tokens — total: 68442, input: 32112, output: 36330, reasoning: 35076

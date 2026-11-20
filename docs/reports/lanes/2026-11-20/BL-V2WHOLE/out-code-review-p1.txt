@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-20T22:39:39.738Z file_sha256=4a1da306630dcbceaeb5d1f2bbce96cdc0d44aeebd576a7013966e27152ed93e prompt_sha256=f38e6752af8708eadbdf70c8aa0d34bc1f70ff23c6be5d438fa715aa08036778
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+BUG severity=MED — scripts/hooks/check-lane-close.mjs (hunk `@@ -230,30 +339,114 @@`, the `cov` block) "rangeEmpty = cov.length === 0;" — the F1 comment claims "a build or fix task whose range holds no file outside the exempt paths ... is refused", but rangeEmpty is measured before the exempt filter, so an exempt-only range sets rangeEmpty false, expectedPaths empty, and then `ph === 'out' && expected.length` (plus the unsplit branch's `expected.length === 0` fallback) skips the chunk and whole-diff proof entirely, so the close passes with no diff-bound evidence — compute rangeEmpty from `cov.filter((p) => !matchesAny(exempt, p))` (or refuse when `expectedPaths.length === 0 && cov.length > 0`).
+
+BUG severity=MED — scripts/hooks/check-lane-close.mjs (hunk `@@ -230,30 +339,114 @@`, ownsTable line) "const ownsTable = coveredBy(filesEntries(baseTask ?? mv.now), 'scripts/analysis/rule-lists.json');" — the same diff guards the identical call elsewhere ("!coveredBy(filesEntries(baseTask) ?? [], p)"), so filesEntries is known to be nullable; here a task taken without a Files line hands null/undefined to coveredBy and the commit-msg hook dies with a TypeError instead of a refusal line — pass `filesEntries(baseTask ?? mv.now) ?? []` (cannot see coveredBy's null handling, the asymmetry inside one diff is the defect).
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs (hunk `@@ -230,30 +339,114 @@`, H3 line) "if (git(['diff', '--quiet', base, 'HEAD', '--', p]).status === 1 && !coveredBy(filesEntries(baseTask) ?? [], p))" — a git error (status 128, bad path or ref) is neither 0 nor 1, so the check is silently skipped and the H3 guard fails open — refuse on any status other than 0 or 1.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs (hunk `@@ -285,7 +304,31 @@`, lensPromptHash) "const system = split.systemInstruction ?? \"You are a focused reviewer. Follow the prompt's output format strictly.\";" — this is a second, independent reconstruction of the prompt the review tool builds, using `??` where buildLensInputs' own `sys` (unchanged line above the hunk) may use a different fallback; if they disagree every prompt_sha256 is rejected and no lane can close. Cannot see scripts/deepseek-review.js, so the grounder should confirm the tool builds [system, user] exactly this way.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs (hunk `@@ -46,25 +51,90 @@`, closeErrors JSDoc) "@param {{id:string, taskText:string, fm:object, ... expectedPaths?:string[], diffOf?:(paths:string[])=>string|null, readRepo:(p:string)=>string|null}} i" — the body also reads `i.rangeEmpty`, `i.optionalPaths` and `i.readBase`, which are undeclared in the only type annotation this .mjs file has — add the three fields to the JSDoc.
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs (import hunk / lensLine body) "const baseFull = /^refs\//.test(ruleTable?.base_ref ?? '') ? ruleTable.base_ref : `refs/heads/${ruleTable?.base_ref ?? 'wf2/board'}`;" — optional chaining does not protect an undeclared identifier; if `ruleTable` is not already a module-level binding in backlog-lane.mjs (cannot see the rest of the file) every launch throws ReferenceError before the brief is printed — grounder to confirm the binding exists.
+
+REJECT — scripts/analysis/rule-lists.mjs (hunk `@@ -24,6 +27,22 @@`, splitDiff) "const p = rest.slice(0, (rest.length - 3) / 2);" — looks like fragile length arithmetic on a diff header — the header body is exactly `a/<p> b/<p>` so |rest| = 2|p| + 3, and the following equality test `\`${p} b/${p}\` !== rest` turns any quoted or renamed header into a thrown error instead of a wrong path.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- rangeEmpty is measured before the exempt filter, so an exempt-only range neither trips the F1 refusal nor gets any chunk or whole-diff coverage proof
+- unguarded `filesEntries(...)` at ownsTable, unlike every neighbouring call, can crash the commit-msg hook instead of refusing
+- the H3 prompt-builder guard treats a failed `git diff --quiet` (status 2/128) as "no difference" and fails open
+
+---
+⏱  177920ms (177.9s)
+📊 Tokens — total: 63591, input: 28501, output: 35090, reasoning: 33977

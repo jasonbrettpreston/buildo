@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:39.993Z file_sha256=1c48600246e34ce6aa61114bf4b20c8bbc9f675124746267cc2fcb7053d11c81 prompt_sha256=311503612fd5692e02d02010e6e33e7fae9781ee386523721d6f93f845a57fc7
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-eng-all-p3.txt (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> — none raised. Findings below are deferred risks; no clause is broken at merge-blocking severity.
+
+DEFER severity=MED — §2.3 "Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment." — src/tests/backlog/rule-lists.logic.test.ts:513 "const m = st[0]!.chunks;" (also :515 "st[0]!.parts", :521 "st[i]!.chunk as number", and every "l.text[0]!" in the same hunk) — the change adds a dozen new `!` assertions on indexed test accessors with no prior guard and no inline justification, so the clause's required artifact (the comment) is absent — replace each with an explicit guard (e.g. `const first = st[0]; if (!first) throw ...`) or add the one-line justification §2.3 requires.
+
+DEFER severity=MED — §5.2 "`*.infra.test.ts` | API routes, DB queries, external calls" and §5.5 "Pick the layer that proves the claim; a green suite in the wrong layer is false confidence." — src/tests/backlog/rule-lists.logic.test.ts:494 "// V2.WHOLE (task-410): the review tool splits a change ..." with `run('git', ['ls-files', 'src/tests/fixtures/surfaces/*/*.mobile.json'], { cwd: ROOT })` and check-lane-close.logic.test.ts "const DIFF_FLAGS = (JSON.parse(run('node', ['-e', \"import('./scripts/analysis/rule-lists.mjs')...\"]" — the new suites prove subprocess/external-call behavior (git invocations, node CLI runs, reads of the live repo tree) while sitting in the layer §5.2 reserves for "Pure functions, scoring, classification" — add an explicit in-file note that these are CLI-parity locks, or move the subprocess-driving cases to an `*.infra.test.ts` sibling so the layer name matches the claim.
+
+DEFER severity=MED — §12.12 "Pure functions with arithmetic invariants — scoring formulas, key normalizers, distance/unit conversions, cursor comparators — MUST have at least one `fast-check` property test asserting the invariant." — src/tests/backlog/rule-lists.logic.test.ts:494 "const dfile = ..." / "expect(t.length).toBeLessThanOrEqual(max)" — the new chunk-room invariant ("for all (diff, max): every chunk <= max and the chunk path lists partition the diff's paths") is asserted only over fixed examples; no `src/tests/property/*.property.test.ts` file is added in this chunk and none is named as planned — add one `fast-check` property over (files[], max) asserting the budget and partition invariants.
+
+DEFER severity=LOW — §5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — src/tests/backlog/check-lane-close.logic.test.ts:424 "const TROW = { id: 'tbl', globs: ['scripts/analysis/**'], lists: ['first'], why: 'the table is governed like any file' };" (same shape again inline inside the golden and `.gitattributes` cases) — new table-row fixtures are inline inferred literals, no import from `src/tests/factories.ts` is visible in either file, so a manifest schema change drifts them silently — add a typed rule-list-row factory (to `factories.ts` if absent) and import it.
+
+DEFER severity=LOW — §5.5 "Two surfaces that MUST agree stay in lockstep: ... seed JSON ↔ TS `LOGIC_VAR_DEFAULTS`" (parity/drift guard) — src/tests/backlog/check-lane-close.logic.test.ts:371 "return sha(JSON.stringify([s.systemInstruction ?? \"You are a focused reviewer. Follow the prompt's output format strictly.\", ...]))" — the test re-states the library's default system instruction as a literal instead of reading it, creating a third surface that drifts silently if the default in `scripts/lib/review-template.js` changes — source the default from the module (or export it) and assert the fallback once.
+
+MET — §8.2 "Regex `s` flag (dotAll) requires ES2018+ — use `[\s\S]` instead." — src/tests/backlog/check-lane-close.logic.test.ts:409 "/list ev[\s\S]*out-compliance-ev\.txt/" — the new multi-line assertions use the ES2017-safe `[\s\S]` form throughout instead of the `s` flag.
+
+MET — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — src/tests/backlog/check-lane-close.logic.test.ts and src/tests/backlog/rule-lists.logic.test.ts — this chunk touches only the two `src/tests/backlog/` suites; no file under `scripts/`, `migrations/` or `scripts/lib/` is modified here.
+
+REJECT — §4.1/§2.2 try-catch and verifyAdminAuth checklist items — the change is accused of not guarding routes — neither file creates or touches a `src/app/api/` handler, so no route clause is engaged.
+
+REJECT — §11 "a change that adds behaviour no pasted clause or ruling names is a finding" — the change is accused of adding un-named behaviour (V2.WHOLE, F1-F13, H1-H10 refusal classes) — the behaviours are named by the change's own cited card (task-410 "V2.WHOLE") and are locked as tests of an engine in another chunk, not new product surface; no pasted ruling names a different scope to check against.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  64547ms (64.5s)
+📊 Tokens — total: 40416, input: 28500, output: 11916, reasoning: 10553

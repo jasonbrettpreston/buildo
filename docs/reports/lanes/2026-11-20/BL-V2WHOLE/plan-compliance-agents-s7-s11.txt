@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T18:56:55.714Z file_sha256=cce8b886b99be54fc644b12e39acdf7836368d2ffd261de157bcdfe436e8eb0b prompt_sha256=e2cb50eee3839d05b237ca7107d5bd9508d7dcd67f4dcef53756d145dbbc1410
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 08 §11.4 "are written INTO the plan and reviewed at PLAN altitude" — plan (task-410) "Tests first (red as failing assertions through the pre-commit related run): rule-lists.logic.test.ts (chunking, file over room, no-list mode, non-diff material still refused), check-lane-close.logic.test.ts (control passes; chunk set missing a changed file refused; chunk text differing from the diff refused; hand-edited stamp refused; non-compliance parts)" — the cases are named in one sentence with no fixture and no per-case red/green expectation, so the plan panel cannot review what it is told to review — write each case as fixture, expected red, expected green and invocation mode in the plan body.
+
+BUG severity=HIGH — §11.9 TKT-1 dated note "`Done-condition:` (the task's acceptance criteria)" with the task's own words "Acceptance: planted-defect tests with passing controls (a chunk set missing one changed file is refused; a chunk whose text differs from the diff is refused); task-390's whole diff run through it for real, the call count reported." — NONE — the plan's tests, commits and NOT built list never run task-390's whole diff and never report a call count, so half the done-condition is absent from the plan — add a plan step that runs the chunked review over task-390's whole diff and records the measured call count before close.
+
+BUG severity=MED — Spec 08 §11.1 "a plan or fold may not contain a claim that COULD be executed but wasn't" — plan (task-410) "NOT built: the always-attached lists checked at plan phase only for build tasks (measured), lens-input pasted context (measured)" — "(measured)" asserts an execution with no command, number, host or result anywhere in the plan — state each measurement (command run and its result) or mark the item UNVERIFIED.
+
+BUG severity=MED — Spec 08 §11.1 "a line citation is read, not remembered" — plan (task-410) "(3) part (a) the four templates carry {{PLAN}} once each (lens-code-review/error-paths/ux/security.md line 34): DONE by task-406, not redone." against the task's "(3) four lens templates (code-review, error-paths, ux, security, line 32) still carry the plan placeholder in their prose" — the two pasted line numbers for the same placeholder disagree, so at least one was not read from the file and the DONE-by-task-406 claim rests on an unread citation — re-read the four templates now, record the actual line, and if the {{PLAN}} placeholder is still present do (a) inside this task.
+
+DEFER severity=MED — §11.9 TKT-1 "`Scope:` the files or targets; `Done-condition:`; `max_fix_rounds:` a number" — plan (task-410) "PLAN task-410 (V2.WHOLE). Rule: Spec 126 section 0a principle 1 and 11b.2;" — the reviewed header carries no Ticket line, no Scope, no Done-condition and no max_fix_rounds — restate the header in TKT-1 form with the task file list as Scope, the task acceptance as Done-condition and max_fix_rounds 2.
+
+DEFER severity=MED — Spec 08 §11.2 "one grounder re-executes every claim in the fold" and "one cross-read adversary checks the folded decisions PAIRWISE" — NONE — the plan folds four recommendations (a, b, c, d) plus the test set and names no fold-validation grounder and no cross-read adversary before implementation, which is the collision class §11.2 says is missed — add the two fold-validation seats and their trigger to the plan.
+
+MET — Spec 08 §11.1 "a line citation is read, not remembered" — plan (task-410) "Verified facts (opened): (1) check-lane-close.mjs compliance block checks the material only by its stamped hash" — the three premises are marked opened rather than recalled.
+
+MET — task (1) "the close check verifies nothing about the review MATERIAL beyond its hash" — plan (task-410) "each chunk material must equal git diff --no-renames merge-base HEAD -- <its paths>" — the material text is recomputed, not only its stamped hash.
+
+MET — task (c) "refuses when the union of the chunks' paths is not that list" — plan (task-410) "the union of the chunk path lists must be exactly the expected list with no path in two chunks" — the union check is present.
+
+MET — task "NOT built without the operator's word: excluding generated files from the material (no rule exempts them); raising the bound; a size limit on a task." — plan (task-410) "NOT built: ... generated-file exclusion, bound change, task size limit" — the operator gate on those three is respected.
+
+MET — task "Protected paths: each check or tool edit in its own commit, no task status move in it." — plan (task-410) "Each protected-path edit in its own commit, no status move." — the protected-path commit rule is carried.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 6
+
+---
+⏱  65692ms (65.7s)
+📊 Tokens — total: 32792, input: 18710, output: 14082, reasoning: 12908

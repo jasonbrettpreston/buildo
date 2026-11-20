@@ -229,8 +229,21 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
       expect(e).toContain('in-<same name>');
       expect(e).toContain('out-<lens>[-<list id>]-rN.txt');
       expect(e).toContain('fix-*.txt');
-      // mechanism (rule-lists.mjs lens-input): the RULE LIST is split at its headings into -p1..-pN and the whole diff rides in every part; a diff is never split
-      expect(e).toMatch(/compliance lens reviews the WHOLE change: lens-input splits the rule list at its headings into parts -p1\.\.-pN and puts the whole diff in every part; the diff is never split or trimmed to core files; a diff too large for one part is refused by lens-input: report that to the orchestrator at once/);
+      // V2.WHOLE (task-410): lens-input splits the rule list at its headings AND, when the diff leaves no room for a list part, the DIFF at file boundaries (the tool, never by hand)
+      expect(e).toContain('The compliance lens reviews the WHOLE change');
+      expect(e).toContain('git -c core.quotepath=false diff --no-ext-diff --no-textconv --text --full-index --diff-algorithm=myers --indent-heuristic --inter-hunk-context=0 --no-color --no-renames --src-prefix=a/ --dst-prefix=b/ -U3');
+      expect(e).toMatch(/\$\(git log refs\/heads\/\S+ --first-parent --reverse --format=%H -S@lane-\S+ -- 'backlog\/tasks\/[^']+' \| head -1\) HEAD -- /);
+      expect(e).toContain('the base is the task\'s launch commit on the board');
+      expect(e).toContain("':(exclude,glob)docs/reports/lanes/**' ':(exclude,glob)docs/reports/reviews/**'");
+      expect(e).toContain('lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file)');
+      expect(e).toContain('each chunk goes against every list part');
+      expect(e).toContain('stamped chunk c of m with its path list');
+      expect(e).toContain('out-<lens>-pN.txt');
+      expect(e).toContain('one file alone over the room is refused naming the file and its size: report that to the orchestrator at once');
+      expect(e).toContain('The close check recomputes the changed paths of the task range');
+      expect(e).toContain('closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane');
+      expect(e).not.toMatch(/the diff is never split or trimmed to core files/);
+      expect(e).not.toMatch(/puts the whole diff in every part/);
       expect(e).not.toMatch(/a diff over the review tool's bound is split/);
     }
   });

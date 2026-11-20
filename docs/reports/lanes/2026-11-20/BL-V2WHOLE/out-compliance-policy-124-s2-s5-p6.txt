@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:39.789Z file_sha256=7a8a240f2cc15d8b5e67b69ea50923a4358a1c6e50b0ae89d95d0ad9ced0a214 prompt_sha256=217172ea79fc5bca591047051980a07fa0c8afdc5537b26f1448cbb6afee2a35
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-policy-124-s2-s5-p6.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — R-HK "Every approved decision is a register row citing `<log stem>#<decision id>`; `--check` (pre-commit, R-DJ (1)) is RED on an approved decision with no row" — src/tests/backlog/check-lane-close.logic.test.ts "it('ITEM 3 (operator '1-5 y', item 3): a golden the existing golden check validates" — the operator approval this item rests on exists in this chunk only as a test title: no `docs/reports/decisions/<date>-<slug>.json` log with the chat quote and no routed register row (not even an `owed` one) is visible in the material, so the coverage lock has nothing to bind and R-HK's `--check` has no row to pass — commit the "1-5 y" item 3 decision log (or name the log it is in) with its quote and the routed register row, then let `decision-log.logic` `--check` cover it.
+
+DEFER severity=LOW — standard versions "V2 — McDonald's Airtight | Specs 122/122a/124/124a step standard: descriptor, closed-answer gates, ledger R-BA, witness #44" and "V3 — McDonald's Airtight V3 (FINAL, R-DF; every future step)" — src/tests/backlog/check-lane-close.logic.test.ts "describe('close check: the review material is the whole change (V2.WHOLE)'" — the version-shaped label V2.WHOLE is not in the pasted versions table and no pasted ruling names a whole-material close proof or a file-boundary split, so the arm's authority in this chunk is a test title plus an unpasted "brief" and "grounder 2026-11-20" attacks — cite the register row id (once the finding above is logged) in the describe title, or drop the version-shaped label so no new standard version is implied.
+
+DEFER severity=LOW — R-HK "a log that differs from its raw record committed under `docs/reports/decisions/raw/` (re-imported by `--import`, never hand-edited)" — src/tests/backlog/check-lane-close.logic.test.ts "// V2.WHOLE fix round (grounder 2026-11-20, attacks e, f, g binary, h, k): each planted defect has a passing control" — the review-round outcomes (F1, F2, F7, H1, H9 round 6, H10, items 3, 24 to 51) are recorded only as test titles and numeric trailing args, never as a generator-emitted decision log, so the decision trail these tests claim cannot be re-imported or checked — land the grounding review as a decision log and let the row skeletons drive the titles.
+
+MET — R-GW "A spec in `docs/specs` opens with exactly one `> **Role: <role>.**` line" — src/tests/backlog/rule-lists.logic.test.ts — the change touches no file under `docs/specs`, so the banner and `role_banner_pending` postures are untouched.
+
+MET — R-GX "a historical spec ... carries a rule id not in it" — src/tests/backlog/rule-lists.logic.test.ts — no `| R-x |` style row and no `rule-map.json` id is introduced by this chunk, so the role and rule-id baselines are unaffected.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+
+---
+⏱  52842ms (52.8s)
+📊 Tokens — total: 43805, input: 34411, output: 9394, reasoning: 8597

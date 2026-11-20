@@ -1,0 +1,516 @@
+LIST policy-124-s2-s5 sha256:862c7ff5bc53ba68406a249e1ac31114df061ebe8c01ac032a0748b8be0d5de8 material sha256:ceb2181f35ee9ccdc1cf4c2dd03ff2f47b75eafd86f4fc4f7c65a98d28279462 part 1 of 2 chunk 1 of 3
+RULE LIST policy-124-s2-s5 (docs/specs/01-pipeline/124_step_standard_policy.md, sections 2. The rules; 5. Register of rulings), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/backlog-lane.mjs","scripts/analysis/rule-lists.mjs"]
+
+## §2. The rules
+
+Thirteen rules (Rule 13 added by R-R, 2026-08-29). Each is enforced today, or marked ⚠ GAP with the artifact that would close it.
+
+---
+
+**1. Nothing about a step's behaviour may live only in code — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field.**
+- **Enforced by:** `checks` cannot be omitted (`step.schema.json:1095-1099`, `type:"array", minItems:1`); `scripts/ast-grep-rules/compute-shape.yml`'s five rules block the commonest hiding places (console, bare fetch, wall clock, `process.env`, forbidden `require`s) inside compute. **+ §5 R-BA gate A** (`step-validate.mjs` fast invariant #28): every `checks[].limit`/`warn_limit` is drawn from a CLOSED set (`limit_from_config` naming a declared variable, the exact string `viol == 0`, or a dated `standard-gates-ledger.json` row) — a bare number is behaviour hiding in descriptor prose instead of code, the same violation class under a different rung. **+ §5 R-BA gate C** (fast invariant #30): a step's declared `emits[]` must EQUAL the `records_meta` keys its own golden POST captures actually emit (minus the runner-owned `RUNNER_META_KEYS`, `scripts/lib/step/index.js`) — an emitted-but-undeclared key is behaviour hidden from the descriptor just as surely as a bare literal. **+ §5 R-BA gate I** (fast invariants #33-#36): banned-value coverage, staleness-disposition adjudication, census parity and defect-id uniqueness are each a closed registry a step cannot silently omit itself from.
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's four fences (`assert_schema`) were each moved to descriptor data or a named check rather than left as unexplained code. *(operator y 2026-10-20, rulings-8: under this rule and the IL-6 ruling, assert_data_bounds' `COST_MAG_ACCEPT` list moved from a compute-imported constant to `checks[].expect.accept_list`, which the compute reads from the descriptor; 124a §B19.)*
+- **Violation reads as:** a build failure at `pipeline.step()` construction (AJV) or a red `compute-shape` ast-grep scan in `.husky/pre-commit`.
+**M14 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B3 — GAP G-1 closure record (moved from Spec 124 §2 Rule 1) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B3 — GAP G-1 closure record (moved from Spec 124 §2 Rule 1) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure record of GAP G-1 (2026-08-29); Rule 1's text, Enforced-by and Violation lines stay live in Spec 124. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+
+**2. Compute contains domain logic only — no gating, ledger, lock, emission, logging side-channel, environment read, or policy comment.**
+- **Enforced by:** `compute-shape.yml` (6 rules — the original 5 plus `compute-no-postgis-branch`, R-W) + `check-step-shape.mjs` (blocking over `scripts/lib/compute/**`) + ~~`step-conformance.infra.test.ts:532-620`~~ **CORRECTED 2026-09-10 (measured, now `:611`/`:670`/`:699` — ~80 lines of drift; cite by greppable anchor, not line number, per Spec 124 §5 R-R's own lesson): `step-conformance.infra.test.ts`'s `COMPUTE_RULE_IDS` battery / "dispatch keys are exactly the descriptor's check ids" test** (dispatch keys ≡ declared check ids, proven to fire on a known-bad fixture).
+- **Archetype variance:** none, except ASSERT's compute never opens `ctx.pool` at all (its `outputs`, `recovery`, `counters` are forced `"none"`).
+- **Evidence:** the compute-shape gate's own blocking loop was found missing on 2026-08-25 (it scanned and reported but never failed the build) — fixed the same day; the incident is the strongest argument for keeping this a shape rule rather than a review checklist.
+- **Violation reads as:** a red ast-grep scan naming the file, line, and rule id.
+
+> **R-W addendum (2026-08-30).** Compute MUST NOT branch on PostGIS availability — `hasPostGIS`,
+> `pg_extension`, `postgis_version` (bare identifier, property access, or a string/SQL fragment naming one
+> of them), or a `try`/`catch` wrapped around a PostGIS-only call, are all the same anti-pattern: a second,
+> silently-selected algorithm hidden inside compute. `guards.requires: {kind: "extension", name: "postgis",
+> on_missing: "fail"}` is the only legal form — the step refuses before compute ever runs, and a database
+> genuinely missing the extension HALTS rather than silently degrading to a different answer. ~~Three
+> precedents on record~~ — **CORRECTED 2026-09-10 (measured): four** (R-W's own §5 register row, below, already
+> lists a fourth — `link_parcels` LP-D9 — this addendum text just never caught up): `link_massing` A-8 (in-memory grid/haversine fallback, retired), `compute_centroids`
+> A-1(a) (unweighted arithmetic-mean centroid fallback, retired), `link_parcels` A-1 (JS nearest-parcel
+> fallback, retired commit 7, 2026-08-30), `link_parcels` LP-D9 (Strategy 1a's `address_points_exact` predicate
+> gap, fixed commit 8a — see the §5 R-W row for the full fourth entry). **Enforced by:** a new ast-grep rule,
+> `compute-no-postgis-branch` (`compute-shape.yml`), wired through the same always-blocking
+> `check-step-shape.mjs` compute corpus as the other 8 rules — no separate wiring needed, since the driver
+> runs every rule in the file over `scripts/lib/compute/**`. Proven RED-first on
+> `scripts/steps/_schema/fixtures/compute/bad-compute-shape.js`'s `ctx.hasPostGIS` branch (added to the
+> fixture's known-violation set), GREEN on all six converted computes (`assert-schema.js`,
+> `compute-centroids.js`, `link-massing.js`, `link-parcel-addresses.js`, `link-wsib.js`, `load-ravines.js` —
+> none references `hasPostGIS`/`pg_extension`/`postgis_version` today), asserted by
+> `src/tests/step-conformance.infra.test.ts`'s `COMPUTE_RULE_IDS` prove-red battery.
+
+**3. Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal — PRESENCE of its `logic_variables` row is always FAIL (R-G), and VALIDITY is per-variable via the closed `on_invalid` enum: `fail` is MANDATORY for a verdict- or write-affecting variable, `default`/`clamp` are allowed only for the rest, each carrying a stated `why`.**
+- **Enforced by:** `compute-no-literal-url-tunable`/`-byte-window`/`-threshold` (`compute-shape.yml`) + `step-conformance.infra.test.ts:772-943` (declared ⊆ registry, declared ⊆ admin GROUPS, consumed ≡ declared, each direction proven RED) + `scripts/lib/step/config.js` (PRESENCE half: throws when a declared name has no `logic_variables` row, naming the remedy — LM-D15).
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's own first violation (`assert_schema` declared `config:"none"` while compute hard-coded `limit=20`, `Range: bytes=0-2048` and `bytes=0-8192`), remediated before pilot 2. **R-G's grounding:** the old P4 sentence ("no row ⇒ FAILED run") never distinguished presence from validity, and practice already contradicted its literal reading — `link-massing.descriptor.json` uses `on_invalid:"fail"` for only 3 of 6 variables, `load-ravines`/`assert-schema` use `default`/`clamp` for every one, each justified in `deviations[]`. This rule states the split that was already true.
+- **Violation reads as:** a red conformance test naming the literal, or a runtime throw naming the missing registry row (presence). No machine reads a validity failure yet.
+**M15 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B4 — GAP G-4 and GAP (R-D) closure records (moved from Spec 124 §2 Rule 3) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B4 — GAP G-4 and GAP (R-D) closure records (moved from Spec 124 §2 Rule 3) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure records of GAP G-4 (2026-08-29 / R-BA gate B 2026-09-26) and GAP (R-D) (2026-09-03); Rule 3's text and Enforced-by stay live; R-BA stays the live row. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+
+> **R-AU addendum (2026-09-21, operator-adjudicated).** This rule's reach is SCALAR TUNABLES.
+> Pricing DATA — a DB rate table, or a keyed catalogue of priced lines with its permitted-value
+> vocabulary — is not a tunable and is NOT externalized by porting it: it is carried byte-for-byte
+> and DECLARED in the descriptor as a NON-ADMIN SURFACE (`limitations[]`), so a reader can see that
+> the values exist, where they live, and that no admin surface edits them. Declaring them under
+> `config.logic_variables[]` would be a second source of truth for the same values and a false
+> claim of admin tunability. Every scalar the step consumes still obeys the rule above, unchanged.
+> **This is an INTERIM state carrying a named closing row, not a permanent exemption** — see §5 R-AU.
+> **CLOSED 2026-09-23 (batch-2 row 2.5, commits `7c3e85eb`/`d6cd1c7d`/`3bc1eee0`/`0f1f46fb`):** the admin
+> editor landed and the INTERIM state above no longer applies — see §5 R-AU for the closing text.
+
+**4. A rule kept in compute rather than declared data must still be written down — as a check's `why`, not a comment.**
+- **Enforced by:** nothing machine-checked. Applied narratively in the Intent Ledger, whose discoverer≠ adjudicator role split is Spec 123 §7.1 (§4.2 below states the *rule*).
+**M16 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B5 — GAP G-2 closure record (moved from Spec 124 §2 Rule 4) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B5 — GAP G-2 closure record (moved from Spec 124 §2 Rule 4) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure record of GAP G-2 (2026-08-29); Rule 4's text and Enforced-by stay live. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's coordinate-source OR-contract — kept in compute, its rule stated in the descriptor `checks[].why` and `limitations` by ruling, not by a check. *(operator y 2026-10-20, rulings-8: two gaps under this rule ride the bundled RE-FREEZE night, PIN REFREEZE-BUNDLE-1 (3)/(4) — neighbourhoods' U+2019 apostrophe normalisation and assert_global_coverage IL-11/IL-12's `has_bldg` scoping, each written today only in compute; 124a §B17, §B19.)*
+- **Violation reads as:** nothing today (this is exactly the ⚠ GAP).
+
+**5. `checks` may never be `"none"` — every step declares at least one.**
+- **Enforced by:** `step.schema.json:1095-1099` — `checks` is typed `array, minItems:1`; a step cannot construct without it.
+- **Archetype variance:** none — the one category every archetype leaves untouched, even ASSERT (which forces `outputs`/`recovery`/`counters` to `"none"` but not `checks`).
+- **Evidence:** all 3 converted steps carry 8–19 checks each; ASSERT (`assert_schema`) has the fewest live categories of any archetype but still declares 9.
+- **Violation reads as:** a schema-validation throw at `pipeline.step()` construction, before compute runs.
+
+**6. Every category is present, and every field inside it is answered — `"none"` is legal but must be written, never omitted.**
+- **Enforced by:** `step.schema.json`'s top-level `required` (~~18 categories~~ **CORRECTED 2026-09-10 (measured): 20**) plus per-field `required` arrays nested throughout.
+- **Archetype variance:** none.
+- **Evidence:** the schema itself is the enforcement; a descriptor missing any of the 18 fails AJV outright.
+- **Violation reads as:** a schema-validation throw naming the missing field.
+
+**7. A step's archetype determines which categories are live — a step may not omit a category its archetype requires, and may not answer a category its archetype forbids.**
+- **Enforced by:** `step.schema.json`'s `allOf` blocks keyed on `identity.archetype` (`step.schema.json:1373-1443`) — six profiles, one per non-degenerate archetype grouping.
+- **Archetype variance:** this rule *is* the variance mechanism — see §3 below.
+- **Evidence:** the schema comment on the ENRICHER profile names claim #54 (a `staleness.scope` on a lineage column implies a declared invalidator) as "the centroid defect made unexpressible."
+- **Violation reads as:** a schema-validation throw at construction naming the archetype and the forbidden or missing field.
+
+**8. A write target's discipline class, guard, and scope are declared per write target — never assumed for the whole step.**
+- **Enforced by:** `step.schema.json`'s `outputs.writes[].write_discipline` shape, with `if`/`then` blocks requiring `guard_why` when `guard:"none"` (`:279-280`) and `why` for `staging_full_replace` (`:291-292`).
+- **Archetype variance:** applies to INGESTOR/LINK/MATCHER/ENRICHER (any archetype whose `outputs` is an object); N/A for ASSERT (`outputs` forced `"none"`).
+- **Evidence:** `link_massing`'s E1/E2 targets declare two different disciplines (`set_based_scoped` guarded none, `guarded_upsert`) on two different write targets in the same step.
+- **Violation reads as:** a schema-validation throw naming the write target and the missing `why`.
+
+**9. A banned write shape (an unguarded set-based write, an insert-only step with no retraction) may ship only with a dated, committed, SHA-anchored ledger entry naming who approved it — a `why` string alone is not enough (promoted from pilot practice, R-I.2).**
+- **Enforced by:** `scripts/steps/_schema/grandfathered.json`, read by `assertGrandfathered` at `pipeline.step()` construction (before any pool opens) — refuses a banned value with no matching entry even when the schema's own `guard_why` is present.
+- **Archetype variance:** applies wherever `outputs` is an object; N/A for ASSERT.
+- **Evidence:** `link_massing`'s E1 target (`write_discipline.guard:"none"`) is grandfathered against commit `5bb31faf`, operator name, and date — the schema's own fixture for this shape is grandfathered the same way, so the rule cannot be satisfied by weakening the fixture.
+- **Violation reads as:** a construction-time throw refusing the descriptor, naming the ungrandfathered path.
+
+**10. The verdict is always derived from the declared checks' rows — never a parallel boolean, never a hardcoded literal.**
+- **Enforced by:** `scripts/lib/step/verdict.js` (`deriveVerdict(rows)`) is the only place a verdict is computed; `step-library.logic.test.ts:145-283` — "the verdict is ROW-DERIVED, and all three values are reachable."
+- **Archetype variance:** none — runner-owned, no archetype may opt out.
+- **Evidence:** AS-D1 (sources verdict read the raw error array, not the row set) and LM-D2 (a hand-rolled per-script cascade plus a boolean-driven severity) both closed by routing through this single function; a repo-wide grep for `'FAIL'`/`'WARN'` literals across the library returns exactly the rows inside `verdict.js` itself.
+- **Violation reads as:** a red `step-library.logic.test.ts` assertion, or (pre-conversion) a fleet-wide finding that a script structurally cannot emit WARN or FAIL.
+- **R-Q / R-R note (2026-08-29):** `step-library.logic.test.ts` is outside `step:validate`'s own run scope (spec-named as step-conformance + golden-fingerprint + `src/tests/steps/<slug>/` only), so `step:validate`'s policy matrix used to print this rule PROSE-ONLY per step rather than claiming a false enforced-green — a scope caveat, not a claim the rule is unenforced elsewhere. Separately, this commit's G6 ledger-normalization work fixed one concrete instance of a severity-conflated counter reaching the ledger (`LPA-D2`), the same defect class R-Q (`checks_failed`/`checks_warned` split, `LPA-D6`) closed in the library itself.
+- **Enforced by (WF2 "Rules 10/11/12 mechanical checkers", C1, 2026-09-03):** `scripts/analysis/step-validate.mjs`'s `checkVerdictSingleSource` closes the PROSE-ONLY gap above with a genuine mechanical checker over a closed corpus, `VERDICT_LIBRARY_CORPUS` (every `scripts/lib/step/*.js` file except `verdict.js` itself + `scripts/lib/pipeline.js` + `scripts/lib/source-version.js` — the files that see a full `rows` array and could hand-roll a second cascade). Two halves: **(a)** no unsanctioned second PASS/WARN/FAIL derivation anywhere in that corpus — `pipeline.js`'s `emitSummary` escalate-only recompute is the ONE declared, cited exception (`SANCTIONED_VERDICT_SITES`; not behaviour-identical to `deriveVerdict` — never downgrades, preserves SKIP/UNKNOWN), and `scripts/lib/source-version.js`'s prior hand-rolled duplicate was routed through `deriveVerdict` in this same commit (behaviour-identical, proven in `step-conformance.infra.test.ts`); `scripts/lib/step/plausibility.js`'s `verdictCascade` (a second duplicate, consumed by the live `assert_parcel_sanity` step) was retired outright, its one consumer now importing `deriveVerdict` directly. **(b)** a `SELF_SKIPPED` terminal's audit rows must fold to a verdict other than PASS, AND that verdict must be genuinely row-derived (≥1 declared non-INFO row, `verdict === deriveVerdict(rows)`) — **CLOSED 2026-09-09 (WF3 VRD-SKIP, Rule 10 ladder rung b, see §7 below and the `VRD-SKIP` row of `programme-items.json`, now `BUILT`):** `skipRecordsMeta`'s `status` row declares severity `WARN` with threshold `'ran'` (was `INFO`/`null`), so the checker now ships `enforced-green`. Was pinned `KNOWN-DEFECT` per Spec 123 §3.1 against `review_followups.md` ("A lock-skipped converted step verdicts as PASS", now RESOLVED) from 2026-09-03 until closure. Both halves proven both-directions: `--self-test-only` runs in-memory RED/GREEN proofs on every invocation (`step-validate.mjs`'s own `selfTest()`), and `compute-no-verdict-derivation` (`scripts/ast-grep-rules/compute-shape.yml`) bans a compute from ever assigning anything named `verdict`, proven on `scripts/steps/_schema/fixtures/compute/bad-verdict-parallel.js` + the extended `bad-compute-shape.js` battery.
+
+> **R-H addendum (2026-08-28).** Rule 10 governs HOW the verdict is derived, not WHICH severity a check should choose. That gap let pilot 3's ruling A-6 dispose `nearest_footprint_gt_lot_count` and `shared_primary_buildings` as INFO for a standing non-zero population — conflicting with Spec 48 §4.9 / `tasks/lessons.md:117`: **a metric expected to be permanently non-zero is WARN with a declared, machine-observable retighten condition — never FAIL, never INFO-by-taste.** INFO is legal ONLY for a purely descriptive counter no threshold could bound, and that exception must itself be declared in `checks[].why`. Consequence: **LM-D6/LM-D11 re-dispositioned OPEN → WARN + a declared retighten condition, carried to pilot 4** (defect ledger + review followups amended in the same commit). ⚠ **GAP G-5** — no check yet distinguishes "purely descriptive, no threshold possible" from "INFO chosen to avoid a red"; author judgment only, same class as G-2. **First closed instance (LG-29, WF3 VRD-SKIP, 2026-09-09):** a `SELF_SKIPPED` terminal is the maximal case of "a check the library could not evaluate" — zero declared checks ran — so `status:'INFO'` on the skip's own `status` row was exactly the "INFO chosen to avoid a red" failure mode G-5 names, not a purely descriptive counter (a threshold — `'ran'` — was possible all along). Closed by flipping that one row's declared severity to `WARN`; `skipRecordsMeta` (`scripts/lib/step/index.js`) is this addendum's named precedent for the self-skip case specifically.
+
+**11. A ruling that reorders a step's phases must re-derive every "before X" guarantee stated in that step's own governing spec, in the same commit (promoted from pilot practice, R-I.1).**
+- **Enforced by (STALE until this amendment — `checkOrderGuaranteesCited` existed since `b2a85079`, 2026-09-03, but this row was never updated to say so):** `scripts/analysis/step-validate.mjs`'s `checkOrderGuaranteesCited(descriptor)` — the DECLARED half only (GAP G-3's completeness half, below, stays open). Verifies every `checks[].when:"pre_write"` entry carries `order_guarantee{guarantee, spec_ref, anchor}` (schema-enforced, re-verified defensively), that `spec_ref` resolves to a real `docs/specs/**` file, that `anchor` is found LITERALLY in that file (a rotted citation REDs), and that `spec_ref` agrees with the descriptor's own `identity.spec` — a pre_write check's ordering guarantee must trace to THIS STEP's own governing spec, never an unrelated one. **Ask 6 amendment (pilot 9 commit 1, 2026-09-04):** `identity.spec` is single-valued, but a step's outputs can genuinely span more than one governing spec (`enrich_parcels`: `identity.spec` `"65"`, pass 5's own post-commit-read order_guarantee governed by Spec 78 §P3A.1 — grep-confirmed `comp_*`/`opt_*`/`optimal_config` appear only in Specs 78/88/89/100, never 55 or 65). `checkOrderGuaranteesCited` now accepts a spec-qualified anchor, `"<specnum>:<anchor text>"` — when present, the spec_ref-agreement check resolves against the QUALIFIER's own spec instead of `identity.spec`'s; an unqualified anchor is byte-for-byte the pre-existing behavior. Proven both directions against the real `docs/specs/` tree in `step-validate.mjs`'s own `selfTest()`: an unqualified anchor whose `spec_ref` disagrees with `identity.spec` still REDs (the qualifier, not the mere citation, is what licenses the disagreement); a qualified anchor naming the SAME spec `spec_ref` already points at GREENs; a qualifier naming a spec number that resolves to no file REDs.
+- ⚠ **GAP G-3** — the DECLARED half above is real and non-vacuous, but its own completeness is not proven: nothing re-checks a step's governing spec for "before X" language when the library's phase order changes generically (e.g. a future ordering change to LINK or a second ENRICHER), and nothing forces a `pre_write` check + `order_guarantee` to be AUTHORED in the first place merely because a step's spec states a "before X" guarantee — `enrich_parcels`'s own pass 5 (Spec 78 §P3A.1) needed this pilot to explicitly author `pass5_post_commit_read_order` before Rule 11 had anything to check.
+- **Archetype variance:** matters most for INGESTOR (acquire→validate→write→score) and any archetype using `checks[].when:"pre_write"`; N/A for ASSERT (no writes to order against). ENRICHER (pilot 9) is the first archetype whose post-commit phase order guarantee spans a SECOND spec beyond `identity.spec`.
+- **Evidence:** LR-D9 — converting `load_ravines` to the INGESTOR archetype silently retired Spec 59's write-order guarantee until the Regression Guardian caught it in a fold review, one commit after it shipped. `enrich_parcels` (pilot 9) — the multi-spec case above, closed by this amendment rather than left as a second per-incident fix.
+- **Violation reads as:** a `checkOrderGuaranteesCited` violation in `step:validate`'s Rule 11 matrix row (`enforced-red` when a real violation exists); GAP G-3's completeness half is still nothing today, absent a reviewer catching it by hand.
+
+**12. A write target with a destructive full retraction (`retract_when:full_only` or `retract:"all"`) declares a truthful crash-recovery posture — `"none"` is legal only with a stated why.**
+- **Enforced by:** `step.schema.json`'s `recovery.interrupted` field (required when a destructive retraction target exists) + ~~`step-conformance.infra.test.ts:1039-1073`~~ **CORRECTED 2026-09-10 (measured, now `:1647-1656` — ~600 lines of drift; cite by greppable anchor, per Spec 124 §5 R-R's own lesson): `step-conformance.infra.test.ts`'s "recovery.interrupted reddens against its destructive retraction target" battery** (RED on `"none"`, RED on missing).
+- **Archetype variance:** applies to LINK and any INGESTOR with a full-retraction write; N/A for ASSERT/RECORDER.
+- **Evidence:** a killed `link_massing` forced-FULL run left `parcel_buildings` at 29,330/520,492 rows; the next run's gate read "unchanged" and the hole persisted silently — this is the incident the rule exists to make undeclarable.
+- **Violation reads as:** a schema-validation throw at construction. *(Note, updated 2026-08-29: BOTH halves are now CLOSED. The DECLARATION half — `recovery.interrupted` and the paired `recovery.before_image` (R-M), both required, truthful, schema-enforced fields, R-M's before-image mechanism BUILT and LIVE-FIRED (`d07529af`, LG-17 — `link_massing`'s genuine forced-FULL wrote a 520,492-row before-image file before its retraction ran). The RUNTIME half — `staleness.detectInterruptedRetraction` auto-detects a `crashed`/stuck-`running` prior run for a step's own producer slugs and `selectMode` forces FULL unconditionally, wired into `runCascadePhase`/`runLinkPhase` (`LW-D20`/`LG-19`, Spec 122 R-B) — closed by a live kill-and-rerun proof against `link_wsib` that found and fixed two real bugs (a step self-detecting its own just-opened row; the check being unreachable behind the ledger gated-skip), both now regression-locked fast (fake-pool) and against real Postgres. "Declared" and "automatically enforced" are now the same posture.)*
+- **Enforced by (WF2 "Rules 10/11/12 mechanical checkers", C3, 2026-09-03) — `step:validate`'s own matrix, closing this rule's prior PROSE-ONLY gap from THAT tool's own vantage:** `scripts/analysis/step-validate.mjs`'s `checkInterruptedPostureTruthful(descriptor)`, two parts. **(a) Declaration** — the same "destructive retraction requires `force_full_on_next_run`" rule as the existing `step-conformance.infra.test.ts` R-B lock, re-verified here. **(b) Reachability** — a NEW, static, runner-derived claim beyond the declaration: for the descriptor's `execution.shape`, is `staleness.detectInterruptedRetraction` actually REACHABLE on every path through that shape's runner in `scripts/lib/step/index.js`? Derived from a source scan (`extractFunctionBody` + `runnerReachability`), never hand-listed — a runner behind a `staleness.ledgerGatedSkip` early-return is reachable only if its `bypassed` term folds in `interruptedRetraction.interrupted` BEFORE that call (the exact shape `runMaterializePhase` lacked until `febd0968`, closed AHEAD of this checker landing per Fold A item 2 of `.cursor/wf2_rules_10_12_checkers_active_task.md`); a runner with no such early-return instead reaches it via an unconditional `staleness.selectMode` call. Measured live over all 8 converted descriptors: `link`/`link_keyed`/`cascade` (the three declaring `force_full_on_next_run`) all REACHABLE; the other five declare `"none"` (no reachability claim to verify). Proven both directions via `selfTest()` (RED on the exact pre-fix `runMaterializePhase` shape reconstructed in-memory; GREEN on the post-fix shape, a LINK-shaped unconditional-`selectMode` runner, and a declaration-only violation; RED on a runner reaching neither `ledgerGatedSkip` nor `selectMode`). **Behavioural proof, WRITTEN but BLOCKED** (the DB-tier half beyond static reachability): `src/tests/db/step-crash-posture.db.test.ts` spawns a REAL `link_wsib` process, SIGTERMs it once its `pipeline_runs` row reads `running`, and asserts the row stays `running` (no SIGTERM handler exists anywhere in this codebase — grepped — so Node's default disposition abandons the in-flight `finalizeLedgerRow` call) AND the next `staleness.selectMode` call over the SAME descriptor/pool resolves `mode:"full", reason:"recover_interrupted_retraction"` — declared posture matching MEASURED behaviour, not just source reachability. Committed `describe.skip`-gated: measured live 2026-09-03 that a real converted step spawned against the ephemeral `BUILDO_TEST_DB` testcontainer always refuses at `assertDbTarget` (`scripts/lib/resolve-db.js`) — the container is named `buildo_test`, every descriptor's `database.assert_current_database` is the single literal `"postgres"` with no test-context override, and step scripts have no descriptor-path override hook either. Filed HIGH in `review_followups.md` ("WF2 Rule 12 behavioural half — no `db.test.ts` can spawn a REAL converted step against the ephemeral test container") as its own scoped WF2/WF3 — a deliberate production safety fence (Spec 122 §P0), not weakened under this WF2's time pressure. Until that lands, the STATIC reachability half above + the existing fake-pool unit lock (`src/tests/step-library.logic.test.ts`) are the enforced mechanisms. Scoped, once unblocked, to ONE archetype first (CASCADE via `link_wsib`, the same step LW-D20/LG-19 were originally found against) — the other two live shapes (`link`/`link_massing`, `link_keyed`/`link_parcels`) are `programme-items.json`'s `CRASH-BEHAV` (`nice_to_have`, `NOT_STARTED`).
+
+**13. A step validates itself — the Spec 123 §6 scorecard and this spec's own policy-coverage matrix are generated by one command, run for every converted step, and enforced (never a separate, hand-maintained track).**
+- **Enforced by:** `scripts/analysis/step-validate.mjs` (`npm run step:validate -- --step=<slug>` / `--all`): runs `validateDescriptor` (Rules 1, 5–9), the ast-grep shape gate scoped to the step's own file + compute (Rules 1–2), the step's own `src/tests/steps/<slug>/` + the shared conformance/golden-fingerprint suites, the golden-capture invocation/fingerprint/diff check (G8), and derives the full G0–G9 scorecard plus a Rules-1–13 coverage matrix — all from committed artifacts. `step-conformance.infra.test.ts` asserts every converted step's assessment report carries a `## Validation scorecard (generated)` block equal to a fresh run (drift is red). `.husky/pre-commit` runs `step:validate --all --fast` first (the vitest spawn skipped, everything else run, plus 7 always-on fast invariants); `.husky/pre-push` re-runs it plus `typecheck` (defeats a bare `--no-verify`). **+ §5 R-BA gates F/H/J/G (2026-09-26):** F floors the SCORE half (a converted step below 14/17, or a non-LF path, hard-stops without a dated ledger row — fast invariant #37); H closes the MATRIX's own status vocabulary (`MATRIX_STATUSES`, a closed enum — `computePolicyMatrix` throws on an out-of-set status); J and G close the PROCESS half the addendum below names — J at commit time (Spec-diff staged-or-declared, generated-doc freshness, `.husky/pre-commit`), G on the scorecard's own input freshness (nonzero capture per declared write target, `lib_fingerprint` staleness, explained-diff coverage — fast invariants #38-#40): Rule 13 no longer just runs the check, it proves the check's own inputs are current.
+- **Archetype variance:** none — every archetype's descriptor is validated, shape-gated, and scored the same way.
+- **Evidence:** pilots 1–5 backfilled by `step:validate --all --write` (R-R, 2026-08-29) — `link_parcel_addresses` scored 8/17 on the FIRST honest run (real hard-stop: `LPA-D2`'s ledger status wasn't literally `CLOSED`/`PIN`, and a later WF3 fix's `records_meta` shape change wasn't yet re-explained in the report), fixed by two real documentation commits rather than by loosening the gate — 14/17 after.
+- **Violation reads as:** a red `step-conformance.infra.test.ts` assertion naming the stale/missing scorecard block, or a non-zero `step:validate` exit (a hard stop on G6/G7/G8/G9 or a fast invariant) in `.husky/pre-commit`/`pre-push`.
+- **Rule 13's own boundary (R-T addendum, filed 2026-08-29, BUILT 2026-08-30 — this same programme's follow-on WF2).** `step:validate` conflates two different questions under one name: whether a step's *process* was followed (G0–G9, the policy coverage matrix) and whether a step's *data* is plausible (Spec 79/120/30 §5.4.1's bound doctrine — **not bare "§5"**, Fold B-6, 2026-08-30: Spec 30 §5 is the CI/CD section; §5.4.1 is the runtime verdict/halting-semantics section the bound doctrine actually lives in). **The rule: "the validator validates DATA (Spec 79/120/30 §5.4.1); the scorecard validates process, from structured artifacts."** Both halves are now BUILT: the scorecard half (G0–G9, as specified above) and the DATA half — `invariants[]`/`plausibility[]` bounds (threshold-derived/reachable/last-measured-value-beside-the-bound, §9 below), the seam-validation pass (`scripts/lib/step/seam.js` — over `inputs.reads.steps[]` declared step-edges, corrected from the original "`outputs.invalidates` edges" phrasing: that category is `{table,column,when}`-shaped, a step's own re-eligibility scope, not a producer→consumer edge — closes VAL-3/LDG-2/LDG-7's concern), chain-end synthesis automation (`scripts/analysis/chain-end-synthesis.mjs`, the `sources` chain's roll-up + the declared cloud trigger for `validate_only` invariants, Ask 6(b)), and R-U's chain-run correlation (`records_meta.chain_run_id`, below) that both the seam pass and chain-end synthesis join on. The layer table above states WHERE each half lives (descriptor declares, library executes, compute only measures). **The DATA/PROCESS split has a SECOND enforcement point, not just declaration (Fold B-3):** every synthetic invariant/plausibility row carries a REQUIRED, closed `source: check|invariant|plausibility` field distinct from `kind` (`scripts/lib/step/verdict.js`'s `checkRow`) — so a consumer reading only the EMITTED audit table (never the descriptor) can still tell a DATA row from a PROCESS row without re-deriving it from naming convention; chain-end synthesis and `step-validate.mjs`'s scorer both key off this field. **Scoped as BUILT, not fully DE-REGEXED**: the scorecard's own six prose-regex gates (`G0`/`G1`/`G3`/`G4`/`G5`/`G9`, `section()`/`splitTableRow()`-scraped from free-form report text) are UNCHANGED — only `G2`'s vacuous-green (Spec 123 §6's own documented defect) and the defect-ledger/`notes.json` strict-row-schema parse (`G6`/`G7`/`G4d`) were fixed, per Ask 3's own scoped default; the larger de-regex lift is filed as `nice_to_have` in `programme-items.json` (§9 below), not silently dropped. Programme item `VAL-WF2` (`batching_prereq`) CLOSES with this commit; `REGEXSC` is `SUPERSEDED` by it (unchanged from the original filing); `G2` is `PARTIAL` — the vacuous-green half closes here, the churn×complexity-plot BUILD half stays its own `S6b` item (operator ruling 2026-08-25 decision 2, `review_followups.md:2994`, unchanged).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+index 763216acc64b9298fff7f6497128ad440234023c..6429c107d30b566b43f95f2acc7f3fbcf127099c 100644
+--- a/docs/reports/generated/rule-lists-by-kind.md
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -17,10 +17,10 @@ Example Files line: `scripts/steps/_schema/converted.json, scripts/load-permits.
+ | airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+-| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 7,525 | 1 |
++| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 10 lists | | 195,941 | 10 |
++| total | 10 lists | | 197,241 | 10 |
+ 
+ ## McFrontend web
+ 
+@@ -29,21 +29,21 @@ Example Files line: `src/components/report/, scripts/surfaces/parcel_product/F02
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+-| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
+-| airtight-124a | docs/specs/01-pipeline/124a_step_standard_policy_appendix.md | Appendix §B10; Appendix §B12 | 38,138 | 1 |
+-| airtight-v3-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 5.5 Condition 4 | 5,017 | 1 |
+-| airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
+-| airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
+ | surface-136 | docs/specs/02-web-admin/136_mcfrontend_handbook.md | 2. Rules | 13,783 | 1 |
+ | surface-126 | docs/specs/02-web-admin/126_maxbld_surface_standard.md | whole file | 256,412 | 4 |
+ | surface-127 | docs/specs/02-web-admin/127_surface_conversion_procedure.md | whole file | 50,606 | 1 |
+ | surface-128 | docs/specs/02-web-admin/128_surface_standard_policy.md | whole file | 77,169 | 1 |
+ | surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file | 84,215 | 1 |
++| step-132 | docs/specs/01-pipeline/132_step_standard_handbook.md | 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check | 47,779 | 1 |
++| airtight-124a | docs/specs/01-pipeline/124a_step_standard_policy_appendix.md | Appendix §B10; Appendix §B12 | 38,138 | 1 |
++| airtight-v3-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 5.5 Condition 4 | 5,017 | 1 |
++| airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
++| airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+-| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 7,525 | 1 |
++| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 15 lists | | 678,126 | 18 |
++| total | 15 lists | | 679,426 | 18 |
+ 
+ ## phone
+ 
+@@ -63,10 +63,10 @@ Example Files line: `mobile/src/app/`; type build; milestone group [S].
+ | surface-135 | docs/specs/02-web-admin/135_mcfrontend_decisions_register.md | whole file | 84,215 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+-| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 7,525 | 1 |
++| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 15 lists | | 765,116 | 18 |
++| total | 15 lists | | 766,416 | 18 |
+ 
+ ## storage
+ 
+@@ -84,10 +84,10 @@ Example Files line: `src/lib/parcels/report-compute.ts`; type build; milestone g
+ | airtight-v2-122 | docs/specs/01-pipeline/122_pipeline_step_optimization.md | 6.6.1 Registry and ledger truth | 10,424 | 1 |
+ | airtight-122a | docs/specs/01-pipeline/122a_step_optimization_appendix.md | Appendix §A26; Appendix §A27 | 12,237 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+-| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 7,525 | 1 |
++| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 13 lists | | 568,370 | 16 |
++| total | 13 lists | | 569,670 | 16 |
+ 
+ ## tooling
+ 
+@@ -95,16 +95,16 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
+ 
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+-| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 4,727 | 1 |
++| agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 13,405 | 1 |
+ | agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 27,384 | 1 |
+-| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 27,664 | 1 |
++| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 29,969 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+ | orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+-| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 7,525 | 1 |
++| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 9 lists | | 173,691 | 9 |
++| total | 9 lists | | 185,974 | 9 |
+ 
+ ## spec-only
+ 
+@@ -112,12 +112,12 @@ Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; miles
+ 
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+-| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 27,664 | 1 |
++| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 29,969 | 1 |
+ | agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 27,384 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+-| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 7,525 | 1 |
++| plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 7 lists | | 137,394 | 7 |
++| total | 7 lists | | 140,999 | 7 |
+ 
+diff --git a/docs/specs/00-architecture/08_agents.md b/docs/specs/00-architecture/08_agents.md
+index d7b586247fa56bfa5524a8afcc3896a44e8e0429..dd6063128e35ffcdb558af9fe7e9439a6fd0d4ec 100644
+--- a/docs/specs/00-architecture/08_agents.md
++++ b/docs/specs/00-architecture/08_agents.md
+@@ -227,6 +227,16 @@ Deeper notes for the roles whose value, dependencies, or gating need spelling ou
+ Not a new agent — a **mandatory second pass**. After the panel returns findings, run **DeepSeek + Integration against the *proposed findings/changes*** (not the code): for each finding, is the premise true, is the ruling already settled, does the fix cost less than the risk? This operationalizes manual §6.3 (⅓ false premises). Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8). Round-2 is cheap (DeepSeek) and catches the eager-fix (§8.4).
+ 
+ Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2, lane BL-COMPLY2, Increment 1·B; the infra freeze is lifted for it by name; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the 2026-11-20 entries: "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." and "yes to McStorage and 1,2,3 yes as recommended" (the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table)): the mechanical half of section 7 rule 4 and section 5.3 is built in the repo. (1) `scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code, says which rule lists (whole files, or whole sections where the file itself separates rules from history) govern a touched path; it reuses the path maps of `mcbylaws/protected-paths.json` (`layer23`, `frontend`) instead of copying them. (2) `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through it, refuses a task with no Files line (a record-only task gets the queue lists) or an unmatched path with the path named, puts the governing lists into the brief (READ each whole before planning) and runs the compliance lens once per list with the list pasted whole ahead of the plan or diff (`scripts/analysis/rule-lists.mjs lens-input`; a list is split by its own headings when list plus material pass the review tool bound, never trimmed). (3) `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane) with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding of the lens outputs; presence and form only, the judgement stays with the grounder (rule 4: a separate grounder rules on every finding; this section: rejections carry reasons). The lane that wrote the work leaves the task RUNNING with "grounder owed".
++
++Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOLE, Increment 1·B; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y", item 4 as put to him: "Keep the split for code review, error paths, UX and security"): the whole change goes to the reviewer and the close check proves it. (1) `scripts/analysis/rule-lists.mjs lens-input` cuts a diff that leaves no room (counting the rendered stamp, head and path list) into chunks at FILE boundaries, the tool and never by hand; each chunk goes against every list part and is stamped chunk c of m with its path list; one file alone over the room is refused naming it. With no `--list` and a lens template it writes the same chunks for code-review, error-paths, ux and security (the split the operator kept). (2) `scripts/hooks/check-lane-close.mjs` takes the task's launch commit L (the first board commit on the base ref, first-parent, that holds the lane assignee on the task file; refused when none or not an ancestor of HEAD) and requires that every file changed from L to HEAD that the Files line covers, minus the exempt paths, is in exactly one chunk whose text equals what `git diff` (the pinned flag set `DIFF_ARGS`) prints for it. The rule-list table (lists, rows, every_task, exempt, protected paths, base_ref), the lens templates and the task type are read from the range base or the launch copy, so an earlier commit of the lane cannot trim or widen them; a lane that changes exempt or base_ref is refused; a task whose Files line names the table is judged by its branch table with every field that decides what is reviewed still taken from the base. Each committed input is regenerated from its stamp and compared; each compliance and lens output's prompt_sha256 is recomputed from the template, the input and the context (the tool's placeholder today; the hook point is `lensContexts` for task-375); an unsplit lens output's file hash must be that of the recomputed whole diff; a lane build or fix close stages only its lane report directory, the review context directory, task files and decision records. Known limits, not built here: a clause spanning two files is judged in two chunk runs; a hand-written output whose author computed the public hashes passes; moving the board ref by a forbidden command is refused by the lane guard, not by this check; plan-phase compliance outputs for a build task (task-404) and the reviewer context (task-375).
++
++Dated note 2026-11-20 (M-246, prior text kept; correction to the task-410 note above, grounder round 3; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentence above that the rule-list table and its protected paths cannot be trimmed or widened by an earlier commit of the lane was too wide. What `scripts/hooks/check-lane-close.mjs` enforces now is exactly this: (1) `base_ref`, `finished_statuses`, `protected_paths` and `exempt` are read from the board ref `refs/heads/wf2/board` (else `refs/remotes/origin/wf2/board`), and the task's launch commit is searched on that same ref; a lane whose own table differs from the board's in any of those four keys is refused, so a lane cannot cut the finished statuses, repoint the base to its own branch or widen the exempt paths (a task that changes them is refused too: those changes land on the board first). (2) The rest of the table (lists, rows, every_task) and the lens templates are read from the range base (the merge-base with that ref); a task whose Files line names the table is judged by its branch table for lists and rows, with every_task still from the base. (3) The task type, the lane assignee and the milestone are read from the launch copy of the task file; a lane that retypes or moves its task is refused. (4) `scripts/lib/review-template.js` and `scripts/deepseek-review.js`, which decide what a recomputed prompt hash proves, may not differ from the range base unless the task's launch Files line covers them. Not enforced: a hand-written output whose author computed the public hashes, and a board ref moved by a forbidden command (the lane guard refuses that command).
++
++Dated note 2026-11-20 (M-246, prior text kept; second correction to the task-410 notes above, grounder round 4; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentence above that the task type, the lane assignee and the milestone are read from the launch copy says more than the code did until this round. What `scripts/hooks/check-lane-close.mjs` does now: the lane assignee is the one on the staged task file, else the one on the HEAD copy, so dropping it or setting `@human` in the closing commit does not hide the lane; the task type, and the milestone, are read from the launch copy of the task file (the board commit that first holds that lane assignee on it), so retyping to doc or record in the closing commit does not skip the lens set; a lane build or fix task that drops its lane assignee at close is refused whatever type it then carries. A task close needs the board: the base, the deciding table keys and the launch commit come from `refs/heads/wf2/board` (else `refs/remotes/origin/wf2/board`), and a close in a clone with neither ref is refused with a clear line; a commit that moves no task does not read the board and is not refused for its absence.
++
++Dated note 2026-11-20 (M-246, prior text kept; third correction to the task-410 notes above, grounder round 5; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentences above that the task type and the lane assignee are read from the launch copy, or from the staged or HEAD copy, were not true after a lane dropped its assignee in an earlier commit. What `scripts/hooks/check-lane-close.mjs` does now: the task type and the lane assignee are read from the BOARD copy of the task file (found by task id on `refs/heads/wf2/board`, the ref the launch commit is searched on); a close whose board copy is a lane build or fix task is refused unless the closing copy is that same lane's build or fix task, whatever earlier commits did to the lane's own copy. The task id is the file's task number (a differing front-matter id is refused); the milestone is the launch copy's; the rule lists resolve from the union of the launch Files line and the staged one, so narrowing the line cannot drop a list; the assignees a grounder must differ from are the staged, HEAD and board ones together. The shared diff flags also pin `--diff-algorithm=myers`, `--indent-heuristic` and `--inter-hunk-context=0`, so a lane machine's diff configuration cannot change the text that is recomputed.
++
++Dated note 2026-11-20 (M-246, prior text kept; fourth correction to the task-410 notes above, grounder round 6; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator ORDERS task-410 finished", put to him: "after this round, fold 410 as an omission guard, named as that, with the forgery routes recorded on tasks 401 and 402 — yes (recommended) or no?"; his words: "Finsih it!"; the entry marks the reading that this is a yes to the question as put as the orchestrator's, not his words): `scripts/hooks/check-lane-close.mjs` is an OMISSION GUARD. It refuses a skipped review, a skipped rule list, an unreviewed changed file, a trimmed or stale review input, and a close without a separate grounder's file. It does not stop a lane that sets out to forge: a hand-written output with the right hashes; an earlier-commit edit of the lane's own working-tree copy of the check script, `scripts/analysis/rule-lists.mjs`, `scripts/analysis/mcbylaws/paths.mjs` or the commit-msg hook (such an edit changes what runs); a moved board ref. Those routes are owned by the fold-time tasks task-401 and task-402 (grounder file sha256 b3425b2c1d6c…). Also stated: a task number the board never held is refused at close (the board holds no copy of the file: type and lane assignee are read from the board copy, with no fallback to the lane's own copy), and a branch whose tree lacks the task file of a lane build or fix task whose lane directory it carries cannot close anything.
+ 
+ ### 5.4 Schema-Fidelity
+ **Question:** *Does every DB field this change reads/writes actually exist in the live schema with the assumed type, nullability, and constraints?* Cross-checks column existence, type, `NOT NULL` (+ default), `UNIQUE`/PK, FK, and `ON CONFLICT` arbiters against `docs/specs/00-architecture/01_database_schema.md` + the live `information_schema` + the generated `src/lib/db/generated/schema.ts`.
+diff --git a/docs/specs/00-architecture/137_mcqueue.md b/docs/specs/00-architecture/137_mcqueue.md
+index 98bb50065b414b9400d81ee3c1a6e3046b57c588..0bd7422911ebb0776eabc751470e4384b47e516a 100644
+--- a/docs/specs/00-architecture/137_mcqueue.md
++++ b/docs/specs/00-architecture/137_mcqueue.md
+@@ -96,6 +96,8 @@ Where the line sits. A row with a bold heading carries the line directly under t
+ Source: operator, 2026-11-14, verbatim: "y" (DECISIONS.md rule 2). Builds on the McFrontend queue head: "A task not listed here is not done." (`.cursor/MCFRONTEND-QUEUE.md`, first paragraph) and the McBylaws queue head (`.cursor/MCBYLAWS-QUEUE.md`, "Next free id" paragraph), and on the ID ledger (Spec 08 §11.8 MCINC-8: "Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere").
+ 
+ **Rule 3. The status line changes in the same commit as the work.** When work lands for a row, the commit that lands it edits that row's status line. This goes into every lane brief and the commit checklist. There is no tool. A lane and the orchestrator can edit the same line; the later commit replaces the earlier one, and the weekly snapshot (§5) reports any row where the line and what landed disagree.
++
++Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator AGREES the Rule 3 amendment and RULES on material too large to review", put to him: "amend Spec 137 Rule 3 so a lane task closes in a separate commit after its code — yes (recommended) or no?"; his words: "agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close."): Rule 3 is amended for lane build and fix tasks. The work lands first; the status moves in a separate closing commit that carries only the lane's records (its lane report directory, the review context directory, the task file, the decision record), because the close check (scripts/hooks/check-lane-close.mjs) proves the review covered code that is already committed. Every other task keeps Rule 3 as written.
+ Source: operator, 2026-11-14, verbatim: "y" (DECISIONS.md rule 3).
+ 
+ **Rule 4. The orchestrator writes each ruling into the row's status line the same day.** The scratch decision logs are logs only. A ruling is kept as a verbatim dated note on its row, in the M-246 form: `Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: "<words>")`.
+@@ -131,6 +133,10 @@ Source: operator, 2026-11-14, verbatim: "Just a question about G1 - we still nee
+ 
+ Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2, lane BL-COMPLY2, Increment 1·B; the infra freeze is lifted for it by name; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the 2026-11-20 entries: "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." and "yes to McStorage and 1,2,3 yes as recommended" (the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table)): the close of a lane's task (rule 3 of this section: the status line changes in the same commit as the work) now also needs, in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`), one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding; `scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them. Which lists a task attaches is decided by `scripts/analysis/rule-lists.json` from the task's Files line (the launch refuses a task whose Files line is missing or matches no row).
+ 
++Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOLE; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y", item 4 as put to him: "Keep the split for code review, error paths, UX and security"): the commit that sets BUILT or DONE on a lane build or fix task is also refused (scripts/hooks/check-lane-close.mjs) when a file changed from the task's launch commit that its Files line covers is not in a review chunk, when a chunk, an input or an output hash does not match, and when the closing commit stages a path other than the lane's report directory, the task's review context directory, task files and decision records. Rule 3 is unchanged: the status line moves in the commit that closes the task, after the work commits that the review covered.
++
++Dated note 2026-11-20 (M-246, prior text kept; correction to the task-410 note above): its closing sentence says Rule 3 is unchanged. That is corrected by the Rule 3 note under Rule 3 (same date, same task): for lane build and fix tasks Rule 3 is amended to the two-commit close, the operator having agreed ("agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close."); every other task keeps Rule 3 as written.
++
+ ## 5. The weekly snapshot
+ 
+ A procedure. No tool and no code.
+diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
+index 391e9f37ec2a8a056a5b56a77f96105b19df7a4c..2f98237749756e1131c9a301efb1d148a843820f 100644
+--- a/scripts/analysis/backlog-lane.mjs
++++ b/scripts/analysis/backlog-lane.mjs
+@@ -20,7 +20,7 @@ import fs from 'node:fs';
+ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ import { args, asList, descriptionOf, home, parseFM, readItems, REPO, sha256, today } from './backlog-lib.mjs';
+-import { DEFAULT_TABLE, filesText, lensSet, milestoneLetter, readTable, resolveTask, verifyResolved } from './rule-lists.mjs';
++import { DEFAULT_TABLE, DIFF_ARGS, filesText, lensSet, milestoneLetter, readTable, resolveTask, verifyResolved } from './rule-lists.mjs';
+ 
+ const a = args();
+ const str = (k, d) => (a[k] && a[k] !== true ? String(a[k]) : d);
+@@ -149,9 +149,10 @@ const lensLine = (task, ctx, lists) => {
+   const f = (l) => (l === 'plan-review-deepseek' ? 'plan-review-deepseek.md' : `lens-${l}.md`);
+   const cmd = 'DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review';
+   const ids = lists.map((l) => l.id);
+-  const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed): for each list id L and each phase P (plan: material = ${ctx}; out: material = the diff file), \`node scripts/analysis/rule-lists.mjs lens-input --list L --material <material> --out <lane dir>/in-P-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md > P-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'plan-compliance-' + i + '.txt, out-compliance-' + i + '.txt').join('; ')}. Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list, an out-<lens>.txt for every other output lens named above, a plan-stage output (plan-<lens>.txt), and the grounder file below (scripts/hooks/check-lane-close.mjs).`;
++  const baseFull = /^refs\//.test(ruleTable?.base_ref ?? '') ? ruleTable.base_ref : `refs/heads/${ruleTable?.base_ref ?? 'wf2/board'}`;
++  const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed): for each list id L and each phase P (plan: material = ${ctx}; out: material = the diff file), \`node scripts/analysis/rule-lists.mjs lens-input --list L --material <material> --out <lane dir>/in-P-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md > P-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'plan-compliance-' + i + '.txt, out-compliance-' + i + '.txt').join('; ')}. Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list, an out-<lens>.txt for every other output lens named above, a plan-stage output (plan-<lens>.txt), and the grounder file below (scripts/hooks/check-lane-close.mjs).`;
+   // task-407 (V2.LAYOUT): the one place the close check reads (scripts/hooks/check-lane-close.mjs: lane files at path depth 6, plan-*.txt / out-*.txt, in- beside them), said in every brief
+-  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; a later (fix) round (r2, r3, ...) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: lens-input splits the rule list at its headings into parts -p1..-pN and puts the whole diff in every part; the diff is never split or trimmed to core files; a diff too large for one part is refused by lens-input: report that to the orchestrator at once.`;
++  const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; a later (fix) round (r2, r3, ...) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with \`git -c core.quotepath=false diff ${DIFF_ARGS.join(' ')} $(git log ${baseFull} --first-parent --reverse --format=%H -S@lane-${lane} -- '${'backlog/tasks/' + path.basename(task.file)}' | head -1) HEAD -- ${filesText(task.body).split(',').map((s) => s.trim()).filter(Boolean).map((e) => (/[*?]/.test(e) ? `'${':(glob)'}${e}'` : `'${e}'`)).join(' ')} ${(ruleTable?.exempt ?? []).map((g) => `'${':(exclude,glob)'}${g}'`).join(' ')}\` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (\`lens-input --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md\`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited.`;
+   const grounder = ' Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy plan-*.txt, out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY plan-*.txt and out-*.txt (rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote on that line>" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it.';
+   return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Plan review lenses: ${plan.map(f).join(', ')}, each \`${cmd} ${ctx} --template .claude/review-templates/<lens file> --context <pasted-context file>\` (the context file is the plan and its pasted rulings; the pasted-context file holds the spec clauses and rulings, the same file as for the output lenses; without --context a lens sees "(no pasted context provided)"). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> --context <pasted-context file>\`. ${per}${layout} Run the lenses of each review in parallel, one call each, outputs plan-<lens>.txt and out-<lens>.txt in the lane report dir; then a separate grounder rules every finding in GROUNDER.md (below).${grounder}`;
+ };
+diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
+index 88293741ff4abbc782341e33271cf592e0812b5e..90e9c71aa44d3cf554afa21cd384e5bdd8c8a70a 100644
+--- a/scripts/analysis/rule-lists.mjs
++++ b/scripts/analysis/rule-lists.mjs
+@@ -3,9 +3,12 @@
+ // Used by scripts/analysis/backlog-lane.mjs (attach at launch), scripts/hooks/check-lane-close.mjs (require at close) and this file's own CLI:
+ //   validate [--table f] [--root dir]                      every list file exists, every section selector names exactly one heading, every glob matches a tracked path
+ //   resolve --files "<Files line>" [--type t] [--letter L]   the lists a Files line attaches (JSON); exit 3 with one line when refused
+-//   lens-input --list id --material f --out prefix [--template f] [--max n]
++//   lens-input [--list id] --material f --out prefix [--template f] [--max n]
+ //                                                           the compliance lens input: the list FIRST, then the material; split by the list's own headings when list +
+-//                                                           material would pass the review tool bound; never trims; exit 1 when it cannot fit
++//                                                           material would pass the review tool bound; never trims; exit 1 when it cannot fit. V2.WHOLE (task-410): when the material is
++//                                                           a git diff that leaves no room for a list part, the TOOL splits it at FILE boundaries into chunks (each chunk against every list
++//                                                           part, stamped chunk c of m with its path list); one file alone over the room is refused naming it. No --list: the same chunks for
++//                                                           a non-compliance lens template (an empty list part)
+ //   check-tasks [--table f] [--root dir]                    every open task of backlog/tasks: resolves (with the every_task and milestone lists verified) or is listed by id as not yet resolvable, with the reason
+ //   page [--write|--check] [--table f] [--root dir]          the generated page docs/reports/generated/rule-lists-by-kind.md: per kind of work the documents, sizes and part counts
+ //   findings --dir d                                        the finding ids of the lens outputs in d (<file stem>#<ordinal among BUG and DEFER lines>)
+@@ -24,6 +27,22 @@ export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');
+ const BOUND = 120000; // scripts/deepseek-review.js MAX_PROMPT_CHARS
+ const RESERVE = 800; // stamp, header and separator of one lens input file
+ const MARKER = '\n=== MATERIAL UNDER REVIEW (everything below this line) ===\n';
++/** V2.WHOLE (task-410): the one diff command the brief, the lens input and the close check share (every flag pinned, so the text is the same on every machine). */
++// --text and --full-index (V2.WHOLE fix round): a .gitattributes line `*.ts -diff` makes git print "Binary files differ" for code; --text prints the text whatever the attributes say, --full-index fixes the index line length
++export const DIFF_ARGS = ['--no-ext-diff', '--no-textconv', '--text', '--full-index', '--diff-algorithm=myers', '--indent-heuristic', '--inter-hunk-context=0', '--no-color', '--no-renames', '--src-prefix=a/', '--dst-prefix=b/', '-U3'];
++/** A git diff cut at its file headers: [{path, text}] in order, or null when the text is not a diff (does not start at a header). Content lines carry a prefix, so a file whose own text says "diff --git" is never cut. */
++export function splitDiff(text) {
++  const at = [...text.matchAll(/^diff --git /gm)].map((m) => m.index);
++  if (at.length === 0 || at[0] !== 0) return null;
++  return at.map((s, i) => {
++    const seg = text.slice(s, at[i + 1] ?? text.length);
++    const rest = seg.split('\n', 1)[0].slice('diff --git a/'.length);
++    const p = rest.slice(0, (rest.length - 3) / 2);
++    if (!seg.startsWith('diff --git a/') || `${p} b/${p}` !== rest) throw new Error(`cannot read the path in the diff file header "${seg.split('\n', 1)[0].slice(0, 160)}": git quotes names with non-ASCII characters, quotes or tabs and prints rename headers; make the diff with the command in the brief (git -c core.quotepath=false diff with DIFF_ARGS, which has --no-renames) and rename a file whose name has a quote or a tab`);
++    return { path: p, text: seg };
++  });
++}
++export const diffPaths = (text) => (splitDiff(text) ?? []).map((s) => s.path);
+ 
+ export const readTable = (file = DEFAULT_TABLE) => JSON.parse(fs.readFileSync(file, 'utf8'));
+ export function trackedFiles(root) {
+@@ -275,7 +294,7 @@ export function findingsIn(files) {
+ function splitUnits(text, max, label, id) {
+   if (text.length <= max) return [text];
+   const subs = headings(text).filter((h) => h.offset > 0);
+-  if (subs.length === 0) throw new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading to split at (room for list text in one file: ${max})`);
++  if (subs.length === 0) throw Object.assign(new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading to split at (room for list text in one file: ${max})`), { room: true, size: text.length });
+   const level = Math.min(...subs.map((h) => h.level));
+   const cuts = [0, ...subs.filter((h) => h.level === level).map((h) => h.offset), text.length];
+   const out = [];
+@@ -285,7 +304,31 @@ function splitUnits(text, max, label, id) {
+   }
+   return out;
+ }
+-/** The lens input files for one list: [{suffix, text}]. The list part comes first, whole; the material follows. Throws when a part cannot fit (never trims). */
++/** The text of one lens input file, exactly as lens-input writes it (the close check regenerates it from the stamped parts and compares). `list` null: no rule list. `paths` null: material that is not a diff. */
++export function renderLensInput({ id, list, part, i, n, material, paths, c, m }) {
++  const sel = list ? (list.whole ? 'whole file' : `sections ${list.sections.join('; ')}`) : '';
++  const mark = paths ? ` chunk ${c} of ${m}` : '';
++  const what = list ? `RULE LIST ${id} (${list.file}, ${sel}), part ${i} of ${n}. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.` : 'NO RULE LIST: the lens template alone judges the material under review.';
++  const head = `${what}${paths ? ` The material is chunk ${c} of ${m} of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ${JSON.stringify(paths)}` : ''}`;
++  const stamp = `LIST ${list ? id : 'none'} sha256:${sha256(Buffer.from(part))} material sha256:${sha256(Buffer.from(material))} part ${i} of ${n}${mark}`;
++  return `${stamp}\n${head}\n\n${part}${MARKER}${material}\n`;
++}
++/** The prompt hash the review tool writes in its REVIEW header: sha256 of JSON [system, user] for a lens template, the input file as {{PLAN}} and the context as {{SPECS}} (today the tool's placeholder string; a task that passes a real context file passes its text here). */
++export function lensPromptHash({ templateText, inputText, context = '(no pasted context provided)' }) {
++  const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
++  const split = rt.splitTemplate(templateText);
++  const system = split.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.";
++  const user = rt.substitutePlaceholders(split.userTemplate, { plan: inputText, specs: context, dataContext: '(no live-DB context provided)' });
++  return sha256(Buffer.from(JSON.stringify([system, user])));
++}
++
++/**
++ * The lens input files for one list: [{suffix, text}]. The list part comes first, whole; the material follows. Throws when a part cannot fit (never trims).
++ * V2.WHOLE (task-410): when the material leaves no room for a list part and is a git diff, the TOOL cuts it at file boundaries into chunks (packed in diff order, each at most the room
++ * left beside the list part); every chunk goes against every list part, files are -p1..-pN chunk by chunk (N = chunks x list parts), and each input is stamped "chunk c of m" with
++ * its path list. One file alone over the room is refused naming the file and its size. A diff is always stamped (chunk 1 of 1 when it fits), so the close check reads paths from the stamp.
++ * `list` null (a non-compliance lens template): the same chunks with an empty list part, id "none".
++ */
+ export function buildLensInputs({ id, list, root, material, templateFile, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {
+   const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
+   const split = rt.splitTemplate(fs.readFileSync(templateFile, 'utf8'));
+@@ -293,26 +336,60 @@ export function buildLensInputs({ id, list, root, material, templateFile, max =
+   const k = (split.userTemplate.match(/\{\{PLAN\}\}/g) ?? []).length || 1;
+   const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
+   const avail = Math.floor((max - fixed - 200) / k);
+-  const unitMax = avail - material.length - RESERVE;
+-  if (unitMax < 200) throw new Error(`material is ${material.length} characters; with the lens template (${fixed} fixed characters, the plan placeholder used ${k}x) at most ${avail} characters fit one file, leaving ${unitMax} for the list: split the material (a list is never trimmed)`);
+-  const units = listBlocks(list, root, id).flatMap((b) => splitUnits(b.text, unitMax, b.label, id));
+-  const parts = [];
+-  let cur = [];
+-  let len = 0;
+-  for (const u of units) {
+-    if (cur.length && len + u.length + 1 > unitMax) { parts.push(cur.join('\n')); cur = []; len = 0; }
+-    cur.push(u); len += u.length + 1;
++  const room = (msg, size) => Object.assign(new Error(msg), { room: true, size });
++  const partsFor = (unitMax) => {
++    if (!list) return [''];
++    const units = listBlocks(list, root, id).flatMap((b) => splitUnits(b.text, unitMax, b.label, id));
++    const parts = [];
++    let cur = [];
++    let len = 0;
++    for (const u of units) {
++      if (cur.length && len + u.length + 1 > unitMax) { parts.push(cur.join('\n')); cur = []; len = 0; }
++      cur.push(u); len += u.length + 1;
++    }
++    if (cur.length) parts.push(cur.join('\n'));
++    return parts;
++  };
++  const segs = splitDiff(material);
++  let chunks = [{ text: material, paths: segs ? segs.map((s) => s.path) : null }];
++  let parts;
++  try {
++    const unitMax = avail - material.length - RESERVE;
++    if (unitMax < (list ? 200 : 0)) throw room(`material is ${material.length} characters; with the lens template (${fixed} fixed characters, the plan placeholder used ${k}x) at most ${avail} characters fit one file, leaving ${unitMax} for the list: split the material (a list is never trimmed)`);
++    parts = partsFor(unitMax);
++    // F13: the room test above is an estimate; when the FINAL prompt (stamp, head with the path list, marker) of the widest part would pass the bound, the material is chunked too
++    const widest = parts.reduce((x, y) => (y.length > x.length ? y : x), '');
++    const finalLen = sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: widest, i: parts.length, n: parts.length, material, paths: segs ? chunks[0].paths : null, c: 1, m: 1 }), specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++    if (finalLen > max) throw room(`the input with the rendered head would be ${finalLen} characters, over the ${max} bound`, widest.length);
++  } catch (e) {
++    if (!e.room || !segs) throw e;
++    // the material is a diff: cut it at file boundaries. The list part gets half the room (more when one of its blocks cannot be split), never so much that the largest file cannot ride beside it.
++    const big = segs.reduce((x, y) => (y.text.length > x.text.length ? y : x));
++    let listRoom = list ? Math.max(0, Math.min(Math.floor(avail / 2), avail - RESERVE - big.text.length)) : 0;
++    for (;;) {
++      if (avail - RESERVE - listRoom < big.text.length) throw new Error(`file ${big.path} is ${big.text.length} characters of diff and cannot be split inside a file: at most ${avail - RESERVE - listRoom} fit one input beside the rule list part of ${listRoom} (bound ${max}); report it to the orchestrator`);
++      try { parts = partsFor(listRoom); break; } catch (x) { if (!x.room || !(x.size > listRoom)) throw x; listRoom = x.size; }
++    }
++    // the room of a chunk is MEASURED (V2.WHOLE fix round): the stamp, the head with the chunk's own path list and the marker are rendered for the longest list part and counted, so a long path list cannot push an input over the bound
++    const longest = parts.reduce((x, y) => (y.length > x.length ? y : x), '');
++    const promptOf = (paths, text) => sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: longest, i: 99999, n: 99999, material: text, paths, c: 99999, m: 99999 }), specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++    chunks = [];
++    for (const s of segs) {
++      const last = chunks[chunks.length - 1];
++      if (last && promptOf([...last.paths, s.path], last.text + s.text) <= max) { last.text += s.text; last.paths.push(s.path); continue; }
++      const alone = promptOf([s.path], s.text);
++      if (alone > max) throw new Error(`file ${s.path} is ${s.text.length} characters of diff and cannot be split inside a file: with the rule list part (${longest.length} characters), the stamp and the head the input would be ${alone} characters, over the ${max} bound; report it to the orchestrator`);
++      chunks.push({ text: s.text, paths: [s.path] });
++    }
+   }
+-  if (cur.length) parts.push(cur.join('\n'));
+-  const sel = list.whole ? 'whole file' : `sections ${list.sections.join('; ')}`;
+-  const files = parts.map((p, i) => {
+-    const head = `RULE LIST ${id} (${list.file}, ${sel}), part ${i + 1} of ${parts.length}. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.`;
+-    const stamp = `LIST ${id} sha256:${sha256(Buffer.from(p))} material sha256:${sha256(Buffer.from(material))} part ${i + 1} of ${parts.length}`;
+-    const text = `${stamp}\n${head}\n\n${p}${MARKER}${material}\n`;
++  const files = [];
++  chunks.forEach((ch, ci) => parts.forEach((p, i) => {
++    const text = renderLensInput({ id, list, part: p, i: i + 1, n: parts.length, material: ch.text, paths: ch.paths, c: ci + 1, m: chunks.length });
+     const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
+     if (prompt > max) throw new Error(`list ${id}: part ${i + 1} would be ${prompt} characters, over the ${max} bound`);
+-    return { suffix: parts.length === 1 ? '' : `-p${i + 1}`, text };
+-  });
++    const n = ci * parts.length + i + 1;
++    files.push({ suffix: files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });
++  }));
+   return files;
+ }
+ 
+@@ -321,14 +398,17 @@ export function buildLensInputs({ id, list, root, material, templateFile, max =
+  * and checks that the parts of a list together carry the WHOLE list (whitespace aside), so a list cannot be shortened or softened and re-stamped.
+  */
+ export function parseLensInput(text) {
+-  const m = /^LIST (\S+) sha256:([0-9a-f]{64}) material sha256:([0-9a-f]{64}) part (\d+) of (\d+)\n/.exec(text);
++  const m = /^LIST (\S+) sha256:([0-9a-f]{64}) material sha256:([0-9a-f]{64}) part (\d+) of (\d+)(?: chunk (\d+) of (\d+))?\n/.exec(text);
+   if (!m) return null;
+   const l1 = text.indexOf('\n', text.indexOf('\n') + 1);
+   const mi = text.indexOf(MARKER);
+   if (l1 < 0 || mi < 0) return null;
+   const listPart = text.slice(l1 + 2, mi);
+   const material = text.slice(mi + MARKER.length).replace(/\n$/, '');
+-  return { id: m[1], listSha: m[2], materialSha: m[3], part: Number(m[4]), parts: Number(m[5]), listPart, material, ok: sha256(Buffer.from(listPart)) === m[2] && sha256(Buffer.from(material)) === m[3] };
++  const pm = / paths: (\[.*\])$/.exec(text.slice(0, l1));
++  let paths = null;
++  try { paths = pm ? JSON.parse(pm[1]) : null; } catch { paths = null; }
++  return { id: m[1], listSha: m[2], materialSha: m[3], part: Number(m[4]), parts: Number(m[5]), chunk: m[6] === undefined ? undefined : Number(m[6]), chunks: m[7] === undefined ? undefined : Number(m[7]), paths, listPart, material, ok: sha256(Buffer.from(listPart)) === m[2] && sha256(Buffer.from(material)) === m[3] };
+ }
+ /** The text of a whole list as the helper reads it (all blocks), for the whole-list comparison. */
+ export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');
+@@ -412,10 +492,11 @@ function cli() {
+     console.log(JSON.stringify(r, null, 2));
+   } else if (cmd === 'lens-input') {
+     const id = str('list', '');
+-    const list = table.lists[id];
+-    if (!list) die(1, `no list ${id} in ${tableFile}`);
++    const list = id ? table.lists[id] : null; // no --list: a non-compliance lens template, the chunks alone (V2.WHOLE)
++    if (id && !list) die(1, `no list ${id} in ${tableFile}`);
++    if (!id && !a.template) die(2, 'usage: lens-input needs --list <id>, or --template <lens file> alone to split the material for a non-compliance lens');
+     const matFile = str('material', ''); const outPrefix = str('out', '');
+-    if (!matFile || !outPrefix || !fs.existsSync(matFile)) die(2, 'usage: lens-input --list <id> --material <file> --out <prefix> [--template <lens file>] [--max <n>]');
++    if (!matFile || !outPrefix || !fs.existsSync(matFile)) die(2, 'usage: lens-input [--list <id>] --material <file> --out <prefix> [--template <lens file>] [--max <n>]');
+     if (a.max !== undefined && !(Number.isFinite(Number(a.max)) && Number(a.max) > 0)) die(1, `--max must be a positive number (got ${a.max}); the bound has to be enforced`);
+     let files;
+     try { files = buildLensInputs({ id, list, root, material: fs.readFileSync(matFile, 'utf8'), templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }
+

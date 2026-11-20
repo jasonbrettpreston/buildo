@@ -1,0 +1,15 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T22:39:40.085Z file_sha256=9dd71a0f233e359450bed6ae1ef256fc84bc0b2432ca7eedf8622ffeae9f539a prompt_sha256=dbce99811d9eb0af4c5abac7fd57bd0dbde854e4989219381f4990762676a473
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-five-words-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — rule list header "Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs." — src/tests/backlog/check-lane-close.logic.test.ts:419 "// V2.WHOLE fix round (grounder 2026-11-20, attacks e, f, g binary, h, k): each planted defect has a passing control (the default scenario)." — the block locks obligations that exist only in an unpasted grounder ruling, and the same file locks an unpasted operator item at line 497 "a golden the existing golden check validates (a <state>.<target>.json under the golden folder, named in the table exempt with its check in exempt_why)", so neither can be judged clause by clause against this pasted part — paste the grounder and operator ruling text into the context, or cite in each describe the rule-map id the ruling lands in.
+DEFER severity=LOW — #NN "Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates." — src/tests/backlog/check-lane-close.logic.test.ts:386 "refused(scenario({ ...SPLIT, split: { max: 4000, skip: 'src/f3.ts' } }), /src\/f3\.ts/, 15);" — the trailing integers 15 through 51 are bare, carry no rule id or invariant reference, and the pasted part gives only one meaning for a cited number, an invariant or gate that must exist in step-validate.mjs, which these do not claim to be — state what the third argument is, or drop it.
+MET — lock / lock-db / check / hook "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/backlog/check-lane-close.logic.test.ts:376 "describe('close check: the review material is the whole change (V2.WHOLE)', () => {" — the new cases live under src/tests/ and every new block names the rule id V2.WHOLE, matching the file's existing V2.LIST convention, and each refuses or asserts it.
+REJECT — five words "STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates" — the material is accused of never recording a PASS or FAIL for the five words — not a real issue, gate V is computed in scripts/analysis/step-validate.mjs and the pasted part places it there, which this test-only diff does not touch, so the record is located elsewhere by the clause itself.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 28   Unmet: 0
+
+---
+⏱  65819ms (65.8s)
+📊 Tokens — total: 31386, input: 18151, output: 13235, reasoning: 12611
