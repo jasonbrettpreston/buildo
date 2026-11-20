@@ -322,8 +322,8 @@ function check(msgFile) {
   const boardRef = BOARD_REFS.find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0) ?? null;
   let boardTable = null;
   if (boardRef) { const bx = git(['show', `${boardRef}:scripts/analysis/rule-lists.json`]); try { boardTable = bx.status === 0 ? JSON.parse(bx.stdout) : null; } catch { boardTable = null; } }
-  if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: the keys that decide what is checked come from the board (fail closed)`]);
-  const finished = new Set((boardTable.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
+  // a commit that moves no task never needs the board (round 5): the finished statuses default until a move is found, then the board is required
+  const finished = new Set((boardTable?.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
   const staged = git(['diff', '--cached', '--name-only', '--no-renames']).stdout.split('\n').filter(Boolean);
   const taskFiles = staged.filter((f) => /^backlog\/tasks\/task-\d+( -.*)?\.md$/i.test(f));
   const moves = [];
@@ -339,6 +339,7 @@ function check(msgFile) {
     moves.push({ f, now: now.stdout, fm, headFm, status });
   }
   if (moves.length === 0) return 0;
+  if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: a task close needs the board, because the keys that decide what is checked and the task's launch commit come from it (fail closed)`]);
   const errors = [];
   // self-edit: the check, its table, its helper, the review tool and the hooks may not change in a commit that also closes a task
   const prot = staged.filter((p) => matchesAny(boardTable.protected_paths ?? [], p));
@@ -371,8 +372,9 @@ function check(msgFile) {
   for (const mv of moves) {
     const id = String(mv.fm.id ?? mv.f).toLowerCase().replace(/^task-0*/, 'task-');
     const assignees = asList(mv.fm.assignee).map(String);
-    const laneAssign = assignees.find((a) => /^@lane-/.test(a));
-    const laneName = laneAssign?.replace(/^@lane-/, '');
+    // H8: the lane assignee is the staged one, else the one the HEAD copy holds, so dropping it (or setting @human) in the closing commit cannot hide the lane
+    const laneAssign = assignees.find((a) => /^@lane-/.test(a)) ?? asList(mv.headFm.assignee).map(String).find((a) => /^@lane-/.test(a));
+    const laneName = assignees.map((a) => /^@lane-(.+)$/.exec(a)?.[1]).find(Boolean);
     // F8 + F11: the task as it was taken. L is the board commit that first holds the lane assignee on the task file (the lane cannot choose it); type, assignee and the Files line are read from that copy
     let L = null;
     let baseTask = null;

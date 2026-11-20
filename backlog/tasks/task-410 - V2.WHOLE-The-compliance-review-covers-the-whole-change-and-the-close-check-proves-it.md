@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2WHOLE'
 created_date: '2026-11-20T17:52:00Z'
-updated_date: '2026-11-20T21:26:00Z'
+updated_date: '2026-11-20T21:45:00Z'
 labels:
   - McFix
   - McFix V2
@@ -98,4 +98,8 @@ Tests first (red as failing assertions through the pre-commit related run): rule
 2026-11-20 round 4 landed: 98c9f9a8e (check-lane-close.mjs H1 H3 H4), 3852f74e9 (correcting dated note). Lens set re-run on the final range. Task stays RUNNING, grounder owed.
 
 2026-11-20 KNOWN LIMITS added after grounder round 3 (task:task-410 lines of the TRIAGE.md round 3 section; the operator rules on owners): out-compliance-agents-s5-1to3-p1#1, out-compliance-agents-s5-1to3-p1#2, out-compliance-agents-s7-s11-p1#1, out-compliance-agents-s7-s11-p2#3, out-compliance-inc-S-p1#1, out-compliance-orchestrator-doc17-p1#1, out-compliance-queue-137-p1#1, out-error-paths#3, plan-compliance-agents-s5-1to3#3, plan-compliance-inc-S#2, plan-compliance-inc-S#3, plan-compliance-orchestrator-doc17#1, plan-compliance-orchestrator-doc17#2, plan-compliance-orchestrator-doc17#3, plan-compliance-orchestrator-doc17#5, plan-compliance-orchestrator-doc17#6, plan-error-paths#1, plan-error-paths#6, plan-plan-review-deepseek#4. Additional limits named: the path maps (mcbylaws/protected-paths.json) that resolve lists are read from the branch tree (out-compliance-agents-s5-1to3-p1#2); after a fold a lane's code outside its Files line is in neither the coverage set nor the outside-Files range (out-compliance-queue-137-p1#1); a task whose Files line names the table is judged by its branch rows and lists, the table edit being in its own reviewed diff (out-error-paths#3); the reviewer context stays with task-375 (lensContexts() hook).
+
+2026-11-20 round 5 started (grounder r4: H8 and the board read after the moves check). Tests first.
+
+2026-11-20 round 5: check-lane-close.mjs takes the lane assignee from the staged copy else the HEAD copy and the type from the launch copy, so dropping the assignee or retyping cannot hide the lane (H8); the board is read only when a task moves.
 <!-- SECTION:NOTES:END -->

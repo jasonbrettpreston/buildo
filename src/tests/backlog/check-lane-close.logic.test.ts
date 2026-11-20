@@ -64,7 +64,7 @@ type Opts = {
   status?: string; before?: string; type?: string; files?: string | null; assignees?: string[]; beforeAssignees?: string[]; trailer?: string | false; msg?: string; table?: 'keep' | 'delete' | 'never';
   tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
   split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
-  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; finalMilestone?: string; finalFiles?: string;
+  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalMilestone?: string; finalFiles?: string;
   mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
 };
 function scenario(o: Opts = {}) {
@@ -88,6 +88,7 @@ function scenario(o: Opts = {}) {
   if (Object.keys(laneWork).length) { for (const [f, t] of Object.entries(laneWork)) w(f, t); g('add', '-A'); g('commit', '-qm', 'lane work'); }
   if (o.tagAtHead) g('tag', o.tagAtHead);
   if (o.folded) g('branch', '-f', 'wf2/board', 'HEAD');
+  if (o.noBoard) g('branch', '-D', 'wf2/board');
   if (o.afterFold) { for (const [f2, t2] of Object.entries(o.afterFold)) w(f2, t2); g('add', '-A'); g('commit', '-qm', 'fix after the fold'); }
   if (o.table === 'delete') fs.rmSync(path.join(d, 'scripts/analysis/rule-lists.json'));
   for (const [f, t] of Object.entries(o.staged ?? {})) w(f, t);
@@ -518,5 +519,16 @@ describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () =>
     refused(scenario({ tableEdit: row, files: 'src/a.ts', finalFiles: 'src/a.ts, scripts/lib/review-template.js', laneWork: lw }), /review-template\.js differs from the range base/, 44);
     const ok = scenario({ tableEdit: row, files: 'src/a.ts, scripts/lib/review-template.js', laneWork: lw });
     expect(ok.status, ok.stderr).toBe(0);
+  });
+  it('H8 PLANTED DEFECT: dropping the lane assignee and retyping to doc or record, or setting the assignee to @human, in the closing commit is refused; the unchanged lane close passes (control above)', () => {
+    const lane = ['@lane-BL-COMPLY2'];
+    refused(scenario({ beforeType: 'build', type: 'doc', beforeAssignees: lane, assignees: [] }), /@lane/, 45);
+    refused(scenario({ beforeType: 'build', type: 'record', beforeAssignees: lane, assignees: [] }), /@lane/, 45);
+    refused(scenario({ beforeType: 'build', type: 'doc', beforeAssignees: lane, assignees: ['@human'] }), /@lane/, 45);
+  });
+  it('H2 PLANTED DEFECT: a clone with no board ref: a commit that moves no task passes, a task close is refused with a clear line', () => {
+    const plain = scenario({ noBoard: true, status: 'RUNNING', mutate: () => ({}) });
+    expect(plain.status, plain.stderr).toBe(0);
+    refused(scenario({ noBoard: true }), /a task close needs the board/, 46);
   });
 });
