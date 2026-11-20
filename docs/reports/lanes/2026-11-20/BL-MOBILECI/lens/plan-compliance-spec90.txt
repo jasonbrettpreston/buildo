@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/plan-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9312 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19394 chars, answer 0 chars, 30s
+DEFER severity=MED — Spec 90 §2 "descriptor-governed web surfaces render as Next.js RSC (Spec 126 §5.3; Spec 128 R-22); the MaxBLD web pages use the web library of Spec 126 §11b.4. The Expo Web build target is unruled." — plan step 2 "used = refs in mobile goldens + refs in the committed web goldens src/tests/fixtures/surfaces/mobile_parcel_search/*.web.json" — the mobile Jest suite is made to read the Next.js tree; no pasted clause authorises a mobile target to take its pass/fail from Next.js fixtures, and the edit breaks the mobile suite whenever the web goldens change — fix: keep the four footer exemptions in a mobile-owned fixture (mobile/src/... or mobile test fixture) and assert the mobile goldens against that, leaving the web refs as evidence not as input.
+
+DEFER severity=MED — Spec 90 §10 "Minimum 80% coverage threshold." — plan "Proof of green is the next Mobile CI run after the push (mobile jest cannot run here)" — the clause's threshold is unevidenced at plan-lock while six files change and one file currently fails to load (zero coverage from it), so the gate cannot be said to be satisfied yet — fix: attach the coverage summary of the first green Mobile CI run to task-354 before merge, and treat that run, not the trace, as the clause evidence.
+
+DEFER severity=LOW — Spec 90 §13 "Every JSON response fetched via TanStack Query MUST be parsed through a Zod schema before hitting the UI" — plan sixth fix "mocks for expo-router (useRouter + useFocusEffect), authStore (signed out), useParcelEntitlement" — the entitlement response path is mocked away, so the suite no longer exercises the Zod parse on that path and cannot catch its removal — fix: add one case that mocks useParcelEntitlement with a malformed payload and asserts the parse rejects before render.
+
+MET — Spec 90 §3 "**MUST NOT** perform complex data mutation, geographic PostGIS math, or algorithmic sorting" — plan "No mobile/src or mobile/app file changes." — the change is confined to tests, goldens, fixtures and capture scripts; no computation enters the app.
+
+MET — Spec 90 §5 "**NO Web Libraries:** Never import `shadcn/ui`, `@tremor/react`, `framer-motion`, or `lucide-react`." — plan sixth fix "mocks for expo-router (useRouter + useFocusEffect), authStore (signed out), useParcelEntitlement" — the load failure is fixed with jest module mocks, no web library or DOM API is introduced.
+
+MET — Spec 90 §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`." — plan step 3 "the literal names the list min-h-[44px]|min-h-[48px] (bindings.json:73)" — both accepted values are at or above the 44px floor, so aligning the expected literal does not weaken the touch-target rule.
+
+REJECT — Spec 90 §10 — the plan omits a behaviour test for the reports-left line ("Not done on purpose") — no pasted clause requires a per-feature behaviour test; §10 mandates Jest coverage and the Maestro toggleAirplaneMode step, and the line is pinned by the reports_left golden.
+
+REJECT — Spec 90 §13 "`\"strict\": true` and `\"noImplicitAny\": true`" — rewriting the props member of five goldens and adding regen-props.mts / verify-props.mts is accused of dodging type checking — the change adds no .ts/.tsx product code, and the two scripts are capture tooling outside the app compilation the clause governs.
+
+REJECT — Spec 90 §4 amendment 2 "There is no monorepo and no `packages/shared-types`." — the cross-tree fixture read in step 2 is treated as a shared-types/monorepo violation — that amendment is a measured fact, not a prohibition; the risk is raised under §2 above, not here.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  40284ms (40.3s)
+📊 Tokens — total: 14796, input: 7767, output: 7029, reasoning: 6095

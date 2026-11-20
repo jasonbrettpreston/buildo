@@ -1,0 +1,41 @@
+# TRIAGE.md - BL-MOBILECI (task-354). Round r1 on the plan (outputs: r1-plan.txt, lens-plan/*). One round; every finding KEPT or REJECTED with the opened line. Verdicts on these are the grounder's (grounder owed).
+Order note (rule 16): the test edits were already in the worktree, uncommitted, when r1 ran (the review round ran on the written plan plus edits, before any commit). Disclosed, not hidden.
+
+## KEPT (folded)
+- K1 (code-review, error-paths, 136s2, 128 rule 11, r1 MED item 4: expectation follows the tree): mobile/__tests__/parcelScreens.golden.test.ts MF-58 loop now also pins `ks.includes('reports-left') === (k === 'reports_left')`; opened mobile/__tests__/fixtures/parcelSearch.situations.json: only situation reports_left has an entitlement.
+- K2 (code-review MED, 136s2 FE-07, 128 rule 15, spec90 DEFER: union of web refs hides a mobile-only key): the same file now pins the keys no MOBILE golden uses to exactly the four footer.* keys (RR-0270), run in node against the goldens: [footer.copyright, footer.help, footer.privacy, footer.terms].
+- K3 (spec100 DEFER LOW): page_no_ad props carry no ad ref after the rewrite: opened, `.ad.` count 0.
+- K4 (code-review, 128 B4, r1 CRITICAL, 136s2 FE-03: the props pin follows the binding's own output): kept as a FINDING, not a code change: report-page-capture.ts:14 states props is "carried over unchanged" and no script writes it, so it re-stales on the next sheet change (this task). Finding F-1 for the orchestrator: a props write mode in report-page-capture.ts with --check (a new task; out of scope here). The independent check done: every part ref of the new sheet resolves to the view part of the same role (verify-props.mts, 0 unresolved; view roles input.label x2, input.placeholder x2, unit.ft, unit.m, link read from page_v21 view), and the old golden fails T1 in the replay exactly as on CI.
+- K5 (r1 HIGH: file:line without paths; AC wording): the report table names full paths (REPORT.md).
+- K6 (r1 MED: "no test loosened" is a claim): REPORT.md carries the per-case before/after table (causes.md).
+
+## REJECTED (with the reason)
+- R1 (128 B4 HIGH, source_fingerprint): the five props goldens have no fingerprint member (keys: harness, spec, surface, state, target, response_fixture, view, props; opened page_v21.mobile.json); the fingerprinted page goldens are untouched and report-page-capture --check passes (checks.out AFTER).
+- R2 (128 HIGH 4.2, same pass adjudicates): the brief sets a separate grounder; the lane closes nothing.
+- R3 (128 MED 4.4 red/green in the same commit; std5 5.3; 136s2 FE-03 HIGH; 98 DEFER; spec90 coverage): mobile jest cannot run in this lane (brief); the replay of T1/T3 shows red on the old goldens and green on the new; green proof is the next Mobile CI run (stated in REPORT.md).
+- R4 (r1 CRITICAL ENOENT/doc baselines/stale text, MED generator defects, milestone, scratch paths, 'labels' empty): findings about the generated context file, not about this change; opened the file: the ENOENT blocks are docs the pack generator could not find; not mine to edit, noted in REPORT.md as an observation.
+- R5 (r1 HIGH item 2 / spec90 DEFER: mobile test reads web fixtures, ENOENT on a mobile-only checkout): .github/workflows/mobile-ci.yml checks out the whole repo (the same test already reads REPO/scripts/surfaces/_schema/bindings.json and reportScreens reads REPO/src/tests/fixtures: parcelScreens.golden.test.ts:27, reportScreens.golden.test.ts:25); opened .github/workflows/mobile-ci.yml:23 (actions/checkout@v4, no sparse option) and the CI log path /home/runner/work/buildo/buildo/mobile (repo root above mobile).
+- R6 (r1 HIGH golden count re-pinned): the exact list is the intent (a new golden must be named on purpose); KEEP-as-is.
+- R7 (r1/code-review: absence assertion for unlinked weak; unlinked radio check): unlinked tree has no cards by construction; the loop still asserts selectedParcelId and route null; the named case at lotMapScreens.golden.test.ts:177 pins the pin marker and the message; the Help link is now asserted present in the real mount.
+- R8 (code-review/128 DEFER/r1: label values read from the same fixture): the test pins LITERALS (checked by script against content + fixture: 4 strings present).
+- R9 (r1 MED: a11y label coupling): the label is the only place the facts are still drawn after C.9 removed the line; moving them to accessibilityValue is a design change (not named).
+- R10 (r1 HIGH SurfaceRenderer throw is a design decision; error-paths unhandled action untested): the throw is pinned by the MF-35 unknown-action plant (SurfaceRenderer.tsx:112 comment); no change.
+- R11 (error-paths double press): exists already: semiQuestionPage.behaviour.test.tsx "a double press while the fetch runs sends one fetch and one replace".
+- R12 (error-paths/r1: signed-in entitlement cases, malformed entitlement, reports-left behaviour test, zero count golden, Zod path, Maestro): new tests not named by task-354 (no scope creep, PLAN-PROTOCOL.md:3); listed as OPEN-1 in REPORT.md.
+- R13 (r1 HIGH: no hook runs mobile jest; rollback): named in task-343 loose end (brief); revert is one commit.
+- R14 (r1 HIGH no plan id; RR-0190): the lane was launched by backlog-lane per RR-0240 (task notes); not a lane decision.
+- R15 (spec100 BUG MED frontageStreet provenance): frontageStreet is the existing Zod field mobile/src/lib/schemas.ts:384 (task-338), not added here; the fixture text is read, not introduced.
+- R16 (spec100 BUG MED anchors for chips/result blocks): the loop's old assertion was only "legal right after pill"; unchanged semantics; chips and result blocks come after legal in SearchBinding.tsx:232-238 order.
+- R17 (spec90 REJECTs, std5 5.1 typed factories, 98 DEFER snapshot/goldens): test-only mocks follow useParcelLookup.test.ts:13; goldens in the unit suite are the existing MF-35 design.
+
+# Round on the DIFF (lens-diff/*, lens-diff2/* for specs 99, 100, 128 split in chunks of about 40000 characters because the first run refused: prompt over the 120000 bound)
+## KEPT
+- D-K1 (136s2 BUG HIGH fe.31, code-review MED: collection-scope read, no per-state web pin): parcelScreens.golden.test.ts now reads the web goldens inside the test and pins their names to the mobile golden names (11 = 11, compared in node).
+- D-K2 (spec100-part2 BUG HIGH, MF-58 "directly under the address input"): NOT a code or test change: finding F-2 for the orchestrator. Spec 100 line 144 (MF-58 note 2026-11-10) says the legal line sits "directly under the address input, before the recent-search chips and every result block"; the operator-approved small-pages-v8 draws input, "6 of 10 reports left", legal (search.html:267-269) and SRCH.A6 (task-320, RR-0307) built it so; the intent (before chips and results) holds, the word "directly" is overtaken. The test follows the approved design and the code; a dated note on that Spec 100 line is owed (spec text is outside this lane).
+## REJECTED
+- D-R1 (code-review: byTestID missing value): byTestID is `nodes(t).find(...)` (parcelScreens/lotMapScreens helper) so absent is undefined; the same helper is asserted `toBeUndefined` in the existing named cases.
+- D-R2 (code-review/128: .busy off accessibilityState throws): Pressable always sets the object (Pressable.js:250); the old assertion read the same prop.
+- D-R3 (spec90 HIGH dark mode; fe.44 frontage unit; fe.06 null zoning dash; 128 rule 4 labels): the pins follow existing code (map 'light' fdb6cd266 by the Daylight ruling R-D1; card facts and null dash are LotMapBinding.tsx:171-189, task-338); no behaviour is added by this diff.
+- D-R4 (spec99 chunks: card statements not visible in pasted diff, Target Files, query-key row for entitlement, mocks): the sheet goldens are a data change outside the pasted test diff by design; a row for the entitlement query key in Spec 99 §4 is not this task (grep not run: UNVERIFIED whether the row exists).
+- D-R5 (std5/error-paths: typed factories, useFocusEffect stand-in, signed-in cases, double press while busy): as R12 and R11 of the plan round (new tests not named; semi double press test exists).
+- D-R6 (spec100-part1/spec128: 'used' unconsumed, unnamed-ruling DEFERs, 48 px note): `used` is consumed by the next two expects (file lines after the fold); the 48 px list is bindings.json:73 with its dated note (cited in the test comment).

@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/diff-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9730 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20014 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29518 chars, answer 1242 chars, 45s
+DEFER severity=MED — Spec 98 §5 "npm run test (Jest unit tests)" — mobile/__tests__/parcelScreens.golden.test.ts "+  const webGoldenProps = fs.readdirSync(WEB_GOLDEN_DIR).filter((f) => f.endsWith('.web.json')).sort().map((f) => rj(path.join(WEB_GOLDEN_DIR, f)).props);" — the read and the rj parse run at file load, so a missing or empty web-golden directory fails the whole suite to run instead of one test, the same failure mode this diff cites elsewhere ("Test suite failed to run") — move the read inside the it and guard it with fs.existsSync.
+
+DEFER severity=MED — Spec 98 §5 "npm run test (Jest unit tests)" — mobile/__tests__/parcelScreens.golden.test.ts "+    expect(names.sort()).toEqual(['ambiguous', 'empty', 'error', 'loading', 'miss', 'rate_limited', 'redirect', 'reports_left', 'schema_drift', 'static', 'unauthorized']);" — the eleventh mobile golden and the reports_left situation this pins are not in the pasted diff, and the prompt says the golden props changes are the report sheet's only, so I cannot see the committed search golden or its situation and cannot tell whether the name pin can pass — paste the committed golden and situation, or name them in the diff.
+
+DEFER severity=MED — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — mobile/__tests__/parcelScreens.golden.test.ts "+  const WEB_GOLDEN_DIR = path.join(REPO, 'src/tests/fixtures/surfaces/mobile_parcel_search');" — the CR3-2 key-coverage check is widened from the mobile target's goldens to the web target's committed prop trees under src/tests, a scope no pasted clause or ruling names — cite the ruling that admits the web goldens here or keep the check mobile-only.
+
+DEFER severity=LOW — Spec 98 §4 dated note 2026-11-10 (MF-35) "a render smoke (throws / renders non-empty / finds its test ids, labels and host props) and a screen-behaviour test are not snapshots" — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "+    expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState.busy).toBeUndefined();" — the idle reading no longer separates a binding that sends no busy key from one that sends busy undefined, so the SemiQuestionBinding.tsx:99 behaviour the new comment names is pinned only by semiQuestionScreens.golden.test.ts:151, which is not in the diff — pin the absent key in this file or paste that pin.
+
+DEFER severity=LOW — Spec 98 §4 dated note 2026-11-10 (MF-35) "MF-35 extends its use to the mobile binding and the parcel search screen" — mobile/__tests__/parcelScreens.golden.test.ts "+    expect(Object.keys(SEARCH_SLICE.content).filter((k) => !usedByMobile.has(k))).toEqual(['footer.copyright', 'footer.help', 'footer.privacy', 'footer.terms']);" — an exact array also fixes the declaration order of the content file, so a reordering with no behavioural change reddens the §5 jest gate — compare as a sorted set.
+
+MET — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — mobile/__tests__/lotMapPage.behaviour.test.tsx — every added or changed assertion reads a test id, an accessibilityLabel or a host prop, and no toMatchSnapshot or .snap file is added by the diff.
+
+MET — Spec 98 §4 dated note 2026-11-10 (MF-35) "finds its test ids, labels and host props" — mobile/__tests__/lotMapPage.behaviour.test.tsx "+    expect(screen.getByTestId('parcel-lotmap-card-PCL-A1').props.accessibilityLabel).toBe('Lot A, 3,052 sq ft · 284 m², frontage 7.6 m, zoning RD (f12.0; a370)');" — the render smoke still finds its ids, labels and host props after the card facts line moved into the accessibility label.
+
+MET — Spec 98 §5 "npm run test (Jest unit tests)" — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "+jest.mock('@/store/authStore', () => ({ useAuthStore: (select: (s: { accessToken: string | null }) => unknown) => select({ accessToken: null }) }));" — the three mocks remove the native-module cause of "Test suite failed to run" that the diff records against run 44741125636.
+
+REJECT — Spec 98 §4 "UI component snapshot testing is deliberately excluded" — that the search and report golden props tests are the excluded snapshots — the diff edits derived expectations inside existing prop-tree tests and adds no snapshot artefact; the exclusion names snapshot testing, and the MF-35 note approves render smoke and behaviour assertions.
+
+REJECT — Spec 98 §3.1 "Every Maestro YAML file must explicitly define its state expectations using clearState" and §3.2 required suites — that this change disturbs E2E state handling — no file under mobile/maestro/ appears in the diff.
+
+REJECT — Spec 98 §4 dated note (MF-35) "MF-35 extends its use to the mobile binding and the parcel search screen" — that editing the lot map, semi-question and report suites exceeds the note's scope — the note approves a kind of test, and the three suites it edits pre-date this diff; no pasted clause puts them out of bounds.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 0
+
+---
+⏱  49006ms (49.0s)
+📊 Tokens — total: 24946, input: 16185, output: 8761, reasoning: 7449

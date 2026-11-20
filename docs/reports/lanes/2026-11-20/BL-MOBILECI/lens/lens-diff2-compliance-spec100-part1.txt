@@ -1,0 +1,41 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/diff-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10035 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20434 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30345 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 41118 chars, answer 0 chars, 60s
+BUG/DEFER/etc. lines:
+
+DEFER severity=MED — Spec 100 MF-53 note (2026-11-11) item (2) "`map.neighbours[]` (`parcelId`, `outline`) only on `unlinked` with a pin" and item (3) "the chosen lot opens through the metered `parcelId` path" — mobile/__tests__/lotMapPage.behaviour.test.tsx "+    expect(screen.queryByTestId('parcel-lotmap-continue')).toBeNull();" and "+    expect(screen.getByTestId('parcel-lotmap-help')).toBeTruthy();" — the pasted clause gives the unlinked map neighbour outlines so a lot can be chosen and opened, and no pasted clause names a control set for that state, so pinning "no Continue, Help only" is a behaviour the pasted text never names — paste the ruling that removed B.8 (SRCH.DAYLIGHT) or add an assertion that a chosen neighbour opens the parcel path.
+
+DEFER severity=MED — Spec 100 MF-53 note (2026-11-11) item (2) "`.area` ← `parcels.lot_size_sqm` through the report's display rule `area_sqft_m2_dot` ... `.frontage` ← `parcels.frontage_m` through `len1`; `.zoning` ← `parcels.zoning_zn_string`" — mobile/__tests__/lotMapPage.behaviour.test.tsx "+    expect(screen.getByTestId('parcel-lotmap-card-PCL-A1').props.accessibilityLabel).toBe('Lot A, 3,052 sq ft · 284 m², frontage 7.6 m, zoning RD (f12.0; a370)');" — the pasted clause promotes these fields inside the `map` payload only; a card accessibility-label composition and the removal of the visible facts line are named by no pasted clause (C.9 removal and SRCH.LOTCARD are cited from unpasted commits) — cite the pasted ruling for the card label or assert the values through the named display rules.
+
+DEFER severity=MED — Spec 100 MF-53 note (2026-11-11) item (1) "Every response carries `resolution`: `unique` | `text_candidates` | `multi_parcel` | `unlinked` | `no_match`" — mobile/__tests__/parcelScreens.golden.test.ts "+    expect(names.sort()).toEqual(['ambiguous', 'empty', 'error', 'loading', 'miss', 'rate_limited', 'redirect', 'reports_left', 'schema_drift', 'static', 'unauthorized']);" — the test now declares 11 goldens including a `reports_left` situation that no pasted clause names, and the pasted spec's resolution enum has no such value — paste the SRCH.A6 ruling (ace05ccee) that declares the reports-left state before pinning it.
+
+DEFER severity=MED — Spec 100 §3.2 "The response is an explicit allow-list, not a deny-list" (only response fields are enumerated in the pasted text) — mobile/__tests__/parcelScreens.golden.test.ts "+    expect(Object.keys(SEARCH_SLICE.content).filter((k) => !usedByMobile.has(k))).toEqual(['footer.copyright', 'footer.help', 'footer.privacy', 'footer.terms']);" — the four footer keys, RR-0270 and the A.10 line are named by no pasted clause, so the exact-set assertion pins copy names the pasted context never defines — paste RR-0270/MF-91 or drop the exact-set equality.
+
+DEFER severity=MED — MF-53 note (2026-11-11) item (2) "small-pages-v8 choose-lot.html draws none" is not pasted; the pasted text only says "the legal line ..." nowhere — mobile/__tests__/parcelScreens.golden.test.ts "+      const owed = ks.includes('reports-left') ? ['reports-left', 'legal'] : ['legal'];" — the placement rule (reports-left between the address input and the legal line, legal next block before any result) is named by no pasted clause (small-pages-v8 search.html:267-269 is not pasted) — paste the layout ruling or assert only that the legal line follows the input.
+
+DEFER severity=LOW — pasted context names no touch-target rule; Spec 100 has no min-h clause — mobile/__tests__/parcelScreens.golden.test.ts "+      '100100: Button min-h tokens ["min-h-[44px]","sm:min-h-8"] (need exactly one of min-h-[44px]|min-h-[48px])'," and mobile/__tests__/reportScreens.golden.test.ts "+      'o1-size-open: Button min-h tokens ["min-h-11"] (need exactly one of min-h-[44px]|min-h-[48px])'," — the 48 px acceptance is grounded only in unpasted SUITE.FIX-2 (8a5387194) — paste that ruling or leave the expected message unchanged.
+
+DEFER severity=LOW — Spec 100 SEMI-B note (2026-11-13) "the app shows one question before the report ('Is this house one half of a semi-detached pair?': yes / no / not sure)" names no busy or accessibilityState contract — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "+    expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState.busy).toBeUndefined();" (x3) — the idle/busy definition rests on Pressable.js:221, not pasted, and reading `.busy` off an object that may be undefined is a self-inflicted failure the old form did not have — keep the optional access or paste the binding's busy ruling.
+
+MET — Spec 100 §2.1 "Presentation only. Pulls existing `parcels` columns ... Creates, derives, and mutates nothing." — all six files — every hunk is a test expectation; no production file, route, migration or write path is touched.
+
+MET — Spec 100 MF-53 note (2026-11-11) item (2) "A `map` block is sent ONLY for `multi_parcel` and `unlinked`" — mobile/__tests__/lotMapScreens.golden.test.ts "+      if (k === 'unlinked') expect([k, cont]).toEqual([k, undefined]);" — the per-state branch keeps the unlinked state distinct instead of asserting one Continue for every state.
+
+MET — Spec 100 MF-53 note (2026-11-11) item (2) "`.frontage` ← `parcels.frontage_m` through `len1`" — mobile/__tests__/lotMapPage.behaviour.test.tsx "frontage 7.6 m" — the one-decimal frontage shown is consistent with the named `len1` rule.
+
+MET — Spec 100 dated note 2026-11-12 "an installed app shows \"—\"" (null is rendered as the null value, not zero) — mobile/__tests__/lotMapPage.behaviour.test.tsx "zoning —" with the trailing comment "a null zoning shows the null value" — a null zoning still renders as the null marker.
+
+MET — Spec 100 §3.2 "No other Tier-3 column enters the response" — mobile/__tests__/parcelScreens.golden.test.ts — the content-key test adds coverage but asserts nothing about response columns; the `groups` / Tier-3 fence is untouched.
+
+REJECT — Spec 100 §3.2 "The response is an explicit allow-list, not a deny-list" — accused of leaking map columns because frontage and zoning are asserted in a test label — this diff changes no assembler and no whitelist, so the accusation does not land.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  70005ms (70.0s)
+📊 Tokens — total: 38567, input: 25514, output: 13053, reasoning: 11268

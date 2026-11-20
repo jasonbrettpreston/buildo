@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/diff-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9517 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19952 chars, answer 0 chars, 30s
+BUG severity=<CRIT|HIGH> — none found (see lines below)
+
+MET — ASK-19 "A measured value **below 44 is a FINDING, not a setting** — see the defect ledger." — mobile/__tests__/parcelScreens.golden.test.ts "(need exactly one of min-h-[44px]|min-h-[48px])" — both accepted tokens are 44 px or 48 px, so the widened acceptance set does not lower the pasted 44 px floor.
+
+MET — R-21 "product surfaces `[\"web\",\"mobile\"]`" — mobile/__tests__/parcelScreens.golden.test.ts "const WEB_GOLDEN_DIR = path.join(REPO, 'src/tests/fixtures/surfaces/mobile_parcel_search');" — the content-key check now counts a committed web golden of the same surface, which is what one descriptor set across `platforms` implies.
+
+MET — R-21 "One descriptor set, three renderers, `platforms[]` is a descriptor field." — mobile/__tests__/parcelScreens.golden.test.ts "expect(Object.keys(SEARCH_SLICE.content).filter((k) => !usedByMobile.has(k))).toEqual(['footer.copyright', 'footer.help', 'footer.privacy', 'footer.terms']);" — the shared content file is now checked per target instead of being forced to the mobile set, and the mobile-only drift arm is kept.
+
+DEFER severity=LOW — ASK-19 "A measured value **below 44 is a FINDING, not a setting**" — mobile/__tests__/parcelScreens.golden.test.ts "'100100: Button min-h tokens [\"min-h-[44px]\",\"sm:min-h-8\"] (need exactly one of min-h-[44px]|min-h-[48px])'" — the expectation records a 32 px token (sm:min-h-8) inside a reportable token list, and no pasted clause says whether a sub-floor breakpoint token is exempt — the diff only re-words a message that reports that token rather than setting it, so this is recorded, not fixed here.
+
+REJECT — R-18 "A surface's declared auth must match its contracts' auth class" — the diff mocks the parcel search screen's auth store signed out — "jest.mock('@/store/authStore', () => ({ useAuthStore: (select: (s: { accessToken: string | null }) => unknown) => select({ accessToken: null }) }));" is a jest fixture in mobile/__tests__/parcelSearchScreen.behaviour.test.tsx, not a descriptor `guards.session` or a contract auth class, so the parity lock is untouched.
+
+REJECT — R-01 "The parcel tool is its own metered product, product key **`parcel_tool`**." — the added entitlement mock could be read as dropping the parcel_tool gate from search — "useParcelEntitlement: () => ({ data: undefined, isError: false, refetch: jest.fn() })" only pins the signed-out, no-entitlement shape for one behaviour test, and no product key, registry or descriptor is edited in the diff.
+
+REJECT — R-23 "a **`metering` ⇒ ledger-row check**" — the reports-left block assertion could be read as adding an entitlement read with no ledger row — "expect([k, ks.includes('reports-left')]).toEqual([k, k === 'reports_left']); // only the reports_left situation carries an entitlement" touches goldens only; no metered route, no write shape, and no `usage_events` row is added by this diff.
+
+REJECT — not-pasted rulings named in the diff — SRCH.A6 (ace05ccee), SRCH.C12 (d20ddec5e), SRCH.DAYLIGHT (fdb6cd266), RR-0270, RR-0289, SUITE.FIX-2 (8a5387194) and MOBILE.CI-1 are cited in the comments but none is in the pasted context — a clause that is not pasted is not mine to invent, so the 10 to 11 golden count, the light map props, the removed unlinked Continue and the footer key exception are neither certified nor refused here.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+
+---
+⏱  39896ms (39.9s)
+📊 Tokens — total: 26021, input: 18803, output: 7218, reasoning: 6251

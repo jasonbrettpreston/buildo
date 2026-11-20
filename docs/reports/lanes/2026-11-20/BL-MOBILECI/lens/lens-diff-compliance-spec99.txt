@@ -1,0 +1,5 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/diff-under-review.md (model: deepseek-reasoner)
+
+
+❌ Failed: prompt is 128111 chars, over the 120000 bound — refusing to send (it would run past any caller's cap). Pass only the relevant part of a large context with --section "<heading text>" (repeatable), or raise DEEPSEEK_REVIEW_MAX_CHARS deliberately.

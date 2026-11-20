@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/plan-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10839 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21947 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33111 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 44309 chars, answer 0 chars, 60s
+BUG severity=HIGH — FE-03 "P2 Proven, not reviewed: declarations checked against live contracts and the catalogue; golden states; both-directions locks; observability inside." — plan step 9-10 "Trace for the lines after :159 (never reached on CI)" and header "Proof of green is the next Mobile CI run after the push (mobile jest cannot run here)" — eight of the eighteen repaired cases are concluded by reading an assertion against code, which is review, and the plan defers all execution to a future CI run, so FE-03 is unmet for those cases at lock — fix: gate plan-lock on an executed mobile jest run (paste run id and per-test status for the 18), or mark those eight cases unproven and drop them from the plan's green claim.
+
+DEFER severity=MED — FE-03 "both-directions locks" — plan step 4 "Fix: after 'pill' the next keys must be exactly ['reports-left','legal'] where the tree has the line, ['legal'] where not." — the discriminator is the tree under test, so a state that wrongly loses or wrongly gains reports-left still passes; the MF-58 lock now checks the tree against itself — fix: derive the expected key list from the named situation (reports_left present only for that case), not from the tree's own keys.
+
+DEFER severity=MED — FE-07 "parity compares each target's real output" — plan step 2 "Fix: used = refs in mobile goldens + refs in the committed web goldens src/tests/fixtures/surfaces/mobile_parcel_search/*.web.json" — the mobile content-coverage check can now be satisfied by a web golden, so a content key the mobile page alone drops is no longer caught on the mobile target (the exclusion rests on RR-0270, which is not pasted and cannot be checked here) — fix: keep a mobile-only assertion over the mobile-reachable key set and exclude the four footer keys by name with the dated comment, instead of widening the pool to the other target.
+
+DEFER severity=MED — FE-03 "declarations checked against live contracts and the catalogue" — plan step 6-8 "Fix: rewrite ONLY the props member of the five page goldens with reportProps(view) (regen-props.mts)" with "verify-props.mts replays T1 (deepStrictEqual)" — the written value and the asserted value are the same function's output, so the five regenerated props pins cannot catch a wrong sheet field (width, depth, ft/m, link) — fix: check the five new props trees field by field against the declared MF-19 v3 sheet content and paste that comparison, keeping deepStrictEqual as a regression smoke only.
+
+MET — FE-01 — plan "No mobile/src or mobile/app file changes" — no held surface path is added or edited by this plan.
+
+MET — FE-31 — plan step 6-8 "the three lifecycle goldens are unchanged" — one props golden per reachable state per declared target is kept, only the props member moves.
+
+MET — FE-33 — plan steps 1-4 — the mobile jest-expo render smoke per archetype is kept and its stale pins are moved to the committed goldens, not deleted, skipped or loosened by name.
+
+MET — FE-24 — plan step 11-18 "the test's actions() lacks it (SurfaceRenderer.tsx:113 throws)" — the renderer still throws on the undeclared action; the plan fixes the test's action map, not the throw.
+
+REJECT — FE-01 — the change touches files under src/tests/fixtures/surfaces/mobile_parcel_search and mobile test files, which could be read as held surface paths — those are test and fixture files and the plan states "No mobile/src or mobile/app file changes", so no held surface path is touched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 4
+
+---
+⏱  72468ms (72.5s)
+📊 Tokens — total: 21611, input: 8064, output: 13547, reasoning: 12689

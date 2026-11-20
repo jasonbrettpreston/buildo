@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/plan-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10692 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21698 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31571 chars, answer 2422 chars, 45s
+BUG severity=HIGH — Spec 128 Rule B4 "goldens refresh on fingerprint, never on request. A descriptor, contract descriptor, archetype component or format-helper edit after capture forces a recapture. This is mechanical (source_fingerprint over fingerprint_files[]), not a reviewer's judgment." — plan step 6-8 "rewrite ONLY the props member of the five page goldens with reportProps(view) (regen-props.mts); the other members round-trip identical" — clause unmet: the MF-19 sheet edit forces a recapture of the five page goldens, and a member-level rewrite leaves the stored source_fingerprint attesting content no capture produced, which the fingerprint mechanism then cannot detect — fix: run report-page-capture for the five page states, commit the recaptured goldens with a fresh source_fingerprint, drop regen-props.mts
+
+BUG severity=HIGH — Spec 128 rule 11 "when a projection's section order changes, the declared order is re-derived and the goldens recaptured, never patched" — plan step 4 "after 'pill' the next keys must be exactly ['reports-left','legal'] where the tree has the line, ['legal'] where not" — clause unmet: the expected order is selected by reading the tree under test, so the assertion re-derives nothing and any tree that drops the reports-left line shrinks its own expectation and still passes — fix: declare one ordered section list per projection state in a fixture the test reads, assert the golden key order equals that list, never branch on the tree
+
+BUG severity=HIGH — Spec 128 §4.2 "A different party adjudicates, never the pass that discovered it. This is a policy rule, not merely a procedure step" — plan header "Classification: every case is a stale pin (c) or a wrong test (a); no code is wrong (b)" — clause unmet: the same pass that found the 18 failures rules that no case is a code defect and then moves the pins, so a code-wrong case would be re-pinned as test-wrong with no second party — fix: have a different party adjudicate the (a)/(b)/(c) classification and cite that adjudication before any pin moves
+
+DEFER severity=MED — Spec 128 §4.4 "the same commit that records the ruling adds a both-directions test (red on the old behaviour, green on the new) proving it" — plan header "Proof of green is the next Mobile CI run after the push (mobile jest cannot run here)" — no red/green pair lands in the commit with the moved pins, the green arm is a promised later run — fix: name the failing run's assertion text per moved pin as the red arm and the exact passing assertion as the green arm in the same commit
+
+DEFER severity=MED — Spec 128 §2.2 Rule 15 "parity between render targets is a comparison, not a discipline. A surface declaring more than one render.targets[] entry proves its projections equal on the shared field set, by golden comparison." — plan step 2 "used = refs in mobile goldens + refs in the committed web goldens ... a key no golden of either target uses still fails" — the mobile page's key-usage assertion is now satisfied by the other target's goldens, and RR-0270, the exemption the fix rests on, is not in the pasted context (cannot see) — fix: cite RR-0270's register row plus a declared per-target expected-unused list, or keep the mobile-only ref set
+
+DEFER severity=LOW — Spec 128 rule 4 "which fields render, in which order, with which labels, is a declaration the server owns, not a component's implicit knowledge" — plan step 11-18 "card titles read from the fixture (A: house, faces Dunmore Lane; B: no building); frontage and zoning read from each card's accessibilityLabel including the null zoning dash" — expected labels are read from the same fixture under test, so a changed fixture passes silently — fix: assert against a written expected label table, not the fixture
+
+MET — Spec 128 rule 1 "no surface behaviour lives only in a component" — plan header "No mobile/src or mobile/app file changes" — the change touches no projection or component file, so no behaviour moves into code
+
+MET — Spec 128 Rule B4 "goldens refresh on fingerprint, never on request" — plan step 1 "the exact name list gains reports_left; title says 11" — the 11 goldens are not edited, the stale count pin is brought up to the already captured set
+
+REJECT — Spec 128 Rule B4 — accused of hand-editing goldens in step 1 — no golden file content changes there, only the stale name list, and ace05ccee already captured the eleventh golden
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 3
+
+---
+⏱  46700ms (46.7s)
+📊 Tokens — total: 34114, input: 25305, output: 8809, reasoning: 7752

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/diff-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10389 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21409 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32371 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43520 chars, answer 0 chars, 60s
+DEFER severity=MED — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "jest.mock('@/store/authStore', () => ({ useAuthStore: (select: (s: { accessToken: string | null }) => unknown) => select({ accessToken: null }) }));" — the mock requires a selector argument and exposes only useAuthStore, so a no-selector call (zustand's plain `useAuthStore()`) or any other export of the store (e.g. getState used by the fetch client) throws TypeError inside render rather than failing the assertion — make select optional with a default and mirror any other members the import graph touches, or state in the comment that only the selector form is used.
+
+DEFER severity=MED — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "useParcelEntitlement: () => ({ data: undefined, isError: false, refetch: jest.fn() })," — a fresh object and a fresh jest.fn() are built on every render, so refetch's identity changes each render; the real hook returns a stable refetch, and if the screen ever lists refetch in an effect or focus-effect dependency it will re-run every render (or loop when it sets state) — hoist a module-level `const refetch = jest.fn()` and return it.
+
+DEFER severity=MED — mobile/__tests__/parcelScreens.golden.test.ts "const webGoldenProps = fs.readdirSync(WEB_GOLDEN_DIR).filter((f) => f.endsWith('.web.json')).sort().map((f) => rj(path.join(WEB_GOLDEN_DIR, f)).props);" — this runs at describe-collection scope, so a missing or renamed fixture directory throws an opaque ENOENT and takes down the whole suite before `expect(webGoldenProps.length).toBeGreaterThan(0)` can report it; and I cannot see this file's header, so fs, path, REPO and rj are unverified (cannot see) — guard with existsSync (or move the read into beforeAll) and confirm the four symbols are imported in this file.
+
+DEFER severity=MED — mobile/__tests__/parcelScreens.golden.test.ts "const used = new Set([...Object.values(goldens).map((g) => g.props), ...webGoldenProps].flatMap((p) => refs(p, 'content')));" — the mobile golden test now fails or passes on web-target fixture files committed by another lane, so a web-only fixture change breaks a mobile test for an unrelated reason — keep the mobile-only check as the gate and read the web fixtures through an explicitly labelled helper with a clear failure message.
+
+DEFER severity=LOW — mobile/__tests__/lotMapScreens.golden.test.ts "if (k === 'unlinked') expect([k, cont]).toEqual([k, undefined]);" — this only holds if byTestID returns undefined for an absent node; if it returns null the assertion fails with `[k, null]` vs `[k, undefined]`, and I cannot see byTestID's contract (cannot see) — assert on cont directly with the helper's documented missing value (toBeUndefined or toBeNull) instead of wrapping it in a tuple.
+
+DEFER severity=LOW — mobile/__tests__/lotMapScreens.golden.test.ts "else expect([k, cont!.children[0]]).toMatchObject([k, { children: [{ content: 'select.none' }] }]);" — the non-null assertion on a node the helper may have returned missing turns a clean assertion failure into "Cannot read properties of undefined (reading 'children')", hiding which state lost its Continue — guard `expect(cont).toBeDefined()` before dereferencing.
+
+DEFER severity=NIT — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState.busy).toBeUndefined();" — dereferencing .busy straight off accessibilityState throws a TypeError if that prop is undefined on the host node rather than reporting the idle expectation — use `expect(...accessibilityState?.busy).toBeUndefined()` so a missing state prop fails as an assertion.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  74408ms (74.4s)
+📊 Tokens — total: 27593, input: 13193, output: 14400, reasoning: 13470

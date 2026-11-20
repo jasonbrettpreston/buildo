@@ -1,0 +1,45 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/diff-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9693 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20079 chars, answer 0 chars, 30s
+BUG/DEFER findings
+
+DEFER severity=MED — task-354 card statement (pasted) "five report golden props members change only in the sheet tree" — mobile/__tests__/parcelScreens.golden.test.ts "const WEB_GOLDEN_DIR = path.join(REPO, 'src/tests/fixtures/surfaces/mobile_parcel_search');" — the pasted diff carries only test-file changes, no sheet-tree golden props member is visible, so the statement cannot be checked against this material — paste the five fixture-prop changes or restate the card to describe the test-only diff.
+
+DEFER severity=MED — no pasted clause names the lot map unlinked state (pasted set is Spec 99 §5 to §9) — mobile/__tests__/lotMapPage.behaviour.test.tsx "expect(screen.queryByTestId('parcel-lotmap-continue')).toBeNull();" — the diff drops the "disabled: true" Continue assertion and asserts a Help link instead, a behaviour no pasted clause or ruling names — cite the ruling (SRCH.DAYLIGHT B.8 / SRCH.C12) that removes the unlinked Continue in the pasted context.
+
+DEFER severity=MED — no pasted clause fixes the golden count (nothing pasted in §8 Test Mandates covers parcel search goldens) — mobile/__tests__/parcelScreens.golden.test.ts "expect(names.sort()).toEqual(['ambiguous', 'empty', 'error', 'loading', 'miss', 'rate_limited', 'redirect', 'reports_left', 'schema_drift', 'static', 'unauthorized']);" — the 10 to 11 pin change rests only on the commit comment (ace05ccee, SRCH.A6), and a clause satisfied only by a comment is unmet — paste the SRCH.A6 ruling that declares eleven goldens.
+
+DEFER severity=MED — no pasted clause names CR3-2 or a web fixture directory (nothing pasted) — mobile/__tests__/parcelScreens.golden.test.ts "const used = new Set([...Object.values(goldens).map((g) => g.props), ...webGoldenProps].flatMap((p) => refs(p, 'content')));" — the content-key coverage check is widened from mobile goldens to web goldens and a mobile-only gap list is hardcoded to four footer keys, justified only by comments citing d2cd0d5a2 and RR-0270 — paste the CR3-2 clause and RR-0270 so the widened set is checkable.
+
+DEFER severity=LOW — no pasted clause names touch-target tokens (SUITE.FIX-2 is not pasted) — mobile/__tests__/reportScreens.golden.test.ts "'o1-size-open: Button min-h tokens [\"min-h-11\"] (need exactly one of min-h-[44px]|min-h-[48px])'," — the expected lint message now admits a 48 px member on a comment's authority only — paste the SUITE.FIX-2 ruling that authorises two accepted min-h values.
+
+DEFER severity=LOW — §5.2 "Is user authenticated? `authStore.user` (canonical)" — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "jest.mock('@/store/authStore', () => ({ useAuthStore: (select: (s: { accessToken: string | null }) => unknown) => select({ accessToken: null }) }));" — the mock pins an auth shape (§accessToken) that §5.2 does not name as the canonical signal, so it can keep passing if the canonical field drifts — type the mock against the store's own state type rather than a hand-written "accessToken" shape.
+
+DEFER severity=LOW — §5.4 "Router `useEffect` dependency arrays MUST NOT contain Zustand fields read inside the effect body" — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "useFocusEffect: (cb: () => void) => R.useEffect(cb, [cb])" — the stand-in turns focus into a callback-identity effect, so the test never exercises the focus re-read it claims to stand in for, and no pasted clause sanctions the substitution — assert the re-read via a focus trigger the mock can fire, or note the gap in the ruling.
+
+DEFER severity=LOW — no pasted clause names accessibilityState or Pressable internals — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState.busy).toBeUndefined();" — the idle-busy contract is now asserted against a React Native code path (Pressable.js:221) that is not in the pasted context and cannot be seen — cite the binding contract in the pasted material or keep the assertion at the binding's own output.
+
+MET — §5.4 — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "useFocusEffect: (cb: () => void) => R.useEffect(cb, [cb])" — no routing useEffect is added to mobile/app/_layout.tsx or (app)/_layout.tsx; the rule's scope is untouched.
+
+MET — §6.1 — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "useParcelEntitlement: () => ({ data: undefined, isError: false, refetch: jest.fn() })" — the mock returns a constant, and §6.1's enforcement scope (mobile/app/** and mobile/src/components/**) is not modified by the diff.
+
+MET — §6.5 — no gate condition is edited; the diff does not touch AppLayout's loading gate or any isFetching branch.
+
+MET — §8.1 — no bridge implementation or bridge test named in §4 is changed, so the idempotency mandate is unaffected.
+
+MET — §8.5 — mobile/__tests__/storeReset.coverage.test.ts is not in the diff, so the store-enumeration mandate stands.
+
+MET — §7.5 — mobile/__tests__/useAuth.test.ts is not in the diff; the Sentry.setUser assertion mandate is unaffected.
+
+MET — §9.21 — no MANDATES row is removed or added; the meta-count guard for §7 and §8 mandates is untouched.
+
+REJECT — §8.2 — the change is accused of weakening router branch coverage — the diff adds no branch and removes no authGate test; §8.2 is not pasted and the authGate test file is absent from the diff.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  41953ms (42.0s)
+📊 Tokens — total: 26949, input: 19497, output: 7452, reasoning: 5998

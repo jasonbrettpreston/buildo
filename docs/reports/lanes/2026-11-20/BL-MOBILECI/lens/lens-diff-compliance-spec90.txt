@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/diff-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10235 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20461 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31143 chars, answer 0 chars, 45s
+BUG severity=HIGH — §2 Theme Constraint "The app must natively support System Dark Mode. NativeWind `dark:` variants are required for all UI components." — mobile/__tests__/lotMapPage.behaviour.test.tsx (pre-diff line `toEqual(['dark', true, false, false, false])` becomes) "expect([map.props.userInterfaceStyle, Array.isArray(map.props.customMapStyle), map.props.rotateEnabled, map.props.pitchEnabled, 'region' in map.props]).toEqual(['light', true, false, false, false])" — the change reverses a passing assertion into one that pins the lot map to a light-only userInterfaceStyle, so the screen cannot follow the system dark scheme, and no pasted ruling authorises the light map (SRCH.DAYLIGHT / fdb6cd266 is named only in a comment) — fix: paste the SRCH.DAYLIGHT or operator ruling that exempts the map, or assert userInterfaceStyle follows the colour scheme (with 'light' only under the light scheme) before merge.
+
+DEFER severity=MED — walk step 4 "A change that adds behaviour no pasted clause or ruling names is a finding (nothing added that the card or ruling did not name)" — mobile/__tests__/lotMapPage.behaviour.test.tsx "expect(screen.getByTestId('parcel-lotmap-help')).toBeTruthy();" and parcelScreens.golden.test.ts "expect(names.sort()).toEqual(['ambiguous', 'empty', 'error', 'loading', 'miss', 'rate_limited', 'redirect', 'reports_left', ...])" — the help action, the reports-left entitlement line and the four footer keys are pinned on the strength of commits d20ddec5e (SRCH.C12), ace05ccee (SRCH.A6), d2cd0d5a2 (SRCH.FOOTER) and RR-0270, which appear only as comment text, not as pasted rulings — rationale: the pins have no auditable authority in this context, so paste those four rulings or the additions cannot be checked.
+
+DEFER severity=LOW — §10 "Unit Testing (Jest): Jest + React Native Testing Library for logic hooks. Minimum 80% coverage threshold." — parcelScreens.golden.test.ts "const owed = ks.includes('reports-left') ? ['reports-left', 'legal'] : ['legal'];" — the expected block order is read off `ks`, the keys of the tree under test, so this placement assertion cannot fail if the reports-left line moves or is dropped from the tree — fix: write the expected order literally for the reports_left golden (['reports-left','legal']) and the literal ['legal'] for the rest, instead of deriving it from the tree.
+
+REJECT — §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`." — the change is accused of loosening the touch-target gate by adding min-h-[48px] to the accepted set — 48px is above the pasted 44px floor, and the same assertion list still fails the 32px token "min-h tokens ["min-h-[44px]","sm:min-h-8"]".
+
+MET — §9 "Touch targets for all interactive elements MUST be a minimum of `44px` by `44px`." — mobile/__tests__/reportScreens.golden.test.ts "(need exactly one of min-h-[44px]|min-h-[48px])" — both accepted tokens are at or above the 44px floor, so the widened gate message does not lower the clause.
+MET — §10 "Unit Testing (Jest): Jest + React Native Testing Library for logic hooks." — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "render(<Page />);" — the changed suites stay Jest + RNTL with fireEvent/waitFor, no other harness introduced.
+MET — §5 "NO `useEffect` for Fetching: Never fetch API data inside a `useEffect`. Always use TanStack Query." — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "useFocusEffect: (cb: () => void) => R.useEffect(cb, [cb])" — the mock only re-runs the screen's existing focus callback, no fetch is added inside an effect.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 1
+
+---
+⏱  56422ms (56.4s)
+📊 Tokens — total: 27001, input: 16855, output: 10146, reasoning: 9190

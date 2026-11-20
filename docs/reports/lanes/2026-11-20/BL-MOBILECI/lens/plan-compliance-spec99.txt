@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/plan-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9589 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19644 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 29627 chars, answer 0 chars, 45s
+DEFER severity=MED — task-354 card constraint "No test is deleted, skipped or loosened; each moved pin carries a dated comment." — the plan step 2 line "a key no golden of either target uses still fails" — step 2 widens the "every content key is used" set from mobile goldens to mobile plus committed web goldens, so a content key that the mobile page never renders now passes the check, which is the loosening the same paragraph denies — either assert per target (mobile refs resolved by a mobile golden, web refs by a web golden) or record step 2 explicitly as a scope correction, not a pin move
+DEFER severity=MED — operator ruling RR-0270 — "RR-0270 keeps the footer off the mobile page" — NONE — the entire justification for excluding footer.copyright/help/privacy/terms from the mobile target of surface mobile_parcel_search rests on a ruling that is not in the pasted context, so I cannot verify that the mobile side is legitimately exempt rather than missing four keys — paste RR-0270 verbatim into the lock packet before plan-lock
+DEFER severity=MED — task-354 card constraint "Classification: every case is a stale pin (c) or a wrong test (a); no code is wrong (b)." — "Cause: fdb6cd266 (SRCH.DAYLIGHT) removed B.8: the unlinked state draws no Continue (LotMapBinding.tsx:239)" and "SurfaceRenderer.tsx:113 throws" and "Pressable.js:220-226" and "report-page-capture.ts:14" — none of these four source quotes is pasted, so the (a)/(c)-not-(b) classification the whole plan hangs on is unverifiable here — append those four file:line bodies to the packet; if any shows a code defect the card is (b) and the test edits mask it
+DEFER severity=LOW — Spec 99 amendment on §8.6 "Wiring it into `mobile-ci.yml` is Spec 126 §12 phase **P0b**." — NONE — this is a MOBILE.CI lane that repairs the mobile test job and yet adds no step for `check-spec99-matrix.mjs`, so the amendment's named CI gap stays open after the push — either add the step to mobile-ci.yml here or state in the plan that P0b is out of this card, with the phase that carries it
+MET — §8.5 — mobile/__tests__/storeReset.coverage.test.ts, globs `mobile/src/store/*.ts`, "assert that `signOut()` in `mobile/src/store/authStore.ts` calls `use<Name>Store.getState().reset()` for every discovered store" — no store is added, so no reset call or exemption comment is owed
+MET — §2.1 — "Layer 4a (MMKV) is NEVER read directly outside Zustand `persist` middleware or TanStack `Persister`." — no read or write of MMKV is added; the sixth-file fix mocks, it does not persist
+MET — §3 Field Ownership Matrix — "Adding a field to the mobile app requires adding a row here." — no field row is added or changed
+MET — §6.5 with §8.3 — "Gate conditions MUST be stable signals" — no render gate or layout is touched, so the gate-stability mandate is unaffected
+MET — §9.15 — "globs `mobile/app/**/*.tsx` + `mobile/src/components/**/*.tsx`" — the card states no mobile/src or mobile/app file changes, so the 51 router-hygiene tests keep their subject
+MET — §7.6 enforcement — "the `mobile/__tests__/spec99.mandates.lint.test.ts` test greps each canonical site for the matching `track()` call" — no canonical funnel site is touched, so the mandate lint keeps passing
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 0
+
+---
+⏱  57550ms (57.5s)
+📊 Tokens — total: 36393, input: 26263, output: 10130, reasoning: 9257

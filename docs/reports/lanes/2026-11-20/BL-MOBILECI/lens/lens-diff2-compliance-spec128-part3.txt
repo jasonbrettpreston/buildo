@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/diff-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10338 chars, answer 0 chars, 15s
+REJECT — §8 Target Files "`docs/specs/02-web-admin/128_surface_standard_policy.md` — this spec" — change accused of amending the governing spec or its mirror — the diff hunks are only mobile/__tests__ files (lotMapPage.behaviour.test.tsx, lotMapScreens.golden.test.ts, parcelScreens.golden.test.ts, parcelSearchScreen.behaviour.test.tsx, reportScreens.golden.test.ts, semiQuestionPage.behaviour.test.tsx), no docs/specs or scripts/violations hunk is present
+REJECT — §8 Out-of-Scope "`migrations/**` — this spec records rulings about schema, never schema" — change accused of a schema move — no migrations path appears anywhere in the diff
+REJECT — §8 Out-of-Scope "`scripts/steps/_schema/step.schema.json` — frozen at C3 by the pipeline programme" — change accused of touching the frozen step schema — no scripts/steps path in the diff
+REJECT — §8 Out-of-Scope "`docs/specs/01-pipeline/124_step_standard_policy.md` — the pipeline's policy register. This spec MIRRORS it and must never edit it" — change accused of editing the mirrored register — no 124 file and no mirror output in the diff
+REJECT — §7 "*(Omitted by the template's own rule until the first CRITICAL/HIGH guard lands.)*" — change accused of landing without a §7 failure-mode entry — §7 carries no clause by its own rule, so there is nothing here to satisfy or breach
+REJECT — not pasted (rulings the diff itself cites: "RR-0270: the mobile page keeps its A.10 line under the box and draws no footer", "RR-0289", "SRCH.A6", "SRCH.DAYLIGHT", "SRCH.C12", "SUITE.FIX-2") — change accused of pinning the footer key set, the 11-golden count, the reports-left ordering, dark to light props and open_help against operator rulings — none of those rulings is in the pasted context, so this lens can neither confirm nor deny them and does not invent them
+MET — §8 Target Files "`scripts/violations/generate-spec-mirror.mjs` — the generator that emits §2 and §4" — mobile/__tests__/parcelScreens.golden.test.ts — no hunk touches the generator, so the "mirror is generated so it cannot silently diverge" constraint is untouched by this change
+MET — §8 Cross-Spec Dependencies "a spec that names a chained step script owes it a classification" — mobile/__tests__/reportScreens.golden.test.ts and siblings — no classification of scripts/reconcile-runs.js or any step script is added, removed or reworded in the diff
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 0   Unmet: 0
+
+---
+⏱  18655ms (18.7s)
+📊 Tokens — total: 12476, input: 9024, output: 3452, reasoning: 2793

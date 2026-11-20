@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/plan-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10211 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20379 chars, answer 0 chars, 30s
+DEFER severity=MED — "Continue again calls fetchParcelLookup (default mockResolvedValue), boundedWait resolves, storeLookup, router.replace('/(app)/parcel-tool/PCL-S1?semi=answered&lotFormOverride=semi_half'); 2 fetch calls." — every fetch-count assertion sits on the fail-then-retry path; no case presses Continue while busy:true, so a second tap during the in-flight lookup that fires two lookups and two storeLookup writes passes this suite — add a case with a never-resolving first lookup, press Continue twice, assert exactly 1 fetchParcelLookup call and 1 storeLookup.
+DEFER severity=MED — "the test's actions() lacks it (SurfaceRenderer.tsx:113 throws)" — once actions() gains open_help every action the goldens emit has a handler, so the renderer's throw on an unknown action is exercised by no test and a surface adding a new action crashes the screen untested — keep one case whose action is absent from actions() and pin the documented fail-closed outcome (throw or visible fallback), not silence.
+DEFER severity=MED — "Fix: after 'pill' the next keys must be exactly ['reports-left','legal'] where the tree has the line, ['legal'] where not." — the expectation is derived from the tree under test, so a tree that wrongly gains or loses the reports-left line still passes and the ordering guard cannot signal a regression — pin each of the 11 trees to a fixed expected sequence instead of branching on the tree.
+DEFER severity=MED — "Fix: mocks for expo-router (useRouter + useFocusEffect), authStore (signed out), useParcelEntitlement; same pattern as useParcelLookup.test.ts:13." — signed-out covers the empty case only; the AsyncStorage load failing and the entitlement fetch rejecting are now mocked away, so nothing asserts the search screen still renders when auth or entitlement is down — add one case with useParcelEntitlement rejecting (or the auth store read failing) and assert the search form renders and no entitlement refetch fires.
+DEFER severity=LOW — "Not done on purpose: a behaviour test of the reports-left line (not named by task-354; the reports_left golden pins the tree)." — the only reports_left coverage is one golden showing "6 of 10 reports left"; the zero/absent-count rendering of that line is unpinned — add a golden with reports_left = 0 or absent and assert the line is absent or reads as designed.
+REJECT — "Fix: rewrite ONLY the props member of the five page goldens with reportProps(view) (regen-props.mts); the other members round-trip identical; the three lifecycle goldens are unchanged." — looks like a non-idempotent in-place rewrite that a mid-run failure could leave half-applied — it is safe: props is recomputed from the untouched view member, so a re-run is a no-op and verify-props replays all 8 states.
+
+VERDICT: PASS on error-path safety
+Paths walked: double-submit while busy, retry after failed lookup, unhandled surface action, auth/entitlement load failure, empty reports_left count, golden regen re-run   Unguarded: 3
+
+---
+⏱  36993ms (37.0s)
+📊 Tokens — total: 10418, input: 4122, output: 6296, reasoning: 5595

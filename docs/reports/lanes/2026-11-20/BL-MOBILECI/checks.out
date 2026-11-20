@@ -1,0 +1,61 @@
+##### BEFORE (tip 772c72c52, no edits)
+=== node scripts/surfaces/surface-validate.mjs --check
+surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 426 strings)
+exit=0
+=== node scripts/surfaces/emit-mobile-surfaces.mjs --check
+surfaces ok (4 surfaces, 30 goldens)
+exit=0
+=== node scripts/violations/generate-surface-registry.mjs --check
+[surface-registry] clean — no drift (171 rows, 171 descriptors)
+exit=0
+=== node scripts/analysis/gates/consumer-registry.mjs --check
+scripts/steps/_schema/consumer-registry.json is fresh
+exit=0
+=== node scripts/analysis/generate-target-files.mjs --check
+exit=0
+=== node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/search-golden-capture.ts --check
+search goldens ok (11)
+exit=0
+=== node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/lotmap-golden-capture.ts --check
+lotmap goldens ok (11)
+exit=0
+=== node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/semi-question-golden-capture.ts --check
+semi-question goldens ok (8)
+exit=0
+=== node_modules/.bin/tsx scripts/surfaces/report-page-capture.ts --check
+page goldens current (40 and the landing sample)
+exit=0
+=== node scripts/analysis/spec-split-check.mjs --check
+[spec-split-check] clean — 43 move(s) verified, 11482 citations checked, 0 dangling, budgets held, 0 reader breaks, totality holds, every spec has a role.
+exit=0
+
+##### AFTER (edits in worktree, uncommitted)
+=== node scripts/surfaces/surface-validate.mjs --check
+surface-validate current; S-gen ok · S-golden ok (18 states x 4; owed 13 states / 52 files) · S-parity ok · binding ok · closed-status ok · budget WAITS MF-08 · S-desc ok (examined 33 in scope: converted 17, pending 3, parked 9, report 4) · S-screen ok (17 surfaces, 100 goldens) · S-sbind ok (17 surfaces, 426 strings)
+exit=0
+=== node scripts/surfaces/emit-mobile-surfaces.mjs --check
+surfaces ok (4 surfaces, 30 goldens)
+exit=0
+=== node scripts/violations/generate-surface-registry.mjs --check
+[surface-registry] clean — no drift (171 rows, 171 descriptors)
+exit=0
+=== node scripts/analysis/gates/consumer-registry.mjs --check
+scripts/steps/_schema/consumer-registry.json is fresh
+exit=0
+=== node scripts/analysis/generate-target-files.mjs --check
+exit=0
+=== node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/search-golden-capture.ts --check
+search goldens ok (11)
+exit=0
+=== node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/lotmap-golden-capture.ts --check
+lotmap goldens ok (11)
+exit=0
+=== node_modules/.bin/tsx --tsconfig mobile/tsconfig.json scripts/surfaces/semi-question-golden-capture.ts --check
+semi-question goldens ok (8)
+exit=0
+=== node_modules/.bin/tsx scripts/surfaces/report-page-capture.ts --check
+page goldens current (40 and the landing sample)
+exit=0
+=== node scripts/analysis/spec-split-check.mjs --check
+[spec-split-check] clean — 43 move(s) verified, 11482 citations checked, 0 dangling, budgets held, 0 reader breaks, totality holds, every spec has a role.
+exit=0

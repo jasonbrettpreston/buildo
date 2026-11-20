@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/diff-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10579 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20915 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31750 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42568 chars, answer 0 chars, 60s
+[deepseek-review] deepseek-reasoner working… reasoning 53427 chars, answer 0 chars, 75s
+[deepseek-review] deepseek-reasoner working… reasoning 64466 chars, answer 0 chars, 90s
+[deepseek-review] deepseek-reasoner working… reasoning 75110 chars, answer 0 chars, 105s
+[deepseek-review] deepseek-reasoner working… reasoning 85658 chars, answer 0 chars, 120s
+BUG severity=HIGH — MF-58 legal-line placement, dated note 2026-11-10 "directly under the address input, before the recent-search chips and every result block, in every state" — mobile/__tests__/parcelScreens.golden.test.ts "const owed = ks.includes('reports-left') ? ['reports-left', 'legal'] : ['legal'];" — the lock now accepts the reports-left block between the address input and the legal line in the reports_left state, so the placement clause is no longer pinned, and the only pasted text on that slot (2026-11-19) says "the reports-left slot is unchanged" and fixes no new position — fix: assert 'legal' is the column child directly after the input in every state, or land the SRCH.A6 (ace05ccee) ruling as pasted text before relaxing the lock
+
+DEFER severity=LOW — 2026-11-19 dated note "the reports-left slot is unchanged" — mobile/__tests__/parcelScreens.golden.test.ts "expect([k, ks.includes('reports-left')]).toEqual([k, k === 'reports_left']);" — no pasted ruling names which situations carry the reports-left line, so this per-state rule rests on the golden tree alone and will block any future state that legitimately carries it — fix: paste the SRCH.A6 rule for the slot, or drop the assertion
+
+DEFER severity=LOW — the change's own content-key guarantee "A key no golden of any target uses still fails." — mobile/__tests__/parcelScreens.golden.test.ts "const used = new Set([...Object.values(goldens).map((g) => g.props), ...webGoldenProps].flatMap((p) => refs(p, 'content')));" — no assertion consumes `used`, so a footer.* key used by no golden of either target still passes, contrary to the comment's stated guard — fix: assert every non-footer key of SEARCH_SLICE.content is in `used`, and each of the four footer keys appears in a web golden
+
+DEFER severity=LOW — Operating Boundaries "Target Files:" ... "the §6 test files." — mobile/__tests__/reportScreens.golden.test.ts "'o1-size-open: Button min-h tokens [\"min-h-11\"] (need exactly one of min-h-[44px]|min-h-[48px])'," and mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState.busy).toBeUndefined();" — the report and semi-question test files are not among the §6 mobile Jest tests the pasted spec names, and no pasted ruling authorises editing them — fix: cite the task-354 (MOBILE.CI-1) ruling in the pasted context, or confine the edit to the §6 test files
+
+MET — Known Failure Modes "Guard now: the MF-48 mobile props goldens and render test (`mobile/__tests__/reportScreens.golden.test.ts` \"page_no_ad has no ad ref\"; `reportPage.behaviour.test.tsx` \"no ad value, no ad box\")" — mobile/__tests__/reportScreens.golden.test.ts "'o1-size-open: Button min-h tokens [\"min-h-11\"] (need exactly one of min-h-[44px]|min-h-[48px])'," — the only change in that file is a token-rule message string, the ad-slot lock is untouched
+
+MET — MF-58 "It is one content key (`search.legal`, `mobile_parcel_search.content.json`) bound by the mobile SEARCH binding, locked by `mobile/__tests__/parcelScreens.golden.test.ts`" — mobile/__tests__/parcelScreens.golden.test.ts "const owed = ks.includes('reports-left') ? ['reports-left', 'legal'] : ['legal'];" — the legal line is still the single 'legal' key required in every state, only its position is at issue in the BUG above
+
+REJECT — Known Failure Modes "An ad section with no ad value draws nothing (no empty box)" — accused of dropping the sponsor/ad-slot guard by editing reportScreens.golden.test.ts — not a real issue, the edit changes one expected token-rule string and leaves "page_no_ad has no ad ref" intact
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 1
+
+---
+⏱  134006ms (134.0s)
+📊 Tokens — total: 37044, input: 12751, output: 24293, reasoning: 23290

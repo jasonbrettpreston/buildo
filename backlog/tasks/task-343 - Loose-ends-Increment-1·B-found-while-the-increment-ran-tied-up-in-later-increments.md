@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOOSE'
 created_date: '2026-11-19T20:30:00Z'
-updated_date: '2026-11-19T23:26:00Z'
+updated_date: '2026-11-20T13:28:00Z'
 labels:
   - S
   - loose-ends
@@ -151,4 +151,6 @@ Dated note 2026-11-19 (M-246; loose ends from LOAD.1 stage 2, lane BL-LOAD1B, ta
 task-360 (BL-METER2) loose ends: (1) race UNVERIFIED: a no-flag lookup in flight from the semi question page resolving after Continue could overwrite the answered cache entry with page null (useParcelLookup key excludes semi); (2) RC-1 evaluated-option gate still has no owner; (3) mobile jest of useParcelLookup.test.ts and reportScreen.mount.behaviour.test.tsx not run locally: CI/device; (4) S-sbind pin reads 426, brief said 425.
 
 2026-11-19 (SRCH.HYGIENE-1, task-364, lane BL-HYG) cite correction by note, text above kept: on head 19f44c421 the customer producer's switch (null for every lot while MAXBLD_WEB_LIVE is false) is src/lib/parcels/report-page.ts:57 (readCustomerPageResponse), not :23-26; the lookup meter branch is src/app/api/parcels/lookup/route.ts:181-193 (the not_produced label :183, openReport :186), not :45, :152-170, :161 or :167. The BL-METER report (docs/reports/lanes/2026-11-19/BL-METER/REPORT.md) names the old :23-26 and :161 and is a dated lane record, left unchanged.
+
+2026-11-20 (task-354, BL-MOBILECI): the mobile jest tests are run by no hook and no station; only the manual GitHub Mobile CI job runs them, so cases written in a lane stay unrun until a push (run 44741125636: 18 of 786 failing).
 <!-- SECTION:NOTES:END -->

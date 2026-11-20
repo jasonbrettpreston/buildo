@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/plan-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10117 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21329 chars, answer 0 chars, 30s
+DEFER severity=MED — "used = refs in mobile goldens + refs in the committed web goldens src/tests/fixtures/surfaces/mobile_parcel_search/*.web.json" — unioning every web ref into `used` means a content key that is legitimately mobile-only but later drops out of the mobile goldens is still counted as used, so the test stops proving mobile coverage — extend `used` with an explicit allowlist (footer.copyright/help/privacy/terms) rather than with all web refs.
+DEFER severity=MED — "frontage and zoning read from each card's accessibilityLabel including the null zoning dash" — the expected frontage and zoning values are extracted from the same accessibilityLabel the assertion then checks, so the check passes for any value the label carries (tautology) — assert against literals read from the fixture (e.g. the frontage string and the "—" for null zoning), not against values parsed out of the label under test.
+DEFER severity=MED — "Fix: unlinked must have no Continue; the other three still show select.none." — the unlinked state is removed from the "nothing is selected at open" assertion and replaced only by a no-Continue check, so an unlinked tree that opens with a radio already checked is no longer caught — keep the select.none / no-radio-checked assertion for unlinked and add the no-Continue assertion beside it.
+DEFER severity=MED — "rewrite ONLY the props member of the five page goldens with reportProps(view) (regen-props.mts)" — regen-props.mts and verify-props.mts are one-off scripts; if committed with no caller they are dead code, and the drift they repair stays latent because "report-page-capture.ts:14 carries it over; no script rewrites it" — either wire the props rewrite into report-page-capture.ts (or a --check in CI) or keep the two .mts scripts out of the tree.
+DEFER severity=LOW — "the helper message to list min-h-[44px]|min-h-[48px] (bindings.json:73) without the literal" — the expected literal contains regex metacharacters, so if it is matched with toMatch the brackets become a character class and the assertion cannot fail — compare with string equality (toBe / arrayContaining) or escape the brackets.
+DEFER severity=LOW — "card titles read from the fixture (A: house, faces Dunmore Lane; B: no building)" — deriving the expected title from the same fixture member the renderer reads lets a wrong field-to-title mapping pass whenever the two fields coincide — pin the two expected title strings as literals in the test and leave the fixture mutation to the scenario setup only.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  33016ms (33.0s)
+📊 Tokens — total: 9905, input: 4105, output: 5800, reasoning: 5195

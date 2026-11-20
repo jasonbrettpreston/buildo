@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/plan-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10792 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22416 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 33277 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43522 chars, answer 1091 chars, 60s
+BUG severity=CRIT — none raised; no clause in the pasted context is unmet by a specific plan step, so no CRIT line is owed.
+DEFER severity=MED — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — plan line "Not done on purpose: a behaviour test of the reports-left line (not named by task-354; the reports_left golden pins the tree)." — the new reports-left UI line ends with the mechanism the spec excludes as its only coverage, and the same pasted section says "No Maestro flow covers parcel-tool today", so no spec-sanctioned check of that line exists — add one screen-behaviour assertion for the reports-left line (or name the Maestro flow) before merge.
+DEFER severity=MED — Spec 98 §4 "UI component snapshot testing is deliberately excluded (Maestro handles UI validation)" — plan line "rewrite ONLY the props member of the five page goldens with reportProps(view) (regen-props.mts)" — regenerating the expected props with the same production function makes T1's deepStrictEqual self-fulfilling for the five page states, so later prop drift is accepted silently and the pin no longer pins — keep one independently written expected props sample, or record in the plan that the props member no longer catches drift.
+DEFER severity=MED — Spec 98 §5 "npm run test (Jest unit tests)" — plan line "Proof of green is the next Mobile CI run after the push (mobile jest cannot run here)" — all 18 case moves plus 5 regenerated golden props are locked on assertion-reading only, so the §5 test job result is asserted rather than shown — attach the Mobile CI run result before merge, not after.
+DEFER severity=LOW — Spec 98 §4 "Unit tests focus strictly on business logic, state machines, and Expo Router guards" — plan steps 1-8 spend 8 of 18 fixes on committed UI goldens with no clause in the pasted context naming that suite — bounded to test-repair of pre-existing goldens, so safe to defer, but the plan should state which pasted clause sanctions keeping goldens in the unit suite.
+MET — Spec 98 §4.1 "§8.5 — store-enumeration grep test (`mobile/__tests__/storeReset.coverage.test.ts`)" — plan line "No mobile/src or mobile/app file changes" — no `create<*Store>(` is added and no reset call is removed, so the enumeration count is unchanged.
+MET — Spec 98 §4 dated note 2026-11-10 (MF-35) "`@testing-library/react-native` 13.3.3 with `react-test-renderer` 19.1.0" — plan line "mocks for expo-router (useRouter + useFocusEffect), authStore (signed out), useParcelEntitlement; same pattern as useParcelLookup.test.ts:13" — mocks only, no dependency or version change in the plan.
+MET — Spec 98 §4 dated note 2026-11-09 operator verbatim "the report should still show with the google street view photo if its not available - just the photo space should not show" — plan line "the 177 changed lines per file lie inside the sheet tree" — the props rewrite is bounded to the Add-lot-size sheet, so the Street View photo props stay as pinned.
+MET — Spec 98 §4.1 "`useParcelLookup.test.ts`: `fetchParcelLookup` Zod-parses the whitelist envelope (`raw.data`)" — plan line "same pattern as useParcelLookup.test.ts:13" — that file is used only as a mocking pattern and none of its pins are edited.
+MET — Spec 98 §5 "Pull Request Checks: On every PR targeting `main`, GitHub Actions runs" — plan line "Proof of green is the next Mobile CI run after the push" — the required `npm run test` job does run on the PR that carries the change.
+REJECT — Spec 98 §5 "`npm run typecheck` (TypeScript compiler) `npm run lint` (ESLint)" — the plan does not show a typecheck or lint pass over the six edited test files before lock — one PR job runs typecheck, lint and test over the same tree, so no separate local pass is owed by a pasted clause.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  63009ms (63.0s)
+📊 Tokens — total: 18825, input: 7097, output: 11728, reasoning: 10757

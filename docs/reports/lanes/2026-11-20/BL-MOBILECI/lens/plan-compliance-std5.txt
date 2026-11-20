@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/plan-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10550 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21324 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30683 chars, answer 1459 chars, 45s
+DEFER severity=MED — 5.3 "Run the test and confirm it fails, only then implement the code to make it pass." — NONE (plan line: "Proof of green is the next Mobile CI run after the push (mobile jest cannot run here)") — 18 assertion rewrites go to push with no observed red or green run; every trace is argued by reading, not by executing — bounded blast radius (test-only, no src/app change), but one wrong trace costs another full CI cycle; add a mobile jest job or a dispatched pre-push run that executes the six files before the fix commit is pushed
+DEFER severity=LOW — 5.1 "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — NONE (plan line: "mocks for expo-router (useRouter + useFocusEffect), authStore (signed out), useParcelEntitlement") — the signed-out auth/entitlement state for the sixth file is not stated to come from a typed factory, and cannot see the mock body — test-only; confirm the authStore/entitlement mock state is a factory import, not an inline literal
+DEFER severity=LOW — 5.2 parity battery row "generated doc ↔ its generator (the drift guard, regenerate to a buffer, diff the committed file)" — NONE (plan line: "report-page-capture.ts:14 carries it over; no script rewrites it") — the named capture generator still cannot produce the props member, so the committed file is locked only by verify-props, not by its generator — bounded because verify-props deepStrictEquals reportProps(view); if the capture script stays carry-over it re-stales on the next view change
+MET — 5.2 parity battery (generated artifact) — NONE (plan line: "search-golden-capture --check: \"search goldens ok (11)\"") — regenerate-to-buffer diff exists for the search goldens
+MET — 5.2 parity battery (generated artifact) — NONE (plan line: "verify-props.mts replays T1 (deepStrictEqual), T3") — props member is locked against reportProps(view) rather than against a hand-written literal
+MET — 5.3 — NONE (plan line: "No mobile/src or mobile/app file changes") — no fix code is written, so the red-before-green ordering is not inverted by this batch
+MET — 5.5 "Pick the layer that *proves the claim*" — NONE (plan line: "reports_left golden keys = pill, reports-left, legal") — the reports-left draw is proven at the golden layer, which is the layer that pins the tree
+MET — 5.1 — NONE (plan line: "card titles read from the fixture (A: house, faces Dunmore Lane; B: no building)") — card state comes from the committed fixture, not from a new inline literal
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+
+---
+⏱  46331ms (46.3s)
+📊 Tokens — total: 13572, input: 5303, output: 8269, reasoning: 7587

@@ -7,10 +7,14 @@ status: RUNNING
 assignee:
   - '@lane-BL-MOBILECI'
 created_date: '2026-11-19T21:37:00Z'
-updated_date: '2026-11-20T13:27:00Z'
+updated_date: '2026-11-20T13:29:00Z'
 labels: []
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/lanes/2026-11-20/BL-MOBILECI/REPORT.md
+  - docs/reports/lanes/2026-11-20/BL-MOBILECI/TRIAGE.md
+  - docs/reports/lanes/2026-11-20/BL-MOBILECI/causes.md
 type: build
 ordinal: 54012
 ---

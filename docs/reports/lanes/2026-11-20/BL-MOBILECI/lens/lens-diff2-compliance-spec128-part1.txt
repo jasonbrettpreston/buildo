@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/diff-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10581 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21609 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 32170 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 42633 chars, answer 0 chars, 60s
+DEFER severity=MED — Rule 4 (Projection rule declared), "which fields render, in which order, with which labels, is a declaration the server owns, not a component's implicit knowledge" — mobile/__tests__/lotMapPage.behaviour.test.tsx "+    expect(screen.getByTestId('parcel-lotmap-card-PCL-A1').props.accessibilityLabel).toBe('Lot A, 3,052 sq ft · 284 m², frontage 7.6 m, zoning RD (f12.0; a370)');" — the label's field order, separators and unit form are pinned only as a hand-written literal and no owning declaration (descriptor field or binding output) is cited, so a card composing them itself would still pass this test — assert the label equals the declared projection output and name that declaration in the comment, or cite it.
+
+DEFER severity=MED — Rule 15 (parity), "a field present in one target's projection and absent or different in another's, named by the differential" — diff header "five report golden props members change only in the sheet tree" — no paired golden for the other target appears anywhere in the pasted diff, so the shared-field-set equality after these five member changes cannot be seen — include the paired web/mobile goldens for the five members, or cite the S-parity golden-pair run in the diff.
+
+DEFER severity=MED — §4.4, "the same commit that records the ruling adds a both-directions test (red on the old behaviour, green on the new)" — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "+jest.mock('@/store/authStore', () => ({ useAuthStore: (select: (s: { accessToken: string | null }) => unknown) => select({ accessToken: null }) }));" — the focus re-read (index.tsx:56 per the comment) is mocked to a signed-out shape, so no test in this diff goes red if that re-read is deleted; the comment's claim that it is pinned elsewhere is not pasted — cite the path:line of the lock that goes red when the focus re-read is removed.
+
+REJECT — §4.11 item 6, "surface paths (`scripts/surfaces/**`, `src/lib/surfaces/**`, `src/tests/surfaces/**`) are NOT layer23 today" — accused of touching held/frontend surface paths without the hold gate — every file in the diff is under mobile/__tests__/, which is none of the pasted globs, so that refusal does not apply here.
+
+REJECT — Rule 16 (single source), "A REPORT surface displays values read from the contract; it does not add, subtract, round or compare to produce a displayed number" — accused of arithmetic/formatting in the lot map label "3,052 sq ft · 284 m²" — the pasted scope line reads "Scope: the REPORT archetype now", and nothing pasted shows the lot map card is a REPORT surface, so that clause is not mine to apply to it.
+
+MET — Rule 11 (Render-order re-derive) — mobile/__tests__/lotMapScreens.golden.test.ts — "else expect([k, cont!.children[0]]).toMatchObject([k, { children: [{ content: 'select.none' }] }]);" — every state that should draw the Continue still pins its declared content, so the per-state relaxation is not a blanket one.
+
+MET — §4.4 (both-directions lock) — mobile/__tests__/lotMapPage.behaviour.test.tsx — "expect(screen.queryByTestId('parcel-lotmap-continue')).toBeNull();" — red on the old behaviour (a disabled Continue drawn), green on the new, for the unlinked state.
+
+MET — Rule B4 (goldens refresh on fingerprint) — mobile/__tests__/parcelScreens.golden.test.ts — "it('11 committed goldens, one per declared state, each naming a situation; searchProps(situation) equals the golden props exactly'" — the exact golden set is pinned and each golden must equal searchProps, so a recapture that adds, drops or drifts a state fails.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  74429ms (74.4s)
+📊 Tokens — total: 32062, input: 18638, output: 13424, reasoning: 12490

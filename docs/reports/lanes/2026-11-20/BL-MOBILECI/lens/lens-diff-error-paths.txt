@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+🔍 Adversarial review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/mobileci/diff-under-review.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10399 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20450 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31634 chars, answer 0 chars, 45s
+DEFER severity=MED — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "useFocusEffect: (cb: () => void) => R.useEffect(cb, [cb])" — the on-focus reports-left re-read is collapsed to a one-shot mount effect with [cb] deps, so a real refocus double-read or a per-render re-fire from an unstable cb is neither exercised nor ruled out here — mirror real focus semantics or add a refocus case asserting refetch runs exactly once.
+
+DEFER severity=MED — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "useParcelEntitlement: () => ({ data: undefined, isError: false, refetch: jest.fn() })" — returns a fresh refetch every render and pins isError:false, so the entitlement fetch-failure path (the line must degrade to absent, no throw) is never run, and refetch identity churns per render — supply a stable refetch and add an isError:true case asserting no reports-left line and no throw.
+
+DEFER severity=MED — mobile/__tests__/parcelSearchScreen.behaviour.test.tsx "useAuthStore: (select: (s: { accessToken: string | null }) => unknown) => select({ accessToken: null })" — the signed-in path, where focus re-reads and the counted reports-left line is drawn, is never executed, so a repeated counted read on refocus cannot be observed here — add a token-present case asserting one read per focus.
+
+DEFER severity=LOW — mobile/__tests__/parcelScreens.golden.test.ts "const webGoldenProps = fs.readdirSync(WEB_GOLDEN_DIR).filter((f) => f.endsWith('.web.json')).sort().map((f) => rj(path.join(WEB_GOLDEN_DIR, f)).props);" — this runs at describe collection, so a missing dir or a malformed .web.json throws at load and fails the whole file with no assertion message, and the empty case is only caught later by toBeGreaterThan(0) — guard the readdir/parse so a dependency-down surfaces as a clear assertion.
+
+DEFER severity=MED — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(screen.getByTestId('parcel-semi-continue').props.accessibilityState).toMatchObject({ busy: true });" — pending asserts busy but never that the node is disabled or that a second press is a no-op, so a double-submit of the report (two presses while busy) is not ruled out — press Continue twice while busy and assert mockFetchLookup stays 1 and mockReplace is called once.
+
+REJECT — mobile/__tests__/semiQuestionPage.behaviour.test.tsx "expect(mockFetchLookup).toHaveBeenCalledTimes(2);" — retry looks like it could re-send indefinitely — it issues exactly one extra lookup on the user's retry press, no auto-retry and no repeated write.
+
+REJECT — mobile/__tests__/lotMapPage.behaviour.test.tsx "it('a non-map outcome replaces the route once on settled data, never while fetching', () => {" — repeated navigation on settle looked risky — the case pins replace to once and never while fetching, so no double route.
+
+REJECT — mobile/__tests__/lotMapPage.behaviour.test.tsx "expect(screen.queryByTestId('parcel-lotmap-continue')).toBeNull();" — an empty unlinked state with no button could strand the flow — it draws no Continue (nothing to double-submit) and keeps the Help link, a safe empty degrade.
+
+VERDICT: PASS on error-path safety
+Paths walked: entitlement error, empty unlinked, focus re-read retry, retry button, double-submit Continue, route replace once, content-key dedup, web golden dir missing   Unguarded: 5
+
+---
+⏱  50591ms (50.6s)
+📊 Tokens — total: 22594, input: 13210, output: 9384, reasoning: 8539
