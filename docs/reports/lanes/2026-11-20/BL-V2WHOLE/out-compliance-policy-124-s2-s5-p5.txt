@@ -1,16 +1,20 @@
-◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:21:42.636Z file_sha256=521291c46913a6b81a4b3652693625302655b3035c515cb11f18a6d9cbe339ce prompt_sha256=a09fe8e09c76eeebba6200319958b9f767b8932c46541eb6555c109a05a6b525
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:51:18.666Z file_sha256=dcb3f2e814b48c63108b69f7497941ed93019b6bd6c8c29457b5121b8bb68ed8 prompt_sha256=89463d6225addc3a4662abe902a3a132ee69cff9e8f8f42292a23005aa1e66af
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-policy-124-s2-s5-p5.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — §2 rules 1-13 (all govern step descriptors/compute; this chunk is two backlog test files) "Nothing about a step's behaviour may live only in code" — src/tests/backlog/check-lane-close.logic.test.ts "// V2.WHOLE (task-410): the close check proves the review saw the WHOLE change." — the new close-check and lens-input chunking behaviour is attributed to task-410 and operator "1-5 y" item 3, and neither authority is pasted, so whether the behaviour is licensed cannot be judged here — paste task-410 and the "1-5 y" ruling text so this chunk's substance is reviewable.
-REJECT — Rule 1 "Nothing about a step's behaviour may live only in code" — the change is accused of putting behaviour in code rather than descriptor data — the behaviour under test is a git hook and an analysis CLI, quoted at src/tests/backlog/check-lane-close.logic.test.ts "'scripts/hooks/check-lane-close.mjs'", neither of which is a pipeline step with a descriptor, so Rule 1's subject is absent from this chunk.
-REJECT — Rule 2 "Compute contains domain logic only" — the change is accused of hiding gating/emission logic in compute — no file under scripts/lib/compute/** or any step compute appears in this chunk, only src/tests/backlog/check-lane-close.logic.test.ts and src/tests/backlog/rule-lists.logic.test.ts (see "const max = 12000;"), so the shape gate has no subject here.
-REJECT — Rule 3 "a step consumes is a registered logic variable resolved through `ctx.config`" — the new chunk room and fixtures are accused of being unregistered literals — "split: { max: 4000 }" and "const max = 12000;" are a CLI flag and test fixtures, and the rule's subject is what a step consumes via ctx.config, with no step descriptor in this chunk.
-REJECT — Rule 13 "A step validates itself" — the two new describe blocks are accused of shipping behaviour outside step:validate's corpus — "describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries', () => {" lives in src/tests/backlog/, not in a converted step's src/tests/steps/<slug>/ suite or its descriptor, so Rule 13 imposes nothing on it.
+DEFER severity=MED — no pasted clause names the behaviour under test "Thirteen rules (Rule 13 added by R-R, 2026-08-29). Each is enforced today, or marked ⚠ GAP with the artifact that would close it." — src/tests/backlog/check-lane-close.logic.test.ts "// V2.WHOLE (task-410): the close check proves the review saw the WHOLE change." — the entire added behaviour (file-boundary chunking, chunk stamps, DIFF_ARGS, refusal messages, fold/base_ref/exempt recompute) is named only by task-410, which is not in the pasted context, so no pasted clause can confirm or deny it — paste the governing card or spec section for task-410/rule-lists next to Spec 124 §2
+
+REJECT — Spec 124 §2 Rule 3 "Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal" — accused of hard-coded bounds in the new tests, e.g. "const max = 2 * (d.length + 900) + 300;" — Rule 3's subject is a limit "a step consumes"; these files drive `scripts/analysis/rule-lists.mjs` (`lens-input`), which is not a step descriptor nor `scripts/lib/compute/**`, so the clause does not reach them
+
+REJECT — Spec 124 §2 Rule 1 "Nothing about a step's behaviour may live only in code" — accused of putting the split/stamp contract only in code and tests: "// each input stamped \"chunk c of m\" with its path list" — Rule 1's subject is "a step's behaviour"; lens-input chunking is backlog tooling, not a step descriptor, declared check or shape rule
+
+REJECT — Spec 124 §2 Rule 10 "The verdict is always derived from the declared checks' rows — never a parallel boolean, never a hardcoded literal" — accused of a parallel verdict literal: "VERDICT: PASS on compliance\n" in `body()` — that string is a review-output fixture the close check parses, not a step verdict derivation; `deriveVerdict` governs runner code, not fixture text
+
+REJECT — Spec 124 §2 Rule 13 "none — every archetype's descriptor is validated, shape-gated, and scored the same way." — accused of an unvalidated, hand-maintained test track, since the new suites sit outside `src/tests/steps/<slug>/` — no step is converted or descriptor touched by this diff, so the clause has no subject here
 
 VERDICT: PASS on compliance with the pasted clauses
 Clauses checked: 13   Unmet: 0
 
 ---
-⏱  22855ms (22.9s)
-📊 Tokens — total: 28087, input: 24120, output: 3967, reasoning: 3403
+⏱  20165ms (20.2s)
+📊 Tokens — total: 28255, input: 24435, output: 3820, reasoning: 3213

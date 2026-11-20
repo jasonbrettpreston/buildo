@@ -1,4 +1,4 @@
-LIST policy-124-s2-s5 sha256:2e6d2f7a0c33bd5106e5396fe3c558cade78178a92ef4d3b5fe6c3a401544b81 material sha256:356fee237384bddad5469df8c3bddbe338e6a78e9f23e9b083cd23e0484e1e7d part 2 of 2 chunk 2 of 3
+LIST policy-124-s2-s5 sha256:2e6d2f7a0c33bd5106e5396fe3c558cade78178a92ef4d3b5fe6c3a401544b81 material sha256:ef4382328f18735d747878bd04e3205d5a9d85673d3417e07bb58486457ec98a part 2 of 2 chunk 2 of 3
 RULE LIST policy-124-s2-s5 (docs/specs/01-pipeline/124_step_standard_policy.md, sections 2. The rules; 5. Register of rulings), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts"]
 
 ## §5. Register of rulings
@@ -102,7 +102,7 @@ text and evidence. This table is live for anything estate-wide from here on.
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..d765ffab20de3803eac1c45c7b568e2f18f0101a 100644
+index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..7d713130c25bcf3204fec5030a33919df45a72d0 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -15,6 +15,11 @@
@@ -300,13 +300,16 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..d765ffab20de3803eac1c45c7b568e2f
 +  const boardRef = BOARD_REFS.find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0) ?? null;
 +  let boardTable = null;
 +  if (boardRef) { const bx = git(['show', `${boardRef}:scripts/analysis/rule-lists.json`]); try { boardTable = bx.status === 0 ? JSON.parse(bx.stdout) : null; } catch { boardTable = null; } }
-+  if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: the keys that decide what is checked come from the board (fail closed)`]);
-+  const finished = new Set((boardTable.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
++  // a commit that moves no task never needs the board (round 5): the finished statuses default until a move is found, then the board is required
++  const finished = new Set((boardTable?.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
    const staged = git(['diff', '--cached', '--name-only', '--no-renames']).stdout.split('\n').filter(Boolean);
    const taskFiles = staged.filter((f) => /^backlog\/tasks\/task-\d+( -.*)?\.md$/i.test(f));
    const moves = [];
-@@ -232,28 +341,83 @@ function check(msgFile) {
+@@ -230,30 +339,87 @@ function check(msgFile) {
+     moves.push({ f, now: now.stdout, fm, headFm, status });
+   }
    if (moves.length === 0) return 0;
++  if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: a task close needs the board, because the keys that decide what is checked and the task's launch commit come from it (fail closed)`]);
    const errors = [];
    // self-edit: the check, its table, its helper, the review tool and the hooks may not change in a commit that also closes a task
 -  const prot = staged.filter((p) => matchesAny(table.protected_paths ?? [], p));
@@ -347,9 +350,9 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..d765ffab20de3803eac1c45c7b568e2f
      const id = String(mv.fm.id ?? mv.f).toLowerCase().replace(/^task-0*/, 'task-');
      const assignees = asList(mv.fm.assignee).map(String);
 -    const type = String(mv.fm.type ?? '').toLowerCase();
--    const laneName = assignees.map((a) => /^@lane-(.+)$/.exec(a)?.[1]).find(Boolean);
-+    const laneAssign = assignees.find((a) => /^@lane-/.test(a));
-+    const laneName = laneAssign?.replace(/^@lane-/, '');
++    // H8: the lane assignee is the staged one, else the one the HEAD copy holds, so dropping it (or setting @human) in the closing commit cannot hide the lane
++    const laneAssign = assignees.find((a) => /^@lane-/.test(a)) ?? asList(mv.headFm.assignee).map(String).find((a) => /^@lane-/.test(a));
+     const laneName = assignees.map((a) => /^@lane-(.+)$/.exec(a)?.[1]).find(Boolean);
 +    // F8 + F11: the task as it was taken. L is the board commit that first holds the lane assignee on the task file (the lane cannot choose it); type, assignee and the Files line are read from that copy
 +    let L = null;
 +    let baseTask = null;

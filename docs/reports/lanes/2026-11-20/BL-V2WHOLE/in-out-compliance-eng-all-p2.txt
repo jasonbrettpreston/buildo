@@ -1,4 +1,4 @@
-LIST eng-all sha256:7545438c361c56f30f6dc65a4ce504992e2c558b203ee38d7f1d070d3d63281d material sha256:59a76e70603c47a3cddfe8b4a46a733c48eb57c54453f0081994a19d6c8f1408 part 1 of 1 chunk 2 of 3
+LIST eng-all sha256:7545438c361c56f30f6dc65a4ce504992e2c558b203ee38d7f1d070d3d63281d material sha256:3dbbc4e47384cb8ea181c9d90e272ca34681595f32dc5b26a1fd7c19020ffba5 part 1 of 1 chunk 2 of 3
 RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts"]
 
 # Engineering Standards & Stability Guardrails
@@ -471,7 +471,7 @@ Detection is not enough. **Every CRITICAL/HIGH review finding (Spec 08 roster) i
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..d765ffab20de3803eac1c45c7b568e2f18f0101a 100644
+index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..7d713130c25bcf3204fec5030a33919df45a72d0 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -15,6 +15,11 @@
@@ -669,13 +669,16 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..d765ffab20de3803eac1c45c7b568e2f
 +  const boardRef = BOARD_REFS.find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0) ?? null;
 +  let boardTable = null;
 +  if (boardRef) { const bx = git(['show', `${boardRef}:scripts/analysis/rule-lists.json`]); try { boardTable = bx.status === 0 ? JSON.parse(bx.stdout) : null; } catch { boardTable = null; } }
-+  if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: the keys that decide what is checked come from the board (fail closed)`]);
-+  const finished = new Set((boardTable.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
++  // a commit that moves no task never needs the board (round 5): the finished statuses default until a move is found, then the board is required
++  const finished = new Set((boardTable?.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']).map((s) => String(s).toUpperCase()));
    const staged = git(['diff', '--cached', '--name-only', '--no-renames']).stdout.split('\n').filter(Boolean);
    const taskFiles = staged.filter((f) => /^backlog\/tasks\/task-\d+( -.*)?\.md$/i.test(f));
    const moves = [];
-@@ -232,28 +341,83 @@ function check(msgFile) {
+@@ -230,30 +339,87 @@ function check(msgFile) {
+     moves.push({ f, now: now.stdout, fm, headFm, status });
+   }
    if (moves.length === 0) return 0;
++  if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: a task close needs the board, because the keys that decide what is checked and the task's launch commit come from it (fail closed)`]);
    const errors = [];
    // self-edit: the check, its table, its helper, the review tool and the hooks may not change in a commit that also closes a task
 -  const prot = staged.filter((p) => matchesAny(table.protected_paths ?? [], p));
@@ -716,9 +719,9 @@ index d8b5cd0d1a940956a8b8d302b99c9243d4ecc51d..d765ffab20de3803eac1c45c7b568e2f
      const id = String(mv.fm.id ?? mv.f).toLowerCase().replace(/^task-0*/, 'task-');
      const assignees = asList(mv.fm.assignee).map(String);
 -    const type = String(mv.fm.type ?? '').toLowerCase();
--    const laneName = assignees.map((a) => /^@lane-(.+)$/.exec(a)?.[1]).find(Boolean);
-+    const laneAssign = assignees.find((a) => /^@lane-/.test(a));
-+    const laneName = laneAssign?.replace(/^@lane-/, '');
++    // H8: the lane assignee is the staged one, else the one the HEAD copy holds, so dropping it (or setting @human) in the closing commit cannot hide the lane
++    const laneAssign = assignees.find((a) => /^@lane-/.test(a)) ?? asList(mv.headFm.assignee).map(String).find((a) => /^@lane-/.test(a));
+     const laneName = assignees.map((a) => /^@lane-(.+)$/.exec(a)?.[1]).find(Boolean);
 +    // F8 + F11: the task as it was taken. L is the board commit that first holds the lane assignee on the task file (the lane cannot choose it); type, assignee and the Files line are read from that copy
 +    let L = null;
 +    let baseTask = null;
@@ -796,7 +799,7 @@ index 518a4dff34f49c63f1a3833971d15a616594d700..0811305866b49ef15aa7ff21f2893b09
      }
    });
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b6477ddd3 100644
+index 028a17e9375029fef36f87fd0958b6e9ba3a9027..307c03fc2556e1630648f4340983d73b30fdb78a 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -9,15 +9,16 @@ import { describe, expect, it } from 'vitest';
@@ -843,11 +846,11 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
    status?: string; before?: string; type?: string; files?: string | null; assignees?: string[]; beforeAssignees?: string[]; trailer?: string | false; msg?: string; table?: 'keep' | 'delete' | 'never';
    tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
 +  split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
-+  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; finalMilestone?: string; finalFiles?: string;
++  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalMilestone?: string; finalFiles?: string;
    mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
  };
  function scenario(o: Opts = {}) {
-@@ -62,29 +75,54 @@ function scenario(o: Opts = {}) {
+@@ -62,29 +75,55 @@ function scenario(o: Opts = {}) {
    const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
    o.tableEdit?.(table);
    if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
@@ -867,6 +870,7 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
 +  if (Object.keys(laneWork).length) { for (const [f, t] of Object.entries(laneWork)) w(f, t); g('add', '-A'); g('commit', '-qm', 'lane work'); }
 +  if (o.tagAtHead) g('tag', o.tagAtHead);
 +  if (o.folded) g('branch', '-f', 'wf2/board', 'HEAD');
++  if (o.noBoard) g('branch', '-D', 'wf2/board');
 +  if (o.afterFold) { for (const [f2, t2] of Object.entries(o.afterFold)) w(f2, t2); g('add', '-A'); g('commit', '-qm', 'fix after the fold'); }
    if (o.table === 'delete') fs.rmSync(path.join(d, 'scripts/analysis/rule-lists.json'));
    for (const [f, t] of Object.entries(o.staged ?? {})) w(f, t);
@@ -913,7 +917,7 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
    lane['plan-code-review.txt'] = body(false);
    let l = o.mutate ? o.mutate(lane, d) : lane;
    if (!('GROUNDER.md' in l)) l['GROUNDER.md'] = grounder(l, o.g);
-@@ -325,3 +363,160 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
+@@ -325,3 +364,171 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
      refused(scenario({ tableEdit: (t) => { t.milestone_docs = { Z: ['msf'] }; } }), /milestone_docs|milestone objectives/);
    });
  });
@@ -1072,6 +1076,17 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
 +    refused(scenario({ tableEdit: row, files: 'src/a.ts', finalFiles: 'src/a.ts, scripts/lib/review-template.js', laneWork: lw }), /review-template\.js differs from the range base/, 44);
 +    const ok = scenario({ tableEdit: row, files: 'src/a.ts, scripts/lib/review-template.js', laneWork: lw });
 +    expect(ok.status, ok.stderr).toBe(0);
++  });
++  it('H8 PLANTED DEFECT: dropping the lane assignee and retyping to doc or record, or setting the assignee to @human, in the closing commit is refused; the unchanged lane close passes (control above)', () => {
++    const lane = ['@lane-BL-COMPLY2'];
++    refused(scenario({ beforeType: 'build', type: 'doc', beforeAssignees: lane, assignees: [] }), /@lane/, 45);
++    refused(scenario({ beforeType: 'build', type: 'record', beforeAssignees: lane, assignees: [] }), /@lane/, 45);
++    refused(scenario({ beforeType: 'build', type: 'doc', beforeAssignees: lane, assignees: ['@human'] }), /@lane/, 45);
++  });
++  it('H2 PLANTED DEFECT: a clone with no board ref: a commit that moves no task passes, a task close is refused with a clear line', () => {
++    const plain = scenario({ noBoard: true, status: 'RUNNING', mutate: () => ({}) });
++    expect(plain.status, plain.stderr).toBe(0);
++    refused(scenario({ noBoard: true }), /a task close needs the board/, 46);
 +  });
 +});
 

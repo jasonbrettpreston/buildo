@@ -1,4 +1,4 @@
-LIST agents-s5-1to3 sha256:05bf98e5ac5476200498dc251b22b8d6c4606ae847f55497b02b2cfab9dc169a material sha256:9dbc57e8a8b256ac6ce0aedb43986613ac9edf7487df8f6508a480d580962b26 part 1 of 1 chunk 2 of 2
+LIST agents-s5-1to3 sha256:679b2fb4fa8fad7af90aa713a97045076eca77862a0cced572d2728f613906ab material sha256:cd1409ed26c8b4c013b17fcd1aa13618a626c49b40cb2f9f30baad4dc43a0eed part 1 of 1 chunk 2 of 2
 RULE LIST agents-s5-1to3 (docs/specs/00-architecture/08_agents.md, sections 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
 
 ### 5.1 Compliance (spec → code)
@@ -23,9 +23,11 @@ Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOL
 
 Dated note 2026-11-20 (M-246, prior text kept; correction to the task-410 note above, grounder round 3; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentence above that the rule-list table and its protected paths cannot be trimmed or widened by an earlier commit of the lane was too wide. What `scripts/hooks/check-lane-close.mjs` enforces now is exactly this: (1) `base_ref`, `finished_statuses`, `protected_paths` and `exempt` are read from the board ref `refs/heads/wf2/board` (else `refs/remotes/origin/wf2/board`), and the task's launch commit is searched on that same ref; a lane whose own table differs from the board's in any of those four keys is refused, so a lane cannot cut the finished statuses, repoint the base to its own branch or widen the exempt paths (a task that changes them is refused too: those changes land on the board first). (2) The rest of the table (lists, rows, every_task) and the lens templates are read from the range base (the merge-base with that ref); a task whose Files line names the table is judged by its branch table for lists and rows, with every_task still from the base. (3) The task type, the lane assignee and the milestone are read from the launch copy of the task file; a lane that retypes or moves its task is refused. (4) `scripts/lib/review-template.js` and `scripts/deepseek-review.js`, which decide what a recomputed prompt hash proves, may not differ from the range base unless the task's launch Files line covers them. Not enforced: a hand-written output whose author computed the public hashes, and a board ref moved by a forbidden command (the lane guard refuses that command).
 
+Dated note 2026-11-20 (M-246, prior text kept; second correction to the task-410 notes above, grounder round 4; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentence above that the task type, the lane assignee and the milestone are read from the launch copy says more than the code did until this round. What `scripts/hooks/check-lane-close.mjs` does now: the lane assignee is the one on the staged task file, else the one on the HEAD copy, so dropping it or setting `@human` in the closing commit does not hide the lane; the task type, and the milestone, are read from the launch copy of the task file (the board commit that first holds that lane assignee on it), so retyping to doc or record in the closing commit does not skip the lens set; a lane build or fix task that drops its lane assignee at close is refused whatever type it then carries. A task close needs the board: the base, the deciding table keys and the launch commit come from `refs/heads/wf2/board` (else `refs/remotes/origin/wf2/board`), and a close in a clone with neither ref is refused with a clear line; a commit that moves no task does not read the board and is not refused for its absence.
+
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b6477ddd3 100644
+index 028a17e9375029fef36f87fd0958b6e9ba3a9027..307c03fc2556e1630648f4340983d73b30fdb78a 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -9,15 +9,16 @@ import { describe, expect, it } from 'vitest';
@@ -72,11 +74,11 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
    status?: string; before?: string; type?: string; files?: string | null; assignees?: string[]; beforeAssignees?: string[]; trailer?: string | false; msg?: string; table?: 'keep' | 'delete' | 'never';
    tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
 +  split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
-+  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; finalMilestone?: string; finalFiles?: string;
++  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalMilestone?: string; finalFiles?: string;
    mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
  };
  function scenario(o: Opts = {}) {
-@@ -62,29 +75,54 @@ function scenario(o: Opts = {}) {
+@@ -62,29 +75,55 @@ function scenario(o: Opts = {}) {
    const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
    o.tableEdit?.(table);
    if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
@@ -96,6 +98,7 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
 +  if (Object.keys(laneWork).length) { for (const [f, t] of Object.entries(laneWork)) w(f, t); g('add', '-A'); g('commit', '-qm', 'lane work'); }
 +  if (o.tagAtHead) g('tag', o.tagAtHead);
 +  if (o.folded) g('branch', '-f', 'wf2/board', 'HEAD');
++  if (o.noBoard) g('branch', '-D', 'wf2/board');
 +  if (o.afterFold) { for (const [f2, t2] of Object.entries(o.afterFold)) w(f2, t2); g('add', '-A'); g('commit', '-qm', 'fix after the fold'); }
    if (o.table === 'delete') fs.rmSync(path.join(d, 'scripts/analysis/rule-lists.json'));
    for (const [f, t] of Object.entries(o.staged ?? {})) w(f, t);
@@ -142,7 +145,7 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
    lane['plan-code-review.txt'] = body(false);
    let l = o.mutate ? o.mutate(lane, d) : lane;
    if (!('GROUNDER.md' in l)) l['GROUNDER.md'] = grounder(l, o.g);
-@@ -325,3 +363,160 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
+@@ -325,3 +364,171 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
      refused(scenario({ tableEdit: (t) => { t.milestone_docs = { Z: ['msf'] }; } }), /milestone_docs|milestone objectives/);
    });
  });
@@ -301,6 +304,17 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
 +    refused(scenario({ tableEdit: row, files: 'src/a.ts', finalFiles: 'src/a.ts, scripts/lib/review-template.js', laneWork: lw }), /review-template\.js differs from the range base/, 44);
 +    const ok = scenario({ tableEdit: row, files: 'src/a.ts, scripts/lib/review-template.js', laneWork: lw });
 +    expect(ok.status, ok.stderr).toBe(0);
++  });
++  it('H8 PLANTED DEFECT: dropping the lane assignee and retyping to doc or record, or setting the assignee to @human, in the closing commit is refused; the unchanged lane close passes (control above)', () => {
++    const lane = ['@lane-BL-COMPLY2'];
++    refused(scenario({ beforeType: 'build', type: 'doc', beforeAssignees: lane, assignees: [] }), /@lane/, 45);
++    refused(scenario({ beforeType: 'build', type: 'record', beforeAssignees: lane, assignees: [] }), /@lane/, 45);
++    refused(scenario({ beforeType: 'build', type: 'doc', beforeAssignees: lane, assignees: ['@human'] }), /@lane/, 45);
++  });
++  it('H2 PLANTED DEFECT: a clone with no board ref: a commit that moves no task passes, a task close is refused with a clear line', () => {
++    const plain = scenario({ noBoard: true, status: 'RUNNING', mutate: () => ({}) });
++    expect(plain.status, plain.stderr).toBe(0);
++    refused(scenario({ noBoard: true }), /a task close needs the board/, 46);
 +  });
 +});
 diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts

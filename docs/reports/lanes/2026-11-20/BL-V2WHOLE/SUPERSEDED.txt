@@ -1,11 +1,14 @@
-Superseded by the round 4 re-run (2026-11-20), removed in the same commit as the new outputs:
+Superseded by the round 5 re-run (2026-11-20), removed in the same commit as the new outputs:
 DIFF.patch
+in-out-code-review-p1.txt
+in-out-code-review-p2.txt
 in-out-compliance-agents-s5-1to3-p1.txt
 in-out-compliance-agents-s5-1to3-p2.txt
 in-out-compliance-agents-s7-s11-p1.txt
 in-out-compliance-agents-s7-s11-p2.txt
 in-out-compliance-eng-all-p1.txt
 in-out-compliance-eng-all-p2.txt
+in-out-compliance-eng-all-p3.txt
 in-out-compliance-five-words-p1.txt
 in-out-compliance-five-words-p2.txt
 in-out-compliance-inc-S-p1.txt
@@ -16,9 +19,6 @@ in-out-compliance-orchestrator-doc17-p1.txt
 in-out-compliance-orchestrator-doc17-p2.txt
 in-out-compliance-plan-protocol-p1.txt
 in-out-compliance-plan-protocol-p2.txt
-in-out-compliance-plan-protocol-p3.txt
-in-out-compliance-plan-protocol-p4.txt
-in-out-compliance-plan-protocol-p5.txt
 in-out-compliance-policy-124-s2-s5-p1.txt
 in-out-compliance-policy-124-s2-s5-p2.txt
 in-out-compliance-policy-124-s2-s5-p3.txt
@@ -27,13 +27,17 @@ in-out-compliance-policy-124-s2-s5-p5.txt
 in-out-compliance-policy-124-s2-s5-p6.txt
 in-out-compliance-queue-137-p1.txt
 in-out-compliance-queue-137-p2.txt
-out-code-review.txt
+in-out-error-paths-p1.txt
+in-out-error-paths-p2.txt
+out-code-review-p1.txt
+out-code-review-p2.txt
 out-compliance-agents-s5-1to3-p1.txt
 out-compliance-agents-s5-1to3-p2.txt
 out-compliance-agents-s7-s11-p1.txt
 out-compliance-agents-s7-s11-p2.txt
 out-compliance-eng-all-p1.txt
 out-compliance-eng-all-p2.txt
+out-compliance-eng-all-p3.txt
 out-compliance-five-words-p1.txt
 out-compliance-five-words-p2.txt
 out-compliance-inc-S-p1.txt
@@ -44,9 +48,6 @@ out-compliance-orchestrator-doc17-p1.txt
 out-compliance-orchestrator-doc17-p2.txt
 out-compliance-plan-protocol-p1.txt
 out-compliance-plan-protocol-p2.txt
-out-compliance-plan-protocol-p3.txt
-out-compliance-plan-protocol-p4.txt
-out-compliance-plan-protocol-p5.txt
 out-compliance-policy-124-s2-s5-p1.txt
 out-compliance-policy-124-s2-s5-p2.txt
 out-compliance-policy-124-s2-s5-p3.txt
@@ -55,9 +56,11 @@ out-compliance-policy-124-s2-s5-p5.txt
 out-compliance-policy-124-s2-s5-p6.txt
 out-compliance-queue-137-p1.txt
 out-compliance-queue-137-p2.txt
-out-error-paths.txt
+out-error-paths-p1.txt
+out-error-paths-p2.txt
 real-cfgbounds.txt
 real-pagetable.txt
 real-thinroute.txt
 real-v2list.txt
+real-v2whole.txt
 selfproof.txt

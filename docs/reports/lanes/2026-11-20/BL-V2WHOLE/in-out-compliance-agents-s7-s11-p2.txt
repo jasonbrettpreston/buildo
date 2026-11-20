@@ -1,4 +1,4 @@
-LIST agents-s7-s11 sha256:b0fd6aac813d999266f716af347dca9e4f48774014e4e8f65b2a61fa0bd25b4f material sha256:9dbc57e8a8b256ac6ce0aedb43986613ac9edf7487df8f6508a480d580962b26 part 1 of 1 chunk 2 of 2
+LIST agents-s7-s11 sha256:b0fd6aac813d999266f716af347dca9e4f48774014e4e8f65b2a61fa0bd25b4f material sha256:cd1409ed26c8b4c013b17fcd1aa13618a626c49b40cb2f9f30baad4dc43a0eed part 1 of 1 chunk 2 of 2
 RULE LIST agents-s7-s11 (docs/specs/00-architecture/08_agents.md, sections 7. Rules & economics; 11. Grounded Verification Protocol), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
 
 ## 7. Rules & economics
@@ -85,7 +85,7 @@ Dated note 2026-11-14 (M-246, prior text kept; McQueue · lane MQ; operator, ver
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b6477ddd3 100644
+index 028a17e9375029fef36f87fd0958b6e9ba3a9027..307c03fc2556e1630648f4340983d73b30fdb78a 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -9,15 +9,16 @@ import { describe, expect, it } from 'vitest';
@@ -132,11 +132,11 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
    status?: string; before?: string; type?: string; files?: string | null; assignees?: string[]; beforeAssignees?: string[]; trailer?: string | false; msg?: string; table?: 'keep' | 'delete' | 'never';
    tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
 +  split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
-+  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; finalMilestone?: string; finalFiles?: string;
++  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalMilestone?: string; finalFiles?: string;
    mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
  };
  function scenario(o: Opts = {}) {
-@@ -62,29 +75,54 @@ function scenario(o: Opts = {}) {
+@@ -62,29 +75,55 @@ function scenario(o: Opts = {}) {
    const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
    o.tableEdit?.(table);
    if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
@@ -156,6 +156,7 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
 +  if (Object.keys(laneWork).length) { for (const [f, t] of Object.entries(laneWork)) w(f, t); g('add', '-A'); g('commit', '-qm', 'lane work'); }
 +  if (o.tagAtHead) g('tag', o.tagAtHead);
 +  if (o.folded) g('branch', '-f', 'wf2/board', 'HEAD');
++  if (o.noBoard) g('branch', '-D', 'wf2/board');
 +  if (o.afterFold) { for (const [f2, t2] of Object.entries(o.afterFold)) w(f2, t2); g('add', '-A'); g('commit', '-qm', 'fix after the fold'); }
    if (o.table === 'delete') fs.rmSync(path.join(d, 'scripts/analysis/rule-lists.json'));
    for (const [f, t] of Object.entries(o.staged ?? {})) w(f, t);
@@ -202,7 +203,7 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
    lane['plan-code-review.txt'] = body(false);
    let l = o.mutate ? o.mutate(lane, d) : lane;
    if (!('GROUNDER.md' in l)) l['GROUNDER.md'] = grounder(l, o.g);
-@@ -325,3 +363,160 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
+@@ -325,3 +364,171 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
      refused(scenario({ tableEdit: (t) => { t.milestone_docs = { Z: ['msf'] }; } }), /milestone_docs|milestone objectives/);
    });
  });
@@ -361,6 +362,17 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
 +    refused(scenario({ tableEdit: row, files: 'src/a.ts', finalFiles: 'src/a.ts, scripts/lib/review-template.js', laneWork: lw }), /review-template\.js differs from the range base/, 44);
 +    const ok = scenario({ tableEdit: row, files: 'src/a.ts, scripts/lib/review-template.js', laneWork: lw });
 +    expect(ok.status, ok.stderr).toBe(0);
++  });
++  it('H8 PLANTED DEFECT: dropping the lane assignee and retyping to doc or record, or setting the assignee to @human, in the closing commit is refused; the unchanged lane close passes (control above)', () => {
++    const lane = ['@lane-BL-COMPLY2'];
++    refused(scenario({ beforeType: 'build', type: 'doc', beforeAssignees: lane, assignees: [] }), /@lane/, 45);
++    refused(scenario({ beforeType: 'build', type: 'record', beforeAssignees: lane, assignees: [] }), /@lane/, 45);
++    refused(scenario({ beforeType: 'build', type: 'doc', beforeAssignees: lane, assignees: ['@human'] }), /@lane/, 45);
++  });
++  it('H2 PLANTED DEFECT: a clone with no board ref: a commit that moves no task passes, a task close is refused with a clear line', () => {
++    const plain = scenario({ noBoard: true, status: 'RUNNING', mutate: () => ({}) });
++    expect(plain.status, plain.stderr).toBe(0);
++    refused(scenario({ noBoard: true }), /a task close needs the board/, 46);
 +  });
 +});
 diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts

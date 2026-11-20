@@ -1,12 +1,20 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:21:43.003Z file_sha256=c2c7bac679568c924bb0316c207aed47bafd3339caf06a6c0f3fca533b923fd5 prompt_sha256=41bb54c199c7c7e2d68083bccd504082e79b6a2a5603f29183adece0f4cd09fa
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:51:19.030Z file_sha256=c4013e47caf2d5794f2982c0b6c018281c874fa3c84e639295d958affecf785a prompt_sha256=1735c02448f59eeec65ad87ef824a46df9c0b4eb7ec9afbf1791448d804bec25
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — context: no pasted clause (the operator ruling the diff implements, 2026-11-20 item 4, is not in the pasted context) "" — docs/specs/00-architecture/08_agents.md:230 "item 4 as put to him: \"Keep the split for code review, error paths, UX and security\"" — the governing ruling and the task-410 card are quoted only inside the material under review, so nothing pasted states what the diff chunking, the chunk proof, the board-ref table or the prompt-hash recomputation must do, and those clauses cannot be checked — paste the operator entry and the task-410 Files/acceptance text as context so the mechanism (rule-lists.mjs buildLensInputs, check-lane-close.mjs chunkErrors, BOARD_REFS, lensPromptHash) is judged against the words that ordered it
+DEFER severity=MED — inc-S whole file, its only clause set is the element table "| id | element | where | status | deliverers | built |" whose rows are all search page elements (A.1 "Brand block", B.1 "Candidate list", G.5 "Report page for the lot on a hit") — NONE of the seven changed paths (scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, scripts/hooks/check-lane-close.mjs, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, docs/reports/generated/rule-lists-by-kind.md, src/tests/backlog/backlog-lane.logic.test.ts) is a search page element — the attached governing list does not reach a single line of this chunk, so this run proves nothing about the change and the task's Files line attached the wrong list — attach the tooling lists the path table gives for these paths and rerun the lens per list against that material.
+
+DEFER severity=LOW — inc-S "The search pages are built on mobile (search page, choose-your-lot map page, semi question page) ... Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button" (no pasted clause or pasted operator ruling names review tooling) — scripts/analysis/rule-lists.mjs, hunk "@@ -285,7 +304,31 @@" "V2.WHOLE (task-410): when the material is a git diff that leaves no room for a list part, the TOOL splits it at FILE boundaries into chunks" — the diff adds behaviour (diff chunking at file boundaries, board-ref pinning of base_ref/finished_statuses/protected_paths/exempt, prompt-hash recomputation) that no pasted clause or ruling names and I cannot see the authorising operator words, they are quoted only inside the material — record the operator verbatim for task-410 in the pasted context so the addition is judged against it, not against inc-S.
+
+DEFER severity=LOW — inc-S contains no clause on amending Spec 137 Rule 3 or Spec 08 section 5.3, cannot see any authorisation in the pasted context — docs/specs/00-architecture/137_mcqueue.md hunk "@@ -96,6 +96,8 @@" "+Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE; ...): Rule 3 is amended for lane build and fix tasks." — the change rewrites the governing rule "The status line changes in the same commit as the work" on the strength of a verbatim that is not pasted, so compliance with the amendment cannot be verified here — paste the entry "2026-11-20 · Operator AGREES the Rule 3 amendment and RULES on material too large to review" into the context file for this build.
+
+REJECT — inc-S rows A.11 "Clear (x) button inside the box", A.6 "Reports-left line under the box", D.9 "Input: distance from your wall to the shared line", E.2 "Web footer: legal line, Terms of Service" — the diff is accused of leaving these unbuilt — not a real issue: those rows are pasted as NOT-BUILT/NOT-BUILT objectives with their own deliverers (GAP.13, SRCH.A6, SRCH.SEMI, MF-44 MF-46), and the change's paths are tooling and spec docs, not those screens.
+
+MET — inc-S built state "counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}" — docs/reports/generated/rule-lists-by-kind.md, hunks "@@ -17,10 +17,10 @@" to "@@ -112,12 +112,12 @@" (no element row altered) — the diff changes only list sizes and totals, no status row, so the pasted built/no-data/not-built state is left as the list states it.
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 0   Unmet: 0
+Clauses checked: 1   Unmet: 0
 
 ---
-⏱  16834ms (16.8s)
-📊 Tokens — total: 34065, input: 31331, output: 2734, reasoning: 2514
+⏱  53597ms (53.6s)
+📊 Tokens — total: 38705, input: 32528, output: 6177, reasoning: 5245

@@ -1,5 +1,5 @@
-LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:9dbc57e8a8b256ac6ce0aedb43986613ac9edf7487df8f6508a480d580962b26 part 1 of 1 chunk 2 of 2
-RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:2625c628abc129dd1cbaaa0faaf2a9911accd33e3d4df874003653c2f67b1c6b part 1 of 1 chunk 2 of 2
+RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
 
 ---
 id: doc-17
@@ -168,8 +168,35 @@ Readings and register entries of the rulings register. They are NOT the operator
 - RR-0218 2026-11-19: "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:870)
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index 518a4dff34f49c63f1a3833971d15a616594d700..0811305866b49ef15aa7ff21f2893b09469fe0d0 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -229,8 +229,20 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+       expect(e).toContain('in-<same name>');
+       expect(e).toContain('out-<lens>[-<list id>]-rN.txt');
+       expect(e).toContain('fix-*.txt');
+-      // mechanism (rule-lists.mjs lens-input): the RULE LIST is split at its headings into -p1..-pN and the whole diff rides in every part; a diff is never split
+-      expect(e).toMatch(/compliance lens reviews the WHOLE change: lens-input splits the rule list at its headings into parts -p1\.\.-pN and puts the whole diff in every part; the diff is never split or trimmed to core files; a diff too large for one part is refused by lens-input: report that to the orchestrator at once/);
++      // V2.WHOLE (task-410): lens-input splits the rule list at its headings AND, when the diff leaves no room for a list part, the DIFF at file boundaries (the tool, never by hand)
++      expect(e).toContain('The compliance lens reviews the WHOLE change');
++      expect(e).toContain('git -c core.quotepath=false diff --no-ext-diff --no-textconv --text --full-index --no-color --no-renames --src-prefix=a/ --dst-prefix=b/ -U3');
++      expect(e).toMatch(/\$\(git log refs\/heads\/\S+ --first-parent --reverse --format=%H -S@lane-\S+ -- 'backlog\/tasks\/[^']+' \| head -1\) HEAD -- /);
++      expect(e).toContain('the base is the task\'s launch commit on the board');
++      expect(e).toContain("':(exclude,glob)docs/reports/lanes/**' ':(exclude,glob)docs/reports/reviews/**'");
++      expect(e).toContain('lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file)');
++      expect(e).toContain('each chunk goes against every list part');
++      expect(e).toContain('stamped chunk c of m with its path list');
++      expect(e).toContain('out-<lens>-pN.txt');
++      expect(e).toContain('one file alone over the room is refused naming the file and its size: report that to the orchestrator at once');
++      expect(e).toContain('The close check recomputes the changed paths of the task range');
++      expect(e).not.toMatch(/the diff is never split or trimmed to core files/);
++      expect(e).not.toMatch(/puts the whole diff in every part/);
+       expect(e).not.toMatch(/a diff over the review tool's bound is split/);
+     }
+   });
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b6477ddd3 100644
+index 028a17e9375029fef36f87fd0958b6e9ba3a9027..307c03fc2556e1630648f4340983d73b30fdb78a 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -9,15 +9,16 @@ import { describe, expect, it } from 'vitest';
@@ -216,11 +243,11 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
    status?: string; before?: string; type?: string; files?: string | null; assignees?: string[]; beforeAssignees?: string[]; trailer?: string | false; msg?: string; table?: 'keep' | 'delete' | 'never';
    tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
 +  split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
-+  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; finalMilestone?: string; finalFiles?: string;
++  tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalMilestone?: string; finalFiles?: string;
    mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
  };
  function scenario(o: Opts = {}) {
-@@ -62,29 +75,54 @@ function scenario(o: Opts = {}) {
+@@ -62,29 +75,55 @@ function scenario(o: Opts = {}) {
    const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
    o.tableEdit?.(table);
    if (o.table !== 'never') w('scripts/analysis/rule-lists.json', JSON.stringify(table));
@@ -240,6 +267,7 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
 +  if (Object.keys(laneWork).length) { for (const [f, t] of Object.entries(laneWork)) w(f, t); g('add', '-A'); g('commit', '-qm', 'lane work'); }
 +  if (o.tagAtHead) g('tag', o.tagAtHead);
 +  if (o.folded) g('branch', '-f', 'wf2/board', 'HEAD');
++  if (o.noBoard) g('branch', '-D', 'wf2/board');
 +  if (o.afterFold) { for (const [f2, t2] of Object.entries(o.afterFold)) w(f2, t2); g('add', '-A'); g('commit', '-qm', 'fix after the fold'); }
    if (o.table === 'delete') fs.rmSync(path.join(d, 'scripts/analysis/rule-lists.json'));
    for (const [f, t] of Object.entries(o.staged ?? {})) w(f, t);
@@ -286,7 +314,7 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
    lane['plan-code-review.txt'] = body(false);
    let l = o.mutate ? o.mutate(lane, d) : lane;
    if (!('GROUNDER.md' in l)) l['GROUNDER.md'] = grounder(l, o.g);
-@@ -325,3 +363,160 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
+@@ -325,3 +364,171 @@ describe('close check: the milestone guard (V2.LIST round 2)', () => {
      refused(scenario({ tableEdit: (t) => { t.milestone_docs = { Z: ['msf'] }; } }), /milestone_docs|milestone objectives/);
    });
  });
@@ -445,6 +473,17 @@ index 028a17e9375029fef36f87fd0958b6e9ba3a9027..e0466ec72d231208f7ac2516a08e5f6b
 +    refused(scenario({ tableEdit: row, files: 'src/a.ts', finalFiles: 'src/a.ts, scripts/lib/review-template.js', laneWork: lw }), /review-template\.js differs from the range base/, 44);
 +    const ok = scenario({ tableEdit: row, files: 'src/a.ts, scripts/lib/review-template.js', laneWork: lw });
 +    expect(ok.status, ok.stderr).toBe(0);
++  });
++  it('H8 PLANTED DEFECT: dropping the lane assignee and retyping to doc or record, or setting the assignee to @human, in the closing commit is refused; the unchanged lane close passes (control above)', () => {
++    const lane = ['@lane-BL-COMPLY2'];
++    refused(scenario({ beforeType: 'build', type: 'doc', beforeAssignees: lane, assignees: [] }), /@lane/, 45);
++    refused(scenario({ beforeType: 'build', type: 'record', beforeAssignees: lane, assignees: [] }), /@lane/, 45);
++    refused(scenario({ beforeType: 'build', type: 'doc', beforeAssignees: lane, assignees: ['@human'] }), /@lane/, 45);
++  });
++  it('H2 PLANTED DEFECT: a clone with no board ref: a commit that moves no task passes, a task close is refused with a clear line', () => {
++    const plain = scenario({ noBoard: true, status: 'RUNNING', mutate: () => ({}) });
++    expect(plain.status, plain.stderr).toBe(0);
++    refused(scenario({ noBoard: true }), /a task close needs the board/, 46);
 +  });
 +});
 diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts

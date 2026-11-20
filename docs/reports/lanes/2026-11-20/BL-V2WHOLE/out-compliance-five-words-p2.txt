@@ -1,20 +1,16 @@
-◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:21:42.919Z file_sha256=481a58ec2f35931b6adee3730b19c32fb1c09a6766571786c5570d34e6c23be5 prompt_sha256=2c1d1dfc32c99e7d0fce2c084558a0ddd15ea50d15e3d2703b1336704535d3d0
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:51:18.946Z file_sha256=b82f160559a232068837ca7b422beb5bc892a5036ef6a05767a47d93803b2271 prompt_sha256=8bf44cb49a2134a145fb034d6660a3b5a03070382f06f55dad15f68e1d55406d
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-five-words-p2.txt (model: deepseek-reasoner)
 
-```
-REJECT — five-words rule list, part 1 of 1 (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary) "RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary), part 1 of 1" — the whole new lane-close behaviour (chunked material, chunk stamps, prompt_sha256 recompute) is accused of being out of scope because no pasted line names it — the pasted part is a Glossary of definitions for the step program and carries no obligation on src/tests/backlog, so no clause is unmet; the card authorising task-410 is not pasted and I do not invent it
-MET — class-A "its behaviours need a both-directions lock" — src/tests/backlog/check-lane-close.logic.test.ts:+366 "PLANTED DEFECTS each have a passing control (the same scenario untouched)" — every planted defect is paired with a passing control, so each new behaviour is asserted in both directions
-MET — lock / lock-db / check / hook "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/backlog/rule-lists.logic.test.ts:+494 "describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries'" — the added tests live under src/tests as *.logic.test.ts and name V2.WHOLE in every describe; whether V2.WHOLE is a declared id or alias in scripts/analysis/rule-lists.json is cannot see from this context
-MET — five words "R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates" — paths stamp of this chunk "paths: [\"src/tests/backlog/check-lane-close.logic.test.ts\",\"src/tests/backlog/rule-lists.logic.test.ts\"]" — no file under scripts/analysis/step-validate.mjs or scripts/analysis/gates/ is touched, so the gate V mapping is unchanged by this chunk
-REJECT — five words "each PASS or FAIL from the mapped gates" — that the fixture docs/ev.md "the five words and the plan protocol" stands in for gate V — it is list text in a temp fixture written by scenario(), not a PASS/FAIL computation, and the gate itself is untouched
-REJECT — #NN "Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates" — that the trailing 15…44 arguments to refused() are #NN invariant citations — they are not written as #NN and no prose in the diff calls them step-validate invariants; they are planted-defect numbers and the clause does not reach them
-REJECT — Gate A … K, V "Gate E is compute purity, Gate F the score floor" — that the new test titles "F1 (e)", "F3 (h)", "H1", "H3", "H4" collide with Gates F and H — they are grounder-attack labels inside test titles, not gate tokens in a rule map, and title wording is lens-code-review
-REJECT — lock / lock-db / check / hook "a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook" — that the new tests are mis-kinded as locks — they are named tests under src/tests run by the test runner, which is the lock kind, and no .husky or step-validate file is added
+DEFER severity=MED — pasted context "(no pasted context provided)" — src/tests/backlog/check-lane-close.logic.test.ts:421 "// V2.WHOLE fix round (grounder 2026-11-20, attacks e, f, g binary, h, k)" — the guards V2.WHOLE, H1-H4 and F1-F13 are named only by card task-410, by a grounder attack list and by operator item "1-5 y", none of which is in the pasted context, so "nothing added that the card or ruling did not name" cannot be verified — paste the card, the grounder attacks and operator item "1-5 y" with the plan before lock.
+
+DEFER severity=MED — operator ruling "1-5 y" item 3, cited at src/tests/backlog/check-lane-close.logic.test.ts:499 and not pasted — src/tests/backlog/check-lane-close.logic.test.ts:500 "const gold = (x: Record<string, unknown>) => { (x.exempt as string[]).push('src/golden/**/*.web.json'); (x.rows as unknown[]).push({ id: 'g', globs: ['src/golden/**'], lists: ['first'], why: 'goldens' }); };" — the test name claims the golden is "named in the table exempt with its check in exempt_why" but the fixture sets only a path glob and a row `why`, no exempt_why, so the ruling is satisfied only by the test name — set exempt_why in the fixture and paste the ruling wording it encodes.
+
+MET — five words "R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates." — src/tests/backlog/check-lane-close.logic.test.ts:378 — the chunk touches only the two backlog test files, gate V and scripts/analysis/step-validate.mjs are untouched, so the one pasted clause is not broken.
+
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 12   Unmet: 0
-```
+Clauses checked: 2   Unmet: 0
 
 ---
-⏱  50948ms (50.9s)
-📊 Tokens — total: 25297, input: 15958, output: 9339, reasoning: 8485
+⏱  57437ms (57.4s)
+📊 Tokens — total: 27967, input: 16273, output: 11694, reasoning: 11197

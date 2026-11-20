@@ -1,24 +1,24 @@
-◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:21:43.048Z file_sha256=ffb2159ab9d359a31cae667dc658d40e6964037b2b2f019c4be3e6d8eacfe66d prompt_sha256=eeea5bb01935b5b5fec056c77cc0abdd8986f31b96ce7949ab83447d29c3ec7f
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T21:51:19.072Z file_sha256=abe3e518d6ba4b0602274f644f7ffe4741f8332b2404cf5321c5f7df8e35d16b prompt_sha256=ada50aaa4e02e8e441b7014b864ab9e74ae3399e7bca8e140217b1d40581274d
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-V2WHOLE/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — Project objectives, relevance "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — src/tests/backlog/rule-lists.logic.test.ts:495 "// V2.WHOLE (task-410): the review tool splits a change that does not fit one input at FILE boundaries" — the added coverage is for the review tool, and no pasted clause, card or ruling names task-410 or makes lens-input chunking a supporting function of the designed report, details or search page; the relevance link exists only in a comment — quote the card or operator ruling that makes the review tool a supporting function, or move this work out of the search increment.
+BUG severity=HIGH — Project objectives, five principles (PLAN-PROTOCOL.md:3) "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — src/tests/backlog/check-lane-close.logic.test.ts:424 "describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () => {" — the diff adds refusal families (chunk-stamp edit, prompt_sha256 recompute, DIFF_ARGS --text/--full-index, core.quotepath refusal, finished_statuses/base_ref guards, golden exemption) that no pasted clause or ruling names, so it is scope creep against the pasted objectives — land only the review-completeness behaviour a pasted clause names, or paste the operator ruling that names task-410 item by item before merge.
 
-BUG severity=HIGH — Project objectives, no scope creep "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — src/tests/backlog/rule-lists.logic.test.ts:626 "// V2.WHOLE round 3, operator item 3 (\"1-5 y\"): the real table (task-406's fold) exempts a real golden from the review material and nothing that is not one." — a second card's fold (task-406) is carried inside the task-410 change and golden-snapshot exemption is named by no pasted clause — split the golden exemption block into its own change against its own card.
+BUG severity=HIGH — Increment objectives (MORNING-DECISIONS.md:673) "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — src/tests/backlog/rule-lists.logic.test.ts:504 "describe('V2.WHOLE: lens-input splits a change that leaves no room for a list part, at file boundaries', () => {" — the material filed under the increment-1 b-search rule list adds only chunk splitting of review inputs and satisfies no search page, address-confusion or lot-confusion element — move this harness work out of the b-search lane list, or add the search element the increment names.
 
-BUG severity=HIGH — Increment objectives, search before increment 1 "Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion" — src/tests/backlog/rule-lists.logic.test.ts:583 "describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', () => {" — the material under review is 141 added lines of review-tool tests and none touch the search page, the address confusion or the lot confusion the increment is ordered to deliver first — land this after the search page work or obtain a pasted ruling that reorders it.
+DEFER severity=MED — Project objectives (MORNING-DECISIONS.md:635) "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — src/tests/backlog/check-lane-close.logic.test.ts:370 "const F5 = Object.fromEntries(['f1', 'f2', 'f3', 'f4', 'f5'].map((n) => [" — the change is the lane-close review harness only, so nothing in this chunk traces to the report, details or search page the database exists to service — the card line must state the supporting function this harness serves, since no pasted line does.
 
-DEFER severity=MED — Project objectives, one plan "we need one plan - we can only execute one plan" — src/tests/backlog/rule-lists.logic.test.ts:626 "operator item 3 (\"1-5 y\")" — the chunk advances task-410, task-406's fold and an operator item 3 in one stream, so which single plan it executes cannot be seen — name the one plan in the change description or split the folds.
+MET — five principles, "accuracy" (PLAN-PROTOCOL.md:3) — src/tests/backlog/check-lane-close.logic.test.ts:36 — promptHash recomputes prompt_sha256 from the real template text instead of a constant HEX64, so the header value checked is the accurate one.
 
-MET — Project objectives, database services the report, details and search page — src/tests/backlog/rule-lists.logic.test.ts:495 — the diff touches only a backlog test file, no report, details or search path is altered, so that clause is not broken.
+MET — five principles, "standardization" (PLAN-PROTOCOL.md:3) — src/tests/backlog/check-lane-close.logic.test.ts:42 — DIFF_FLAGS is imported from the tool's exported DIFF_ARGS, so the fixture and the tool print the diff with one shared flag set.
 
-MET — Increment objectives, 65 designed search elements A to G "| id | element | where | status | deliverers | built |" — src/tests/backlog/rule-lists.logic.test.ts:583 — no element A to G is added, removed or re-scoped by this chunk, so their statuses stand.
+MET — Project objectives (MORNING-DECISIONS.md:652) "we need one plan - we can only execute one plan" — src/tests/backlog/check-lane-close.logic.test.ts:367 — every added assertion is filed under the single V2.WHOLE (task-410) marker, one task, one plan.
 
-REJECT — Project objectives "or a supporting function" — that the change feeds old code or is wholly irrelevant — this is not a real issue on the diff alone, since the clause itself admits a supporting function and the chunk deletes nothing.
+REJECT — Project objectives (MORNING-DECISIONS.md:635) "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page" — accused of adding no report or search behaviour — that clause constrains what the database serves, not which supporting harness files a lane may edit, so it is not the clause the diff breaks.
 
 VERDICT: FAIL on compliance with the pasted clauses
 Clauses checked: 9   Unmet: 3
 
 ---
-⏱  38105ms (38.1s)
-📊 Tokens — total: 13362, input: 5399, output: 7963, reasoning: 7217
+⏱  42784ms (42.8s)
+📊 Tokens — total: 24189, input: 15483, output: 8706, reasoning: 7897
