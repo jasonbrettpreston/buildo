@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-AREAFACTOR'
 created_date: '2026-11-20T18:27:00Z'
-updated_date: '2026-11-20T18:33:00Z'
+updated_date: '2026-11-20T19:33:00Z'
 labels:
   - McFix
   - McFix A
@@ -41,4 +41,6 @@ Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-AREAFACTOR, worktree /Users/brettpreston_macmini/Buildo-wt-areafactor, branch wf1/inc1b-areafactor), RR-0240
+
+Operator ruling 2026-11-20 (MORNING-DECISIONS.md entry 'Operator RULES on five open items', item 5; his words: "yes to all"): task-411 is accepted as built: the server sends one converted square-feet figure and the phone only rounds it and appends the unit word; the both-units-and-toggle half of the unit ruling (:241, FE-44) applies to the report only, not to lead detail (Spec 126:1132). The CONFLICT findings on that half are settled by this.
 <!-- SECTION:NOTES:END -->

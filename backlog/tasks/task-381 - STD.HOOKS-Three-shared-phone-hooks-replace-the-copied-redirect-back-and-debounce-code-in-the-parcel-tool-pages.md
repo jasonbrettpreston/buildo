@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HOOKS3'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T18:32:00Z'
+updated_date: '2026-11-20T19:33:00Z'
 labels:
   - McFix
   - McFix B
@@ -41,4 +41,6 @@ Plan section B1. Page-runner measurement: redirect-once-on-settled, back-with-ca
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-20 taken on the board at lane launch (lane BL-HOOKS3, worktree /Users/brettpreston_macmini/Buildo-wt-hooks3, branch wf1/inc1b-hooks3), RR-0240
+
+Operator ruling 2026-11-20 (same entry, item 1; his words: "yes to all"): the three shared hooks in task 381 are named per-feature code under Spec 126 section 11b.1, and the task-381 board row is their queue row.
 <!-- SECTION:NOTES:END -->
