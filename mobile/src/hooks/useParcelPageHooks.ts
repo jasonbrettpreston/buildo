@@ -1,9 +1,10 @@
-// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 (a redirect fires once, on the first settled data, never on a background refetch)
+// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 ("Gate conditions MUST be stable signals": the redirect waits on isFetching being false and fires once, so a refetch toggling isFetching cannot repeat it)
 //            docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 (the parcel-tool pages) and its dated note 2026-11-10 (the search debounce)
-//            docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b (a mount holds hooks and callbacks; shared behaviour lives in @/hooks)
+//            scripts/surfaces/_schema/bindings.json (mount_internal lists "@/hooks/"; a converted surface's mount file "may import only a framework package (framework[]), a binding module or a project-internal path (mount_internal[]")
+//            docs/specs/02-web-admin/135_mcfrontend_decisions_register.md FE-31 ("Every MaxBLD page (a converted non-REPORT surface) is descriptor + content + standard library components configured by schema")
 //
 // STD.HOOKS (task-381): the three mount concerns the parcel-tool pages used to copy (redirect once on settled data, go back, debounced value). A mount may
-// import only @/hooks/ (FE-31 C-2), so they live here. This is its own file, not useParcelLookup.ts: five page tests replace that whole module with a mock.
+// import only framework, binding and mount_internal paths (bindings.json), so they live here. This is its own file, not useParcelLookup.ts: five page tests replace that whole module with a mock.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { PARCEL_TAB_ROUTE } from '@/lib/parcelSearchMatch';

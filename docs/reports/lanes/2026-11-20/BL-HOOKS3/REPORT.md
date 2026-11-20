@@ -28,3 +28,10 @@ Operator item: none. Note for the orchestrator: the "red" commit landed (5614c61
 - No push, no DB, no full suite, no checkout/reset/stash. Task left RUNNING; grounder owed. GROUNDER.md owed from a separate agent: the commit that sets the task BUILT is refused without it.
 - Hooks' --check scripts for the surface files: ran inside the real commit (GATE OK).
 STATUS: task-381 BL-HOOKS3 ready, RUNNING, grounder owed; phone-test green unproven until Mobile CI. Question: should the red-by-construction test commit 5614c611b be squashed into the build commit at the station?
+
+## Plain additions after the grounder (2026-11-20)
+- Red was a mobile typecheck missing-export error (TS2305 for the three hooks) plus a landed test-only commit; the pre-commit hook runs no phone test, so it never refused the test.
+- The test file changed between the two commits (the first commit imported the hooks from useParcelLookup and mocked apiClient, authStore and Sentry; the second imports them from useParcelPageHooks and mocks only expo-router).
+- Mobile CI is the first real run of these tests, and of the page tests after the change.
+- The task card's count of four redirect copies was wrong: three is true (index.tsx's effect is a different route-keyed push).
+- Doc-only fix commit: header cites corrected (Spec 126 11b cite replaced by bindings.json mount_internal and Spec 135 FE-31 words; Spec 99 6.5 cite reworded to what 6.5 says, "Gate conditions MUST be stable signals"; Spec 99 holds no redirect-once rule: grep for "redirect" in it found none); Spec 100 Target Files now lists useParcelPageHooks.ts and parcelPageHooks.test.tsx.

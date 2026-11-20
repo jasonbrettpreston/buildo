@@ -1,6 +1,6 @@
-// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 (a redirect fires once, on the first settled data, never on a background refetch)
+// SPEC LINK: docs/specs/03-mobile/99_mobile_state_architecture.md §6.5 ("Gate conditions MUST be stable signals": the redirect waits on isFetching being false and fires once)
 //            docs/specs/03-mobile/100_mobile_parcel_cost_tool.md §4 (the parcel-tool pages) and its dated note 2026-11-10 (the search debounce)
-//            docs/specs/02-web-admin/126_maxbld_surface_standard.md §11b (a mount holds hooks and callbacks; shared behaviour lives in @/hooks)
+//            scripts/surfaces/_schema/bindings.json (mount_internal lists "@/hooks/")
 //
 // STD.HOOKS (task-381): the three shared hooks that replaced the code copied into the parcel-tool mounts. The REAL hooks run here (only expo-router
 // is mocked).
