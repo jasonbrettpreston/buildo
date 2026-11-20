@@ -92,4 +92,6 @@ Step 4 audit by a separate grounder 2026-11-20 (file ~/Buildo-scratch/lanes-2026
 2026-11-20 BL-V2LIST round 3 report.
 
 2026-11-20 BL-V2LIST round 3: row for docs/reference/** (task-406's own Files path matched no row).
+
+2026-11-20 BL-V2LIST round 4: drift test for the surface-contract-routes row (operator MORNING-DECISIONS.md:1517).
 <!-- SECTION:NOTES:END -->

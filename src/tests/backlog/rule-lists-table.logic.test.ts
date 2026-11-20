@@ -62,3 +62,50 @@ describe('V2.LIST round 2: the repo copy of the plan protocol', () => {
     expect(crypto.createHash('sha256').update(body).digest('hex')).toBe('d92940f479c51d30b0622b2b6236a0286cb5c9124add4c778d3c173e27d9942a');
   });
 });
+
+// V2.LIST round 4 (task-406; operator, 2026-11-20, "yes, ground it and resolve it. don't makr the task complete until it actually works.", MORNING-DECISIONS.md:1517): the contract routes of the programme get the surface standard (Spec 126) and the surface standard policy (Spec 128).
+// Census scopes parcel_product and parcel_admin are attached (Spec 126:135 and :136 "Yes"); platform_shared (36 entries) waits for the operator (Spec 126:1132 "Admin pages other than D1-D4 are estate admin, not MaxBLD pages" is read against its 20 admin routes); estate_other is "No" (Spec 126:138).
+type CensusEntry = { programme?: { scope?: string }; evidence?: { files?: string[] } };
+const ATTACHED_SCOPES = ['parcel_product', 'parcel_admin'];
+/** The route file of each census entry in the attached scopes: the first route.ts under src/app/api in evidence.files, its :line suffix removed; an entry naming none is skipped. */
+export const censusRoutes = (census: Record<string, CensusEntry>, scopes = ATTACHED_SCOPES): string[] => {
+  const out = new Set<string>();
+  for (const e of Object.values(census)) {
+    if (!scopes.includes(e.programme?.scope ?? '')) continue;
+    const f = (e.evidence?.files ?? []).map((x) => x.replace(/:\d+.*$/, '')).find((x) => /^src\/app\/api\/.+\/route\.ts$/.test(x));
+    if (f) out.add(f);
+  }
+  return [...out].sort();
+};
+/** What a row misses and what it holds that the census no longer names. */
+export const routeDrift = (rowGlobs: string[], census: Record<string, CensusEntry>) => {
+  const want = new Set(censusRoutes(census));
+  const have = new Set(rowGlobs);
+  return { missing: [...want].filter((x) => !have.has(x)).sort(), stale: [...have].filter((x) => !want.has(x)).sort() };
+};
+const censusFile = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'scripts/surfaces/_schema/census/contracts.json'), 'utf8')) as Record<string, CensusEntry>;
+const entry = (scope: string, file: string): CensusEntry => ({ programme: { scope }, evidence: { files: [`${file}:1`] } });
+
+describe('V2.LIST round 4: the surface-contract-routes row equals the census (drift test)', () => {
+  it('the real row lists exactly the route files the census names for parcel_product and parcel_admin, and attaches surface-126 and surface-128 only', () => {
+    const row = table().rows.find((r) => r.id === 'surface-contract-routes')!;
+    expect(row, 'row surface-contract-routes').toBeDefined();
+    expect(row.lists).toEqual(['surface-126', 'surface-128']);
+    expect(routeDrift(row.globs ?? [], censusFile())).toEqual({ missing: [], stale: [] });
+    expect(row.why).toContain('The client is just glass');
+    expect(row.why).toContain('one API route');
+  });
+  it('control, PLANTED DEFECTS: a census entry in scope with its route missing from the row fails; a row route the census no longer names fails; an estate_other or platform_shared route is not required', () => {
+    const census = { a: entry('parcel_product', 'src/app/api/x/route.ts'), b: entry('parcel_admin', 'src/app/api/admin/y/route.ts'), c: entry('estate_other', 'src/app/api/leads/z/route.ts'), d: entry('platform_shared', 'src/app/api/admin/w/route.ts') };
+    expect(routeDrift(['src/app/api/x/route.ts', 'src/app/api/admin/y/route.ts'], census)).toEqual({ missing: [], stale: [] });
+    expect(routeDrift(['src/app/api/x/route.ts'], census).missing).toEqual(['src/app/api/admin/y/route.ts']);
+    expect(routeDrift(['src/app/api/x/route.ts', 'src/app/api/admin/y/route.ts', 'src/app/api/gone/route.ts'], census).stale).toEqual(['src/app/api/gone/route.ts']);
+  });
+  it('the lookup route and a parcel_admin route gain surface-126 and surface-128; an estate_other route (leads/detail/[id]) does not', () => {
+    expect(lists('src/app/api/parcels/lookup/route.ts')).toEqual(expect.arrayContaining(['surface-126', 'surface-128']));
+    expect(lists('src/app/api/admin/media/route.ts')).toEqual(expect.arrayContaining(['surface-126', 'surface-128']));
+    const lead = lists('src/app/api/leads/detail/[id]/route.ts');
+    expect(lead).not.toContain('surface-126');
+    expect(lead).not.toContain('surface-128');
+  });
+});
