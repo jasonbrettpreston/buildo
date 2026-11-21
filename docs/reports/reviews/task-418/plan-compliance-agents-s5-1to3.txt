@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T05:12:37.326Z file_sha256=4e45b395ae0043032a60fe4f7a3eda91aa879c6d17e0dc8dab174df4de7801bf prompt_sha256=0ad4dacfae7cfe295d438d635e7efb2caa9e5e5a91bb0c97cf2e4b1f5a72ff37
+🔍 Lens review of docs/reports/reviews/task-418/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md §5.1 "HARD DEPENDENCY: Compliance is only meaningful if the spec is TRUE. Run **Ground-truth (§5.2) FIRST**; a stale spec makes compliance-checking a check against fiction" — PLAN-418-v2 §4.2 "a. AGENT: orchestrator puts the plan on the task ... b. SCRIPT: plan-prep review. c. AGENTS: three seats, separate grounder" — the nine per-list compliance outputs are produced at step b and no §5.2 pass over those nine rule lists is ordered before them anywhere in 4.2 or in 4.3 — add one line to 4.2 ahead of b naming the §5.2 ground-truth pass on the resolved lists and who runs it, or state that the Reality-Check seat is that pass and move it before review.
+
+DEFER severity=MED — 08_agents.md §5.3 "Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8)" — PLAN-418-v2 §3 "Plan review round N: <a> folded, <b> task, <c> ruling, <d> wontfix, <e> pile; grounder <path>; triage <path>" and "TRIAGE-PLAN.md, one line per CONFIRMED or CONFLICT id" — a rejected (wontfix) finding reaches the plan as a count plus an id/word/ref line and no artifact in post's pipeline carries its reason; TRIAGE-PLAN.md covers only CONFIRMED and CONFLICT — require one reason per wontfix id in the form the task-366 note uses ("<finding id> CONFIRMED|REJECTED <file:line> [reason]") and make post refuse without it.
+
+DEFER severity=MED — task-366 dated note "a separate grounder rules on every finding" — PLAN-418-v2 §4.4 "Refuses, naming each: GROUNDER-PLAN.md absent; a Seat line missing for a name of PLAN_SEATS; a seat file named by a Seat line absent on disk; a CONFIRMED or CONFLICT id of the grounder with no TRIAGE-PLAN.md line" — post's own refusal list omits a Grounder field equal to the planned lane or to an assignee, and the plan never states that --lane or the assignee set is passed to outcomeErrors, so the separation this clause requires rests on code post does not show — add that refusal to 4.4 and name the lane and assignees handed to outcomeErrors.
+
+DEFER severity=MED — 08_agents.md §5.2 "For each load-bearing claim in the spec, verify it against the live code / DB / behavior" — PLAN-418-v2 §4.1 "check-lane-close.mjs imports rule-lists.mjs, so plan-prep post reaches ... by a dynamic import (a static import is a cycle)" against §11 "whether the dynamic import of check-lane-close.mjs from the rule-lists.mjs CLI works (UNVERIFIED, not run)" — the whole shape of the post phase rests on an import the plan itself records as never run, while 4.1 states the cycle as fact and carries no UNVERIFIED mark — run the import once against the tree at d9f2143a7 and record the result, or mark 4.1 UNVERIFIED and name the fallback.
+
+MET — card "ONE subcommand plan-prep of scripts/analysis/rule-lists.mjs with three phases (review, post, commit)" — PLAN-418-v2 §4.1 "node scripts/analysis/rule-lists.mjs plan-prep <review|post|commit> --task task-N --lane <planned lane name>" — one subcommand, three phases, and §1 "No new script file, field or key".
+
+MET — card "it never writes a ruling, a seat report, a grounder file ... and it does not launch" — PLAN-418-v2 §4.5 "node scripts/analysis/backlog-lane.mjs --task N --lane <lane> --dry-run" with §4.2 "h. HAND: node scripts/analysis/backlog-lane.mjs --task task-N --lane <name>, without --dry-run" — the script only dry-runs the gate, the real launch is a hand step, and §5 lists seats, grounder and rulings as "NEVER SCRIPTED".
+
+MET — task-366 dated note "runs the compliance lens once per list with the list pasted whole ahead of the plan or diff" — PLAN-418-v2 §4.3 "2. build: per resolved list L, node scripts/analysis/rule-lists.mjs lens-input --list L --context <ctx> --material-from <ctx> --out <folder>/in-plan-compliance-L" — one lens input and one review call per resolved list, nine for task-418.
+
+MET — 08_agents.md §5.1 "Item-by-item, spec-clause → code-line, PASS/FAIL" applied to the plan per operator ":1634 'Complaince on the plan and output.'" — PLAN-418-v2 §4.3 "REVIEW_CMD <in file> --template .claude/review-templates/lens-compliance.md --context <ctx>" — the compliance template is the one lens run per list.
+
+MET — card acceptance (f) "backlog task view task-412 --plain shows the references (GROUNDER-PLAN.md, TRIAGE-PLAN.md if any, the three seats)" — PLAN-418-v2 §4.4 "backlog task edit task-N --append-plan "<block>" with one --add-ref per repo path of GROUNDER-PLAN.md, TRIAGE-PLAN.md when present and each seat path" — the references and the round block are posted from what the gate reads.
+
+REJECT — card "it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line" — accused of post writing outcome lines via "one line "<id> <SEV> <word> <ref>" per CONFIRMED CRITICAL, HIGH or MED id" — not a real issue: the card's own acceptance #6 requires post to write the "Plan review round 1" block and the words come from the grounder's fold, so the prohibition reads as "plan-prep decides no verdict", which §4.4 keeps by refusing when outcomeErrors reports anything unresolved.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 4
+
+---
+⏱  102100ms (102.1s)
+📊 Tokens — total: 29539, input: 11778, output: 17761, reasoning: 16333

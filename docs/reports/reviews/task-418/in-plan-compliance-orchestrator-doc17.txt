@@ -1,0 +1,295 @@
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:8e99766108650287c0f75d9ea23011e7dac16f376607070c48cd66287da3dbea part 1 of 1
+RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+---
+id: doc-17
+title: Orchestrator readings (not rulings)
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Orchestrator readings (not rulings)
+
+Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18). The operator's rulings are the decisions.
+
+## Readings
+- RR-0001 2026-11-18 2026-11-18 · RULED: automatic policy checks and evidence-based task st: Infra freeze lifted for the named list only; scratch-side parts now, repo checks after push 6 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:725)
+- RR-0002 2026-11-18 2026-11-18 · Operator: lane tooling first; independent agent reviews: Lane tooling first (run-panel, guard, generated briefs, results gate, lane registry and pack cache, Spec 08 seat-K note draft) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:716)
+- RR-0003 undated open-questions.md:1100: Daylight is the product standard: small pages v8, landing v10+ (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1100)
+- RR-0004 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Web follows the same designed choose-lot pages and states; recent-search chips on web and phone (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0006 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : Loading screen setting is 35 s (LOAD.3: max raised to 35,000 ms) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0007 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : See details is computed together with the main page, behind the loading screen from the search pick (not on tap) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0008 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: RULED: a lot's numbers are computed on first open, track or owner input, then stored with their stamp for that user and others; no record for lots nobody opened; no all-lot headline fill (amends ST-5, FE-39, ST-6, MB-38) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704)
+- RR-0009 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Storage ruling confirmed by the operator ("1y 2y") (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0010 undated ONE-SITTING.md:22: Open question 12 (ONE-SITTING.md): Gap Q1 (1.4): fix the two search-parser defects (street direction guard, unit-token strip) before launch? (a) yes, with (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:22)
+- RR-0011 undated ONE-SITTING.md:65: Open question 35 (ONE-SITTING.md): Gap Q2 (LS.11): W5 (choose your parcel) on the web: (b) defer until the web has a map ruling and keep the web live switc (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:65)
+- RR-0013 2026-11-17 2026-11-17 ~08:40 · Operator rulings on MB-REVIEW-20261117 section 6: Launch means users on the live customer report, not tester preview (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:568)
+- RR-0015 undated plan.md:219: Colour ruling D-1 (2026-11-14): the built report must look like the Daylight B mock; this is a colour ruling, not a whole-layout approval (~/Buildo-scratch/mcfrontend/MF-83/plan.md:219)
+- RR-0016 undated open-questions.md:866: Earlier approval: dark mock v21 (2026-11-10); superseded for colour, summary, gallery, lot views and See details sheets by the later theme and rulings (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:866)
+- RR-0017 undated open-questions.md:1094: Theme ruled: Daylight B (light) with the summary at the top (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0018 undated DELTA.md:10: Report base confirmed by the operator: Report Theme B · Daylight model, identical to pub/B.html (report-delta/DELTA.md:10); the later rulings are applied on top (CHANGES.md) (~/Buildo-scratch/lanes-20261117/report-delta/DELTA.md:10)
+- RR-0019 undated CHANGES.md:1: Page-level rulings after the brief (theme, brand, summary, units switch, one lot-size box, one disclaimer) are in CHANGES.md (~/Buildo-scratch/lanes-20261117/req-rulings/CHANGES.md:1)
+- RR-0020 undated open-questions.md:1094: Theme: Daylight B (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0021 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word for a number with no stored row: Not yet estimated (amends the earlier label) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0022 undated open-questions.md:1073: One short disclaimer everywhere (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1073)
+- RR-0023 undated ONE-SITTING.md:64: Open question 34 (ONE-SITTING.md): Storage D1 and D2 with gap Q12: name the wait a user may have on See details and after typing the house in (only (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:64)
+- RR-0024 undated ONE-SITTING.md:15: Open question 5 (ONE-SITTING.md): MB-44 order and the three dated notes W needs (RESOLVE R10, R11, R12), plus wiring What-we-checked into the route (gap Q (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:15)
+- RR-0025 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Word for a number with no row yet: "Not yet evaluated" (the mock); never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0026 2026-11-18 2026-11-18 · Operator direction: page-level lot information in increme: The report page parts every scenario shares (header, summary at the top, About this lot rows and details, lot-size box, footer) are listed under increment 1 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:674)
+- RR-0027 undated MCBYLAWS-QUEUE.md:88: Increment 2 adds the main-wall share caps only (2026-11-03, Q1 option a); street-side yard and front-yard averaging were already in (origin:.cursor/MCBYLAWS-QUEUE.md:88)
+- RR-0029 undated open-questions.md:1124: Can you build bigger shows Not yet evaluated until MB-38/MB-44; no feeding of the legacy variance model (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0030 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word where no row is stored: Not yet estimated; never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0031 undated open-questions.md:1145: FSI cap line stays in See details (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1145)
+- RR-0032 undated ONE-SITTING.md:23: Open question 13 (ONE-SITTING.md): Gap Q3 (1.1): customer rule for lots under 50 m2 or over 5,000 m2: (a) show the not-evaluated state with one closed reas (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:23)
+- RR-0033 undated ONE-SITTING.md:27: Open question 17 (ONE-SITTING.md): Gap Q8 + Q11 (1.5, and the permits.storeys chain 7.7, 7.8, 7.9, 7.23): serve null for storeys 0 (key kept, Spec 100 Tier (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:27)
+- RR-0034 undated ONE-SITTING.md:35: Open question 20 (ONE-SITTING.md): Q-COA and Q-COAN (CO.1, CO.2: on the critical path): (a) status-only CoA rows land in the increment 8 seed window and nu (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:35)
+- RR-0035 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Every option has a summary item at the top: a smaller summary photo + its Max Build estimate (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0036 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: On "see concepts" a smaller copy of the main image stays above the gallery (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0037 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Neighbours reach is per scenario; the houseplex reach is larger (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0038 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Lot views draw the FITTED house (storeys_fit, footprint_fit_m2, depth_fit_m, height_fit_m), not the by-law maximums (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0039 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Concept photos: 3 per scenario, chosen by scenario, lot shape and lot size (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0040 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Concept photos per lot-size band small / medium / large (band limits are settings, values owed), with lot shape (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0041 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Image hold R-IMG1..3 is LIFTED: the image tasks (GAP.2) are ready (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0042 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: "Most space": the tag goes on every option that has the most space; a tie goes to the lowest option number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0043 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: The cost panel "Calculated <date>" line is dropped (costs are updated regularly) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0045 undated MCBYLAWS-QUEUE.md:89: M-344 moves from increment 3 to the sixplex increment (2026-11-03, Q5 b) (origin:.cursor/MCBYLAWS-QUEUE.md:89)
+- RR-0046 undated 78_optimal_lot_configuration.md:848: Minimum units is 2 (gap Q4 closed) (origin:docs/specs/01-pipeline/78_optimal_lot_configuration.md:848)
+- RR-0047 undated open-questions.md:1150: From the side: the houseplex is drawn with its units (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1150)
+- RR-0048 undated open-questions.md:1124: Houseplex Can you build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0049 undated ONE-SITTING.md:24: Open question 14 (ONE-SITTING.md): Gap Q5 (3.2): hold the houseplex roof rows B9.8, B9.9, B9.10 out of v1 (payload_only)? (a) yes; (b) show them. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:24)
+- RR-0050 undated MCBYLAWS-QUEUE.md:90: Increment 4 decision list ruled 2026-11-11 (record mcbylaws/inc4/DECISIONS-v2.md) (origin:.cursor/MCBYLAWS-QUEUE.md:90)
+- RR-0051 undated open-questions.md:805: One lot-size box recalculates every option; no per-card Improve accuracy button (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0052 undated open-questions.md:1124: Build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0053 undated ONE-SITTING.md:26: Open question 16 (ONE-SITTING.md): Gap Q7 (4.1): fold the six small report items into the existing What lists (MB-94 c, MF-85) instead of new rows; and are (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:26)
+- RR-0054 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) is a BASEMENT secondary suite computed from the fitted house; the by-law maximum (150.10.40.40(1), 45 percent of the interior floor area) is disclosed in See details (closes Q-GAP-4) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:686)
+- RR-0055 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) = min(basement suite size, 45% of the house's interior floor area per 150.10.40.40(1)); the cap is applied to the number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:688)
+- RR-0056 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: The basement suite size is computed from the fitted house footprint (footprint_fit_m2), then capped at 45% of the interior floor area (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:690)
+- RR-0057 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Suite Size See details disclosure is the one-line version: "Basement suite, inside the walls. Toronto limits a secondary suite to 45% of the house's interior floor area: {X} m² on this lot." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0058 undated Operator 2026-11-14 (verbatim: "This is not very good. We need the bui: Garden-suite face = two size and cost pairs, gain not on the card (2026-11-14) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:235)
+- RR-0059 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Operator direction 2026-11-17: fix the garden-suite card with MF-ADDON as its design (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:641)
+- RR-0061 2026-11-17 2026-11-17 ~11:50 · Decisions 2-4 after the exact-wording panel (lane : The 80,682 addon_cand rows question (Q2 (a)); the restore ruling is open (q7) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:614)
+- RR-0062 undated ONE-SITTING.md:14: Open question 4 (ONE-SITTING.md): 5.11: add the garden-suite split speed-up (same outputs, byte-identical, measured on 100 lots) before the MB-38 fill, an (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:14)
+- RR-0063 undated ONE-SITTING.md:16: Open question 6 (ONE-SITTING.md): Garden-suite card and binding (RESOLVE R2, R3, R4, R9): A1a classes and texts as written; split outputs bind by the new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:16)
+- RR-0064 undated ONE-SITTING.md:17: Open question 7 (ONE-SITTING.md): Stop storing the 14 addon_cand working rows (RESOLVE R5, R6, R7): new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:17)
+- RR-0065 undated ONE-SITTING.md:18: Open question 8 (ONE-SITTING.md): RESOLVE R8 (offered extra): also stop storing the 26 further internal rows read by nothing? y / n. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:18)
+- RR-0066 undated ONE-SITTING.md:36: Open question 21 (ONE-SITTING.md): Q-5-COST (5.6): what prices the House tile on a garden-suite card? (a) the house type's existing cost line on main_gfa_w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:36)
+- RR-0067 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: All 59 increment 6 recommendations approved (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0068 2026-11-17 2026-11-17 ~11:20 · Operator ruling: D7 once (decisions/DECISIONS-2026: The D7 recapture runs once, on the test stack; no dev run (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:602)
+- RR-0069 2026-11-16 2026-11-16 operator literal ruling: Renovation card carries the lawfully existing owner question (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:470)
+- RR-0070 undated open-questions.md:805: No per-card Improve accuracy button on renovation cards (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0071 undated ONE-SITTING.md:25: Open question 15 (ONE-SITTING.md): Renovation (gap Q6, inc 6 R2, R3): add the two dated notes naming RE and RF on the increments table row 6 and on LC-16, (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:25)
+- RR-0072 undated ONE-SITTING.md:37: Open question 22 (ONE-SITTING.md): Renovation cost line (inc 6 R1, R6-COST; also the semi page 7.25): (a) priced inside the on-demand one-lot path; (b) pri (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:37)
+- RR-0073 undated ONE-SITTING.md:13: Open question 3 (ONE-SITTING.md): Storage (ST-4, ST-5, ST-6): keep as ruled and record the three corrected-fact notes after push 6? y / change. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:13)
+- RR-0074 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Increment 6 list approved, 6c items included (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0075 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: MB-90 cost-rate sub-points R-1..R-4 are not in the plan now (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:637)
+- RR-0076 undated ONE-SITTING.md:19: Open question 9 (ONE-SITTING.md): Increment 6c groups 1-7 and call-out A: approve all seven group lines, with the 6c notes joining the push-6 records comm (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:19)
+- RR-0077 undated ONE-SITTING.md:20: Open question 10 (ONE-SITTING.md): O-15 (e) (6c.4): is the keyed Drive set a candidate pool for the proof draw? (i) yes, with the three held map commits' l (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:20)
+- RR-0078 undated ONE-SITTING.md:21: Open question 11 (ONE-SITTING.md): Refresh lines (6c.23, 6c.24, 6c.26): six rows get status wording (MF-86, MF-66, MB-109, MF-87, MF-69, MB-74 read LATER w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:21)
+- RR-0079 undated ONE-SITTING.md:11: Open question 1 (ONE-SITTING.md): AL.9 (new, integration pass): fix the one rehearsal-script defect (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:11)
+- RR-0082 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: The increment 7 ON word comes before the single Layer 3 recapture (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:628)
+- RR-0083 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: J3 reach-settings migration is required (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:634)
+- RR-0084 undated ONE-SITTING.md:12: Open question 2 (ONE-SITTING.md): J4 (MB-90 cost-rate refresh, staged migration 331 with the 106.2 index rebase): run it now, or move J4 and MB-90 later w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:12)
+- RR-0085 undated MCFRONTEND-QUEUE.md:639: A coa_required sixplex card has no as-of-right headline; its figure shows in the CoA tier only (origin:.cursor/MCFRONTEND-QUEUE.md:639)
+- RR-0089 undated ONE-SITTING.md:33: Open question 18 (ONE-SITTING.md): Increment 8 rulings 8.15a, 8.17, 8.18: (A) the sixplex ON edit lands in push 9a before the J7 rehearsal; (A) the five MB (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:33)
+- RR-0090 undated ONE-SITTING.md:34: Open question 19 (ONE-SITTING.md): Q-S7FACE: what does a coa_required sixplex card show besides the badge? (a) badge only, no figure, no cost (amends :639) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:34)
+- RR-0091 undated ONE-SITTING.md:66: Open question 36 (ONE-SITTING.md): Gap Q10 and the J9 copy-forward form (8.25) and prereg numbering (8.3): record the plausibility verdicts (Q10 a); copy-f (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:66)
+- RR-0093 2026-11-15 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready: Primary measure by building: suite-only cases score the suite against the suite max (2026-11-15) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:340)
+- RR-0094 undated ONE-SITTING.md:44: Open question 24 (ONE-SITTING.md): Increment 9 R1: one dated M-362 amendment with three sub-rulings: (F2) a type with no stored same-type class leaves the (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:44)
+- RR-0095 undated ONE-SITTING.md:45: Open question 25 (ONE-SITTING.md): Increment 9 R3: how is the CoA route scored? (a) by approval; (b) by need (coa_required correct iff the notice cites a p (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:45)
+- RR-0096 undated ONE-SITTING.md:46: Open question 26 (ONE-SITTING.md): Increment 9 D-11 (9.0a): the CoA building column is filled (a) by the loader from the clause-family table; (b) loaded fr (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:46)
+- RR-0097 undated ONE-SITTING.md:47: Open question 27 (ONE-SITTING.md): Increment 9 R2 (ask after the O-15 (e) row above): record the closeness-threshold RULE now (median and p25 of the 25 on (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:47)
+- RR-0098 undated ONE-SITTING.md:38: Open question 23 (ONE-SITTING.md): Group approve lines under rulings already given: increment 8 groups A-H and the removal of 8.7 and 8.24; increment 9 gro (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:38)
+- RR-0100 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 compression runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0101 undated ONE-SITTING.md:53: Open question 28 (ONE-SITTING.md): O-15 (a) draw form c2, (b) floor 3 per modelled stratum with N as D-10 item 2, (c) you type the seed, (f) one re-key: y (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:53)
+- RR-0102 undated ONE-SITTING.md:54: Open question 29 (ONE-SITTING.md): Push 11: one landing set or two? (i) two windows, storage set first (10.3, the MB-111 migration, the 10.6 note), proof s (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:54)
+- RR-0103 undated ONE-SITTING.md:55: Open question 30 (ONE-SITTING.md): D-4 and D-10 (asked once, at the 9.3 sitting): maxima for the drawn proof lots by (A) a read-only snapshot file, or (B) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:55)
+- RR-0104 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0105 undated McSTORAGE-RULINGS.md:130: All-lot store is one headline record per parcel and option (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:130)
+- RR-0106 undated MCFRONTEND-QUEUE.md:498: MF-51 and MF-59 are on the launch list (origin:.cursor/MCFRONTEND-QUEUE.md:498)
+- RR-0107 undated ONE-SITTING.md:61: Open question 31 (ONE-SITTING.md): MB-109 lot views (L.1, L.2, L.3): are lot views in the live layout at launch? If yes: the dated M-465 (7) amendment nami (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:61)
+- RR-0108 undated ONE-SITTING.md:62: Open question 32 (ONE-SITTING.md): MB-100 launch call (L.4): the 39,267 lots gated whole-lot as exception_not_authored: accept and disclose, or build first (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:62)
+- RR-0109 undated ONE-SITTING.md:63: Open question 33 (ONE-SITTING.md): CoA fit and cost (Q-UNFREEZE, Q-UBOUND, Q-COACOST, Q-CORERUN): (a) unfreeze no AV3 rows; store u = 1.00 for multiplex (r (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:63)
+- RR-0110 undated infra-freeze-project-first.md:12: Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record) (~/.claude/projects/-Users-brettpreston-macmini/memory/infra-freeze-project-first.md:12)
+- RR-0111 undated 137_mcqueue.md:112: Permit step conversion stays frozen (Spec 137 rule 11) (origin:docs/specs/00-architecture/137_mcqueue.md:112)
+
+## Register entries (operator words as logged, kind entry)
+- RR-0112 2026-11-17: "let's do your recommendation - what a mess - please resolve..." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:640)
+- RR-0113 2026-11-17: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:642)
+- RR-0114 2026-11-17: "Each increment represents a scenario for the report? ... We are computing each result on demand - this is also new to me. In the context of " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:643)
+- RR-0115 2026-11-17: "D7 fix if you grounded this in reality and its complaint" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:645)
+- RR-0116 2026-11-17: "We may need to make different choices about storage based on teh best user outcome? Clearly, you fogot about what we were trying to achieve " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:646)
+- RR-0117 2026-11-17: "I am open to this plan - re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:648)
+- RR-0118 2026-11-17: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integratio" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:650)
+- RR-0119 2026-11-17: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652)
+- RR-0120 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:654)
+- RR-0121 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:660)
+- RR-0122 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:664)
+- RR-0123 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:668)
+- RR-0124 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:672)
+- RR-0125 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:676)
+- RR-0126 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:680)
+- RR-0127 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:684)
+- RR-0128 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:692)
+- RR-0129 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:698)
+- RR-0130 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:702)
+- RR-0131 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:709)
+- RR-0132 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:714)
+- RR-0133 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:718)
+- RR-0134 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:723)
+- RR-0135 2026-11-18: "What do we call the lane policy - so you actually follow the policies? Let's start increment 1a - with the panels on all the tasks, build pa" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:728)
+- RR-0138 2026-11-18: "1. let's push it 2. yes resort 3. add open decision to the artifact where I can answer them.  4. y  - Is there another approach to my pushes" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:732)
+- RR-0142 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:737)
+- RR-0148 2026-11-18: "Are yo confident you can do this? Why do you want your own repo now? Let's just build them right way - what's wrong with that? something tha" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:742)
+- RR-0151 2026-11-18: "Of course, yes to re-use obviosouly, yes drop - run the panel as always" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:749)
+- RR-0153 2026-11-18: "yes and it should pull the next task as something completes or move to the next task if a question remains" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:753)
+- RR-0155 2026-11-18: "Panel decides" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:757)
+- RR-0158 2026-11-18: "y - what a mess - why is the panel revisting every task - we are rebuilding the weird scratch tooling proposal into gates? this was the focu" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:763)
+- RR-0160 2026-11-18: "you added the question about selecting the new or open tasks within the increment - normally you just stop and never thinkg about it.  Queue" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:767)
+- RR-0171 2026-11-18: "wait for what numbers" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:772)
+- RR-0173 2026-11-18: "Even if the load completes quicker the animation still needs to be complete.. the button shows when its ready - anytime after the animation " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:778)
+- RR-0175 2026-11-18: "so right now the animation takes 23 seconds - this goes to completion - the buttononly appears when the load is done - that would be at 36 s" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:782)
+- RR-0177 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:788)
+- RR-0181 2026-11-18: "yes these need to be built 2. teh search needs to idenfity if its an address with two parcels etc or mis address or its potentially a semi l" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:795)
+- RR-0183 2026-11-18: "Let's see the update incra 1b - with the new rulings and the new tasks - also need a semi question page similar to a min page" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:800)
+- RR-0185 2026-11-18: "y and your not following the McQueue rules in how to provide information to deepseek and others standard rules - which i kow you dont like t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:804)
+- RR-0187 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:808)
+- RR-0189 2026-11-18: "close the gap.  fix teh register - for your own messages you never cite any rulings or say its unveridied thats just lip service" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:812)
+- RR-0191 2026-11-18: "McRecommendations I don't think this is enough - the recommendation should be framed with an explanation that speaks to what I know the fron" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:816)
+- RR-0194 2026-11-18: "Push them.  We need to make some progress" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:822)
+- RR-0197 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:828)
+- RR-0199 2026-11-18: "run a review on this and install backlog - we also use docker - this wouldn't be a big deal either - how do we differentiate between recomme" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:832)
+- RR-0201 2026-11-18: "yes move it - I need to be able to see the board and the categories and the decisions and the research ids for each" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:836)
+- RR-0204 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:842)
+- RR-0206 2026-11-19: "we need to use all of this.  Please add.  You should also review the project itself and the current process.  The current queue is represent" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:846)
+- RR-0209 2026-11-19: "Let's stick with McLane for a name." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:851)
+- RR-0211 2026-11-19: "as you may have learned one of the is understandability - this has two parts simple and no scope creep.  How large is this build now? Are yo" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:865)
+- RR-0213 2026-11-19: "Opus thought this plan replaced all of Incra-1a and we could move to Incr-1b is this true - you may need to also on the board after the move" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:856)
+- RR-0216 2026-11-19: "As a second image task can you create New build professional concept images for each scenario we need three each - but for the detached hous" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:860)
+- RR-0218 2026-11-19: "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:870)
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-20 by the orchestrator, Spec 137 rule 2. Operator ruling RR-0345 (MORNING-DECISIONS.md:1600, verbatim: "5 yes.", to the question as put: the pre-launch steps are done by the orchestrator by hand for task-375, and scripting them is the first task after 375, before the other build tasks launch). Why: before a build or fix launch the plan is reviewed (compliance per governing rule list, the Integration, Reality-Check and Regression seats), ruled by a separate grounder, folded, the fold checked, and the evidence put on the task and committed (Spec 08 sections 6.4, 5.3, 11.2); the launch check of task-375 (folded at d9f2143a7) now refuses a launch without it. Scope (2026-11-21, PLAN-418-v2 in the Implementation Plan field governs; build exactly that plan, do not re-plan): ONE subcommand plan-prep of scripts/analysis/rule-lists.mjs with three phases (review, post, commit) that runs the mechanical steps only, reusing what exists (backlog-brief.mjs, lens-input, findings, the exported functions of check-lane-close.mjs, plant-evidence.mjs for tests); it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line, and it does not launch. Files: scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
+
+
+## Acceptance criteria
+- #1 (a) planted-defect tests red then green through the real hooks.
+- #2 (b) plan-prep review --task task-412 --lane <name> --dry-run: exit 0; 1 brief, 9 lens-input and 9 review commands; git status unchanged.
+- #3 (c) the same without --dry-run with 412's plan on the task: 9 plan-compliance-*.txt each starting "REVIEW template=lens-compliance.md", 9 in- files, FINDINGS-PLAN.md; paste counts and shell time.
+- #4 (d) the same on a task with an empty plan field: exit 3 one line.
+- #5 (e) the agent steps for real on 412 (seat-integration-1.md, seat-reality-check-1.md, seat-regression-1.md, grounder, fold), then post, commit, the grounder copies the printed Plan line, commit again: the dry run prints "plan gate ok: 9 lists, <M> findings, Plan sha256:<12>"; one word edited in the task: exit 3, new expected Plan line; revert.
+- #6 (f) backlog task view task-412 --plain shows the references (GROUNDER-PLAN.md, TRIAGE-PLAN.md if any, the three seats) and the "Plan review round 1" block; git log -1 --name-only on wf2/board shows exactly the folder.
+
+
+## Implementation Plan
+PLAN-418-v2 (build plan, self-contained). Task: LAUNCH.PREP, the mechanical steps before a build launch run from one command. Basis: board branch wf2/board, head d9f2143a7 (task-375 parts A, B, D and task-399 folded). Every file:line below was opened at d9f2143a7 unless marked UNVERIFIED. v2 replaces v1 (whose 375 claims came from PLAN-375, not code).
+Serves: supporting function of the compliance review of every Increment 1.B task; advances none of doc-2 elements A to G. Estimate: GUESS 0.5 lane day (smaller than v1: the real code already does more), not timed.
+
+Files: scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
+
+0. THE OPERATOR'S WORDS (verbatim, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md; line numbers measured; the rest is orchestrator design)
+:1517 "don't makr the task complete until it actually works"
+:1522 "you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y"
+:1585 "yes hardening rounds.  Today's were warranted, but not endless."
+:1600 "5 yes." (entry :1598): scripting the hand steps is the first task after 375.
+:1630 "these only run on the plan"; :1634 "Complaince on the plan and output. Let's start with that!"
+:1638 "You are good to build them tonight! If the panel leaves an open question - ground it and then take that as approved and let me know in the morning."
+Standards: simple, no over-engineering, no scope creep, no facades; check what exists first. This task scripts the mechanical half of steps 1 to 4 of the six (confirmed as read, :1580). It rules nothing.
+
+1. WHAT IT DOES
+Three phases of ONE subcommand, plan-prep, of rule-lists.mjs: review (context, a lens input and a review call per resolved list, findings list), post (references and the "Plan review round" block on the task), commit (evidence commit, then the launch dry run). No new script file, field or key. Not scripted, the code already does it: the take adds the compliance:<list id> references (backlog-lane.mjs:129, rule-lists.mjs:452); check-tasks prints the commands for open tasks (:567-576); the gate is the dry run.
+
+2. WHAT EXISTS AT d9f2143a7 AND IS REUSED (each opened)
+- docs/reports/reviews/task-375/plant-evidence.mjs (67 lines; run by backlog-lane.logic.test.ts:16). It ALREADY writes a whole valid evidence set into a fixture board and commits it: context-r1.md from fixture-context.md; each list's input via rl.buildLensInputs({id, list, root, material: extractSections(ctx, PLAN_SECTIONS), templateFile, context: extractSections(ctx, CONTEXT_SECTIONS)}) as in-plan-compliance-<id>[-pN].txt; the output with a REVIEW header whose prompt_sha256 is rl.lensPromptHash(...); GROUNDER-PLAN.md (Grounder, Lane, an rl.ruledLine per plan-*.txt, a Seat line per seat with the first 12 hex of the sha256, the Plan line last from planHash); seat-<name>-1.md with a line "### <3 letters>#1 LOW: ..."; the task edits --plan, --append-plan "Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder <rel>/GROUNDER-PLAN.md; triage <rel>/TRIAGE-PLAN.md" and one --add-ref per evidence file; git add -A and commit. It is a test fixture: SYNTHETIC outputs and ruling, 0 findings. Plan-prep rebuilds none of it: same library calls and forms, tests start from its state, its zero-finding block is the string post must reproduce. What plan-prep adds: the real review calls, real findings, the block for N findings, the real commit through the hooks.
+- backlog-brief.mjs writes docs/reports/reviews/<task>/context-rN.md (:49-52 contextRound over the folder, never overwritten; :146-147 the Implementation Plan and Notes sections; :159 writeFileSync) from --task, --lane, --root; its stdout is the brief, not the context path: the caller computes N with the exported contextRound(dir) (scripts/lib/review-template.js:137).
+- scripts/lib/review-template.js: CONTEXT_SECTIONS, PLAN_SECTIONS (Description, Acceptance criteria, Implementation Plan), extractSections, contextRound.
+- rule-lists.mjs lens-input (:544-566): --list <id> --context <ctx> --material-from <ctx> --out <prefix>; --context is required (exit 2 without); --material-from is its own context and cuts PLAN_SECTIONS; it deletes older <prefix> files first. findings --dir (:588-593) prints a Ruled line per plan-*/out-* file and "<id>\t<line>" per finding.
+- backlog-lane.mjs: the review command literal is const cmd at :180 inside lensLine (DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review); every lens passes --context <ctx> and one --section per CONTEXT_SECTIONS entry (:175-177). The gate call is :90-106; it prints "plan gate ok: <L> lists, <M> findings, Plan sha256:<12>" (:106), or one "backlog-lane: refused: plan gate: <error>" line per error to stderr and exits 3 (:105).
+- check-lane-close.mjs: planGateErrors (:564, pure; exported), planHash (:552), PLAN_SEATS (:549: always integration and reality-check, conditional regression when a Files entry names a path tracked at the board head, :621), outcomeErrors (:161, exported; mode 'plan'; forms folded, task, ruling, wontfix, pile; folded needs a 20+ character quote present in the task text), parseVerdicts (:128), lensKindOf (:141), seatLines (:145). The round block is built INLINE at :266-276 and appears only in a refusal message ("the block is:\n<lines>\n(one command ...)"), only when the outcome errors are empty, there is at least one CONFIRMED or CONFLICT id, and a round line exists (planGateInner :630 passes summary null when the plan field has no "Plan review round N:" line). It is NOT exported.
+- 08_agents.md:524 and 137_mcqueue.md:140 (dated notes 2026-11-21): seats run on the plan only; the gate "cannot prove that the grounder or any seat ran or is a different agent".
+- board-commit.zsh commits only backlog/ (:10, :12) every 600 s; index.lock makes it skip (:11). check-backlog-task.mjs:3-4 exempts docs commits from the Task trailer; check-task-files.mjs:10, :70 always allows docs/reports/reviews/<this task id>/.
+
+3. WHAT THE REAL GATE REQUIRES FOR A BUILD TASK, AND WHO WRITES IT
+Folder docs/reports/reviews/<id>/ read from git HEAD (backlog-lane.mjs:92-95; the task body from the working file); stray names are ignored. Grounder checklist for task-418: ~/Buildo-scratch/lanes-20261119/inc1b/gate375/h/GROUNDER.md.new section F (the final GROUNDER.md in that folder has no task-418 section).
+ | item (real name) | written by |
+ | context-r1.md | plan-prep review (backlog-brief.mjs) |
+ | in-plan-compliance-<list>[-pN].txt and plan-compliance-<list>[-pN].txt for EVERY resolved list (9 for 418: agents-s5-1to3, agents-s7-s11, queue-137, eng-all, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S) | plan-prep review (lens-input then the review command); the tool writes the REVIEW header |
+ | FINDINGS-PLAN.md (ids for the grounder; a stray name, ignored by the gate) | plan-prep review (findings output) |
+ | seat-integration-1.md, seat-reality-check-1.md, seat-regression-1.md, each with at least one line "### <id>#<n> CRITICAL|HIGH|MED|LOW|NIT: ..." (SEAT_LINE :142) | AGENTS: tool-having Sonnet seats. Never scripted |
+ | GROUNDER-PLAN.md: Grounder (not the planned lane, not an assignee), Lane (the planned lane name), a Ruled line per plan-*.txt, a verdict per finding id (lens ids and seat ids), Seat lines "Seat: <name> <repo path> sha256:<12>" (path inside the folder), the Plan line last | AGENT: separate grounder. Never scripted |
+ | TRIAGE-PLAN.md, one line per CONFIRMED or CONFLICT id (required only when there is one) | AGENT: orchestrator's fold. Never scripted |
+ | references on the task: GROUNDER-PLAN.md, TRIAGE-PLAN.md when present, each seat path (gate :639) | plan-prep post |
+ | "Plan review round N: <a> folded, <b> task, <c> ruling, <d> wontfix, <e> pile; grounder <path>; triage <path>" and one line "<id> <SEV> <word> <ref>" per CONFIRMED CRITICAL, HIGH or MED id, in the Implementation Plan field (gate :625-630) | plan-prep post |
+ | the folder committed at the board HEAD | plan-prep commit |
+ | Plan: <id> sha256:<12>, the hash of title plus body now (front matter excluded, so references do not change it; the round block does) | AGENT: the grounder copies the expected line the dry run prints, as its last act |
+Only per-list compliance is required for a build task (:588 branch); a fix task needs one plan-<lens>.txt instead (:604-607). Any other plan-*.txt in the folder must also have a Ruled line and a verdict per finding.
+
+4. DESIGN
+4.1 Shape: node scripts/analysis/rule-lists.mjs plan-prep <review|post|commit> --task task-N --lane <planned lane name> [--board <dir>] [--dry-run]. In rule-lists.mjs, which owns lens-input, findings, check-tasks and resolveTask; check-lane-close.mjs imports rule-lists.mjs, so plan-prep post reaches outcomeErrors, parseVerdicts, lensKindOf, seatLines, PLAN_SEATS and planHash by a dynamic import (a static import is a cycle).
+4.2 Actor order (each phase refuses when its input is missing):
+ a. AGENT: orchestrator puts the plan on the task (backlog task edit --plan, --ac, --append-notes, --description) and sets the Files line.
+ b. SCRIPT: plan-prep review.
+ c. AGENTS: three seats, separate grounder (GROUNDER-PLAN.md without the Plan line), fold into the task text, TRIAGE-PLAN.md, fold check (08_agents.md:473).
+ d. SCRIPT: plan-prep post.
+ e. SCRIPT: plan-prep commit (first run: the dry run prints the expected Plan line).
+ f. AGENT: the grounder appends that line, last.
+ g. SCRIPT: plan-prep commit again: the dry run prints "plan gate ok: 9 lists, <M> findings, Plan sha256:<12>".
+ h. HAND: node scripts/analysis/backlog-lane.mjs --task task-N --lane <name>, without --dry-run.
+ The expected Plan line is printed only when GROUNDER-PLAN.md is already at the HEAD without it (planGateInner prints it in the Plan-line branch, :635, which runs only after the file is found): so commit runs twice, as above. A later edit of the task title or body changes the hash and sends step f back.
+4.3 review. Refusals (exit 3, one line, before any write, wording after backlog-lane.mjs:27): task not found; status not LATER or WAITS; Files do not resolve or lists incomplete (resolveTask, verifyResolved as backlog-lane.mjs:76-79); Implementation Plan field empty; board dirty outside backlog/ and the folder; type not build or fix; a plan-*.txt already in the folder (one round per prep, 4-Q1). Then, each command printed as "cd <dir> && <cmd>" and run unless --dry-run:
+ 1. node scripts/analysis/backlog-brief.mjs --task N --lane <lane> --root <board> (writes the context; N from contextRound before the call).
+ 2. build: per resolved list L, node scripts/analysis/rule-lists.mjs lens-input --list L --context <ctx> --material-from <ctx> --out <folder>/in-plan-compliance-L (the checklist's form). fix: no inputs; the plan lens command takes the context file itself as the file under review (backlog-lane.mjs:187 lens line), output plan-plan-review-deepseek.txt (the name :607 expects).
+ 3. per input: REVIEW_CMD <in file> --template .claude/review-templates/lens-compliance.md --context <ctx> + one --section per CONTEXT_SECTIONS entry, cwd the board, output plan-<same name>.txt written only on exit 0 (backlog-lane.mjs:94 precedent). Calls run concurrently; a failed call is listed by name, exit 1, no partial file; a re-run redoes only missing names.
+ 4. every output opens with "REVIEW template=" or the phase exits 1 naming it.
+ 5. rule-lists.mjs findings --dir <folder> > <folder>/FINDINGS-PLAN.md (the lane FINDINGS.md precedent).
+ Only compliance runs for a build task: the gate requires only it and his :1634 starts with compliance; the brief's other plan lenses are not run (4-Q4).
+4.4 post. Refuses, naming each: GROUNDER-PLAN.md absent; a Seat line missing for a name of PLAN_SEATS (integration, reality-check, plus regression when a Files entry is tracked: git ls-files, the gate's own test, :621); a seat file named by a Seat line absent on disk; a CONFIRMED or CONFLICT id of the grounder with no TRIAGE-PLAN.md line. Then it calls outcomeErrors in mode 'plan' on the on-disk files (verdicts from parseVerdicts, lens kinds from findingsIn and lensKindOf, seats from seatLines read from disk, which also refuses a seat file edited after its Seat line, facts from the working tree) with a summary of empty text, so that clean outcomes return the "the block is:" message; post writes its lines, the first as "Plan review round N: ..." (the gate maps that prefix to "Review round", :627). With zero CONFIRMED or CONFLICT ids the block is the zero form plant-evidence writes. Any other outcome error is printed and post exits 1: the fold is not finished. Then ONE command: backlog task edit task-N --append-plan "<block>" with one --add-ref per repo path of GROUNDER-PLAN.md, TRIAGE-PLAN.md when present and each seat path that the task does not carry (one argument per path: a comma splits it). Idempotent: when the gate's own test (head = rounds before the last, text = the plan field) finds nothing missing, it prints "nothing to post", exit 0. It parses a refusal message; test 11 pins that coupling.
+ Shared, not copied: backlog-lane.mjs:100-103 builds taskOf and decisionExists from git HEAD inline; they become one exported boardFacts({ show, ls }) in rule-lists.mjs (the caller passes readers): backlog-lane.mjs passes git-HEAD readers (behaviour unchanged), post passes working-tree readers. Likewise the literal of :180 becomes one exported REVIEW_CMD that backlog-lane.mjs imports (it already imports from rule-lists.mjs, :25). That is why backlog-lane.mjs is on the Files line.
+4.5 commit. Refuses: index.lock present (board-commit.zsh :11 skips on it; say retry); anything staged or dirty outside the folder and backlog/; GROUNDER-PLAN.md absent. If the folder changed: git add docs/reports/reviews/<id>; git commit -m "docs(08_agents): plan review evidence for task-N" through the real hooks (no --no-verify); a hook refusal leaves nothing committed, prints its first lines, exit 1. Then node scripts/analysis/backlog-lane.mjs --task N --lane <lane> --dry-run, output and exit code passed through.
+4.6 --dry-run on any phase prints every command and writes nothing.
+
+5. NEVER SCRIPTED (agent work)
+Plan text, acceptance criteria, dated notes, decision records; the three seats; the grounder's rulings and Plan line; TRIAGE-PLAN.md and the fold; the fold check; the lane name; the launch; every ruling.
+
+6. TESTS (red first through the real hooks, DoD #2; each lock proven both ways, 08_agents.md 11.3; each spawned-CLI test first asserts exit status, no signal and the first output line before any absence assertion, R-CP 124a:296). Fixture: the temp board of backlog-lane.logic.test.ts and its plantEvidence helper (:15-16), which runs plant-evidence.mjs; no second evidence writer is built.
+Seam, documented like backlog-lane's --backlog-bin: --review-bin <script> replaces scripts/deepseek-review.js in tests; the success path uses the REAL tool with --dry-run and a dummy DEEPSEEK_API_KEY (real header, no API call, deepseek-review.js :39 and :194).
+Planted defects, each with a control:
+ 1 empty plan field: exit 3, nothing written / plan present proceeds.
+ 2 task not LATER, Files not resolving, type record: refused / resolving build task.
+ 3 dirty file outside backlog/ and the folder: refused / dirty only in backlog/ passes.
+ 4 plan-*.txt present: refused, bytes unchanged / empty folder.
+ 5 one call exits 1 (stub): names it, no partial file, re-run redoes only it / all succeed.
+ 6 output without a REVIEW header (stub): exit 1 / real tool output passes.
+ 7 inputs equal byte for byte the files plant-evidence writes from the same context (control); another Description gives different inputs (planted).
+ 8 context round: with context-r1.md present the phase writes context-r2.md and r1 is untouched.
+ 9 post: from plant-evidence's state with the round line and references stripped (backlog task edit --plan and --remove-ref), post restores the exact zero-form line and the references; run twice, one block (nothing to post).
+ 10 post with a CONFIRMED id lacking a TRIAGE-PLAN.md line: refused naming the id, task unchanged / with folded:"<20+ characters in the task>" it posts.
+ 11 post for a CONFIRMED HIGH folded: commit, then the real dry run prints "plan gate ok" (the end-to-end test; skipped in v1, now runnable).
+ 12 seats: Regression Seat line removed where a Files path is tracked: post refuses naming it / all-new Files need none; integration or reality-check removed: refused; a seat file edited after the grounder: refused.
+ 13 commit: staged file outside the folder refused; hook exit 1: nothing committed; index.lock refused; the commit holds exactly the folder (git show --name-only).
+ 14 one-word edit of the task after the Plan line: the dry run refuses with the new expected Plan line.
+ 15 --dry-run on each phase: commands printed, tree byte-identical.
+ 16 a fix task: review writes plan-plan-review-deepseek.txt, no per-list inputs.
+Existing tests stay green: rule-lists.logic.test.ts (804 lines), backlog-lane.logic.test.ts (454 lines; its pins on the lens-line text, :263 and :335, are unchanged because REVIEW_CMD holds the same string). The usage line of cli() (rule-lists.mjs:594) gains "plan-prep"; grep "usage: rule-lists" in src/tests/backlog found no pin.
+
+7. ACCEPTANCE (commands on a real not-started build task; output pasted on the task; do not mark BUILT until all are pasted, :1517)
+Real task: task-412 (FOLLOWUPS.ROW; LATER, type build, 9 resolved lists at d9f2143a7). Its launch is not part of this acceptance.
+ (a) planted-defect tests red then green through the real hooks.
+ (b) plan-prep review --task task-412 --lane <name> --dry-run: exit 0; 1 brief, 9 lens-input and 9 review commands; git status unchanged.
+ (c) the same without --dry-run with 412's plan on the task: 9 plan-compliance-*.txt each starting "REVIEW template=lens-compliance.md", 9 in- files, FINDINGS-PLAN.md; paste counts and shell time.
+ (d) the same on a task with an empty plan field: exit 3 one line.
+ (e) the agent steps for real on 412 (seat-integration-1.md, seat-reality-check-1.md, seat-regression-1.md, grounder, fold), then post, commit, the grounder copies the printed Plan line, commit again: the dry run prints "plan gate ok: 9 lists, <M> findings, Plan sha256:<12>"; one word edited in the task: exit 3, new expected Plan line; revert.
+ (f) backlog task view task-412 --plain shows the references (GROUNDER-PLAN.md, TRIAGE-PLAN.md if any, the three seats) and the "Plan review round 1" block; git log -1 --name-only on wf2/board shows exactly the folder.
+
+8. WHAT THIS CANNOT PROVE
+That the seats or grounder ran or differ from the lane (the gate compares names and hashes); that rulings are right; that the fold is complete (only "every CONFIRMED has an outcome and a folded quote is present"); that review content is good; latency or cost; that the plan is unchanged after launch; forgery (401, 402). It proves the mechanical steps ran in order on real inputs and left what the gate reads.
+
+9. NOT IN SCOPE
+Scripting a ruling, seat, grounder, fold or fold check; a second round's storage; non-compliance plan lenses; the launch; record, check and doc types; lane close (399); compliance references (the take does it); a backlog task edit wrapper; changing the gate, the context or plant-evidence.mjs.
+
+10. LANDING
+Red tests first, then code: one code commit ("Task: task-418", task file in the diff); a records-only closing commit (Spec 137 Rule 3).
+
+11. LEFT FOR THE LANE TO MEASURE
+Per-call time and counts with a real 30 KB context (measured: 9 files for 9 lists with the 259-character fixture context); whether the dynamic import of check-lane-close.mjs from the rule-lists.mjs CLI works (UNVERIFIED, not run).
+

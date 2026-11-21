@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T05:12:37.337Z file_sha256=48fb5fca55011ff1c358d5719d148790eb4e2ac75f11b5024798939035ebb4e7 prompt_sha256=a2bf5e2dcba3a096071181a1ea200d529c2871542c5a17968b74cccf6162d442
+🔍 Lens review of docs/reports/reviews/task-418/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't ... 'Approved on paper' is not a verification state." — plan §11 "whether the dynamic import of check-lane-close.mjs from the rule-lists.mjs CLI works (UNVERIFIED, not run)" — the whole post phase (4.1 "by a dynamic import (a static import is a cycle)", 4.4 outcomeErrors/planHash/PLAN_SEATS) rests on an import form the plan states it never ran, so its central mechanism is approved on paper — execute the dynamic import from the rule-lists.mjs CLI at the basis sha today, paste command, exit and output into §2, or restructure to a cycle-free static import before plan-lock.
+
+DEFER severity=MED — 08_agents.md §11.1 "a census grep runs at the full scope its conclusion covers" — plan §6 "grep \"usage: rule-lists\" in src/tests/backlog found no pin" — the conclusion (no test pins the usage line) covers the repo, the grep covered one directory; a pin under scripts/ or src/tests/analysis would red the usage-line change — rerun the grep at repo root or narrow the sentence to src/tests/backlog.
+
+DEFER severity=MED — 08_agents.md §7.4 "run the LENS SET in parallel, each a narrow prompt ... (3) idempotency/dedup, (4) error-paths/degrade-safety" and §11.5 "Idempotency lens (agent charter — owns replay/transaction/collision classes)" — plan 4.3.5 "Only compliance runs for a build task: the gate requires only it and his :1634 starts with compliance; the brief's other plan lenses are not run (4-Q4)" — no idempotency and no error-paths lens runs at plan altitude for any task this tool preps, and 4.4 requires only "integration, reality-check, plus regression"; the pasted justification for narrowing is the gate, not rule 7's subject-matter test, and this tool is replay/idempotency-heavy — run the brief's lens set for build/fix tasks or record the rule 7 narrowing with the test applied.
+
+DEFER severity=MED — 08_agents.md §11.2 "one grounder re-executes every claim in the fold + one cross-read adversary checks the folded decisions PAIRWISE and walks every checklist line for staleness" — plan 4.2(c) "fold into the task text, TRIAGE-PLAN.md, fold check (08_agents.md:473)" — the actor order names one unnamed "fold check" and no cross-read adversary and no per-claim re-execution, and §8 concedes "that the fold is complete" cannot be proven — name both 11.2 roles in 4.2(c) so the order it defines carries the STEP the clause makes mandatory.
+
+DEFER severity=MED — task-418 acceptance #3 "9 plan-compliance-*.txt each starting \"REVIEW template=lens-compliance.md\"" — plan 4.3.3 "per input: REVIEW_CMD <in file> ... output plan-<same name>.txt" with inputs "in-plan-compliance-L" (4.3.2) — read literally the output is plan-in-plan-compliance-*.txt, not the plan-compliance-<list>[-pN].txt the gate needs (§3), and §3 makes every other plan-*.txt owe a Ruled line and verdicts, so the launch would refuse — state the output name explicitly as plan-compliance-<list>[-pN].txt, stripping the in- prefix.
+
+DEFER severity=LOW — task-418 Description "reusing what exists (backlog-brief.mjs, lens-input, findings, the exported functions of check-lane-close.mjs, plant-evidence.mjs for tests)" — plan 4.4 "they become one exported boardFacts({ show, ls }) in rule-lists.mjs ... Likewise the literal of :180 becomes one exported REVIEW_CMD" — the card names reuse of existing exports, not new exports and a rewrite of backlog-lane.mjs :100-103 and :180; bounded because the Files line names backlog-lane.mjs and the tests pin the lens line (:263, :335) — either cite the card line that names this sharing or drop it to a private helper.
+
+DEFER severity=LOW — 08_agents.md §7 rule 6 dated note 2026-11-20 "the close requires every in- input and out- output to equal the diff of the whole range at HEAD, so after any fix commit every input is re-made with rule-lists.mjs lens-input and every lens output re-run under the same names" — plan 4.3 "a plan-*.txt already in the folder (one round per prep, 4-Q1)" and 4.3.3 "a re-run redoes only missing names" — the same-name re-make the clause mandates cannot be done through this command once any output exists, and a partial re-run is the shape the clause says is task-414 — allow same-name re-make when the context hash changes, or state that plan rounds are handed to a later task by name.
+
+MET — 08_agents.md §11.9 dated note 2026-11-21 (1) "Every lens command passes it with `--context` and one `--section` per entry of CONTEXT_SECTIONS" — plan 4.3.3 — the review command carries --context <ctx> plus one --section per entry.
+MET — 08_agents.md §11.9 dated note 2026-11-21 (1) "rule-lists.mjs lens-input refuses without `--context`" — plan 4.3.2 — lens-input is called with --context and --material-from <ctx>.
+MET — 08_agents.md §11.9 dated note 2026-11-21 (2) "Integration and Reality-Check on every build or fix launch" — plan 4.4 — post refuses when a Seat line of PLAN_SEATS is missing.
+MET — 08_agents.md §11.9 TKT-1 "A code commit names its task by the trailer `Task: task-N`" — plan §10 — one code commit with trailer "Task: task-418" and the task file in the diff.
+MET — 08_agents.md §11.3 "Every lock is proven in BOTH directions" — plan §6 — each of the 16 planted defects carries a stated control.
+MET — 08_agents.md §11.4 "The failing tests ... are written INTO the plan" — plan §6 — cases, fixture, stub seam, invocation mode and expectations are in the plan.
+MET — 08_agents.md §7 rule 6 dated note 2026-11-20 "every CONFIRMED or CONFLICT finding ... has one outcome line" — plan 4.4 — post refuses a CONFIRMED id with no TRIAGE-PLAN.md line, through outcomeErrors mode 'plan'.
+MET — 08_agents.md §7.7 "Compose the smallest DIVERSE panel" — plan 4.2(c) and 4.4 — three seats plus a separate grounder, no full roster run.
+
+REJECT — 08_agents.md §7.7 "Reality-Check/Schema-Fidelity/Ground-truth only when values/DB-fields/spec-claims are in play" — the plan requires Reality-Check at every build or fix launch — the 2026-11-21 dated note overrides it: "Reality-Check is required at every build or fix launch for now (his :1625)".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 7
+
+---
+⏱  114614ms (114.6s)
+📊 Tokens — total: 38908, input: 17191, output: 21717, reasoning: 20004
