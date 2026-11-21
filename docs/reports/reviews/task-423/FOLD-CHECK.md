@@ -14,5 +14,19 @@ On the board at HEAD 1dec2bc5a (the plan-prep commit; the task file edits of the
 
 (5) PASS. planHash of the board task file, recomputed with the exported function of scripts/hooks/check-lane-close.mjs, is b485973db7df, equal to the gate's expected line.
 
+(First entry closed: Plan line b485973db7df, superseded by the second entry below.)
+
+## Second entry: fold check again after RR-0369 (decision-154)
+
+Checked by: Cairn-Ground-P423
+
+After my first PASS the orchestrator recorded decision-154 (RR-0369) with backlog-decision.mjs, which appended a dated note to the task body, so the earlier Plan line stopped matching. Read-only; nothing in the repo edited.
+
+(1) PASS. git diff of the board task-423 file against the state I checked shows two changes only: the front-matter updated_date (2026-11-21T22:07:00Z to 22:15:00Z, outside the plan hash) and the appended dated note for RR-0369. The plan field (33,053 characters, first 28,205 equal to my fold) , the Description, the Files line and the acceptance items are unchanged.
+
+(2) PASS. The note records the operator verbatim ("the first round of MEdiums on the outputs are corrected with Highs and criticals and then the second round is just highs and criticals"). It concerns the output medium rule, which is card B (section 6, Adjustment 4), and card B is planned again under its own plan stage (as noted in the first entry, RR-0367 already amended it). Card A builds the join and plan findings ruled once and touches no outcome rule, so nothing it builds is contradicted.
+
+(3) PASS. planHash of the board task file, recomputed with the exported function of scripts/hooks/check-lane-close.mjs, is a1d08882148d.
+
 Verdict: PASS
-Plan: task-423 sha256:b485973db7df
+Plan: task-423 sha256:a1d08882148d
