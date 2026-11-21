@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GAPS419'
 created_date: '2026-11-21T14:40:00Z'
-updated_date: '2026-11-21T15:24:00Z'
+updated_date: '2026-11-21T15:27:00Z'
 labels:
   - McFix
   - McFix V2
@@ -181,4 +181,6 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0355 · task-419 · Backlog; o
 2026-11-21 lane BL-GAPS419: tests written first (check-lane-close, rule-lists, backlog-lane logic tests and the plant-evidence fixture), red attempt through the real pre-commit hook, output in the lane dir red.out; no code edit yet.
 
 2026-11-21 lane BL-GAPS419: red proven through the real pre-commit hook (12 failing assertions, red.out). Build commit A1 = the two scripts, the three test files, plant-evidence.mjs (green: 279 tests in the three files, commit.out). The spec notes could not ride the same commit as the plan's LANDING says: the pre-commit refuses a spec edit unless docs/reports/generated/rule-lists-by-kind.md is regenerated (the rule-list character counts move), and check-task-files refuses that page in a code commit because it is outside the Files line. Precedent: task-375 commit 574378f22 landed its spec notes and the page as a docs-only commit (no code file staged). So the two dated spec notes land in commit A2, docs-only, with the regenerated page; reported to the orchestrator.
+
+2026-11-21 lane BL-GAPS419: commit A2 (docs-only) carries the two dated spec notes (08_agents.md after 11.2, 137_mcqueue.md after :140; RR-0351, RR-0352, RR-0354) and the regenerated docs/reports/generated/rule-lists-by-kind.md.
 <!-- SECTION:NOTES:END -->
