@@ -121,6 +121,183 @@ export function chunkErrors({ label, items, expected, diffOf = () => null, optio
 export const BOARD_REFS = ['refs/heads/wf2/board', 'refs/remotes/origin/wf2/board'];
 const kOf = (name) => { const x = /-p(\d+)\.txt$/.exec(name); return x ? Number(x[1]) : null; };
 
+/** One verdict per finding id of a GROUNDER.md: Map id -> {word, file, line, quote, reason} (the last verdict line of an id wins). */
+export function parseVerdicts(g) {
+  const verdicts = new Map();
+  for (const raw of g.split('\n')) { const v = VERDICT.exec(raw.replace(/[`*]/g, '')); if (v) verdicts.set(v[1], { word: v[2], file: v[3], line: Number(v[4]), quote: v[5], reason: v[6].trim() }); }
+  return verdicts;
+}
+
+// task-399 (FOLD.ADOPT, Spec 08 section 7 rule 3 08_agents.md:346 "fold survivors, file rejections with reasons", rule 6 :350 BUG goes to WF3 before Green Light, DEFER to review_followups.md with reasons):
+// every CONFIRMED or CONFLICT id of the grounder file carries ONE outcome line in TRIAGE.md (the last line of an id is judged). Presence, form and git facts; never judgement: it cannot prove that a fix fixes.
+const SEVS = ['CRITICAL', 'HIGH', 'MED', 'LOW', 'NIT'];
+const normSev = (s) => { const u = String(s ?? '').toUpperCase(); const k = u === 'CRIT' ? 'CRITICAL' : u === 'MEDIUM' ? 'MED' : u; return SEVS.includes(k) ? k : null; };
+/** The severity a grounder writes in the first 40 characters of its reason (earliest whole upper-case word), else null. */
+const reasonSev = (reason) => { const m = /\b(CRITICAL|CRIT|HIGH|MEDIUM|MED|LOW|NIT)\b/.exec(String(reason ?? '').slice(0, 40)); return m ? normSev(m[1]) : null; };
+/** {kind: BUG|DEFER, sev} of a lens finding line ("BUG severity=HIGH - ..."); the lens writes CRIT, read as CRITICAL. */
+export const lensKindOf = (line) => { const m = /^\s*[-*]?\s*(BUG|DEFER)\s+severity=([A-Za-z]+)/.exec(line); return { kind: m ? m[1] : 'BUG', sev: m ? normSev(m[2]) : null, line }; };
+const SEAT_LINE = /^\s*(?:#+\s+)?([a-z0-9]+)#(\d+)\s+(CRITICAL|HIGH|MED|LOW|NIT)\b/;
+const SEAT_HEAD = /^\s*Seat:\s*(\S+)\s+(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm;
+/** The `Seat: <name> <repo path> sha256:<12 hex>` lines of a GROUNDER.md, each with its file text from `read` (null when missing). */
+export const seatLines = (g, read) => [...g.matchAll(SEAT_HEAD)].map((m) => ({ name: m[1], path: m[2], sha: m[3], text: read(m[2]) }));
+const FORM_WORDS = { close: ['fixed', 'task', 'ruling', 'wontfix', 'pile'], plan: ['folded', 'task', 'ruling', 'wontfix', 'pile'] };
+const unq = (s) => { const t = String(s).trim(); const m = /^"(.*)"$/s.exec(t) ?? /^'(.*)'$/s.exec(t) ?? /^`(.*)`$/s.exec(t); return squash(m ? m[1] : t); };
+const FAIL = Symbol('fact failed');
+
+/**
+ * MODE TABLE (PLAN-399-v3 4.1; task-375 reuses it for mode 'plan'). Pure of git: every git fact is a callback in `facts`.
+ *  mode close: forms fixed, task, ruling, wontfix, pile. CRITICAL, HIGH, MED close by fixed or ruling (task only when the lens line begins DEFER); LOW and NIT by any form (operator 2026-11-20 ":1580").
+ *  mode plan: folded takes the place of fixed (fixed is refused); the rest as close. A CONFLICT id takes ruling, or fixed (close) / folded (plan), only.
+ * @param {{verdicts:Map<string,{word:string,file:string,line:number,quote:string,reason:string}>, triageText:string, lensKinds:Map<string,{kind:string,sev:string|null,line?:string}>,
+ *   facts:{resolveSha:(s:string)=>string|null, isAncestor:(f:string)=>boolean, inRange:(f:string)=>boolean, touches:(f:string,p:string)=>boolean, reverts:(f:string)=>boolean,
+ *          taskOf:(n:string)=>({exists:boolean,status:string,text:string}|null), decisionExists:(ref:string)=>boolean, taskText?:()=>string},
+ *   mode?:'close'|'plan', seats?:{name:string,path:string,sha:string,text:string|null}[], seatRoot?:string|null,
+ *   summary?:{text:string, headText:string, grounderPath:string, triagePath:string}|null}} a
+ * @returns {{errors:string[], ids:number}} refusal lines (one per failing id) and the number of CONFIRMED or CONFLICT ids checked
+ */
+export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = 'close', seats = [], seatRoot = null, summary = null }) {
+  const errors = [];
+  const kinds = new Map(lensKinds ?? []);
+  // seats (Integration, Reality-Check, Ground-truth): one report each, one finding per line; its findings are BUG kind and need a verdict and an outcome like any lens finding
+  for (const s of seats) {
+    if (seatRoot && !String(s.path).startsWith(seatRoot)) { errors.push(`Seat ${s.name}: ${s.path} is outside ${seatRoot} (the seat file is read from the tree of the ${mode} mode)`); continue; }
+    if (s.text === null || s.text === undefined) { errors.push(`Seat ${s.name}: ${s.path} is not in the repo (the file the Seat line names must be committed)`); continue; }
+    if (sha(s.text).slice(0, 12) !== s.sha) { errors.push(`Seat ${s.name}: ${s.path} has sha256:${sha(s.text).slice(0, 12)}, the Seat line says sha256:${s.sha} (the seat file was edited after the grounder ruled)`); continue; }
+    const found = s.text.split('\n').map((ln) => SEAT_LINE.exec(ln)).filter(Boolean);
+    if (found.length === 0) { errors.push(`Seat ${s.name}: ${s.path} holds no finding line (form: "### <seat id>#<n> CRITICAL|HIGH|MED|LOW|NIT: ..."); a seat file with no finding line is not a seat report`); continue; }
+    for (const m of found) {
+      const id = `${m[1]}#${m[2]}`;
+      kinds.set(id, { kind: 'BUG', sev: normSev(m[3]), line: m[0].trim() });
+      if (!verdicts.has(id)) errors.push(`${id} ${m[3]}: seat finding of ${s.name} has no verdict line in GROUNDER.md (form: <id> CONFIRMED|REJECTED|CONFLICT <path>:<line> "<quote>" [reason]) [Spec 08 section 5.3, 08_agents.md:225]`);
+    }
+  }
+  // the outcome file: ONLY THE LAST LINE of an id is judged; a line for an id the grounder file does not hold is ignored
+  const last = new Map();
+  for (const raw of String(triageText ?? '').split('\n')) {
+    const m = /^\s*(?:[-*]\s+)?([A-Za-z0-9._-]+#\d+)\s+(\S.*?)\s*$/.exec(raw.replace(/[`*]/g, ''));
+    if (m && verdicts.has(m[1])) last.set(m[1], m[2]);
+  }
+  const rows = [];
+  const ids = [...verdicts].filter(([, v]) => v.word === 'CONFIRMED' || v.word === 'CONFLICT');
+  const call = (errs, what, fn) => { try { const r = fn(); if (r === undefined) { errs.push(`the fact callback for ${what} returned nothing, so it cannot be proved`); return FAIL; } return r; } catch (e) { errs.push(`the fact callback for ${what} failed: ${String(e?.message ?? e).split('\n')[0]}`); return FAIL; } };
+  for (const [id, v] of ids) {
+    const k = kinds.get(id) ?? { kind: 'BUG', sev: null };
+    const sev = reasonSev(v.reason) ?? normSev(k.sev) ?? 'CRITICAL';
+    const low = sev === 'LOW' || sev === 'NIT';
+    const conflict = v.word === 'CONFLICT';
+    const fixWord = mode === 'plan' ? 'folded' : 'fixed';
+    const allowed = conflict ? ['ruling', fixWord] : low ? FORM_WORDS[mode] : k.kind === 'DEFER' ? [fixWord, 'task', 'ruling'] : [fixWord, 'ruling'];
+    const pass = allowed.map((w) => ({ fixed: `fixed:<sha> <path the commit touches>`, folded: `folded:"<20+ characters present in the task text>"`, task: 'task:task-N (its text names this id)', ruling: 'ruling:RR-NNNN or ruling:decision-N', wontfix: 'wontfix:"<reason, 30+ characters>"', pile: 'pile:"<reason, 30+ characters>"' })[w]).join(' | ');
+    const rule = conflict ? 'Spec 08 section 5.3 (08_agents.md:225): a conflict waits for the operator ruling' : k.kind === 'DEFER' && !low ? 'Spec 08 section 7 rule 6 (08_agents.md:350): DEFER goes to review_followups.md with reasons' : low ? 'Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later)' : 'Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors';
+    const refuse = (why) => errors.push(`${id} ${sev}: ${why} [${rule}; verdict ${v.file}:${v.line}; form that passes: ${id} ${pass}]`);
+    const text = last.get(id);
+    if (text === undefined) { refuse(`no outcome line in TRIAGE.md`); continue; }
+    const fm = /^(fixed|folded|task|ruling|wontfix|pile)\s*:\s*(.*)$/s.exec(text);
+    if (!fm) { refuse(`the last TRIAGE.md line "${text.slice(0, 60)}" fits no form`); continue; }
+    const [, word, rawArg] = fm;
+    const arg = rawArg.trim();
+    if (!allowed.includes(word)) {
+      refuse(word === 'fixed' && mode === 'plan' ? 'fixed is refused in plan mode (the fix is made before a lane branch exists; use folded)' : word === 'folded' && mode !== 'plan' ? 'folded is a plan-mode form (a lane close uses fixed)' : conflict ? `a CONFLICT takes ${allowed.join(' or ')} only, not ${word}` : `${word} is not allowed for a ${sev} ${k.kind} finding${(word === 'wontfix' || word === 'pile') ? ' (wontfix and pile are for LOW and NIT only)' : word === 'task' ? ' (task is for a DEFER finding; a BUG is fixed before Green Light)' : ''}`);
+      continue;
+    }
+    const errs = [];
+    let ref = '';
+    if (word === 'fixed') {
+      const am = /^([0-9a-fA-F]{7,40})\s+(\S.*)$/.exec(arg);
+      if (!am) errs.push('fixed needs a sha (7+ hex) and the path the commit touches: fixed:<sha> <path>');
+      else {
+        const p = am[2].trim().replace(/^["'`]|["'`]$/g, '');
+        ref = am[1].slice(0, 7);
+        const full = call(errs, `sha ${am[1]}`, () => facts.resolveSha(am[1]));
+        if (full === null) errs.push(`${am[1]} is not a commit of this repo`);
+        else if (full !== FAIL) {
+          const anc = call(errs, 'the ancestor test', () => facts.isAncestor(full));
+          if (anc === false) errs.push(`${am[1]} is not an ancestor of HEAD (a rebase or amend rewrote it: record the fixed line again with the new sha)`);
+          else if (anc !== FAIL) {
+            const inr = call(errs, 'the launch range', () => facts.inRange(full));
+            if (inr === false) errs.push(`${am[1]} is not in the range from the task's launch commit to HEAD (it is older than the launch, or on another branch)`);
+            else if (inr !== FAIL) {
+              const tch = call(errs, 'the touched paths', () => facts.touches(full, p));
+              if (tch === false) errs.push(`${am[1]} does not touch ${p}`);
+              else if (tch !== FAIL) { const rv = call(errs, 'the revert search', () => facts.reverts(full)); if (rv === true) errs.push(`${am[1]} is reverted by a later commit of the range ("This reverts commit ${full}")`); }
+            }
+          }
+        }
+      }
+    } else if (word === 'folded') {
+      const q = unq(arg);
+      ref = q.slice(0, 20);
+      if (q.length < 20) errs.push('folded needs a quote of 20+ characters present in the task text');
+      else { const t = call(errs, 'the task text', () => facts.taskText()); if (t !== FAIL && !squash(t).includes(q)) errs.push(`the quote "${q.slice(0, 40)}" is not in the task text`); }
+    } else if (word === 'task') {
+      const tm = /^(task-\d+)\b/i.exec(arg);
+      if (!tm) errs.push('task needs a task id: task:task-N');
+      else {
+        ref = tm[1].toLowerCase();
+        const ti = call(errs, `task ${ref}`, () => facts.taskOf(ref));
+        if (ti === null || (ti !== FAIL && !ti.exists)) errs.push(`${ref} has no task file`);
+        else if (ti !== FAIL) {
+          if (String(ti.status).toUpperCase() === 'DROPPED') errs.push(`${ref} is DROPPED`);
+          else if (!new RegExp(`(?<![A-Za-z0-9_-])${esc(id)}(?!\\d)`).test(ti.text) && !ti.text.includes(v.file)) errs.push(`the text of ${ref} names neither the finding id ${id} (as a whole token) nor the cited path ${v.file}`);
+        }
+      }
+    } else if (word === 'ruling') {
+      const rm = /^(RR-\d{4}|decision-\d+)\b/i.exec(arg);
+      if (!rm) errs.push('ruling needs RR-NNNN or decision-N');
+      else {
+        ref = rm[1].replace(/^rr-/i, 'RR-').replace(/^decision-/i, 'decision-');
+        const ex = call(errs, `decision ${ref}`, () => facts.decisionExists(ref));
+        if (ex === false) errs.push(`${ref} has no decision record (record the operator's answer as a decision first)`);
+      }
+    } else {
+      const reason = unq(arg);
+      if (reason.length < 30) errs.push(`the ${word} reason is ${reason.length} characters; 30+ are needed after whitespace is squashed`);
+    }
+    if (errs.length) { refuse(errs.join('; ')); continue; }
+    rows.push({ id, sev, word, ref });
+  }
+  // visible on the task (step 6): the Final Summary holds the round line and one line per CRITICAL, HIGH or MED finding; checked only when every id has a good outcome
+  if (summary && errors.length === 0 && ids.length > 0) {
+    const count = (w) => rows.filter((r) => r.word === w).length;
+    const fixWord = mode === 'plan' ? 'folded' : 'fixed';
+    const head = /<!-- SECTION:FINAL_SUMMARY:BEGIN -->([\s\S]*?)<!-- SECTION:FINAL_SUMMARY:END -->/.exec(summary.headText ?? '')?.[1] ?? '';
+    const n = 1 + (head.match(/^\s*Review round \d+:/gm) ?? []).length;
+    const round = `Review round ${n}: ${count(fixWord)} ${fixWord}, ${count('task')} task, ${count('ruling')} ruling, ${count('wontfix')} wontfix, ${count('pile')} pile; grounder ${summary.grounderPath}; triage ${summary.triagePath}`;
+    const lines = rows.filter((r) => r.sev === 'CRITICAL' || r.sev === 'HIGH' || r.sev === 'MED').map((r) => `${r.id} ${r.sev} ${r.word} ${r.ref}`);
+    const have = String(summary.text ?? '');
+    const miss = [round, ...lines].filter((l) => !have.includes(l));
+    if (miss.length) errors.push(`the task's Final Summary lacks ${miss.length} of ${lines.length + 1} required line(s) (the outcomes are shown on the task page, Spec 08 section 7 rule 3): ${miss.slice(0, 3).map((l) => `"${l.slice(0, 70)}"`).join(', ')}${miss.length > 3 ? ', ...' : ''}; the block is:\n${[round, ...lines].join('\n')}\n(one command: backlog task edit task-N --final-summary "<what landed>" --append-final-summary "<block>" -s BUILT)`);
+  }
+  return { errors, ids: ids.length };
+}
+
+/** The git facts the outcome check needs, as callbacks (so outcomeErrors stays pure). `L` is the task's launch commit (null: the range facts throw). */
+export function gitFacts(L) {
+  let range = null; let revText = null;
+  const need = () => { if (!L) throw new Error('the task launch commit is unknown, so the range L..HEAD cannot be computed'); };
+  const files = (dir) => git(['ls-files', '--cached', '--', dir]).stdout.split('\n').filter(Boolean);
+  return {
+    resolveSha: (s) => { if (!/^[0-9a-f]{7,40}$/i.test(s)) return null; const r = git(['rev-parse', '--verify', '--quiet', `${s}^{commit}`]); return r.status === 0 ? r.stdout.trim() : null; },
+    isAncestor: (f) => { const r = git(['merge-base', '--is-ancestor', f, 'HEAD']); if (r.status > 1) throw new Error(`git merge-base failed (status ${r.status})`); return r.status === 0; },
+    inRange: (f) => { need(); if (!range) { const r = git(['rev-list', `${L}..HEAD`]); if (r.status !== 0) throw new Error('git rev-list failed'); range = new Set(r.stdout.split('\n').filter(Boolean)); } return range.has(f); },
+    touches: (f, p) => { const r = git(['diff-tree', '--no-commit-id', '--name-only', '-r', '-m', '--no-renames', f]); if (r.status !== 0) throw new Error(`git diff-tree failed for ${f.slice(0, 9)}`); return r.stdout.split('\n').includes(p); },
+    reverts: (f) => { need(); if (revText === null) { const r = git(['log', `${L}..HEAD`, '--format=%B']); if (r.status !== 0) throw new Error('git log failed'); revText = r.stdout; } return revText.includes(`This reverts commit ${f}`); },
+    taskOf: (tid) => {
+      const n = /\d+/.exec(tid)?.[0];
+      const f = files('backlog/tasks').find((p) => new RegExp(`^backlog/tasks/task-0*${n}( -.*)?\\.md$`, 'i').test(p));
+      if (!f) return { exists: false, status: '', text: '' };
+      const x = git(['show', `:${f}`]);
+      if (x.status !== 0) throw new Error(`cannot read ${f}`);
+      return { exists: true, status: String(parseFM(x.stdout).fm.status ?? ''), text: x.stdout };
+    },
+    decisionExists: (ref) => {
+      const fs_ = files('backlog/decisions');
+      if (/^decision-\d+$/i.test(ref)) return fs_.some((p) => path.basename(p).toLowerCase().startsWith(`${ref.toLowerCase()} -`));
+      return fs_.some((p) => path.basename(p).includes(ref) || new RegExp(`^title:.*${esc(ref)}`, 'm').test(git(['show', `:${p}`]).stdout.split('\n').slice(0, 12).join('\n')));
+    },
+  };
+}
+
 /**
  * Every refusal for one closing task, as lines. Pure of git: the caller supplies what it read.
  * @param {{id:string, taskText:string, fm:object, assignees:string[], headAssignees:string[], type:string, table:object, root:string, letter?:string,
@@ -282,8 +459,7 @@ export function closeErrors(i) {
     if (!have) errors.push(`GROUNDER.md: no "Ruled:" line for ${f.name} (expected: ${want})`);
     else if (`Ruled: ${f.name} sha256:${have.sha} findings:${have.n}` !== want) errors.push(`GROUNDER.md: the "Ruled:" line for ${f.name} does not match the committed output (the grounder ruled on sha256:${have.sha} findings:${have.n}, the file is now ${want.replace(`Ruled: ${f.name} `, '')}: the output was edited after grounding, or the count is wrong)`);
   }
-  const verdicts = new Map();
-  for (const raw of g.split('\n')) { const v = VERDICT.exec(raw.replace(/[`*]/g, '')); if (v) verdicts.set(v[1], { word: v[2], file: v[3], line: Number(v[4]), quote: v[5], reason: v[6].trim() }); }
+  const verdicts = parseVerdicts(g);
   const seenQuote = new Map();
   for (const f of findings) {
     const v = verdicts.get(f.id);
@@ -303,6 +479,11 @@ export function closeErrors(i) {
     const cited = squash(lines[v.line - 1]);
     if (!cited.includes(q)) errors.push(`GROUNDER.md: finding ${f.id}: the quote is not on ${v.file}:${v.line}`);
     else if (lines.filter((x) => squash(x) === cited).length > 3) errors.push(`GROUNDER.md: finding ${f.id}: the cited line occurs more than 3 times in ${v.file} (a boilerplate line proves nothing): cite a line specific to the finding`);
+  }
+  // task-399: every CONFIRMED or CONFLICT id carries one outcome (TRIAGE.md, last line wins), and the outcomes are shown on the task
+  if (build) {
+    const dirPath = mine[0][0];
+    errors.push(...outcomeErrors({ verdicts, triageText: textOf('TRIAGE.md') ?? '', lensKinds: new Map(findings.map((f) => [f.id, lensKindOf(f.line)])), facts: i.facts, mode: 'close', seats: seatLines(g, readRepo), seatRoot: `${dirPath}/`, summary: { text: i.taskText, headText: i.headTaskText ?? '', grounderPath: `${dirPath}/GROUNDER.md`, triagePath: `${dirPath}/TRIAGE.md` } }).errors);
   }
   return errors;
 }
@@ -336,7 +517,7 @@ function check(msgFile) {
     const was = git(['show', `HEAD:${f}`]);
     const headFm = was.status === 0 ? parseFM(was.stdout).fm : {};
     if (was.status === 0 && String(headFm.status ?? '').toUpperCase() === status) continue;
-    moves.push({ f, now: now.stdout, fm, headFm, status });
+    moves.push({ f, now: now.stdout, fm, headFm, status, headText: was.status === 0 ? was.stdout : '' });
   }
   if (moves.length === 0) return 0;
   if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: a task close needs the board, because the keys that decide what is checked and the task's launch commit come from it (fail closed)`]);
@@ -435,7 +616,7 @@ function check(msgFile) {
     const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];
     const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
     const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
-    errors.push(...closeErrors({ id, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase }));
+    errors.push(...closeErrors({ id, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase, facts: gitFacts(L), headTaskText: mv.headText }));
   }
   // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
   const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
@@ -450,4 +631,27 @@ function check(msgFile) {
   }
   return errors.length ? fail(errors) : 0;
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = check(process.argv[2]);
+/** CLI: node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>: prints "checked N ids", then one line per refusal; exit 1 on any refusal (reads the directory on disk and the git facts of the current repo). */
+export function outcomesCli(dir) {
+  if (!dir) { process.stderr.write('usage: check-lane-close.mjs --outcomes <lane dir>\n'); return 1; }
+  const abs = path.resolve(dir);
+  const top = git(['rev-parse', '--show-toplevel']).stdout.trim() || process.cwd();
+  const rd = (n) => { try { return fs.readFileSync(path.join(abs, n), 'utf8'); } catch { return null; } };
+  const g = rd('GROUNDER.md');
+  if (g === null) { process.stdout.write(`no GROUNDER.md in ${dir}\n`); return 1; }
+  const lensFiles = fs.readdirSync(abs).filter(isLensOutput).sort().map((name) => ({ name, text: fs.readFileSync(path.join(abs, name), 'utf8') }));
+  const verdicts = parseVerdicts(g);
+  const rel = path.relative(top, abs).split(path.sep).join('/');
+  // the launch commit L: the first board commit that holds this lane's assignee on the task file named by the lane's TASK file
+  let L = null;
+  const num = /task-0*(\d+)/i.exec(rd('TASK') ?? '')?.[1];
+  const boardRef = BOARD_REFS.find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0);
+  if (num && boardRef) {
+    const bf = git(['ls-tree', '--name-only', boardRef, 'backlog/tasks/']).stdout.split('\n').find((n) => new RegExp(`^backlog/tasks/task-0*${num}( -.*)?\\.md$`, 'i').test(n));
+    if (bf) L = git(['log', boardRef, '--first-parent', '--reverse', '--format=%H', `-S@lane-${path.basename(abs)}`, '--', bf]).stdout.split('\n').filter(Boolean)[0] ?? null;
+  }
+  const r = outcomeErrors({ verdicts, triageText: rd('TRIAGE.md') ?? '', lensKinds: new Map(findingsIn(lensFiles).map((f) => [f.id, lensKindOf(f.line)])), facts: gitFacts(L), mode: 'close', seats: seatLines(g, (p) => { try { return fs.readFileSync(path.join(top, p), 'utf8'); } catch { return null; } }), seatRoot: `${rel}/` });
+  process.stdout.write(`checked ${r.ids} ids\n${r.errors.map((e) => `${e}\n`).join('')}`);
+  return r.errors.length ? 1 : 0;
+}
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = process.argv[2] === '--outcomes' ? outcomesCli(process.argv[3]) : check(process.argv[2]);

@@ -39,7 +39,7 @@ const promptHash = (inputText: string, templateText = TEMPLATE_TEXT) => {
 };
 const hdr = (template: string, inputText: string | null, prompt?: string) => `REVIEW template=${template} model=deepseek-reasoner at=2026-11-20T10:00:00.000Z file_sha256=${inputText === null ? HEX64 : sha(inputText)} prompt_sha256=${prompt ?? (inputText !== null ? promptHash(inputText, templateOf(template)) : HEX64)}\n`;
 const DIFF_FLAGS = (JSON.parse(run('node', ['-e', "import('./scripts/analysis/rule-lists.mjs').then((m)=>console.log(JSON.stringify(m.DIFF_ARGS)))"], { cwd: ROOT }).stdout) as string[]);
-const body = (finding: boolean) => `noise\n${finding ? FINDING : ''}MET — c — d — e\nVERDICT: PASS on compliance\n`;
+const body = (finding: boolean, line: string = FINDING) => `noise\n${finding ? line : ''}MET — c — d — e\nVERDICT: PASS on compliance\n`;
 const nFind = (t: string) => (t.match(/^\s*[-*]?\s*(BUG|DEFER)\s+severity=/gm) ?? []).length;
 const isLens = (n: string) => /^(plan|out)-.+\.txt$/.test(n);
 const refLine = (stem: string, k: number) => `${stem}#${k}`;
@@ -65,8 +65,11 @@ type Opts = {
   tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
   split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
+  // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
+  triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean;
   mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
 };
+type TriageCtx = { ids: { id: string; word: string; sev: string }[]; sha: string; path: string; base: string; d: string };
 function scenario(o: Opts = {}) {
   const d = tmp('lc');
   const g = (...a: string[]) => run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...a], { cwd: d });
@@ -79,13 +82,16 @@ function scenario(o: Opts = {}) {
   w('docs/a.md', '# A\nrule one text\nrule two text\n'); w('docs/ev.md', '# Ev\nthe five words and the plan protocol\n'); w('docs/ms.md', '# Ms\nthe milestone objectives\n'); w('docs/inc.md', '# Inc\nincrement text\n');
   w('src/a.ts', AFILE); w('src/long.ts', Array.from({ length: 40 }, (_, i) => `export const L${i} = ${i};`).join('\n') + '\n');
   w('backlog/milestones/m-0 - inc.md', '---\nid: m-0\ntitle: "Increment 1·A Foundations [F]"\n---\n');
-  w(TASK, taskText({ status: o.before ?? 'RUNNING', type: o.beforeType ?? o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees }));
-  if (o.otherTask) w(OTHER, taskText({ id: 'TASK-8', status: 'RUNNING', type: o.otherType, assignees: o.otherAssignees }));
+  w(TASK, `${taskText({ status: o.before ?? 'RUNNING', type: o.beforeType ?? o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees })}${o.priorRound ? '\n## Final Summary\n\n<!-- SECTION:FINAL_SUMMARY:BEGIN -->\nReview round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder x; triage y\n<!-- SECTION:FINAL_SUMMARY:END -->\n' : ''}`);
+  if (!o.noDecision) w('backlog/decisions/decision-1 - RR-0001-test-ruling.md', '---\nid: decision-1\ntitle: RR-0001 test ruling\n---\n');
+  if (o.otherTask) w(OTHER, `${taskText({ id: 'TASK-8', status: o.otherStatus ?? 'RUNNING', type: o.otherType, assignees: o.otherAssignees })}${o.otherExtra ?? ''}`);
   for (const [p, x] of LENS_TEMPLATES) w(p, x);
   g('add', '-A'); g('commit', '-qm', 'base'); g('branch', 'wf2/board');
   const baseSha = g('rev-parse', 'HEAD').stdout.trim();
   const laneWork = o.laneWork ?? { 'src/a.ts': `${AFILE}// lane work\n` };
   if (Object.keys(laneWork).length || o.laneDelete) { for (const [f, t] of Object.entries(laneWork)) w(f, t); for (const p of o.laneDelete ?? []) fs.rmSync(path.join(d, p)); g('add', '-A'); g('commit', '-qm', 'lane work'); }
+  const laneSha = g('rev-parse', 'HEAD').stdout.trim();
+  if (o.revertLane) g('commit', '--allow-empty', '-qm', `Revert lane work\n\nThis reverts commit ${laneSha}.`);
   if (o.tagAtHead) g('tag', o.tagAtHead);
   if (o.folded) g('branch', '-f', 'wf2/board', 'HEAD');
   if (o.noBoard) g('branch', '-D', 'wf2/board');
@@ -112,9 +118,9 @@ function scenario(o: Opts = {}) {
       const nm = path.basename(p);
       const inText = fs.readFileSync(p, 'utf8');
       lane[nm] = inText;
-      lane[nm.replace(/^in-/, '')] = hdr('lens-compliance.md', inText) + body(id === 'first' && o.lensFinding !== false);
+      lane[nm.replace(/^in-/, '')] = hdr('lens-compliance.md', inText) + body(id === 'first' && o.lensFinding !== false, o.finding);
     }
-    if (r.status !== 0) { lane[`in-out-compliance-${id}.txt`] = ''; lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', '') + body(id === 'first' && o.lensFinding !== false); }
+    if (r.status !== 0) { lane[`in-out-compliance-${id}.txt`] = ''; lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', '') + body(id === 'first' && o.lensFinding !== false, o.finding); }
   }
   lane['out-code-review.txt'] = hdr('lens-code-review.md', material) + body(false);
   if (o.split?.lens) {
@@ -129,10 +135,25 @@ function scenario(o: Opts = {}) {
   let l = o.mutate ? o.mutate(lane, d) : lane;
   if (!('GROUNDER.md' in l)) l['GROUNDER.md'] = grounder(l, o.g);
   if (o.after) l = o.after(l);
+  // task-399: the outcome records a valid close carries: TRIAGE.md (one line per CONFIRMED or CONFLICT id) and the Final Summary block the check recomputes
+  const verdictRows = String(l['GROUNDER.md'] ?? '').split('\n').map((ln) => /^(\S+) (CONFIRMED|CONFLICT)\b(.*)$/.exec(ln)).filter((m): m is RegExpExecArray => m !== null)
+    .map((m) => { const reason = /"[^"]*"\s*(.*)$/.exec(m[3] ?? '')?.[1] ?? ''; const hit = /\b(CRITICAL|HIGH|MED|LOW|NIT)\b/.exec(reason.slice(0, 40)); return { id: m[1] as string, word: m[2] as string, sev: hit ? (hit[1] as string) : 'HIGH' }; });
+  const laneFirst = Object.keys(o.laneWork ?? { 'src/a.ts': '' })[0] ?? 'src/a.ts';
+  const tctx: TriageCtx = { ids: verdictRows, sha: laneSha, path: laneFirst, base: baseSha, d };
+  if (!('TRIAGE.md' in l) && verdictRows.length) l['TRIAGE.md'] = o.triage ? o.triage(tctx) : `${verdictRows.map((r) => (r.word === 'CONFLICT' ? `${r.id} ruling:RR-0001` : `${r.id} fixed:${laneSha} ${laneFirst}`)).join('\n')}\n`;
+  if (verdictRows.length && o.summary !== false && !o.noTaskFile && !o.taskFileText) {
+    // the block is derived from the final TRIAGE.md (last line per id), the way the check recomputes it
+    const tri = String(l['TRIAGE.md'] ?? '').split('\n');
+    const got = verdictRows.map((r) => { const m = tri.map((ln) => new RegExp(`^${r.id.replace(/[#.]/g, '\\$&')} (\\w+):(\\S+)`).exec(ln)).filter(Boolean).pop(); return { ...r, form: m?.[1] ?? 'none', ref: m?.[1] === 'fixed' ? (m[2] as string).slice(0, 7) : (m?.[2] ?? '') }; });
+    const n = (k: string) => got.filter((r) => r.form === k).length;
+    const block = [`Review round ${o.priorRound ? 2 : 1}: ${n('fixed')} fixed, ${n('task')} task, ${n('ruling')} ruling, ${n('wontfix')} wontfix, ${n('pile')} pile; grounder ${LD}/GROUNDER.md; triage ${LD}/TRIAGE.md`, ...got.filter((r) => ['CRITICAL', 'HIGH', 'MED'].includes(r.sev)).map((r) => `${r.id} ${r.sev} ${r.form} ${r.ref}`)];
+    fs.appendFileSync(path.join(d, o.finalTaskPath ?? TASK), `\n## Final Summary\n\n<!-- SECTION:FINAL_SUMMARY:BEGIN -->\n${(o.summary ? o.summary(block) : block).join('\n')}\n<!-- SECTION:FINAL_SUMMARY:END -->\n`);
+  }
   for (const [n, t] of Object.entries(l)) if (t !== null) w(`${LD}/${n}`, t);
   g('add', '-A');
   const msgFile = path.join(d, '.git/MSG');
   fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
+  if (o.cli) return script('scripts/hooks/check-lane-close.mjs', ['--outcomes', LD], { cwd: d });
   return script('scripts/hooks/check-lane-close.mjs', [msgFile], { cwd: d });
 }
 const refused = (r: { status: number | null; stderr: string }, re: RegExp, attack?: number) => {
@@ -571,5 +592,163 @@ describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () =>
   it('H10 control: a same-number retitle of the task file is not refused (the task is found by its number, the launch commit by the board path)', () => {
     const ok = scenario({ finalTaskPath: 'backlog/tasks/task-7 - Lane work retitled.md' });
     expect(ok.status, ok.stderr).toBe(0);
+  });
+});
+
+// ---- task-399 (FOLD.ADOPT): every CONFIRMED or CONFLICT finding carries an outcome the close check verifies ----
+// SPEC LINK (task-399): Spec 08 section 7 rule 3 (08_agents.md:346 "fold survivors, file rejections with reasons"), rule 6 (:350 BUG goes to WF3 before Green Light, DEFER to review_followups.md with reasons), section 5.3 (:225).
+// Each planted defect has a passing control; every spawned-CLI assertion first checks exit status and the "checked N ids" line before any absence assertion (R-CP 124a:296).
+const ID = 'out-compliance-first#1';
+const DEFER_LINE = 'DEFER severity=HIGH — clause "x" — src/a.ts:1 "y" — claim — fix\n';
+const other = (extra = '', status = 'RUNNING'): Opts => ({ otherTask: true, otherStatus: status, otherExtra: extra, finding: DEFER_LINE });
+const cli = (o: Opts = {}) => {
+  const r = scenario({ ...o, cli: true });
+  expect(r.status, r.stderr).not.toBeNull();
+  return r;
+};
+const closeRefused = (o: Opts, re: RegExp) => { const r = scenario(o); expect(r.status, r.stderr).toBe(1); expect(r.stderr).toMatch(re); return r; };
+type Mod = { outcomeErrors: (a: Record<string, unknown>) => { errors: string[]; ids: number } };
+const loadMod = () => import(path.join(ROOT, 'scripts/hooks/check-lane-close.mjs')) as Promise<Mod>;
+const goodFacts = { resolveSha: (s: string) => s.padEnd(40, '0'), isAncestor: () => true, inRange: () => true, touches: () => true, reverts: () => false, taskOf: () => ({ exists: true, status: 'RUNNING', text: 'id#1' }), decisionExists: () => true, taskText: () => 'the folded plan text holds this sentence whole' };
+const V = (word: string, reason = '') => new Map([['id#1', { word, file: 'src/a.ts', line: 1, quote: 'q', reason }]]);
+const K = (kind: string, sev: string) => new Map([['id#1', { kind, sev }]]);
+
+describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399)', () => {
+  it('control: the default close (every CONFIRMED id has a fixed line with a real lane commit and the Final Summary holds the block) passes', () => {
+    const r = scenario();
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('control: the --outcomes command on the same lane prints "checked 1 ids" and exits 0', () => {
+    const r = cli();
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.stdout).toMatch(/^checked 1 ids\n/);
+  });
+  it('PLANTED DEFECT: an id with no outcome line is refused, naming the id, its severity, the verdict and the form that passes', () => {
+    const r = closeRefused({ triage: () => '' }, /out-compliance-first#1 HIGH: no outcome line in TRIAGE\.md/);
+    expect(r.stderr).toMatch(/form that passes: out-compliance-first#1 fixed:<sha>/);
+  });
+  it('PLANTED DEFECT: with no TRIAGE.md at all every id is refused, one line each, and the CLI prints "checked 1 ids" first', () => {
+    const r = cli({ mutate: (l) => ({ ...l, 'TRIAGE.md': null }), triage: () => '' });
+    expect(r.status, r.stdout).toBe(1);
+    expect(r.stdout.split('\n')[0]).toBe('checked 1 ids');
+    expect(r.stdout.split('\n').filter((x) => /no outcome line/.test(x))).toHaveLength(1);
+  });
+  it('the LAST line of an id is judged: an earlier wrong line does not matter (control), a wrong last line is refused', () => {
+    const ok = scenario({ triage: (c) => `${ID} fixed:deadbee src/a.ts\n${ID} fixed:${c.sha} ${c.path}\n` });
+    expect(ok.status, ok.stderr).toBe(0);
+    closeRefused({ triage: (c) => `${ID} fixed:${c.sha} ${c.path}\n${ID} fixed:deadbee src/a.ts\n` }, /not a commit of this repo/);
+  });
+  it('PLANTED DEFECT: a line that starts with a known id and fits no form (no path, unknown word) is refused; a line for a stale id is ignored (control)', () => {
+    closeRefused({ triage: (c) => `${ID} fixed:${c.sha.slice(0, 7)}\n` }, /fixed needs a sha/);
+    closeRefused({ triage: () => `${ID} done\n` }, /fits no form/);
+    const ok = scenario({ triage: (c) => `${ID} fixed:${c.sha} ${c.path}\nzzz#9 fixed:abc\n` });
+    expect(ok.status, ok.stderr).toBe(0);
+  });
+  it('PLANTED DEFECT: fixed with a fake sha, a sha not touching the path, a sha outside L..HEAD (the launch commit), is refused', () => {
+    closeRefused({ triage: (c) => `${ID} fixed:abcdef1 ${c.path}\n` }, /abcdef1 is not a commit/);
+    closeRefused({ triage: (c) => `${ID} fixed:${c.sha} src/long.ts\n` }, /does not touch src\/long\.ts/);
+    closeRefused({ triage: (c) => `${ID} fixed:${c.base} ${c.path}\n` }, /not in the range from the task's launch commit/);
+  });
+  it('PLANTED DEFECT: a sha reverted by a later commit of the range is refused; the same fix without the revert closes (control above)', () => {
+    closeRefused({ revertLane: true }, /is reverted by a later commit/);
+  });
+  it('task: on a DEFER finding passes when the task exists, is not DROPPED and names the id; refused for DROPPED, unknown, a text without the id, and x#1 against a task naming only x#12', () => {
+    const t: Opts = { ...other(`\nfollow-up for ${ID}\n`), triage: () => `${ID} task:task-8\n` };
+    const ok = scenario(t);
+    expect(ok.status, ok.stderr).toBe(0);
+    closeRefused({ ...t, ...other(`\nfollow-up for ${ID}\n`, 'DROPPED') }, /task-8 is DROPPED/);
+    closeRefused({ ...t, triage: () => `${ID} task:task-99\n` }, /task-99 has no task file/);
+    // the verdict cites a path no other task text holds, so only the id token can match
+    const far = { g: { verdict: () => 'CONFIRMED src/long.ts:1 "export const L0 = 0;"' } } as const;
+    closeRefused({ ...t, ...far, ...other('\nnothing about it\n') }, /names neither the finding id/);
+    closeRefused({ ...t, ...far, ...other(`\nfollow-up for ${ID}2 and out-compliance-first#12\n`) }, /names neither the finding id/);
+  });
+  it('PLANTED DEFECT: task: on a BUG finding of HIGH severity is refused (a BUG is fixed before Green Light)', () => {
+    closeRefused({ otherTask: true, otherExtra: `\n${ID}\n`, triage: () => `${ID} task:task-8\n` }, /task is not allowed for a HIGH BUG finding/);
+  });
+  it('ruling: a CONFLICT closed by ruling:RR-0001 passes (control); an unknown ruling and a CONFLICT closed by task: are refused', () => {
+    const c = (v: string): Opts => ({ g: { verdict: () => `CONFLICT src/a.ts:1 "export const value01 = 'alpha quote number 01';" the operator must rule on this` }, triage: () => `${ID} ${v}\n` });
+    const ok = scenario({ ...c('ruling:RR-0001') });
+    expect(ok.status, ok.stderr).toBe(0);
+    closeRefused({ ...c('ruling:RR-9999') }, /RR-9999 has no decision record/);
+    closeRefused({ ...c('task:task-8'), otherTask: true, otherExtra: `\n${ID}\n` }, /a CONFLICT takes ruling or fixed only/);
+  });
+  it('wontfix and pile: refused on a HIGH finding; on a LOW grounder severity (lowering the lens HIGH) they pass; a reason under 30 characters after squashing is refused; no parsable severity reads as CRITICAL', () => {
+    const reason = 'the line is a test fixture and nothing reads it';
+    closeRefused({ triage: () => `${ID} wontfix:"${reason}"\n` }, /wontfix is not allowed for a HIGH BUG finding/);
+    closeRefused({ triage: () => `${ID} pile:"${reason}"\n` }, /pile is not allowed for a HIGH BUG finding/);
+    const low = (t: string): Opts => ({ g: { verdict: () => `CONFIRMED src/a.ts:1 "export const value01 = 'alpha quote number 01';" LOW: cosmetic only` }, triage: () => `${ID} ${t}\n` });
+    for (const form of ['wontfix', 'pile']) { const ok = scenario(low(`${form}:"${reason}"`)); expect(ok.status, ok.stderr).toBe(0); }
+    closeRefused(low('wontfix:"too   short   reason"'), /reason is \d+ characters; 30\+ are needed/);
+    closeRefused({ finding: 'BUG severity=??? — clause "x" — src/a.ts:1 "y" — claim — fix\n', triage: () => `${ID} wontfix:"${reason}"\n` }, /out-compliance-first#1 CRITICAL: wontfix is not allowed/);
+  });
+  it('the seat report: control passes; a missing file, a changed sha, a report with no finding line, a seat finding with no verdict and one with no outcome are refused', () => {
+    const SEAT = '# seat report\n### rc2#1 HIGH: a seat finding\n';
+    const seatLine = (t: string) => `Seat: rc ${LD}/seat-rc.md sha256:${sha(t).slice(0, 12)}\n`;
+    const seated = (o: { file?: string | null; line?: string; verdict?: boolean; outcome?: boolean } = {}): Opts => ({
+      after: (l) => ({ ...l, ...(o.file === null ? {} : { 'seat-rc.md': o.file ?? SEAT }), 'GROUNDER.md': `${l['GROUNDER.md']}${o.line ?? seatLine(SEAT)}${o.verdict === false ? '' : 'rc2#1 CONFIRMED src/a.ts:1 "seat quote"\n'}` }),
+      triage: (c) => `${ID} fixed:${c.sha} ${c.path}\n${o.outcome === false ? '' : `rc2#1 fixed:${c.sha} ${c.path}\n`}`,
+    });
+    const ok = scenario(seated());
+    expect(ok.status, ok.stderr).toBe(0);
+    closeRefused(seated({ file: null }), /Seat rc: .* is not in the repo/);
+    closeRefused(seated({ line: seatLine('another text') }), /the Seat line says sha256/);
+    closeRefused(seated({ file: '# no finding lines here\n', line: seatLine('# no finding lines here\n') }), /holds no finding line/);
+    closeRefused(seated({ verdict: false }), /rc2#1 HIGH: seat finding of rc has no verdict line/);
+    closeRefused(seated({ outcome: false }), /rc2#1 HIGH: no outcome line/);
+  });
+  it('visible on the task: a Final Summary with no round line, a missing finding line or wrong counts is refused, and the refusal prints the exact block; N counts the round lines of the HEAD copy', () => {
+    closeRefused({ summary: false }, /Final Summary lacks 2 of 2 required line\(s\)[\s\S]*Review round 1: 1 fixed, 0 task, 0 ruling, 0 wontfix, 0 pile/);
+    closeRefused({ summary: (b) => b.slice(0, 1) }, /lacks 1 of 2 required line\(s\)/);
+    closeRefused({ summary: (b) => [b[0]!.replace('1 fixed', '2 fixed'), ...b.slice(1)] }, /lacks 1 of 2 required line\(s\)/);
+    const second = scenario({ priorRound: true });
+    expect(second.status, second.stderr).toBe(0);
+    closeRefused({ priorRound: true, summary: (b) => b.map((x) => x.replace('Review round 2', 'Review round 1')) }, /Review round 2: 1 fixed/);
+  });
+  it('a lane with zero CONFIRMED ids and no TRIAGE.md passes, and the CLI prints "checked 0 ids"', () => {
+    const r = scenario({ lensFinding: false });
+    expect(r.status, r.stderr).toBe(0);
+    const c = cli({ lensFinding: false });
+    expect(c.status, c.stderr).toBe(0);
+    expect(c.stdout).toBe('checked 0 ids\n');
+  });
+});
+
+describe('outcome check: the mode table, seats and failing callbacks (outcomeErrors, pure)', () => {
+  it('mode plan: folded takes the place of fixed (control passes with a quote present in the task text); fixed is refused; a quote under 20 characters or absent from the task text is refused', async () => {
+    const { outcomeErrors } = await loadMod();
+    const run1 = (triageText: string) => outcomeErrors({ verdicts: V('CONFIRMED'), triageText, lensKinds: K('BUG', 'HIGH'), facts: goodFacts, mode: 'plan' });
+    expect(run1('id#1 folded:"the folded plan text holds this sentence whole"').errors).toEqual([]);
+    expect(run1('id#1 fixed:abcdef1 src/a.ts').errors.join('\n')).toMatch(/fixed is refused in plan mode/);
+    expect(run1('id#1 folded:"too short"').errors.join('\n')).toMatch(/20\+ characters/);
+    expect(run1('id#1 folded:"a sentence that the task text does not hold at all"').errors.join('\n')).toMatch(/not in the task text/);
+  });
+  it('close mode refuses folded; a LOW finding of any kind closes by any form (control), a MED DEFER by task, a MED BUG not', async () => {
+    const { outcomeErrors } = await loadMod();
+    const r = (v: Map<string, unknown>, k: Map<string, unknown>, t: string) => outcomeErrors({ verdicts: v, triageText: t, lensKinds: k, facts: goodFacts, mode: 'close' }).errors.join('\n');
+    expect(r(V('CONFIRMED'), K('BUG', 'HIGH'), 'id#1 folded:"the folded plan text holds this sentence whole"')).toMatch(/folded is a plan-mode form/);
+    expect(r(V('CONFIRMED'), K('BUG', 'LOW'), 'id#1 task:task-5')).toBe('');
+    expect(r(V('CONFIRMED'), K('DEFER', 'MED'), 'id#1 task:task-5')).toBe('');
+    expect(r(V('CONFIRMED'), K('BUG', 'MED'), 'id#1 task:task-5')).toMatch(/task is not allowed for a MED BUG/);
+  });
+  it('PLANTED DEFECT: a callback that throws or returns nothing is one error line tied to the id, never a throw out of the check', async () => {
+    const { outcomeErrors } = await loadMod();
+    const t = 'id#1 fixed:abcdef1 src/a.ts';
+    const boom = outcomeErrors({ verdicts: V('CONFIRMED'), triageText: t, lensKinds: K('BUG', 'HIGH'), facts: { ...goodFacts, isAncestor: () => { throw new Error('git broke'); } }, mode: 'close' });
+    expect(boom.errors).toHaveLength(1);
+    expect(boom.errors[0]).toMatch(/^id#1 HIGH: .*callback for the ancestor test failed: git broke/);
+    const none = outcomeErrors({ verdicts: V('CONFIRMED'), triageText: t, lensKinds: K('BUG', 'HIGH'), facts: { ...goodFacts, touches: () => undefined }, mode: 'close' });
+    expect(none.errors).toHaveLength(1);
+    expect(none.errors[0]).toMatch(/returned nothing/);
+    expect(outcomeErrors({ verdicts: V('CONFIRMED'), triageText: t, lensKinds: K('BUG', 'HIGH'), facts: goodFacts, mode: 'close' }).errors).toEqual([]);
+  });
+  it('seat reports are read from the tree of the mode: a seat file outside it is refused; a "### rc2#1 HIGH:" line parses (control)', async () => {
+    const { outcomeErrors } = await loadMod();
+    const text = '### rc2#1 HIGH: a finding\n';
+    const seat = (p: string) => ({ name: 'rc', path: p, sha: sha(text).slice(0, 12), text });
+    const v = new Map([['rc2#1', { word: 'REJECTED', file: 'src/a.ts', line: 1, quote: 'q', reason: 'x'.repeat(30) }]]);
+    const mk = (p: string) => outcomeErrors({ verdicts: v, triageText: '', lensKinds: new Map(), facts: goodFacts, mode: 'plan', seats: [seat(p)], seatRoot: 'docs/reports/reviews/task-9/' }).errors;
+    expect(mk('docs/reports/reviews/task-9/seat.md')).toEqual([]);
+    expect(mk('docs/reports/lanes/x/seat.md').join('\n')).toMatch(/is outside docs\/reports\/reviews\/task-9\//);
   });
 });
