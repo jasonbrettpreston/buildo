@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-OUTCOME'
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-21T00:33:00Z'
+updated_date: '2026-11-21T00:51:00Z'
 labels:
   - McFix
   - McFix Z
@@ -284,4 +284,6 @@ Dated note 2026-11-20 (M-246, prior text kept; RR-0340 · task-399 · Backlog; o
 2026-11-20 taken on the board at lane launch (lane BL-OUTCOME, worktree /Users/brettpreston_macmini/Buildo-wt-outcome, branch wf1/inc1b-outcome), RR-0240
 
 Dated note 2026-11-20 (M-246, prior text kept; RR-0342 · task-399 · Backlog; operator, verbatim: "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently")
+
+2026-11-20 (M-246, prior text kept) WHO DOES WHAT AFTER THE GROUNDER RULES of PLAN-399-v3 and the sentence of its section 5 saying the orchestrator writes TRIAGE.md are superseded on the operator's ruling (MORNING-DECISIONS.md:1605, verbatim: "agreed", to the question as put: the lane fixes and closes, the grounder verifies each fix, the orchestrator only routes): the lane writes its own outcome lines and makes the closing commit, a separate grounder verifies each fix resolves its finding, the orchestrator only routes. Fix round 1 was already run this way; this note records, it changes no code.
 <!-- SECTION:NOTES:END -->
