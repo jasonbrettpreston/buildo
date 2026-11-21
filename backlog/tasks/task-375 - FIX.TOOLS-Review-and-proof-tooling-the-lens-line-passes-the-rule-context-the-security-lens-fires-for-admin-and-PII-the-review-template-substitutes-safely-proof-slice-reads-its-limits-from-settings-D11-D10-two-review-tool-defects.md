@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T01:56:00Z'
+updated_date: '2026-11-21T01:57:00Z'
 labels:
   - McFix
   - McFix A
@@ -389,4 +389,6 @@ BL-GATE375 build note (D1-D5 in check-lane-close.mjs): listProof and grounderErr
 BL-GATE375 build note (D5 wiring, the LAST commit of backlog-lane.mjs): after the existing refusals and the dirty-board check and BEFORE the take, a build or fix launch runs planGateErrors on the board HEAD evidence (docs/reports/reviews/<id>/, flat) and the task file; each error is a stderr line (exit 3, nothing taken); --dry-run runs it too and prints 'plan gate ok: <L> lists, <M> findings, Plan sha256:<12>'. Rollback if it blocks every launch: git revert of this one commit. Lane test fixtures plant real stamped evidence with docs/reports/reviews/task-375/plant-evidence.mjs. Red: red11.out (2 failed).
 
 BL-GATE375 build note (D6): backlog-brief.mjs prints the line that the plan is the task text at launch, checked before launch, that the lane does not edit Description, Acceptance or Plan, records deviations in Implementation Notes and still runs a plan-stage lens of its own. Red: red12.out.
+
+BL-GATE375 build note (section 10): ONE dated note under the TKT-1 note of 08_agents.md (context-rN.md; the plan-only seats) and a dated note in 137_mcqueue.md after the :138 note (the close refusals and the launch gate, what it cannot prove), prior text kept.
 <!-- SECTION:NOTES:END -->
