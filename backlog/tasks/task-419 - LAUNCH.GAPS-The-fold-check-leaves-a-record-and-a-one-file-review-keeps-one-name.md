@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GAPS419'
 created_date: '2026-11-21T14:40:00Z'
-updated_date: '2026-11-21T15:57:00Z'
+updated_date: '2026-11-21T15:58:00Z'
 labels:
   - McFix
   - McFix V2
@@ -33,6 +33,8 @@ references:
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-21/BL-GAPS419/REPORT.md
   - docs/reports/lanes/2026-11-21/BL-GAPS419/FINDINGS.md
+  - docs/reports/lanes/2026-11-21/BL-GAPS419/TRIAGE.md
+  - docs/reports/lanes/2026-11-21/BL-GAPS419/GROUNDER.md
 type: build
 ordinal: 119012
 ---
