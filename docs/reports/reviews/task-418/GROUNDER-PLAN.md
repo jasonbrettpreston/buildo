@@ -112,3 +112,4 @@ rg#6 CONFIRMED scripts/analysis/backlog-lane.mjs:208 "Review (review mode, from 
 Seat: integration docs/reports/reviews/task-418/seat-integration-1.md sha256:d4fa999edf3b
 Seat: reality-check docs/reports/reviews/task-418/seat-reality-check-1.md sha256:3e6ff65c86b6
 Seat: regression docs/reports/reviews/task-418/seat-regression-1.md sha256:d61616b460cb
+Plan: task-418 sha256:f6e8fbfaf205
