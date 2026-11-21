@@ -361,7 +361,7 @@ export function lensPromptHash({ templateText, inputText, context = NO_CONTEXT }
  * V2.WHOLE (task-410): when the material leaves no room for a list part and is a git diff, the TOOL cuts it at file boundaries into chunks (packed in diff order, each at most the room
  * left beside the list part); every chunk goes against every list part, files are -p1..-pN chunk by chunk (N = chunks x list parts), and each input is stamped "chunk c of m" with
  * its path list. One file alone over the room is refused naming the file and its size. A diff is always stamped (chunk 1 of 1 when it fits), so the close check reads paths from the stamp.
- * `list` null (a non-compliance lens template): the same chunks with an empty list part, id "none".
+ * `list` null (a non-compliance lens template): the same chunks with an empty list part, id "none"; such an input is always named -pN, even when it is the only file (task-419).
  */
 export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {
   const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
@@ -422,7 +422,8 @@ export function buildLensInputs({ id, list, root, material, templateFile, contex
     const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: context, dataContext: '(no live-DB context provided)' }).length;
     if (prompt > max) throw new Error(`list ${id}: part ${i + 1} would be ${prompt} characters, over the ${max} bound`);
     const n = ci * parts.length + i + 1;
-    files.push({ suffix: files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });
+    // task-419: a rule-list input that is one file keeps the unsuffixed name; a no-list input is always -pN (the close check reads an unsuffixed out-<lens>.txt as a review of the raw diff)
+    files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });
   }));
   return files;
 }

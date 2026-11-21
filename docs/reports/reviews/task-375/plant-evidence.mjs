@@ -62,6 +62,8 @@ const ed = (args) => { const e = spawnSync(bin, ['task', 'edit', taskId, ...args
 ed(['--plan', 'the plan text of the fixture task']);
 ed(['--append-plan', `Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder ${rel}/GROUNDER-PLAN.md; triage ${rel}/TRIAGE-PLAN.md`]);
 for (const x of [`${rel}/GROUNDER-PLAN.md`, ...seats.map((n) => `${rel}/seat-${n}-1.md`)]) ed(['--add-ref', x]);
-lines.push(...seatLines, `Plan: ${taskId} sha256:${clc.planHash(fs.readFileSync(t.file, 'utf8'))}`);
+const planLine = `Plan: ${taskId} sha256:${clc.planHash(fs.readFileSync(t.file, 'utf8'))}`;
+lines.push(...seatLines, planLine);
 w('GROUNDER-PLAN.md', `${lines.join('\n')}\n`);
+w('FOLD-CHECK.md', `# Fold check (test evidence)\nChecked by: Fold-G1\nVerdict: PASS\n\n${planLine}\n`);
 git('add', '-A'); const c = git('commit', '-q', '-m', 'plan evidence'); if (c.status !== 0) { console.error(c.stdout + c.stderr); process.exit(1); }

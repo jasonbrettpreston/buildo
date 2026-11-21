@@ -639,6 +639,27 @@ function planGateInner(i) {
     const refs = [`${dir}/GROUNDER-PLAN.md`, ...(textOf('TRIAGE-PLAN.md') !== undefined ? [`${dir}/TRIAGE-PLAN.md`] : []), ...seats.map((x) => x.path)];
     for (const rp of [...new Set(refs)]) if (!have.has(rp)) errors.push(`${id}: the task's references lack ${rp}: backlog task edit ${id} --add-ref ${rp}`);
   }
+  // task-419: the grounder's fold check (docs/reports/reviews/<task>/FOLD-CHECK.md) is a committed record beside GROUNDER-PLAN.md; the gate reads its form, never its body
+  const fc = textOf('FOLD-CHECK.md');
+  const form = 'write "Checked by: <name>", "Verdict: PASS" and last "Plan: <task id> sha256:<12 hex>"';
+  if (fc === undefined) errors.push(`FOLD-CHECK.md is missing in ${dirNote} (the separate grounder writes it beside GROUNDER-PLAN.md after checking the folded plan: ${form})`);
+  else {
+    const lastOf = (re) => [...fc.matchAll(re)].pop();
+    const by = lastOf(/^\s*Checked by:(.*)$/gm);
+    const who = by ? by[1].split(/,| \(/)[0].trim() : '';
+    if (!by) errors.push(`FOLD-CHECK.md has no "Checked by: <name>" line (${form})`);
+    else if (!who) errors.push(`FOLD-CHECK.md: "Checked by:" names nobody (${form})`);
+    else {
+      if (clash(who, i.laneName)) errors.push(`FOLD-CHECK.md: Checked by "${who}" is the lane (${i.laneName}) or a name that contains or is contained in it; a separate agent must check (${form})`);
+      for (const a of i.assignees.filter((x) => nameKey(x) !== nameKey(i.laneName))) if (clash(who, a)) errors.push(`FOLD-CHECK.md: Checked by "${who}" is, contains or is contained in an assignee of ${id} (${a}); a separate agent must check (${form})`);
+    }
+    const vd = lastOf(/^\s*Verdict:\s*(.*?)\s*$/gm);
+    if (!vd) errors.push(`FOLD-CHECK.md: no "Verdict: PASS" line (${form})`);
+    else if (vd[1] !== 'PASS') errors.push(`FOLD-CHECK.md: the Verdict is not PASS ("${vd[1]}") (${form})`);
+    const fp = lastOf(/^\s*Plan:\s*(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm);
+    if (!fp) errors.push(`FOLD-CHECK.md: no last "Plan: <task id> sha256:<12 hex>" line (${form}); expected: ${line}`);
+    else if (`Plan: ${fp[1]} sha256:${fp[2]}` !== line) errors.push(`FOLD-CHECK.md: the Plan line "Plan: ${fp[1]} sha256:${fp[2]}" is not the hash of the task as it is now (the fold was checked on another text, so it must be checked again) (${form}); expected: ${line}`);
+  }
   return { errors, lists: r.lists.length, findings, line };
 }
 const entriesOf = (taskText) => filesEntries(taskText) ?? [];

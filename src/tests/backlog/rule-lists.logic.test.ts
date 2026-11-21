@@ -585,6 +585,46 @@ describe('V2.WHOLE: lens-input splits a change that leaves no room for a list pa
   });
 });
 
+// task-419 (gap 2): the close check reads an unsuffixed out-<lens>.txt as a review of the raw diff and only -pN outputs as tool-made inputs, so the tool names a no-list input -pN always.
+describe('task-419: a no-list lens input is always named -pN; a rule-list input keeps its unsuffixed name for one file', () => {
+  const noList = (f: ReturnType<typeof fixture>, material: string, out: string, max = '20000') => {
+    const m = path.join(f.d, 'nl1.material'); fs.writeFileSync(m, material);
+    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+    const outDir = path.join(f.d, 'out1'); fs.mkdirSync(outDir, { recursive: true });
+    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(outDir, out), '--template', tpl, '--max', max]);
+    return { r, outDir, listed: r.stdout.split('\n').filter(Boolean), written: fs.readdirSync(outDir).sort() };
+  };
+  it('(c) no --list, a one-file diff that fits: the printed path and the only file written end in -p1.txt, stamped chunk 1 of 1', () => {
+    const f = fixture();
+    const n = noList(f, dfile('src/a.ts', 3), 'in-out-code-review');
+    expect(n.r.status, n.r.stderr).toBe(0);
+    expect(n.listed.map((x) => path.basename(x))).toEqual(['in-out-code-review-p1.txt']);
+    expect(n.written).toEqual(['in-out-code-review-p1.txt']);
+    const s = stampOf(fs.readFileSync(n.listed[0]!, 'utf8'));
+    expect([s.id, s.chunk, s.chunks, s.paths]).toEqual(['none', 1, 1, ['src/a.ts']]);
+  });
+  it('a round file made with no list is -rN-p1: --out in-out-code-review-r2 writes in-out-code-review-r2-p1.txt', () => {
+    const f = fixture();
+    const n = noList(f, dfile('src/a.ts', 3), 'in-out-code-review-r2');
+    expect(n.r.status, n.r.stderr).toBe(0);
+    expect(n.written).toEqual(['in-out-code-review-r2-p1.txt']);
+  });
+  it('control: with --list and one chunk the name stays unsuffixed', () => {
+    const f = fixture();
+    const l = lens(f, 'first', dfile('src/a.ts', 3), 20000, 'keep');
+    expect(l.r.status, l.r.stderr).toBe(0);
+    expect(l.files.map((x) => path.basename(x))).toEqual(['keep.txt']);
+  });
+  it('control: no --list and several chunks keeps -p1..-pN, unchanged', () => {
+    const f = fixture();
+    const n = noList(f, BIGDIFF, 'in-out-code-review', '9000');
+    expect(n.r.status, n.r.stderr).toBe(0);
+    expect(n.listed.length).toBeGreaterThan(1);
+    expect(n.listed.map((x) => path.basename(x))).toEqual(n.listed.map((_, i) => `in-out-code-review-p${i + 1}.txt`));
+    expect(n.written).toEqual(n.listed.map((x) => path.basename(x)).sort());
+  });
+});
+
 // V2.WHOLE fix round (grounder 2026-11-20): F2 the diff flags, F5 a measured chunk room, F6 the refusal for a name git quotes.
 describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', () => {
   it('F2: the shared diff flags include --text and --full-index (a .gitattributes -diff line cannot turn code into "Binary files differ")', async () => {

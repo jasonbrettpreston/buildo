@@ -450,6 +450,13 @@ describe('close check: the review material is the whole change (V2.WHOLE)', () =
     const r = scenario({ ...SPLIT, split: { max: 4000, lens: true } });
     expect(r.status, r.stderr).toBe(0);
   });
+  it('task-419 (d): a one-file diff reviewed with lens-input and no list closes with the name the tool wrote, out-code-review-p1.txt (control); the same pair renamed unsuffixed is still refused (the lock stays)', () => {
+    const one = { files: 'src/', lensFinding: false, laneWork: { 'src/one.ts': 'export const one = 1;\n' }, split: { max: 100000, lens: true } } as const;
+    const ok = scenario({ ...one, mutate: (l) => { expect(Object.keys(l)).toContain('in-out-code-review-p1.txt'); expect(Object.keys(l)).toContain('out-code-review-p1.txt'); expect(Object.keys(l)).not.toContain('in-out-code-review.txt'); return l; } });
+    expect(ok.status, ok.stderr).toBe(0);
+    const renamed = scenario({ ...one, mutate: (l) => { const { ['in-out-code-review-p1.txt']: i, ['out-code-review-p1.txt']: o, ...rest } = l; return { ...rest, 'in-out-code-review.txt': i ?? null, 'out-code-review.txt': o ?? null }; } });
+    refused(renamed, /out-code-review\.txt[\s\S]*file_sha256/);
+  });
   it('PLANTED DEFECT: a split code-review run with its last chunk missing is refused, naming the lens', () => {
     refused(scenario({ ...SPLIT, split: { max: 4000, lens: true }, mutate: (l) => dropLast(l, 'code-review') }), /code-review/, 23);
   });
@@ -829,7 +836,9 @@ type PO = {
   type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
   noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
   ctx?: string; badMaterial?: boolean; junkPlan?: boolean; fixCompliance?: 'valid' | 'junk';
+  fold?: false | ((planLine: string) => string); assignees?: string[];
 };
+const goodFold = (planLine: string, name = 'Fold-G1') => `# Fold check\nChecked by: ${name}\nVerdict: PASS\n\nthe folded plan was read again against the findings\n\n${planLine}\n`;
 async function planScenario(o: PO = {}) {
   const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
   const rl = (await import('../../../scripts/analysis/rule-lists.mjs')) as { buildLensInputs: (a: unknown) => { suffix: string; text: string }[]; resolveTask: (a: unknown) => { lists: { id: string }[] } };
@@ -895,18 +904,68 @@ async function planScenario(o: PO = {}) {
   const refs = [`${dir}/GROUNDER-PLAN.md`, ...(o.triage ? [`${dir}/TRIAGE-PLAN.md`] : []), ...names.map((n) => `${dir}/seat-${n}-1.md`)];
   finalText = finalText.replace(/\nmilestone:/, `\nreferences:\n${refs.map((r) => `  - ${r}`).join('\n')}\nmilestone:`);
   if (o.refs === false) finalText = text0;
-  if (!o.noPlanLine) lines.push(`Plan: ${id} sha256:${m.planHash(finalText)}`);
+  const planLine = `Plan: ${id} sha256:${m.planHash(finalText)}`;
+  if (!o.noPlanLine) lines.push(planLine);
+  if (!o.noFolder && o.fold !== false) files['FOLD-CHECK.md'] = o.fold ? o.fold(planLine) : goodFold(planLine);
   if (!o.noGrounder && !o.noFolder) files['GROUNDER-PLAN.md'] = `${lines.join('\n')}\n`;
   mem[`${dir}/GROUNDER-PLAN.md`] = files['GROUNDER-PLAN.md'] ?? '';
   if (o.editBody) finalText = finalText.replace(/the plan text is long enough/, 'the plan text is wrong enough');
   const tracked = o.tracked ?? ['src/a.ts'];
   return m.planGateErrors({
-    id, taskText: finalText, type, table, root: d, letter: 'F', laneName: 'BL-COMPLY2', assignees: [], folder: Object.entries(files).map(([name, text]) => ({ name, text })),
+    id, taskText: finalText, type, table, root: d, letter: 'F', laneName: 'BL-COMPLY2', assignees: o.assignees ?? [], folder: Object.entries(files).map(([name, text]) => ({ name, text })),
     readRepo: (p: string) => { if (o.throwRead) throw new Error('disk gone'); return mem[p] ?? null; }, tracked: (e: string) => tracked.includes(e),
     facts: { taskOf: () => ({ exists: false, status: '', text: '' }), decisionExists: () => false },
   });
 }
 const gate = (r: { errors: string[] }, re: RegExp) => { expect(r.errors.join('\n')).toMatch(re); expect(r.errors.length).toBeGreaterThan(0); };
+
+describe('task-419: the launch gate requires the FOLD-CHECK.md of the grounder', () => {
+  const FORM = /write "Checked by: <name>", "Verdict: PASS" and last "Plan: <task id> sha256:<12 hex>"/;
+  const stale = `Plan: task-7 sha256:${'0'.repeat(12)}`;
+  it('control: the full evidence with a good FOLD-CHECK.md passes (the scenario default)', async () => {
+    const r = await planScenario();
+    expect(r.errors).toEqual([]);
+  });
+  it('no FOLD-CHECK.md is refused naming the file and the form; with GROUNDER-PLAN.md missing too, both files are named', async () => {
+    const r = await planScenario({ fold: false });
+    gate(r, /FOLD-CHECK\.md is missing in docs\/reports\/reviews\/task-7\//);
+    expect(r.errors.join('\n')).toMatch(FORM);
+    const both = await planScenario({ fold: false, noGrounder: true });
+    gate(both, /GROUNDER-PLAN\.md is missing/);
+    gate(both, /FOLD-CHECK\.md is missing/);
+  });
+  it('no Checked by line, and an empty name, are refused', async () => {
+    gate(await planScenario({ fold: (p) => `Verdict: PASS\n${p}\n` }), /FOLD-CHECK\.md has no "Checked by: <name>" line/);
+    gate(await planScenario({ fold: (p) => `Checked by:\nVerdict: PASS\n${p}\n` }), /FOLD-CHECK\.md: "Checked by:" names nobody/);
+    gate(await planScenario({ fold: (p) => `Checked by: , the lane\nVerdict: PASS\n${p}\n` }), /FOLD-CHECK\.md: "Checked by:" names nobody/);
+  });
+  it('a name equal to the lane, or to an assignee of the task, is refused; a clean name that is followed by a sentence naming the lane after a comma or an opening bracket passes (controls)', async () => {
+    gate(await planScenario({ fold: (p) => goodFold(p, 'BL-COMPLY2') }), /FOLD-CHECK\.md: Checked by "BL-COMPLY2" is the lane/);
+    gate(await planScenario({ assignees: ['@lane-BL-OTHER'], fold: (p) => goodFold(p, 'BL-OTHER') }), /FOLD-CHECK\.md: Checked by "BL-OTHER" is, contains or is contained in an assignee/);
+    expect((await planScenario({ assignees: ['@lane-BL-OTHER'], fold: (p) => goodFold(p, 'Fold-G1, not BL-COMPLY2 or BL-OTHER') })).errors).toEqual([]);
+    expect((await planScenario({ fold: (p) => goodFold(p, 'Fold-G1 (a separate agent from BL-COMPLY2)') })).errors).toEqual([]);
+  });
+  it('a Verdict other than PASS is refused; of two Verdict lines the last counts, in both orders', async () => {
+    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: FAIL\n${p}\n` }), /FOLD-CHECK\.md: the Verdict is not PASS/);
+    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\nVerdict: FAIL\n${p}\n` }), /FOLD-CHECK\.md: the Verdict is not PASS/);
+    expect((await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: FAIL\nVerdict: PASS\n${p}\n` })).errors).toEqual([]);
+    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\n${p}\n` }), /FOLD-CHECK\.md: no "Verdict: PASS" line/);
+  });
+  it('a stale Plan line is refused with the expected line printed; no Plan line, and a Plan line inside prose or backticks, are refused', async () => {
+    const s = await planScenario({ fold: () => goodFold(stale) });
+    gate(s, /FOLD-CHECK\.md: the Plan line "Plan: task-7 sha256:0{12}" is not the hash of the task as it is now[\s\S]*expected: Plan: task-7 sha256:[0-9a-f]{12}/);
+    expect(s.errors.join('\n')).toMatch(FORM);
+    gate(await planScenario({ fold: () => 'Checked by: Fold-G1\nVerdict: PASS\n' }), /FOLD-CHECK\.md: no last "Plan: <task id> sha256:<12 hex>" line[\s\S]*expected: Plan: task-7 sha256:[0-9a-f]{12}/);
+    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\nThe line is ${p} and nothing else.\n` }), /FOLD-CHECK\.md: no last "Plan:/);
+    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\n\`${p}\`\n` }), /FOLD-CHECK\.md: no last "Plan:/);
+    // the last of a repeated line counts: a stale line then the right one passes, the right one then a stale one is refused
+    expect((await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\n${stale}\n${p}\n` })).errors).toEqual([]);
+    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\n${p}\n${stale}\n` }), /FOLD-CHECK\.md: the Plan line/);
+  });
+  it('a fix task is gated the same way (control passes above in the fix tests; a missing file is refused)', async () => {
+    gate(await planScenario({ type: 'fix', fold: false }), /FOLD-CHECK\.md is missing/);
+  });
+});
 
 describe('task-375 D: the launch gate refuses a build or fix launch whose plan was not checked', () => {
   it('control: a build task with full plan evidence passes and reports its lists, findings and Plan line', async () => {

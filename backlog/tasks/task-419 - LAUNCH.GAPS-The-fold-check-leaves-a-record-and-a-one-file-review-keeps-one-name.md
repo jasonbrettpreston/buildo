@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GAPS419'
 created_date: '2026-11-21T14:40:00Z'
-updated_date: '2026-11-21T15:13:00Z'
+updated_date: '2026-11-21T15:24:00Z'
 labels:
   - McFix
   - McFix V2
@@ -177,4 +177,8 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0355 · task-419 · Backlog; o
 2026-11-21 (M-246) Plan review round 1 of this task, the second made with plan-prep (task-418): 11 plan review outputs written by plan-prep review, the Integration, Reality-Check and Regression seats on the plan, ruled by the separate grounder Cairn-Ground-P419: 79 findings, 63 CONFIRMED (1 HIGH, 31 MED, 26 LOW, 5 NIT), 16 REJECTED, 0 CONFLICT; 62 folded into the plan by 27 sentence edits (FOLD-419.json as the grounder wrote it, applied mechanically), 1 to the review pile; block and references added by plan-prep post. Eight open questions were ruled by the grounder with grounds (docs/reports/reviews/task-419/QUESTIONS-RULED.md) and are reported to the operator: Q1 the Files line is final at eight paths (the six of the card plus docs/specs/00-architecture/08_agents.md and 137_mcqueue.md for the RR-0354 wording and the gate note; no new rule list, the nine lists are unchanged); Q2 no task is prepped and unlaunched (task-412 and task-418, both BUILT), no date cutoff; Q3 the Checked by name is the text up to the first comma or " (" or the line end, the last of a repeated line counts; Q4 plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67); Q5 two dated spec notes in commit A (08_agents.md after 11.2: the cross-read adversary pass is no longer required after a fold, the grounder's re-execution stays and leaves FOLD-CHECK.md, RR-0354; 137_mcqueue.md after :140: the launch check also requires FOLD-CHECK.md); Q6 the clash with the lane and the assignees is kept (the Grounder line rule); Q7 the FOLD-CHECK Plan line is copied from the gate's expected output after post and the first commit; Q8 a round file made by lens-input is named -rN-p1. Not ruled, for the operator: the scope of RR-0354 (the orchestrator's reading is that the pass is no longer required anywhere), the copies of the 11.2 wording in CLAUDE.md, .claude/workflows.md, packs/spec08.md and Spec 119 that this task does not edit, and whether the raw-diff route of a one-file review stays.
 
 2026-11-21 taken on the board at lane launch (lane BL-GAPS419, worktree /Users/brettpreston_macmini/Buildo-wt-gaps419, branch wf1/inc1b-gaps419), RR-0240
+
+2026-11-21 lane BL-GAPS419: tests written first (check-lane-close, rule-lists, backlog-lane logic tests and the plant-evidence fixture), red attempt through the real pre-commit hook, output in the lane dir red.out; no code edit yet.
+
+2026-11-21 lane BL-GAPS419: red proven through the real pre-commit hook (12 failing assertions, red.out). Build commit A1 = the two scripts, the three test files, plant-evidence.mjs (green: 279 tests in the three files, commit.out). The spec notes could not ride the same commit as the plan's LANDING says: the pre-commit refuses a spec edit unless docs/reports/generated/rule-lists-by-kind.md is regenerated (the rule-list character counts move), and check-task-files refuses that page in a code commit because it is outside the Files line. Precedent: task-375 commit 574378f22 landed its spec notes and the page as a docs-only commit (no code file staged). So the two dated spec notes land in commit A2, docs-only, with the regenerated page; reported to the orchestrator.
 <!-- SECTION:NOTES:END -->
