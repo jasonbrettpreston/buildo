@@ -1,0 +1,20 @@
+# Seat: reality-check — task-412 plan (PLAN-412-v1)
+
+### rc#1 NIT: the task-384 block cite (:177-204) stops before the block ends (:212)
+Plan sentence: "the task-384 block (:177-204) plants a defect by copying the table to a temp git repo and resolving with --root and --table (resolveIn :181-192)".
+Evidence: src/tests/backlog/rule-lists-table.logic.test.ts:177 is `describe('task-384: ...`; the file is 213 lines and `grep -n "^});"` gives 173 and 212, so the block closes at :212. The planted RED `it` is :198-204, so :177-204 does cover every part the plan says to copy; the block then holds one more `it` (lens-input, :205-211) that is not part of the shape.
+What would go wrong: nothing functional; the cite names the block but ends at its second-last case.
+Smallest correction: "the task-384 block (:177-212; planted case :198-204)".
+
+## Tried and holds
+Setup: `git clone --shared ~/Buildo-wt-board` into a throwaway dir (head 4a70b85ca). I added the row exactly as the plan words it: id "review-followups", globs ["docs/reports/review_followups.md"], lists ["agents-s7-s11"], placed after panel-records (I inserted it before specs-docs). The clone and the temp repos were deleted afterwards.
+- Before the row: `rule-lists.mjs resolve --files docs/reports/review_followups.md --type build --letter S` prints "rule-lists: refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json: docs/reports/review_followups.md (add a row ...)" and exits 3. This matches the plan.
+- After the row, resolve exits 0 and lists agents-s7-s11[review-followups] five-words[every-task] plan-protocol[every-task] inc-S[increment] ms-S[milestone]. This is acceptance (a), exactly. The output is the same for --type build, fix, plan and docs.
+- `validate` on the real board prints "rule-lists: ok 55 lists, 22 rows". With the row it prints "ok 55 lists, 23 rows" and exits 0. This is acceptance (b), exactly.
+- `page --check` prints "rule-lists: docs/reports/generated/rule-lists-by-kind.md is current" both before and with the row, and exits 0. This is acceptance (c), and "rows unaffected" holds.
+- docs/reports/review_followups.md exists (1232979 bytes) and `git ls-files` lists it, so the validate rule "every literal glob matches a tracked path" (rule-lists.mjs:129) is met.
+- The list is the one holding rule 6. scripts/analysis/rule-lists.json:45 defines agents-s7-s11 as 08_agents.md sections "7. Rules & economics" and "11. Grounded Verification Protocol". In docs/specs/00-architecture/08_agents.md, "## 7. Rules & economics" is at :342 and "## 7b." at :361. Rule 6 "Findings triage (WF6): BUG -> WF3 ...; DEFER -> `review_followups.md` with reasons" is at :350, inside section 7.
+- Planted-defect mechanics, run by hand in a temp git repo with --root and --table. With the real table (the row present), resolve exits 0 even though the temp repo has no review_followups.md. With the row filtered out, resolve exits 3 with stderr holding "matched by no row". So the control is green and the planted case red as described.
+- Red before the row: the plan's test calls `lists('docs/reports/review_followups.md')`, whose first line is `expect(r.status, ...).toBe(0)` (test :13). That helper fails at that assertion while the resolve exit is 3, so the case goes red at an assertion and green once the row exists. I did not run the test runner.
+- Other cites checked and correct: the table's `rows` array at :80; the queue-records row at :150-155 (it carries agents-s7-s11); the panel-records row at :187-192; every_task added by resolve at rule-lists.mjs:251, with inc-S and ms-S added right after; the validate glob rule at rule-lists.mjs:129; the protected_paths key at rule-lists.json:22 (it lists rule-lists.json); the self-edit refusal at check-lane-close.mjs:681-682; ownsTable (the Files-line exception) at :767; helper lists() at test :11-16 and table() at :17.
+- No test or script pins a row count of 22. `grep -rnE "\b22\b" src/tests/backlog/rule-lists*.ts` returned nothing, so adding a row breaks no pinned count.

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:39:39.503Z file_sha256=b50c985c9ede1c663c870bb8cedc47ec143db40842d3a84d794a887f7221529e prompt_sha256=150337daa4566bd7225f3cfaa71845f36512107f04156668a78ad7df66e19f06
+🔍 Lens review of docs/reports/reviews/task-412/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card RR-0336 item 1 "a table row for review_followups.md, after task-375; until then a deferral goes to a named task" — plan "BASIS. ... Depends on task-375 (RUNNING)." and "ORDER. 1 test; 2 see it red; 3 add the row" — the dependency is recorded but no entry gate arms it, so step 3 and "Commit B (later): the task file and queue row to DONE with the evidence" can land while task-375 is still RUNNING — add an explicit gate line "task-375 DONE, evidence: its queue row" before ORDER step 1 and before commit B.
+
+DEFER severity=LOW — plan-protocol "D. Build pass | Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines" — plan "5 `rule-lists.mjs validate` and `page --check` (both ok at head, rows unaffected); 6 commit through the real hooks." — exact commands and the red-first case are named, the lens per artifact and the PASS line to be recorded are not — name the lens for rule-lists.json and for the test file, and the PASS line text to paste.
+
+DEFER severity=LOW — card "Today docs/reports/review_followups.md matches no row of scripts/analysis/rule-lists.json, so a lane cannot write it" — plan "WHAT THIS CANNOT PROVE. That a lane can then write review_followups.md in a commit (the Files check is a separate hook)" — the barrier the card names is not shown removed; acceptance (a) proves only that resolve exits 0 — add one acceptance line showing a lane commit touching the file passes the Files check, or quote the check showing resolve was the only barrier.
+
+DEFER severity=NIT — plan-protocol section 5 "TIME: every task carries an estimate (MEASURED with source, or GUESS labelled)" — plan "ORDER. 1 test; 2 see it red; 3 add the row; 4 test green; 5 ... 6 commit through the real hooks." — task-412's own plan carries no estimate — add one MEASURED (with source) or GUESS line.
+
+REJECT — card "Card opened 2026-11-20 by the orchestrator from the plan of task-399 (section 9), Spec 137 rule 2" — the change is accused of omitting queue-137 from the new row's lists — the card names Spec 137 only as the card's provenance and names the governing rule as "Rule: Spec 08 section 7 rule 6 (DEFER goes to review_followups.md with reasons)", so lists ["agents-s7-s11"] follows the pasted text.
+
+MET — card "Scope: one table row and its test" — plan "WHAT. ONE new row in scripts/analysis/rule-lists.json: id "review-followups"" — one row, one test case, and "No other row, no list added, no resolver change".
+MET — card "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" — plan "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" — identical, and acceptance (e) bounds commit A to exactly those two paths.
+MET — card "Rule: Spec 08 section 7 rule 6 (DEFER goes to review_followups.md with reasons)" — plan "globs ["docs/reports/review_followups.md"]; lists ["agents-s7-s11"]" — the file gets the list that holds rule 6.
+MET — plan-protocol note "the first bullet of section 0 below ... is superseded by Spec 137 ...: the board is the plan" — plan "BASIS. Board wf2/board head 4a70b85ca" — written against the board head, no new plan file.
+MET — plan-protocol "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)" — plan "why: names Spec 08 section 7 rule 6 ..., RR-0336, this task" — no task added, and the one row carries its source.
+MET — operator standard "you are probaley rebuilding stuff that already exists you do this all the time" — plan "No existing row globs it (docs/reports/** rows are generated, policy, panels, reference only)." — the record was searched for an existing row before adding one.
+MET — plan-protocol note "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce" — plan note "its plan review evidence is in docs/reports/reviews/task-412/" — panel evidence is recorded against the card pre-launch.
+MET — RR-0338 "the findings that are deemed low priorities are filed in a review pile for later" — plan "the pile: outcome of task-399 (RR-0338) points here once it exists" — gives the pile its named home.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+
+---
+⏱  65661ms (65.7s)
+📊 Tokens — total: 18258, input: 5870, output: 12388, reasoning: 11242

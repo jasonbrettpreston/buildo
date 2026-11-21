@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-21T06:39:39.503Z file_sha256=c6079e4ea35a43a95bdf9efffc5cd496bb1bf3cf95b094da88003f62c3f418d3 prompt_sha256=a9a91c735cd7901d15c161631e06cb9388dc7fa2fba577fbb68723b2199768e7
+🔍 Lens review of docs/reports/reviews/task-412/context-r1.md (model: deepseek-reasoner)
+
+BUG/DEFER/REJECT findings below, then verdict.
+
+DEFER severity=MED — BASIS "the file is tracked (git ls-files)" / ACCEPTANCE (b) — the plan asserts `docs/reports/review_followups.md` is tracked but shows no command output; rule-lists.mjs:129 hard-fails `validate` on any literal glob with no tracked path, and the card's "once it exists" wording leaves the file's existence genuinely open — before lock run `git ls-files --error-unmatch docs/reports/review_followups.md; test -f docs/reports/review_followups.md`; if absent, creating+tracking the file is a third file the plan's scope explicitly excludes.
+
+DEFER severity=MED — LANDING step 5 "page --check (both ok at head, rows unaffected)" — unverified that a new row leaves the generated page byte-identical; if `page` renders the row set, `page --check` fails and regeneration makes commit A a three-file commit, which contradicts ACCEPTANCE (c)+(e) simultaneously — verify by adding the row in a scratch copy and running `node scripts/analysis/rule-lists.mjs page` (not --check) and diffing against the committed page before lock.
+
+DEFER severity=MED — LANDING / ACCEPTANCE (e) "names exactly the two Files paths" — no explicit `git add <path> <path>` or clean-tree gate is specified, so a dirty worktree or `git add -A` (or a hook that restages) silently violates (e) and is only caught at the final `git show --stat` — add an explicit two-path stage list plus a `git status --porcelain` empty check immediately before commit A.
+
+DEFER severity=MED — ACCEPTANCE (b) literal "rule-lists: ok 55 lists, 23 rows" — the 55/22 counts are pinned to board head 4a70b85ca; if any row or list landed since (task-375 is RUNNING and writes tooling), the frozen literal fails even though the new row is correct — re-run `node scripts/analysis/rule-lists.mjs validate` at implementation head and assert "row present / prior-count+1" rather than the exact string.
+
+DEFER severity=MED — TESTS item 2 (planted-defect, task-384 pattern :177-204) — the control branch ("real table ... exits 0") depends on the temp repo tracking `docs/reports/review_followups.md`; if it doesn't, the control fails for a glob-tracking reason rather than proving the row exists, masking intent — confirm the resolveIn helper copies the target tracked path into the temp repo (or that resolve's exit-0 path does not consult tracked paths under `--root`).
+
+DEFER severity=LOW — WHAT lists ["agents-s7-s11"] only, excluding queue-137 — other lane-writeable rows (queue-records :150-155) attach queue-137; the deferral reasons come from Spec 08 rule 6 so agents-s7-s11 is defensible, but confirm the writing lane doesn't need Spec 137 process context to fill reasons — grep whether any review_followups writer resolves to a row carrying queue-137.
+
+DEFER severity=LOW — WHAT "Placed after panel-records" + BASIS head 4a70b85ca — the anchor row's lines (:187-192) and list line (:45) are pinned to that head; if it has moved, "after panel-records" drifts — confirm `git rev-parse HEAD` matches 4a70b85ca (or re-locate panel-records) before editing.
+
+DEFER severity=LOW — Sibling (Axis 3) — same "report file with no row" root cause may affect other lane-written `docs/reports/` paths (`docs/reports/reviews/task-*/`, `docs/reports/lanes/*`), which prior-review context shows are written — grep rule-lists.json for `reviews/` and `lanes/` globs; if unrowed and committed through resolve, file a sibling followup rather than discovering it in a later lane.
+
+DEFER severity=LOW — TESTS placement in existing file — the task-375 note flags a DB test "red by construction" from an unregistered fixture; this plan reuses `rule-lists-table.logic.test.ts` (good, no new registration), but confirm the logic CI job's file glob picks up a new describe in that file without a registration change.
+
+REJECT — LANDING two-commit split — plan splits row+test (A, touches the protected path, no task move) from task→DONE (B, no protected path); check-lane-close.mjs:681-682 refuses only a commit that does BOTH — the split is correct, not a risk.
+
+REJECT — BASIS row-matching breadth — plan claims no existing row globs `docs/reports/review_followups.md`; the quoted resolve exit 3 "matched by no row" is direct evidence, so no merge/overlap with a broad `docs/reports/**` row exists today.
+
+```
+VERDICT: PASS on plan-readiness for implementation (with the MED verifications above completed before the lane edits rule-lists.json)
+Top 3 operational blockers (if FAIL): none (pass)
+Top 3 unverified data premises (regardless of verdict):
+- docs/reports/review_followups.md exists and is git-tracked (required by rule-lists.mjs:129, else validate fails) — verify: `git ls-files --error-unmatch docs/reports/review_followups.md; test -f docs/reports/review_followups.md`
+- `rule-lists.mjs page` output is independent of the added row (so page --check stays green and commit A stays exactly two files) — verify: add row in a scratch copy, `node scripts/analysis/rule-lists.mjs page`, `git diff -- docs/` (any regenerated surface page ⇒ acceptance (c) and (e) conflict)
+- today's validate counts still read "55 lists, 22 rows" at implementation head (else acceptance (b)'s literal is wrong) — verify: `node scripts/analysis/rule-lists.mjs validate`
+```
+
+---
+⏱  75613ms (75.6s)
+📊 Tokens — total: 27680, input: 14698, output: 12982, reasoning: 11629

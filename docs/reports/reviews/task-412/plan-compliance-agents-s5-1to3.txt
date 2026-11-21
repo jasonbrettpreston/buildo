@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:39:39.490Z file_sha256=668d5091ae57437d17a7d8ba64c3e49026751e7d517f5fb2d5d5f43474dcc753 prompt_sha256=51173bdd672164ef4ee35ffd615e43bba49a11903287442177106058e54eaf54
+🔍 Lens review of docs/reports/reviews/task-412/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0336 as pasted on the card "Operator approved the item (RR-0336, item 1 of the list put to him: a table row for review_followups.md, after task-375; until then a deferral goes to a named task)" — PLAN-412-v1 BASIS "Depends on task-375 (RUNNING)." and ACCEPTANCE "(b) `node scripts/analysis/rule-lists.mjs validate` prints \"rule-lists: ok 55 lists, 23 rows\"" — the row was approved after task-375 but the plan launches while task-375 is RUNNING, and it pins an absolute row count that a concurrent lane touching the same protected table can move, so the sequencing ruling is unmet and acceptance (b) can fail for reasons outside this change — hold launch until task-375 closes, or state task-375's rule-lists.json footprint is disjoint and assert the row's presence rather than an absolute row count.
+
+DEFER severity=MED — card "Card opened 2026-11-20 by the orchestrator from the plan of task-399 (section 9), Spec 137 rule 2." — PLAN-412-v1 WHAT "Only agents-s7-s11, because that is the list holding rule 6; no queue-137 (the card names only the Spec 08 rule)." — the pasted card does name Spec 137 rule 2, so the stated reason for omitting queue-137 is false against the material and a lane writing review_followups.md may never be shown the spec-137 pile rule — read Spec 137 rule 2 and either attach queue-137 or record why it does not govern this path.
+
+DEFER severity=MED — pasted note "refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:`" — PLAN-412-v1 LANDING "Commit B (later): the task file and queue row to DONE with the evidence." — commit B names no lane report directory, no one-compliance-output-per-attached-list and no separate grounder, so the close ruling has no plan step and the close commit is refused as planned — name in step B the lane report dir, one compliance output per attached list and a GROUNDER.md from a grounder that is not this lane.
+
+DEFER severity=LOW — card "the pile: outcome of task-399 (RR-0338) points here once it exists" — PLAN-412-v1 BASIS "Validate requires every literal glob to match a tracked path (rule-lists.mjs:129); the file is tracked (git ls-files)." against OUT OF SCOPE "creating or editing review_followups.md content" — the only basis for the literal glob passing validate is an unquoted ls-files result while creating the file is out of scope, so if the path is untracked the row fails validate with no step to fix it — paste the git ls-files line into the plan evidence or name who puts the path in the tree before the row lands.
+
+MET — card "Scope: one table row and its test." — PLAN-412-v1 WHAT — exactly one row id review-followups with globs, lists and why, plus one test case, no other row, no list added, no resolver change.
+
+MET — card "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" — PLAN-412-v1 ACCEPTANCE "(e) `git show --stat HEAD` for commit A names exactly the two Files paths".
+
+MET — pasted note "refuses a commit that changes one and also moves a task to a finished status" — PLAN-412-v1 LANDING "Two commits, because the table is a protected path. Commit A: the row and the test, no task move".
+
+MET — pasted note "a task whose Files line names the table is judged by its branch table for lists and rows" — PLAN-412-v1 LANDING "Task is judged by its branch table because its own Files line names the table (check-lane-close.mjs:767)."
+
+MET — pasted note "`scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code" — PLAN-412-v1 WHAT — the change is one data row in that table, no code path in rule-lists.mjs is touched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 4
+
+---
+⏱  64886ms (64.9s)
+📊 Tokens — total: 18480, input: 7077, output: 11403, reasoning: 10401

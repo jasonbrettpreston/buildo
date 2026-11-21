@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:39:39.497Z file_sha256=ecd7e388d144071c6bab69eb5ba38784330333e33ca99d68300d385033aa66f5 prompt_sha256=cb8cb500ad681b50cdf9c8596d85153db8c16e72d3a9d3581f352bbd594f22fe
+🔍 Lens review of docs/reports/reviews/task-412/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0336 item 1 "a table row for review_followups.md, after task-375" — BASIS "Depends on task-375 (RUNNING)" — no step in ORDER, LANDING or ACCEPTANCE gates the row on task-375 being finished, so the lane can land it while task-375 still runs — add a launch precondition: task-375 closed, or an operator waiver recorded on the card.
+DEFER severity=MED — RR-0338 "Low-priority findings go to a review pile; Reality-Check and Integration on the additions" — ORDER "1 test; 2 see it red; 3 add the row; 4 test green; 5 `rule-lists.mjs validate` and `page --check`; 6 commit through the real hooks" — no Reality-Check or Integration step for the row and its test is named, validate and page --check are not a grounding of the new row against the live tree — add one step that grounds the row against the tracked file and live resolve output, and name the integration check in ACCEPTANCE.
+DEFER severity=LOW — card "Card opened 2026-11-20 by the orchestrator from the plan of task-399 (section 9), Spec 137 rule 2" — WHAT "no queue-137 (the card names only the Spec 08 rule)" — the stated reason contradicts the card, which names Spec 137 rule 2 as the card's origin, and that rule's text is not pasted so I cannot see whether it reaches this row — either attach queue-137 as panel-records does, or state why Spec 137 rule 2 does not reach the row.
+DEFER severity=LOW — card "Not started; plan and panel before launch." — ORDER "1 test; 2 see it red; 3 add the row" — the plan's own order begins at the test with no panel or plan-lock step, and the claimed evidence "its plan review evidence is in docs/reports/reviews/task-412/" is not in front of me (cannot see) — name the panel verdict as a precondition of step 1.
+MET — Spec 08 section 7 rule 6 "DEFER -> review_followups.md with reasons" — WHAT "id \"review-followups\"; globs [\"docs/reports/review_followups.md\"]; lists [\"agents-s7-s11\"]" — gives the DEFER file the list that carries rule 6.
+MET — card "Scope: one table row and its test" — WHAT "No other row, no list added, no resolver change" and TESTS "One case in the existing table test, in a new describe" — exactly one row and one test case.
+MET — card "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" — ACCEPTANCE "(e) `git show --stat HEAD` for commit A names exactly the two Files paths" — commit A carries nothing else.
+MET — "keep it simple; no scope creep" — OUT OF SCOPE "Any other row; any resolver or check change; the pile outcome of task-399 (RR-0338); creating or editing review_followups.md content; adding a list" — scope is bounded to the one row.
+REJECT — Project objectives "A task that serves neither a designed element nor a supporting function is most likely not relevant" — this row serves no designed search, report or details element — RR-0336 item 1 of the list put to the operator, "approved", so the operator ruling names this row.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+
+---
+⏱  61481ms (61.5s)
+📊 Tokens — total: 15274, input: 4256, output: 11018, reasoning: 10216

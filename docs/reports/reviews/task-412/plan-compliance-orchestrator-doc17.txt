@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:39:39.494Z file_sha256=8953ef92e29dfad1b30de6b5a8c6c21f9d9abb9b2239b6accda7d98e5b96f4a1 prompt_sha256=dc5e05534d82493f0fa9da9d7af31c456b5e7cd4963ba57eca121fbd3c5370ea
+🔍 Lens review of docs/reports/reviews/task-412/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task card Description, approval sequencing "Operator approved the item (RR-0336, item 1 of the list put to him: a table row for review_followups.md, after task-375" — PLAN-412-v1 ORDER/LANDING "Depends on task-375 (RUNNING)." then "3 add the row; 4 test green; ... 6 commit through the real hooks" — the plan commits the row with no gate on task-375 finishing first, and hard-codes the count as "(b) ... prints \"rule-lists: ok 55 lists, 23 rows\", which is wrong if task-375 lands its own table change — add ORDER step 0 that task-375's rule-lists.json change is already landed before step 1, and make (b) assert the review-followups row is present and exactly one row was added rather than an absolute count.
+
+DEFER severity=LOW — Implementation Notes "its plan review evidence is in docs/reports/reviews/task-412/" — plan NONE — the plan names no step or artifact for the plan-review evidence the card says is filed under docs/reports/reviews/task-412/, while LANDING constrains commit A to exactly the two Files paths — safe to defer because the panel/orchestrator owns that artifact, but name where it lands so the lane does not skip it.
+
+MET — task card Description scope "Scope: one table row and its test." — PLAN-412-v1 WHAT/TESTS — exactly one row (id review-followups) plus one test case, "No other row, no list added, no resolver change."
+MET — task card Description "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" — PLAN-412-v1 LANDING and acceptance (e) — commit A touches only those two paths and says so.
+MET — RR-0336 "approved" — PLAN-412-v1 WHAT — the row globs docs/reports/review_followups.md and attaches agents-s7-s11, the list holding the cited Spec 08 section 7 rule 6.
+MET — RR-0338 "the findings that are deemed low priorities are filed in a review pile for later" — PLAN-412-v1 WHAT — gives the pile file docs/reports/review_followups.md a row so resolve stops refusing it.
+MET — operator standard quoted in PLAN-412-v1 "you are probaley rebuilding stuff that already exists you do this all the time" — BASIS "No existing row globs it (docs/reports/** rows are generated, policy, panels, reference only)." — the plan checks for an existing row before adding one.
+MET — task card Description "Not started; plan and panel before launch." — PLAN-412-v1 header "PLAN-412-v1. Task: FOLLOWUPS.ROW" — task stays in plan mode with a plan under review, nothing committed.
+MET — RR-0350 "You are good to build them tonight!" — PLAN-412-v1 BASIS, card quote RR-0336 item 1 — build is authorized and the plan does not re-open an approved item as a new question.
+REJECT — doc-17 register readings, e.g. "RR-0018 undated DELTA.md:10: Report base confirmed by the operator" — the plan is accused of not honouring these readings — doc-17 states at its head "Readings and register entries ... are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)", so no reading in the pasted rule list binds this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9 (Spec 08 section 7 rule 6 text: cannot see, quoted only inside the plan)   Unmet: 1
+
+---
+⏱  42500ms (42.5s)
+📊 Tokens — total: 22124, input: 14463, output: 7661, reasoning: 6825

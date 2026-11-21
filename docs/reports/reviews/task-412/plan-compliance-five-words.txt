@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:39:39.492Z file_sha256=ea4e9c9235bc5ce3d01ec28b9d0b62927b5f8a8e14b7c78d9085224fd9c210aa prompt_sha256=1e2e81b39afda1a1b859f84445a3463c7c9dc005e391db31d08364e8c8e22581
+🔍 Lens review of docs/reports/reviews/task-412/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card RR-0336 item 1 "Operator approved the item (RR-0336, item 1 of the list put to him: a table row for review_followups.md, after task-375; until then a deferral goes to a named task)." — PLAN-412-v1 BASIS "Depends on task-375 (RUNNING)." — the approved order is not met: the plan launches the row while its named predecessor is still RUNNING, and no ORDER step gates launch on task-375 landing (ORDER "1 test; 2 see it red; 3 add the row"), while task-375's touched paths cannot be seen and rule-lists.json is exactly the collision surface — add an ORDER step 0 that requires task-375 terminal, or a recorded no-overlap statement naming task-375's paths, before step 1.
+
+DEFER severity=LOW — card "Card opened 2026-11-20 by the orchestrator from the plan of task-399 (section 9), Spec 137 rule 2." — PLAN-412-v1 WHAT "Only agents-s7-s11, because that is the list holding rule 6; no queue-137 (the card names only the Spec 08 rule)." — cannot see Spec 137 rule 2, so the omitted queue-137 list is not groundable here and the card does cite Spec 137, not only Spec 08 — ground Spec 137 rule 2 and record why queue-137 is not owed, or add it.
+
+DEFER severity=LOW — Glossary, lock "a lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — PLAN-412-v1 TESTS "1. Real tree: lists('docs/reports/review_followups.md') contains 'agents-s7-s11'" — the new case names no rule id or alias, so by the glossary it is a table test and not a lock for the Spec 08 rule 6 row; the card asks only for "its test", so nothing is breached — assert the rule id (or declared alias) and where rule 6's enforcement lives, or state in the plan that this case is not a lock.
+
+REJECT — Glossary, five words "STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates" — the change is accused of self-declaring three words not met (PLAN-412-v1 SERVES "Not scalable, accurate or understandable beyond that") — gate V and its mapping are not pasted and score steps, not an analysis table row.
+
+REJECT — card "Not started; plan and panel before launch." — the change is accused of launching at ORDER "1 test" without a panel step — the panel is this review, evidenced by the card's own "its plan review evidence is in docs/reports/reviews/task-412/".
+
+MET — card "Scope: one table row and its test." — PLAN-412-v1 WHAT "ONE new row in scripts/analysis/rule-lists.json" — exactly one row, one test case, and "No other row, no list added, no resolver change".
+
+MET — card "Today docs/reports/review_followups.md matches no row of scripts/analysis/rule-lists.json" — PLAN-412-v1 BASIS "No existing row globs it (docs/reports/** rows are generated, policy, panels, reference only)" — answers the operator standard against rebuilding what exists, with a resolve repro at exit 3.
+
+MET — Glossary, hook "a `hook` is a `.husky` hook" — PLAN-412-v1 LANDING "Commit A: the row and the test" / "(commit A passes husky; none bypassed)" — enforcement runs through the real hooks, not a bypass.
+
+MET — RR-0338 "the findings that are deemed low priorities are filed in a review pile for later" — PLAN-412-v1 ACCEPTANCE (a) "exits 0 and lists agents-s7-s11, five-words, plan-protocol, inc-S, ms-S" — makes the pile file resolvable so a lane can write it (content itself is declared out of scope, which matches RR-0338's "for later").
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  62374ms (62.4s)
+📊 Tokens — total: 16098, input: 5046, output: 11052, reasoning: 10105
