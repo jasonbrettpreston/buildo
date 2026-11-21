@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GAPS419'
 created_date: '2026-11-21T14:40:00Z'
-updated_date: '2026-11-21T15:52:00Z'
+updated_date: '2026-11-21T22:19:00Z'
 labels:
   - McFix
   - McFix V2
@@ -179,4 +179,6 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0355 · task-419 · Backlog; o
 2026-11-21 taken on the board at lane launch (lane BL-GAPS419, worktree /Users/brettpreston_macmini/Buildo-wt-gaps419, branch wf1/inc1b-gaps419), RR-0240
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0360 · task-419 · Backlog; operator, verbatim: "change the claude.md to remove the cross check.  The agent stays available on request is fine froma wording perspective")
+
+Dated note 2026-11-21 (M-246, prior text kept; RR-0370 · task-419 · Backlog; operator, verbatim: "if so approved. 2. The station: option C (one list of push checks kept in the repo, used by both the hook and the station), plus the one line today. Also want to add the spec rules section as a later task to the board.")
 <!-- SECTION:NOTES:END -->
