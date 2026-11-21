@@ -3,11 +3,11 @@ id: TASK-419
 title: >-
   LAUNCH.GAPS The fold check leaves a record and a one-file review keeps one
   name
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-GAPS419'
 created_date: '2026-11-21T14:40:00Z'
-updated_date: '2026-11-21T22:19:00Z'
+updated_date: '2026-11-21T22:54:00Z'
 labels:
   - McFix
   - McFix V2
@@ -47,12 +47,12 @@ Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's o
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 (a) Plan-prep fixture: a board whose folder lacks FOLD-CHECK.md: `backlog-lane.mjs --dry-run` exits 3, stderr "FOLD-CHECK.md". With the file (Checked by: Fold-G1, Verdict: PASS, correct Plan line) it prints "plan gate ok".
-- [ ] #2 (b) Same board, the task body edited by one word: exit 3, FOLD-CHECK.md Plan line stale, expected line printed.
-- [ ] #3 (c) `node scripts/analysis/rule-lists.mjs lens-input --template .claude/review-templates/lens-code-review.md --context <ctx> --material <one-file diff> --out <dir>/in-out-code-review` prints `<dir>/in-out-code-review-p1.txt` and writes only that.
-- [ ] #4 (d) The close check on a lane with out-code-review-p1.txt made from (c): exit 0 (named test green).
-- [ ] #5 (e) Existing close tests (a -p1 pair, the unsuffixed compliance control) still pass.
-- [ ] #6 (f) The three test files green; git diff --stat shows only the Files line.
+- [x] #1 (a) Plan-prep fixture: a board whose folder lacks FOLD-CHECK.md: `backlog-lane.mjs --dry-run` exits 3, stderr "FOLD-CHECK.md". With the file (Checked by: Fold-G1, Verdict: PASS, correct Plan line) it prints "plan gate ok".
+- [x] #2 (b) Same board, the task body edited by one word: exit 3, FOLD-CHECK.md Plan line stale, expected line printed.
+- [x] #3 (c) `node scripts/analysis/rule-lists.mjs lens-input --template .claude/review-templates/lens-code-review.md --context <ctx> --material <one-file diff> --out <dir>/in-out-code-review` prints `<dir>/in-out-code-review-p1.txt` and writes only that.
+- [x] #4 (d) The close check on a lane with out-code-review-p1.txt made from (c): exit 0 (named test green).
+- [x] #5 (e) Existing close tests (a -p1 pair, the unsuffixed compliance control) still pass.
+- [x] #6 (f) The three test files green; git diff --stat shows only the Files line.
 <!-- AC:END -->
 
 ## Definition of Done
@@ -202,3 +202,17 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0360 · task-419 · Backlog; o
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0370 · task-419 · Backlog; operator, verbatim: "if so approved. 2. The station: option C (one list of push checks kept in the repo, used by both the hook and the station), plus the one line today. Also want to add the spec rules section as a later task to the board.")
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed: the launch check requires the grounder's FOLD-CHECK.md (Checked by, Verdict PASS, last Plan line) and lens-input names a no-list lens input -pN always. Commits: 571b6d999 (code and tests, hook run green: Tests 279 passed), e5c3a4818 (fix round 1: one-line reads, tests; hook run Tests 280 passed), f4c0a0b42 (spec notes with RR-0360, CLAUDE.md lines 139 and 143, Files line plus CLAUDE.md, regenerated page). Acceptance (a) to (f) evidence is in the Implementation Notes. Grounder rounds 1 to 4 in GROUNDER.md; the cross-check wording copies outside CLAUDE.md go to task-426.
+
+Review round 1: 10 fixed, 6 task, 1 ruling, 0 wontfix, 12 pile; grounder docs/reports/lanes/2026-11-21/BL-GAPS419/GROUNDER.md; triage docs/reports/lanes/2026-11-21/BL-GAPS419/TRIAGE.md
+out-compliance-eng-all-r1#2 MED task task-426
+out-compliance-orchestrator-doc17-r1#2 MED task task-426
+g419#1 HIGH fixed 273d5bb
+g419#5 MED ruling decision-145
+out-compliance-eng-all-r2#2 MED task task-426
+out-compliance-ms-S-r2#2 MED task task-426
+<!-- SECTION:FINAL_SUMMARY:END -->
