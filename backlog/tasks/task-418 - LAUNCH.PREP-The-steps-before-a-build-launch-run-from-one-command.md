@@ -4,6 +4,7 @@ title: LAUNCH.PREP The steps before a build launch run from one command
 status: LATER
 assignee: []
 created_date: '2026-11-21T00:24:00Z'
+updated_date: '2026-11-21T05:12:00Z'
 labels:
   - McFix
   - McFix V2
@@ -17,8 +18,18 @@ ordinal: 118012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Card opened 2026-11-20 by the orchestrator, Spec 137 rule 2. Operator ruling RR pending record (MORNING-DECISIONS.md:1598, verbatim: "5 yes.", to the question as put: the pre-launch steps are done by the orchestrator by hand for task-375, and scripting them is the first task after 375, before the other build tasks launch). Why: before a build or fix launch the plan is reviewed (DeepSeek lens set per rule list, Reality-Check and Integration seats), ruled by a separate grounder, folded, the fold checked, and the evidence put on the task and committed (Spec 08 sections 6.4, 5.3, 11.2); for task-399 this was about ten hand commands by the orchestrator. Scope to be planned and reviewed by the plan panel before launch; existing commands first (rule-lists.mjs lens-input and check-tasks, backlog-brief.mjs, backlog-lane.mjs, board-commit.zsh); it scripts the mechanical steps only, never a ruling. Launches after task-375 folds, under its launch check. Files: scripts/analysis/backlog-lane.mjs, scripts/analysis/rule-lists.mjs, src/tests/backlog/backlog-lane.logic.test.ts
+Card opened 2026-11-20 by the orchestrator, Spec 137 rule 2. Operator ruling RR-0345 (MORNING-DECISIONS.md:1600, verbatim: "5 yes.", to the question as put: the pre-launch steps are done by the orchestrator by hand for task-375, and scripting them is the first task after 375, before the other build tasks launch). Why: before a build or fix launch the plan is reviewed (compliance per governing rule list, the Integration, Reality-Check and Regression seats), ruled by a separate grounder, folded, the fold checked, and the evidence put on the task and committed (Spec 08 sections 6.4, 5.3, 11.2); the launch check of task-375 (folded at d9f2143a7) now refuses a launch without it. Scope (2026-11-21, PLAN-418-v2 in the Implementation Plan field governs; build exactly that plan, do not re-plan): ONE subcommand plan-prep of scripts/analysis/rule-lists.mjs with three phases (review, post, commit) that runs the mechanical steps only, reusing what exists (backlog-brief.mjs, lens-input, findings, the exported functions of check-lane-close.mjs, plant-evidence.mjs for tests); it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line, and it does not launch. Files: scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 (a) planted-defect tests red then green through the real hooks.
+- [ ] #2 (b) plan-prep review --task task-412 --lane <name> --dry-run: exit 0; 1 brief, 9 lens-input and 9 review commands; git status unchanged.
+- [ ] #3 (c) the same without --dry-run with 412's plan on the task: 9 plan-compliance-*.txt each starting "REVIEW template=lens-compliance.md", 9 in- files, FINDINGS-PLAN.md; paste counts and shell time.
+- [ ] #4 (d) the same on a task with an empty plan field: exit 3 one line.
+- [ ] #5 (e) the agent steps for real on 412 (seat-integration-1.md, seat-reality-check-1.md, seat-regression-1.md, grounder, fold), then post, commit, the grounder copies the printed Plan line, commit again: the dry run prints "plan gate ok: 9 lists, <M> findings, Plan sha256:<12>"; one word edited in the task: exit 3, new expected Plan line; revert.
+- [ ] #6 (f) backlog task view task-412 --plain shows the references (GROUNDER-PLAN.md, TRIAGE-PLAN.md if any, the three seats) and the "Plan review round 1" block; git log -1 --name-only on wf2/board shows exactly the folder.
+<!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
@@ -33,3 +44,124 @@ Card opened 2026-11-20 by the orchestrator, Spec 137 rule 2. Operator ruling RR 
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+PLAN-418-v2 (build plan, self-contained). Task: LAUNCH.PREP, the mechanical steps before a build launch run from one command. Basis: board branch wf2/board, head d9f2143a7 (task-375 parts A, B, D and task-399 folded). Every file:line below was opened at d9f2143a7 unless marked UNVERIFIED. v2 replaces v1 (whose 375 claims came from PLAN-375, not code).
+Serves: supporting function of the compliance review of every Increment 1.B task; advances none of doc-2 elements A to G. Estimate: GUESS 0.5 lane day (smaller than v1: the real code already does more), not timed.
+
+Files: scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
+
+0. THE OPERATOR'S WORDS (verbatim, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md; line numbers measured; the rest is orchestrator design)
+:1517 "don't makr the task complete until it actually works"
+:1522 "you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y"
+:1585 "yes hardening rounds.  Today's were warranted, but not endless."
+:1600 "5 yes." (entry :1598): scripting the hand steps is the first task after 375.
+:1630 "these only run on the plan"; :1634 "Complaince on the plan and output. Let's start with that!"
+:1638 "You are good to build them tonight! If the panel leaves an open question - ground it and then take that as approved and let me know in the morning."
+Standards: simple, no over-engineering, no scope creep, no facades; check what exists first. This task scripts the mechanical half of steps 1 to 4 of the six (confirmed as read, :1580). It rules nothing.
+
+1. WHAT IT DOES
+Three phases of ONE subcommand, plan-prep, of rule-lists.mjs: review (context, a lens input and a review call per resolved list, findings list), post (references and the "Plan review round" block on the task), commit (evidence commit, then the launch dry run). No new script file, field or key. Not scripted, the code already does it: the take adds the compliance:<list id> references (backlog-lane.mjs:129, rule-lists.mjs:452); check-tasks prints the commands for open tasks (:567-576); the gate is the dry run.
+
+2. WHAT EXISTS AT d9f2143a7 AND IS REUSED (each opened)
+- docs/reports/reviews/task-375/plant-evidence.mjs (67 lines; run by backlog-lane.logic.test.ts:16). It ALREADY writes a whole valid evidence set into a fixture board and commits it: context-r1.md from fixture-context.md; each list's input via rl.buildLensInputs({id, list, root, material: extractSections(ctx, PLAN_SECTIONS), templateFile, context: extractSections(ctx, CONTEXT_SECTIONS)}) as in-plan-compliance-<id>[-pN].txt; the output with a REVIEW header whose prompt_sha256 is rl.lensPromptHash(...); GROUNDER-PLAN.md (Grounder, Lane, an rl.ruledLine per plan-*.txt, a Seat line per seat with the first 12 hex of the sha256, the Plan line last from planHash); seat-<name>-1.md with a line "### <3 letters>#1 LOW: ..."; the task edits --plan, --append-plan "Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder <rel>/GROUNDER-PLAN.md; triage <rel>/TRIAGE-PLAN.md" and one --add-ref per evidence file; git add -A and commit. It is a test fixture: SYNTHETIC outputs and ruling, 0 findings. Plan-prep rebuilds none of it: same library calls and forms, tests start from its state, its zero-finding block is the string post must reproduce. What plan-prep adds: the real review calls, real findings, the block for N findings, the real commit through the hooks.
+- backlog-brief.mjs writes docs/reports/reviews/<task>/context-rN.md (:49-52 contextRound over the folder, never overwritten; :146-147 the Implementation Plan and Notes sections; :159 writeFileSync) from --task, --lane, --root; its stdout is the brief, not the context path: the caller computes N with the exported contextRound(dir) (scripts/lib/review-template.js:137).
+- scripts/lib/review-template.js: CONTEXT_SECTIONS, PLAN_SECTIONS (Description, Acceptance criteria, Implementation Plan), extractSections, contextRound.
+- rule-lists.mjs lens-input (:544-566): --list <id> --context <ctx> --material-from <ctx> --out <prefix>; --context is required (exit 2 without); --material-from is its own context and cuts PLAN_SECTIONS; it deletes older <prefix> files first. findings --dir (:588-593) prints a Ruled line per plan-*/out-* file and "<id>\t<line>" per finding.
+- backlog-lane.mjs: the review command literal is const cmd at :180 inside lensLine (DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review); every lens passes --context <ctx> and one --section per CONTEXT_SECTIONS entry (:175-177). The gate call is :90-106; it prints "plan gate ok: <L> lists, <M> findings, Plan sha256:<12>" (:106), or one "backlog-lane: refused: plan gate: <error>" line per error to stderr and exits 3 (:105).
+- check-lane-close.mjs: planGateErrors (:564, pure; exported), planHash (:552), PLAN_SEATS (:549: always integration and reality-check, conditional regression when a Files entry names a path tracked at the board head, :621), outcomeErrors (:161, exported; mode 'plan'; forms folded, task, ruling, wontfix, pile; folded needs a 20+ character quote present in the task text), parseVerdicts (:128), lensKindOf (:141), seatLines (:145). The round block is built INLINE at :266-276 and appears only in a refusal message ("the block is:\n<lines>\n(one command ...)"), only when the outcome errors are empty, there is at least one CONFIRMED or CONFLICT id, and a round line exists (planGateInner :630 passes summary null when the plan field has no "Plan review round N:" line). It is NOT exported.
+- 08_agents.md:524 and 137_mcqueue.md:140 (dated notes 2026-11-21): seats run on the plan only; the gate "cannot prove that the grounder or any seat ran or is a different agent".
+- board-commit.zsh commits only backlog/ (:10, :12) every 600 s; index.lock makes it skip (:11). check-backlog-task.mjs:3-4 exempts docs commits from the Task trailer; check-task-files.mjs:10, :70 always allows docs/reports/reviews/<this task id>/.
+
+3. WHAT THE REAL GATE REQUIRES FOR A BUILD TASK, AND WHO WRITES IT
+Folder docs/reports/reviews/<id>/ read from git HEAD (backlog-lane.mjs:92-95; the task body from the working file); stray names are ignored. Grounder checklist for task-418: ~/Buildo-scratch/lanes-20261119/inc1b/gate375/h/GROUNDER.md.new section F (the final GROUNDER.md in that folder has no task-418 section).
+ | item (real name) | written by |
+ | context-r1.md | plan-prep review (backlog-brief.mjs) |
+ | in-plan-compliance-<list>[-pN].txt and plan-compliance-<list>[-pN].txt for EVERY resolved list (9 for 418: agents-s5-1to3, agents-s7-s11, queue-137, eng-all, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S) | plan-prep review (lens-input then the review command); the tool writes the REVIEW header |
+ | FINDINGS-PLAN.md (ids for the grounder; a stray name, ignored by the gate) | plan-prep review (findings output) |
+ | seat-integration-1.md, seat-reality-check-1.md, seat-regression-1.md, each with at least one line "### <id>#<n> CRITICAL|HIGH|MED|LOW|NIT: ..." (SEAT_LINE :142) | AGENTS: tool-having Sonnet seats. Never scripted |
+ | GROUNDER-PLAN.md: Grounder (not the planned lane, not an assignee), Lane (the planned lane name), a Ruled line per plan-*.txt, a verdict per finding id (lens ids and seat ids), Seat lines "Seat: <name> <repo path> sha256:<12>" (path inside the folder), the Plan line last | AGENT: separate grounder. Never scripted |
+ | TRIAGE-PLAN.md, one line per CONFIRMED or CONFLICT id (required only when there is one) | AGENT: orchestrator's fold. Never scripted |
+ | references on the task: GROUNDER-PLAN.md, TRIAGE-PLAN.md when present, each seat path (gate :639) | plan-prep post |
+ | "Plan review round N: <a> folded, <b> task, <c> ruling, <d> wontfix, <e> pile; grounder <path>; triage <path>" and one line "<id> <SEV> <word> <ref>" per CONFIRMED CRITICAL, HIGH or MED id, in the Implementation Plan field (gate :625-630) | plan-prep post |
+ | the folder committed at the board HEAD | plan-prep commit |
+ | Plan: <id> sha256:<12>, the hash of title plus body now (front matter excluded, so references do not change it; the round block does) | AGENT: the grounder copies the expected line the dry run prints, as its last act |
+Only per-list compliance is required for a build task (:588 branch); a fix task needs one plan-<lens>.txt instead (:604-607). Any other plan-*.txt in the folder must also have a Ruled line and a verdict per finding.
+
+4. DESIGN
+4.1 Shape: node scripts/analysis/rule-lists.mjs plan-prep <review|post|commit> --task task-N --lane <planned lane name> [--board <dir>] [--dry-run]. In rule-lists.mjs, which owns lens-input, findings, check-tasks and resolveTask; check-lane-close.mjs imports rule-lists.mjs, so plan-prep post reaches outcomeErrors, parseVerdicts, lensKindOf, seatLines, PLAN_SEATS and planHash by a dynamic import (a static import is a cycle).
+4.2 Actor order (each phase refuses when its input is missing):
+ a. AGENT: orchestrator puts the plan on the task (backlog task edit --plan, --ac, --append-notes, --description) and sets the Files line.
+ b. SCRIPT: plan-prep review.
+ c. AGENTS: three seats, separate grounder (GROUNDER-PLAN.md without the Plan line), fold into the task text, TRIAGE-PLAN.md, fold check (08_agents.md:473).
+ d. SCRIPT: plan-prep post.
+ e. SCRIPT: plan-prep commit (first run: the dry run prints the expected Plan line).
+ f. AGENT: the grounder appends that line, last.
+ g. SCRIPT: plan-prep commit again: the dry run prints "plan gate ok: 9 lists, <M> findings, Plan sha256:<12>".
+ h. HAND: node scripts/analysis/backlog-lane.mjs --task task-N --lane <name>, without --dry-run.
+ The expected Plan line is printed only when GROUNDER-PLAN.md is already at the HEAD without it (planGateInner prints it in the Plan-line branch, :635, which runs only after the file is found): so commit runs twice, as above. A later edit of the task title or body changes the hash and sends step f back.
+4.3 review. Refusals (exit 3, one line, before any write, wording after backlog-lane.mjs:27): task not found; status not LATER or WAITS; Files do not resolve or lists incomplete (resolveTask, verifyResolved as backlog-lane.mjs:76-79); Implementation Plan field empty; board dirty outside backlog/ and the folder; type not build or fix; a plan-*.txt already in the folder (one round per prep, 4-Q1). Then, each command printed as "cd <dir> && <cmd>" and run unless --dry-run:
+ 1. node scripts/analysis/backlog-brief.mjs --task N --lane <lane> --root <board> (writes the context; N from contextRound before the call).
+ 2. build: per resolved list L, node scripts/analysis/rule-lists.mjs lens-input --list L --context <ctx> --material-from <ctx> --out <folder>/in-plan-compliance-L (the checklist's form). fix: no inputs; the plan lens command takes the context file itself as the file under review (backlog-lane.mjs:187 lens line), output plan-plan-review-deepseek.txt (the name :607 expects).
+ 3. per input: REVIEW_CMD <in file> --template .claude/review-templates/lens-compliance.md --context <ctx> + one --section per CONTEXT_SECTIONS entry, cwd the board, output plan-<same name>.txt written only on exit 0 (backlog-lane.mjs:94 precedent). Calls run concurrently; a failed call is listed by name, exit 1, no partial file; a re-run redoes only missing names.
+ 4. every output opens with "REVIEW template=" or the phase exits 1 naming it.
+ 5. rule-lists.mjs findings --dir <folder> > <folder>/FINDINGS-PLAN.md (the lane FINDINGS.md precedent).
+ Only compliance runs for a build task: the gate requires only it and his :1634 starts with compliance; the brief's other plan lenses are not run (4-Q4).
+4.4 post. Refuses, naming each: GROUNDER-PLAN.md absent; a Seat line missing for a name of PLAN_SEATS (integration, reality-check, plus regression when a Files entry is tracked: git ls-files, the gate's own test, :621); a seat file named by a Seat line absent on disk; a CONFIRMED or CONFLICT id of the grounder with no TRIAGE-PLAN.md line. Then it calls outcomeErrors in mode 'plan' on the on-disk files (verdicts from parseVerdicts, lens kinds from findingsIn and lensKindOf, seats from seatLines read from disk, which also refuses a seat file edited after its Seat line, facts from the working tree) with a summary of empty text, so that clean outcomes return the "the block is:" message; post writes its lines, the first as "Plan review round N: ..." (the gate maps that prefix to "Review round", :627). With zero CONFIRMED or CONFLICT ids the block is the zero form plant-evidence writes. Any other outcome error is printed and post exits 1: the fold is not finished. Then ONE command: backlog task edit task-N --append-plan "<block>" with one --add-ref per repo path of GROUNDER-PLAN.md, TRIAGE-PLAN.md when present and each seat path that the task does not carry (one argument per path: a comma splits it). Idempotent: when the gate's own test (head = rounds before the last, text = the plan field) finds nothing missing, it prints "nothing to post", exit 0. It parses a refusal message; test 11 pins that coupling.
+ Shared, not copied: backlog-lane.mjs:100-103 builds taskOf and decisionExists from git HEAD inline; they become one exported boardFacts({ show, ls }) in rule-lists.mjs (the caller passes readers): backlog-lane.mjs passes git-HEAD readers (behaviour unchanged), post passes working-tree readers. Likewise the literal of :180 becomes one exported REVIEW_CMD that backlog-lane.mjs imports (it already imports from rule-lists.mjs, :25). That is why backlog-lane.mjs is on the Files line.
+4.5 commit. Refuses: index.lock present (board-commit.zsh :11 skips on it; say retry); anything staged or dirty outside the folder and backlog/; GROUNDER-PLAN.md absent. If the folder changed: git add docs/reports/reviews/<id>; git commit -m "docs(08_agents): plan review evidence for task-N" through the real hooks (no --no-verify); a hook refusal leaves nothing committed, prints its first lines, exit 1. Then node scripts/analysis/backlog-lane.mjs --task N --lane <lane> --dry-run, output and exit code passed through.
+4.6 --dry-run on any phase prints every command and writes nothing.
+
+5. NEVER SCRIPTED (agent work)
+Plan text, acceptance criteria, dated notes, decision records; the three seats; the grounder's rulings and Plan line; TRIAGE-PLAN.md and the fold; the fold check; the lane name; the launch; every ruling.
+
+6. TESTS (red first through the real hooks, DoD #2; each lock proven both ways, 08_agents.md 11.3; each spawned-CLI test first asserts exit status, no signal and the first output line before any absence assertion, R-CP 124a:296). Fixture: the temp board of backlog-lane.logic.test.ts and its plantEvidence helper (:15-16), which runs plant-evidence.mjs; no second evidence writer is built.
+Seam, documented like backlog-lane's --backlog-bin: --review-bin <script> replaces scripts/deepseek-review.js in tests; the success path uses the REAL tool with --dry-run and a dummy DEEPSEEK_API_KEY (real header, no API call, deepseek-review.js :39 and :194).
+Planted defects, each with a control:
+ 1 empty plan field: exit 3, nothing written / plan present proceeds.
+ 2 task not LATER, Files not resolving, type record: refused / resolving build task.
+ 3 dirty file outside backlog/ and the folder: refused / dirty only in backlog/ passes.
+ 4 plan-*.txt present: refused, bytes unchanged / empty folder.
+ 5 one call exits 1 (stub): names it, no partial file, re-run redoes only it / all succeed.
+ 6 output without a REVIEW header (stub): exit 1 / real tool output passes.
+ 7 inputs equal byte for byte the files plant-evidence writes from the same context (control); another Description gives different inputs (planted).
+ 8 context round: with context-r1.md present the phase writes context-r2.md and r1 is untouched.
+ 9 post: from plant-evidence's state with the round line and references stripped (backlog task edit --plan and --remove-ref), post restores the exact zero-form line and the references; run twice, one block (nothing to post).
+ 10 post with a CONFIRMED id lacking a TRIAGE-PLAN.md line: refused naming the id, task unchanged / with folded:"<20+ characters in the task>" it posts.
+ 11 post for a CONFIRMED HIGH folded: commit, then the real dry run prints "plan gate ok" (the end-to-end test; skipped in v1, now runnable).
+ 12 seats: Regression Seat line removed where a Files path is tracked: post refuses naming it / all-new Files need none; integration or reality-check removed: refused; a seat file edited after the grounder: refused.
+ 13 commit: staged file outside the folder refused; hook exit 1: nothing committed; index.lock refused; the commit holds exactly the folder (git show --name-only).
+ 14 one-word edit of the task after the Plan line: the dry run refuses with the new expected Plan line.
+ 15 --dry-run on each phase: commands printed, tree byte-identical.
+ 16 a fix task: review writes plan-plan-review-deepseek.txt, no per-list inputs.
+Existing tests stay green: rule-lists.logic.test.ts (804 lines), backlog-lane.logic.test.ts (454 lines; its pins on the lens-line text, :263 and :335, are unchanged because REVIEW_CMD holds the same string). The usage line of cli() (rule-lists.mjs:594) gains "plan-prep"; grep "usage: rule-lists" in src/tests/backlog found no pin.
+
+7. ACCEPTANCE (commands on a real not-started build task; output pasted on the task; do not mark BUILT until all are pasted, :1517)
+Real task: task-412 (FOLLOWUPS.ROW; LATER, type build, 9 resolved lists at d9f2143a7). Its launch is not part of this acceptance.
+ (a) planted-defect tests red then green through the real hooks.
+ (b) plan-prep review --task task-412 --lane <name> --dry-run: exit 0; 1 brief, 9 lens-input and 9 review commands; git status unchanged.
+ (c) the same without --dry-run with 412's plan on the task: 9 plan-compliance-*.txt each starting "REVIEW template=lens-compliance.md", 9 in- files, FINDINGS-PLAN.md; paste counts and shell time.
+ (d) the same on a task with an empty plan field: exit 3 one line.
+ (e) the agent steps for real on 412 (seat-integration-1.md, seat-reality-check-1.md, seat-regression-1.md, grounder, fold), then post, commit, the grounder copies the printed Plan line, commit again: the dry run prints "plan gate ok: 9 lists, <M> findings, Plan sha256:<12>"; one word edited in the task: exit 3, new expected Plan line; revert.
+ (f) backlog task view task-412 --plain shows the references (GROUNDER-PLAN.md, TRIAGE-PLAN.md if any, the three seats) and the "Plan review round 1" block; git log -1 --name-only on wf2/board shows exactly the folder.
+
+8. WHAT THIS CANNOT PROVE
+That the seats or grounder ran or differ from the lane (the gate compares names and hashes); that rulings are right; that the fold is complete (only "every CONFIRMED has an outcome and a folded quote is present"); that review content is good; latency or cost; that the plan is unchanged after launch; forgery (401, 402). It proves the mechanical steps ran in order on real inputs and left what the gate reads.
+
+9. NOT IN SCOPE
+Scripting a ruling, seat, grounder, fold or fold check; a second round's storage; non-compliance plan lenses; the launch; record, check and doc types; lane close (399); compliance references (the take does it); a backlog task edit wrapper; changing the gate, the context or plant-evidence.mjs.
+
+10. LANDING
+Red tests first, then code: one code commit ("Task: task-418", task file in the diff); a records-only closing commit (Spec 137 Rule 3).
+
+11. LEFT FOR THE LANE TO MEASURE
+Per-call time and counts with a real 30 KB context (measured: 9 files for 9 lists with the 259-character fixture context); whether the dynamic import of check-lane-close.mjs from the rule-lists.mjs CLI works (UNVERIFIED, not run).
+<!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-21 (M-246) Plan put on the task by the orchestrator by hand (RR-0345): PLAN-418-v2, written read-only against the code at d9f2143a7 after task-375 folded; the build is authorized by the operator (RR-0350, MORNING-DECISIONS.md:1638). The Files line is replaced by the plan's four paths (adds src/tests/backlog/rule-lists.logic.test.ts). The plan review of this task is made by hand under the launch check; its evidence is in docs/reports/reviews/task-418/.
+<!-- SECTION:NOTES:END -->
