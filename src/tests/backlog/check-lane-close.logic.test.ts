@@ -962,6 +962,11 @@ describe('task-419: the launch gate requires the FOLD-CHECK.md of the grounder',
     expect((await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\n${stale}\n${p}\n` })).errors).toEqual([]);
     gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\n${p}\n${stale}\n` }), /FOLD-CHECK\.md: the Plan line/);
   });
+  it('g419 round 1: a Verdict whose PASS is on the next line, and a Plan line split across two lines, are refused (the form is one line each); a name that contains the lane is refused (control: a clean name passes above)', async () => {
+    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict:\nPASS\n${p}\n` }), /FOLD-CHECK\.md: (no "Verdict: PASS" line|the Verdict is not PASS)/);
+    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\n${p.replace(' sha256:', '\nsha256:')}\n` }), /FOLD-CHECK\.md: no last "Plan:/);
+    gate(await planScenario({ fold: (p) => goodFold(p, 'Cairn-BL-COMPLY2-2') }), /FOLD-CHECK\.md: Checked by "Cairn-BL-COMPLY2-2" is the lane/);
+  });
   it('a fix task is gated the same way (control passes above in the fix tests; a missing file is refused)', async () => {
     gate(await planScenario({ type: 'fix', fold: false }), /FOLD-CHECK\.md is missing/);
   });

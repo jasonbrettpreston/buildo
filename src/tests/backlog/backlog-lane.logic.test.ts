@@ -392,8 +392,13 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     expect(bad.status, bad.stdout + bad.stderr).toBe(3);
     expect(bad.stderr).toMatch(/FOLD-CHECK\.md is missing/);
     expect(statusOf(f)).toBe('LATER');
+    // the folder is read from the board HEAD: a copy that is ignored (so the board is clean) and not committed is not seen
+    fs.appendFileSync(path.join(f.board, '.git/info/exclude'), 'docs/reports/reviews/*/FOLD-CHECK.md\n');
     fs.writeFileSync(fold, text);
-    git(f.board, 'add', fold);
+    const ign = lane(f, ['--dry-run']);
+    expect(ign.status, ign.stdout + ign.stderr).toBe(3);
+    expect(ign.stderr).toMatch(/FOLD-CHECK\.md is missing/);
+    git(f.board, 'add', '-f', fold);
     const c2 = git(f.board, 'commit', '-q', '-m', 'the fold check again');
     expect(c2.status, c2.stdout + c2.stderr).toBe(0);
     const ok = lane(f, ['--dry-run']);
@@ -822,6 +827,8 @@ describe('plan-prep commit and the end to end (task-418)', () => {
     backlog(f.board, ['task', 'edit', f.task, '-d', 'Launch description text, one word edited.\n\nFiles: scripts/analysis/thing.mjs']);
     const c3 = prep(f, 'commit');
     expect(c3.status, c3.stdout + c3.stderr).toBe(3);
+    expect(c3.stderr).toMatch(/GROUNDER-PLAN\.md: the Plan line/);
+    expect(c3.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);
     expect(c3.stderr).toMatch(/expected: Plan: \S+ sha256:[0-9a-f]{12}/);
     expect(/expected: (Plan: \S+ sha256:[0-9a-f]{12})/.exec(c3.stderr)?.[1]).not.toBe(exp);
   });
