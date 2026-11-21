@@ -3,11 +3,11 @@ id: TASK-412
 title: >-
   FOLLOWUPS.ROW review_followups.md gets a rule-list row so a deferral has its
   Spec 08 home
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-F412'
 created_date: '2026-11-20T23:40:00Z'
-updated_date: '2026-11-21T06:51:00Z'
+updated_date: '2026-11-21T07:06:00Z'
 labels:
   - McFix
   - McFix V2
@@ -31,6 +31,11 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-21/BL-F412/REPORT.md
+  - docs/reports/reviews/task-412/FOLD-CHECK.md
+  - docs/reports/lanes/2026-11-21/BL-F412/GROUNDER.md
+  - docs/reports/lanes/2026-11-21/BL-F412/TRIAGE.md
+  - docs/reports/lanes/2026-11-21/BL-F412/FINDINGS.md
 type: build
 ordinal: 112012
 ---
@@ -40,6 +45,15 @@ ordinal: 112012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Card opened 2026-11-20 by the orchestrator from the plan of task-399 (section 9), Spec 137 rule 2. Operator approved the item (RR-0336, item 1 of the list put to him: a table row for review_followups.md, after task-375; until then a deferral goes to a named task). Rule: Spec 08 section 7 rule 6 (DEFER goes to review_followups.md with reasons). Today docs/reports/review_followups.md matches no row of scripts/analysis/rule-lists.json, so a lane cannot write it; the pile: outcome of task-399 (RR-0338) points here once it exists. Scope: one table row and its test. Not started; plan and panel before launch. Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [x] #1 (a) resolve --files docs/reports/review_followups.md --type build --letter S exits 0 and lists agents-s7-s11, queue-137, five-words, plan-protocol, inc-S, ms-S
+- [x] #2 (b) validate prints rule-lists: ok 55 lists, N+1 rows, N the row count of the table the branch started from
+- [x] #3 (c) page --check prints ... is current
+- [x] #4 (d) the new test case is red before the row (failing assertion, the resolve exit) and green after, through the real hooks
+- [x] #5 (e) git show --stat for commit A names exactly the two Files paths and this task file
+<!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
@@ -122,4 +136,32 @@ rg#1 MED folded it does not make a f
 2026-11-21 (M-246) Plan review round 1 of this task, the first made with plan-prep (task-418): 11 plan review outputs written by plan-prep review (83 s), the Integration, Reality-Check and Regression seats on the plan, ruled by the separate grounder Cairn-Ground-P412: 53 findings, 42 CONFIRMED (1 HIGH, 13 MED, 23 LOW, 5 NIT), 11 REJECTED; 40 folded into the plan by 13 sentence edits (FOLD-412.json as the grounder wrote it, applied mechanically), 2 to the review pile; block and references added by plan-prep post. Three open questions were ruled by the grounder with grounds (docs/reports/reviews/task-412/QUESTIONS-RULED.md) and are taken as approved on the operator's authorization (RR-0350, MORNING-DECISIONS.md:1638), reported to him: Q1 the row lets a lane write the file and does not make a file write an outcome; the note at 08_agents.md:351 is not edited by this task; whether the file replaces the TRIAGE.md pile line is the operator's to rule; Q2 the row attaches agents-s7-s11 and queue-137, as the eight other rows carrying agents-s7-s11 do; Q3 'after task-375' is read as satisfied by task-375's tooling being folded while it is still RUNNING (the operator may rule it means DONE); the other table-editing tasks land one at a time.
 
 2026-11-21 taken on the board at lane launch (lane BL-F412, worktree /Users/brettpreston_macmini/Buildo-wt-f412, branch wf1/inc1b-f412), RR-0240
+
+2026-11-21 (lane BL-F412) red test written first: src/tests/backlog/rule-lists-table.logic.test.ts describe 'task-412: review_followups.md has its Spec 08 home' (two cases); the row follows. Note: gitFreeEnv() is not a name in the repo; the test spawns through helpers run()/script(), which strip every GIT_* variable (helpers.ts cleanEnv).
+
+2026-11-21 (lane BL-F412) commit A: row review-followups added after panel-records (lists agents-s7-s11, queue-137); the test went red at failing assertions first (red.out: resolve exit 3 not 0), now green through the hooks.
+
+2026-11-21 ACCEPTANCE (lane BL-F412, commit 52a49566e): (a) resolve --files docs/reports/review_followups.md --type build --letter S exit 0, lists: agents-s7-s11 queue-137 five-words plan-protocol inc-S ms-S. (b) validate: rule-lists: ok 55 lists, 23 rows (branch start had 22 rows, so N+1). (c) page --check: rule-lists: docs/reports/generated/rule-lists-by-kind.md is current. (d) red: red.out, both new cases failed at assertions (resolve refused, 'matched by no row', exit 3 not 0); green: commit.out, 21 passed, commit through real hooks, none bypassed. (e) git show --stat HEAD:  ...-list-row-so-a-deferral-has-its-Spec-08-home.md |  6 ++++-; scripts/analysis/rule-lists.json                   |  6 +++++; src/tests/backlog/rule-lists-table.logic.test.ts   | 30 ++++++++++++++++++++++;
+
+2026-11-21 CORRECTION (lane BL-F412, fix round 1): my earlier note that gitFreeEnv() 'does not exist in the repo' is false: scripts/analysis/rule-lists.mjs:53 exports it. The test's helper cleanEnv (src/tests/backlog/helpers.ts:30) strips the same GIT_* keys and is equivalent for the test (the output grounder's ruling).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+The review-followups row and its test are built; acceptance (a) to (e) met; output review and a separate grounder done; the fold check was recorded after the fact and no cross-read adversary pass ran; the closing commit is records only because rule-lists.json is protected.
+
+Review round 1: 13 fixed, 0 task, 8 ruling, 0 wontfix, 1 pile; grounder docs/reports/lanes/2026-11-21/BL-F412/GROUNDER.md; triage docs/reports/lanes/2026-11-21/BL-F412/TRIAGE.md
+plan-compliance-agents-s5-1to3#1 MED ruling decision-135
+plan-compliance-agents-s5-1to3#2 MED fixed 52a4956
+plan-compliance-eng-all#1 MED ruling decision-135
+plan-compliance-five-words#1 MED ruling decision-135
+plan-compliance-inc-S#1 MED ruling decision-135
+plan-compliance-inc-S#2 MED fixed 52a4956
+plan-compliance-ms-S#1 MED ruling decision-135
+plan-compliance-orchestrator-doc17#1 MED ruling decision-135
+plan-compliance-plan-protocol#1 MED ruling decision-135
+plan-compliance-queue-137#1 HIGH fixed 52a4956
+out-compliance-agents-s7-s11#1 HIGH fixed 90eebe6
+out-compliance-agents-s7-s11#2 MED fixed 90eebe6
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -211,3 +211,33 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
   });
 });
 // task-375: lens-input takes --context (A4); see the deviation note on the task
+
+// task-412 FOLLOWUPS.ROW: Spec 08 section 7 rule 6 ("DEFER -> review_followups.md with reasons", 08_agents.md:350) names docs/reports/review_followups.md, so the table must know it
+// (RR-0336, RR-0338). Without a row a lane's Files line naming it is refused. The row attaches agents-s7-s11 (holds rule 6) and queue-137.
+describe('task-412: review_followups.md has its Spec 08 home', () => {
+  const FILE = 'docs/reports/review_followups.md';
+  const resolveIn = (rows: Row[]) => {
+    const d = tmp('fu');
+    fs.mkdirSync(path.join(d, 'mcbylaws'));
+    fs.copyFileSync(path.join(ROOT, 'mcbylaws/protected-paths.json'), path.join(d, 'mcbylaws/protected-paths.json'));
+    fs.writeFileSync(path.join(d, 'table.json'), JSON.stringify({ ...table(), rows }));
+    run('git', ['init', '-q', '.'], { cwd: d });
+    run('git', ['add', '-A'], { cwd: d });
+    run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'x'], { cwd: d });
+    return script(CLI, ['resolve', '--root', d, '--table', path.join(d, 'table.json'), '--files', FILE, '--type', 'build', '--letter', 'S']);
+  };
+  it('the real table: the file resolves agents-s7-s11 and queue-137 through exactly one row', () => {
+    expect(lists(FILE)).toEqual(expect.arrayContaining(['agents-s7-s11', 'queue-137']));
+    const rows = table().rows.filter((r) => r.id === 'review-followups');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.lists).toEqual(expect.arrayContaining(['agents-s7-s11', 'queue-137']));
+  });
+  it('RED (planted): the table without the row refuses the file (exit 3, matched by no row); the real table is the control', () => {
+    const all = table().rows;
+    const control = resolveIn(all);
+    expect(control.status, control.stderr).toBe(0);
+    const bad = resolveIn(all.filter((r) => r.id !== 'review-followups'));
+    expect(bad.status, bad.stderr).toBe(3);
+    expect(bad.stderr).toContain('matched by no row');
+  });
+});

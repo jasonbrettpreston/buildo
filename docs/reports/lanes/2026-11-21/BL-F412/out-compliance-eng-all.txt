@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:56:07.575Z file_sha256=eac3faaeaa47e6a7b820016366f62d7c32440df61e53b93a6b70a14960232e4e prompt_sha256=4bff5c16fef71acca50563306c7f0e6f3b26da08fe3207d118b95da49a6884de
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-f412/docs/reports/lanes/2026-11-21/BL-F412/in-out-compliance-eng-all.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0338 "Low-priority findings go to a review pile; Reality-Check and Integration on the additions" — Implementation Notes "11 plan review outputs written by plan-prep review (83 s), the Integration, Reality-Check and Regression seats on the plan" — the pasted evidence shows the Reality-Check and Integration seats ran on PLAN-412-v1, not on the additions (the row and the test) that RR-0338 names — attach the Reality-Check and Integration outputs for the diff to the task before merge, or state in the task that the plan-stage panel is being taken as the panel on the additions
+
+DEFER severity=LOW — Engineering Standards §14 registry "Every source/test file's SPEC LINK points at the spec AND the section (§N)" — src/tests/backlog/rule-lists-table.logic.test.ts "Spec 08 section 7 rule 6 (\"DEFER -> review_followups.md with reasons\", 08_agents.md:350)" — the appended block cites only Spec 08 §7, while the row it tests declares Spec 137 rule 2 as a second governing list ("Spec 137 (rule 2, the card) govern it"), so the block's spec citation is incomplete for the coupling it creates — add the Spec 137 section citation to the same comment block
+
+DEFER severity=LOW — card Q2 "the row attaches agents-s7-s11 and queue-137, as the eight other rows carrying agents-s7-s11 do" — scripts/analysis/rule-lists.json "\"lists\": [\"agents-s7-s11\", \"queue-137\"]" — cannot see the definitions of agents-s7-s11 and queue-137 in the pasted chunk (only the added hunk is shown), so the row's \"why\" claim that these lists hold Spec 08 §7 rule 6 and Spec 137 rule 2 is unverified here — paste the list rows or confirm the membership in the review record
+
+MET — card "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" — diff headers — the chunk touches exactly those two files and nothing else
+
+MET — card "Scope: one table row and its test" — scripts/analysis/rule-lists.json "id": "review-followups" — one row added plus one describe block, no other behaviour
+
+MET — Spec 08 section 7 rule 6 "DEFER -> review_followups.md with reasons" — scripts/analysis/rule-lists.json "\"globs\": [\"docs/reports/review_followups.md\"]" — the row's glob is exactly the ruled file path
+
+MET — card Q1 "the row lets a lane write the file and does not make a file write an outcome; the note at 08_agents.md:351 is not edited by this task" — src/tests/backlog/rule-lists-table.logic.test.ts "const bad = resolveIn(all.filter((r) => r.id !== 'review-followups'));" — the diff only makes the path resolvable, no writer and no 08_agents.md edit
+
+MET — Engineering Standards §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code" — src/tests/backlog/rule-lists-table.logic.test.ts "it('RED (planted): the table without the row refuses the file (exit 3, matched by no row); the real table is the control'" — a planted-red case pins the failure before the row exists, with the real table as control
+
+MET — card Q3 "'after task-375' is read as satisfied by task-375's tooling being folded while it is still RUNNING" — src/tests/backlog/rule-lists-table.logic.test.ts "// task-375: lens-input takes --context (A4); see the deviation note on the task" — the new block is appended after the task-375 block, one table-editing task in this chunk
+
+REJECT — Engineering Standards §5.2 "*.infra.test.ts | API routes, DB queries, external calls" — the new case spawns git and the CLI, so it is accused of being filed in the logic layer — the card itself names src/tests/backlog/rule-lists-table.logic.test.ts as "its test" and the file already carries the same resolve harness at line 211
+
+REJECT — Engineering Standards §10.2 "Frontend WFs must NOT modify files in scripts/, migrations/, or scripts/lib/" — the diff edits scripts/analysis/rule-lists.json — this is the McFix table lane, not a frontend feature WF, and the card names the file explicitly
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  34504ms (34.5s)
+📊 Tokens — total: 20962, input: 15335, output: 5627, reasoning: 4587

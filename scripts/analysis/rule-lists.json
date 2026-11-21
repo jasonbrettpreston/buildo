@@ -191,6 +191,12 @@
       "why": "V2.LIST (task-406, round 2): the panel record docs/reports/panels/MF-n.json is named by Spec 128 line 182 (\"both panel records (docs/reports/panels/MF-n.json, D-3)\"), so the surface standard policy (Spec 128), the surface contract (Spec 126), Spec 08 sections 7 and 11 and Spec 137 govern it"
     },
     {
+      "id": "review-followups",
+      "globs": ["docs/reports/review_followups.md"],
+      "lists": ["agents-s7-s11", "queue-137"],
+      "why": "task-412 (RR-0336, RR-0338): Spec 08 section 7 rule 6 (\"DEFER -> review_followups.md with reasons\") names docs/reports/review_followups.md, so Spec 08 sections 7 and 11 (the list that holds rule 6) and Spec 137 (rule 2, the card) govern it; before this row a lane could not write the file"
+    },
+    {
       "id": "specs-docs",
       "globs": ["docs/specs/**"],
       "lists": ["eng-all", "agents-s7-s11", "queue-137"],

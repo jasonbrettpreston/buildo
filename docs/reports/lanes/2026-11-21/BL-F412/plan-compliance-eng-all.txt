@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:39:39.491Z file_sha256=88c4fd1522a83e0d3518828d8caced5650bce65fbbd23e570e4c5dfcea7b115e prompt_sha256=737565dfc1c077ace653aaea6f041161fa4d5c6374040e832d9264a44d7ce533
+🔍 Lens review of docs/reports/reviews/task-412/in-plan-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0336 "Operator approved the item (RR-0336, item 1 of the list put to him: a table row for review_followups.md, after task-375; until then a deferral goes to a named task)." — PLAN-412 BASIS "Depends on task-375 (RUNNING)." — the approved item is sequenced after task-375, and the plan neither waits for it nor cites RR-0350 as lifting that order, so the ordering condition is unaddressed at launch — add one BASIS/ORDER line: launch only after task-375 is DONE, or cite RR-0350 and state why this row is independent of task-375's output.
+DEFER severity=LOW — §11 "Before declaring Green Light, generate a 5-10 item self-skeptical checklist ... Output PASS/FAIL per item in the response BEFORE running tests." — PLAN-412 ORDER "1 test; 2 see it red; 3 add the row; 4 test green; 5 `rule-lists.mjs validate` and `page --check` (both ok at head, rows unaffected); 6 commit through the real hooks." — no ORDER step carries the pre-review PASS/FAIL checklist; ACCEPTANCE (a)-(e) are outcomes, not the self-skeptical walk — add the checklist step to ORDER so the lane cannot skip it.
+DEFER severity=LOW — §14 "Every source/test file's SPEC LINK points at the spec AND the section (§N); new couplings update Cross-Spec Dependencies both directions" — TESTS "in a new describe "task-412: review_followups.md has its Spec 08 home"" — the new case names Spec 08 without the section (§7 rule 6) and the WHAT introduces the review_followups.md to Spec 08 §7 coupling with no statement on Cross-Spec Dependencies — put §7 rule 6 in the new describe header/comment and state whether the coupling owes a two-direction update.
+MET — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — ORDER "1 test; 2 see it red; 3 add the row; 4 test green" — red runs before the row is written.
+MET — card "Scope: one table row and its test." — WHAT "ONE new row in scripts/analysis/rule-lists.json ... No other row, no list added, no resolver change." — scope held to one row plus one case, and RR-0338's pile outcome is excluded.
+MET — card "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" — ACCEPTANCE "(e) `git show --stat HEAD` for commit A names exactly the two Files paths." — commit A is bounded to the two Files paths.
+REJECT — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — the plan edits scripts/analysis/rule-lists.json — the freeze is scoped to frontend WFs and this is a tooling/table row with no frontend file on its Files line, so the clause does not bind it.
+REJECT — §9.6 "Pipeline metadata (chain definitions, script paths, table reads/writes, feature flags) MUST be declared in `scripts/manifest.json`" — the plan adds table metadata outside the manifest — rule-lists.json is a rule-list table, not chain, script-path, table-read or flag metadata, so no manifest entry is owed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 3
+
+---
+⏱  71039ms (71.0s)
+📊 Tokens — total: 27851, input: 15395, output: 12456, reasoning: 11658

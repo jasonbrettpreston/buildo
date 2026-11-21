@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:39:39.500Z file_sha256=48e5c824fecff250e491c47c1d6c29e221d2aa216caa774f06e9ca10b8b09ad0 prompt_sha256=e373051c68e8a685265b7198a6a495d928a0eef64cbc3f59d476588d85affe92
+🔍 Lens review of docs/reports/reviews/task-412/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0336 "a table row for review_followups.md, after task-375" — Implementation Plan "Depends on task-375 (RUNNING)." — the plan sequences the row now with no gate on the ruling's stated condition, so the operator's "after task-375" ordering is unmet — add ORDER step 0: do not start until task-375 is DONE, or the orchestrator records a release naming this card.
+
+DEFER severity=MED — RR-0350 "If the panel leaves an open question - ground it and then take that as approved and let me know in the morning" — Implementation Plan "no queue-137 (the card names only the Spec 08 rule)" — an open question closed by assertion, and the assertion is contradicted by the card's own line "Card opened 2026-11-20 by the orchestrator from the plan of task-399 (section 9), Spec 137 rule 2", with no grounding of rule 2's text and no morning note — paste Spec 137 rule 2 verbatim into BASIS and record in the morning note whether queue-137 joins lists.
+
+DEFER severity=LOW — RR-0338 "the findings that are deemed low priorities are filed in a review pile for later" — Implementation Plan "why: names Spec 08 section 7 rule 6 (DEFER goes to review_followups.md with reasons), RR-0336, this task" — the row's why names the triage rule and RR-0336 but not RR-0338, the ruling the card ties to this pile, so a lane reading the row cannot tell which pile it is — add RR-0338 to the why string.
+
+DEFER severity=LOW — card "## Acceptance criteria" is empty — Implementation Plan "(a) ... exits 0 and lists agents-s7-s11, five-words, plan-protocol, inc-S, ms-S" — the five acceptance criteria are the plan's own substitute for an empty card section and the plan never records that substitution under RR-0350 "ground it and then take that as approved and let me know in the morning" — state in the morning note that (a) to (e) are the grounded substitute for the empty criteria block.
+
+MET — Scope: one table row and its test — Implementation Plan "ONE new row in scripts/analysis/rule-lists.json" and "One case in the existing table test, in a new describe" — one row, one test case, no second row and no list added.
+
+MET — Files: two paths — Implementation Plan "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" — matches the card's Files line exactly and acceptance (e) pins the commit stat to those two paths.
+
+MET — Rule: Spec 08 section 7 rule 6 — Implementation Plan "Only agents-s7-s11, because that is the list holding rule 6" — the row attaches the list carrying section 7 where rule 6 sits, and changes no resolver.
+
+MET — "Today docs/reports/review_followups.md matches no row of scripts/analysis/rule-lists.json" — Implementation Plan "prints \"refused: Files path(s) matched by no row ...\", exit 3" and acceptance (a) exit 0 with ids — baseline refusal and target resolution are both stated.
+
+MET — RR-0336 item 1 "a table row for review_followups.md" — Implementation Plan "globs [\"docs/reports/review_followups.md\"]" — the row globs only the file the ruling names.
+
+MET — operator "you are probaley rebuilding stuff that already exists you do this all the time" — Implementation Plan "One case in the existing table test" and "no resolver change" — reuses the existing test file, row shape and resolver instead of new machinery.
+
+MET — "Not started; plan and panel before launch" — Implementation Plan "run it in the lane (the lane runs the runner, not this plan)" — the plan is plan-only, no build performed in this material.
+
+REJECT — card "so a lane cannot write it" — accused: the row alone does not make the file writable because a separate Files hook blocks it — not a real issue, the card names the missing rule-list row as the blocker and the plan declares the Files check under "WHAT THIS CANNOT PROVE. That a lane can then write review_followups.md in a commit (the Files check is a separate hook)".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+
+---
+⏱  50109ms (50.1s)
+📊 Tokens — total: 18802, input: 9710, output: 9092, reasoning: 8106

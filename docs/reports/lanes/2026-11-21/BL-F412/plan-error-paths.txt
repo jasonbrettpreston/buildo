@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-21T06:39:39.492Z file_sha256=c6079e4ea35a43a95bdf9efffc5cd496bb1bf3cf95b094da88003f62c3f418d3 prompt_sha256=b697e392a8768d2964e3247357dd64f79d1095f98d97bdb02825ce61077d9c68
+🔍 Lens review of docs/reports/reviews/task-412/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=MED — src/tests/backlog/rule-lists-table.logic.test.ts (planned new case) "Plant a defect (same case): copy the table without the row (resolveIn style, temp git repo, --root and --table)" and "Each spawned call asserts exit status first." — the case spawns resolve at least twice, one against a temp git repo whose copy/init/add can block (git lock, missing HOME), and the plan names no timeout or bounded wait, so a stuck child hangs the lane run with no expiry and no failure signal — pass an explicit timeout to every spawned resolve (e.g. execFileSync timeout 30000) and assert the exit status, so a hang fails the test instead of hanging the lane.
+
+DEFER severity=LOW — "id "review-followups"; globs ["docs/reports/review_followups.md"]; lists ["agents-s7-s11"]" — the plan names no dedup rule: a second apply (lane retry of commit A, or another task adding the same glob) appends a second matching row and resolve attaches agents-s7-s11 twice, while validate can still print ok with a larger row count; the only key is the row id "review-followups" and the plan does not say validate rejects a repeat — say whether validate rejects a duplicate id or an overlapping glob, and assert table().rows holds exactly one row whose globs include the path.
+
+DEFER severity=LOW — "`node scripts/analysis/rule-lists.mjs validate` prints "rule-lists: ok 55 lists, 23 rows"" — acceptance (b) pins the totals of a shared protected table that other in-flight lanes edit, so a concurrent row makes this lane fail an acceptance it did not break and a re-run does not self-heal — read the row count before the change and assert current count equals that plus one, plus the row present.
+
+DEFER severity=NIT — "the real table is the control and exits 0" — the negative-path case borrows the real tree as its control, so if the row is later dropped by a bad merge the planted-defect test fails on the control assertion, misattributing a positive-state regression to the planted-defect path — give the control its own assertion message, or build the control from a temp table that does contain the row.
+
+REJECT — "Validate requires every literal glob to match a tracked path (rule-lists.mjs:129); the file is tracked (git ls-files)." — if docs/reports/review_followups.md is deleted or renamed before commit A, the row's glob matches no tracked path — handled: validate errors and acceptance (b) cannot print ok, so the empty/missing-target path fails closed rather than leaving a silently dead row.
+
+REJECT — "refused: Files path(s) matched by no row of scripts/analysis/rule-lists.json" — a deferral written with no row could be resolved to the wrong home — handled: resolve refuses and exits 3, so the degrade path fails closed (the lane cannot write the file) instead of writing to a default or wrong list.
+
+REJECT — "check-lane-close.mjs:681-682 refuses a commit that changes one and also moves a task to a finished status (self-edit rule)" — a retried, amended or squashed commit that folds the row and the DONE move together — handled: the hook refuses the commit, so the double-submit is blocked rather than silently landing a self-edit.
+
+VERDICT: PASS on error-path safety
+Paths walked: resolve no-row refusal (exit 3), validate with missing/untracked glob target, spawned resolve in temp git repo (retry and timeout), duplicate row apply, two-commit protected-path double-submit, concurrent row count on shared table   Unguarded: 3
+
+---
+⏱  44276ms (44.3s)
+📊 Tokens — total: 20968, input: 13812, output: 7156, reasoning: 6344
