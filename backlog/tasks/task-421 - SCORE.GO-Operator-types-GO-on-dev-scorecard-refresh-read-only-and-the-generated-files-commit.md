@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SCORE421'
 created_date: '2026-11-21T14:53:00Z'
-updated_date: '2026-11-21T15:49:00Z'
+updated_date: '2026-11-21T15:50:00Z'
 labels:
   - McFix
 milestone: m-1
@@ -38,6 +38,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-21/BL-SCORE421/REPORT.md
+  - docs/reports/lanes/2026-11-21/BL-SCORE421/GROUNDER.md
+  - docs/reports/lanes/2026-11-21/BL-SCORE421/TRIAGE.md
 type: db-go
 ordinal: 121012
 ---
