@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.252Z file_sha256=c0b3e7c205c31991d8dbda06c58ac7e23e0d69c6436b53732f468e8ece19f112 prompt_sha256=3e00e9b2fb5b74f0397787504b970b12d85c4e04257f33e6310c7ca9b306e175
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-126-p11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 "then a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-10-07-batch3-p1-1-load-coa-notices-assessment.md:168 "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z" — the registry-input ceiling moved from 27.5 s to 33.2 s in all 22 reports, so the PASS row is bought by a raised ceiling, not by a run inside the ruled budget — restore the 27.5 s ceiling and let row 52 report FAIL, or land the ceiling change as its own ruled budget row before this commit.
+
+BUG severity=HIGH — task-421 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:92 "**Score: 17/17**" (was 14/17) with :114 "| G8 | 3 | 3 | ... missing-pre-invocations=0 ... net-new (R-DK)" (was "| G8 | 0 | 3 | ... missing-pre-invocations=1 ... stage-gated (compute_ported)") — a re-score and a stage-gate annotation removal no pasted clause names, and the same report block records "SKIPPED or failed to run: --fast: vitest spawn skipped", so the evidence for the new 17/17 is not pasted — paste the run that produced the re-score, or leave this block at 14/17 and the stage-gated note intact.
+
+BUG severity=MED — task-421 "The operator's typed GO is recorded verbatim on the task" and "the operator types GO in his own Terminal" — Implementation Notes "operator, verbatim: \"GO for scorecards\"" / RR-0357 "GO for scorecards" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1676) — the only record pasted is a chat line, not a Terminal GO, so the card's own gate is unmet on the pasted record — paste the Terminal transcript of the typed GO, or have the operator amend AC #1 to the chat record.
+
+DEFER severity=MED — task-421 "commits them through the real hooks as one generated-files commit in the form of bd1f246cc" — NONE — the material is a working-tree diff of 22 files with no commit sha, no hook output and no step-conformance Rule 13 result, cannot see whether one commit through the hooks exists — attach the commit sha and the Rule 13 pass line to the hand-back.
+
+DEFER severity=MED — task-421 "Must be re-run if another migration file lands before the push" — docs/reports/2026-10-07-batch3-p1-1-load-coa-notices-assessment.md:138 "min_migration=249 <= migrations count=316" — this same diff shows the count at 316 while the budget stamp reads 2026-11-20T19:37:21.468Z, so whether migration 316 landed before that measurement cannot be told — confirm the measurement post-dates migration 316, otherwise re-run and re-stamp.
+
+DEFER severity=LOW — RR-0353 "The 29 scorecards are resolved the right way" — the 22 paths of the change block (docs/reports/*-assessment.md) — 22 of the 29 scorecards appear and the other 7 cannot see whether they carry a count or budget row at all — state in the hand-back the number of scorecards whose generated blocks are current so the 29 is accounted for.
+
+DEFER severity=LOW — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:91 "Regenerate with the same command; a stale block is a conformance-lock finding (step-conformance.infra.test.ts)" — :162 "- compare ran: true · diffs found: 0 · unexplained: 0" (was "compare ran: false") and ":163" "- missing invocations (PRE, GOLD-PRE): none" (was "none::") — two hand-shaped edits (a typo fix and a compare flip) ride in the same generated block as the re-score, so which lines came from the generator cannot be told — regenerate the block and show the diff as generator output only.
+
+MET — task-421 "the count row 315 to 316" — docs/reports/2026-10-07-batch3-p1-1-load-coa-notices-assessment.md:138 "min_migration=249 <= migrations count=316" (same edit in all 14 reports carrying row 1)
+MET — task-421 "the assessment reports under docs/reports/" — the change block lists only docs/reports/*-assessment.md paths, no code, schema, migration or lock file
+MET — RR-0357 "GO for scorecards" — Implementation Notes "operator, verbatim: \"GO for scorecards\"" is recorded on task-421
+MET — RR-0358 "does the rehearsal provide a benefit here - if not move on" — no task-420 rehearsal output is claimed in the material, consistent with the waiver
+MET — Spec 126 §11b.2 "REPORT goldens are unchanged" — no file under src/tests/fixtures/surfaces/ or src/tests/fixtures/report-page/ appears in the change block
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 3
+
+---
+⏱  43804ms (43.8s)
+📊 Tokens — total: 38096, input: 30354, output: 7742, reasoning: 6444

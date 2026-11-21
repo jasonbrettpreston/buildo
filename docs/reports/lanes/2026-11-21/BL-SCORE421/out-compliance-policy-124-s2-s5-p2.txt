@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.167Z file_sha256=71c264e0dfd270225d17ff1aaddda6d47d6de1cc36f15ed00d286559718d06fb prompt_sha256=94992e65ba5057b8c4472265530c884306c28b1c1cfa524335f4330e82f7f051
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 AC #1 "The operator's typed GO is recorded verbatim on the task" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md (whole diff) shows no task-side record, and the only GO pasted is "RR-0357 GO for the scorecards, given in the chat before the rehearsal" — acceptance #1 unmet: the card requires "the operator types GO in his own Terminal" after task-420 passes, and the material carries no terminal-typed GO on the task, only the pre-rehearsal chat GO — record the operator's terminal GO verbatim on task-421 before this generated-files commit is folded
+
+BUG severity=HIGH — R-EC "the R-DJ pre-commit budget, registered and observed by fast invariant #52" with R-DF "every threshold, window, timeout, limit, rate or count is a registered `<slug>_<name>` logic variable ... seeded by migration in R-CV form, or an exact zero; no literal fallback" — "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" — the registry-input ceiling moved 27.5 s to 33.2 s inside the generated report while no seeded variable change is visible in this chunk, so either the report was hand-adjusted (R-BF: "generated/witnessed") or the threshold change rides in another chunk; the pasted context names no ruling authorising a budget raise — land the new ceiling as a registered variable seeded by migration in R-CV form in the same change, or keep 27.5 s and record the overrun as a finding, not a PASS
+
+DEFER severity=MED — R-EC "registered and observed by fast invariant #52" — "registry-input 33.19 s <= 33.2 s" — PASS rests on a 10 ms margin (99.97 percent of budget), so the next run prints FAIL on all 24 step assessment reports — give real headroom in the registered value or remove the 6 s of added pre-commit cost before folding
+
+DEFER severity=MED — task-421 AC #2 "step-conformance Rule 13 passes on it" — NONE — Rule 13 text and the resulting commit (form of bd1f246cc) are not pasted, so "cannot see"; this chunk shows only 24 docs/reports files, not the commit through the hooks — paste the commit id and the Rule 13 verdict for the generated-files commit in the next chunk
+
+DEFER severity=LOW — task-421 "the operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run on dev" — "measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches" — one timestamp across all 24 reports is consistent with a single run, but the machine is the same while docs-only degraded 18.51 s to 22.84 s, which the row does not explain — state in the report that the run was the single dev run of task-420 and under what load
+
+MET — task-421 "the count row 315 to 316" — all 24 files, e.g. "| 1 | assert_schema | PASS | min_migration=41 <= migrations count=316 |" — every step row 1 carries 316 and no other count value remains
+
+MET — task-421 "checks that only generated files changed (the assessment reports under docs/reports/" — diff header "diff --git a/docs/reports/2026-08-25-pilot1-assert-schema-assessment.md b/docs/reports/2026-08-25-pilot1-assert-schema-assessment.md" — all 24 changed paths are under docs/reports, none outside
+
+MET — R-GP "folds a `validate_only` entry only when its measured `value` differs ... an equal value is printed as unchanged and not re-stamped" — "docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z" — both measured values differ from the stored 18.51 / 27.36, so restamping the `at` is the ruled behaviour, not drift
+
+REJECT — R-GP "an entry's `at`, `commit`, `cost_ms` and `sample_n` describe the measurement that last CHANGED its value" — accused: the historical 2026-08-25 report now carries a 2026-11-20 measurement — not a real issue: these pilot reports already carry the 2026-10-05/06 FLEET-2 recapture and the prior 2026-10-30 measurement in the same rows, and the ruled semantics are exactly value-change restamping
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  33052ms (33.1s)
+📊 Tokens — total: 45066, input: 39482, output: 5584, reasoning: 4464

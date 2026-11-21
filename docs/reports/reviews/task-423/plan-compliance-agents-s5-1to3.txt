@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T17:06:38.043Z file_sha256=bfbb860c5143dec5100878389a6b47a1dbae5166e2e47a21346d5644292282d2 prompt_sha256=531eb580150cb23fb2246df258069d92a15d22a26f591a9ada257c3dfcc600e3
+🔍 Lens review of docs/reports/reviews/task-423/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 08 §5.3 note (M-246, task-410) "runs the compliance lens once per list with the list pasted whole ahead of the plan or diff" — plan adjustment 1 "`joinLists`: the resolved lists' blocks joined in table order ... given to the existing `buildLensInputs` as ONE list (id `rules`)" — one joined output per stage is not one output per attached list, and the same note still requires `docs/reports/lanes/<date>/<lane>/` to hold "one compliance lens output per attached list", which the plan amends nowhere in section 4 — either keep the per-list output as the satisfying form and only join the material inside each call, or add the 5.3 note to section 4 with RR-0363's words and the operator's ruling number
+
+BUG severity=HIGH — Spec 08 §5.3 note (M-246, task-410) "a list is split by its own headings when list plus material pass the review tool bound, never trimmed" — plan adjustment 1 "`lines` (regex) on a list, applied to its blocks, for the two specs that already hold one rule per line ... (14 lines `**Rule N.**`, 3.4k of 33k)" — selecting only matched rule lines and dropping table rows (doc-17, Spec 08 §5.3, engineering standards sections 12 and 13) is trimming a list, which the pasted note forbids outright — make the `lines` form a list-level amendment the operator rules on by name and add it to section 4, not a silent table field
+
+BUG severity=HIGH — Spec 08 §5.3 note (M-246, task-410) "requires that every file changed from L to HEAD that the Files line covers, minus the exempt paths, is in exactly one chunk whose text equals what `git diff` (the pinned flag set `DIFF_ARGS`) prints for it" — plan adjustment 5 "the check learns to read them instead of \"every output equals the whole-range diff at HEAD\"" — the pasted clause still mandates whole-range equality at HEAD while the plan's section 4 amends only Spec 08 §7 rule 4, §7 rule 6, Spec 137:134 and README:158/:160, leaving the 5.3 note describing the retired mechanism — add the 5.3 note (task-410 item 2, and the third correction's pinned flags) to section 4 as an amended sentence in the same card as adjustment 5
+
+BUG severity=HIGH — Spec 08 §5.3 second correction (task-410) "a lane whose own table differs from the board's in any of those four keys is refused, so a lane cannot cut the finished statuses, repoint the base to its own branch or widen the exempt paths (a task that changes them is refused too: those changes land on the board first)" — plan card C "Files: scripts/analysis/rule-lists.mjs, scripts/analysis/rule-lists.json, ... Depends on: card B folded (same functions). Order: third." — card C exists to add `exempt` globs, an exempt change is refused at close when made on the lane, and the plan carries no separate board landing commit before card C — split card C into a board-table commit (landed on `refs/heads/wf2/board`) and the lane card that reads it, and name the board step in the card
+
+DEFER severity=MED — RR-0365 "yes cut the plan and have the panel review the plan - review - ground - present the plan with tasks ready to execute" — plan card A "Acceptance (observable): 1. Replay of task-419's plan and output ...: plan 11 calls become 3" — acceptance 1 is only true if OPEN QUESTION 2 is approved, by the plan's own arithmetic ("With `lines` only: about 160k = 2 plan calls"), so a card ordered to be ready to execute fails its own acceptance if the operator says no — write acceptance 1 in both branches (3 calls with trims, 4 without) and mark card A executable only after Q2 is answered
+
+DEFER severity=MED — Description issue (6) "\"suite passed\" did not mean \"push will pass\" (the push gate has checks the station suite does not run)" — plan adjustment 6 "If OPEN QUESTION 1 is no, adjustment 6 is the one-line edit of the scratch file, done by the orchestrator, no card." — the fix for a named issue then lands in a file outside the repo, outside every Files line and every test, so nothing proves the gap stays closed — make card D the only route, or record issue 6 as deliberately left open with the operator's own word, not fixed by an untracked edit
+
+DEFER severity=MED — RR-0361 "the objective is an effective compliance review on the plan and the output.  It isn't 17" — plan adjustment 1 "Surface, phone and pipeline kinds still draw several calls (rules lines for 126, 128, mobile, Airtight do not exist; a later card)." — the objective is met for tooling and spec kinds only, three named kinds keep several compliance calls and no card number, acceptance or date says when they get one — name the later card number and its acceptance now, or state in section 5 that the objective is scoped to tooling and spec tasks this round
+
+MET — Spec 08 §5.3 fourth correction "`scripts/lib/review-template.js` and `scripts/deepseek-review.js` ... may not differ from the range base unless the task's launch Files line covers them" — plan section 6 "scripts/deepseek-review.js and review-template.js are NOT touched" — neither file appears in any card's Files line
+
+MET — RR-0364 "1. yes 2. yes", item 1 — plan adjustment 4 "MED may close by `pile:\"<reason>\"` or `wontfix:\"<reason>\"` (30+ chars, existing check) as LOW and NIT already may" — medium is recorded, not fixed, as ruled
+
+MET — RR-0363 "There shold be the plan reviews - the grounding - the fold (no other reviews) - the build - the review of the output - grounding and then the fold" — plan section 0 rows 2-5 "same (plan-prep, seats, separate grounder, fold, fold check, launch gate)" — the ordered sequence is kept whole and no step is removed
+
+MET — RR-0351 "Gap 3 we dont need the cross check." — plan card A acceptance 3 "plant a plan sentence contradicting a ruling in its \"Decisions naming this task\" section (task-419's RR-0351 ...); the compliance call flags it with the quote, 2 of 2 runs; control clean" — the ruling reaching the DeepSeek pass is proven, not assumed
+
+MET — Spec 08 §5.3 third correction "a task whose Files line names the table is judged by its branch table with every field that decides what is reviewed still taken from the base" — plan card A "add `lines` and `count` to the table for Spec 137 section 4 and Spec 08 section 7" — card A changes only `lists` and `rows` plus the new fields, never `base_ref`, `finished_statuses`, `protected_paths` or `exempt`, which is what the note permits
+
+REJECT — RR-0363 "No review of paperwork." — accused of not being delivered by task-423, which is card A only — the Implementation Notes settle the split: "this task is card A (adjustments 1 and 3) ... Cards B, C and D are opened only after the operator has seen the grounded plan"
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 7
+
+---
+⏱  64679ms (64.7s)
+📊 Tokens — total: 24545, input: 12922, output: 11623, reasoning: 9897

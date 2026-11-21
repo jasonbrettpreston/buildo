@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T17:06:38.042Z file_sha256=73f574429ee2e9a5182c1dd3e6d3eca534fa666f135ed4b4a62aef706878977e prompt_sha256=006c5eb2c288470a00b4fef7e58ba2246e67a8e3107c0558b6e65cca33353c74
+🔍 Lens review of docs/reports/reviews/task-423/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0363 "That's it.  No review of paperwork." — PLAN-423-v2 adjustment 2 "Add globs: `docs/reports/*-assessment.md` (proving check: step-validate.mjs --all --fast, station step 1; UNVERIFIED that a stale block fails it), `docs/reports/generated/**` (each page names its generator --check), `backlog/**` (task-file hooks), `.cursor/*QUEUE*.md` (queue-check in the McBylaws gate)." — the exempt list omits the lane's own record folder and decision record, yet the same plan says "Each is a two-commit close: commit 1 = work and tests; commit 2 = records only (lane report folder, review context folder, task file, decision record)", so every card's commit 2 lands on covered non-exempt paths, still draws lens outputs, and under adjustment 5 ("git diff to HEAD -- covered non-exempt paths must be empty") stales the review it belongs to — add `docs/reports/reviews/**` and the decision-record path to the exempt globs with the close check as their proving check, and exclude them from the stale rule
+
+BUG severity=MED — RR-0336 "Items 0 to 8 approved for task-399 and task-375" — PLAN-423-v2 adjustment 5 "it was approved by the operator (RR-0336 item 7) so the hand-off tells him" — the pasted RR-0336 approves items for task-399 and task-375, it does not name task-414, so closing task-414 as superseded rests on a ruling that does not cover it and a hand-off notice is not a ruling — either leave task-414 open until the operator rules on it, or produce the ruling that names task-414 and cite it in the card that closes it
+
+BUG severity=MED — RR-0363 "Unless the output was revealing to have critical or high faults and a second review of the output maybe required." — PLAN-423-v2 adjustment 5 "A covered change after the last review needs one more round on that delta (compliance once, code-review, error-paths)" and "(lost: even a one-line voluntary fix draws a small fix-diff review, about 3 small calls; safer than trusting a cite)" — the extra round is triggered by any covered change, not by a critical or high fault, which is more review than his words name and adds three calls per non-critical fix — gate the extra round on an open critical or high finding (or a lane-declared fix of one) and record a non-critical fix by cite
+
+BUG severity=MED — RR-0361 "We should use the old findings and ground them and then include them in the new pass." — NONE — no plan section, card or acceptance step grounds the prior findings on this task (the v1 plan review) or lists their dispositions, so the new pass cannot be shown to include them; the only related line, "a duplicate-finding verdict word (add only if the replay shows more than 2 findings ruled twice)", is about duplicate verdicts, not old findings — add to card A a step and an acceptance line that lists each prior finding on this task as folded, superseded or carried, with its quote
+
+DEFER severity=MED — RR-0364 "Medium and low findings recorded not fixed; paperwork tasks get a grounder check, no review" — PLAN-423-v2 adjustment 2 "`docs/reports/*-assessment.md` (proving check: step-validate.mjs --all --fast, station step 1; UNVERIFIED that a stale block fails it)" — the exemption substitutes a proving check for review, but the plan marks that check UNVERIFIED, so that report path is exempt on a check that may not fail on a stale block, state the test that proves it before the glob lands or keep that path unexempted for one card
+
+DEFER severity=LOW — task-423 Description "(6) "suite passed" did not mean "push will pass" (the push gate has checks the station suite does not run)." — PLAN-423-v2 "If OPEN QUESTION 1 is no, adjustment 6 is the one-line edit of the scratch file, done by the orchestrator, no card." — correction 6 then lands outside the repo, outside the hooks and with no test, which is the condition that produced the issue — make card D unconditional, or record the one-line edit with its proving run (21adfde8a passes, 0f6ba8225 stops at the gate) as a dated decision before it is done
+
+MET — RR-0363 plan review, grounding, fold, build, output review, grounding, fold — PLAN-423-v2 §0 row 5 "same (plan-prep, seats, separate grounder, fold, fold check, launch gate)" and adjustment 3 "GROUNDER-PLAN.md exists at the launch commit L" — the seven-stage shape is kept and plan grounding evidence is still demanded before the take
+
+MET — RR-0364 item 1 — PLAN-423-v2 adjustment 4 "MED may close by `pile:"<reason>"` or `wontfix:"<reason>"` (30+ chars, existing check) as LOW and NIT already may; CRITICAL and HIGH still close by fixed or ruling." — medium and low are recorded with a reason, critical and high still force a fix or a ruling
+
+MET — RR-0365 "yes cut the plan and have the panel review the plan - review - ground - present the plan with tasks ready to execute" — PLAN-423-v2 "Cards, ready to execute (3 code cards, 1 optional)" with Files, Depends on, Order and numbered acceptance per card
+
+MET — MORNING-DECISIONS.md:1546 "files too large to review even when split. or split smaller" — PLAN-423-v2 adjustment 1 "part-splitting cuts by size only when over the bound" plus the `lines` cut of Spec 137 §4 and Spec 08 §7, "under 120k"
+
+MET — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling" — PLAN-423-v2 adjustment 1 "drop doc-17 from the lane-tools rows (31.6k; it is the register of orchestrator readings" — the register of readings is removed from the reviewer's lists, subject to open question 2
+
+MET — task-423 Description issue (5) "plan findings are ruled twice" — PLAN-423-v2 adjustment 3 "`closeErrors` reads only out-*.txt for findings and Ruled lines" — plan findings are no longer re-ruled at the output
+
+MET — RR-0351 "Gap 3 we dont need the cross check." — PLAN-423-v2 card A acceptance 3, RR-0351 used only as a planted contradiction fixture — no cross-read adversary pass is added and the ruling is used to prove rulings still reach the reviewer
+
+REJECT — RR-0363 "(no other reviews)" — the plan keeps compliance, code-review and error-paths at both stages — the same sentence says "the plan reviews" in the plural and RR-0365 says "We hare not making a whole new approach here", so the lens panel is the review, not an extra one
+
+REJECT — RR-0363 one review per stage — surface, phone and pipeline kinds still draw several calls ("Surface, phone and pipeline kinds still draw several calls") — splitting a too-large input is the operator's own instruction (MORNING-DECISIONS.md:1546 "files too large to review even when split. or split smaller") and their rule lines are marked a later card, so this is not a breach of the pasted clauses
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 6
+
+---
+⏱  93468ms (93.5s)
+📊 Tokens — total: 38167, input: 20308, output: 17859, reasoning: 16156

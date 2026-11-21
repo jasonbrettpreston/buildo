@@ -1,0 +1,49 @@
+$ node scripts/analysis/mcbylaws/gate.mjs --ci --base origin/wf1/mb-rulings   (HEAD 4b32de544)
+PUSH HEAD  APPROVED present since 5d3c6b57b 2026-10-30
+PROTECTED:
+HELD PATCHES  12 of 12, may only fall
+held, worktrees: not evaluated in CI
+pending/  1 red-by-design tests (was 1)
+landing exception: 42521481cab1ad58b848600367c8d11f1a185b8c (frozen landing list)
+landing exception: 3e7b592e9a21862c93db18bca890f74604c22db3 (frozen landing list)
+landing exception: bef5585e65ccc2a02169902dd18da1ba2fa9349a (frozen landing list)
+landing exception: 6474b00ef0f558f675a9c240a801a3aef05eb1b4 (frozen landing list)
+landing exception: ce116571ba381a0a1b51734820f45ccce2981244 (frozen landing list)
+landing exception: 3e3212b99131a49441e06e8c655c8b9663ee36d3 (frozen landing list)
+landing exception: dfe1f23d695ff16cb0934e12c675d1948f098346 (CoA ledger commit made before the gate's policy existed)
+landing exception: d07bca70c8c3e6db34aefed7d03465577cd3483a (CoA ledger commit made before the gate's policy existed)
+landing exception: 72ce5b55cd645a02da4797421d3dc0fb701c1383 (CoA ledger commit made before the gate's policy existed)
+landing exception: 95e6c0931541bfe65903c7d05489976562f90b85 (CoA ledger commit made before the gate's policy existed)
+landing exception: 5b53f0229cc3f440dc66d5c83e5b42ef30bd3ef0 (CoA ledger commit made before the gate's policy existed)
+landing exception: c1d4968692f8e6edf1ef5e7eceab2a34fd01a548 (CoA ledger commit made before the gate's policy existed)
+landing exception: eea40c1d0511fd52d68c27d520c50068608a57ea (CoA ledger commit made before the gate's policy existed)
+landing exception: d3f12cc8ea8812a33fe76d30a8a61bf8622d1254 (CoA ledger commit made before the gate's policy existed)
+landing exception: b9971d4254705c38b6e7217a538702eedc051080 (CoA ledger commit made before the gate's policy existed)
+landing exception: 528ac744aabbb3910d31642356ebf0e36917479b (CoA ledger commit made before the gate's policy existed)
+landing exception: 13951d9e4d8c83c104a7c1320f4e7fc9a58fc5ab (CoA ledger commit made before the gate's policy existed)
+landing exception: c8258757d5c7870f058a355ca32a9b3adf201075 (CoA ledger commit made before the gate's policy existed)
+landing exception: e7820bd4c3db28f6db8f15cc5a5ca4a30ff90c7c (CoA ledger commit made before the gate's policy existed)
+landing exception: 9c720d8fa3e1ae0d158cbee9aa53daf3d760c034 (CoA ledger commit made before the gate's policy existed)
+loop: note: out of scope: no code, oracle or generated path changed
+loop: loop-gate ci: ok
+  PUSH: 1
+  PROTECTED:: 1
+  .cursor: 2
+  .husky: 2
+  docs: 5
+  mcbylaws: 1
+  mobile: 1
+  scripts: 15
+  src: 107
+  HELD: 1
+  held,: 1
+  pending: 1
+  MCBYLAWS:: 22
+full list: /var/folders/8l/mcyqkj6d1pd5nm0bry4bql100000gn/T/mcbylaws-summary-68310.txt
+held, worktree and tty: not evaluated in CI
+GATE OK
+exit=0
+
+--- falsifier (idLedgerErrors on the same range, rev HEAD~1 without the row, then HEAD with it) ---
+HEAD~1 ["FAIL:Q:id-no-row:mig-334:migrations/334_precommit_budget_registry_repin.sql"]
+HEAD []

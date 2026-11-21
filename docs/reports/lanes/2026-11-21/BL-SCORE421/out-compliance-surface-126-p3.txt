@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.269Z file_sha256=bbd201233022e536cc44e97f47bd892f7a5522f25ec6e722dd3cab169079d049 prompt_sha256=ec162a4c68eda7f064bcf37156618a56d99733b1d3f20e199e0d55c3841ad2ac
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 acceptance #1 "The operator's typed GO is recorded verbatim on the task" — NONE (the only GO in the pasted task block is RR-0357 "- GO for scorecards", which the same card records as "given in the chat before the rehearsal"; the description requires "the operator types GO in his own Terminal") — the Terminal GO that authorizes this run and this commit is not recorded on task-421 — paste the operator's typed Terminal GO verbatim on task-421 before this generated-files commit is folded.
+
+DEFER severity=MED — task-421 description "the assessment reports under docs/reports/, the count row 315 to 316" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches" — the commit changes a second row class the card does not name, so "generated files only" holds only if row 52 is generator output — state that row 52 in all 27 reports came from the same `step-validate.mjs --all --fast --write` run and was not hand-edited.
+
+DEFER severity=MED — task-421 description "Must be re-run if another migration file lands before the push" — docs/reports/2026-09-24-batch2-p3-7-parcels-assessment.md:694 "min_migration=11 <= migrations count=316" — 316 is asserted in all 27 reports with no push-time re-measure visible, so a migration landing after the run leaves every count row stale — re-run and record the count and the time of the re-measure on the task before push.
+
+DEFER severity=LOW — task-421 acceptance #2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md:817 "registry-input 33.19 s <= 33.2 s" — a PASS row with 0.01 s headroom and a measurement stamped 2026-11-20T19:37:21.468Z, one day before the card opened, is not attributable to this task's run and cannot distinguish a pass from noise — name the run that produced the 2026-11-20 measurement and confirm Rule 13 fired on the folded commit.
+
+MET — task-421 description "the assessment reports under docs/reports/" — docs/reports/2026-10-02-batch2-p3-3-load-zoning-assessment.md:813 — every touched path in the chunk is under docs/reports/; no migrations/ or src/ file appears, matching "generated files only" on content.
+
+MET — task-421 description "the count row 315 to 316" — docs/reports/2026-08-27-pilot3-link-massing-assessment.md:547 "min_migration=81 <= migrations count=316" — the count row carries 316 with identical wording in all 27 reports, consistent with one regeneration.
+
+MET — spec 126 §6.1 "every migration claims its number in the commit that writes it, after re-measuring" — NONE — the diff writes no migration and claims no migration number, so the numbering rule is not engaged by this change.
+
+REJECT — spec 126 §6.3 "Nine are net-new, each verified absent from `migrations/`, `src/` and `scripts/`" — that the change ignores the ten-table declare-and-assert schedule — the material is a report refresh in docs/reports/ only; §6.3 binds table authoring, not scorecard rows, and no schema claim is made here.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 3
+
+---
+⏱  39159ms (39.2s)
+📊 Tokens — total: 43762, input: 36727, output: 7035, reasoning: 6144

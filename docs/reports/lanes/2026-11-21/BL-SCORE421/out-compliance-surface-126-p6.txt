@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.302Z file_sha256=6683198c7875364b9e00e52e739d583cf46fb180eb4869704bd3d0f14fb49e0c prompt_sha256=0f35a1496a437b956791b2c7ad97e90a4f725eeffe82bd6190b9c46a16f3cd82
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-126-p6.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 card, scope: "checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 (same hunk in all 27 files) "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |" — a second row is rewritten in all 27 reports although the card authorises only the count row, so this is a hand edit inside a commit the card requires to be generated files only — rebase the diff to the row-1 count change only, or record the operator ruling that authorises the PRECOMMIT-BUDGET row rewrite.
+
+BUG severity=HIGH — task-421 card opening: "Card opened 2026-11-21" and description "makes ONE read-only run on dev of `step-validate.mjs --all --fast --write`" — docs/reports/2026-09-30-batch2-p3-3-load-zoning-assessment.md:846 "measured 2026-11-20T19:37:21.468Z" — the row states a measurement timestamp one day before the card existed, so the row cannot be the output of the sanctioned 2026-11-21 run — replace the row with the measurement taken by this run, or leave row 52 untouched.
+
+BUG severity=HIGH — acceptance criterion #1: "The operator's typed GO is recorded verbatim on the task" (card: "the operator types GO in his own Terminal") — pasted context "RR-0357 GO for the scorecards, given in the chat before the rehearsal" — the only GO in the pasted context is a chat GO given before the rehearsal, not a GO typed in the operator's Terminal, and no Terminal GO appears in the task text — record the typed Terminal GO verbatim on task-421, or record an operator ruling that the chat GO of RR-0357 supersedes the Terminal requirement.
+
+DEFER severity=MED — task-421 card: "step-conformance Rule 13 passes on it" is not pasted, and the row now leaves "registry-input 33.19 s <= 33.2 s", a 0.01 s margin — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "registry-input 33.19 s <= 33.2 s" against the pre-change "registry-input 27.36 s <= 27.5 s" — the budget threshold moved from 27.5 s to 33.2 s with the measurement, so the PASS cannot fail and records no headroom — state the fixed budget as a constant independent of the measurement, or note the threshold derivation in the row.
+
+DEFER severity=LOW — task-421 card: "One commit of generated files only, through the hooks" — NONE — the diff shows only docs/reports/ paths but a diff cannot show commit count or that the real hooks ran, so criteria #2 is unverifiable from this material — paste the commit sha and the hook output for the single commit.
+
+MET — task-421 card, "the count row 315 to 316" — all 27 files, e.g. docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:477 "min_migration=41 <= migrations count=316" — every row 1 in the diff moves 315 to 316 and no file still reads 315.
+
+MET — task-421 card, "Files: docs/reports/" — every diff header is a docs/reports/ path, first hunk "diff --git a/docs/reports/2026-08-25-pilot1-assert-schema-assessment.md" — no file outside docs/reports/ is touched.
+
+MET — RR-0353 "The 29 scorecards are resolved the right way" — the rows are re-derived from a run (row 1 recounts the migration table) rather than asserted by hand — 27 of 29 cards carried here, the remainder falling to chunk 2 per the LIST header.
+
+REJECT — Spec 126 §11b.7, §12, §13, §14 (part 6 of 6, the rules in this prompt's spec context) — a reader could accuse the change of not building any MaxBLD page, phase or lock test — no pasted clause in part 6 binds a docs/reports/ assessment row, so nothing here is unmet by it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  33504ms (33.5s)
+📊 Tokens — total: 41231, input: 35615, output: 5616, reasoning: 4557

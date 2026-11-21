@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T16:33:34.611Z file_sha256=674c4242c8b6fe4cb04c9220c3c355d2ebaeb41ecb23cbe33c31a3365d5ce596 prompt_sha256=676731bb5bcea2b7c69b3066d6c7ff7ed2a4ffbed13a00e1ce7de9de653da6c5
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-MIG334/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10669 chars, answer 0 chars, 15s
+BUG severity=HIGH — AC#2 "The id-ledger check of mcbylaws-queue-check.mjs, run on the push range without pushing, no longer prints id-no-row for mig-334 (output pasted), or the lane states exactly why it could not be run" — NONE (the material is only the .cursor/MCBYLAWS-QUEUE.md diff, no run output, no statement of why it could not be run) — the second acceptance criterion is satisfied nowhere in the material under review; cannot see — run the id-ledger check on the push range without pushing and paste the output, or state exactly why it could not be run, in the lane report
+BUG severity=HIGH — Task "Also report (read-only) whether the pre-push gate's checks can be run on a commit range without pushing, and how." — NONE — the read-only report on running the pre-push gate on a commit range without pushing appears nowhere in the material; cannot see — add the read-only findings (command form, what it checks, what it cannot check pre-push) to the lane report
+DEFER severity=MED — Task "with a Spec 137 rule 3 status line" and "in the form of the existing row for migration 330 (.cursor/MCBYLAWS-QUEUE.md:1289)" — .cursor/MCBYLAWS-QUEUE.md:+1292 "  Status: WAITS · since 2026-11-21 · expires when migration 334 is applied on dev · next: written and NOT applied to any database; rehearse on the test stack first (MCINC-7; ...), then the operator types `OPERATOR-GO INC1B-MIG334` on dev (waits: the test-stack rehearsal, operator)" — the 330 row this row is told to copy ends its status line `· ruling: "y"` and the new row carries no `ruling:` field, so the status line is not in the 330 form (whether rule 3 itself demands that field is not pasted) — append `· ruling: "y"` to the status line, citing RR-0362
+DEFER severity=LOW — Task "stating the truth: what the migration does, that it is written and NOT applied, that it is a DB job owed a test-stack rehearsal and the operator's typed GO, its owner task-406" — .cursor/MCBYLAWS-QUEUE.md:+1292 "(MCINC-7; task-420 SCORE.REHEARSE is the later scorecard rehearsal after 334)" — this sentence adds a sequencing claim about task-420 that neither the card nor RR-0362 names — keep or drop it as the lane prefers, it is annotation only, not behaviour, so nothing is blocked
+
+MET — Task "add ONE queue row for the migration 334 job" — .cursor/MCBYLAWS-QUEUE.md:+1292 — exactly one row added, "- Row INC1B-MIG334 · Migration 334 job (tooling_precommit_budget_registry_s re-pinned from 27.5 to 33.2 seconds) · McIncrement · increment 1·B · DB job ..."
+MET — Task "what the migration does" — .cursor/MCBYLAWS-QUEUE.md:+1293 — "one UPDATE of logic_variables, key tooling_precommit_budget_registry_s, value 27.5 to 33.2 and its description"
+MET — Task "that it is written and NOT applied" — .cursor/MCBYLAWS-QUEUE.md:+1292 — "written and NOT applied to any database" and "No database holds it today: this row records the job and applies nothing."
+MET — Task "a DB job owed a test-stack rehearsal" — .cursor/MCBYLAWS-QUEUE.md:+1292 — "rehearse on the test stack first (MCINC-7 ...) (waits: the test-stack rehearsal, operator)"
+MET — Task "the operator's typed GO" — .cursor/MCBYLAWS-QUEUE.md:+1292 — "then the operator types `OPERATOR-GO INC1B-MIG334` on dev"
+MET — Task "its owner task-406" — .cursor/MCBYLAWS-QUEUE.md:+1293 — "Owner: task-406."
+MET — AC#1 "nothing else in the queue file changes"; Task "No code, test, spec or migration file is edited" — diff header — only ".cursor/MCBYLAWS-QUEUE.md" is touched, three added lines, no deletions
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  21797ms (21.8s)
+📊 Tokens — total: 8521, input: 4068, output: 4453, reasoning: 3439

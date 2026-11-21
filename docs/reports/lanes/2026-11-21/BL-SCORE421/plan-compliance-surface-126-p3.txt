@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.522Z file_sha256=220694f1a1dabc36f6bf97fb83fee98bc48fbbda374620e76d0508a8c392b846 prompt_sha256=98f34554741bbd48c64510532ff58b6769c63651979f18bbe81b7edf632e1a34
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-plan-compliance-surface-126-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0358 "The scorecard rehearsal is waived if it gives no benefit" — task-421 Description "After task-420 (the rehearsal) passes: the operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run on dev" — the card keeps task-420 as a hard prerequisite and no line records the benefit determination the operator asked for, so the ruling that lets the run proceed without the rehearsal is unmet — record the benefit determination on the card and either drop the task-420 gate or state the waiver explicitly.
+BUG severity=HIGH — task-421 Acceptance #1 "The operator's typed GO is recorded verbatim on the task" — task-421 Decisions "RR-0357 GO for the scorecards, given in the chat before the rehearsal" against Description "the operator types GO in his own Terminal" — the only GO on the task is a chat line that RR-0357 itself places before the rehearsal, while the card requires a Terminal GO after it, so #1 is satisfied by a different GO than the process names and the required one is unrecorded — state which GO satisfies #1 and record the Terminal GO verbatim when typed, or amend the Description.
+BUG severity=HIGH — task-421 Acceptance #2 "One commit of generated files only, through the hooks" — task-421 Description "ONE read-only run on dev of `step-validate.mjs --all --fast --write`" — a read-only run writes nothing, so the named run cannot produce the generated files the one commit must contain and the two lines cannot both hold — call the run what it is (one run whose only writes are the generated files under docs/reports/) or drop `--write`.
+DEFER severity=MED — task-421 Acceptance #2 "step-conformance Rule 13 passes on it" — NONE — Rule 13 is not pasted, so whether the generated-files commit passes it cannot be seen — paste Rule 13 or name the exact check the lane runs on the commit.
+DEFER severity=MED — task-421 Description "Files: docs/reports/" against "only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — the count row's home is not stated, so if it sits outside docs/reports/ the declared file scope and "generated files only" disagree — name the count row's file and confirm it is generated output.
+DEFER severity=MED — Spec 126 §12 "anything else under `scripts/` waits for the pipeline slot" — task-421 Description "ONE read-only run on dev of `step-validate.mjs --all --fast --write`" — the card runs a pipeline validator on lane BL-SCORE421 with no record that the pipeline slot is held, and I cannot see where step-validate.mjs lives — record the slot on the card or confirm the script lies outside scripts/.
+DEFER severity=LOW — task-421 Description "ONE read-only run on dev" against "Must be re-run if another migration file lands before the push" — the single-run rule and the later re-run condition conflict unless the second run is the stated exception — write it as one run, re-run only if a migration lands before the push.
+REJECT — Spec 126 §13 "a RED canary per lock" — accused of adding no logic, UI or infra test — not a real issue: the card changes only generated assessment reports under docs/reports/ and adds no lock the mandate governs.
+
+MET — RR-0357 "GO for scorecards" — task-421 Implementation Notes "operator, verbatim: \"GO for scorecards\"" — the GO is recorded verbatim on the task.
+MET — RR-0358 "does the rehearsal provide a benefit here - if not move on" — task-421 Implementation Notes — the ruling is recorded verbatim on the task.
+MET — Spec 126 §11b.1 "No hand-built standard component" — task-421 Description "Files: docs/reports/" — the card adds no page, descriptor or binding, so the page standard is untouched.
+MET — Spec 126 §14 "migrations/** — no migration is authored by this spec" — task-421 Description "Must be re-run if another migration file lands before the push" — the card authors no migration, it only re-runs a validator when another lands.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 3
+
+---
+⏱  63282ms (63.3s)
+📊 Tokens — total: 36628, input: 25122, output: 11506, reasoning: 10557

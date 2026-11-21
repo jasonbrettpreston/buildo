@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.273Z file_sha256=654b96308d0520cb3bdd16ff47cc896cc9ecc9bf3491f56658e3675efca240fb prompt_sha256=4a38b3b28a715ccd69f0007c3b41363c338dafaff46f67ad7a62bcb78bbae996
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-126-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 description "a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "+| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" (was "registry-input 27.36 s <= 27.5 s") — the commit also moves the registry-input precommit ceiling 27.5 s to 33.2 s, i.e. to 0.01 s above the measurement, so the gate can no longer fail; the docs-only ceiling stayed at 25.3 s, so this is not a uniform regeneration, and no pasted clause or ruling names a ceiling change — fix: keep the 27.5 s ceiling and report the 33.19 s overrun, or land the ceiling change as its own task with an operator ruling instead of carrying it in a generated-files commit
+
+MED — task-421 "Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2" with "the run script of task-420 makes ONE read-only run on dev of step-validate.mjs --all --fast --write" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "+... measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local" — the budget row stamped into all 27 reports predates the card and its post-GO run by a day, so the row does not evidence the run the card names — fix: re-measure in the post-GO run and restamp, or state in the report which run produced the 2026-11-20 numbers
+
+DEFER severity=LOW — AC #2 "step-conformance Rule 13 passes on it" — NONE — cannot see: the diff carries no Rule 13 evidence and Rule 13 is not pasted in this context — attach the Rule 13 result to the generated-files commit so AC #2 is evidenced, not asserted
+
+MET — task-421 "the count row 315 to 316" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:476 "+| 1 | assert_schema | PASS | min_migration=41 <= migrations count=316" — all 27 reports in this chunk move the count 315 to 316 with min_migration unchanged
+
+MET — task-421 "commits them through the real hooks as one generated-files commit" — diff paths — every changed path is under docs/reports/, no code, schema, descriptor or generator file is touched in this chunk
+
+MET — AC #1 "The operator's typed GO is recorded verbatim on the task" — pasted card "Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: \"GO for scorecards\")" — typed GO recorded verbatim with its ruling id
+
+REJECT — RR-0353 "The 29 scorecards are resolved the right way" — accused: only 27 report files changed here, not 29 — this is chunk 1 of 2 cut at file boundaries by lens-input, the remaining files are reviewed in their own run
+
+REJECT — Spec 126 11a.1 closed binding set and 11b.1 import boundary "A wrapper component anywhere else (src/app, mobile/app, src/lib, the vendor folder) fails" — accused: the change might break the closed binding set or the import rule — the diff is docs-only, no descriptor, schema, generator, binding module or component is touched, so no 126 part-4 clause binds this chunk
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+
+---
+⏱  45586ms (45.6s)
+📊 Tokens — total: 46110, input: 37964, output: 8146, reasoning: 7269

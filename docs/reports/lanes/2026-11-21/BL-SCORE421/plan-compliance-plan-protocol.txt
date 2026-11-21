@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.487Z file_sha256=8b2bc5651149b9e87505894ca3ccd4602bcc4a84a0160aaa80b5abba3e010d9c prompt_sha256=be19e0b1dfb122900fec1350d347f39252477dcf384e2aebd7d9e037a23122ac
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan-protocol 5.5 "every task carries an estimate (MEASURED with source, or GUESS labelled); the integration pass shows the critical path to the customer-ready product." — task-421 card, NONE — task-421 carries no estimate line anywhere in the pasted card, notes or criteria — add "Estimate: GUESS <n>" or a MEASURED figure with its source.
+BUG severity=HIGH — RR-0358 "The scorecard rehearsal is waived if it gives no benefit (names task-421, RR-0358), 'does the rehearsal provide a benefit here - if not move on'" — "After task-420 (the rehearsal) passes: the operator types GO in his own Terminal" — the run is still gated on the rehearsal passing, with no recorded determination that the rehearsal has benefit, contradicting the ruling that waives it otherwise — record the benefit finding on the task, or drop the task-420 gate and run on the GO alone.
+BUG severity=HIGH — RR-0357 "GO for the scorecards, given in the chat before the rehearsal (names task-421, RR-0357), 'GO for scorecards'" — "the operator types GO in his own Terminal" — the card requires a fresh Terminal-typed GO the ruling did not name, while the ruling records the GO already given in chat — either accept the RR-0357 chat GO as the GO for this card, or cite the ruling that requires a second typed GO.
+DEFER severity=MED — plan-protocol 2 step B "Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE." — card, NONE — task-421 shows no SLICE/SUPPORT/NONE tag, so it is not shown to fill one of the nine parts or a supporting function as section 3 requires — add the tag with its source line.
+DEFER severity=MED — plan-protocol 4 "REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict)" — card, NONE — no seat verdicts are pasted for task-421 — attach the R,C,I,D,G,O,W,X then F verdict lines for this task.
+DEFER severity=LOW — plan-protocol 3 "Every step reports: tasks before, added (with source), removed-candidate, after." — card, NONE — no before/added/removed-candidate/after count accompanies this task's addition — add the count block with the source per added task.
+
+MET — plan-protocol 0 as superseded by Spec 137 "the board is the plan" — card header "status: RUNNING · milestone: m-1 · assignee: @lane-BL-SCORE421" and "2026-11-21 taken on the board at lane launch" — the task lives on the board as required.
+MET — plan-protocol 0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — "Spec 137 rule 2 (RR-0353, RR-0355)" with "MORNING-DECISIONS.md:1658" and ":1668" — source rulings with file:line are present.
+MET — acceptance criteria #1 "The operator's typed GO is recorded verbatim on the task" — "operator, verbatim: \"GO for scorecards\"" — the GO is recorded verbatim in the implementation notes.
+MET — acceptance criteria #2 "One commit of generated files only, through the hooks" — "commits them through the real hooks as one generated-files commit in the form of bd1f246cc" — a single generated-files commit through hooks is the named step.
+MET — RR-0353 "let's resolve the scorecard the right way" — "ONE read-only run on dev of `step-validate.mjs --all --fast --write`" plus "the assessment reports under docs/reports/" — the card scopes the scorecard fix to a single read-only run and its generated reports.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 3
+
+---
+⏱  32638ms (32.6s)
+📊 Tokens — total: 10427, input: 4438, output: 5989, reasoning: 5089

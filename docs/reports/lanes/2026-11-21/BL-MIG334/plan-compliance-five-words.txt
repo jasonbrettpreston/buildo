@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T16:30:39.218Z file_sha256=d31d6173cc525da1f93952b106e4b8beffe276a257dd8cca7a166e02a379bcce prompt_sha256=2bf6aaba76e303ab6771ba6f42ec501d034a8664539ab5405e37172376babd03
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-MIG334/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9578 chars, answer 0 chars, 15s
+BUG severity=CRIT — RR-0362 "RR-0362 GO on the queue row for migration 334 so the push can be retried" — NONE (Implementation Plan "(none)") — no queue row is proposed anywhere, so the ruling the card exists to satisfy is unmet — add exactly one row to .cursor/MCBYLAWS-QUEUE.md naming mig-334 and migrations/334_precommit_budget_registry_repin.sql, modelled on line 1289
+BUG severity=HIGH — AC #1 "One queue row names migration 334 in the form of the migration 330 row, with a rule 3 status line; nothing else in the queue file changes" — NONE — the plan contains no row text, no rule 3 status line, no statement of scope containment — draft the literal row box (what 334 does, written and NOT applied, DB job owed test-stack rehearsal plus operator typed GO, owner task-406, rule 3 status line) and state that no other line of the file changes
+BUG severity=HIGH — AC #2 "The id-ledger check of mcbylaws-queue-check.mjs, run on the push range without pushing, no longer prints id-no-row for mig-334 (output pasted), or the lane states exactly why it could not be run" — NONE — neither pasted output nor a statement of why it could not be run appears — add a plan step to run the id-ledger check over the push range and paste its output, or record the exact blocker
+BUG severity=HIGH — "Also report (read-only) whether the pre-push gate's checks can be run on a commit range without pushing, and how" — NONE — the read-only report the card asks for is absent — add one plan line giving the invocation that runs mcbylaws-queue-check.mjs against a commit range (see its range flag) with the gate's own exit behaviour
+MET — RR-0362 scope limit "No code, test, spec or migration file is edited" — "Files: .cursor/MCBYLAWS-QUEUE.md" — the plan touches nothing, so no out-of-scope file is edited
+MET — glossary "RE-FREEZE #N" "A field is added or deleted only by one" — Implementation Plan "(none)" — no step-vocabulary field is added, so no RE-FREEZE is owed
+MET — glossary "lock / lock-db / check / hook" "a lock is a test under src/tests/ run by npm test that names the rule id" — NONE — a records-only queue row names no rule id, so no lock is owed and none is claimed
+REJECT — glossary "five words" "each PASS or FAIL from the mapped gates" — that the material produces no five-word PASS/FAIL set — the material is a records-only queue-row card, not a step assessment, so gate V does not reach it
+REJECT — glossary "stage" "A pending step's declared progress in converted.json pending[]" — that no converted.json stage is declared — no step is being converted, so stage does not apply
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 4
+
+---
+⏱  18541ms (18.5s)
+📊 Tokens — total: 6972, input: 3787, output: 3185, reasoning: 2496

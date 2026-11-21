@@ -3,11 +3,11 @@ id: TASK-421
 title: >-
   SCORE.GO Operator types GO on dev: scorecard refresh (read-only) and the
   generated-files commit
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SCORE421'
 created_date: '2026-11-21T14:53:00Z'
-updated_date: '2026-11-21T15:11:00Z'
+updated_date: '2026-11-21T15:52:00Z'
 labels:
   - McFix
 milestone: m-1
@@ -37,6 +37,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-21/BL-SCORE421/REPORT.md
+  - docs/reports/lanes/2026-11-21/BL-SCORE421/GROUNDER.md
+  - docs/reports/lanes/2026-11-21/BL-SCORE421/TRIAGE.md
 type: db-go
 ordinal: 121012
 ---
@@ -49,8 +52,8 @@ Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2 (RR-0353, RR-0355). 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 The operator's typed GO is recorded verbatim on the task
-- [ ] #2 One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it
+- [x] #1 The operator's typed GO is recorded verbatim on the task
+- [x] #2 One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it
 <!-- AC:END -->
 
 ## Definition of Done
@@ -75,4 +78,14 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; o
 Dated note 2026-11-21 (M-246, prior text kept; RR-0358 · task-421 · Backlog; operator, verbatim: "does the rehearsal provide a benefit here - if not move on")
 
 2026-11-21 taken on the board at lane launch (lane BL-SCORE421, worktree /Users/brettpreston_macmini/Buildo-wt-score421, branch wf1/inc1b-score421), RR-0240
+
+Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: "GO for scorecards"). The operator ran go-scorecards.zsh in his own Terminal on 2026-11-21 and typed GO (exactly) at the script's prompt. Run: PGOPTIONS='-c default_transaction_read_only=on' ... step-validate.mjs --all --fast --write on dev, exit code 0; changed paths (tracked) 49; not-assessment paths: none; added lines with 'migrations count=316': 42; untracked: none. Classification of every changed line (95 added, 95 removed): (1) 42 count rows 315 to 316; (2) 49 '(registry)' PRECOMMIT-BUDGET (R-EC) rows, new timings and the 33.2 s pin of migration 334 (the 7 files with no count row carry only this row; the three earlier refreshes show no such row change, the repin is new); (3) 6 lines in the 2026-11-02 batch7-p1-1 assessment report: Score 14/17 to 17/17, G8 0/3 to 3/3 (stage-gated to net-new R-DK), compare ran false to true, a stray double colon removed (improved, none worse). Nothing hand-edited.
+
+2026-11-21 lane BL-SCORE421: generated-files commit 2fd17001d landed through the hooks (hook output in the lane report dir is commit.out in the lane folder); review lenses run (plan and out compliance per rule list, plan-review-deepseek); FINDINGS.md filed in docs/reports/lanes/2026-11-21/BL-SCORE421/; grounder owed (the orchestrator launches a grounder that is not this lane); task left RUNNING.
+
+Dated note 2026-11-21 (M-246, prior text kept; RR-0359 · task-421 · Backlog; operator, verbatim: "That's ridiculous to fold before the grounder review - the focus is on getting it right")
+
+2026-11-21 Rule 13 evidence for AC #2 (lane BL-SCORE421, read from the files, no suite run by the lane): the push station ran the full suite on the folded commit 849770c4c (run folder ~/Buildo-scratch/push-station/runs/849770c4c-20261121-102628; pass file ~/Buildo-scratch/push-station/pass/849770c4c204f463a25aa4df889cbc958e29c502.pass). suite.log line 1500: ' ✓ src/tests/step-conformance.infra.test.ts (735 tests) 197953ms'; suite.json: that file status passed, 735 assertions, 0 failed, numFailedTests 0, success true. Spec 124 Rule 13 test src/tests/step-conformance.infra.test.ts:2435-2455. Grounder Cairn-Ground-O421 ruled 313 findings (GROUNDER.md in the lane report dir): 21 CONFIRMED all LOW; the fold before the grounder ruled is decision-144 (RR-0359).
+
+2026-11-21 status corrected DONE to BUILT on the grounder's fix check (137_mcqueue.md:77-78): built and committed locally, not pushed; the closing commit 6e1daf1ae said 'landed' in error.
 <!-- SECTION:NOTES:END -->

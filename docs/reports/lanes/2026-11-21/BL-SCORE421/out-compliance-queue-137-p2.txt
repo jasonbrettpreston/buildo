@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.232Z file_sha256=d2692c2fd4c2c42a5e57ade72f9ec1d3a209970f769ca3432eaabcc17e117c25 prompt_sha256=d403c1f43ac3e11d6124b1401978fcd18edfbfa1e17b6a299d2d1a10c540f56f
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-queue-137-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 description "the operator types GO in his own Terminal" / acceptance #1 "The operator's typed GO is recorded verbatim on the task" — Implementation Notes "operator, verbatim: \"GO for scorecards\"" recorded from RR-0357 "given in the chat before the rehearsal" — the only recorded GO is the chat GO; no Terminal-typed GO exists, so acceptance #1 is unmet — obtain and record the operator's verbatim Terminal-typed GO on task-421 before this commit merges.
+
+BUG severity=MED — task-421 description "one generated-files commit" / "only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-10-18-batch4-p4-3-enrich-coa-zoning-assessment.md:197 "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" (was "registry-input 27.36 s <= 27.5 s") — the registry-input budget threshold is raised from 27.5 s to 33.2 s so the PASS threshold tracks the new 33.19 s measurement, so the "generated files only" commit carries a moved budget (a policy constant, not a measurement) and the PASS can no longer fail — revert the threshold to 27.5 s and let the row report the real value, or land the budget change separately with justification.
+
+DEFER severity=MED — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md header "Regenerate with the same command; a stale block is a conformance-lock finding" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:91 "+**Score: 17/17**" and :113 "+| G8 | 3 | 3 | ... missing-pre-invocations=0 ... net-new (R-DK)" (was "0 | 3 | ... missing-pre-invocations=1 ... stage-gated (compute_ported)") plus :165 "+- missing invocations (PRE, GOLD-PRE): none" and "+- compare ran: true" — the commit flips a conformance verdict (14/17 to 17/17, G8 0 to 3, stage-gated to net-new) and makes hand-looking edits ("none::" to "none"), which need a source or a clean regeneration — attach the source commit making compute_maxbld_scenarios net-new or show the block is exactly the tool's regeneration.
+
+DEFER severity=LOW — task-421 description "Must be re-run if another migration file lands before the push" — all row 1 "min_migration=... <= migrations count=316" — the re-run condition cannot be confirmed from the diff, so if another migration lands before push the 316 count is stale — re-run step-validate and confirm count 316 at push time.
+
+DEFER severity=LOW — acceptance #2 "step-conformance Rule 13 passes on it" — NONE — the Rule 13 test result is not visible in the diff, so it cannot be shown to pass — attach the step-conformance Rule 13 run output to the commit or task.
+
+MET — task-421 description "the count row 315 to 316" — docs/reports/2026-10-18-batch4-p4-4-classify-coa-scope-assessment.md:217 — "min_migration=133 <= migrations count=316", the count row is updated 315 to 316 in every assessment report.
+
+MET — task-421 description "the assessment reports under docs/reports/" — file list lines "diff --git a/docs/reports/..." — only assessment reports under docs/reports/ are touched.
+
+MET — Spec 137 §4 Rule 3 amendment "for lane build and fix tasks ... the two-commit close" — the diff does not touch the task file; task-421 stays RUNNING — the work commit correctly precedes the separate close commit.
+
+MET — Spec 137 §4 Rule 4 / Rule 10 "a ruling enters a row as a verbatim dated note" — task-421 Implementation Notes "Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: \"GO for scorecards\")" — RR-0357 and RR-0358 are recorded as verbatim dated notes.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+
+---
+⏱  80421ms (80.4s)
+📊 Tokens — total: 38024, input: 23375, output: 14649, reasoning: 13626

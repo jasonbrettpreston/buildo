@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.400Z file_sha256=e29e07ec78f6efbf0ffe08a613eb6a7bb2c6c63f589d1cc6ebcb1c285f038b99 prompt_sha256=5ba658028e70abcbc3a95ee9c79fecd1a3b5a1fe7255386ec3b134eff50d452f
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-128-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 "one commit of generated files only ... the count row 315 to 316" "One commit of generated files only, through the hooks" — docs/reports/2026-10-17-batch4-p1-2-coa-assessment.md (row 52, all 18 files) "PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s" -> "docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" — the registry-input ceiling is raised 27.5 to 33.2 s (a 20% budget widening) so a 33.19 s measurement clears it by 0.01 s, and docs-only keeps its 25.3 s ceiling with 10% headroom: a budget constant change ridden inside a commit whose card names only the count row, not a generated measurement — revert the ceiling to 27.5 s or land the budget change as its own reviewed change with the ceiling derivation stated
+
+BUG severity=HIGH — task-421 "ONE read-only run of `step-validate.mjs --all --fast --write` in the lane worktree" "makes ONE read-only run on dev of `step-validate.mjs --all --fast --write`" — docs/reports/2026-10-19-batch5-p1-1-assert-entity-tracing-assessment.md (hunk @@ -288,7 +288,7 @@, row 52 only) "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s" vs docs/reports/2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md "| 1 | assert_lifecycle_phase_distribution | PASS | min_migration=276 <= migrations count=316 |" — 6 of the 18 reports (assert-entity-tracing, assert-network-health, assert-staleness, compute-phase-calibration, link-coa, classify-lifecycle-phase) get row 52 refreshed but carry no count-row update, so either they are stale at 315 or row 1 is absent, and neither is producible by one `--all --write` pass — regenerate once with `--all --fast --write` and assert `migrations count=316` in every one of the 18 reports before committing
+
+BUG severity=MED — task-421 "scorecard refresh (read-only)" and "the count row 315 to 316" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:92 "**Score: 17/17**" (was "**Score: 14/17**") plus ":114" "missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 net-new (R-DK)" (was "missing-pre-invocations=1 ... stage-gated (compute_ported)") and "compare ran: true" (was "compare ran: false") — a verdict flip from 14/17 to 17/17 and a G8 reclassification from stage-gated to net-new are scoring claims no pasted clause names, and the same file's own header warns "a stale block is a conformance-lock finding" — cite the capture that closed the missing pre-invocation in the commit body, or drop the score change back to the prior block and commit only the count row
+
+DEFER severity=MED — task-421 "The operator's typed GO is recorded verbatim on the task" — none — "Operator types GO in his own Terminal" — the material records only the chat GO ("RR-0357 ... \"GO for scorecards\"") and no typed Terminal GO after the rehearsal/RR-0358 waiver, so AC #1 is satisfied by a different decision record than the one the card requires — paste the terminal GO verbatim on task-421 or amend AC #1 to name RR-0357 as the recording
+
+DEFER severity=LOW — task-421 "step-conformance Rule 13 passes on it" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:90 "a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`)" — nothing in the material shows Rule 13 run against this exact commit, and the file with the altered generated block is the one most exposed to it — attach the Rule 13 result to the commit or the task after the commit lands
+
+MET — task-421 "only generated files changed (the assessment reports under docs/reports/" — diff paths — every one of the 18 changed paths is under docs/reports/*-assessment.md and matches the LIST path set exactly
+
+MET — task-421 "the count row 315 to 316" — docs/reports/2026-10-18-batch4-p4-4-classify-coa-scope-assessment.md "-| 1 | classify_coa_scope | PASS | min_migration=133 <= migrations count=315 | +| 1 | classify_coa_scope | PASS | min_migration=133 <= migrations count=316 |" — the count row is bumped in 12 of the 18 reports with min_migration unchanged, as the card names
+
+MET — task-421 "PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s" — docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md (row 52) — the docs-only arm is measured at 22.84 s against an unchanged 25.3 s ceiling, so that arm passes on its own terms
+
+REJECT — RR-0355 "push as soon as possible" — accused of not pushing in this diff — a diff cannot show a push, and RR-0355 sets priority, not a content requirement on the committed files
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 3
+
+---
+⏱  59020ms (59.0s)
+📊 Tokens — total: 37984, input: 27521, output: 10463, reasoning: 9117

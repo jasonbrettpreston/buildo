@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.386Z file_sha256=5a404979a924ffd75b3a7438c488b739029a27d7dbdff339896c1ec75beaa4cd prompt_sha256=7e4a04269fb1c8cadc4d6f1aff119229c166032b54d184ac744f92a89e3c2bd3
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-128-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 description, "then a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md, the file's only hunk "@@ -303,7 +303,7 @@" carries one changed line ("| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s ...") while 30 of the 31 touched reports also carry "+| 1 | ... PASS | min_migration=... <= migrations count=316 |" — the count row is left at 315 (or absent) in this report, so the generated set is inconsistent with the count the card names; cannot see the file body to say which — re-run the generator over the full set, or update row 1 in this file to "migrations count=316" and re-check that all 31 reports agree.
+
+BUG severity=MED — task-421 description, "scorecard refresh (read-only)" and "checks that only generated files changed" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md "+| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" (old line: "registry-input 27.36 s <= 27.5 s") — the registry-input ceiling is raised 27.5 s to 33.2 s, a budget change the card does not name, and no non-report file changing that ceiling appears in this chunk, so either the row was hand-edited inside a generated file (contradicting "read-only" and "only generated files changed") or the ceiling's authored constant is in chunk 2, which I cannot see — name the file that authors the 33.2 s ceiling in the commit, or keep 27.5 s and let the row read FAIL at 33.19 s.
+
+DEFER severity=LOW — task-421 description, "Must be re-run if another migration file lands before the push" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md "+| 1 | assert_schema | PASS | min_migration=41 <= migrations count=316 |" — 316 is asserted against a measurement stamped "2026-11-20T19:37:21.468Z", and nothing in this chunk pins the migration count at commit time, so a migration landing between the stamp and the push is undetected by the diff — record the migration count at commit time in the commit message or re-run before push.
+
+MET — task-421 AC#1 "The operator's typed GO is recorded verbatim on the task" — Implementation Notes "RR-0357 GO for scorecards, given in the chat" records "GO for scorecards" verbatim with its decision id.
+
+MET — task-421 description "the count row 315 to 316" — docs/reports/2026-08-25-pilot2-load-ravines-assessment.md "+| 1 | load_ravines | PASS | min_migration=167 <= migrations count=316 |", the count row is updated in 30 of 31 reports.
+
+MET — RR-0358 "does the rehearsal provide a benefit here - if not move on" — Implementation Notes carry the waiver verbatim, so the rehearsal gate the card opens with is dispositioned rather than silently skipped.
+
+REJECT — §8 Operating Boundaries "Target Files" — the change edits files outside the two listed targets (docs/reports/ rather than the spec and generate-spec-mirror.mjs) — §8 fences the spec's own build (the generated §2/§4 mirror and the spec it emits) and names no assessment report; it does not fence docs/reports/.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  38513ms (38.5s)
+📊 Tokens — total: 45097, input: 38277, output: 6820, reasoning: 5936

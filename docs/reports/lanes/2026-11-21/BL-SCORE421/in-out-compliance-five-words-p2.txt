@@ -1,0 +1,101 @@
+LIST five-words sha256:9ac37044b0deec3165ae2ad6e4c02aa48a6d8ede03c038b0c9178860b8f223a2 material sha256:f93971aa9e0f2b816d40056ab21a0d4cc38d4754fb5e1fefa39d5dd6cdd69c1f part 1 of 1 chunk 2 of 2
+RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/2026-10-23-batch5-p5-1-classify-lifecycle-phase-assessment.md","docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md"]
+
+## Glossary
+
+- **slug**: A step's name: its `scripts/manifest.json` key and `identity.name`. Not its file name (table 1b).
+- **archetype vs shape**: `identity.archetype` (INGESTOR, LINK, MATCHER, ENRICHER, MATERIALIZER, BACKFILL, ASSERT, RECORDER) is what the step is; it selects required and forbidden descriptor fields and is checked against the census. `execution.shape` is which runner phase executes it (table 1a). A MATCHER has shape `cascade`; a RECORDER may have no shape.
+- **phase**: One of the runner functions in table 1a that owns a step's reads, writes and transactions.
+- **compute hook**: A named function or value on the compute module that a phase calls or reads (for example `compute.buildMatchSql`); the main function is called once after the phase.
+- **PH-0 … PH-8**: Spec 121 §3 assessment phases used in Spec 123: PH-0 is the boundary freeze (it reads every write and derives the archetype), PH-4 the risk class. Not the programme stages P0–P3.
+- **① ② ③**: The three conversion commits: ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]` (`scripts/steps/_schema/converted.json`).
+- **stage**: A pending step's declared progress in `converted.json` `pending[]` (`red_suite` … `shape_clean`); it decides which gates cannot yet be answered.
+- **RE-FREEZE #N**: A numbered, reviewed revision of the frozen step vocabulary (`scripts/steps/_schema/step.schema.json`, `template-freeze.json`). A field is added or deleted only by one.
+- **#NN**: A `step-validate` fast invariant, by number (for example #44 the read/write witness, #54 swap order). Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates.
+- **Gate A … K, V**: Lettered R-BA gates (A…K, plus V for the five words), implemented in `scripts/analysis/gates/` or in `scripts/analysis/step-validate.mjs` (gates H, K and V live there). Gate E is compute purity, Gate F the score floor. Not the scorecard.
+- **PURITY-G0 … PURITY-G13**: Gate E compute-purity finding codes. Not rule ids; never the scorecard gates.
+- **SCORECARD-G0 … SCORECARD-G9**: Spec 123 scorecard gates G0–G9 (G7 test adequacy, G8 differential); rule ids `G0`…`G9` carry these aliases.
+- **V3 (standard) vs V3 (vocabulary)**: `standard=V3` is the McDonald's Airtight V3 label (R-EY). The rule id `V3` (alias SPEC122A-V3) is the Spec 122a `guards.schema_drift` vocabulary row.
+- **SPEC121-M1 … SPEC121-M14**: Spec 121 cadence items, retired as a set. `M14` also names an unrelated spec-move id in Spec 124; the alias SPEC121-M14 means the Spec 121 item.
+- **five words**: R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates.
+- **bracket**: A capture taken inside a perturbation (a forced cohort, delete-and-reinsert or derived-status), so a guarded write path writes something; replayed only through the same bracket (#38).
+- **OWED**: Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps.
+- **class-A**: Spec 123 risk class A (PH-4): the highest test intensity; its behaviours need a both-directions lock.
+- **LDG-10, EP-PIN-D17**: Programme items in `scripts/steps/_schema/programme-items.json` (cutover prerequisites).
+- **W4A-Rn**: Wave-4 assessment rulings drafted outside the register; their register rows are owed (rule-map `meta.register_rows_owed`).
+- **lock / lock-db / check / hook**: Enforcement kinds in the rule map. A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`; a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook.
+- **Intent Ledger**: The table in a step's assessment report listing each behaviour of the legacy step and its disposition, one of the closed `DISPOSITION_VOCAB` (`scripts/analysis/step-validate.mjs`): preserved-in-runner, preserved-in-validator, preserved-in-compute, encoded-as-descriptor-field, encoded-as-deviation, knowingly-retired. Scored by scorecard G3; G-2 reads it.
+- **G-2**: Spec 124 GAP G-2 (Rule 4): every preserved-in-compute Intent Ledger row names where its rule is written (`checkPreservedInComputeHasWhy`). Not scorecard G2.
+- **§R Reflection**: The closing section of a step's assessment report recording what the conversion taught; scorecard G9 checks it exists.
+- **seam**: A declared hand-off between steps or between compute and the runner: cross-step seams are producer → consumer edges (`inputs.reads.steps`); the ENRICHER write seam is `ctx.exec` / `ctx.joinUpdate`, where the runner, not compute, issues the DML.
+- **sources chain**: The `sources` chain in `scripts/manifest.json` `chains`: the ordered ingest-and-derive steps run by `run-chain.js`; other chains (for example `coa`) are listed beside it.
+- **P0 … P3**: Programme stages of the step-optimisation programme (Spec 122/123). Not the assessment phases PH-0 … PH-8. Spec 122 also uses "P0" for a top-priority missing schema category ("six missing P0 categories", 122a §A5 and 122a R6); history.1's "P0 categories adjudication" is that sense, not the stage.
+- **†**: An id or code pointer that lands with another branch (rule-map `meta.pending_integration`).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/reports/2026-10-23-batch5-p5-1-classify-lifecycle-phase-assessment.md b/docs/reports/2026-10-23-batch5-p5-1-classify-lifecycle-phase-assessment.md
+index 4e2d5911e4c091937049f41fe2e5aa1dde4336ac..df0083087e1453dfdfda5ebeb6e7bfc5dc3029fb 100644
+--- a/docs/reports/2026-10-23-batch5-p5-1-classify-lifecycle-phase-assessment.md
++++ b/docs/reports/2026-10-23-batch5-p5-1-classify-lifecycle-phase-assessment.md
+@@ -372,7 +372,7 @@ The descriptor skeleton is drafted outside the repo (`~/Buildo-scratch/v3coa-i/c
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md b/docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md
+index 15cac0bb8fc7b4b6cc5ceba9c44a932ba0946765..c2d22cdb0ce990c704b9b8b56b583a92bc85d35d 100644
+--- a/docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md
++++ b/docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md
+@@ -88,7 +88,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
+ > Generated by `node scripts/analysis/step-validate.mjs --step=compute_maxbld_scenarios --write` — Spec 123 §6, ruling R-R (2026-08-29).
+ > Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+ 
+-**Score: 14/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
++**Score: 17/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+ 
+ ### Five-word verdict (Spec 124 §5 R-BA — "McDonald's Airtight")
+ 
+@@ -110,7 +110,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
+ | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+ | G6 | 3 | 3 | 8 ledger row(s), 0 without CLOSED/PIN () |
+ | G7 | 3 | 3 | file=true fences=0 it-count=8 red-evidence-claims=3 red-evidence-pass=true ledger-deferred=false |
+-| G8 | 0 | 3 | missing-invocations=0 missing-pre-invocations=1 stale-fingerprints=0 unexplained-diffs=0 — stage-gated (compute_ported) |
++| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 net-new (R-DK) |
+ | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+ | G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=8 |
+ | G-shape | PASS | — | file-clean=null compute-clean=true |
+@@ -119,7 +119,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | compute_maxbld_scenarios | PASS | min_migration=0 <= migrations count=315 |
++| 1 | compute_maxbld_scenarios | PASS | min_migration=0 <= migrations count=316 |
+ | 2 | compute_maxbld_scenarios | PASS | 35 declared, missing from seeds: none |
+ | 3 | compute_maxbld_scenarios | PASS | retired=22 overlap-with-declared=none |
+ | 7 | compute_maxbld_scenarios | PASS | SPEC LINK header present=true |
+@@ -152,7 +152,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+@@ -162,9 +162,9 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
+ 
+ ### Captures (item iv)
+ - missing invocations (POST): none
+-- missing invocations (PRE, GOLD-PRE): none::
++- missing invocations (PRE, GOLD-PRE): none
+ - stale fingerprints: none
+-- compare ran: false · diffs found: 0 · unexplained: 0
++- compare ran: true · diffs found: 0 · unexplained: 0
+ 
+ ### Test suite (item iii)
+ - SKIPPED or failed to run: --fast: vitest spawn skipped
+

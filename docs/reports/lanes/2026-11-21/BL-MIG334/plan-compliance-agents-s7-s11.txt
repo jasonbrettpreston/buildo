@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T16:30:39.217Z file_sha256=0b210a07207b19c6725fbd0905bb7b9252eb1ee7486faf515bb59b616cba9365 prompt_sha256=f5fdc978a98d3eb7d018dbd2b079ed9ce1c7fe1fc1e36f7c1d1b64e2e926122b
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-MIG334/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9976 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20866 chars, answer 0 chars, 30s
+BUG severity=HIGH — §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — Implementation Plan "(none)" NONE — AC #2's claim (the gate no longer prints id-no-row for mig-334) is executable via scripts/analysis/mcbylaws/mcbylaws-queue-check.mjs, and the plan carries no step that runs it and pastes the output — add the plan step: run the checker against the worktree range at HEAD and paste stdout verbatim — .
+
+BUG severity=HIGH — §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — Acceptance criteria "#2 ... (output pasted), or the lane states exactly why it could not be run" — the second branch lets the lane close #2 with prose, so an executable claim can be approved unexecuted — remove the branch, or restrict it: only after a quoted checker invocation fails and its stderr is pasted — .
+
+BUG severity=HIGH — §11.8 MCINC-7 "The job runs end to end first on the local test stack" — Implementation Plan "(none)" NONE — AC #1 requires the row to state written-and-NOT-applied plus the test-stack rehearsal and typed GO, but the plan contains no row text, so no reviewer can check the row states the true DB-job state — paste the exact row block to be inserted into the queue file into the plan — .
+
+DEFER severity=MED — §7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — "with a Spec 137 rule 3 status line" — the card invokes 137 rule 3 as the row's status form but quotes neither the rule text nor a file:line anchor, and 137 rule 3 is not pasted, so the status words the lane must write are undefined — cite 137 rule 3 by id and anchor with the verbatim allowed statuses — .
+
+DEFER severity=MED — RR-0362 "GO on the queue row for migration 334 so the push can be retried" — "Also report (read-only) whether the pre-push gate's checks can be run on a commit range without pushing, and how" — the ruling names only the queue row, so the gate-range investigation is scope no pasted ruling names — move that report to its own card or have RR-0362 widened by name — .
+
+DEFER severity=LOW — §11.8 MCINC-8 "Every MF, FE, MB, migration, prereg round, D and M number is claimed in ~/Buildo-scratch/ids before it is used anywhere" — "id claimed at ~/Buildo-scratch/ids/mig-334" — the ledger state is asserted from memory, with no owner-file line or mkdir evidence pasted — paste the ids/mig-334 owner line into the plan — .
+
+MET — RR-0362 — Description "add ONE queue row for the migration 334 job in the form of the existing row for migration 330" — the row's subject, owner task-406 and the truth it must state are named.
+MET — §11.8 MCINC-7 — Description "that it is written and NOT applied, that it is a DB job owed a test-stack rehearsal and the operator's typed GO" — the row is required to carry the rehearsal-and-GO state.
+MET — Spec 137 rule 2 — Description "Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2" — the card records the rule it was opened under.
+MET — Acceptance #1 scope — Description "No code, test, spec or migration file is edited" with Files ".cursor/MCBYLAWS-QUEUE.md" — one file, one row, nothing else changes.
+MET — §11.1 (census at the full scope its conclusion covers) — Description "must be named by a line in .cursor/MCBYLAWS-QUEUE.md or .cursor/MCFRONTEND-QUEUE.md" — the card carries the gate's real scope, both queue files.
+MET — TKT-1 note 2026-11-21 (context sections) — "## Task ... ## Description ... ## Acceptance criteria ... ## Decisions naming this task ... ## Implementation Notes" — all five CONTEXT_SECTIONS are present in the context handed to the lenses.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 6
+
+---
+⏱  34299ms (34.3s)
+📊 Tokens — total: 17861, input: 11231, output: 6630, reasoning: 5661

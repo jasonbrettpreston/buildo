@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.076Z file_sha256=a1248ed238e3ce2ba042cf3d758549f72b58f700d2c2012b2c7304ff93065965 prompt_sha256=a7e981b62e79f720c6f7e1317be428eda3dfbb76167f70b5bed0b2a3d6a263f0
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-ms-S-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 "a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-10-23-batch5-p4-4-link-coa-assessment.md:298 "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |" — 7 of the 48 reports in this chunk (2026-10-17-batch4-p1-1-permits, 2026-10-19-batch5-p1-1-assert-entity-tracing, 2026-10-19-batch5-p1-2-assert-network-health, 2026-10-19-batch5-p1-3-assert-staleness, 2026-10-23-batch5-p3-5-compute-phase-calibration, 2026-10-23-batch5-p4-4-link-coa, 2026-10-23-batch5-p5-1-classify-lifecycle-phase) show only the row-52 hunk and no "count=316" hunk, so the count change the card names is not visible in them and their row 1 plausibly still reads 315 — regenerate those 7 from the same run and confirm each row 1 reads "migrations count=316", or record why those files carry no count row.
+
+DEFER severity=MED — Plan protocol "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z ..." — besides the named count row, the refresh moves the registry-input precommit ceiling from 27.5 s to 33.2 s (docs-only ceiling stays 25.3 s), a threshold change no pasted clause or card text names, and the new margin is 0.01 s — land the ceiling raise as its own named change with the ruling that authorises it, or leave the ceiling at 27.5 s and let the row report the overage.
+
+DEFER severity=LOW — task-421 AC #2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — NONE — a path-level diff cannot show commit count, hook passage or a Rule 13 result, so AC #2 is unverifiable from the material pasted ("cannot see") — paste the commit id and the Rule 13 line for that commit at fold.
+
+MET — task-421 "Files: docs/reports/" — every changed path in this chunk — all 48 hunks are rooted at docs/reports/*.md, nothing outside the card's file scope.
+MET — task-421 "the count row 315 to 316" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:476 "| 1 | assert_schema | PASS | min_migration=41 <= migrations count=316 |" — 41 of 48 reports carry the 315 to 316 count bump (the 7 exceptions are the finding above).
+MET — task-421 AC #1 "The operator's typed GO is recorded verbatim on the task" — Implementation Notes "operator, verbatim: "GO for scorecards"" — the GO is recorded as verbatim text on the task.
+MET — RR-0358 "does the rehearsal provide a benefit here - if not move on" — Implementation Notes record RR-0358 on the task — no rehearsal gate is inserted ahead of the generated-files commit.
+
+REJECT — task-421 "the operator types GO in his own Terminal" vs the recorded chat GO — nothing is wrong here, because pasted RR-0357 explicitly names "GO for the scorecards, given in the chat before the rehearsal", so the chat record is the ruling-sanctioned form.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 2
+
+---
+⏱  41441ms (41.4s)
+📊 Tokens — total: 48861, input: 41166, output: 7695, reasoning: 6700

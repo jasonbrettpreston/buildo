@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.377Z file_sha256=97ca5929ae53e90d0f42664b854e63d222468fa5f63aa76004b432749538e7ce prompt_sha256=a497e02463b2ffa9023c1bed8634129ed9a628005b76888ae65bbce2ffe2937c
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-127-p2.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — Spec 127 §3.2 "so the score is generated, and a missing artifact scores zero rather than being waived" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:110 "| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 net-new (R-DK) |" — G8 is scored full while the same report at :85 still says "Filled at the first local run (queued): the POST capture with its rerun-zero pro", and the card's run is "ONE read-only run on dev", which cannot produce a missing PRE invocation or a capture — Fix: restore G8=0 and the 14/17 total, or commit the capture and its red evidence in this same change and update the queued line.
+
+BUG severity=HIGH — Spec 127 §3 "a zero in S6–S8 is a hard stop regardless of total" (source G8, mirrored) — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:88 "**Score: 17/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**" — the zero is lifted by relabelling the row "net-new (R-DK)", a ruling absent from the pasted context, so no pasted clause authorises clearing the stop, and a change adding a scoring arm the pasted card never names is itself a finding — Fix: paste the R-DK ruling plus the artifact that evidences net-new, or keep 14/17 and record the stop.
+
+DEFER severity=MED — card "then a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md:309 "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z" — the diff also moves the registry-input budget limit from 27.5 s to 33.2 s, a threshold change no pasted ruling names, landing 0.01 s above the sample with "hook sha matches" unchanged, so the limit is not pinned by the hook and cannot fire — Fix: pin the limit from a named ruling and report the overage instead, or cite the ruling that raised it.
+
+DEFER severity=LOW — card acceptance #2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — NONE — the material is a diff only, so the single-commit form ("in the form of bd1f246cc"), the real-hook run, the fold, the station suite and the Rule 13 result are cannot see — Fix: attach the commit sha and the Rule 13 output to the task.
+
+DEFER severity=LOW — card "Must be re-run if another migration file lands before the push" — docs/reports/2026-10-02-batch2-p3-3-load-zoning-assessment.md:813 "min_migration=227 <= migrations count=316" — the count is 316 at the measurement only; whether a further migration landed before the push is cannot see, and six of the 23 reports (permits, assert-entity-tracing, assert-network-health, assert-staleness, compute-phase-calibration, link-coa, classify-lifecycle-phase) show only the budget row and no count-row hunk, so their freshness is unevidenced — Fix: state the migration count and head sha at push time on the task.
+
+MET — card acceptance #1 "The operator's typed GO is recorded verbatim on the task" — pasted card Implementation Notes — "operator, verbatim: 'GO for scorecards'" is recorded on task-421.
+MET — RR-0357 "GO for scorecards" — pasted card Decisions — the ruling names task-421.
+MET — RR-0358 "does the rehearsal provide a benefit here - if not move on" — pasted card Implementation Notes — the waiver is recorded as an operator note.
+MET — card "Files: docs/reports/" — every diff path — all changed files sit under docs/reports/.
+MET — card "the count row 315 to 316" — docs/reports/2026-10-02-batch2-p3-3-load-zoning-assessment.md:813 — "migrations count=316" is present in 17 of the 23 reports.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 5
+
+---
+⏱  101893ms (101.9s)
+📊 Tokens — total: 53392, input: 33973, output: 19419, reasoning: 18346

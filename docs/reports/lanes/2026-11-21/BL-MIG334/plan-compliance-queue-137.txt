@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T16:30:39.219Z file_sha256=cfde37f8a038df3c34b7066d43261e3dd085f88dde32ffa4d34cc078319c12a0 prompt_sha256=b9c44bbc6115b0b37fe721cec58fd9e0665ab4259068416ee9b0c850c8b26b63
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-MIG334/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10166 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20767 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 28130 chars, answer 3953 chars, 45s
+BUG severity=HIGH — Spec 137 §3 Rule 1 "Every row has ONE status line, REPLACED when the status changes, never appended." (form: Status, since, expires, next, ruling) — task-422 acceptance "#1 One queue row names migration 334 in the form of the migration 330 row, with a rule 3 status line; nothing else in the queue file changes" — the criterion asks for a "rule 3" line (the same-commit rule), not the Rule 1 line, so `since`, `expires` and `next` may be omitted and the row lands malformed — restate #1 to require the Rule 1 form verbatim: Status word, since date, expires, next step.
+BUG severity=HIGH — Spec 137 §4 Rule 12 "The `expires` field reads `when <event>`, not a date 7 days out." — task-422 "that it is a DB job owed a test-stack rehearsal and the operator's typed GO" — the row waits on two named events, yet no criterion forbids a 7-day date, which Rule 12 does not allow here — add to #1 that the row reads `expires when <test-stack rehearsal and operator GO>` (or the operator's later named word).
+BUG severity=MED — Spec 137 §3 "Word list (closed; nine words)" — task-422 "stating the truth: what the migration does, that it is written and NOT applied" — "written and NOT applied" is not one of the nine words and the card names none, leaving the lane to invent prose in the status field — fix #1 to name the word (WAITS for rehearsal plus GO, BUILT if it is committed locally and the card prefers that reading).
+BUG severity=MED — Spec 137 §4 Rule 7 "Each open row carries an opened date and an expiry 7 days later." and §3 "for a Backlog task the status line is its front matter: `status` is the word; the due date is `expires`" — task-422 "status: RUNNING · milestone: m-1 · assignee: @lane-BL-MIG334 · labels: McFix" — the carrying task's own row is open and carries no `expires`, so §5 step 6 would list it as "no expiry" — add `expires` to the task-422 front matter.
+BUG severity=MED — Spec 137 §4 dated note 2026-11-20 (task-399 FOLD.ADOPT) "a lane build or fix task's closing commit is refused unless the lane directory holds TRIAGE.md with one outcome line per CONFIRMED or CONFLICT id of GROUNDER.md" — task-422 "No code, test, spec or migration file is edited." — the card does not state the task type or the close path, so whether the close check requires GROUNDER.md, TRIAGE.md and the per-list compliance outputs is undetermined, and a wrong guess costs a refused closing commit — state in #1 whether task-422 is a build/fix task under check-lane-close.mjs or a records task outside it.
+DEFER severity=LOW — Spec 137 §4 Rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form" — task-422 "## Decisions naming this task - RR-0362 GO on the queue row for migration 334 so the push can be retried (names RR-0362) — "y"" — RR-0362 is entered as a paraphrase plus quote with no date and no M-246 marker on the row it governs — add the dated M-246 note form to the task description.
+DEFER severity=LOW — Spec 137 §2 "| McBylaws | `.cursor/MCBYLAWS-QUEUE.md` | "THE PHASE 3 EXIT PATH", "FOLLOW-ON", "Close-out"; lane board "Lane board"" — task-422 "in the form of the existing row for migration 330 (.cursor/MCBYLAWS-QUEUE.md:1289, "Row INC6-MIG330 · Migration 330 job")" — the row's section in the file is not named, only its form, so the row can land outside every section §2 lists — name the section alongside :1289.
+
+MET — Spec 137 §4 Rule 2 "Every task is registered. A card, or a claimed id, gets a status line too." — task-422 "#1 One queue row names migration 334 in the form of the migration 330 row" — the migration id gets a row, which is the whole point of the card.
+MET — Spec 137 §4 Rule 9 "Every DB job is rehearsed on the local test stack first (MCINC-7 ...), then runs under the operator's go." — task-422 "owed a test-stack rehearsal and the operator's typed GO" — the row must state both conditions before the job can run.
+MET — Spec 137 §2 note "`INC-n`, `AV3-*`, `ST-*` and `CARD-*` have no counter line; the ID ledger is their only claim record." — task-422 "id claimed at ~/Buildo-scratch/ids/mig-334" — the id is claimed before the row is written.
+MET — Spec 137 §5a Rule 13 "The board is a view; the row is the record." — task-422 "Files: .cursor/MCBYLAWS-QUEUE.md" — only the row file is touched, no board edit.
+
+REJECT — Spec 137 §4 Rule 3 dated note 2026-11-20 "Rule 3 is amended for lane build and fix tasks." — that the card lets the status move outside the landing commit — task-422 is a records-only row addition, the two-commit amendment is limited to lane build and fix tasks and does not reach it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 5
+
+---
+⏱  45902ms (45.9s)
+📊 Tokens — total: 20674, input: 11621, output: 9053, reasoning: 7744

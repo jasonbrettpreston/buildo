@@ -1,0 +1,41 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-21T16:30:39.215Z file_sha256=cb97dbc485e2f0e8a85bce2b6b513902c84e1c91d7139be1b3f171f00cf3111b prompt_sha256=e7d15a0f5ff1c7023549e17e49ed04554d3d0f08ab51d923113f2db17aef6b7f
+🔍 Lens review of docs/reports/reviews/task-422/context-r1.md (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9319 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 18783 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 28739 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 38960 chars, answer 0 chars, 60s
+Walking the plan. Note upfront: this is a records-only task with **no Implementation Plan** (`Implementation Plan: (none)`), so there are no R-steps — every premise is, by construction, an UNVERIFIED PREMISE. The "plan" being reviewed is the Description + ACs + the referenced row/checker.
+
+```
+BUG severity=HIGH — Implementation Plan "(none)" + Description ("in the form of the existing row for migration 330 (.cursor/MCBYLAWS-QUEUE.md:1289)") — premise that line 1289 in branch wf1/inc1b-mig334 still carries the migration-330 row and its exact field order is unverified; a shifted or differently-formatted file produces a wrong "form" and AC#1 fails on format — fix: add an explicit read step (grep -n 'INC6-MIG330' .cursor/MCBYLAWS-QUEUE.md in the worktree) and copy that row's exact field order ("Row INC6-MIG334 · Migration 334 job") before writing; rollback is git revert of the single-line diff.
+BUG severity=HIGH — Description (mcbylaws-queue-check.mjs:321-323) — plan assumes a human-readable row "naming migration 334" satisfies the id-ledger grep, but does not state the exact token matched ("mig-334" vs "mig-334" vs the path "migrations/334_precommit_budget_registry_repin.sql"); if the checker greps the file path a prose row still fails — fix: read the matcher (~lines 300-345) and make the row contain the exact matched token; AC#2's pasted output is the proof.
+BUG severity=HIGH — RR-0203 ("committed generator with --check, from a committed raw snapshot; nothing hand-copied") + Files: .cursor/MCBYLAWS-QUEUE.md — plan assumes the queue file is hand-editable; if a generator owns it (wholly or partially) the hand-added row breaks --check or is wiped on the next regen and the push retry still fails — fix: verify generator scope (grep -rn 'MCBYLAWS-QUEUE' scripts/) and, if owned, add the row to the committed raw snapshot and regenerate; rollback via the generator.
+BUG severity=HIGH — AC#2 ("the id-ledger check ... no longer prints id-no-row") — the gate is fail-fast at id-no-row (FAIL:Q:id-no-row) so every other pre-push check on 0f6ba8225 is unproven; the retry can still be refused on a different check, defeating the stated goal ("so the push can be retried") — fix: run the FULL pre-push gate on the range, not only the id-ledger check, and paste that output as well.
+BUG severity=HIGH — Description ("the push of 0f6ba8225 was refused") + Implementation Notes (branch wf1/inc1b-mig334) — unverified that 0f6ba8225 and migrations/334_precommit_budget_registry_repin.sql are on this branch/worktree, and AC#2 never defines "the push range"; the lane can paste output for the wrong range — fix: pin base (git merge-base HEAD origin/main) and confirm git log --oneline <base>..HEAD | grep 0f6ba8225 before running the check against that exact range.
+BUG severity=MED — Description ("owner task-406") + Dependencies (task-406 RUNNING) — row-append is not idempotent: a lane retry after abort, or task-406 also adding a row, yields two mig-334 rows — fix: grep -n 'mig-334\|334_precommit' .cursor/MCBYLAWS-QUEUE.md .cursor/MCFRONTEND-QUEUE.md before insert; make the edit one idempotent hunk.
+BUG severity=MED — Description (id-no-row fired only for mig-334) — sibling risk: other files added on 0f6ba8225 (other migrations, analysis scripts, a frontend-queue check needing a MCFRONTEND row) may also be unrowed; the retry fails again after this one fix — fix: git diff --name-only 0f6ba8225^..0f6ba8225 and cross-check every added file against a queue row; fold any second unrowed file into the same change.
+DEFER severity=MED — RR-0298 ("Status changes only by the launch script") — the row's Spec 137 rule 3 status line may be launch-script-owned; a hand-written status line could be overwritten or trigger a re-fail — rationale: confirm ownership of this file's status field before writing; if not launch-owned, proceed.
+DEFER severity=LOW — Files: .cursor/MCBYLAWS-QUEUE.md (shared row store per RR-0205) — concurrent lanes inserting near line 1289 shift line numbers or produce a merge conflict on rebuild into shared branches — rationale: resolve by row id, not line number; keep the diff to exactly one row. Line drift is harmless post-merge.
+DEFER severity=LOW — AC#1 ("nothing else in the queue file changes") — editors can introduce trailing-whitespace / newline / BOM changes that fail the AC#1 check — rationale: git diff --word-diff + git diff --stat on the single file before commit; rollback is git checkout -- .cursor/MCBYLAWS-QUEUE.md.
+DEFER severity=LOW — Description ("report ... whether the pre-push gate's checks can be run on a commit range without pushing, and how") — AC#2 fallback ("states exactly why it could not be run") has no success criterion for the report; the operator may still need a live push to verify the retry — rationale: name the exact command (env var / --base / stdin ref) if determinable, so the retry is reproducible without a push.
+DEFER severity=LOW — Description ("that it is written and NOT applied") — the row is a snapshot of a claim; once task-406 applies the migration on the operator's typed GO, the row drifts and no automation re-checks it — rationale: make the row point at the source of truth (migration header + MCINC-7 + typed GO) so the checker can re-run; correction is a manual edit.
+REJECT — Axis 1 categories 1 (NULL 23502, FK, schema mismatch, partial commit) and 3 (lock contention, deadlock, double-execution on rows) — plan touches no DB rows, no schema, no migration file (334 written/not applied by task-406) — these failure modes do not apply to a one-line record diff.
+```
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- RR-0203 generator ownership of `.cursor/MCBYLAWS-QUEUE.md` unverified — hand-editing can break `--check` / get clobbered and the retry still fails.
+- AC#2 scoped only to the id-ledger check while the gate was fail-fast on `id-no-row`; all other pre-push checks on the range are unproven, so the "push can be retried" goal is not demonstrated.
+- Row form (`:1289`) and checker token (`mcbylaws-queue-check.mjs:321-323`) are both assumed, not read; the row can satisfy the human "form" while still failing the grep.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- Line 1289 of `.cursor/MCBYLAWS-QUEUE.md` in this worktree holds the migration-330 row, unchanged from the description's line refs. Verify: `grep -n 'INC6-MIG330' .cursor/MCBYLAWS-QUEUE.md` (or `sed -n '1280,1300p'`).
+- The id-ledger matcher at `scripts/analysis/mcbylaws/mcbylaws-queue-check.mjs:321-323` greps a token a human row can contain. Verify: `sed -n '300,345p' scripts/analysis/mcbylaws/mcbylaws-queue-check.mjs`.
+- No mig-334 row already exists in either queue file (duplicate risk from the RUNNING task-406). Verify: `grep -n 'mig-334\|334_precommit' .cursor/MCBYLAWS-QUEUE.md .cursor/MCFRONTEND-QUEUE.md` (expect empty), and `cat ~/Buildo-scratch/ids/mig-334` for the claimed-id record.
+
+---
+⏱  69182ms (69.2s)
+📊 Tokens — total: 24549, input: 12246, output: 12303, reasoning: 10416

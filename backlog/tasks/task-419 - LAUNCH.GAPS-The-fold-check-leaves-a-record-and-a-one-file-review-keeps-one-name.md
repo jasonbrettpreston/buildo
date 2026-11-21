@@ -197,4 +197,6 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0355 · task-419 · Backlog; o
 2026-11-21 (M-246) Operator RR-0360, verbatim: "change the claude.md to remove the cross check.  The agent stays available on request is fine froma wording perspective": CLAUDE.md added to the Files line by the lane on the orchestrator's relay of this ruling; lines 139 and 143 edited; the other copies of the wording are not edited.
 
 2026-11-21 lane BL-GAPS419 fix round 1 landed: e5c3a4818 (check-lane-close.mjs one-line reads, tests), f4c0a0b42 (spec notes with RR-0360, CLAUDE.md :139 and :143, regenerated page, Files line plus CLAUDE.md). Round 2 output review made at that head, 11 outputs, 32 findings, plant-evidence.mjs and CLAUDE.md in the material.
+
+Dated note 2026-11-21 (M-246, prior text kept; RR-0360 · task-419 · Backlog; operator, verbatim: "change the claude.md to remove the cross check.  The agent stays available on request is fine froma wording perspective")
 <!-- SECTION:NOTES:END -->

@@ -1,0 +1,168 @@
+LIST agents-s5-1to3 sha256:56726f1e8e2c1a3935426321609275da970041e9c086b2bda04cbb9a1354097d material sha256:2cd1c0c06f97d9e98526025755c66881462bd7751f0a6a661aaba23947566463 part 1 of 1 chunk 2 of 2
+RULE LIST agents-s5-1to3 (docs/specs/00-architecture/08_agents.md, sections 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md","docs/reports/2026-10-23-batch5-p2-1-classify-permit-phase-assessment.md","docs/reports/2026-10-23-batch5-p3-5-compute-phase-calibration-assessment.md","docs/reports/2026-10-23-batch5-p4-4-link-coa-assessment.md","docs/reports/2026-10-23-batch5-p5-1-classify-lifecycle-phase-assessment.md","docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md"]
+
+### 5.1 Compliance (spec → code)
+**Question:** *Given a spec and the implementation, does the code SATISFY every clause of the spec's Behavioral Contract + Auth Matrix?* Item-by-item, spec-clause → code-line, PASS/FAIL.
+**Substrate:** DeepSeek CLI at plan altitude (`spec <path>`), or a `general-purpose` agent for the code diff.
+**Distinct from A3/A5 because:** Code Reviewer asks "is the code good?"; Integration asks "does it match the *codebase*?"; Compliance asks "does it match the *spec*?" — a clause the spec mandates but the code omits (e.g. Spec 21 §6's phantom `stripe_cancel_failed` directory filter, which the spec promised and the code never built) is a Compliance finding no other role owns.
+**HARD DEPENDENCY:** Compliance is only meaningful if the spec is TRUE. Run **Ground-truth (§5.2) FIRST**; a stale spec makes compliance-checking a check against fiction (manual §8.3).
+
+### 5.2 Ground-truth (reality → spec)
+**Question:** *Is the SPEC still true?* For each load-bearing claim in the spec, verify it against the live code / DB / behavior; report every drift as "spec §X says A; reality is B."
+**Substrate:** `general-purpose` (main tree + live DB) — it needs to read code AND query the schema/data.
+**Absorbs "spec-freshness enforcement":** you do NOT need a separate up-to-dateness agent — spec drift IS this agent's primary output. Enforcement = (a) Ground-truth runs at the START of any WF that touches a spec-governed area, and (b) a **standing periodic Ground-truth sweep** (a scheduled routine — see §7) that diffs high-traffic specs against reality and files drift to `review_followups.md`. This directly serves CLAUDE.md Prime Directive #10 (spec-first, no assumptions).
+**Why:** the manual's single most-cited failure (§8.3) is planning against a stale spec. Spec 20 described unbuilt routes; Spec 95/97 described a retired immediate-cancel design after the period-end ruling. Ground-truth is the antibody.
+
+### 5.3 Round-2 adjudication — FORMALIZE the existing practice
+**Substrate: DeepSeek CLI produces the pass; Integration (`general-purpose`, main tree) is its grounder** — already practised, now stamped (§A/§B).
+Not a new agent — a **mandatory second pass**. After the panel returns findings, run **DeepSeek + Integration against the *proposed findings/changes*** (not the code): for each finding, is the premise true, is the ruling already settled, does the fix cost less than the risk? This operationalizes manual §6.3 (⅓ false premises). Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8). Round-2 is cheap (DeepSeek) and catches the eager-fix (§8.4).
+
+Dated note 2026-11-20 (M-246, prior text kept; task-366 COMPLY.2, lane BL-COMPLY2, Increment 1·B; the infra freeze is lifted for it by name; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the 2026-11-20 entries: "Add the tasks to incr 1b - the infa freeze needs to be lifted again - what is the point of building a mess - wasted effort." and "yes to McStorage and 1,2,3 yes as recommended" (the surface specs 126, 127, 128 and the full Spec 135 rows go into the path table)): the mechanical half of section 7 rule 4 and section 5.3 is built in the repo. (1) `scripts/analysis/rule-lists.json` is the path to rule-list table: data, not code, says which rule lists (whole files, or whole sections where the file itself separates rules from history) govern a touched path; it reuses the path maps of `mcbylaws/protected-paths.json` (`layer23`, `frontend`) instead of copying them. (2) `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through it, refuses a task with no Files line (a record-only task gets the queue lists) or an unmatched path with the path named, puts the governing lists into the brief (READ each whole before planning) and runs the compliance lens once per list with the list pasted whole ahead of the plan or diff (`scripts/analysis/rule-lists.mjs lens-input`; a list is split by its own headings when list plus material pass the review tool bound, never trimmed). (3) `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses a commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane) with one `<finding id> CONFIRMED|REJECTED <file:line> [reason]` line per BUG or DEFER finding of the lens outputs; presence and form only, the judgement stays with the grounder (rule 4: a separate grounder rules on every finding; this section: rejections carry reasons). The lane that wrote the work leaves the task RUNNING with "grounder owed".
+
+Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOLE, Increment 1·B; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y", item 4 as put to him: "Keep the split for code review, error paths, UX and security"): the whole change goes to the reviewer and the close check proves it. (1) `scripts/analysis/rule-lists.mjs lens-input` cuts a diff that leaves no room (counting the rendered stamp, head and path list) into chunks at FILE boundaries, the tool and never by hand; each chunk goes against every list part and is stamped chunk c of m with its path list; one file alone over the room is refused naming it. With no `--list` and a lens template it writes the same chunks for code-review, error-paths, ux and security (the split the operator kept). (2) `scripts/hooks/check-lane-close.mjs` takes the task's launch commit L (the first board commit on the base ref, first-parent, that holds the lane assignee on the task file; refused when none or not an ancestor of HEAD) and requires that every file changed from L to HEAD that the Files line covers, minus the exempt paths, is in exactly one chunk whose text equals what `git diff` (the pinned flag set `DIFF_ARGS`) prints for it. The rule-list table (lists, rows, every_task, exempt, protected paths, base_ref), the lens templates and the task type are read from the range base or the launch copy, so an earlier commit of the lane cannot trim or widen them; a lane that changes exempt or base_ref is refused; a task whose Files line names the table is judged by its branch table with every field that decides what is reviewed still taken from the base. Each committed input is regenerated from its stamp and compared; each compliance and lens output's prompt_sha256 is recomputed from the template, the input and the context (the tool's placeholder today; the hook point is `lensContexts` for task-375); an unsplit lens output's file hash must be that of the recomputed whole diff; a lane build or fix close stages only its lane report directory, the review context directory, task files and decision records. Known limits, not built here: a clause spanning two files is judged in two chunk runs; a hand-written output whose author computed the public hashes passes; moving the board ref by a forbidden command is refused by the lane guard, not by this check; plan-phase compliance outputs for a build task (task-404) and the reviewer context (task-375).
+
+Dated note 2026-11-20 (M-246, prior text kept; correction to the task-410 note above, grounder round 3; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentence above that the rule-list table and its protected paths cannot be trimmed or widened by an earlier commit of the lane was too wide. What `scripts/hooks/check-lane-close.mjs` enforces now is exactly this: (1) `base_ref`, `finished_statuses`, `protected_paths` and `exempt` are read from the board ref `refs/heads/wf2/board` (else `refs/remotes/origin/wf2/board`), and the task's launch commit is searched on that same ref; a lane whose own table differs from the board's in any of those four keys is refused, so a lane cannot cut the finished statuses, repoint the base to its own branch or widen the exempt paths (a task that changes them is refused too: those changes land on the board first). (2) The rest of the table (lists, rows, every_task) and the lens templates are read from the range base (the merge-base with that ref); a task whose Files line names the table is judged by its branch table for lists and rows, with every_task still from the base. (3) The task type, the lane assignee and the milestone are read from the launch copy of the task file; a lane that retypes or moves its task is refused. (4) `scripts/lib/review-template.js` and `scripts/deepseek-review.js`, which decide what a recomputed prompt hash proves, may not differ from the range base unless the task's launch Files line covers them. Not enforced: a hand-written output whose author computed the public hashes, and a board ref moved by a forbidden command (the lane guard refuses that command).
+
+Dated note 2026-11-20 (M-246, prior text kept; second correction to the task-410 notes above, grounder round 4; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentence above that the task type, the lane assignee and the milestone are read from the launch copy says more than the code did until this round. What `scripts/hooks/check-lane-close.mjs` does now: the lane assignee is the one on the staged task file, else the one on the HEAD copy, so dropping it or setting `@human` in the closing commit does not hide the lane; the task type, and the milestone, are read from the launch copy of the task file (the board commit that first holds that lane assignee on it), so retyping to doc or record in the closing commit does not skip the lens set; a lane build or fix task that drops its lane assignee at close is refused whatever type it then carries. A task close needs the board: the base, the deciding table keys and the launch commit come from `refs/heads/wf2/board` (else `refs/remotes/origin/wf2/board`), and a close in a clone with neither ref is refused with a clear line; a commit that moves no task does not read the board and is not refused for its absence.
+
+Dated note 2026-11-20 (M-246, prior text kept; third correction to the task-410 notes above, grounder round 5; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator RULES on five more items (reviewer inputs and the whole-change check)": "1-5 y"): the sentences above that the task type and the lane assignee are read from the launch copy, or from the staged or HEAD copy, were not true after a lane dropped its assignee in an earlier commit. What `scripts/hooks/check-lane-close.mjs` does now: the task type and the lane assignee are read from the BOARD copy of the task file (found by task id on `refs/heads/wf2/board`, the ref the launch commit is searched on); a close whose board copy is a lane build or fix task is refused unless the closing copy is that same lane's build or fix task, whatever earlier commits did to the lane's own copy. The task id is the file's task number (a differing front-matter id is refused); the milestone is the launch copy's; the rule lists resolve from the union of the launch Files line and the staged one, so narrowing the line cannot drop a list; the assignees a grounder must differ from are the staged, HEAD and board ones together. The shared diff flags also pin `--diff-algorithm=myers`, `--indent-heuristic` and `--inter-hunk-context=0`, so a lane machine's diff configuration cannot change the text that is recomputed.
+
+Dated note 2026-11-20 (M-246, prior text kept; fourth correction to the task-410 notes above, grounder round 6; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator ORDERS task-410 finished", put to him: "after this round, fold 410 as an omission guard, named as that, with the forgery routes recorded on tasks 401 and 402 — yes (recommended) or no?"; his words: "Finsih it!"; the entry marks the reading that this is a yes to the question as put as the orchestrator's, not his words): `scripts/hooks/check-lane-close.mjs` is an OMISSION GUARD. It refuses a skipped review, a skipped rule list, an unreviewed changed file, a trimmed or stale review input, and a close without a separate grounder's file. It does not stop a lane that sets out to forge: a hand-written output with the right hashes; an earlier-commit edit of the lane's own working-tree copy of the check script, `scripts/analysis/rule-lists.mjs`, `scripts/analysis/mcbylaws/paths.mjs` or the commit-msg hook (such an edit changes what runs); a moved board ref. Those routes are owned by the fold-time tasks task-401 and task-402 (grounder file sha256 b3425b2c1d6c…). Also stated: a task number the board never held is refused at close (the board holds no copy of the file: type and lane assignee are read from the board copy, with no fallback to the lane's own copy), and a branch whose tree lacks the task file of a lane build or fix task whose lane directory it carries cannot close anything.
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md b/docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md
+index 7839020cc28f691d05e517737f4c8b690bdfeb15..6c461779a81a1b0c5a061e7d08e35fe625f4fcff 100644
+--- a/docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md
++++ b/docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md
+@@ -141,7 +141,7 @@ the measured run budget, the storage check, and the replacement of notes `expect
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | resolve_bylaws | PASS | min_migration=275 <= migrations count=315 |
++| 1 | resolve_bylaws | PASS | min_migration=275 <= migrations count=316 |
+ | 2 | resolve_bylaws | PASS | 8 declared, missing from seeds: none |
+ | 3 | resolve_bylaws | PASS | retired=0 overlap-with-declared=none |
+ | 7 | resolve_bylaws | PASS | SPEC LINK header present=true |
+@@ -174,7 +174,7 @@ the measured run budget, the storage check, and the replacement of notes `expect
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-23-batch5-p2-1-classify-permit-phase-assessment.md b/docs/reports/2026-10-23-batch5-p2-1-classify-permit-phase-assessment.md
+index 8a5800df1d339b285b00534cf717b87f83602ee5..6e7d3d8bd5e605bfc955e4e6be875db66bc481de 100644
+--- a/docs/reports/2026-10-23-batch5-p2-1-classify-permit-phase-assessment.md
++++ b/docs/reports/2026-10-23-batch5-p2-1-classify-permit-phase-assessment.md
+@@ -271,7 +271,7 @@ This is an estimate. The legacy file is not scanned by gate E, so each code is m
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | classify_permit_phase | PASS | min_migration=279 <= migrations count=315 |
++| 1 | classify_permit_phase | PASS | min_migration=279 <= migrations count=316 |
+ | 2 | classify_permit_phase | PASS | 3 declared, missing from seeds: none |
+ | 3 | classify_permit_phase | PASS | retired=0 overlap-with-declared=none |
+ | 7 | classify_permit_phase | PASS | SPEC LINK header present=true |
+@@ -304,7 +304,7 @@ This is an estimate. The legacy file is not scanned by gate E, so each code is m
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-23-batch5-p3-5-compute-phase-calibration-assessment.md b/docs/reports/2026-10-23-batch5-p3-5-compute-phase-calibration-assessment.md
+index e918222cf4c3fe57e9c9a07f8e4cd09dc0efa037..1da024157950b357cf44f86f5cc56474006d42cc 100644
+--- a/docs/reports/2026-10-23-batch5-p3-5-compute-phase-calibration-assessment.md
++++ b/docs/reports/2026-10-23-batch5-p3-5-compute-phase-calibration-assessment.md
+@@ -314,7 +314,7 @@ PH-2 (churn × complexity) is ASSESSMENT-INCOMPLETE because the generated batch
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-23-batch5-p4-4-link-coa-assessment.md b/docs/reports/2026-10-23-batch5-p4-4-link-coa-assessment.md
+index ccbca089b3d9f41dad0858b403c7960832239642..6baa80fb7eece7a6f02e81dd84595d0d42404906 100644
+--- a/docs/reports/2026-10-23-batch5-p4-4-link-coa-assessment.md
++++ b/docs/reports/2026-10-23-batch5-p4-4-link-coa-assessment.md
+@@ -295,7 +295,7 @@ The descriptor skeleton is drafted outside the repo (`~/Buildo-scratch/v3coa-h/l
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-23-batch5-p5-1-classify-lifecycle-phase-assessment.md b/docs/reports/2026-10-23-batch5-p5-1-classify-lifecycle-phase-assessment.md
+index 4e2d5911e4c091937049f41fe2e5aa1dde4336ac..df0083087e1453dfdfda5ebeb6e7bfc5dc3029fb 100644
+--- a/docs/reports/2026-10-23-batch5-p5-1-classify-lifecycle-phase-assessment.md
++++ b/docs/reports/2026-10-23-batch5-p5-1-classify-lifecycle-phase-assessment.md
+@@ -372,7 +372,7 @@ The descriptor skeleton is drafted outside the repo (`~/Buildo-scratch/v3coa-i/c
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md b/docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md
+index 15cac0bb8fc7b4b6cc5ceba9c44a932ba0946765..c2d22cdb0ce990c704b9b8b56b583a92bc85d35d 100644
+--- a/docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md
++++ b/docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md
+@@ -88,7 +88,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
+ > Generated by `node scripts/analysis/step-validate.mjs --step=compute_maxbld_scenarios --write` — Spec 123 §6, ruling R-R (2026-08-29).
+ > Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`).
+ 
+-**Score: 14/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
++**Score: 17/17** · G9 Reflection: PASS · G4d fence-lock coverage: PASS · G-shape: PASS · **Hard stop: no**
+ 
+ ### Five-word verdict (Spec 124 §5 R-BA — "McDonald's Airtight")
+ 
+@@ -110,7 +110,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
+ | G5 | 1 | 1 | db=true clock=true network=true argv/env=true |
+ | G6 | 3 | 3 | 8 ledger row(s), 0 without CLOSED/PIN () |
+ | G7 | 3 | 3 | file=true fences=0 it-count=8 red-evidence-claims=3 red-evidence-pass=true ledger-deferred=false |
+-| G8 | 0 | 3 | missing-invocations=0 missing-pre-invocations=1 stale-fingerprints=0 unexplained-diffs=0 — stage-gated (compute_ported) |
++| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 net-new (R-DK) |
+ | G9 (binary) | PASS | — | heading=true low-confidence-table=true recurring-table=true |
+ | G4d (fence<=lock) | PASS | — | fences=0 lock-it-count=8 |
+ | G-shape | PASS | — | file-clean=null compute-clean=true |
+@@ -119,7 +119,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | compute_maxbld_scenarios | PASS | min_migration=0 <= migrations count=315 |
++| 1 | compute_maxbld_scenarios | PASS | min_migration=0 <= migrations count=316 |
+ | 2 | compute_maxbld_scenarios | PASS | 35 declared, missing from seeds: none |
+ | 3 | compute_maxbld_scenarios | PASS | retired=22 overlap-with-declared=none |
+ | 7 | compute_maxbld_scenarios | PASS | SPEC LINK header present=true |
+@@ -152,7 +152,7 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+@@ -162,9 +162,9 @@ Filled at the first local run (queued): the POST capture with its rerun-zero pro
+ 
+ ### Captures (item iv)
+ - missing invocations (POST): none
+-- missing invocations (PRE, GOLD-PRE): none::
++- missing invocations (PRE, GOLD-PRE): none
+ - stale fingerprints: none
+-- compare ran: false · diffs found: 0 · unexplained: 0
++- compare ran: true · diffs found: 0 · unexplained: 0
+ 
+ ### Test suite (item iii)
+ - SKIPPED or failed to run: --fast: vitest spawn skipped
+

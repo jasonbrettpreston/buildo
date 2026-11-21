@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.355Z file_sha256=85203167c9bfdde7a66db480487334269aef32771f158a3e3fe9495a1db84a54 prompt_sha256=fe89a0a20d18ce186b1236eb2ec08fab0946f668dbba01d4fc41f2fa04aacb78
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-126-p8.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0355 "The gaps are closed in parellel" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:113 "+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 net-new (R-DK) |" (from "-| G8 | 0 | 3 | ... missing-pre-invocations=1 ... stage-gated (compute_ported) |") — the generated-files commit closes the G8 conformance gap and lifts the score from 14/17 to 17/17 in the same edit that claims to re-render the scorecard, while the ruling keeps gap closure in a parallel lane; a scorecard refresh may not resolve its own gap — revert the G8, score and compare lines and land the `compute_ported` net-new classification in the parallel gap task with its own evidence.
+
+BUG severity=HIGH — task-421 "checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-10-07-batch3-p1-1-load-coa-notices-assessment.md:171 "+| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" (from "registry-input 27.36 s <= 27.5 s") — the enforced registry-input ceiling is raised from 27.5 s to 33.2 s with 0.01 s headroom inside a commit the card restricts to the count row 315 to 316; no pasted clause or ruling names a budget change — emit row 52 unchanged from the run, or split the budget re-adjudication into its own task with the operator ruling that authorises it.
+
+BUG severity=MED — task-421 "makes ONE read-only run on dev of `step-validate.mjs --all --fast --write` in the lane worktree" — docs/reports/2026-10-18-batch4-p4-1-assert-coa-freshness-assessment.md:243 "+| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): ... measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |" — the row's measurement timestamp precedes the 2026-11-21 GO and names a local Mac Mini rather than the dev run the card specifies, so the row's provenance is not the named run — re-emit row 52 from the dev run so the timestamp advances, and record the run invocation on the task.
+
+BUG severity=MED — AC #1 "The operator's typed GO is recorded verbatim on the task" — pasted context "RR-0357 GO for the scorecards, given in the chat before the rehearsal ... \"GO for scorecards\"" — the task carries only a chat GO, and no verbatim typed-in-Terminal GO as task-421 step one requires, so the commit would be folded on a ruling the card does not accept as its trigger — paste the operator's Terminal GO verbatim on task-421 before folding.
+
+MET — spec §3 archetype profiles "Every rendering surface is assigned exactly once; the column sums are asserted by the generator, not typed" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:1 — the diff touches no descriptor, no `x-profile` block and no profile count, so no archetype table is hand-edited.
+
+MET — spec §4 category contract "Omission is a build failure; `\"none\"` is a valid value" — docs/reports/2026-10-17-batch4-p1-2-coa-assessment.md:344 — no SURFACE category is added, dropped or omitted by the change, so the 21-category register is untouched.
+
+MET — spec §5.0 "nothing in that fan-out is hand-written, and nothing in it is a second declaration" — docs/reports/2026-10-18-batch4-p4-2-link-coa-to-parcels-assessment.md:291 — no generated TypeScript type, validator, Zod mirror or OpenAPI document is authored or altered here.
+
+REJECT — chunk scope — the change is accused of resolving only 22 of the 29 scorecards named by RR-0353 — the material states "chunk 2 of 2 of the change" and the other chunks are reviewed in their own runs, so the remaining reports are not this run's to judge.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 4
+
+---
+⏱  45586ms (45.6s)
+📊 Tokens — total: 39875, input: 31660, output: 8215, reasoning: 7151
