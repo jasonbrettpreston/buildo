@@ -1,10 +1,11 @@
 ---
 id: TASK-418
 title: LAUNCH.PREP The steps before a build launch run from one command
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-PREP418'
 created_date: '2026-11-21T00:24:00Z'
-updated_date: '2026-11-21T05:40:00Z'
+updated_date: '2026-11-21T05:43:00Z'
 labels:
   - McFix
   - McFix V2
@@ -17,6 +18,17 @@ references:
   - docs/reports/reviews/task-418/seat-integration-1.md
   - docs/reports/reviews/task-418/seat-reality-check-1.md
   - docs/reports/reviews/task-418/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 118012
 ---
@@ -212,4 +224,6 @@ rg#4 MED folded one review round per
 2026-11-21 (M-246) Plan put on the task by the orchestrator by hand (RR-0345): PLAN-418-v2, written read-only against the code at d9f2143a7 after task-375 folded; the build is authorized by the operator (RR-0350, MORNING-DECISIONS.md:1638). The Files line is replaced by the plan's four paths (adds src/tests/backlog/rule-lists.logic.test.ts). The plan review of this task is made by hand under the launch check; its evidence is in docs/reports/reviews/task-418/.
 
 2026-11-21 (M-246) Plan review round 1 of this task, made by hand under the launch check (RR-0345): 11 plan review outputs (compliance per governing rule list, plan-review-deepseek, error-paths), the Integration, Reality-Check and Regression seats on the plan, ruled by the separate grounder Cairn-Ground-P418: 92 findings, 71 CONFIRMED (2 HIGH, 36 MED, 29 LOW, 4 NIT), 21 REJECTED; 64 folded into the plan by 30 sentence edits (FOLD-418.json as the grounder wrote it, applied mechanically), 7 to the review pile. Six open questions were ruled by the grounder with grounds (docs/reports/reviews/task-418/QUESTIONS-RULED.md) and are taken as approved on the operator's authorization (RR-0350, MORNING-DECISIONS.md:1638), reported to him: Q1 one review round per prep run; Q2 the script makes the review calls without asking each time; Q3 this task is hand-prepared and is the gate proof, task-412 the first scripted proof; Q4 the plan stage also runs plan-review-deepseek and error-paths beside compliance (Spec 08 section 7 rule 4; MORNING-DECISIONS.md:1634 is his proposal, not a ruling); Q5 backlog-lane.mjs is left untouched and nothing is exported from it; Q6 the round block is read from the check's own refusal message.
+
+2026-11-21 taken on the board at lane launch (lane BL-PREP418, worktree /Users/brettpreston_macmini/Buildo-wt-prep418, branch wf1/inc1b-prep418), RR-0240
 <!-- SECTION:NOTES:END -->
