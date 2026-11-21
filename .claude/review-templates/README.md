@@ -118,8 +118,10 @@ Output review (the file under review is the diff; the pasted spec clauses, rulin
 git show <sha> -- <paths> > review-input.diff
 DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config \
   scripts/deepseek-review.js review review-input.diff \
-  --template .claude/review-templates/lens-<lens>.md --context pasted-context.md > r1-<lens>.txt
+  --template .claude/review-templates/lens-<lens>.md --context docs/reports/reviews/<task>/context-rN.md --section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes" > r1-<lens>.txt
 ```
+
+The context file of a lane review is the task, sized (task-375): `docs/reports/reviews/<task>/context-rN.md`, one per review round and never overwritten, written by `scripts/analysis/backlog-brief.mjs` with the task's Implementation Plan and Implementation Notes; the five `--section` flags (the one list CONTEXT_SECTIONS in `scripts/lib/review-template.js`) send only the task, its description, acceptance criteria, decisions and notes. The compliance lens inputs are written by `node scripts/analysis/rule-lists.mjs lens-input --list <id> --context <context-rN.md> --material <diff file>` (the plan phase: `--material-from <context-rN.md>`, which cuts Description, Acceptance criteria and Implementation Plan); `lens-input` refuses without `--context`, and the close check recomputes each output's prompt hash with the committed context.
 
 Plan review (the plan is `.cursor/active_task.md`; the pasted context goes in `--specs`):
 
@@ -142,7 +144,7 @@ The compliance lens (`lens-compliance.md`) judges "against the pasted clauses on
 ```bash
 DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config \
   scripts/deepseek-review.js review <diff part> --context .claude/review-templates/packs/<pack>.md \
-  --template .claude/review-templates/lens-compliance.md
+  --template .claude/review-templates/lens-compliance.md   # a lane review passes its committed context-rN.md and the five --section flags instead (above)
 ```
 
 Size and tool limits found by the COMPLY.1 pass (task-365; findings in `docs/reports/lanes/2026-11-20/BL-COMPLY/FINDINGS.md`): the lens template carries `{{PLAN}}` twice, so the file under review is sent twice and the 120000 bound is on the doubled prompt (keep a diff part to 38000 characters or less with a 33000 character pack); and `scripts/lib/review-template.js` `substitutePlaceholders` passes the text to `String.replace` as a replacement string, so a `$` sequence in a pack or diff expands into other text, and a literal placeholder token inside a diff is substituted again. Double each `$` in the inputs and neutralise any placeholder token until the tool is fixed. The lens returns at most 8 findings per run, so cut a diff into parts rather than sending one large one.

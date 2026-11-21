@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T01:39:00Z'
+updated_date: '2026-11-21T01:40:00Z'
 labels:
   - McFix
   - McFix A
@@ -377,4 +377,6 @@ BL-GATE375 build note (A3): backlog-lane.mjs lens line and review line, and back
 BL-GATE375 build note (B1): rule-lists.mjs exports complianceRefs(lists, refs) ({add, remove}, compared by the id token, a path with a comma entered as compliance:<id> alone); checkTasks collects the stale open tasks and check-tasks prints the exact backlog task edit --add-ref / --remove-ref command for each (exit unchanged); backlog-lane.mjs's take adds only the missing compliance: references in the same edit. Red for this commit was a typecheck refusal (complianceRefs not exported), in red7.out.
 
 BL-GATE375 build note (D10b, PARTIAL, DB read OPEN): proof-slice.mjs exports TIMEOUT_VARIABLE ('tooling_proof_slice_timeout_ms', the builder's name, NOT registered: no tooling_ timeout variable exists in scripts/seeds/logic_variables.json and registering one is a seed + migration + id claim the operator authorises with a typed DB GO after the MCINC-7 rehearsal) and timeoutMsFromVariable(value), which refuses unset, empty, non-positive-integer values naming the variable; the logic test is green, src/tests/proof-slice.db.test.ts is written and NOT RUN. DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable; the task is NOT complete.
+
+BL-GATE375 build note (A3 docs): .claude/review-templates/README.md How-to-run section now names context-rN.md, the five --section flags and lens-input --context / --material-from (the plan's README item for A3).
 <!-- SECTION:NOTES:END -->
