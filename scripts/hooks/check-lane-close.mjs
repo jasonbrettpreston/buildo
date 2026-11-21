@@ -34,11 +34,14 @@ import { spawnSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { asList, parseFM } from '../analysis/backlog-lib.mjs';
 import { coveredBy, DIFF_ARGS, diffPaths, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
 import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
 
+const { CONTEXT_SECTIONS, extractSections } = createRequire(import.meta.url)('../lib/review-template.js');
+const PLACEHOLDER_CONTEXT = '(no pasted context provided)';
 const git = (a) => { const r = spawnSync('git', ['-c', 'core.quotepath=false', ...a], { encoding: 'utf8', maxBuffer: 1 << 28 }); return { status: r.status ?? 1, stdout: r.stdout ?? '' }; };
 const fail = (lines) => { for (const l of lines) process.stderr.write(`check-lane-close: ${l}\n`); return 1; };
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -62,7 +65,7 @@ function reviewErrors(name, text, template, inputText, opt = {}) {
   // F3: the prompt hash is recomputed from the repo template, the committed input and the context value the tool used; an arbitrary or hand-written value does not match
   if (opt.templateText !== undefined && inputText !== null) {
     if (opt.templateText === null) e.push(`${name}: the review template ${template} is not in the repo (index or HEAD), so prompt_sha256 cannot be recomputed (fail closed)`);
-    else if (!lensContexts().some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c }))) e.push(`${name}: the REVIEW header prompt_sha256 is not the hash of the prompt the review tool builds from ${template}, the committed input and the context (an output not made by the tool on that input, or an edited input)`);
+    else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c }))) e.push(`${name}: the REVIEW header prompt_sha256 is not the hash of the prompt the review tool builds from ${template}, the committed input and the context (an output not made by the tool on that input, or an edited input)`);
   }
   if (!/^VERDICT:/m.test(text)) e.push(`${name}: no VERDICT line (a failed run is not a lens output)`);
   return e;
@@ -308,10 +311,20 @@ export function gitFacts(L) {
  *          laneFiles:{dir:string,name:string,text:string}[], changed:string[], expectedPaths?:string[], diffOf?:(paths:string[])=>string|null, readRepo:(p:string)=>string|null}} i
  */
 /**
- * HOOK POINT (task-375, the reviewer context): the context values a lens run may have used. Today the review tool is run with no --context, so its placeholder is the one value; when task-375 builds the
- * context option, this returns the context text the lane passed (read from the committed pasted-context file) and prompt_sha256 is recomputed with it. Nothing else changes in the check.
+ * task-375 A4: the context values a lens run may have used. `contexts` [{name, text}] are the committed context files of the task (docs/reports/reviews/<task>/context-rN.md); each one's value is the text of
+ * its CONTEXT_SECTIONS (the sections the review tool is passed with --section), so the prompt_sha256 recompute binds it. A context that is the placeholder, lacks a required heading (the Description,
+ * and Implementation Notes when the task has notes) is a problem line, never a value. An output must match one value (one file per review round).
  */
-export const lensContexts = () => [undefined];
+export function lensContexts(contexts, hasNotes = true) {
+  const values = [];
+  const problems = [];
+  for (const c of contexts) {
+    if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(`${c.name}: the review context is the placeholder "${PLACEHOLDER_CONTEXT}": the lenses must run with the committed context file (--context and one --section per ${CONTEXT_SECTIONS.join(', ')})`); continue; }
+    const want = !hasNotes && !/^#{1,6}\s.*Implementation Notes/m.test(c.text) ? CONTEXT_SECTIONS.filter((x) => x !== 'Implementation Notes') : CONTEXT_SECTIONS;
+    try { values.push(extractSections(c.text, want)); } catch (e) { problems.push(`${c.name}: ${e.message} (the context must hold the headings ${want.join(', ')})`); }
+  }
+  return { values, problems };
+}
 
 export function closeErrors(i) {
   const { id, type, readRepo } = i;
@@ -330,6 +343,10 @@ export function closeErrors(i) {
   try { r = resolveTask({ table: i.table, root: i.root, body: i.taskText, type, letter: i.letter }); } catch (e) { return [`${id}: cannot read the rule-list table or one of its path maps: ${String(e.message).split('\n')[0]}`]; }
   if (r.error) return [`${id}: ${r.error.replace(/^refused: /, '')}`];
   const errors = [];
+  const hasNotes = /<!-- SECTION:NOTES:BEGIN -->/.test(i.taskText);
+  const lc = lensContexts(i.contexts ?? [], hasNotes);
+  if ((i.contexts ?? []).length === 0) errors.push(`${id}: no committed review context file docs/reports/reviews/${id}/context-rN.md (written by backlog-brief.mjs, one per review round, committed with the round): the prompt hash of every lens output is recomputed with it`);
+  for (const x of lc.problems) errors.push(`${id}: ${x}`);
   const expected = i.expectedPaths ?? []; // V2.WHOLE: the changed paths of the task range minus the exempt ones (check() computes them)
   // F1: the proof is never skipped silently: a build or fix task whose range holds no file outside the exempt paths (the lane was folded into the base already, or the base is wrong) is refused
   if (build && i.rangeEmpty) errors.push(`${id}: no file the task's Files line covers changed between the task's launch commit and HEAD, so the review cannot be proved to cover any change (the launch commit is the board commit that took the task for its lane assignee)`);
@@ -354,6 +371,14 @@ export function closeErrors(i) {
   if (mine.length === 0) return [...errors, `${id}: no ${dirNote} holds a TASK file naming exactly ${id} (a lane report dir is scoped to one task: write the task id in TASK; a dir used for another task does not count); ${layout}`];
   const files = mine.flatMap(([, fs_]) => fs_);
   const textOf = (n) => files.find((f) => f.name === n)?.text;
+  // task-375 B2: the task's references hold the repo copies of REPORT.md, GROUNDER.md and, when the lane directory holds one, TRIAGE.md (08_agents.md:357 note); the exact command is printed
+  if (build) {
+    const have = new Set(asList(i.fm?.references).map((x) => String(x).trim()));
+    for (const n of ['REPORT.md', 'GROUNDER.md', ...(textOf('TRIAGE.md') !== undefined ? ['TRIAGE.md'] : [])]) {
+      const rp = `${mine[0][0]}/${n}`;
+      if (!have.has(rp)) errors.push(`${id}: the task's references lack the repo copy ${rp}: backlog task edit ${id} --add-ref ${rp}`);
+    }
+  }
 
   // (a) one compliance lens output per list, with its REVIEW header, bound to the committed input and to the whole list
   const phases = build ? ['out'] : ['plan', 'out'];
@@ -374,7 +399,7 @@ export function closeErrors(i) {
       for (const n of names) {
         const input = textOf(`in-${n}`);
         if (input === undefined) { bad.push(`${n}: the input in-${n} that the review tool read is not committed beside it`); continue; }
-        bad.push(...reviewErrors(n, textOf(n) ?? '', 'lens-compliance.md', input, { templateText: readBase('.claude/review-templates/lens-compliance.md') }));
+        bad.push(...reviewErrors(n, textOf(n) ?? '', 'lens-compliance.md', input, { templateText: readBase('.claude/review-templates/lens-compliance.md'), contexts: lc.values }));
         const p = parseLensInput(input);
         if (!p) bad.push(`in-${n}: first line is not "LIST <id> sha256:<hex> material sha256:<hex> part i of n" (rule-lists.mjs lens-input writes it)`);
         else if (p.id !== l.id) bad.push(`in-${n}: stamped for list ${p.id}, expected ${l.id}`);
@@ -412,7 +437,7 @@ export function closeErrors(i) {
           const nm = `out-${lens}-p${x}.txt`;
           const input = textOf(`in-${nm}`);
           if (input === undefined) { errors.push(`${id}: ${nm}: the input in-${nm} that the review tool read is not committed beside it`); continue; }
-          errors.push(...reviewErrors(nm, textOf(nm) ?? '', `lens-${lens}.md`, input, { templateText: readBase(`.claude/review-templates/lens-${lens}.md`) }).map((y) => `${id}: ${y}`));
+          errors.push(...reviewErrors(nm, textOf(nm) ?? '', `lens-${lens}.md`, input, { templateText: readBase(`.claude/review-templates/lens-${lens}.md`), contexts: lc.values }).map((y) => `${id}: ${y}`));
           const p = parseLensInput(input);
           if (p && p.ok && p.id === 'none' && renderLensInput({ id: 'none', list: null, part: '', i: p.part, n: p.parts, material: p.material, paths: p.chunk === undefined ? null : p.paths, c: p.chunk, m: p.chunks }) !== input) errors.push(`${id}: in-${nm}: not what lens-input writes for its own stamp (the head line, the paths or the text around the material was edited)`);
           else if (!p || p.id !== 'none' || !p.ok || p.listPart.trim() !== '') errors.push(`${id}: in-${nm}: not an input written by lens-input for a lens with no rule list (first line "LIST none sha256:... part 1 of 1 chunk c of m", stamps matching its text)`);
@@ -428,7 +453,7 @@ export function closeErrors(i) {
         const whole = expected.length && i.diffOf ? i.diffOf(expected) : '';
         if (expected.length === 0) errors.push(...reviewErrors(n, t, `lens-${lens}.md`, null).map((x) => `${id}: ${x}`));
         else if (whole === null || whole === '') errors.push(`${id}: ${n}: the whole-range diff text cannot be recomputed, so the file the lens read cannot be proved`);
-        else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, whole, { what: 'the recomputed diff of the whole task range (the diff file the lens must have read, made with the command in the brief)', templateText: readBase(`.claude/review-templates/lens-${lens}.md`) }).map((x) => `${id}: ${x}`));
+        else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, whole, { what: 'the recomputed diff of the whole task range (the diff file the lens must have read, made with the command in the brief)', templateText: readBase(`.claude/review-templates/lens-${lens}.md`), contexts: lc.values }).map((x) => `${id}: ${x}`));
       }
     }
     if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7); ${layout}`);
@@ -620,7 +645,10 @@ function check(msgFile) {
     const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];
     const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
     const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
-    errors.push(...closeErrors({ id, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase, facts: gitFacts(L), headTaskText: mv.headText }));
+    // task-375 A5: every committed context file of the task (docs/reports/reviews/<id>/context-rN.md), the INDEX first, then HEAD (the order readRepo uses), never the range base
+    const ctxDir = `docs/reports/reviews/${id}/`;
+    const contexts = [...new Set([...git(['ls-files', '--cached', '--', ctxDir]).stdout.split('\n'), ...git(['ls-tree', '-r', '--name-only', 'HEAD', '--', ctxDir]).stdout.split('\n')].filter((q) => new RegExp(`^${esc(ctxDir)}context-r\\d+\\.md$`).test(q)))].sort().map((q) => ({ name: q, text: readRepo(q) })).filter((x) => x.text !== null);
+    errors.push(...closeErrors({ id, contexts, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase, facts: gitFacts(L), headTaskText: mv.headText }));
   }
   // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
   const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));

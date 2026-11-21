@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T01:21:00Z'
+updated_date: '2026-11-21T01:26:00Z'
 labels:
   - McFix
   - McFix A
@@ -369,4 +369,6 @@ BL-GATE375 build note (A1, A5 naming): backlog-brief.mjs writes ## Implementatio
 BL-GATE375 build note (A4 lens-input, A6): rule-lists.mjs lens-input takes --context (refused without; exit 2), counts the CONTEXT_SECTIONS text in the room on both paths (buildLensInputs context param), --material-from cuts PLAN_SECTIONS and is its own context; splitFlat cuts a block with no deeper heading at table rows and blank-line paragraphs (a piece alone over the room keeps the old refusal naming list and section). Existing lens-input test calls pass a fixture context (src/tests/backlog/fixtures/review-context.md).
 
 BL-GATE375 deviation note: the plan's Files line does not name src/tests/backlog/rule-lists-table.logic.test.ts, whose lens-input calls at :49 and :206 pass no --context and so fail once lens-input refuses without it (A4); check-task-files refuses an edit of that file, so it is NOT edited here and goes red at the push suite until the Files line names it. The shared test context lives at docs/reports/reviews/task-375/fixture-context.md (the one folder the Files check always allows).
+
+BL-GATE375 build note (A4 close binding, A5, B2): check-lane-close.mjs lensContexts(contexts, hasNotes) returns the CONTEXT_SECTIONS text of every committed docs/reports/reviews/<task>/context-rN.md (index first, then HEAD, read in check()) and problem lines for the placeholder or a missing Description or Implementation Notes heading; the prompt_sha256 recompute uses it (an output must match one context file); no committed context is a refusal; B2 refuses a missing REPORT.md, GROUNDER.md or (when the lane dir holds it) TRIAGE.md reference and prints the exact backlog task edit --add-ref command. The test helper scenario() writes a valid context and the three references.
 <!-- SECTION:NOTES:END -->

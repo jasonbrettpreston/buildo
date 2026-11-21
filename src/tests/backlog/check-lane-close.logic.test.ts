@@ -28,14 +28,18 @@ const quoteAt = (k: number) => `export const value0${k} = 'alpha quote number 0$
 const FINDING = 'BUG severity=HIGH — clause "x" — src/a.ts:1 "y" — claim — fix\n';
 const sha = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
 const HEX64 = 'a'.repeat(64);
-// the prompt hash of a compliance output is what the review tool writes: sha256 of JSON [system, user] built from the repo template, the input file and the placeholder context
+// the prompt hash of a compliance output is what the review tool writes: sha256 of JSON [system, user] built from the repo template, the input file and the selected sections of the committed context
 const TEMPLATE_TEXT = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-compliance.md'), 'utf8');
 const LENS_TEMPLATES = ['compliance', 'code-review', 'error-paths', 'ux', 'security'].map((n) => [`.claude/review-templates/lens-${n}.md`, fs.readFileSync(path.join(ROOT, `.claude/review-templates/lens-${n}.md`), 'utf8')] as const);
 const templateOf = (template: string) => (template === 'lens-compliance.md' ? TEMPLATE_TEXT : fs.readFileSync(path.join(ROOT, `.claude/review-templates/${template}`), 'utf8'));
-const promptHash = (inputText: string, templateText = TEMPLATE_TEXT) => {
+// task-375 A4: the reviewer context is the selected sections of the committed context file (one value per context file)
+const CTX_FILE = fs.readFileSync(path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), 'utf8');
+const selectedOf = (text: string) => { const x = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { extractSections: (m: string, w: string[]) => string; CONTEXT_SECTIONS: string[] }; return x.extractSections(text, /^#{1,6}\s.*Implementation Notes/m.test(text) ? x.CONTEXT_SECTIONS : x.CONTEXT_SECTIONS.filter((n) => n !== 'Implementation Notes')); };
+let HASH_CTX = CTX_FILE; // the context text the outputs of the scenario being built were run with (default: the committed one)
+const promptHash = (inputText: string, templateText = TEMPLATE_TEXT, context: string = selectedOf(HASH_CTX)) => {
   const rt = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { splitTemplate: (t: string) => { systemInstruction: string | null; userTemplate: string }; substitutePlaceholders: (t: string, v: Record<string, string>) => string };
   const s = rt.splitTemplate(templateText);
-  return sha(JSON.stringify([s.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.", rt.substitutePlaceholders(s.userTemplate, { plan: inputText, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' })]));
+  return sha(JSON.stringify([s.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.", rt.substitutePlaceholders(s.userTemplate, { plan: inputText, specs: context, dataContext: '(no live-DB context provided)' })]));
 };
 const hdr = (template: string, inputText: string | null, prompt?: string) => `REVIEW template=${template} model=deepseek-reasoner at=2026-11-20T10:00:00.000Z file_sha256=${inputText === null ? HEX64 : sha(inputText)} prompt_sha256=${prompt ?? (inputText !== null ? promptHash(inputText, templateOf(template)) : HEX64)}\n`;
 const DIFF_FLAGS = (JSON.parse(run('node', ['-e', "import('./scripts/analysis/rule-lists.mjs').then((m)=>console.log(JSON.stringify(m.DIFF_ARGS)))"], { cwd: ROOT }).stdout) as string[]);
@@ -67,10 +71,11 @@ type Opts = {
   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
   // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
   triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean; notesBlock?: boolean;
-  mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
+  ctx?: string | false; hashCtx?: string; refs?: false | string[]; mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
 };
 type TriageCtx = { ids: { id: string; word: string; sev: string }[]; sha: string; path: string; base: string; d: string };
 function scenario(o: Opts = {}) {
+  HASH_CTX = o.hashCtx ?? CTX_FILE;
   const d = tmp('lc');
   const g = (...a: string[]) => run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...a], { cwd: d });
   const w = (f: string, t: string) => { fs.mkdirSync(path.dirname(path.join(d, f)), { recursive: true }); fs.writeFileSync(path.join(d, f), t); };
@@ -151,6 +156,15 @@ function scenario(o: Opts = {}) {
     fs.appendFileSync(path.join(d, o.finalTaskPath ?? TASK), `\n## Final Summary\n\n<!-- SECTION:FINAL_SUMMARY:BEGIN -->\n${(o.notesBlock ? ['no outcome block here'] : o.summary ? o.summary(block) : block).join('\n')}\n<!-- SECTION:FINAL_SUMMARY:END -->\n`);
   }
   for (const [n, t] of Object.entries(l)) if (t !== null) w(`${LD}/${n}`, t);
+  // task-375 A5: the review context the lane committed with its round (docs/reports/reviews/<task>/context-rN.md); B2: the references the close requires (the repo copies of the lane files)
+  if (o.ctx !== false) w('docs/reports/reviews/task-7/context-r1.md', o.ctx ?? CTX_FILE);
+  const tp = path.join(d, o.finalTaskPath ?? TASK);
+  if (!o.noTaskFile && o.refs !== false && fs.existsSync(tp)) {
+    const refs = o.refs ?? [`${LD}/REPORT.md`, `${LD}/GROUNDER.md`, ...(l['TRIAGE.md'] ? [`${LD}/TRIAGE.md`] : [])];
+    let tt = fs.readFileSync(tp, 'utf8');
+    if (!/^references:/m.test(tt)) tt = tt.replace(/\nmilestone:/, `\nreferences:\n${refs.map((r) => `  - ${r}`).join('\n')}\nmilestone:`);
+    fs.writeFileSync(tp, tt);
+  }
   g('add', '-A');
   const msgFile = path.join(d, '.git/MSG');
   fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
@@ -769,5 +783,43 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
     const mk = (p: string) => outcomeErrors({ verdicts: v, triageText: '', lensKinds: new Map(), facts: goodFacts, mode: 'plan', seats: [seat(p)], seatRoot: 'docs/reports/reviews/task-9/' }).errors;
     expect(mk('docs/reports/reviews/task-9/seat.md')).toEqual([]);
     expect(mk('docs/reports/lanes/x/seat.md').join('\n')).toMatch(/is outside docs\/reports\/reviews\/task-9\//);
+  });
+});
+
+describe('task-375 A4, A5, B2: the close binds the committed review context and the references', () => {
+  const planted = (ctx: string) => { const r = scenario({ ctx }); return r; };
+  it('control: a lane with a valid committed context and the three references closes', () => {
+    const r = scenario();
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('refuses when no context file is committed for the task (the placeholder is not accepted)', () => {
+    refused(scenario({ ctx: false }), /no committed review context file/);
+  });
+  it('refuses a context that is the placeholder, and one without the Description heading', () => {
+    refused(planted('(no pasted context provided)'), /context-r1\.md/);
+    refused(planted(CTX_FILE.replace('## Description', '## Gone')), /Description/);
+  });
+  it('refuses a context edited after the review (the recomputed prompt hash no longer matches any committed context)', () => {
+    refused(planted(CTX_FILE.replace('a short description', 'a different description')), /prompt_sha256/);
+  });
+  it('an output must match one committed context file: the earlier round file is kept and still binds', () => {
+    const r = scenario({ staged: { 'docs/reports/reviews/task-7/context-r2.md': CTX_FILE.replace('a short description', 'a later round description') } });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('a missing Implementation Notes heading is refused when the task has notes, and control: tolerated when it has none', () => {
+    refused(scenario({ notesBlock: true, ctx: CTX_FILE.replace('## Implementation Notes\n(none)', '## Elsewhere\n(none)') }), /Implementation Notes/);
+    const bare = CTX_FILE.replace('## Implementation Notes\n(none)\n\n', '');
+    const ok = scenario({ ctx: bare, hashCtx: bare });
+    expect(ok.status, ok.stderr).toBe(0);
+  });
+  it('B2: a missing REPORT.md reference is refused and the exact add-ref command is printed; control above closes with all three', () => {
+    const r = scenario({ refs: ['docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md', 'docs/reports/lanes/2026-11-20/BL-COMPLY2/TRIAGE.md'] });
+    refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/);
+  });
+  it('B2: the TRIAGE.md reference is required only when the lane directory holds one', () => {
+    const noTri = scenario({ lensFinding: false, refs: [`docs/reports/lanes/2026-11-20/BL-COMPLY2/REPORT.md`, `docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md`] });
+    expect(noTri.status, noTri.stderr).toBe(0);
+    const tri = scenario({ refs: [`docs/reports/lanes/2026-11-20/BL-COMPLY2/REPORT.md`, `docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md`] });
+    refused(tri, /--add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/TRIAGE\.md/);
   });
 });
