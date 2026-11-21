@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PREP418'
 created_date: '2026-11-21T00:24:00Z'
-updated_date: '2026-11-21T05:43:00Z'
+updated_date: '2026-11-21T05:47:00Z'
 labels:
   - McFix
   - McFix V2
@@ -226,4 +226,6 @@ rg#4 MED folded one review round per
 2026-11-21 (M-246) Plan review round 1 of this task, made by hand under the launch check (RR-0345): 11 plan review outputs (compliance per governing rule list, plan-review-deepseek, error-paths), the Integration, Reality-Check and Regression seats on the plan, ruled by the separate grounder Cairn-Ground-P418: 92 findings, 71 CONFIRMED (2 HIGH, 36 MED, 29 LOW, 4 NIT), 21 REJECTED; 64 folded into the plan by 30 sentence edits (FOLD-418.json as the grounder wrote it, applied mechanically), 7 to the review pile. Six open questions were ruled by the grounder with grounds (docs/reports/reviews/task-418/QUESTIONS-RULED.md) and are taken as approved on the operator's authorization (RR-0350, MORNING-DECISIONS.md:1638), reported to him: Q1 one review round per prep run; Q2 the script makes the review calls without asking each time; Q3 this task is hand-prepared and is the gate proof, task-412 the first scripted proof; Q4 the plan stage also runs plan-review-deepseek and error-paths beside compliance (Spec 08 section 7 rule 4; MORNING-DECISIONS.md:1634 is his proposal, not a ruling); Q5 backlog-lane.mjs is left untouched and nothing is exported from it; Q6 the round block is read from the check's own refusal message.
 
 2026-11-21 taken on the board at lane launch (lane BL-PREP418, worktree /Users/brettpreston_macmini/Buildo-wt-prep418, branch wf1/inc1b-prep418), RR-0240
+
+2026-11-21 (M-246) Lane BL-PREP418 build stage 1: tests for plan-prep written first (16 planted defects with controls in src/tests/backlog/backlog-lane.logic.test.ts, beside plantEvidence); red attempt follows, then the code.
 <!-- SECTION:NOTES:END -->

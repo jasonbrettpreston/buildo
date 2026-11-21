@@ -12,14 +12,16 @@
 //   check-tasks [--table f] [--root dir]                    every open task of backlog/tasks: resolves (with the every_task and milestone lists verified) or is listed by id as not yet resolvable, with the reason
 //   page [--write|--check] [--table f] [--root dir]          the generated page docs/reports/generated/rule-lists-by-kind.md: per kind of work the documents, sizes and part counts
 //   findings --dir d                                        the finding ids of the lens outputs in d (<file stem>#<ordinal among BUG and DEFER lines>)
+//   plan-prep <review|post|commit> --task task-N --lane <name> [--board dir] [--dry-run]   task-418 (LAUNCH.PREP): the MECHANICAL steps before a build launch (see planPrep below); it rules nothing
 // Rules: Spec 08 section 7 rule 4 and section 5.3 (08_agents.md), 00_engineering_standards.md section 14, operator 2026-11-20 (see the table's $comment); PLAN-PROTOCOL.md:3 simple.
 // Reused, not rebuilt: the glob matcher of scripts/analysis/mcbylaws/paths.mjs, the path maps of mcbylaws/protected-paths.json (globs_from), the Files grammar of check-task-files.mjs.
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { args, asList, parseFM, readItems, REPO, sha256 } from './backlog-lib.mjs';
+import { args, asList, home, parseFM, readItems, REPO, sha256 } from './backlog-lib.mjs';
 import { globToRegExp, matchesAny } from './mcbylaws/paths.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -523,6 +525,222 @@ export function renderPage({ table, root }) {
   return o.join('\n') + '\n';
 }
 
+/** The lines of the findings command for a folder: a Ruled line per lens output, then "<id>\t<line>" per finding (the CLI prints them; plan-prep writes them to FINDINGS-PLAN.md). */
+export function findingsReport(dir) {
+  const files = fs.readdirSync(dir).filter(isLensOutput).sort().map((name) => ({ name, text: fs.readFileSync(path.join(dir, name), 'utf8') }));
+  return [...files.map((f) => ruledLine(f.name, f.text)), ...findingsIn(files).map((f) => `${f.id}\t${f.line}`)];
+}
+
+// ---- plan-prep (task-418, LAUNCH.PREP; PLAN-418-v2 in the task): the MECHANICAL steps before a build launch, three phases of one subcommand ----
+//   review  the plan context (backlog-brief.mjs), one lens input and one review call per resolved rule list (compliance), one call per plan lens, FINDINGS-PLAN.md
+//   post    the references and the "Plan review round N" block on the task, read from the check's own text (outcomeErrors of check-lane-close.mjs)
+//   commit  the evidence folder committed through the real hooks, then the launch dry run (the gate)
+// It NEVER writes a ruling, a seat report, a grounder file, an outcome line or the Plan line, and it does not launch. Reused, not rebuilt: backlog-brief.mjs, lens-input, findingsReport, resolveTask,
+// the exported functions of scripts/hooks/check-lane-close.mjs (a dynamic import: that file imports this one) and scripts/analysis/backlog-lane.mjs (run as the gate, unchanged).
+// Every git call and every spawned tool gets gitFreeEnv() (a commit hook exports GIT_DIR, GIT_INDEX_FILE and GIT_WORK_TREE). Test-only seams: --review-bin <script> replaces scripts/deepseek-review.js,
+// --launch-args '<json array>' adds arguments to the launch dry run (as backlog-lane's own --backlog-bin and --main seams).
+class Stop extends Error { constructor(code, msg) { super(msg); this.code = code; } }
+const shq = (s) => (/^[A-Za-z0-9_@%+=:,./-]+$/.test(s) ? s : `'${String(s).replace(/'/g, `'\\''`)}'`);
+const cmdLine = (cwd, argv, env) => `cd ${shq(cwd)} && ${env ? `${Object.entries(env).map(([k, v]) => `${k}=${shq(v)}`).join(' ')} ` : ''}${argv.map(shq).join(' ')}`;
+const first = (s, n = 8) => String(s).trim().split('\n').slice(0, n).join('\n');
+const CALL_MS = 900000 + 10000; // deepseek-review.js bounds a call at 900 s (TIMEOUT_MS)
+const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+export async function planPrep(a) {
+  const str = (k, d) => (a[k] && a[k] !== true ? String(a[k]) : d);
+  const refuse = (m) => { throw new Stop(3, `refused: ${m}`); };
+  const phase = a._?.[0];
+  const taskId = str('task', '').toLowerCase();
+  const lane = str('lane', '');
+  if (!['review', 'post', 'commit'].includes(phase) || !/^task-\d+$/.test(taskId) || !lane) { process.stderr.write('plan-prep: usage: plan-prep <review|post|commit> --task task-N --lane <planned lane name> [--board <dir>] [--dry-run]\n'); return 2; }
+  const dry = a['dry-run'] === true;
+  const board = path.resolve(home(str('board', '~/Buildo-wt-board')));
+  const ev = `docs/reports/reviews/${taskId}`;
+  const evAbs = path.join(board, ev);
+  const env = gitFreeEnv();
+  const git = (...g) => spawnSync('git', ['-c', 'core.quotepath=false', ...g], { cwd: board, encoding: 'utf8', maxBuffer: 1 << 26, env });
+  const bin = path.resolve(home(str('backlog-bin', process.env.BACKLOG_BIN || [path.join(board, 'node_modules/.bin/backlog'), path.join(REPO, 'node_modules/.bin/backlog')].find((c) => fs.existsSync(c)) || path.join(REPO, 'node_modules/.bin/backlog'))));
+  const say = (cwd, argv, e) => console.log(`$ ${cmdLine(cwd, argv, e)}`);
+  const sh = (argv) => spawnSync(argv[0], argv.slice(1), { cwd: board, encoding: 'utf8', maxBuffer: 1 << 26, env });
+  const rm = (re) => { if (fs.existsSync(evAbs)) for (const f of fs.readdirSync(evAbs)) if (re.test(f)) fs.rmSync(path.join(evAbs, f)); };
+  try {
+    if (!fs.existsSync(board) || git('rev-parse', '--git-dir').status !== 0) refuse(`board ${board} is not a git checkout`);
+    const t = readItems(board).find((x) => x.id === taskId);
+    if (!t) refuse(`${taskId} not found under ${path.join(board, 'backlog/tasks')}`);
+    const type = String(t.fm.type ?? '').toLowerCase();
+    const planField = /<!-- SECTION:PLAN:BEGIN -->\n?([\s\S]*?)\n?<!-- SECTION:PLAN:END -->/.exec(t.body)?.[1] ?? '';
+    // the files of the board outside backlog/ and the evidence folder that are dirty or staged (the node_modules links of a worktree are untracked and ignored: backlog-lane.mjs:84)
+    const dirtyOutside = () => {
+      const st = git('status', '--porcelain', '--untracked-files=all');
+      if (st.status !== 0) refuse(`git status failed on ${board}: ${first(st.stderr, 1)}`);
+      return st.stdout.split('\n').filter(Boolean).map((l) => l.slice(3).replace(/^.* -> /, '').replace(/^"(.*)"$/, '$1')).filter((p) => !p.startsWith('backlog/') && !p.startsWith(`${ev}/`) && !/(^|\/)node_modules\/?$/.test(p));
+    };
+    const notDirty = () => { const d = dirtyOutside(); if (d.length) refuse(`board checkout ${board} is dirty outside backlog/ and ${ev}/: ${d.slice(0, 5).join(', ')}${d.length > 5 ? ', ...' : ''}`); };
+    const launchArgs = () => { try { const v = JSON.parse(str('launch-args', '[]')); return Array.isArray(v) ? v.map(String) : []; } catch { throw new Stop(2, 'usage: --launch-args must be a JSON array of strings'); } };
+
+    if (phase === 'review') return await reviewPhase();
+    if (phase === 'post') return await postPhase();
+    return commitPhase();
+
+    // ---- review ----
+    async function reviewPhase() {
+      const status = String(t.fm.status).toUpperCase();
+      if (status !== 'LATER' && status !== 'WAITS') refuse(`task ${taskId} is not LATER or WAITS (status ${status}); only a waiting task is prepared`);
+      if (type !== 'build' && type !== 'fix') refuse(`task ${taskId} is type ${type || '(none)'}: only build and fix tasks have a plan review`);
+      const table = readTable(DEFAULT_TABLE);
+      const letter = milestoneLetter(board, t.fm.milestone);
+      let r;
+      try { r = resolveTask({ table, root: board, body: t.body, type, letter }); } catch (e) { refuse(`${taskId}: cannot read the rule-list table or one of its path maps under ${board}: ${first(e.message, 1)}`); }
+      if (r.error) refuse(`${taskId}: ${r.error.replace(/^refused: /, '')}`);
+      const miss = verifyResolved(table, r, letter, type);
+      if (miss.length) refuse(`${taskId}: the resolved rule lists are incomplete: ${miss.join('; ')}`);
+      if (!planField.trim()) refuse(`${taskId}: the Implementation Plan field is empty (backlog task edit ${taskId} --plan ...): there is nothing to review`);
+      notDirty();
+      const old = fs.existsSync(evAbs) ? fs.readdirSync(evAbs).filter((f) => /^plan-.*\.txt$/.test(f)) : [];
+      if (old.length) refuse(`${ev}/ already holds ${old.slice(0, 3).join(', ')}${old.length > 3 ? ', ...' : ''}: one review round per prep run (a second round re-makes every input and output, 08_agents.md:352)`);
+
+      const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
+      const ctxRel = `${ev}/context-r${rt.contextRound(evAbs)}.md`;
+      const reviewBin = str('review-bin', '') ? path.resolve(home(str('review-bin', ''))) : 'scripts/deepseek-review.js';
+      const dotenv = [path.join(os.homedir(), 'Buildo/node_modules/dotenv/config'), path.join(REPO, 'node_modules/dotenv/config')].find((c) => fs.existsSync(`${c}.js`)) ?? path.join(os.homedir(), 'Buildo/node_modules/dotenv/config');
+      const denv = { DOTENV_CONFIG_PATH: process.env.DOTENV_CONFIG_PATH || path.join(os.homedir(), 'Buildo', '.env') };
+      const reviewArgv = (file, tpl) => ['node', '-r', dotenv, reviewBin, 'review', file, '--template', `.claude/review-templates/${tpl}`, '--context', ctxRel, ...rt.CONTEXT_SECTIONS.flatMap((s) => ['--section', s])];
+      const lenses = lensSet({ type, files: filesText(t.body) }).plan.map((l) => ({ out: `plan-${l}.txt`, tpl: l === 'plan-review-deepseek' ? 'plan-review-deepseek.md' : `lens-${l}.md`, file: ctxRel }));
+      const lists = type === 'build' ? r.lists : []; // a fix task needs the plan lens outputs only (check-lane-close.mjs:604)
+      const briefArgv = ['node', path.join(HERE, 'backlog-brief.mjs'), '--task', taskId, '--lane', lane, '--root', board];
+      const inputArgv = (id) => ['node', path.join(HERE, 'rule-lists.mjs'), 'lens-input', '--root', board, '--list', id, '--context', ctxRel, '--material-from', ctxRel, '--out', `${ev}/in-plan-compliance-${id}`];
+      if (dry) {
+        say(board, briefArgv);
+        for (const l of lists) say(board, inputArgv(l.id));
+        // the number of parts of a list is known only from the context the brief writes: the review command names the file as in-plan-compliance-<id>[-pN].txt
+        for (const l of lists) say(board, reviewArgv(`${ev}/in-plan-compliance-${l.id}[-pN].txt`, 'lens-compliance.md'), denv);
+        for (const l of lenses) say(board, reviewArgv(l.file, l.tpl), denv);
+        return 0;
+      }
+      const fail = (m) => { rm(/^(in-)?plan-.*\.txt$/); throw new Stop(1, m); };
+      say(board, briefArgv);
+      const b = sh(briefArgv);
+      if (b.status !== 0 || !fs.existsSync(path.join(board, ctxRel))) throw new Stop(1, `the brief did not write ${ctxRel}: ${first(b.stderr || b.stdout, 2)}`);
+      for (const l of lists) { say(board, inputArgv(l.id)); const x = sh(inputArgv(l.id)); if (x.status !== 0) fail(`lens-input failed for list ${l.id}: ${first(x.stderr || x.stdout, 3)}`); }
+      const jobs = [];
+      for (const l of lists) for (const f of fs.readdirSync(evAbs).filter((n) => new RegExp(`^in-plan-compliance-${reEsc(l.id)}(-p\\d+)?\\.txt$`).test(n)).sort()) jobs.push({ out: f.replace(/^in-/, ''), tpl: 'lens-compliance.md', file: `${ev}/${f}` });
+      const nCompliance = jobs.length;
+      jobs.push(...lenses);
+      const started = jobs.map((j) => { const argv = reviewArgv(j.file, j.tpl); say(board, argv, denv); return runAsync(argv, denv).then((x) => ({ j, x })); });
+      const done = await Promise.all(started);
+      const failed = done.filter(({ x }) => x.status !== 0);
+      if (failed.length) fail(`${failed.length} review call(s) failed: ${failed.map(({ j, x }) => `${j.file} (${x.signal ?? `exit ${x.status}`}: ${first(x.stderr || x.stdout, 2).replace(/\n/g, ' | ')})`).join('; ')}; nothing is kept, run the phase again`);
+      for (const { j, x } of done) fs.writeFileSync(path.join(evAbs, j.out), x.stdout);
+      // each output holds the REVIEW header of the template asked for in its first 15 lines (a dotenv banner may come first) and a VERDICT line (check-lane-close.mjs:57-70)
+      const bad = done.map(({ j }) => ({ j, text: fs.readFileSync(path.join(evAbs, j.out), 'utf8') })).filter(({ j, text }) => !new RegExp(`^REVIEW template=${reEsc(j.tpl)} `, 'm').test(text.split('\n').slice(0, 15).join('\n')) || !/^VERDICT:/m.test(text));
+      if (bad.length) fail(`${bad.length} output(s) lack the REVIEW header of their template in the first 15 lines or the VERDICT line: ${bad.map(({ j }) => `${ev}/${j.out}`).join(', ')}`);
+      const report = findingsReport(evAbs);
+      fs.writeFileSync(path.join(evAbs, 'FINDINGS-PLAN.md'), `${report.join('\n')}\n`);
+      console.log(`plan-prep review: ${done.length} outputs (${nCompliance} compliance, ${lenses.length} plan lens), ${report.filter((l) => l.includes('\t')).length} findings, ${ev}/FINDINGS-PLAN.md`);
+      return 0;
+    }
+    function runAsync(argv, extra) {
+      return new Promise((resolve) => {
+        const c = spawn(argv[0], argv.slice(1), { cwd: board, env: { ...env, ...extra }, timeout: CALL_MS });
+        let stdout = ''; let stderr = '';
+        c.stdout.on('data', (d) => { stdout += d; }); c.stderr.on('data', (d) => { stderr += d; });
+        c.on('error', (e) => resolve({ status: 1, signal: null, stdout, stderr: `${stderr}${e.message}` }));
+        c.on('close', (status, signal) => resolve({ status: status ?? 1, signal, stdout, stderr }));
+      });
+    }
+
+    // ---- post ----
+    async function postPhase() {
+      const clc = await import('../hooks/check-lane-close.mjs');
+      const read = (rel) => { const p = path.join(board, rel); return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null; };
+      const g = read(`${ev}/GROUNDER-PLAN.md`);
+      if (g === null) refuse(`${ev}/GROUNDER-PLAN.md is absent (the separate grounder writes it before post)`);
+      const taskText = fs.readFileSync(t.file, 'utf8');
+      const entries = filesEntries(t.body) ?? [];
+      const seats = clc.seatLines(g, read);
+      const need = [...clc.PLAN_SEATS.always, ...(entries.some((e) => git('ls-files', '--', e).stdout.trim() !== '') ? clc.PLAN_SEATS.conditional : [])];
+      const problems = [
+        ...need.filter((n) => !seats.some((s) => s.name.toLowerCase() === n)).map((n) => `no "Seat: ${n} <repo path inside ${ev}/> sha256:<12 hex>" line in GROUNDER-PLAN.md`),
+        ...seats.filter((s) => s.text === null).map((s) => `the seat file ${s.path} (Seat ${s.name}) is absent on disk`),
+      ];
+      const verdicts = clc.parseVerdicts(g);
+      const triage = read(`${ev}/TRIAGE-PLAN.md`) ?? '';
+      for (const [id, v] of verdicts) if ((v.word === 'CONFIRMED' || v.word === 'CONFLICT') && !new RegExp(`^\\s*(?:[-*]\\s+)?${reEsc(id)}\\s+\\S`, 'm').test(triage.replace(/[`*]/g, ''))) problems.push(`${id} is ${v.word} in GROUNDER-PLAN.md and has no line in TRIAGE-PLAN.md`);
+      if (problems.length) refuse(problems.join('; '));
+      const files = fs.readdirSync(evAbs).filter(isLensOutput).sort().map((name) => ({ name, text: fs.readFileSync(path.join(evAbs, name), 'utf8') }));
+      const headTasks = git('ls-tree', '--name-only', 'HEAD', 'backlog/tasks/').stdout.split('\n').filter(Boolean);
+      const showHead = (p) => { const x = git('show', `HEAD:${p}`); return x.status === 0 ? x.stdout : null; };
+      const oc = clc.outcomeErrors({
+        verdicts, triageText: triage, lensKinds: new Map(findingsIn(files).map((f) => [f.id, clc.lensKindOf(f.line)])), mode: 'plan', seats, seatRoot: `${ev}/`, selfTask: taskId,
+        facts: {
+          taskText: () => taskText,
+          taskOf: (tid) => { const n = /\d+/.exec(tid)?.[0]; const f = headTasks.find((x) => new RegExp(`^backlog/tasks/task-0*${n}( -.*)?\\.md$`, 'i').test(x)); if (!f) return { exists: false, status: '', text: '' }; const x = showHead(f) ?? ''; return { exists: true, status: String(parseFM(x).fm.status ?? ''), text: x }; },
+          decisionExists: (ref) => git('ls-tree', '--name-only', 'HEAD', 'backlog/decisions/').stdout.split('\n').some((x) => path.posix.basename(x).toLowerCase().startsWith(`${ref.toLowerCase()} -`) || path.posix.basename(x).includes(ref)),
+        },
+        summary: { text: '', headText: '', grounderPath: `${ev}/GROUNDER-PLAN.md`, triagePath: `${ev}/TRIAGE-PLAN.md` }, // empty text: clean outcomes come back as the check's own "the block is:" message
+      });
+      const lacks = oc.errors.filter((e) => /^the task's Final Summary lacks/.test(e));
+      const other = oc.errors.filter((e) => !lacks.includes(e));
+      if (other.length) throw new Stop(1, `the fold is not finished (${other.length} outcome error(s)); the task is unchanged:\n${other.join('\n')}`);
+      let block;
+      if (oc.ids === 0) block = `Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder ${ev}/GROUNDER-PLAN.md; triage ${ev}/TRIAGE-PLAN.md`;
+      else {
+        const m = /the block is:\n([\s\S]*?)\n\(one command/.exec(lacks[0] ?? '');
+        if (!m) refuse(`the check's message holds no block to read (${first(lacks[0] ?? '(no message)', 1)}); the task is unchanged`);
+        block = m[1].replace(/^Review round/, 'Plan review round');
+      }
+      const lines = block.split('\n');
+      if (!/^Plan review round 1: \d+ folded, \d+ task, \d+ ruling, \d+ wontfix, \d+ pile; grounder \S+; triage \S+$/.test(lines[0]) || !lines.slice(1).every((l) => /^\S+ (CRITICAL|HIGH|MED) (folded|task|ruling|wontfix|pile)(\s.*)?$/.test(l))) refuse(`the block read from the check is not in the expected form (the check's text changed?): ${lines[0].slice(0, 100)}; the task is unchanged`);
+      const have = planField.split('\n').map((l) => l.trim());
+      const rounds = have.filter((l) => /^Plan review round \d+:/.test(l));
+      const otherRound = rounds.find((l) => l !== lines[0]);
+      if (otherRound) refuse(`the plan field already holds "${otherRound.slice(0, 90)}": a second round line moves the gate's N (one round line holds the latest counts); remove it by hand`);
+      if (rounds.length && !lines.every((l) => have.includes(l))) refuse(`the plan field holds the round line but not every outcome line of the block; fix it by hand (${lines.filter((l) => !have.includes(l))[0].slice(0, 80)})`);
+      const refs = new Set(asList(parseFM(taskText).fm.references).map((x) => String(x).trim()));
+      const wantRefs = [...new Set([`${ev}/GROUNDER-PLAN.md`, ...(triage ? [`${ev}/TRIAGE-PLAN.md`] : []), ...seats.map((s) => s.path)])];
+      const addRefs = wantRefs.filter((x) => !refs.has(x));
+      if (rounds.length && addRefs.length === 0) { console.log('plan-prep post: nothing to post (the round block and every reference are on the task)'); return 0; }
+      const argv = [bin, 'task', 'edit', taskId, ...(rounds.length ? [] : ['--append-plan', block]), ...addRefs.flatMap((x) => ['--add-ref', x])]; // one --add-ref per path: backlog splits a value at a comma
+      say(board, argv);
+      if (dry) return 0;
+      const e = sh(argv);
+      if (e.status !== 0) throw new Stop(1, `backlog task edit failed: ${first(e.stderr || e.stdout, 3)}`);
+      console.log(`plan-prep post: ${rounds.length ? '' : 'block and '}${addRefs.length} reference(s) added to ${taskId}`);
+      return 0;
+    }
+
+    // ---- commit ----
+    function commitPhase() {
+      const lock = path.resolve(board, git('rev-parse', '--git-path', 'index.lock').stdout.trim() || '.git/index.lock');
+      const locked = () => { if (fs.existsSync(lock)) refuse(`${lock} exists: the board commit job (every 600 s) or another git command holds the index; retry in a minute`); };
+      locked();
+      notDirty();
+      if (!fs.existsSync(path.join(evAbs, 'GROUNDER-PLAN.md'))) refuse(`${ev}/GROUNDER-PLAN.md is absent: nothing to commit yet`);
+      const changed = git('status', '--porcelain', '--untracked-files=all', '--', ev).stdout.trim() !== '';
+      const addArgv = ['git', 'add', '--', ev];
+      const commitArgv = ['git', 'commit', '-q', '-m', `docs(08_agents): plan review evidence for ${taskId}`, '--', ev];
+      const gateArgv = ['node', path.join(HERE, 'backlog-lane.mjs'), '--task', taskId, '--lane', lane, '--board', board, '--dry-run', ...launchArgs()];
+      if (changed) { say(board, addArgv); say(board, commitArgv); } else console.log(`plan-prep commit: ${ev}/ is already committed`);
+      say(board, gateArgv);
+      if (dry) return 0;
+      if (changed) {
+        locked();
+        const undo = () => git('restore', '--staged', '--', ev);
+        const ad = git('add', '--', ev);
+        if (ad.status !== 0) { undo(); throw new Stop(1, `git add failed: ${first(ad.stderr, 3)}`); }
+        const cm = git(...commitArgv.slice(1)); // the real hooks run; no --no-verify
+        if (cm.status !== 0) { undo(); throw new Stop(1, `the commit did not land and nothing is staged (git exit ${cm.status}):\n${first(`${cm.stdout}\n${cm.stderr}`, 12)}`); }
+        console.log(`plan-prep commit: committed ${git('rev-parse', '--short', 'HEAD').stdout.trim()} (${ev}/)`);
+      }
+      const gx = sh(gateArgv);
+      process.stdout.write(gx.stdout); process.stderr.write(gx.stderr);
+      return gx.status ?? 1; // the gate's own exit code and text, passed through (3 with the expected Plan line, 0 with "plan gate ok")
+    }
+  } catch (e) {
+    if (e instanceof Stop) { process.stderr.write(`plan-prep: ${e.message}\n`); return e.code; }
+    throw e;
+  }
+}
 // ---- CLI ----
 function cli() {
   const [cmd] = process.argv.slice(2);
@@ -590,9 +808,9 @@ function cli() {
   } else if (cmd === 'findings') {
     const dir = str('dir', '');
     if (!dir || !fs.existsSync(dir)) die(2, 'usage: findings --dir <lane report dir>');
-    const files = fs.readdirSync(dir).filter(isLensOutput).sort().map((name) => ({ name, text: fs.readFileSync(path.join(dir, name), 'utf8') }));
-    for (const f of files) console.log(ruledLine(f.name, f.text));
-    for (const f of findingsIn(files)) console.log(`${f.id}\t${f.line}`);
-  } else die(2, 'usage: rule-lists.mjs validate | resolve | lens-input | check-tasks | page | findings');
+    for (const l of findingsReport(dir)) console.log(l);
+  } else if (cmd === 'plan-prep') {
+    planPrep(a).then((c) => process.exit(c), (e) => die(1, `plan-prep: ${e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : e}`));
+  } else die(2, 'usage: rule-lists.mjs validate | resolve | lens-input | check-tasks | page | findings | plan-prep');
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) cli();

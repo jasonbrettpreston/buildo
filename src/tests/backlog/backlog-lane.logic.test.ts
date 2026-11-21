@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { backlog, backlogBin, makeProject, mk, ROOT, run, tmp } from './helpers';
 
@@ -458,5 +459,327 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
   });
   it('a milestone letter with no increment requirements document is refused naming the letter', () => {
     refused(lane(fixture({ letter: 'Q' })), /increment.*Q|Q.*increment/);
+  });
+});
+
+// ---- task-418 (LAUNCH.PREP): `rule-lists.mjs plan-prep <review|post|commit>` runs the mechanical steps before a build launch; it rules nothing (PLAN-418-v2). ----
+// Fixture: the temp board above and plantEvidence (the evidence writer of task-375 D; no second writer is built). --review-bin is the test-only seam that replaces scripts/deepseek-review.js.
+// Every spawned-CLI test first asserts the exit status and the first output line before any absence assertion (R-CP, 124a:296).
+const RL = path.join(ROOT, 'scripts/analysis/rule-lists.mjs');
+const DUMMY_ENV = (() => { const d = tmp('dotenv'); const p = path.join(d, 'env'); fs.writeFileSync(p, 'UNUSED=1\n'); return p; })();
+const STUB = (() => {
+  const p = path.join(tmp('stub'), 'review-stub.mjs');
+  fs.writeFileSync(p, `import fs from 'node:fs'; import crypto from 'node:crypto'; import path from 'node:path';
+const a = process.argv; const file = a[3]; const tpl = path.basename(a[a.indexOf('--template') + 1]); const mode = process.env.STUB_MODE || '';
+if (process.env.STUB_FAIL && path.basename(file).includes(process.env.STUB_FAIL)) { console.error('stub: failing on ' + file); process.exit(1); }
+console.log('[dotenv] injected 0 variables');
+if (mode !== 'nohdr') console.log('REVIEW template=' + tpl + ' model=stub at=2026-11-21T00:00:00.000Z file_sha256=' + crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') + ' prompt_sha256=' + 'c'.repeat(64));
+console.log('body');
+if (mode !== 'noverdict') console.log('VERDICT: PASS on stub');
+`);
+  return p;
+})();
+type PF = Fx & { rev: string };
+function prepFixture(opts: { type?: string; files?: string | null; status?: string; plan?: string | null; evidence?: boolean } = {}): PF {
+  const f = fixture({ type: opts.type ?? 'build', ...(opts.files !== undefined ? { files: opts.files } : {}), noEvidence: !opts.evidence });
+  git(f.board, 'config', 'user.name', 't'); git(f.board, 'config', 'user.email', 't@t'); // plan-prep runs git with a GIT_*-free environment: the identity comes from the repository
+  if (!opts.evidence) {
+    const rs = run('node', [RL, 'resolve', '--root', f.board, '--files', opts.files ?? 'scripts/analysis/thing.mjs', '--type', opts.type ?? 'build', '--letter', 'F']);
+    for (const l of rs.status === 0 ? (JSON.parse(rs.stdout) as { lists: { file: string }[] }).lists : []) { fs.mkdirSync(path.dirname(path.join(f.board, l.file)), { recursive: true }); fs.copyFileSync(path.join(ROOT, l.file), path.join(f.board, l.file)); }
+    git(f.board, 'add', '-A'); git(f.board, 'commit', '-q', '-m', 'lists');
+    if (opts.plan !== null) backlog(f.board, ['task', 'edit', f.task, '--plan', opts.plan ?? 'step 1: do the thing; step 2: test it']);
+  }
+  if (opts.status) backlog(f.board, ['task', 'edit', f.task, '-s', opts.status]);
+  return { ...f, rev: path.join(f.base, 'rev') };
+}
+const prep = (f: Fx, phase: string, extra: string[] = [], env: Record<string, string> = {}) => run('node', [RL, 'plan-prep', phase, '--task', f.task, '--lane', 'BL-T1', '--board', f.board, '--backlog-bin', backlogBin(), '--launch-args', JSON.stringify(f.args.slice(6)), ...extra], { env: { ...ID, DEEPSEEK_API_KEY: 'dummy', DOTENV_CONFIG_PATH: DUMMY_ENV, ...env } });
+const review = (f: Fx, extra: string[] = [], env: Record<string, string> = {}) => prep(f, 'review', ['--review-bin', STUB, ...extra], env);
+const dirOf = (f: Fx) => path.join(f.board, 'docs/reports/reviews', f.task);
+const names = (f: Fx, re: RegExp) => (fs.existsSync(dirOf(f)) ? fs.readdirSync(dirOf(f)).filter((n) => re.test(n)).sort() : []);
+const first = (r: { stdout: string; stderr: string }) => (r.stdout + r.stderr).split('\n').find((l) => l.trim()) ?? '';
+const refusal = (r: { status: number | null; stdout: string; stderr: string }, re: RegExp) => { expect(r.status, r.stdout + r.stderr).toBe(3); expect(r.stderr.trim().split('\n')).toHaveLength(1); expect(r.stderr).toMatch(/^plan-prep: refused: /); expect(r.stderr).toMatch(re); };
+const taskFile = (f: Fx) => path.join(f.board, 'backlog/tasks', fs.readdirSync(path.join(f.board, 'backlog/tasks')).find((n) => n.startsWith(`${f.task} -`)) as string);
+const planText = (f: Fx) => /<!-- SECTION:PLAN:BEGIN -->([\s\S]*?)<!-- SECTION:PLAN:END -->/.exec(fs.readFileSync(taskFile(f), 'utf8'))?.[1] ?? '';
+const status = (f: Fx) => git(f.board, 'status', '--porcelain').stdout;
+
+describe('plan-prep review (task-418): refusals, one line, nothing written; each with its control', () => {
+  it('1: an empty Implementation Plan field is refused (exit 3, nothing written); with a plan the same board proceeds', () => {
+    const f = prepFixture({ plan: null });
+    refusal(review(f), /Implementation Plan/);
+    expect(fs.existsSync(dirOf(f))).toBe(false);
+    backlog(f.board, ['task', 'edit', f.task, '--plan', 'a plan']);
+    const ok = review(f);
+    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+    expect(names(f, /^context-r1\.md$/)).toHaveLength(1);
+  });
+  it('2: a task that is not LATER or WAITS, a Files path no row matches and a record task are refused; a resolving LATER build task is not', () => {
+    refusal(review(prepFixture({ status: 'RUNNING' })), /not LATER or WAITS.*RUNNING/);
+    refusal(review(prepFixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' })), /zzz-nothing\/new\.txt/);
+    refusal(review(prepFixture({ type: 'record' })), /type record/);
+    const ok = review(prepFixture({ status: 'WAITS' }));
+    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+  });
+  it('3: a dirty file outside backlog/ and the folder is refused; a change inside backlog/ and a node_modules link pass', () => {
+    const f = prepFixture();
+    fs.writeFileSync(path.join(f.board, 'stray.txt'), 'x');
+    refusal(review(f), /dirty outside backlog\/.*stray\.txt/);
+    expect(fs.existsSync(dirOf(f))).toBe(false);
+    fs.rmSync(path.join(f.board, 'stray.txt'));
+    fs.symlinkSync(os.tmpdir(), path.join(f.board, 'node_modules'));
+    const ok = review(f);
+    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+  });
+  it('4: a plan-*.txt already in the folder is refused with its bytes unchanged; an empty folder is not', () => {
+    const f = prepFixture();
+    fs.mkdirSync(dirOf(f), { recursive: true });
+    fs.writeFileSync(path.join(dirOf(f), 'plan-compliance-x.txt'), 'old bytes\n');
+    refusal(review(f), /plan-compliance-x\.txt/);
+    expect(fs.readFileSync(path.join(dirOf(f), 'plan-compliance-x.txt'), 'utf8')).toBe('old bytes\n');
+    expect(names(f, /^context-/)).toHaveLength(0);
+    fs.rmSync(path.join(dirOf(f), 'plan-compliance-x.txt'));
+    expect(review(f).status).toBe(0);
+  });
+});
+
+describe('plan-prep review: the calls and what they leave', () => {
+  it('5: one failing call is named, exit 1, the files of that run are deleted and the re-run succeeds; all succeeding writes every in- and plan- file', () => {
+    const f = prepFixture();
+    const bad = review(f, [], { STUB_FAIL: 'plan-compliance-queue-137' });
+    expect(bad.status, bad.stdout + bad.stderr).toBe(1);
+    expect(bad.stderr).toMatch(/in-plan-compliance-queue-137\.txt/);
+    expect(names(f, /^(in-)?plan-/)).toEqual([]);
+    const ok = review(f);
+    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+    const outs = names(f, /^plan-compliance-.*\.txt$/);
+    expect(outs.length).toBeGreaterThan(3);
+    expect(names(f, /^in-plan-compliance-.*\.txt$/)).toHaveLength(outs.length);
+    expect(names(f, /^plan-(plan-review-deepseek|error-paths)\.txt$/)).toHaveLength(2);
+    expect(names(f, /^FINDINGS-PLAN\.md$/)).toHaveLength(1);
+  });
+  it('6: an output with no REVIEW header in its first 15 lines, or no VERDICT line, is exit 1 naming the file; a banner then the header on line 2 and a VERDICT pass', () => {
+    for (const STUB_MODE of ['nohdr', 'noverdict']) {
+      const f = prepFixture();
+      const r = review(f, [], { STUB_MODE });
+      expect(r.status, r.stdout + r.stderr).toBe(1);
+      expect(r.stderr).toMatch(/plan-.*\.txt/);
+      expect(names(f, /^(in-)?plan-/)).toEqual([]);
+    }
+    const f = prepFixture();
+    expect(review(f).status).toBe(0);
+    const o = fs.readFileSync(path.join(dirOf(f), names(f, /^plan-compliance-.*\.txt$/)[0] as string), 'utf8').split('\n');
+    expect(o[0]).toMatch(/dotenv/);
+    expect(o[1]).toMatch(/^REVIEW template=lens-compliance\.md /);
+  });
+  it('7: the inputs equal what the library writes for the same context (the plantEvidence call); another Description gives different inputs', async () => {
+    const rl = await import(RL);
+    const rt = (await import('node:module')).createRequire(`${ROOT}/x.js`)(`${ROOT}/scripts/lib/review-template.js`);
+    const f = prepFixture();
+    expect(review(f).status).toBe(0);
+    const ctx = fs.readFileSync(path.join(dirOf(f), 'context-r1.md'), 'utf8');
+    const table = rl.readTable();
+    const rs = rl.resolveTask({ table, root: f.board, body: fs.readFileSync(taskFile(f), 'utf8'), type: 'build', letter: 'F' });
+    for (const l of rs.lists as { id: string }[]) for (const x of rl.buildLensInputs({ id: l.id, list: table.lists[l.id], root: f.board, material: rt.extractSections(ctx, rt.PLAN_SECTIONS), templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: rt.extractSections(ctx, rt.CONTEXT_SECTIONS) }))
+      expect(fs.readFileSync(path.join(dirOf(f), `in-plan-compliance-${l.id}${x.suffix}.txt`), 'utf8')).toBe(x.text);
+    const g = prepFixture(); backlog(g.board, ['task', 'edit', g.task, '-d', 'another description\n\nFiles: scripts/analysis/thing.mjs']);
+    expect(review(g).status).toBe(0);
+    const a = names(f, /^in-plan-compliance-eng-all/)[0] as string;
+    expect(fs.readFileSync(path.join(dirOf(g), a), 'utf8')).not.toBe(fs.readFileSync(path.join(dirOf(f), a), 'utf8'));
+  });
+  it('8: with context-r1.md present the phase writes context-r2.md and leaves r1 untouched', () => {
+    const f = prepFixture();
+    fs.mkdirSync(dirOf(f), { recursive: true });
+    fs.writeFileSync(path.join(dirOf(f), 'context-r1.md'), '## Task\nold\n');
+    const r = review(f);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    expect(fs.readFileSync(path.join(dirOf(f), 'context-r1.md'), 'utf8')).toBe('## Task\nold\n');
+    expect(names(f, /^context-r\d+\.md$/)).toEqual(['context-r1.md', 'context-r2.md']);
+  });
+  it('16: a fix task writes the plan lens outputs and no per-list inputs', () => {
+    const f = prepFixture({ type: 'fix' });
+    const r = review(f);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    expect(names(f, /^plan-.*\.txt$/)).toEqual(['plan-error-paths.txt', 'plan-plan-review-deepseek.txt']);
+    expect(names(f, /^in-/)).toEqual([]);
+  });
+  it('git environment: a foreign GIT_DIR, GIT_INDEX_FILE and GIT_WORK_TREE (as in a commit hook) still gives a successful review', () => {
+    const f = prepFixture();
+    const real = run('git', ['rev-parse', '--absolute-git-dir'], { cwd: ROOT }).stdout.trim();
+    const r = review(f, [], { GIT_DIR: real, GIT_INDEX_FILE: path.join(real, 'index'), GIT_WORK_TREE: ROOT });
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    expect(names(f, /^context-r1\.md$/)).toHaveLength(1);
+  });
+  it('15: --dry-run on each phase prints the commands (the real tool line included) and leaves the tree byte-identical', () => {
+    const f = prepFixture();
+    const before = status(f);
+    const r = prep(f, 'review', ['--dry-run']);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    expect(first(r)).toMatch(/^\$ cd .* && node \S*backlog-brief\.mjs /);
+    const li = r.stdout.split('\n').filter((l) => /lens-input/.test(l)).length;
+    expect(li).toBeGreaterThan(3);
+    expect(r.stdout.split('\n').filter((l) => /scripts\/deepseek-review\.js review .*lens-compliance\.md/.test(l))).toHaveLength(li);
+    expect(r.stdout).toMatch(/DOTENV_CONFIG_PATH=\S+ node -r \S*dotenv\/config scripts\/deepseek-review\.js review \S+ --template \.claude\/review-templates\/plan-review-deepseek\.md --context \S+ --section Task /);
+    expect(status(f)).toBe(before);
+    expect(fs.existsSync(dirOf(f))).toBe(false);
+    const e = prepFixture({ evidence: true });
+    const eb = status(e);
+    const p = prep(e, 'post', ['--dry-run']);
+    expect(p.status, p.stdout + p.stderr).toBe(0);
+    const c = prep(e, 'commit', ['--dry-run']);
+    expect(c.status, c.stdout + c.stderr).toBe(0);
+    expect(c.stdout).toMatch(/backlog-lane\.mjs .*--dry-run/);
+    expect(status(e)).toBe(eb);
+  });
+});
+
+// helpers of the post and commit tests: the state plantEvidence leaves, with the round line and the references stripped, as the agents' work (grounder, seats, fold) is
+const seatsOf = (f: Fx) => names(f, /^seat-.*-1\.md$/).map((n) => n.replace(/^seat-|-1\.md$/g, ''));
+const stripRound = (f: Fx) => {
+  backlog(f.board, ['task', 'edit', f.task, '--plan', 'the plan text of the fixture task']);
+  for (const x of [`GROUNDER-PLAN.md`, ...seatsOf(f).map((n) => `seat-${n}-1.md`)]) backlog(f.board, ['task', 'edit', f.task, '--remove-ref', `docs/reports/reviews/${f.task}/${x}`]);
+};
+const ZERO = (f: Fx) => `Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder docs/reports/reviews/${f.task}/GROUNDER-PLAN.md; triage docs/reports/reviews/${f.task}/TRIAGE-PLAN.md`;
+const refsOf = (f: Fx) => backlog(f.board, ['task', 'view', f.task, '--plain']).stdout;
+const sha12 = (s: string) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 12);
+/** A seat finding of severity `sev` that the grounder CONFIRMS, with the Seat line re-stamped, as the agents would leave it. */
+function confirmSeat(f: Fx, seat = 'integration', sev = 'HIGH') {
+  const d = dirOf(f); const abbr = seat.slice(0, 3);
+  const body = `# ${seat} seat\n### ${abbr}#1 ${sev}: a real finding\n`;
+  fs.writeFileSync(path.join(d, `seat-${seat}-1.md`), body);
+  let g = fs.readFileSync(path.join(d, 'GROUNDER-PLAN.md'), 'utf8');
+  g = g.replace(new RegExp(`^${abbr}#1 REJECTED (.*)$`, 'm'), `${abbr}#1 CONFIRMED $1 ${sev} real`).replace(new RegExp(`^(Seat: ${seat} \\S+ sha256:)[0-9a-f]{12}$`, 'm'), `$1${sha12(body)}`);
+  fs.writeFileSync(path.join(d, 'GROUNDER-PLAN.md'), g);
+}
+
+describe('plan-prep post (task-418)', () => {
+  it('9: from the plantEvidence state with the round line and references stripped, post restores the exact zero-form line and the references; run twice, one block', () => {
+    const f = prepFixture({ evidence: true });
+    stripRound(f);
+    expect(planText(f)).not.toMatch(/Plan review round/);
+    const r = prep(f, 'post');
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    expect(planText(f)).toContain(ZERO(f));
+    const v = refsOf(f);
+    for (const x of ['GROUNDER-PLAN.md', ...seatsOf(f).map((n) => `seat-${n}-1.md`)]) expect(v).toContain(`docs/reports/reviews/${f.task}/${x}`);
+    const again = prep(f, 'post');
+    expect(again.status, again.stdout + again.stderr).toBe(0);
+    expect(first(again)).toMatch(/nothing to post/);
+    expect(planText(f).split('Plan review round 1').length - 1).toBe(1);
+  });
+  it('9b: a different "Plan review round" line is refused naming it, the task unchanged', () => {
+    const f = prepFixture({ evidence: true });
+    backlog(f.board, ['task', 'edit', f.task, '--append-plan', 'Plan review round 2: 1 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder g; triage t']);
+    const before = planText(f);
+    const r = prep(f, 'post');
+    expect(r.status, r.stdout + r.stderr).toBe(3);
+    expect(r.stderr).toMatch(/Plan review round 2/);
+    expect(planText(f)).toBe(before);
+  });
+  it('10: a CONFIRMED id with no TRIAGE-PLAN.md line is refused naming the id and the task is unchanged; with a folded quote that is in the task it posts', () => {
+    const f = prepFixture({ evidence: true });
+    stripRound(f);
+    confirmSeat(f, 'integration', 'LOW');
+    const before = planText(f);
+    const r = prep(f, 'post');
+    expect(r.status, r.stdout + r.stderr).toBe(3);
+    expect(r.stderr).toMatch(/int#1/);
+    expect(planText(f)).toBe(before);
+    fs.writeFileSync(path.join(dirOf(f), 'TRIAGE-PLAN.md'), 'int#1 folded:"the plan text of the fixture task"\n');
+    const ok = prep(f, 'post');
+    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+    expect(planText(f)).toContain('Plan review round 1: 1 folded, 0 task, 0 ruling, 0 wontfix, 0 pile;');
+    expect(refsOf(f)).toContain(`docs/reports/reviews/${f.task}/TRIAGE-PLAN.md`);
+  });
+  it('10b: a folded quote that is NOT in the task is exit 1 (the fold is not finished) and the task is unchanged', () => {
+    const f = prepFixture({ evidence: true });
+    stripRound(f);
+    confirmSeat(f, 'integration', 'LOW');
+    fs.writeFileSync(path.join(dirOf(f), 'TRIAGE-PLAN.md'), 'int#1 folded:"words that are nowhere in the task text"\n');
+    const before = planText(f);
+    const r = prep(f, 'post');
+    expect(r.status, r.stdout + r.stderr).toBe(1);
+    expect(r.stderr).toMatch(/not in the task text/);
+    expect(planText(f)).toBe(before);
+  });
+  it('12: a missing Seat line (integration, reality-check, regression where a Files path is tracked), an absent seat file and a seat file edited after the grounder are refused; all-new Files need no regression', () => {
+    const f = prepFixture({ evidence: true });
+    stripRound(f);
+    expect(prep(f, 'post').status).toBe(0); // control: all-new Files, no regression seat
+    for (const seat of ['integration', 'reality-check']) {
+      const g = prepFixture({ evidence: true }); stripRound(g);
+      const gp = path.join(dirOf(g), 'GROUNDER-PLAN.md');
+      fs.writeFileSync(gp, fs.readFileSync(gp, 'utf8').split('\n').filter((l) => !l.startsWith(`Seat: ${seat} `)).join('\n'));
+      const r = prep(g, 'post');
+      expect(r.status, r.stdout + r.stderr).toBe(3);
+      expect(r.stderr).toContain(`Seat: ${seat}`);
+    }
+    const t = prepFixture({ evidence: true, files: 'mobile/.keep' }); stripRound(t);
+    expect(seatsOf(t)).toContain('regression');
+    const gp = path.join(dirOf(t), 'GROUNDER-PLAN.md');
+    fs.writeFileSync(gp, fs.readFileSync(gp, 'utf8').split('\n').filter((l) => !l.startsWith('Seat: regression ')).join('\n'));
+    const rr = prep(t, 'post');
+    expect(rr.status, rr.stdout + rr.stderr).toBe(3);
+    expect(rr.stderr).toMatch(/Seat: regression/);
+    const a = prepFixture({ evidence: true }); stripRound(a);
+    fs.rmSync(path.join(dirOf(a), 'seat-integration-1.md'));
+    const ra = prep(a, 'post');
+    expect(ra.status, ra.stdout + ra.stderr).toBe(3);
+    expect(ra.stderr).toMatch(/seat-integration-1\.md/);
+    const e = prepFixture({ evidence: true }); stripRound(e);
+    fs.appendFileSync(path.join(dirOf(e), 'seat-integration-1.md'), 'edited later\n');
+    const re = prep(e, 'post');
+    expect(re.status, re.stdout + re.stderr).toBe(1);
+    expect(re.stderr).toMatch(/edited after/);
+  });
+});
+
+describe('plan-prep commit and the end to end (task-418)', () => {
+  const head = (f: Fx) => git(f.board, 'rev-parse', 'HEAD').stdout.trim();
+  it('13: a staged file outside the folder, a failing hook and an index.lock leave nothing committed; the commit holds exactly the folder', () => {
+    const f = prepFixture({ evidence: true });
+    fs.writeFileSync(path.join(dirOf(f), 'TRIAGE-PLAN.md'), 'x\n');
+    fs.writeFileSync(path.join(f.board, 'other.txt'), 'x'); git(f.board, 'add', 'other.txt');
+    const h0 = head(f);
+    const s = prep(f, 'commit');
+    refusal(s, /other\.txt/);
+    expect(head(f)).toBe(h0);
+    git(f.board, 'rm', '--cached', '-q', 'other.txt'); fs.rmSync(path.join(f.board, 'other.txt'));
+    fs.writeFileSync(path.join(f.board, '.git/index.lock'), '');
+    refusal(prep(f, 'commit'), /index\.lock/);
+    fs.rmSync(path.join(f.board, '.git/index.lock'));
+    const hook = path.join(f.board, '.git/hooks/pre-commit');
+    fs.writeFileSync(hook, '#!/bin/sh\necho hook says no\nexit 1\n'); fs.chmodSync(hook, 0o755);
+    const hk = prep(f, 'commit');
+    expect(hk.status, hk.stdout + hk.stderr).toBe(1);
+    expect(hk.stderr + hk.stdout).toMatch(/hook says no/);
+    expect(head(f)).toBe(h0);
+    expect(git(f.board, 'diff', '--cached', '--name-only').stdout.trim()).toBe('');
+    fs.rmSync(hook);
+    const ok = prep(f, 'commit');
+    expect(ok.stdout + ok.stderr).toMatch(/plan gate/);
+    expect(head(f)).not.toBe(h0);
+    expect(git(f.board, 'show', '--name-only', '--format=', 'HEAD').stdout.trim()).toBe(`docs/reports/reviews/${f.task}/TRIAGE-PLAN.md`);
+  });
+  it('11 and 14: a CONFIRMED HIGH folded: post, commit (the dry run prints the expected Plan line), the grounder copies it, commit again prints "plan gate ok"; one word edited in the task refuses with the new expected line', () => {
+    const f = prepFixture({ evidence: true });
+    stripRound(f);
+    confirmSeat(f, 'integration', 'HIGH');
+    fs.writeFileSync(path.join(dirOf(f), 'TRIAGE-PLAN.md'), 'int#1 folded:"the plan text of the fixture task"\n');
+    const p = prep(f, 'post');
+    expect(p.status, p.stdout + p.stderr).toBe(0);
+    expect(planText(f)).toMatch(/int#1 HIGH folded /);
+    const c1 = prep(f, 'commit');
+    expect(c1.status, c1.stdout + c1.stderr).toBe(3);
+    const exp = /expected: (Plan: \S+ sha256:[0-9a-f]{12})/.exec(c1.stderr)?.[1];
+    expect(exp).toBeTruthy();
+    const gp = path.join(dirOf(f), 'GROUNDER-PLAN.md');
+    fs.writeFileSync(gp, fs.readFileSync(gp, 'utf8').replace(/^Plan: .*$/m, exp as string));
+    const c2 = prep(f, 'commit');
+    expect(c2.status, c2.stdout + c2.stderr).toBe(0);
+    expect(c2.stdout).toMatch(/plan gate ok: \d+ lists, \d+ findings, Plan sha256:[0-9a-f]{12}/);
+    backlog(f.board, ['task', 'edit', f.task, '-d', 'Launch description text, one word edited.\n\nFiles: scripts/analysis/thing.mjs']);
+    const c3 = prep(f, 'commit');
+    expect(c3.status, c3.stdout + c3.stderr).toBe(3);
+    expect(c3.stderr).toMatch(/expected: Plan: \S+ sha256:[0-9a-f]{12}/);
+    expect(/expected: (Plan: \S+ sha256:[0-9a-f]{12})/.exec(c3.stderr)?.[1]).not.toBe(exp);
   });
 });
