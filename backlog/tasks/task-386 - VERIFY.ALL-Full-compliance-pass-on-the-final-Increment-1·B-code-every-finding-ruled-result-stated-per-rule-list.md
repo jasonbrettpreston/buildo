@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-21T14:52:00Z'
+updated_date: '2026-11-21T16:15:00Z'
 labels:
   - McFix
   - McFix E
@@ -42,4 +42,6 @@ Plan section E1; after sections A, B, C. Every governing rule list whole (rule-l
 McFix V2 review 2026-11-20 (orchestrator recommendation, not a ruling; status not changed by hand): Still relevant and moves AFTER McFix V2: the full pass runs with the definitive list (V2.LIST) and through the fold check, so it is the first whole-increment review with the right documents.
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0356 · task-386 · Backlog; operator, verbatim: "Create a plan to  approach the output review for the built taks")
+
+Dated note 2026-11-21 (M-246, prior text kept; RR-0361 · task-386 · Backlog; operator, verbatim: "We should use the old findings and ground them and then include them in the new pass.")
 <!-- SECTION:NOTES:END -->
