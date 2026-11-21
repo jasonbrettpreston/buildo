@@ -3,10 +3,11 @@ id: TASK-423
 title: >-
   PROTOCOL.SIMPLE One compliance review on the plan and one on the output,
   against rules sections; no review of paperwork
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-SIMPLE423'
 created_date: '2026-11-21T16:43:00Z'
-updated_date: '2026-11-21T22:15:00Z'
+updated_date: '2026-11-21T23:11:00Z'
 labels:
   - McFix
   - McFix V2
@@ -19,6 +20,17 @@ references:
   - docs/reports/reviews/task-423/seat-integration-1.md
   - docs/reports/reviews/task-423/seat-reality-check-1.md
   - docs/reports/reviews/task-423/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 123012
 ---
@@ -59,7 +71,7 @@ Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's o
 <!-- SECTION:PLAN:BEGIN -->
 # PLAN-423-v3: join the whole rule lists into one compliance call set per stage, rule the plan findings once (card A of two); card B and the station edit are listed at the end
 
-Planner v2, folded by the separate plan grounder Cairn-Ground-P423 on the board head 36a2c2d63: docs/reports/reviews/task-423/GROUNDER-PLAN.md rules 129 findings (91 of the eleven DeepSeek plan outputs and 38 of the three seat reports). Read-only until the launch. Hours are MEASURED where they carry a lane source and GUESS where they do not. UNVERIFIED is marked.
+Planner v2, folded by the separate plan grounder Cairn-Ground-P423 on the board head 36a2c2d63: docs/reports/reviews/task-423/GROUNDER-PLAN.md rules 129 findings (91 of the eleven DeepSeek plan outputs and 38 of the three seat reports). Read-only until the launch. Hours are MEASURED where they carry a lane source and GUESS where they do not. UNVERIFIED is marked. Every file:line cite of this plan is at board head 36a2c2d63; the fold of task-419 (700db70f0) moved some: check-lane-close.mjs after :641 by 21 lines (:688 is :709, :726 to :763 are :747 to :784), rule-lists.mjs after :425 by 1, 137_mcqueue.md after :141 by 2, and the test files (check-lane-close.logic.test.ts after :452 by 7 and more, rule-lists.logic.test.ts after :587 by 40, backlog-lane.logic.test.ts after :380 by 27 and more), so a test is found by its name and a script line by its quote.
 Operator words are cited by entry and line of ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md. The objective, verbatim: "the objective is an effective compliance review on the plan and the output.  It isn't 17" (:1711; the entry has no RR number, and the earlier cite RR-0361 is wrong: decision-146 rules the old findings of task-386). RR-0363 (:1718, decision-148): "It doesnt need to be a summary we can consolidate the specs awell as an option.  We just need the rules for deepseek." and "No review of paperwork.". RR-0364 (:1723, decision-149): "1. yes 2. yes". "the ruling are included as well" (:1731). "I am just adding to or understanding the existing plan. We hare not making a whole new approach here." (:1735). RR-0366 (:1744, decision-151): "Each of the five tasks is pre-approved to get this to work right" and "let's limit the output reviews to csomething reasonable".
 
 ## 0. What changed from PLAN-423-v2, on evidence
@@ -68,11 +80,11 @@ Operator words are cited by entry and line of ~/Buildo-scratch/queues-20261113/M
 | 1 the rules to the reviewer | cut rule lines with `lines` and `count`, three table trims, exempt tested before rows | Card A: the resolved lists are joined whole, in table order, into one virtual list and packed by size. Nothing is cut, nothing is trimmed, no table key is added, no operator question is needed. |
 | 2 no review of paperwork | exempt globs, exempt before rows | Card B: decided by the task type (record, db-go) and by the changed paths, in the close check. No glob, no resolver change. |
 | 3 plan findings ruled once | kept | Card A, with a stronger replacement for the plan-evidence test (section 2e). |
-| 4 medium recorded, not fixed | kept | Card B, close mode only. |
+| 4 medium outcome | kept, then replaced by RR-0369 (MORNING-DECISIONS.md:1781) | Card B: output round 1 fixes mediums with the highs and criticals, from output round 2 a medium is recorded with a reason. |
 | 5 a review stays valid, a fix is reviewed on the fix diff | range stamps and round files | Not built. Adjustment 5 is not built: today's whole-range check already keeps a review valid unless the covered code changes, and the fix-diff-only part is task-414 (RR-0336 item 7, approved), which stays open and unchanged. |
-| 6 the station runs the gate | one line, or card D into the repo | The one line in ~/Buildo-scratch/push-station/station.sh, by the orchestrator, with its two proving runs recorded; no card. Moving the station into the repo needs the operator to name it (the infra-freeze named list, MORNING-DECISIONS.md:745). |
+| 6 the station runs the gate | one line, or card D into the repo | The one line in ~/Buildo-scratch/push-station/station.sh, by the orchestrator, with its two proving runs recorded; no card. Moving the station into the repo needed the operator to name it (the infra-freeze named list, MORNING-DECISIONS.md:745); RR-0370 (:1787, decision-155) has since ruled option C, one list of push checks kept in the repo and used by the hook and the station (task-424), plus the one line today. |
 
-Why adjustment 1 changed. Nothing is cut: every resolved list is joined whole, in table order, and packed by size; the dated notes that amend the rules travel with them. Measured at 36a2c2d63: Spec 137 holds 3,430 characters of Rule lines and 15,110 with its dated notes and bullets (of 32,996); Spec 08 section 7 holds 3,825 characters of numbered rules and 9,539 with its dated notes (of 9,567). The amendments live in the dated notes (137_mcqueue.md:98 is Rule 3, :100 is its two-commit-close note), so a rule-line cut shows the reviewer superseded text and hides this plan's own notes. The operator's rulings keep the lists whole (MORNING-DECISIONS.md:1285 "compliance means the handbooks", RR-0336 items 4 and 5 answered No, rule-lists.json:4 "never a hand-picked clause", README.md:156); a cut would reverse them, a join does not. The operator's other form, a small rules section written into each spec, is his option and is kept for question 3.
+Why adjustment 1 changed. Nothing is cut: every resolved list is joined whole, in table order, and packed by size; the dated notes that amend the rules travel with them. Measured at 36a2c2d63: Spec 137 holds 3,430 characters of Rule lines and 15,110 with its dated notes and bullets (of 32,996); Spec 08 section 7 holds 3,825 characters of numbered rules and 9,539 with its dated notes (of 9,567). The amendments live in the dated notes (137_mcqueue.md:98 is Rule 3, :100 is its two-commit-close note), so a rule-line cut shows the reviewer superseded text and hides this plan's own notes. The operator's rulings keep the lists whole (MORNING-DECISIONS.md:1285 "compliance means the handbooks", RR-0336 items 4 and 5 answered No, rule-lists.json:4 "never a hand-picked clause", README.md:156); a cut would reverse them, a join does not. The operator's other form, a small rules section written into each spec, is his option and RR-0368 (MORNING-DECISIONS.md:1768, decision-153) orders it as tasks 427 and 425.
 Why the three trims are dropped. The tests row attaches the engineering standards whole (eng-all, 46,076 characters), so the v2 figure of 87,000 characters did not hold: card A's own Files line resolves the same nine lists as the tooling kind, 194,255 characters, and the trims would have bought one call per stage at the price of three lost rule sets (doc-17, Spec 08 section 5.3, engineering standards sections 1, 3, 4, 6, 7, 8, 10, 12, 13).
 
 ## 1. Measured cost today and after card A
@@ -87,7 +99,7 @@ Measured at 36a2c2d63 with the repo's own buildLensInputs over the resolved list
 | storage | 13, 569,670 | 15 to 16 | 8 to 10 | 11 |
 One compliance call per stage is not reached: tooling and spec tasks draw 2 to 3 compliance calls per stage, pipeline 3 to 4, web 9 to 12, phone 10 to 14, storage 7 to 11. The reason is arithmetic: one call holds 120,000 characters (scripts/deepseek-review.js:35), the rules alone are 149,000 to 766,000, and the join only removes the unfilled space of the per-list calls.
 Whole tasks. task-419 (165 changed lines): plan 11 calls and output 11 become 5 and 5 (3 compliance plus plan-review and error-paths; 3 plus code-review and error-paths), 22 become 10, and a whole-range re-run after a fix costs 5 where it cost 11 (33 become 15). task-412: 22 become 10. Paperwork lanes (BL-SCORE421, 58 calls on 49 generated files; BL-MIG334, 13 calls on a 3-line queue row) become 0 by card B.
-Why the cost is what it is: resolveTask (rule-lists.mjs:218) returns every list; planPrep and the brief run one lens-input per list; listProof (check-lane-close.mjs:380) demands one output per list per phase; the grounder re-rules the plan findings at the output. Surface, phone and storage tasks keep 7 to 16 calls per stage after card A; the operator's own option, a small rules section in each large spec, is what would take them lower, and no card is cut for it (question 3).
+Why the cost is what it is: resolveTask (rule-lists.mjs:218) returns every list; planPrep and the brief run one lens-input per list; listProof (check-lane-close.mjs:380) demands one output per list per phase; the grounder re-rules the plan findings at the output. Surface, phone and storage tasks keep 7 to 16 calls per stage after card A; the operator's own option, a small rules section in each large spec, is what takes them lower, and RR-0368 (MORNING-DECISIONS.md:1768, decision-153) orders it: the rules index check and the sections for Spec 137 and Spec 08 are task-427, the sections for the engineering standards and the orchestrator rules are task-425, each with its own plan stage after this task.
 
 ## 2. Card A, the design (task-423: adjustments 1 and 3)
 Reuse what exists: buildLensInputs, renderLensInput, parseLensInput, listProof, reviewErrors, splitUnits and the part/chunk stamps stay as they are. The join is a virtual list the existing code reads like any table list.
@@ -100,7 +112,7 @@ Reuse what exists: buildLensInputs, renderLensInput, parseLensInput, listProof, 
 - `planPrep` (:549): for a build task one lens-input call with the resolved ids (inputArgv :620, the dry-run lines :623-625, the job list :634 reads `in-plan-compliance-rules(-pN)?.txt`). Any failed call still removes every output and the phase is run again (:641 "nothing is kept, run the phase again"); the REVIEW header and VERDICT line test (:645) still catches a cut-off reply.
 
 ### 2b. The close and the launch gate accept the joined set (scripts/hooks/check-lane-close.mjs)
-- One helper decides the form per phase from the files in the folder: any `<phase>-compliance-rules*` file means the joined form, any `<phase>-compliance-<list id>*` file means the per-list form (today's, kept), a folder holding both forms for one phase is refused, neither is refused naming the joined file first. The joined proof is the existing listProof (:380) with `l = { id: 'rules' }` and the table returned by joinLists, so the stamp, the whole-list recompute (:408), the chunk coverage and the prompt hash are the existing ones; the recomputed text comes from the lists the task resolves now, so a shortened or edited joined text is refused.
+- One helper decides the form per phase from the files in the folder: any `<phase>-compliance-rules*` file means the joined form, any `<phase>-compliance-<list id>*` file means the per-list form (today's, kept), a folder holding both forms for one phase is refused, neither is refused naming the joined file first. The joined proof is the existing listProof (:380) with `l = { id: 'rules' }` and the table returned by joinLists, so the stamp, the whole-list recompute (:408), the chunk coverage and the prompt hash are the existing ones; the recomputed text comes from the lists the task resolves now, so a shortened or edited joined text is refused. The Spec 137 task-410 note (137_mcqueue.md:136, a chunk, an input or an output hash that does not match is refused) stays true under the join: the joined input is stamped and recomputed as any list input.
 - Used at the three sites that loop `r.lists`: closeErrors (a) (:477), planGateInner (:591) and the lane-brief text. No table key changes, so the lane table pin (check-lane-close.mjs:688, base_ref, finished_statuses, protected_paths, exempt) refuses no open lane; the evidence form decides, per phase, so a task launched before card A closes the old way and nothing already BUILT is re-gated. Card A's own lane may close with either form. The per-list path is removed in a later cleanup once no open lane uses it (no card now).
 - `compliance:<list id>` references on the task stay one per list (RR-0343, backlog-lane.mjs:129, rule-lists.mjs:452).
 
@@ -142,7 +154,7 @@ Acceptance (observable; the orchestrator writes these onto the task as its accep
 The amendments are graded against the amended text by the output compliance call, because the lens reads the lane's tree; the output grounder reads the diff of the notes against their prior text.
 
 ## 5. Not done, and risks
-- Not done in card A: adjustments 2 and 4 (card B), adjustment 5 (task-414, unchanged), a rules section or consolidation of the large specs (the operator's option, question 3), deleting the packs under .claude/review-templates/packs/ (nothing reads them; the lane-tools row globs `.claude/**`, but a row attaches rule lists and the review material is the diff, so the packs are sent only if a change touches them), committing fewer in- files, a counted cap on fix rounds (the brief's max_fix_rounds: 2, backlog-brief.mjs:169, stays a stated rule; RR-0339 rules rounds bounded, not endless), a duplicate-finding verdict word (add only if the replay of acceptance (f) shows more than 2 findings ruled twice).
+- Not done in card A: adjustments 2 and 4 (card B), adjustment 5 (task-414, unchanged), a rules section or consolidation of the large specs (tasks 427 and 425, RR-0368), deleting the packs under .claude/review-templates/packs/ (nothing reads them; the lane-tools row globs `.claude/**`, but a row attaches rule lists and the review material is the diff, so the packs are sent only if a change touches them), committing fewer in- files, a counted cap on fix rounds (the brief's max_fix_rounds: 2, backlog-brief.mjs:169, stays a stated rule; RR-0339 rules rounds bounded, not endless; RR-0371, MORNING-DECISIONS.md:1803, sets two review rounds on a plan and three on the output as a starting setting, counted by no card of this plan), a duplicate-finding verdict word (add only if the replay of acceptance (f) shows more than 2 findings ruled twice).
 - Risk: a call over the bound or a cut-off reply. The existing phase fails closed: any failed call removes every output and the phase is run again (rule-lists.mjs:641), and a reply without the REVIEW header and VERDICT line is refused (:645). A joined part is larger than a single list, so a reply can be longer; the same test applies.
 - Risk: the whole-list recompute reads the lane's tree, so a spec edit merged in after the review stales the joined set exactly as it stales a per-list set today; unchanged, and the lane merges the board before the review.
 - Risk: both forms stay accepted until a cleanup removes the per-list path; the brief tells a lane launched after card A to use the joined form, so the choice is the lane's cost, not a gap.
@@ -159,40 +171,34 @@ Depends on: task-419 BUILT (same two protected files). The Files line resolves t
 Acceptance: section 3 (a) to (g).
 
 ### Card B (open it after card A is BUILT; text ready): adjustments 2 and 4
-Title: PROTOCOL.RECORDS Medium findings are recorded, not fixed; a paperwork task gets a grounder record check and no review.
-Description: RR-0364 (:1723, decision-149), verbatim "1. yes 2. yes", put to him as: "1. Medium and low findings after the output grounding. My recommendation: they are recorded with a reason and not fixed, so they never trigger another review." and "2. Paperwork tasks, such as the queue row. No review, as you ruled. My recommendation: a separate grounder still checks the row is true before the fold, which is one short read, not a review round."; RR-0363 (:1718) "No review of paperwork.". Source: GROUNDER-PLAN.md of task-423 (adjustments 2 and 4).
+Title: PROTOCOL.RECORDS A medium finding may be recorded from output round 2; a paperwork task gets a grounder record check and no review.
+Description: RR-0364 (:1723, decision-149), verbatim "1. yes 2. yes", put to him as: "1. Medium and low findings after the output grounding. My recommendation: they are recorded with a reason and not fixed, so they never trigger another review." and "2. Paperwork tasks, such as the queue row. No review, as you ruled. My recommendation: a separate grounder still checks the row is true before the fold, which is one short read, not a review round."; RR-0363 (:1718) "No review of paperwork.". RR-0369 (:1781, decision-154) replaces RR-0364 item 1 for medium findings, verbatim "Let's make this easy the first round of MEdiums on the outputs are corrected with Highs and criticals and then the second round is just highs and criticals."; RR-0367 (:1760, decision-152) holds fix-only re-review and says important medium findings are fixed. Source: GROUNDER-PLAN.md of task-423 (adjustments 2 and 4).
 Design (smallest, no glob, no resolver change, no table key):
-- outcomeErrors close mode (check-lane-close.mjs:188-193, refusal text :203): `low` becomes `recordable`: LOW, NIT, and MED when mode is close; CRITICAL and HIGH still close by fixed or ruling; plan mode is unchanged (RR-0364 item 1 says after the output grounding); the Final Summary line per CRITICAL, HIGH or MED stays (08_agents.md:351). The severity is the grounder's word in the first 40 characters of its reason, as for LOW today.
+- outcomeErrors close mode (check-lane-close.mjs:188-193, refusal text :203): under RR-0369, in output round 1 a MED closes as today (fixed or ruling, task for a DEFER) with the CRITICAL and HIGH; from output round 2 only CRITICAL and HIGH must be fixed, and a MED may close by pile or wontfix with a reason of 30+ characters (LOW and NIT by any form, as today); plan mode is unchanged (RR-0364 item 1 said after the output grounding, and RR-0369 speaks of the outputs); the Final Summary line per CRITICAL, HIGH or MED stays (08_agents.md:351); how the close knows its output round (the file name out-<lens>-rN or the round line of the Final Summary) is decided in card B's own plan stage. The severity is the grounder's word in the first 40 characters of its reason, as for LOW today.
 - closeErrors: `paper` is true when the board copy of the task has type record or db-go and every changed path of the range is under docs/reports/generated/, docs/reports/lanes/, docs/reports/reviews/, backlog/tasks/, backlog/decisions/ or is .cursor/*QUEUE*.md (an allow-list constant in check-lane-close.mjs; anything else, including docs/specs, backlog/docs, backlog/milestones, backlog/config.yml, scripts, src and an empty range, is not paperwork and takes today's full proof). For paper: no compliance or lens output, plan or out, is required; GROUNDER.md of a separate grounder (the existing header, clash and quote tests of grounderErrors) holds at least one `record#N CONFIRMED <path>:<line> "<quote>"` line for the claims of REPORT.md, and a record line that is REJECTED or CONFLICT refuses the close.
 - Brief text (backlog-lane.mjs lensLine): for type record and db-go the brief says no review, the record lines, and that a path outside the paperwork list restores the full set.
-- Spec notes: 08_agents.md section 7 rule 6 (MED recorded, pile and wontfix for MED in close mode, Final Summary line kept; RR-0364) and 137_mcqueue.md (paperwork gets a grounder record check only); README item 5.
+- Spec notes: 08_agents.md section 7 rule 6 (MED pile and wontfix from output round 2, Final Summary line kept; RR-0369) and 137_mcqueue.md (paperwork gets a grounder record check only); README item 5.
 Files: scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
-Acceptance: (1) offline: the range of BL-SCORE421 (49 generated files, type db-go) and of BL-MIG334 (the queue row, type record) need no lens output and need record lines (58 and 13 calls become 0, plus one short grounder read); control: the same range plus one scripts/ file takes the full set; a record task with no record line, or with a REJECTED one, is refused; an empty range of a build task is still refused (check-lane-close.logic.test.ts:500 stays green); (2) a MED closed by pile with 30+ characters is accepted in close mode, refused in plan mode; a HIGH closed by pile is refused; a MED with no outcome is refused; (3) the type is read from the board copy (a lane that retypes its task is refused, as today); (4) the Pre-Review Self-Checklist is in REPORT.md. Depends on: card A BUILT.
+Acceptance: (1) offline: the range of BL-SCORE421 (49 generated files, type db-go) and of BL-MIG334 (the queue row, type record) need no lens output and need record lines (58 and 13 calls become 0, plus one short grounder read); control: the same range plus one scripts/ file takes the full set; a record task with no record line, or with a REJECTED one, is refused; an empty range of a build task is still refused (check-lane-close.logic.test.ts:500 stays green); (2) in output round 1 a MED closed by pile is refused (control: fixed or ruling is accepted); from round 2 a MED closed by pile with 30+ characters is accepted; in plan mode it is refused; a HIGH closed by pile is refused; a MED with no outcome is refused; (3) the type is read from the board copy (a lane that retypes its task is refused, as today); (4) the Pre-Review Self-Checklist is in REPORT.md. Depends on: card A BUILT.
 
 ### Not a card
-- Adjustment 5 is not built; task-414 stays open and unchanged. After card A a re-run after a fix costs the joined set (5 calls on task-419), not 11; after card B only a CRITICAL or HIGH finding is fixed.
-- Adjustment 6: the orchestrator adds one line to `suite` in ~/Buildo-scratch/push-station/station.sh, after the tip check: `step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs --ci --base "origin/$br"` (gate.mjs:613 reads --ci and --base; .husky/pre-push:41 runs the gate first; the station already stops at `git rev-parse origin/$br` if the upstream is absent). Proof to run and record when the line is added (not run by this plan, UNVERIFIED until then): the gate prints GATE OK on 21adfde8a (BL-MIG334 REPORT.md item 2 ran it by hand) and stops with `id-no-row` on 0f6ba8225, where the migration 334 queue row is missing. It does not cover the interactive y that `gate.mjs --push` asks on the tty, which stays the operator's.
+- Adjustment 5 is not built; task-414 stays open and unchanged. After card A a re-run after a fix costs the joined set (5 calls on task-419), not 11; from output round 2 (card B, RR-0369) only a CRITICAL or HIGH finding must be fixed; fix-only re-review is held (RR-0367).
+- Adjustment 6 (RR-0370, :1787: option C is task-424, plus the one line today): the orchestrator adds one line to `suite` in ~/Buildo-scratch/push-station/station.sh, after the tip check: `step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs --ci --base "origin/$br"` (gate.mjs:613 reads --ci and --base; .husky/pre-push:41 runs the gate first; the station already stops at `git rev-parse origin/$br` if the upstream is absent). Proof to run and record when the line is added (not run by this plan, UNVERIFIED until then): the gate prints GATE OK on 21adfde8a (BL-MIG334 REPORT.md item 2 ran it by hand) and stops with `id-no-row` on 0f6ba8225, where the migration 334 queue row is missing. It does not cover the interactive y that `gate.mjs --push` asks on the tty, which stays the operator's.
 
 ### Hours (elapsed, including the plan stage, the review and the two-commit close)
 MEASURED on the lane folders: task-418 (550 changed lines in the same two protected files) 76 minutes from plan evidence to close; task-419 (165 lines) 77 minutes from the context file, plan stage about 30 minutes; task-412 (41 lines) about 20 minutes. Card A: about 200 lines of code plus tests plus three spec files, so 75 to 100 minutes of lane after the launch, plus the orchestrator's grounder, landing and close about 30 minutes: about 2 hours after launch (GUESS from the three measures); its own plan stage is this round. Card B: about 60 lines, a plan stage of about 30 minutes (under card A's joined form), a lane of 40 to 60 minutes and the close: about 1.5 hours (GUESS). The station line: 10 minutes (GUESS). Both cards, plan stages and closes: about 3.5 to 4 hours of elapsed time, where PLAN-423-v2 said 33 to 39. The v2 figure had no source; this one rests on the three measures above.
 
-## 7. Questions ruled by the grounder; what only the operator can decide
-Ruled (QUESTIONS-RULED.md holds the grounds): 1 the station stays in ~/Buildo-scratch (the one-line edit now); 2 the three table trims are not made (they reversed three rulings and a join does not need them); 3 a rules section per spec is the operator's option and is not built.
-For the operator only: question 3 (whether he wants the large specs consolidated into small rules sections so surface, phone and storage tasks reach one or two calls per stage); the move of the station into the repo (the infra-freeze named list, MORNING-DECISIONS.md:745); and the dropping of adjustment 5 from the five he approved (task-414 stays open).
+## 7. Questions ruled by the grounder; what the operator has ruled since
+Ruled (QUESTIONS-RULED.md holds the grounds): 1 the station stays in ~/Buildo-scratch (the one-line edit now); 2 the three table trims are not made (they reversed three rulings and a join does not need them); 3 a rules section per spec is not built in card A or B.
+Grounded: the operator has answered the three questions that were left to him, in the decision records of the board. Recommendation (checked against those records by the grounder, not by a DeepSeek round: UNVERIFIED by a review): the move of the station into the repo (the infra-freeze named list, MORNING-DECISIONS.md:745) is ruled by RR-0370 (:1787, decision-155) as option C, task-424, plus the one line today; the small rules sections are ordered by RR-0368 (:1768, decision-153) as tasks 427 and 425; the dropping of adjustment 5 is held by RR-0367 (:1760, decision-152, fix-only re-review held) and task-414 stays open and unchanged; the caps of RR-0371 (:1803) are two review rounds on a plan and three on the output. Nothing here is an open operator item of card A.
 
-Plan review round 1: 105 folded, 0 task, 0 ruling, 0 wontfix, 8 pile; grounder docs/reports/reviews/task-423/GROUNDER-PLAN.md; triage docs/reports/reviews/task-423/TRIAGE-PLAN.md
+Plan review round 1: 101 folded, 0 task, 0 ruling, 0 wontfix, 8 pile; grounder docs/reports/reviews/task-423/GROUNDER-PLAN.md; triage docs/reports/reviews/task-423/TRIAGE-PLAN.md
 plan-compliance-agents-s5-1to3#1 MED folded one dated note after
 plan-compliance-agents-s5-1to3#2 MED folded and no table trim is
 plan-compliance-agents-s5-1to3#4 MED folded Design (smallest, no
 plan-compliance-agents-s5-1to3#5 MED folded The tests row attach
 plan-compliance-agents-s5-1to3#6 MED folded The one line in ~/Bu
 plan-compliance-agents-s5-1to3#7 MED folded Surface, phone and s
-plan-compliance-agents-s7-s11#1 MED folded The one line in ~/Bu
-plan-compliance-agents-s7-s11#2 HIGH folded Nothing is cut: ever
-plan-compliance-agents-s7-s11#3 MED folded Design (smallest, no
-plan-compliance-agents-s7-s11#4 MED folded dated notes in the M
-plan-compliance-agents-s7-s11#5 MED folded the move of the stat
-plan-compliance-agents-s7-s11#6 MED folded the orchestrator wri
 plan-compliance-eng-all#3 MED folded Spec notes: 08_agent
 plan-compliance-eng-all#4 MED folded The Pre-Review Self-
 plan-compliance-eng-all#5 MED folded Surface, phone and s
@@ -222,11 +228,6 @@ plan-compliance-plan-protocol#3 MED folded stays open and uncha
 plan-compliance-plan-protocol#4 MED folded Hours are MEASURED w
 plan-compliance-plan-protocol#5 MED folded 5 is not built: toda
 plan-compliance-plan-protocol#6 MED folded Source: GROUNDER-PLA
-plan-compliance-queue-137#1 HIGH folded Nothing is cut: ever
-plan-compliance-queue-137#2 MED folded Spec notes: 08_agent
-plan-compliance-queue-137#3 MED folded anything else, inclu
-plan-compliance-queue-137#4 MED folded 5 is not built: toda
-plan-compliance-queue-137#5 MED folded Design (smallest, no
 plan-error-paths#2 MED folded Design (smallest, no
 plan-error-paths#3 MED folded anything else, inclu
 plan-error-paths#4 MED folded at the launch commit
@@ -241,6 +242,15 @@ plan-plan-review-deepseek#7 MED folded the trims would have
 plan-plan-review-deepseek#8 MED folded Design (smallest, no
 plan-plan-review-deepseek#9 MED folded a counted cap on fix
 plan-plan-review-deepseek#13 MED folded and no table trim is
+plan-compliance-agents-s7-s11#1 MED folded Design (smallest, no
+plan-compliance-agents-s7-s11#2 HIGH folded Nothing is cut: ever
+plan-compliance-agents-s7-s11#4 MED folded 5 is not built: toda
+plan-compliance-agents-s7-s11#5 MED folded Grounded: the operat
+plan-compliance-agents-s7-s11#6 MED folded 5 is not built: toda
+plan-compliance-agents-s7-s11#7 MED folded the orchestrator wri
+plan-compliance-queue-137#1 MED folded stays true under the
+plan-compliance-queue-137#3 MED folded stays open and uncha
+plan-compliance-queue-137#4 MED folded Grounded: the operat
 int#1 HIGH folded The tests row attach
 int#2 HIGH folded Nothing is cut: ever
 int#3 HIGH folded Design (smallest, no
@@ -249,7 +259,7 @@ int#5 HIGH folded the evidence form de
 int#6 MED folded returns a copy of th
 int#7 MED folded Files: scripts/analy
 int#8 MED folded Design (smallest, no
-int#9 MED folded LOW, NIT, and MED wh
+int#9 MED folded output round 1 a MED
 rg#1 HIGH folded Nothing is cut: ever
 rg#2 MED folded stay true: nothing i
 rg#3 MED folded Design (smallest, no
@@ -291,4 +301,8 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0368 · task-423 · Backlog; o
 2026-11-21 (M-246) Scope of this task after the operator's later rulings (RR-0367 decision-152, RR-0368 decision-153; MORNING-DECISIONS.md entries "ORDERS the rules section done right" and "fine 1"): this task builds what the grounded round-1 plan says and nothing more: the join of the resolved rule lists into one compliance review packed by size, and plan findings ruled once. The rules index sections (Spec 137, Spec 08, the engineering standards), the check that keeps them true and the table switch are NEW cards after this one, each with its own reviewed plan (planner draft: ~/Buildo-scratch/lanes-20261119/inc1b/proto423/PLAN-423-v3.md, not reviewed). Card B (paperwork allow-list, medium outcome) follows as written in section 6 of the plan. Fix-only re-review is held (task-414 unchanged). The fold below was applied mechanically from the grounder's FOLD-423.json by the orchestrator.
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0369 · task-423 · Backlog; operator, verbatim: "Let's make this easy the first round of MEdiums on the outputs are corrected with Highs and criticals and then the second round is just highs and criticals.")
+
+2026-11-21 (M-246) Plan review round 2 of this task (a re-run of two lists, after the fold of task-419 changed Spec 08 and Spec 137 and staled their compliance outputs; the cap of RR-0371 is two review rounds on a plan, so there is no third): the orchestrator re-made plan-compliance-agents-s7-s11 and plan-compliance-queue-137 on the same context-r1.md (7 findings: 5 HIGH, 2 MED; and 6: 3 HIGH, 1 MED, 2 LOW; the other seven outputs stand), the separate grounder Cairn-Ground-P423 ruled them against the plan as it will be: 13 findings, 11 CONFIRMED (1 HIGH, 8 MED, 2 LOW), 2 REJECTED (agents-s7-s11#3: the launch gate does rule every plan finding; queue-137#2: the launch gate skips every type but build and fix). Whole file after round 2: 127 findings (89 of the plan outputs and 38 of the seats), 109 CONFIRMED (15 HIGH, 71 MED, 21 LOW, 2 NIT), 18 REJECTED, 0 CONFLICT; 101 folded, 8 pile. Every verdict quote is on its line at the board head (11 lens quotes and 4 seat quotes re-pointed after the task-419 fold, 1 re-quoted: eng-all#2). The plan is edited by 16 sentence edits (FOLD-423-r2.json, F10 to F25, applied mechanically): cites dated to 36a2c2d63 with the shifts the fold made; the later-cards text brought to the operator's later rulings (RR-0367 decision-152, RR-0368 decision-153, RR-0369 decision-154, RR-0370 decision-155, RR-0371 decision-156): the rules sections are tasks 427 and 425, the station is task-424 plus the one line, card B's medium rule is round 1 fixed and round 2 recorded (RR-0369), the caps; the task-410 note of Spec 137 stays true under the join; section 7 states what the operator has ruled in the Grounded and Recommendation form. No open operator item for card A. Fix-only re-review is held (task-414 unchanged). The old Plan review round block is replaced by plan-prep post.
+
+2026-11-21 taken on the board at lane launch (lane BL-SIMPLE423, worktree /Users/brettpreston_macmini/Buildo-wt-simple423, branch wf1/inc1b-simple423), RR-0240
 <!-- SECTION:NOTES:END -->
