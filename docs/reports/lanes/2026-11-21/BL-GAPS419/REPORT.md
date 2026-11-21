@@ -33,4 +33,7 @@ STATUS: RUNNING; fix round 1 landed, round 2 reviewed, grounder owed on round 2 
 ## CLOSING ROUND RECORDS (RR-0370, decision-155): records only, no code, test or spec edit
 - Merge c858a2a79 of wf2/board; one conflict, the task file (updated_date: kept the later; Implementation Notes: both sides kept). No Files-line path changed by the merge.
 - Round 3 output review at the merge head; round 1 files git mv'd to -r1 names. New findings are for the grounder; no TRIAGE.md outcome written for them.
-STATUS: RUNNING; closing-round review remade at the merge head, grounder owed on the new findings.
+
+## Close check on the re-made inputs (clone of d743c7b52 deleted afterwards; task staged BUILT; board ref origin/wf2/board; the round 2 GROUNDER.md still in the folder)
+`node scripts/hooks/check-lane-close.mjs <msg>` exit 1. grep -c for "not in the task range", "no valid compliance lens output" and "not what git diff prints": 0. Lines not about GROUNDER.md: only the Final Summary one ("lacks 5 of 5 required line(s)"). The remaining 219 refusals all say GROUNDER.md has no or a stale "Ruled:" line (the grounder file is the old round 2 one; expected until the grounder's file is placed).
+STATUS: RUNNING; closing round re-made from the correct diff at merge head 4d3061a2d, grounder owed on the new standard-name outputs.
