@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T01:36:00Z'
+updated_date: '2026-11-21T01:39:00Z'
 labels:
   - McFix
   - McFix A
@@ -375,4 +375,6 @@ BL-GATE375 build note (A4 close binding, A5, B2): check-lane-close.mjs lensConte
 BL-GATE375 build note (A3): backlog-lane.mjs lens line and review line, and backlog-brief.mjs review line, pass the committed context (context-r1.md) with one --section per CONTEXT_SECTIONS entry on every deepseek-review command (plan, output, compliance), lens-input gets --context and, in the plan phase, --material-from; the lens templates are passed as --template, no longer as --context. Pins re-made: backlog-lane.logic.test.ts :169 and :258, backlog-brief.logic.test.ts :58, backlog-brief-context.logic.test.ts :43.
 
 BL-GATE375 build note (B1): rule-lists.mjs exports complianceRefs(lists, refs) ({add, remove}, compared by the id token, a path with a comma entered as compliance:<id> alone); checkTasks collects the stale open tasks and check-tasks prints the exact backlog task edit --add-ref / --remove-ref command for each (exit unchanged); backlog-lane.mjs's take adds only the missing compliance: references in the same edit. Red for this commit was a typecheck refusal (complianceRefs not exported), in red7.out.
+
+BL-GATE375 build note (D10b, PARTIAL, DB read OPEN): proof-slice.mjs exports TIMEOUT_VARIABLE ('tooling_proof_slice_timeout_ms', the builder's name, NOT registered: no tooling_ timeout variable exists in scripts/seeds/logic_variables.json and registering one is a seed + migration + id claim the operator authorises with a typed DB GO after the MCINC-7 rehearsal) and timeoutMsFromVariable(value), which refuses unset, empty, non-positive-integer values naming the variable; the logic test is green, src/tests/proof-slice.db.test.ts is written and NOT RUN. DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable; the task is NOT complete.
 <!-- SECTION:NOTES:END -->

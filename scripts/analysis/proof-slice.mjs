@@ -19,7 +19,18 @@ import { gateVariable } from './gates/variables.mjs';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DATA = path.join(REPO, 'scripts/analysis/proof-slices.json');
-const DEFAULT_TIMEOUT_MS = 120000;
+const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it (seed + migration); until then this typed value stays
+/**
+ * task-375 D10b: the registered tooling variable the row timeout is read from (R-EB (b); NOT yet registered: the seed entry and migration need the operator's typed DB GO after the MCINC-7 rehearsal).
+ * The name is the builder's choice, to be confirmed at registration.
+ */
+export const TIMEOUT_VARIABLE = 'tooling_proof_slice_timeout_ms';
+/** The timeout (ms) from the variable's stored value (a number or the text of one): a positive integer, else a refusal naming the variable (no default, no unbounded run). */
+export function timeoutMsFromVariable(value) {
+  const n = typeof value === 'number' ? value : typeof value === 'string' && /^\s*\d+\s*$/.test(value) ? Number(value) : Number.NaN;
+  if (!Number.isInteger(n) || n <= 0) throw new Error(`${TIMEOUT_VARIABLE} must be a positive integer number of milliseconds (got ${JSON.stringify(value)}): set it in logic_variables; there is no default and no unbounded run`);
+  return n;
+}
 const ID_RE = /^[a-z0-9-]{1,40}$/;
 const TASK_RE = /^task-\d+$/;
 const KEYS = ['id', 'proof', 'argv', 'waits', 'expect', 'timeoutMs', 'suite', 'notbuilt'];
