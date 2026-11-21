@@ -73,3 +73,4 @@ rg#3 CONFIRMED src/tests/backlog/rule-lists-table.logic.test.ts:198 "it('RED (pl
 Seat: integration docs/reports/reviews/task-412/seat-integration-1.md sha256:f0c8a3055f08
 Seat: reality-check docs/reports/reviews/task-412/seat-reality-check-1.md sha256:9f7ddb67c9dc
 Seat: regression docs/reports/reviews/task-412/seat-regression-1.md sha256:54964ed0f5ff
+Plan: task-412 sha256:73d02e7e8f80
