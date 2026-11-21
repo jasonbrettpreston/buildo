@@ -3,15 +3,40 @@ id: TASK-421
 title: >-
   SCORE.GO Operator types GO on dev: scorecard refresh (read-only) and the
   generated-files commit
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-SCORE421'
 created_date: '2026-11-21T14:53:00Z'
-updated_date: '2026-11-21T14:56:00Z'
+updated_date: '2026-11-21T15:11:00Z'
 labels:
   - McFix
 milestone: m-1
 dependencies:
   - TASK-420
+references:
+  - >-
+    compliance:policy-124-s2-s5
+    docs/specs/01-pipeline/124_step_standard_policy.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - >-
+    compliance:surface-127
+    docs/specs/02-web-admin/127_surface_conversion_procedure.md
+  - >-
+    compliance:surface-128
+    docs/specs/02-web-admin/128_surface_standard_policy.md
+  - >-
+    compliance:surface-126
+    docs/specs/02-web-admin/126_maxbld_surface_standard.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: db-go
 ordinal: 121012
 ---
@@ -48,4 +73,6 @@ Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2 (RR-0353, RR-0355). 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: "GO for scorecards")
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0358 · task-421 · Backlog; operator, verbatim: "does the rehearsal provide a benefit here - if not move on")
+
+2026-11-21 taken on the board at lane launch (lane BL-SCORE421, worktree /Users/brettpreston_macmini/Buildo-wt-score421, branch wf1/inc1b-score421), RR-0240
 <!-- SECTION:NOTES:END -->
