@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:23:48.738Z file_sha256=8bc2c473bf950ab4365c5f02d050926fde4de73943fa6d99f4a2f93149856555 prompt_sha256=15e07700e973de9ba08422fb63695c31ff95dff4d7c19e70a478e6eea989d215
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-PREP418/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Q1 "Q1 one review round per prep run" — scripts/analysis/rule-lists.mjs (new hunk at 525) "const old = fs.existsSync(evAbs) ? fs.readdirSync(evAbs).filter((f) => /^plan-.*\.txt$/.test(f)) : [];" — the one-round guard looks only for plan-*.txt while the job list is rebuilt from the directory, "for (const f of fs.readdirSync(evAbs).filter((n) => new RegExp(`^in-plan-compliance-${reEsc(l.id)}(-p\\d+)?\\.txt$`).test(n)).sort())", so an interrupted run that left in-plan-*.txt but no plan-*.txt is not refused and a stale -pN part is reviewed and written as this round's output — extend the guard to in-plan-*.txt (refuse or delete them) before lens-input, or build the jobs from the files lens-input wrote this run.
+
+DEFER severity=MED — Acceptance "#3 (c) the same without --dry-run with 412's plan on the task: 9 plan-compliance-*.txt each starting "REVIEW template=lens-compliance.md", 9 in- files, FINDINGS-PLAN.md; paste counts and shell time." — NONE — the notes state "(c), (e) and (f) NOT RUN", so the real DeepSeek path and the real launch gate on task-412 are unproven against #3, #5 and #6 — run (c), (e), (f) on task-412 and paste the counts, the "Plan sha256:<12>" line and git log -1 --name-only.
+
+DEFER severity=MED — Description "before a build or fix launch the plan is reviewed (compliance per governing rule list, the Integration, Reality-Check and Regression seats)" — scripts/analysis/rule-lists.mjs "const lists = type === 'build' ? r.lists : []; // a fix task needs the plan lens outputs only (check-lane-close.mjs:604)" — a fix task passes the type gate ("if (type !== 'build' && type !== 'fix') refuse") but gets no compliance call for any resolved rule list, and the only support is a code comment citing a rule that is not pasted — run the resolved lists for fix tasks too, or record the check-lane-close.mjs:604 exemption as a declared deviation in the notes.
+
+DEFER severity=LOW — Scope "build exactly that plan, do not re-plan" and the note "DEVIATION from the plan sentence 'builds the inputs in memory to name the parts'" — scripts/analysis/rule-lists.mjs "for (const l of lists) say(board, reviewArgv(`${ev}/in-plan-compliance-${l.id}[-pN].txt`, 'lens-compliance.md'), denv);" — the deviation is declared but not approved (PLAN-418-v2 is not pasted) and the printed command names a literal "[-pN]" file that does not exist, so the dry run's review lines cannot be run as printed — record the approval or amend the plan, and print one line per real part or a documented placeholder.
+
+MET — Q5 "backlog-lane.mjs is left untouched and nothing is exported from it" — scripts/analysis/rule-lists.mjs "const gateArgv = ['node', path.join(HERE, 'backlog-lane.mjs'), ...launchArgs(), '--task', taskId, '--lane', lane, '--board', board, '--dry-run'];" — backlog-lane is spawned as the gate, nothing is imported from or exported by it.
+
+MET — Q4 "the plan stage also runs plan-review-deepseek and error-paths beside compliance" — scripts/analysis/rule-lists.mjs "const lenses = lensSet({ type, files: filesText(t.body) }).plan.map((l) => ({ out: `plan-${l}.txt`, tpl: l === 'plan-review-deepseek' ? 'plan-review-deepseek.md' : `lens-${l}.md`, file: ctxRel }));" — compliance jobs plus both plan lens calls are issued.
+
+MET — Q6 "the round block is read from the check's own refusal message" — scripts/analysis/rule-lists.mjs "const m = /the block is:\n([\s\S]*?)\n\(one command/.exec(lacks[0] ?? '');" — the block is transcribed from outcomeErrors, never authored.
+
+MET — Acceptance "#4 (d) the same on a task with an empty plan field: exit 3 one line." — scripts/analysis/rule-lists.mjs "if (!planField.trim()) refuse(`${taskId}: the Implementation Plan field is empty (backlog task edit ${taskId} --plan ...): there is nothing to review`);" with "if (e instanceof Stop) { process.stderr.write(`plan-prep: ${e.message}\n`); return e.code; }" — exit 3, one line, before anything is written.
+
+MET — Scope "it never writes a ruling, a seat report, a grounder file" — scripts/analysis/rule-lists.mjs "if (g === null) refuse(`${ev}/GROUNDER-PLAN.md is absent (the separate grounder writes it before post)`);" — the grounder file is read and required, never written.
+
+MET — Acceptance "#6 (f) ... git log -1 --name-only on wf2/board shows exactly the folder." — scripts/analysis/rule-lists.mjs "const commitArgv = ['git', 'commit', '-q', '-m', `docs(08_agents): plan review evidence for ${taskId}`, '--', ev];" — the commit is pathspec-limited to the evidence folder.
+
+REJECT — Scope "it never writes ... an outcome line" — post appending the round block with its "int#1 HIGH folded ..." lines — Q6 "the round block is read from the check's own refusal message" is a pasted ruling taken as approved under RR-0350, and the tool only transcribes the check's text.
+
+REJECT — Acceptance "#2 (b) ... 1 brief, 9 lens-input and 9 review commands" — the dry run printing 11 review command lines (9 compliance, 2 plan lens) — Q4 rules that the plan stage also runs plan-review-deepseek and error-paths beside compliance, so the two extra lines are the ruled lens calls, not unrequested work.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 4
+
+---
+⏱  109557ms (109.6s)
+📊 Tokens — total: 39425, input: 19934, output: 19491, reasoning: 18043

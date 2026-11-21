@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T05:12:37.324Z file_sha256=9239d28e64820da22d83a6bc0f711dead036aa7cd1270018505f3a425a92eee4 prompt_sha256=92fba0e0780619f27459ccf5a929a1c6c05cbb9752ca76a3567ed7f08fa3add1
+🔍 Lens review of docs/reports/reviews/task-418/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Description scope "it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line, and it does not launch." — PLAN-418-v2 §3 table "one line \"<id> <SEV> <word> <ref>\" per CONFIRMED CRITICAL, HIGH or MED id, in the Implementation Plan field (gate :625-630) | plan-prep post" — clause unmet: post writes the per-id outcome lines (folded, task, ruling, wontfix, pile) that the card forbids the tool to write — fix: have the fold append the per-id lines in the agent step and make post refuse when they are absent, appending only the round summary line.
+
+BUG severity=HIGH — RR-0350 "If the panel leaves an open question - ground it and then take that as approved and let me know in the morning." — PLAN-418-v2 §11 "whether the dynamic import of check-lane-close.mjs from the rule-lists.mjs CLI works (UNVERIFIED, not run)" — clause unmet: the plan locks an ungrounded mechanism that §4.1 makes post's only route to outcomeErrors, parseVerdicts and planHash, where the ruling says ground open questions first — fix: run one node -e dynamic import at d9f2143a7 before plan-lock and record the result and the fallback in §4.1.
+
+DEFER severity=MED — AC #6 "the references (GROUNDER-PLAN.md, TRIAGE-PLAN.md if any, the three seats)" — PLAN-418-v2 §4.4 "plus regression when a Files entry is tracked: git ls-files, the gate's own test, :621" — the plan never establishes that a task-412 Files path is tracked, so post may add two seat refs and nothing requires seat-regression-1.md, failing AC #5 and AC #6 as written — fix: run git ls-files on 412's Files at d9f2143a7, record the answer in §7, or write the acceptance seat set as the gate-required seats.
+
+DEFER severity=MED — card Description "reusing what exists (backlog-brief.mjs, lens-input, findings, the exported functions of check-lane-close.mjs, plant-evidence.mjs for tests)" — PLAN-418-v2 §4.4 "backlog-lane.mjs:100-103 builds taskOf and decisionExists from git HEAD inline; they become one exported boardFacts({ show, ls }) in rule-lists.mjs" — the plan rewrites gate-body code into a new export no pasted clause names, while its own §9 says "changing the gate" is not in scope — fix: export those readers from backlog-lane.mjs and reach them from post by dynamic import, as §4.1 already does for check-lane-close, leaving the gate body text unchanged.
+
+DEFER severity=LOW — AC #6 "git log -1 --name-only on wf2/board shows exactly the folder" — PLAN-418-v2 §2 "board-commit.zsh commits only backlog/ (:10, :12) every 600 s" and §4.5 "git add docs/reports/reviews/<id>; git commit" — post's task edit leaves backlog/ dirty, so a daemon backlog commit can become the last commit and the AC #6 check then shows the task file — fix: run the check as git log -1 --name-only -- docs/reports/reviews/task-412, or state it must run before the next board commit.
+
+DEFER severity=LOW — AC #3 "9 plan-compliance-*.txt each starting \"REVIEW template=lens-compliance.md\"" — PLAN-418-v2 §4.3 step 4 "every output opens with \"REVIEW template=\" or the phase exits 1 naming it" — the guard accepts any template value, so AC #3's pinned literal is not enforced — fix: compare the exact prefix "REVIEW template=lens-compliance.md".
+
+MET — card Description "ONE subcommand plan-prep of scripts/analysis/rule-lists.mjs with three phases (review, post, commit)" — PLAN-418-v2 §4.1 "node scripts/analysis/rule-lists.mjs plan-prep <review|post|commit> --task task-N --lane <planned lane name>" — command surface matches the clause exactly.
+MET — card Description "it ... does not launch" — PLAN-418-v2 §4.2 h "HAND: node scripts/analysis/backlog-lane.mjs --task task-N --lane <name>, without --dry-run" — the launch stays a hand step and §9 repeats it out of scope.
+MET — AC #2 "(b) plan-prep review --task task-412 --lane <name> --dry-run: exit 0; 1 brief, 9 lens-input and 9 review commands; git status unchanged." — PLAN-418-v2 §4.3 "each command printed as \"cd <dir> && <cmd>\" and run unless --dry-run" and §4.6 "--dry-run on any phase prints every command and writes nothing" — the dry run prints all 19 commands and writes nothing.
+MET — AC #4 "(d) the same on a task with an empty plan field: exit 3 one line." — PLAN-418-v2 §4.3 "Refusals (exit 3, one line, before any write ...): ... Implementation Plan field empty" — one exit-3 line before any write.
+MET — AC #5 "the dry run prints \"plan gate ok: 9 lists, <M> findings, Plan sha256:<12>\"" — PLAN-418-v2 §4.5 "Then node scripts/analysis/backlog-lane.mjs --task N --lane <lane> --dry-run, output and exit code passed through" — the gate's own line and code are surfaced, not re-derived.
+MET — card Description "it never writes ... the Plan line" — PLAN-418-v2 §4.2 f "AGENT: the grounder appends that line, last" — the Plan line stays agent work.
+MET — AC #1 "(a) planted-defect tests red then green through the real hooks." — PLAN-418-v2 §6 "red first through the real hooks, DoD #2" with 16 planted defects each carrying a control.
+MET — doc-2 Increment S elements A.1 to G.6 — PLAN-418-v2 "Serves: supporting function of the compliance review of every Increment 1.B task; advances none of doc-2 elements A to G" — the plan adds no search-page behaviour, so no pasted element status changes.
+
+REJECT — RR-0350 "Teh goal is to get all six steps working tonight" — accused of leaving steps 5 and 6 unscripted — not a real issue, the pasted card scope limits this task to the mechanical steps and the launch is a hand step (PLAN-418-v2 §4.2 h).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 2
+
+---
+⏱  108031ms (108.0s)
+📊 Tokens — total: 34154, input: 14411, output: 19743, reasoning: 18195

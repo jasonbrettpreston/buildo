@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-21T06:23:48.740Z file_sha256=dd984f2c315426a4b9d656a9c183450fa9709709631185c01e12a8dfec293f9f prompt_sha256=85a989a5d245117f698bb047d7443ac4fdfcf575abad148c81dde847e64f4e37
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-PREP418/in-out-error-paths.txt (model: deepseek-reasoner)
+
+BUG severity=MED — scripts/analysis/rule-lists.mjs "const changed = git('status', '--porcelain', '--untracked-files=all', '--', ev).stdout.trim() !== '';" — a failing git status returns empty stdout so changed is false, plan-prep prints "already committed", skips the commit and runs the gate, while dirtyOutside above does check `st.status !== 0` and refuses — check the status here and refuse on nonzero before trusting changed.
+
+BUG severity=MED — scripts/analysis/rule-lists.mjs "for (const l of lists) for (const f of fs.readdirSync(evAbs).filter((n) => new RegExp(`^in-plan-compliance-${reEsc(l.id)}(-p\\d+)?\\.txt$`).test(n)).sort()) jobs.push(...)" — only lens-input's exit status is checked, so a list that resolves but writes no in-plan-compliance-<id> parts adds no job and the run still reports success (nCompliance short); assert each resolved list produced at least one part before the calls.
+
+BUG severity=MED — scripts/analysis/rule-lists.mjs "for (const { j, x } of done) fs.writeFileSync(path.join(evAbs, j.out), x.stdout);" — the one-round key is the presence of plan-*.txt written only after all calls succeed, so a crash mid-write leaves partial plan files and the next run refuses "one review round per prep run" with no instruction to delete them; name the files to remove in the refusal or claim the round atomically with an O_EXCL marker at start.
+
+BUG severity=MED — scripts/analysis/rule-lists.mjs "...(rounds.length ? [] : ['--append-plan', block])..." — the dedup key is the "Plan review round N" line read once at start with no lock or re-check, so two concurrent posts both append the block, and a doubled line is not caught later because `rounds.find((l) => l !== lines[0])` matches duplicate equal lines; lock the edit or re-read and verify the count after append.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "const sh = (argv) => spawnSync(argv[0], argv.slice(1), { cwd: board, encoding: 'utf8', maxBuffer: 1 << 26, env });" — the brief, lens-input, backlog task edit and the gate run with no timeout so a hung child blocks plan-prep with no bound (only the review calls get CALL_MS); add a timeout and treat a signal or null status as a Stop.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "const undo = () => git('restore', '--staged', '--', ev);" — if the commit failed because index.lock is held, restore --staged fails too and is ignored, so files stay staged while the message claims "nothing is staged"; check the restore result and report the actual staged state.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "if (e.status !== 0) throw new Stop(1, `backlog task edit failed: ${first(e.stderr || e.stdout, 3)}`);" — a missing backlog binary gives empty stderr/stdout (the reason sits in e.error), so the refusal prints "backlog task edit failed:" with no cause; append e.error?.message.
+
+VERDICT: FAIL on error-path safety
+Paths walked: empty plan field, dirty tree, existing plan-*.txt, failing/partial review call, missing header/VERDICT, fix task empty list, dry-run no-write, post zero and non-zero round, post missing triage, post concurrent re-edit, commit dirty/hook/index.lock/launch-args guard, gate exit pass-through   Unguarded: 4
+
+---
+⏱  110833ms (110.8s)
+📊 Tokens — total: 36728, input: 18371, output: 18357, reasoning: 17520

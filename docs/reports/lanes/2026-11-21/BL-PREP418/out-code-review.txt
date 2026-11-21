@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T06:23:48.750Z file_sha256=dd984f2c315426a4b9d656a9c183450fa9709709631185c01e12a8dfec293f9f prompt_sha256=0d34a1abb8f1c1445c971baef6a9fa5cda1d5f799f2e9c2e3181c5f063d774ba
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-PREP418/in-out-code-review.txt (model: deepseek-reasoner)
+
+BUG/REJECT/DEFER findings below, each resting on a quoted pasted line.
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs "const headTasks = git('ls-tree', '--name-only', 'HEAD', 'backlog/tasks/').stdout.split('\n').filter(Boolean);" — the git status of this read (and of git('ls-files','--',e) two lines up) is never checked or logged, so a git failure yields an empty list and later surfaces as a misleading outcome error ("task ... does not exist", or the regression seat silently not required) instead of a loud git failure — check .status on these reads and refuse with the git stderr, as dirtyOutside already does.
+
+DEFER severity=LOW — src/tests/backlog/backlog-lane.logic.test.ts "return { ...f, rev: path.join(f.base, 'rev') };" — rev is declared in "type PF = Fx & { rev: string };" and set here but never read by any added test, dead field — drop rev from PF and from the returned object.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "for (const l of lists) say(board, reviewArgv(`${ev}/in-plan-compliance-${l.id}[-pN].txt`, 'lens-compliance.md'));" — the dry run prints the compliance call without the denv third argument, while the real call prints it via "say(board, argv, denv)", so --dry-run does not show the DOTENV_CONFIG_PATH the command actually runs with — pass denv here too.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "if (cm.status !== 0) { undo(); throw new Stop(1, `the commit did not land and nothing is staged (git exit ${cm.status}):" — undo()'s own failure is swallowed ("const undo = () => git('restore', '--staged', '--', ev);") and the message asserts nothing is staged even when the restore failed, leaving the evidence staged while the operator is told it is not — check restore's status and word the message from the actual result.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "const old = fs.existsSync(evAbs) ? fs.readdirSync(evAbs).filter((f) => /^plan-.*\.txt$/.test(f)) : [];" — the one-round guard matches only plan-* outputs, not leftover in-plan-* inputs, so after an interrupted run (killed before fail() cleans up) the next run re-globs "in-plan-compliance-${reEsc(l.id)}(-p\\d+)?\\.txt" and can review a stale -pN input that was not regenerated — also refuse (or remove) stale in-plan-* files here.
+
+DEFER severity=NIT — scripts/analysis/rule-lists.mjs "process.stdout.write(gx.stdout); process.stderr.write(gx.stderr);" — spawnSync returns null stdout/stderr when the spawn itself fails (ENOENT), and writing null throws a TypeError that masks the real error — write `gx.stdout ?? ''` and `gx.stderr ?? ''` (or use the error field) so the gate failure is reported.
+
+REJECT — scripts/analysis/rule-lists.mjs "if (phase === 'review') return await reviewPhase();" — the await looks redundant on a return — it is required: reviewPhase is async, and without the await a Stop rejection would bypass the surrounding try/catch and be handled by cli's die(1) instead of the intended exit code.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none blocking (all findings are DEFER, MED or lower)
+
+---
+⏱  233929ms (233.9s)
+📊 Tokens — total: 60961, input: 18354, output: 42607, reasoning: 41788

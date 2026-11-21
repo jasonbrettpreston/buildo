@@ -1,0 +1,597 @@
+LIST eng-all sha256:7545438c361c56f30f6dc65a4ce504992e2c558b203ee38d7f1d070d3d63281d material sha256:8e99766108650287c0f75d9ea23011e7dac16f376607070c48cd66287da3dbea part 1 of 1
+RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.
+
+# Engineering Standards & Stability Guardrails
+
+> ⚠ **Supabase migration in progress** (2026-07-18 program — Spec 113 `docs/specs/00-architecture/113_supabase_infrastructure.md`). Firebase/Cloud-SQL/GCS content in this doc reflects the **current implementation**; it is rewritten in **Phase 1** of `.cursor/active_task.md`.
+
+This document outlines the strict engineering standards, stability rules, and defensive programming patterns that all AI agents and human developers must adhere to when contributing to the Buildo codebase.
+
+---
+
+## 🏗️ 1. Architecture & UI Standards
+
+### 1.1 Mobile-First UI Mandate
+- **Rule:** All Tailwind CSS styling MUST be written mobile-first.
+- **Execution:** The base (unprefixed) utility classes must dictate the layout for mobile screens (<=640px). You may only use `sm:`, `md:`, and `lg:` prefixes to enhance or reflow the layout for larger viewports. Do not start with a desktop view and attempt to retrofit mobile breakpoints.
+- **Touch Targets:** All interactive elements (buttons, links, toggles, icons) MUST have a minimum tappable area of **44px x 44px**. Use `min-h-[44px] min-w-[44px]` or equivalent padding.
+- **Responsive Layout:** Card and row layouts MUST stack vertically on mobile and flow horizontally on desktop. Use `flex flex-col md:flex-row` (not `flex` alone). Dense metadata rows MUST use `flex-wrap`. Tooltips and popovers MUST be capped at `max-w-[calc(100vw-2rem)]` on mobile.
+
+### 1.2 Component Isolation
+- **Rule:** Shared UI components (`src/components/ui/`) must remain pure and stateless where possible. They should not directly fetch data via API calls or rely on global context unless explicitly engineered to do so.
+
+### 1.3 Mobile Front-End Patterns & UX
+
+**Touch Targets:** All `Pressable` and `TouchableOpacity` elements must satisfy a minimum tappable area of **44px × 44px**. Use `min-h-[44px]` or explicit `hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}` when the visual size is smaller. Bare text nodes used as CTAs are not permitted — wrap in a `TouchableOpacity` with the required minimum height.
+
+**Micro-animations & Haptics:** Primary interactive cards and buttons must use Reanimated `withSpring` for press-state feedback (scale or opacity). Critical state transitions — save confirmation, destructive delete, error toasts — must trigger a haptic: `lightImpact()` for neutral actions, `successNotification()` for confirms, and the error variant for failures. Silent state changes that affect financial or account data are not acceptable.
+
+**TanStack Query Hardening (Expo):**
+- **Cold-boot offline:** `onlineManager.setEventListener` must be called synchronously at app boot (before any query fires) so TanStack Query's network state matches the device state from the first render, not after the first poll cycle.
+- **Safe MMKV hydration:** `JSON.parse()` output from MMKV must be structurally validated (e.g. `safeParse` via Zod or a shape-check guard) before casting to `PersistedClient`. A corrupt or schema-mismatched cache must be discarded with a warning — not silently cast.
+- **401 interceptor:** When `fetchWithAuth` receives a 401, it must call `firebase.auth().currentUser?.getIdToken(true)` to force a token refresh and retry once before propagating `ApiError(401)` to TanStack Query. Expired-token 401s must not surface as user-visible errors on the first failure.
+
+**Design System Fidelity:** `font-mono` is reserved strictly for data values (permit numbers, distances, currency amounts, timestamps). It must never be applied to human-readable labels, headings, or button text. Dark-mode colour tokens must use NativeWind `dark:` variants (e.g. `dark:bg-zinc-900`) rather than hardcoded `bg-zinc-950` so the system colour scheme is respected.
+
+---
+
+## 🚨 2. Error Handling & Stability
+
+### 2.1 The "Unhappy Path" Test Mandate
+- **Rule:** When writing integration tests (`.infra.test.ts`), you MUST include tests for **error paths and silent failures**.
+- **Execution:** Do not merely test "Loading," "Success," and "Error" states. Force errors in the deepest layer of the call stack (e.g., forcing a database `ROLLBACK` to throw, or simulating a network timeout) and explicitly assert that the top layer recovers gracefully or returns a safe HTTP 500 without leaking the raw `.message`.
+
+### 2.2 The Try-Catch Boundary Rule
+- **Rule:** Every newly created API route (`export async function GET/POST/PUT/DELETE/PATCH` inside `src/app/api/`) MUST have an overarching `try-catch` block wrapping the entire handler body.
+- **Execution:** The catch block MUST return `{ error: 'Human-readable message' }` with an appropriate HTTP status (e.g., 500) and log the raw error server-side only. **Never expose `err.message` to clients.** The guardrail tests in `api.infra.test.ts` scan route files to enforce this.
+
+### 2.3 Assumption Documentation
+- **Rule:** Before accessing nested object properties, explicitly check for `null` or `undefined`.
+- **Execution:** Use TypeScript Optional Chaining (`?.`) or explicit type guards. Do NOT use the non-null assertion operator (`!`) unless the value's existence is mathematically guaranteed by a prior validation step. If using `!`, you must document why in an inline comment.
+
+---
+
+## 🗄️ 3. Database Management & Scaling
+
+### 3.1 Zero-Downtime Migration Pattern
+- **Rule:** When altering existing columns in a database table larger than 100,000 rows, do NOT use `ALTER TABLE ... ALTER COLUMN` directly.
+- **Execution:** Use the **Add-Backfill-Drop** pattern to avoid table-locking:
+  1. Add the new column.
+  2. Backfill data into the new column.
+  3. Swap application references to the new column.
+  4. Drop the old column in a subsequent deployment.
+- **Execution:** `CREATE INDEX` on large tables should use the `CONCURRENTLY` keyword when applicable.
+
+### 3.2 Migration Rollback Safety
+- **Rule:** Every migration file in `migrations/` MUST contain both `UP` and `DOWN` blocks so any schema change can be reversed with a single rollback.
+- **Execution:** Write `-- UP` (create/alter/add) and `-- DOWN` (drop/revert) SQL in the same `NNN_[feature].sql` file. If Database Impact is YES in the Active Task, the migration file is a mandatory deliverable — never skip it.
+
+### 3.3 Pagination Enforcement
+- **Rule:** Any API route that reads from growing database tables (`permits`, `coa_applications`) MUST enforce pagination boundaries. Unbounded `SELECT *` without `LIMIT` is strictly forbidden.
+
+---
+
+## 🔐 4. Security & API Contracts
+
+### 4.1 Route Guarding
+- **Rule:** All endpoints within `src/app/api/` must be analyzed for protection. Never leave administrative routes unprotected.
+- **Rule (amended 2026-09-15, WF3 SEC-1):** `src/middleware.ts` is a **presence-only pre-filter, not the gate**. Its admin/API arm performs no authorization: it passes any request carrying a non-empty `sb-*-auth-token` cookie (of any shape) OR any `x-admin-key` header value (the secret comparison lives solely in `verify-admin.ts` mode 2 — the P1-F4 break-glass transport decision, 2026-07-19), and Spec 13 §3.5 states plainly that middleware performs no cryptographic verification. The **authoritative gate for every `/api/admin/**` route is `verifyAdminAuth(request)` as the FIRST statement of the handler** (Spec 33 §8). Measured 2026-09-15: 11 of 29 admin routes relied on the middleware and had no guard at all — two of them said so in a header comment. Enforcement is locked by the source scan in `src/tests/api.infra.test.ts` (*"every /api/admin/** handler export calls verifyAdminAuth as its FIRST statement"*), plus an integration lock in `src/tests/admin-route-guard.infra.test.ts` proving an `x-admin-key: anything` request no longer reaches a handler. Route **classification** (`classifyRoute` returning `'admin'`) is a label; it enforces nothing.
+
+### 4.2 Parameterization
+- **Rule:** Raw SQL statements must utilize Drizzle parameterized queries to prevent SQL injection. String concatenation for dynamic queries (especially via `order by` or search terms) is forbidden unless rigorously validated against a static whitelist.
+
+### 4.3 Frontend Security
+- **Rule:** Never place API keys, admin SDK credentials, or database connection strings in `use client` components. Firebase client config (public keys) is the only exception.
+- **Rule:** Never use `dangerouslySetInnerHTML` without explicit sanitization. Prefer React JSX which escapes by default.
+- **Rule:** API routes must return only the fields the UI needs. Never `SELECT *` — always project specific columns. This limits exposure if an API route is accessed directly.
+- **Rule:** All authorization must be enforced server-side in API routes or middleware. Client-side route hiding (e.g., hiding an admin link) is cosmetic, not security. Both must exist.
+- **Rule:** User-provided input displayed in the UI (search terms, company names, addresses) must be treated as untrusted. Watch for reflected XSS in query params rendered into page content.
+
+### 4.4 API Design for Multi-App Consumption
+- **Rule:** API routes are the **contract boundary** between frontend and backend. They must be designed as stable, versioned interfaces that could serve multiple client apps.
+- **Response shape:** All API routes must return a consistent envelope: `{ data, error, meta }`. Never return raw arrays or ad-hoc shapes.
+- **No client assumptions:** API routes must not assume which frontend is calling. Do not embed UI-specific logic (pagination styles, component-shaped responses) in the API layer. Return normalized data; let each client transform it.
+- **Auth via tokens, not cookies (future):** Current cookie-based auth works for the Next.js app. When a second client app is added, migrate to Bearer token auth (Firebase ID tokens in `Authorization` header) so non-browser clients can authenticate.
+- **Rate limiting:** Public-facing API routes must include rate limiting before a second app is connected. Use middleware-level throttling, not per-route logic.
+- **CORS:** When a second app is added, configure explicit CORS origins in `next.config.js`. Never use `Access-Control-Allow-Origin: *` in production.
+
+---
+
+## 🧪 5. Testing Standards
+
+### 5.1 Typed Factories Only
+- **Rule:** Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`.
+
+### 5.2 Test File Pattern
+| Pattern | Tests | Mandated when | Example |
+|---------|-------|---------------|---------|
+| `*.logic.test.ts` | Pure functions, scoring, classification | Any pure/derivation logic | `scoring.logic.test.ts` |
+| `*.ui.test.tsx` | React component rendering, interactions | Any new/changed component | `admin.ui.test.tsx` |
+| `*.infra.test.ts` | API routes, DB queries, external calls | New API route / DB mutation (unhappy path first, §5.3) | `api.infra.test.ts` |
+| `*.security.test.ts` | Negative/abuse — blocks malicious payloads and unauthorized users | Auth-guarded / externally-reachable surfaces | `auth.security.test.ts` |
+| DB replay (`*.db.test.ts` under `BUILDO_TEST_DB=1 npm run test:db`; Spec 124 R-DH) | Real Postgres: IMMUTABLE/NOT NULL/FK/length/index errors a SQL-string test misses | Any migration touching schema/constraints/indexes (run before push) | `assert-data-bounds.infra.test.ts` |
+| `*.regression.test.ts` | Pin a load-bearing behavior a diff must NOT retire (past bug fix, edge-case guard) | When altering/deleting code the Regression Guardian flags as a fence | `coa-cost-model.regression.test.ts` |
+| Parity battery (`*.infra.test.ts` / `*.logic.test.ts`) | Two parallel implementations stay in sync (§7 dual-path; seed-JSON ↔ TS defaults; generated doc ↔ generator) | Any dual-surface or generated artifact (drift guard) | `control-panel.logic.test.ts`, `logic-vars-registry.infra.test.ts` |
+
+### 5.3 Red-Green Test Cycle (Golden Rule)
+- **Rule:** You MUST write and run a **failing test** (Red Light) BEFORE writing any feature or fix code. Code may not be written until the test demonstrably fails.
+- **Execution:** For new API routes and database mutations, the failing test MUST be an `.infra.test.ts` that exercises the **unhappy path** (error responses, invalid input, missing auth). For pure logic, use `.logic.test.ts`. Run the test and confirm it fails — only then implement the code to make it pass (Green Light). This is the single strongest defense against hallucinated or untested code.
+
+### 5.4 Test Data Seeding
+- **Rule:** To set up specific DB scenarios for testing or demos, create `scripts/seed-[scenario].js`. Define a JSON state object, insert it, and verify DB contents.
+
+### 5.5 Test-Layer Map — which layer proves what
+The six layers of §5.2 are complementary, not interchangeable. Pick the layer that *proves the claim*; a green suite in the wrong layer is false confidence.
+
+| Layer | Proves | Runs in | Consequence of skipping |
+|-------|--------|---------|-------------------------|
+| `*.logic.test.ts` | The pure function computes the right value on happy + edge inputs. | `npm run test` (default) | Un-pinned derivation logic silently changes value. |
+| `*.ui.test.tsx` | The component renders each state + wires interactions. | `npm run test` | UI regressions ship unseen. |
+| `*.infra.test.ts` (no DB) | API envelope / query shape / error paths (§5.3 unhappy-path-first). | `npm run test` | Hallucinated/untested routes. |
+| DB replay — `BUILDO_TEST_DB=1 npm run test:db` | The migration/query survives **real Postgres**: IMMUTABLE, NOT NULL, FK, length, CHECK, index build. A SQL-string assertion does NOT catch these. | Local opt-in (Docker) / CI | A migration that passes string tests but throws on apply — caught only in production. **Run before pushing any schema change.** |
+| `*.regression.test.ts` | A load-bearing behavior (a documented fence — a past `fix(...)` carrying a Spec 05 §5 severity/lesson footer, an edge-case guard, a workaround) is preserved across a change. | `npm run test` | Chesterton's-Fence: a diff silently drops a behavior that existed for a reason. Authored whenever the Regression Guardian finds an unguarded fence. |
+| Parity battery | Two surfaces that MUST agree stay in lockstep: dual code paths (§7), seed JSON ↔ TS `LOGIC_VAR_DEFAULTS`, and **generated doc ↔ its generator** (the drift guard — regenerate to a buffer, diff the committed file). | `npm run test` | Silent divergence — exactly the doc-rot the generated AI-operator docs (Spec 47 §5, `docs/reference/*`) are gated against. |
+
+**Rule:** a change that adds a schema constraint AND a value-derivation AND a generated artifact needs all three of DB-replay + regression-lock + parity — not just the one that is easiest to write.
+
+---
+
+## 📡 6. Centralized Logging
+
+### 6.1 logError Mandate
+- **Rule:** All server-side error logging MUST use `logError()` from `src/lib/logger.ts` — never bare `console.error()` in API routes or lib modules. Client-side components (React `'use client'`) may use `console.error` since `logError` imports server-only modules.
+- **Execution:** `logError(tag, err, context)` writes to `console.error` locally and reports to Sentry when `SENTRY_DSN` is configured in production. The guardrail tests in `api.infra.test.ts` enforce that critical paths import `logError`.
+
+---
+
+## 🔀 7. Dual Code Path Safety
+
+### 7.1 Classification Sync Rule
+- **Rule:** Trade classification logic exists in two parallel implementations that MUST stay in sync:
+  - `src/lib/classification/classifier.ts` — TypeScript API used by the web app
+  - `scripts/classify-permits.js` — standalone Node.js script for batch DB processing
+- **Execution:** When modifying classification rules (tag-trade matrix, tier rules, narrow-scope codes, confidence thresholds), you MUST update **both** files. Before committing, verify both paths produce identical output for the same input by running the classification test suite: `npx vitest run src/tests/classification.logic.test.ts`.
+
+### 7.2 Scope Classification Sync
+- **Rule:** The same dual-path constraint applies to scope classification:
+  - `src/lib/classification/scope.ts` — TypeScript API
+  - `scripts/classify-scope.js` — standalone batch script
+- **Execution:** Changes to scope tags, project types, or the `classifyScope()` algorithm must be mirrored in both files.
+
+---
+
+## ⚙️ 8. Next.js & TypeScript Constraints
+
+### 8.1 API Route Export Rule
+- **Rule:** Next.js App Router `route.ts` files may ONLY export HTTP handler functions (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`). Exporting any other function, constant, or type from a `route.ts` file will cause a build error or silent runtime failure.
+- **Execution:** If a route file needs shared helper logic, extract it to a module under `src/lib/` and import it. Never `export function` or `export const` from route files unless it is a named HTTP handler.
+
+### 8.2 TypeScript Target Gotchas
+- **Rule:** The project `tsconfig.json` targets **ES2017**. Be aware of these constraints:
+  - Regex `s` flag (dotAll) requires ES2018+ — use `[\s\S]` instead.
+  - `process.env.NODE_ENV = 'test'` fails due to literal type narrowing — use `(process.env as Record<string, string>).NODE_ENV = 'test'`.
+  - `typeof globalThis.google` breaks in Next.js client bundles — use `(window as any).google`.
+  - The `functions/` directory (Cloud Functions, deleted 2026-07-20 — Supabase migration Phase 3.1, zero live references) formerly had its own `tsconfig.json` excluded from the root config.
+
+---
+
+## 🛢️ 9. Pipeline & Script Safety
+
+### 9.1 Transaction Boundaries
+- **Rule:** Pipeline scripts (`scripts/*.js`) that write to the database MUST wrap multi-row mutations in explicit transactions (`BEGIN` / `COMMIT`). The `ROLLBACK` in the catch block MUST itself be wrapped in a nested try-catch to prevent crash-on-rollback-failure.
+
+### 9.2 PostgreSQL Parameter Limit
+- **Rule:** PostgreSQL has a hard limit of **65,535 parameters** per prepared statement. Batch `INSERT` statements in pipeline scripts MUST use sub-batch chunking (e.g., `MAX_ROWS_PER_INSERT = 4000` for a table with 16 columns: 4000 x 16 = 64,000 params).
+- **Execution:** When adding columns to a table that has a batch insert script, recalculate `MAX_ROWS_PER_INSERT` to stay under 65,535. The formula is: `Math.floor(65535 / number_of_columns)`.
+
+### 9.3 Idempotent Scripts
+- **Rule:** All pipeline scripts MUST be safe to re-run. Use `INSERT ... ON CONFLICT DO UPDATE` (upsert) or `DELETE + INSERT` within a transaction rather than bare `INSERT` which fails on duplicate keys.
+
+### 9.4 Pipeline SDK Mandate
+- **Rule:** All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`) for infrastructure concerns. No inline `new Pool({...})` instantiation, no bare `console.error()` for error handling.
+- **Execution:** Every script must:
+  1. `const pipeline = require('./lib/pipeline');`
+  2. Wrap its main logic in `pipeline.run('script-name', async (pool) => { ... })`
+  3. Use `pipeline.createPool()` (handled by `run()`) — never instantiate `Pool` directly
+  4. Use `pipeline.log.{info,warn,error}()` for structured JSON logging
+  5. Use `pipeline.withTransaction(pool, fn)` for all multi-row write operations
+  6. Call `pipeline.emitSummary({ records_total, records_new, records_updated })` before exit
+  7. Call `pipeline.emitMeta(reads, writes, external?)` to declare I/O schema
+- **SDK exports:** `createPool`, `run`, `log`, `withTransaction`, `emitSummary`, `emitMeta`, `progress`, `BATCH_SIZE`, `maxRowsPerInsert`, `isFullMode`
+
+### 9.5 Streaming Ingestion
+- **Rule:** Data loaders that fetch from external APIs (CKAN, etc.) MUST NOT accumulate all records in memory before processing. Use async generator (yield-per-page) streaming to keep peak memory at O(batch_size) rather than O(total_records).
+- **Execution:** Replace array-accumulation fetch patterns with `async function*` generators that `yield` each page of results. Consumers process each batch immediately via `for await...of`.
+
+### 9.6 Pipeline Manifest
+- **Rule:** Pipeline metadata (chain definitions, script paths, table reads/writes, feature flags) MUST be declared in `scripts/manifest.json` as the single source of truth.
+- **Execution:** The chain orchestrator (`scripts/run-chain.js`) reads chain definitions from the manifest rather than hardcoding them. The UI (`FreshnessTimeline.tsx`) exports chain/registry data that must stay consistent with the manifest. Test coverage validates that every manifest entry points to an existing script file and that chain definitions match the UI registry.
+
+### 9.7 Pipeline Observability (Opt-In)
+- **Rule:** The Pipeline SDK (`scripts/lib/pipeline.js`) instruments `run()`, `withTransaction()`, and `progress()` with OpenTelemetry spans and events. Tracing is **opt-in** — it silently no-ops when `@opentelemetry/api` is not installed or no SDK is registered.
+- **Execution:** The tracing bootstrap (`scripts/lib/tracing.js`) attempts `require('@opentelemetry/api')` with a try-catch fallback to no-op stubs. Individual pipeline scripts require zero changes — all instrumentation is SDK-internal. To enable tracing:
+  1. `npm install @opentelemetry/api @opentelemetry/sdk-node @opentelemetry/exporter-trace-otlp-http`
+  2. Set `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` (or Honeycomb/Datadog endpoint)
+  3. Run any pipeline script — spans are exported automatically
+- **Span hierarchy:** `pipeline.run.{name}` (root) → `pipeline.transaction` (per write batch) → `pipeline.progress` events (per progress tick)
+- **Attributes:** `pipeline.name`, `pipeline.duration_ms`, `pipeline.status`, `db.system=postgresql`
+
+---
+
+## 🧱 10. Frontend/Backend Boundary
+
+### 10.1 Data Flow Direction
+- **Rule:** The data flow is strictly one-directional: `[Pipelines] → [Database] → [API Routes] → [Frontend]`. Frontend components never write to pipeline tables. Pipelines never read frontend state. API routes are the only bridge.
+
+### 10.2 Boundary Rules During Frontend Phase
+- **Rule:** Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`. If a frontend feature needs data that doesn't exist, add an API route that queries and transforms existing tables — do not change how data enters the database.
+- **Rule:** Database schema is frozen during frontend work unless a feature genuinely requires a new column. Convenience columns ("I wish this was pre-computed") should be computed in the API layer instead.
+- **Rule:** If a `src/lib/` module is imported by both API routes and frontend components, any modification requires `npx vitest related` to verify no API regression. Shared modules are the highest-risk cross-boundary files.
+
+### 10.3 API Route Discipline
+- **Rule:** API routes must be thin — validate input, call a lib function, return the result. Business logic belongs in `src/lib/`, not in route handlers. This keeps logic testable and reusable across future apps.
+- **Rule:** New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route. This enables type-safe consumption by any client.
+- **Rule:** Avoid returning database column names directly. Map to a stable API field name (e.g., `est_const_cost` → `estimatedCost`). This decouples the API contract from the schema, so future DB refactors don't break clients.
+
+---
+
+## ✅ 11. Plan Compliance Checklist
+
+Before presenting "PLAN LOCKED", the plan MUST address each applicable item below. These are not optional — if the condition applies, the corresponding items must appear in the plan.
+
+### If Database Impact = YES:
+- [ ] UP + DOWN migration in `migrations/NNN_[feature].sql` (§3.2)
+- [ ] Backfill strategy for ALTER on 100K+ row tables (§3.1)
+- [ ] `src/tests/factories.ts` updated with new fields (§5.1)
+- [ ] `npm run typecheck` planned after `db:generate` (§8.2)
+
+### If API Route Created/Modified:
+- [ ] Request/Response TypeScript interface in `src/lib/[feature]/types.ts` (§10.3)
+- [ ] Consistent response envelope: `{ data, error, meta }` (§4.4)
+- [ ] Overarching try-catch with `logError(tag, err, context)` (§2.2, §6.1)
+- [ ] Unhappy-path test cases listed: 400, 404, 500 (§2.1)
+- [ ] Route guarded by `verifyAdminAuth(request)` as the handler's FIRST statement — middleware is a presence-only pre-filter, never the gate (§4.1, Spec 33 §8)
+- [ ] Every mutating admin export writes an `admin_audit_log` row inside the mutation's own transaction, and refuses the shared non-session sentinels with 403 (§4.1, Spec 33 §8.1, Spec 128 R-12)
+- [ ] No `.env` secrets exposed to client components (§4.3)
+- [ ] Returns projected fields only, not `SELECT *` (§4.3)
+- [ ] No client-specific assumptions in response shape (§4.4)
+
+### If UI Component Created/Modified:
+- [ ] Mobile-first layout: base classes = mobile, `md:`/`lg:` = desktop (§1.1)
+- [ ] Touch targets ≥ 44px (§1.1)
+- [ ] 375px viewport test in test plan
+- [ ] No API keys or secrets in `use client` components (§4.3)
+- [ ] User-provided input escaped/sanitized before display (§4.3)
+
+### If Shared Logic Touched (classification, scoring, scope):
+- [ ] All dual-code-path consumers identified (§7.1, §7.2)
+- [ ] Update plan covers both TS module and JS script
+- [ ] `npx vitest related` planned for cross-boundary validation (§10.2)
+
+### If Pipeline Script Created/Modified:
+- [ ] Uses Pipeline SDK: `pipeline.run`, `withTransaction`, `emitSummary` (§9.4)
+- [ ] Streaming ingestion for external API data (§9.5)
+
+### Frontend Boundary Check (all frontend WFs):
+- [ ] No modifications to `scripts/`, `migrations/`, or `scripts/lib/` (§10.2)
+- [ ] API route returns stable field names, not raw DB columns (§10.3)
+- [ ] Business logic in `src/lib/`, not in route handlers (§10.3)
+
+### Frontend Foundation Check (new code in `src/features/`):
+- [ ] Biome check passes (§12.1)
+- [ ] No `useEffect` for data fetching — TanStack Query only (§12.2)
+- [ ] No `useState` for form fields — React Hook Form + Zod (§12.3)
+- [ ] No React Context inside `src/features/leads/` — Zustand only (§12.4)
+- [ ] All `onClick`/`onSubmit` handlers call `captureEvent()` (§13.1)
+- [ ] Centered modals replaced with Shadcn `<Drawer>` on mobile (§12.5)
+- [ ] Lists >50 items wrapped in TanStack Virtual (§12.6)
+- [ ] Toast notifications via Sonner — no custom alert banners (§12.7)
+
+### Pre-Review Self-Checklist (always applies, every WF):
+- [ ] Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change (Behavioral Contract / API Endpoints / Operating Boundaries / §4 Edge Cases). Walk each item against the ACTUAL diff. Output PASS/FAIL per item in the response BEFORE running tests. See `CLAUDE.md` WF1/WF2/WF3 execution plans for the per-workflow phrasing.
+- [ ] WF3 variant: list 3-5 sibling bugs that could share the same root cause and verify the fix covers them (or document why each doesn't apply).
+
+### Cross-Layer Contracts Check (always applies):
+- [ ] Any numeric threshold that crosses spec ↔ SQL ↔ Zod ↔ migration is sourced from `docs/specs/_contracts.json`, not duplicated as a literal across files (§12.10)
+- [ ] If a new threshold is introduced, a row is added to `src/tests/contracts.infra.test.ts` mapping the JSON key to its consumer file(s) so drift becomes a CI failure
+- [ ] If a threshold is changed, EVERY consumer file listed in `contracts.infra.test.ts` is updated in the same commit
+
+### Database/Migration Check:
+- [ ] New migration has DOWN block (§3.2, §12.8)
+- [ ] SQLFluff lint passes for new migration files (§12.8)
+- [ ] `validate-migration.js` passes (no DROP without confirmation, no non-CONCURRENTLY indexes on tables >100K rows) (§12.8)
+- [ ] No raw SQL string concatenation — parameterized only (§4.2)
+
+---
+
+## 🛠️ 12. Frontend Foundation Tooling
+
+> **Status:** Adopted as of 2026-04-07 for the lead feed feature build (`src/features/leads/`). To be expanded to other frontend code as proven valuable.
+
+### 12.1 Biome (React Logic Linting)
+- **Rule:** Biome MUST pass on all files in `src/features/leads/` before commit. Initially scoped to leads; expand after 2-4 weeks of validation.
+- **Critical rules (never disable):** `useHookAtTopLevel`, `noFloatingPromises`, `useExhaustiveDependencies`, `useExhaustiveDependencies`, `noUnusedVariables`
+- **Why:** These three rules catch the React logic failures we want to prevent: hook ordering bugs, unawaited promises, stale closures
+- **Note:** ESLint (`next lint`) continues to run on `scripts/` and the rest of `src/`. Do NOT replace ESLint repo-wide.
+
+### 12.2 Server State (TanStack Query)
+- **Rule:** All API data fetching uses `useQuery` / `useMutation` / `useInfiniteQuery`. NEVER use `useEffect` for data fetching.
+- **Cache persistence:** Use `PersistQueryClientProvider` with IndexedDB (`idb-keyval`) for offline support. 24h `maxAge`.
+- **Query key normalization:** Round geographic coordinates to 3 decimals (~110m) before including in query keys to prevent GPS jitter from creating unbounded cache entries.
+- **Why:** Eliminates race conditions, automatic loading/error states, automatic background refetching, cache deduplication.
+
+### 12.3 Form Management (React Hook Form + Zod)
+- **Rule:** All forms use React Hook Form for state management and Zod for schema validation. Resolver: `@hookform/resolvers/zod`.
+- **Never:** Use local `useState` for form fields. Use uncontrolled inputs registered via RHF.
+- **Why:** RHF is uncontrolled, eliminating per-keystroke re-renders. Zod schemas double as TypeScript types.
+
+### 12.4 Global State (Zustand, NOT React Context)
+- **Rule (scoped):** Inside `src/features/leads/`, NEVER use `React.createContext` or `useContext` for global state. Use Zustand stores. AST-grep enforces.
+- **Persistence:** Use `zustand/middleware` `persist` for filter state that should survive page reloads.
+- **Allowed Context exceptions:** 3rd-party providers (`QueryClientProvider`, `ThemeProvider`, etc.) are not in scope of this rule because they are wrappers, not application state.
+- **Why:** Context triggers re-renders on every consumer for any state change. Zustand subscribes per-selector, avoiding the cascade.
+
+### 12.5 UI Primitives (Shadcn UI + Mobile-First)
+- **Rule:** Use Shadcn UI for foundational primitives — Modals, Drawers, Dropdowns, Forms, Date Pickers. Run `npx shadcn@latest add [component]` to install each.
+- **Mobile rule:** On mobile viewports, NEVER use centered `<Dialog>` modals. Use Shadcn `<Drawer>` (powered by Vaul) for all popups, sheets, contextual menus, and forms.
+- **Why:** Shadcn provides accessible, touch-friendly primitives out of the box. Vaul provides iOS-grade gesture physics (`cubic-bezier(0.32, 0.72, 0, 1)`) that reaching the close button on a centered modal cannot match on mobile.
+
+### 12.6 List Virtualization (TanStack Virtual)
+- **Rule:** Any list/feed/grid expected to render more than 50 items MUST be wrapped in `useVirtualizer` from `@tanstack/react-virtual`.
+- **Why:** Rendering thousands of DOM nodes crashes mobile browsers and tanks frame rate. Virtualization renders only visible items + a small overscan buffer.
+
+### 12.7 Toast Notifications (Sonner)
+- **Rule:** Use Shadcn's Sonner integration for all success/error/info notifications. Use `toast.success()`, `toast.error()`, `toast.info()`.
+- **Never:** Build custom alert banners. Never use `alert()`, `confirm()`, or `prompt()` (they freeze the entire mobile browser).
+- **Why:** Sonner stacks neatly, supports swipe-to-dismiss, and never blocks the UI thread.
+
+### 12.8 SQL Linting & Migration Safety
+- **Rule:** All NEW migration files must pass `sqlfluff lint --dialect postgres`. Existing migrations (001-069) are grandfathered.
+- **Rule:** All NEW migrations must pass `scripts/validate-migration.js`, which catches:
+  - `DROP TABLE` or `DROP COLUMN` without explicit user confirmation comment
+  - `CREATE INDEX` (non-CONCURRENT) on tables with >100K rows
+  - Missing `-- DOWN` block
+  - `UPDATE` without `WHERE` clause (full-table scan risk)
+- **Rule:** All migrations must include a DOWN section that reverses the UP changes.
+- **Why:** Backwards compatibility, rollback safety, no production lock incidents.
+
+### 12.10 Real-DB Integration Tests (testcontainers + CI service)
+- **Status:** Adopted 2026-04-08 after the Phase 0+1+2 holistic review. Mocked-pool tests cannot catch SQL syntax errors, constraint violations, FK cascades, geography casts, or column-width truncation — that bug class accounted for ~40% of recent holistic-review findings.
+- **Rule:** Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts` file under `src/tests/db/` that exercises the constraint against a real Postgres.
+- **Local opt-in:** `BUILDO_TEST_DB=1 npm run test:db` spawns a container of the target engine image, `docs/specs/_contracts.json` `db_target.test_image` (`public.ecr.aws/supabase/postgres:17.6.1.167`: PG 17 / PostGIS 3.3, the image the local Supabase stack runs), via testcontainers, connects as the non-superuser `postgres` role, applies migrations 001..NNN via `scripts/migrate.js`, runs the suite, tears down. Requires Docker. The CI service container runs the same image. The pin is locked by T-PIN-1 (`src/tests/db-test-harness-target.infra.test.ts`) and T-PIN-2 (`src/tests/db/db-target-version.db.test.ts`) (WF3 PostGIS pin, 2026-10-03).
+- **CI:** `.github/workflows/db-tests.yml` provides a Postgres service container; runs on every PR that touches migrations, db client, or db tests.
+- **Skip semantics:** When neither `DATABASE_URL` nor `BUILDO_TEST_DB=1` is set, every `*.db.test.ts` self-skips via `describe.skipIf(!dbAvailable())`. The standard `npm run test` is unaffected.
+- **Target guard (WF3 2026-10-03):** the globalSetup picks its target with the pure `decideTestDbTarget(env)` in `src/tests/db/setup-testcontainer.ts`. An exported `DATABASE_URL` is migrated only when it is a disposable test DB: a loopback host with `CI=true` (the CI service container) or `BUILDO_TEST_DB_EXTERNAL=1`, or a non-loopback host with `BUILDO_TEST_DB_EXTERNAL=1`. The local Supabase dev stack (loopback port 54322) is never migrated, whatever flags are set. A qualifying URL wins over `BUILDO_TEST_DB=1` (CI runs `npm run test:db`, which always sets it). A URL that does not qualify is replaced by a testcontainer when `BUILDO_TEST_DB=1` is set; otherwise the suite aborts with a `REFUSING` error that names the target with the password redacted. Locked by `src/tests/test-db-setup-guard.logic.test.ts`.
+- **Why:** A real DB catches the bugs that locked our team into "reading SQL by eye" for 3+ phases. The migration 030 self-heal that this section's WF shipped removes the 1a blocker that was forcing the mock-only fallback.
+
+### 12.11 Footgun Lint Gate (AST-grep + grep)
+- **Status:** Adopted 2026-04-08. Five pattern bans wired into pre-commit + manual `npm run ast-grep:leads`. Initially scoped to `src/features/leads/` and (rule-by-rule) `src/lib/`. Expand per the §12 conservative model.
+- **Rules enforced** (each maps to a bug class the holistic reviews keep flagging):
+  1. **silent-catch-fallback** — bans `try/catch { return [] / null / emptyResult() }`. Caught Phase 2 holistic CRIT (`getLeadFeed` swallowing DB errors as 200 empty feeds, commit 0a3e680).
+  2. **env-default-in-lib** — bans `process.env.X || 'default'` inside `src/features/leads/`. A typo silently uses the default instead of failing loud. Suppressable per-line with justification.
+  3. **comment-rot** — grep heuristic: any file with `// never throws` / `// always returns` AND a `throw` statement is flagged. Caught Phase 0+1+2 holistic HIGH (stale "never throws" comment in feed/route.ts, commit 449fb2a).
+  4. **silent-row-drop** — grep heuristic: any file with `.filter((x): x is _ => x !== null)` AND no `logWarn` call is flagged. Caught Phase 0+1+2 holistic MED (`mapRow` silent null filter).
+  5. **pool-boundary** — bans `new Pool(` instantiation outside `src/lib/db/`, `src/tests/`, `scripts/`. Per CLAUDE.md Backend Mode rule 3.
+- **Suppression:** `// ast-grep-disable-next-line <rule-id>` with a one-line justification. Audited in code review.
+- **Files:** rule definitions live in `scripts/ast-grep-rules/*.yml`; the grep-based heuristics + runner live in `scripts/hooks/ast-grep-leads.sh`.
+
+### 12.12 Property-Based Tests (`fast-check`)
+- **Status:** Adopted 2026-04-08 after Phase 0+1+2 holistic review caught arithmetic-invariant violations (fit_score=23, buildLeadKey '0'/'00' drift) that example-based tests missed.
+- **Rule:** Pure functions with arithmetic invariants — scoring formulas, key normalizers, distance/unit conversions, cursor comparators — MUST have at least one `fast-check` property test asserting the invariant. Example-based tests are still required for happy paths and explicit edge cases.
+- **What counts as an invariant:** a property that holds for ALL inputs of the type. Examples: `forAll(input => relevance_score(input) <= 100)`, `forAll(input => buildLeadKey(input) === buildLeadKey(normalize(input)))`, `forAll(a < b => format(a) <= format(b))`.
+- **Files:** `src/tests/property/*.property.test.ts`. Run via `npm run test:property` or as part of the standard `npm run test`.
+- **Why:** A counterexample-finding test does the work that human review can't — it tries 100+ inputs and shrinks failures to a minimal reproduction. The Phase 0+1+2 buildLeadKey fix would have shipped 4 phases earlier with this in place.
+
+### 12.13 Mutation Testing (Stryker)
+- **Status:** Adopted 2026-04-08. **Automated** via `.github/workflows/mutation.yml` — runs weekly (Monday 12:00 UTC) AND on every PR that touches a mutation target file. **Not** manual: relying on humans to remember a weekly task is how the value gets lost.
+- **Rule:** The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`) and their `.test.ts` siblings are the mutation surface. Mutation score must stay ≥ 50% (script breaks below; CI job fails).
+- **What it catches:** "snapshot-style change-detector tests" where `expect(result).toBe(20)` locks the value but doesn't exercise it in any meaningful behavior assertion. Stryker injects mutations (flip `>=` to `>`, swap constants, remove conditionals, etc.) and watches for surviving mutants — every survivor is a test gap.
+- **Local usage:** `npm run test:mutation:dry` (verifies the runner setup, ~1 min) and `npm run test:mutation` (full run, ~3-5 min on 4 files / 439 mutants).
+- **CI usage:** Triggered by:
+  1. Weekly cron — Mondays 12:00 UTC, surfaces drift in test quality even when no PR is open
+  2. Per-PR — only when a target file or its test changed (path filter in the workflow)
+  3. Manual `workflow_dispatch` — one-off audits from the Actions tab
+- **Triage:** For each surviving mutant, EITHER add a focused test that kills it (preferred) OR add a `// stryker disable next-line <mutator>` with justification. Stryker HTML reports are uploaded as a build artifact for 30 days.
+- **Why not pre-commit:** Full runs take minutes. Pre-commit gates must be sub-second to avoid friction. CI absorbs the cost without blocking dev iteration.
+
+### 12.14 Semantic-Diff Narrator (Pre-Commit, Opt-In)
+- **Status:** Adopted 2026-04-08. Opt-in via `BUILDO_DIFF_NARRATOR=1`. Default OFF.
+- **Rule:** When enabled, every `git commit` runs the staged diff through Gemini and appends a 3-5 bullet summary to the commit message footer. Catches stale comments, contract drift, side effects in pure functions, and unexpected files in the diff BEFORE the commit lands.
+- **Critical:** **Fails open** on any error (missing key, network timeout, parse failure, empty diff). Never blocks a commit on its own. Test coverage in `src/tests/diff-narrator.logic.test.ts` locks the fail-open contract.
+- **Cost:** ~$0.0001 per commit, ~2-5s latency. Negligible for the value when enabled.
+- **Enable:** `echo 'export BUILDO_DIFF_NARRATOR=1' >> ~/.bashrc` (or your shell rc).
+- **Files:** `scripts/diff-narrator.js` (the Node script), `scripts/hooks/diff-narrator.sh` (the wrapper), `.husky/prepare-commit-msg` (the git hook).
+
+### 12.9 Animation & Gestures (Motion for React)
+- **Rule:** Use `motion` package (formerly Framer Motion) for swipe-to-delete, layout transitions, drag interactions, and button press animations.
+- **Spring config standard:** `{ type: 'spring', stiffness: 400, damping: 20, mass: 1 }` for button interactions. The Motion default (stiffness 1, damping 10) is intentionally weak and feels sluggish.
+- **Never:** Write custom CSS keyframes for complex interactions. Never animate layout properties (use `transform` / `opacity`).
+- **Why:** Hardware-accelerated, gesture-tracking, declarative.
+
+---
+
+## 📊 13. Observability Standards
+
+> **Status:** Adopted as of 2026-04-07. Building observability in from day one of the frontend rebuild — lessons learned from the painful retrofit on the backend pipeline.
+
+### 13.1 Product Telemetry (PostHog)
+- **Tool:** PostHog (self-hosted free tier covers 1M events/month)
+- **Wrapper:** All event capture goes through `src/lib/observability/capture.ts` exporting `captureEvent(name, properties)`. The wrapper handles SSR safety, type-safe event names, and provider abstraction.
+- **Type-safe event names:** Define a `EventName` union type. New events require adding to the union (catches typos at compile time).
+- **Mandatory coverage:** Every interactive handler in `src/features/leads/` (`onClick`, `onSubmit`, `onChange` for filters) MUST call `captureEvent()`. AST-grep enforces inside the leads feature.
+- **PII handling:** Never include user names, emails, addresses in event properties. Use Firebase UID (pseudonymous) for user identification.
+
+### 13.2 Error Tracking (Sentry)
+- **Tool:** Sentry (free tier covers 5K events/month)
+- **Wiring:** All `app/[...]/error.tsx` route boundaries call `Sentry.captureException(error, { extra: { digest: error.digest } })` in their `useEffect`.
+- **Source maps:** Uploaded to Sentry on every production build via `@sentry/nextjs` plugin.
+- **Local dev:** Errors logged to console only (Sentry disabled in dev to preserve free tier).
+
+### 13.3 Backend Structured Logging (`logInfo` / `logWarn` / `logError`)
+- **Tool:** `src/lib/logger.ts` exports `logError`, `logWarn`, `logInfo`. Each emits a structured JSON line: `{ level, tag, event, timestamp, ...context }`.
+- **Rule:** API routes MUST emit at least one `logInfo` per successful request with `{user_id, duration_ms, ...key_params}` for observability.
+- **Rule:** All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`. ESLint enforces.
+- **Rule:** Pipeline scripts use `pipeline.log.info/warn/error` from the SDK, which routes to the same underlying logger.
+
+### 13.4 Performance Monitoring (Lighthouse CI)
+- **Tool:** Lighthouse CI in GitHub Actions, runs on every PR.
+- **Hard budgets (CI fails below these):**
+  - Performance: ≥90 mobile (Moto G4 emulation)
+  - Accessibility: ≥95
+  - Best Practices: ≥90
+  - LCP: <2.5s
+  - CLS: <0.1
+  - TBT: <200ms
+- **Why:** Catches performance regressions before merge. Enforces the "right foundation" goal.
+
+### 13.5 Feature Flags (PostHog Flags)
+- **Tool:** PostHog feature flags (included in free tier, integrated with telemetry)
+- **Rule:** Any new user-facing feature MUST be wrapped in a feature flag check at the route level. The lead feed launches behind `feature_lead_feed_v1`.
+- **Rollout pattern:** 0% → 10% (internal testing) → 25% → 50% → 100%. Each step gated on no-error-rate-spike in Sentry.
+- **Why:** Decouples deploy from release. Enables instant rollback without redeploy.
+
+---
+
+## 🛡️ 14. The Prevention Loop (findings → protocols → gates)
+
+Detection is not enough. **Every CRITICAL/HIGH review finding (Spec 08 roster) is triaged with a second question beyond "fix it": *"what standing rule would have prevented this whole CLASS, and where does it live?"*** The rule is placed here (or in the domain doc), and where deterministic, **promoted to a machine-read GATE** (husky footgun / ESLint / migration hook) — the strongest form: *a NO-GO the machine reads cannot be shipped past; a guideline eventually will* (operating-manual §2.4). This is the rule-oriented mirror of Spec 05's lesson-routing; the Roster Manager (Spec 08 §5.9) recommends new entries.
+
+**Registry (extracted from real findings — domain-tagged; promote guideline → gate as effort allows):**
+
+| Rule | Class it prevents | Domain | Form |
+|------|-------------------|--------|------|
+| Every `INSERT` provides all **NOT-NULL** columns; every `SELECT` feeding a typed client includes **every field the client type declares** | `lead_analytics` NOT-NULL crash; `DETAIL_COLUMNS` omission → dead UI | backend + admin | Schema-Fidelity agent → *candidate footgun* |
+| An `ON CONFLICT` INSERT **`GROUP BY`s the arbiter expression**, never the raw inputs it's derived from | the `21000` LPAD `lead_key` double-hit | backend | Schema-Fidelity → *candidate lint* |
+| Every **privileged mutation + its audit row** commit in ONE `withTransaction` (extends §R9 from `scripts/` to API routes) | reconcile/retry-cancel unaudited-mutation hole | admin + backend | guideline → *extend footgun* |
+| A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit** | period-end drift (Spec 95/97 stale vs code) | cross-cutting | Ground-truth/Compliance |
+| Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions** | traceability rot; stale cross-refs | cross-cutting | *candidate gate* (Spec 08 §5.10) |
+| A webhook/event that can arrive from a **superseded object** must match the CURRENT owning id before mutating state | the P26 stale-subscription downgrade | backend | guideline |
+
+**Domain protocol specs own their domain-tagged rows and point back here** (this §14 is the cross-cutting canonical registry): **Spec 47** (`docs/specs/01-pipeline/47_pipeline_script_protocol.md`, backend/pipeline), **Spec 34** (`docs/specs/02-web-admin/34_web_admin_testing_protocol.md`, admin), **Spec 90** (`docs/specs/03-mobile/90_mobile_engineering_protocol.md`, frontend/mobile).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+## Description
+Card opened 2026-11-20 by the orchestrator, Spec 137 rule 2. Operator ruling RR-0345 (MORNING-DECISIONS.md:1600, verbatim: "5 yes.", to the question as put: the pre-launch steps are done by the orchestrator by hand for task-375, and scripting them is the first task after 375, before the other build tasks launch). Why: before a build or fix launch the plan is reviewed (compliance per governing rule list, the Integration, Reality-Check and Regression seats), ruled by a separate grounder, folded, the fold checked, and the evidence put on the task and committed (Spec 08 sections 6.4, 5.3, 11.2); the launch check of task-375 (folded at d9f2143a7) now refuses a launch without it. Scope (2026-11-21, PLAN-418-v2 in the Implementation Plan field governs; build exactly that plan, do not re-plan): ONE subcommand plan-prep of scripts/analysis/rule-lists.mjs with three phases (review, post, commit) that runs the mechanical steps only, reusing what exists (backlog-brief.mjs, lens-input, findings, the exported functions of check-lane-close.mjs, plant-evidence.mjs for tests); it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line, and it does not launch. Files: scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
+
+
+## Acceptance criteria
+- #1 (a) planted-defect tests red then green through the real hooks.
+- #2 (b) plan-prep review --task task-412 --lane <name> --dry-run: exit 0; 1 brief, 9 lens-input and 9 review commands; git status unchanged.
+- #3 (c) the same without --dry-run with 412's plan on the task: 9 plan-compliance-*.txt each starting "REVIEW template=lens-compliance.md", 9 in- files, FINDINGS-PLAN.md; paste counts and shell time.
+- #4 (d) the same on a task with an empty plan field: exit 3 one line.
+- #5 (e) the agent steps for real on 412 (seat-integration-1.md, seat-reality-check-1.md, seat-regression-1.md, grounder, fold), then post, commit, the grounder copies the printed Plan line, commit again: the dry run prints "plan gate ok: 9 lists, <M> findings, Plan sha256:<12>"; one word edited in the task: exit 3, new expected Plan line; revert.
+- #6 (f) backlog task view task-412 --plain shows the references (GROUNDER-PLAN.md, TRIAGE-PLAN.md if any, the three seats) and the "Plan review round 1" block; git log -1 --name-only on wf2/board shows exactly the folder.
+
+
+## Implementation Plan
+PLAN-418-v2 (build plan, self-contained). Task: LAUNCH.PREP, the mechanical steps before a build launch run from one command. Basis: board branch wf2/board, head d9f2143a7 (task-375 parts A, B, D and task-399 folded). Every file:line below was opened at d9f2143a7 unless marked UNVERIFIED. v2 replaces v1 (whose 375 claims came from PLAN-375, not code).
+Serves: supporting function of the compliance review of every Increment 1.B task; advances none of doc-2 elements A to G. Estimate: GUESS 0.5 lane day (smaller than v1: the real code already does more), not timed.
+
+Files: scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
+
+0. THE OPERATOR'S WORDS (verbatim, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md; line numbers measured; the rest is orchestrator design)
+:1517 "don't makr the task complete until it actually works"
+:1522 "you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y"
+:1585 "yes hardening rounds.  Today's were warranted, but not endless."
+:1600 "5 yes." (entry :1598): scripting the hand steps is the first task after 375.
+:1630 "these only run on the plan"; :1634 "Complaince on the plan and output. Let's start with that!"
+:1638 "You are good to build them tonight! If the panel leaves an open question - ground it and then take that as approved and let me know in the morning."
+Standards: simple, no over-engineering, no scope creep, no facades; check what exists first. This task scripts the mechanical half of steps 1 to 4 of the six (confirmed as read, :1580). It rules nothing.
+
+1. WHAT IT DOES
+Three phases of ONE subcommand, plan-prep, of rule-lists.mjs: review (context, a lens input and a review call per resolved list, findings list), post (references and the "Plan review round" block on the task), commit (evidence commit, then the launch dry run). No new script file, field or key. Not scripted, the code already does it: the take adds the compliance:<list id> references (backlog-lane.mjs:129, rule-lists.mjs:452); check-tasks prints the commands for open tasks (:567-576); the gate is the dry run.
+
+2. WHAT EXISTS AT d9f2143a7 AND IS REUSED (each opened)
+- docs/reports/reviews/task-375/plant-evidence.mjs (67 lines; run by backlog-lane.logic.test.ts:16). It ALREADY writes a whole valid evidence set into a fixture board and commits it: context-r1.md from fixture-context.md; each list's input via rl.buildLensInputs({id, list, root, material: extractSections(ctx, PLAN_SECTIONS), templateFile, context: extractSections(ctx, CONTEXT_SECTIONS)}) as in-plan-compliance-<id>[-pN].txt; the output with a REVIEW header whose prompt_sha256 is rl.lensPromptHash(...); GROUNDER-PLAN.md (Grounder, Lane, an rl.ruledLine per plan-*.txt, a Seat line per seat with the first 12 hex of the sha256, the Plan line last from planHash); seat-<name>-1.md with a line "### <3 letters>#1 LOW: ..."; the task edits --plan, --append-plan "Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder <rel>/GROUNDER-PLAN.md; triage <rel>/TRIAGE-PLAN.md" and one --add-ref per evidence file; git add -A and commit. It is a test fixture: SYNTHETIC outputs and ruling, 0 findings. Plan-prep rebuilds none of it: same library calls and forms, tests start from its state, its zero-finding block is the string post must reproduce. What plan-prep adds: the real review calls, real findings, the block for N findings, the real commit through the hooks.
+- backlog-brief.mjs writes docs/reports/reviews/<task>/context-rN.md (:49-52 contextRound over the folder, never overwritten; :146-147 the Implementation Plan and Notes sections; :159 writeFileSync) from --task, --lane, --root; its stdout is the brief, not the context path: the caller computes N with the exported contextRound(dir) (scripts/lib/review-template.js:137).
+- scripts/lib/review-template.js: CONTEXT_SECTIONS, PLAN_SECTIONS (Description, Acceptance criteria, Implementation Plan), extractSections, contextRound.
+- rule-lists.mjs lens-input (:544-566): --list <id> --context <ctx> --material-from <ctx> --out <prefix>; --context is required (exit 2 without); --material-from is its own context and cuts PLAN_SECTIONS; it deletes older <prefix> files first. findings --dir (:588-593) prints a Ruled line per plan-*/out-* file and "<id>\t<line>" per finding.
+- backlog-lane.mjs: the review command literal is const cmd at :180 inside lensLine (DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review); every lens passes --context <ctx> and one --section per CONTEXT_SECTIONS entry (:175-177). The gate call is :90-106; it prints "plan gate ok: <L> lists, <M> findings, Plan sha256:<12>" (:106), or one "backlog-lane: refused: plan gate: <error>" line per error to stderr and exits 3 (:105).
+- check-lane-close.mjs: planGateErrors (:564, pure; exported), planHash (:552), PLAN_SEATS (:549: always integration and reality-check, conditional regression when a Files entry names a path tracked at the board head, :621), outcomeErrors (:161, exported; mode 'plan'; forms folded, task, ruling, wontfix, pile; folded needs a 20+ character quote present in the task text), parseVerdicts (:128), lensKindOf (:141), seatLines (:145). The round block is built INLINE at :266-276 and appears only in a refusal message ("the block is:\n<lines>\n(one command ...)"), only when the outcome errors are empty, there is at least one CONFIRMED or CONFLICT id, and a round line exists (planGateInner :630 passes summary null when the plan field has no "Plan review round N:" line). It is NOT exported.
+- 08_agents.md:524 and 137_mcqueue.md:140 (dated notes 2026-11-21): seats run on the plan only; the gate "cannot prove that the grounder or any seat ran or is a different agent".
+- board-commit.zsh commits only backlog/ (:10, :12) every 600 s; index.lock makes it skip (:11). check-backlog-task.mjs:3-4 exempts docs commits from the Task trailer; check-task-files.mjs:10, :70 always allows docs/reports/reviews/<this task id>/.
+
+3. WHAT THE REAL GATE REQUIRES FOR A BUILD TASK, AND WHO WRITES IT
+Folder docs/reports/reviews/<id>/ read from git HEAD (backlog-lane.mjs:92-95; the task body from the working file); stray names are ignored. Grounder checklist for task-418: ~/Buildo-scratch/lanes-20261119/inc1b/gate375/h/GROUNDER.md.new section F (the final GROUNDER.md in that folder has no task-418 section).
+ | item (real name) | written by |
+ | context-r1.md | plan-prep review (backlog-brief.mjs) |
+ | in-plan-compliance-<list>[-pN].txt and plan-compliance-<list>[-pN].txt for EVERY resolved list (9 for 418: agents-s5-1to3, agents-s7-s11, queue-137, eng-all, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S) | plan-prep review (lens-input then the review command); the tool writes the REVIEW header |
+ | FINDINGS-PLAN.md (ids for the grounder; a stray name, ignored by the gate) | plan-prep review (findings output) |
+ | seat-integration-1.md, seat-reality-check-1.md, seat-regression-1.md, each with at least one line "### <id>#<n> CRITICAL|HIGH|MED|LOW|NIT: ..." (SEAT_LINE :142) | AGENTS: tool-having Sonnet seats. Never scripted |
+ | GROUNDER-PLAN.md: Grounder (not the planned lane, not an assignee), Lane (the planned lane name), a Ruled line per plan-*.txt, a verdict per finding id (lens ids and seat ids), Seat lines "Seat: <name> <repo path> sha256:<12>" (path inside the folder), the Plan line last | AGENT: separate grounder. Never scripted |
+ | TRIAGE-PLAN.md, one line per CONFIRMED or CONFLICT id (required only when there is one) | AGENT: orchestrator's fold. Never scripted |
+ | references on the task: GROUNDER-PLAN.md, TRIAGE-PLAN.md when present, each seat path (gate :639) | plan-prep post |
+ | "Plan review round N: <a> folded, <b> task, <c> ruling, <d> wontfix, <e> pile; grounder <path>; triage <path>" and one line "<id> <SEV> <word> <ref>" per CONFIRMED CRITICAL, HIGH or MED id, in the Implementation Plan field (gate :625-630) | plan-prep post |
+ | the folder committed at the board HEAD | plan-prep commit |
+ | Plan: <id> sha256:<12>, the hash of title plus body now (front matter excluded, so references do not change it; the round block does) | AGENT: the grounder copies the expected line the dry run prints, as its last act |
+Only per-list compliance is required for a build task (:588 branch); a fix task needs one plan-<lens>.txt instead (:604-607). Any other plan-*.txt in the folder must also have a Ruled line and a verdict per finding.
+
+4. DESIGN
+4.1 Shape: node scripts/analysis/rule-lists.mjs plan-prep <review|post|commit> --task task-N --lane <planned lane name> [--board <dir>] [--dry-run]. In rule-lists.mjs, which owns lens-input, findings, check-tasks and resolveTask; check-lane-close.mjs imports rule-lists.mjs, so plan-prep post reaches outcomeErrors, parseVerdicts, lensKindOf, seatLines, PLAN_SEATS and planHash by a dynamic import (a static import is a cycle).
+4.2 Actor order (each phase refuses when its input is missing):
+ a. AGENT: orchestrator puts the plan on the task (backlog task edit --plan, --ac, --append-notes, --description) and sets the Files line.
+ b. SCRIPT: plan-prep review.
+ c. AGENTS: three seats, separate grounder (GROUNDER-PLAN.md without the Plan line), fold into the task text, TRIAGE-PLAN.md, fold check (08_agents.md:473).
+ d. SCRIPT: plan-prep post.
+ e. SCRIPT: plan-prep commit (first run: the dry run prints the expected Plan line).
+ f. AGENT: the grounder appends that line, last.
+ g. SCRIPT: plan-prep commit again: the dry run prints "plan gate ok: 9 lists, <M> findings, Plan sha256:<12>".
+ h. HAND: node scripts/analysis/backlog-lane.mjs --task task-N --lane <name>, without --dry-run.
+ The expected Plan line is printed only when GROUNDER-PLAN.md is already at the HEAD without it (planGateInner prints it in the Plan-line branch, :635, which runs only after the file is found): so commit runs twice, as above. A later edit of the task title or body changes the hash and sends step f back.
+4.3 review. Refusals (exit 3, one line, before any write, wording after backlog-lane.mjs:27): task not found; status not LATER or WAITS; Files do not resolve or lists incomplete (resolveTask, verifyResolved as backlog-lane.mjs:76-79); Implementation Plan field empty; board dirty outside backlog/ and the folder; type not build or fix; a plan-*.txt already in the folder (one round per prep, 4-Q1). Then, each command printed as "cd <dir> && <cmd>" and run unless --dry-run:
+ 1. node scripts/analysis/backlog-brief.mjs --task N --lane <lane> --root <board> (writes the context; N from contextRound before the call).
+ 2. build: per resolved list L, node scripts/analysis/rule-lists.mjs lens-input --list L --context <ctx> --material-from <ctx> --out <folder>/in-plan-compliance-L (the checklist's form). fix: no inputs; the plan lens command takes the context file itself as the file under review (backlog-lane.mjs:187 lens line), output plan-plan-review-deepseek.txt (the name :607 expects).
+ 3. per input: REVIEW_CMD <in file> --template .claude/review-templates/lens-compliance.md --context <ctx> + one --section per CONTEXT_SECTIONS entry, cwd the board, output plan-<same name>.txt written only on exit 0 (backlog-lane.mjs:94 precedent). Calls run concurrently; a failed call is listed by name, exit 1, no partial file; a re-run redoes only missing names.
+ 4. every output opens with "REVIEW template=" or the phase exits 1 naming it.
+ 5. rule-lists.mjs findings --dir <folder> > <folder>/FINDINGS-PLAN.md (the lane FINDINGS.md precedent).
+ Only compliance runs for a build task: the gate requires only it and his :1634 starts with compliance; the brief's other plan lenses are not run (4-Q4).
+4.4 post. Refuses, naming each: GROUNDER-PLAN.md absent; a Seat line missing for a name of PLAN_SEATS (integration, reality-check, plus regression when a Files entry is tracked: git ls-files, the gate's own test, :621); a seat file named by a Seat line absent on disk; a CONFIRMED or CONFLICT id of the grounder with no TRIAGE-PLAN.md line. Then it calls outcomeErrors in mode 'plan' on the on-disk files (verdicts from parseVerdicts, lens kinds from findingsIn and lensKindOf, seats from seatLines read from disk, which also refuses a seat file edited after its Seat line, facts from the working tree) with a summary of empty text, so that clean outcomes return the "the block is:" message; post writes its lines, the first as "Plan review round N: ..." (the gate maps that prefix to "Review round", :627). With zero CONFIRMED or CONFLICT ids the block is the zero form plant-evidence writes. Any other outcome error is printed and post exits 1: the fold is not finished. Then ONE command: backlog task edit task-N --append-plan "<block>" with one --add-ref per repo path of GROUNDER-PLAN.md, TRIAGE-PLAN.md when present and each seat path that the task does not carry (one argument per path: a comma splits it). Idempotent: when the gate's own test (head = rounds before the last, text = the plan field) finds nothing missing, it prints "nothing to post", exit 0. It parses a refusal message; test 11 pins that coupling.
+ Shared, not copied: backlog-lane.mjs:100-103 builds taskOf and decisionExists from git HEAD inline; they become one exported boardFacts({ show, ls }) in rule-lists.mjs (the caller passes readers): backlog-lane.mjs passes git-HEAD readers (behaviour unchanged), post passes working-tree readers. Likewise the literal of :180 becomes one exported REVIEW_CMD that backlog-lane.mjs imports (it already imports from rule-lists.mjs, :25). That is why backlog-lane.mjs is on the Files line.
+4.5 commit. Refuses: index.lock present (board-commit.zsh :11 skips on it; say retry); anything staged or dirty outside the folder and backlog/; GROUNDER-PLAN.md absent. If the folder changed: git add docs/reports/reviews/<id>; git commit -m "docs(08_agents): plan review evidence for task-N" through the real hooks (no --no-verify); a hook refusal leaves nothing committed, prints its first lines, exit 1. Then node scripts/analysis/backlog-lane.mjs --task N --lane <lane> --dry-run, output and exit code passed through.
+4.6 --dry-run on any phase prints every command and writes nothing.
+
+5. NEVER SCRIPTED (agent work)
+Plan text, acceptance criteria, dated notes, decision records; the three seats; the grounder's rulings and Plan line; TRIAGE-PLAN.md and the fold; the fold check; the lane name; the launch; every ruling.
+
+6. TESTS (red first through the real hooks, DoD #2; each lock proven both ways, 08_agents.md 11.3; each spawned-CLI test first asserts exit status, no signal and the first output line before any absence assertion, R-CP 124a:296). Fixture: the temp board of backlog-lane.logic.test.ts and its plantEvidence helper (:15-16), which runs plant-evidence.mjs; no second evidence writer is built.
+Seam, documented like backlog-lane's --backlog-bin: --review-bin <script> replaces scripts/deepseek-review.js in tests; the success path uses the REAL tool with --dry-run and a dummy DEEPSEEK_API_KEY (real header, no API call, deepseek-review.js :39 and :194).
+Planted defects, each with a control:
+ 1 empty plan field: exit 3, nothing written / plan present proceeds.
+ 2 task not LATER, Files not resolving, type record: refused / resolving build task.
+ 3 dirty file outside backlog/ and the folder: refused / dirty only in backlog/ passes.
+ 4 plan-*.txt present: refused, bytes unchanged / empty folder.
+ 5 one call exits 1 (stub): names it, no partial file, re-run redoes only it / all succeed.
+ 6 output without a REVIEW header (stub): exit 1 / real tool output passes.
+ 7 inputs equal byte for byte the files plant-evidence writes from the same context (control); another Description gives different inputs (planted).
+ 8 context round: with context-r1.md present the phase writes context-r2.md and r1 is untouched.
+ 9 post: from plant-evidence's state with the round line and references stripped (backlog task edit --plan and --remove-ref), post restores the exact zero-form line and the references; run twice, one block (nothing to post).
+ 10 post with a CONFIRMED id lacking a TRIAGE-PLAN.md line: refused naming the id, task unchanged / with folded:"<20+ characters in the task>" it posts.
+ 11 post for a CONFIRMED HIGH folded: commit, then the real dry run prints "plan gate ok" (the end-to-end test; skipped in v1, now runnable).
+ 12 seats: Regression Seat line removed where a Files path is tracked: post refuses naming it / all-new Files need none; integration or reality-check removed: refused; a seat file edited after the grounder: refused.
+ 13 commit: staged file outside the folder refused; hook exit 1: nothing committed; index.lock refused; the commit holds exactly the folder (git show --name-only).
+ 14 one-word edit of the task after the Plan line: the dry run refuses with the new expected Plan line.
+ 15 --dry-run on each phase: commands printed, tree byte-identical.
+ 16 a fix task: review writes plan-plan-review-deepseek.txt, no per-list inputs.
+Existing tests stay green: rule-lists.logic.test.ts (804 lines), backlog-lane.logic.test.ts (454 lines; its pins on the lens-line text, :263 and :335, are unchanged because REVIEW_CMD holds the same string). The usage line of cli() (rule-lists.mjs:594) gains "plan-prep"; grep "usage: rule-lists" in src/tests/backlog found no pin.
+
+7. ACCEPTANCE (commands on a real not-started build task; output pasted on the task; do not mark BUILT until all are pasted, :1517)
+Real task: task-412 (FOLLOWUPS.ROW; LATER, type build, 9 resolved lists at d9f2143a7). Its launch is not part of this acceptance.
+ (a) planted-defect tests red then green through the real hooks.
+ (b) plan-prep review --task task-412 --lane <name> --dry-run: exit 0; 1 brief, 9 lens-input and 9 review commands; git status unchanged.
+ (c) the same without --dry-run with 412's plan on the task: 9 plan-compliance-*.txt each starting "REVIEW template=lens-compliance.md", 9 in- files, FINDINGS-PLAN.md; paste counts and shell time.
+ (d) the same on a task with an empty plan field: exit 3 one line.
+ (e) the agent steps for real on 412 (seat-integration-1.md, seat-reality-check-1.md, seat-regression-1.md, grounder, fold), then post, commit, the grounder copies the printed Plan line, commit again: the dry run prints "plan gate ok: 9 lists, <M> findings, Plan sha256:<12>"; one word edited in the task: exit 3, new expected Plan line; revert.
+ (f) backlog task view task-412 --plain shows the references (GROUNDER-PLAN.md, TRIAGE-PLAN.md if any, the three seats) and the "Plan review round 1" block; git log -1 --name-only on wf2/board shows exactly the folder.
+
+8. WHAT THIS CANNOT PROVE
+That the seats or grounder ran or differ from the lane (the gate compares names and hashes); that rulings are right; that the fold is complete (only "every CONFIRMED has an outcome and a folded quote is present"); that review content is good; latency or cost; that the plan is unchanged after launch; forgery (401, 402). It proves the mechanical steps ran in order on real inputs and left what the gate reads.
+
+9. NOT IN SCOPE
+Scripting a ruling, seat, grounder, fold or fold check; a second round's storage; non-compliance plan lenses; the launch; record, check and doc types; lane close (399); compliance references (the take does it); a backlog task edit wrapper; changing the gate, the context or plant-evidence.mjs.
+
+10. LANDING
+Red tests first, then code: one code commit ("Task: task-418", task file in the diff); a records-only closing commit (Spec 137 Rule 3).
+
+11. LEFT FOR THE LANE TO MEASURE
+Per-call time and counts with a real 30 KB context (measured: 9 files for 9 lists with the 259-character fixture context); whether the dynamic import of check-lane-close.mjs from the rule-lists.mjs CLI works (UNVERIFIED, not run).
+

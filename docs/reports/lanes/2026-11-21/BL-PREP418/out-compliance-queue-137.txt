@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:23:48.744Z file_sha256=7352ede684763346a0f899ca91bb00efab09912387d2b0dae4748b5985bea52c prompt_sha256=1f242917aaf4d26f02f48094240c31a956b7a1770a59bb254ac2ff9a6cc2b8c6
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-PREP418/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-418 Scope "PLAN-418-v2 in the Implementation Plan field governs; build exactly that plan, do not re-plan" — scripts/analysis/rule-lists.mjs:625 "for (const l of lists) say(board, reviewArgv(`${ev}/in-plan-compliance-${l.id}[-pN].txt`, 'lens-compliance.md'), denv);" — the plan sentence quoted in the task notes ("builds the inputs in memory to name the parts") is not built; the pasted note records "DEVIATION from the plan sentence ... the dry run names each input file as in-plan-compliance-<id>[-pN].txt", so acceptance #2's "9 review commands" is a non-runnable placeholder command, a self-declared deviation from the governing plan with no amendment — build the parts as the plan says (write the inputs in the dry run to a temp dir, or derive the part count without writing) and print one command per real part file, or get the plan amended in the plan field
+
+DEFER severity=MED — task-418 Acceptance criteria "#3 (c) the same without --dry-run with 412's plan on the task: 9 plan-compliance-*.txt each starting 'REVIEW template=lens-compliance.md', 9 in- files, FINDINGS-PLAN.md; paste counts and shell time." — NONE — (c), (e) and (f) are unmet in the material: the pasted notes say "(c), (e) and (f) NOT RUN: they need real DeepSeek calls and agent steps on task-412", so the real-input proof and the through-the-gate round are evidenced only by vitest fixtures (test 11 and 14), not by the criteria the card names — run (c), (e) and (f) on task-412 before close and paste the counts and the gate lines
+
+DEFER severity=LOW — task-418 Scope "reusing what exists (backlog-brief.mjs, lens-input, findings, the exported functions of check-lane-close.mjs, plant-evidence.mjs for tests)" — scripts/analysis/rule-lists.mjs:613 "const reviewBin = str('review-bin', '') ? path.resolve(home(str('review-bin', ''))) : 'scripts/deepseek-review.js';" — the card names no way to replace the review engine, yet this seam runs any binary as the plan compliance review and the test STUB shows a hand-written "REVIEW template=lens-compliance.md" header plus a VERDICT line is all the phase requires — confine the seam to a test environment flag so the shipped command can only call scripts/deepseek-review.js
+
+MET — task-418 Scope "ONE subcommand plan-prep of scripts/analysis/rule-lists.mjs with three phases (review, post, commit)" — scripts/analysis/rule-lists.mjs:554 — any phase outside review/post/commit, a non task-N id or a missing lane is refused with the usage line
+MET — task-418 Scope "it ... does not launch" — scripts/analysis/rule-lists.mjs:731 — the gate argv is backlog-lane.mjs with the identity flags and "--dry-run" appended last, and no other backlog-lane invocation exists
+MET — task-418 Scope "it never writes ... a grounder file" — scripts/analysis/rule-lists.mjs:665 — GROUNDER-PLAN.md is read only, and an absent one is refused
+MET — Spec 137 §4 dated note 2026-11-21 (task-375) "the required seat reports (Integration, Reality-Check, and Regression when the Files line names a tracked path)" — scripts/analysis/rule-lists.mjs:670 — Regression is required exactly when a Files entry is tracked on the board
+MET — Spec 137 §4 dated note 2026-11-20 (task-399) "one outcome line per CONFIRMED or CONFLICT id of GROUNDER.md" — scripts/analysis/rule-lists.mjs:677 — every CONFIRMED and CONFLICT verdict without a TRIAGE-PLAN.md line is refused by id
+MET — task-418 Acceptance criteria "#6 (f) backlog task view task-412 --plain shows the references (GROUNDER-PLAN.md, TRIAGE-PLAN.md if any, the three seats)" — scripts/analysis/rule-lists.mjs:709 — wantRefs is exactly GROUNDER-PLAN.md, TRIAGE-PLAN.md when present, and each Seat path
+MET — task-418 Acceptance criteria "#6 (f) git log -1 --name-only on wf2/board shows exactly the folder" — scripts/analysis/rule-lists.mjs:730 — the commit is made with a path-limited "--" ev pathspec, so only the evidence folder is in it
+
+REJECT — task-418 Scope "it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line" — accused of writing outcome lines because post appends the block with "--append-plan" — the block is the check's own text transcribed from outcomeErrors, and acceptance #6 plus the Spec 137 task-399 note require the round line and the CRITICAL, HIGH and MED outcomes on the task, so this is the mechanical copy the criterion asks for; the Plan hash line is left to the grounder
+REJECT — task-418 Scope "it ... does not launch" — accused of a launch path through "--launch-args" — the seam accepts only six value-carrying flags, the identity flags and "--dry-run" are appended last, and test 13b asserts the task stays LATER with no worktree and no branch when the seam carries "--dry-run" or an identity flag
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  159056ms (159.1s)
+📊 Tokens — total: 56036, input: 27768, output: 28268, reasoning: 27006

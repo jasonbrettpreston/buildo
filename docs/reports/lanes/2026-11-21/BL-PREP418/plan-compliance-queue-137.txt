@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T05:12:37.358Z file_sha256=e55d982828ec2159f926fc0bb6ba487c5162b057950629ed9ccf736522c41814 prompt_sha256=eece3ed3fda19e1b4e5fa9f25eddcc395ce11782417a6bbf56f9ab70e5891328
+🔍 Lens review of docs/reports/reviews/task-418/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §4 Rule 3 dated note 2026-11-20 (task-366) "the close of a lane's task (rule 3 of this section: the status line changes in the same commit as the work) now also needs, in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`), one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane" — PLAN-418-v2 §10 "one code commit ("Task: task-418", task file in the diff); a records-only closing commit (Spec 137 Rule 3)" plus §9 "lane close (399)" — the landing step produces no lane report directory, so the closing commit that sets BUILT is refused by check-lane-close.mjs for all 9 attached lists (queue-137 among them) plus GROUNDER.md, and the 2026-11-21 note's REPORT.md/GROUNDER.md/TRIAGE.md references are never added — add the lane report dir with the 9 compliance outputs, GROUNDER.md and those refs to §10 and remove "lane close" from §9.
+
+BUG severity=MED — task-418 scope "reusing what exists (backlog-brief.mjs, lens-input, findings, the exported functions of check-lane-close.mjs, plant-evidence.mjs for tests)" — PLAN-418-v2 §11 "whether the dynamic import of check-lane-close.mjs from the rule-lists.mjs CLI works (UNVERIFIED, not run)" — every post refusal rests on that dynamic import while §9 forbids changing the gate, so a failing import leaves post with no outcome, verdict or seat validation and no stated fallback — run the import once at plan time, or move outcomeErrors, parseVerdicts, seatLines, PLAN_SEATS and planHash into a shared module both callers import statically.
+
+BUG severity=MED — task-418 scope "it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line" — PLAN-418-v2 §3 table row "one line "<id> <SEV> <word> <ref>" per CONFIRMED CRITICAL, HIGH or MED id, in the Implementation Plan field (gate :625-630) | plan-prep post" — post itself writes the per-finding outcome lines and their words, which the scope clause denies the script — either have the fold agent write those outcome lines and make post verify them only, or amend the scope clause to say post reproduces the gate's block text verbatim.
+
+DEFER severity=LOW — task-418 scope "ONE subcommand plan-prep of scripts/analysis/rule-lists.mjs with three phases (review, post, commit)" — PLAN-418-v2 §1 "No new script file, field or key" against §6 "--review-bin <script> replaces scripts/deepseek-review.js in tests" and §4.4 "they become one exported boardFacts({ show, ls })" — a new CLI flag and two new exports are unnamed by the card and contradicted by §1 — name them in §1 and confirm the Files line covers the exports, or drop the seam.
+
+DEFER severity=LOW — Spec 137 §4 dated note 2026-11-21 "the required seat reports (Integration, Reality-Check, and Regression when the Files line names a tracked path)" — PLAN-418-v2 §4.4 "plus regression when a Files entry is tracked: git ls-files, the gate's own test, :621" against §3 "conditional regression when a Files entry names a path tracked at the board head" — post tests the working tree while the gate tests the board head, so post's required seat set can differ from the set the gate enforces — use the same board-head reader in both.
+
+REJECT — Spec 137 §5a dated note 2026-11-19 "a conforming `docs(137_mcqueue): board edits <date>` message" — accused of a non-conforming commit message in PLAN-418-v2 §4.5 "git commit -m "docs(08_agents): plan review evidence for task-N"" — that message form governs board-edit commits, not plan evidence commits.
+
+MET — Spec 137 §4 Rule 3 dated note 2026-11-20 "for lane build and fix tasks Rule 3 is amended to the two-commit close" — PLAN-418-v2 §10 — code commit first, records-only closing commit second.
+MET — RR-0345 "5 yes." (the pre-launch steps scripted as the first task after 375) — PLAN-418-v2 §1 — only plan-prep and its refactor are built, nothing else.
+MET — task-418 scope "and it does not launch" — PLAN-418-v2 §9 — the launch is out of scope and only the dry run is invoked in §4.5.
+MET — Spec 137 §4 dated note 2026-11-20 (task-399) "one outcome line per CONFIRMED or CONFLICT id of GROUNDER.md" — PLAN-418-v2 §4.4 — post refuses a CONFIRMED or CONFLICT id with no TRIAGE-PLAN.md line.
+MET — operator, :1517 "don't makr the task complete until it actually works" — PLAN-418-v2 §7 — BUILT is withheld until every acceptance output is pasted.
+MET — operator, :1522 "you are probaley rebuilding stuff that already exists" — PLAN-418-v2 §2 — plan-prep rebuilds none of plant-evidence, it reuses the same library calls.
+MET — Spec 137 §4 dated note 2026-11-21 "the round block on the task and the Plan hash line" — PLAN-418-v2 §4.4 — post writes the round block and the grounder writes the Plan line the dry run prints.
+MET — Spec 137 §3 "`ruling:` and `when:` are description lines (the verbatim ruling on FROZEN and DROPPED)" — PLAN-418-v2 §5 — rulings, seat reports and grounder files are never scripted.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 26   Unmet: 3
+
+---
+⏱  92087ms (92.1s)
+📊 Tokens — total: 33609, input: 17581, output: 16028, reasoning: 14657

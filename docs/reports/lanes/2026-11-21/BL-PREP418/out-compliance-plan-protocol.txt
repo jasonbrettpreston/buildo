@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:23:48.741Z file_sha256=034a872af4b3670dd854d78fad1345d749233d37e584dcf012a182c028eba769 prompt_sha256=7b0ace6a648fe699121f59eeb02539f4f0d8edb5efaeb55474b6c0c5e88eb65f
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-PREP418/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-418 Acceptance #3 (c) "#3 (c) the same without --dry-run with 412's plan on the task: 9 plan-compliance-*.txt each starting ..., 9 in- files, FINDINGS-PLAN.md; paste counts and shell time" — task-418 Implementation Notes, BL-PREP418 acceptance "(c), (e) and (f) NOT RUN: they need real DeepSeek calls and agent steps on task-412 (owed after the fold; task-412 is the first scripted proof)." — three pasted acceptance criteria (c), (e), (f) are unmet; only fixture tests 5, 6, 11 and 14 stand in for the real task-412 run — run (c) on task-412 and paste the counts, and run (e)/(f) or log the operator's dated deferral on the task before merge.
+
+DEFER severity=MED — task-418 Description "before a build or fix launch the plan is reviewed (compliance per governing rule list, the Integration, Reality-Check and Regression seats)" — scripts/analysis/rule-lists.mjs "const lists = type === 'build' ? r.lists : []; // a fix task needs the plan lens outputs only (check-lane-close.mjs:604)" — a fix task gets zero compliance per-list reviews although the clause names fix launches, and the authority cited (check-lane-close.mjs:604) is not pasted — run the compliance lists for fix tasks too, or record the check's authority in the plan sentence and the notes.
+
+DEFER severity=MED — task-418 Implementation Notes Q6 "Q6 the round block is read from the check's own refusal message" — scripts/analysis/rule-lists.mjs "if (oc.ids === 0) block = `Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder ${ev}/GROUNDER-PLAN.md; triage ${ev}/TRIAGE-PLAN.md`;" — on the zero-findings path plan-prep authors the round line itself instead of reading it from the check, so the posted line can differ from the one the launch check recomputes — take the zero form from the check's own text (or refuse when the check returns no block) and delete the hand-built string.
+
+DEFER severity=MED — task-418 Files "Files: scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts" with "build exactly that plan, do not re-plan" — diff header "+++ b/src/tests/backlog/backlog-lane.logic.test.ts" — no hunk touches src/tests/backlog/rule-lists.logic.test.ts, the plan's named test path, and the notes record only the dry-run naming deviation — add the plan-prep tests to rule-lists.logic.test.ts, or record this second deviation in the notes and the plan.
+
+DEFER severity=LOW — task-418 Description "reusing what exists (... plant-evidence.mjs for tests)" — src/tests/backlog/backlog-lane.logic.test.ts "// Fixture: the temp board above and plantEvidence (the evidence writer of task-375 D; no second writer is built)." — the reuse rests on a comment: prepFixture calls "fixture({ type: opts.type ?? 'build', ... noEvidence: !opts.evidence })" and no plantEvidence call is visible here, cannot see helpers — point the comment at the call inside fixture() or call plantEvidence in prepFixture.
+
+MET — note 2026-11-20 item 4 "a single lane task takes the Spec 08 section 7 lens set ... plus its separate grounder" — scripts/analysis/rule-lists.mjs "const lenses = lensSet({ type, files: filesText(t.body) }).plan" and "if (g === null) refuse(`${ev}/GROUNDER-PLAN.md is absent (the separate grounder writes it before post)`)".
+
+MET — task-418 Description "it does not launch" — scripts/analysis/rule-lists.mjs "const gateArgv = ['node', path.join(HERE, 'backlog-lane.mjs'), ...launchArgs(), '--task', taskId, '--lane', lane, '--board', board, '--dry-run'];" with the flag gate "if (!LAUNCH_ARG_FLAGS.includes(out[i]) ...) refuse".
+
+MET — task-418 Acceptance #4 (d) "the same on a task with an empty plan field: exit 3 one line" — scripts/analysis/rule-lists.mjs "if (!planField.trim()) refuse(`${taskId}: the Implementation Plan field is empty" plus "if (e instanceof Stop) { process.stderr.write(...); return e.code; }".
+
+MET — task-418 Implementation Notes Q1 "Q1 one review round per prep run" — scripts/analysis/rule-lists.mjs "if (old.length) refuse(`${ev}/ already holds ...: one review round per prep run".
+
+MET — note 2026-11-20 item 3 "the board is the plan" — scripts/analysis/rule-lists.mjs "const board = path.resolve(home(str('board', '~/Buildo-wt-board')));".
+
+MET — Q5 "backlog-lane.mjs is left untouched and nothing is exported from it" — no hunk touches scripts/analysis/backlog-lane.mjs; the check functions arrive by "const clc = await import('../hooks/check-lane-close.mjs');".
+
+REJECT — task-418 Description "it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line" — that post writes the outcome block into the plan field with "--append-plan block" is accused of writing outcome lines — Acceptance #6 requires the "Plan review round 1" block on task-412 and Q6 has it read from the check, so transcribing the check's block is the named behaviour, not authoring a ruling.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 5
+
+---
+⏱  93571ms (93.6s)
+📊 Tokens — total: 38440, input: 20758, output: 17682, reasoning: 16316

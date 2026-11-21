@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PREP418'
 created_date: '2026-11-21T00:24:00Z'
-updated_date: '2026-11-21T05:43:00Z'
+updated_date: '2026-11-21T06:35:00Z'
 labels:
   - McFix
   - McFix V2
@@ -29,6 +29,11 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-21/BL-PREP418/REPORT.md
+  - docs/reports/lanes/2026-11-21/BL-PREP418/FINDINGS.md
+  - docs/reports/reviews/task-418/context-r2.md
+  - docs/reports/lanes/2026-11-21/BL-PREP418/GROUNDER.md
+  - docs/reports/lanes/2026-11-21/BL-PREP418/TRIAGE.md
 type: build
 ordinal: 118012
 ---
@@ -226,4 +231,69 @@ rg#4 MED folded one review round per
 2026-11-21 (M-246) Plan review round 1 of this task, made by hand under the launch check (RR-0345): 11 plan review outputs (compliance per governing rule list, plan-review-deepseek, error-paths), the Integration, Reality-Check and Regression seats on the plan, ruled by the separate grounder Cairn-Ground-P418: 92 findings, 71 CONFIRMED (2 HIGH, 36 MED, 29 LOW, 4 NIT), 21 REJECTED; 64 folded into the plan by 30 sentence edits (FOLD-418.json as the grounder wrote it, applied mechanically), 7 to the review pile. Six open questions were ruled by the grounder with grounds (docs/reports/reviews/task-418/QUESTIONS-RULED.md) and are taken as approved on the operator's authorization (RR-0350, MORNING-DECISIONS.md:1638), reported to him: Q1 one review round per prep run; Q2 the script makes the review calls without asking each time; Q3 this task is hand-prepared and is the gate proof, task-412 the first scripted proof; Q4 the plan stage also runs plan-review-deepseek and error-paths beside compliance (Spec 08 section 7 rule 4; MORNING-DECISIONS.md:1634 is his proposal, not a ruling); Q5 backlog-lane.mjs is left untouched and nothing is exported from it; Q6 the round block is read from the check's own refusal message.
 
 2026-11-21 taken on the board at lane launch (lane BL-PREP418, worktree /Users/brettpreston_macmini/Buildo-wt-prep418, branch wf1/inc1b-prep418), RR-0240
+
+2026-11-21 (M-246) Lane BL-PREP418 build stage 1: tests for plan-prep written first (16 planted defects with controls in src/tests/backlog/backlog-lane.logic.test.ts, beside plantEvidence); red attempt follows, then the code.
+
+2026-11-21 (M-246) BL-PREP418 acceptance on real inputs (scratch clone --shared of the lane worktree at 213342547, deleted afterwards; task-412 on the board untouched).
+(a) planted-defect tests red then green through the real hooks: red attempt with only the tests and the task file staged failed at assertions (18 failed, red.out in the lane dir: 'AssertionError: rule-lists: usage: rule-lists.mjs validate | ...: expected 2 to be 3'); green = commit 213342547 through the real hooks (3 test files, 265 passed; commit.out).
+(b) plan-prep review --task task-412 --lane BL-FOLLOWROW --board <clone> --dry-run (a scratch plan set on 412 in the clone only): exit 0; counts: backlog-brief 1, lens-input 9, compliance review commands 9, plan-lens review commands 2 (plan-review-deepseek.md, lens-error-paths.md); git status --porcelain before and after identical (only the scratch plan edit under backlog/). DEVIATION from the plan sentence 'builds the inputs in memory to name the parts': the dry run names each input file as in-plan-compliance-<id>[-pN].txt, because the part count comes from the context the brief writes and the dry run writes nothing.
+(d) the same without --dry-run on task-412 with its empty plan field: 'plan-prep: refused: task-412: the Implementation Plan field is empty (backlog task edit task-412 --plan ...): there is nothing to review', exit 3, one line, nothing written.
+(c), (e) and (f) NOT RUN: they need real DeepSeek calls and agent steps on task-412 (owed after the fold; task-412 is the first scripted proof).
+
+2026-11-21 (M-246) BL-PREP418 fix round 1 (grounder Cairn-Ground-O418, g418#1 = out-compliance-eng-all#3 MED): --launch-args could carry --dry-run and the identity flags and turn the commit phase's launch dry run into a real launch. Red test first (commit phase with --launch-args '["--dry-run","x","--no-launchd",...]': expect refusal, task LATER, no worktree, no branch).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+plan-prep (review, post, commit) is built in scripts/analysis/rule-lists.mjs with its tests, and the launch dry run it runs cannot be overridden (fix round 1); acceptance (c), (e) and (f) are owed on task-412, so the task is NOT complete and stays RUNNING.
+
+Review round 1: 34 fixed, 0 task, 0 ruling, 0 wontfix, 14 pile; grounder docs/reports/lanes/2026-11-21/BL-PREP418/GROUNDER.md; triage docs/reports/lanes/2026-11-21/BL-PREP418/TRIAGE.md
+plan-compliance-agents-s5-1to3#4 MED fixed 2133425
+plan-compliance-agents-s7-s11#1 MED fixed 2133425
+plan-compliance-agents-s7-s11#3 MED fixed 2133425
+plan-compliance-agents-s7-s11#5 MED fixed 2133425
+plan-compliance-eng-all#1 MED fixed 2133425
+plan-compliance-five-words#2 MED fixed 2133425
+plan-compliance-five-words#3 MED fixed 2133425
+plan-compliance-inc-S#1 MED fixed 2133425
+plan-compliance-inc-S#2 MED fixed 2133425
+plan-compliance-ms-S#1 MED fixed 2133425
+plan-compliance-ms-S#3 MED fixed 2133425
+plan-compliance-ms-S#4 MED fixed 2133425
+plan-compliance-orchestrator-doc17#2 MED fixed 2133425
+plan-compliance-orchestrator-doc17#3 MED fixed 2133425
+plan-compliance-plan-protocol#2 MED fixed 2133425
+plan-compliance-queue-137#2 MED fixed 2133425
+plan-compliance-queue-137#3 MED fixed 2133425
+plan-error-paths#1 MED fixed 2133425
+plan-error-paths#4 MED fixed 2133425
+plan-error-paths#6 MED fixed 2133425
+plan-plan-review-deepseek#1 MED fixed 2133425
+plan-plan-review-deepseek#2 MED fixed 2133425
+out-compliance-eng-all#3 MED fixed 6b0693a
+
+Review round 2: 33 fixed, 0 task, 0 ruling, 0 wontfix, 12 pile; grounder docs/reports/lanes/2026-11-21/BL-PREP418/GROUNDER.md; triage docs/reports/lanes/2026-11-21/BL-PREP418/TRIAGE.md
+plan-compliance-agents-s5-1to3#4 MED fixed 2133425
+plan-compliance-agents-s7-s11#1 MED fixed 2133425
+plan-compliance-agents-s7-s11#3 MED fixed 2133425
+plan-compliance-agents-s7-s11#5 MED fixed 2133425
+plan-compliance-eng-all#1 MED fixed 2133425
+plan-compliance-five-words#2 MED fixed 2133425
+plan-compliance-five-words#3 MED fixed 2133425
+plan-compliance-inc-S#1 MED fixed 2133425
+plan-compliance-inc-S#2 MED fixed 2133425
+plan-compliance-ms-S#1 MED fixed 2133425
+plan-compliance-ms-S#3 MED fixed 2133425
+plan-compliance-ms-S#4 MED fixed 2133425
+plan-compliance-orchestrator-doc17#2 MED fixed 2133425
+plan-compliance-orchestrator-doc17#3 MED fixed 2133425
+plan-compliance-plan-protocol#2 MED fixed 2133425
+plan-compliance-queue-137#2 MED fixed 2133425
+plan-compliance-queue-137#3 MED fixed 2133425
+plan-error-paths#1 MED fixed 2133425
+plan-error-paths#4 MED fixed 2133425
+plan-error-paths#6 MED fixed 2133425
+plan-plan-review-deepseek#1 MED fixed 2133425
+plan-plan-review-deepseek#2 MED fixed 2133425
+<!-- SECTION:FINAL_SUMMARY:END -->

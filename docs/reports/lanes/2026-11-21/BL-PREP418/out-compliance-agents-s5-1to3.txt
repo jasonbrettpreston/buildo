@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:23:48.743Z file_sha256=cbe9cb40eb67fdac3635a97bc8d76999517a5c24051c1651aa8dbd2253079d6e prompt_sha256=ea10b78549fb5b50f489f1e283c0405b2373eb36500bf0cb748f1bb866903d42
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-PREP418/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-418 Description "before a build or fix launch the plan is reviewed (compliance per governing rule list, the Integration, Reality-Check and Regression seats)" — scripts/analysis/rule-lists.mjs "const lists = type === 'build' ? r.lists : [];" — a fix task gets no compliance lens input at all, so its plan review is prepared without the compliance per governing rule list the clause requires — set lists = r.lists for both build and fix, and change test 16 to expect the per-list inputs.
+MET — task-418 acceptance #4 — scripts/analysis/rule-lists.mjs — "if (!planField.trim()) refuse(...)" gives exit 3 and one line for an empty plan.
+MET — task-418 acceptance #2 — scripts/analysis/rule-lists.mjs — "if (dry) { ... return 0; }" prints the brief, lens-input and review commands and writes nothing.
+MET — task-418 acceptance #5 — scripts/analysis/rule-lists.mjs — "const gateArgv = ... '--dry-run'; ... return gx.status ?? 1;" passes the launch gate's dry run and exit code through.
+MET — task-418 acceptance #6 — scripts/analysis/rule-lists.mjs — "const wantRefs = ..." and "git commit ... -- ev" add the grounder, triage and seat references and commit only the evidence folder.
+MET — task-418 scope "it does not launch" — scripts/analysis/rule-lists.mjs — "const LAUNCH_ARG_FLAGS = ..." refuses --dry-run and identity flags in --launch-args, so the gate cannot be turned into a real launch.
+MET — task-418 scope "never writes a ruling, a seat report, a grounder file" — scripts/analysis/rule-lists.mjs — "const g = read(`${ev}/GROUNDER-PLAN.md`)" reads the grounder and seats and writes only references and the round block.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+
+---
+⏱  291181ms (291.2s)
+📊 Tokens — total: 85698, input: 21965, output: 63733, reasoning: 63278

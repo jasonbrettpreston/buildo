@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-21T05:21:30.334Z file_sha256=ea7da3c567e633dc5f929dfea76b9b224fa6cdf08af04f016ee976a710a49201 prompt_sha256=1d3292f96956f05d040f28e81bd460c460b4dc2826ccedcaddda866412c785f1
+🔍 Lens review of docs/reports/reviews/task-418/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan §4.3: "a plan-*.txt already in the folder (one round per prep, 4-Q1)" against the same paragraph's "a failed call is listed by name, exit 1, no partial file; a re-run redoes only missing names" — after one call fails the eight successes have already written plan-*.txt, so the promised retry is refused by the one-round check and test 5's "re-run redoes only it" cannot pass without hand-deleting files — fix: key the refusal to a completed round (all 9 outputs present, or a round marker), let a re-run redo only the missing plan-*, and delete partial outputs on any phase failure.
+
+BUG severity=MED — "Calls run concurrently; a failed call is listed by name, exit 1, no partial file" — no per-call timeout is named, so a hung review call blocks the whole phase with no output and no exit code, and the exit-1 listing only ever covers calls that return — fix: give each call a stated timeout and name a timed-out call in the same exit-1 list, leaving its output absent for the re-run.
+
+BUG severity=MED — "rule-lists.mjs findings --dir <folder> > <folder>/FINDINGS-PLAN.md (the lane FINDINGS.md precedent)" — the shell redirect creates or truncates the file before findings runs and no exit check is stated, so a crashed findings run leaves an empty FINDINGS-PLAN.md that reads as zero findings to the grounder — fix: write findings to a temp file, require exit 0 and its Ruled line, then rename over FINDINGS-PLAN.md.
+
+BUG severity=MED — "Refuses: index.lock present (board-commit.zsh :11 skips on it; say retry)" with "a hook refusal leaves nothing committed, prints its first lines, exit 1" — the lock test is a snapshot; board-commit.zsh takes that lock on its 600 s cycle between the check and git commit, and the commit paragraph names handling only for hook refusals, so a lock or other git failure has no stated path — fix: re-check index.lock immediately before git add/commit and treat any non-zero git commit as a refusal, print its first lines, exit 1.
+
+BUG severity=MED — "every output opens with "REVIEW template=" or the phase exits 1 naming it" — that prefix is the whole validity test, so a review call that exits 0 with an empty or error body under a correct header passes step 4 and the committed file satisfies the gate by name (cannot see deepseek-review.js's exit code on an API error, grounder should check) — fix: require a minimum non-empty body and the header's prompt sha to equal lensPromptHash before the file counts as present.
+
+BUG severity=MED — "It parses a refusal message; test 11 pins that coupling." — post writes into the task's plan field whatever it scraped from a human refusal message, so a wording or ordering change in check-lane-close makes post append a malformed block, and the damage surfaces only at the commit phase's dry run after the evidence folder is already committed — fix: validate the scraped block (first line matches ^Plan review round N:, counts parse, N id lines) and exit 1 with the task unchanged when it does not match.
+
+DEFER severity=LOW — "when the gate's own test (head = rounds before the last, text = the plan field) finds nothing missing, it prints "nothing to post", exit 0" — the check-then-append is unlocked, so two post processes both see missing and each appends a round block; the key is the last round line plus the plan field text — rationale: a single orchestrator process, and a duplicate block fails the gate closed, so the blast radius is bounded.
+
+REJECT — "each seat path that the task does not carry" — a repeated --add-ref looks like it could duplicate references on a re-run — it is handled: the task text is read before the write and a sequential re-run adds nothing (the concurrent case is the LOW above).
+
+VERDICT: FAIL on error-path safety
+Paths walked: review context write, lens-input rebuild, 9 concurrent review calls, header check, findings redirect, post refusal checks, outcomeErrors scrape, append-plan plus add-ref, commit staged/lock/hook paths, dry run at commit end, empty plan, missing grounder/seat/triage, partial-run retry, double-submit of post, double-submit of commit   Unguarded: 4
+
+---
+⏱  64077ms (64.1s)
+📊 Tokens — total: 28943, input: 18354, output: 10589, reasoning: 9608
