@@ -3,7 +3,7 @@ id: TASK-421
 title: >-
   SCORE.GO Operator types GO on dev: scorecard refresh (read-only) and the
   generated-files commit
-status: RUNNING
+status: DONE
 assignee:
   - '@lane-BL-SCORE421'
 created_date: '2026-11-21T14:53:00Z'
