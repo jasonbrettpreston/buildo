@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T05:58:46.739Z file_sha256=b81001a8fab9095cf5e92f25c60d4200c20138aa3670ce3123cf0bb4c0ac789f prompt_sha256=c74e88cf1dee4bfc31f6f8a0a85d92f6305729f4a3f85246fd1ed1c28cdb5ea2
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-PREP418/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #3 "9 plan-compliance-*.txt each starting 'REVIEW template=lens-compliance.md'" — scripts/analysis/rule-lists.mjs "for (const { j, x } of done) fs.writeFileSync(path.join(evAbs, j.out), x.stdout);" — the criterion's start-of-file form is not enforced: the raw stdout is kept and the header is only required somewhere in the first 15 lines, so a file may start with the dotenv banner (src/tests/backlog/backlog-lane.logic.test.ts "expect(o[0]).toMatch(/dotenv/);") — the gate reads the header within 15 lines so only the acceptance form is at risk; write the file from the REVIEW line onward or quiet the banner.
+DEFER severity=MED — AC #2 "1 brief, 9 lens-input and 9 review commands; git status unchanged" — src/tests/backlog/backlog-lane.logic.test.ts "expect(li).toBeGreaterThan(3);" — the exact 9 and 9 on task-412 are not demonstrated: the material holds no run on 412 and the only dry-run assertion accepts any count above 3 — criterion proof is owed; run plan-prep review on task-412 and paste the counts, and assert the lens-input count equals the resolved list count.
+DEFER severity=NIT — Files "src/tests/backlog/rule-lists.logic.test.ts" — src/tests/backlog/backlog-lane.logic.test.ts "describe('plan-prep review (task-418): refusals, one line, nothing written; each with its control'" — every plan-prep test lands in the lane test file and the card's rule-lists test path is untouched — both paths are on the Files line so rule resolution is unaffected and the lane fixtures live there, no action needed.
+REJECT — Scope "it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line" — writing the fold outcome lines to the plan field in post — the card's AC #6 requires the "Plan review round 1" block on the task and the code only copies the check's own text ("const m = /the block is:\n([\s\S]*?)\n\(one command/.exec(lacks[0] ?? '');") and refuses any other form, so no outcome is authored by the script.
+MET — doc-17 "never feed a review as a ruling" — scripts/analysis/rule-lists.mjs "// ---- plan-prep (task-418, LAUNCH.PREP; PLAN-418-v2 in the task)" — the material cites task ids and PLAN-418-v2, never an RR-00xx reading as a ruling.
+MET — Scope "ONE subcommand plan-prep of scripts/analysis/rule-lists.mjs with three phases (review, post, commit)" — scripts/analysis/rule-lists.mjs "if (!['review', 'post', 'commit'].includes(phase) || !/^task-\d+$/.test(taskId) || !lane)" — one subcommand, exactly the three named phases.
+MET — Scope "it does not launch" — scripts/analysis/rule-lists.mjs "const gateArgv = ['node', path.join(HERE, 'backlog-lane.mjs'), '--task', taskId, '--lane', lane, '--board', board, '--dry-run', ...launchArgs()];" — the gate is spawned dry only.
+MET — Q5 "backlog-lane.mjs is left untouched and nothing is exported from it" — scripts/analysis/rule-lists.mjs "const cm = git(...commitArgv.slice(1)); // the real hooks run; no --no-verify" — the diff touches rule-lists.mjs and backlog-lane.logic.test.ts only and runs the gate as a subprocess.
+MET — Q6 "the round block is read from the check's own refusal message" — scripts/analysis/rule-lists.mjs "const m = /the block is:\n([\s\S]*?)\n\(one command/.exec(lacks[0] ?? '');" — the block text is taken from outcomeErrors' own message, only the "Review" prefix is rewritten.
+MET — Q1 "one review round per prep run" — scripts/analysis/rule-lists.mjs "if (old.length) refuse(`${ev}/ already holds" — a second round is refused before any input is made.
+MET — AC #1 "planted-defect tests red then green through the real hooks" — src/tests/backlog/backlog-lane.logic.test.ts "fs.writeFileSync(hook, '#!/bin/sh\necho hook says no\nexit 1\n');" — the planted hook fails the commit, leaves nothing staged, and the commit lands once it is removed.
+MET — AC #6 "shows the references (GROUNDER-PLAN.md, TRIAGE-PLAN.md if any, the three seats)" — scripts/analysis/rule-lists.mjs "const wantRefs = [...new Set([`${ev}/GROUNDER-PLAN.md`, ...(triage ? [`${ev}/TRIAGE-PLAN.md`] : []), ...seats.map((s) => s.path)])];" — one --add-ref per path, seats included.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 21   Unmet: 2
+
+---
+⏱  141144ms (141.1s)
+📊 Tokens — total: 52218, input: 28141, output: 24077, reasoning: 22894

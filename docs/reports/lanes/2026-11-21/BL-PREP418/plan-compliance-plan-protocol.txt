@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T05:12:37.326Z file_sha256=56aed48206fb3a1d2366758de9539436d0f6f69b9f4b98d5701be844cce1e983 prompt_sha256=b977de06d8c479fe29ae385b171dd2950e4f2a86441e2eb5ba59ef60e93273a4
+🔍 Lens review of docs/reports/reviews/task-418/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Description scope "reusing what exists (backlog-brief.mjs, lens-input, findings, the exported functions of check-lane-close.mjs, plant-evidence.mjs for tests)" plus "Files: scripts/analysis/rule-lists.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts" — PLAN-418-v2 4.1 "reaches outcomeErrors, parseVerdicts, lensKindOf, seatLines, PLAN_SEATS and planHash by a dynamic import" against the plan's own inventory "planGateErrors (:564, pure; exported) ... outcomeErrors (:161, exported ...)" and "The round block is built INLINE at :266-276 ... It is NOT exported." — clause unmet: post needs five symbols and the round-block builder that the plan itself does not show exported, so either check-lane-close.mjs must be edited (not on the Files line, and section 9 says "changing the gate" is out of scope) or the gate logic is duplicated — fix: put check-lane-close.mjs on the Files line with an export-only diff, or restrict post to the exported pure planGateErrors/outcomeErrors and transcribe their message.
+
+BUG severity=HIGH — card Description scope "it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line, and it does not launch" — PLAN-418-v2 4.4 "post writes its lines, the first as \"Plan review round N: ...\"" and "one line \"<id> <SEV> <word> <ref>\" per CONFIRMED CRITICAL, HIGH or MED id" — clause unmet: the block post writes contains the folded/task/ruling/wontfix/pile word per id, i.e. the outcome lines the scope forbids the tool to write, and the plan's own section 3 lists TRIAGE-PLAN.md outcomes as "AGENT: orchestrator's fold. Never scripted" — fix: have post print the gate-computed block and the fold step append it, or record in the plan that post transcribes the gate's lines verbatim and authors no outcome, with the Description reconciled.
+
+DEFER severity=MED — plan-protocol section 5.2 "LAUNCH-SHARED home: work that serves the finished product but no single scenario ... lives in increment \"1-2 shared\" or the Launch gate, from the gap register and the launch list only." — PLAN-418-v2 "Serves: supporting function of the compliance review of every Increment 1.B task; advances none of doc-2 elements A to G." — claim: a task serving every build launch names neither the "1-2 shared" home nor the Launch gate — rationale: bounded, one line naming the home in the Serves field.
+
+DEFER severity=LOW — plan-protocol section 2 step B "Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE." — PLAN-418-v2 "Serves: supporting function of the compliance review of every Increment 1.B task" — claim: the supporting function is named but carries no S1-S8 tag as step B requires — rationale: bounded, add the S tag; the section 3 substance ("one supporting function, with a source") is met.
+
+DEFER severity=LOW — plan-protocol section 4 "3. BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step)." — PLAN-418-v2 section 10 "one code commit (\"Task: task-418\", task file in the diff); a records-only closing commit (Spec 137 Rule 3)." — claim: no push review of contents, suite, gates or operator tty step is in the plan — rationale: bounded, the increment SITTING may carry it but the plan does not point to that line.
+
+DEFER severity=NIT — acceptance #3 "(c) ... 9 plan-compliance-*.txt each starting \"REVIEW template=lens-compliance.md\"" — PLAN-418-v2 4.3 step 4 "every output opens with \"REVIEW template=\" or the phase exits 1 naming it" — claim: the check accepts any template header, not the named lens-compliance.md the acceptance requires — rationale: the review command does pass --template .claude/review-templates/lens-compliance.md, so only the verification is loose.
+
+REJECT — plan-protocol section 0 first bullet "The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board)." — the change is accused of being a new plan outside sequence.json — the dated note 2026-11-20 supersedes that bullet via Spec 137 (the board is the plan) and this material is a card on the board.
+
+MET — card Description "ONE subcommand plan-prep of scripts/analysis/rule-lists.mjs with three phases (review, post, commit)" — PLAN-418-v2 4.1 "node scripts/analysis/rule-lists.mjs plan-prep <review|post|commit>" — one subcommand, three phases, no new script file.
+MET — card Description "it does not launch" — PLAN-418-v2 4.2 "h. HAND: node scripts/analysis/backlog-lane.mjs --task task-N --lane <name>, without --dry-run." — the launch is left to the hand step, commit passes only the dry run.
+MET — plan-protocol section 0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — card Description "Operator ruling RR-0345 (MORNING-DECISIONS.md:1600, verbatim: \"5 yes.\" ...)" — the source is a cited operator ruling.
+MET — plan-protocol section 5.5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — PLAN-418-v2 "Estimate: GUESS 0.5 lane day (smaller than v1: the real code already does more), not timed." — labelled GUESS.
+MET — acceptance #5 "(e) ... the dry run prints \"plan gate ok: 9 lists, <M> findings, Plan sha256:<12>\"" — PLAN-418-v2 4.5 "Then node scripts/analysis/backlog-lane.mjs --task N --lane <lane> --dry-run, output and exit code passed through." — the gate output is passed through unaltered.
+MET — acceptance #6 "(f) ... git log -1 --name-only on wf2/board shows exactly the folder" — PLAN-418-v2 4.5 "git add docs/reports/reviews/<id>" — only the evidence folder is staged and committed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 2
+
+---
+⏱  113790ms (113.8s)
+📊 Tokens — total: 31517, input: 10571, output: 20946, reasoning: 19412

@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T05:12:37.331Z file_sha256=0ec3cdb0fc2276723f3002c8849db4c945ee29cb0c19f4e10843330d5effda27 prompt_sha256=4998589ed8d9a869b212df11d3d023e544e093a8b7f88a535fbd5223b8c80362
+🔍 Lens review of docs/reports/reviews/task-418/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — doc-17 "Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)." — plan §3 "in-plan-compliance-<list>[-pN].txt and plan-compliance-<list>[-pN].txt for EVERY resolved list (9 for 418: agents-s5-1to3, agents-s7-s11, queue-137, eng-all, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S)" — plan-prep must produce a per-list compliance review with orchestrator-doc17 as governing text, which feeds readings as rulings, so one of the nine required outputs has no ruling to comply with — fix: drop orchestrator-doc17 from the resolved list set for plan compliance (resolver or classification, by operator ruling) before this plan locks, or run it as a non-binding reading pass only, never as a compliance input.
+
+BUG severity=HIGH — card Scope "it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line, and it does not launch" — plan §3 "one line \"<id> <SEV> <word> <ref>\" per CONFIRMED CRITICAL, HIGH or MED id, in the Implementation Plan field (gate :625-630) | plan-prep post" and 4.4 "post writes its lines, the first as \"Plan review round N: ...\"" — post writes the fold's outcome lines, the exact artefact the scope says plan-prep never writes — fix: the orchestrator or grounder places the round block and outcome lines in the plan field and post only adds references and commits, or an operator ruling amends the scope before plan-lock.
+
+DEFER severity=MED — AC #2 "plan-prep review --task task-412 --lane <name> --dry-run: exit 0; 1 brief, 9 lens-input and 9 review commands; git status unchanged" — plan 4.3 "4. every output opens with \"REVIEW template=\" or the phase exits 1 naming it." — under --dry-run no output is written, so step 4 as written can exit 1 naming nothing and contradict the exit 0 the criterion requires — fix: state that step 4 runs only over files written in this run and is skipped under --dry-run.
+
+DEFER severity=MED — card Scope "reusing what exists (backlog-brief.mjs, lens-input, findings, the exported functions of check-lane-close.mjs, plant-evidence.mjs for tests)" — plan §11 "whether the dynamic import of check-lane-close.mjs from the rule-lists.mjs CLI works (UNVERIFIED, not run)" — the only route to the exported functions the scope names is unverified with no fallback, so the reuse clause is not shown to hold at build time — fix: add a red test that resolves outcomeErrors, planHash and PLAN_SEATS through the CLI entry, plus a fallback (move the pure functions to a lib module) if the import cycle blocks it.
+
+DEFER severity=LOW — operator :1634 "Complaince on the plan and output. Let's start with that!" — plan 4.3 "Only compliance runs for a build task: the gate requires only it and his :1634 starts with compliance; the brief's other plan lenses are not run (4-Q4)." — the operator names the output as well as the plan, and the plan names no owner or increment for output-side compliance — fix: add one line naming where output-side compliance lands so the second half of the sentence is not silently dropped.
+
+REJECT — doc-17 "Readings and register entries ... never feed a review as a ruling" — the change is accused of resting on register entries RR-0345 and RR-0350 — the card pastes both with verbatim operator words ("5 yes." at :1600 and the :1638 text), so they are the decisions, not readings.
+
+REJECT — card Description "(Spec 08 sections 6.4, 5.3, 11.2)" — the change is accused of not satisfying the review, grounder, fold, fold-check and evidence-commit sequence — those clauses are not pasted in this context, so this lens cannot rule on their text.
+
+MET — RR-0345 "5 yes." — card "scripting them is the first task after 375, before the other build tasks launch" — plan §1 "Three phases of ONE subcommand, plan-prep, of rule-lists.mjs" — the hand steps become one scripted command for the named successor task.
+
+MET — card Scope "and it does not launch" — plan 4.5 "Then node scripts/analysis/backlog-lane.mjs --task N --lane <lane> --dry-run, output and exit code passed through." — the script's only launch-check call is the dry run; the real launch is 4.2 h HAND.
+
+MET — AC #4 "the same on a task with an empty plan field: exit 3 one line" — plan 4.3 "Refusals (exit 3, one line, before any write, wording after backlog-lane.mjs:27): ... Implementation Plan field empty".
+
+MET — AC #6 "backlog task view task-412 --plain shows the references (GROUNDER-PLAN.md, TRIAGE-PLAN.md if any, the three seats)" — plan 4.4 "one --add-ref per repo path of GROUNDER-PLAN.md, TRIAGE-PLAN.md when present and each seat path that the task does not carry".
+
+MET — :1517 "don't makr the task complete until it actually works" — plan §7 "output pasted on the task; do not mark BUILT until all are pasted, :1517".
+
+MET — :1522 "you are probaley rebuilding stuff that already exists you do this all the time" — plan §2 "WHAT EXISTS AT d9f2143a7 AND IS REUSED (each opened)" and §1 "Not scripted, the code already does it".
+
+MET — :1630 "these only run on the plan" — plan 4.3 "Only compliance runs for a build task: the gate requires only it".
+
+MET — card Description "before a build or fix launch the plan is reviewed" — plan 4.3 "type not build or fix" refusal plus test 16 "a fix task: review writes plan-plan-review-deepseek.txt, no per-list inputs".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 2
+
+---
+⏱  81640ms (81.6s)
+📊 Tokens — total: 34217, input: 19164, output: 15053, reasoning: 13608

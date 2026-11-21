@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PREP418'
 created_date: '2026-11-21T00:24:00Z'
-updated_date: '2026-11-21T05:47:00Z'
+updated_date: '2026-11-21T06:03:00Z'
 labels:
   - McFix
   - McFix V2
@@ -29,6 +29,9 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-21/BL-PREP418/REPORT.md
+  - docs/reports/lanes/2026-11-21/BL-PREP418/FINDINGS.md
+  - docs/reports/reviews/task-418/context-r2.md
 type: build
 ordinal: 118012
 ---
@@ -228,4 +231,10 @@ rg#4 MED folded one review round per
 2026-11-21 taken on the board at lane launch (lane BL-PREP418, worktree /Users/brettpreston_macmini/Buildo-wt-prep418, branch wf1/inc1b-prep418), RR-0240
 
 2026-11-21 (M-246) Lane BL-PREP418 build stage 1: tests for plan-prep written first (16 planted defects with controls in src/tests/backlog/backlog-lane.logic.test.ts, beside plantEvidence); red attempt follows, then the code.
+
+2026-11-21 (M-246) BL-PREP418 acceptance on real inputs (scratch clone --shared of the lane worktree at 213342547, deleted afterwards; task-412 on the board untouched).
+(a) planted-defect tests red then green through the real hooks: red attempt with only the tests and the task file staged failed at assertions (18 failed, red.out in the lane dir: 'AssertionError: rule-lists: usage: rule-lists.mjs validate | ...: expected 2 to be 3'); green = commit 213342547 through the real hooks (3 test files, 265 passed; commit.out).
+(b) plan-prep review --task task-412 --lane BL-FOLLOWROW --board <clone> --dry-run (a scratch plan set on 412 in the clone only): exit 0; counts: backlog-brief 1, lens-input 9, compliance review commands 9, plan-lens review commands 2 (plan-review-deepseek.md, lens-error-paths.md); git status --porcelain before and after identical (only the scratch plan edit under backlog/). DEVIATION from the plan sentence 'builds the inputs in memory to name the parts': the dry run names each input file as in-plan-compliance-<id>[-pN].txt, because the part count comes from the context the brief writes and the dry run writes nothing.
+(d) the same without --dry-run on task-412 with its empty plan field: 'plan-prep: refused: task-412: the Implementation Plan field is empty (backlog task edit task-412 --plan ...): there is nothing to review', exit 3, one line, nothing written.
+(c), (e) and (f) NOT RUN: they need real DeepSeek calls and agent steps on task-412 (owed after the fold; task-412 is the first scripted proof).
 <!-- SECTION:NOTES:END -->

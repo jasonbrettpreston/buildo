@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T05:58:46.741Z file_sha256=6e190f1918e4e026c687c8406a28774153038dbae10c33fe131ddf8643b1ed66 prompt_sha256=fdf038f98fd29181e73945df75cac8a625fafac08569e097d3c6a1c37e11a04c
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-PREP418/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-418 Description, "before a build or fix launch the plan is reviewed (compliance per governing rule list, the Integration, Reality-Check and Regression seats)" — scripts/analysis/rule-lists.mjs:608 — "const lists = type === 'build' ? r.lists : []; // a fix task needs the plan lens outputs only (check-lane-close.mjs:604)" — a fix launch gets the two plan lenses and zero per-list compliance outputs, although the card names fix launches in the compliance step and r.lists is already resolved for a fix task — ground the exemption in a pasted ruling (the cited check-lane-close line governs the lane close, not plan prep) and, if it is not ruled, run one lens-input and one review per list for fix tasks too.
+
+DEFER severity=LOW — task-418 Acceptance #3 (c), "9 plan-compliance-*.txt each starting \"REVIEW template=lens-compliance.md\"" — scripts/analysis/rule-lists.mjs:634 — "!new RegExp(`^REVIEW template=${reEsc(j.tpl)} `, 'm').test(text.split('\n').slice(0, 15).join('\n'))" — the header is accepted on any of the first 15 lines, so an output need not start with it, and the test asserts a dotenv banner on line 1 — amend (c) to say "first 15 lines" or require the header on the first line after the banner, so the pasted criterion and the check say the same thing.
+
+DEFER severity=LOW — task-418 Scope, "ONE subcommand plan-prep of scripts/analysis/rule-lists.mjs with three phases (review, post, commit) that runs the mechanical steps only, reusing what exists" — scripts/analysis/rule-lists.mjs:603 — "const reviewBin = str('review-bin', '') ? path.resolve(home(str('review-bin', ''))) : 'scripts/deepseek-review.js';" — --review-bin and --launch-args are seams no pasted clause names, and --review-bin lets the review phase be filled by any script that prints the header and a VERDICT line — record the seams in the plan or fence them behind an env flag the tests set, so a run cannot swap the reviewer unrecorded.
+
+DEFER severity=LOW — task-418 Files line, "src/tests/backlog/rule-lists.logic.test.ts" — src/tests/backlog/backlog-lane.logic.test.ts:461 — "describe('plan-prep review (task-418): refusals, one line, nothing written; each with its control', () => {" — the change carries no hunk for the named rule-lists test file and every plan-prep test sits in backlog-lane.logic.test.ts — confirm the named path exists and was meant to stay unchanged, or land the plan-prep tests there and correct the Files line.
+
+MET — task-418 Description "it does not launch" — scripts/analysis/rule-lists.mjs:722 — "const gateArgv = ['node', path.join(HERE, 'backlog-lane.mjs'), '--task', taskId, '--lane', lane, '--board', board, '--dry-run', ...launchArgs()];" runs the gate dry and passes its exit code and text through.
+
+MET — task-418 Description "it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line" — scripts/analysis/rule-lists.mjs:657 — "if (g === null) refuse(`${ev}/GROUNDER-PLAN.md is absent (the separate grounder writes it before post)`)" refuses rather than writes; ruling, seats and the Plan line stay with the grounder.
+
+MET — task-418 Implementation Notes Q1 "one review round per prep run" — scripts/analysis/rule-lists.mjs:599 — "if (old.length) refuse(`${ev}/ already holds ${old.slice(0, 3).join(', ')}${old.length > 3 ? ', ...' : ''}: one review round per prep run" refuses a folder that already holds plan-*.txt.
+
+MET — task-418 Implementation Notes Q6 "the round block is read from the check's own refusal message" — scripts/analysis/rule-lists.mjs:688 — "const m = /the block is:\n([\s\S]*?)\n\(one command/.exec(lacks[0] ?? '');" reads the block from outcomeErrors' message and re-validates every line against the fixed round-line form.
+
+MET — task-418 Implementation Notes Q4 "the plan stage also runs plan-review-deepseek and error-paths beside compliance" — scripts/analysis/rule-lists.mjs:607 — "const lenses = lensSet({ type, files: filesText(t.body) }).plan.map(...)" puts both plan lenses in the same job set as the compliance calls.
+
+MET — task-418 Implementation Notes Q5 "backlog-lane.mjs is left untouched and nothing is exported from it" — scripts/analysis/rule-lists.mjs:722 — it is spawned as the gate, never imported, and the diff has no hunk for it.
+
+MET — task-418 Acceptance #4 (d) "the same on a task with an empty plan field: exit 3 one line" — scripts/analysis/rule-lists.mjs:596 — "if (!planField.trim()) refuse(`${taskId}: the Implementation Plan field is empty" throws Stop(3), printed as one "plan-prep: refused:" line.
+
+MET — task-418 Acceptance #6 (f) "git log -1 --name-only on wf2/board shows exactly the folder" — scripts/analysis/rule-lists.mjs:721 — "const commitArgv = ['git', 'commit', '-q', '-m', `docs(08_agents): plan review evidence for ${taskId}`, '--', ev];" commits with the evidence path as pathspec.
+
+REJECT — task-418 Description "it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line" — accused that postPhase writes outcome lines (the block's "int#1 HIGH folded ..." lines) into the task — those lines are computed by check-lane-close's outcomeErrors from GROUNDER-PLAN.md and TRIAGE-PLAN.md and only transcribed, and Acceptance #6 (f) requires that block on the task.
+
+REJECT — task-418 Acceptance #2 (b) "1 brief, 9 lens-input and 9 review commands" — accused that the dry run prints more review commands than nine — the extra two are the plan-review-deepseek and error-paths calls that Implementation Notes Q4 rules into the plan stage, so the count pairs lens-input with the compliance reviews.
+
+REJECT — task-418 Files line "scripts/analysis/backlog-lane.mjs" — accused that the named file has no hunk in this change — Implementation Notes Q5 leaves it untouched and the close check requires every changed file the line covers to be in a chunk, not that every named file change.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 0
+
+---
+⏱  151861ms (151.9s)
+📊 Tokens — total: 46591, input: 20755, output: 25836, reasoning: 24274

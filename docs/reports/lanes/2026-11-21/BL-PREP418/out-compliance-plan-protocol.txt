@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T05:58:46.739Z file_sha256=47f9370fa52b5d447a1a4ec04c4404f2ad020d5ccc4ef46c072e0e6148f126da prompt_sha256=db983e9446c780aae29eae463d8ffa99ff9f038eaf6d53e9182e6071fa4aff38
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-PREP418/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-418 Description "Why: before a build or fix launch the plan is reviewed (compliance per governing rule list, the Integration, Reality-Check and Regression seats), ruled by a separate grounder, folded, the fold checked, and the evidence put on the task and committed" — scripts/analysis/rule-lists.mjs @+525 reviewPhase "const lists = type === 'build' ? r.lists : []; // a fix task needs the plan lens outputs only (check-lane-close.mjs:604)" — a fix launch gets no compliance review at all, so the named "compliance per governing rule list" for a build OR fix launch is unmet for fix; the only justification is check-lane-close.mjs:604, which is not pasted — run r.lists for both types, or paste the close-check clause at check-lane-close.mjs:604 and have the operator rule the fix exemption, then change test 16 to match.
+
+DEFER severity=MED — task-418 Description "it never writes a ruling, a seat report, a grounder file, an outcome line or the Plan line" — scripts/analysis/rule-lists.mjs @+525 postPhase "block = m[1].replace(/^Review round/, 'Plan review round');" and "const argv = [bin, 'task', 'edit', taskId, ...(rounds.length ? [] : ['--append-plan', block])," — the script is the writer of record for the "Plan review round 1: N folded, ..." line and for the per-finding folded/pile lines, which are outcome lines, contrary to the "never writes ... an outcome line" clause; the text is copied verbatim from the check's own refusal, so the risk is bounded to ownership wording, but the clause as pasted is not met — either limit post to references and leave the block to the agent, or get the clause amended to "copies the check's own block, never composes one".
+
+DEFER severity=LOW — task-418 Acceptance criteria "#3 (c) ... 9 plan-compliance-*.txt each starting "REVIEW template=lens-compliance.md"" — src/tests/backlog/backlog-lane.logic.test.ts @+461 test 6 "expect(o[0]).toMatch(/dotenv/);" next to "expect(o[1]).toMatch(/^REVIEW template=lens-compliance\.md /);" — the files the command actually leaves do not start with the REVIEW line; line 1 is the dotenv banner and the header is accepted anywhere in the first 15 lines, so the pasted acceptance evidence cannot match the criterion as written — strip a leading dotenv banner before writing the output file, or amend criterion (c) to say "whose first REVIEW header line is template=lens-compliance.md".
+
+DEFER severity=LOW — task-418 Description "Scope (2026-11-21, PLAN-418-v2 in the Implementation Plan field governs; build exactly that plan, do not re-plan)" — NONE — PLAN-418-v2 is not pasted, so whether the diff builds exactly that plan (three phases, no re-plan) and whether the test-only seams --review-bin and --launch-args are in it cannot be judged; cannot see the governing plan text — paste PLAN-418-v2 into the review context so the "build exactly that plan" clause can be checked.
+
+DEFER severity=LOW — task-418 Acceptance criteria "#1 (a) planted-defect tests red then green through the real hooks." — src/tests/backlog/backlog-lane.logic.test.ts @+461 "it('13: a staged file outside the folder, a failing hook and an index.lock leave nothing committed; the commit holds exactly the folder'" — in this material the clause rests on test names only (the walk rule: a clause satisfied only by a test name is UNMET); the red-then-green run and the hook transcript are not in the diff, so (a) is not evidenced here — attach the red-then-green transcript to docs/reports/reviews/task-418 and name it in the review.
+
+MET — 2026-11-20 note, item 3 (board is the plan, supersedes line 8) — scripts/analysis/rule-lists.mjs @+525 "const t = readItems(board).find((x) => x.id === taskId);" — the task and its evidence are read and written on the board checkout only, no second plan file.
+
+MET — 2026-11-20 note, item 4 "a single lane task takes the Spec 08 section 7 lens set ... plus its separate grounder" — scripts/analysis/rule-lists.mjs @+525 "lensSet({ type, files: filesText(t.body) }).plan" with postPhase "refuse(`${ev}/GROUNDER-PLAN.md is absent (the separate grounder writes it before post)`)" — the enforced lens set is reused and the separate grounder file is required.
+
+MET — task-418 Description "it never writes a ruling, a seat report, a grounder file, ... and it does not launch" (the no-launch half) — scripts/analysis/rule-lists.mjs @+525 "const gateArgv = ['node', path.join(HERE, 'backlog-lane.mjs'), '--task', taskId, '--lane', lane, '--board', board, '--dry-run', ...launchArgs()];" — the gate always runs with --dry-run and its exit code is passed through.
+
+MET — task-418 Acceptance criteria "#4 (d) the same on a task with an empty plan field: exit 3 one line" — scripts/analysis/rule-lists.mjs @+525 "if (!planField.trim()) refuse(`${taskId}: the Implementation Plan field is empty ...`)" through "throw new Stop(3, `refused: ${m}`)" — exit 3 with one stderr line and nothing written.
+
+MET — task-418 Acceptance criteria "#6 (f) ... git log -1 --name-only on wf2/board shows exactly the folder." — scripts/analysis/rule-lists.mjs @+525 "['git', 'commit', '-q', '-m', `docs(08_agents): plan review evidence for ${taskId}`, '--', ev]" — the commit is path-limited to the evidence folder.
+
+MET — implementation note Q5 "backlog-lane.mjs is left untouched and nothing is exported from it" — the diff touches only scripts/analysis/rule-lists.mjs and src/tests/backlog/backlog-lane.logic.test.ts — backlog-lane.mjs is not modified.
+
+REJECT — plan-protocol section 2 step C "Seats R,C,I,D,G,O,W,X then F on the increment's task list" — plan-prep runs no nine-seat panel — the 2026-11-20 dated note ("yes to all", item 4) scopes that roster to the whole-increment plan review and gives a single lane task the Spec 08 section 7 lens set plus its separate grounder, which is what plan-prep does.
+
+REJECT — task-418 Description "the Integration, Reality-Check and Regression seats" — the diff makes the Regression seat conditional on a tracked Files path — it reads clc.PLAN_SEATS.always and clc.PLAN_SEATS.conditional, the same exported constants the close check enforces, so post and the close check cannot diverge on which seats are required.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+
+---
+⏱  94980ms (95.0s)
+📊 Tokens — total: 35371, input: 19548, output: 15823, reasoning: 14187

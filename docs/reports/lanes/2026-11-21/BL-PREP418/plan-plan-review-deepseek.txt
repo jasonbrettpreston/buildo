@@ -1,0 +1,51 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-21T05:21:30.334Z file_sha256=ea7da3c567e633dc5f929dfea76b9b224fa6cdf08af04f016ee976a710a49201 prompt_sha256=6b8872bb93757541da373b95a00dc6dd47c3a2bc46b7a9b6ef9cf8b86531301f
+🔍 Lens review of docs/reports/reviews/task-418/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §4.3 refusal 4 vs step 3 — the "a plan-\*.txt already in the folder" refusal fires on the 8 files a partial run left, so a single failed review call (likely with 9 concurrent API calls) cannot be re-run ("redoes only missing names" is unreachable), and a present-but-headerless output written on exit 0 (step 4) is never regenerated — the review phase wedges until manual deletion — have step 3 delete failed/headerless outputs (or track a phase-start marker so the refusal ignores this round's files) so a re-run is clean.
+
+BUG severity=HIGH — §11 / §4.4 — post's entire reuse of outcomeErrors/parseVerdicts/lensKindOf/seatLines/planHash hinges on a runtime dynamic import of check-lane-close.mjs, which the plan marks UNVERIFIED and defers to "the lane to measure"; if it fails, post cannot validate and the feature delivers nothing — run a 5-line spike from the CLI context before plan-lock; if it fails, redesign post's coupling.
+
+BUG severity=MED — §4.4 — post builds the round block by parsing check-lane-close.mjs's inline, non-exported refusal message (:266-276 "the block is: …"), so any wording change to that message or to the five form names (folded/task/ruling/wontfix/pile) silently breaks post at runtime (test 11 only catches it at test time) — export the block builder from check-lane-close.mjs and call it instead of scraping.
+
+BUG severity=MED — §4.4 — post applies the block and all references via one `backlog task edit --append-plan … --add-ref …` call but its idempotency test checks only the block, not the references; if that edit applies the block yet not every --add-ref (non-atomic), a re-run prints "nothing to post" and the references stay missing, so the gate (:639) refuses at launch — verify `backlog task edit` is atomic across flags, else assert every expected reference exists and add only the missing ones.
+
+BUG severity=MED — §4.3 step 3 — the review command is assembled as a shell string with one `--section` per CONTEXT_SECTIONS entry, and those values contain spaces ("Acceptance criteria", "Implementation Plan"); if plan-prep re-joins them unquoted instead of copying backlog-lane.mjs:175-177's quoting, the review silently receives truncated sections — reuse the exact `--section` quoting from backlog-lane.mjs:175-177 and assert a spaced heading arrives intact.
+
+BUG severity=MED — §4.4 — refactoring backlog-lane.mjs:100-103 (taskOf/decisionExists built inline from git HEAD) into an exported boardFacts({show,ls}) with injected readers changes the working launch gate's fact source on the "behaviour unchanged" claim, covered only transitively by the e2e dry run — add a direct equivalence test that boardFacts with HEAD readers matches the old inline result on the fixture, including the git-show-fails path.
+
+BUG severity=MED — §4.4 — post passes an empty-string summary to outcomeErrors assuming "" means "a round line exists" so the block is built, but :630 passes null when no round line and the block builds only "when a round line exists"; empty-vs-null semantics are UNVERIFIED and a wrong assumption yields a false "round line missing" and post exiting 1 — confirm :266-276/:625-630 treat `''` as present-not-null, else call the exported builder directly.
+
+BUG severity=MED — §4.4 — post decides whether a Regression seat is required via `git ls-files` while the gate (:621) requires "a Files entry names a path tracked at the board head"; the index and HEAD disagree for a staged-but-uncommitted path, so post and gate can differ on the Regression seat (false refusal, or a missing seat at gate time) — use the gate's exact command (`git ls-tree -r HEAD --name-only`, not `git ls-files`) and mirror :621 byte for byte.
+
+BUG severity=MED — §7 acceptance #2 / §3 — acceptance pins "9 lens-input and 9 review commands" for task-412, but the input name form allows `[-pN]` pagination and only the 259-char fixture context was measured (§11); with task-412's real 30 KB plan a list may split, so the count can exceed 9 and the acceptance fails spuriously — run buildLensInputs on task-412's real context now, record the true input count, and set the acceptance to "N inputs = N review commands".
+
+BUG severity=MED — §3 / §1 — the plan's factual base (9 lists, every :line) was "opened at d9f2143a7", but board-commit.zsh advanced HEAD every 600 s and task-375 is RUNNING; if scripts/ drifted the cited lines are stale and the "9 resolved lists" may differ — verify `git diff d9f2143a7..HEAD -- scripts/analysis/rule-lists.mjs scripts/analysis/backlog-lane.mjs scripts/lib/review-template.js` is empty and re-resolve task-412 to 9 lists before editing.
+
+DEFER severity=LOW — §4.5 — plan-prep commit exits with the dry run's code, so on the first commit (expected "Plan line" branch) the phase exits 3 even though the evidence commit succeeded, conflating success with refusal and breaking `&&` chains — print a distinct "evidence committed: <sha>" line before the dry run.
+
+DEFER severity=LOW — §4.5 — the index.lock check runs only at commit start; board-commit.zsh (600 s, backlog/ only) can take index.lock between that check and `git add`/`git commit`, failing the git op ungracefully — retry once on index.lock or hold the lock across add+commit (skip-on-lock handles only the reverse direction).
+
+DEFER severity=LOW — §4.3 refusal 4 / §3 — if a review output is named one-off (`plan-compliance-<list>-p1.txt` where the gate's :588 expects one `plan-compliance-<list>.txt`), the gate treats it as "any other plan-\*.txt" and demands a Ruled line + per-finding verdict it does not have, refusing the launch — confirm :588 accepts `-pN` variants per list or normalize output names to exactly what the gate globs.
+
+DEFER severity=LOW — §4.3 step 2-3 — a very large plan paginates into many `-pN` inputs with no cap, so one prep can spawn an unbounded number of paid review calls (cost/latency excluded in §8) — cap parts-per-list or total calls and warn above a threshold.
+
+DEFER severity=LOW — acceptance (f) — `git log -1 --name-only` assumes the evidence commit is HEAD, but board-commit.zsh commits the backlog/ task edits within 600 s and becomes log -1, so acceptance (f) can spuriously fail — check `git show <plan-prep-sha> --name-only` or run the check immediately after commit.
+
+DEFER severity=LOW — §2 / §4.5 — the evidence commit "docs(08_agents): plan review evidence for task-N" carries no Task trailer, and check-task-files "always allows docs/reports/reviews/<this task id>/" only if it can resolve the id; if the hook keys on the trailer the evidence commit is refused — verify check-task-files resolves the id from the path (read :10/:70); test 13 should go red if not.
+
+VERDICT: FAIL on plan-readiness for implementation
+Top 3 operational blockers (if FAIL):
+- Review phase cannot recover from a partial/invalid run (refusal-on-existing-files vs "redoes only missing names"): one of 9 concurrent calls failing wedges the phase until manual deletion.
+- Post is load-bearing on an UNVERIFIED dynamic import of check-lane-close.mjs plus scraping a non-exported refusal message; if either breaks, post cannot validate and the feature produces nothing.
+- Post's non-atomic `backlog task edit --append-plan … --add-ref …` with a block-only idempotency check can leave references missing, so the launch gate (:639) refuses after prep reports success.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- Dynamic import from rule-lists.mjs CLI resolves check-lane-close.mjs exports — `node --input-type=module -e "import('./scripts/analysis/rule-lists.mjs').then(()=>import('./scripts/analysis/check-lane-close.mjs')).then(m=>console.log('ok',typeof m.outcomeErrors))"` at d9f2143a7.
+- task-412 resolves to exactly 9 lists and 9 inputs with its real context (not fixture size) — `node scripts/analysis/rule-lists.mjs resolve-task --task task-412` then count `in-plan-compliance-*` off the real `context-r1.md` via buildLensInputs.
+- outcomeErrors treats `''` summary as "round line present" — `node --input-type=module -e "const m=await import('./scripts/analysis/check-lane-close.mjs'); console.log(JSON.stringify(m.outcomeErrors(/* mode 'plan', summary:'' */)))"` or read :626-630.
+- scripts/ still match d9f2143a7 — `git diff --stat d9f2143a7..HEAD -- scripts/analysis/rule-lists.mjs scripts/analysis/backlog-lane.mjs scripts/lib/review-template.js`.
+
+---
+⏱  157718ms (157.7s)
+📊 Tokens — total: 46732, input: 19240, output: 27492, reasoning: 25361
