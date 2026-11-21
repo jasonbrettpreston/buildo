@@ -99,3 +99,4 @@ rg#7 CONFIRMED docs/specs/00-architecture/08_agents.md:476 "one grounder re-exec
 Seat: integration docs/reports/reviews/task-419/seat-integration-1.md sha256:a490dc746b2b
 Seat: reality-check docs/reports/reviews/task-419/seat-reality-check-1.md sha256:94caf06359c2
 Seat: regression docs/reports/reviews/task-419/seat-regression-1.md sha256:a870868001d1
+Plan: task-419 sha256:bcfce6af1573
