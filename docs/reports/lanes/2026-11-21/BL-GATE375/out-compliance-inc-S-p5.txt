@@ -1,27 +1,40 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:29:54.247Z file_sha256=009a2107b1a5f4abbddc27e4423a263635fe6781c461829f1f5524fbb10c7c78 prompt_sha256=72884e168c56cc2cfca13fe3f49210e5452bad230dd5012e23877d345ffd6c26
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:28:23.122Z file_sha256=009a2107b1a5f4abbddc27e4423a263635fe6781c461829f1f5524fbb10c7c78 prompt_sha256=d9cd524d42556b306619c17a534e9ab4066b407e16ccb1db494a1be15a16d273
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-inc-S-p5.txt (model: deepseek-reasoner)
 
-BUG: none found at CRIT/HIGH in this chunk.
+BUG severity=MED — AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — src/tests/proof-slice.db.test.ts:17 "describe.skipIf(!dbAvailable())('proof-slice timeout variable (live DB)'" — the only D10b evidence added here is a skipped DB test plus a pure parser test, so the timeout variable is neither red first nor green and the runner still uses the literal; the clause is being carried by the pasted note, not by the material — obtain the operator DB GO, register the seed row, run this file under BUILDO_TEST_DB=1 and paste both the red and the green before the task leaves RUNNING.
 
-DEFER severity=MED — Description C "C the earlier defects D10 (proof-slice.mjs reads its timeout and buffer from registered tooling_ variables" — src/tests/proof-slice.logic.test.ts:285 "describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)'" — clause satisfied only by the exported helper and the test name; the pasted note "DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable" — add the source assertion the buffer test already uses (a not-to-match on a numeric timeout literal in proof-slice.mjs), or retitle the describe so it does not claim the runner reads it.
-DEFER severity=MED — AC #2 "Tests red first, then green through the real hooks" — src/tests/proof-slice.db.test.ts:6 "WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane)" — the DB half of D10b has no recorded red, only a written file — bounded because AC #13 "needs the DB GO; otherwise the task stays RUNNING" and the build note says the task is not complete.
-DEFER severity=LOW — Description A "the reviewer's context is the task, sized" — src/tests/backlog/rule-lists.logic.test.ts:736 "it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound'" — no assertion sizes any part against the --max 4000 passed at the call, so a split that overshoots the bound passes — add the per-part length assertion the A4 room test already makes at :703.
+DEFER severity=MED — A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes" — src/tests/backlog/rule-lists.logic.test.ts:686 "fs.writeFileSync(p, '# x\n\n## Task\nt\n')" — the file holding the A4 lens-input tests plants only the missing-Description refusal; the placeholder-context and notes-missing refusals are not exercised here (check-lane-close tests are in another chunk, cannot see) — add the two planted refusals with their controls, or name the file where each is planted.
 
-MET — AC #12 — src/tests/backlog/rule-lists.logic.test.ts:653 "it('an admin path and a PII path add the security lens on both phases'" — admin and PII paths asserted to add the security lens on plan and out, with a no-fire control and the existing stripe control.
-MET — RR-0343 "labelled means i need to know its a compliance document" — src/tests/backlog/rule-lists.logic.test.ts:749 "expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md'])" — every entry carries the compliance: label, comma-path taken as the id alone.
-MET — AC #9 "each entry starting "compliance:", the count equal to the lists printed by rule-lists.mjs resolve for its Files line" — src/tests/backlog/rule-lists.logic.test.ts:743 "expect(entries).toHaveLength(want.length)" — count is taken from resolve, not hardcoded.
-MET — Plan A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — src/tests/review-template.logic.test.ts:206 "describe('task-375 A2: one section list for the reviewer context, one extractSections'" — CONTEXT_SECTIONS and PLAN_SECTIONS pinned to the plan's five and three, and a missing heading throws.
-MET — Description A "lens-input refuses without it" — src/tests/backlog/rule-lists.logic.test.ts:679 "expect(no.status, no.stderr).toBe(2)" — refusal without --context and exit 0 with it, both asserted.
-MET — Plan A.6 "A row or paragraph that alone passes the room is still refused naming it" — src/tests/backlog/rule-lists.logic.test.ts:761 "expect(l.r.stderr).toContain('5. Register')" — a single over-room row keeps the old refusal naming list and section.
-MET — AC #11 — src/tests/review-template.logic.test.ts:202 "describe('substitutePlaceholders — values are inserted literally, once'" — the dollar-sequence and placeholder-once block is untouched by the diff.
+DEFER severity=MED — AC #12 "A7 D11b test red first then green." — src/tests/backlog/rule-lists.logic.test.ts:653 "it('an admin path and a PII path add the security lens on both phases'" — the green is visible in the diff, the red rests only on the note "red first in red.out"; no red artefact is in the material under review (cannot see), the same shape the pasted retro grounder recorded as "red.out and commit.out cited by the report are not in the repo" — attach red.out and the commit sha to this task so red-first is evidenced, not claimed.
 
-REJECT — AC #10 "A5 The planted refusals of section 8, each with its control" — accused of omitting the placeholder, edited-context, stale-compliance and missing-reference refusals — those live in the check-lane-close and backlog-lane tests, which are not in this chunk (5 of 5, four test files).
-REJECT — inc-S A.4 "NOT-BUILT (parser)" and A.5 "NOT-BUILT" — accused of not building direction and unit parsing — this chunk is four test files and the inc-S list assigns A.4/A.5 to plan 1.4, not to this lane.
+DEFER severity=LOW — A.7 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — src/tests/backlog/rule-lists.logic.test.ts:727 "const tableDoc = (n: number) => '# T\n\n## 5. Register\n\n| id | rule |\n| --- | --- |'" — only the table-row branch is built and asserted; no blank-line-paragraph document is exercised anywhere in this chunk — add one paragraph-only document that splits, with the same row/paragraph-once assertion.
+
+DEFER severity=LOW — A.7 "A row or paragraph that alone passes the room is still refused naming it" read with the room count, A.4 "counts the selected sections in the room" — src/tests/backlog/rule-lists.logic.test.ts:736 "it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound'" — the test never asserts a part's rendered size, so "none over the bound" exists only in the test name (the room test at :703 does assert it, this one does not) — add the same lessThanOrEqual(max) loop over the split parts.
+
+DEFER severity=LOW — AC #9 "choose the task on the day 375 launches: a LATER build task not recommended for drop" — pasted record "for task-101 (LATER, type record, not build) the command carries 6 compliance: entries" — the demonstrated task is not the build task the criterion names, so the resolved-list count equality is shown on a weaker case — re-run the printed-command half on a LATER build task on launch day and paste it.
+
+MET — A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js; extractSections moves there" — src/tests/review-template.logic.test.ts:211 — both constants are pinned to the exact five and three heading texts and extractSections is asserted to cut at the next heading and to throw on a missing one.
+
+MET — C "the security lens fires for admin and PII paths" — src/tests/backlog/rule-lists.logic.test.ts:656 — admin and PII paths assert security on both plan and out phases, with a no-match control and a control that the existing word still fires it.
+
+MET — A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — src/tests/backlog/rule-lists.logic.test.ts:679 — exit 2 with stderr naming --context, and the control with a context exits 0.
+
+MET — B.1 "Entry (field `references`, not `documentation`): `compliance:<list id> <file>`" — src/tests/backlog/rule-lists.logic.test.ts:801 — complianceRefs adds by id token, enters a comma path as the id alone, and drops a stale entry by --remove-ref.
+
+MET — A.6 "instead of being refused ... A row ... that alone passes the room is still refused naming it" — src/tests/backlog/rule-lists.logic.test.ts:753 — the oversize row exits 1 naming "5. Register", with the table that fits as its control.
+
+MET — AC #11 "The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green." — src/tests/review-template.logic.test.ts:202 — the literal-once substitutePlaceholders tests are untouched by this chunk.
+
+MET — RR-0343 "labelled means i need to know its a compliance document" — src/tests/backlog/rule-lists.logic.test.ts:777 — every entry matched and emitted carries the compliance: prefix, distinct from the task's other references.
+
+REJECT — docs/specs/01-pipeline/124_step_standard_policy.md R-EB (b) / R-CV pinned form — accused of pinning min = max = default with no backing clause — that clause is named only in the test's SPEC LINK comment and is not pasted here, so it is not mine to judge.
+
+REJECT — Inc-S requirements rule list (A.6 reports-left line, F-SEARCH-WEB live switch, G.3 ready line) — accused of being unsatisfied by this chunk — no Inc-S clause names a review or proof tool; the chunk changes only tooling tests, so no Inc-S clause is engaged.
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 11   Unmet: 1
+Clauses checked: 15   Unmet: 0
 
 ---
-⏱  83518ms (83.5s)
-📊 Tokens — total: 41350, input: 25635, output: 15715, reasoning: 14672
+⏱  163285ms (163.3s)
+📊 Tokens — total: 56510, input: 25863, output: 30647, reasoning: 29228

@@ -1,5 +1,5 @@
-LIST airtight-122a sha256:2f265ab3c040c5af6e67e9463020bed74137983e1bb4d2bbc16388da70e12666 material sha256:32a13eecdc23ee808426bbacea012daa23a5fcc219a4a71abb79676c78d56595 part 1 of 1 chunk 3 of 4
-RULE LIST airtight-122a (docs/specs/01-pipeline/122a_step_optimization_appendix.md, sections Appendix §A26; Appendix §A27), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists-table.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts","src/tests/proof-slice.db.test.ts"]
+LIST airtight-122a sha256:2f265ab3c040c5af6e67e9463020bed74137983e1bb4d2bbc16388da70e12666 material sha256:f2048fafc853182a38a390f81b052187b22173f5ca8b0458b12b40268457cf33 part 1 of 1 chunk 3 of 4
+RULE LIST airtight-122a (docs/specs/01-pipeline/122a_step_optimization_appendix.md, sections Appendix §A26; Appendix §A27), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists-table.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
 
 ## Appendix §A26 — Compute purity: Rule 2 as closed-answer gate codes (R-BZ, R-CA) (2026-10-11)
 
@@ -212,7 +212,7 @@ index d3a9ab087c1a99c8905b35915508573a4ccb5a58..ccebbad171d112ce7aed0c256ffe58de
      const f = fixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' });
      refused(lane(f), /zzz-nothing\/new\.txt/);
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index 960823f50101ad5627f5f32c0cc67048824e596b..11d9ee6f9c2b31d177024c17e2d0cb8e3a712177 100644
+index 960823f50101ad5627f5f32c0cc67048824e596b..b3fff939796ee199358af6172b012a46cb4066e3 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -28,14 +28,18 @@ const quoteAt = (k: number) => `export const value0${k} = 'alpha quote number 0$
@@ -284,7 +284,7 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..11d9ee6f9c2b31d177024c17e2d0cb8e
    g('add', '-A');
    const msgFile = path.join(d, '.git/MSG');
    fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
-@@ -771,3 +785,209 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
+@@ -771,3 +785,215 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
      expect(mk('docs/reports/lanes/x/seat.md').join('\n')).toMatch(/is outside docs\/reports\/reviews\/task-9\//);
    });
  });
@@ -331,7 +331,7 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..11d9ee6f9c2b31d177024c17e2d0cb8e
 +type PO = {
 +  type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
 +  noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
-+  ctx?: string; badMaterial?: boolean; junkPlan?: boolean;
++  ctx?: string; badMaterial?: boolean; junkPlan?: boolean; fixCompliance?: 'valid' | 'junk';
 +};
 +async function planScenario(o: PO = {}) {
 +  const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
@@ -366,6 +366,7 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..11d9ee6f9c2b31d177024c17e2d0cb8e
 +      }
 +    }
 +    if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.junkPlan ? 'junk\n' : `${hdr('lens-code-review.md', null)}${body(false)}`;
++    if (type === 'fix' && o.fixCompliance) files['plan-compliance-first.txt'] = o.fixCompliance === 'junk' ? 'junk\n' : `${hdr('lens-compliance.md', null)}${body(false)}`;
 +    if (o.finding) files['plan-code-review.txt'] = `${hdr('lens-code-review.md', null)}BUG severity=${o.finding.sev} — clause "x" — src/a.ts:1 "y" — claim — fix\nVERDICT: PASS\n`;
 +    if (o.stray) files['notes.txt'] = 'stray\n';
 +  }
@@ -486,6 +487,11 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..11d9ee6f9c2b31d177024c17e2d0cb8e
 +    gate(await planScenario({ type: 'fix', junkPlan: true }), /plan-code-review\.txt: no REVIEW header/);
 +    const ok = await planScenario({ type: 'fix' });
 +    expect(ok.errors).toEqual([]);
++  });
++  it('g375#11: a fix launch with a valid plan-code-review.txt AND a valid plan-compliance-<list>.txt (template lens-compliance.md) passes; control: a junk plan-compliance-<list>.txt is still refused', async () => {
++    const ok = await planScenario({ type: 'fix', fixCompliance: 'valid' });
++    expect(ok.errors).toEqual([]);
++    gate(await planScenario({ type: 'fix', fixCompliance: 'junk' }), /plan-compliance-first\.txt: no REVIEW header/);
 +  });
 +  it('a fix task with one plan lens output passes; a build task with only that output is refused', async () => {
 +    const fx = await planScenario({ type: 'fix' });
@@ -747,48 +753,6 @@ index 4fea028e03810a041655685eea7ef7cf478e765c..6c6c817b5d408c10cde578a3f608377c
 +    const r = m.complianceRefs([{ id: 'ms-9', file: 'docs/a, b.md' }, { id: 'eng-all', file: 'docs/e.md' }, { id: 'five', file: 'docs/f.md' }], ['compliance:eng-all some other path', 'docs/a.md']);
 +    expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);
 +    expect(r.remove).toEqual([]);
-+  });
-+});
-diff --git a/src/tests/proof-slice.db.test.ts b/src/tests/proof-slice.db.test.ts
-new file mode 100644
-index 0000000000000000000000000000000000000000..841318ca2b6b9edca229f07ded4b1edde07b6878
---- /dev/null
-+++ b/src/tests/proof-slice.db.test.ts
-@@ -0,0 +1,36 @@
-+// SPEC LINK: docs/specs/01-pipeline/132_step_standard_handbook.md x-tooling.1 (a test that needs Postgres is *.db.test.ts, run only by npm run test:db),
-+//            docs/specs/01-pipeline/124_step_standard_policy.md R-EB (b) (gate and tooling variables, R-CV pinned form),
-+//            docs/specs/00-architecture/08_agents.md:511 (MCINC-7: every DB job is rehearsed on the test stack first).
-+//
-+// task-375 D10b: the registered variable the proof slice runner reads its timeout from exists in the logic_variables table with a value the runner accepts, and it equals the pinned seed.
-+// WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane): the variable is registered by a seed + migration the operator authorises with a typed GO after the MCINC-7 rehearsal.
-+// Skipped unless BUILDO_TEST_DB=1 (or CI DATABASE_URL).
-+import { readFileSync } from 'node:fs';
-+import { join } from 'node:path';
-+
-+import type { Pool } from 'pg';
-+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-+
-+import { TIMEOUT_VARIABLE, timeoutMsFromVariable } from '../../scripts/analysis/proof-slice.mjs';
-+import { dbAvailable, getTestPool } from './db/setup-testcontainer';
-+
-+describe.skipIf(!dbAvailable())('proof-slice timeout variable (live DB)', () => {
-+  let pool: Pool;
-+  beforeAll(() => { pool = getTestPool() as Pool; });
-+  afterAll(async () => { await pool.end().catch(() => undefined); });
-+
-+  it('the variable is in logic_variables and its value is a positive integer the runner accepts', async () => {
-+    const { rows } = await pool.query('SELECT variable_value FROM logic_variables WHERE variable_key = $1', [TIMEOUT_VARIABLE]);
-+    expect(rows, `${TIMEOUT_VARIABLE} is not registered in logic_variables`).toHaveLength(1);
-+    expect(timeoutMsFromVariable(rows[0].variable_value)).toBeGreaterThan(0);
-+  });
-+  it('the database value equals the pinned seed default (R-CV form: min = max = default)', async () => {
-+    const seed = JSON.parse(readFileSync(join(process.cwd(), 'scripts/seeds/logic_variables.json'), 'utf8')) as Record<string, { default: number; min: number; max: number }>;
-+    const entry = seed[TIMEOUT_VARIABLE];
-+    expect(entry, `${TIMEOUT_VARIABLE} is not in the seed`).toBeDefined();
-+    expect(entry!.min).toBe(entry!.default);
-+    expect(entry!.max).toBe(entry!.default);
-+    const { rows } = await pool.query('SELECT variable_value FROM logic_variables WHERE variable_key = $1', [TIMEOUT_VARIABLE]);
-+    expect(timeoutMsFromVariable(rows[0].variable_value)).toBe(entry!.default);
 +  });
 +});
 

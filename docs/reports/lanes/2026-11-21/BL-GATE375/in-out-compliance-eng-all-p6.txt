@@ -1,4 +1,4 @@
-LIST eng-all sha256:9973ef45dcba5b23a8b7b5bc5da8754c7e73c23958000a3949e1cefce2da158d material sha256:3508140447076c0d299666e1238648381c7e8e8c014ca150b07ff79b074ae626 part 2 of 2 chunk 3 of 6
+LIST eng-all sha256:9973ef45dcba5b23a8b7b5bc5da8754c7e73c23958000a3949e1cefce2da158d material sha256:a66a6c53fc500b2aec7ad3bfe0037c30ef7a8911d26862731d7972bc9ec4b9e5 part 2 of 2 chunk 3 of 6
 RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","scripts/lib/review-template.js"]
 
 ## 🛠️ 12. Frontend Foundation Tooling
@@ -170,7 +170,7 @@ Detection is not enough. **Every CRITICAL/HIGH review finding (Spec 08 roster) i
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index d52921dc5ea1751f92feb692eeab811af30bd4e1..90b7a323a9af01270733f4d3726629f5f9e751b2 100644
+index d52921dc5ea1751f92feb692eeab811af30bd4e1..dc94b8f3468adb193398dc78d9b8a6837847e0c1 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -34,11 +34,14 @@ import { spawnSync } from 'node:child_process';
@@ -515,7 +515,7 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..90b7a323a9af01270733f4d3726629f5
 +    // a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line (reviewErrors; g375#1)
 +    const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));
 +    if (planFiles.length === 0) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
-+    for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null).map((x) => `${id}: ${x}`));
++    for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, /^plan-compliance-/.test(f.name) ? 'lens-compliance.md' : f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null).map((x) => `${id}: ${x}`));
 +  }
 +  const g = textOf('GROUNDER-PLAN.md');
 +  let findings = 0;

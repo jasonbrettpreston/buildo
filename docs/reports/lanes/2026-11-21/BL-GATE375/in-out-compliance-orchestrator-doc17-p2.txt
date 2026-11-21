@@ -1,5 +1,5 @@
-LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:af8dfcf96c950f5c867864450a2e854b0e67cf22a5fced057aa2da6f229af9aa part 1 of 1 chunk 2 of 6
-RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.mjs","scripts/deepseek-review.js"]
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:62f19ee3d6a58fc387ddc0e5b2bf211daa42b4f262e2230bbdfd9c0d93596e34 part 1 of 1 chunk 2 of 6
+RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/proof-slice.mjs","scripts/analysis/rule-lists.mjs","scripts/deepseek-review.js"]
 
 ---
 id: doc-17
@@ -168,6 +168,30 @@ Readings and register entries of the rulings register. They are NOT the operator
 - RR-0218 2026-11-19: "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:870)
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/analysis/proof-slice.mjs b/scripts/analysis/proof-slice.mjs
+index 34c8510073a1dc789cac614552961cd069ccc36a..9c330cfc24424a19941f36d2c6776c98ec228b02 100644
+--- a/scripts/analysis/proof-slice.mjs
++++ b/scripts/analysis/proof-slice.mjs
+@@ -19,7 +19,18 @@ import { gateVariable } from './gates/variables.mjs';
+ 
+ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+ const DATA = path.join(REPO, 'scripts/analysis/proof-slices.json');
+-const DEFAULT_TIMEOUT_MS = 120000;
++const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it (seed + migration); until then this typed value stays
++/**
++ * task-375 D10b: the registered tooling variable the row timeout is read from (R-EB (b); NOT yet registered: the seed entry and migration need the operator's typed DB GO after the MCINC-7 rehearsal).
++ * The name is the builder's choice, to be confirmed at registration.
++ */
++export const TIMEOUT_VARIABLE = 'tooling_proof_slice_timeout_ms';
++/** The timeout (ms) from the variable's stored value (a number or the text of one): a positive integer, else a refusal naming the variable (no default, no unbounded run). */
++export function timeoutMsFromVariable(value) {
++  const n = typeof value === 'number' ? value : typeof value === 'string' && /^\s*\d+\s*$/.test(value) ? Number(value) : Number.NaN;
++  if (!Number.isInteger(n) || n <= 0) throw new Error(`${TIMEOUT_VARIABLE} must be a positive integer number of milliseconds (got ${JSON.stringify(value)}): set it in logic_variables; there is no default and no unbounded run`);
++  return n;
++}
+ const ID_RE = /^[a-z0-9-]{1,40}$/;
+ const TASK_RE = /^task-\d+$/;
+ const KEYS = ['id', 'proof', 'argv', 'waits', 'expect', 'timeoutMs', 'suite', 'notbuilt'];
 diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
 index 90e9c71aa44d3cf554afa21cd384e5bdd8c8a70a..eba7a0202b06533f9d00f9a318b73fd344b57ac6 100644
 --- a/scripts/analysis/rule-lists.mjs

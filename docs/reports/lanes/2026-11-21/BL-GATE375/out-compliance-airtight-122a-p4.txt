@@ -1,30 +1,24 @@
-◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:15:27.890Z file_sha256=68eb5195ff215631712c5a2da3769cb94a9956f9489c3960aeaadb7696c38128 prompt_sha256=0a3fe65a6fbd15ac308618391ef236108af8a6b416eb0101f7a53e1479e64c44
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:13:38.027Z file_sha256=a23d37614058dba1018488168f6b7f997d7d8f4aaae1e485b113fd1a927d2d45 prompt_sha256=de2e076fb3340acb8bfcdc83885fee91f8445e0ca864a70899c66bf9197dde6b
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-122a-p4.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — Task Description C "proof-slice.mjs reads its timeout and buffer from registered tooling_ variables", AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — src/tests/proof-slice.logic.test.ts:286 "describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)'" — the block only calls timeoutMsFromVariable, and the pasted note states "DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable", so the clause rests on the test title alone, which is UNMET — retitle the block to what it proves and keep D10b OPEN in the notes, or add the assertion that the runner reads TIMEOUT_VARIABLE once the DB GO lands.
+BUG severity=MED — Appendix §A27 line 13 "under `src/tests/db/`, or beside its step under `src/tests/steps/<slug>/`" — src/tests/proof-slice.db.test.ts:1 "diff --git a/src/tests/proof-slice.db.test.ts" — the Postgres test sits at the top level of src/tests/, neither under src/tests/db/ nor under src/tests/steps/<slug>/ (proof-slice.mjs is analysis tooling with no step slug), so the named location is unmet — move it to src/tests/db/proof-slice.db.test.ts and rebase its imports ('./setup-testcontainer', '../../../scripts/analysis/proof-slice.mjs').
 
-DEFER severity=MED — Appendix §A27 item 13 "A test that needs Postgres is `*.db.test.ts` ... under `src/tests/db/`, or beside its step under `src/tests/steps/<slug>/`" — Files line "src/tests/proof-slice.db.test.ts" — a Postgres test named at src/tests/ top level sits in neither sanctioned location — move it to src/tests/db/ and update the Files line.
+DEFER severity=LOW — Acceptance #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — pasted D10b note "the logic test is green, src/tests/proof-slice.db.test.ts is written and NOT RUN" — no red file is named for the new timeoutMsFromVariable logic test or for the new A2 review-template block, while every other commit in the same notes names a redN.out — paste the red for both new blocks, or record them as open alongside the DB read.
 
-DEFER severity=LOW — AC #2 "Tests red first, then green through the real hooks" — NONE — the pasted notes cite red*.out (red7, red9, red10, red11, red12, red13, red14) for every other commit but no red for the A2 and D10b test blocks, and the D10b note says only "the logic test is green" — red-first for these two blocks is unrecorded — record the red run for each block as the other commits do.
+DEFER severity=NIT — Appendix §A27 line 13 "never a per-file package.json list (`step-conformance.infra`)" — NONE — this chunk carries no package.json, so I cannot see that `npm run test` excludes and `npm run test:db` includes `**/*.db.test.ts` — confirm both script globs on the head in the close evidence.
 
-REJECT — FINAL BUILD NOTE A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — accused of adding a second section constant because the test pins PLAN_SECTIONS too — CONTEXT_SECTIONS is the one cut shared by the review tool, lens-input and the close check, and PLAN_SECTIONS is the separate plan-material cut the D5 plan gate needs, not a competing context list.
+MET — Acceptance #11 "A6 The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green" — src/tests/review-template.logic.test.ts:206 "describe('task-375 A2: one section list for the reviewer context, one extractSections', () => {" — the new block is appended after the existing describes and edits none of them.
 
-REJECT — Appendix §A26 compute purity codes (G0 to G13) — accused of compute purity violations — src/tests/proof-slice.logic.test.ts and src/tests/review-template.logic.test.ts are tests of scripts/analysis/proof-slice.mjs and scripts/lib/review-template.js, neither a compute module nor in any compute require closure, so no A26 code can bind them.
+MET — Appendix §A27 line 13 "A test that needs Postgres is `*.db.test.ts`" — src/tests/proof-slice.db.test.ts:1 — the file carries the .db.test.ts suffix, so the naming half of the clause is met.
 
-MET — FINAL BUILD NOTE A.2 "The reviewer's context is these headings of that file only, with the exact heading texts: "Task", "Description", "Acceptance criteria", "Decisions naming this task", "Implementation Notes"" — src/tests/review-template.logic.test.ts:211 "expect(rt.CONTEXT_SECTIONS).toEqual(['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes']);" — the five heading texts are pinned verbatim in order.
+MET — Appendix §A26 G0 "The purity codes run over compute **and its AST `require` closure**" — src/tests/proof-slice.logic.test.ts:286 "describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)'" — both edited files test analysis tooling, are not compute and are not in a compute require closure, so G1 to G13 owe no answer token here.
 
-MET — FINAL BUILD NOTE A.2 "deepseek-review.js throws on a heading it cannot find (:111) and matches by substring, so a section cannot be dropped silently" — src/tests/review-template.logic.test.ts:218 "expect(() => rt.extractSections(md, ['Nope'])).toThrow(/no heading contains that text/);" — the move of extractSections into review-template.js keeps the refusal, not a silent drop.
-
-MET — AC #11 "A6 The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green" — src/tests/review-template.logic.test.ts:206 hunk "@@ -202,3 +202,19 @@" — the change appends one describe after the substitutePlaceholders block and edits none of the existing assertions.
-
-MET — Appendix §A27 item 13 "A test that needs Postgres is `*.db.test.ts`" — both files under review are named *.logic.test.ts and neither opens a connection, so no Postgres test is mis-named here.
-
-MET — AC #13 describes the D10b refusal "a bad value refuses and names it" — src/tests/proof-slice.logic.test.ts:297 "expect(() => m.timeoutMsFromVariable(bad), String(bad)).toThrow(new RegExp(m.TIMEOUT_VARIABLE));" — every refused value must produce a message containing the variable name.
+REJECT — Appendix §A26 G1 "SQL over `pipeline_runs`/`sync_runs`/`logic_variables`/`schema_migrations`/`trade_configurations`" — the db test runs "SELECT variable_value FROM logic_variables WHERE variable_key = $1" at src/tests/proof-slice.db.test.ts:23 — G0 scopes these codes to compute and its AST require closure; a test that requires a module is not inside that module's closure, so this is not a G1 site.
 
 VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 8   Unmet: 2
+Clauses checked: 6   Unmet: 1
 
 ---
-⏱  101022ms (101.0s)
-📊 Tokens — total: 35043, input: 16873, output: 18170, reasoning: 17138
+⏱  76574ms (76.6s)
+📊 Tokens — total: 33034, input: 17932, output: 15102, reasoning: 14353

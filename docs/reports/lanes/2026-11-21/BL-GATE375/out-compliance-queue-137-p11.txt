@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:34:25.256Z file_sha256=959121f32af823546079c5f257ce3409641ebf8ecc1a1d79234625a27f59f99d prompt_sha256=1a3555a160dba3472f33a1f28a3147435434f0714dd473f9122ec473856adcb5
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-queue-137-p11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-375 AC #9 "check-tasks on the live board prints the exact backlog task edit --add-ref command for at least one stale open task (choose the task on the day 375 launches: a LATER build task not recommended for drop)" — TASK-375 notes "for task-101 (LATER, type record, not build) the command carries 6 compliance: entries = 6 lists of resolve" — the live-board proof was run on a record-type task, not the LATER build task the AC names, so the build-path resolution the AC asked to prove is unshown — rerun check-tasks on a LATER build task not recommended for drop and paste that command, or record that none exists.
+
+DEFER severity=LOW — plan B.2 "prints, for each open task whose compliance: entries differ from the resolved lists (verifyResolved first), the exact backlog task edit task-N --add-ref ... command" — src/tests/backlog/rule-lists.logic.test.ts "['compliance:eng-all some other path', 'docs/a.md']" — an entry with the right id but a wrong path yields neither --add-ref nor --remove-ref, so a compliance reference pointing at the wrong file is never flagged though it "differs from the resolved lists" — compare the file as well, or emit --remove-ref plus --add-ref for an id match with a mismatched path.
+
+DEFER severity=LOW — task-375 AC #1 "Each defect is confirmed on the head before fixing, with file:line" — TASK-375 notes "D10b DEFAULT_TIMEOUT_MS = 120000 typed (needs a migration number from the ID ledger, seed row, registry doc; operator typed GO for the DB)" — the D10b confirmation names no file:line (D11b cites rule-lists.mjs:128), so one defect lacks the confirmation AC #1 requires — cite the proof-slice.mjs line that holds the 120000 literal.
+
+DEFER severity=NIT — plan A.6 "a block with no deeper heading is cut between table rows or blank-line paragraphs" — src/tests/backlog/rule-lists.logic.test.ts "for (let i = 0; i < 60; i++) expect(all.split(`| R${i} |`).length - 1, 'R' + i).toBe(1);" — the it() title claims "none over the bound" but the body never asserts a part is within --max, so that half rests on the test name only — assert each part's substituted length is at most 4000.
+
+MET — plan A.4 "lens-input takes --context, refuses without it" — src/tests/backlog/rule-lists.logic.test.ts "expect(no.status, no.stderr).toBe(2)" — the no-context refusal and its exit-0 control are both asserted.
+
+MET — plan A.6 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — src/tests/backlog/rule-lists.logic.test.ts "expect(l.files.length).toBeGreaterThan(1)" — a 60-row table splits and every row appears once across the parts.
+
+MET — plan A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — src/tests/review-template.logic.test.ts "expect(rt.CONTEXT_SECTIONS).toEqual(['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'])" — the five headings are pinned to the shared constant.
+
+MET — task-375 AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — src/tests/proof-slice.db.test.ts "WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane)" — the DB read is deferred and the task stays RUNNING as the clause allows.
+
+VERDICT: FAIL on compliance
+Clauses checked: 18   Unmet: 4
+
+---
+⏱  155952ms (156.0s)
+📊 Tokens — total: 58353, input: 28773, output: 29580, reasoning: 28704

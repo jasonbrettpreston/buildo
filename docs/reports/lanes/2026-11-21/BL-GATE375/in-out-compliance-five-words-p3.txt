@@ -1,4 +1,4 @@
-LIST five-words sha256:9ac37044b0deec3165ae2ad6e4c02aa48a6d8ede03c038b0c9178860b8f223a2 material sha256:800063f3a937ea75cb451b69c4e3130e7b561a0491a27f4344a4d0b96caa0784 part 1 of 1 chunk 3 of 3
+LIST five-words sha256:9ac37044b0deec3165ae2ad6e4c02aa48a6d8ede03c038b0c9178860b8f223a2 material sha256:63c22835de0323882ea89e2b636de8a28d0fa76b1cbc1b573c1340e4aab5cd36 part 1 of 1 chunk 3 of 3
 RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 3 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists-table.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts","src/tests/proof-slice.db.test.ts","src/tests/proof-slice.logic.test.ts","src/tests/review-template.logic.test.ts"]
 
 ## Glossary
@@ -34,7 +34,7 @@ RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sect
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index 960823f50101ad5627f5f32c0cc67048824e596b..11d9ee6f9c2b31d177024c17e2d0cb8e3a712177 100644
+index 960823f50101ad5627f5f32c0cc67048824e596b..b3fff939796ee199358af6172b012a46cb4066e3 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -28,14 +28,18 @@ const quoteAt = (k: number) => `export const value0${k} = 'alpha quote number 0$
@@ -106,7 +106,7 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..11d9ee6f9c2b31d177024c17e2d0cb8e
    g('add', '-A');
    const msgFile = path.join(d, '.git/MSG');
    fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
-@@ -771,3 +785,209 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
+@@ -771,3 +785,215 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
      expect(mk('docs/reports/lanes/x/seat.md').join('\n')).toMatch(/is outside docs\/reports\/reviews\/task-9\//);
    });
  });
@@ -153,7 +153,7 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..11d9ee6f9c2b31d177024c17e2d0cb8e
 +type PO = {
 +  type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
 +  noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
-+  ctx?: string; badMaterial?: boolean; junkPlan?: boolean;
++  ctx?: string; badMaterial?: boolean; junkPlan?: boolean; fixCompliance?: 'valid' | 'junk';
 +};
 +async function planScenario(o: PO = {}) {
 +  const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
@@ -188,6 +188,7 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..11d9ee6f9c2b31d177024c17e2d0cb8e
 +      }
 +    }
 +    if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.junkPlan ? 'junk\n' : `${hdr('lens-code-review.md', null)}${body(false)}`;
++    if (type === 'fix' && o.fixCompliance) files['plan-compliance-first.txt'] = o.fixCompliance === 'junk' ? 'junk\n' : `${hdr('lens-compliance.md', null)}${body(false)}`;
 +    if (o.finding) files['plan-code-review.txt'] = `${hdr('lens-code-review.md', null)}BUG severity=${o.finding.sev} — clause "x" — src/a.ts:1 "y" — claim — fix\nVERDICT: PASS\n`;
 +    if (o.stray) files['notes.txt'] = 'stray\n';
 +  }
@@ -308,6 +309,11 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..11d9ee6f9c2b31d177024c17e2d0cb8e
 +    gate(await planScenario({ type: 'fix', junkPlan: true }), /plan-code-review\.txt: no REVIEW header/);
 +    const ok = await planScenario({ type: 'fix' });
 +    expect(ok.errors).toEqual([]);
++  });
++  it('g375#11: a fix launch with a valid plan-code-review.txt AND a valid plan-compliance-<list>.txt (template lens-compliance.md) passes; control: a junk plan-compliance-<list>.txt is still refused', async () => {
++    const ok = await planScenario({ type: 'fix', fixCompliance: 'valid' });
++    expect(ok.errors).toEqual([]);
++    gate(await planScenario({ type: 'fix', fixCompliance: 'junk' }), /plan-compliance-first\.txt: no REVIEW header/);
 +  });
 +  it('a fix task with one plan lens output passes; a build task with only that output is refused', async () => {
 +    const fx = await planScenario({ type: 'fix' });

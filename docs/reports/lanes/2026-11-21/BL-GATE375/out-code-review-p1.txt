@@ -1,23 +1,29 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T03:08:33.617Z file_sha256=e34beb582acd2bda98a35418ca82c4d5c8f7f53fc934bad0357bd0bf9590e3c3 prompt_sha256=fef0dc1d31c0d880329cc44aa2f30a9c8cc036a0c368bca49587787299d9a784
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T04:08:02.657Z file_sha256=e34beb582acd2bda98a35418ca82c4d5c8f7f53fc934bad0357bd0bf9590e3c3 prompt_sha256=138be7b44be127089258d278849e5c02853dc597e3fadd6c1ebfc99cf50f3f0e
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-code-review-p1.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — scripts/analysis/backlog-lane.mjs:101 "taskOf: (tid) => { const n = /\d+/.exec(tid)?.[0]; const f = headTasks.find((x) => new RegExp(`^backlog/tasks/task-0*${n}( -.*)?\\.md$`, 'i').test(x))" — a reference to a dotted sub-task (task-401.1) resolves to its parent task-401, and a reference with no digits builds the pattern task-0*undefined.md and is silently reported as nonexistent, so the gate grades the wrong task's status — parse the whole id (`/^task-(\d+(?:\.\d+)?)$/`), escape it, and refuse a tid that does not match.
+BUG severity=HIGH — scripts/analysis/backlog-lane.mjs:94 "taskText: fs.readFileSync(t.file, 'utf8'), type: gateType, table: ruleTable, root: board" — the gate hashes the working-tree task file while the evidence folder, the referenced tasks and the Plan line are all read from HEAD ("showHead", "headTasks"), and the dirty check at :84 deliberately tolerates uncommitted "backlog/" edits ("filter((p) => !p.startsWith('backlog/') ...)"), so a plan edited but never committed can pass the gate against a Plan line that matches no commit — read the task with showHead (or refuse a task file that differs from HEAD) so the hashed text is the committed one.
 
-DEFER severity=MED — scripts/analysis/backlog-brief.mjs:55 "?? '').trim().replace(/^#{1,6} /gm, '#### ') || '(none)'" — an absent SECTION marker and a genuinely empty field both read "(none)", so a marker name that does not match the task file silently drops the Implementation Plan or Notes from the context while the heading is still written (the A0 acceptance counts headings only, not content) — distinguish "no markers in the body" and refuse naming the field.
+BUG severity=MED — scripts/analysis/backlog-lane.mjs:97 "tracked: (e) => git('ls-files', '--', e).stdout.trim() !== ''" — a failing git ls-files (bad pathspec, not a repo, unreadable index) yields empty stdout and is read as "not tracked", so the Regression seat silently drops out of the gate instead of being demanded — test r.status and emit a refusal line naming the pathspec and r.stderr.
 
-DEFER severity=LOW — scripts/analysis/rule-lists.mjs:308 "else if (ln.trim() === '') { if (!(head && pieces.length === 0 && cur.length === 1)) flush(); }" — the blank line is dropped instead of closing the piece with it, so the packed parts lose the markdown paragraph break and do not reproduce the block text (two paragraphs become one; any close comparison of the joined parts with the whole list must normalise whitespace or it will refuse) — push the blank line into cur before flushing.
+BUG severity=MED — scripts/analysis/backlog-lane.mjs:89 "const showHead = (pth) => { const r = git('show', `HEAD:${pth}`); return r.status === 0 ? r.stdout : null; };" — a git read failure is collapsed to null and then to an empty file ("text: showHead(x) ?? ''"), so a broken object read is reported as missing or invalid evidence and the git stderr is never logged — log `git show HEAD:<path>: ${r.stderr}` on the refusal line and keep the two cases (absent, unreadable) distinct.
 
-DEFER severity=LOW — scripts/analysis/backlog-lane.mjs:102 "path.posix.basename(x).toLowerCase().startsWith(`${ref.toLowerCase()} -`) || path.posix.basename(x).includes(ref)" — the includes fallback matches by substring, so a ruling citing a truncated or mistyped ref (RR-034, RR-0343x) is accepted when only a longer decision file exists — match the id token exactly, e.g. a regex of `^<escaped ref>( -|\\.md)`.
+BUG severity=MED — scripts/analysis/backlog-lane.mjs:101 "startsWith(`${ref.toLowerCase()} - `) || path.posix.basename(x).includes(ref)" — the fallback accepts a decision id that is only a prefix of an existing one (RR-033 resolving to "RR-0333 - ....md"), so the gate passes a reference to a decision that does not exist — match on the id token only (`startsWith(\`${ref} \`)` or an exact id regexp) and list "backlog/decisions/" once instead of one git ls-tree per reference.
 
-DEFER severity=LOW — scripts/analysis/backlog-brief.mjs:55 ".trim().replace(/^#{1,6} /gm, '#### ')" — the demotion also rewrites lines inside fenced code (a shell comment "# rebuild" becomes "#### rebuild", a ##### heading is promoted to ####), so the plan text recorded in the context is not the task's text — demote only heading lines outside fenced blocks.
+BUG severity=MED — scripts/analysis/backlog-lane.mjs:127 "step('take', board, [bin, 'task', 'edit', taskId, '-s', 'RUNNING', '-a', `@lane-${lane}`, '--append-notes', note, ...addRefs]);" — the take appends a note to the task body straight after the gate hashed that body (A9 step 3 shows an appended note changes the expected Plan line), so the committed Plan line stops describing the task and every relaunch of the same build or fix task is refused until the line is regenerated — exclude the launch note from planHash, or re-hash after the take and record that hash.
 
-DEFER severity=NIT — scripts/analysis/rule-lists.mjs:444 "/** Every open task (not finished, not DROPPED) of root's backlog/tasks: {resolve: [ids], notYet: [{id, cls, reason}], bad: [lines]}." against "const out = { resolve: [], notYet: [], bad: [], refs: [] };" — the documented return shape omits the new refs array — add refs to the JSDoc.
+DEFER severity=MED — scripts/analysis/backlog-lane.mjs:94 "table: ruleTable, root: board, letter: letterOf, laneName: lane" — cannot see where ruleTable and letterOf are declared; the only letter binding the diff shows is "const letter = /\[([^\]]+)\]\s*$/..." at new line 173, after this gate at :94, so an undefined or TDZ reference would abort every build/fix launch — grounder to confirm both are declared above the gate.
 
-REJECT — scripts/analysis/proof-slice.mjs:29 "const n = typeof value === 'number' ? value : typeof value === 'string' && /^\s*\d+\s*$/.test(value) ? Number(value) : Number.NaN;" combined with "if (!Number.isInteger(n) || n <= 0) throw new Error(...)" — looks like a string value reaches Number unchecked — the string branch is gated by the digits-only regex first and the integer/positive test still runs, so "0", "-5", "1e3" and "abc" all refuse.
+DEFER severity=LOW — scripts/analysis/backlog-brief.mjs:53 ".trim().replace(/^#{1,6} /gm, '#### ')" — the demotion hits every line starting with "#" to 6 hashes and a space, including shell or comment lines inside fenced code blocks in the plan and notes, so the reviewer's material is not the task text unchanged — skip lines inside ``` fences when demoting headings.
 
-VERDICT: PASS on code correctness
+DEFER severity=NIT — scripts/analysis/rule-lists.mjs:556 "const matFrom = str('material-from', ''); const ctxFile = str('context', matFrom);" — a bare "--context" with no value is not refused when "--material-from" is present, because str() falls back to the default, so the exact silently-degrading flag shape the task is fixing reappears on --context — check `a.context === true` and die(2) naming the flag.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The launch gate hashes the working-tree task file while all evidence is read from HEAD, so an uncommitted plan can pass.
+- Git failures in the gate's tracked/showHead callbacks are swallowed into "untracked" or "missing evidence" and never logged.
+- decisionExists accepts a decision id that is only a prefix of an existing file, so a nonexistent decision reference passes the gate.
 
 ---
-⏱  286769ms (286.8s)
-📊 Tokens — total: 82518, input: 30210, output: 52308, reasoning: 51453
+⏱  191087ms (191.1s)
+📊 Tokens — total: 68148, input: 30438, output: 37710, reasoning: 36611

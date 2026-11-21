@@ -1,5 +1,5 @@
-LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:9e4269d80a2ac0f7c5767c3ed44c9c8f1c10ca20bdcce7706c6a7b66f1d9ac39 part 1 of 1 chunk 4 of 6
-RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 4 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/backlog-brief-context.logic.test.ts","src/tests/backlog/backlog-brief.logic.test.ts","src/tests/backlog/backlog-lane.logic.test.ts"]
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:e95826b3062cb14b56d3205eb6a61cf255460a52be3cb9b57d20e767effbe31e part 1 of 1 chunk 4 of 6
+RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 4 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/lib/review-template.js","src/tests/backlog/backlog-brief-context.logic.test.ts","src/tests/backlog/backlog-brief.logic.test.ts","src/tests/backlog/backlog-lane.logic.test.ts"]
 
 ---
 id: doc-17
@@ -168,6 +168,46 @@ Readings and register entries of the rulings register. They are NOT the operator
 - RR-0218 2026-11-19: "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:870)
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/lib/review-template.js b/scripts/lib/review-template.js
+index 28dd70b5aec22742dcddd93297eb51df363b1048..f7574a442f9c68a068ea43d496e1acb879b9c124 100644
+--- a/scripts/lib/review-template.js
++++ b/scripts/lib/review-template.js
+@@ -108,4 +108,34 @@ function loadReviewNotesBlock(filePath) {
+   return { notesPath: rel, block };
+ }
+ 
+-module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX };
++/**
++ * task-375 A2: the reviewer's context is the task, sized. ONE list of headings of the context file docs/reports/reviews/<task>/context-rN.md
++ * (CONTEXT_SECTIONS) and the plan phase's material (PLAN_SECTIONS), shared by the review tool, rule-lists.mjs lens-input and the close check.
++ */
++const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];
++const PLAN_SECTIONS = ['Description', 'Acceptance criteria', 'Implementation Plan'];
++
++/** Keep only the markdown sections whose heading line contains one of `wanted` (to the next heading of the same or higher level); throws on a missing heading. */
++function extractSections(markdown, wanted) {
++  const lines = markdown.split('\n');
++  const out = [];
++  for (const want of wanted) {
++    const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && l.includes(want));
++    if (start === -1) throw new Error(`--section "${want}": no heading contains that text`);
++    const level = lines[start].match(/^(#+)/)[1].length;
++    let end = lines.length;
++    for (let i = start + 1; i < lines.length; i += 1) {
++      const m = lines[i].match(/^(#+)\s/);
++      if (m && m[1].length <= level) { end = i; break; }
++    }
++    out.push(lines.slice(start, end).join('\n'));
++  }
++  return out.join('\n\n');
++}
++
++/** The number of the next review round of a task: the context-r<N>.md files already in `dir` (docs/reports/reviews/<task>/) plus one. ONE count, shared by the brief that writes the file and the launch that names it. */
++function contextRound(dir) {
++  return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
++}
++
++module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections, contextRound };
 diff --git a/src/tests/backlog/backlog-brief-context.logic.test.ts b/src/tests/backlog/backlog-brief-context.logic.test.ts
 index 22e1bd269953ef24a5b7700ea1ca9946ae8991bc..5637ac460a1d4497e3005b2be52d153df5577d43 100644
 --- a/src/tests/backlog/backlog-brief-context.logic.test.ts

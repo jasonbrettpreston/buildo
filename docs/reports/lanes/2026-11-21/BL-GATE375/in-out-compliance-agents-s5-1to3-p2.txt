@@ -1,5 +1,5 @@
-LIST agents-s5-1to3 sha256:56726f1e8e2c1a3935426321609275da970041e9c086b2bda04cbb9a1354097d material sha256:8e4644c041ddca9036833d9675671f4239e536ff184740c3397c01bc19edf085 part 1 of 1 chunk 2 of 4
-RULE LIST agents-s5-1to3 (docs/specs/00-architecture/08_agents.md, sections 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/deepseek-review.js","scripts/hooks/check-lane-close.mjs","scripts/lib/review-template.js","src/tests/backlog/backlog-brief-context.logic.test.ts","src/tests/backlog/backlog-brief.logic.test.ts"]
+LIST agents-s5-1to3 sha256:56726f1e8e2c1a3935426321609275da970041e9c086b2bda04cbb9a1354097d material sha256:be85160c8138443e3141fcd102739d51ee81441c024f562bcb5f4883826884b8 part 1 of 1 chunk 2 of 4
+RULE LIST agents-s5-1to3 (docs/specs/00-architecture/08_agents.md, sections 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.mjs","scripts/deepseek-review.js","scripts/hooks/check-lane-close.mjs"]
 
 ### 5.1 Compliance (spec → code)
 **Question:** *Given a spec and the implementation, does the code SATISFY every clause of the spec's Behavioral Contract + Auth Matrix?* Item-by-item, spec-clause → code-line, PASS/FAIL.
@@ -30,6 +30,206 @@ Dated note 2026-11-20 (M-246, prior text kept; third correction to the task-410 
 Dated note 2026-11-20 (M-246, prior text kept; fourth correction to the task-410 notes above, grounder round 6; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, the entry "2026-11-20 · Operator ORDERS task-410 finished", put to him: "after this round, fold 410 as an omission guard, named as that, with the forgery routes recorded on tasks 401 and 402 — yes (recommended) or no?"; his words: "Finsih it!"; the entry marks the reading that this is a yes to the question as put as the orchestrator's, not his words): `scripts/hooks/check-lane-close.mjs` is an OMISSION GUARD. It refuses a skipped review, a skipped rule list, an unreviewed changed file, a trimmed or stale review input, and a close without a separate grounder's file. It does not stop a lane that sets out to forge: a hand-written output with the right hashes; an earlier-commit edit of the lane's own working-tree copy of the check script, `scripts/analysis/rule-lists.mjs`, `scripts/analysis/mcbylaws/paths.mjs` or the commit-msg hook (such an edit changes what runs); a moved board ref. Those routes are owned by the fold-time tasks task-401 and task-402 (grounder file sha256 b3425b2c1d6c…). Also stated: a task number the board never held is refused at close (the board holds no copy of the file: type and lane assignee are read from the board copy, with no fallback to the lane's own copy), and a branch whose tree lacks the task file of a lane build or fix task whose lane directory it carries cannot close anything.
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
+index 90e9c71aa44d3cf554afa21cd384e5bdd8c8a70a..eba7a0202b06533f9d00f9a318b73fd344b57ac6 100644
+--- a/scripts/analysis/rule-lists.mjs
++++ b/scripts/analysis/rule-lists.mjs
+@@ -19,13 +19,15 @@ import fs from 'node:fs';
+ import { createRequire } from 'node:module';
+ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+-import { args, parseFM, readItems, REPO, sha256 } from './backlog-lib.mjs';
++import { args, asList, parseFM, readItems, REPO, sha256 } from './backlog-lib.mjs';
+ import { globToRegExp, matchesAny } from './mcbylaws/paths.mjs';
+ 
+ const HERE = path.dirname(fileURLToPath(import.meta.url));
+ export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');
+ const BOUND = 120000; // scripts/deepseek-review.js MAX_PROMPT_CHARS
+ const RESERVE = 800; // stamp, header and separator of one lens input file
++/** The text a lens sees when no --context is given (the review tool's own placeholder). */
++const NO_CONTEXT = '(no pasted context provided)';
+ const MARKER = '\n=== MATERIAL UNDER REVIEW (everything below this line) ===\n';
+ /** V2.WHOLE (task-410): the one diff command the brief, the lens input and the close check share (every flag pinned, so the text is the same on every machine). */
+ // --text and --full-index (V2.WHOLE fix round): a .gitattributes line `*.ts -diff` makes git print "Binary files differ" for code; --text prints the text whatever the attributes say, --full-index fixes the index line length
+@@ -158,7 +160,7 @@ export const filesText = (body) => /(?:^|\s)Files:[ \t]*(.*)$/m.exec(String(body
+ export function lensSet({ type, files }) {
+   const code = ['build', 'fix'].includes(String(type ?? '').toLowerCase());
+   const surface = /\bmobile\/|src\/app\/|src\/components\/|surfaces\//.test(files);
+-  const sec = /entitlement|auth|stripe|metered/i.test(files);
++  const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);
+   return {
+     code,
+     plan: ['plan-review-deepseek', ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],
+@@ -291,10 +293,38 @@ export function findingsIn(files) {
+ }
+ 
+ // ---- lens input ----
++/**
++ * task-375 A6 (his :1546 "or split smaller"; the cut at rows and paragraphs is the orchestrator's reading): a block with no deeper heading is cut between table rows or blank-line
++ * paragraphs and the pieces packed in order up to `max`. A row or paragraph that alone passes `max`, or a block with no row or blank line to cut at, is refused naming it (the old throw).
++ * A row is judged without its neighbours and, mid-table, without its column header.
++ */
++function splitFlat(text, max, label, id) {
++  const pieces = [];
++  let cur = [];
++  const flush = () => { if (cur.length) { pieces.push(cur.join('\n')); cur = []; } };
++  const lines = text.split('\n');
++  const head = /^#{1,6}\s/.test(lines[0]) ? 1 : 0; // the block's own heading line stays with the first piece (a part of only a heading would judge nothing)
++  for (const [i, ln] of lines.entries()) {
++    if (i < head) cur.push(ln);
++    else if (/^\s*\|/.test(ln)) { if (!(head && pieces.length === 0 && cur.length === 1)) flush(); cur.push(ln); flush(); } else if (ln.trim() === '') { if (!(head && pieces.length === 0 && cur.length === 1)) flush(); } else cur.push(ln);
++  }
++  flush();
++  const big = pieces.find((x) => x.length > max);
++  if (big) throw Object.assign(new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading, table row or blank line to split at that fits (a piece of ${big.length} characters; room for list text in one file: ${max})`), { room: true, size: big.length });
++  const out = [];
++  let acc = [];
++  let len = 0;
++  for (const x of pieces) {
++    if (acc.length && len + x.length + 1 > max) { out.push(acc.join('\n')); acc = []; len = 0; }
++    acc.push(x); len += x.length + 1;
++  }
++  if (acc.length) out.push(acc.join('\n'));
++  return out;
++}
+ function splitUnits(text, max, label, id) {
+   if (text.length <= max) return [text];
+   const subs = headings(text).filter((h) => h.offset > 0);
+-  if (subs.length === 0) throw Object.assign(new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading to split at (room for list text in one file: ${max})`), { room: true, size: text.length });
++  if (subs.length === 0) return splitFlat(text, max, label, id);
+   const level = Math.min(...subs.map((h) => h.level));
+   const cuts = [0, ...subs.filter((h) => h.level === level).map((h) => h.offset), text.length];
+   const out = [];
+@@ -314,7 +344,7 @@ export function renderLensInput({ id, list, part, i, n, material, paths, c, m })
+   return `${stamp}\n${head}\n\n${part}${MARKER}${material}\n`;
+ }
+ /** The prompt hash the review tool writes in its REVIEW header: sha256 of JSON [system, user] for a lens template, the input file as {{PLAN}} and the context as {{SPECS}} (today the tool's placeholder string; a task that passes a real context file passes its text here). */
+-export function lensPromptHash({ templateText, inputText, context = '(no pasted context provided)' }) {
++export function lensPromptHash({ templateText, inputText, context = NO_CONTEXT }) {
+   const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
+   const split = rt.splitTemplate(templateText);
+   const system = split.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.";
+@@ -329,12 +359,12 @@ export function lensPromptHash({ templateText, inputText, context = '(no pasted
+  * its path list. One file alone over the room is refused naming the file and its size. A diff is always stamped (chunk 1 of 1 when it fits), so the close check reads paths from the stamp.
+  * `list` null (a non-compliance lens template): the same chunks with an empty list part, id "none".
+  */
+-export function buildLensInputs({ id, list, root, material, templateFile, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {
++export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {
+   const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
+   const split = rt.splitTemplate(fs.readFileSync(templateFile, 'utf8'));
+   const sys = (split.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.").length;
+   const k = (split.userTemplate.match(/\{\{PLAN\}\}/g) ?? []).length || 1;
+-  const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++  const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context, dataContext: '(no live-DB context provided)' }).length;
+   const avail = Math.floor((max - fixed - 200) / k);
+   const room = (msg, size) => Object.assign(new Error(msg), { room: true, size });
+   const partsFor = (unitMax) => {
+@@ -359,7 +389,7 @@ export function buildLensInputs({ id, list, root, material, templateFile, max =
+     parts = partsFor(unitMax);
+     // F13: the room test above is an estimate; when the FINAL prompt (stamp, head with the path list, marker) of the widest part would pass the bound, the material is chunked too
+     const widest = parts.reduce((x, y) => (y.length > x.length ? y : x), '');
+-    const finalLen = sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: widest, i: parts.length, n: parts.length, material, paths: segs ? chunks[0].paths : null, c: 1, m: 1 }), specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++    const finalLen = sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: widest, i: parts.length, n: parts.length, material, paths: segs ? chunks[0].paths : null, c: 1, m: 1 }), specs: context, dataContext: '(no live-DB context provided)' }).length;
+     if (finalLen > max) throw room(`the input with the rendered head would be ${finalLen} characters, over the ${max} bound`, widest.length);
+   } catch (e) {
+     if (!e.room || !segs) throw e;
+@@ -372,7 +402,7 @@ export function buildLensInputs({ id, list, root, material, templateFile, max =
+     }
+     // the room of a chunk is MEASURED (V2.WHOLE fix round): the stamp, the head with the chunk's own path list and the marker are rendered for the longest list part and counted, so a long path list cannot push an input over the bound
+     const longest = parts.reduce((x, y) => (y.length > x.length ? y : x), '');
+-    const promptOf = (paths, text) => sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: longest, i: 99999, n: 99999, material: text, paths, c: 99999, m: 99999 }), specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++    const promptOf = (paths, text) => sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: longest, i: 99999, n: 99999, material: text, paths, c: 99999, m: 99999 }), specs: context, dataContext: '(no live-DB context provided)' }).length;
+     chunks = [];
+     for (const s of segs) {
+       const last = chunks[chunks.length - 1];
+@@ -385,7 +415,7 @@ export function buildLensInputs({ id, list, root, material, templateFile, max =
+   const files = [];
+   chunks.forEach((ch, ci) => parts.forEach((p, i) => {
+     const text = renderLensInput({ id, list, part: p, i: i + 1, n: parts.length, material: ch.text, paths: ch.paths, c: ci + 1, m: chunks.length });
+-    const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++    const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: context, dataContext: '(no live-DB context provided)' }).length;
+     if (prompt > max) throw new Error(`list ${id}: part ${i + 1} would be ${prompt} characters, over the ${max} bound`);
+     const n = ci * parts.length + i + 1;
+     files.push({ suffix: files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });
+@@ -413,12 +443,28 @@ export function parseLensInput(text) {
+ /** The text of a whole list as the helper reads it (all blocks), for the whole-list comparison. */
+ export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');
+ 
++// ---- compliance references (task-375 B1, his :1541 "labelled means i need to know its a compliance document") ----
++/**
++ * The references a task carries for its resolved lists: one "compliance:<list id> <file>" per list, compared by the id token (the text before the first space). A file path with a comma is entered
++ * as "compliance:<list id>" alone (backlog splits --add-ref at commas; ms-9 is the only such list). {add} the entries for lists the task does not carry yet; {remove} the compliance: entries of
++ * lists that no longer resolve. `lists` [{id, file}]; `refs` the task's references.
++ */
++export function complianceRefs(lists, refs) {
++  const idOf = (r) => /^compliance:(\S+)/.exec(String(r).trim())?.[1];
++  const have = new Map((refs ?? []).filter((r) => idOf(r)).map((r) => [idOf(r), String(r).trim()]));
++  const want = new Set(lists.map((l) => l.id));
++  return {
++    add: lists.filter((l) => !have.has(l.id)).map((l) => (String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`)),
++    remove: [...have].filter(([id]) => !want.has(id)).map(([, r]) => r),
++  };
++}
++
+ // ---- the check over every open task, and the generated page (task-406, V2.LIST) ----
+ /** Every open task (not finished, not DROPPED) of root's backlog/tasks: {resolve: [ids], notYet: [{id, cls, reason}], bad: [lines]}. A task with a Files line that resolves must carry the every_task and milestone lists. */
+ export function checkTasks({ table, root }) {
+   const tracked = trackedFiles(root);
+   const done = new Set([...(table.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']), 'DROPPED'].map((s) => s.toUpperCase()));
+-  const out = { resolve: [], notYet: [], bad: [] };
++  const out = { resolve: [], notYet: [], bad: [], refs: [] };
+   for (const t of readItems(root)) {
+     if (done.has(String(t.fm.status ?? '').toUpperCase())) continue;
+     const letter = milestoneLetter(root, t.fm.milestone);
+@@ -426,7 +472,12 @@ export function checkTasks({ table, root }) {
+     try { r = resolveTask({ table, root, body: t.body, type: String(t.fm.type ?? ''), letter, tracked }); } catch (e) { out.bad.push(`${t.id}: cannot resolve: ${String(e.message).split('\n')[0]}`); continue; }
+     if (!r.error) {
+       const miss = verifyResolved(table, r, letter, String(t.fm.type ?? ''));
+-      if (miss.length) out.bad.push(`${t.id}: resolves but ${miss.join('; ')}`); else out.resolve.push(t.id);
++      if (miss.length) out.bad.push(`${t.id}: resolves but ${miss.join('; ')}`);
++      else {
++        out.resolve.push(t.id);
++        const c = complianceRefs(r.lists, asList(t.fm.references));
++        if (c.add.length || c.remove.length) out.refs.push({ id: t.id, ...c }); // task-375 B1: the exact command that brings the task's compliance: references in step
++      }
+       continue;
+     }
+     const m = /matched by no row[^:]*: (.*?) \(add a row/.exec(r.error);
+@@ -495,11 +546,20 @@ function cli() {
+     const list = id ? table.lists[id] : null; // no --list: a non-compliance lens template, the chunks alone (V2.WHOLE)
+     if (id && !list) die(1, `no list ${id} in ${tableFile}`);
+     if (!id && !a.template) die(2, 'usage: lens-input needs --list <id>, or --template <lens file> alone to split the material for a non-compliance lens');
++    // task-375 A4: the reviewer's context is the task, sized: the selected sections of the committed context file are counted in the room. --material-from <context-rN.md> cuts the plan phase material from it (and is its own context).
++    const matFrom = str('material-from', ''); const ctxFile = str('context', matFrom);
+     const matFile = str('material', ''); const outPrefix = str('out', '');
+-    if (!matFile || !outPrefix || !fs.existsSync(matFile)) die(2, 'usage: lens-input [--list <id>] --material <file> --out <prefix> [--template <lens file>] [--max <n>]');
++    if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> (the reviewer context of the task; the selected sections are counted in the room); --material-from <context-rN.md> is its own context');
++    if ((!matFile && !matFrom) || !outPrefix || (matFile && !fs.existsSync(matFile)) || !fs.existsSync(ctxFile) || (matFrom && !fs.existsSync(matFrom))) die(2, 'usage: lens-input [--list <id>] (--material <file> | --material-from <context-rN.md>) --context <context-rN.md> --out <prefix> [--template <lens file>] [--max <n>]');
++    let context; let material;
++    try {
++      const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
++      context = rt.extractSections(fs.readFileSync(ctxFile, 'utf8'), rt.CONTEXT_SECTIONS);
++      material = matFrom ? rt.extractSections(fs.readFileSync(matFrom, 'utf8'), rt.PLAN_SECTIONS) : fs.readFileSync(matFile, 'utf8');
++    } catch (e) { die(1, e.message); }
+     if (a.max !== undefined && !(Number.isFinite(Number(a.max)) && Number(a.max) > 0)) die(1, `--max must be a positive number (got ${a.max}); the bound has to be enforced`);
+     let files;
+-    try { files = buildLensInputs({ id, list, root, material: fs.readFileSync(matFile, 'utf8'), templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }
++    try { files = buildLensInputs({ id, list, root, material, context, templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }
+     const dir = path.dirname(path.resolve(outPrefix)); const base = path.basename(outPrefix);
+     fs.mkdirSync(dir, { recursive: true });
+     for (const f of fs.readdirSync(dir)) if (f === `${base}.txt` || new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-p\\d+\\.txt$`).test(f)) fs.rmSync(path.join(dir, f));
+@@ -510,6 +570,11 @@ function cli() {
+     console.log(`check-tasks: open ${c.resolve.length + c.notYet.length + c.bad.length}: resolve ${c.resolve.length}, not yet resolvable ${c.notYet.length}${c.bad.length ? `, FAILED ${c.bad.length}` : ''}`);
+     const heads = ['a Files path matches no row (a governance gap: add a row or fix the Files line)', 'other reason', 'no Files line (the author adds one before launch)'];
+     for (let cls = 0; cls < 3; cls++) { const g = c.notYet.filter((x) => x.cls === cls); if (g.length) { console.log(`not yet resolvable, ${heads[cls]}: ${g.length}`); for (const x of g) console.log(`  ${x.id}: ${x.reason}`); } }
++    if (c.refs.length) {
++      const q1 = (x) => `'${String(x).replace(/'/g, "'\\''")}'`;
++      console.log(`compliance references out of step with the resolved lists: ${c.refs.length} task(s); run each printed command (exit stays 0)`);
++      for (const x of c.refs) console.log(`  backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}`);
++    }
+     if (c.bad.length) { for (const b of c.bad) console.log(`FAILED ${b}`); die(1, `${c.bad.length} open task(s) resolve without the every_task or milestone lists`); }
+   } else if (cmd === 'page') {
+     const file = path.join(root, PAGE);
 diff --git a/scripts/deepseek-review.js b/scripts/deepseek-review.js
 index 8f0f5c1e5fc3621aff98bb0d44876f6e1d68778e..fe6778ed6b8bbc13ae92f388e01419146adb6cb5 100644
 --- a/scripts/deepseek-review.js
@@ -69,7 +269,7 @@ index 8f0f5c1e5fc3621aff98bb0d44876f6e1d68778e..fe6778ed6b8bbc13ae92f388e0141914
    const abs = path.resolve(filePath);
    if (!fs.existsSync(abs)) {
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index d52921dc5ea1751f92feb692eeab811af30bd4e1..90b7a323a9af01270733f4d3726629f5f9e751b2 100644
+index d52921dc5ea1751f92feb692eeab811af30bd4e1..dc94b8f3468adb193398dc78d9b8a6837847e0c1 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -34,11 +34,14 @@ import { spawnSync } from 'node:child_process';
@@ -414,7 +614,7 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..90b7a323a9af01270733f4d3726629f5
 +    // a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line (reviewErrors; g375#1)
 +    const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));
 +    if (planFiles.length === 0) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
-+    for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null).map((x) => `${id}: ${x}`));
++    for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, /^plan-compliance-/.test(f.name) ? 'lens-compliance.md' : f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null).map((x) => `${id}: ${x}`));
 +  }
 +  const g = textOf('GROUNDER-PLAN.md');
 +  let findings = 0;
@@ -468,148 +668,4 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..90b7a323a9af01270733f4d3726629f5
    }
    // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
    const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
-diff --git a/scripts/lib/review-template.js b/scripts/lib/review-template.js
-index 28dd70b5aec22742dcddd93297eb51df363b1048..f7574a442f9c68a068ea43d496e1acb879b9c124 100644
---- a/scripts/lib/review-template.js
-+++ b/scripts/lib/review-template.js
-@@ -108,4 +108,34 @@ function loadReviewNotesBlock(filePath) {
-   return { notesPath: rel, block };
- }
- 
--module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX };
-+/**
-+ * task-375 A2: the reviewer's context is the task, sized. ONE list of headings of the context file docs/reports/reviews/<task>/context-rN.md
-+ * (CONTEXT_SECTIONS) and the plan phase's material (PLAN_SECTIONS), shared by the review tool, rule-lists.mjs lens-input and the close check.
-+ */
-+const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];
-+const PLAN_SECTIONS = ['Description', 'Acceptance criteria', 'Implementation Plan'];
-+
-+/** Keep only the markdown sections whose heading line contains one of `wanted` (to the next heading of the same or higher level); throws on a missing heading. */
-+function extractSections(markdown, wanted) {
-+  const lines = markdown.split('\n');
-+  const out = [];
-+  for (const want of wanted) {
-+    const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && l.includes(want));
-+    if (start === -1) throw new Error(`--section "${want}": no heading contains that text`);
-+    const level = lines[start].match(/^(#+)/)[1].length;
-+    let end = lines.length;
-+    for (let i = start + 1; i < lines.length; i += 1) {
-+      const m = lines[i].match(/^(#+)\s/);
-+      if (m && m[1].length <= level) { end = i; break; }
-+    }
-+    out.push(lines.slice(start, end).join('\n'));
-+  }
-+  return out.join('\n\n');
-+}
-+
-+/** The number of the next review round of a task: the context-r<N>.md files already in `dir` (docs/reports/reviews/<task>/) plus one. ONE count, shared by the brief that writes the file and the launch that names it. */
-+function contextRound(dir) {
-+  return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
-+}
-+
-+module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections, contextRound };
-diff --git a/src/tests/backlog/backlog-brief-context.logic.test.ts b/src/tests/backlog/backlog-brief-context.logic.test.ts
-index 22e1bd269953ef24a5b7700ea1ca9946ae8991bc..5637ac460a1d4497e3005b2be52d153df5577d43 100644
---- a/src/tests/backlog/backlog-brief-context.logic.test.ts
-+++ b/src/tests/backlog/backlog-brief-context.logic.test.ts
-@@ -23,7 +23,7 @@ function fixture(extraDocs: string[] = []) {
-   return { d, task, dep };
- }
- const brief = (d: string, task: string, extra: string[] = []) => script('scripts/analysis/backlog-brief.mjs', ['--task', task, '--lane', 'BL-R1', '--stage', '2', '--root', d, '--date', '2026-11-19', ...extra]);
--const ctxOf = (d: string, task: string) => fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-2026-11-19.md`), 'utf8');
-+const ctxOf = (d: string, task: string) => fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-r1.md`), 'utf8');
- const section = (ctx: string, name: string) => new RegExp(`## ${name}\\n([\\s\\S]*?)(?=\\n## (?:Milestone|Document sections|Decisions naming this task|Prior reviews and lane reports|Dependencies)\\n|$)`).exec(ctx)?.[1] ?? '';
- 
- describe('G1 context pack (task-309, RR-0235)', () => {
-@@ -40,9 +40,9 @@ describe('G1 context pack (task-309, RR-0235)', () => {
-     const { d, task } = fixture();
-     const r = brief(d, task);
-     expect(r.stdout).toMatch(/^Context pack sections:.*Milestone.*Document sections.*Decisions naming this task.*Prior reviews and lane reports.*Dependencies/m);
--    expect(r.stdout).toContain(`node scripts/deepseek-review.js review docs/reports/reviews/${task}/context-2026-11-19.md --context .claude/review-templates/plan-review-deepseek.md`);
-+    expect(r.stdout).toContain(`node scripts/deepseek-review.js review docs/reports/reviews/${task}/context-r1.md --template .claude/review-templates/plan-review-deepseek.md --context docs/reports/reviews/${task}/context-r1.md --section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes"`);
-     expect(r.stdout).not.toContain('deepseek-review.js plan');
--    const sha = crypto.createHash('sha256').update(fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-2026-11-19.md`))).digest('hex');
-+    const sha = crypto.createHash('sha256').update(fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-r1.md`))).digest('hex');
-     expect(r.stdout).toContain(sha.slice(0, 12));
-   });
- 
-@@ -138,7 +138,7 @@ describe('G1 context pack (task-309, RR-0235)', () => {
-     expect(s).toContain(`docs/reports/reviews/${dep}/r1-plan.md`);
-     expect(s).toContain('docs/reports/lanes/20261119/BL-R9/REPORT.md');
-     expect(s).not.toContain('BL-R0');
--    expect(s).not.toContain('context-2026-11-19.md');
-+    expect(s).not.toContain('context-r1.md');
-     expect(s).not.toContain('context-2026-11-18.md');
-   });
- 
-@@ -162,3 +162,35 @@ describe('G1 context pack (task-309, RR-0235)', () => {
-     expect(sha(a)).not.toBe(sha(b));
-   });
- });
-+
-+describe('task-375 A1/A5: the review context holds the plan and the notes; one file per round', () => {
-+  it('writes "## Implementation Plan" and "## Implementation Notes" from the task, and a plan heading inside the text cannot end the section', async () => {
-+    const { d, task } = fixture();
-+    backlog(d, ['task', 'edit', task, '--plan', 'PLAN-LINE-ONE\n# Inner heading\nPLAN-LINE-TWO', '--append-notes', 'NOTE-LINE-ONE']);
-+    const r = brief(d, task); expect(r.status, r.stderr).toBe(0);
-+    const ctx = ctxOf(d, task);
-+    expect(ctx).toMatch(/^## Implementation Plan\n[\s\S]*PLAN-LINE-ONE[\s\S]*PLAN-LINE-TWO/m);
-+    expect(ctx).toMatch(/^## Implementation Notes\n[\s\S]*NOTE-LINE-ONE/m);
-+    expect(ctx.indexOf('## Implementation Plan')).toBeGreaterThan(ctx.indexOf('## Acceptance criteria'));
-+    const rt = await import('../../../scripts/lib/review-template.js');
-+    expect(rt.extractSections(ctx, ['Implementation Plan'])).toContain('PLAN-LINE-TWO');
-+  });
-+  it('control: a task with no plan and no notes still has both headings, reading (none)', () => {
-+    const { d, task } = fixture();
-+    brief(d, task);
-+    const ctx = ctxOf(d, task);
-+    expect(ctx).toMatch(/^## Implementation Plan\n\(none\)/m);
-+    expect(ctx).toMatch(/^## Implementation Notes\n\(none\)/m);
-+  });
-+  it('a later brief writes context-r2.md and leaves context-r1.md as it was (never overwritten)', () => {
-+    const { d, task } = fixture();
-+    brief(d, task);
-+    const r1 = path.join(d, `docs/reports/reviews/${task}/context-r1.md`);
-+    const before = fs.readFileSync(r1, 'utf8');
-+    backlog(d, ['task', 'edit', task, '--append-notes', 'LATER-NOTE']);
-+    const r = brief(d, task); expect(r.status, r.stderr).toBe(0);
-+    expect(fs.readFileSync(r1, 'utf8')).toBe(before);
-+    expect(fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-r2.md`), 'utf8')).toContain('LATER-NOTE');
-+    expect(r.stdout).toContain(`${task}/context-r2.md`);
-+  });
-+});
-diff --git a/src/tests/backlog/backlog-brief.logic.test.ts b/src/tests/backlog/backlog-brief.logic.test.ts
-index f3983fe9233a8f7c3760be4889ede7a0ed240ab5..8354b3080f04fe1aa98c086aaea69b3862b091b8 100644
---- a/src/tests/backlog/backlog-brief.logic.test.ts
-+++ b/src/tests/backlog/backlog-brief.logic.test.ts
-@@ -55,7 +55,7 @@ describe('G1 backlog-brief (test 4)', () => {
-     expect(r.stdout).toMatch(/08_agents\.md:339/);
-     expect(r.stdout).toContain(`task edit ${plan} -s RUNNING -a @lane-BL-R1`);
-     expect(r.stdout).toMatch(/--plan/);
--    expect(r.stdout).toMatch(/node scripts\/deepseek-review\.js review docs\/reports\/reviews\/\S+\/context-2026-11-19\.md --context \.claude\/review-templates\/plan-review-deepseek\.md/);
-+    expect(r.stdout).toMatch(/node scripts\/deepseek-review\.js review docs\/reports\/reviews\/\S+\/context-r1\.md --template \.claude\/review-templates\/plan-review-deepseek\.md --context docs\/reports\/reviews\/\S+\/context-r1\.md --section "Task"/);
-     expect(r.stdout).toMatch(/provider claude/i);
-     expect(r.stdout).toMatch(/bash_allow/);
-     expect(r.stdout).toMatch(/--final-summary/);
-@@ -65,6 +65,11 @@ describe('G1 backlog-brief (test 4)', () => {
-     expect(r.stdout).toMatch(/from round 2 on use only --append-final-summary/);
-     expect(r.stdout).toMatch(/check-lane-close\.mjs --outcomes/);
-     expect(r.stdout).toMatch(/do NOT run --plan/);
-+    // task-375 D6: what the brief tells a lane about the plan that the launch gate checked
-+    expect(r.stdout).toMatch(/The plan is the task text at launch, checked before launch/);
-+    expect(r.stdout).toMatch(/do not edit the Description, Acceptance or Plan/);
-+    expect(r.stdout).toMatch(/record deviations in Implementation Notes/);
-+    expect(r.stdout).toMatch(/still runs at least one plan-stage lens of its own and rules its findings in its own GROUNDER\.md/);
-     expect(r.stdout).toMatch(/STATUS: ready\|blocked\|failed\|dropped/);
-   });
- 
-@@ -72,7 +77,7 @@ describe('G1 backlog-brief (test 4)', () => {
-     const { d, plan } = fixture();
-     const r = brief(d, plan);
-     expect(r.status, r.stderr).toBe(0);
--    const ctx = path.join(d, `docs/reports/reviews/${plan}/context-2026-11-19.md`);
-+    const ctx = path.join(d, `docs/reports/reviews/${plan}/context-r1.md`);
-     expect(fs.existsSync(ctx), ctx).toBe(true);
-     const body = fs.readFileSync(ctx, 'utf8');
-     expect(body).toContain('Plan item CHK.5 scope check');
 

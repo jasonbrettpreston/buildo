@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T04:06:00Z'
+updated_date: '2026-11-21T04:55:00Z'
 labels:
   - McFix
   - McFix A
@@ -406,4 +406,6 @@ BL-GATE375 fix round 1 (g375#2): review-template.js exports contextRound(dir) (c
 BL-GATE375 fix round 1 done: g375#1 (b4f4afc39) and g375#2 (dfe326345) fixed red first at failing assertions (red13.out, red14.out); every in- input re-made and all 86 out- outputs re-run under the same names with context-r2.md (all with a REVIEW header and a VERDICT line; one call re-run once for a missing VERDICT line); 351 findings untriaged in FINDINGS.md; every LOW and NIT goes to the pile in TRIAGE.md after the grounder re-rules; D10b stays open.
 
 BL-GATE375 fix round 2 (g375#11): the fix branch of planGateInner expects lens-compliance.md for plan-compliance-<list>[-pN].txt (the names the close uses for fix tasks), so a valid per-list plan compliance output on a fix launch is no longer refused; a junk one still is. Red: red15.out (1 failed, expected [ Array(1) ] to deeply equal []).
+
+BL-GATE375 fix round 2 done: g375#11 fixed (0bf6c680d, red15.out failing assertion, green c20.out 134 passed); fresh context-r3.md, every in- input re-made and all 94 out- outputs re-run under the same names (94 of 94 with a REVIEW header and a VERDICT line; three calls re-run once); 435 findings untriaged in FINDINGS.md; D10b stays open.
 <!-- SECTION:NOTES:END -->

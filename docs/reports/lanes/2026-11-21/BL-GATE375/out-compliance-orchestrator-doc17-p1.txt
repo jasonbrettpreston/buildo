@@ -1,34 +1,34 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:31:17.846Z file_sha256=4a37161dd2ee6ede98a3d242ecee550468653cc2b0e0d3fff6fba4a851611d94 prompt_sha256=90aeda401643566855a7f9aded2cfe55c15db0982a6420b7489f9473ce4b5738
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:29:34.906Z file_sha256=849c6deb4426c9c1c970348d1f1c53ba3c15375cd721dea1ed4e6761d6cf967d prompt_sha256=efc1b3bb08a7f4f91f752403a653e948624312cc68994cece6961d3439176aa8
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — AC #9 "#9 A4 node scripts/analysis/rule-lists.mjs check-tasks on the live board prints the exact backlog task edit --add-ref command for at least one stale open task (choose the task on the day 375 launches: a LATER build task not recommended for drop; task-400 is, and its Files line collides with this task)" — pasted acceptance note "for task-101 (LATER, type record, not build)" — the command is shown only for a record task, so the AC's chosen LATER build task is never demonstrated — run check-tasks for a LATER build task other than task-400 and paste its command, the silence after running it and the References line.
+BUG/DEFER findings:
 
-DEFER severity=MED — AC #8 "A3 lens-input --list surface-135 with a 60,000-character material: today exit 1 naming "## Register"; after A6 exit 0 with parts; the same for policy-124-s2-s5 and bylaw-133" — pasted acceptance note "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the pre-fix refusal AC #8 requires, and AC #1 ("Each defect is confirmed on the head before fixing, with file:line"), is not shown — paste the old-head run exiting 1 naming "## Register" for the three named lists, or the recorded red for it.
+DEFER severity=MED — A5 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file." — scripts/analysis/backlog-lane.mjs "const ctxRel = `docs/reports/reviews/${taskId}/context-r${contextRound(path.join(board, 'docs/reports/reviews', taskId))}.md`; // ... the same count (review-template.js contextRound) over the same tree" — the round is counted over the board checkout while backlog-brief.mjs counts and writes over `--root` (the worktree); the two trees differ whenever an earlier round is in the worktree but not yet folded to the board, and the printed lens line then names a context file the brief did not write — use the path the brief printed (its stdout line / sha256) instead of recomputing the round over `board`.
 
-DEFER severity=LOW — AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — pasted note "the logic test is green, src/tests/proof-slice.db.test.ts is written and NOT RUN" — no D10b red run is named in the pasted notes while red files are named for the other commits (red7.out to red14.out) — record the D10b red run (or the commit where it was red) beside the green before the task leaves RUNNING.
+DEFER severity=MED — task-375 A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes." — scripts/analysis/backlog-brief.mjs "const fieldOf = (name) => (new RegExp(`<!-- SECTION:${name}:BEGIN -->...`).exec(t.body)?.[1] ?? '').trim().replace(/^#{1,6} /gm, '#### ') || '(none)';" and "`## Implementation Notes`, fieldOf('NOTES'), ''," — the writer always emits the heading and substitutes "(none)" when the markers are absent, so a task whose notes are stored outside SECTION:NOTES ships a context that has the heading and no notes and the close check's "lacks the Implementation Notes section" guard cannot fire — emit the heading only when the field carries text, and let the brief (not the sentinel) report an empty notes field.
 
-REJECT — D10 (proof-slice.mjs reads its timeout and buffer from registered tooling_ variables) — the diff leaves DEFAULT_TIMEOUT_MS = 120000 in use behind an unwired timeoutMsFromVariable — the Description conditions the DB read on the operator's DB GO ("otherwise A, B and D ship and the task is not marked complete") and the task is RUNNING, which the pasted notes record, so the open part breaks no clause.
+DEFER severity=LOW — AC #4 "A lens run on a file containing dollar sequences and placeholder tokens sends the text unchanged, once (test, red first)." — .claude/review-templates/README.md "Double each `$` in the inputs and neutralise any placeholder token until the tool is fixed." — this diff edits the How-to-run section for A3 but leaves standing the workaround text that tells reviewers the substitution defect is unfixed, against the behaviour this task ships — replace that sentence with the fixed behaviour (or name the task that makes it stale).
 
-MET — A (Implementation Plan and Implementation Notes in the context) — scripts/analysis/backlog-brief.mjs:146-147 — `## Implementation Plan`, fieldOf('PLAN') and `## Implementation Notes`, fieldOf('NOTES') are written after the acceptance criteria.
+MET — A3 — scripts/analysis/backlog-lane.mjs "const ctxArgs = `--context ${ctx} ${sectionFlags}`;" used in plan, output and compliance lens lines, and --template is passed with a value in "review ${ctxRel} --template .claude/review-templates/plan-review-deepseek.md --context ${ctxRel} ${sectionFlags}" — every lens command of this file now carries the committed context and one --section per CONTEXT_SECTIONS entry.
 
-MET — A5 (context-rN.md per round, never overwritten) — scripts/analysis/backlog-brief.mjs:49-51 — ctxDir, contextRound(ctxDir) and `context-r${round}.md` name a fresh round file and never reuse a date name.
+MET — A1 — scripts/analysis/backlog-brief.mjs "`## Implementation Plan`, fieldOf('PLAN'), '', `## Implementation Notes`, fieldOf('NOTES'), ''," — the two named sections are written after the acceptance criteria.
 
-MET — A3 (every lens command passes the committed context and one --section per CONTEXT_SECTIONS entry) — scripts/analysis/backlog-lane.mjs:178 — `const ctxArgs = "--context ${ctx} ${sectionFlags}"` is used on the plan, output and compliance lens lines and on the review line, with the template passed as --template.
+MET — A5 naming — scripts/analysis/backlog-brief.mjs "const round = createRequire(import.meta.url)('../lib/review-template.js').contextRound(ctxDir); const ctxRel = `docs/reports/reviews/${taskId}/context-r${round}.md`;" — context-rN.md, N = existing context-r*.md + 1, no context-<date>.md.
 
-MET — D (launch gate refuses a build or fix launch without the plan evidence) — scripts/analysis/backlog-lane.mjs:90-91 — the gate runs planGateErrors for type build and fix before the take, prints one stderr line per error and exits 3.
+MET — B1 — scripts/analysis/backlog-lane.mjs "const addRefs = complianceRefs(resolved.lists, asList(t.fm.references)).add.flatMap((e) => ['--add-ref', e]);" added to the same take step — compliance: references go in one edit, only the missing ones.
 
-MET — B1 (compliance references labelled and added on the take) — scripts/analysis/backlog-lane.mjs:130 — `const addRefs = complianceRefs(resolved.lists, asList(t.fm.references)).add.flatMap((e) => ['--add-ref', e])` adds only the missing entries in the take edit.
+MET — D5 — scripts/analysis/backlog-lane.mjs "if (gate.errors.length) { for (const e of gate.errors) process.stderr.write(`backlog-lane: refused: plan gate: ${e}\n`); process.exit(3); }" placed after the dirty-board refusal and before step('take', ...), with no flag and no env switch — the launch gate is the last refusal before the take.
 
-MET — section 10 (08_agents.md takes ONE dated note carrying two points) — docs/specs/00-architecture/08_agents.md:524 — one dated note 2026-11-21 carries point (1) context-rN.md and point (2) the plan-only tool seats.
+MET — D6 — scripts/analysis/backlog-brief.mjs "The plan is the task text at launch, checked before launch ... do not re-plan, do not edit the Description, Acceptance or Plan, record deviations in Implementation Notes; the lane still runs at least one plan-stage lens of its own" — the brief prints the no-re-plan line.
 
-MET — section 10 (137_mcqueue.md dated note of the close refusals and the launch gate) — docs/specs/00-architecture/137_mcqueue.md:140 — one dated note after the :138 correction describes the close refusals, the launch gate and what it cannot prove, prior text kept.
+MET — section 10 — docs/specs/00-architecture/08_agents.md "Dated note 2026-11-21 (M-246, prior text kept; task-375 FIX.TOOLS, lane BL-GATE375, Increment 1·B; ...): two points." and docs/specs/00-architecture/137_mcqueue.md "Dated note 2026-11-21 (M-246, prior text kept; Rule 3 and Rule 10: task-375 ...)" — one dated note each, prior text kept, and the 137 note carries the close refusals, the gate and "WHAT THE GATE CANNOT PROVE".
 
-MET — A3 docs (README names context-rN.md and the five --section flags) — .claude/review-templates/README.md:126 — the lane-review paragraph names docs/reports/reviews/<task>/context-rN.md, the five --section flags, lens-input --context and --material-from.
+REJECT — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)." — accused of feeding scratch line quotes into the spec notes as rulings — the quotes cited in the notes (:1595, :1620, :1625, :1630, :1605) are the same words carried by the pasted decisions RR-0344, RR-0342, RR-0347, RR-0348 and RR-0346 with the same line cites, so they are decisions, not readings.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 22   Unmet: 3
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
 
 ---
-⏱  216155ms (216.2s)
-📊 Tokens — total: 75509, input: 35351, output: 40158, reasoning: 39070
+⏱  110086ms (110.1s)
+📊 Tokens — total: 55702, input: 35027, output: 20675, reasoning: 19360

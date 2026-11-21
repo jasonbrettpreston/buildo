@@ -1,26 +1,26 @@
-◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:08:33.618Z file_sha256=bd844827e6a77b2f79a38546f2d9c0c98ed80e29baf1b1fc85a20c2ec1680f97 prompt_sha256=25c4a4f94ba5d115476c3c787249ce41b552cd38a75edcf8a7203e4614c19369
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:08:02.657Z file_sha256=aeb2f0bbbe30365f51f5fdde9e63db0339132b746a9db39909c352915c3962a2 prompt_sha256=3f140fc632bd416e2a89bba4e66a2e04825168548bf6f22260d420906af019a2
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-agents-s5-1to3-p2.txt (model: deepseek-reasoner)
 
-MET — RR-0334 / plan A2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js; extractSections moves there from deepseek-review.js:106-121" — scripts/lib/review-template.js:114 "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" and ":120 function extractSections(markdown, wanted)" — the constant and the one extractor now live in the shared lib and deepseek-review.js requires it.
+DEFER severity=MED — SCOPE A.5 "A build or fix task needs the compliance PLAN phase as well" and RR-0349 "Compliance on the plan and output" — scripts/hooks/check-lane-close.mjs "if (planFiles.length === 0) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);" — a fix launch requires only at least one plan lens, not one compliance plan output per resolved list, and its plan files go through "reviewErrors(f.name, f.text, ..., null)" so no input and no prompt-hash/context binding is required — require plan-compliance-<list> per resolved list for a fix launch and recompute its prompt hash from the committed context.
 
-MET — plan A4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes" — scripts/hooks/check-lane-close.mjs:322 "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(...); continue; }" and ":324 const want = !hasNotes && !/^#{1,6}\s.*Implementation Notes/m.test(c.text) ? CONTEXT_SECTIONS.filter((x) => x !== 'Implementation Notes') : CONTEXT_SECTIONS;" with ":325 values.push(extractSections(c.text, want))" — placeholder and any missing CONTEXT_SECTIONS heading become problem lines.
+DEFER severity=LOW — SCOPE B.3 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir (08_agents.md:347); the close check refuses when one is missing." — scripts/hooks/check-lane-close.mjs "for (const n of ['REPORT.md', 'GROUNDER.md', ...(textOf('TRIAGE.md') !== undefined ? ['TRIAGE.md'] : [])])" — TRIAGE.md is required only when the lane dir already holds one, so a lane that never writes TRIAGE.md is not refused for the missing reference the pasted clause names — make the TRIAGE.md reference unconditional, or record in the clause that the conditional is the rule.
 
-MET — plan A4 "the existing prompt_sha256 recompute (:65) binds it" — scripts/hooks/check-lane-close.mjs:68 "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))" — the recompute now runs over the committed context values, one match per output.
+DEFER severity=LOW — SCOPE A.6 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file." — scripts/hooks/check-lane-close.mjs "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))" — an output is accepted if its hash matches any committed context-rN.md, so a round-1 output survives a regenerated round-2 context and the close cannot tell which round an output belongs to — bind each output to the round's context (stamp the round and compare), not to any committed context.
 
-MET — FINAL BUILD NOTE B.3 "the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md ... refuses when one is missing" — scripts/hooks/check-lane-close.mjs:466 "for (const n of ['REPORT.md', 'GROUNDER.md', ...(textOf('TRIAGE.md') !== undefined ? ['TRIAGE.md'] : [])]) {" and ":470 if (!have.has(rp)) errors.push(`${id}: the task's references lack the repo copy ${rp}: backlog task edit ${id} --add-ref ${rp}`)" — missing references are refused with the exact command.
+MET — SCOPE C / D11b "the security regex at rule-lists.mjs:128 misses admin and PII" — scripts/analysis/rule-lists.mjs "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — admin and PII now fire the security lens.
+MET — SCOPE A.4 "lens-input takes --context, refuses without it" — scripts/analysis/rule-lists.mjs "if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> ..." — refuses without a context.
+MET — SCOPE A.4 "counts the selected sections in the room on both paths" — scripts/analysis/rule-lists.mjs "specs: context," — the selected context text is counted in the room check on the list and no-list paths.
+MET — SCOPE A.6 "a block with no deeper heading is cut between table rows or blank-line paragraphs" — scripts/analysis/rule-lists.mjs "if (subs.length === 0) return splitFlat(text, max, label, id);" — refused blocks are now cut at rows/paragraphs instead of only refused.
+MET — SCOPE B.2 "the repo copies of REPORT.md, GROUNDER.md" — scripts/hooks/check-lane-close.mjs "for (const n of ['REPORT.md', 'GROUNDER.md', ..." — report and grounder references are refused when missing and the add-ref command is printed.
+MET — SCOPE A.4 "prints the exact backlog task edit task-N --add-ref ... command" — scripts/analysis/rule-lists.mjs "backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...]" — the exact command is printed, exit unchanged.
 
-MET — plan A1/A5 "writes context-rN.md (N = existing context-r*.md + 1, never overwritten)" — scripts/lib/review-template.js:141 "function contextRound(dir) { return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1; }" and src/tests/backlog/backlog-brief-context.logic.test.ts "expect(fs.readFileSync(r1, 'utf8')).toBe(before);" — one round count, prior round unchanged.
+REJECT — RR-0342 "regression only required when code is changed" — accused: the regression seat fires for any tracked path, docs included — the grounded READBACK-375-v4 Q1/Q2 answers taken as approved at :1638 (RR-0350) rule that a directory or glob tracked entry counts, so the wide trigger is the recorded decision.
+REJECT — SCOPE B.1 "compliance:<list id> <file>, one per resolved list" — accused: complianceRefs emits compliance:<id> with no file for comma paths — the pasted B.1 build note explicitly records the comma exception (ms-9) as approved, so this is intended.
 
-REJECT — plan A2 "extractSections moves there from deepseek-review.js:106-121" — accused that deleting the local function breaks deepseek-review.js --section — it is imported: scripts/deepseek-review.js:29 "const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');".
-
-REJECT — plan v4 "A.5 both-phases close rule -> deleted (plan evidence moves to the launch gate)" — accused that a build close still demands both compliance phases — it does not: scripts/hooks/check-lane-close.mjs:476 "const phases = build ? ['out'] : ['plan', 'out'];" (a build close needs only the output phase).
-
-REJECT — FINAL BUILD NOTE B.3 "refuses when one is missing" — accused that the TRIAGE.md reference is not enforced — it is enforced whenever the lane dir actually holds TRIAGE.md; a dir with no such file cannot carry a reference to it, and TRIAGE presence is separately enforced.
-
-VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 9   Unmet: 0
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
 
 ---
-⏱  245184ms (245.2s)
-📊 Tokens — total: 75770, input: 31437, output: 44333, reasoning: 43448
+⏱  335286ms (335.3s)
+📊 Tokens — total: 76574, input: 33927, output: 42647, reasoning: 41570

@@ -1,5 +1,5 @@
-LIST queue-137 sha256:c1daa368d394cfaf048fb91073b60920973d9a0004c9769098bdb62ea98a7649 material sha256:66f2319768bd9ffef13f7b7d9ba9c5bc5b2a231e54c5d2741a12b1a45936e2ab part 1 of 1 chunk 1 of 6
-RULE LIST queue-137 (docs/specs/00-architecture/137_mcqueue.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md","docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/backlog-brief.mjs","scripts/analysis/backlog-lane.mjs"]
+LIST queue-137 sha256:a4225c73192594a9b9a95a688307e64d05bd298b2a8efd0b5f4d8f09a2d43710 material sha256:66f2319768bd9ffef13f7b7d9ba9c5bc5b2a231e54c5d2741a12b1a45936e2ab part 1 of 2 chunk 1 of 6
+RULE LIST queue-137 (docs/specs/00-architecture/137_mcqueue.md, whole file), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md","docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/backlog-brief.mjs","scripts/analysis/backlog-lane.mjs"]
 
 # SPEC 137 — McQueue
 
@@ -8,6 +8,7 @@ RULE LIST queue-137 (docs/specs/00-architecture/137_mcqueue.md, whole file), par
 > **Role: standard.** The queue policy page. McQueue is the one page that says where every task lives and how its status is kept. It does not hold tasks. It points to them. Sources of every rule: the operator rulings of 2026-11-14 (`~/Buildo-scratch/mcqueue/DECISIONS.md`) and the existing dated notes cited in §4.
 
 > **Citation form.** `Spec 137 §<n>` for a section, `Spec 137 §4 rule <n>` for a rule. A rule is quoted with its source; the source is never paraphrased in its place.
+
 
 ## 1. Purpose
 
@@ -33,6 +34,7 @@ Dated note 2026-11-19 (M-246, prior text kept; task-1 BL.0 Backlog home of the i
 
 Operator, 2026-11-14, verbatim: "a - let's do it but it needs to properly point to the tasks - it was too much work to bring them into a central location".
 
+
 ## 2. The homes
 
 Paths marked LOCAL are scratch files on the operator machine, not in the repo. Every other path is in the repo.
@@ -54,6 +56,7 @@ Notes on the table.
 - The "next free id" line in the head of `.cursor/MCBYLAWS-QUEUE.md` (MB-nn) and of `.cursor/MCFRONTEND-QUEUE.md` (MF-nn) is the one tools read. `INC-n`, `AV3-*`, `ST-*` and `CARD-*` have no counter line; the ID ledger is their only claim record.
 - Line numbers in this page are dated by the commit they were read at (`827ea5acc`) and are a hint; the section or note name is the pointer.
 - Spec 08 §11.8 (MCINC-7 and MCINC-8) and §11.9 (TKT) govern how lanes work on these rows. This page does not restate them.
+
 
 ## 3. The status line
 
@@ -92,6 +95,7 @@ Source of the word list: the status-word form line in `.cursor/MCFRONTEND-QUEUE.
 Reading older text. A heading that still carries an older status word (for example a WAITS heading above a DONE status line) is prior text kept under M-246. The `Status:` line is the current word.
 
 Where the line sits. A row with a bold heading carries the line directly under the heading. A row in a table or list carries it in the queue's status section (§2). A card carries it as the first line of the card file. Spec pages carry their own status in the page header (`Status: DRAFT`); the status line is for queue rows, cards and claimed ids that are tasks.
+
 
 ## 4. The rules, with sources
 
@@ -144,6 +148,7 @@ Dated note 2026-11-21 (M-246, prior text kept; Rule 3 and Rule 10: task-375 FIX.
 
 Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1517`: "don't makr the task complete until it actually works"): a lane build or fix task's closing commit is refused unless the lane directory holds TRIAGE.md with one outcome line per CONFIRMED or CONFLICT id of GROUNDER.md (forms fixed, task, ruling, wontfix, pile; see the Spec 08 rule 6 note of the same date) and the task's Final Summary shows the round line and the CRITICAL, HIGH and MED outcomes. TRIAGE.md is required only when GROUNDER.md holds such an id. Rule 3 (the two-commit close) is otherwise unchanged.
 
+
 ## 5. The weekly snapshot
 
 A procedure. No tool and no code.
@@ -160,6 +165,7 @@ A procedure. No tool and no code.
 9. The orchestrator makes the corrections in the next docs commit (rule 3, rule 4).
 
 Worked example: the 2026-11-14 audit (LOCAL `~/Buildo-scratch/queues-20261114/`: `mcbylaws-rows.json`, `mcfrontend-rows.json` and the two summary files).
+
 
 ## 5a. The board (a read-only view)
 
@@ -181,14 +187,6 @@ What it is (LOCAL, outside the repo):
 
 Limits: it runs only while the Mac is on and the operator is logged in; it shows what is pushed to origin, so unpushed lane commits appear after their push.
 
-## 6. Deferred
-
-A commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling. It is infrastructure work. It is carded for the infra-freeze lift and is not built now.
-Source: operator, 2026-11-14, verbatim: "y" (DECISIONS.md, "Deferred to the infra-freeze lift"). Also deferred by the same ruling: a generated index across all queues ("a generated index across all queues is infra work: carded for the freeze lift, not built now", DECISIONS.md, first ruling).
-
-Dated note 2026-11-15 (M-246, prior text kept; MB-108; operator, verbatim: "y auto board", "y spec board"): the generated index is built now as a read-only board outside the repo (§5a). The commit check above stays deferred.
-
-Also deferred: Backlog.md as the source of truth ("part 2"). Not adopted. It needs an operator amendment of this spec after the infra-freeze lift, because the queue gates read the queue rows, the row ids would be re-keyed, and Backlog.md has no expiry or landed-commit check (pilot record, "Fit verdict for step 2").
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/.claude/review-templates/README.md b/.claude/review-templates/README.md

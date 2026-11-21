@@ -1,5 +1,5 @@
-LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:3508140447076c0d299666e1238648381c7e8e8c014ca150b07ff79b074ae626 part 1 of 1 chunk 3 of 6
-RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","scripts/lib/review-template.js"]
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:8f53c5690358d0da233d84a0eef03c29908726b9297090627b513170539fe2f6 part 1 of 1 chunk 3 of 6
+RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs"]
 
 ---
 id: doc-17
@@ -169,7 +169,7 @@ Readings and register entries of the rulings register. They are NOT the operator
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index d52921dc5ea1751f92feb692eeab811af30bd4e1..90b7a323a9af01270733f4d3726629f5f9e751b2 100644
+index d52921dc5ea1751f92feb692eeab811af30bd4e1..dc94b8f3468adb193398dc78d9b8a6837847e0c1 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -34,11 +34,14 @@ import { spawnSync } from 'node:child_process';
@@ -514,7 +514,7 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..90b7a323a9af01270733f4d3726629f5
 +    // a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line (reviewErrors; g375#1)
 +    const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));
 +    if (planFiles.length === 0) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
-+    for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null).map((x) => `${id}: ${x}`));
++    for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, /^plan-compliance-/.test(f.name) ? 'lens-compliance.md' : f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null).map((x) => `${id}: ${x}`));
 +  }
 +  const g = textOf('GROUNDER-PLAN.md');
 +  let findings = 0;
@@ -568,44 +568,4 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..90b7a323a9af01270733f4d3726629f5
    }
    // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
    const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
-diff --git a/scripts/lib/review-template.js b/scripts/lib/review-template.js
-index 28dd70b5aec22742dcddd93297eb51df363b1048..f7574a442f9c68a068ea43d496e1acb879b9c124 100644
---- a/scripts/lib/review-template.js
-+++ b/scripts/lib/review-template.js
-@@ -108,4 +108,34 @@ function loadReviewNotesBlock(filePath) {
-   return { notesPath: rel, block };
- }
- 
--module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX };
-+/**
-+ * task-375 A2: the reviewer's context is the task, sized. ONE list of headings of the context file docs/reports/reviews/<task>/context-rN.md
-+ * (CONTEXT_SECTIONS) and the plan phase's material (PLAN_SECTIONS), shared by the review tool, rule-lists.mjs lens-input and the close check.
-+ */
-+const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];
-+const PLAN_SECTIONS = ['Description', 'Acceptance criteria', 'Implementation Plan'];
-+
-+/** Keep only the markdown sections whose heading line contains one of `wanted` (to the next heading of the same or higher level); throws on a missing heading. */
-+function extractSections(markdown, wanted) {
-+  const lines = markdown.split('\n');
-+  const out = [];
-+  for (const want of wanted) {
-+    const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && l.includes(want));
-+    if (start === -1) throw new Error(`--section "${want}": no heading contains that text`);
-+    const level = lines[start].match(/^(#+)/)[1].length;
-+    let end = lines.length;
-+    for (let i = start + 1; i < lines.length; i += 1) {
-+      const m = lines[i].match(/^(#+)\s/);
-+      if (m && m[1].length <= level) { end = i; break; }
-+    }
-+    out.push(lines.slice(start, end).join('\n'));
-+  }
-+  return out.join('\n\n');
-+}
-+
-+/** The number of the next review round of a task: the context-r<N>.md files already in `dir` (docs/reports/reviews/<task>/) plus one. ONE count, shared by the brief that writes the file and the launch that names it. */
-+function contextRound(dir) {
-+  return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
-+}
-+
-+module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections, contextRound };
 

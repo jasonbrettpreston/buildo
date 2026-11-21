@@ -1,24 +1,42 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:30:59.453Z file_sha256=77fa8863bd35e7a26447a4ee8bcdb38effd77b53fbdec820829dd8a28e9d46ea prompt_sha256=4647655bc94fdba1e0dc41acc9a5272ee8c546f95b3089216cab273dfe74f20f
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:29:14.957Z file_sha256=1abb38f702aa6703f38583c500eb8345eadfe53a8d6917eb740d60f76cab62bf prompt_sha256=b235b7b8eeb152330cb42aac11f7c106925b761a976d84a279b5f4711cb9e798
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-ms-S-p3.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — AC #11 "The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green" — src/tests/review-template.logic.test.ts:207 "const rt = require('../../scripts/lib/review-template');" — a bare require in an ESM test file, while the sibling test touched in this same change imports createRequire from node:module, so the file can fail at collection and take the dollar-sequence tests red that this clause requires green — use createRequire(import.meta.url) as src/tests/backlog/rule-lists.logic.test.ts:7 does.
-DEFER severity=MED — B.1 "`compliance:<list id> <file>`, one per resolved list" — src/tests/backlog/rule-lists.logic.test.ts:798 "expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);" — the test pins an entry with the list id alone and an id-token-only comparison, so a reference holding a stale file path for a known list never prints the B.2 command — keep it as a recorded deviation for the operator or compare the file token too.
-DEFER severity=MED — B.3 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir (08_agents.md:347); the close check refuses when one is missing." — src/tests/backlog/check-lane-close.logic.test.ts:818 "it('B2: the TRIAGE.md reference is required only when the lane directory holds one', () => {" with ":820" "expect(noTri.status, noTri.stderr).toBe(0);" — the test pins a passing close with TRIAGE.md unreferenced, a condition the clause does not state — record the conditional as a deviation on the task or make the third reference mandatory.
-DEFER severity=MED — A.7 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — src/tests/backlog/rule-lists.logic.test.ts:733 "it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound', () => {" — only the table-row cut is pinned, no new test exercises the blank-line paragraph cut, so half of A.7 has no test and no control — add a paragraph-split test with its own control.
-DEFER severity=LOW — AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — src/tests/proof-slice.db.test.ts:22 "describe.skipIf(!dbAvailable())('proof-slice timeout variable (live DB)', () => {" — the file is skipped without a DB and was never run red, so only the clause's escape (task stays RUNNING) currently holds — run it after the operator's DB GO before the task closes.
-DEFER severity=LOW — C "D10 (proof-slice.mjs reads its timeout and buffer from registered tooling_ variables" — src/tests/proof-slice.logic.test.ts:286 "it('the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)', async () => {" — nothing exercises the runner reading the timeout and the build note says "DEFAULT_TIMEOUT_MS (120000) stays in use", so the clause rests on a helper test only — quote the open D10b on the task until the variable is registered and read.
-MET — A.2 "with the exact heading texts: "Task", "Description", "Acceptance criteria", "Decisions naming this task", "Implementation Notes"" — src/tests/review-template.logic.test.ts:209 — asserts CONTEXT_SECTIONS equals exactly those five and PLAN_SECTIONS the three plan headings.
-MET — A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — src/tests/backlog/rule-lists.logic.test.ts:673 — asserts exit 2 and a stderr naming --context, with a passing control.
-MET — A.4 "the existing prompt_sha256 recompute (:65) binds it" — src/tests/backlog/check-lane-close.logic.test.ts:804 — pins that an output matching an earlier round context still binds and that an edited context is refused on prompt_sha256.
-MET — D11b "the security lens fires for admin and PII paths" — src/tests/backlog/rule-lists.logic.test.ts:650 — admin and pii paths asserted on both phases, with a non-firing control.
-MET — B.1/B.2 "each entry starting "compliance:"" and the exact command — src/tests/backlog/rule-lists.logic.test.ts:766 — asserts one compliance: entry per resolved list, the exact task edit command and no --remove-ref.
-MET — Files line "src/tests/backlog/rule-lists-table.logic.test.ts" — src/tests/backlog/rule-lists-table.logic.test.ts:49 — the path forced by A4 is now named on the pasted Files line and both affected calls pass --context.
-REJECT — RR-0343 "labelled means i need to know its a compliance document" — the comma-path entry written as the id alone is unlabelled — it still starts compliance: and the operator's label requirement is kept; only the file part differs.
+BUG severity=HIGH — AC #8 "A3 lens-input --list surface-135 with a 60,000-character material: today exit 1 naming" — pasted acceptance note "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the before-state AC #8 (and AC #1 "Each defect is confirmed on the head before fixing") requires for A6 is not demonstrated; the new tests src/tests/backlog/rule-lists.logic.test.ts show only the after-state (parts produced, row over the room refused) — run lens-input with the 60,000-character material on the pre-A6 head and paste exit 1 naming "## Register" for surface-135, policy-124-s2-s5 and bylaw-133.
+
+DEFER severity=MED — Description part B "the report, grounder and triage files are referenced at close" — src/tests/backlog/check-lane-close.logic.test.ts:163 "...(l['TRIAGE.md'] ? [`${LD}/TRIAGE.md`] : [])" — the added close test makes the TRIAGE.md reference conditional and its control (`expect(noTri.status, noTri.stderr).toBe(0)`) blesses a close with no TRIAGE reference, a narrowing the pasted clause does not state — either require TRIAGE.md for every build and fix lane or get the operator to amend the Description sentence to "when the lane dir holds one".
+
+DEFER severity=MED — AC #6 "with the five --section flags and --dry-run: 0 hits of" — pasted acceptance note "0 hits of the placeholder (6 hits sit inside the diff text, which quotes the string in rule-lists.mjs)" — the AC's measure is 0 hits in the assembled prompt and the paste records 6, so the AC is satisfied only by reinterpreting it as the context slot — have the operator amend AC #6 to "0 hits in the context slot" or record the measurement as the AC is worded.
+
+DEFER severity=MED — AC #9 "choose the task on the day 375 launches: a LATER build task not recommended for drop" — pasted acceptance note "for task-101 (LATER, type record, not build) the command carries 6 compliance: entries" — the recorded evidence is a record task, not the LATER build task the AC names — re-run check-tasks against a LATER build task (task-401) and paste its add-ref command plus the empty output after running it.
+
+DEFER severity=LOW — AC #7 "A2 rule-lists.mjs lens-input for each of the 15 resolved lists of task-381 with that context: paste each exit code, selected-section count and call count" — pasted acceptance note "A2 (buildLensInputs with the 5 sections, material 17,753 characters): task-381 15 lists, 5 sections 2121 characters, 17 calls, 0 refused" — the artifact pasted is buildLensInputs totals, not the per-list exit codes from the lens-input CLI — paste the 15 lens-input exit codes and counts, then the same for task-410 and task-267.
+
+DEFER severity=LOW — Description part A "split at table rows and paragraphs" — src/tests/backlog/rule-lists.logic.test.ts "it('a table too big for one file is split at rows, every row appears once across the parts" — every A6 test plants a table (`const tableDoc = (n: number) => ...`), so the paragraph branch of the split is named by the clause but unguarded by any test — add one test whose block is a heading-free run of blank-line paragraphs over the room.
+
+MET — Description A "one CONTEXT_SECTIONS constant" — src/tests/review-template.logic.test.ts — asserts CONTEXT_SECTIONS equals the five exact heading texts and PLAN_SECTIONS the three plan headings, one constant in review-template.js.
+
+MET — Description A "lens-input refuses without it" — src/tests/backlog/rule-lists.logic.test.ts — "refuses without --context (exit 2, says so) and control: with it exits 0", plus the missing-heading and --material-from refusals.
+
+MET — Description D — src/tests/backlog/check-lane-close.logic.test.ts — the plan gate tests cover no evidence folder, missing per-list output, placeholder-context output, missing GROUNDER-PLAN.md, Grounder equal to Lane, missing integration/reality-check Seat, missing outcome, missing Plan line and edited task.
+
+MET — ".claude/review-templates/lens-compliance.md is on the Files line and is NOT edited" — the chunk carries no hunk for that path.
+
+MET — RR-0342 "regression only required when code is changed" — src/tests/backlog/check-lane-close.logic.test.ts — "regression is required when the Files line names an existing path, and not when it names only new paths", with both controls.
+
+MET — RR-0343 "labelled means i need to know its a compliance document" — src/tests/backlog/rule-lists.logic.test.ts — complianceRefs entries are asserted to start "compliance:" (`expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md'])`).
+
+MET — AC #11 "The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green" — the diff preserves the existing substitutePlaceholders body (`expect(out).toBe('A:P {{SPECS}} {{DATA_CONTEXT}}|B:S {{PLAN}}|C:P {{SPECS}} {{DATA_CONTEXT}}|D:');`) and only appends a new describe.
+
+MET — Description part B (report and grounder at close) — src/tests/backlog/check-lane-close.logic.test.ts — "B2: a missing REPORT.md reference is refused and the exact add-ref command is printed", with the all-three control closing.
+
+REJECT — AC #3 "Compliance lens run once per governing rule list with the list whole" — that the output review ran 74 compliance outputs over 14 lists, so lists were split — "or split smaller" is the operator's own words pasted in the notes (AGREES the Rule 3 amendment and RULES on material too large to review) and v4 A.7 governs per the Description.
+
+REJECT — Description part C "proof-slice.mjs reads its timeout and buffer from registered tooling_ variables" — that the runner still uses DEFAULT_TIMEOUT_MS 120000 and does not read the variable — the same clause allows it ("the DB read needs the operator's DB GO after the MCINC-7 rehearsal, otherwise A, B and D ship and the task is not marked complete"), the board shows status RUNNING and RR-0333 forbids marking it complete.
 
 VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 18   Unmet: 1
+Clauses checked: 24   Unmet: 6
 
 ---
-⏱  118209ms (118.2s)
-📊 Tokens — total: 51219, input: 29173, output: 22046, reasoning: 20831
+⏱  136504ms (136.5s)
+📊 Tokens — total: 55841, input: 29589, output: 26252, reasoning: 24734

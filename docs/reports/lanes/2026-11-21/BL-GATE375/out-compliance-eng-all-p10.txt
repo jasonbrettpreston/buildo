@@ -1,32 +1,24 @@
 ◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:21:55.457Z file_sha256=a2e4b954a6511bc6fcda6b783b98a500daa70b3993454b5316ebf8d799ca59cb prompt_sha256=ea047e512f8611bd72f93c325e196bc4f081328adfd1f27626c40c8d6b157456
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:20:25.799Z file_sha256=b9e0ab85da3f3de340c670b277815234e22c8beb7b4ec4d588c3674f494ec3f8 prompt_sha256=aa05f7b24abdec5f002b3e047f9c27c2b426e593493c07c44e92e0a8f3028893
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-eng-all-p10.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — §12.12 "Pure functions with arithmetic invariants ... MUST have at least one `fast-check` property test asserting the invariant" — src/tests/backlog/rule-lists.logic.test.ts "for (let i = 0; i < 60; i++) expect(all.split(`| R${i} |`).length - 1, 'R' + i).toBe(1);" — the change's new pure functions (the splitFlat row/paragraph cut, planHash as a key normalizer over task text) are proven by one fixed example each and no src/tests/property/*.property.test.ts appears on the Files line or in this diff — add a fast-check property test: forAll(rows, room) the parts partition every row exactly once and each part is within the room, and forAll(t) planHash(t) === planHash(whitespace re-flowed t with the same front matter).
+BUG severity=<CRIT|HIGH> not used (see DEFERs). Output:
 
-DEFER severity=MED — A.4 "counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)" — src/tests/backlog/rule-lists.logic.test.ts "return script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'whole', '--material', m, '--out', path.join(f.d, 'out/room'), '--template', tpl, '--max', '4000', '--context', ctx]);" — every room assertion in the new A4 describe passes --list, so the no-list path's context counting is unasserted — add one room test with no --list (code-review style) and a context too big for the room, expecting exit 1.
+DEFER severity=MED — plan A.5 "A build or fix task needs the compliance PLAN phase as well (:178 phases = both), Spec 08 section 7 rule 1 (:336 "both mandatory per WF")" — src/tests/backlog/check-lane-close.logic.test.ts:985 "const fx = await planScenario({ type: 'fix' });" / "expect(fx.errors).toEqual([]);" — the fix fixture builds no plan-compliance-<list>.txt at all and the test pins a fix launch passing on plan-code-review.txt alone, so the compliance plan phase the plan names is not required for fix — have the fix fixture emit the per-list compliance outputs and refuse their absence, keeping the code-review lens as a separate control.
 
-DEFER severity=MED — A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes" — src/tests/backlog/check-lane-close.logic.test.ts:156 "(o.notesBlock ? ['no outcome block here'] : o.summary ? o.summary(block) : block)" — the "task has notes" case is planted with notesBlock, which this helper uses to replace the Final Summary text, so the test never shows a task carrying Implementation Notes, and the clause's "when the task has notes" condition is not demonstrated by the pair of tests — plant the notes in the task text itself (a real "## Implementation Notes" body) and keep the existing no-notes control.
+DEFER severity=MED — AC #10 "A5 The planted refusals of section 8, each with its control" and plan A.4 "Refuse a context that is the placeholder" — src/tests/backlog/check-lane-close.logic.test.ts:797 "refused(planted('(no pasted context provided)'), /context-r1\.md/);" — the placeholder text also lacks "## Description" and the asserted regex matches any refusal that names the file, so this test cannot show the placeholder itself is refused (it would pass with the placeholder check deleted) — assert the placeholder-specific message instead of the file name.
 
-MET — A.4 close binding "recomputes prompt_sha256 against the REVIEW header" — src/tests/backlog/check-lane-close.logic.test.ts "it('refuses a context edited after the review (the recomputed prompt hash no longer matches any committed context)'" — the edited-context refusal is exercised end to end through the close.
+DEFER severity=LOW — §14 registry "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — src/tests/backlog/check-lane-close.logic.test.ts:787 "describe('task-375 A4, A5, B2: the close binds the committed review context and the references'" — the added blocks cite task-375 clause ids only, and the file header is not in this chunk (cannot see), so the §N pointer for the new coupling to docs/reports/reviews/task-375/fixture-context.md is unverified — confirm the SPEC LINK carries the section (§N) or add it in the same commit.
 
-MET — B.3 "the close check refuses when one is missing" — src/tests/backlog/check-lane-close.logic.test.ts "it('B2: a missing REPORT.md reference is refused and the exact add-ref command is printed" — missing REPORT.md refused and the exact command asserted, with the all-three control above.
+MET — plan A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — src/tests/backlog/rule-lists-table.logic.test.ts:49 — both lens-input calls now pass --context docs/reports/reviews/task-375/fixture-context.md.
+MET — plan B.3 "the close check refuses when one is missing" (REPORT.md, GROUNDER.md, TRIAGE.md) — src/tests/backlog/check-lane-close.logic.test.ts:815 "refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/);" — missing report and missing triage both refused with the exact add-ref command.
+MET — plan D "the Plan hash" / AC #14 "one word edited in the task: refused with the new expected Plan line" — src/tests/backlog/check-lane-close.logic.test.ts:967 "gate(bad, /Plan line .* is not the hash of the task as it is now[\s\S]*expected: Plan: task-7 sha256:[0-9a-f]{12}/);" — the edited-task refusal and the unchanged control are both pinned.
+MET — RR-0342 "regression only required when code is changed" — src/tests/backlog/check-lane-close.logic.test.ts:940 "regression is required when the Files line names an existing path, and not when it names only new paths" — the regression seat trigger follows the ruling.
+MET — AC #2 "Tests red first, then green through the real hooks" — pasted "BL-GATE375 build note: rule-lists-table.logic.test.ts :49 and :206 now pass --context ... red in red9.out (2 failed), green by the commit." — red first is recorded for this chunk's only non-comment edit.
 
-MET — RR-0342 "regression only required when code is changed" — src/tests/backlog/check-lane-close.logic.test.ts "it('regression is required when the Files line names an existing path, and not when it names only new paths'" — both directions of the trigger are asserted.
-
-MET — A.7 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — src/tests/backlog/rule-lists.logic.test.ts "it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound'" — split asserted, and the single oversized row still refused naming the section.
-
-MET — AC #9 "each entry starting "compliance:"" — src/tests/backlog/rule-lists.logic.test.ts "expect(entries).toContain(`compliance:${l.id} ${l.file}`);" — one compliance entry per resolved list, count equal to resolve, exit 0.
-
-MET — A9 "then one word edited in the task: refused with the new expected Plan line" — src/tests/backlog/check-lane-close.logic.test.ts "expected: Plan: task-7 sha256:[0-9a-f]{12}" — the stale Plan hash refusal with the new expected line is asserted.
-
-REJECT — plan "FILES line to set first, through the backlog CLI" / deviation note — that the lane edited the Files line — the pasted grounder resolution itself rules "Files line must be extended for rule-lists.mjs, check-lane-close.mjs, backlog-brief.mjs and their tests", and the pasted Files line already carries the path.
-
-REJECT — B.1 "`compliance:<list id> <file>`, one per resolved list" — that complianceRefs drops the file for a comma path ("compliance:ms-9") — a comma in the path cannot survive backlog's --add-ref split, the entry still starts compliance: and carries the id, which is what AC #9 requires.
-
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 14   Unmet: 3
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
 
 ---
-⏱  162950ms (162.9s)
-📊 Tokens — total: 61331, input: 31559, output: 29772, reasoning: 28598
+⏱  132789ms (132.8s)
+📊 Tokens — total: 51175, input: 26691, output: 24484, reasoning: 23568

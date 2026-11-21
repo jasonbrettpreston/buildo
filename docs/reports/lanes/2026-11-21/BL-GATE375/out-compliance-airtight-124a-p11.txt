@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:14:39.599Z file_sha256=3a48a228170cbb7b99bb858648d9ef7592e837f5e11c2451aeed6dc44e5e0729 prompt_sha256=aa92383d3975b5dd41dd7a4ba8cacd856b94c54a4e0fc23a963a207cd5e3c11b
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-124a-p11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #2 "Tests red first, then green through the real hooks" — src/tests/proof-slice.db.test.ts:30 "expect(entry, `${TIMEOUT_VARIABLE} is not in the seed`).toBeDefined();" — the file is committed asserting a seed entry the pasted note says does not exist ("no tooling_ timeout variable exists in scripts/seeds/logic_variables.json"), so the DB suite goes red wherever DATABASE_URL is set and no line in the change turns it green; AC #13 lets the A8 item stay open with the task RUNNING, it does not authorise a red file on the shared DB gate — guard both cases on the variable's presence (skip until the seed lands) and re-enable under the DB GO.
+
+DEFER severity=MED — Description scope A "Implementation Plan and Implementation Notes in the context, one CONTEXT_SECTIONS constant" — src/tests/review-template.logic.test.ts:211 "expect(rt.PLAN_SECTIONS).toEqual(['Description', 'Acceptance criteria', 'Implementation Plan']);" — pins a second section list whose composition no pasted clause or ruling names, and the block's own title says "one section list" while it asserts two constants — cite the AC or ruling that defines the plan-material sections, or drop the PLAN_SECTIONS expectation from this commit.
+
+DEFER severity=LOW — AC #2 "Tests red first, then green through the real hooks" — src/tests/review-template.logic.test.ts:206 "describe('task-375 A2: one section list for the reviewer context, one extractSections', () => {" — the pasted notes record only green for these additions ("review-template.logic.test.ts green in ef574eb02"), so red-first for the A2 block is not evidenced in the material — record the red run for this block beside the green commit sha.
+
+DEFER severity=LOW — AC #11 "A6 The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green." — src/tests/review-template.logic.test.ts:207 "const rt = require('../../scripts/lib/review-template');" — the new block loads the module with require under a lint-disable while the sibling proof-slice test of the same change uses await import, so if this file is ESM the whole file, including the dollar-sequence tests, fails at collection (cannot see the file head to confirm) — use the same dynamic-import form so the block cannot take the existing tests red.
+
+MET — Plan A.2 "The reviewer's context is these headings of that file only, with the exact heading texts: "Task", "Description", "Acceptance criteria", "Decisions naming this task", "Implementation Notes"" — src/tests/review-template.logic.test.ts:210 — pins exactly these five in order, and the exact-equality excludes Milestone, Document sections and Prior reviews.
+MET — Plan A.2 "deepseek-review.js throws on a heading it cannot find (:111) and matches by substring" — src/tests/review-template.logic.test.ts:217 — asserts a missing heading throws /no heading contains that text/.
+MET — Plan A.2 "extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text" — src/tests/review-template.logic.test.ts:207 — takes extractSections from scripts/lib/review-template, the file named on the Files line.
+MET — R-BC(e)(2) "DB checks belong to npm run test:db or npm run cloud:pre" — src/tests/proof-slice.db.test.ts:20 "describe.skipIf(!dbAvailable())" — the DB read sits in a *.db.test.ts and is skipped unless the DB environment is set.
+MET — Files line "src/tests/proof-slice.logic.test.ts, src/tests/proof-slice.db.test.ts, src/tests/review-template.logic.test.ts" — the diff touches only these three, each named on the line.
+
+REJECT — R-BA gate K "red-first proof is a committed vitest JSON artifact, never the bare word RED" — the added tests carry no committed vitest JSON red artifact — gate K governs a step conversion's gates under step-validate --step=<slug>, not repo-level review-tooling tests.
+REJECT — R-BB #43 "A change set that appends a file to converted.json converted[] must stage every spec whose system-map Implementation cell names that file" — no owner spec is staged with these test files — this chunk appends nothing to converted.json converted[] and names no step file.
+REJECT — R-BE "a step's files, data and edges are generated into its owner spec, never hand-listed" — the test paths are hand-listed rather than generated — R-BE covers computeSourceFingerprint inputs and src/tests/steps/<slug>/, and none of these files is a step or a step test.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 1
+
+---
+⏱  146188ms (146.2s)
+📊 Tokens — total: 50026, input: 21953, output: 28073, reasoning: 26982

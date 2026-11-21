@@ -1,23 +1,38 @@
 ◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:20:24.651Z file_sha256=15dc3ac667ab856f6fc0db30eedea2c748849763a54a82fc78f548ef49c4b7df prompt_sha256=29568c4006873af6dba90b7c467211284257717075575a6ef3ac6d58c08998bf
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:18:03.592Z file_sha256=bd4081a36982867d564d1c26b733ceae7fdba13089e41007e83ddf7fcef1b681 prompt_sha256=18438c5111ccc3f4181cf5dc5c66f533b1252566dbbc5f460f2470ccb1b9883f
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-v2-122-p2.txt (model: deepseek-reasoner)
 
-```
-DEFER severity=LOW — Description A "every lens command passes the committed context, lens-input refuses without it" — scripts/hooks/check-lane-close.mjs "for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : ..., null).map((x) => `${id}: ${x}`));" — a fix launch's plan-<lens>.txt is proved only by REVIEW header, template name, timestamp and VERDICT: inputText null skips the prompt_sha256 recompute and no in-<name> input file is required, unlike the build branch which binds every plan compliance output to its context — LOW: a fix plan output made on the placeholder (or with no committed input) clears the launch gate; pass the committed context and require the in- file for fix plan outputs, or state that limit in the gate's note
-MET — 6.6.1(c) "no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed" — scripts/hooks/check-lane-close.mjs:~556 — the PLAN_SEATS JSDoc states "it cannot prove that the seat ran, ran independently or was a Sonnet agent", so the new gate declares its own limit instead of presenting a declaration as observed
-MET — 6.6.1(a) "100% mechanical: generated from code/runtime or witnessed from executed SQL, never hand-authored" — scripts/hooks/check-lane-close.mjs:~550 "export function planHash(taskText)" — the Plan identifier is sha256-recomputed from the title plus body, not hand-typed, and the diff adds no step registry or ledger row
-MET — RR-0342 "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently" — scripts/hooks/check-lane-close.mjs:~543 "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };" — regression is demanded only when the Files line names a path tracked at the board head, and the always-run reality-check rests on RR-0347
-MET — RR-0348 "these only run on the plan" — scripts/hooks/check-lane-close.mjs:~601 — seat lines are demanded only inside planGateInner against the launch's plan evidence; closeErrors carries no seat requirement
-MET — RR-0349 "Complaince on the plan and output" — scripts/hooks/check-lane-close.mjs:~601 "listProof({ id, l, phases: ['plan'], ... })" with `const phases = build ? ['out'] : ['plan', 'out'];` — plan compliance per resolved list at launch, output compliance at close
-MET — RR-0333 "don't makr the task complete until it actually works" — scripts/hooks/check-lane-close.mjs:~560 — the gate refuses (exit 3, nothing taken) rather than recording success on partial evidence; nothing in this chunk moves a task to complete
-REJECT — 6.6.1(a) — accused of adding hand-authored registry evidence (the Plan line, the Seat lines) — the Plan and seat identifiers are sha256 recomputed from committed text (planHash, seatLines), and the diff adds no step registry or ledger row, so no hand-authored registry evidence is introduced
-REJECT — 6.6.1(b) — accused of leaving the Phase 1 WITNESS marker and the R-BF lock unsatisfied — this chunk touches neither scripts/analysis/step-validate.mjs nor src/tests/spec124-register-rulings.logic.test.ts, so 6.6.1(c)'s NOT MET status stands unchanged; the obligation belongs to the witness programme, not this review-tooling change
-REJECT — 6.6.1(f) — accused of adding behaviour outside the FLEET-2 landing clause — the added behaviour (context-rN.md per round, plan gate, seat lines) is named by the pasted task text and RR-0342/0347/0348/0349, not by 6.6.1, and 6.6.1 names no obligation on review tooling
+BUG severity=MED — plan NOT IN SCOPE "the V2L15 early-return change; any new script." — src/tests/backlog/backlog-lane.logic.test.ts:17 "run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()]" — the change ships a new executable script (plus the new docs/reports/reviews/task-375/fixture-context.md the pasted build note names) that the governing plan excludes and the Files line does not name — inline the evidence builder into backlog-lane.logic.test.ts (on the Files line) and delete the script, or record the operator's ruling before merge
 
-VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 14   Unmet: 0
-```
+DEFER severity=MED — RR-0349 "Complaince on the plan and output. Let's start with that!" with D "refuses a build or fix launch whose plan evidence ... are not on the board" — scripts/hooks/check-lane-close.mjs:planGateInner "const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));" — only a build launch must carry a per-list plan-compliance proof; a fix launch passes with any single plan-<lens>.txt, so the rule-list plan compliance review need never run for a fix task and RR-0349 is unmet there — require the same per-list plan-compliance-<id>[-pN].txt proof on a fix launch, or record why the ruling is build-only
+
+DEFER severity=LOW — AC #2 "Tests red first, then green through the real hooks" — pasted build note "Red for this commit was a typecheck refusal (red10.out)." — the D1-D5 commit's recorded red is a typecheck refusal, not a red test asserting the gate refuses a launch with no evidence, so #2 is satisfied by a compile error only — record a red run in which a gate test fails on behaviour (a no-evidence launch not refused) before the green
+
+DEFER severity=LOW — v4 "the Integration and Reality-Check seats on every build or fix plan ... as Claude Sonnet agents, on the plan only" — scripts/hooks/check-lane-close.mjs:planGateInner "if (!seats.some((x) => x.name.toLowerCase() === n)) errors.push(" — the gate proves a Seat line, a path and a sha256 exist and nothing about the agent, so "as Claude Sonnet agents" is unenforced by any clause the diff implements — have the orchestrator record the agent on the Seat line and check that string, or have the operator drop the phrase from the ruling
+
+DEFER severity=LOW — FINAL BUILD NOTE B.3 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir (08_agents.md:347); the close check refuses when one is missing." — scripts/hooks/check-lane-close.mjs:466 "if (build) {" wrapping "for (const n of ['REPORT.md', 'GROUNDER.md', ..." — B.3 says "at close" with no type qualifier, but the refusal runs only for build and fix closes, so a plan or record close with none of the three references passes — drop the build guard on the reference block or record the narrowing
+
+REJECT — 6.6.1(c) "Until this programme lands, no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed." — the new plan gate describes review evidence as proved — 6.6.1 governs step registries and the cross-step ledger; this diff adds no registry or ledger row, touches no descriptor and labels none accurate, so the clause is not engaged by this chunk
+
+REJECT — D5 "BEFORE the take, a build or fix launch runs planGateErrors" — the gate is not shown wired into the launch — backlog-lane.mjs is not in this chunk (chunk 2 of 3); the wiring is judged in its own run
+
+MET — FINAL BUILD NOTE A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — scripts/lib/review-template.js:115 "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" — the constant, PLAN_SECTIONS and extractSections live in the one shared module and are exported
+
+MET — A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes." — scripts/hooks/check-lane-close.mjs:lensContexts "if (c.text.trim() === PLACEHOLDER_CONTEXT)" and the extractSections catch — the placeholder and every missing heading become problem lines at close and at the plan gate
+
+MET — D3 "the first 12 hex of the sha256 of the title plus the whole body after the front matter, whitespace squashed" — scripts/hooks/check-lane-close.mjs:planHash "return sha(squash(`${fm.title ?? ''} ${body}`)).slice(0, 12);" — matches the approved hash definition
+
+MET — RR-0348 "these only run on the plan" — scripts/hooks/check-lane-close.mjs:PLAN_SEATS "always: ['integration', 'reality-check'], conditional: ['regression']" — seats are checked only in planGateInner, never in closeErrors
+
+MET — RR-0347 "If it can't tell if a figure is changed than it just runs anyways for now" — scripts/hooks/check-lane-close.mjs:PLAN_SEATS — reality-check is required on every build and fix launch, not only when a figure is known to change
+
+MET — RR-0342 "regression only required when code is changed" — scripts/hooks/check-lane-close.mjs:planGateInner "entriesOf(i.taskText).some((e) => i.tracked(e)) ? PLAN_SEATS.conditional : []" — regression is conditional on a tracked path (the grounded Q1 reading approved on MORNING-DECISIONS.md:1638)
+
+MET — A.7 "The close recompute needs no change: it joins the stamped parts and compares them with the whole list, whitespace aside." — scripts/hooks/check-lane-close.mjs:listProof — the whole-list whitespace-insensitive compare is carried over unchanged by the extraction
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 5
 
 ---
-⏱  90718ms (90.7s)
-📊 Tokens — total: 50038, input: 34019, output: 16019, reasoning: 15062
+⏱  142116ms (142.1s)
+📊 Tokens — total: 60759, input: 34267, output: 26492, reasoning: 25056

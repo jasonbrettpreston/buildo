@@ -1,5 +1,5 @@
-LIST eng-all sha256:9973ef45dcba5b23a8b7b5bc5da8754c7e73c23958000a3949e1cefce2da158d material sha256:a4242a2542c1c57d984769f40bf28583b41c8c85ba89dd0d367b219355cd9076 part 2 of 2 chunk 6 of 6
-RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 6 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/proof-slice.db.test.ts","src/tests/proof-slice.logic.test.ts","src/tests/review-template.logic.test.ts"]
+LIST eng-all sha256:9973ef45dcba5b23a8b7b5bc5da8754c7e73c23958000a3949e1cefce2da158d material sha256:9425f21f425af21ffb18fc8c69b62db19f210ad1bca8265e912e9fe17e860d1a part 2 of 2 chunk 6 of 6
+RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 6 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/rule-lists.logic.test.ts","src/tests/proof-slice.db.test.ts","src/tests/proof-slice.logic.test.ts","src/tests/review-template.logic.test.ts"]
 
 ## 🛠️ 12. Frontend Foundation Tooling
 
@@ -169,6 +169,235 @@ Detection is not enough. **Every CRITICAL/HIGH review finding (Spec 08 roster) i
 **Domain protocol specs own their domain-tagged rows and point back here** (this §14 is the cross-cutting canonical registry): **Spec 47** (`docs/specs/01-pipeline/47_pipeline_script_protocol.md`, backend/pipeline), **Spec 34** (`docs/specs/02-web-admin/34_web_admin_testing_protocol.md`, admin), **Spec 90** (`docs/specs/03-mobile/90_mobile_engineering_protocol.md`, frontend/mobile).
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 4fea028e03810a041655685eea7ef7cf478e765c..6c6c817b5d408c10cde578a3f608377c0f604187 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -4,6 +4,7 @@
+ // import row, record-only default, lens input (one file when small, split by the list's own headings when big, never trims, refuses what cannot fit).
+ import { describe, expect, it } from 'vitest';
+ import * as fs from 'node:fs';
++import { createRequire } from 'node:module';
+ import * as path from 'node:path';
+ import { ROOT, run, script, tmp } from './helpers';
+ 
+@@ -225,12 +226,17 @@ describe('resolve on a fixture tree (AC #2)', () => {
+   });
+ });
+ 
++const CTX = (d: string, desc = 'the description', extra = '') => {
++  const p = path.join(d, 'context-r1.md');
++  fs.writeFileSync(p, `# Review context\n\n## Task\ntask-1 t\n\n## Description\n${desc}\n\n## Acceptance criteria\n- #1 a\n\n## Implementation Plan\nTHE-PLAN\n\n## Implementation Notes\n(none)\n\n## Decisions naming this task\n- (none)\n${extra}`);
++  return p;
++};
+ const TPL = '## System persona\nsys\n\n## User prompt\nSPECS:\n{{SPECS}}\nPLAN:\n{{PLAN}}\nAGAIN:\n{{PLAN}}\n';
+ function lens(f: ReturnType<typeof fixture>, list: string, material: string, max: number, name = 'o') {
+   const m = path.join(f.d, `${name}.material`); fs.writeFileSync(m, material);
+   const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+   const out = path.join(f.d, 'out', name);
+-  const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', list, '--material', m, '--out', out, '--template', tpl, '--max', String(max)]);
++  const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', list, '--material', m, '--out', out, '--template', tpl, '--max', String(max), '--context', CTX(f.d)]);
+   const files = r.stdout.split('\n').filter(Boolean);
+   return { r, files, text: files.map((x) => fs.readFileSync(x, 'utf8')) };
+ }
+@@ -333,7 +339,7 @@ describe('V2.LIST: every task gets the five words, the plan protocol and its mil
+     expect(t.lists['eng-all']).toMatchObject({ file: 'docs/specs/00_engineering_standards.md', whole: true });
+   });
+   it('the Glossary block of Spec 132 carries the five words statement, and the repo plan protocol carries the five principles line', () => {
+-    const r = script(CLI, ['lens-input', '--list', 'five-words', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fw'), 'in-x')]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'five-words', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fw'), 'in-x')]);
+     expect(r.status, r.stderr).toBe(0);
+     const text = fs.readFileSync(r.stdout.trim().split('\n')[0] as string, 'utf8');
+     expect(text).toContain('STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE');
+@@ -568,7 +574,7 @@ describe('V2.WHOLE: lens-input splits a change that leaves no room for a list pa
+     const f = fixture();
+     const m = path.join(f.d, 'nl.material'); fs.writeFileSync(m, BIGDIFF);
+     const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+-    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/nl'), '--template', tpl, '--max', '9000']);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/nl'), '--template', tpl, '--max', '9000']);
+     expect(r.status, r.stderr).toBe(0);
+     const files = r.stdout.split('\n').filter(Boolean);
+     const st = files.map((x) => stampOf(fs.readFileSync(x, 'utf8')));
+@@ -592,7 +598,7 @@ describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', ()
+     const d = names.map((p) => dfile(p, 1)).join('');
+     const m = path.join(f.d, 'f5.material'); fs.writeFileSync(m, d);
+     const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+-    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f5'), '--template', tpl, '--max', '40000']);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f5'), '--template', tpl, '--max', '40000']);
+     expect(r.status, r.stderr).toBe(0);
+     const files = r.stdout.split('\n').filter(Boolean);
+     const texts = files.map((x) => fs.readFileSync(x, 'utf8'));
+@@ -614,7 +620,7 @@ describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', ()
+     const m = path.join(f.d, 'f13.material'); fs.writeFileSync(m, d);
+     const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+     const max = 2 * (d.length + 900) + 300;
+-    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f13'), '--template', tpl, '--max', String(max)]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f13'), '--template', tpl, '--max', String(max)]);
+     expect(r.status, r.stderr).toBe(0);
+     const texts = r.stdout.split('\n').filter(Boolean).map((x) => fs.readFileSync(x, 'utf8'));
+     expect(texts.length).toBeGreaterThan(1);
+@@ -638,3 +644,161 @@ describe('V2.WHOLE: the real table exempts golden snapshots by their file shape
+     for (const a of ['--diff-algorithm=myers', '--indent-heuristic', '--inter-hunk-context=0']) expect(m.DIFF_ARGS, a).toContain(a);
+   });
+ });
++
++describe('D11b (task-375): the security lens fires for admin and PII paths, as README.md:104 and lens-security.md:48 say', () => {
++  const lens = async (files: string) => {
++    const m = await import('../../../scripts/analysis/rule-lists.mjs');
++    return m.lensSet({ type: 'build', files }) as { plan: string[]; out: string[] };
++  };
++  it('an admin path and a PII path add the security lens on both phases', async () => {
++    for (const f of ['src/app/admin/page.tsx', 'src/lib/pii/redact.ts', 'src/lib/admin-users.ts', 'scripts/pii-scrub.mjs']) {
++      const r = await lens(f);
++      expect(r.plan, f).toContain('security');
++      expect(r.out, f).toContain('security');
++    }
++  });
++  it('control: a path naming none of these adds no security lens', async () => {
++    const r = await lens('scripts/analysis/proof-slice.mjs');
++    expect(r.plan).not.toContain('security');
++    expect(r.out).not.toContain('security');
++  });
++  it('control: the existing words still fire it', async () => {
++    expect((await lens('src/lib/stripe/webhook.ts')).out).toContain('security');
++  });
++});
++
++describe('task-375 A4: lens-input takes the reviewer context, counts it in the room and can cut the plan material from it', () => {
++  const base = (f: ReturnType<typeof fixture>, extra: string[]) => {
++    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
++    const m = path.join(f.d, 'mat.txt'); fs.writeFileSync(m, 'MAT');
++    return script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'first', '--out', path.join(f.d, 'out/ctx'), '--template', tpl, ...extra, ...(extra.includes('--material-from') ? [] : ['--material', m])]);
++  };
++  it('refuses without --context (exit 2, says so) and control: with it exits 0', () => {
++    const f = fixture();
++    const no = base(f, []);
++    expect(no.status, no.stderr).toBe(2);
++    expect(no.stderr).toMatch(/--context/);
++    const yes = base(f, ['--context', CTX(f.d)]);
++    expect(yes.status, yes.stderr).toBe(0);
++  });
++  it('a context without a required heading is refused naming the heading', () => {
++    const f = fixture();
++    const p = path.join(f.d, 'bad.md'); fs.writeFileSync(p, '# x\n\n## Task\nt\n');
++    const r = base(f, ['--context', p]);
++    expect(r.status).toBe(1);
++    expect(r.stderr).toMatch(/Description/);
++  });
++  it('the selected sections are counted in the room: no input plus its context passes --max; a context too big for the room is refused', () => {
++    const f = fixture();
++    const run1 = (ctx: string) => { const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL); const m = path.join(f.d, 'mat.txt'); fs.writeFileSync(m, 'MAT'); return script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'whole', '--material', m, '--out', path.join(f.d, 'out/room'), '--template', tpl, '--max', '4000', '--context', ctx]); };
++    const small = run1(CTX(f.d));
++    expect(small.status, small.stderr).toBe(0);
++    const midCtx = CTX(f.d, 'D'.repeat(400));
++    const mid = run1(midCtx);
++    expect(mid.status, mid.stderr).toBe(0);
++    const rt = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js'));
++    const sel = rt.extractSections(fs.readFileSync(midCtx, 'utf8'), rt.CONTEXT_SECTIONS);
++    const files = mid.stdout.split('\n').filter(Boolean);
++    expect(files.length).toBeGreaterThanOrEqual(small.stdout.split('\n').filter(Boolean).length);
++    for (const x of files) expect(('sys' + rt.substitutePlaceholders('SPECS:\n{{SPECS}}\nPLAN:\n{{PLAN}}\nAGAIN:\n{{PLAN}}\n', { plan: fs.readFileSync(x, 'utf8'), specs: sel })).length).toBeLessThanOrEqual(4000);
++    const huge = run1(CTX(f.d, 'D'.repeat(3900)));
++    expect(huge.status).toBe(1);
++  });
++  it('--material-from cuts the plan sections (Description, Acceptance criteria, Implementation Plan) and uses the same file as the context', () => {
++    const f = fixture();
++    const c = CTX(f.d);
++    const r = base(f, ['--material-from', c]);
++    expect(r.status, r.stderr).toBe(0);
++    const t = fs.readFileSync(r.stdout.split('\n').filter(Boolean)[0]!, 'utf8');
++    expect(t).toContain('THE-PLAN');
++    expect(t).toContain('## Acceptance criteria');
++    expect(t).not.toContain('## Implementation Notes');
++  });
++  it('--material-from a file without an Implementation Plan heading is refused', () => {
++    const f = fixture();
++    const p = path.join(f.d, 'noplan.md'); fs.writeFileSync(p, '# x\n\n## Task\nt\n\n## Description\nd\n\n## Acceptance criteria\na\n\n## Decisions naming this task\n-\n\n## Implementation Notes\nn\n');
++    const r = base(f, ['--material-from', p]);
++    expect(r.status).toBe(1);
++    expect(r.stderr).toMatch(/Implementation Plan/);
++  });
++});
++
++describe('task-375 A6: a block with no deeper heading is cut between table rows or paragraphs', () => {
++  const tableDoc = (n: number) => '# T\n\n## 5. Register\n\n| id | rule |\n| --- | --- |\n' + Array.from({ length: n }, (_, i) => `| R${i} | rule text number ${i} that is long enough to count ${'x'.repeat(40)} |`).join('\n') + '\n\n## 6. Next\n\nafter\n';
++  const mk = (doc: string) => {
++    const f = fixture();
++    fs.writeFileSync(path.join(f.d, 'docs/t.md'), doc);
++    const t = JSON.parse(fs.readFileSync(f.table, 'utf8'));
++    t.lists.tab = { file: 'docs/t.md', sections: ['5. Register'], generated_by: 'hand-written' };
++    fs.writeFileSync(f.table, JSON.stringify(t));
++    return f;
++  };
++  it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound', () => {
++    const f = mk(tableDoc(60));
++    const l = lens(f, 'tab', 'MAT', 4000);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    expect(l.files.length).toBeGreaterThan(1);
++    const all = l.text.join('\n');
++    for (let i = 0; i < 60; i++) expect(all.split(`| R${i} |`).length - 1, 'R' + i).toBe(1);
++  });
++  it('control: the same table that fits is one file', () => {
++    const f = mk(tableDoc(5));
++    const l = lens(f, 'tab', 'MAT', 20000);
++    expect(l.files).toHaveLength(1);
++  });
++  it('a single row that alone passes the room is refused naming the list and section (the old throw)', () => {
++    const f = mk('# T\n\n## 5. Register\n\n| id | rule |\n| --- | --- |\n| R0 | ' + 'y'.repeat(5000) + ' |\n');
++    const l = lens(f, 'tab', 'MAT', 4000);
++    expect(l.r.status).toBe(1);
++    expect(l.r.stderr).toContain('5. Register');
++  });
++});
++
++describe('task-375 B1: compliance references (compliance:<list id> <file>) on each task, and check-tasks prints the commands for the open ones', () => {
++  const board = () => {
++    const f = fixture();
++    const t = JSON.parse(fs.readFileSync(f.table, 'utf8')) as Record<string, unknown>;
++    t.every_task = ['queue']; t.milestone_docs = { F: ['crlf'] };
++    fs.writeFileSync(f.table, JSON.stringify(t));
++    fs.mkdirSync(path.join(f.d, 'backlog/milestones'), { recursive: true });
++    fs.writeFileSync(path.join(f.d, 'backlog/milestones/m-0 - a.md'), '---\nid: m-0\ntitle: "A [F]"\n---\n');
++    const w = (n: string, refs: string[], body: string, status = 'WAITS') => { const p = path.join(f.d, `backlog/tasks/task-${n} - x.md`); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, `---\nid: TASK-${n}\ntitle: x\nstatus: ${status}\ntype: build\nmilestone: m-0\n${refs.length ? `references:\n${refs.map((r) => `  - '${r}'`).join('\n')}\n` : ''}---\n\n## Description\n\n${body}\n`); };
++    return { f, w };
++  };
++  const resolved = (f: ReturnType<typeof fixture>, files: string) => (JSON.parse(script(CLI, ['resolve', '--root', f.d, '--table', f.table, '--files', files, '--type', 'build', '--letter', 'F']).stdout) as Res).lists;
++  it('a stale open task: prints the exact add-ref command, one entry per resolved list, each starting compliance:, exit 0', () => {
++    const { f, w } = board();
++    w('1', ['docs/a.md'], 'Files: src/two.ts');
++    const want = resolved(f, 'src/two.ts');
++    const r = script(CLI, ['check-tasks', '--root', f.d, '--table', f.table]);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const line = r.stdout.split('\n').find((l) => l.includes('backlog task edit task-1 ')) ?? '';
++    expect(line).toBeTruthy();
++    const entries = [...line.matchAll(/--add-ref '(compliance:[^']*)'/g)].map((m) => m[1]!);
++    expect(entries).toHaveLength(want.length);
++    for (const l of want) expect(entries).toContain(`compliance:${l.id} ${l.file}`);
++    expect(line).not.toContain('--remove-ref');
++  });
++  it('control: a task whose entries match its lists prints no command, a task with part of them prints only the rest, a stale entry gets --remove-ref', () => {
++    const { f, w } = board();
++    const want = resolved(f, 'src/two.ts');
++    w('2', want.map((l) => `compliance:${l.id} ${l.file}`), 'Files: src/two.ts');
++    w('3', [`compliance:${want[0]!.id} ${want[0]!.file}`], 'Files: src/two.ts');
++    w('4', [...want.map((l) => `compliance:${l.id} ${l.file}`), 'compliance:gone docs/gone.md'], 'Files: src/two.ts');
++    const r = script(CLI, ['check-tasks', '--root', f.d, '--table', f.table]);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    expect(r.stdout).not.toContain('backlog task edit task-2 ');
++    const l3 = r.stdout.split('\n').find((l) => l.includes('backlog task edit task-3 ')) ?? '';
++    expect([...l3.matchAll(/--add-ref '(compliance:[^']*)'/g)]).toHaveLength(want.length - 1);
++    expect(l3).not.toContain(`'compliance:${want[0]!.id} `);
++    const l4 = r.stdout.split('\n').find((l) => l.includes('backlog task edit task-4 ')) ?? '';
++    expect(l4).toContain("--remove-ref 'compliance:gone docs/gone.md'");
++    expect(l4).not.toContain('--add-ref');
++  });
++  it('complianceRefs: an entry for a file path with a comma is the id alone (backlog splits --add-ref at commas); entries compare by the id token', async () => {
++    const m = await import('../../../scripts/analysis/rule-lists.mjs');
++    const r = m.complianceRefs([{ id: 'ms-9', file: 'docs/a, b.md' }, { id: 'eng-all', file: 'docs/e.md' }, { id: 'five', file: 'docs/f.md' }], ['compliance:eng-all some other path', 'docs/a.md']);
++    expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);
++    expect(r.remove).toEqual([]);
++  });
++});
 diff --git a/src/tests/proof-slice.db.test.ts b/src/tests/proof-slice.db.test.ts
 new file mode 100644
 index 0000000000000000000000000000000000000000..841318ca2b6b9edca229f07ded4b1edde07b6878

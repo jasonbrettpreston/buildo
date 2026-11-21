@@ -1,36 +1,24 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:13:20.474Z file_sha256=0d340918c033935501f03888b0ad246e8e1e16707c475e80c3beed3761b0bbc4 prompt_sha256=f7ed9db0f5cc9b340e48378f1f8c56fec52d1203f260a24b181de1ba9fe4e98f
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:12:53.148Z file_sha256=0d340918c033935501f03888b0ad246e8e1e16707c475e80c3beed3761b0bbc4 prompt_sha256=0181b6748143c156169b1f61a1105eeff83750e2ce33c310174f6154f1c0a70f
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-122a-p1.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — RR-0342 "regression only required when code is changed" — docs/specs/00-architecture/137_mcqueue.md "the required seat reports (Integration, Reality-Check, and Regression when the Files line names a tracked path)" — the note, and the gate input in scripts/analysis/backlog-lane.mjs "tracked: (e) => git('ls-files', '--', e).stdout.trim() !== '', // the Files entry names at least one tracked path (a file, directory or glob)", demand a Regression seat for any tracked path, docs included, where the ruling limits it to a code change — narrow the trigger to tracked code paths (src/, scripts/, mobile/) or record his words for the wider reading before launch uses it.
+BUG severity=HIGH — §A27 item 13 — "under `src/tests/db/`, or beside its step under `src/tests/steps/<slug>/`" — Description Files line "src/tests/proof-slice.db.test.ts" (Implementation Notes: "src/tests/proof-slice.db.test.ts is written and NOT RUN") — the Postgres test is placed directly under src/tests/, neither of the two locations the clause names, and proof-slice is a script, not a step, so the second location cannot apply — move it to src/tests/db/proof-slice.db.test.ts (content unchanged) or record a ruling that item 13 does not bind a script test
+DEFER severity=MED — Task AC #8 — "lens-input --list surface-135 with a 60,000-character material: today exit 1 naming \"## Register\"; after A6 exit 0 with parts" — Implementation Notes "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the before half of A3/A6 is unevidenced, so AC #2 (red first, then green) is not shown for splitFlat — re-run the pre-A6 head and paste the exit 1 naming the section
+DEFER severity=LOW — Task AC #7 — "paste each exit code, selected-section count and call count: expected 17 calls in total, none refused" — Implementation Notes "task-381 15 lists, 5 sections 2121 characters, 17 calls, 0 refused (expected 17)" — aggregates only, no per-list exit code, and the note reports buildLensInputs rather than the lens-input CLI the AC names — run lens-input once per resolved list and paste each exit code with its counts
+DEFER severity=LOW — Implementation Notes B.2 — "check-tasks (existing command) prints, for each open task whose compliance: entries differ from the resolved lists (verifyResolved first), the exact `backlog task edit task-N --add-ref ...` command" — scripts/analysis/rule-lists.mjs:577 "...x.remove.map((e) => `--remove-ref ${q1(e)}`)" — check-tasks also prints --remove-ref for stale entries, a behaviour the plan text does not name and the build notes do not record as a deviation — record it as a deviation in Implementation Notes or drop the remove path
+DEFER severity=LOW — Description C "D10 (proof-slice.mjs reads its timeout and buffer from registered tooling_ variables" — scripts/analysis/proof-slice.mjs:22 "const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it" — the timeout read is met only by a comment and an export no code calls, the runner still uses the typed default (walk step 3) — keep D10b OPEN and the task RUNNING (both are so) so it is never reported as done, and land the seed and migration only under the DB GO
+MET — RR-0343 "labelled means i need to know its a compliance document" — scripts/analysis/rule-lists.mjs:450 "add: lists.filter((l) => !have.has(l.id)).map((l) => (String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`))" — every resolved list gets a compliance: reference, added in the take edit
+MET — Description A (one context file per round, context-rN.md) — scripts/analysis/backlog-brief.mjs:50 "const ctxRel = `docs/reports/reviews/${taskId}/context-r${round}.md`;" — the round file replaces context-<date>.md in backlog-brief and in backlog-lane ("context-r${contextRound(...)}")
+MET — Description A (Implementation Plan and Implementation Notes headings) — scripts/analysis/backlog-brief.mjs:155 "`## Implementation Plan`, fieldOf('PLAN'), '', `## Implementation Notes`, fieldOf('NOTES'), ''" — both headings are written after the acceptance criteria and default to (none), so they are present for a task with no plan
+MET — A4 / AC #7 (lens-input refuses without --context) — scripts/analysis/rule-lists.mjs:552 "if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> ...')" — the refusal runs before any input is built, on both the --material and --material-from paths
+MET — D11b (AC #12) — scripts/analysis/rule-lists.mjs:163 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — admin and pii now fire the security lens
+MET — RR-0333 "don't makr the task complete until it actually works" — Implementation Notes "the task is NOT complete" with status RUNNING — the lane does not close with D10b open and the grounder owed
+REJECT — §A26 compute purity codes G1-G14 — the change is accused of touching compute without the purity gate — the codes judge compute and its AST require closure (G0 "The purity codes run over compute **and its AST `require` closure**"), and this chunk edits analysis tooling and specs only, no step compute
+REJECT — §A27 items 1-12 — the change is accused of skipping the conversion checklist — the checklist opens "Every new step and every conversion walks this list before its first capture", and this task adds no step and converts none
 
-DEFER severity=MED — AC #7 "paste each exit code, selected-section count and call count: expected 17 calls in total, none refused" — NONE (no lens-input exit code in the material); the note records "A2 (buildLensInputs with the 5 sections, material 17,753 characters): task-381 15 lists, 5 sections 2121 characters, 17 calls, 0 refused (expected 17)" — the library was called directly, so no per-list exit code exists and the CLI path with --context is unproven for task-381/410/267 — run rule-lists.mjs lens-input once per list with the committed context and paste the exit codes.
-
-DEFER severity=MED — A27 item 13 "under `src/tests/db/`, or beside its step under `src/tests/steps/<slug>/`" — Files line "src/tests/proof-slice.db.test.ts" and the note "src/tests/proof-slice.db.test.ts is written and NOT RUN" — the new Postgres test sits at neither named location and proof-slice is not a step, so the placement rule is unmet — move it to src/tests/db/proof-slice.db.test.ts.
-
-DEFER severity=LOW — AC #3 "a separate grounder verdict on file" — "Grounder owed; the task stays RUNNING." — no grounder verdict is on file for this build — permitted while the task is RUNNING (AC #14, RR-0333), refused at close: keep it RUNNING until GROUNDER.md rules every finding.
-
-DEFER severity=LOW — Description "proof-slice.mjs reads its timeout and buffer from registered tooling_ variables" — scripts/analysis/proof-slice.mjs "const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it" — the runner still reads the typed literal and no tooling_ timeout variable is registered, so the clause rests on an unused export — permitted only by AC #13 while the task stays RUNNING; register the variable before any close.
-
-MET — Description "docs/specs/00-architecture/08_agents.md takes ONE dated note carrying two points (context-rN.md; the plan-only seats)" — docs/specs/00-architecture/08_agents.md new "Dated note 2026-11-21 ... two points. (1) ... (2) ..." — exactly one note, two numbered points, prior text kept.
-
-MET — A3 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — scripts/analysis/backlog-lane.mjs "const ctxArgs = `--context ${ctx} ${sectionFlags}`;" and scripts/analysis/backlog-brief.mjs "--template .claude/review-templates/plan-review-deepseek.md --context ${ctxRel} ${sectionFlags}" — both phases carry the context and five section flags.
-
-MET — A4 "rule-lists.mjs lens-input takes --context, refuses without it" — scripts/analysis/rule-lists.mjs "if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> (the reviewer context of the task; the selected sections are counted in the room)..." — refusal present, and the context is counted in the room on both paths via the context param of buildLensInputs.
-
-MET — A6 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — scripts/analysis/rule-lists.mjs "if (subs.length === 0) return splitFlat(text, max, label, id);" — splitFlat cuts at table rows and blank lines and still refuses a single oversized piece naming list and section.
-
-MET — D11b "the security lens pattern in rule-lists.mjs misses admin and PII" — scripts/analysis/rule-lists.mjs "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — both terms added.
-
-MET — 137 note "The LAUNCH of a build or fix task ... before the take ... runs planGateErrors on the board HEAD" — scripts/analysis/backlog-lane.mjs "if (gateType === 'build' || gateType === 'fix') {" sits after the dirty-board refusal and before "step('take'"; it refuses with exit 3 and prints "plan gate ok: ..." on success.
-
-MET — RR-0343 "labelled means i need to know its a compliance document" — scripts/analysis/rule-lists.mjs "(String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`)" plus the take in scripts/analysis/backlog-lane.mjs "complianceRefs(resolved.lists, asList(t.fm.references)).add" — one compliance: entry per resolved list, added only when missing.
-
-MET — A5 "one per review round and never overwritten (N = the context-r*.md files already there + 1)" — scripts/analysis/backlog-brief.mjs "const ctxRel = `docs/reports/reviews/${taskId}/context-r${round}.md`;" with "contextRound(ctxDir)" — the name is round-counted, not date-stamped.
-
-VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 16   Unmet: 2
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 2
 
 ---
-⏱  189180ms (189.2s)
-📊 Tokens — total: 66665, input: 33251, output: 33414, reasoning: 32044
+⏱  151272ms (151.3s)
+📊 Tokens — total: 64785, input: 33479, output: 31306, reasoning: 30055

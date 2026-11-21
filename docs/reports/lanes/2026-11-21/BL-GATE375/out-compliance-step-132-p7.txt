@@ -1,40 +1,30 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:42:04.195Z file_sha256=4563c2cc969aa4be555a3bb4370cd4b2e1357ca9a00e5cb24901b52a8a64de33 prompt_sha256=5f7f6249a6d7f24fd47c7c78d2b487b8761a847fa001a9d6824ecab5729fec9f
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:41:54.267Z file_sha256=4563c2cc969aa4be555a3bb4370cd4b2e1357ca9a00e5cb24901b52a8a64de33 prompt_sha256=e078b07c905313f04165cc186d7eac266b56f686e1efee737f89ea4f12501009
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-step-132-p7.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — plan scope line "NOT IN SCOPE: ... any new script" — src/tests/backlog/backlog-lane.logic.test.ts "const r = run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID });" — the lane fixtures now execute a new evidence-planting script the plan rules out of scope, named only in a lane build note and not in a grounder-ruled deviation — record a dated deviation naming plant-evidence.mjs in the Implementation Notes, or plant the evidence inline so no new script is added
+DEFER severity=LOW — AC #14 "dry-run before evidence: refused, one error per missing item (the first names the missing evidence folder or GROUNDER-PLAN.md)" — src/tests/backlog/backlog-lane.logic.test.ts:362 "expect(lines.length).toBeGreaterThan(1);" — the test proves there is more than one refusal line but not that there is exactly one per missing item, so a gate that fuses two missing items into one line, or emits duplicates, still passes — assert the count against the number of planted gaps (evidence folder, GROUNDER-PLAN.md, one per resolved list, seat lines) instead of greaterThan(1).
 
-DEFER severity=LOW — A.2 "backlog-brief.mjs writes ONE more section ... '## Implementation Notes'" names the headings but no empty-section text — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(ctx).toMatch(/^## Implementation Plan\\n\\(none\\)/m);" — the "(none)" reading for an empty Implementation Plan or Notes is a new output convention pinned by a test and named by no pasted clause — record it in the notes, or drop the control test
+DEFER severity=LOW — A.3 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — src/tests/backlog/backlog-lane.logic.test.ts:273 "const cmds = e.match(/scripts\/deepseek-review\.js review [^`]*/g) ?? [];" — a review command not wrapped in backticks, or split across a backtick or newline, is outside the loop and escapes the per-command assertion, so "every lens command" is unproven for exactly the case that matters — also assert the count of `deepseek-review.js review` occurrences in the whole text equals cmds.length.
 
-DEFER severity=LOW — AC #3 "Compliance lens run once per governing rule list with the list whole; a separate grounder verdict on file" — pasted note "Grounder owed; the task stays RUNNING." — the output-phase grounder verdict is not yet on file — obtain it before the task moves past RUNNING, which RR-0333 "don't makr the task complete until it actually works" already forbids
+DEFER severity=NIT — AC #6 / A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — src/tests/backlog/backlog-lane.logic.test.ts:270 "const SECT = '--section \"Task\" --section \"Description\" --section \"Acceptance criteria\" --section \"Decisions naming this task\" --section \"Implementation Notes\"';" — the five-section list is re-typed in the test, a second place it lives — build the expected string from the exported CONTEXT_SECTIONS so a drift in the constant shows up in one place, not zero.
 
-DEFER severity=NIT — v4 ruling "the context-<date>.md name -> context-rN.md" — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(s).not.toContain('context-2026-11-18.md');" — a date-named context assertion survives the rename and now witnesses nothing — delete it or re-point it at context-r\\d
+MET — AC #5 (A0) "the output holds the headings \"## Implementation Plan\" and \"## Implementation Notes\"" — src/tests/backlog/backlog-brief-context.logic.test.ts:172 "expect(ctx).toMatch(/^## Implementation Plan\n[\s\S]*PLAN-LINE-ONE[\s\S]*PLAN-LINE-TWO/m);" — both headings asserted from a real brief run, plus the after-acceptance position and the (none) control.
 
-MET — AC #5 (A0) "the output holds the headings '## Implementation Plan' and '## Implementation Notes'" — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(ctx).toMatch(/^## Implementation Plan\\n[\\s\\S]*PLAN-LINE-ONE[\\s\\S]*PLAN-LINE-TWO/m);" — both sections written from the task, plan text survives an inner heading
+MET — v4 "the context-<date>.md name -> context-rN.md" (A.6 "the context file is regenerated before each review round and committed with the round") — src/tests/backlog/backlog-brief-context.logic.test.ts:193 "expect(fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-r2.md`), 'utf8')).toContain('LATER-NOTE');" — r1 left byte-identical, r2 written, and the stdout names r2.
 
-MET — A "context-rN.md per round, never overwritten" — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(fs.readFileSync(r1, 'utf8')).toBe(before);" — r1 untouched, later brief writes context-r2.md with the new note
+MET — task-375 "the review template substitutes safely" / D11a defect "the plan-lens --context value is the literal placeholder" — src/tests/backlog/backlog-lane.logic.test.ts:337 "expect(line).not.toMatch(/--context \.claude\/review-templates/);" — the extra block's plan line is pinned to --template plus --context docs/reports/reviews/ with five sections, placeholder gone.
 
-MET — A3 "every lens command ... passes --context <the committed context file> and one --section per CONTEXT_SECTIONS entry" — src/tests/backlog/backlog-lane.logic.test.ts "for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }" — all three commands carry the context and the five sections
+MET — RR-0343 "labelled means i need to know its a compliance document" (B.1) — src/tests/backlog/backlog-lane.logic.test.ts:348 "for (const l of lists) expect(t1).toContain(`--add-ref 'compliance:${l.id} ${l.file}'`);" — one labelled reference per resolved list on the take and none re-added for a list already on the task.
 
-MET — A3 "deepseek-review.js ... the lens templates are passed as --template" — src/tests/backlog/backlog-brief.logic.test.ts "expect(r.stdout).toContain(`node scripts/deepseek-review.js review docs/reports/reviews/${task}/context-r1.md --template .claude/review-templates/plan-review-deepseek.md --context ...`" — template and context are separate flags, placeholder gone
+MET — card D "backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board" — src/tests/backlog/backlog-lane.logic.test.ts:376 "expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);" — refusal on missing evidence, ok line with list count and Plan hash, and refusal after a one-word edit.
 
-MET — A3 "lens-input gets --context and, in the plan phase, --material-from" — src/tests/backlog/backlog-lane.logic.test.ts "expect(e).toMatch(/lens-input --context \\S+ --material <diff file>/);" — lens-input commands pass the context
+REJECT — core.1 "A step is three files: a descriptor (data only), a compute module and a thin shell" — that the diff ships no descriptor, compute or shell — the material is three backlog tooling test files, not a step conversion; spec 132 sections 2 and 3 bind pipeline steps.
 
-MET — A9 "refused, one error per missing item (the first names the missing evidence folder or GROUNDER-PLAN.md)" — src/tests/backlog/backlog-lane.logic.test.ts "expect(lines[0]).toMatch(/refused: plan gate: .*no plan evidence folder docs\\/reports\\/reviews\\/task-\\d+\\//);" plus "expect(lines.length).toBeGreaterThan(1);" — one line per item, nothing taken, in dry-run too
-
-MET — A9 "'plan gate ok: <L> lists' with L equal to the resolved-list count ... then one word edited in the task: refused with the new expected Plan line" — src/tests/backlog/backlog-lane.logic.test.ts "expect(ok.stdout).toMatch(new RegExp(`plan gate ok: ${L} lists, \\\\d+ findings, Plan sha256:[0-9a-f]{12}`));" and "expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\\s\\S]*expected: Plan: task-\\d+ sha256:[0-9a-f]{12}/);"
-
-MET — B1 "only those not already on the task, so a re-take after the undo adds none twice" — src/tests/backlog/backlog-lane.logic.test.ts "expect([...t2.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length - 1);" — the already-referenced list is not re-added
-
-REJECT — core.1 "A step is three files: a descriptor (data only), a compute module and a thin shell" — the diff is accused of not meeting the step file shape — the material is backlog analysis test files, not a pipeline step descriptor, so the clause does not bind this change
-
-REJECT — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero" — hardcoded numbers in the diff (exit 3, sha256 12 hex, 2026-11-19) are accused of bypassing registered variables — those are test literals pinning observable behaviour, not production numbers a step, gate or tool uses, so this clause is not breached here
-
-REJECT — core.9 "Compute is pure ... reports every check value through ctx.report(id, value)" — the diff is accused of impure or unreported compute — the change touches no compute module, ctx dispatch or check row, so the purity clauses do not bind this chunk
+REJECT — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero" — that the new tests carry unregistered numbers — the numbers asserted (list counts, list ids, Plan hash) are computed from rule-lists.mjs resolve on the fixture; the settings literals in these files predate the change.
 
 VERDICT: PASS on compliance with the pasted clauses
 Clauses checked: 14   Unmet: 0
 
 ---
-⏱  113284ms (113.3s)
-📊 Tokens — total: 44679, input: 24107, output: 20572, reasoning: 19109
+⏱  69685ms (69.7s)
+📊 Tokens — total: 37469, input: 24335, output: 13134, reasoning: 11983

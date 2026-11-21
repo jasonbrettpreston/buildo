@@ -1,5 +1,5 @@
-LIST airtight-124a sha256:a17cafde55c326338a2ee657dc9aaac1007a54b8508b6476b3097e7c93af56eb material sha256:af8dfcf96c950f5c867864450a2e854b0e67cf22a5fced057aa2da6f229af9aa part 2 of 2 chunk 2 of 5
-RULE LIST airtight-124a (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md, sections Appendix §B10; Appendix §B12), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.mjs","scripts/deepseek-review.js"]
+LIST airtight-124a sha256:a17cafde55c326338a2ee657dc9aaac1007a54b8508b6476b3097e7c93af56eb material sha256:af8dfcf96c950f5c867864450a2e854b0e67cf22a5fced057aa2da6f229af9aa part 2 of 2 chunk 2 of 6
+RULE LIST airtight-124a (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md, sections Appendix §B10; Appendix §B12), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.mjs","scripts/deepseek-review.js"]
 
 ## Appendix §B12 — Register rows R-BZ…R-CP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-18
 

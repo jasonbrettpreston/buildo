@@ -1,20 +1,38 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:15:12.526Z file_sha256=19fb7de51f8cf00ee54f5a48353b69e93eb3ef9ad802246ef92557c4a2cd981c prompt_sha256=71a23fb4f1c0a4ad37d0dc2dfc9283a833fd82253bda3dda77ddd77cacacefee
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:13:21.801Z file_sha256=e4c9af570a5bf457e4c5444f726cd555ada9c7fd8abebbe10a210fb74702ee6c prompt_sha256=70b7c92d3c58c83c2273c31102d51acb310cfc8b2332fea1459c040f3f51c016
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-122a-p3.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — A27 §13 — "A test that needs Postgres is `*.db.test.ts` ... under `src/tests/db/`, or beside its step under `src/tests/steps/<slug>/`" — src/tests/proof-slice.db.test.ts:16 "import { dbAvailable, getTestPool } from './db/setup-testcontainer';" — the new DB test sits at src/tests/ root, neither under src/tests/db/ nor under src/tests/steps/<slug>/, although the required src/tests/db/ directory exists — move it to src/tests/db/proof-slice.db.test.ts (import './setup-testcontainer') and update the Files line accordingly.
-DEFER severity=LOW — AC #13 — "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — src/tests/proof-slice.db.test.ts:7 "WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane)" — the red-first half of AC #13 is carried only by a header comment and a skip-guarded test, not a recorded run — capture the red run when the DB GO is given, or state A8 blocked and keep the task RUNNING.
-MET — A4 "lens-input takes --context, refuses without it, and counts the selected sections in the room" — src/tests/backlog/rule-lists.logic.test.ts "refuses without --context (exit 2, says so) and control: with it exits 0" — planted refusal plus control, with room and --material-from tests.
-MET — A6 "a block with no deeper heading is cut between table rows or blank-line paragraphs" — src/tests/backlog/rule-lists.logic.test.ts "a table too big for one file is split at rows, every row appears once across the parts" — asserts row-level split and the single-row refusal naming list and section.
-MET — A3 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — src/tests/backlog/backlog-lane.logic.test.ts "A3: plan, output and compliance commands all pass the committed context and the five sections" — asserts all three command families and the removal of the placeholder.
-MET — B1 "`compliance:<list id> <file>`, one per resolved list" — src/tests/backlog/rule-lists.logic.test.ts "complianceRefs: an entry for a file path with a comma is the id alone" — asserts add and remove compared by the id token.
-MET — B2 "a missing report reference" — src/tests/backlog/check-lane-close.logic.test.ts "B2: a missing REPORT.md reference is refused and the exact add-ref command is printed" — refusal plus control that all three references close.
-MET — D11b "the security lens fires for admin and PII" — src/tests/backlog/rule-lists.logic.test.ts "describe('D11b (task-375): the security lens fires for admin and PII paths" — asserts admin and PII paths on both phases, with a control.
-REJECT — A26 (all codes) — violating the compute purity codes — §A26 G0 confines the codes to compute and its AST require closure ("The purity codes run over compute and its AST `require` closure"), and this chunk holds only .logic.test.ts and .db.test.ts files, none a compute module; no code of §A26 is engaged.
+BUG severity=MED — plan "NOT IN SCOPE: ... any new script" — src/tests/backlog/backlog-lane.logic.test.ts:15 "run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID })" (the pasted build note "Lane test fixtures plant real stamped evidence with docs/reports/reviews/task-375/plant-evidence.mjs" confirms the program is new to this lane) — a new node program excluded by the approved plan's NOT IN SCOPE list is introduced to plant fixtures — add that path to the Files line and the deviation note, or fold the planting into the existing test helper so no new script exists.
+
+DEFER severity=LOW — plan A.4 "counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)" — src/tests/backlog/rule-lists.logic.test.ts:686 "it('the selected sections are counted in the room: no input plus its context passes --max; a context too big for the room is refused'" with "'--list', 'whole'" — only the with-list path is shown refusing an oversized context, the no-'--list' path is never asserted in the room — add a no-list case whose oversized context is refused (exit 1).
+
+DEFER severity=LOW — plan D "PLAN_SEATS (always integration and reality-check; regression when the Files line names a path tracked at the board head, a directory or glob entry counts)" — src/tests/backlog/check-lane-close.logic.test.ts:930 "const nw = await planScenario({ files: 'src/brand-new.ts', tracked: ['src/a.ts'] });" — only a plain untracked path is exercised, the directory and glob entries the design names have no case — add one Files-line case with a directory entry and one with a glob entry.
+
+DEFER severity=LOW — plan A.6 "in splitUnits (rule-lists.mjs, the `subs.length === 0` throw, :297 at the 410 head) a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — src/tests/backlog/rule-lists.logic.test.ts:742 "it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound'" — the paragraph half of the cut rule has no case, every A6 fixture is a markdown table — add a heading-less block of blank-line-separated paragraphs that must split and appear once.
+
+MET — plan A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — src/tests/backlog/rule-lists.logic.test.ts:668 "expect(no.status, no.stderr).toBe(2);" — refused without the flag, control exits 0 with it.
+
+MET — plan D5 "each error is a stderr line (exit 3, nothing taken)" — src/tests/backlog/backlog-lane.logic.test.ts:340 "expect(r.status, r.stdout + r.stderr).toBe(3);" and "expect(fs.existsSync(f.wt)).toBe(false);" — refused in dry-run and real launch, nothing taken, status stays LATER.
+
+MET — plan A.6 "The context file is regenerated before each review round and committed with the round" — src/tests/backlog/backlog-lane.logic.test.ts:400 "expect(named).toBe('context-r2.md');" — the lens lines name the round the brief wrote.
+
+MET — plan B.2 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir" — src/tests/backlog/check-lane-close.logic.test.ts:838 "refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/);" — missing reference refused, exact command printed, TRIAGE only when present.
+
+MET — plan B.1 "check-tasks ... prints ... the exact `backlog task edit task-N --add-ref ...` command" — src/tests/backlog/rule-lists.logic.test.ts:751 "expect(entries).toHaveLength(want.length);" — one compliance: entry per resolved list, none re-added when already present.
+
+MET — Task AC #14 "one word edited in the task: refused with the new expected Plan line" — src/tests/backlog/backlog-lane.logic.test.ts:378 "expected: Plan: task-\d+ sha256:[0-9a-f]{12}" — the edited task is refused with the new expected Plan line.
+
+MET — Appendix §A27 item 13 "A test that needs Postgres is `*.db.test.ts`" — src/tests/backlog/backlog-lane.logic.test.ts:15 and src/tests/backlog/check-lane-close.logic.test.ts:790 run only git, node and injected readRepo mocks, no added test opens a database, so R-DH is not engaged.
+
+REJECT — Appendix §A26 code table G1 to G14 — that the change violates a compute purity code — the diff touches only src/tests/backlog/*.logic.test.ts, no compute module and no AST require closure, so no judged site exists and G0 scope holds.
+
+REJECT — Task AC #10 "A5 The planted refusals of section 8, each with its control" (compliance entries differing from the resolved lists) — that the close refusal for stale compliance references is missing a plant — the governing v4 note deletes it ("B.2 close refusal on stale references -> deleted (check-tasks prints the commands, the take adds them)") and the stale-entry path is tested at src/tests/backlog/rule-lists.logic.test.ts:765 "expect(l4).toContain(\"--remove-ref 'compliance:gone docs/gone.md'\");".
+
+REJECT — Appendix §A27 item 13 "never a per-file package.json list" — that the added tests break the test split — no added test needs a database, so nothing belongs under *.db.test.ts and no package.json list is touched.
 
 VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 9   Unmet: 1
+Clauses checked: 16   Unmet: 4
 
 ---
-⏱  140827ms (140.8s)
-📊 Tokens — total: 60663, input: 34758, output: 25905, reasoning: 25107
+⏱  77715ms (77.7s)
+📊 Tokens — total: 50441, input: 34342, output: 16099, reasoning: 14672

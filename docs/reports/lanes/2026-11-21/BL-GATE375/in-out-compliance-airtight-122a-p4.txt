@@ -1,5 +1,5 @@
-LIST airtight-122a sha256:2f265ab3c040c5af6e67e9463020bed74137983e1bb4d2bbc16388da70e12666 material sha256:f23eb27c83a3f1df6b09d7e0cbccf03dbc9cb9160d163511019bf0cea265b57d part 1 of 1 chunk 4 of 4
-RULE LIST airtight-122a (docs/specs/01-pipeline/122a_step_optimization_appendix.md, sections Appendix §A26; Appendix §A27), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 4 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/proof-slice.logic.test.ts","src/tests/review-template.logic.test.ts"]
+LIST airtight-122a sha256:2f265ab3c040c5af6e67e9463020bed74137983e1bb4d2bbc16388da70e12666 material sha256:a4242a2542c1c57d984769f40bf28583b41c8c85ba89dd0d367b219355cd9076 part 1 of 1 chunk 4 of 4
+RULE LIST airtight-122a (docs/specs/01-pipeline/122a_step_optimization_appendix.md, sections Appendix §A26; Appendix §A27), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 4 of 4 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/proof-slice.db.test.ts","src/tests/proof-slice.logic.test.ts","src/tests/review-template.logic.test.ts"]
 
 ## Appendix §A26 — Compute purity: Rule 2 as closed-answer gate codes (R-BZ, R-CA) (2026-10-11)
 
@@ -68,6 +68,48 @@ Every new step and every conversion walks this list before its first capture. Ea
 ---
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/proof-slice.db.test.ts b/src/tests/proof-slice.db.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..841318ca2b6b9edca229f07ded4b1edde07b6878
+--- /dev/null
++++ b/src/tests/proof-slice.db.test.ts
+@@ -0,0 +1,36 @@
++// SPEC LINK: docs/specs/01-pipeline/132_step_standard_handbook.md x-tooling.1 (a test that needs Postgres is *.db.test.ts, run only by npm run test:db),
++//            docs/specs/01-pipeline/124_step_standard_policy.md R-EB (b) (gate and tooling variables, R-CV pinned form),
++//            docs/specs/00-architecture/08_agents.md:511 (MCINC-7: every DB job is rehearsed on the test stack first).
++//
++// task-375 D10b: the registered variable the proof slice runner reads its timeout from exists in the logic_variables table with a value the runner accepts, and it equals the pinned seed.
++// WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane): the variable is registered by a seed + migration the operator authorises with a typed GO after the MCINC-7 rehearsal.
++// Skipped unless BUILDO_TEST_DB=1 (or CI DATABASE_URL).
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++
++import type { Pool } from 'pg';
++import { afterAll, beforeAll, describe, expect, it } from 'vitest';
++
++import { TIMEOUT_VARIABLE, timeoutMsFromVariable } from '../../scripts/analysis/proof-slice.mjs';
++import { dbAvailable, getTestPool } from './db/setup-testcontainer';
++
++describe.skipIf(!dbAvailable())('proof-slice timeout variable (live DB)', () => {
++  let pool: Pool;
++  beforeAll(() => { pool = getTestPool() as Pool; });
++  afterAll(async () => { await pool.end().catch(() => undefined); });
++
++  it('the variable is in logic_variables and its value is a positive integer the runner accepts', async () => {
++    const { rows } = await pool.query('SELECT variable_value FROM logic_variables WHERE variable_key = $1', [TIMEOUT_VARIABLE]);
++    expect(rows, `${TIMEOUT_VARIABLE} is not registered in logic_variables`).toHaveLength(1);
++    expect(timeoutMsFromVariable(rows[0].variable_value)).toBeGreaterThan(0);
++  });
++  it('the database value equals the pinned seed default (R-CV form: min = max = default)', async () => {
++    const seed = JSON.parse(readFileSync(join(process.cwd(), 'scripts/seeds/logic_variables.json'), 'utf8')) as Record<string, { default: number; min: number; max: number }>;
++    const entry = seed[TIMEOUT_VARIABLE];
++    expect(entry, `${TIMEOUT_VARIABLE} is not in the seed`).toBeDefined();
++    expect(entry!.min).toBe(entry!.default);
++    expect(entry!.max).toBe(entry!.default);
++    const { rows } = await pool.query('SELECT variable_value FROM logic_variables WHERE variable_key = $1', [TIMEOUT_VARIABLE]);
++    expect(timeoutMsFromVariable(rows[0].variable_value)).toBe(entry!.default);
++  });
++});
 diff --git a/src/tests/proof-slice.logic.test.ts b/src/tests/proof-slice.logic.test.ts
 index e0125ca1e25c031615c8abfd5e25d10f2da74b9b..4852f11ce28632d0594b9f0bf11f7f1f5551c1c0 100644
 --- a/src/tests/proof-slice.logic.test.ts

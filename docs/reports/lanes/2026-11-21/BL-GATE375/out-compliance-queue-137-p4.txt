@@ -1,20 +1,38 @@
-◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:36:48.828Z file_sha256=abef9dc34f8a1e8c0ea790603467ce4b9b0fa2c8bc37381da7126e3cf1d0a7db prompt_sha256=529cbb1d062b5eb315ea35eddb29ea151a3a841e23c09643ac1a6d226a802082
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:35:47.125Z file_sha256=c43243c48fc0b82dcb7580ba98f87c83dd762e67a37e4fb1c5df11967354f2f5 prompt_sha256=28a1fb25e8b0032acf1e12cf50006188a13023be7436f72d02deb5f42303ba41
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-queue-137-p4.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — RR-0333 "don't makr the task complete until it actually works" — scripts/lib/review-template.js:129 "if (m && m[1].length <= level) { end = i; break; }" — the section cut ends at any heading whose level number is at most the section's own, so a "# ..." line inside the task's plan or notes truncates the text the reviewer and the close hash see, and the "cannot end the section" claim lives only in the test name: src/tests/backlog/backlog-brief-context.logic.test.ts:174 "expect(rt.extractSections(ctx, ['Implementation Plan'])).toContain('PLAN-LINE-TWO');" cannot hold against the cut above for a plan body written at line start — have backlog-brief.mjs demote or indent the plan and notes body lines in context-rN.md so a heading in the task text is not a boundary, then run backlog-brief-context.logic.test.ts red first and green.
-DEFER severity=MED — Spec 137 §4 Rule 3 note "a separate closing commit that carries only the lane's records (its lane report directory, the review context directory, the task file, the decision record)" — src/tests/backlog/backlog-lane.logic.test.ts:16 "run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()]" — test support code is placed in the review context directory that Rule 3 treats as records staged only in the closing commit, so the launch-gate tests depend on a record file a later evidence sweep removes, and the plan says "NOT IN SCOPE: ... any new script" — move the fixture program to a test fixture path named on the Files line.
-DEFER severity=LOW — AC #2 "Tests red first, then green through the real hooks" — "A5: the planted refusals with controls are the tests in check-lane-close.logic.test.ts, backlog-lane.logic.test.ts, rule-lists.logic.test.ts, backlog-brief-context.logic.test.ts (green in the commits)" — the new Implementation Plan, Implementation Notes, context-r2 and section-cut tests are recorded green only, no red run is named for this chunk — record the red run for backlog-brief-context.logic.test.ts in the notes.
-MET — Plan A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — scripts/lib/review-template.js:115 "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" — the five heading texts, in the plan's order.
-MET — Plan A.1 "writes context-rN.md (N = existing context-r*.md + 1, never overwritten)" — scripts/lib/review-template.js:138 "return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;" — one count, matching the plan's N, shared by the brief and the launch.
-MET — Spec 137 §4 2026-11-21 note "recomputes each lens output's prompt hash with the committed review context (docs/reports/reviews/<task>/context-rN.md)" — src/tests/backlog/backlog-lane.logic.test.ts "expect(e).not.toMatch(/context-<date>|context-20\d\d/);" — no lens command keeps the date-named context.
-MET — Plan A.3 "every lens command ... passes --context <the committed context file> and one --section per constant entry" — src/tests/backlog/backlog-lane.logic.test.ts "for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }" — plan, output and compliance commands all carry the context and the five sections.
-MET — AC #5 "the output holds the headings '## Implementation Plan' and '## Implementation Notes'" — "expect(ctx).toMatch(/^## Implementation Plan\n\(none\)/m);" — both headings exist even with no plan and no notes.
-REJECT — Plan A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — the change adds a second constant PLAN_SECTIONS — not a real issue, the pasted Spec 137 §4 note already requires the plan evidence "over the plan sections of the committed context".
+DEFER severity=MED — A4 "rule-lists.mjs lens-input takes --context, refuses without it, and counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)." — rule-lists.mjs:368 "export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {" — the refusal lives only in the CLI (`if (!ctxFile) die(2, ...)`) while the exported builder still substitutes the placeholder for any caller that omits the argument, which is the exact prompt D11a proved was sent in real runs; a test can pin that text again — make `context` a required argument of buildLensInputs (throw when undefined) and let the non-compliance template path pass an explicit context.
 
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 12   Unmet: 3
+DEFER severity=LOW — A.7 "A row or paragraph that alone passes the room is still refused naming it." — rule-lists.mjs:305 "has no deeper heading, table row or blank line to split at that fits (a piece of ${big.length} characters; room for list text in one file: ${max})" — the refusal names the list, the section label and a length, not the row or paragraph itself, so the author cannot find the offending piece in a 77 KB section — append the first ~80 characters of `big` to the message.
+
+MET — 137 §6 "A commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling. It is infrastructure work. It is carded for the infra-freeze lift and is not built now." — rule-lists.mjs:575 "run each printed command (exit stays 0)" — the new references output refuses nothing and leaves exit 0, so no deferred commit check is built here.
+
+MET — 137 §6 "the generated index is built now as a read-only board outside the repo (§5a). The commit check above stays deferred." — NONE in this diff — check-tasks prints per-task edit commands to stdout only and writes no index file into the repo; nothing in the three files generates a queue index.
+
+MET — 137 §6 "Also deferred: Backlog.md as the source of truth" — rule-lists.mjs:474 "const c = complianceRefs(r.lists, asList(t.fm.references));" — the task remains the source and only its references field is read; Backlog.md is not adopted.
+
+MET — A.2 "extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text." — deepseek-review.js:29 "const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');" with the local copy deleted — one extractor is now shared.
+
+MET — A.4 "counts the selected sections in the room on both paths" — rule-lists.mjs:367 "const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context, dataContext: '(no live-DB context provided)' }).length;" and the same `specs: context` at finalLen, promptOf and the per-file prompt — the context text is counted in every room computation, list and no-list path alike.
+
+MET — A.6 "in splitUnits (rule-lists.mjs, the `subs.length === 0` throw, :297 at the 410 head) a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused." — rule-lists.mjs:325 "if (subs.length === 0) return splitFlat(text, max, label, id);" — the old throw is replaced by the row and paragraph cut, with the over-room piece still refused.
+
+MET — C "D11b the security regex at rule-lists.mjs:128 misses admin and PII (README.md :104 and lens-security.md:48 say they fire it)." — rule-lists.mjs:163 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — admin and PII file paths now select the security lens.
+
+MET — B.1 "a file path with a comma is entered as \"compliance:<list id>\" alone (backlog splits --add-ref at commas; ms-9 is the only such list)" — rule-lists.mjs:455 "String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`" — entry format and the comma rule match the approved text.
+
+MET — AC #9 "exit 0; after running the printed command, check-tasks prints nothing for it" — rule-lists.mjs:574 "for (const x of c.refs) console.log(`  backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}`);" — the command is printed per stale task, entries start "compliance:", and the run still exits 0.
+
+REJECT — C "the DB read needs the operator's DB GO after the MCINC-7 rehearsal, otherwise A, B and D ship and the task is not marked complete" — accused: `timeoutMsFromVariable` is exported but nothing calls it, so the timeout clause is met only by a comment — not a real issue: the pasted clause conditions the timeout read on the DB GO, the card reads "status: RUNNING" and AC #13 says the task stays RUNNING without it, so keeping DEFAULT_TIMEOUT_MS and not wiring the variable is the behaviour the clause names.
+
+REJECT — B.2 "the exact `backlog task edit task-N --add-ref ...` command" — accused: the printed command also carries --remove-ref, which no pasted clause names — not a real issue: B.2 fires on entries that "differ from the resolved lists", and a compliance: entry for a list that no longer resolves can only be brought into step by removing it; the comparison is by id token, so a live list is never removed.
+
+REJECT — A.7 "The close recompute needs no change: it joins the stamped parts and compares them with the whole list, whitespace aside." — accused: splitFlat drops the blank-line separators, so the parts no longer rejoin to the whole list and the close recompute would fail — not a real issue: the pasted clause compares whitespace aside, and blank separators are whitespace.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
 
 ---
-⏱  146878ms (146.9s)
-📊 Tokens — total: 55618, input: 28522, output: 27096, reasoning: 26060
+⏱  82529ms (82.5s)
+📊 Tokens — total: 35057, input: 19312, output: 15745, reasoning: 14257

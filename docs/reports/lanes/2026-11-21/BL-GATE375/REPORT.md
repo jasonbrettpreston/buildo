@@ -81,3 +81,30 @@ Re-run: context docs/reports/reviews/task-375/context-r2.md (selected sections 4
 | error-paths | out-error-paths-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
 
 New finding count: 351 (BUG 63, DEFER 288), listed by id in FINDINGS.md, untriaged. Not done: TRIAGE.md, the GROUNDER.md copy, the closing commit, D10b (open).
+
+## Fix round 2 (the last; supersedes the round 1 re-run where it differs)
+
+The grounder verified round 1: g375#2 RESOLVED; g375#1 RESOLVED with one MED regression, g375#11. One fix, 0bf6c680d (check-lane-close.mjs, no status move): the fix branch of planGateInner expects lens-compliance.md for plan-compliance-<list>[-pN].txt. Red: red15.out, 1 failed, "AssertionError: expected [ Array(1) ] to deeply equal []" (a fix planScenario with a valid plan-code-review.txt and a valid plan-compliance-first.txt); control: a junk plan-compliance-first.txt is still refused. Green: c20.out, Tests 134 passed (134). Nothing else was changed; every other confirmed finding is LOW or NIT and goes to the pile in TRIAGE.md, written only after the grounder re-rules.
+
+Re-run: fresh context docs/reports/reviews/task-375/context-r3.md; every in- input re-made with rule-lists.mjs lens-input over the whole-range diff (19 files, 174,472 bytes); 94 calls in the sanctioned DOTENV_CONFIG_PATH form under the same names. Three calls failed to give a lens output and were re-run once under the same name: out-compliance-ms-S-p1.txt and out-compliance-step-132-p4.txt (the API call ended with no body, exit 1; first outputs kept at ~/Buildo-scratch/lanes-20261119/inc1b/gate375/r3-ms-S-p1.first-run.txt and r3-step-132-p4.first-run.txt) and out-compliance-queue-137-p5.txt (no VERDICT line: the model used its whole 65,536-token output budget; first output kept at r3-queue-137-p5.first-run.txt). Result: 94 of 94 with a REVIEW header and a VERDICT line.
+
+| rule list or lens | output files | REVIEW header | VERDICT line |
+| --- | --- | --- | --- |
+| compliance agents-s5-1to3 | out-compliance-agents-s5-1to3-p1.txt to -p4.txt (4 files) | yes 4 of 4 | yes 4 of 4 |
+| compliance agents-s7-s11 | out-compliance-agents-s7-s11-p1.txt to -p6.txt (6 files) | yes 6 of 6 | yes 6 of 6 |
+| compliance queue-137 | out-compliance-queue-137-p1.txt to -p12.txt (12 files) | yes 12 of 12 | yes 12 of 12 |
+| compliance eng-all | out-compliance-eng-all-p1.txt to -p12.txt (12 files) | yes 12 of 12 | yes 12 of 12 |
+| compliance orchestrator-doc17 | out-compliance-orchestrator-doc17-p1.txt to -p6.txt (6 files) | yes 6 of 6 | yes 6 of 6 |
+| compliance step-132 | out-compliance-step-132-p1.txt to -p12.txt (12 files) | yes 12 of 12 | yes 12 of 12 |
+| compliance airtight-124a | out-compliance-airtight-124a-p1.txt to -p12.txt (12 files) | yes 12 of 12 | yes 12 of 12 |
+| compliance airtight-v3-122 | out-compliance-airtight-v3-122-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+| compliance airtight-v2-122 | out-compliance-airtight-v2-122-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+| compliance airtight-122a | out-compliance-airtight-122a-p1.txt to -p4.txt (4 files) | yes 4 of 4 | yes 4 of 4 |
+| compliance five-words | out-compliance-five-words-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+| compliance plan-protocol | out-compliance-plan-protocol-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+| compliance inc-S | out-compliance-inc-S-p1.txt to -p5.txt (5 files) | yes 5 of 5 | yes 5 of 5 |
+| compliance ms-S | out-compliance-ms-S-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+| code-review | out-code-review-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+| error-paths | out-error-paths-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+
+New finding count: 435 (BUG 98, DEFER 337), by id in FINDINGS.md, untriaged. Not done: TRIAGE.md, the GROUNDER.md copy, the closing commit, D10b (open).
