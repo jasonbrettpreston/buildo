@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MIG334'
 created_date: '2026-11-21T16:28:00Z'
-updated_date: '2026-11-21T16:29:00Z'
+updated_date: '2026-11-21T16:31:00Z'
 labels:
   - McFix
 milestone: m-1
@@ -50,8 +50,16 @@ Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's G
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
 
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+1. Read task, 330 row (.cursor/MCBYLAWS-QUEUE.md:1289-1291), migration 334 header, the id ledger check (mcbylaws-queue-check.mjs:285-325). 2. Add ONE row INC1B-MIG334 (bullet row form of INC6-MIG330: row line, Status line, dated Record line) after the 330 row; the row names migration 334 by the lowercase words 'migration 334' and the path migrations/334_precommit_budget_registry_repin.sql so the named regex at :321 matches. 3. Commit through the hooks. 4. Run gate.mjs --ci --base origin/wf1/mb-rulings (read-only, no push, no tty) and paste output. 5. Lens reviews, FINDINGS.md, grounder owed.
+<!-- SECTION:PLAN:END -->
+
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-21 taken on the board at lane launch (lane BL-MIG334, worktree /Users/brettpreston_macmini/Buildo-wt-mig334, branch wf1/inc1b-mig334), RR-0240
+
+2026-11-21 BL-MIG334: row INC1B-MIG334 added to .cursor/MCBYLAWS-QUEUE.md after the INC6-MIG330 row (3 lines: row, Status WAITS, Record citing RR-0362 decision-147 verbatim y). Placement and form: ID_QUEUES check (mcbylaws-queue-check.mjs:260-325) counts only **MB-/MF- headings (this is a bullet row, so no heading count, no next-free-id and no status-word check applies); the migration check is the named regex at :321, matched here by 'migration 334' and the path migrations/334_precommit_budget_registry_repin.sql. Written, NOT applied to any database; DB job owed a test-stack rehearsal (MCINC-7) and the operator's typed GO; owner task-406. No code, test, spec or migration file edited.
 <!-- SECTION:NOTES:END -->
