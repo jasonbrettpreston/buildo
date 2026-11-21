@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T01:55:00Z'
+updated_date: '2026-11-21T01:56:00Z'
 labels:
   - McFix
   - McFix A
@@ -387,4 +387,6 @@ BL-GATE375 build note: rule-lists-table.logic.test.ts :49 and :206 now pass --co
 BL-GATE375 build note (D1-D5 in check-lane-close.mjs): listProof and grounderErrors are extracted from closeErrors (behaviour preserving, the existing close tests are the proof); planGateErrors (pure; any read error is a refusal line), planHash (title plus body after the front matter, whitespace squashed, 12 hex), PLAN_SEATS (always integration and reality-check; regression when the Files line names a path tracked at the board head, a directory or glob entry counts) are exported; it reuses outcomeErrors with mode 'plan', seatLines, parseVerdicts and extractSections. Plan inputs are checked per committed context: the stamped material must be the PLAN_SECTIONS cut of the context whose text produced the output's prompt hash. Not wired into backlog-lane.mjs in this commit. Red for this commit was a typecheck refusal (red10.out).
 
 BL-GATE375 build note (D5 wiring, the LAST commit of backlog-lane.mjs): after the existing refusals and the dirty-board check and BEFORE the take, a build or fix launch runs planGateErrors on the board HEAD evidence (docs/reports/reviews/<id>/, flat) and the task file; each error is a stderr line (exit 3, nothing taken); --dry-run runs it too and prints 'plan gate ok: <L> lists, <M> findings, Plan sha256:<12>'. Rollback if it blocks every launch: git revert of this one commit. Lane test fixtures plant real stamped evidence with docs/reports/reviews/task-375/plant-evidence.mjs. Red: red11.out (2 failed).
+
+BL-GATE375 build note (D6): backlog-brief.mjs prints the line that the plan is the task text at launch, checked before launch, that the lane does not edit Description, Acceptance or Plan, records deviations in Implementation Notes and still runs a plan-stage lens of its own. Red: red12.out.
 <!-- SECTION:NOTES:END -->

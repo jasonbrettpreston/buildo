@@ -65,6 +65,11 @@ describe('G1 backlog-brief (test 4)', () => {
     expect(r.stdout).toMatch(/from round 2 on use only --append-final-summary/);
     expect(r.stdout).toMatch(/check-lane-close\.mjs --outcomes/);
     expect(r.stdout).toMatch(/do NOT run --plan/);
+    // task-375 D6: what the brief tells a lane about the plan that the launch gate checked
+    expect(r.stdout).toMatch(/The plan is the task text at launch, checked before launch/);
+    expect(r.stdout).toMatch(/do not edit the Description, Acceptance or Plan/);
+    expect(r.stdout).toMatch(/record deviations in Implementation Notes/);
+    expect(r.stdout).toMatch(/still runs at least one plan-stage lens of its own and rules its findings in its own GROUNDER\.md/);
     expect(r.stdout).toMatch(/STATUS: ready\|blocked\|failed\|dropped/);
   });
 
