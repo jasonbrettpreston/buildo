@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T02:37:00Z'
+updated_date: '2026-11-21T03:03:00Z'
 labels:
   - McFix
   - McFix A
@@ -398,4 +398,6 @@ BL-GATE375 acceptance, third run (outputs in ~/Buildo-scratch/lanes-20261119/inc
 BL-GATE375 acceptance A9 and A4b, fourth run (outputs ~/Buildo-scratch/lanes-20261119/inc1b/gate375/a9/; run on a scratch git clone --shared of this worktree, removed afterwards, so this worktree was never touched: git status --short shows no tracked change). A9 on task-401 (LATER, build, 9 resolved lists), dry-run only: (1) before evidence: exit 3, 11 errors, one per missing item, the first 'plan gate: task-401: no plan evidence folder docs/reports/reviews/task-401/ on the board', then one 'list <id> ... has no valid compliance lens output' for each of the 9 lists (agents-s5-1to3, agents-s7-s11, queue-137, eng-all, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S) and 'GROUNDER-PLAN.md is missing'. (2) with test evidence (context, 9 plan outputs with inputs, integration and reality-check Seat lines, no regression seat because the Files line names only paths that do not exist yet, round block, references, Plan line): exit 0, 'plan gate ok: 9 lists, 2 findings, Plan sha256:76fa8e5f3005'. (3) one appended note to the task: exit 3, 'GROUNDER-PLAN.md: the Plan line "Plan: task-401 sha256:76fa8e5f3005" is not the hash of the task as it is now ... expected: Plan: task-401 sha256:6017e6ec7b94'. (4) clone deleted. A4b on the same clone: check-tasks printed the add-ref command for task-101 (6 compliance: entries = 6 lists); after running it check-tasks --root <clone> printed nothing for task-101 (0 lines, exit 0) and backlog task view shows the compliance: entries on the References line.
 
 BL-GATE375 acceptance A1 and the output review, fourth run: A1 (the review tool with --dry-run in the sanctioned dotenv form, task-381 context and the five --section flags): the context slot holds 0 hits of the placeholder (6 hits sit inside the diff text, which quotes the string in rule-lists.mjs), 1 hit of 'yes to all', each of the five heading lines once, 24,823 characters (under 120000). Output review: 80 calls over the whole-range diff (19 files, 170,582 bytes) with context-r1.md: 74 compliance outputs over 14 lists, 3 code-review, 3 error-paths, all exit 0, 80 of 80 with a REVIEW header and a VERDICT line; 410 findings listed untriaged in docs/reports/lanes/2026-11-21/BL-GATE375/FINDINGS.md; report docs/reports/lanes/2026-11-21/BL-GATE375/REPORT.md. Grounder owed; the task stays RUNNING.
+
+BL-GATE375 fix round 1 (g375#1): planGateInner runs the existing reviewErrors (REVIEW header, template, timestamp, VERDICT line) on every plan-<lens>.txt of a FIX launch; a junk file is refused. Red: red13.out (1 failed, assertion expected '' to match /plan-code-review.txt: no REVIEW header/).
 <!-- SECTION:NOTES:END -->

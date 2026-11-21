@@ -828,7 +828,7 @@ describe('task-375 A4, A5, B2: the close binds the committed review context and 
 type PO = {
   type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
   noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
-  ctx?: string; badMaterial?: boolean;
+  ctx?: string; badMaterial?: boolean; junkPlan?: boolean;
 };
 async function planScenario(o: PO = {}) {
   const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
@@ -862,7 +862,7 @@ async function planScenario(o: PO = {}) {
         }
       }
     }
-    if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.finding ? body(true) : body(false);
+    if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.junkPlan ? 'junk\n' : `${hdr('lens-code-review.md', null)}${body(false)}`;
     if (o.finding) files['plan-code-review.txt'] = `${hdr('lens-code-review.md', null)}BUG severity=${o.finding.sev} — clause "x" — src/a.ts:1 "y" — claim — fix\nVERDICT: PASS\n`;
     if (o.stray) files['notes.txt'] = 'stray\n';
   }
@@ -978,6 +978,11 @@ describe('task-375 D: the launch gate refuses a build or fix launch whose plan w
     const t = await planScenario({ throwRead: true });
     expect(t.errors.length).toBeGreaterThan(0);
     expect(t.errors.join('\n')).toMatch(/could not read|disk gone/);
+  });
+  it('g375#1: a fix task whose plan-<lens>.txt is junk (no REVIEW header, no VERDICT line) is refused; a valid one passes (control above)', async () => {
+    gate(await planScenario({ type: 'fix', junkPlan: true }), /plan-code-review\.txt: no REVIEW header/);
+    const ok = await planScenario({ type: 'fix' });
+    expect(ok.errors).toEqual([]);
   });
   it('a fix task with one plan lens output passes; a build task with only that output is refused', async () => {
     const fx = await planScenario({ type: 'fix' });

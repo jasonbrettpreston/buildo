@@ -600,7 +600,12 @@ function planGateInner(i) {
       }
       if (!good) errors.push(last);
     }
-  } else if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
+  } else {
+    // a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line (reviewErrors; g375#1)
+    const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));
+    if (planFiles.length === 0) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
+    for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null).map((x) => `${id}: ${x}`));
+  }
   const g = textOf('GROUNDER-PLAN.md');
   let findings = 0;
   if (g === undefined) errors.push(`${id}: GROUNDER-PLAN.md is missing in ${dirNote} (a separate grounder rules every plan finding and copies the Plan line last)`);
