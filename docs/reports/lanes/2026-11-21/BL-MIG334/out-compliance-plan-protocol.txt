@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T16:33:34.611Z file_sha256=f838665b4a267f3ab1f81d2b4439313726fc25da885940f16fefb3acb986fbd3 prompt_sha256=072392cefda4445515b8ed7fb9e17c63151c1017cf32df742ed3402db6ec066a
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-MIG334/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10774 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21573 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 31776 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 43036 chars, answer 0 chars, 60s
+DEFER severity=MED — plan protocol §5.1 "one DB job at a time (Spec 137 rule 9)" — .cursor/MCBYLAWS-QUEUE.md:1293 "next: ... rehearse on the test stack first ... then the operator types `OPERATOR-GO INC1B-MIG334` on dev (waits: the test-stack rehearsal, operator)" — the row records no place in the DB-job order against the 330 row (.cursor/MCBYLAWS-QUEUE.md:1289) or INC6-RECAP (.cursor/MCBYLAWS-QUEUE.md:1295), so a typed GO can land inside the D7 recapture window — add the order to `next:` (relative to INC6-MIG330 and INC6-RECAP) with the ruling or search it comes from.
+DEFER severity=MED — Acceptance #2 "The id-ledger check of mcbylaws-queue-check.mjs, run on the push range without pushing, no longer prints id-no-row for mig-334 (output pasted), or the lane states exactly why it could not be run" — NONE — no check output and no stated reason appear in the material, and the only id token in the row sits inside a scratch path, .cursor/MCBYLAWS-QUEUE.md:1294 "id claimed at `~/Buildo-scratch/ids/mig-334`", so the row naming the migration to the check is unproven — paste the run output or the exact reason into the lane report.
+DEFER severity=LOW — card "add ONE queue row for the migration 334 job in the form of the existing row for migration 330" — .cursor/MCBYLAWS-QUEUE.md:1290 "· ruling: \"y\"" against .cursor/MCBYLAWS-QUEUE.md:1293, which carries no `· ruling:` field — the 330 row's status line closes with a ruling field, the new row's does not — append `· ruling: "y"` citing RR-0362, or record why the field is omitted.
+DEFER severity=LOW — card "Also report (read-only) whether the pre-push gate's checks can be run on a commit range without pushing, and how." — NONE — that read-only report is not present anywhere in the material — put the answer in the lane report before close.
+DEFER severity=LOW — plan protocol §4 "Increments: 1-2 detached house, 3 houseplex, 4 house with suite, 5 garden suite, 6 renovations ... 10 proof set (+ Launch gate L)" and §5.2 "increment \"1-2 shared\"" — .cursor/MCBYLAWS-QUEUE.md:1292 "· McIncrement · increment 1·B ·" — "1·B" is not an increment in the pasted plan, while the 330 row uses "increment 6", so the integration pass cannot bucket this DB job — relabel to "1-2" or "1-2 shared", or cite the ruling that defines 1·B.
+DEFER severity=NIT — plan protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)" — .cursor/MCBYLAWS-QUEUE.md:1294 "RR-0362, decision-147, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md` entry \"2026-11-21 · Operator says GO on the queue-row fix for the failed push\"" — the ruling is cited by entry title, not by the line the pasted decision gives (:1707) — append ":1707" to that citation.
+MET — Acceptance #1 "One queue row names migration 334 in the form of the migration 330 row, with a rule 3 status line; nothing else in the queue file changes" — .cursor/MCBYLAWS-QUEUE.md:1292-1294 — one row added, three added lines only (hunk -1289,6 +1289,9), status line present.
+MET — card "Queue row for the migration 334 job so the pre-push gate can name it" — .cursor/MCBYLAWS-QUEUE.md:1294 "The file `migrations/334_precommit_budget_registry_repin.sql` was written by task-406" — the row names the migration file the gate rejected.
+MET — card "what the migration does, that it is written and NOT applied" — .cursor/MCBYLAWS-QUEUE.md:1294 "one UPDATE of logic_variables, key tooling_precommit_budget_registry_s, value 27.5 to 33.2 ... written, not applied".
+MET — card "a DB job owed a test-stack rehearsal and the operator's typed GO" — .cursor/MCBYLAWS-QUEUE.md:1292-1293 "DB job (rehearsed on the test stack first, Spec 08 section 11.8 MCINC-7)" and "the operator types `OPERATOR-GO INC1B-MIG334` on dev".
+MET — card "its owner task-406" — .cursor/MCBYLAWS-QUEUE.md:1294 "Owner: task-406."
+MET — card "No code, test, spec or migration file is edited." with "Files: .cursor/MCBYLAWS-QUEUE.md" — diff header "diff --git a/.cursor/MCBYLAWS-QUEUE.md b/.cursor/MCBYLAWS-QUEUE.md" — the only path touched is the queue file.
+MET — RR-0362 "A lane adds one queue row for the migration 334 job, in the form of the 330 row. It is a records edit." — .cursor/MCBYLAWS-QUEUE.md:1294 "operator, verbatim: \"y\" to the fix as put to him, 2026-11-21, RR-0362" — exactly one records row, no behaviour added.
+REJECT — plan protocol §0 "Every existing task stays until a step below removes it with a cited reason." — the change is accused of disturbing the 330 and RECAP rows — both are context lines, unmodified, the new row is inserted between them.
+REJECT — plan protocol §3 "no scope creep" — the row is accused of adding work nothing names — RR-0362 pasted here names this exact row ("A lane adds one queue row for the migration 334 job"), so it is in scope.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 6
+
+---
+⏱  67914ms (67.9s)
+📊 Tokens — total: 19640, input: 5682, output: 13958, reasoning: 12508

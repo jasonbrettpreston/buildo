@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MIG334'
 created_date: '2026-11-21T16:28:00Z'
-updated_date: '2026-11-21T16:31:00Z'
+updated_date: '2026-11-21T16:35:00Z'
 labels:
   - McFix
 milestone: m-1
@@ -20,6 +20,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-21/BL-MIG334/REPORT.md
 type: record
 ordinal: 122012
 ---
@@ -62,4 +63,6 @@ Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's G
 2026-11-21 taken on the board at lane launch (lane BL-MIG334, worktree /Users/brettpreston_macmini/Buildo-wt-mig334, branch wf1/inc1b-mig334), RR-0240
 
 2026-11-21 BL-MIG334: row INC1B-MIG334 added to .cursor/MCBYLAWS-QUEUE.md after the INC6-MIG330 row (3 lines: row, Status WAITS, Record citing RR-0362 decision-147 verbatim y). Placement and form: ID_QUEUES check (mcbylaws-queue-check.mjs:260-325) counts only **MB-/MF- headings (this is a bullet row, so no heading count, no next-free-id and no status-word check applies); the migration check is the named regex at :321, matched here by 'migration 334' and the path migrations/334_precommit_budget_registry_repin.sql. Written, NOT applied to any database; DB job owed a test-stack rehearsal (MCINC-7) and the operator's typed GO; owner task-406. No code, test, spec or migration file edited.
+
+2026-11-21 BL-MIG334 gate check (read-only, no push): gate.mjs --ci --base origin/wf1/mb-rulings at 4b32de544 = GATE OK, no id-no-row for mig-334; falsifier: idLedgerErrors at HEAD~1 = FAIL:Q:id-no-row:mig-334:migrations/334_precommit_budget_registry_repin.sql, at HEAD = []. Output in docs/reports/lanes/2026-11-21/BL-MIG334/gate-check.out. Review: plan and out lens outputs filed, findings untriaged (FINDINGS.md). Grounder owed (RR-0359); task left RUNNING.
 <!-- SECTION:NOTES:END -->

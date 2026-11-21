@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T16:33:34.611Z file_sha256=0f929618dd877faa4a15d0e669fbabda9a2dbd0371ba70cdbacf86b34857c7cd prompt_sha256=ca7a1ca409e71803680ee407a4345ad49cd808da40011da3796be3b2de05f0b2
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-MIG334/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11196 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 22862 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 34451 chars, answer 0 chars, 45s
+[deepseek-review] deepseek-reasoner working… reasoning 46069 chars, answer 0 chars, 60s
+DEFER severity=MED — AC #2 "The id-ledger check of mcbylaws-queue-check.mjs, run on the push range without pushing, no longer prints id-no-row for mig-334 (output pasted), or the lane states exactly why it could not be run" — NONE — the material shows no gate output and no stated reason, so AC #2 is not evidenced, cannot see — paste the range gate-run output for mig-334 or state exactly why it could not be run.
+
+DEFER severity=LOW — AC #1 "One queue row names migration 334 in the form of the migration 330 row, with a rule 3 status line" — .cursor/MCBYLAWS-QUEUE.md "+  Status: WAITS · since 2026-11-21 · expires when migration 334 is applied on dev · next: ... (waits: the test-stack rehearsal, operator)" — the migration 330 row's Status line ends with `· ruling: "y"` while this row's Status line does not, a deviation from that form — append `· ruling: "y"` to the 334 Status line.
+
+DEFER severity=LOW — Description "Also report (read-only) whether the pre-push gate's checks can be run on a commit range without pushing, and how" — NONE — the read-only gate-on-a-range report is not in the material, cannot see — include that report in the lane report.
+
+MET — AC #1 "nothing else in the queue file changes" — .cursor/MCBYLAWS-QUEUE.md hunk "@@ -1289,6 +1289,9 @@" — three lines added forming one row, no other line changed.
+
+MET — Description "what the migration does" — "What migration 334 does: one UPDATE of logic_variables, key tooling_precommit_budget_registry_s, value 27.5 to 33.2 and its description" — states the action.
+
+MET — Description "written and NOT applied" — "No database holds it today: this row records the job and applies nothing." — states written, not applied.
+
+MET — Description "DB job owed a test-stack rehearsal and the operator's typed GO" — "rehearse on the test stack first (MCINC-7; ...), then the operator types `OPERATOR-GO INC1B-MIG334` on dev" — states both obligations.
+
+MET — Description "its owner task-406" — "Owner: task-406." — names the owner.
+
+MET — Description "with a Spec 137 rule 3 status line" — "Status: WAITS · since 2026-11-21 · expires when migration 334 is applied on dev · next: ..." — status line present.
+
+MET — Description "No code, test, spec or migration file is edited" — diff touches only .cursor/MCBYLAWS-QUEUE.md — records-only edit.
+
+MET — RR-0362 "a lane adds one queue row for the migration 334 job, in the form of the 330 row. It is a records edit." — one row added and no code/migration edit — satisfies the ruling's scope.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 2
+
+---
+⏱  70863ms (70.9s)
+📊 Tokens — total: 26812, input: 12302, output: 14510, reasoning: 13811

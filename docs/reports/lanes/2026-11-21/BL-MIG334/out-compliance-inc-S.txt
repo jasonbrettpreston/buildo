@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T16:33:34.611Z file_sha256=d2de5d0886406f18a84e1cd3bebdb24f82f145c2312da25fd17edb020da5694b prompt_sha256=b85b3474e8ca8e3fffc1f8bd35052c76cb61506e65062a8d7a4bedbd43eeacca
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-MIG334/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10024 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 19345 chars, answer 1658 chars, 30s
+BUG severity=HIGH — task-422 AC#2 "The id-ledger check of mcbylaws-queue-check.mjs, run on the push range without pushing, no longer prints id-no-row for mig-334 (output pasted), or the lane states exactly why it could not be run" — NONE (material under review is only "+- Row INC1B-MIG334 · Migration 334 job (tooling_precommit_budget_registry_s re-pinned from 27.5 to 33.2 seconds)") — no check output is pasted and no reason is stated for not running it, so the gate-clearing claim is unverified; the same clause in the Description ("Also report (read-only) whether the pre-push gate's checks can be run on a commit range without pushing, and how.") is likewise unanswered — paste the id-ledger run for the push range against this diff, or the exact reason it could not be run.
+
+DEFER severity=LOW — task-422 Description "add ONE queue row for the migration 334 job in the form of the existing row for migration 330" — .cursor/MCBYLAWS-QUEUE.md:1290 "Status: WAITS · since 2026-11-17 · expires when push 5 lands · next: after push 5 fill PIN and pin the blocks; rehearse on the test stack (minutes; it leaves 330 applied there); then the operator types `OPERATOR-GO INC6-MIG330` on dev, before the INC8-RECAP c1 (waits: push 5, operator) · ruling: \"y\"" against the new "+  Status: WAITS · since 2026-11-21 · expires when migration 334 is applied on dev · next: written and NOT applied to any database; ... (waits: the test-stack rehearsal, operator)" — the new status line drops the trailing ruling segment that both sibling rows (330 and RECAP) carry — append `· ruling: "y"` so the row matches the 330 form and RR-0362 shows on the status line.
+
+MET — RR-0362 "1. A lane adds one queue row for the migration 334 job, in the form of the 330 row. It is a records edit." — .cursor/MCBYLAWS-QUEUE.md ("+- Row INC1B-MIG334 · Migration 334 job ...") — exactly one records row added, copied from the 330 row's Row/Status/Record shape, no other file in the diff.
+
+MET — Description "stating the truth: what the migration does" — "+What migration 334 does: one UPDATE of logic_variables, key tooling_precommit_budget_registry_s, value 27.5 to 33.2 and its description".
+
+MET — Description "that it is written and NOT applied" — "+next: written and NOT applied to any database" and "+No database holds it today: this row records the job and applies nothing."
+
+MET — Description "that it is a DB job owed a test-stack rehearsal and the operator's typed GO" — "+DB job (rehearsed on the test stack first, Spec 08 section 11.8 MCINC-7)" and "+then the operator types `OPERATOR-GO INC1B-MIG334` on dev (waits: the test-stack rehearsal, operator)".
+
+MET — Description "its owner task-406" — "+No database holds it today: this row records the job and applies nothing. Owner: task-406."
+
+MET — Description "No code, test, spec or migration file is edited." — "diff --git a/.cursor/MCBYLAWS-QUEUE.md b/.cursor/MCBYLAWS-QUEUE.md" is the only file in the diff.
+
+MET — AC#1 "nothing else in the queue file changes" — "@@ -1289,6 +1289,9 @@" — the hunk adds three lines, no deletions or edits elsewhere.
+
+REJECT — task-422 Description "with a Spec 137 rule 3 status line" — that the status line form cannot be verified — the rule 3 text is not pasted, so it is judged only against the 330 row shape ("Status: WAITS · since ... · expires ... · next: ..."), which the new row reproduces; a finding here would invent a clause.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 2
+
+---
+⏱  32167ms (32.2s)
+📊 Tokens — total: 15784, input: 9522, output: 6262, reasoning: 5306
