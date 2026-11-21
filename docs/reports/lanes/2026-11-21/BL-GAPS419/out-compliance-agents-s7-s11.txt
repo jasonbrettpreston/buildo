@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:29:08.110Z file_sha256=408353ccf5d38eaf6123e3ccb6f0152df37c4e0a433f4a0b4709c386c32f7f15 prompt_sha256=5fb0d7482d27e622654277e6e6d9e8228e11ca526f232ef351045368b78f0be6
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-419 Q4 (pasted: "Q4 plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)") — src/tests/backlog/backlog-lane.logic.test.ts "const text = fs.readFileSync(fold, 'utf8');" and "expect(text).toMatch(/^Checked by: Fold-G1$/m);" — the new gate requires FOLD-CHECK.md in the planted evidence and two new tests read a planted FOLD-CHECK.md, but the whole change (chunk 1 of 1) touches seven paths and carries no hunk that plants it; the ruled Q4 edit to docs/reports/reviews/task-375/plant-evidence.mjs is absent, so acceptance #1 (a) "With the file (Checked by: Fold-G1, Verdict: PASS, correct Plan line) it prints plan gate ok" and acceptance #2 (b) rest on a file no step creates — add the three-line planting (Checked by: Fold-G1, Verdict: PASS, the Plan line) to docs/reports/reviews/task-375/plant-evidence.mjs as Q4 rules, then confirm the fixture read at backlog-lane.logic.test.ts finds it.
+MET — acceptance #3 (c) — scripts/analysis/rule-lists.mjs:425 "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — a no-list input now always carries -pN, a rule-list single file keeps the unsuffixed name.
+MET — acceptance #4 (d) — src/tests/backlog/check-lane-close.logic.test.ts:453 "expect(ok.status, ok.stderr).toBe(0);" — the -p1 pair closes, and the same pair renamed unsuffixed is still refused.
+MET — acceptance #2 (b) — src/tests/backlog/backlog-lane.logic.test.ts:379 "expect(bad.stderr).toMatch(/FOLD-CHECK\.md: the Plan line" — the stale fold-check Plan line is refused with the expected line printed.
+MET — RR-0351 "Gap 3 we dont need the cross check." — docs/specs/00-architecture/08_agents.md (11.2 note) "the cross-read adversary pass of 11.2 and the Cross-read Adversary row of the roster (:449) is no longer required after a fold; the agent stays in the roster and may be asked for" — the ruling is recorded and the role survives as askable.
+MET — RR-0354 "change the spec's wording" — docs/specs/00-architecture/137_mcqueue.md (launch-check note) "also requires docs/reports/reviews/<task>/FOLD-CHECK.md, committed beside GROUNDER-PLAN.md and written by the separate plan grounder, never by a script" — both spec files carry the ruled wording.
+MET — §11.2 dated note "The grounder's re-execution of every claim in the fold stays, and it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md" — scripts/hooks/check-lane-close.mjs:642 "const fc = textOf('FOLD-CHECK.md');" — the record is required by the launch gate.
+MET — Q3 "the Checked by name is the text up to the first comma or \" (\" or the line end, the last of a repeated line counts" — scripts/hooks/check-lane-close.mjs:648 "const who = by ? by[1].split(/,| \(/)[0].trim() : '';" — the form matches the ruling, with lane and assignee clashes refused.
+MET — Q8 "a round file made by lens-input is named -rN-p1" — src/tests/backlog/rule-lists.logic.test.ts:602 "expect(n.written).toEqual(['in-out-code-review-r2-p1.txt']);" — the round name follows the ruling.
+REJECT — §11.1 "a census grep runs at the full scope its conclusion covers" — the 137 note's "(the gate runs at launch only; none was prepped and unlaunched)" is an unexecuted census — the task's Implementation Notes record Q2 ruled by the grounder with the scope named (task-412, task-418, both BUILT), so the conclusion has its record.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+
+---
+⏱  93520ms (93.5s)
+📊 Tokens — total: 38460, input: 22029, output: 16431, reasoning: 15423
