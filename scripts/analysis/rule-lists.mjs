@@ -3,7 +3,7 @@
 // Used by scripts/analysis/backlog-lane.mjs (attach at launch), scripts/hooks/check-lane-close.mjs (require at close) and this file's own CLI:
 //   validate [--table f] [--root dir]                      every list file exists, every section selector names exactly one heading, every glob matches a tracked path
 //   resolve --files "<Files line>" [--type t] [--letter L]   the lists a Files line attaches (JSON); exit 3 with one line when refused
-//   lens-input [--list id] --material f --out prefix [--template f] [--max n]
+//   lens-input [--list id | --list rules --lists a,b,c] --material f --out prefix [--template f] [--max n]   (task-423: --list rules joins the named lists whole, in table order, into one packed input set)
 //                                                           the compliance lens input: the list FIRST, then the material; split by the list's own headings when list +
 //                                                           material would pass the review tool bound; never trims; exit 1 when it cannot fit. V2.WHOLE (task-410): when the material is
 //                                                           a git diff that leaves no room for a list part, the TOOL splits it at FILE boundaries into chunks (each chunk against every list
@@ -96,12 +96,27 @@ export function sectionText(text, selector) {
 }
 /** The text blocks of a list: the whole file, or one block per section selector. Throws when the file or a selector is not there. */
 export function listBlocks(list, root, id = '?') {
+  // task-423: a joined list (joinLists) is its member lists in order, each whole; the label names the member
+  if (Array.isArray(list.members)) return list.members.flatMap((m) => listBlocks(m, root, m.id).map((b) => ({ label: `${m.id}: ${b.label}`, text: b.text })));
   const f = path.join(root, list.file);
   if (!fs.existsSync(f)) throw new Error(`list ${id}: file ${list.file} is missing`);
   const text = fs.readFileSync(f, 'utf8');
   if (list.whole) return [{ label: 'whole file', text: text.endsWith('\n') ? text : `${text}\n` }];
   if (!Array.isArray(list.sections) || list.sections.length === 0) throw new Error(`list ${id}: needs whole or sections`);
   return list.sections.map((s) => { try { return { label: s, text: sectionText(text, s) }; } catch (e) { throw new Error(`list ${id} (${list.file}): ${e.message}`); } });
+}
+
+/** The id of the virtual list that joins the resolved lists (task-423); a table list may not use it. */
+export const JOINED_ID = 'rules';
+/**
+ * task-423 (PROTOCOL.SIMPLE, adjustment 1): a copy of the table with one extra list `rules`: the given lists joined WHOLE, in table order, nothing cut. The existing code (listBlocks, partsFor, renderLensInput,
+ * the close check's whole-list recompute) reads it like any table list, so the lists are packed by size and one compliance call set covers all of them. Throws when an id is not in the table.
+ */
+export function joinLists(table, ids) {
+  const want = new Set(ids);
+  for (const id of want) if (id === JOINED_ID || !table.lists?.[id]) throw new Error(`cannot join: list ${id} is not in the table`);
+  const sorted = Object.keys(table.lists).filter((k) => want.has(k));
+  return { ...table, lists: { ...table.lists, [JOINED_ID]: { file: `the ${sorted.length} resolved lists (${sorted.join(', ')})`, generated_by: 'joined', whole: true, members: sorted.map((id) => ({ id, ...table.lists[id] })) } } };
 }
 
 // ---- validation ----
@@ -112,6 +127,7 @@ export function validateTable(table, root) {
   const any = (g) => { const re = globToRegExp(g); return tracked.some((t) => re.test(t)); };
   if (!table.lists || typeof table.lists !== 'object') bad.push('lists: missing');
   for (const [id, l] of Object.entries(table.lists ?? {})) {
+    if (id === JOINED_ID) { bad.push(`list ${id}: the id "${JOINED_ID}" is the joined list of lens-input --list ${JOINED_ID} (task-423); name the list otherwise`); continue; }
     if (typeof l.generated_by !== 'string' || !l.generated_by) bad.push(`list ${id}: generated_by missing (a generator path or "hand-written")`);
     if (Boolean(l.whole) === Array.isArray(l.sections)) bad.push(`list ${id}: needs exactly one of whole or sections`);
     try { listBlocks(l, root, id); } catch (e) { bad.push(e.message); }
@@ -342,7 +358,8 @@ function splitUnits(text, max, label, id) {
 export function renderLensInput({ id, list, part, i, n, material, paths, c, m }) {
   const sel = list ? (list.whole ? 'whole file' : `sections ${list.sections.join('; ')}`) : '';
   const mark = paths ? ` chunk ${c} of ${m}` : '';
-  const what = list ? `RULE LIST ${id} (${list.file}, ${sel}), part ${i} of ${n}. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.` : 'NO RULE LIST: the lens template alone judges the material under review.';
+  const where = list?.members ? `${list.members.length} lists: ${list.members.map((m) => m.id).join(', ')}` : list ? `${list.file}, ${sel}` : '';
+  const what = list ? `RULE LIST ${id} (${where}), part ${i} of ${n}. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs.` : 'NO RULE LIST: the lens template alone judges the material under review.';
   const head = `${what}${paths ? ` The material is chunk ${c} of ${m} of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ${JSON.stringify(paths)}` : ''}`;
   const stamp = `LIST ${list ? id : 'none'} sha256:${sha256(Buffer.from(part))} material sha256:${sha256(Buffer.from(material))} part ${i} of ${n}${mark}`;
   return `${stamp}\n${head}\n\n${part}${MARKER}${material}\n`;
@@ -616,9 +633,10 @@ export async function planPrep(a) {
       const denv = { DOTENV_CONFIG_PATH: process.env.DOTENV_CONFIG_PATH || path.join(os.homedir(), 'Buildo', '.env') };
       const reviewArgv = (file, tpl) => ['node', '-r', dotenv, reviewBin, 'review', file, '--template', `.claude/review-templates/${tpl}`, '--context', ctxRel, ...rt.CONTEXT_SECTIONS.flatMap((s) => ['--section', s])];
       const lenses = lensSet({ type, files: filesText(t.body) }).plan.map((l) => ({ out: `plan-${l}.txt`, tpl: l === 'plan-review-deepseek' ? 'plan-review-deepseek.md' : `lens-${l}.md`, file: ctxRel }));
-      const lists = type === 'build' ? r.lists : []; // a fix task needs the plan lens outputs only (check-lane-close.mjs:604)
+      const ids = r.lists.map((l) => l.id).join(',');
+      const lists = type === 'build' ? [{ id: JOINED_ID }] : []; // task-423: the resolved lists joined whole into one compliance call set; a fix task needs the plan lens outputs only
       const briefArgv = ['node', path.join(HERE, 'backlog-brief.mjs'), '--task', taskId, '--lane', lane, '--root', board];
-      const inputArgv = (id) => ['node', path.join(HERE, 'rule-lists.mjs'), 'lens-input', '--root', board, '--list', id, '--context', ctxRel, '--material-from', ctxRel, '--out', `${ev}/in-plan-compliance-${id}`];
+      const inputArgv = (id) => ['node', path.join(HERE, 'rule-lists.mjs'), 'lens-input', '--root', board, '--list', id, ...(id === JOINED_ID ? ['--lists', ids] : []), '--context', ctxRel, '--material-from', ctxRel, '--out', `${ev}/in-plan-compliance-${id}`];
       if (dry) {
         say(board, briefArgv);
         for (const l of lists) say(board, inputArgv(l.id));
@@ -773,6 +791,11 @@ function cli() {
     console.log(JSON.stringify(r, null, 2));
   } else if (cmd === 'lens-input') {
     const id = str('list', '');
+    if (id === JOINED_ID) { // task-423: the joined list of the resolved lists named by --lists a,b,c (table order, each whole)
+      const ids = str('lists', '').split(',').map((x) => x.trim()).filter(Boolean);
+      if (!ids.length) die(2, `usage: lens-input --list ${JOINED_ID} --lists <id,id,...> (the resolved list ids to join)`);
+      try { table = joinLists(table, ids); } catch (e) { die(1, e.message); }
+    }
     const list = id ? table.lists[id] : null; // no --list: a non-compliance lens template, the chunks alone (V2.WHOLE)
     if (id && !list) die(1, `no list ${id} in ${tableFile}`);
     if (!id && !a.template) die(2, 'usage: lens-input needs --list <id>, or --template <lens file> alone to split the material for a non-compliance lens');

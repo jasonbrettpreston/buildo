@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SIMPLE423'
 created_date: '2026-11-21T16:43:00Z'
-updated_date: '2026-11-21T23:11:00Z'
+updated_date: '2026-11-21T23:16:00Z'
 labels:
   - McFix
   - McFix V2
@@ -305,4 +305,6 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0369 · task-423 · Backlog; o
 2026-11-21 (M-246) Plan review round 2 of this task (a re-run of two lists, after the fold of task-419 changed Spec 08 and Spec 137 and staled their compliance outputs; the cap of RR-0371 is two review rounds on a plan, so there is no third): the orchestrator re-made plan-compliance-agents-s7-s11 and plan-compliance-queue-137 on the same context-r1.md (7 findings: 5 HIGH, 2 MED; and 6: 3 HIGH, 1 MED, 2 LOW; the other seven outputs stand), the separate grounder Cairn-Ground-P423 ruled them against the plan as it will be: 13 findings, 11 CONFIRMED (1 HIGH, 8 MED, 2 LOW), 2 REJECTED (agents-s7-s11#3: the launch gate does rule every plan finding; queue-137#2: the launch gate skips every type but build and fix). Whole file after round 2: 127 findings (89 of the plan outputs and 38 of the seats), 109 CONFIRMED (15 HIGH, 71 MED, 21 LOW, 2 NIT), 18 REJECTED, 0 CONFLICT; 101 folded, 8 pile. Every verdict quote is on its line at the board head (11 lens quotes and 4 seat quotes re-pointed after the task-419 fold, 1 re-quoted: eng-all#2). The plan is edited by 16 sentence edits (FOLD-423-r2.json, F10 to F25, applied mechanically): cites dated to 36a2c2d63 with the shifts the fold made; the later-cards text brought to the operator's later rulings (RR-0367 decision-152, RR-0368 decision-153, RR-0369 decision-154, RR-0370 decision-155, RR-0371 decision-156): the rules sections are tasks 427 and 425, the station is task-424 plus the one line, card B's medium rule is round 1 fixed and round 2 recorded (RR-0369), the caps; the task-410 note of Spec 137 stays true under the join; section 7 states what the operator has ruled in the Grounded and Recommendation form. No open operator item for card A. Fix-only re-review is held (task-414 unchanged). The old Plan review round block is replaced by plan-prep post.
 
 2026-11-21 taken on the board at lane launch (lane BL-SIMPLE423, worktree /Users/brettpreston_macmini/Buildo-wt-simple423, branch wf1/inc1b-simple423), RR-0240
+
+2026-11-21 (M-246) BL-SIMPLE423 stage 1 build: tests first (the four test files), red at the designed assertions, then the build of card A (joinLists, the joined set in the close and the launch gate, GROUNDER-PLAN.md at L, the brief sentences).
 <!-- SECTION:NOTES:END -->
