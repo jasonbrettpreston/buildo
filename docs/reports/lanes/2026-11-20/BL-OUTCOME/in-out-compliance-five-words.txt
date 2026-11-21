@@ -1,0 +1,649 @@
+LIST five-words sha256:9ac37044b0deec3165ae2ad6e4c02aa48a6d8ede03c038b0c9178860b8f223a2 material sha256:30a8d0ab97177d90a245536c7e9b88b765dd3acb6a38745a5cb79a41dda977a1 part 1 of 1 chunk 1 of 1
+RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/backlog-brief.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-brief.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts"]
+
+## Glossary
+
+- **slug**: A step's name: its `scripts/manifest.json` key and `identity.name`. Not its file name (table 1b).
+- **archetype vs shape**: `identity.archetype` (INGESTOR, LINK, MATCHER, ENRICHER, MATERIALIZER, BACKFILL, ASSERT, RECORDER) is what the step is; it selects required and forbidden descriptor fields and is checked against the census. `execution.shape` is which runner phase executes it (table 1a). A MATCHER has shape `cascade`; a RECORDER may have no shape.
+- **phase**: One of the runner functions in table 1a that owns a step's reads, writes and transactions.
+- **compute hook**: A named function or value on the compute module that a phase calls or reads (for example `compute.buildMatchSql`); the main function is called once after the phase.
+- **PH-0 … PH-8**: Spec 121 §3 assessment phases used in Spec 123: PH-0 is the boundary freeze (it reads every write and derives the archetype), PH-4 the risk class. Not the programme stages P0–P3.
+- **① ② ③**: The three conversion commits: ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]` (`scripts/steps/_schema/converted.json`).
+- **stage**: A pending step's declared progress in `converted.json` `pending[]` (`red_suite` … `shape_clean`); it decides which gates cannot yet be answered.
+- **RE-FREEZE #N**: A numbered, reviewed revision of the frozen step vocabulary (`scripts/steps/_schema/step.schema.json`, `template-freeze.json`). A field is added or deleted only by one.
+- **#NN**: A `step-validate` fast invariant, by number (for example #44 the read/write witness, #54 swap order). Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates.
+- **Gate A … K, V**: Lettered R-BA gates (A…K, plus V for the five words), implemented in `scripts/analysis/gates/` or in `scripts/analysis/step-validate.mjs` (gates H, K and V live there). Gate E is compute purity, Gate F the score floor. Not the scorecard.
+- **PURITY-G0 … PURITY-G13**: Gate E compute-purity finding codes. Not rule ids; never the scorecard gates.
+- **SCORECARD-G0 … SCORECARD-G9**: Spec 123 scorecard gates G0–G9 (G7 test adequacy, G8 differential); rule ids `G0`…`G9` carry these aliases.
+- **V3 (standard) vs V3 (vocabulary)**: `standard=V3` is the McDonald's Airtight V3 label (R-EY). The rule id `V3` (alias SPEC122A-V3) is the Spec 122a `guards.schema_drift` vocabulary row.
+- **SPEC121-M1 … SPEC121-M14**: Spec 121 cadence items, retired as a set. `M14` also names an unrelated spec-move id in Spec 124; the alias SPEC121-M14 means the Spec 121 item.
+- **five words**: R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates.
+- **bracket**: A capture taken inside a perturbation (a forced cohort, delete-and-reinsert or derived-status), so a guarded write path writes something; replayed only through the same bracket (#38).
+- **OWED**: Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps.
+- **class-A**: Spec 123 risk class A (PH-4): the highest test intensity; its behaviours need a both-directions lock.
+- **LDG-10, EP-PIN-D17**: Programme items in `scripts/steps/_schema/programme-items.json` (cutover prerequisites).
+- **W4A-Rn**: Wave-4 assessment rulings drafted outside the register; their register rows are owed (rule-map `meta.register_rows_owed`).
+- **lock / lock-db / check / hook**: Enforcement kinds in the rule map. A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`; a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook.
+- **Intent Ledger**: The table in a step's assessment report listing each behaviour of the legacy step and its disposition, one of the closed `DISPOSITION_VOCAB` (`scripts/analysis/step-validate.mjs`): preserved-in-runner, preserved-in-validator, preserved-in-compute, encoded-as-descriptor-field, encoded-as-deviation, knowingly-retired. Scored by scorecard G3; G-2 reads it.
+- **G-2**: Spec 124 GAP G-2 (Rule 4): every preserved-in-compute Intent Ledger row names where its rule is written (`checkPreservedInComputeHasWhy`). Not scorecard G2.
+- **§R Reflection**: The closing section of a step's assessment report recording what the conversion taught; scorecard G9 checks it exists.
+- **seam**: A declared hand-off between steps or between compute and the runner: cross-step seams are producer → consumer edges (`inputs.reads.steps`); the ENRICHER write seam is `ctx.exec` / `ctx.joinUpdate`, where the runner, not compute, issues the DML.
+- **sources chain**: The `sources` chain in `scripts/manifest.json` `chains`: the ordered ingest-and-derive steps run by `run-chain.js`; other chains (for example `coa`) are listed beside it.
+- **P0 … P3**: Programme stages of the step-optimisation programme (Spec 122/123). Not the assessment phases PH-0 … PH-8. Spec 122 also uses "P0" for a top-priority missing schema category ("six missing P0 categories", 122a §A5 and 122a R6); history.1's "P0 categories adjudication" is that sense, not the stage.
+- **†**: An id or code pointer that lands with another branch (rule-map `meta.pending_integration`).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/.claude/review-templates/README.md b/.claude/review-templates/README.md
+index 008b15f69367a7b1cdf14d92d5f2c546da1c94d5..4ee9a886c41d892a14a842299a8a54eaec55453e 100644
+--- a/.claude/review-templates/README.md
++++ b/.claude/review-templates/README.md
+@@ -106,7 +106,7 @@ Each lens asks one question, names what it is not responsible for, rejects any f
+ ### The standard
+ 
+ 1. The lenses that fire run in parallel, one DeepSeek call each, one narrow prompt each; outputs `r1-<lens>.txt`.
+-2. Then ONE tool-bearing Claude grounder adjudicates every finding against the files (round 2, Spec 08 section 5.3, "every DeepSeek finding is adjudicated by a tool-having grounder"): KEEP or REJECT with the opened `file:line`, in `TRIAGE.md`. The grounder also does the Integration check (A5) itself.
++2. Then ONE tool-bearing Claude grounder adjudicates every finding against the files (round 2, Spec 08 section 5.3, "every DeepSeek finding is adjudicated by a tool-having grounder"): CONFIRMED, REJECTED or CONFLICT with the opened `file:line`, in `GROUNDER.md`; the lane's `TRIAGE.md` holds one outcome line per CONFIRMED or CONFLICT finding (forms: `fixed`, `task`, `ruling`, `wontfix`, `pile`; `node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` checks them). The grounder also does the Integration check (A5) itself.
+ 3. Reality-Check (A7, Claude) runs only when values are served (DB fields, derived numbers); it is not a lens.
+ 4. Wording rule: a claim is "verified" only with the name of what verified it (which lens, which round, or which grounder check). "Verified" alone is not accepted.
+ 
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+index 6429c107d30b566b43f95f2acc7f3fbcf127099c..3041c56d214ea7d9164019c4caf8c3f37b759999 100644
+--- a/docs/reports/generated/rule-lists-by-kind.md
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -96,15 +96,15 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 13,405 | 1 |
+-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 27,384 | 1 |
+-| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 29,969 | 1 |
++| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 28,990 | 1 |
++| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 30,663 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+ | orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 9 lists | | 185,974 | 9 |
++| total | 9 lists | | 188,274 | 9 |
+ 
+ ## spec-only
+ 
+@@ -112,12 +112,12 @@ Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; miles
+ 
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+-| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 29,969 | 1 |
+-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 27,384 | 1 |
++| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 30,663 | 1 |
++| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 28,990 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 7 lists | | 140,999 | 7 |
++| total | 7 lists | | 143,299 | 7 |
+ 
+diff --git a/docs/specs/00-architecture/08_agents.md b/docs/specs/00-architecture/08_agents.md
+index dd6063128e35ffcdb558af9fe7e9439a6fd0d4ec..e1850b8b1f89608031f33f9c30c433cae445a952 100644
+--- a/docs/specs/00-architecture/08_agents.md
++++ b/docs/specs/00-architecture/08_agents.md
+@@ -348,6 +348,7 @@ Legend: **I**=Integration · **RC**=Reality-Check · **SF**=Schema-Fidelity · *
+    Dated note 2026-11-19 (M-246, prior text kept; task-358 REVIEW.LENSES, lane BL-LENSES; operator, verbatim, 2026-11-19, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry 'Operator: the review protocol': "I believe deepseek does the compliance seat" and "Deepseek is respoonsible for many of these seats - too many tokens to run all claude ones"): the repo lens set is five narrow DeepSeek templates in `.claude/review-templates/`: `lens-compliance.md` (A10), `lens-code-review.md` (A3), `lens-ux.md` (A11), `lens-error-paths.md` (A2 lens 4), `lens-security.md` (A12, money/auth/PII only), plus `plan-review-deepseek.md` as the failure-modes lens; run with `scripts/deepseek-review.js review <file> --template <lens> --context <pasted context>`; the lane brief written by `backlog-lane.mjs` names the lenses by task type; one Claude grounder adjudicates every finding as round 2. Table: `.claude/review-templates/README.md`.
+ 5. **Panel sizing scales to stakes.** "quick check" → a couple of lenses, single-vote. "thoroughly audit / money code / pipeline data" → full domain roster + round-2 (manual: scale to what's asked).
+ 6. **Findings triage** (WF6): BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons.
++   Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1580`: "the findings that are deemed low priorities are filed in a review pile for later"; :1517 "don't makr the task complete until it actually works"): the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md (seat findings listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included) has one outcome line in the lane's TRIAGE.md, the last line per id judged (`node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` runs it before the close). Forms: `fixed:<sha> <path>` (the commit is an ancestor of HEAD, in the range from the launch commit, touches the path, is not reverted), `task:task-N` (the task exists, is not DROPPED and names the finding id; only for a DEFER finding), `ruling:RR-NNNN` or `ruling:decision-N` (the decision record exists), `wontfix:"<reason>"` and `pile:"<reason>"` (30+ characters; LOW and NIT only). CRITICAL, HIGH and MED close by fixed or ruling (rule 6 above: a BUG is fixed before Green Light); LOW and NIT close by any form whatever the kind (his :1580 words override rule 6 for them). Until the review_followups.md table row exists, pile lines in TRIAGE.md are the pile. The task's Final Summary carries the round line and one line per CRITICAL, HIGH or MED finding. This is part of the same omission guard as the task-410 note (it proves presence, form and git facts, never that a fix fixes); forgery routes stay with tasks 401 and 402.
+ 7. **The roster is a MENU, not a checklist.** Never run all ~12 roles on one change. Compose the **smallest DIVERSE panel that covers this change's actual risks** (typically 5–8 lenses) + round-2. Lens-diversity beats agent-count (manual §6.2): running the whole menu floods you with the ⅓-false-premise noise (§9) it takes longer to triage than the bugs are worth. Security fires only on money/auth/PII/admin; Op-Model Compliance only at WF6; Reality-Check/Schema-Fidelity/Ground-truth only when values/DB-fields/spec-claims are in play.
+ 8. **Spend on reality-touching agents; economize on file-readers.** Empirically (§7b), the agents that verify against reality — Reality-Check (runs code / queries the live DB), Integration, Schema-Fidelity, Ground-truth — catch the subtlest, highest-severity bugs and carry the lowest false-premise rate, because they don't guess. The file-only CLIs (Gemini/DeepSeek) are cheap breadth, not ground truth (§9 CLI blind spots). Budget accordingly: a FEW reality-touching Claude agents + a couple of cheap DeepSeek lens-passes beats a large panel of file-readers.
+ 9. **Substrate economics.** DeepSeek handles execution and static reviews at low cost; spend tool-bearing Claude only when live tree / DB / git tools are strictly required. The execution half is `PLANNED` (SUB-ENG-1) — until it ships, execution is Claude. Rule 8 ("spend on reality-touching agents") is unchanged and takes precedence: cheap breadth never substitutes for a grounder.
+diff --git a/docs/specs/00-architecture/137_mcqueue.md b/docs/specs/00-architecture/137_mcqueue.md
+index 0bd7422911ebb0776eabc751470e4384b47e516a..a7ddaa9bf193630036dc62ad15643bef0803c1b8 100644
+--- a/docs/specs/00-architecture/137_mcqueue.md
++++ b/docs/specs/00-architecture/137_mcqueue.md
+@@ -137,6 +137,8 @@ Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOL
+ 
+ Dated note 2026-11-20 (M-246, prior text kept; correction to the task-410 note above): its closing sentence says Rule 3 is unchanged. That is corrected by the Rule 3 note under Rule 3 (same date, same task): for lane build and fix tasks Rule 3 is amended to the two-commit close, the operator having agreed ("agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close."); every other task keeps Rule 3 as written.
+ 
++Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1517`: "don't makr the task complete until it actually works"): a lane build or fix task's closing commit is refused unless the lane directory holds TRIAGE.md with one outcome line per CONFIRMED or CONFLICT id of GROUNDER.md (forms fixed, task, ruling, wontfix, pile; see the Spec 08 rule 6 note of the same date) and the task's Final Summary shows the round line and the CRITICAL, HIGH and MED outcomes. TRIAGE.md is required only when GROUNDER.md holds such an id. Rule 3 (the two-commit close) is otherwise unchanged.
++
+ ## 5. The weekly snapshot
+ 
+ A procedure. No tool and no code.
+diff --git a/scripts/analysis/backlog-brief.mjs b/scripts/analysis/backlog-brief.mjs
+index 4bd5b0cdb9c5ac6ebc18b3943f5532c08603f260..5f2aa472f5186e30c60018ef381c8243d697b74c 100644
+--- a/scripts/analysis/backlog-brief.mjs
++++ b/scripts/analysis/backlog-brief.mjs
+@@ -163,12 +163,12 @@ const out = [
+   '',
+   `Take order:`,
+   `  1. backlog task edit ${taskId} -s RUNNING -a ${laneArg}`,
+-  `  2. backlog task edit ${taskId} --plan "<numbered steps, one per acceptance criterion>"`,
++  `  2. If the task's Implementation Plan field already holds a plan (reviewed, ruled and checked before launch), build that plan and do NOT run --plan; only a task with no plan runs: backlog task edit ${taskId} --plan "<numbered steps, one per acceptance criterion>"`,
+   `Review (plan or output): node scripts/deepseek-review.js review ${ctxRel} --context .claude/review-templates/plan-review-deepseek.md`,
+   `  Run by the tool-bearing Claude lane with provider claude: scripts/deepseek-review.js is not in exec-policy.json bash_allow, which governs only the DeepSeek execution engine (Spec 08 section 7 rule 10 (b), 08_agents.md:341). Context file ${ctxRel} sha256=${ctxSha}.`,
+   `Context pack sections: ${ctxRel} also carries Milestone, Document sections, Decisions naming this task, Prior reviews and lane reports, Dependencies (RR-0235): read it, not only the references above.`,
+   `Close:`,
+-  `  backlog task edit ${taskId} --check-ac <n> (each criterion, with its evidence) --final-summary "<what landed, commit sha, hook result>" -s DONE|BUILT`,
++  `  backlog task edit ${taskId} --check-ac <n> (each criterion, with its evidence) --final-summary "<what landed, commit sha, hook result>" --append-final-summary "<the outcome block the close check prints: Review round N line and one line per CRITICAL, HIGH or MED finding>" -s BUILT (one command; every CONFIRMED or CONFLICT finding of GROUNDER.md has an outcome line in TRIAGE.md first: node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>)`,
+   `  End the report with one line: STATUS: ready|blocked|failed|dropped`,
+   `Standing rules: attach the lane standing rules file; no push, no DB, no --no-verify.`,
+   '',
+diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
+index 449f30cf4ebc60669163cd94135c6c3478dfd0d8..97890f51dc9c0edcdd6e859d8653af20c54eaf76 100644
+--- a/scripts/hooks/check-lane-close.mjs
++++ b/scripts/hooks/check-lane-close.mjs
+@@ -121,6 +121,183 @@ export function chunkErrors({ label, items, expected, diffOf = () => null, optio
+ export const BOARD_REFS = ['refs/heads/wf2/board', 'refs/remotes/origin/wf2/board'];
+ const kOf = (name) => { const x = /-p(\d+)\.txt$/.exec(name); return x ? Number(x[1]) : null; };
+ 
++/** One verdict per finding id of a GROUNDER.md: Map id -> {word, file, line, quote, reason} (the last verdict line of an id wins). */
++export function parseVerdicts(g) {
++  const verdicts = new Map();
++  for (const raw of g.split('\n')) { const v = VERDICT.exec(raw.replace(/[`*]/g, '')); if (v) verdicts.set(v[1], { word: v[2], file: v[3], line: Number(v[4]), quote: v[5], reason: v[6].trim() }); }
++  return verdicts;
++}
++
++// task-399 (FOLD.ADOPT, Spec 08 section 7 rule 3 08_agents.md:346 "fold survivors, file rejections with reasons", rule 6 :350 BUG goes to WF3 before Green Light, DEFER to review_followups.md with reasons):
++// every CONFIRMED or CONFLICT id of the grounder file carries ONE outcome line in TRIAGE.md (the last line of an id is judged). Presence, form and git facts; never judgement: it cannot prove that a fix fixes.
++const SEVS = ['CRITICAL', 'HIGH', 'MED', 'LOW', 'NIT'];
++const normSev = (s) => { const u = String(s ?? '').toUpperCase(); const k = u === 'CRIT' ? 'CRITICAL' : u === 'MEDIUM' ? 'MED' : u; return SEVS.includes(k) ? k : null; };
++/** The severity a grounder writes in the first 40 characters of its reason (earliest whole upper-case word), else null. */
++const reasonSev = (reason) => { const m = /\b(CRITICAL|CRIT|HIGH|MEDIUM|MED|LOW|NIT)\b/.exec(String(reason ?? '').slice(0, 40)); return m ? normSev(m[1]) : null; };
++/** {kind: BUG|DEFER, sev} of a lens finding line ("BUG severity=HIGH - ..."); the lens writes CRIT, read as CRITICAL. */
++export const lensKindOf = (line) => { const m = /^\s*[-*]?\s*(BUG|DEFER)\s+severity=([A-Za-z]+)/.exec(line); return { kind: m ? m[1] : 'BUG', sev: m ? normSev(m[2]) : null, line }; };
++const SEAT_LINE = /^\s*(?:#+\s+)?([a-z0-9]+)#(\d+)\s+(CRITICAL|HIGH|MED|LOW|NIT)\b/;
++const SEAT_HEAD = /^\s*Seat:\s*(\S+)\s+(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm;
++/** The `Seat: <name> <repo path> sha256:<12 hex>` lines of a GROUNDER.md, each with its file text from `read` (null when missing). */
++export const seatLines = (g, read) => [...g.matchAll(SEAT_HEAD)].map((m) => ({ name: m[1], path: m[2], sha: m[3], text: read(m[2]) }));
++const FORM_WORDS = { close: ['fixed', 'task', 'ruling', 'wontfix', 'pile'], plan: ['folded', 'task', 'ruling', 'wontfix', 'pile'] };
++const unq = (s) => { const t = String(s).trim(); const m = /^"(.*)"$/s.exec(t) ?? /^'(.*)'$/s.exec(t) ?? /^`(.*)`$/s.exec(t); return squash(m ? m[1] : t); };
++const FAIL = Symbol('fact failed');
++
++/**
++ * MODE TABLE (PLAN-399-v3 4.1; task-375 reuses it for mode 'plan'). Pure of git: every git fact is a callback in `facts`.
++ *  mode close: forms fixed, task, ruling, wontfix, pile. CRITICAL, HIGH, MED close by fixed or ruling (task only when the lens line begins DEFER); LOW and NIT by any form (operator 2026-11-20 ":1580").
++ *  mode plan: folded takes the place of fixed (fixed is refused); the rest as close. A CONFLICT id takes ruling, or fixed (close) / folded (plan), only.
++ * @param {{verdicts:Map<string,{word:string,file:string,line:number,quote:string,reason:string}>, triageText:string, lensKinds:Map<string,{kind:string,sev:string|null,line?:string}>,
++ *   facts:{resolveSha:(s:string)=>string|null, isAncestor:(f:string)=>boolean, inRange:(f:string)=>boolean, touches:(f:string,p:string)=>boolean, reverts:(f:string)=>boolean,
++ *          taskOf:(n:string)=>({exists:boolean,status:string,text:string}|null), decisionExists:(ref:string)=>boolean, taskText?:()=>string},
++ *   mode?:'close'|'plan', seats?:{name:string,path:string,sha:string,text:string|null}[], seatRoot?:string|null,
++ *   summary?:{text:string, headText:string, grounderPath:string, triagePath:string}|null}} a
++ * @returns {{errors:string[], ids:number}} refusal lines (one per failing id) and the number of CONFIRMED or CONFLICT ids checked
++ */
++export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = 'close', seats = [], seatRoot = null, summary = null }) {
++  const errors = [];
++  const kinds = new Map(lensKinds ?? []);
++  // seats (Integration, Reality-Check, Ground-truth): one report each, one finding per line; its findings are BUG kind and need a verdict and an outcome like any lens finding
++  for (const s of seats) {
++    if (seatRoot && !String(s.path).startsWith(seatRoot)) { errors.push(`Seat ${s.name}: ${s.path} is outside ${seatRoot} (the seat file is read from the tree of the ${mode} mode)`); continue; }
++    if (s.text === null || s.text === undefined) { errors.push(`Seat ${s.name}: ${s.path} is not in the repo (the file the Seat line names must be committed)`); continue; }
++    if (sha(s.text).slice(0, 12) !== s.sha) { errors.push(`Seat ${s.name}: ${s.path} has sha256:${sha(s.text).slice(0, 12)}, the Seat line says sha256:${s.sha} (the seat file was edited after the grounder ruled)`); continue; }
++    const found = s.text.split('\n').map((ln) => SEAT_LINE.exec(ln)).filter(Boolean);
++    if (found.length === 0) { errors.push(`Seat ${s.name}: ${s.path} holds no finding line (form: "### <seat id>#<n> CRITICAL|HIGH|MED|LOW|NIT: ..."); a seat file with no finding line is not a seat report`); continue; }
++    for (const m of found) {
++      const id = `${m[1]}#${m[2]}`;
++      kinds.set(id, { kind: 'BUG', sev: normSev(m[3]), line: m[0].trim() });
++      if (!verdicts.has(id)) errors.push(`${id} ${m[3]}: seat finding of ${s.name} has no verdict line in GROUNDER.md (form: <id> CONFIRMED|REJECTED|CONFLICT <path>:<line> "<quote>" [reason]) [Spec 08 section 5.3, 08_agents.md:225]`);
++    }
++  }
++  // the outcome file: ONLY THE LAST LINE of an id is judged; a line for an id the grounder file does not hold is ignored
++  const last = new Map();
++  for (const raw of String(triageText ?? '').split('\n')) {
++    const m = /^\s*(?:[-*]\s+)?([A-Za-z0-9._-]+#\d+)\s+(\S.*?)\s*$/.exec(raw.replace(/[`*]/g, ''));
++    if (m && verdicts.has(m[1])) last.set(m[1], m[2]);
++  }
++  const rows = [];
++  const ids = [...verdicts].filter(([, v]) => v.word === 'CONFIRMED' || v.word === 'CONFLICT');
++  const call = (errs, what, fn) => { try { const r = fn(); if (r === undefined) { errs.push(`the fact callback for ${what} returned nothing, so it cannot be proved`); return FAIL; } return r; } catch (e) { errs.push(`the fact callback for ${what} failed: ${String(e?.message ?? e).split('\n')[0]}`); return FAIL; } };
++  for (const [id, v] of ids) {
++    const k = kinds.get(id) ?? { kind: 'BUG', sev: null };
++    const sev = reasonSev(v.reason) ?? normSev(k.sev) ?? 'CRITICAL';
++    const low = sev === 'LOW' || sev === 'NIT';
++    const conflict = v.word === 'CONFLICT';
++    const fixWord = mode === 'plan' ? 'folded' : 'fixed';
++    const allowed = conflict ? ['ruling', fixWord] : low ? FORM_WORDS[mode] : k.kind === 'DEFER' ? [fixWord, 'task', 'ruling'] : [fixWord, 'ruling'];
++    const pass = allowed.map((w) => ({ fixed: `fixed:<sha> <path the commit touches>`, folded: `folded:"<20+ characters present in the task text>"`, task: 'task:task-N (its text names this id)', ruling: 'ruling:RR-NNNN or ruling:decision-N', wontfix: 'wontfix:"<reason, 30+ characters>"', pile: 'pile:"<reason, 30+ characters>"' })[w]).join(' | ');
++    const rule = conflict ? 'Spec 08 section 5.3 (08_agents.md:225): a conflict waits for the operator ruling' : k.kind === 'DEFER' && !low ? 'Spec 08 section 7 rule 6 (08_agents.md:350): DEFER goes to review_followups.md with reasons' : low ? 'Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later)' : 'Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors';
++    const refuse = (why) => errors.push(`${id} ${sev}: ${why} [${rule}; verdict ${v.file}:${v.line}; form that passes: ${id} ${pass}]`);
++    const text = last.get(id);
++    if (text === undefined) { refuse(`no outcome line in TRIAGE.md`); continue; }
++    const fm = /^(fixed|folded|task|ruling|wontfix|pile)\s*:\s*(.*)$/s.exec(text);
++    if (!fm) { refuse(`the last TRIAGE.md line "${text.slice(0, 60)}" fits no form`); continue; }
++    const [, word, rawArg] = fm;
++    const arg = rawArg.trim();
++    if (!allowed.includes(word)) {
++      refuse(word === 'fixed' && mode === 'plan' ? 'fixed is refused in plan mode (the fix is made before a lane branch exists; use folded)' : word === 'folded' && mode !== 'plan' ? 'folded is a plan-mode form (a lane close uses fixed)' : conflict ? `a CONFLICT takes ${allowed.join(' or ')} only, not ${word}` : `${word} is not allowed for a ${sev} ${k.kind} finding${(word === 'wontfix' || word === 'pile') ? ' (wontfix and pile are for LOW and NIT only)' : word === 'task' ? ' (task is for a DEFER finding; a BUG is fixed before Green Light)' : ''}`);
++      continue;
++    }
++    const errs = [];
++    let ref = '';
++    if (word === 'fixed') {
++      const am = /^([0-9a-fA-F]{7,40})\s+(\S.*)$/.exec(arg);
++      if (!am) errs.push('fixed needs a sha (7+ hex) and the path the commit touches: fixed:<sha> <path>');
++      else {
++        const p = am[2].trim().replace(/^["'`]|["'`]$/g, '');
++        ref = am[1].slice(0, 7);
++        const full = call(errs, `sha ${am[1]}`, () => facts.resolveSha(am[1]));
++        if (full === null) errs.push(`${am[1]} is not a commit of this repo`);
++        else if (full !== FAIL) {
++          const anc = call(errs, 'the ancestor test', () => facts.isAncestor(full));
++          if (anc === false) errs.push(`${am[1]} is not an ancestor of HEAD (a rebase or amend rewrote it: record the fixed line again with the new sha)`);
++          else if (anc !== FAIL) {
++            const inr = call(errs, 'the launch range', () => facts.inRange(full));
++            if (inr === false) errs.push(`${am[1]} is not in the range from the task's launch commit to HEAD (it is older than the launch, or on another branch)`);
++            else if (inr !== FAIL) {
++              const tch = call(errs, 'the touched paths', () => facts.touches(full, p));
++              if (tch === false) errs.push(`${am[1]} does not touch ${p}`);
++              else if (tch !== FAIL) { const rv = call(errs, 'the revert search', () => facts.reverts(full)); if (rv === true) errs.push(`${am[1]} is reverted by a later commit of the range ("This reverts commit ${full}")`); }
++            }
++          }
++        }
++      }
++    } else if (word === 'folded') {
++      const q = unq(arg);
++      ref = q.slice(0, 20);
++      if (q.length < 20) errs.push('folded needs a quote of 20+ characters present in the task text');
++      else { const t = call(errs, 'the task text', () => facts.taskText()); if (t !== FAIL && !squash(t).includes(q)) errs.push(`the quote "${q.slice(0, 40)}" is not in the task text`); }
++    } else if (word === 'task') {
++      const tm = /^(task-\d+)\b/i.exec(arg);
++      if (!tm) errs.push('task needs a task id: task:task-N');
++      else {
++        ref = tm[1].toLowerCase();
++        const ti = call(errs, `task ${ref}`, () => facts.taskOf(ref));
++        if (ti === null || (ti !== FAIL && !ti.exists)) errs.push(`${ref} has no task file`);
++        else if (ti !== FAIL) {
++          if (String(ti.status).toUpperCase() === 'DROPPED') errs.push(`${ref} is DROPPED`);
++          else if (!new RegExp(`(?<![A-Za-z0-9_-])${esc(id)}(?!\\d)`).test(ti.text) && !ti.text.includes(v.file)) errs.push(`the text of ${ref} names neither the finding id ${id} (as a whole token) nor the cited path ${v.file}`);
++        }
++      }
++    } else if (word === 'ruling') {
++      const rm = /^(RR-\d{4}|decision-\d+)\b/i.exec(arg);
++      if (!rm) errs.push('ruling needs RR-NNNN or decision-N');
++      else {
++        ref = rm[1].replace(/^rr-/i, 'RR-').replace(/^decision-/i, 'decision-');
++        const ex = call(errs, `decision ${ref}`, () => facts.decisionExists(ref));
++        if (ex === false) errs.push(`${ref} has no decision record (record the operator's answer as a decision first)`);
++      }
++    } else {
++      const reason = unq(arg);
++      if (reason.length < 30) errs.push(`the ${word} reason is ${reason.length} characters; 30+ are needed after whitespace is squashed`);
++    }
++    if (errs.length) { refuse(errs.join('; ')); continue; }
++    rows.push({ id, sev, word, ref });
++  }
++  // visible on the task (step 6): the Final Summary holds the round line and one line per CRITICAL, HIGH or MED finding; checked only when every id has a good outcome
++  if (summary && errors.length === 0 && ids.length > 0) {
++    const count = (w) => rows.filter((r) => r.word === w).length;
++    const fixWord = mode === 'plan' ? 'folded' : 'fixed';
++    const head = /<!-- SECTION:FINAL_SUMMARY:BEGIN -->([\s\S]*?)<!-- SECTION:FINAL_SUMMARY:END -->/.exec(summary.headText ?? '')?.[1] ?? '';
++    const n = 1 + (head.match(/^\s*Review round \d+:/gm) ?? []).length;
++    const round = `Review round ${n}: ${count(fixWord)} ${fixWord}, ${count('task')} task, ${count('ruling')} ruling, ${count('wontfix')} wontfix, ${count('pile')} pile; grounder ${summary.grounderPath}; triage ${summary.triagePath}`;
++    const lines = rows.filter((r) => r.sev === 'CRITICAL' || r.sev === 'HIGH' || r.sev === 'MED').map((r) => `${r.id} ${r.sev} ${r.word} ${r.ref}`);
++    const have = String(summary.text ?? '');
++    const miss = [round, ...lines].filter((l) => !have.includes(l));
++    if (miss.length) errors.push(`the task's Final Summary lacks ${miss.length} of ${lines.length + 1} required line(s) (the outcomes are shown on the task page, Spec 08 section 7 rule 3): ${miss.slice(0, 3).map((l) => `"${l.slice(0, 70)}"`).join(', ')}${miss.length > 3 ? ', ...' : ''}; the block is:\n${[round, ...lines].join('\n')}\n(one command: backlog task edit task-N --final-summary "<what landed>" --append-final-summary "<block>" -s BUILT)`);
++  }
++  return { errors, ids: ids.length };
++}
++
++/** The git facts the outcome check needs, as callbacks (so outcomeErrors stays pure). `L` is the task's launch commit (null: the range facts throw). */
++export function gitFacts(L) {
++  let range = null; let revText = null;
++  const need = () => { if (!L) throw new Error('the task launch commit is unknown, so the range L..HEAD cannot be computed'); };
++  const files = (dir) => git(['ls-files', '--cached', '--', dir]).stdout.split('\n').filter(Boolean);
++  return {
++    resolveSha: (s) => { if (!/^[0-9a-f]{7,40}$/i.test(s)) return null; const r = git(['rev-parse', '--verify', '--quiet', `${s}^{commit}`]); return r.status === 0 ? r.stdout.trim() : null; },
++    isAncestor: (f) => { const r = git(['merge-base', '--is-ancestor', f, 'HEAD']); if (r.status > 1) throw new Error(`git merge-base failed (status ${r.status})`); return r.status === 0; },
++    inRange: (f) => { need(); if (!range) { const r = git(['rev-list', `${L}..HEAD`]); if (r.status !== 0) throw new Error('git rev-list failed'); range = new Set(r.stdout.split('\n').filter(Boolean)); } return range.has(f); },
++    touches: (f, p) => { const r = git(['diff-tree', '--no-commit-id', '--name-only', '-r', '-m', '--no-renames', f]); if (r.status !== 0) throw new Error(`git diff-tree failed for ${f.slice(0, 9)}`); return r.stdout.split('\n').includes(p); },
++    reverts: (f) => { need(); if (revText === null) { const r = git(['log', `${L}..HEAD`, '--format=%B']); if (r.status !== 0) throw new Error('git log failed'); revText = r.stdout; } return revText.includes(`This reverts commit ${f}`); },
++    taskOf: (tid) => {
++      const n = /\d+/.exec(tid)?.[0];
++      const f = files('backlog/tasks').find((p) => new RegExp(`^backlog/tasks/task-0*${n}( -.*)?\\.md$`, 'i').test(p));
++      if (!f) return { exists: false, status: '', text: '' };
++      const x = git(['show', `:${f}`]);
++      if (x.status !== 0) throw new Error(`cannot read ${f}`);
++      return { exists: true, status: String(parseFM(x.stdout).fm.status ?? ''), text: x.stdout };
++    },
++    decisionExists: (ref) => {
++      const fs_ = files('backlog/decisions');
++      if (/^decision-\d+$/i.test(ref)) return fs_.some((p) => path.basename(p).toLowerCase().startsWith(`${ref.toLowerCase()} -`));
++      return fs_.some((p) => path.basename(p).includes(ref) || new RegExp(`^title:.*${esc(ref)}`, 'm').test(git(['show', `:${p}`]).stdout.split('\n').slice(0, 12).join('\n')));
++    },
++  };
++}
++
+ /**
+  * Every refusal for one closing task, as lines. Pure of git: the caller supplies what it read.
+  * @param {{id:string, taskText:string, fm:object, assignees:string[], headAssignees:string[], type:string, table:object, root:string, letter?:string,
+@@ -282,8 +459,7 @@ export function closeErrors(i) {
+     if (!have) errors.push(`GROUNDER.md: no "Ruled:" line for ${f.name} (expected: ${want})`);
+     else if (`Ruled: ${f.name} sha256:${have.sha} findings:${have.n}` !== want) errors.push(`GROUNDER.md: the "Ruled:" line for ${f.name} does not match the committed output (the grounder ruled on sha256:${have.sha} findings:${have.n}, the file is now ${want.replace(`Ruled: ${f.name} `, '')}: the output was edited after grounding, or the count is wrong)`);
+   }
+-  const verdicts = new Map();
+-  for (const raw of g.split('\n')) { const v = VERDICT.exec(raw.replace(/[`*]/g, '')); if (v) verdicts.set(v[1], { word: v[2], file: v[3], line: Number(v[4]), quote: v[5], reason: v[6].trim() }); }
++  const verdicts = parseVerdicts(g);
+   const seenQuote = new Map();
+   for (const f of findings) {
+     const v = verdicts.get(f.id);
+@@ -304,6 +480,11 @@ export function closeErrors(i) {
+     if (!cited.includes(q)) errors.push(`GROUNDER.md: finding ${f.id}: the quote is not on ${v.file}:${v.line}`);
+     else if (lines.filter((x) => squash(x) === cited).length > 3) errors.push(`GROUNDER.md: finding ${f.id}: the cited line occurs more than 3 times in ${v.file} (a boilerplate line proves nothing): cite a line specific to the finding`);
+   }
++  // task-399: every CONFIRMED or CONFLICT id carries one outcome (TRIAGE.md, last line wins), and the outcomes are shown on the task
++  if (build) {
++    const dirPath = mine[0][0];
++    errors.push(...outcomeErrors({ verdicts, triageText: textOf('TRIAGE.md') ?? '', lensKinds: new Map(findings.map((f) => [f.id, lensKindOf(f.line)])), facts: i.facts, mode: 'close', seats: seatLines(g, readRepo), seatRoot: `${dirPath}/`, summary: { text: i.taskText, headText: i.headTaskText ?? '', grounderPath: `${dirPath}/GROUNDER.md`, triagePath: `${dirPath}/TRIAGE.md` } }).errors);
++  }
+   return errors;
+ }
+ 
+@@ -336,7 +517,7 @@ function check(msgFile) {
+     const was = git(['show', `HEAD:${f}`]);
+     const headFm = was.status === 0 ? parseFM(was.stdout).fm : {};
+     if (was.status === 0 && String(headFm.status ?? '').toUpperCase() === status) continue;
+-    moves.push({ f, now: now.stdout, fm, headFm, status });
++    moves.push({ f, now: now.stdout, fm, headFm, status, headText: was.status === 0 ? was.stdout : '' });
+   }
+   if (moves.length === 0) return 0;
+   if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: a task close needs the board, because the keys that decide what is checked and the task's launch commit come from it (fail closed)`]);
+@@ -435,7 +616,7 @@ function check(msgFile) {
+     const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];
+     const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
+     const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
+-    errors.push(...closeErrors({ id, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase }));
++    errors.push(...closeErrors({ id, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase, facts: gitFacts(L), headTaskText: mv.headText }));
+   }
+   // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
+   const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
+@@ -450,4 +631,27 @@ function check(msgFile) {
+   }
+   return errors.length ? fail(errors) : 0;
+ }
+-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = check(process.argv[2]);
++/** CLI: node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>: prints "checked N ids", then one line per refusal; exit 1 on any refusal (reads the directory on disk and the git facts of the current repo). */
++export function outcomesCli(dir) {
++  if (!dir) { process.stderr.write('usage: check-lane-close.mjs --outcomes <lane dir>\n'); return 1; }
++  const abs = path.resolve(dir);
++  const top = git(['rev-parse', '--show-toplevel']).stdout.trim() || process.cwd();
++  const rd = (n) => { try { return fs.readFileSync(path.join(abs, n), 'utf8'); } catch { return null; } };
++  const g = rd('GROUNDER.md');
++  if (g === null) { process.stdout.write(`no GROUNDER.md in ${dir}\n`); return 1; }
++  const lensFiles = fs.readdirSync(abs).filter(isLensOutput).sort().map((name) => ({ name, text: fs.readFileSync(path.join(abs, name), 'utf8') }));
++  const verdicts = parseVerdicts(g);
++  const rel = path.relative(top, abs).split(path.sep).join('/');
++  // the launch commit L: the first board commit that holds this lane's assignee on the task file named by the lane's TASK file
++  let L = null;
++  const num = /task-0*(\d+)/i.exec(rd('TASK') ?? '')?.[1];
++  const boardRef = BOARD_REFS.find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0);
++  if (num && boardRef) {
++    const bf = git(['ls-tree', '--name-only', boardRef, 'backlog/tasks/']).stdout.split('\n').find((n) => new RegExp(`^backlog/tasks/task-0*${num}( -.*)?\\.md$`, 'i').test(n));
++    if (bf) L = git(['log', boardRef, '--first-parent', '--reverse', '--format=%H', `-S@lane-${path.basename(abs)}`, '--', bf]).stdout.split('\n').filter(Boolean)[0] ?? null;
++  }
++  const r = outcomeErrors({ verdicts, triageText: rd('TRIAGE.md') ?? '', lensKinds: new Map(findingsIn(lensFiles).map((f) => [f.id, lensKindOf(f.line)])), facts: gitFacts(L), mode: 'close', seats: seatLines(g, (p) => { try { return fs.readFileSync(path.join(top, p), 'utf8'); } catch { return null; } }), seatRoot: `${rel}/` });
++  process.stdout.write(`checked ${r.ids} ids\n${r.errors.map((e) => `${e}\n`).join('')}`);
++  return r.errors.length ? 1 : 0;
++}
++if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = process.argv[2] === '--outcomes' ? outcomesCli(process.argv[3]) : check(process.argv[2]);
+diff --git a/src/tests/backlog/backlog-brief.logic.test.ts b/src/tests/backlog/backlog-brief.logic.test.ts
+index e11bfc09e8da99d96b5bb13014a83a0485d6b047..3f3be976d5f27a5e6fd2843e7ed8532e0390ca81 100644
+--- a/src/tests/backlog/backlog-brief.logic.test.ts
++++ b/src/tests/backlog/backlog-brief.logic.test.ts
+@@ -60,7 +60,10 @@ describe('G1 backlog-brief (test 4)', () => {
+     expect(r.stdout).toMatch(/bash_allow/);
+     expect(r.stdout).toMatch(/--final-summary/);
+     expect(r.stdout).toMatch(/--check-ac/);
+-    expect(r.stdout).toMatch(/-s DONE\|BUILT|-s DONE/);
++    expect(r.stdout).toMatch(/--append-final-summary/);
++    expect(r.stdout).toMatch(/-s BUILT/);
++    expect(r.stdout).toMatch(/check-lane-close\.mjs --outcomes/);
++    expect(r.stdout).toMatch(/do NOT run --plan/);
+     expect(r.stdout).toMatch(/STATUS: ready\|blocked\|failed\|dropped/);
+   });
+ 
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index 1957eaef9aa8b67ffabc3b60cd7b6a37a51fed47..dce28ed5bfdbb51ab557610802b34f8ac78e4676 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -39,7 +39,7 @@ const promptHash = (inputText: string, templateText = TEMPLATE_TEXT) => {
+ };
+ const hdr = (template: string, inputText: string | null, prompt?: string) => `REVIEW template=${template} model=deepseek-reasoner at=2026-11-20T10:00:00.000Z file_sha256=${inputText === null ? HEX64 : sha(inputText)} prompt_sha256=${prompt ?? (inputText !== null ? promptHash(inputText, templateOf(template)) : HEX64)}\n`;
+ const DIFF_FLAGS = (JSON.parse(run('node', ['-e', "import('./scripts/analysis/rule-lists.mjs').then((m)=>console.log(JSON.stringify(m.DIFF_ARGS)))"], { cwd: ROOT }).stdout) as string[]);
+-const body = (finding: boolean) => `noise\n${finding ? FINDING : ''}MET — c — d — e\nVERDICT: PASS on compliance\n`;
++const body = (finding: boolean, line: string = FINDING) => `noise\n${finding ? line : ''}MET — c — d — e\nVERDICT: PASS on compliance\n`;
+ const nFind = (t: string) => (t.match(/^\s*[-*]?\s*(BUG|DEFER)\s+severity=/gm) ?? []).length;
+ const isLens = (n: string) => /^(plan|out)-.+\.txt$/.test(n);
+ const refLine = (stem: string, k: number) => `${stem}#${k}`;
+@@ -65,8 +65,11 @@ type Opts = {
+   tableEdit?: (t: Record<string, unknown>) => void; laneWork?: Record<string, string>; staged?: Record<string, string>; otherTask?: boolean;
+   split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
+   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
++  // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
++  triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean;
+   mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
+ };
++type TriageCtx = { ids: { id: string; word: string; sev: string }[]; sha: string; path: string; base: string; d: string };
+ function scenario(o: Opts = {}) {
+   const d = tmp('lc');
+   const g = (...a: string[]) => run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...a], { cwd: d });
+@@ -79,13 +82,16 @@ function scenario(o: Opts = {}) {
+   w('docs/a.md', '# A\nrule one text\nrule two text\n'); w('docs/ev.md', '# Ev\nthe five words and the plan protocol\n'); w('docs/ms.md', '# Ms\nthe milestone objectives\n'); w('docs/inc.md', '# Inc\nincrement text\n');
+   w('src/a.ts', AFILE); w('src/long.ts', Array.from({ length: 40 }, (_, i) => `export const L${i} = ${i};`).join('\n') + '\n');
+   w('backlog/milestones/m-0 - inc.md', '---\nid: m-0\ntitle: "Increment 1·A Foundations [F]"\n---\n');
+-  w(TASK, taskText({ status: o.before ?? 'RUNNING', type: o.beforeType ?? o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees }));
+-  if (o.otherTask) w(OTHER, taskText({ id: 'TASK-8', status: 'RUNNING', type: o.otherType, assignees: o.otherAssignees }));
++  w(TASK, `${taskText({ status: o.before ?? 'RUNNING', type: o.beforeType ?? o.type, files: o.files, assignees: o.beforeAssignees ?? o.assignees })}${o.priorRound ? '\n## Final Summary\n\n<!-- SECTION:FINAL_SUMMARY:BEGIN -->\nReview round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder x; triage y\n<!-- SECTION:FINAL_SUMMARY:END -->\n' : ''}`);
++  if (!o.noDecision) w('backlog/decisions/decision-1 - RR-0001-test-ruling.md', '---\nid: decision-1\ntitle: RR-0001 test ruling\n---\n');
++  if (o.otherTask) w(OTHER, `${taskText({ id: 'TASK-8', status: o.otherStatus ?? 'RUNNING', type: o.otherType, assignees: o.otherAssignees })}${o.otherExtra ?? ''}`);
+   for (const [p, x] of LENS_TEMPLATES) w(p, x);
+   g('add', '-A'); g('commit', '-qm', 'base'); g('branch', 'wf2/board');
+   const baseSha = g('rev-parse', 'HEAD').stdout.trim();
+   const laneWork = o.laneWork ?? { 'src/a.ts': `${AFILE}// lane work\n` };
+   if (Object.keys(laneWork).length || o.laneDelete) { for (const [f, t] of Object.entries(laneWork)) w(f, t); for (const p of o.laneDelete ?? []) fs.rmSync(path.join(d, p)); g('add', '-A'); g('commit', '-qm', 'lane work'); }
++  const laneSha = g('rev-parse', 'HEAD').stdout.trim();
++  if (o.revertLane) g('commit', '--allow-empty', '-qm', `Revert lane work\n\nThis reverts commit ${laneSha}.`);
+   if (o.tagAtHead) g('tag', o.tagAtHead);
+   if (o.folded) g('branch', '-f', 'wf2/board', 'HEAD');
+   if (o.noBoard) g('branch', '-D', 'wf2/board');
+@@ -112,9 +118,9 @@ function scenario(o: Opts = {}) {
+       const nm = path.basename(p);
+       const inText = fs.readFileSync(p, 'utf8');
+       lane[nm] = inText;
+-      lane[nm.replace(/^in-/, '')] = hdr('lens-compliance.md', inText) + body(id === 'first' && o.lensFinding !== false);
++      lane[nm.replace(/^in-/, '')] = hdr('lens-compliance.md', inText) + body(id === 'first' && o.lensFinding !== false, o.finding);
+     }
+-    if (r.status !== 0) { lane[`in-out-compliance-${id}.txt`] = ''; lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', '') + body(id === 'first' && o.lensFinding !== false); }
++    if (r.status !== 0) { lane[`in-out-compliance-${id}.txt`] = ''; lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', '') + body(id === 'first' && o.lensFinding !== false, o.finding); }
+   }
+   lane['out-code-review.txt'] = hdr('lens-code-review.md', material) + body(false);
+   if (o.split?.lens) {
+@@ -129,10 +135,25 @@ function scenario(o: Opts = {}) {
+   let l = o.mutate ? o.mutate(lane, d) : lane;
+   if (!('GROUNDER.md' in l)) l['GROUNDER.md'] = grounder(l, o.g);
+   if (o.after) l = o.after(l);
++  // task-399: the outcome records a valid close carries: TRIAGE.md (one line per CONFIRMED or CONFLICT id) and the Final Summary block the check recomputes
++  const verdictRows = String(l['GROUNDER.md'] ?? '').split('\n').map((ln) => /^(\S+) (CONFIRMED|CONFLICT)\b(.*)$/.exec(ln)).filter((m): m is RegExpExecArray => m !== null)
++    .map((m) => { const reason = /"[^"]*"\s*(.*)$/.exec(m[3] ?? '')?.[1] ?? ''; const hit = /\b(CRITICAL|HIGH|MED|LOW|NIT)\b/.exec(reason.slice(0, 40)); return { id: m[1] as string, word: m[2] as string, sev: hit ? (hit[1] as string) : 'HIGH' }; });
++  const laneFirst = Object.keys(o.laneWork ?? { 'src/a.ts': '' })[0] ?? 'src/a.ts';
++  const tctx: TriageCtx = { ids: verdictRows, sha: laneSha, path: laneFirst, base: baseSha, d };
++  if (!('TRIAGE.md' in l) && verdictRows.length) l['TRIAGE.md'] = o.triage ? o.triage(tctx) : `${verdictRows.map((r) => (r.word === 'CONFLICT' ? `${r.id} ruling:RR-0001` : `${r.id} fixed:${laneSha} ${laneFirst}`)).join('\n')}\n`;
++  if (verdictRows.length && o.summary !== false && !o.noTaskFile && !o.taskFileText) {
++    // the block is derived from the final TRIAGE.md (last line per id), the way the check recomputes it
++    const tri = String(l['TRIAGE.md'] ?? '').split('\n');
++    const got = verdictRows.map((r) => { const m = tri.map((ln) => new RegExp(`^${r.id.replace(/[#.]/g, '\\$&')} (\\w+):(\\S+)`).exec(ln)).filter(Boolean).pop(); return { ...r, form: m?.[1] ?? 'none', ref: m?.[1] === 'fixed' ? (m[2] as string).slice(0, 7) : (m?.[2] ?? '') }; });
++    const n = (k: string) => got.filter((r) => r.form === k).length;
++    const block = [`Review round ${o.priorRound ? 2 : 1}: ${n('fixed')} fixed, ${n('task')} task, ${n('ruling')} ruling, ${n('wontfix')} wontfix, ${n('pile')} pile; grounder ${LD}/GROUNDER.md; triage ${LD}/TRIAGE.md`, ...got.filter((r) => ['CRITICAL', 'HIGH', 'MED'].includes(r.sev)).map((r) => `${r.id} ${r.sev} ${r.form} ${r.ref}`)];
++    fs.appendFileSync(path.join(d, o.finalTaskPath ?? TASK), `\n## Final Summary\n\n<!-- SECTION:FINAL_SUMMARY:BEGIN -->\n${(o.summary ? o.summary(block) : block).join('\n')}\n<!-- SECTION:FINAL_SUMMARY:END -->\n`);
++  }
+   for (const [n, t] of Object.entries(l)) if (t !== null) w(`${LD}/${n}`, t);
+   g('add', '-A');
+   const msgFile = path.join(d, '.git/MSG');
+   fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
++  if (o.cli) return script('scripts/hooks/check-lane-close.mjs', ['--outcomes', LD], { cwd: d });
+   return script('scripts/hooks/check-lane-close.mjs', [msgFile], { cwd: d });
+ }
+ const refused = (r: { status: number | null; stderr: string }, re: RegExp, attack?: number) => {
+@@ -573,3 +594,161 @@ describe('close check: the fix round for the grounder attacks (V2.WHOLE)', () =>
+     expect(ok.status, ok.stderr).toBe(0);
+   });
+ });
++
++// ---- task-399 (FOLD.ADOPT): every CONFIRMED or CONFLICT finding carries an outcome the close check verifies ----
++// SPEC LINK (task-399): Spec 08 section 7 rule 3 (08_agents.md:346 "fold survivors, file rejections with reasons"), rule 6 (:350 BUG goes to WF3 before Green Light, DEFER to review_followups.md with reasons), section 5.3 (:225).
++// Each planted defect has a passing control; every spawned-CLI assertion first checks exit status and the "checked N ids" line before any absence assertion (R-CP 124a:296).
++const ID = 'out-compliance-first#1';
++const DEFER_LINE = 'DEFER severity=HIGH — clause "x" — src/a.ts:1 "y" — claim — fix\n';
++const other = (extra = '', status = 'RUNNING'): Opts => ({ otherTask: true, otherStatus: status, otherExtra: extra, finding: DEFER_LINE });
++const cli = (o: Opts = {}) => {
++  const r = scenario({ ...o, cli: true });
++  expect(r.status, r.stderr).not.toBeNull();
++  return r;
++};
++const closeRefused = (o: Opts, re: RegExp) => { const r = scenario(o); expect(r.status, r.stderr).toBe(1); expect(r.stderr).toMatch(re); return r; };
++type Mod = { outcomeErrors: (a: Record<string, unknown>) => { errors: string[]; ids: number } };
++const loadMod = () => import(path.join(ROOT, 'scripts/hooks/check-lane-close.mjs')) as Promise<Mod>;
++const goodFacts = { resolveSha: (s: string) => s.padEnd(40, '0'), isAncestor: () => true, inRange: () => true, touches: () => true, reverts: () => false, taskOf: () => ({ exists: true, status: 'RUNNING', text: 'id#1' }), decisionExists: () => true, taskText: () => 'the folded plan text holds this sentence whole' };
++const V = (word: string, reason = '') => new Map([['id#1', { word, file: 'src/a.ts', line: 1, quote: 'q', reason }]]);
++const K = (kind: string, sev: string) => new Map([['id#1', { kind, sev }]]);
++
++describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399)', () => {
++  it('control: the default close (every CONFIRMED id has a fixed line with a real lane commit and the Final Summary holds the block) passes', () => {
++    const r = scenario();
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('control: the --outcomes command on the same lane prints "checked 1 ids" and exits 0', () => {
++    const r = cli();
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout).toMatch(/^checked 1 ids\n/);
++  });
++  it('PLANTED DEFECT: an id with no outcome line is refused, naming the id, its severity, the verdict and the form that passes', () => {
++    const r = closeRefused({ triage: () => '' }, /out-compliance-first#1 HIGH: no outcome line in TRIAGE\.md/);
++    expect(r.stderr).toMatch(/form that passes: out-compliance-first#1 fixed:<sha>/);
++  });
++  it('PLANTED DEFECT: with no TRIAGE.md at all every id is refused, one line each, and the CLI prints "checked 1 ids" first', () => {
++    const r = cli({ mutate: (l) => ({ ...l, 'TRIAGE.md': null }), triage: () => '' });
++    expect(r.status, r.stdout).toBe(1);
++    expect(r.stdout.split('\n')[0]).toBe('checked 1 ids');
++    expect(r.stdout.split('\n').filter((x) => /no outcome line/.test(x))).toHaveLength(1);
++  });
++  it('the LAST line of an id is judged: an earlier wrong line does not matter (control), a wrong last line is refused', () => {
++    const ok = scenario({ triage: (c) => `${ID} fixed:deadbee src/a.ts\n${ID} fixed:${c.sha} ${c.path}\n` });
++    expect(ok.status, ok.stderr).toBe(0);
++    closeRefused({ triage: (c) => `${ID} fixed:${c.sha} ${c.path}\n${ID} fixed:deadbee src/a.ts\n` }, /not a commit of this repo/);
++  });
++  it('PLANTED DEFECT: a line that starts with a known id and fits no form (no path, unknown word) is refused; a line for a stale id is ignored (control)', () => {
++    closeRefused({ triage: (c) => `${ID} fixed:${c.sha.slice(0, 7)}\n` }, /fixed needs a sha/);
++    closeRefused({ triage: () => `${ID} done\n` }, /fits no form/);
++    const ok = scenario({ triage: (c) => `${ID} fixed:${c.sha} ${c.path}\nzzz#9 fixed:abc\n` });
++    expect(ok.status, ok.stderr).toBe(0);
++  });
++  it('PLANTED DEFECT: fixed with a fake sha, a sha not touching the path, a sha outside L..HEAD (the launch commit), is refused', () => {
++    closeRefused({ triage: (c) => `${ID} fixed:abcdef1 ${c.path}\n` }, /abcdef1 is not a commit/);
++    closeRefused({ triage: (c) => `${ID} fixed:${c.sha} src/long.ts\n` }, /does not touch src\/long\.ts/);
++    closeRefused({ triage: (c) => `${ID} fixed:${c.base} ${c.path}\n` }, /not in the range from the task's launch commit/);
++  });
++  it('PLANTED DEFECT: a sha reverted by a later commit of the range is refused; the same fix without the revert closes (control above)', () => {
++    closeRefused({ revertLane: true }, /is reverted by a later commit/);
++  });
++  it('task: on a DEFER finding passes when the task exists, is not DROPPED and names the id; refused for DROPPED, unknown, a text without the id, and x#1 against a task naming only x#12', () => {
++    const t: Opts = { ...other(`\nfollow-up for ${ID}\n`), triage: () => `${ID} task:task-8\n` };
++    const ok = scenario(t);
++    expect(ok.status, ok.stderr).toBe(0);
++    closeRefused({ ...t, ...other(`\nfollow-up for ${ID}\n`, 'DROPPED') }, /task-8 is DROPPED/);
++    closeRefused({ ...t, triage: () => `${ID} task:task-99\n` }, /task-99 has no task file/);
++    // the verdict cites a path no other task text holds, so only the id token can match
++    const far = { g: { verdict: () => 'CONFIRMED src/long.ts:1 "export const L0 = 0;"' } } as const;
++    closeRefused({ ...t, ...far, ...other('\nnothing about it\n') }, /names neither the finding id/);
++    closeRefused({ ...t, ...far, ...other(`\nfollow-up for ${ID}2 and out-compliance-first#12\n`) }, /names neither the finding id/);
++  });
++  it('PLANTED DEFECT: task: on a BUG finding of HIGH severity is refused (a BUG is fixed before Green Light)', () => {
++    closeRefused({ otherTask: true, otherExtra: `\n${ID}\n`, triage: () => `${ID} task:task-8\n` }, /task is not allowed for a HIGH BUG finding/);
++  });
++  it('ruling: a CONFLICT closed by ruling:RR-0001 passes (control); an unknown ruling and a CONFLICT closed by task: are refused', () => {
++    const c = (v: string): Opts => ({ g: { verdict: () => `CONFLICT src/a.ts:1 "export const value01 = 'alpha quote number 01';" the operator must rule on this` }, triage: () => `${ID} ${v}\n` });
++    const ok = scenario({ ...c('ruling:RR-0001') });
++    expect(ok.status, ok.stderr).toBe(0);
++    closeRefused({ ...c('ruling:RR-9999') }, /RR-9999 has no decision record/);
++    closeRefused({ ...c('task:task-8'), otherTask: true, otherExtra: `\n${ID}\n` }, /a CONFLICT takes ruling or fixed only/);
++  });
++  it('wontfix and pile: refused on a HIGH finding; on a LOW grounder severity (lowering the lens HIGH) they pass; a reason under 30 characters after squashing is refused; no parsable severity reads as CRITICAL', () => {
++    const reason = 'the line is a test fixture and nothing reads it';
++    closeRefused({ triage: () => `${ID} wontfix:"${reason}"\n` }, /wontfix is not allowed for a HIGH BUG finding/);
++    closeRefused({ triage: () => `${ID} pile:"${reason}"\n` }, /pile is not allowed for a HIGH BUG finding/);
++    const low = (t: string): Opts => ({ g: { verdict: () => `CONFIRMED src/a.ts:1 "export const value01 = 'alpha quote number 01';" LOW: cosmetic only` }, triage: () => `${ID} ${t}\n` });
++    for (const form of ['wontfix', 'pile']) { const ok = scenario(low(`${form}:"${reason}"`)); expect(ok.status, ok.stderr).toBe(0); }
++    closeRefused(low('wontfix:"too   short   reason"'), /reason is \d+ characters; 30\+ are needed/);
++    closeRefused({ finding: 'BUG severity=??? — clause "x" — src/a.ts:1 "y" — claim — fix\n', triage: () => `${ID} wontfix:"${reason}"\n` }, /out-compliance-first#1 CRITICAL: wontfix is not allowed/);
++  });
++  it('the seat report: control passes; a missing file, a changed sha, a report with no finding line, a seat finding with no verdict and one with no outcome are refused', () => {
++    const SEAT = '# seat report\n### rc2#1 HIGH: a seat finding\n';
++    const seatLine = (t: string) => `Seat: rc ${LD}/seat-rc.md sha256:${sha(t).slice(0, 12)}\n`;
++    const seated = (o: { file?: string | null; line?: string; verdict?: boolean; outcome?: boolean } = {}): Opts => ({
++      after: (l) => ({ ...l, ...(o.file === null ? {} : { 'seat-rc.md': o.file ?? SEAT }), 'GROUNDER.md': `${l['GROUNDER.md']}${o.line ?? seatLine(SEAT)}${o.verdict === false ? '' : 'rc2#1 CONFIRMED src/a.ts:1 "seat quote"\n'}` }),
++      triage: (c) => `${ID} fixed:${c.sha} ${c.path}\n${o.outcome === false ? '' : `rc2#1 fixed:${c.sha} ${c.path}\n`}`,
++    });
++    const ok = scenario(seated());
++    expect(ok.status, ok.stderr).toBe(0);
++    closeRefused(seated({ file: null }), /Seat rc: .* is not in the repo/);
++    closeRefused(seated({ line: seatLine('another text') }), /the Seat line says sha256/);
++    closeRefused(seated({ file: '# no finding lines here\n', line: seatLine('# no finding lines here\n') }), /holds no finding line/);
++    closeRefused(seated({ verdict: false }), /rc2#1 HIGH: seat finding of rc has no verdict line/);
++    closeRefused(seated({ outcome: false }), /rc2#1 HIGH: no outcome line/);
++  });
++  it('visible on the task: a Final Summary with no round line, a missing finding line or wrong counts is refused, and the refusal prints the exact block; N counts the round lines of the HEAD copy', () => {
++    closeRefused({ summary: false }, /Final Summary lacks 2 of 2 required line\(s\)[\s\S]*Review round 1: 1 fixed, 0 task, 0 ruling, 0 wontfix, 0 pile/);
++    closeRefused({ summary: (b) => b.slice(0, 1) }, /lacks 1 of 2 required line\(s\)/);
++    closeRefused({ summary: (b) => [b[0]!.replace('1 fixed', '2 fixed'), ...b.slice(1)] }, /lacks 1 of 2 required line\(s\)/);
++    const second = scenario({ priorRound: true });
++    expect(second.status, second.stderr).toBe(0);
++    closeRefused({ priorRound: true, summary: (b) => b.map((x) => x.replace('Review round 2', 'Review round 1')) }, /Review round 2: 1 fixed/);
++  });
++  it('a lane with zero CONFIRMED ids and no TRIAGE.md passes, and the CLI prints "checked 0 ids"', () => {
++    const r = scenario({ lensFinding: false });
++    expect(r.status, r.stderr).toBe(0);
++    const c = cli({ lensFinding: false });
++    expect(c.status, c.stderr).toBe(0);
++    expect(c.stdout).toBe('checked 0 ids\n');
++  });
++});
++
++describe('outcome check: the mode table, seats and failing callbacks (outcomeErrors, pure)', () => {
++  it('mode plan: folded takes the place of fixed (control passes with a quote present in the task text); fixed is refused; a quote under 20 characters or absent from the task text is refused', async () => {
++    const { outcomeErrors } = await loadMod();
++    const run1 = (triageText: string) => outcomeErrors({ verdicts: V('CONFIRMED'), triageText, lensKinds: K('BUG', 'HIGH'), facts: goodFacts, mode: 'plan' });
++    expect(run1('id#1 folded:"the folded plan text holds this sentence whole"').errors).toEqual([]);
++    expect(run1('id#1 fixed:abcdef1 src/a.ts').errors.join('\n')).toMatch(/fixed is refused in plan mode/);
++    expect(run1('id#1 folded:"too short"').errors.join('\n')).toMatch(/20\+ characters/);
++    expect(run1('id#1 folded:"a sentence that the task text does not hold at all"').errors.join('\n')).toMatch(/not in the task text/);
++  });
++  it('close mode refuses folded; a LOW finding of any kind closes by any form (control), a MED DEFER by task, a MED BUG not', async () => {
++    const { outcomeErrors } = await loadMod();
++    const r = (v: Map<string, unknown>, k: Map<string, unknown>, t: string) => outcomeErrors({ verdicts: v, triageText: t, lensKinds: k, facts: goodFacts, mode: 'close' }).errors.join('\n');
++    expect(r(V('CONFIRMED'), K('BUG', 'HIGH'), 'id#1 folded:"the folded plan text holds this sentence whole"')).toMatch(/folded is a plan-mode form/);
++    expect(r(V('CONFIRMED'), K('BUG', 'LOW'), 'id#1 task:task-5')).toBe('');
++    expect(r(V('CONFIRMED'), K('DEFER', 'MED'), 'id#1 task:task-5')).toBe('');
++    expect(r(V('CONFIRMED'), K('BUG', 'MED'), 'id#1 task:task-5')).toMatch(/task is not allowed for a MED BUG/);
++  });
++  it('PLANTED DEFECT: a callback that throws or returns nothing is one error line tied to the id, never a throw out of the check', async () => {
++    const { outcomeErrors } = await loadMod();
++    const t = 'id#1 fixed:abcdef1 src/a.ts';
++    const boom = outcomeErrors({ verdicts: V('CONFIRMED'), triageText: t, lensKinds: K('BUG', 'HIGH'), facts: { ...goodFacts, isAncestor: () => { throw new Error('git broke'); } }, mode: 'close' });
++    expect(boom.errors).toHaveLength(1);
++    expect(boom.errors[0]).toMatch(/^id#1 HIGH: .*callback for the ancestor test failed: git broke/);
++    const none = outcomeErrors({ verdicts: V('CONFIRMED'), triageText: t, lensKinds: K('BUG', 'HIGH'), facts: { ...goodFacts, touches: () => undefined }, mode: 'close' });
++    expect(none.errors).toHaveLength(1);
++    expect(none.errors[0]).toMatch(/returned nothing/);
++    expect(outcomeErrors({ verdicts: V('CONFIRMED'), triageText: t, lensKinds: K('BUG', 'HIGH'), facts: goodFacts, mode: 'close' }).errors).toEqual([]);
++  });
++  it('seat reports are read from the tree of the mode: a seat file outside it is refused; a "### rc2#1 HIGH:" line parses (control)', async () => {
++    const { outcomeErrors } = await loadMod();
++    const text = '### rc2#1 HIGH: a finding\n';
++    const seat = (p: string) => ({ name: 'rc', path: p, sha: sha(text).slice(0, 12), text });
++    const v = new Map([['rc2#1', { word: 'REJECTED', file: 'src/a.ts', line: 1, quote: 'q', reason: 'x'.repeat(30) }]]);
++    const mk = (p: string) => outcomeErrors({ verdicts: v, triageText: '', lensKinds: new Map(), facts: goodFacts, mode: 'plan', seats: [seat(p)], seatRoot: 'docs/reports/reviews/task-9/' }).errors;
++    expect(mk('docs/reports/reviews/task-9/seat.md')).toEqual([]);
++    expect(mk('docs/reports/lanes/x/seat.md').join('\n')).toMatch(/is outside docs\/reports\/reviews\/task-9\//);
++  });
++});
+

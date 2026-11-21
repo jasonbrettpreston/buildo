@@ -1,0 +1,60 @@
+   ✓ close check: the review material is the whole change (V2.WHOLE) > a chunk set with the last chunk deleted (all its list parts) is refused: the stamps say m chunks, and a file is missing 486ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > a file left out of ONE rule list review is refused too: the check runs per list 486ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > the paths staged in the closing commit itself (outside the exempt paths and the task files) are refused: they are in no chunk 436ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > the non-compliance lenses split by the same tool (lens-input with a lens template and no --list): out-<lens>-pN.txt with committed inputs closes (control) 557ms
+   ✓ close check: the review material is the whole change (V2.WHOLE) > PLANTED DEFECT: a split code-review run with its last chunk missing is refused, naming the lens 545ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > control: the default scenario (lane work in one file, split-free, every output bound) closes 406ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F1 (e) PLANTED DEFECT: a TAG with the base ref name cannot shadow the branch: a chunk set missing one file is still refused 446ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F8 PLANTED DEFECT: a lane folded into the base plus one fix commit is still covered whole (from its launch commit): a chunk set missing the pre-fold file is refused; the whole set closes (control) 798ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F12 PLANTED DEFECT: a generated report staged in a lane build close is refused; the lane own report directory is not (control above) 417ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F9 PLANTED DEFECT: a split no-list input with its head rewritten and the review re-run is refused; an arbitrary prompt_sha256 on an unsplit lens output is refused 1524ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F10 PLANTED DEFECT: a lens template edited on the lane (outputs hashed from the edited text) is refused: the template is read from the range base 367ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F10 PLANTED DEFECT: a lane that trims every_task in its own table (its Files line names the table) is still held to the range base every_task 397ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F1 (e) PLANTED DEFECT: a build task whose range is empty (closed after the lane was folded into the base) is refused, never skipped 354ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F2 (g binary) PLANTED DEFECT: a .gitattributes -diff line cannot hide code: material made without --text (Binary files differ) is refused; the same attributes with the shared flags close 805ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F3 (h) PLANTED DEFECT: an unsplit out-<lens>.txt with a zeroed file_sha256 is refused; one made on the whole-range diff closes (control above) 803ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F3 (h) PLANTED DEFECT: an unsplit out-<lens>.txt does not stand in for split parts: both present is refused 544ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F3 (k) PLANTED DEFECT: a compliance output with an arbitrary prompt_sha256 is refused; the recomputed one closes (control above) 403ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F3 (k) PLANTED DEFECT: line 2 of an input rewritten (the head the reviewer reads as instruction) and the review re-run on it is refused 380ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F4 PLANTED DEFECT: a doc close or queue-row edit that moves a non-lane task is not refused for a staged non-record path; a lane build close is 678ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F7 (f) PLANTED DEFECT: an earlier lane commit that widens exempt (scripts/**) and a material that leaves the table out is refused: exempt is read from the range base 427ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > F7 control: a lane commit that edits the table without moving exempt or base_ref (the table is reviewed like any file) closes 408ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > ITEM 3 (operator "1-5 y", item 3): a golden the existing golden check validates (a <state>.<target>.json under the golden folder, named in the table exempt with its check in exempt_why) is left out of the material and the close passes; the same folder with a code file renamed into it is refused 824ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H1 PLANTED DEFECT: a lane commit that cuts finished_statuses in its own table is refused (the board list decides what is a finished status); the control closes (default scenario) 413ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H1 PLANTED DEFECT: a lane commit that repoints base_ref to its own branch and widens exempt in the same commit is refused 405ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H4 PLANTED DEFECT: a lane that moves its task to another milestone is refused (the launch copy decides) 404ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H3 PLANTED DEFECT: a change to the prompt builder that the launch Files line does not name is refused; named at launch it closes 811ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H8 PLANTED DEFECT: dropping the lane assignee and retyping to doc or record, or setting the assignee to @human, in the closing commit is refused; the unchanged lane close passes (control above) 800ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H2 PLANTED DEFECT: a clone with no board ref: a commit that moves no task passes, a task close is refused with a clear line 470ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H9 PLANTED DEFECT: the lane assignee dropped in an EARLIER lane commit, then a retype to doc or record in the close, is refused: type and lane assignee come from the board copy 536ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H9 control: the three same-commit forms stay refused (see H8) and the unchanged close passes (default scenario) 402ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H9 round 6: the diff text is pinned against the config keys: the lane made its diff with diff.interHunkContext set high and the recompute still matches 412ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H9 PLANTED DEFECT: a lane that narrows its Files line at close cannot drop a rule list: the lists resolve from the union of the launch copy and the staged copy 883ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H10 PLANTED DEFECT: a task file renumbered to a number the board never held, unassigned and typed doc, closes nothing: refused in the closing commit and when the renumber came in two earlier commits 529ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H10 PLANTED DEFECT: a branch that deleted the lane task file closes nothing, even another task: refused; the same close with the file present passes (control) 550ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H10 control: a same-number retitle of the task file is not refused (the task is found by its number, the launch commit by the board path) 411ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > control: the default close (every CONFIRMED id has a fixed line with a real lane commit and the Final Summary holds the block) passes 403ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: an id with no outcome line is refused, naming the id, its severity, the verdict and the form that passes 391ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > the LAST line of an id is judged: an earlier wrong line does not matter (control), a wrong last line is refused 812ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: a line that starts with a known id and fits no form (no path, unknown word) is refused; a line for a stale id is ignored (control) 1170ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: fixed with a fake sha, a sha not touching the path, a sha outside L..HEAD (the launch commit), is refused 1187ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: a sha reverted by a later commit of the range is refused; the same fix without the revert closes (control above) 411ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > task: on a DEFER finding passes when the task exists, is not DROPPED and names the id; refused for DROPPED, unknown, a text without the id, and x#1 against a task naming only x#12 1967ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: task: on a BUG finding of HIGH severity is refused (a BUG is fixed before Green Light) 388ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > ruling: a CONFLICT closed by ruling:RR-0001 passes (control); an unknown ruling and a CONFLICT closed by task: are refused 1173ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > wontfix and pile: refused on a HIGH finding; on a LOW grounder severity (lowering the lens HIGH) they pass; a reason under 30 characters after squashing is refused; no parsable severity reads as CRITICAL 2307ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > the seat report: control passes; a missing file, a changed sha, a report with no finding line, a seat finding with no verdict and one with no outcome are refused 2525ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > visible on the task: a Final Summary with no round line, a missing finding line or wrong counts is refused, and the refusal prints the exact block; N counts the round lines of the HEAD copy 2012ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > a lane with zero CONFIRMED ids and no TRIAGE.md passes, and the CLI prints "checked 0 ids" 599ms
+
+ Test Files  2 passed (2)
+      Tests  111 passed (111)
+   Start at  19:11:00
+   Duration  75.82s (transform 20ms, setup 10ms, collect 36ms, tests 74.93s, environment 0ms, prepare 36ms)
+
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 4 file(s)
+[wf1/inc1b-outcome d86373d7a] feat(08_agents): the close check refuses a CONFIRMED finding with no outcome (task-399 FOLD.ADOPT)
+ 9 files changed, 415 insertions(+), 22 deletions(-)
+exit=0

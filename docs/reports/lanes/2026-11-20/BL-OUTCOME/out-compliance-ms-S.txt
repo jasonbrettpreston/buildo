@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:12:55.669Z file_sha256=afa3ee2a2dd9d2ccd1595ee7e189940cec5216f7224efe93f6bdb60484f442f5 prompt_sha256=1ff2a5a502b6f913983cd42271c86fa8fa40eb9d3552c4c47428aa69fd6107a5
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Project objectives, no scope creep "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — scripts/hooks/check-lane-close.mjs (new hunk at 121) "export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = 'close', seats = [], seatRoot = null, summary = null })" — the change adds an entire close gate (outcome lines, commit ancestry, launch-range, touched-path, revert search, task and decision existence, computed Final Summary block) that no pasted clause names, and it writes its own authority into two governing specs — split the outcome guard into its own operator-ruled task and keep this diff to what a pasted clause or ruling asks for.
+
+BUG severity=HIGH — Project objectives, no scope creep "keep it simple; no scope creep" — scripts/hooks/check-lane-close.mjs (new hunk at 121) "const FORM_WORDS = { close: ['fixed', 'task', 'ruling', 'wontfix', 'pile'], plan: ['folded', 'task', 'ruling', 'wontfix', 'pile'] };" — the change invents a plan-mode outcome vocabulary (folded, quote-of-20-chars against the task text, "fixed is refused in plan mode") that no pasted clause names and that no production caller selects, since outcomesCli passes mode: 'close' — delete mode 'plan' and the folded form from this change and file them under a card that names them.
+
+BUG severity=HIGH — Project objectives, no scope creep "keep it simple; no scope creep" — docs/specs/00-architecture/08_agents.md:351 "seat findings listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included" — the change adds a second audit surface (per-seat report files, sha256 of each seat file, SEAT_LINE finding parsing, seatRoot containment) that no pasted clause names — move seat-report auditing to its own ruled task and drop seats, seatRoot and SEAT_HEAD from this diff.
+
+DEFER severity=MED — Project objectives, no scope creep "keep it simple; no scope creep" — scripts/analysis/backlog-brief.mjs:166 "2. If the task's Implementation Plan field already holds a plan (reviewed, ruled and checked before launch), build that plan and do NOT run --plan" — the lane brief now carries a rule about the Implementation Plan field that no pasted clause names — file that rule as its own task and leave the brief line as it was until a clause or ruling names it.
+
+DEFER severity=MED — Project objectives, no scope creep "keep it simple; no scope creep" — scripts/analysis/backlog-brief.mjs:171 "backlog task edit ${taskId} --check-ac <n> ... --append-final-summary \"...\" -s BUILT" — the same line silently drops DONE from the close statuses (was "-s DONE|BUILT"), a status change no pasted clause names — keep "-s DONE|BUILT" or cite the operator ruling that restricts a lane close to BUILT.
+
+MET — Objectives, one plan "we need one plan - we can only execute one plan" — scripts/analysis/backlog-brief.mjs:166 "build that plan and do NOT run --plan" — the brief now tells a lane to build the already reviewed plan instead of writing a second one on the same task.
+
+MET — Project objectives, five principles, accuracy "standardization, observability, scalability, accuracy, understandability" — docs/reports/generated/rule-lists-by-kind.md "| total | 9 lists | | 188,274 | 9 |" and "| total | 7 lists | | 143,299 | 7 |" — both generated tables move by exactly 2,300, matching the two spec edits (+1,606 agents-s7-s11, +694 queue-137).
+
+REJECT — Project objectives, relevance "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant" — the change is accused of touching no search page, report or database path — not a real issue: the clause itself admits a supporting function, and a lane-close guard is a supporting function of the build the search page comes through.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 1
+
+---
+⏱  45222ms (45.2s)
+📊 Tokens — total: 29994, input: 21592, output: 8402, reasoning: 7428

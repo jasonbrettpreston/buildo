@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-OUTCOME'
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-21T00:10:00Z'
+updated_date: '2026-11-21T00:18:00Z'
 labels:
   - McFix
   - McFix Z
@@ -22,6 +22,8 @@ references:
   - docs/reports/reviews/task-399/seat-ground-truth-2.md
   - docs/reports/reviews/task-399/FOLD-VALIDATION.md
   - docs/reports/reviews/task-399/CROSS-READ.md
+  - docs/reports/lanes/2026-11-20/BL-OUTCOME/REPORT.md
+  - docs/reports/lanes/2026-11-20/BL-OUTCOME/FINDINGS.md
 type: build
 ordinal: 99012
 ---
@@ -286,4 +288,66 @@ Dated note 2026-11-20 (M-246, prior text kept; RR-0340 · task-399 · Backlog; o
 2026-11-20 BL-OUTCOME build start (lane note, plan unchanged): red commit attempt first (new tests plus the scenario helper that writes TRIAGE.md and the Final Summary), then the check, README.md:109, the two dated notes and the two brief lines in one commit through the real hooks. Plan facts verified by opening the files: check-lane-close.mjs VERDICT :50, reason minimum 30 at the grounder block (:296 at plan time), finished-status skip :338 region; brief lines :166 and :171; test pin :58.
 
 2026-11-20 BL-OUTCOME dated deviation (one item, plan sentence cannot be built as written): the Files line (plan section 3) omits docs/reports/generated/rule-lists-by-kind.md, which scripts/analysis/rule-lists.mjs page --check (pre-commit) regenerates whenever 08_agents.md or 137_mcqueue.md changes (the page holds the spec hashes) and check-task-files refuses outside the Files line (hook output in commit.out). Only that generated path was appended to the Files line (task-410 carried the same path); nothing else of the description or the plan was touched.
+
+2026-11-20 BL-OUTCOME acceptance evidence (commit d86373d7a through the real hooks; commit hook tail: "Test Files 2 passed (2), Tests 111 passed (111)", red first: "Tests 18 failed | 87 passed (105)" with the code absent from the tree).
+
+(a) planted-defect tests red then green: red.out / commit.out in ~/Buildo-scratch/lanes-20261119/inc1b/outcome (copied to docs/reports/lanes/2026-11-20/BL-OUTCOME/); passing control "control: the default close ... passes" and "control: the --outcomes command on the same lane prints checked 1 ids and exits 0" are in the green 111.
+
+(b) node scripts/hooks/check-lane-close.mjs --outcomes docs/reports/lanes/2026-11-20/BL-V2WHOLE (git facts included, no git-fact refusal added: 9 no line, 4 task: on a CRITICAL or HIGH BUG, 1 wontfix above LOW, 34 pass):
+checked 48 ids
+plan-compliance-agents-s5-1to3#3 MED: wontfix is not allowed for a MED DEFER finding (wontfix and pile are for LOW and NIT only) [Spec 08 section 7 rule 6 (08_agents.md:350): DEFER goes to review_followups.md with reasons; verdict scripts/analysis/rule-lists.mjs:312; form that passes: plan-compliance-agents-s5-1to3#3 fixed:<sha> <path the commit touches> | task:task-N (its text names this id) | ruling:RR-NNNN or ruling:decision-N]
+plan-compliance-orchestrator-doc17#1 CRITICAL: task is not allowed for a CRITICAL BUG finding (task is for a DEFER finding; a BUG is fixed before Green Light) [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors; verdict scripts/analysis/backlog-brief.mjs:140; form that passes: plan-compliance-orchestrator-doc17#1 fixed:<sha> <path the commit touches> | ruling:RR-NNNN or ruling:decision-N]
+plan-compliance-orchestrator-doc17#2 HIGH: task is not allowed for a HIGH BUG finding (task is for a DEFER finding; a BUG is fixed before Green Light) [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors; verdict scripts/analysis/backlog-brief.mjs:141; form that passes: plan-compliance-orchestrator-doc17#2 fixed:<sha> <path the commit touches> | ruling:RR-NNNN or ruling:decision-N]
+plan-compliance-orchestrator-doc17#3 HIGH: task is not allowed for a HIGH BUG finding (task is for a DEFER finding; a BUG is fixed before Green Light) [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors; verdict scripts/analysis/backlog-brief.mjs:60; form that passes: plan-compliance-orchestrator-doc17#3 fixed:<sha> <path the commit touches> | ruling:RR-NNNN or ruling:decision-N]
+plan-plan-review-deepseek#4 HIGH: task is not allowed for a HIGH BUG finding (task is for a DEFER finding; a BUG is fixed before Green Light) [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors; verdict scripts/deepseek-review.js:35; form that passes: plan-plan-review-deepseek#4 fixed:<sha> <path the commit touches> | ruling:RR-NNNN or ruling:decision-N]
+out-compliance-agents-s5-1to3-p2#4 LOW: no outcome line in TRIAGE.md [Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later); verdict docs/specs/00-architecture/plan-protocol.md:28; form that passes: out-compliance-agents-s5-1to3-p2#4 fixed:<sha> <path the commit touches> | task:task-N (its text names this id) | ruling:RR-NNNN or ruling:decision-N | wontfix:"<reason, 30+ characters>" | pile:"<reason, 30+ characters>"]
+out-compliance-agents-s5-1to3-p2#5 LOW: no outcome line in TRIAGE.md [Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later); verdict docs/specs/00-architecture/plan-protocol.md:32; form that passes: out-compliance-agents-s5-1to3-p2#5 fixed:<sha> <path the commit touches> | task:task-N (its text names this id) | ruling:RR-NNNN or ruling:decision-N | wontfix:"<reason, 30+ characters>" | pile:"<reason, 30+ characters>"]
+out-compliance-eng-all-p3#4 LOW: no outcome line in TRIAGE.md [Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later); verdict scripts/hooks/check-lane-close.mjs:14; form that passes: out-compliance-eng-all-p3#4 fixed:<sha> <path the commit touches> | task:task-N (its text names this id) | ruling:RR-NNNN or ruling:decision-N | wontfix:"<reason, 30+ characters>" | pile:"<reason, 30+ characters>"]
+out-compliance-five-words-p1#5 NIT: no outcome line in TRIAGE.md [Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later); verdict docs/specs/00-architecture/08_agents.md:239; form that passes: out-compliance-five-words-p1#5 fixed:<sha> <path the commit touches> | task:task-N (its text names this id) | ruling:RR-NNNN or ruling:decision-N | wontfix:"<reason, 30+ characters>" | pile:"<reason, 30+ characters>"]
+out-compliance-five-words-p2#2 LOW: no outcome line in TRIAGE.md [Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later); verdict src/tests/backlog/check-lane-close.logic.test.ts:389; form that passes: out-compliance-five-words-p2#2 fixed:<sha> <path the commit touches> | task:task-N (its text names this id) | ruling:RR-NNNN or ruling:decision-N | wontfix:"<reason, 30+ characters>" | pile:"<reason, 30+ characters>"]
+out-compliance-ms-S-p1#4 MED: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): DEFER goes to review_followups.md with reasons; verdict scripts/hooks/check-lane-close.mjs:133; form that passes: out-compliance-ms-S-p1#4 fixed:<sha> <path the commit touches> | task:task-N (its text names this id) | ruling:RR-NNNN or ruling:decision-N]
+out-compliance-plan-protocol-p2#4 LOW: no outcome line in TRIAGE.md [Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later); verdict src/tests/backlog/check-lane-close.logic.test.ts:422; form that passes: out-compliance-plan-protocol-p2#4 fixed:<sha> <path the commit touches> | task:task-N (its text names this id) | ruling:RR-NNNN or ruling:decision-N | wontfix:"<reason, 30+ characters>" | pile:"<reason, 30+ characters>"]
+out-compliance-policy-124-s2-s5-p1#1 LOW: no outcome line in TRIAGE.md [Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later); verdict scripts/hooks/check-lane-close.mjs:25; form that passes: out-compliance-policy-124-s2-s5-p1#1 fixed:<sha> <path the commit touches> | task:task-N (its text names this id) | ruling:RR-NNNN or ruling:decision-N | wontfix:"<reason, 30+ characters>" | pile:"<reason, 30+ characters>"]
+out-compliance-policy-124-s2-s5-p3#2 LOW: no outcome line in TRIAGE.md [Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later); verdict scripts/hooks/check-lane-close.mjs:133; form that passes: out-compliance-policy-124-s2-s5-p3#2 fixed:<sha> <path the commit touches> | task:task-N (its text names this id) | ruling:RR-NNNN or ruling:decision-N | wontfix:"<reason, 30+ characters>" | pile:"<reason, 30+ characters>"]
+exit=1
+
+(c) task-381 GROUNDER.md (docs/reports/reviews/task-399/hooks3-GROUNDER.md) copied as GROUNDER.md alone into a directory with no TRIAGE.md (lines clipped to 170 characters here):
+checked 36 ids
+out-code-review#1 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors; v
+out-compliance-mobile-100#1 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold su
+out-compliance-mobile-99#2 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold sur
+out-compliance-surface-126-p2#1 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fol
+out-compliance-surface-126-p2#3 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fol
+out-compliance-surface-126-p2#4 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fol
+out-compliance-surface-126-p3#1 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fol
+out-compliance-surface-135#4 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold s
+out-compliance-surface-135#5 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold s
+out-compliance-surface-136#2 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold s
+out-error-paths#1 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors; v
+out-error-paths#2 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors; v
+out-error-paths#4 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors; v
+out-ux#2 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors; verdict mo
+plan-compliance-inc-S#4 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold surviv
+plan-compliance-mobile-90#3 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold su
+plan-compliance-mobile-90#4 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold su
+plan-compliance-mobile-96#5 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold su
+plan-compliance-mobile-98#3 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold su
+plan-compliance-mobile-98#4 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold su
+plan-compliance-mobile-99-p2#4 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold
+plan-compliance-surface-126-p1#6 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fo
+plan-compliance-surface-126-p2#3 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fo
+plan-compliance-surface-126-p4#3 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fo
+plan-compliance-surface-127#2 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold 
+plan-compliance-surface-127#3 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold 
+plan-compliance-surface-127#6 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold 
+plan-compliance-surface-128#1 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold 
+plan-compliance-surface-128#4 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold 
+plan-compliance-surface-135-p2#1 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fo
+plan-compliance-surface-135-p2#2 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fo
+plan-compliance-surface-136#2 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold 
+plan-error-paths#1 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors; 
+plan-review-deepseek#1 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivo
+plan-review-deepseek#2 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivo
+plan-ux#2 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors; verdict d
+exit=1
 <!-- SECTION:NOTES:END -->

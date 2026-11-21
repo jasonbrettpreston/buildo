@@ -1,0 +1,80 @@
+    608| };
+    609| const closeRefused = (o: Opts, re: RegExp) => { const r = scenario(o);…
+       |                                                                                                   ^
+    610| type Mod = { outcomeErrors: (a: Record<string, unknown>) => { errors: …
+    611| const loadMod = () => import(path.join(ROOT, 'scripts/hooks/check-lane…
+ ❯ src/tests/backlog/check-lane-close.logic.test.ts:699:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/18]⎯
+
+ FAIL  src/tests/backlog/check-lane-close.logic.test.ts > outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > a lane with zero CONFIRMED ids and no TRIAGE.md passes, and the CLI prints "checked 0 ids"
+AssertionError: expected '' to be 'checked 0 ids\n' // Object.is equality
+
+- Expected
++ Received
+
+- checked 0 ids
+-
+
+ ❯ src/tests/backlog/check-lane-close.logic.test.ts:711:22
+    709|     const c = cli({ lensFinding: false });
+    710|     expect(c.status, c.stderr).toBe(0);
+    711|     expect(c.stdout).toBe('checked 0 ids\n');
+       |                      ^
+    712|   });
+    713| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/18]⎯
+
+ FAIL  src/tests/backlog/check-lane-close.logic.test.ts > outcome check: the mode table, seats and failing callbacks (outcomeErrors, pure) > mode plan: folded takes the place of fixed (control passes with a quote present in the task text); fixed is refused; a quote under 20 characters or absent from the task text is refused
+TypeError: outcomeErrors is not a function
+ ❯ run1 src/tests/backlog/check-lane-close.logic.test.ts:718:42
+
+ ❯ src/tests/backlog/check-lane-close.logic.test.ts:719:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/18]⎯
+
+ FAIL  src/tests/backlog/check-lane-close.logic.test.ts > outcome check: the mode table, seats and failing callbacks (outcomeErrors, pure) > close mode refuses folded; a LOW finding of any kind closes by any form (control), a MED DEFER by task, a MED BUG not
+TypeError: outcomeErrors is not a function
+ ❯ r src/tests/backlog/check-lane-close.logic.test.ts:726:80
+    724|   it('close mode refuses folded; a LOW finding of any kind closes by a…
+    725|     const { outcomeErrors } = await loadMod();
+    726|     const r = (v: Map<string, unknown>, k: Map<string, unknown>, t: st…
+       |                                                                                ^
+    727|     expect(r(V('CONFIRMED'), K('BUG', 'HIGH'), 'id#1 folded:"the folde…
+    728|     expect(r(V('CONFIRMED'), K('BUG', 'LOW'), 'id#1 task:task-5')).toB…
+ ❯ src/tests/backlog/check-lane-close.logic.test.ts:727:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/18]⎯
+
+ FAIL  src/tests/backlog/check-lane-close.logic.test.ts > outcome check: the mode table, seats and failing callbacks (outcomeErrors, pure) > PLANTED DEFECT: a callback that throws or returns nothing is one error line tied to the id, never a throw out of the check
+TypeError: outcomeErrors is not a function
+ ❯ src/tests/backlog/check-lane-close.logic.test.ts:735:18
+    733|     const { outcomeErrors } = await loadMod();
+    734|     const t = 'id#1 fixed:abcdef1 src/a.ts';
+    735|     const boom = outcomeErrors({ verdicts: V('CONFIRMED'), triageText:…
+       |                  ^
+    736|     expect(boom.errors).toHaveLength(1);
+    737|     expect(boom.errors[0]).toMatch(/^id#1 HIGH: .*callback for the anc…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/18]⎯
+
+ FAIL  src/tests/backlog/check-lane-close.logic.test.ts > outcome check: the mode table, seats and failing callbacks (outcomeErrors, pure) > seat reports are read from the tree of the mode: a seat file outside it is refused; a "### rc2#1 HIGH:" line parses (control)
+TypeError: outcomeErrors is not a function
+ ❯ mk src/tests/backlog/check-lane-close.logic.test.ts:748:31
+    746|     const seat = (p: string) => ({ name: 'rc', path: p, sha: sha(text)…
+    747|     const v = new Map([['rc2#1', { word: 'REJECTED', file: 'src/a.ts',…
+    748|     const mk = (p: string) => outcomeErrors({ verdicts: v, triageText:…
+       |                               ^
+    749|     expect(mk('docs/reports/reviews/task-9/seat.md')).toEqual([]);
+    750|     expect(mk('docs/reports/lanes/x/seat.md').join('\n')).toMatch(/is …
+ ❯ src/tests/backlog/check-lane-close.logic.test.ts:749:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/18]⎯
+
+ Test Files  1 failed (1)
+      Tests  18 failed | 87 passed (105)
+   Start at  19:04:16
+   Duration  68.90s (transform 17ms, setup 4ms, collect 33ms, tests 66.11s, environment 0ms, prepare 18ms)
+
+exit=1

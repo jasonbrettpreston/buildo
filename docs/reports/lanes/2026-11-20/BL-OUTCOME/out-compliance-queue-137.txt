@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:12:55.669Z file_sha256=24cf907e9207dc3c797c9edc5061a1f247b3e1bc90c2dc74f48f1af0ecc4ba01 prompt_sha256=9b1dd77e5272255dd7c3c39fb1941b68e8ee677190409060c5387935bf99b8c0
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 08 §7 rule 6 dated note 2026-11-20 (task-399), incorporated by the Spec 137 note "see the Spec 08 rule 6 note of the same date": "task:task-N (the task exists, is not DROPPED and names the finding id; only for a DEFER finding)" — scripts/hooks/check-lane-close.mjs:241 "else if (!new RegExp(`(?<![A-Za-z0-9_-])${esc(id)}(?!\\d)`).test(ti.text) && !ti.text.includes(v.file)) errs.push(...)" — a DEFER finding passes when the target task text merely contains the cited path (v.file) and never names the finding id, so "names the finding id" is not enforced — drop the `!ti.text.includes(v.file)` alternative so the id token is the only accepted match.
+
+BUG severity=HIGH — Spec 137 §4 dated note 2026-11-20 (task-399): "the task's Final Summary shows the round line and the CRITICAL, HIGH and MED outcomes" — scripts/hooks/check-lane-close.mjs:267 "const have = String(summary.text ?? '');" where summary.text is i.taskText, the whole task file passed at :619 "closeErrors({ id, taskText: resolveText, fm: mv.fm, ..." — the block is accepted anywhere in the task file (description, plan), so a task with an empty Final Summary passes; the FINAL_SUMMARY section markers are read at :263 only for the round count — match the required block against the Final Summary section of the working text, not the whole file.
+
+DEFER severity=MED — Spec 08 §7 rule 6 note (task-399): "CRITICAL, HIGH and MED close by fixed or ruling (rule 6 above: a BUG is fixed before Green Light)" — scripts/hooks/check-lane-close.mjs:185 "const sev = reasonSev(v.reason) ?? normSev(k.sev) ?? 'CRITICAL';" — a lens HIGH BUG whose grounder reason happens to open with LOW closes by pile (asserted in the new test "on a LOW grounder severity (lowering the lens HIGH) they pass"), a severity override the pasted note never names — take severity from the lens finding line, or write the override into the Spec 08 note before relying on it.
+
+DEFER severity=MED — Spec 08 §7 rule 6 note (task-399): "LOW and NIT close by any form whatever the kind (his :1580 words override rule 6 for them)" — scripts/hooks/check-lane-close.mjs:189 "const allowed = conflict ? ['ruling', fixWord] : low ? FORM_WORDS[mode] : ..." — a LOW or NIT CONFLICT is refused wontfix, pile and task because the conflict branch is tested first, a restriction the pasted note does not state for LOW and NIT — test `low` before `conflict`, or add the CONFLICT carve-out to the note.
+
+DEFER severity=MED — Spec 137 §4 dated note 2026-11-20 (task-399): "the task's Final Summary shows the round line and the CRITICAL, HIGH and MED outcomes" — scripts/hooks/check-lane-close.mjs:265 "const round = `Review round ${n}: ${count(fixWord)} ${fixWord}, ${count('task')} task, ...; grounder ${summary.grounderPath}; triage ${summary.triagePath}`;" — any round line in other wording or with other counts is refused, an exact format the pasted note does not name — accept any line matching /^Review round \d+:/ plus the CRITICAL, HIGH and MED lines, or put the exact format in the spec note.
+
+DEFER severity=LOW — no pasted clause or ruling names the lane brief's plan step; the pasted Spec 137 says nothing about scripts/analysis/backlog-brief.mjs — scripts/analysis/backlog-brief.mjs:166 "only a task with no plan runs: backlog task edit ${taskId} --plan" — the new gating ("reviewed, ruled and checked before launch") is behaviour no pasted clause or ruling names, and the ruling it cites is not pasted — cite the ruling in the brief or land the spec note that names it.
+
+MET — Spec 137 §4 note 2026-11-20 (task-399) "TRIAGE.md is required only when GROUNDER.md holds such an id" — scripts/hooks/check-lane-close.mjs:183 "for (const [id, v] of ids) {" plus :260 "if (summary && errors.length === 0 && ids.length > 0) {" — with zero CONFIRMED or CONFLICT ids no TRIAGE.md outcome is demanded (test "a lane with zero CONFIRMED ids and no TRIAGE.md passes").
+
+MET — Spec 08 §7 rule 6 note (task-399) "the commit is an ancestor of HEAD, in the range from the launch commit, touches the path, is not reverted" — scripts/hooks/check-lane-close.mjs:214-222 "const anc = call(errs, 'the ancestor test' ...)" through "const rv = call(errs, 'the revert search' ...)" — all four git facts are checked through gitFacts.
+
+MET — Spec 08 §7 rule 6 note (task-399) "the last line per id judged" — scripts/hooks/check-lane-close.mjs:178 "if (m && verdicts.has(m[1])) last.set(m[1], m[2]);" — a later line for the same id overwrites the earlier one.
+
+MET — Spec 08 §7 rule 6 note (task-399) "`wontfix:"<reason>"` and `pile:"<reason>"` (30+ characters; LOW and NIT only)" — scripts/hooks/check-lane-close.mjs:189 and :254 "if (reason.length < 30) errs.push(...)" — wontfix and pile are allowed only at LOW or NIT and only with a 30+ character squashed reason.
+
+MET — Spec 08 §7 rule 6 note (task-399) "`node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` runs it before the close" — scripts/hooks/check-lane-close.mjs:outcomesCli (added at file end) "process.stdout.write(`checked ${r.ids} ids\n..." — the CLI exists, prints the id count and exits 1 on any refusal, and the brief at scripts/analysis/backlog-brief.mjs:174 names it before the close.
+
+MET — Spec 137 §4 rule 4 note form "Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: "<words>")" — docs/specs/00-architecture/137_mcqueue.md new note — the note is a pure insertion, prior text kept, with row, lane, date and the operator's words verbatim ("don't makr the task complete until it actually works").
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 4
+
+---
+⏱  131122ms (131.1s)
+📊 Tokens — total: 56461, input: 29637, output: 26824, reasoning: 25211

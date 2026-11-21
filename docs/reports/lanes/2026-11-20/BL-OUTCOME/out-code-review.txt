@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T00:12:55.672Z file_sha256=30a8d0ab97177d90a245536c7e9b88b765dd3acb6a38745a5cb79a41dda977a1 prompt_sha256=026fad86c3ffbb2f084f52b8b6b103fabd21dd22a980550476d8db34ae83897e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/outcome/diff.patch (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/hooks/check-lane-close.mjs `!new RegExp(`(?<![A-Za-z0-9_-])${esc(id)}(?!\\d)`).test(ti.text) && !ti.text.includes(v.file)` — the `task:` outcome passes when the follow-up task text merely contains the cited file path, so an unrelated task on the same file satisfies the outcome without naming the finding, and both notes in this diff say it must "name the finding id" — require the id token only (drop the `|| ti.text.includes(v.file)` alternative, i.e. make the error `!test(ti.text)`).
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs `const SEAT_LINE = /^\s*(?:#+\s+)?([a-z0-9]+)#(\d+)\s+(CRITICAL|HIGH|MED|LOW|NIT)\b/;` — the seat finding-id prefix allows only lowercase alphanumerics while the TRIAGE line parser uses `([A-Za-z0-9._-]+#\d+)` and lens ids are hyphenated, so a seat report line like `### reality-check#1 HIGH:` is not recognized, `found.length` is 0 and the close is refused with "holds no finding line" (or the verdict is mis-severity CRITICAL) — widen the class to match the TRIAGE parser, e.g. `([A-Za-z0-9][A-Za-z0-9._-]*)#(\d+)`.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs `const head = /<!-- SECTION:FINAL_SUMMARY:BEGIN -->([\s\S]*?)<!-- SECTION:FINAL_SUMMARY:END -->/.exec(summary.headText ?? '')?.[1] ?? '';` — non-global `exec` takes only the first FINAL_SUMMARY section of the HEAD task, so when HEAD holds a second section (exactly what the `priorRound` test appends) the round number undercounts and the check can accept an already-present `Review round 2:` line rather than requiring the new one — count `Review round \d+:` across the whole `headText` (global match / matchAll over every section) instead of only the first section.
+
+DEFER severity=NIT — scripts/hooks/check-lane-close.mjs `kinds.set(id, { kind: 'BUG', sev: normSev(m[3]), line: m[0].trim() });` — the `line` field put on the kinds map (and returned by `lensKindOf`) is never read anywhere in `outcomeErrors`, dead data the diff introduces — drop the `line` property or surface it in the refusal messages.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The `task:` outcome passes on the cited file path alone, not the finding id, so an unrelated same-file task satisfies the guard.
+- The seat finding-id regex (`[a-z0-9]+`) is narrower than the TRIAGE/verdict id form (`[A-Za-z0-9._-]+`), so hyphenated or uppercase seat ids are rejected as "holds no finding line".
+- The round counter reads only the first FINAL_SUMMARY section of the HEAD task, undercounting rounds once a second section exists.
+
+---
+⏱  274573ms (274.6s)
+📊 Tokens — total: 76250, input: 20534, output: 55716, reasoning: 54981

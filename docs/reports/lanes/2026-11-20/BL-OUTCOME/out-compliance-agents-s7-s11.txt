@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:12:55.669Z file_sha256=b17f8a347d24a0bc3d3e778b4b5c98df2f86e35976c8230170def31f29b5b264 prompt_sha256=b041136c5113b0af20d4cbaf6e659f4af3635e157560af8f5ef59abb4f81014e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 08 section 7 rule 6 note (task-399) "`task:task-N` (the task exists, is not DROPPED and names the finding id; only for a DEFER finding)" — scripts/hooks/check-lane-close.mjs outcomeErrors "!new RegExp(`(?<![A-Za-z0-9_-])${esc(id)}(?!\\d)`).test(ti.text) && !ti.text.includes(v.file)" — clause unmet: the refusal fires only when the task text names neither the finding id nor `v.file`, so a DEFER finding closes with a task that names only the cited path and never the finding id — drop the `&& !ti.text.includes(v.file)` alternative so the id token is required in the task text
+
+DEFER severity=MED — Spec 08 section 7 rule 6 note "the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md ... has one outcome line in the lane's TRIAGE.md" — scripts/hooks/check-lane-close.mjs closeErrors "if (build) {" — the outcome check runs only when `build` is truthy and the definition of `build` cannot be seen in the diff, so whether fix tasks (or non-build lane closes) are covered is unproven — confirm the gate is `build || fix` (or equal to the close types the note names) and show it
+
+MET — Spec 08 section 7 rule 6 note "the last line per id judged" — scripts/hooks/check-lane-close.mjs outcomeErrors "ONLY THE LAST LINE of an id is judged" and `last.set(m[1], m[2])` — last line per id wins, earlier lines ignored
+
+MET — Spec 08 section 7 rule 6 note "`fixed:<sha> <path>` (the commit is an ancestor of HEAD, in the range from the launch commit, touches the path, is not reverted)" — scripts/hooks/check-lane-close.mjs gitFacts isAncestor/inRange/touches/reverts — all four git facts wired through callbacks
+
+MET — Spec 08 section 7 rule 6 note "The task's Final Summary carries the round line and one line per CRITICAL, HIGH or MED finding" — scripts/hooks/check-lane-close.mjs outcomeErrors "Review round ${n}: ${count(fixWord)} ${fixWord}" and the CRITICAL/HIGH/MED line list — recomputed and matched against the task text
+
+MET — Spec 08 section 7 rule 6 note "(`node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` runs it before the close)" — scripts/hooks/check-lane-close.mjs outcomesCli "process.stdout.write(`checked ${r.ids} ids" — CLI added and brief invokes it
+
+MET — Spec 08 section 7 rule 6 note "`wontfix:\"<reason>\"` and `pile:\"<reason>\"` (30+ characters; LOW and NIT only)" — scripts/hooks/check-lane-close.mjs outcomeErrors unq/reason.length and `low` gate — 30+ chars and LOW/NIT gating enforced
+
+MET — Spec 08 section 5.3 / rule 4 "one Claude grounder adjudicates every finding as round 2" — .claude/review-templates/README.md "CONFIRMED, REJECTED or CONFLICT with the opened `file:line`, in `GROUNDER.md`" — round-2 verdicts now land in GROUNDER.md with TRIAGE outcomes
+
+MET — 137 task-399 note (in diff) "TRIAGE.md is required only when GROUNDER.md holds such an id" — scripts/hooks/check-lane-close.mjs outcomeErrors "if (summary && errors.length === 0 && ids.length > 0)" plus the zero-id test — no TRIAGE required when no CONFIRMED/CONFLICT id exists
+
+REJECT — Spec 08 section 7 rule 6 note "CRITICAL, HIGH and MED close by fixed or ruling" — a MED/HIGH DEFER finding is accepted by `task:` (allowed = [fixWord,'task','ruling'] for DEFER) — the same note's "only for a DEFER finding" and rule 6 "DEFER goes to review_followups.md with reasons" name the task form for DEFER, so this is intended, not a gap
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  130140ms (130.1s)
+📊 Tokens — total: 56058, input: 28916, output: 27142, reasoning: 26136

@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:12:55.670Z file_sha256=46f250e0eb645fef8ef376440b13ac8e3ec1f226c9e3af1772e38409b6529568 prompt_sha256=b1c00fb46a2e4bcac4d6c07e3d1ac60f12af34ad4cf09db0849ce369d4cde824
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — doc-17 clause "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — docs/specs/00-architecture/08_agents.md:351 "`ruling:RR-NNNN` or `ruling:decision-N` (the decision record exists)", plus src/tests/backlog/check-lane-close.logic.test.ts hunk @@ -79,13 +82,16 @@ "w('backlog/decisions/decision-1 - RR-0001-test-ruling.md'..." — a CONFIRMED or CONFLICT finding can be closed by a reading id (RR-0001 sits under "## Readings" of the pasted register and the new control test passes "ruling:RR-0001"), and the resolver accepts any decisions file whose basename merely includes the id, scripts/hooks/check-lane-close.mjs "return fs_.some((p) => path.basename(p).includes(ref) || ...)", so a reading feeds a review close as a ruling — accept `ruling:decision-N` only, drop the RR branch of decisionExists, and repoint the test fixture at a decision id.
+
+BUG severity=HIGH — doc-17 clause "The operator's rulings are the decisions." with heading "Register entries (operator words as logged, kind entry)" — docs/specs/00-architecture/08_agents.md:351 "LOW and NIT close by any form whatever the kind (his :1580 words override rule 6 for them)" — the change lets operator words logged in MORNING-DECISIONS.md override Spec 08 rule 6 with no decision record, and the refusal text itself calls the log line a ruling, scripts/hooks/check-lane-close.mjs "the operator ruling :1580 (low priorities filed for later)" — record the operator's answer as a decision-N first and cite that decision in the note and in the rule string, or drop the rule 6 override.
+
+DEFER severity=MED — doc-17 clause "The operator's rulings are the decisions." — docs/specs/00-architecture/137_mcqueue.md:140 "operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1517`: \"don't makr the task complete until it actually works\"" — the new refusal on every lane build and fix close rests on a log line rather than a decision record, so the same defect binds the whole lane-close surface, not one note — cite the decision record for :1517 in this note, or state that the gate rests on no ruling yet.
+
+REJECT — RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit" — the change is accused of adding tooling (a new `--outcomes` CLI mode and close gate) during the freeze — RR-0110 is a Reading of this register, and the pasted clause says readings are not the operator's words as a ruling, so it does not bind this review.
+
+REJECT — RR-0002 "Lane tooling first (run-panel, guard, generated briefs, results gate, lane registry and pack cache, Spec 08 seat-K note draft)" — the change is accused of departing from the lane-tooling order — RR-0002 is likewise a Reading, not a ruling, under the pasted clause, and the diff is lane tooling.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 3
+
+---
+⏱  64169ms (64.2s)
+📊 Tokens — total: 44301, input: 31799, output: 12502, reasoning: 11705
