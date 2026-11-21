@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:53:29.849Z file_sha256=9302d2667e1199400b1ea4406a22a36c03dd536a06b447918c96e8a74c8a7e69 prompt_sha256=46e1ba7530f74982f0436223ab8d1bc44b5c61880bee3e2e58eeadbc85768979
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-eng-all-r2.txt (model: deepseek-reasoner)
+
+```
+BUG severity=HIGH — AC #6 (f) "git diff --stat shows only the Files line" — CLAUDE.md:139 "**Cross-read Adversary** (...): is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360)" — the diff edits CLAUDE.md, which is not one of the paths the pasted ruling fixed: Q1 "the Files line is final at eight paths (the six of the card plus docs/specs/00-architecture/08_agents.md and 137_mcqueue.md)" — remove the CLAUDE.md hunks from this change (same text, separate task), or obtain a ruling that amends the Files line to nine paths, then re-run plan-prep.
+DEFER severity=MED — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — 08_agents.md:479 "the copies in .claude/workflows.md, the review template packs and Spec 119 are not edited by this task." — the retired 11.2 cross-read requirement survives verbatim in three cited carriers, so the same commit leaves contradictory instructions live — name those carriers as an explicit follow-up task id in the note, or update them here if the Files line permits.
+DEFER severity=LOW — "## Decisions naming this task - RR-0351 ... RR-0352 ... RR-0354 ... RR-0355" (pasted list has no RR-0360) — 08_agents.md:479 "CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143)" — the CLAUDE.md edit rests on a ruling the pasted context does not carry, so its authority is unverifiable from the clauses given — cite the ruling id in the task's decision list or drop the edit (it also breaches AC #6).
+DEFER severity=LOW — AC #2 "(b) Same board, the task body edited by one word: exit 3, FOLD-CHECK.md Plan line stale, expected line printed" — src/tests/backlog/backlog-lane.logic.test.ts:379 "expect(bad.stderr).toMatch(/FOLD-CHECK\.md: the Plan line \"Plan: task-\d+ sha256:[0-9a-f]{12}\" is not the hash of the task as it is now/)" — the added backlog-lane assertion cannot see the one-word body edit that (b) names; only the plan-prep test performs it — add the edit-then-dry-run step to the task-419 (a) backlog-lane test so (b) has the path it names.
+MET — AC #1 (a) — docs/reports/reviews/task-375/plant-evidence.mjs:68 "w('FOLD-CHECK.md', `# Fold check (test evidence)\nChecked by: Fold-G1\nVerdict: PASS\n\n${planLine}\n`);" and backlog-lane.logic.test.ts:391 "expect(bad.status, bad.stdout + bad.stderr).toBe(3); ... expect(ok.stdout).toMatch(/plan gate ok/)" — missing file refuses with "FOLD-CHECK.md is missing", present file launches.
+MET — AC #3 (c) and Q8 — scripts/analysis/rule-lists.mjs:426 "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — a no-list input is named -p1 (and -rN-p1), a rule-list single input keeps its unsuffixed name.
+MET — AC #4 (d) — src/tests/backlog/check-lane-close.logic.test.ts:454 "const ok = scenario({ ...one, mutate: (l) => { expect(Object.keys(l)).toContain('in-out-code-review-p1.txt'); ... } }); expect(ok.status, ok.stderr).toBe(0);" — the close check accepts the name the tool now writes.
+MET — Q3 (name form) — scripts/hooks/check-lane-close.mjs:650 "const who = by ? by[1].split(/,| \(/)[0].trim() : '';" — text up to the first comma or " (", last of a repeated line, lane and assignee clashes refused.
+MET — 137 note (form of the Plan line) — scripts/hooks/check-lane-close.mjs:658 "const fp = lastOf(/^[ \t]*Plan:[ \t]*(\S+)[ \t]+sha256:([0-9a-f]{12})[ \t\r]*$/gm);" — last such line, alone on its line, compared to the task's hash at launch, expected line printed on refusal.
+MET — card Gap 1 "written by the grounder and never by the script" — scripts/hooks/check-lane-close.mjs:643 "const fc = textOf('FOLD-CHECK.md');" — the gate only reads the file, it never writes it.
+REJECT — card Gap 1 "written by the grounder and never by the script" — accused: plant-evidence.mjs writes a PASS FOLD-CHECK.md, a script authoring the record — Q4 rules exactly that edit ("Q4 plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)"), and it writes into a throwaway fixture tree, never a lane folder.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 1
+```
+
+---
+⏱  68452ms (68.5s)
+📊 Tokens — total: 39102, input: 26744, output: 12358, reasoning: 11122

@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T14:44:09.397Z file_sha256=9086e251a703f3a7705817834640a5331841ecd7bc9b8362a415663fa0c518bc prompt_sha256=b80398e95a5dc649a25cbacc697dcb424a8a27b9339b9a3f6ef654fb164122e0
+🔍 Lens review of docs/reports/reviews/task-419/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #6 "The three test files green; git diff --stat shows only the Files line." — plan 6 "commit B (later) = task file and queue row to DONE with evidence" — commit B adds two paths outside the Files line, so AC #6 can pass only in the window between commit A and commit B and the plan never says that — add one line to plan 6 and 7: AC #6 is run after commit A, commit B is task bookkeeping outside the build diff.
+
+DEFER severity=LOW — card GAP 2 "without breaking outputs already committed" — plan 3 "suffix is '' only when `list` is set and there is one file; with no list it is always -pN" against rule-lists.mjs:425 "suffix: files.length === 0 && chunks.length * parts.length === 1 ? '' : -pN" — the prose replacement drops the chunks/parts condition, so a one-file list lens split into several parts would lose its -pN name and could write one unsuffixed path twice, against AC #5 and the plan's own control "multi-chunk unchanged" — state the full replacement expression in plan 3 and 4.b, keeping chunks.length * parts.length === 1 as a condition.
+
+DEFER severity=NIT — card Files line "Files: scripts/hooks/check-lane-close.mjs, scripts/analysis/rule-lists.mjs, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, docs/reports/reviews/task-375/plant-evidence.mjs" — plan 9.1 "Files line: may it grow by backlog-lane.logic.test.ts and plant-evidence.mjs (card lists four)?" — the pasted card already lists six and its Implementation Notes record "The Files line is replaced by the plan's six paths", so the question rests on an outdated count — restate 9.1 as confirming the six-path line, or drop it.
+
+MET — card GAP 1 "makes the fold check a committed record that the pre-launch steps carry and the launch check can see" — plan 3 "Record: docs/reports/reviews/<task>/FOLD-CHECK.md." — plan-prep carries the folder (plan 2, "Any new file in that folder is carried") and planGateInner reads the file (plan 4.a).
+
+MET — card GAP 1 "written by the grounder and never by the script" — plan 3 "Writer: the grounder; the script never writes it."
+
+MET — card GAP 2 "makes the tool and the close check agree on the name of a one-file review" — plan 3 "with no list it is always -pN" — plan 5 test (d) closes a lane holding out-code-review-p1.txt made by the real lens-input.
+
+MET — card GAP 2 "without breaking outputs already committed" — plan 3 "Committed outputs still pass: the close check is not edited for gap 2".
+
+MET — card "Reuse what exists; no new tool." — plan 3 "Rejected: ... a new tool." — the fix is one block inside planGateInner plus one suffix expression.
+
+MET — card "NOT in scope: the cross-read adversary pass" — plan 1 "Cross-read pass is out of scope".
+
+MET — AC #3 "prints `<dir>/in-out-code-review-p1.txt` and writes only that." — plan 5 "stdout path ends `-p1.txt`, no unsuffixed file written".
+
+MET — RR-0352 "Let's resolve 1 and 2 now." — plan 3 through 5 — both gaps get a design, exact edits and red-first tests.
+
+REJECT — card GAP 2 "makes the tool and the close check agree on the name of a one-file review" — accused of widening the close check to accept unsuffixed no-list inputs — plan 3 says "the close check is not edited for gap 2"; only the launch-gate block in check-lane-close.mjs changes, so committed review paths are untouched.
+
+REJECT — card GAP 1 "written by the grounder and never by the script" — accused of script-written fold evidence — plan 3 rejects "a script-written stub (a record of nothing)" and the only script write in plan 5 is the test fixture plant-evidence.mjs.
+
+REJECT — RR-0351 "Gap 3 we dont need the cross check." — accused of re-adding the cross-read pass — plan 1 excludes it and no step touches it.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+
+---
+⏱  190140ms (190.1s)
+📊 Tokens — total: 51225, input: 16744, output: 34481, reasoning: 33438

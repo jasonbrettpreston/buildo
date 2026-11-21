@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T14:44:09.397Z file_sha256=9b454c6761a7bce13acd43f27c2bcb61e5a286a0a0f5ce719f43ab9648c51088 prompt_sha256=c5009d96983d275cde6b10a895e51d8acfec9788b920afad82b3aba2658dbf09
+🔍 Lens review of docs/reports/reviews/task-419/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card "The plan (to be written read-only and reviewed before any build) names the design and the final Files line." — plan section 9 "1. Files line: may it grow by backlog-lane.logic.test.ts and plant-evidence.mjs (card lists four)?" — the plan leaves its Files line open, so it does not name a final Files line, and the pasted Files line already lists all six paths, so no ruling is owed — delete Q1 and state the six-path Files line as final, citing the card's Files line.
+
+DEFER severity=MED — plan-protocol section 3 "Rulings: only when a search of the record finds none; the search is quoted." — plan section 9 "2. Which tasks are prepped (evidence committed) but not launched? They will need a FOLD-CHECK.md; is that acceptable, or should the check apply only from a given date?" — a ruling is requested with no quoted search, and the plan's own section 3 already answers it ("A prepped-not-launched task needs the file (intended)") — quote the search, record the answer, drop the question.
+
+DEFER severity=MED — plan-protocol section 4 "BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step)." — plan section 6 "commit A = the two scripts, the tests and plant-evidence.mjs, through the real hooks, no task move (self-edit rule :681-682)" — the landing gives commit contents and one gate but no commit-msg trailers, no ids, no operator tty step, no suite run — add those four items to section 6.
+
+DEFER severity=LOW — plan-protocol section 2 step D "Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands." — plan section 5 "RED: write tests, run the named files, see FOLD-CHECK assertions and the -p1 assertion fail, then edit." — test files are named but the exact command to run each is absent — paste the exact run command per named test file.
+
+DEFER severity=LOW — card acceptance #1 "(a) Plan-prep fixture: a board whose folder lacks FOLD-CHECK.md: `backlog-lane.mjs --dry-run` exits 3, stderr "FOLD-CHECK.md"." — plan section 4a "Update the 'missing evidence' message at :580 to name FOLD-CHECK.md." — the message text of the new missing-file refusal is never specified, so the required stderr string is only implied by the test wording — name the refusal message text in 4a.
+
+MET — card "written by the grounder and never by the script" — plan section 3 "Writer: the grounder; the script never writes it" — authorship is assigned to the grounder and a script-written stub is explicitly rejected.
+
+MET — card "without breaking outputs already committed" — plan section 3 "Committed outputs still pass: the close check is not edited for gap 2; -p1 pairs keep their path (:487-503)" — committed -p1 pairs, unsuffixed compliance and BL-MASSING routes are all preserved.
+
+MET — RR-0351 "Gap 3 we dont need the cross check." — plan "Cross-read pass is out of scope ('Gap 3 we dont need the cross check.')" — the cross-read adversary pass is excluded from the change.
+
+MET — RR-0352 "Let's resolve 1 and 2 now." — plan section 1 "Gap 1: ... Fix: the grounder writes FOLD-CHECK.md beside GROUNDER-PLAN.md; the existing launch check requires it. Gap 2: ... Fix: make the tool always write -p1 for those lenses." — both gaps have a named fix.
+
+MET — card "Reuse what exists; no new tool." — plan section 1 "Reuse what exists; no new tool." plus rejected "a new tool" — no tool is added and the fix rides the existing launch check and lens-input.
+
+REJECT — card acceptance #6 "git diff --stat shows only the Files line" (accusation: scope creep by adding backlog-lane.logic.test.ts and plant-evidence.mjs) — the pasted Files line already ends "src/tests/backlog/backlog-lane.logic.test.ts, docs/reports/reviews/task-375/plant-evidence.mjs", so those two paths are inside the Files line, not beyond it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+
+---
+⏱  60431ms (60.4s)
+📊 Tokens — total: 19062, input: 8151, output: 10911, reasoning: 9899

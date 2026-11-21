@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:53:29.845Z file_sha256=909fed989f228e10f3584bb87cc55dcecf943ad09ec34be83f9999ba248e40a2 prompt_sha256=1c2b4abc1a6d53929471f564d4e395ef83433ecc3147ccf4487a6f3581c9f817
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-agents-s5-1to3-r2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card AC #6 and Q1 "Q1 the Files line is final at eight paths" / "#6 (f) The three test files green; git diff --stat shows only the Files line." — CLAUDE.md:139 "is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360)" — the diff changes a ninth path, CLAUDE.md, which neither the card's Files line nor Q1's eight paths cover, so `git diff --stat` shows more than the Files line, and RR-0360 (the ruling that justifies the edit, quoted only inside the new 08_agents.md note) is missing from the card's "Decisions naming this task" list — widen the Files line on the board to name CLAUDE.md and record RR-0360 as a decision naming task-419 before close, or drop the two CLAUDE.md hunks and leave them to the task that owns that file
+
+DEFER severity=LOW — 137_mcqueue.md dated note 2026-11-21 "committed beside GROUNDER-PLAN.md and written by the separate plan grounder, never by a script" — docs/reports/reviews/task-375/plant-evidence.mjs:69 "w('FOLD-CHECK.md', `# Fold check (test evidence)\nChecked by: Fold-G1\nVerdict: PASS\n\n${planLine}\n`);" — a script now writes a FOLD-CHECK.md with a passing Verdict and a valid Plan line into a committed review folder, the one file the note reserves for the grounder — the fixture is test evidence for an already launched task and Q4 rules the file editable, so a comment marking it as fixture-only text is enough, no gate change
+
+DEFER severity=NIT — card AC #6 "The three test files green" — NONE — no execution of the three test files is visible in the material, so the green half of (f) cannot be judged here, only the diff-stat half — confirmed by the lane's own test run and the close check at commit time, nothing to change in the diff
+
+MET — AC #3 / Q8 — scripts/analysis/rule-lists.mjs:426 "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — a no-list one-file input is now -p1 and a rule-list one-file input keeps the unsuffixed name, which is exactly the two behaviours Q8 and the 137 note name
+MET — AC #4 (d) — src/tests/backlog/check-lane-close.logic.test.ts:453 "const ok = scenario({ ...one, mutate: (l) => { expect(Object.keys(l)).toContain('in-out-code-review-p1.txt');" — the out-code-review-p1.txt pair closes with status 0 and the unsuffixed rename stays refused
+MET — AC #1 (a) — scripts/hooks/check-lane-close.mjs:645 "errors.push(`FOLD-CHECK.md is missing in ${dirNote}" — the missing file is refused naming it, and the backlog-lane test asserts exit 3 then "plan gate ok" once the committed file is back
+MET — AC #2 (b) — src/tests/backlog/backlog-lane.logic.test.ts:816 "expect(c1.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);" — the stale Plan line after a one-word edit is refused with the expected line printed
+MET — 137 note, FOLD-CHECK form — scripts/hooks/check-lane-close.mjs:644 "const form = 'write \"Checked by: <name>\", \"Verdict: PASS\" and last \"Plan: <task id> sha256:<12 hex>\"';" — the code splits the name on `/,| \(/`, takes the last Verdict line and requires PASS, and takes the last Plan line alone on its line compared to the task's current hash, matching the note clause for clause
+MET — 08_agents.md note "CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143)" — CLAUDE.md hunk header "@@ -136,11 +136,11 @@" — the two edited paragraphs fall at old lines 139 and 143 as the note states, so the note does not overclaim what the task edits
+MET — Q3 "the last of a repeated line counts" — src/tests/backlog/check-lane-close.logic.test.ts:940 "expect((await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: FAIL\nVerdict: PASS\n${p}\n` })).errors).toEqual([]);" — last-of-repeated is locked in both orders for Verdict and for Plan
+MET — Q6 "the clash with the lane and the assignees is kept" — scripts/hooks/check-lane-close.mjs:651 "for (const a of i.assignees.filter((x) => nameKey(x) !== nameKey(i.laneName))) if (clash(who, a))" — the name is refused against the lane and against every non-lane assignee, with the contains-or-contained test the note of 2026-11-20 round 5 applied to the Grounder line
+
+REJECT — 137_mcqueue.md note "the Cross-read Adversary row of the roster (:449)" — accused of leaving the roster row unedited so the roster still demands a cross read — the dated note supersedes the prior text under the "prior text kept" convention this spec uses, and RR-0360 keeps the agent in the roster, so no row edit is owed by this task
+REJECT — card "NOT in scope: the cross-read adversary pass" — accused of touching the cross-read adversary wording in two specs — RR-0354 "change the spec's wording" and Q5 (the Files line adding 08_agents.md and 137_mcqueue.md for exactly these two notes) rule the wording change in, and the exclusion names the pass, not the wording
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 2
+
+---
+⏱  97016ms (97.0s)
+📊 Tokens — total: 37088, input: 18426, output: 18662, reasoning: 17276

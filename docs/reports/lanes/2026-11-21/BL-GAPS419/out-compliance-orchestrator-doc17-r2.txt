@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:53:29.848Z file_sha256=140696b69adabf8740ec6dc00497f90c89c077eda17e8ed7277b68baf5c0ce7d prompt_sha256=2a163c9ad8e397622337022e02dfd41ffaaf3b5ab1413f5116f36ec66cb48519
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-orchestrator-doc17-r2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 and plan ruling Q1 "#6 (f) The three test files green; git diff --stat shows only the Files line." / "Q1 the Files line is final at eight paths" — CLAUDE.md:139 "diff --git a/CLAUDE.md b/CLAUDE.md" (hunks at :139 Cross-read Adversary and :143 Grounded Verification Protocol) — a ninth path is changed and is not on the eight-path Files line, so AC #6 and Q1 are unmet — either drop the two CLAUDE.md hunks, or amend the card's Files line and add a dated note naming CLAUDE.md and the RR-0360 words before launch.
+BUG severity=MED — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)." — docs/specs/00-architecture/137_mcqueue.md:142 "the launch check of the note above ... also requires docs/reports/reviews/<task>/FOLD-CHECK.md" citing ":1647 "Gap 3 we dont need the cross check."", ":1651 "Let's resolve 1 and 2 now."", ":1692 "change the claude.md ..."" — none of the four cited operator quotes names the FOLD-CHECK record or its form, and unlike the note directly above ("The mechanism (names, hash, forms) is the orchestrator's design on the orders above") the new note carries no design/reading disclosure, so a design sits in the register beside the rulings — add the same one-sentence disclosure attributing the FOLD-CHECK form to the grounder's Q3/Q7 design on the card's GAP 1.
+DEFER severity=LOW — RR-0354 "change the spec's wording" — docs/specs/00-architecture/08_agents.md:478 "the copies in .claude/workflows.md, the review template packs and Spec 119 are not edited by this task" — the wording change lands in 08_agents.md and CLAUDE.md only, so three copies still order the cross-read pass after every fold and an agent obeying them fires it — name the three copies in a follow-up dated note or edit them in this change.
+MET — AC #1 — src/tests/backlog/backlog-lane.logic.test.ts "expect(ok.stdout).toMatch(/plan gate ok/)" with "expect(bad.stderr).toMatch(/FOLD-CHECK\.md is missing/)" — exit 3 without the file, "plan gate ok" with it.
+MET — AC #2 — src/tests/backlog/backlog-lane.logic.test.ts "expect(c3.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/)" after the one-word body edit.
+MET — AC #3 — src/tests/backlog/rule-lists.logic.test.ts "(c) no --list, a one-file diff that fits" asserting "expect(n.written).toEqual(['in-out-code-review-p1.txt'])".
+MET — AC #4 and #5 — src/tests/backlog/check-lane-close.logic.test.ts "expect(ok.status, ok.stderr).toBe(0)" plus "refused(renamed, /out-code-review\.txt[\s\S]*file_sha256/)".
+MET — 137 note "committed beside GROUNDER-PLAN.md" — src/tests/backlog/backlog-lane.logic.test.ts "a copy that is ignored (so the board is clean) and not committed is not seen".
+MET — 137 note "the refusal prints the expected line" — scripts/hooks/check-lane-close.mjs "; expected: ${line}" on the FOLD-CHECK Plan error.
+MET — plan ruling Q3 "the text after the colon up to the first comma or " (" or the line end" — scripts/hooks/check-lane-close.mjs "const who = by ? by[1].split(/,| \(/)[0].trim() : '';".
+MET — plan ruling Q6 "the clash with the lane and the assignees is kept" — scripts/hooks/check-lane-close.mjs "if (clash(who, i.laneName)) errors.push(...)".
+REJECT — 137 note "written by the separate plan grounder, never by a script" — accused: docs/reports/reviews/task-375/plant-evidence.mjs "w('FOLD-CHECK.md', ...)" makes a script write the file — plan ruling Q4 rules the fixture program, and the clause binds the lane's record, not planted test evidence.
+REJECT — 137 note "The body is free; the gate reads the form" — accused: the gate cannot tell a forged PASS from a real one — the note itself says "WHAT IT CANNOT PROVE: that the checks were run, that the name is a real separate agent, or that the PASS is true".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 3
+
+---
+⏱  69503ms (69.5s)
+📊 Tokens — total: 38779, input: 25812, output: 12967, reasoning: 11854

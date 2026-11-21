@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:53:29.847Z file_sha256=cb1012910d3ebb17ecddbc7e0eec52eb3d84290ae792657d96737221091404d4 prompt_sha256=15d573c689b52bbae0c8b187a1cac5a694ced6063cca43bf3ecc98650a3e9c08
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-inc-S-r2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 "The three test files green; git diff --stat shows only the Files line." and Q1 "the Files line is final at eight paths (the six of the card plus docs/specs/00-architecture/08_agents.md and 137_mcqueue.md for the RR-0354 wording and the gate note)" — CLAUDE.md:139 "**Cross-read Adversary** (`general-purpose`, main tree, Spec 08 §10 roster, §11.2 trigger): is no longer required after a fold and stays available on request" — the diff touches a ninth path, CLAUDE.md, which the ruled eight-path Files line does not carry, so `git diff --stat` cannot show only the Files line — drop the CLAUDE.md hunk from this change (or have the plan grounder amend the Files line and re-run the fold check before launch, since Q7 ties the Plan hash to the post-commit text).
+
+DEFER severity=MED — AC #6 "git diff --stat shows only the Files line" and the task's "## Decisions naming this task" list (RR-0351, RR-0352, RR-0354, RR-0355) — docs/specs/00-architecture/08_agents.md:480 "CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143)" — the committed spec note binds this task to a CLAUDE.md edit and to RR-0360, which appears in no decision of the task; the note and the ruled Files line disagree — either drop that sentence or have RR-0360 and CLAUDE.md recorded in the task and Files line.
+
+REJECT — GAP 1 "written by the grounder and never by the script" — the change is accused of a script writing FOLD-CHECK.md, via docs/reports/reviews/task-375/plant-evidence.mjs `w('FOLD-CHECK.md', ...)` with a hardcoded "Verdict: PASS" — not a real issue: that file is a fixture program for task-375's test boards, named by Q4 ("plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)"), and it is not on the plan-prep or launch path; the gate still has no writer of its own.
+
+REJECT — RR-0354 "change the spec's wording" — the change is accused of leaving the 11.2 wording in .claude/workflows.md, the review template packs and Spec 119 untouched — not a real issue: the Files line ruled final at eight paths carries only 08_agents.md and 137_mcqueue.md, and the Spec 08 note itself discloses the unedited copies as an open item for the operator.
+
+MET — GAP 1 "makes the fold check a committed record that the pre-launch steps carry and the launch check can see, written by the grounder and never by the script" — scripts/hooks/check-lane-close.mjs:643 — `const fc = textOf('FOLD-CHECK.md');` with the missing-file refusal at :645, read from the committed folder (the ignored-copy test at src/tests/backlog/backlog-lane.logic.test.ts:382 proves a non-committed copy is not seen); no code path writes the file.
+
+MET — Spec 137 note "a line `Checked by: <name>` ... the last `Verdict:` line reading `Verdict: PASS`, and, as the last such line of the file, alone on its line, `Plan: <task id> sha256:<12 hex>`" — scripts/hooks/check-lane-close.mjs:648 — `const by = lastOf(/^[ \t]*Checked by:(.*)$/gm);` then `who = by[1].split(/,| \(/)[0].trim()` at :649, the last-Verdict check at :656, the anchored one-line Plan regex at :660.
+
+MET — GAP 2 "makes the tool and the close check agree on the name of a one-file review, without breaking outputs already committed" — scripts/analysis/rule-lists.mjs:426 — `files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : \`-p${n}\`, text });` gives a no-list input -p1 always.
+
+MET — Spec 137 note "a rule-list input keeps its unsuffixed name for one file, and committed outputs are neither blessed nor broken" — scripts/analysis/rule-lists.mjs:426 — the `list &&` guard preserves the unsuffixed rule-list name, and the close check's committed-output handling is untouched.
+
+MET — AC #4 "The close check on a lane with out-code-review-p1.txt made from (c): exit 0" — src/tests/backlog/check-lane-close.logic.test.ts:455 — `const ok = scenario({ ...one, ... })` then `expect(ok.status, ok.stderr).toBe(0);`.
+
+MET — AC #5 "Existing close tests (a -p1 pair, the unsuffixed compliance control) still pass" — src/tests/backlog/check-lane-close.logic.test.ts:458 — `refused(renamed, /out-code-review\.txt[\s\S]*file_sha256/);` keeps the unsuffixed lock red in the same test.
+
+MET — RR-0354 "change the spec's wording" — docs/specs/00-architecture/08_agents.md:480 — the dated note after 11.2 removes the cross-read adversary pass and keeps the grounder's re-execution and FOLD-CHECK.md, matching the operator's quoted words ":1663 "change the spec's wording"".
+
+MET — Spec 137 gate note — docs/specs/00-architecture/137_mcqueue.md:142 — the dated note requires FOLD-CHECK.md at the launch check and in the same change names a no-list lens input -pN always, matching the code.
+
+MET — Q1 "no new rule list, the nine lists are unchanged" — scripts/analysis/rule-lists.mjs:426 — only the suffix expression changed, no list definition touched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 1
+
+---
+⏱  93609ms (93.6s)
+📊 Tokens — total: 38832, input: 21059, output: 17773, reasoning: 16395

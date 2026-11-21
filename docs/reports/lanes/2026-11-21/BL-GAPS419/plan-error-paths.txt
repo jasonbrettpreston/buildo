@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-21T14:44:09.400Z file_sha256=667231279a60124a7ca749f37ff0ce08ebd913730cc7c34c930c2454cc4813b8 prompt_sha256=2b63b6ed2ace4b4f8b4878469146b01de608f301aba591dc7331ea0ad578b468
+🔍 Lens review of docs/reports/reviews/task-419/context-r1.md (model: deepseek-reasoner)
+
+BUG-free scan of the pasted plan, walked as error, empty, retry, double-submit, degrade and idempotency paths.
+
+DEFER severity=MED — plan §5 "Planted defects, each with the control green: no file; no Checked-by; Checked-by equal to the lane BL-COMPLY2 and one equal to an assignee; Verdict: FAIL; Plan line of an edited task (stale); no Plan line." — the re-ground path (grounder rewrites FOLD-CHECK.md after a plan edit) is untested for a file that already holds a Verdict line: no rule is fixed for two "Verdict:" or two "Checked by:" lines, so an appended PASS under a FAIL either closes on a laundered verdict or blocks a correct re-check depending on a rule nobody wrote — Fix: state one rule (refuse two Verdict lines, last wins for Checked by) and add both-order tests.
+
+DEFER severity=MED — plan §3 Gap 1 "Minimum content: a line `Checked by: <name>`; a line `Verdict: PASS`; a last line `Plan: <task id> sha256:<12>` (same form as GROUNDER-PLAN.md)." — an empty value ("Checked by:" with nothing after the colon) sits between "line exists" and "no Checked-by" and neither the design nor the planted-defect list settles it, so an unsigned record can pass if the parse tests line presence — Fix: require a non-empty trimmed name and add the empty-value test.
+
+DEFER severity=MED — plan §4a "read textOf('FOLD-CHECK.md') and push the four refusals above." — only the absent file is named ("file missing -> refusal"); a directory at that path (EISDIR) or an unreadable file (EACCES) has no branch, so if textOf throws (its body cannot be seen here) the gate dies with a stack instead of exit 3 and the lane sees no FOLD-CHECK.md message — Fix: one try/catch mapping every read failure to the same exit-3 refusal.
+
+DEFER severity=MED — plan §3 Gap 1 "Can prove: the file is committed at board HEAD, a name other than the lane and its assignees signed it, it names the plan hash as it is now, and says PASS." — 4a reads the file by path, so a hand-written uncommitted FOLD-CHECK.md satisfies the launch gate, and a lane re-prepped from HEAD loses the record, which is the "written nowhere" failure of gap 1 again — Fix: read via git show HEAD:<id>/FOLD-CHECK.md or assert git status --porcelain over the task folder is empty.
+
+DEFER severity=LOW — plan §4a "message at :580 to name FOLD-CHECK.md" — :580 sits above the GROUNDER-PLAN.md read the plan cites at :609, so a folder missing GROUNDER-PLAN.md is told about FOLD-CHECK.md first, the lane creates the wrong file, reruns, and only then sees the real gap — Fix: name FOLD-CHECK.md only in the new block after :636.
+
+DEFER severity=MED — acceptance #3 "prints `<dir>/in-out-code-review-p1.txt` and writes only that." — a lane that already ran the old tool keeps the unsuffixed out-code-review.txt beside the new -p1 file; the plan does not say which candidate the close check picks when both exist, and the unsuffixed one is bound to the raw diff at :508-513 and passes, so a stale file can shadow the tool's output — Fix: state the both-present resolution rule and test a lane holding both.
+
+DEFER severity=MED — plan §3 Gap 1 "A prepped-not-launched task needs the file (intended)." and §9 "Which tasks are prepped (evidence committed) but not launched?" — at merge every such task exits 3 at launch until a grounder writes FOLD-CHECK.md, and the plan lands before the size of that blocking set is known — Fix: enumerate them at plan-lock and have the grounder write the file for each, or gate only tasks prepped after the change.
+
+REJECT — "Verdict not PASS -> refusal; last Plan line missing or not equal to `line` -> refusal (a fold check of an older plan)." — four new refusals on a path every launch now takes looks launch-blockingly broad — handled: each refusal feeds exit 3 at backlog-lane.mjs:87-116 and stops the launch, so absent, unsigned, failed or stale evidence degrades to "does not launch", never to "launches with a bad record".
+
+VERDICT: PASS on error-path safety
+Paths walked: FOLD-CHECK.md absent, empty, unsigned, clashing name, FAIL verdict, stale Plan line, duplicate lines, unreadable path, uncommitted file; gate re-run after a task-body edit; plan-prep commit re-run; lens-input one-file diff old and new outputs side by side; close check name resolution; prepped-not-launched launch   Unguarded: 7
+
+---
+⏱  98945ms (98.9s)
+📊 Tokens — total: 32844, input: 16307, output: 16537, reasoning: 15427

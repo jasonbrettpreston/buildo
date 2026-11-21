@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T15:53:29.851Z file_sha256=6c7dd4e3fc54314a0af4e3e4f986c5a6f6314e0c07c53c7144049591019dbcbb prompt_sha256=1eb6521fcb2051612d6a233f1a776ddf825db81f8d93d4c460fde332d4cbde24
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-code-review-r2-p1.txt (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> — none found: no wrong condition, no unchecked cast or non-null assertion hiding a real null in the added code (`n.listed[0]!` in rule-lists.logic.test.ts is guarded by the preceding length assertion).
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs "+  if (fc === undefined) errors.push(`FOLD-CHECK.md is missing in ${dirNote} …${form})`);" — the missing-file refusal omits the expected `Plan: <id> sha256:<12 hex>` line that the Spec 137 note says the refusal prints ("equal to the hash of the task as it is at launch (the refusal prints the expected line)"), while the two Plan-line errors below do print `expected: ${line}`, so a lane whose file is absent must derive the line by hand — append `; expected: ${line}` to the missing-file message (line is in scope there).
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs "+    else if (`Plan: ${fp[1]} sha256:${fp[2]}` !== line) errors.push(`FOLD-CHECK.md: the Plan line "Plan: ${fp[1]} sha256:${fp[2]}" is not the hash of the task as it is now …`" — the whole string (id plus hash) is compared in one go, so a line naming a different task id is reported as "not the hash of the task as it is now" and sends the grounder after a hash that is not the problem — compare `fp[1]` to the expected id first, or word the message as "is not the expected line".
+
+DEFER severity=NIT — scripts/hooks/check-lane-close.mjs "+    const fp = lastOf(/^[ \t]*Plan:[ \t]*(\S+)[ \t]+sha256:([0-9a-f]{12})[ \t\r]*$/gm);" — the leading `[ \t]*` accepts a Plan line indented inside a fenced block, though the form says "as the last such line of the file, alone on its line" and the new suite refuses only a backticked copy (`gate(await planScenario({ fold: (p) => … \`${p}\`\n })`); requiring column 0 (or stripping fences) would close that hole.
+
+DEFER severity=NIT — scripts/analysis/rule-lists.mjs "+    files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — `list` is used by truthiness, so an empty resolved list is classified as a rule-list input and keeps the unsuffixed name that the close check reads as a raw-diff review, and `files.length === 0` is already implied by the product being 1; write the intent as `list !== null` (per the JSDoc "`list` null (a non-compliance lens template)") and drop the redundant conjunct.
+
+REJECT — scripts/analysis/rule-lists.mjs "export function lensPromptHash({ templateText, inputText, context = NO_CONTEXT }" — the JSDoc change sits above `buildLensInputs` but appears to document a different function — it is the block comment above `buildLensInputs` (the `list` null paragraph), which is where the new sentence belongs and where the surrounding text already describes `list` behaviour.
+
+REJECT — src/tests/backlog/check-lane-close.logic.test.ts "const who = o.assignees ?? []"—look-alike: the added `assignees?: string[]` looks like dead plumbing since every production call already supplies it — it is required so the new clash cases ("Checked by \"BL-OTHER\" is, contains or is contained in an assignee") can be exercised, and the default keeps the prior empty array.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  188707ms (188.7s)
+📊 Tokens — total: 50207, input: 14815, output: 35392, reasoning: 34527

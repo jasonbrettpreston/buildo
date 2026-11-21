@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T14:44:09.397Z file_sha256=86c56f25fdc494253db290ec11fb4f4bdd04c516079f1887617fc050624dec74 prompt_sha256=a168a4786ee7df665c1e9c18621d5740f39e3f966af343dbe0385184db6fb8a0
+🔍 Lens review of docs/reports/reviews/task-419/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — acceptance #2 "Same board, the task body edited by one word: exit 3, FOLD-CHECK.md Plan line stale, expected line printed." — plan §4a "read textOf('FOLD-CHECK.md') and push the four refusals above. About 12 lines." — the only message text the plan pins is the missing-evidence one at :580; the stale-Plan-line refusal specifies neither that stderr names "FOLD-CHECK.md" nor that it prints the expected `Plan: <id> sha256:<12>` line, so acceptance #2 cannot be met by construction — specify the stale message and the expected-line print, and assert both in the c3 test.
+DEFER severity=MED — card Description "The plan (to be written read-only and reviewed before any build) names the design and the final Files line." — plan §9 "1. Files line: may it grow by backlog-lane.logic.test.ts and plant-evidence.mjs (card lists four)?" — the plan's own six-path Files line is presented as provisional because the open question asks permission for two paths already on it — settle the Files line before lock, either strike Q1 or state that the six paths are final.
+DEFER severity=MED — plan §4d "No edit to backlog-lane.mjs, the specs, or any committed evidence." — plan §5 "plant-evidence.mjs: write FOLD-CHECK.md after GROUNDER-PLAN.md (:36-37) and commit it with the rest." — a committed file under docs/reports/reviews is simultaneously forbidden and required, so the build scope is contradictory — narrow §4d to committed review outputs and name plant-evidence.mjs explicitly as an editable fixture.
+DEFER severity=LOW — card Description "written by the grounder and never by the script" — plan §3 "Checked-by missing or clash() with lane or any assignee -> refusal (reuse clash, same rule as the grounder)" — the assignee-clash refusal is behaviour no pasted clause or acceptance criterion names — keep the grounder's existing clash rule only (lane, not assignees) or record the extension as scoped in the card.
+DEFER severity=LOW — card Description "without breaking outputs already committed" — plan §3 "A prepped-not-launched task needs the file (intended)." — the gate will refuse every already-prepped task at launch until a FOLD-CHECK.md exists, and §9 Q2 leaves that undecided — answer Q2 before lock, or bound the requirement to plans first committed after this change.
+MET — card Description "written by the grounder and never by the script" — plan §3 "Writer: the grounder; the script never writes it." — no edit adds a writer; plan-prep's folder `git add` carries the file without authoring it.
+MET — card Description "makes the tool and the close check agree on the name of a one-file review" — plan §4b "rule-lists.mjs:425: suffix expression as in section 3." — a no-list, one-file lens now emits -p1, which the check's stamp path (:487-503) accepts; compliance keeps its unsuffixed listProof name.
+MET — card Description "Reuse what exists; no new tool." — plan §3 "Rejected: a script-written stub (a record of nothing); a new Seat line (changes the committed form); a hash of GROUNDER-PLAN.md (circular); a new tool." — reuses planGateInner and clash, no new script.
+MET — acceptance #1 "a board whose folder lacks FOLD-CHECK.md: `backlog-lane.mjs --dry-run` exits 3, stderr "FOLD-CHECK.md"" — plan §2 "grep finds planGateErrors called only from scripts/analysis/backlog-lane.mjs (gate at :87-116, exit 3)" — the new refusal is reached by the same dry-run path and the :580 message names the file.
+MET — RR-0352 "Let's resolve 1 and 2 now." — plan §3 headers "Gap 1. Record: docs/reports/reviews/<task>/FOLD-CHECK.md" and "Gap 2. Change the TOOL only" — both gaps carry a design, and RR-0351 is honoured: "Cross-read pass is out of scope".
+REJECT — Glossary "RE-FREEZE #N" "A field is added or deleted only by one." — adding FOLD-CHECK.md as a launch artifact — it is a report file beside GROUNDER-PLAN.md, not a step descriptor field in step.schema.json or template-freeze.json, so no re-freeze is owed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 1
+
+---
+⏱  76667ms (76.7s)
+📊 Tokens — total: 20928, input: 7327, output: 13601, reasoning: 12563

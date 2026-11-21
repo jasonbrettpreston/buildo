@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T14:44:09.397Z file_sha256=e06201f88ad354c07bf99dac22e3d04de1d02eb79cc5edf28f4b26e86953a863 prompt_sha256=1c02fed1ba619f186838446be8b5ab1c012f9a94c4ea3c9f8676c6dea94f4188
+🔍 Lens review of docs/reports/reviews/task-419/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Description "The plan (to be written read-only and reviewed before any build) names the design and the final Files line." "Files: scripts/hooks/check-lane-close.mjs, scripts/analysis/rule-lists.mjs, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, docs/reports/reviews/task-375/plant-evidence.mjs" — PLAN-419-v1 §9 "1. Files line: may it grow by backlog-lane.logic.test.ts and plant-evidence.mjs (card lists four)?" — the final Files line is left as an open question to the grounder, and it rests on a card reading the pasted card contradicts (the pasted Files line already carries all six paths); an answer of "no" strips the two paths acceptance #1 and #2 need, so acceptance #6 has no fixed baseline — strike the question, record the card's six-path Files line as final, and open a card edit only if the board copy truly lists four.
+
+DEFER severity=MED — §11.2 "After folding any review round, and BEFORE implementation: one grounder re-executes every claim in the fold" — PLAN-419-v1 §3 "file missing -> refusal" — the refusal fires on every launch, including a plan round with no fold, so a PASS record is demanded where §11.2 calls for no fold check, which is the shape the plan itself rejects as "a script-written stub (a record of nothing)" — exempt the no-fold case or accept a named "Verdict: N/A, no fold" with the reason.
+
+DEFER severity=MED — card Description "the grounder's report of the check is written nowhere by rule, plan-prep neither asks for it nor stores it" — PLAN-419-v1 §3 "Body free (the grounder's report, pasted)." — the four refusals accept a three-line file with an empty body, so the report the card asks to make a record can still be written nowhere — add a body requirement (for example one line per claim the grounder re-executed) to the refusal set.
+
+DEFER severity=MED — card Description "Wanted: the smallest change that ... Reuse what exists; no new tool." — PLAN-419-v1 §3 "Checked-by missing or clash() with lane or any assignee -> refusal (reuse clash, same rule as the grounder)" — assignee-independence is behaviour no pasted clause or ruling names (the card names only that the grounder, not the script, writes it), and it refuses a task whose assignee is its own grounder — drop the assignee half, or cite the ruling that names it.
+
+DEFER severity=MED — §11.1 "a census grep runs at the full scope its conclusion covers" — PLAN-419-v1 §2 "Committed: no-list pairs are -p1 in BL-V2WHOLE, BL-F412, BL-GATE375, BL-PREP418" — a backlog-wide conclusion with no grep scope or output recorded, so card gap 2's "without breaking outputs already committed" is not shown at the scope the claim covers — record the grep and its full-scope output in the plan.
+
+DEFER severity=MED — card Acceptance criteria "#5 (e) Existing close tests (a -p1 pair, the unsuffixed compliance control) still pass." — PLAN-419-v1 §4b "rule-lists.mjs:425: suffix expression as in section 3" against §3 "suffix is '' only when `list` is set and there is one file" and §2 "files.length === 0 && chunks.length * parts.length === 1 ? ''" — the replacement predicate is described in terms of `list` while the quoted current predicate tests `files.length` and the part count, and no literal new expression is written, so #5 (unsuffixed compliance names unchanged) is asserted, not shown — write the exact literal replacement expression and the compliance one-input case it must still yield ''.
+
+DEFER severity=MED — TKT-2 "Every reply ends with one line `STATUS: ready|blocked|failed|dropped` and carries at most one question." — PLAN-419-v1 §9 "1. Files line: ... 2. Which tasks are prepped (evidence committed) but not launched?" — the plan is the planner seat's reply and ends with two questions and no STATUS line — resolve or card the second question and close with one STATUS line.
+
+DEFER severity=LOW — §11.1 "execute what's executable; ground what's groundable; judge the rest." — PLAN-419-v1 §9 "2. Which tasks are prepped (evidence committed) but not launched?" — a listing that is one grep over the evidence folders is asked instead of run, so the blast radius of the new launch refusal on already-prepped tasks is unknown at plan-lock — run the grep, list the tasks, and state that they will need a FOLD-CHECK.md.
+
+MET — card gap 2 "without breaking outputs already committed" — PLAN-419-v1 §3 "Gap 2. Change the TOOL only: suffix is '' only when `list` is set and there is one file" — check-lane-close.mjs is not edited, so -p1 pairs keep the :487-503 stamp route and list lenses keep the listProof names.
+MET — card "#3 (c) ... prints `<dir>/in-out-code-review-p1.txt` and writes only that." — PLAN-419-v1 §5 "stdout path ends `-p1.txt`, no unsuffixed file written" — the named test asserts exactly the acceptance output.
+MET — card "#4 (d) ... exit 0 (named test green)." and "#5 (e)" — PLAN-419-v1 §5 "the same pair renamed unsuffixed is still refused (planted defect keeps the lock)" — both the -p1 green and the unsuffixed refusal are exercised.
+MET — RR-0351 "Gap 3 we dont need the cross check." — PLAN-419-v1 "Cross-read pass is out of scope" — the cross-read adversary pass is neither built nor tested.
+MET — §11.4 "The failing tests ... are written INTO the plan and reviewed at PLAN altitude" — PLAN-419-v1 §5 "RED: write tests, run the named files, see FOLD-CHECK assertions and the -p1 assertion fail, then edit." — cases, fixtures, red expectation and invocation are in the plan before the build.
+MET — §11.3 "Every lock is proven in BOTH directions" — PLAN-419-v1 §5 "Planted defects, each with the control green" — every new refusal is paired with a green control.
+MET — card "Reuse what exists; no new tool." — PLAN-419-v1 §3 "Rejected: a script-written stub (a record of nothing); a new Seat line ...; a new tool." — planGateInner is extended in place and no tool is added.
+
+REJECT — §11.2 "one cross-read adversary checks the folded decisions PAIRWISE" — the plan omits the cross-read adversary pass — the operator waived it by name, RR-0351 "Gap 3 we dont need the cross check."
+REJECT — card gap 2 "makes the tool and the close check agree on the name of a one-file review" — the plan changes only the tool and leaves check-lane-close.mjs:508-513 untouched — agreement holds once the tool emits -p1, so no second route through the close check is needed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 2
+
+---
+⏱  169623ms (169.6s)
+📊 Tokens — total: 44151, input: 14771, output: 29380, reasoning: 27691
