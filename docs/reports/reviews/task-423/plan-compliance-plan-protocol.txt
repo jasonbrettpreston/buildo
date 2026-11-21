@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T17:06:38.041Z file_sha256=e3a097a132c1d0dfc84e5cef6b25022d40476b3524299ab0442c4882fd8d77c4 prompt_sha256=67f97b0953405984e9b8a876c987e7b8641b2ccded778c43f102e2712248bd39
+🔍 Lens review of docs/reports/reviews/task-423/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-423 title "One compliance review on the plan and one on the output, against rules sections" — plan §2 Adjustment 1 "Honest: the one-call target is met for tooling and spec tasks only." — the deliverable the card names (one compliance call on the plan, one on the output) is left unmet for surface, phone and pipeline kinds and pushed to "a later card" that has no id, no source and no Files line in this plan — add the missing `lines` rows (Specs 126, 127, 128, mobile, Airtight) to card A's rule-lists.json Files line, or open the later card now with its source line and Files.
+
+BUG severity=HIGH — plan-protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added." — plan §6 "Card D (optional, new, parallel to all): adjustment 6 moved into the repo [~2-3 h]" with "Only if OPEN QUESTION 1 is yes." — Card D is a new task with no file:line source, its only ground is an unanswered open question plus an uncited "your rule that tools live in the repo" — cite the file:line of that rule, or drop Card D and keep adjustment 6 as the one-line station edit.
+
+DEFER severity=MED — plan-protocol §2 step E "drop the removal list items the operator approves" — plan Card B "(4) task-414 closed as superseded." and "so the hand-off tells him" — task-414 is removed from the plan on a notice rather than on the operator's approval of a removal-list item — put task-414 on card B's removal list with the RR-0336 cite at MORNING-DECISIONS.md:1557 and close it only after his approval at the sitting.
+
+DEFER severity=MED — plan-protocol §5.5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — plan §3 "Hours are ESTIMATES. UNVERIFIED is marked." — no card or adjustment hour is labelled GUESS and none carries a MEASURED source, "ESTIMATES" is neither of the two words the clause allows — label every card and adjustment hour GUESS, or give the measured lane time that sources it.
+
+DEFER severity=MED — RR-0363 "Unless the output was revealing to have critical or high faults and a second review of the output maybe required. That's it." — plan Card B acceptance "(2) ... (control: a covered path edited after the review with no new round is refused)" — the plan makes a second round mandatory for any covered edit after the last review, where the ruling makes it discretionary and tied to critical or high faults, and adjustment 4 already limits code change to critical and high — trigger the mandatory fix-diff round only on a confirmed critical or high, and let any other covered edit ride to the fold with one ruling line.
+
+DEFER severity=MED — plan-protocol §2 step A gate "every added task has a source line; board re-rendered" — plan Implementation Notes "Cards B, C and D are opened only after the operator has seen the grounded plan." — three new tasks enter the one plan with no seq-patch.json delta, no board re-render and no statement of how they are added, against §0 "One plan, no new plan" — name the delta file that carries cards B, C and D and the board re-render inside card A's close, with a source line per card.
+
+DEFER severity=LOW — RR-0364 item 2 "paperwork tasks get a grounder check, no review" — plan §2 Adjustment 2 "docs/reports/*-assessment.md (proving check: step-validate.mjs --all --fast, station step 1; UNVERIFIED that a stale block fails it)" — a path is exempted from every lens on a proving check the plan itself marks UNVERIFIED, so a stale assessment block has no verified check — prove red-first in card C that step-validate fails on a stale block, or keep assessment reports off the exempt list until it is proven.
+
+MET — plan-protocol 2026-11-20 note "plus its separate grounder (Spec 08 section 7 rules 5 and 7)" — plan §2 Adjustment 3 "docs/reports/reviews/<id>/GROUNDER-PLAN.md exists at the launch commit L" — the separate plan grounder still has to exist at launch after plan outputs stop being copied.
+
+MET — RR-0363 "That's it. No review of paperwork." — plan §2 Adjustment 2 "Reuse `exempt`. Add globs: `docs/reports/*-assessment.md` ... `backlog/**` ... `.cursor/*QUEUE*.md`" — record and generated paths carry no lens output and each glob names the check that proves it.
+
+MET — RR-0364 "1. yes 2. yes" — plan §2 Adjustment 4 "MED may close by `pile:\"<reason>\"` or `wontfix:\"<reason>\"` (30+ chars ...) as LOW and NIT already may; CRITICAL and HIGH still close by fixed or ruling." — medium and low are recorded, critical and high still force a fix.
+
+MET — RR-0351 "Gap 3 we dont need the cross check." — plan Card A acceptance "(3) ... plant a plan sentence contradicting a ruling ... the compliance call flags it with the quote" — no cross-read adversary pass is added; the ruling is used only as a fixture that must be read.
+
+REJECT — RR-0363 "Teh solution maybe just creating a rules section in the spec which is small." — that the plan strikes the written "Rules for review" sections in Specs 08 and doc-17 and keeps prose whole sections — the operator's later ruling ordered exactly that cut, RR-0365 "yes cut the plan and have the panel review the plan", and "maybe" is a suggestion, not a clause.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 7
+
+---
+⏱  67548ms (67.5s)
+📊 Tokens — total: 24295, input: 11715, output: 12580, reasoning: 11241

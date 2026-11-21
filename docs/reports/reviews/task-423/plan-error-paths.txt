@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-21T17:06:38.058Z file_sha256=faeab02610850320ebd4f1245d4355c0ca24e4ec807ae95e88dce4794ef73735 prompt_sha256=3deddf4b21841476f23792a98a3ee230d9b7f42b26246b8a69e100491d2860ec
+🔍 Lens review of docs/reports/reviews/task-423/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — "given to the existing `buildLensInputs` as ONE list (id `rules`)" — collapse of nine compliance calls into one per stage leaves a single network, parse or time-out failure with no stated retry, bound or fallback, so one transient DeepSeek failure now voids the whole stage instead of one list, and the close check refuses with no evidence to resume from — state the retry count and time-out for the joined call and the fallback order (re-split at 120,000, then per-list), and record a failed call so the lane can re-run without re-making the rulings block
+
+BUG severity=HIGH — "`docs/reports/*-assessment.md` (proving check: step-validate.mjs --all --fast, station step 1; UNVERIFIED that a stale block fails it)" — the exemption fails open on an unproven check: if step-validate does not fail a stale block, every assessment file resolves to no lists and is never reviewed and never proven, same for "`docs/reports/generated/**` (each page names its generator --check)" whose --check exit on stale is also unstated — enable each exempt glob only after a planted stale file is shown to fail its named check, and keep the review until then
+
+DEFER severity=MED — "when the range's covered, non-exempt paths are empty, no compliance or lens output is required; instead GROUNDER.md (grounder not the lane) with one `record#N CONFIRMED <path>:<line> "<quote>"` line per claim of REPORT.md checked." — empty path is unguarded: a range with zero changed files, or a REPORT.md with zero claims, is satisfied by an empty or one-line GROUNDER.md, so a lane that changed nothing closes clean — refuse a zero-file range and require at least one CONFIRMED line when REPORT.md names any claim
+
+DEFER severity=MED — "becomes "docs/reports/reviews/<id>/GROUNDER-PLAN.md exists at the launch commit L" (`git cat-file -e`, 3 lines)" — existence is checked, content is not: a zero-byte or stub GROUNDER-PLAN.md at L passes, so plan grounding evidence can be vacuous and the struck `planGateErrors` content proof is lost with no substitute — require a non-empty blob (size > 0 and at least one CONFIRMED or verdict line) not just `cat-file -e`
+
+DEFER severity=MED — "The bound is the brief's max_fix_rounds 2 (backlog-brief.mjs:169), a stated rule, not counted by the hook (lost: no hard stop in the hook; the lane and grounder stop it and a critical or high still open after round 2 goes to the operator)." — the retry bound expires with no mechanical refusal, so a lane can file round 3, 4, N and the close check reads `out-<lens>-rN.txt` without complaint, which is the re-review loop this card exists to stop — have `closeErrors` count rounds and refuse any round file beyond max_fix_rounds
+
+DEFER severity=MED — "Proof: prompt_sha256 recomputed at close" — if the joined rules text is recomputed from the current specs, any spec edit by a parallel lane stales every open compliance output even when no covered code changed, and card A itself edits docs/specs/00-architecture/08_agents.md and 137_mcqueue.md which sit in the attached rows, so the staleness class is recreated for rules — bind the rules block to the range like the diff (hash the joined text sent and accept that hash at close) or freeze attached specs while a lane is open, and let "a shortened joined text is refused at close (control accepted)" fire only on truncation
+
+DEFER severity=MED — "`lines` (regex) on a list, applied to its blocks, for the two specs that already hold one rule per line: Spec 137 section 4 (14 lines `**Rule N.**`, 3.4k of 33k)" — extraction by header line silently drops a rule's continuation text while `count` stays green because only headers are counted, so the reviewer gets half a rule and nothing refuses — extract the whole rule block to the next header and pin the exact extracted bytes in a golden test, not only the line count
+
+DEFER severity=MED — "the close and launch checks accept EITHER a complete joined output (`plan-compliance.txt`, `out-compliance.txt`, parts `-pN`) OR a complete per-list set. The evidence form decides" — with both forms present after a partial re-run no precedence is stated, so a stale complete per-list set can satisfy the close beside a newer joined output, two evidence forms for one verdict — refuse a lane folder that holds both forms, or take the joined form when present and require the per-list set to be absent
+
+VERDICT: FAIL on error-path safety
+Paths walked: single joined compliance call failure and retry, exempt glob with unproven check, empty range and empty GROUNDER, GROUNDER-PLAN existence only, fix-round bound expiry, rules-join staleness on spec edits, lines/count extraction loss, dual evidence forms   Unguarded: 6
+
+---
+⏱  45044ms (45.0s)
+📊 Tokens — total: 27173, input: 19496, output: 7677, reasoning: 6543
