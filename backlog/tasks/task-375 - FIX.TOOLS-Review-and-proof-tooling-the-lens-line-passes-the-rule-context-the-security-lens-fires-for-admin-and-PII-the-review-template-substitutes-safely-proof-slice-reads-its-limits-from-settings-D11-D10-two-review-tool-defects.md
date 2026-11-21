@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T01:42:00Z'
+updated_date: '2026-11-21T01:46:00Z'
 labels:
   - McFix
   - McFix A
@@ -383,4 +383,6 @@ BL-GATE375 build note (A3 docs): .claude/review-templates/README.md How-to-run s
 2026-11-21 DEVIATION (BL-GATE375, third run; precedent: task-399's lane added a path its change forced): the Files line is extended by ONE path, src/tests/backlog/rule-lists-table.logic.test.ts. Why: A4 makes rule-lists.mjs lens-input refuse without --context, and that test calls lens-input twice with no --context (src/tests/backlog/rule-lists-table.logic.test.ts:49 and :206), so both go red at the push suite; check-task-files refused the edit while the path was off the line. Nothing else in the Description changed. rule-lists.mjs resolve for the new Files line: 14 lists before and 14 after, none added, none removed (no new output compliance review owed for a new list). The separate grounder rules on this deviation.
 
 BL-GATE375 build note: rule-lists-table.logic.test.ts :49 and :206 now pass --context docs/reports/reviews/task-375/fixture-context.md (deviation above); red in red9.out (2 failed), green by the commit.
+
+BL-GATE375 build note (D1-D5 in check-lane-close.mjs): listProof and grounderErrors are extracted from closeErrors (behaviour preserving, the existing close tests are the proof); planGateErrors (pure; any read error is a refusal line), planHash (title plus body after the front matter, whitespace squashed, 12 hex), PLAN_SEATS (always integration and reality-check; regression when the Files line names a path tracked at the board head, a directory or glob entry counts) are exported; it reuses outcomeErrors with mode 'plan', seatLines, parseVerdicts and extractSections. Plan inputs are checked per committed context: the stamped material must be the PLAN_SECTIONS cut of the context whose text produced the output's prompt hash. Not wired into backlog-lane.mjs in this commit. Red for this commit was a typecheck refusal (red10.out).
 <!-- SECTION:NOTES:END -->
