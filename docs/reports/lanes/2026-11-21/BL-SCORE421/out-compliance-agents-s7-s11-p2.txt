@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.032Z file_sha256=4863057c46d0f994e0f0e83f0dd07183fab50a216e2b4812cae468ea10c8cf50 prompt_sha256=c14d30549f77a475752df2dcd930c2e0fb9e6abce92cab281019d6cf4b5a4336
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-agents-s7-s11-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — acceptance criterion #2 / Description "then a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md "| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 net-new (R-DK) |" and "**Score: 17/17**" (was "Score: 14/17", G8 "0 | 3 ... stage-gated (compute_ported)") — the only score gain is G8 flipping 0/3 to 3/3, a pass now justified by R-DK, which is not in the pasted context and is not among the card's rulings (RR-0353, RR-0355, RR-0357, RR-0358); the count-row refresh the card names contains no step change that would close G8's missing-pre-invocation — attach R-DK in context and the commit that adds the PRE invocation that closes G8, else leave G8 stage-gated and the score at 14/17
+DEFER severity=LOW — Description "one generated-files commit ... the count row 315 to 316" — docs/reports/2026-10-18-batch4-p4-3-enrich-coa-zoning-assessment.md "registry-input 33.19 s <= 33.2 s" (was "registry-input 27.36 s <= 27.5 s") while docs-only budget stayed "...<= 25.3 s" — the registry-input budget threshold rose 27.5 to 33.2 s but was not named by any pasted clause as a change of this commit; if budgets are stored not auto-derived this is an out-of-scope threshold loosening inside a generated-files commit — confirm the 33.2 value is tool-generated, else restore 27.5 s and file the exceedance separately
+DEFER severity=MED — acceptance criterion #2 "step-conformance Rule 13 passes on it" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md "Test suite (item iii) - SKIPPED or failed to run: --fast: vitest spawn skipped" — the Rule 13 result on the commit is not in the material; only the regenerated report is visible, so AC#2's Rule 13 half is cannot see — attach the step-conformance Rule 13 output for the generated-files commit
+MET — Description "the count row 315 to 316" — docs/reports/2026-10-18-batch4-p4-3-enrich-coa-zoning-assessment.md "min_migration=204 <= migrations count=316" — the count row is bumped 315 to 316 in every file that carries row 1
+MET — Description "only generated files changed (the assessment reports under docs/reports/..." — paths block — every touched path is under docs/reports/ (assessment report .md files only)
+MET — acceptance criterion #1 "The operator's typed GO is recorded verbatim on the task" — Implementation Notes "operator, verbatim: \"GO for scorecards\"" — the GO is recorded verbatim
+MET — acceptance criterion #2 "One commit of generated files only" — diff — the diff touches only generated report files, no source or config change is shown in this chunk
+REJECT — RR-0353 "The 29 scorecards are resolved the right way" — that only 15 of 29 scorecards are touched here — the material is chunk 2 of 2 cut at file boundaries; the remaining scorecards are reviewed in their own run
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 2
+
+---
+⏱  94649ms (94.6s)
+📊 Tokens — total: 40837, input: 22985, output: 17852, reasoning: 17007

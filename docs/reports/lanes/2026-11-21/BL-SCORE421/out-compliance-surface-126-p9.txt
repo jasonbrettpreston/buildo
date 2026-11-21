@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.358Z file_sha256=9843e3e1e70289370ef124511c0ac38a921983467c4a44e5cebeb5203c99f539 prompt_sha256=d75b1601990332c41b6d2b5c46991974449be19a2846005ef96d42ca7f8c3867
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-126-p9.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 Description "then a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md "**Score: 17/17** · G9 Reflection: PASS" and "| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 net-new (R-DK) |" (was "| G8 | 0 | 3 | ... stage-gated (compute_ported) |") — the commit carries a step-conformance verdict change, score 14/17 to 17/17 and G8 0 to 3, which the card does not name, it names only the count row — revert the score and G8 rows to 14/17 and 0/3 and ship the count row alone, or paste the ruling that names the verdict change.
+
+BUG severity=HIGH — task-421 Description "the run script of task-420 makes ONE read-only run on dev of `step-validate.mjs --all --fast --write`" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md "- compare ran: true · diffs found: 0 · unexplained: 0" (was "compare ran: false") against the same file's "Filled at the first local run (queued)" and "- SKIPPED or failed to run: --fast: vitest spawn skipped" — G8 3/3 asserts executed pre-invocations, clean fingerprints and zero diffs while the file itself says those fields are filled at a first local run that is still queued, and the --fast run skips the suite that would witness them — paste the run's POST/PRE capture for compute_maxbld_scenarios or leave compare ran: false and G8 at 0/3.
+
+DEFER severity=MED — task-421 Description "The operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run on dev" — "measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches" — every regenerated row is stamped 2026-11-20, one day before the card opened 2026-11-21 and before RR-0357's typed GO, so the pasted stamps cannot be output of this card's run — name the run that produced the 11-20 stamp or re-measure after GO.
+
+DEFER severity=MED — task-421 Description "the count row 315 to 316" — docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md "@@ -303,7 +303,7 @@" (only the row-52 hunk, no row-1 hunk), same shape in assert-entity-tracing, assert-network-health, assert-staleness, compute-phase-calibration, link-coa, classify-lifecycle-phase — 7 of the 22 files change only the PRECOMMIT-BUDGET row, so either they carry no count row or their count row sits outside this diff and stays at 315 — show row 1 of those 7 files in the material or drop them from the commit.
+
+DEFER severity=MED — task-421 Description "checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s;" against the previous "registry-input 27.36 s <= 27.5 s" — the diff raises the ceiling the row passes against from 27.5 s to 33.2 s and lands 0.01 s under it, a PASS by moved goalpost that no pasted clause or ruling authorises and the card does not name — keep the 27.5 s ceiling or paste the ruling that raised it.
+
+DEFER severity=MED — task-421 AC "#2 One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — NONE — the material shows 22 edited files with no commit boundary and no step-conformance or Rule 13 output, and Rule 13 is not pasted, so both halves of AC #2 are unverified — paste the single commit sha (bd1f246cc form) and the Rule 13 result for it, or mark AC #2 unverified.
+
+MET — task-421 AC "#1 The operator's typed GO is recorded verbatim on the task" — pasted Implementation Notes — RR-0357 "GO for scorecards" and RR-0358 "does the rehearsal provide a benefit here - if not move on" are both recorded verbatim, dated 2026-11-21.
+
+MET — task-421 Description "the count row 315 to 316" — docs/reports/2026-10-07-batch3-p1-1-load-coa-notices-assessment.md "| 1 | load_coa_notices | PASS | min_migration=249 <= migrations count=316 |" — the count row is raised to 316 in the 15 files whose diff carries one.
+
+REJECT — Spec 126 §6.1 "Hand-author the SQL migration under the existing `scripts/migrate.js` conventions" — accused of shipping schema without declare-and-assert — the diff touches only docs/reports assessment files and adds no table, policy, index, descriptor or migration, so §6 has nothing to satisfy here.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 2
+
+---
+⏱  56826ms (56.8s)
+📊 Tokens — total: 43343, input: 32244, output: 11099, reasoning: 9817

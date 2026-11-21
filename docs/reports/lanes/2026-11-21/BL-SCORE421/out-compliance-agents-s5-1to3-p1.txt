@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.032Z file_sha256=23dfe676548408d6f3c7de6f7e0093330f3265990108f8c61337cc5bdbbfab71 prompt_sha256=57bc2c725f1aa98265c1a5cca9fa6c4ccf44c7e310992dac3ffb4048c82e857e
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-agents-s5-1to3-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 Description "then a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md "@@ -303,7 +303,7 @@ ... | 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s" — four changed reports (2026-10-17-batch4-p1-1-permits, 2026-10-19-batch5-p1-1-assert-entity-tracing, 2026-10-19-batch5-p1-2-assert-network-health, 2026-10-19-batch5-p1-3-assert-staleness) carry the new row 52 with no hunk on row 1, so their count row is not carried to 316 in the same commit, the count row 315 to 316 is met in 39 of 43 reports only — regenerate those four reports or confirm and record that their row 1 reads "migrations count=316".
+
+BUG severity=HIGH — task-421 Description "the operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run on dev of `step-validate.mjs --all --fast --write` in the lane worktree" against Acceptance criteria "The operator's typed GO is recorded verbatim on the task" (recorded "2026-11-21 ... operator, verbatim: \"GO for scorecards\"") — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md "PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z" — the row 52 stamp is 2026-11-20T19:37, before the 2026-11-21 GO, so row 52 is inherited from an earlier run and not evidence of the GO'd run the card mandates — re-run after the GO and refresh the row 52 measurement stamp, or record on the task why the row is inherited.
+
+DEFER severity=MED — task-421 Description "the count row 315 to 316" names only the migration count as the intended row change — docs/reports/2026-09-24-batch2-p3-6-massing-assessment.md "registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z" (was "registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z") — the diff also moves the PRECOMMIT-BUDGET registry-input ceiling from 27.5 s to 33.2 s, a threshold change no pasted clause or ruling names, passed with 0.01 s of headroom — show the generator reproducing the 33.2 s ceiling, or split the budget row out as its own named change.
+
+DEFER severity=LOW — task-421 Acceptance criteria "#2 One commit of generated files only, through the hooks" — docs/reports/2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md "@@ -341,7 +341,7 @@ ... @@ -374,7 +374,7 @@" is chunk 1 of 2 as pasted ("chunk 1 of 2 of the change") — the other chunk is not in the material, so generated files only cannot be confirmed for the whole change — paste chunk 2 before the close, or state on the report that chunk 2 holds no path outside docs/reports/.
+
+DEFER severity=LOW — task-421 Description "commits them through the real hooks as one generated-files commit in the form of bd1f246cc, and the commit is folded; the station suite then runs on that commit" and "#2 ... step-conformance Rule 13 passes on it" — NONE — the material is a working-tree diff only, so the single commit, the hook pass, the fold and the station suite on it cannot be seen — attach the commit sha with the step-conformance Rule 13 and station-suite output to the task at close.
+
+MET — task-421 "Files: docs/reports/" — every changed path in the pasted diff — all 43 files are docs/reports/*-assessment.md, no path outside the named directory.
+
+MET — task-421 "the count row 315 to 316" — docs/reports/2026-08-25-pilot2-load-ravines-assessment.md "| 1 | load_ravines | PASS | min_migration=167 <= migrations count=316 |" (was count=315) — the count row is carried to 316 and each report keeps its own min_migration value.
+
+MET — task-421 "the assessment reports under docs/reports/" — docs/reports/2026-10-16-batch3-p1-3-link-parcel-abutments-assessment.md "| 1 | link_parcel_abutments | PASS | min_migration=255 <= migrations count=316 |" — row 1 edits touch only the migration count, no reclassification of the min_migration relation in any pasted hunk.
+
+REJECT — RR-0358 "does the rehearsal provide a benefit here - if not move on" — the change is accused of proceeding without the task-420 rehearsal — the pasted ruling waives the rehearsal on the operator's words, and the card's own GO clause is not conditioned on it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  39781ms (39.8s)
+📊 Tokens — total: 47689, input: 40360, output: 7329, reasoning: 6051

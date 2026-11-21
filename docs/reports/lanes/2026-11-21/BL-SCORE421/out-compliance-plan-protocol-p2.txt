@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.158Z file_sha256=4d41a279be213107eff382c3cd4d78467f89ae3f7907f4a7ca0899b578cb1427 prompt_sha256=be601e691236799ebd64670f2ad4c19bcde56cc1a5f05bfe0117312681d63ab9
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-plan-protocol-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 "scorecard refresh (read-only) and the generated-files commit", "the count row 315 to 316" — docs/reports/2026-10-23-batch5-p3-5-compute-phase-calibration-assessment.md:317 "-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s" / "+| 52 | ... registry-input 33.19 s <= 33.2 s" — the diff raises the registry-input precommit ceiling from 27.5 s to 33.2 s so the new measurement passes with 0.01 s headroom, a grading-threshold change no pasted clause or ruling names — restore the 27.5 s ceiling, or paste the source line the ceiling is generated from and the ruling that moved it.
+
+BUG severity=HIGH — task-421 "read-only (scorecard refresh)" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:113 "-| G8 | 0 | 3 | missing-invocations=0 missing-pre-invocations=1 stale-fingerprints=0 unexplained-diffs=0 — stage-gated (compute_ported) |" / "+| G8 | 3 | 3 | ... missing-pre-invocations=0 ... net-new (R-DK) |" and :93 "**Score: 14/17**" / "**Score: 17/17**" — the diff lifts the G8 stage gate, flips missing-pre-invocations 1 to 0 and moves the score on the authority of R-DK, a ruling that is not in the pasted context, so nothing pasted names this change — paste the R-DK ruling text and the PRE capture that fills the missing invocation, or leave G8 stage-gated at 0/3.
+
+DEFER severity=MED — task-421 "the operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run on dev" — "RR-0357 GO for the scorecards, given in the chat before the rehearsal (names task-421, RR-0357)" and Implementation Notes "operator, verbatim: \"GO for scorecards\"" — the only GO recorded is the chat GO the card distinguishes from the Terminal GO, so criterion #1 is met in wording but the card's GO precondition is not evidenced — record the operator's Terminal GO line verbatim with its timestamp on task-421 before the commit is folded.
+
+DEFER severity=MED — RR-0358 "does the rehearsal provide a benefit here - if not move on" — card "RR-0358 The scorecard rehearsal is waived if it gives no benefit" — the ruling's verbatim is a question, not a waiver, and the material records no benefit assessment or waiver decision for task-420 — paste the one-line assessment answer that invokes the waiver, or state that the rehearsal ran.
+
+DEFER severity=MED — task-421 ac #2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — NONE — no Rule 13 PASS line appears anywhere in the material and the four reports carry rows 42, 45, 46, 52, 47, 48, 49 only, cannot see any Rule 13 evidence — paste the Rule 13 PASS line for the generated-files commit.
+
+DEFER severity=LOW — task-421 "commit them through the real hooks as one generated-files commit in the form of bd1f246cc, and the commit is folded" — NONE — the material is a single diff over four report files with no commit id, trailer, hook transcript or fold record pasted, cannot see the commit form — paste the commit header of the generated-files commit as it stands in the log after folding.
+
+DEFER severity=LOW — task-421 "Must be re-run if another migration file lands before the push" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:122 "+| 1 | compute_maxbld_scenarios | PASS | min_migration=0 <= migrations count=316 |" (was 315) — the count shows a migration landed since the earlier run, and the material cannot show that the refresh postdates the last migration and precedes the push — paste the migration count read at push time beside the 316.
+
+MET — task-421 "Files: docs/reports/" — all four diff headers "a/docs/reports/..." and "b/docs/reports/..." — only report files are touched, no source, hook or config file.
+MET — task-421 "the count row 315 to 316" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:122 "min_migration=0 <= migrations count=316" — the count row is refreshed to 316 as the card names.
+MET — task-421 "One commit of generated files only" — diff paths "docs/reports/2026-10-23-batch5-p3-5-...", "...p4-4-link-coa...", "...p5-1-classify-lifecycle-phase...", "...batch7-p1-1-compute-maxbld-scenarios..." — the change is confined to generated reports.
+MET — RR-0357 "GO for scorecards" — "Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: \"GO for scorecards\")" — the operator GO is recorded verbatim on the task.
+MET — RR-0353 "let's resolve the scorecard the right way" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:89 "> Generated by `node scripts/analysis/step-validate.mjs --step=compute_maxbld_scenarios --write`" — the refresh is produced by the named generator rather than hand-written content.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 7
+
+---
+⏱  69530ms (69.5s)
+📊 Tokens — total: 20526, input: 7701, output: 12825, reasoning: 11459

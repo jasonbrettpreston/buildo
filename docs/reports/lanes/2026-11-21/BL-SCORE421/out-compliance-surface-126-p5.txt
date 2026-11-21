@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.291Z file_sha256=f5c001d886014441a75baada4882d90c8bf5a1c80192a6efc950e2203405e2c3 prompt_sha256=b9454dc73eab35c71f7489f14310f8e55c6e022148cd0e699b94c50a25104312
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-126-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-421 Description "the operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run on dev of `step-validate.mjs --all --fast --write`" — pasted material "+| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local", against the card "Card opened 2026-11-21" and RR-0357 "GO for scorecards" — the only measurement time in the commit is 2026-11-20T19:37Z, before the card and the GO, so the material carries no evidence of a post-GO run; either row 52 is a carried stored measurement or the run precedes the GO — re-run after the GO and restamp, or state on task-421 that row 52 is the 2026-11-20 measurement carried into the regenerated rows.
+
+DEFER severity=MED — task-421 Description "a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — pasted material "-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): ... registry-input 27.36 s <= 27.5 s" and "+| 52 | ... registry-input 33.19 s <= 33.2 s" — the same row does not only restamp a measurement, it moves the registry-input ceiling from 27.5 s to 33.2 s, an unnamed gate-threshold change with 0.01 s headroom, which the card's "count row 315 to 316" does not name and no pasted clause rules — name the ceiling source in the hand-back or keep the 27.5 s ceiling.
+
+DEFER severity=LOW — task-421 acceptance criterion #2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — pasted material "diff --git a/docs/reports/2026-08-25-pilot1-assert-schema-assessment.md b/docs/reports/2026-08-25-pilot1-assert-schema-assessment.md" — the material is a working-tree diff with no commit sha, no hook log and no Rule 13 output, so AC #2 is not visible here — attach the commit sha in the bd1f246cc form and the Rule 13 result to task-421.
+
+DEFER severity=LOW — RR-0353 "The 29 scorecards are resolved the right way" — pasted material paths list, 27 report files from "docs/reports/2026-08-25-pilot1-assert-schema-assessment.md" to "docs/reports/2026-10-02-batch2-p3-3-load-zoning-assessment.md" — this chunk shows 27 files at count=316, the other 2 of the 29 are in chunk 2 of 2 and out of this run, so a partial restamp cannot be excluded — confirm in the hand-back that all 29 scorecards read count=316.
+
+DEFER severity=LOW — task-421 Description "Must be re-run if another migration file lands before the push" — pasted material "+| 1 | assert_schema | PASS | min_migration=41 <= migrations count=316" — 316 is the count at cut time only, whether a further migration lands before the push cannot be seen — re-check the migration head immediately before push and re-run if it moved.
+
+DEFER severity=LOW — task-421 Description "the operator types GO in his own Terminal" against AC #1 "The operator's typed GO is recorded verbatim on the task" — pasted card "operator, verbatim: \"GO for scorecards\"" and RR-0357 "GO for the scorecards, given in the chat before the rehearsal" — the verbatim GO is the chat GO of RR-0357, no GO typed in his own Terminal is recorded — add the Terminal GO to the task or an operator line that the chat GO stands for this run (AC #6 of the run script trigger).
+
+MET — task-421 acceptance criterion #1 — pasted card "Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: \"GO for scorecards\")" — the operator's words are recorded verbatim on the task.
+
+MET — task-421 Description "the assessment reports under docs/reports/, the count row 315 to 316" — pasted material "-| 1 | assert_schema | PASS | min_migration=41 <= migrations count=315" to "+| 1 | assert_schema | PASS | min_migration=41 <= migrations count=316" — the named count row moves 315 to 316 in every file in this chunk, inside docs/reports/, matching the named scope.
+
+MET — task-421 Description "the run script of task-420 makes ONE read-only run on dev" — pasted material, all 27 files carry the identical "+| 52 | ... measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches" and identical 22.84 / 33.19 values — one uniform stamp across 27 files is consistent with one run, not per-file hand edits.
+
+MET — task-421 Description "One commit of generated files only" — pasted material, every diff header is a docs/reports path, e.g. "diff --git a/docs/reports/2026-10-02-batch2-p3-3-load-zoning-assessment.md b/docs/reports/2026-10-02-batch2-p3-3-load-zoning-assessment.md" — no source, schema, script or config file is touched in this chunk.
+
+REJECT — Spec 126 §11b.2 goldens/locks arms "one props golden per reachable state per declared target ... conformance (FE-31), the `contract` binding kind (FE-32)" — accused of not regenerating goldens or locks — the pasted part 5 governs surfaces, bindings and goldens under `src/tests/fixtures/surfaces/`, and nothing pasted in it names assessment reports under docs/reports/; the diff is the scorecard refresh named by task-421.
+
+REJECT — Spec 126 §11b.2 "A converted-surfaces manifest has two-direction totality against the MaxBLD-scope descriptors marked converted; an empty manifest is a finding" — accused of leaving the converted manifest untouched — no clause in the pasted part ties `scripts/surfaces/_schema/converted-surfaces.json` to a migration-count restamp in docs/reports/, so the omission is not a finding against this card.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  55458ms (55.5s)
+📊 Tokens — total: 44893, input: 34837, output: 10056, reasoning: 8513

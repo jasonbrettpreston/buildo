@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.368Z file_sha256=888fc85236d63c567a4409bf39660cb08034a62db74f14fa86b74a5c4685ca17 prompt_sha256=95bf24aff5ca8ec8fa9f7f5d7dbf06f55bb1d59d9dbd565e17815fa3e3e2cc74
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-128-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 description "After task-420 (the rehearsal) passes" and RR-0358 "does the rehearsal provide a benefit here - if not move on" — NONE, the pasted material carries no record that task-420 passed or that the rehearsal was waived — the run this commit records has an unmet precondition; RR-0358 is a question, not a recorded waiver — record task-420's result (or the operator's waiver decision) on task-421 before this commit is folded.
+
+BUG severity=HIGH — task description "the operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run on dev" vs RR-0357 "GO for scorecards" ("given in the chat before the rehearsal") — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:474 "min_migration=41 <= migrations count=316" (the run the diff records) — the GO on the task is a chat GO predating the rehearsal, not the typed-in-his-own-Terminal GO the card requires after task-420, so AC #1 is met only in the letter — have the operator type the GO and record that verbatim, or record a ruling that RR-0357 supersedes the Terminal typing.
+
+BUG severity=MED — task description "the count row 315 to 316" — docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md:303 hunk carries only the row-52 line, no count-row line, alone among the 31 files — either that report's migrations count row was not refreshed to 316 (stale, and cannot see the untouched line from the paste) or it was already 316; one of 31 reports is out of step with the rest — re-run the generator and confirm that file's row 1 reads 316.
+
+BUG severity=MED — task description "(the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:507 "docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z" — a second, unnamed change rides in this commit: the registry-input ceiling relaxes 27.5 s to 33.2 s with a 0.01 s margin, and its measurement date precedes the run being committed; a relaxed guard is being blessed by a PASS row with no ruling and no lock — name the ceiling source (spec 128 §2 rule 3 "every ... limit ... is a registered logic variable with bounds") on the task, or keep 27.5 s and let the row fail.
+
+DEFER severity=LOW — task description "Must be re-run if another migration file lands before the push" — docs/reports/2026-09-04-pilot9-enrich-parcels-assessment.md:1001 "min_migration=254 <= migrations count=316" — all 31 reports pin 316 and nothing pasted dates the run against the last migration file, so the re-run gate is asserted nowhere in this change — state the last migration file's commit/time on the task and re-run if any lands before the push.
+
+MET — task-421 AC #2 "One commit of generated files only" — docs/reports/2026-10-16-batch3-p1-3-link-parcel-abutments-assessment.md:136 and every other hunk — every changed line is a row inside a generated scorecard table under docs/reports/, no prose and no non-docs path touched.
+
+MET — task-421 AC #1 "recorded verbatim on the task" — pasted note "Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: "GO for scorecards")" — the operator's words are quoted on the task (provenance issue raised separately).
+
+REJECT — RR-0353 "let's resolve the scorecard the right way" — accused of being met by regenerating rows rather than by a hand edit — the diff changes 31 report tables uniformly (count 316, one shared row-52 measurement) which is the generator shape, not a hand patch.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 4
+
+---
+⏱  53304ms (53.3s)
+📊 Tokens — total: 46496, input: 37524, output: 8972, reasoning: 8007

@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.445Z file_sha256=400ec0c775493e5efe5025ed0bb502d7d264d9328621f516bc262fa067076af6 prompt_sha256=a69516f7dde15c44abe920999907b88fd2a068bf6d8ca89d5fb59cf2a03f8e5f
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — AC #2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — plan:Implementation-Plan "(none)" — clause unmet, the material contains no plan step for staging only docs/reports/, committing through the real hooks, folding, or running step-conformance Rule 13 on the resulting commit — add those four steps, each with its command, before plan-lock.
+
+BUG severity=CRIT — AC #1 "The operator's typed GO is recorded verbatim on the task" — notes:Implementation-Notes "operator, verbatim: 'GO for scorecards'" — the only verbatim GO on the card is the chat GO (RR-0357, MORNING-DECISIONS.md:1676) given before the rehearsal, not a GO typed in the operator's own Terminal after task-420 passes — record the terminal-typed GO verbatim, or record the RR-0358 waiver, before the run is launched.
+
+BUG severity=HIGH — Description "After task-420 (the rehearsal) passes" against RR-0358 "The scorecard rehearsal is waived if it gives no benefit (names task-421, RR-0358)" — notes:Implementation-Notes "prior text kept; RR-0358 · task-421 · Backlog" — the later ruling lets the lane move on without the rehearsal, the description keeps it a hard precondition, and the plan resolves neither — state in the plan which condition governs and delete or scope the other.
+
+BUG severity=HIGH — Description "the run script of task-420 makes ONE read-only run on dev of step-validate.mjs --all --fast --write in the lane worktree" — plan:Implementation-Plan "(none)" — no plan step names that exact command, its once-only nature, its dev target, or the lane worktree "branch wf1/inc1b-score421" — add the command, the worktree /Users/brettpreston_macmini/Buildo-wt-score421, and a once-only guard.
+
+BUG severity=HIGH — Description "then a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — plan:Implementation-Plan "(none)" — no plan step performs the changed-files check, pins docs/reports/ as the only allowed path, or asserts the count row moves 315 to 316 — add that check as an explicit gate between the run and the commit.
+
+BUG severity=HIGH — Description "commits them through the real hooks as one generated-files commit in the form of bd1f246cc, and the commit is folded; the station suite then runs on that commit" — plan:Implementation-Plan "(none)" — no plan step produces the single commit, folds it, or runs the station suite on it — add the commit, fold and station-suite-on-that-commit steps in that order.
+
+BUG severity=HIGH — Description "Must be re-run if another migration file lands before the push" — plan:Implementation-Plan "(none)" — no plan step detects a migration file landing after the run or triggers the re-run before push — add a pre-push check for new migration files since the run, with an explicit re-run trigger.
+
+DEFER severity=MED — RR-0355 "Agreed. Let's push as soon as possible!" — plan:Implementation-Plan "(none)" — the material stops at the generated-files commit and station suite and never reaches the push the ruling names — name the push step here or record on the card that the push belongs to another task.
+
+REJECT — Glossary "five words" "R-BA gate V (in scripts/analysis/step-validate.mjs): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates" — the material is a read-only validate run plus a generated-files commit of docs/reports/, no descriptor, shape or gate V token is changed — glossary wording imposes no obligation on this card.
+
+MET — RR-0353 "The 29 scorecards are resolved the right way (names RR-0353)" — MORNING-DECISIONS.md:1658 — the ruling is carried on the card with its file:line and verbatim.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 7
+
+---
+⏱  27773ms (27.8s)
+📊 Tokens — total: 8820, input: 3614, output: 5206, reasoning: 4271

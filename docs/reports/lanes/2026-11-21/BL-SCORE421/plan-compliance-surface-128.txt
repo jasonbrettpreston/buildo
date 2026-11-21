@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.548Z file_sha256=e0b5d6af364efd01d691d316de85668798893170e3894ab46b4f1f16306fb1d8 prompt_sha256=425e3ed5213a3d9c34793624b33f810844f38504206560bed6043070f7d5254d
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-plan-compliance-surface-128.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — AC#2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — "Implementation Plan (none)" — no plan step or diff produces the single generated-files commit or the Rule 13 pass on it, so the acceptance criterion is unmet — add plan steps for the generated-only change check, the hook-run commit, and the Rule 13 run against that commit SHA
+BUG severity=CRIT — task text "the run script of task-420 makes ONE read-only run on dev of `step-validate.mjs --all --fast --write` in the lane worktree" — "Implementation Plan (none)" — nothing performs or evidences the single read-only dev run in worktree /Users/brettpreston_macmini/Buildo-wt-score421 on branch wf1/inc1b-score421 — name the run script, the worktree, the exact command, and where the run transcript is stored
+BUG severity=HIGH — task text "After task-420 (the rehearsal) passes" — "RR-0357 GO for the scorecards, given in the chat before the rehearsal ... \"GO for scorecards\" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1676)" — the precondition is unmet, no task-420 pass is recorded and the recorded GO predates the rehearsal — record task-420's pass result on task-421, or record the RR-0358 waiver ruling, before the run
+BUG severity=HIGH — task text "the operator types GO in his own Terminal" — "Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: \"GO for scorecards\")" — the recorded GO is the chat message, not a GO typed in the operator's own Terminal, so that clause names an event that has not happened — record the Terminal GO verbatim, or amend the card to the chat GO with the dated reason and the adjudicator
+BUG severity=HIGH — task text "a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — "Implementation Plan (none)" — no plan states the check, the diff command, or the expected contents including the count row moving 315 to 316 — add the check step naming the git diff command and the exact expected file list and count-row change
+BUG severity=MED — task text "commits them through the real hooks as one generated-files commit in the form of bd1f246cc, and the commit is folded; the station suite then runs on that commit" — "Implementation Plan (none)" — the hook-run commit, the fold and the station suite run are unplanned — add three steps, each naming the commit SHA it acts on
+BUG severity=MED — task text "Must be re-run if another migration file lands before the push" — "Implementation Plan (none)" — no step or guard implements the re-run condition — add a pre-push check that diffs migrations/** since the run commit and forces a re-run when it is non-empty
+BUG severity=MED — RR-0358 "does the rehearsal provide a benefit here - if not move on" — "Dated note 2026-11-21 (M-246, prior text kept; RR-0358 · task-421 · Backlog; operator, verbatim: \"does the rehearsal provide a benefit here - if not move on\")" — the waiver question is recorded but never adjudicated, so task-420 stays a stated prerequisite with an open, unanswered override — record the adjudication (waive or keep) with who decided it and the date
+
+MET — AC#1 "The operator's typed GO is recorded verbatim on the task" — "Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: \"GO for scorecards\")" — the operator's GO is on the task verbatim with its source id and date
+MET — task text "Files: docs/reports/" — "the assessment reports under docs/reports/" — the declared file scope matches the generated assessment reports the task commits
+
+REJECT — "Spec 137 rule 2 (RR-0353, RR-0355)" — that rule 2's own clause is unsatisfied — Spec 137 is not pasted, so its text is not mine to judge
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 8
+
+---
+⏱  25139ms (25.1s)
+📊 Tokens — total: 27995, input: 23292, output: 4703, reasoning: 3700

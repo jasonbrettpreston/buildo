@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.418Z file_sha256=fad09c2f4f50c871b1ddb337f1fe8a748c5259647c2795162b2fde92f81c5d37 prompt_sha256=347c9687f33877f4341fe242cc496480fb9bcd9b3b7c0d0ea5835231c5aa4c78
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — material "## Implementation Plan (none)" — NONE — no plan step produces the single generated-files commit or runs step-conformance Rule 13 on it, so AC #2 is unmet by the material — add a plan step naming the one docs/reports/ commit made through the real hooks and the Rule 13 run with its expected result.
+BUG severity=HIGH — Description "the operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run on dev" — task note "Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: \"GO for scorecards\")" and decisions line "GO for the scorecards, given in the chat before the rehearsal" — the only GO recorded on the task is a chat GO given before the rehearsal, AC #1's typed Terminal GO is absent — record the operator's Terminal GO verbatim on the task before any run starts.
+BUG severity=HIGH — Description "the run script of task-420 makes ONE read-only run on dev of `step-validate.mjs --all --fast --write` in the lane worktree" — material "(none)" — NONE — no step names task-420's run script, the dev target, the lane worktree /Users/brettpreston_macmini/Buildo-wt-score421, the flag set, or the one-run limit — add that step and state the run count explicitly.
+BUG severity=HIGH — Description "then a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — material "(none)" — NONE — no step performs the changed-set check or names the 315 to 316 count row, so "only generated files changed" is asserted nowhere — add a step listing the changed files, asserting they are only docs/reports/ assessment reports, and asserting the count row moved 315 to 316.
+DEFER severity=MED — Description "the commit is folded; the station suite then runs on that commit" — material "(none)" — NONE — no fold step and no station-suite run on the folded commit exist in the material — add both steps, naming the station suite and the commit it runs on.
+DEFER severity=MED — 5.3 dated note "requires ... one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:`" — task header "labels: McFix", "assignee: @lane-BL-SCORE421" — nothing in the material provides the per-list lens outputs or the separate grounder the close check reads, the card only carries the "grounder owed" RUNNING state — add a step producing one lens output per attached list and a GROUNDER.md from a grounder that is not the lane.
+DEFER severity=MED — RR-0358 "The scorecard rehearsal is waived if it gives no benefit" — Description "After task-420 (the rehearsal) passes" — the card gates on task-420 passing while the ruling permits waiver and no note records the benefit determination, so the gate is unresolved — record on the task whether the rehearsal is waived and on what basis, before the run.
+DEFER severity=LOW — Description "Must be re-run if another migration file lands before the push" — material "(none)" — NONE — no step pins the migration set seen at run time, so the re-run trigger cannot be checked later — record the migration head or file count at run time and compare it before the push.
+
+MET — 5.3 dated note "refuses a task with no Files line" — "Files: docs/reports/" — the card carries a Files line, so rule-list resolution has a path to match.
+MET — 5.3 "The lane that wrote the work leaves the task RUNNING with \"grounder owed\"." — "status: RUNNING · milestone: m-1 · assignee: @lane-BL-SCORE421" — the task is left RUNNING under the lane that wrote the work.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 8
+
+---
+⏱  45988ms (46.0s)
+📊 Tokens — total: 13961, input: 5645, output: 8316, reasoning: 7391

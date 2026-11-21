@@ -1,0 +1,47 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-21T15:23:22.335Z file_sha256=a08f3e0225e8eada832622f30042f825dd5d615f774e887a14a07e52ab064638 prompt_sha256=d56539695b6bfb96babf8eafcfd28a5d978df58bb50fe9a618e60b43ca468e3f
+🔍 Lens review of docs/reports/reviews/task-421/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=CRIT — "## Implementation Plan: (none)" — the task is plan-locked with zero R-steps, so nothing here prevents, detects, or rolls back a failure in a commit that must contain *exactly* the generated files — add the literal sequence: pre-run `git -C /Users/brettpreston_macmini/Buildo-wt-score421 status --porcelain` (must be empty), run `step-validate.mjs --all --fast --write`, post-run whitelist check, `git add <exact paths>`, commit through hooks, record pre-fold SHA, fold, station suite.
+
+BUG severity=CRIT — "## Description" ("Must be re-run if another migration file lands before the push") vs AC #2 ("One commit of generated files only") — after the fold the station suite certifies one SHA; a migration landing pre-push forces either a second commit (breaks #2) or an amend that rewrites the certified SHA (invalidates the suite result) — define that re-run is permitted only *before* the station suite via amend, and add a freshness re-check owned by the push task immediately before push.
+
+BUG severity=HIGH — "## Dependencies" (task-420 · status: LATER · final summary: (none yet)) while task-421 is RUNNING — the run is gated on "After task-420 (the rehearsal) passes", but the prerequisite has no recorded pass and RR-0358 waives it only on a benefit assessment that isn't recorded anywhere on the card — record either task-420's pass output or a dated RR-0358 waiver naming who judged "no benefit", before the run.
+
+BUG severity=HIGH — "## Description" ("ONE read-only run … `--write`") — `--write` is not read-only: it mutates `docs/reports/`, so a crash mid-run leaves a half-regenerated report tree with no restore step — add `git checkout -- docs/reports/ && git clean -fd docs/reports/` before each run and record the pre-run SHA in the task note.
+
+BUG severity=HIGH — "## Description" ("commits them through the real hooks … the commit is folded") — no rollback exists for a *folded* commit; undoing a squash/amend after the station certified it requires a history rewrite on the lane branch — state the fold mechanics, record the pre-fold SHA in the task note, and name `git reset --hard <pre-fold SHA>` as the recovery.
+
+BUG severity=HIGH — "## Description" ("through the real hooks") / AC #2 (Rule 13 passes) — hook failure has no defined path and no bypass policy, so the lane can reach for `--no-verify`, which would silently satisfy the commit but break AC #2 — state that `--no-verify` is prohibited, that a Rule 13 failure means fixing the generated content or the generator, and who escalates.
+
+BUG severity=HIGH — "## Description" ("the count row 315 to 316") — only one count row is named; if migration 334 moves any other figure in the assessment reports (scorecard count, rule totals), the commit ships an internally inconsistent report — before committing, enumerate every count/total row the generator emits and confirm each was updated by this run, or cite that 334 changes exactly one figure.
+
+BUG severity=MED — AC #2 ("only generated files changed") — the check mechanism is unspecified, and `git add docs/reports/` would sweep untracked junk (`.DS_Store`, `.tmp`) and committed *inputs* under `docs/reports/plan-import/raw/**` — specify a `git status --porcelain` review plus an explicit path whitelist (assessment report paths + the count-row file only).
+
+BUG severity=MED — "## Description" ("the station suite then runs on that commit") — no action is defined if the station suite fails *after* the fold; fix-forward vs reset is undefined — define: suite failure ⇒ `git reset --hard <pre-fold SHA>`, fix, re-run the whole sequence.
+
+DEFER severity=MED — "## Description" ("Must be re-run") — nothing establishes the generator is deterministic (timestamps, JSON key ordering, date-stamped output dirs), so re-runs may emit spurious diffs and make the "only generated files" check unusable — run it twice and diff before locking.
+
+DEFER severity=MED — "## Description" — sibling pattern: any other generated-files commit in the form of bd1f246cc likely carries the same fold-before-suite / stale-before-push sequence — `git log --grep='generated files'` and confirm each had a suite run after fold; file separately if not.
+
+DEFER severity=LOW — "## Description" — the lane branch may take another fold between the run and this fold, so the final commit could carry foreign files — verify `git show --stat HEAD` lists only `docs/reports/` paths before folding.
+
+DEFER severity=LOW — "## Description" — generated paths carry dates (`plan-import/raw/2026-11-19`); a run across a day boundary may create a new dated directory instead of updating in place — confirm the generator's date source during task-420.
+
+DEFER severity=NIT — "## Description" — "folded" is used without saying what operation it means (merge / squash / amend), which is operational ambiguity only if the lane guesses wrong — one clause fixes it.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- No implementation plan at all: no steps, no rollback, no detection for a commit that must be exactly generated files.
+- The re-run requirement collides with AC #2 (one commit) and with fold-then-station-suite — the plan has no legal ordering for a late migration.
+- The rehearsal gate (task-420 = LATER, no summary) is unsatisfied or waived without a recorded benefit assessment, yet the GO run is pending.
+
+Top 3 unverified data premises (if any, regardless of verdict):
+- "The count row is currently 315 and this run moves it to 316" — pre-run: `grep -rn '315' /Users/brettpreston_macmini/Buildo-wt-score421/docs/reports/` (confirm the file and current value); post-run: `git -C … diff -U0 docs/reports/` showing exactly that one numeric change.
+- "The run only touches assessment reports under docs/reports/" — pre-run `git status --porcelain` must be empty; post-run `git status --porcelain | grep -v ' docs/reports/'` must be empty.
+- "Dev is at migration 334" (task-420 rehearsed "after migration 334 on the *test* stack"; the dev run assumes the same) — the plan never names the migrations ledger table; ask for it, then confirm max applied migration id = 334 on dev before running (and that the 29 scorecards in RR-0353 still count 29, or 30, in the generated set).
+
+---
+⏱  49303ms (49.3s)
+📊 Tokens — total: 20683, input: 12562, output: 8121, reasoning: 6600

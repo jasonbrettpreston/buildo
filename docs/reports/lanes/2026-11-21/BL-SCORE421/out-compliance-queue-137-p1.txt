@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.236Z file_sha256=f2e056fb0eccc331fd85ad3ca8b26e3b423524f106640720d0d76530d0f0b2a8 prompt_sha256=09db9b2e089fd93cdca44bf2b364ada373f69e87bd171a74bdc58311fe4ec843
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-queue-137-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 card, description "a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local" — the commit carries a second change the card does not name: the registry-input ceiling moves from "27.36 s <= 27.5 s" to "33.19 s <= 33.2 s" (0.01 s of headroom) in all 34 reports, and no budget config line supporting 33.2 s is in the diff, so "only generated files changed" is not shown and a gate budget was raised inside a generated-files commit — fix: hold row 52 at the 27.5 s ceiling, or land the 33.2 s budget change as its own commit with the config file and a ruling naming it.
+
+DEFER severity=MED — task-421 card, description "the operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run on dev" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "measured 2026-11-20T19:37:21.468Z" versus pasted "Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: GO for scorecards)" — the re-emitted measurement is stamped a day before the recorded GO, so row 52 in all 34 reports is not shown to be output of the run that GO authorized — fix: re-measure and stamp the run time, or state on task-421 why the 2026-11-20 measurement is the current one.
+
+DEFER severity=LOW — task-421 card, description "Must be re-run if another migration file lands before the push." — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:477 "min_migration=41 <= migrations count=316" — this commit itself registers a migration count that moved 315 to 316, so the re-run obligation is live until the push, and the material shows neither a push nor a re-run — fix: record the push commit and the migration count at push time on task-421.
+
+DEFER severity=LOW — task-421 card, acceptance "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — NONE — the material is chunk 1 of 2 and carries no commit id and no gate output, so "one commit" and the Rule 13 pass cannot be seen — fix: attach the commit sha and the Rule 13 output to task-421 before the close.
+
+REJECT — RR-0353 "let's resolve the scorecard the right way" — touching 34 assessment reports where the label says 29 scorecards — the card's own scope is "the assessment reports under docs/reports/", and "29" is the orchestrator's label, not the operator's words.
+
+MET — Spec 137 §4 rule 3, task-410 amendment "The work lands first; the status moves in a separate closing commit" — docs/reports/ diff, no backlog/ task file — this commit changes no status line, so the two-commit close is not pre-empted.
+
+MET — Spec 137 §4 rule 3, G3 "docs, spec, queue-row, backlog-only and merge commits are exempt" — "docs/reports/2026-08-25-pilot1-assert-schema-assessment.md" — docs-only paths, so no Task: task-N trailer is owed on this commit.
+
+MET — Spec 137 §4 rule 2 "A task with no row does not exist." — pasted card "task-421 SCORE.GO ... status: RUNNING" — the work sits under a registered Backlog task with its Files line "docs/reports/".
+
+MET — task-421 criterion #1 "The operator's typed GO is recorded verbatim on the task" — pasted "Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: GO for scorecards)" — the GO is on the task as a verbatim dated note.
+
+MET — RR-0358 "does the rehearsal provide a benefit here - if not move on" — pasted dated note RR-0358 on task-421 — the card's "After task-420 (the rehearsal) passes" precondition is waived by name, so the run is not out of order.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  54278ms (54.3s)
+📊 Tokens — total: 48965, input: 39132, output: 9833, reasoning: 8742

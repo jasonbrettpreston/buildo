@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SCORE421'
 created_date: '2026-11-21T14:53:00Z'
-updated_date: '2026-11-21T15:20:00Z'
+updated_date: '2026-11-21T15:24:00Z'
 labels:
   - McFix
 milestone: m-1
@@ -37,6 +37,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-21/BL-SCORE421/REPORT.md
 type: db-go
 ordinal: 121012
 ---
@@ -77,4 +78,6 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0358 · task-421 · Backlog; o
 2026-11-21 taken on the board at lane launch (lane BL-SCORE421, worktree /Users/brettpreston_macmini/Buildo-wt-score421, branch wf1/inc1b-score421), RR-0240
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: "GO for scorecards"). The operator ran go-scorecards.zsh in his own Terminal on 2026-11-21 and typed GO (exactly) at the script's prompt. Run: PGOPTIONS='-c default_transaction_read_only=on' ... step-validate.mjs --all --fast --write on dev, exit code 0; changed paths (tracked) 49; not-assessment paths: none; added lines with 'migrations count=316': 42; untracked: none. Classification of every changed line (95 added, 95 removed): (1) 42 count rows 315 to 316; (2) 49 '(registry)' PRECOMMIT-BUDGET (R-EC) rows, new timings and the 33.2 s pin of migration 334 (the 7 files with no count row carry only this row; the three earlier refreshes show no such row change, the repin is new); (3) 6 lines in the 2026-11-02 batch7-p1-1 assessment report: Score 14/17 to 17/17, G8 0/3 to 3/3 (stage-gated to net-new R-DK), compare ran false to true, a stray double colon removed (improved, none worse). Nothing hand-edited.
+
+2026-11-21 lane BL-SCORE421: generated-files commit 2fd17001d landed through the hooks (hook output in the lane report dir is commit.out in the lane folder); review lenses run (plan and out compliance per rule list, plan-review-deepseek); FINDINGS.md filed in docs/reports/lanes/2026-11-21/BL-SCORE421/; grounder owed (the orchestrator launches a grounder that is not this lane); task left RUNNING.
 <!-- SECTION:NOTES:END -->

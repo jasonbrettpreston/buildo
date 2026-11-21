@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.131Z file_sha256=e19ea627856ea0681dacfaed096ed28b562dcd923b08de4d9019d2dcb880eeb7 prompt_sha256=690903b5663dd3ad0a3d28ed14982dfc5f270ace67f1e20af68aaa1f804b9385
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-plan-protocol-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 description "then a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |" — the diff also rewrites row 52 in all 45 scorecards, and raises the registry-input budget ceiling from "registry-input 27.36 s <= 27.5 s" to 33.2 s, which is a gate relaxation no pasted clause or ruling names; the card names only the count row — revert row 52 to the prior measured text, or land the ceiling change separately with the ruling line that authorises 33.2 s.
+DEFER severity=MED — task-421 description "a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md:306 "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" — four scorecards (batch4-p1-1-permits, batch5-p1-1-entity-tracing, batch5-p1-2-network-health, batch5-p1-3-staleness) show a row-52 hunk only and no count-row hunk, so whether their count row still reads 315 cannot see — list the row-1 line of those four files in the commit body, or confirm the row is absent there.
+DEFER severity=MED — acceptance criterion #1 "The operator's typed GO is recorded verbatim on the task" — pasted context "RR-0357 GO for the scorecards, given in the chat before the rehearsal (names task-421, RR-0357)" — the only recorded GO is a chat message, while the description requires "the operator types GO in his own Terminal"; no Terminal typing is pasted — record the Terminal-typed GO verbatim, or cite RR-0358 waiving the rehearsal as the substitute.
+DEFER severity=LOW — task-421 description "Must be re-run if another migration file lands before the push." — NONE — whether any migration file landed after the 315 to 316 capture, and whether the push has happened, cannot see — state the count 316 against the migration directory head at push time in the commit message.
+MET — task-421 "Files: docs/reports/" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:476 — every one of the 45 diff paths is under docs/reports/, no other tree touched.
+MET — task-421 "the count row 315 to 316" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:476 "| 1 | assert_schema | PASS | min_migration=41 <= migrations count=316 |" — the count row is 316 in the 41 scorecards that carry the row.
+MET — acceptance criterion #2 "One commit of generated files only" — diff a/docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:476 and 40 sibling scorecards — the material contains generated report markdown only, no source or config file.
+REJECT — plan-protocol section 0 "The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board)" — accused of not adding a sequence.json task for this commit — the note at line 8 supersedes that bullet: "the board is the plan", and this is a board card (task-421), not a plan edit.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  36363ms (36.4s)
+📊 Tokens — total: 48014, input: 40788, output: 7226, reasoning: 6294
