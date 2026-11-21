@@ -26,7 +26,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const path = require('path');
 const OpenAI = require('openai');
-const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock } = require('./lib/review-template');
+const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');
 
 // `--fast` selects deepseek-chat (V3) for a quick lens tier; DEEPSEEK_MODEL overrides both.
 const MODEL = process.env.DEEPSEEK_MODEL || (process.argv.includes('--fast') ? 'deepseek-chat' : 'deepseek-reasoner');
@@ -100,24 +100,6 @@ async function callDeepSeek(prompt, systemInstruction = null) {
   } finally {
     clearTimeout(deadline);
   }
-}
-
-/** Keep only the markdown sections whose heading line contains one of `wanted` (to the next heading of the same or higher level). */
-function extractSections(markdown, wanted) {
-  const lines = markdown.split('\n');
-  const out = [];
-  for (const want of wanted) {
-    const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && l.includes(want));
-    if (start === -1) throw new Error(`--section "${want}": no heading contains that text`);
-    const level = lines[start].match(/^(#+)/)[1].length;
-    let end = lines.length;
-    for (let i = start + 1; i < lines.length; i += 1) {
-      const m = lines[i].match(/^(#+)\s/);
-      if (m && m[1].length <= level) { end = i; break; }
-    }
-    out.push(lines.slice(start, end).join('\n'));
-  }
-  return out.join('\n\n');
 }
 
 function readFileOrFail(filePath) {

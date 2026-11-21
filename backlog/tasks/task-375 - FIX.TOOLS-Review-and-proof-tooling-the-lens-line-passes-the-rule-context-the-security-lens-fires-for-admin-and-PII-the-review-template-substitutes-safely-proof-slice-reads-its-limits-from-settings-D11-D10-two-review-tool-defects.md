@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T01:09:00Z'
+updated_date: '2026-11-21T01:11:00Z'
 labels:
   - McFix
   - McFix A
@@ -361,4 +361,6 @@ Dated note 2026-11-20 (M-246, prior text kept; RR-0350 · task-375 · Backlog; o
 2026-11-21 taken on the board at lane launch (lane BL-GATE375, worktree /Users/brettpreston_macmini/Buildo-wt-gate375, branch wf1/inc1b-gate375), RR-0240
 
 BL-GATE375 build note 2026-11-21 (D11b, README.md:104, lens-security.md:48): rule-lists.mjs lensSet sec regex now includes admin and pii; red first in red.out (rule-lists.logic.test.ts:650), green by the real commit.
+
+BL-GATE375 build note (A2): CONTEXT_SECTIONS, PLAN_SECTIONS and extractSections now live in scripts/lib/review-template.js; scripts/deepseek-review.js requires extractSections from it (moved from :106-121, same text).
 <!-- SECTION:NOTES:END -->
