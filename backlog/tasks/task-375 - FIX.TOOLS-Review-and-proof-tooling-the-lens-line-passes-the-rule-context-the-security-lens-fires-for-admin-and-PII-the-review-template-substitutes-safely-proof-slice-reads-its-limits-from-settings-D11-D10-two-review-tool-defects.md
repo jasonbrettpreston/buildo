@@ -4,10 +4,11 @@ title: >-
   FIX.TOOLS Review and proof tooling: the lens line passes the rule context, the
   security lens fires for admin and PII, the review template substitutes safely,
   proof-slice reads its limits from settings (D11, D10, two review-tool defects)
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T01:04:00Z'
+updated_date: '2026-11-21T01:06:00Z'
 labels:
   - McFix
   - McFix A
@@ -356,4 +357,6 @@ Dated note 2026-11-20 (M-246, prior text kept; RR-0349 · task-375 · Backlog; o
 Dated note 2026-11-20 (M-246, prior text kept; RR-0350 · task-375 · Backlog; operator, verbatim: "You are good to build them tonight! If the panel leaves an open question - ground it and then take that as approved and let me know in the morning.  Teh goal is to get all six steps working tonight")
 
 2026-11-20 (M-246, prior text kept) This plan (PLAN-375-v4, in the Implementation Plan field) GOVERNS the approved FINAL BUILD NOTE (NOTE-375.md, approved at MORNING-DECISIONS.md:1557) where they differ, on the operator's orders at :1572 and :1580 and the second pass (:1590). Approved sentences it replaces: "ONE more section" (Implementation Notes) -> two sections (Implementation Plan and Implementation Notes); A.5 both-phases close rule -> deleted (plan evidence moves to the launch gate); B.2 close refusal on stale references -> deleted (check-tasks prints the commands, the take adds them); the context-<date>.md name -> context-rN.md; "no shim (RR-0328)" -> that sentence is the orchestrator's reading, not his words. v4 rulings: the Integration and Reality-Check seats on every build or fix plan and the Regression seat when existing code is changed, as Claude Sonnet agents, on the plan only (:1615, :1620, :1625, :1630); no seat on the output; the lane fixes, writes its own outcome lines and closes, a separate grounder verifies each fix, the orchestrator only routes (:1605); a BUILT task does not move to DONE without an output compliance review and a grounder's ruling (:1595). Released from lane BL-FIXTOOLS and relaunched under a new lane name with the launch script's own undo (his yes at the :1517 entry). The v4 fold was read back by a separate grounder (docs/reports/reviews/task-375/READBACK-375-v4.md); its four grounded answers are taken as approved on :1638 and reported to him.
+
+2026-11-21 taken on the board at lane launch (lane BL-GATE375, worktree /Users/brettpreston_macmini/Buildo-wt-gate375, branch wf1/inc1b-gate375), RR-0240
 <!-- SECTION:NOTES:END -->
