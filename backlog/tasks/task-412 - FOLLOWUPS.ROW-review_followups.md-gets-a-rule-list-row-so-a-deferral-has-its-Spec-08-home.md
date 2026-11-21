@@ -3,7 +3,7 @@ id: TASK-412
 title: >-
   FOLLOWUPS.ROW review_followups.md gets a rule-list row so a deferral has its
   Spec 08 home
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-F412'
 created_date: '2026-11-20T23:40:00Z'
@@ -33,6 +33,9 @@ references:
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-21/BL-F412/REPORT.md
   - docs/reports/reviews/task-412/FOLD-CHECK.md
+  - docs/reports/lanes/2026-11-21/BL-F412/GROUNDER.md
+  - docs/reports/lanes/2026-11-21/BL-F412/TRIAGE.md
+  - docs/reports/lanes/2026-11-21/BL-F412/FINDINGS.md
 type: build
 ordinal: 112012
 ---
@@ -142,3 +145,23 @@ rg#1 MED folded it does not make a f
 
 2026-11-21 CORRECTION (lane BL-F412, fix round 1): my earlier note that gitFreeEnv() 'does not exist in the repo' is false: scripts/analysis/rule-lists.mjs:53 exports it. The test's helper cleanEnv (src/tests/backlog/helpers.ts:30) strips the same GIT_* keys and is equivalent for the test (the output grounder's ruling).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+The review-followups row and its test are built; acceptance (a) to (e) met; output review and a separate grounder done; the fold check was recorded after the fact and no cross-read adversary pass ran; the closing commit is records only because rule-lists.json is protected.
+
+Review round 1: 13 fixed, 0 task, 8 ruling, 0 wontfix, 1 pile; grounder docs/reports/lanes/2026-11-21/BL-F412/GROUNDER.md; triage docs/reports/lanes/2026-11-21/BL-F412/TRIAGE.md
+plan-compliance-agents-s5-1to3#1 MED ruling decision-135
+plan-compliance-agents-s5-1to3#2 MED fixed 52a4956
+plan-compliance-eng-all#1 MED ruling decision-135
+plan-compliance-five-words#1 MED ruling decision-135
+plan-compliance-inc-S#1 MED ruling decision-135
+plan-compliance-inc-S#2 MED fixed 52a4956
+plan-compliance-ms-S#1 MED ruling decision-135
+plan-compliance-orchestrator-doc17#1 MED ruling decision-135
+plan-compliance-plan-protocol#1 MED ruling decision-135
+plan-compliance-queue-137#1 HIGH fixed 52a4956
+out-compliance-agents-s7-s11#1 HIGH fixed 90eebe6
+out-compliance-agents-s7-s11#2 MED fixed 90eebe6
+<!-- SECTION:FINAL_SUMMARY:END -->
