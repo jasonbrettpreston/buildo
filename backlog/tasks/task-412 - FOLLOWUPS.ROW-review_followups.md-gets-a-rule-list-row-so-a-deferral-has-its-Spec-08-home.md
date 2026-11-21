@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-F412'
 created_date: '2026-11-20T23:40:00Z'
-updated_date: '2026-11-21T06:57:00Z'
+updated_date: '2026-11-21T07:06:00Z'
 labels:
   - McFix
   - McFix V2
@@ -32,6 +32,7 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-21/BL-F412/REPORT.md
+  - docs/reports/reviews/task-412/FOLD-CHECK.md
 type: build
 ordinal: 112012
 ---
@@ -41,6 +42,15 @@ ordinal: 112012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Card opened 2026-11-20 by the orchestrator from the plan of task-399 (section 9), Spec 137 rule 2. Operator approved the item (RR-0336, item 1 of the list put to him: a table row for review_followups.md, after task-375; until then a deferral goes to a named task). Rule: Spec 08 section 7 rule 6 (DEFER goes to review_followups.md with reasons). Today docs/reports/review_followups.md matches no row of scripts/analysis/rule-lists.json, so a lane cannot write it; the pile: outcome of task-399 (RR-0338) points here once it exists. Scope: one table row and its test. Not started; plan and panel before launch. Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [x] #1 (a) resolve --files docs/reports/review_followups.md --type build --letter S exits 0 and lists agents-s7-s11, queue-137, five-words, plan-protocol, inc-S, ms-S
+- [x] #2 (b) validate prints rule-lists: ok 55 lists, N+1 rows, N the row count of the table the branch started from
+- [x] #3 (c) page --check prints ... is current
+- [x] #4 (d) the new test case is red before the row (failing assertion, the resolve exit) and green after, through the real hooks
+- [x] #5 (e) git show --stat for commit A names exactly the two Files paths and this task file
+<!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
@@ -129,4 +139,6 @@ rg#1 MED folded it does not make a f
 2026-11-21 (lane BL-F412) commit A: row review-followups added after panel-records (lists agents-s7-s11, queue-137); the test went red at failing assertions first (red.out: resolve exit 3 not 0), now green through the hooks.
 
 2026-11-21 ACCEPTANCE (lane BL-F412, commit 52a49566e): (a) resolve --files docs/reports/review_followups.md --type build --letter S exit 0, lists: agents-s7-s11 queue-137 five-words plan-protocol inc-S ms-S. (b) validate: rule-lists: ok 55 lists, 23 rows (branch start had 22 rows, so N+1). (c) page --check: rule-lists: docs/reports/generated/rule-lists-by-kind.md is current. (d) red: red.out, both new cases failed at assertions (resolve refused, 'matched by no row', exit 3 not 0); green: commit.out, 21 passed, commit through real hooks, none bypassed. (e) git show --stat HEAD:  ...-list-row-so-a-deferral-has-its-Spec-08-home.md |  6 ++++-; scripts/analysis/rule-lists.json                   |  6 +++++; src/tests/backlog/rule-lists-table.logic.test.ts   | 30 ++++++++++++++++++++++;
+
+2026-11-21 CORRECTION (lane BL-F412, fix round 1): my earlier note that gitFreeEnv() 'does not exist in the repo' is false: scripts/analysis/rule-lists.mjs:53 exports it. The test's helper cleanEnv (src/tests/backlog/helpers.ts:30) strips the same GIT_* keys and is equivalent for the test (the output grounder's ruling).
 <!-- SECTION:NOTES:END -->

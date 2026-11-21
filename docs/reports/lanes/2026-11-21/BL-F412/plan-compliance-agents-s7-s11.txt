@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:39:39.490Z file_sha256=da91c23342079c5f5ab2ca806010f35fc262510f032e187b825e90f9c0e92802 prompt_sha256=741a3c75837388213563166756acb882a4af748f7997000c3b5cde30a0fb0300
+🔍 Lens review of docs/reports/reviews/task-412/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 08 §11.1 "a plan or fold may not contain a claim that COULD be executed but wasn't ... a census grep runs at the full scope its conclusion covers" — plan BASIS "Validate requires every literal glob to match a tracked path (rule-lists.mjs:129); the file is tracked (git ls-files)." — the tracked-path premise that acceptance (b) rests on is asserted, no git output shown, so the literal-glob precondition for the new row is unproven at plan-lock — record the command and its output (and the exact path string) in BASIS before lock.
+
+DEFER severity=MED — Spec 08 §7 rule 10 dated note 2026-11-20, fix round 1 (3) "after any fix commit every input is re-made with `rule-lists.mjs lens-input` and every lens output re-run under the same names" — plan LANDING "Commit A: the row and the test, no task move ... Commit B (later): the task file and queue row to DONE with the evidence." — the landing has no step that re-makes the in- inputs and re-runs the lens outputs after commit A and commit B move the range at HEAD, which is exactly what the close recompute of each output's prompt hash measures — add a final landing step: after commit B, re-make each in-* with lens-input and re-run every lens under the same names, and carry the round line into the Final Summary.
+
+DEFER severity=LOW — Spec 08 §7 rule 10 dated note 2026-11-06 (C2) "a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha (form: `R-KG (124a; :1015 at <sha>)`)" — plan "Rule: docs/specs/00-architecture/08_agents.md section 7 rule 6 (:350 region)" — the anchor is hedged ("region") and carries no sha, so the citation does not take the C2 form — write it as id plus anchor plus sha, e.g. 08_agents.md §7 rule 6 (:350 at 4a70b85ca).
+
+DEFER severity=LOW — Spec 08 §7 rule 10 dated note 2026-11-19 (RR-0232/RR-0235) "the lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit, and the task's references point at that repo copy" — plan LANDING "Commit B (later): the task file and queue row to DONE with the evidence." — the copy of REPORT.md, TRIAGE.md and the review output into docs/reports/lanes/ is not a landing step, so the task reference would point outside the repo copy — name the copy in commit B and point the task reference at docs/reports/lanes/<date>/<lane>/.
+
+MET — Spec 08 §7 rule 6 "DEFER -> review_followups.md with reasons" — plan WHAT "ONE new row in scripts/analysis/rule-lists.json: id "review-followups"" — the row attaches agents-s7-s11, the list that holds rule 6, so the DEFER target gains its named home.
+
+MET — Spec 08 §11.3 "Every lock is proven in BOTH directions" — plan TESTS "copy the table without the row ... resolve exits 3 and stderr holds "matched by no row"; the real table is the control and exits 0." — red on the old shape, green on the new, both stated.
+
+MET — Spec 08 §11.4 "The failing tests ... are written INTO the plan and reviewed at PLAN altitude" — plan TESTS "One case in the existing table test, in a new describe" — the case, the fixture (temp git repo, --root/--table), the invocation and red/green are in the plan text.
+
+MET — Spec 08 §11.9 TKT-1 "when the header omits it the default is 2" — plan "PLAN-412-v1. Task: FOLLOWUPS.ROW" — no max_fix_rounds field, so the default governs, which the clause permits.
+
+MET — card scope "Scope: one table row and its test." — plan WHAT "Placed after panel-records. No other row, no list added, no resolver change." — exactly one row and one test case, nothing beyond the card.
+
+MET — Spec 08 §7 rule 10 (a) "No recommendation goes to the operator without its rule quoted with `file:line`" — plan "Rule: docs/specs/00-architecture/08_agents.md section 7 rule 6" — the governing rule is quoted with file before the recommendation is put.
+
+REJECT — Spec 08 §11.9 dated note 2026-11-21 (2) plan-altitude seats — change accused of naming no Integration, Reality-Check or Regression seat for the launch — not a real issue: "the launch gate (`scripts/analysis/backlog-lane.mjs`, `planGateErrors` in `scripts/hooks/check-lane-close.mjs`) requires their Seat lines in GROUNDER-PLAN.md", so those seats are grounder-produced and brief-generated, not plan text.
+
+REJECT — Spec 08 §11.9 TKT-1 "The first lines of every brief and prompt (after any front-matter block) are: `Ticket: MB-nn · lane X · stage N`" — change accused of carrying no Ticket, Done-condition or max_fix_rounds header — not a real issue: TKT-1 binds briefs and prompts, this is the plan body, and its ACCEPTANCE (a) to (e) is the done-condition the generated brief carries.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 2
+
+---
+⏱  82646ms (82.6s)
+📊 Tokens — total: 27267, input: 12490, output: 14777, reasoning: 13467

@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:39:39.490Z file_sha256=842d2cb4649f8026fd1cf0b63c1d69af9180ae73f7e463ee55e36f70e2db0c97 prompt_sha256=d0cec1cd408fd7eb5415638160b53eecd0f34e3033ac378a4d127c21ba73f928
+🔍 Lens review of docs/reports/reviews/task-412/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — Spec 137 §1 Rule 3 amendment "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — PLAN-412-v1 ACCEPTANCE (e) "`git show --stat HEAD` for commit A names exactly the two Files paths" and LANDING "Commit A: the row and the test, no task move" — commit A changes scripts/analysis/rule-lists.json and src/tests/backlog/rule-lists-table.logic.test.ts with the task file left out of the diff, so G3 refuses the plan's only code commit — put task-412's task file in commit A (status unchanged) or restate (e) as three paths
+
+DEFER severity=MED — Rule 3 note 2026-11-20 "Rule 3 is amended for lane build and fix tasks." and "Every other task keeps Rule 3 as written." — PLAN-412-v1 LANDING "Two commits, because the table is a protected path." — the split rests on a hook rule that is not pasted and the plan never states task-412 is a lane build or fix task, while Rule 3 as written says "the commit that lands it edits that row's status line" — state task-412's task class and cite the Rule 3 note, or move the status line in the commit that lands the work
+
+DEFER severity=MED — Rule 3 note 2026-11-20 (task-366) "the close of a lane's task ... now also needs, in the repo copy of the lane report (docs/reports/lanes/<date>/<lane>/), one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding; `scripts/hooks/check-lane-close.mjs` refuses the commit that sets BUILT or DONE without them" — PLAN-412-v1 LANDING "Commit B (later): the task file and queue row to DONE with the evidence." — commit B sets DONE but names none of the required close contents (lane report directory, compliance:<list id> outputs, GROUNDER.md, TRIAGE.md, Final Summary round line) — enumerate those paths as commit B's contents
+
+DEFER severity=MED — task-410 note "the closing commit stages a path other than the lane's report directory, the task's review context directory, task files and decision records" and §1 Rule 2 "a plan task that is not a queue row: its Backlog file is its row" — PLAN-412-v1 LANDING "the task file and queue row to DONE" — a queue row is outside the permitted staged set and no queue row for task-412 is named anywhere in the pasted material — drop the queue-row move, or name the queue row id and show task-412 is a queue-row task
+
+DEFER severity=LOW — pasted card, approved item (RR-0336 "approved") "a table row for review_followups.md, after task-375" — PLAN-412-v1 BASIS "Depends on task-375 (RUNNING)" against ORDER "3 add the row" — the dependency is recorded but no ORDER step waits for task-375 to close before commit A adds the row — gate commit A on task-375 DONE, or record that RR-0350 "You are good to build them tonight!" covers this task out of order
+
+REJECT — Spec 137 §6 "a generated index across all queues is infra work: carded for the freeze lift, not built now" — the change is accused of building an index — the row maps one report path to one rule list; it indexes no queue and copies no task
+
+MET — Spec 137 §4 Rule 2 "One task, one row, in one home. Every task is registered." — pasted task block "task-412 FOLLOWUPS.ROW ... status: LATER" — task-412 has its Backlog row and the change creates no second row for it
+
+MET — operator standard, pasted card "you are probaley rebuilding stuff that already exists you do this all the time" — PLAN-412-v1 BASIS "No existing row globs it (docs/reports/** rows are generated, policy, panels, reference only)." — the duplicate check is stated before adding the row
+
+MET — pasted card "Scope: one table row and its test." — PLAN-412-v1 WHAT "ONE new row in scripts/analysis/rule-lists.json ... No other row, no list added, no resolver change." — scope is held to one row and one test case
+
+MET — §1 Rule 4 amendment "a verbatim quote and a cite file:line that exists and contains the quote" — pasted "Decisions naming this task" shows "approved" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1557), :1580, :1638 — the rulings for task-412 are entered in the G2 form
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 4
+
+---
+⏱  71822ms (71.8s)
+📊 Tokens — total: 26309, input: 12880, output: 13429, reasoning: 12289
