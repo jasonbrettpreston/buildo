@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T01:14:00Z'
+updated_date: '2026-11-21T01:21:00Z'
 labels:
   - McFix
   - McFix A
@@ -365,4 +365,8 @@ BL-GATE375 build note 2026-11-21 (D11b, README.md:104, lens-security.md:48): rul
 BL-GATE375 build note (A2): CONTEXT_SECTIONS, PLAN_SECTIONS and extractSections now live in scripts/lib/review-template.js; scripts/deepseek-review.js requires extractSections from it (moved from :106-121, same text).
 
 BL-GATE375 build note (A1, A5 naming): backlog-brief.mjs writes ## Implementation Plan and ## Implementation Notes after the acceptance criteria and writes context-rN.md (N = existing context-r*.md + 1, never overwritten); brief tests re-pinned to context-r1.md (backlog-brief.logic.test.ts:58, backlog-brief-context.logic.test.ts:43).
+
+BL-GATE375 build note (A4 lens-input, A6): rule-lists.mjs lens-input takes --context (refused without; exit 2), counts the CONTEXT_SECTIONS text in the room on both paths (buildLensInputs context param), --material-from cuts PLAN_SECTIONS and is its own context; splitFlat cuts a block with no deeper heading at table rows and blank-line paragraphs (a piece alone over the room keeps the old refusal naming list and section). Existing lens-input test calls pass a fixture context (src/tests/backlog/fixtures/review-context.md).
+
+BL-GATE375 deviation note: the plan's Files line does not name src/tests/backlog/rule-lists-table.logic.test.ts, whose lens-input calls at :49 and :206 pass no --context and so fail once lens-input refuses without it (A4); check-task-files refuses an edit of that file, so it is NOT edited here and goes red at the push suite until the Files line names it. The shared test context lives at docs/reports/reviews/task-375/fixture-context.md (the one folder the Files check always allows).
 <!-- SECTION:NOTES:END -->

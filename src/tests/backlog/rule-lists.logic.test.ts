@@ -4,6 +4,7 @@
 // import row, record-only default, lens input (one file when small, split by the list's own headings when big, never trims, refuses what cannot fit).
 import { describe, expect, it } from 'vitest';
 import * as fs from 'node:fs';
+import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import { ROOT, run, script, tmp } from './helpers';
 
@@ -225,12 +226,17 @@ describe('resolve on a fixture tree (AC #2)', () => {
   });
 });
 
+const CTX = (d: string, desc = 'the description', extra = '') => {
+  const p = path.join(d, 'context-r1.md');
+  fs.writeFileSync(p, `# Review context\n\n## Task\ntask-1 t\n\n## Description\n${desc}\n\n## Acceptance criteria\n- #1 a\n\n## Implementation Plan\nTHE-PLAN\n\n## Implementation Notes\n(none)\n\n## Decisions naming this task\n- (none)\n${extra}`);
+  return p;
+};
 const TPL = '## System persona\nsys\n\n## User prompt\nSPECS:\n{{SPECS}}\nPLAN:\n{{PLAN}}\nAGAIN:\n{{PLAN}}\n';
 function lens(f: ReturnType<typeof fixture>, list: string, material: string, max: number, name = 'o') {
   const m = path.join(f.d, `${name}.material`); fs.writeFileSync(m, material);
   const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
   const out = path.join(f.d, 'out', name);
-  const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', list, '--material', m, '--out', out, '--template', tpl, '--max', String(max)]);
+  const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', list, '--material', m, '--out', out, '--template', tpl, '--max', String(max), '--context', CTX(f.d)]);
   const files = r.stdout.split('\n').filter(Boolean);
   return { r, files, text: files.map((x) => fs.readFileSync(x, 'utf8')) };
 }
@@ -333,7 +339,7 @@ describe('V2.LIST: every task gets the five words, the plan protocol and its mil
     expect(t.lists['eng-all']).toMatchObject({ file: 'docs/specs/00_engineering_standards.md', whole: true });
   });
   it('the Glossary block of Spec 132 carries the five words statement, and the repo plan protocol carries the five principles line', () => {
-    const r = script(CLI, ['lens-input', '--list', 'five-words', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fw'), 'in-x')]);
+    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'five-words', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fw'), 'in-x')]);
     expect(r.status, r.stderr).toBe(0);
     const text = fs.readFileSync(r.stdout.trim().split('\n')[0] as string, 'utf8');
     expect(text).toContain('STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE');
@@ -568,7 +574,7 @@ describe('V2.WHOLE: lens-input splits a change that leaves no room for a list pa
     const f = fixture();
     const m = path.join(f.d, 'nl.material'); fs.writeFileSync(m, BIGDIFF);
     const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
-    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/nl'), '--template', tpl, '--max', '9000']);
+    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/nl'), '--template', tpl, '--max', '9000']);
     expect(r.status, r.stderr).toBe(0);
     const files = r.stdout.split('\n').filter(Boolean);
     const st = files.map((x) => stampOf(fs.readFileSync(x, 'utf8')));
@@ -592,7 +598,7 @@ describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', ()
     const d = names.map((p) => dfile(p, 1)).join('');
     const m = path.join(f.d, 'f5.material'); fs.writeFileSync(m, d);
     const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
-    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f5'), '--template', tpl, '--max', '40000']);
+    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f5'), '--template', tpl, '--max', '40000']);
     expect(r.status, r.stderr).toBe(0);
     const files = r.stdout.split('\n').filter(Boolean);
     const texts = files.map((x) => fs.readFileSync(x, 'utf8'));
@@ -614,7 +620,7 @@ describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', ()
     const m = path.join(f.d, 'f13.material'); fs.writeFileSync(m, d);
     const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
     const max = 2 * (d.length + 900) + 300;
-    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f13'), '--template', tpl, '--max', String(max)]);
+    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f13'), '--template', tpl, '--max', String(max)]);
     expect(r.status, r.stderr).toBe(0);
     const texts = r.stdout.split('\n').filter(Boolean).map((x) => fs.readFileSync(x, 'utf8'));
     expect(texts.length).toBeGreaterThan(1);
@@ -658,5 +664,92 @@ describe('D11b (task-375): the security lens fires for admin and PII paths, as R
   });
   it('control: the existing words still fire it', async () => {
     expect((await lens('src/lib/stripe/webhook.ts')).out).toContain('security');
+  });
+});
+
+describe('task-375 A4: lens-input takes the reviewer context, counts it in the room and can cut the plan material from it', () => {
+  const base = (f: ReturnType<typeof fixture>, extra: string[]) => {
+    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+    const m = path.join(f.d, 'mat.txt'); fs.writeFileSync(m, 'MAT');
+    return script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'first', '--out', path.join(f.d, 'out/ctx'), '--template', tpl, ...extra, ...(extra.includes('--material-from') ? [] : ['--material', m])]);
+  };
+  it('refuses without --context (exit 2, says so) and control: with it exits 0', () => {
+    const f = fixture();
+    const no = base(f, []);
+    expect(no.status, no.stderr).toBe(2);
+    expect(no.stderr).toMatch(/--context/);
+    const yes = base(f, ['--context', CTX(f.d)]);
+    expect(yes.status, yes.stderr).toBe(0);
+  });
+  it('a context without a required heading is refused naming the heading', () => {
+    const f = fixture();
+    const p = path.join(f.d, 'bad.md'); fs.writeFileSync(p, '# x\n\n## Task\nt\n');
+    const r = base(f, ['--context', p]);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toMatch(/Description/);
+  });
+  it('the selected sections are counted in the room: no input plus its context passes --max; a context too big for the room is refused', () => {
+    const f = fixture();
+    const run1 = (ctx: string) => { const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL); const m = path.join(f.d, 'mat.txt'); fs.writeFileSync(m, 'MAT'); return script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'whole', '--material', m, '--out', path.join(f.d, 'out/room'), '--template', tpl, '--max', '4000', '--context', ctx]); };
+    const small = run1(CTX(f.d));
+    expect(small.status, small.stderr).toBe(0);
+    const midCtx = CTX(f.d, 'D'.repeat(400));
+    const mid = run1(midCtx);
+    expect(mid.status, mid.stderr).toBe(0);
+    const rt = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js'));
+    const sel = rt.extractSections(fs.readFileSync(midCtx, 'utf8'), rt.CONTEXT_SECTIONS);
+    const files = mid.stdout.split('\n').filter(Boolean);
+    expect(files.length).toBeGreaterThanOrEqual(small.stdout.split('\n').filter(Boolean).length);
+    for (const x of files) expect(('sys' + rt.substitutePlaceholders('SPECS:\n{{SPECS}}\nPLAN:\n{{PLAN}}\nAGAIN:\n{{PLAN}}\n', { plan: fs.readFileSync(x, 'utf8'), specs: sel })).length).toBeLessThanOrEqual(4000);
+    const huge = run1(CTX(f.d, 'D'.repeat(3900)));
+    expect(huge.status).toBe(1);
+  });
+  it('--material-from cuts the plan sections (Description, Acceptance criteria, Implementation Plan) and uses the same file as the context', () => {
+    const f = fixture();
+    const c = CTX(f.d);
+    const r = base(f, ['--material-from', c]);
+    expect(r.status, r.stderr).toBe(0);
+    const t = fs.readFileSync(r.stdout.split('\n').filter(Boolean)[0]!, 'utf8');
+    expect(t).toContain('THE-PLAN');
+    expect(t).toContain('## Acceptance criteria');
+    expect(t).not.toContain('## Implementation Notes');
+  });
+  it('--material-from a file without an Implementation Plan heading is refused', () => {
+    const f = fixture();
+    const p = path.join(f.d, 'noplan.md'); fs.writeFileSync(p, '# x\n\n## Task\nt\n\n## Description\nd\n\n## Acceptance criteria\na\n\n## Decisions naming this task\n-\n\n## Implementation Notes\nn\n');
+    const r = base(f, ['--material-from', p]);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toMatch(/Implementation Plan/);
+  });
+});
+
+describe('task-375 A6: a block with no deeper heading is cut between table rows or paragraphs', () => {
+  const tableDoc = (n: number) => '# T\n\n## 5. Register\n\n| id | rule |\n| --- | --- |\n' + Array.from({ length: n }, (_, i) => `| R${i} | rule text number ${i} that is long enough to count ${'x'.repeat(40)} |`).join('\n') + '\n\n## 6. Next\n\nafter\n';
+  const mk = (doc: string) => {
+    const f = fixture();
+    fs.writeFileSync(path.join(f.d, 'docs/t.md'), doc);
+    const t = JSON.parse(fs.readFileSync(f.table, 'utf8'));
+    t.lists.tab = { file: 'docs/t.md', sections: ['5. Register'], generated_by: 'hand-written' };
+    fs.writeFileSync(f.table, JSON.stringify(t));
+    return f;
+  };
+  it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound', () => {
+    const f = mk(tableDoc(60));
+    const l = lens(f, 'tab', 'MAT', 4000);
+    expect(l.r.status, l.r.stderr).toBe(0);
+    expect(l.files.length).toBeGreaterThan(1);
+    const all = l.text.join('\n');
+    for (let i = 0; i < 60; i++) expect(all.split(`| R${i} |`).length - 1, 'R' + i).toBe(1);
+  });
+  it('control: the same table that fits is one file', () => {
+    const f = mk(tableDoc(5));
+    const l = lens(f, 'tab', 'MAT', 20000);
+    expect(l.files).toHaveLength(1);
+  });
+  it('a single row that alone passes the room is refused naming the list and section (the old throw)', () => {
+    const f = mk('# T\n\n## 5. Register\n\n| id | rule |\n| --- | --- |\n| R0 | ' + 'y'.repeat(5000) + ' |\n');
+    const l = lens(f, 'tab', 'MAT', 4000);
+    expect(l.r.status).toBe(1);
+    expect(l.r.stderr).toContain('5. Register');
   });
 });

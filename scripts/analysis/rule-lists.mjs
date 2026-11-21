@@ -26,6 +26,8 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');
 const BOUND = 120000; // scripts/deepseek-review.js MAX_PROMPT_CHARS
 const RESERVE = 800; // stamp, header and separator of one lens input file
+/** The text a lens sees when no --context is given (the review tool's own placeholder). */
+const NO_CONTEXT = '(no pasted context provided)';
 const MARKER = '\n=== MATERIAL UNDER REVIEW (everything below this line) ===\n';
 /** V2.WHOLE (task-410): the one diff command the brief, the lens input and the close check share (every flag pinned, so the text is the same on every machine). */
 // --text and --full-index (V2.WHOLE fix round): a .gitattributes line `*.ts -diff` makes git print "Binary files differ" for code; --text prints the text whatever the attributes say, --full-index fixes the index line length
@@ -291,10 +293,38 @@ export function findingsIn(files) {
 }
 
 // ---- lens input ----
+/**
+ * task-375 A6 (his :1546 "or split smaller"; the cut at rows and paragraphs is the orchestrator's reading): a block with no deeper heading is cut between table rows or blank-line
+ * paragraphs and the pieces packed in order up to `max`. A row or paragraph that alone passes `max`, or a block with no row or blank line to cut at, is refused naming it (the old throw).
+ * A row is judged without its neighbours and, mid-table, without its column header.
+ */
+function splitFlat(text, max, label, id) {
+  const pieces = [];
+  let cur = [];
+  const flush = () => { if (cur.length) { pieces.push(cur.join('\n')); cur = []; } };
+  const lines = text.split('\n');
+  const head = /^#{1,6}\s/.test(lines[0]) ? 1 : 0; // the block's own heading line stays with the first piece (a part of only a heading would judge nothing)
+  for (const [i, ln] of lines.entries()) {
+    if (i < head) cur.push(ln);
+    else if (/^\s*\|/.test(ln)) { if (!(head && pieces.length === 0 && cur.length === 1)) flush(); cur.push(ln); flush(); } else if (ln.trim() === '') { if (!(head && pieces.length === 0 && cur.length === 1)) flush(); } else cur.push(ln);
+  }
+  flush();
+  const big = pieces.find((x) => x.length > max);
+  if (big) throw Object.assign(new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading, table row or blank line to split at that fits (a piece of ${big.length} characters; room for list text in one file: ${max})`), { room: true, size: big.length });
+  const out = [];
+  let acc = [];
+  let len = 0;
+  for (const x of pieces) {
+    if (acc.length && len + x.length + 1 > max) { out.push(acc.join('\n')); acc = []; len = 0; }
+    acc.push(x); len += x.length + 1;
+  }
+  if (acc.length) out.push(acc.join('\n'));
+  return out;
+}
 function splitUnits(text, max, label, id) {
   if (text.length <= max) return [text];
   const subs = headings(text).filter((h) => h.offset > 0);
-  if (subs.length === 0) throw Object.assign(new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading to split at (room for list text in one file: ${max})`), { room: true, size: text.length });
+  if (subs.length === 0) return splitFlat(text, max, label, id);
   const level = Math.min(...subs.map((h) => h.level));
   const cuts = [0, ...subs.filter((h) => h.level === level).map((h) => h.offset), text.length];
   const out = [];
@@ -314,7 +344,7 @@ export function renderLensInput({ id, list, part, i, n, material, paths, c, m })
   return `${stamp}\n${head}\n\n${part}${MARKER}${material}\n`;
 }
 /** The prompt hash the review tool writes in its REVIEW header: sha256 of JSON [system, user] for a lens template, the input file as {{PLAN}} and the context as {{SPECS}} (today the tool's placeholder string; a task that passes a real context file passes its text here). */
-export function lensPromptHash({ templateText, inputText, context = '(no pasted context provided)' }) {
+export function lensPromptHash({ templateText, inputText, context = NO_CONTEXT }) {
   const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
   const split = rt.splitTemplate(templateText);
   const system = split.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.";
@@ -329,12 +359,12 @@ export function lensPromptHash({ templateText, inputText, context = '(no pasted 
  * its path list. One file alone over the room is refused naming the file and its size. A diff is always stamped (chunk 1 of 1 when it fits), so the close check reads paths from the stamp.
  * `list` null (a non-compliance lens template): the same chunks with an empty list part, id "none".
  */
-export function buildLensInputs({ id, list, root, material, templateFile, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {
+export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {
   const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
   const split = rt.splitTemplate(fs.readFileSync(templateFile, 'utf8'));
   const sys = (split.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.").length;
   const k = (split.userTemplate.match(/\{\{PLAN\}\}/g) ?? []).length || 1;
-  const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
+  const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context, dataContext: '(no live-DB context provided)' }).length;
   const avail = Math.floor((max - fixed - 200) / k);
   const room = (msg, size) => Object.assign(new Error(msg), { room: true, size });
   const partsFor = (unitMax) => {
@@ -359,7 +389,7 @@ export function buildLensInputs({ id, list, root, material, templateFile, max = 
     parts = partsFor(unitMax);
     // F13: the room test above is an estimate; when the FINAL prompt (stamp, head with the path list, marker) of the widest part would pass the bound, the material is chunked too
     const widest = parts.reduce((x, y) => (y.length > x.length ? y : x), '');
-    const finalLen = sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: widest, i: parts.length, n: parts.length, material, paths: segs ? chunks[0].paths : null, c: 1, m: 1 }), specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
+    const finalLen = sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: widest, i: parts.length, n: parts.length, material, paths: segs ? chunks[0].paths : null, c: 1, m: 1 }), specs: context, dataContext: '(no live-DB context provided)' }).length;
     if (finalLen > max) throw room(`the input with the rendered head would be ${finalLen} characters, over the ${max} bound`, widest.length);
   } catch (e) {
     if (!e.room || !segs) throw e;
@@ -372,7 +402,7 @@ export function buildLensInputs({ id, list, root, material, templateFile, max = 
     }
     // the room of a chunk is MEASURED (V2.WHOLE fix round): the stamp, the head with the chunk's own path list and the marker are rendered for the longest list part and counted, so a long path list cannot push an input over the bound
     const longest = parts.reduce((x, y) => (y.length > x.length ? y : x), '');
-    const promptOf = (paths, text) => sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: longest, i: 99999, n: 99999, material: text, paths, c: 99999, m: 99999 }), specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
+    const promptOf = (paths, text) => sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: longest, i: 99999, n: 99999, material: text, paths, c: 99999, m: 99999 }), specs: context, dataContext: '(no live-DB context provided)' }).length;
     chunks = [];
     for (const s of segs) {
       const last = chunks[chunks.length - 1];
@@ -385,7 +415,7 @@ export function buildLensInputs({ id, list, root, material, templateFile, max = 
   const files = [];
   chunks.forEach((ch, ci) => parts.forEach((p, i) => {
     const text = renderLensInput({ id, list, part: p, i: i + 1, n: parts.length, material: ch.text, paths: ch.paths, c: ci + 1, m: chunks.length });
-    const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
+    const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: context, dataContext: '(no live-DB context provided)' }).length;
     if (prompt > max) throw new Error(`list ${id}: part ${i + 1} would be ${prompt} characters, over the ${max} bound`);
     const n = ci * parts.length + i + 1;
     files.push({ suffix: files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });
@@ -495,11 +525,20 @@ function cli() {
     const list = id ? table.lists[id] : null; // no --list: a non-compliance lens template, the chunks alone (V2.WHOLE)
     if (id && !list) die(1, `no list ${id} in ${tableFile}`);
     if (!id && !a.template) die(2, 'usage: lens-input needs --list <id>, or --template <lens file> alone to split the material for a non-compliance lens');
+    // task-375 A4: the reviewer's context is the task, sized: the selected sections of the committed context file are counted in the room. --material-from <context-rN.md> cuts the plan phase material from it (and is its own context).
+    const matFrom = str('material-from', ''); const ctxFile = str('context', matFrom);
     const matFile = str('material', ''); const outPrefix = str('out', '');
-    if (!matFile || !outPrefix || !fs.existsSync(matFile)) die(2, 'usage: lens-input [--list <id>] --material <file> --out <prefix> [--template <lens file>] [--max <n>]');
+    if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> (the reviewer context of the task; the selected sections are counted in the room); --material-from <context-rN.md> is its own context');
+    if ((!matFile && !matFrom) || !outPrefix || (matFile && !fs.existsSync(matFile)) || !fs.existsSync(ctxFile) || (matFrom && !fs.existsSync(matFrom))) die(2, 'usage: lens-input [--list <id>] (--material <file> | --material-from <context-rN.md>) --context <context-rN.md> --out <prefix> [--template <lens file>] [--max <n>]');
+    let context; let material;
+    try {
+      const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
+      context = rt.extractSections(fs.readFileSync(ctxFile, 'utf8'), rt.CONTEXT_SECTIONS);
+      material = matFrom ? rt.extractSections(fs.readFileSync(matFrom, 'utf8'), rt.PLAN_SECTIONS) : fs.readFileSync(matFile, 'utf8');
+    } catch (e) { die(1, e.message); }
     if (a.max !== undefined && !(Number.isFinite(Number(a.max)) && Number(a.max) > 0)) die(1, `--max must be a positive number (got ${a.max}); the bound has to be enforced`);
     let files;
-    try { files = buildLensInputs({ id, list, root, material: fs.readFileSync(matFile, 'utf8'), templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }
+    try { files = buildLensInputs({ id, list, root, material, context, templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }
     const dir = path.dirname(path.resolve(outPrefix)); const base = path.basename(outPrefix);
     fs.mkdirSync(dir, { recursive: true });
     for (const f of fs.readdirSync(dir)) if (f === `${base}.txt` || new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-p\\d+\\.txt$`).test(f)) fs.rmSync(path.join(dir, f));
