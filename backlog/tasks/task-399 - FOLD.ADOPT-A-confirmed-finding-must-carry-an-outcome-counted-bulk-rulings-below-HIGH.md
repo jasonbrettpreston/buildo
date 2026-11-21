@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-OUTCOME'
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-21T00:37:00Z'
+updated_date: '2026-11-21T00:51:00Z'
 labels:
   - McFix
   - McFix Z
@@ -352,4 +352,8 @@ plan-ux#2 CRITICAL: no outcome line in TRIAGE.md [Spec 08 section 7 rule 6 (08_a
 exit=1
 
 2026-11-20 BL-OUTCOME dated correction of plan section 2d (fix round 1, grounder g399#3; prior text kept): a fix round does NOT file out-<lens>-rN.txt. The close hook requires every in- input and out- output to equal the diff of the WHOLE range at HEAD, so after any fix commit the lane re-makes every in- input with rule-lists.mjs lens-input and re-runs every lens output under the SAME names (superseded files are listed in the lane report). Re-running only the chunks that changed is card task-414 (operator approved, RR-0336 item 7). Also corrected here: plan 4.1 said task:task-N passes when the card's text holds the finding id OR the cited path; that path alternative let any card naming the file (or the closing task itself) close a deferral (grounder out-code-review#1). The form now requires the finding id as a whole token in the card's text and refuses the closing task itself; the dated note in 08_agents.md says the same.
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0342 · task-399 · Backlog; operator, verbatim: "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently")
+
+2026-11-20 (M-246, prior text kept) WHO DOES WHAT AFTER THE GROUNDER RULES of PLAN-399-v3 and the sentence of its section 5 saying the orchestrator writes TRIAGE.md are superseded on the operator's ruling (MORNING-DECISIONS.md:1605, verbatim: "agreed", to the question as put: the lane fixes and closes, the grounder verifies each fix, the orchestrator only routes): the lane writes its own outcome lines and makes the closing commit, a separate grounder verifies each fix resolves its finding, the orchestrator only routes. Fix round 1 was already run this way; this note records, it changes no code.
 <!-- SECTION:NOTES:END -->
