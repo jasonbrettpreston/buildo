@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.477Z file_sha256=551bf595923945a45a112a80a512bb26c168dacc93fb38c4b6adddf82b7f5d7c prompt_sha256=c01beaa1a51e1c61d537aa0a421bc8f6e4620438e8499788da12a33244ee538e
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0357 "GO for scorecards" — Implementation Notes "operator, verbatim: "GO for scorecards"" vs Description "the operator types GO in his own Terminal" — the plan adds a second, unnamed GO gate in the Terminal on top of the GO already recorded verbatim on the task, and RR-0355 "Let's push as soon as possible!" is contradicted by the extra wait — drop the Terminal-GO step and treat the RR-0357 note as the one GO, or record who types the second GO and why RR-0357 did not close it
+
+BUG severity=MED — AC #2 "One commit of generated files only, through the hooks" — Description "the count row 315 to 316" with "Files: docs/reports/" — the count-row change is outside the named Files line and the file that holds row 315/316 is never named, so the "generated files only" set cannot be checked against anything — name the file holding the count row and add it to the Files line
+
+BUG severity=MED — AC #2 "One commit of generated files only" — Description "makes ONE read-only run on dev of step-validate.mjs --all --fast --write" — the run that is supposed to produce the generated files is called read-only while carrying --write, so either nothing changes and AC #2 cannot be met, or the description's read-only claim is false and the only guard is a post-hoc diff check — state the run as a write run scoped to docs/reports/ and say what the diff check does when it finds a file outside the set
+
+BUG severity=MED — RR-0358 "does the rehearsal provide a benefit here - if not move on" — Description "After task-420 (the rehearsal) passes" — the card still gates on task-420 passing and records no waiver, so if the rehearsal is waived per RR-0358 the card is blocked with no line saying so — add a dated note naming task-420 as waived under RR-0358 or naming who judges the benefit
+
+DEFER severity=LOW — AC #2 "step-conformance Rule 13 passes on it" — NONE — Rule 13's text is not pasted, so this acceptance criterion cannot be verified from the pasted context, only named — paste Rule 13 or restate the criterion in terms that can be checked
+
+DEFER severity=LOW — Description "Must be re-run if another migration file lands before the push" — NONE — the re-run trigger has no owner and no check that says which migration files were compared, so the condition can silently go unevaluated — attach the re-run check to the lane named in the note ("lane BL-SCORE421") and record the migration-file comparison result on the task
+
+MET — AC #1 — Implementation Notes — the operator's GO is recorded verbatim on the task ("operator, verbatim: "GO for scorecards""), which is what AC #1 asks for
+
+MET — RR-0353 — Implementation Notes — the card is the scorecard resolution taken on the board in a named lane ("2026-11-21 taken on the board at lane launch (lane BL-SCORE421, worktree /Users/brettpreston_macmini/Buildo-wt-score421, branch wf1/inc1b-score421)")
+
+MET — AC #2 hooks — Description — the commit is specified through the real hooks ("commits them through the real hooks as one generated-files commit")
+
+REJECT — doc-17 — the change is accused of not matching the RR entries in the pasted rule list — that list's own first clause says "They are NOT the operator's words as a ruling and never feed a review as a ruling", so none of its entries bind this change
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 4
+
+---
+⏱  23989ms (24.0s)
+📊 Tokens — total: 16888, input: 13031, output: 3857, reasoning: 3031

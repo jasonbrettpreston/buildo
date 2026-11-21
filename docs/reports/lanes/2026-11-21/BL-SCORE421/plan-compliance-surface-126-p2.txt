@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.519Z file_sha256=663f2a3d67f24ae3baee07d8890cab21edb772fbfa0608ef95653d53a7db0a67 prompt_sha256=31197d088a74922db67b5e3de8c324fa22c6e352dd81012e3e1d036c7ff1b552
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-plan-compliance-surface-126-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Acceptance #1 "The operator's typed GO is recorded verbatim on the task" — Task note "operator, verbatim: \"GO for scorecards\"" — the only GO recorded is the chat GO (RR-0357 "given in the chat before the rehearsal"), not the GO the description requires "the operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run", so #1 is claimed against the wrong event and the run would fire off the chat GO — record the Terminal GO as its own verbatim note at the moment it is typed, and leave the chat GO as a separate RR-0357 record.
+
+BUG severity=HIGH — RR-0358 "does the rehearsal provide a benefit here - if not move on" (recorded as "The scorecard rehearsal is waived if it gives no benefit") — Task description "After task-420 (the rehearsal) passes" — the card still gates the whole run on task-420 while the operator left the rehearsal open, and no recorded answer to RR-0358 appears anywhere on the card — record the orchestrator's answer to RR-0358 and either drop the task-420 gate or state why the rehearsal stays, before the run is sequenced.
+
+BUG severity=MED — Task description "commits them through the real hooks as one generated-files commit in the form of bd1f246cc" — Task description "in the form of bd1f246cc" — the card never states what that form is (path set, commit message, authorship), so the lane has no criterion by which "in the form of" is checked and acceptance #2 is not testable — put bd1f246cc's changed-path set and message shape on the card so the generated-files commit can be matched against it.
+
+DEFER severity=LOW — Task description "Must be re-run if another migration file lands before the push" — Task description "Must be re-run if another migration file lands before the push" — the card records no anchor (highest migration number at run time), so whether a later migration landed between run and push is unprovable after the fact — record the migration high-water mark beside the run output.
+
+DEFER severity=LOW — Task description "the commit is folded; the station suite then runs on that commit" — Task description "and the commit is folded" — the fold and the station-suite run are named as events but no owner or command is attached to either, and the card stops at the commit — state who folds and which station-suite command runs on the folded commit.
+
+MET — Task description "ONE read-only run on dev of `step-validate.mjs --all --fast --write`" — Task description "ONE read-only run on dev of `step-validate.mjs --all --fast --write` in the lane worktree" — the run is singular, named, and scoped to the lane worktree that the implementation note states ("worktree /Users/brettpreston_macmini/Buildo-wt-score421").
+
+MET — Task description "only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — Card "Files: docs/reports/" — the declared changed-file scope matches the only-generated-files check, including the count row.
+
+REJECT — RR-0353 "let's resolve the scorecard the right way" — that the card's read-only regeneration is not the "right way" — the ruling names no alternative mechanism, so the regeneration path is not contradicted by anything pasted.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 4
+
+---
+⏱  35588ms (35.6s)
+📊 Tokens — total: 33685, input: 27549, output: 6136, reasoning: 5361

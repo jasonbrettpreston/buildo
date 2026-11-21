@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.461Z file_sha256=9c28b235624f3e6c32f2740798b336a551203dd500fd5fbaf34db391ac6a69df prompt_sha256=9964c46cd34d0dcaf87cb7d5d7fa216d37d305667d6fb3af811dfc0a05ee46aa
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-plan-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — AC #1 "The operator's typed GO is recorded verbatim on the task" — Implementation Plan "(none)" — NONE — nothing in the material records the GO the operator types at his own Terminal; the only verbatim operator words on the task are the pre-rehearsal chat GO (RR-0357 "GO for scorecards"), which the description itself distinguishes from the typed GO that starts the run — add a plan step that pastes the operator's terminal GO verbatim onto task-421 before the run starts.
+
+BUG severity=CRIT — AC #2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — Implementation Plan "(none)" — NONE — no plan step and no diff creates that commit, names its sha, or runs step-conformance Rule 13 on it (Rule 13's text is not pasted, so only the total absence of a step invoking it is judged) — plan the single commit through the real hooks and a step that records the Rule 13 result on the task.
+
+BUG severity=HIGH — Description "then a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — Implementation Plan "(none)" — NONE — the only-generated-files check exists solely as card prose; nothing in the plan says what performs it or what happens on an unexpected path — add a step that enumerates the changed set and blocks the commit on any path outside docs/reports/.
+
+BUG severity=HIGH — Description "the commit is folded; the station suite then runs on that commit" — Implementation Plan "(none)" — NONE — no step folds the commit and no step runs the station suite against that specific sha — add the fold step and the station-suite step keyed to the generated-files sha.
+
+BUG severity=HIGH — RR-0358 "does the rehearsal provide a benefit here - if not move on" — Description "After task-420 (the rehearsal) passes: the run script of task-420 makes ONE read-only run" — the card makes the run unconditionally contingent on the rehearsal passing, while the ruling makes that contingency conditional on a benefit finding the card never records — record the benefit determination on the task, or drop the task-420 gate.
+
+DEFER severity=MED — Description "Must be re-run if another migration file lands before the push." — Implementation Plan "(none)" — NONE — nothing defines how a migration file landing between the run and the push is detected, so the re-run condition is unenforceable — add a pre-push check of migrations/ newer than the run timestamp that forces the re-run.
+
+DEFER severity=MED — §5.2 "Any dual-surface or generated artifact (drift guard)" — Implementation Plan "(none)" — NONE — the commit is a regenerated artifact, but no step regenerates to a buffer and diffs before committing, and the card's path-only check does not prove content equality — add the drift check so the committed reports are proven equal to a fresh regeneration.
+
+DEFER severity=MED — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — AC #2 "One commit of generated files only" — the count row move 315 to 316 is exactly the kind of ruling the specs cite, and an "only generated files" commit is scoped to forbid that same-commit spec touch, with nothing showing whether any spec cites the count — state which specs and runbooks cite the count and where they are updated.
+
+MET — RR-0357 "GO for scorecards" — Implementation Notes "Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: "GO for scorecards")" — the chat GO is recorded verbatim as that ruling requires.
+
+MET — RR-0358 — Implementation Notes "operator, verbatim: "does the rehearsal provide a benefit here - if not move on"" — the ruling is recorded verbatim on the task.
+
+MET — RR-0353, RR-0355 — "Decisions naming this task" — both rulings are named on the task with their verbatim source lines.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 8
+
+---
+⏱  32619ms (32.6s)
+📊 Tokens — total: 19569, input: 13963, output: 5606, reasoning: 4689

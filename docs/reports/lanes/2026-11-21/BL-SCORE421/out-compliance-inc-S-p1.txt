@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.070Z file_sha256=9a9c7f263a3e3cc37fb62e35f8c4662da8d124f8202f47b56a1c2fdea68f1124 prompt_sha256=6b895b191ab908b94f848440af1dddcb39a0b20df817d597ad6b2d26c7e1ebb0
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 AC#2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" and Description "the count row 315 to 316" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |" — the diff raises the enforced registry-input ceiling from 27.5 s to 33.2 s and records PASS on a 33.19 s measurement, a threshold change the card never names (the card scopes the generated change to "the count row 315 to 316") — revert the ceiling to 27.5 s and put the budget relaxation in its own ruling, or paste the ruling that authorises 33.2 s.
+
+DEFER severity=MED — Description "the assessment reports under docs/reports/" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:474 "The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol" versus the new row at :510 "measured 2026-11-20T19:37:21.468Z" — the regenerated row dates the measurement 47 days after the capture the surrounding prose describes, so the report now states two capture dates — regenerate the whole report or leave the historical budget row untouched so narrative and table agree.
+
+DEFER severity=MED — Description "Must be re-run if another migration file lands before the push" — NONE — the chunk bakes "migrations count=316" into all 40 files with no visible evidence of the migration count at push time relative to the 2026-11-20T19:37:21.468Z run — cannot see, re-run step-validate.mjs --all --fast --write if any migration lands after that timestamp.
+
+DEFER severity=MED — Description "checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "registry-input 33.19 s <= 33.2 s" — a PASS carrying a 0.01 s margin cannot be distinguished from a hand-edited value in the material, so "generated files only" is not demonstrated — paste the run log that emitted the row, with registry-input under 27.5 s.
+
+DEFER severity=LOW — AC#2 "step-conformance Rule 13 passes on it" — NONE — no commit sha and no Rule 13 output appear in the material reviewed — attach the commit (bd1f246cc form) and the Rule 13 result to the task, since Rule 13 text is not pasted here and cannot be judged.
+
+DEFER severity=LOW — Description "ONE read-only run on dev of `step-validate.mjs --all --fast --write`" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "docs-only 22.84 s <= 25.3 s" — docs-only moved 18.51 s to 22.84 s against an unchanged 25.3 s ceiling, leaving 2.46 s of headroom, so the next refresh will breach it — record the headroom so the following run is not a silent failure.
+
+REJECT — doc-2 Increment S requirements, elements A.1 to G.6 e.g. "A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026" — the change is accused of not implementing or preserving search-page elements — not a real issue, doc-2 governs the search pages and this diff touches only generated assessment reports, so no doc-2 element clause binds it.
+
+MET — AC#2 "One commit of generated files only" — diff path list (all 40 file headers) — every changed path is under docs/reports/, no code, config or migration file appears in this chunk.
+
+MET — Description "the count row 315 to 316" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:478 "| 1 | assert_schema | PASS | min_migration=41 <= migrations count=316 |" — the 315 to 316 edit is applied consistently to row 1 of all 40 reports.
+
+MET — Description "ONE read-only run on dev" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches" — one timestamp, one host and one hook sha across all 40 files, consistent with a single run.
+
+MET — RR-0357 "GO for scorecards" — card note "operator, verbatim: "GO for scorecards"" — the operator words are recorded verbatim on the task per AC#1, and the diff neither adds nor contradicts them.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 87   Unmet: 2
+
+---
+⏱  41521ms (41.5s)
+📊 Tokens — total: 48473, input: 40813, output: 7660, reasoning: 6451

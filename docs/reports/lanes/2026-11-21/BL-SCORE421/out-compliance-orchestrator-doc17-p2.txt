@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.133Z file_sha256=450d44e25f554506e9a8183ccffd965b5680d97700572fbad033ccf733675872 prompt_sha256=b916e53e7cf6d8331a77e5d86b528b408acaae1518e06a255402573e81565233
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-orchestrator-doc17-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card "only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-10-18-batch4-p4-4-classify-coa-scope-assessment.md "PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" — the registry-input ceiling rose from 27.5 s to 33.2 s; the 33.19 s measurement would FAIL the prior 27.5 s ceiling, so the recorded PASS rests on a ceiling that no docs-only change provides (the change paths are all docs/reports/) — restore the 27.5 s ceiling and address the 27.36 to 33.19 s slowdown, or show the 33.2 s budget committed elsewhere and re-run.
+
+DEFER severity=MED — acceptance #2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — NONE — the material is a diff chunk with no commit sha, hook log or Rule 13 result, cannot see — attach the commit sha (bd1f246cc form) and the Rule 13 output.
+
+DEFER severity=MED — card "Must be re-run if another migration file lands before the push" — NONE — the run bumped 315 to 316 so at least one migration landed, but whether another landed after 2026-11-20T19:37:21Z cannot be seen — confirm no migration file was added since the run timestamp.
+
+DEFER severity=LOW — card "(the count row 315 to 316)" — docs/reports/2026-10-19-batch5-p1-1-assert-entity-tracing-assessment.md shows only the "PRECOMMIT-BUDGET" row changing with no "migrations count=316" row in this chunk, unlike its siblings — 6 of 14 reports changed a budget row but show no count-row bump, cannot see whether their count rows read 316 — verify all 14 reports carry migrations count=316.
+
+DEFER severity=LOW — card "(the count row 315 to 316)" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md "Score: 17/17" and "G8 | 3 | 3 ... net-new (R-DK)" — the change flips a substantive verdict (14/17 to 17/17, G8 stage-gated to net-new keyed to R-DK, compare ran false to true) beyond the named count row, and R-DK is not pasted — attach the run output that produced G8 3/3 or limit the commit to count rows.
+
+DEFER severity=NIT — card "ONE read-only run" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md "- missing invocations (PRE, GOLD-PRE): none" (was "none::") — removing a trailing "::" looks like a manual edit, not run output — confirm the generator emits "none" so no hand edit occurred.
+
+MET — card "the count row 315 to 316" — docs/reports/2026-10-18-batch4-p4-6-compute-coa-cost-estimates-assessment.md — "min_migration=207 <= migrations count=316", count row bumped.
+MET — card "ONE read-only run on dev of step-validate.mjs --all --fast --write" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md — "--fast: vitest spawn skipped" plus one shared timestamp 2026-11-20T19:37:21.468Z across files indicates one --fast run.
+MET — acceptance #1 "The operator's typed GO is recorded verbatim on the task" — pasted task notes "operator, verbatim: \"GO for scorecards\"" — RR-0357 recorded verbatim as a dated note.
+MET — RR-0358 "does the rehearsal provide a benefit here - if not move on" — pasted task notes "operator, verbatim: \"does the rehearsal provide a benefit here - if not move on\"" — rehearsal-waiver note recorded, consistent with bypassing the card's "after task-420 passes".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+
+---
+⏱  59313ms (59.3s)
+📊 Tokens — total: 35091, input: 24125, output: 10966, reasoning: 9984

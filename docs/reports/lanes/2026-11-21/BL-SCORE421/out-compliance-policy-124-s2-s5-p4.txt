@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.171Z file_sha256=da4065af0955c734d49b54e6cfbafe0b1533cafa6aebe9a0425e6737493ba563 prompt_sha256=8d4b029ec019d778272e36b7e8b7f45900dd19668cfad6f649eb9e73f156bd29
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-policy-124-s2-s5-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 description, the authorized run: "the operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run on dev of `step-validate.mjs --all --fast --write` in the lane worktree" — docs/reports/2026-09-30-batch2-p3-10-enrich-centreline-assessment.md:569 "+| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local" — the committed generated output carries a measurement timestamp from the day before the 2026-11-21 card and 2026-11-21 "GO for scorecards", so it is the 2026-11-20 rehearsal output, not the authorized post-GO run — re-run `step-validate.mjs --all --fast --write` after the GO and commit the fresh timestamp, or record on the task that RR-0358 waives the authorized run itself and not only the rehearsal.
+
+BUG severity=HIGH — task-421 description, "the assessment reports under docs/reports/, the count row 315 to 316" — docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md:306 (single hunk "@@ -303,7 +303,7 @@" is row 52; no row-1 hunk), same in assert-entity-tracing:291, assert-network-health:294, assert-staleness:294, compute-phase-calibration:317, link-coa:298, classify-lifecycle-phase:375 — seven of the 25 reports restamp row 52 from the run while their count row is left untouched, which one run cannot produce when the other 18 print 316 — regenerate all 25 from the same run so every count row reads 316, or state on the task why those seven carry no count row.
+
+DEFER severity=MED — V3 package part (5), "R-EC (the R-DJ pre-commit budget, registered and observed by fast invariant #52)" — docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md:817 "+| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" (was "registry-input 27.36 s <= 27.5 s") — the printed bound moves 27.5 s to 33.2 s while the measured field moves 27.36 s to 33.19 s, leaving 0.01 s headroom; a re-measurement alone cannot move a bound and no pasted clause or ruling names a budget raise — print the registered bound unchanged, or cite the seed/ruling that raised it, or the gate is now passing on a rounding hair.
+
+DEFER severity=MED — Acceptance criterion #1, "The operator's typed GO is recorded verbatim on the task" — pasted Implementation Notes: "Dated note 2026-11-21 (M-246 ...; RR-0357 ...; operator, verbatim: "GO for scorecards")", and the decision log line says RR-0357 was "given in the chat before the rehearsal" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1676) — the card asks for a GO typed in the operator's own Terminal after the rehearsal, and no such record is pasted — record the Terminal GO verbatim on task-421, or record explicitly that RR-0357 before the rehearsal is the GO that satisfies #1.
+
+DEFER severity=LOW — task-421 description, "commits them through the real hooks as one generated-files commit in the form of bd1f246cc, and the commit is folded" — NONE — the diff cannot show commit count, hook execution, or the fold — cannot see: verify at commit time that these 25 files land as one commit through the real hooks before the station suite runs.
+
+MET — task-421 description, "Files: docs/reports/" — all 25 diff paths — every changed path is under docs/reports/, no code, descriptor or migration file is touched.
+MET — task-421 description, "ONE ... run" — docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md:177 "measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches" — one identical timestamp, host and hook sha across all 25 files, consistent with a single run.
+MET — R-GP, "folds a `validate_only` entry only when its measured `value` differs (JSON equality) from the stored one" — docs/reports/2026-10-23-batch5-p4-4-link-coa-assessment.md:298 "docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" (was 18.51 s / 27.36 s) — each restamped entry's measured value did change, which is the one case R-GP allows a restamp.
+MET — task-421 description, "the count row 315 to 316" — docs/reports/2026-09-30-batch2-p3-10-enrich-centreline-assessment.md:536 "+| 1 | enrich_centreline | PASS | min_migration=225 <= migrations count=316" — the count row moves 315 to 316 in 18 of the 25 reports, and every min_migration remains <= the new count.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  56752ms (56.8s)
+📊 Tokens — total: 48302, input: 38422, output: 9880, reasoning: 8554

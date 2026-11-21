@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.033Z file_sha256=cb0de9214c09c0abcde8b76dab05ef26b97ed756ceeda749a0072b233a7a51af prompt_sha256=834a7bddf6bd95e49def72f1ab59fe7898688215da3595883e9a293c166fbf1e
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-eng-all-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-421 "the assessment reports under docs/reports/, the count row 315 to 316" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md hunk "@@ -507,7 +507,7 @@" replaces "registry-input 27.36 s <= 27.5 s" with "registry-input 33.19 s <= 33.2 s" (identical edit in all 28 files) — the commit re-bases the R-EC precommit budget ceiling from a 27.5 s cap to a 33.2 s cap so that a 33.19 s measurement passes with 0.01 s headroom, a rule change the card does not name, that no pasted ruling authorizes, and that appears only inside generated reports while §14's "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" requires the owning consumer to move too — fix: regenerate with the ceiling unchanged at 27.5 s (33.19 s then reads FAIL), and raise any genuine re-base as a separate operator ruling with its owning script/spec in the same commit, never folded into the generated-files commit.
+
+BUG severity=MED — RR-0353 "The 29 scorecards are resolved the right way" against the material's own "| 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype;" — the "paths:" block of this chunk lists 28 report files (pilot1..batch3-p1-1), not 29 — one of the 29 scorecards is absent here, so at most 28 of 29 can read count=316 and one assessment report may still show 315 after the commit — fix: confirm the 29th scorecard (or name it explicitly as living in chunk 2) is updated to count=316 in the same commit before it is folded.
+
+DEFER severity=MED — acceptance #2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — NONE — no pasted line shows the commit itself or a Rule 13 result on it, and a diff cannot evidence either — paste the Rule 13 run output and the commit sha in the form of bd1f246cc alongside the diff.
+
+DEFER severity=LOW — task-421 "Must be re-run if another migration file lands before the push" — NONE — the diff shows the re-run happened at count 316 ("registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z") but nothing ties that timestamp to the current head or to the push — record the regeneration timestamp and the head sha it was produced against before pushing.
+
+MET — task-421 "the count row 315 to 316" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md hunk "@@ -474,7 +474,7 @@" "| 1 | assert_schema | PASS | min_migration=41 <= migrations count=316 |" — all 28 reports in this chunk now read count=316 and every min_migration value stays below it.
+
+MET — task-421 "the assessment reports under docs/reports/" — every one of the 28 changed paths in chunk 1 is a docs/reports/*.md assessment file — no file under scripts/, migrations/, src/ or docs/specs/ appears in this material.
+
+MET — acceptance #1 "The operator's typed GO is recorded verbatim on the task" and RR-0357 "GO for scorecards" — Implementation Notes "operator, verbatim: "GO for scorecards"" — the GO is recorded verbatim with its ruling id and date.
+
+REJECT — §3.2 "Every migration file in migrations/ MUST contain both UP and DOWN blocks" — accused of landing migration 316 with no DOWN block in this material — the migration is not this task's deliverable (the card scopes the commit to docs/reports/ generated files), only its effect on the count row is pasted, and the migration's own review is not this run's material.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  47164ms (47.2s)
+📊 Tokens — total: 45617, input: 36809, output: 8808, reasoning: 7880

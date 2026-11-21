@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.509Z file_sha256=202161af2cdd2896dbaf0c8b6228379312430b2cc909d39b3a0a59226cbd8594 prompt_sha256=a49c0f7c6d0d2f36b0d91ac3fed407838c09290e5d453965b7b204690ad684be
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-plan-compliance-surface-126-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0358 "The scorecard rehearsal is waived if it gives no benefit (names task-421, RR-0358) 'does the rehearsal provide a benefit here - if not move on'" — task card Description "After task-420 (the rehearsal) passes: the operator types GO in his own Terminal" — the plan still gates the whole card on the rehearsal passing and records no determination that the rehearsal has a benefit, so a ruling that names this task is logged in the notes and then not applied — record the benefit determination and either keep task-420 with its cited benefit or delete the gate and move on.
+
+BUG severity=HIGH — task card AC#1 "The operator's typed GO is recorded verbatim on the task" and Description "the operator types GO in his own Terminal" — Implementation Notes "operator, verbatim: 'GO for scorecards'" (RR-0357, given in the chat before the rehearsal) — the only GO on the card is the pre-rehearsal chat GO, so AC#1 can be closed on a GO that precedes the gate it is meant to follow, and no step requires the typed Terminal GO to be recorded before the run — state that RR-0357 is not the executed GO and that the card records the Terminal GO verbatim and dated before the run.
+
+DEFER severity=MED — §0b item 9 "No rule, no decision on the side. Where no rule governs, the nearest related rules are cited and the question goes to the operator as a ruling" — task card "Must be re-run if another migration file lands before the push." and "the commit is folded" — two added conditions (a migration-triggered full re-run, folding the commit) appear in no pasted clause and cite no ruling — cite the governing rule for each or take both to the operator as rulings.
+
+DEFER severity=MED — RR-0355 "Agreed. Let's push as soon as possible!" and §0b item 2 "the operator pushes (the pre-push 'Approve this push? [y/N]'" — task card "the station suite then runs on that commit" with the card ending there and no push step — the ruling names the push as the urgent outcome and the spec makes the push an operator step, and neither has a step in this plan — add the push gate as the closing step or name the row that owns it.
+
+MET — §5.6 "the Spec 123 scorecard *from artifacts, never prose*" — task card "ONE read-only run on dev of `step-validate.mjs --all --fast --write`" with "Files: docs/reports/" — the scorecard is written by the checker into generated assessment reports, not by hand.
+
+MET — §0b item 6 "Every operator ruling is recorded verbatim, dated, landed and cited." — Implementation Notes "Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: ...)" — each ruling carries its date, its verbatim words and its record path.
+
+MET — §0b item 2 "build on the current tip through the real hooks" — task card AC#2 "One commit of generated files only, through the hooks" — the generated commit is declared to run the real hooks rather than bypass them.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 4
+
+---
+⏱  44571ms (44.6s)
+📊 Tokens — total: 33583, input: 25203, output: 8380, reasoning: 7643

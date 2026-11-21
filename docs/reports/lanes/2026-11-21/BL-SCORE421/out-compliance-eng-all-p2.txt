@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.047Z file_sha256=9b9279161a50907a45ead282955762ed4525a936488fa008724f80053b8f204b prompt_sha256=556f1a6f26842117f880e55d3b439f6dff1ddc7f17843631386b1bbddaaf5b0d
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-eng-all-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC#2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:112 "| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 net-new (R-DK) |" (was "| G8 | 0 | 3 | ... — stage-gated (compute_ported) |", score "14/17" to "17/17") — a stage-gated G8 flips to PASS under a ruling "R-DK" that is not in the pasted context, carrying the score 14/17 to 17/17, well beyond the "count row 315 to 316" the card names — confirm the recorded run actually produced 17/17 and that R-DK is a pasted/authorized ruling, else revert the G8 row and score.
+
+BUG severity=HIGH — RR-0353 "let's resolve the scorecard the right way" — docs/reports/2026-10-16-batch3-p1-2-load-bylaw-map-areas-assessment.md:183 "PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" (was "docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s") — the registry-input ceiling moves 27.5 to 33.2 so a 33.19 s measurement passes by 0.01 s; docs-only ceiling stays fixed at 25.3 despite a similar rise, showing the registry ceiling is fitted to the measurement, no pasted clause names a ceiling change — keep the 27.5 ceiling and fix the regression, or land an operator ruling explicitly naming the new budget.
+
+DEFER severity=LOW — AC#1 "The operator's typed GO is recorded verbatim on the task" — context "operator, verbatim: \"GO for scorecards\"" (RR-0357, MORNING-DECISIONS.md:1676) — the recorded GO is the chat GO, while the card description requires "the operator types GO in his own Terminal"; AC#1 rests on the chat GO only — record the Terminal GO verbatim on the task or note RR-0358 waiver covers it.
+
+MET — card "the count row 315 to 316" — docs/reports/2026-10-16-batch3-p1-2-load-bylaw-map-areas-assessment.md:150 "min_migration=254 <= migrations count=316" — the migrations count moved 315 to 316 exactly as the card names.
+
+MET — AC#2 "generated files only" — all diff paths under "docs/reports/" — no scripts/, migrations/, or scripts/lib/ files touched in this chunk, consistent with a generated-files commit.
+
+REJECT — AC#2 "generated files only" — accused of hand-editing report prose — the edits sit inside the block marked "Regenerate with the same command; a stale block is a conformance-lock finding" and are confined to docs/reports/, so the shape is generator output, not manual prose.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 2
+
+---
+⏱  45982ms (46.0s)
+📊 Tokens — total: 39200, input: 30729, output: 8471, reasoning: 7716

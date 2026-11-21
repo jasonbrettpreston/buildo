@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.336Z file_sha256=bd2630025db4f766d1ce3e4664e39d04ec273c89488c06e5683b93fb082e28e9 prompt_sha256=b0b6e2264d117fb98310c99f96a7dff9051b7fd398a4333b36f5cbd7f197aa96
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-126-p7.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" and Description "a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md "-**Score: 14/17**" / "+**Score: 17/17**" and "-| G8 | 0 | 3 | ... stage-gated (compute_ported) |" / "+| G8 | 3 | 3 | ... net-new (R-DK) |" — the card names the count row as the change to expect, but this commit also flips a scorecard from 14/17 to 17/17 and G8 from 0/3 to 3/3 on an R-DK that is not pasted, a substantive conformance change with no stated cause — fix: name R-DK and the row/commit that closed the missing PRE invocation, or drop the score and G8 hunks from this count-row commit.
+
+BUG severity=MED — Description "a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-10-07-batch3-p1-1-load-coa-notices-assessment.md "-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; ..." / "+| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; ..." — the reported PASS at 33.19 s rests on a registry-input budget that moved 27.5 s to 33.2 s inside the generated row, and no scripts/ or seeds change is visible in this docs-only diff to establish that widening — fix: state whether the budget is machine-derived, and if it is a widened constant land it in its own commit with its R-EC justification.
+
+DEFER severity=LOW — AC #1 "The operator's typed GO is recorded verbatim on the task" — task note "/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1676" "GO for scorecards" vs Description "the operator types GO in his own Terminal" — the recorded GO is a chat GO and the Terminal GO the Description names cannot be seen — fix: paste the typed Terminal GO on the task, or state that RR-0357 is the GO this AC means.
+
+DEFER severity=LOW — report header "Regenerate with the same command; a stale block is a conformance-lock finding (`step-conformance.infra.test.ts`)" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md "-missing invocations (PRE, GOLD-PRE): none::" / "+missing invocations (PRE, GOLD-PRE): none" and "-compare ran: false" / "+compare ran: true" — generated fields changed with no generator change visible, so if they were edited by hand the block re-stales against `step-validate.mjs --write` — fix: confirm these lines came from the --write run, not a hand edit.
+
+MET — Description "the count row 315 to 316" — docs/reports/2026-10-17-batch4-p1-2-coa-assessment.md "+| 1 | coa | PASS | min_migration=261 <= migrations count=316 |" — every changed #1 row reads migrations count=316.
+
+MET — AC #2 "One commit of generated files only" — all 22 changed paths are docs/reports/ assessment reports, no src/, scripts/ or seeds/ path.
+
+MET — Spec 126 §0b item 6 "Every operator ruling is recorded verbatim, dated, landed and cited." — task Implementation Notes "Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; operator, verbatim: "GO for scorecards")".
+
+REJECT — AC #2 "step-conformance Rule 13 passes on it" — accused of not passing Rule 13 — Rule 13 is not pasted, so it is not mine to judge and the diff carries no evidence either way.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  79781ms (79.8s)
+📊 Tokens — total: 45949, input: 30806, output: 15143, reasoning: 14108

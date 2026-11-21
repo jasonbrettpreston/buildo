@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.084Z file_sha256=70b29389070b3482da86dfd4d953320b1536f1a30acc749145485af05a0a7774 prompt_sha256=7e2dfcf059b9d0818dd69972ee6f063158451428b31b5fb1ab46028659b24f8e
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #2 "- #2 One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:155 "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |" — the registry-input ceiling itself moved from 27.5 s to 33.2 s, a gate relaxation inside a commit the card scopes to "the count row 315 to 316", and no pasted clause or ruling names any budget change — regenerate with the ceiling unchanged at 27.5 s, or land the budget change as its own task under R-EC
+
+DEFER severity=MED — task description "After task-420 (the rehearsal) passes: the operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run on dev of `step-validate.mjs --all --fast --write` in the lane worktree" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:155 "measured 2026-11-20T19:37:21.468Z" — the committed block was measured 2026-11-20, before the card opened and before the RR-0357 note dated 2026-11-21, so the content appears to come from a pre-GO run and not the run the card mandates — re-run after the GO so the recorded measurement postdates it
+
+DEFER severity=MED — AC #2 "- #2 One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:113 "| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 net-new (R-DK) |" — the 14/17 to 17/17 uplift rests entirely on G8 going 0 to 3 by replacing "stage-gated (compute_ported)" with "net-new (R-DK)" and clearing missing-pre-invocations=1, and R-DK is not pasted, so the pass AC #2 leans on is unverifiable — paste R-DK with the run, or leave G8 stage-gated and score 14/17
+
+DEFER severity=LOW — RR-0358 "The scorecard rehearsal is waived if it gives no benefit (names task-421, RR-0358) — "does the rehearsal provide a benefit here - if not move on"" — NONE — the material records the question verbatim but no determination that the rehearsal gives no benefit, so the "After task-420 (the rehearsal) passes" precondition is neither satisfied nor waived on the record — record the waiver determination on task-421 before the generated-files commit
+
+MET — task description "then a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — diff header "diff --git a/docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md" — one file, under docs/reports/, exactly the path the card names
+
+MET — task description "the count row 315 to 316" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:122 "| 1 | compute_maxbld_scenarios | PASS | min_migration=0 <= migrations count=316 |" — the count row is bumped 315 to 316 as named
+
+MET — task description "Must be re-run if another migration file lands before the push" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:122 "migrations count=316" — the report was regenerated after the 316th migration landed; whether another lands before the push cannot be seen
+
+REJECT — AC #1 "- #1 The operator's typed GO is recorded verbatim on the task" — accused of not recording the terminal GO for the run — AC #1 binds the task record, not this report diff, and the pasted notes already carry RR-0357 "GO for scorecards"
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 4
+
+---
+⏱  55555ms (55.6s)
+📊 Tokens — total: 14407, input: 4089, output: 10318, reasoning: 9265

@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.360Z file_sha256=c8961ca55a108412fc616aec02ae8d852a9c9e6fa8671e91370b2e5f4faee7f9 prompt_sha256=2fec2e001b190b87167332a4f12805522ea2be8b215a7b7d5427e3b98c910dca
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-127-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — spec 127 §3.2 "A stopping rule that cannot fire is not a stopping rule" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:52 "+| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" (prior row read "registry-input 27.36 s <= 27.5 s") — the registry-input limit itself moved from 27.5 s to 33.2 s in the same row that reports a 33.19 s measurement, so the PASS is guaranteed by construction and no pasted clause or operator ruling authorises raising the limit — restore the 27.5 s limit for this row, or land the ruling that raises it together with the measured baseline the new limit is anchored to.
+
+BUG severity=MED — card description "only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md:52 "+| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches" — this commits a second, unnamed change (a wall-clock budget re-measurement with a new date, new numbers and a new limit) in all 25 reports, while the card names only the count row and no pasted clause or ruling authorises a budget re-measure in this commit — land row 52 in its own task with a ruling, or drop it from this generated-files commit.
+
+BUG severity=MED — card description "After task-420 (the rehearsal) passes: the operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run on dev" — pasted "RR-0358 The scorecard rehearsal is waived if it gives no benefit ... operator, verbatim: "does the rehearsal provide a benefit here - if not move on"" — the only rehearsal-related record is a question, not a ruling, and the material records no task-420 pass, so the precondition of the run this diff is the output of is unevidenced — record task-420's status or an explicit waiver ruling on task-421 before the commit is folded.
+
+DEFER severity=LOW — card AC#1 "The operator's typed GO is recorded verbatim on the task" — pasted "RR-0357 GO for the scorecards, given in the chat before the rehearsal" — the GO on record is the chat GO given before the rehearsal, not the terminal-typed GO the description requires, and no terminal transcript is in the material (cannot see) — paste the terminal GO verbatim onto task-421.
+
+DEFER severity=LOW — card AC#2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — NONE — the material shows no Rule 13 result, no hook transcript and no commit identity ("in the form of bd1f246cc"), so the acceptance evidence cannot be seen — attach the Rule 13 output and the commit sha to task-421.
+
+MET — card description "the count row 315 to 316" — docs/reports/2026-08-28-pilot4-link-wsib-assessment.md:1 "| 1 | link_wsib | PASS | min_migration=240 <= migrations count=316 |" — the count row is bumped 315 to 316 in every one of the 25 reports in this chunk, consistently and only in row 1.
+
+MET — card "Files: docs/reports/" — "diff --git a/docs/reports/2026-08-25-pilot1-assert-schema-assessment.md b/docs/reports/2026-08-25-pilot1-assert-schema-assessment.md" — every changed path in this chunk sits under docs/reports/, no source, spec, migration or census file is touched.
+
+MET — spec 127 §11 Out-of-Scope Files "step-validate.mjs and docs/specs/01-pipeline/123_step_opt_assessment_validation.md ... must never edit them" — the diff's changed path list — neither scripts/analysis/step-validate.mjs nor the Spec 123 file appears in the material.
+
+REJECT — spec 127 §11 Out-of-Scope Files — accused of reaching into the pipeline's own procedure — not a real issue: the diff edits only generated scorecard rows under docs/reports/, and neither out-of-scope file is in the material.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 3
+
+---
+⏱  48293ms (48.3s)
+📊 Tokens — total: 45521, input: 36826, output: 8695, reasoning: 7613

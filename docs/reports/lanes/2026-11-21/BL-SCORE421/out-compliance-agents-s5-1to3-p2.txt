@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.033Z file_sha256=553a9c5170998373488ac6f8c1b6a539229175240afff191dbb75bd99ec79c78 prompt_sha256=3192f7af768988d346eca89a0722d5579a0a3952007693e2fbd79571d0804ad7
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-agents-s5-1to3-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Task card description "ONE read-only run on dev of `step-validate.mjs --all --fast --write`" and AC#2 "step-conformance Rule 13 passes on it" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md "- compare ran: true · diffs found: 0 · unexplained: 0" — the block flipped "compare ran: false" to true and G8 "stage-gated (compute_ported)" to "net-new (R-DK)" taking Score 14/17 to 17/17, which does not look like output of the card's --fast run, so Rule 13 cannot be shown to pass — regenerate with the exact --all --fast --write run or record why compare ran.
+
+DEFER severity=MED — Task card description "a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-10-23-batch5-p3-5-compute-phase-calibration-assessment.md "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s" — p3-5 plus p4-4 and p5-1 change only row 52 and no item-1 count row, so 315 to 316 lands in only 3 of the 6 reports — confirm those three count rows read 316 or say why their item table is untouched.
+
+DEFER severity=MED — Task card description "commits them through the real hooks as one generated-files commit" with "only generated files changed" — docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md "registry-input 33.19 s <= 33.2 s" — the registry-input ceiling moved from 27.5 to 33.2 s, 20.9 percent looser with 0.01 s headroom, a policy change carried inside a generated-files refresh — confirm the ceiling lives in a non-generated hook and was committed separately before this refresh.
+
+DEFER severity=LOW — Task card AC#1 "The operator's typed GO is recorded verbatim on the task" versus description "the operator types GO in his own Terminal" — pasted context "RR-0357 GO for the scorecards, given in the chat before the rehearsal" — the only GO on record is the pre-rehearsal chat GO, not the post-rehearsal typed Terminal GO the description requires — record the Terminal GO or cite RR-0358 as waiving the post-rehearsal step.
+
+DEFER severity=NIT — Task card description "the count row 315 to 316" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md "- missing invocations (PRE, GOLD-PRE): none" — a stray "::" was dropped, cosmetic and harmless — keep it, noted so it is not read as a generated count change.
+
+MET — Task card "Files: docs/reports/" — all six diff paths — every path is docs/reports/*.md, within the Files scope.
+MET — Task card "the count row 315 to 316" — docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md "min_migration=275 <= migrations count=316" — count row updated in batch6-p1-1, batch5-p2-1 and batch7-p1-1.
+MET — RR-0357 "GO for the scorecards" — pasted Implementation Notes — recorded verbatim in the task notes.
+MET — RR-0358 "the scorecard rehearsal is waived" — pasted Implementation Notes — rehearsal not blocking, so no gate stops the run.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 4
+
+---
+⏱  76990ms (77.0s)
+📊 Tokens — total: 25167, input: 10543, output: 14624, reasoning: 13763

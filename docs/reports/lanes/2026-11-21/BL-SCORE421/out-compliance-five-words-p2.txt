@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.058Z file_sha256=6de64d8fb968d42edd1a66780f0662ec5a16e0f98f4063648b8ff85b54ba03bb prompt_sha256=1042ed5d4cb67d1c5eb556cd4b04f86854dd3b1de91bbab673ba77c8837cd534
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-five-words-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Description "ONE read-only run on dev of `step-validate.mjs --all --fast --write` in the lane worktree" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md "**Score: 17/17**" and "| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 net-new (R-DK)" — a read-only refresh cannot clear missing-pre-invocations from 1 to 0 or lift G8 from "stage-gated (compute_ported)"; the 3 points that carry 14/17 to 17/17 require a new PRE capture that no pasted line supplies — attach the PRE capture and invocation that cleared G8 or restore "| G8 | 0 | 3 | ... stage-gated (compute_ported)" and 14/17
+
+BUG severity=HIGH — AC "#2 One commit of generated files only, through the hooks" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md "- compare ran: false · diffs found: 0 · unexplained: 0" replaced by "+ compare ran: true · diffs found: 0 · unexplained: 0" — this is a hand-authored content assertion in the section the report opens with "Filled at the first local run (queued)", so the commit would carry a non-generated edit beyond the named count row — regenerate the block with `--write` or revert the line and record the compare run outside the generated-files commit
+
+BUG severity=MED — card Description "only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-10-23-batch5-p5-1-classify-lifecycle-phase-assessment.md "+| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" — the R-EC registry-input ceiling itself moved from 27.5 s to 33.2 s, a threshold change no pasted clause names, and the PASS now rests on a 0.01 s margin — regenerate row 52 with the generator's fixed ceiling, or cite the ruling that authorises 33.2 s
+
+DEFER severity=MED — card Description "the operator types GO in his own Terminal and the run script of task-420 makes ONE read-only run" — pasted context "RR-0357 GO for the scorecards, given in the chat before the rehearsal" — the only GO of record is a chat message given before the rehearsal, not the Terminal GO the card gates the run on, and NONE in the diff addresses it — record the Terminal GO verbatim on task-421 or strike the Terminal channel from the card
+
+DEFER severity=LOW — AC "#2 ... step-conformance Rule 13 passes on it" — NONE — cannot see any Rule 13 output or the single commit bd1f246cc-shaped in the pasted material, the diff carries only working-tree edits — paste the Rule 13 result for the commit before fold
+
+MET — card Description "the count row 315 to 316" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:119 — "min_migration=0 <= migrations count=316", the row is moved 315 to 316 exactly as named
+
+MET — card Description "Must be re-run if another migration file lands before the push" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md:119 — the landed migration is inside the refresh, count 316 not 315
+
+MET — AC "#1 The operator's typed GO is recorded verbatim on the task" — pasted context "RR-0357 GO for the scorecards" — a verbatim GO is recorded against task-421
+
+MET — RR-0358 "does the rehearsal provide a benefit here - if not move on" — NONE, the diff proceeds without a task-420 rehearsal artifact, which this waiver permits
+
+MET — card Description "the assessment reports under docs/reports/" — docs/reports/2026-10-23-batch5-p5-1-classify-lifecycle-phase-assessment.md and docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md — both diff paths are assessment reports under docs/reports/
+
+REJECT — card Description "the station suite then runs on that commit" — the change is accused of scoring 17/17 while "SKIPPED or failed to run: --fast: vitest spawn skipped" — the card places the station suite after the commit, so its absence from the diff is not a gap
+
+REJECT — RR-0355 "Agreed. Let's push as soon as possible!" — the change is accused of not being pushed — RR-0355 sets pacing, not a content condition this diff can satisfy or break
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 3
+
+---
+⏱  52114ms (52.1s)
+📊 Tokens — total: 15085, input: 5556, output: 9529, reasoning: 8382

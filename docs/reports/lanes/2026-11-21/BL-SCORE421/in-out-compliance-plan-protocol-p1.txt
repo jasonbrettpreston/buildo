@@ -1,0 +1,1005 @@
+LIST plan-protocol sha256:18d509bc25994c3bafce34d9fd7c7f5e9007ae5b54982c90ed8207d3e7f55759 material sha256:98ab0c1c1f6ede144e317e7ad6d1f0eae5a44f55ce52347b6452eb0ee1914cf8 part 1 of 1 chunk 1 of 2
+RULE LIST plan-protocol (docs/specs/00-architecture/plan-protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/reports/2026-08-25-pilot1-assert-schema-assessment.md","docs/reports/2026-08-25-pilot2-load-ravines-assessment.md","docs/reports/2026-08-27-pilot3-link-massing-assessment.md","docs/reports/2026-08-28-pilot4-link-wsib-assessment.md","docs/reports/2026-08-29-pilot5-link-parcel-addresses-assessment.md","docs/reports/2026-08-29-pilot6-compute-centroids-assessment.md","docs/reports/2026-08-30-pilot7-link-parcels-assessment.md","docs/reports/2026-08-31-pilot8-refresh-snapshot-assessment.md","docs/reports/2026-09-04-pilot9-enrich-parcels-assessment.md","docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md","docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md","docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md","docs/reports/2026-09-16-batch2-i4-link-neighbourhoods-assessment.md","docs/reports/2026-09-16-batch2-i5-geocode-permits-assessment.md","docs/reports/2026-09-18-batch2-p1-1-assert-parcel-sanity-assessment.md","docs/reports/2026-09-18-batch2-p2-1-enrich-ravines-assessment.md","docs/reports/2026-09-20-batch2-p2-2-enrich-heritage-assessment.md","docs/reports/2026-09-21-batch2-p2-4-compute-parcel-cost-estimates-assessment.md","docs/reports/2026-09-23-batch2-p3-1-address-points-assessment.md","docs/reports/2026-09-24-batch2-p3-2-load-centreline-assessment.md","docs/reports/2026-09-24-batch2-p3-6-massing-assessment.md","docs/reports/2026-09-24-batch2-p3-7-parcels-assessment.md","docs/reports/2026-09-28-batch2-p3-8-neighbourhoods-assessment.md","docs/reports/2026-09-29-batch2-p3-5-load-wsib-assessment.md","docs/reports/2026-09-30-batch2-p3-10-enrich-centreline-assessment.md","docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md","docs/reports/2026-10-02-batch2-p3-3-load-zoning-assessment.md","docs/reports/2026-10-07-batch3-p1-1-load-coa-notices-assessment.md","docs/reports/2026-10-16-batch3-p1-2-load-bylaw-map-areas-assessment.md","docs/reports/2026-10-16-batch3-p1-3-link-parcel-abutments-assessment.md","docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md","docs/reports/2026-10-17-batch4-p1-2-coa-assessment.md","docs/reports/2026-10-18-batch4-p4-1-assert-coa-freshness-assessment.md","docs/reports/2026-10-18-batch4-p4-2-link-coa-to-parcels-assessment.md","docs/reports/2026-10-18-batch4-p4-3-enrich-coa-zoning-assessment.md","docs/reports/2026-10-18-batch4-p4-4-classify-coa-scope-assessment.md","docs/reports/2026-10-18-batch4-p4-5-classify-coa-trades-assessment.md","docs/reports/2026-10-18-batch4-p4-6-compute-coa-cost-estimates-assessment.md","docs/reports/2026-10-18-batch4-p4-7-enrich-permits-assessment.md","docs/reports/2026-10-19-batch5-p1-1-assert-entity-tracing-assessment.md","docs/reports/2026-10-19-batch5-p1-2-assert-network-health-assessment.md","docs/reports/2026-10-19-batch5-p1-3-assert-staleness-assessment.md","docs/reports/2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md","docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md","docs/reports/2026-10-23-batch5-p2-1-classify-permit-phase-assessment.md"]
+
+> **Role: standard.**
+> Dated note 2026-11-20 (M-246, prior text kept; operator, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry "2026-11-20 · Operator RULES on five open items", :1504; item 3 put to him: "3. Plan protocol line 8 superseded by Spec 137: recommended yes."; operator, verbatim: "yes to all"): the first bullet of section 0 below ("The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board).", line 8 of this file before this note was added) is superseded by Spec 137 (RR-0205, `docs/specs/00-architecture/137_mcqueue.md:18`): the board is the plan.
+> Dated note 2026-11-20 (M-246, prior text kept; same entry, :1504; item 4 put to him: "4. Narrow lens set binds a lane task: recommended yes."; operator, verbatim: "yes to all"): the nine-seat roster below (seats R,C,I,D,G,O,W,X then F: the Panel row of the section 2 table and the "Per increment" line of section 3, lines 20 and 34 of this file before this note was added) applies to the whole-increment plan review; a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce (`scripts/analysis/rule-lists.mjs` lensSet, `scripts/hooks/check-lane-close.mjs`), plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`).
+
+# Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00)
+Operator, verbatim: "re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which we can remove later depending if they fit the plan ... These early plans need to be reviewed, grounded with the panel. We need a build pass and then optimization. The biggest thing is this cant take forever ... simple and no scope creep ... Dont make more ungrounded recommendations."
+Principles (buildo-grounded-rules): standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep.
+
+## 0. One plan, no new plan
+- The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board). Nothing is re-written from scratch. Every existing task stays until a step below removes it with a cited reason.
+- Increments 1-5 are RE-OPENED in sequence.json as increments "1".."5", one per built scenario: 1-2 detached house, 3 houseplex 2-4, 4 house with secondary suite, 5 garden suite. Their engine work stays DONE (cited); only the missing slice parts are added as tasks.
+- Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added.
+
+## 1. Done = the scenario works for a customer (the slice definition)
+An increment is done only when, on a real lot on the real page: (1) engine rows right (answer key); (2) stored as ruled (headline / on demand, per the storage sitting); (3) page section + binding; (4) display text; (5) public route; (6) cost line; (7) CoA per option; (8) search hand-off where the scenario needs one; (9) measured check on the page. Built ONCE with the first slice (detached house): the route (MB-44 W), the headline table (MB-38), the text registry, the cost capture, the CoA mechanism, the check. Later slices add data + one check.
+
+## 2. Steps, in order (per increment, 1 first)
+| Step | What | Gate |
+|---|---|---|
+| A. Merge | Add the slice tasks to sequence.json from the existing sources only: gap-register/REGISTER.md, resolve-design/items.json, replan SCENARIO-SLICES.md (18 slice items), CoA regression, storage-outcome. Duplicates merged, never doubled. Old tasks untouched. | every added task has a source line; board re-rendered |
+| B. Fit check | Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE. NONE goes on a removal list with its evidence (grep), not deleted. | design-fit seat X |
+| C. Panel | Seats R,C,I,D,G,O,W,X then F on the increment's task list (tasks, order, dependencies). Beyond-research parts GROUNDED / STRIPPED / STILL OPEN. | check.mjs, check-cites, check-quotes PASS |
+| D. Build pass | Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines |
+| E. Optimisation | Merge, fold into existing nights/pushes, drop the removal list items the operator approves; nothing new added here. | F on the final wording |
+| F. One sitting | One page per increment: the task list, the removal list, rulings only where a rule is genuinely open (searched first). | operator's words logged |
+
+## 3. Simplicity guards (to stop task growth)
+- No new research topics. Only the sources in step A.
+- A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source.
+- Every step reports: tasks before, added (with source), removed-candidate, after. The count must not grow without a source per task.
+- Rulings: only when a search of the record finds none; the search is quoted.
+- One lane per increment at a time; increment 1-2 (detached house) first, the others queue behind it.
+
+## 4. Operator order, 2026-11-17 ~22:20 (supersedes the step order in section 2)
+Operator, verbatim: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integration, context, compliance etc. (for every task) 2 - optimize all the tasks within the increment (we need to complete this quickly) and then runa build pass and review any potential pushes in advance. When you get to incremement six - need to incorporate all the relevant tasks from the current plan. Do all nine increments this way tonight. In the end like today this needs to be one plan... we know what we are working on.. keep it simple."
+Per increment: 1. ADD the slice tasks (section 2 step A) and REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict). 2. OPTIMISE the increment's tasks (merge, fold into existing nights/pushes, removal list; nothing new). 3. BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step). Then the one-page sitting.
+Increments: 1-2 detached house, 3 houseplex, 4 house with suite, 5 garden suite, 6 renovations (with 6c owner inputs; incorporate every relevant task already in the current plan), 7 semi renovation, 8 sixplex, 9 merged measure, 10 proof set (+ Launch gate L). Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason) + SITTING.md + PASS lines. The orchestrator applies each patch to sequence.json after checking, so the end result is ONE plan.
+
+## 5. Joining steps (operator 2026-11-17 ~22:40, verbatim: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project ie a database that works and is ready 3. yes - this is the mess we created we need to clean it up 4. yes. 5. yes we need to finish this as quickly as possible today was a massive setback - we cant continue to make these mistakes - the infastrcuture may need to change as per your earlier grounding issues etc. yes add them")
+1. INTEGRATION PASS (after the last increment, before the board is final): across all increments check ids/dependsOn exist, one DB job at a time (Spec 137 rule 9), one recapture per increment, push order and contents, storage room vs the ST-3 line, shared-piece ids from increment 1-2 used consistently. Panel R,C,I,D,G,W,X then F. Output: one sequence.json.
+2. LAUNCH-SHARED home: work that serves the finished product but no single scenario (search fixes, McFrontend launch list MCFRONTEND-QUEUE.md:498 - billing, account, tracked lots, landing, lawyer check -, McTest harness, the shared pieces) lives in increment "1-2 shared" or the Launch gate, from the gap register and the launch list only. Objective: a completed project - a database that works and is ready, served to the customer.
+3. ONE SITTING: the orchestrator merges every increment's SITTING.md and the pending sittings (6c, 7, 8, 9, 10, design, gaps, storage) into one, duplicates merged, anything already ruled recorded not asked (search quoted).
+4. HELD MERGE: when the CoA regression and the storage review land, their items go into their increments and only those items are re-reviewed (seats + F).
+5. TIME: every task carries an estimate (MEASURED with source, or GUESS labelled); the integration pass shows the critical path to the customer-ready product.
+6. INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule) and is listed in the plan as tasks with sources: e.g. ground.mjs pack contention, the forbidden-name guard on command lines, lanes reading only seat tails, design-fit check in every panel (done: seat X).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/docs/reports/2026-08-25-pilot1-assert-schema-assessment.md b/docs/reports/2026-08-25-pilot1-assert-schema-assessment.md
+index 460e5ce067a3bdf12597f63dad6329a363358401..bdd1d88f9d2c9906b10bc90a6753ffcb22c1f603 100644
+--- a/docs/reports/2026-08-25-pilot1-assert-schema-assessment.md
++++ b/docs/reports/2026-08-25-pilot1-assert-schema-assessment.md
+@@ -474,7 +474,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | assert_schema | PASS | min_migration=41 <= migrations count=315 |
++| 1 | assert_schema | PASS | min_migration=41 <= migrations count=316 |
+ | 2 | assert_schema | PASS | 3 declared, missing from seeds: none |
+ | 3 | assert_schema | PASS | retired=0 overlap-with-declared=none |
+ | 7 | assert_schema | PASS | SPEC LINK header present=true |
+@@ -507,7 +507,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-08-25-pilot2-load-ravines-assessment.md b/docs/reports/2026-08-25-pilot2-load-ravines-assessment.md
+index e08839543fe935bf1f9986370dc109eff46014d1..d698b770aef23591712feb740e605821819748c2 100644
+--- a/docs/reports/2026-08-25-pilot2-load-ravines-assessment.md
++++ b/docs/reports/2026-08-25-pilot2-load-ravines-assessment.md
+@@ -493,7 +493,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | load_ravines | PASS | min_migration=167 <= migrations count=315 |
++| 1 | load_ravines | PASS | min_migration=167 <= migrations count=316 |
+ | 2 | load_ravines | PASS | 9 declared, missing from seeds: none |
+ | 3 | load_ravines | PASS | retired=0 overlap-with-declared=none |
+ | 7 | load_ravines | PASS | SPEC LINK header present=true |
+@@ -526,7 +526,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-08-27-pilot3-link-massing-assessment.md b/docs/reports/2026-08-27-pilot3-link-massing-assessment.md
+index 101400cd7975ce5f11a9e1021c6306ebef154646..4684828222720b5dc4db6f99e176533379e9608e 100644
+--- a/docs/reports/2026-08-27-pilot3-link-massing-assessment.md
++++ b/docs/reports/2026-08-27-pilot3-link-massing-assessment.md
+@@ -544,7 +544,7 @@ Plan `.cursor/wf2_link_massing_nonzero_close_active_task.md` (operator-approved
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | link_massing | PASS | min_migration=81 <= migrations count=315 |
++| 1 | link_massing | PASS | min_migration=81 <= migrations count=316 |
+ | 2 | link_massing | PASS | 10 declared, missing from seeds: none |
+ | 3 | link_massing | PASS | retired=1 overlap-with-declared=none |
+ | 7 | link_massing | PASS | SPEC LINK header present=true |
+@@ -577,7 +577,7 @@ Plan `.cursor/wf2_link_massing_nonzero_close_active_task.md` (operator-approved
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-08-28-pilot4-link-wsib-assessment.md b/docs/reports/2026-08-28-pilot4-link-wsib-assessment.md
+index 18069df107e03544d1d881bd4b0267819d034113..e0950b3a187d4315e02cbbe957640ad36c4d8099 100644
+--- a/docs/reports/2026-08-28-pilot4-link-wsib-assessment.md
++++ b/docs/reports/2026-08-28-pilot4-link-wsib-assessment.md
+@@ -748,7 +748,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | link_wsib | PASS | min_migration=240 <= migrations count=315 |
++| 1 | link_wsib | PASS | min_migration=240 <= migrations count=316 |
+ | 2 | link_wsib | PASS | 10 declared, missing from seeds: none |
+ | 3 | link_wsib | PASS | retired=0 overlap-with-declared=none |
+ | 7 | link_wsib | PASS | SPEC LINK header present=true |
+@@ -781,7 +781,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-08-29-pilot5-link-parcel-addresses-assessment.md b/docs/reports/2026-08-29-pilot5-link-parcel-addresses-assessment.md
+index c37c1c097b8c9bc1df6764224bfd8cf0a4ab01c5..a54765ccad7dd4e409456e45ec981438f2105487 100644
+--- a/docs/reports/2026-08-29-pilot5-link-parcel-addresses-assessment.md
++++ b/docs/reports/2026-08-29-pilot5-link-parcel-addresses-assessment.md
+@@ -746,7 +746,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | link_parcel_addresses | PASS | min_migration=159 <= migrations count=315 |
++| 1 | link_parcel_addresses | PASS | min_migration=159 <= migrations count=316 |
+ | 2 | link_parcel_addresses | PASS | 7 declared, missing from seeds: none |
+ | 3 | link_parcel_addresses | PASS | retired=0 overlap-with-declared=none |
+ | 7 | link_parcel_addresses | PASS | SPEC LINK header present=true |
+@@ -779,7 +779,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-08-29-pilot6-compute-centroids-assessment.md b/docs/reports/2026-08-29-pilot6-compute-centroids-assessment.md
+index dd08d6161f3b4c99a7775104128634fd610d74c7..caff305bd9abff51a20d4546b7286b6d2e76fc72 100644
+--- a/docs/reports/2026-08-29-pilot6-compute-centroids-assessment.md
++++ b/docs/reports/2026-08-29-pilot6-compute-centroids-assessment.md
+@@ -1394,7 +1394,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | compute_centroids | PASS | min_migration=16 <= migrations count=315 |
++| 1 | compute_centroids | PASS | min_migration=16 <= migrations count=316 |
+ | 2 | compute_centroids | PASS | 3 declared, missing from seeds: none |
+ | 3 | compute_centroids | PASS | retired=0 overlap-with-declared=none |
+ | 7 | compute_centroids | PASS | SPEC LINK header present=true |
+@@ -1427,7 +1427,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-08-30-pilot7-link-parcels-assessment.md b/docs/reports/2026-08-30-pilot7-link-parcels-assessment.md
+index 6e88ae370f8a061c7542cc251bfeb39dd0ee75b2..c81b07e37e1d000b26732914a658da71c54bedb5 100644
+--- a/docs/reports/2026-08-30-pilot7-link-parcels-assessment.md
++++ b/docs/reports/2026-08-30-pilot7-link-parcels-assessment.md
+@@ -2333,7 +2333,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | link_parcels | PASS | min_migration=12 <= migrations count=315 |
++| 1 | link_parcels | PASS | min_migration=12 <= migrations count=316 |
+ | 2 | link_parcels | PASS | 8 declared, missing from seeds: none |
+ | 3 | link_parcels | PASS | retired=0 overlap-with-declared=none |
+ | 7 | link_parcels | PASS | SPEC LINK header present=true |
+@@ -2366,7 +2366,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-08-31-pilot8-refresh-snapshot-assessment.md b/docs/reports/2026-08-31-pilot8-refresh-snapshot-assessment.md
+index 0eced513c4494294a7015a0f1b587e3bfa217d7d..ddaa236135cf0f9a5a686a6bc55d4148df1252d6 100644
+--- a/docs/reports/2026-08-31-pilot8-refresh-snapshot-assessment.md
++++ b/docs/reports/2026-08-31-pilot8-refresh-snapshot-assessment.md
+@@ -788,7 +788,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | refresh_snapshot | PASS | min_migration=15 <= migrations count=315 |
++| 1 | refresh_snapshot | PASS | min_migration=15 <= migrations count=316 |
+ | 2 | refresh_snapshot | PASS | 10 declared, missing from seeds: none |
+ | 3 | refresh_snapshot | PASS | retired=0 overlap-with-declared=none |
+ | 7 | refresh_snapshot | PASS | SPEC LINK header present=true |
+@@ -821,7 +821,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-04-pilot9-enrich-parcels-assessment.md b/docs/reports/2026-09-04-pilot9-enrich-parcels-assessment.md
+index 275d09c8307c508a3caeb84eabfc836373542fec..703a9d06c033a02e33c48a29a42568549250fed0 100644
+--- a/docs/reports/2026-09-04-pilot9-enrich-parcels-assessment.md
++++ b/docs/reports/2026-09-04-pilot9-enrich-parcels-assessment.md
+@@ -1001,7 +1001,7 @@ Captures C1–C4 ran 2026-10-07/08 (C4 = the heal `--full`, pipeline runs 2365 +
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | enrich_parcels | PASS | min_migration=254 <= migrations count=315 |
++| 1 | enrich_parcels | PASS | min_migration=254 <= migrations count=316 |
+ | 2 | enrich_parcels | PASS | 52 declared, missing from seeds: none |
+ | 3 | enrich_parcels | PASS | retired=0 overlap-with-declared=none |
+ | 7 | enrich_parcels | PASS | SPEC LINK header present=true |
+@@ -1034,7 +1034,7 @@ Captures C1–C4 ran 2026-10-07/08 (C4 = the heal `--full`, pipeline runs 2365 +
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md b/docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md
+index a26c55598fcd7cb26e917da0440b63eaa9bc099e..87101daa7d68dcfe8a15e8cf50e6cd0e4bb853a0 100644
+--- a/docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md
++++ b/docs/reports/2026-09-11-batch1-i1-assert-global-coverage-assessment.md
+@@ -836,7 +836,7 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | assert_global_coverage | PASS | min_migration=241 <= migrations count=315 |
++| 1 | assert_global_coverage | PASS | min_migration=241 <= migrations count=316 |
+ | 2 | assert_global_coverage | PASS | 25 declared, missing from seeds: none |
+ | 3 | assert_global_coverage | PASS | retired=0 overlap-with-declared=none |
+ | 7 | assert_global_coverage | PASS | SPEC LINK header present=true |
+@@ -869,7 +869,7 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md b/docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md
+index d7d4c9e7d8fdb372c29fd2fd9797b5adf6e8af35..1a4c5690cbd613a1a21b2a0057418fd642072567 100644
+--- a/docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md
++++ b/docs/reports/2026-09-12-batch1-i2-assert-data-bounds-assessment.md
+@@ -758,7 +758,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | assert_data_bounds | PASS | min_migration=244 <= migrations count=315 |
++| 1 | assert_data_bounds | PASS | min_migration=244 <= migrations count=316 |
+ | 2 | assert_data_bounds | PASS | 33 declared, missing from seeds: none |
+ | 3 | assert_data_bounds | PASS | retired=0 overlap-with-declared=none |
+ | 7 | assert_data_bounds | PASS | SPEC LINK header present=true |
+@@ -791,7 +791,7 @@ The 5 cases are preserved with the SAME claims, re-expressed against the new mec
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md b/docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md
+index 6c23eaec7be69fb2aecb265effb2415e8f501554..962130fe07322a6643446429a09714216a287657 100644
+--- a/docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md
++++ b/docs/reports/2026-09-14-batch1-i3-assert-engine-health-assessment.md
+@@ -341,7 +341,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | assert_engine_health | PASS | min_migration=48 <= migrations count=315 |
++| 1 | assert_engine_health | PASS | min_migration=48 <= migrations count=316 |
+ | 2 | assert_engine_health | PASS | 8 declared, missing from seeds: none |
+ | 3 | assert_engine_health | PASS | retired=0 overlap-with-declared=none |
+ | 7 | assert_engine_health | PASS | SPEC LINK header present=true |
+@@ -374,7 +374,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-16-batch2-i4-link-neighbourhoods-assessment.md b/docs/reports/2026-09-16-batch2-i4-link-neighbourhoods-assessment.md
+index bfab57c48552a744fc3686aa086a6299c2d4207f..5cb677795f4210c4d95d7b81611a68fafde9a17d 100644
+--- a/docs/reports/2026-09-16-batch2-i4-link-neighbourhoods-assessment.md
++++ b/docs/reports/2026-09-16-batch2-i4-link-neighbourhoods-assessment.md
+@@ -492,7 +492,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | link_neighbourhoods | PASS | min_migration=106 <= migrations count=315 |
++| 1 | link_neighbourhoods | PASS | min_migration=106 <= migrations count=316 |
+ | 2 | link_neighbourhoods | PASS | 5 declared, missing from seeds: none |
+ | 3 | link_neighbourhoods | PASS | retired=0 overlap-with-declared=none |
+ | 7 | link_neighbourhoods | PASS | SPEC LINK header present=true |
+@@ -525,7 +525,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-16-batch2-i5-geocode-permits-assessment.md b/docs/reports/2026-09-16-batch2-i5-geocode-permits-assessment.md
+index 0153a542c453e3260da31e2cbe2eb0b9abe951eb..98fe3ab2961cabe96cd5dd4bc6da93c4f8923e5b 100644
+--- a/docs/reports/2026-09-16-batch2-i5-geocode-permits-assessment.md
++++ b/docs/reports/2026-09-16-batch2-i5-geocode-permits-assessment.md
+@@ -800,7 +800,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | geocode_permits | PASS | min_migration=18 <= migrations count=315 |
++| 1 | geocode_permits | PASS | min_migration=18 <= migrations count=316 |
+ | 2 | geocode_permits | PASS | 3 declared, missing from seeds: none |
+ | 3 | geocode_permits | PASS | retired=0 overlap-with-declared=none |
+ | 7 | geocode_permits | PASS | SPEC LINK header present=true |
+@@ -833,7 +833,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-18-batch2-p1-1-assert-parcel-sanity-assessment.md b/docs/reports/2026-09-18-batch2-p1-1-assert-parcel-sanity-assessment.md
+index 3b74d07deda8077d8fc2c0d73c6d15ef7320d465..d5ebf00135c43daf17bcb8d44c18466e8b088d56 100644
+--- a/docs/reports/2026-09-18-batch2-p1-1-assert-parcel-sanity-assessment.md
++++ b/docs/reports/2026-09-18-batch2-p1-1-assert-parcel-sanity-assessment.md
+@@ -190,7 +190,7 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | assert_parcel_sanity | PASS | min_migration=244 <= migrations count=315 |
++| 1 | assert_parcel_sanity | PASS | min_migration=244 <= migrations count=316 |
+ | 2 | assert_parcel_sanity | PASS | 38 declared, missing from seeds: none |
+ | 3 | assert_parcel_sanity | PASS | retired=0 overlap-with-declared=none |
+ | 7 | assert_parcel_sanity | PASS | SPEC LINK header present=true |
+@@ -223,7 +223,7 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-18-batch2-p2-1-enrich-ravines-assessment.md b/docs/reports/2026-09-18-batch2-p2-1-enrich-ravines-assessment.md
+index cf0e74a4c1d0b2ec496d07aaa91f096c5f5bbb91..43ab124b8f81f7eaef61ea6165dc3ba9600343e1 100644
+--- a/docs/reports/2026-09-18-batch2-p2-1-enrich-ravines-assessment.md
++++ b/docs/reports/2026-09-18-batch2-p2-1-enrich-ravines-assessment.md
+@@ -578,7 +578,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | enrich_ravines | PASS | min_migration=244 <= migrations count=315 |
++| 1 | enrich_ravines | PASS | min_migration=244 <= migrations count=316 |
+ | 2 | enrich_ravines | PASS | 9 declared, missing from seeds: none |
+ | 3 | enrich_ravines | PASS | retired=0 overlap-with-declared=none |
+ | 7 | enrich_ravines | PASS | SPEC LINK header present=true |
+@@ -611,7 +611,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-20-batch2-p2-2-enrich-heritage-assessment.md b/docs/reports/2026-09-20-batch2-p2-2-enrich-heritage-assessment.md
+index 8a5fb2d5bcae3a0c524b20502f81f9cf6123cc01..97c3ed47b582c97d0d859e08dbb76c69b5e0c0cd 100644
+--- a/docs/reports/2026-09-20-batch2-p2-2-enrich-heritage-assessment.md
++++ b/docs/reports/2026-09-20-batch2-p2-2-enrich-heritage-assessment.md
+@@ -379,7 +379,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | enrich_heritage | PASS | min_migration=244 <= migrations count=315 |
++| 1 | enrich_heritage | PASS | min_migration=244 <= migrations count=316 |
+ | 2 | enrich_heritage | PASS | 10 declared, missing from seeds: none |
+ | 3 | enrich_heritage | PASS | retired=1 overlap-with-declared=none |
+ | 7 | enrich_heritage | PASS | SPEC LINK header present=true |
+@@ -412,7 +412,7 @@ The FLEET-2 recapture (ASSEMBLY §5, 2026-10-05/06) re-took this step's POST gol
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-21-batch2-p2-4-compute-parcel-cost-estimates-assessment.md b/docs/reports/2026-09-21-batch2-p2-4-compute-parcel-cost-estimates-assessment.md
+index 0212e3c5e5f9664df86bed85154e85eb88ee065c..daab4983afbe8eb2396859700c82b7947bde6bb6 100644
+--- a/docs/reports/2026-09-21-batch2-p2-4-compute-parcel-cost-estimates-assessment.md
++++ b/docs/reports/2026-09-21-batch2-p2-4-compute-parcel-cost-estimates-assessment.md
+@@ -606,7 +606,7 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | compute_parcel_cost_estimates | PASS | min_migration=201 <= migrations count=315 |
++| 1 | compute_parcel_cost_estimates | PASS | min_migration=201 <= migrations count=316 |
+ | 2 | compute_parcel_cost_estimates | PASS | 20 declared, missing from seeds: none |
+ | 3 | compute_parcel_cost_estimates | PASS | retired=0 overlap-with-declared=none |
+ | 7 | compute_parcel_cost_estimates | PASS | SPEC LINK header present=true |
+@@ -639,7 +639,7 @@ POST `sources` / `standalone` were recaptured 2026-10-08 after the enrich_parcel
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-23-batch2-p3-1-address-points-assessment.md b/docs/reports/2026-09-23-batch2-p3-1-address-points-assessment.md
+index 597ffc3b2e3c2404021692e8f94a15d6a0867204..9f8aab34f06157a801fef5317dbabde3db680efc 100644
+--- a/docs/reports/2026-09-23-batch2-p3-1-address-points-assessment.md
++++ b/docs/reports/2026-09-23-batch2-p3-1-address-points-assessment.md
+@@ -718,7 +718,7 @@ this doc pass, golden recapture, the forced-change proof, and landed the commit.
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | address_points | PASS | min_migration=18 <= migrations count=315 |
++| 1 | address_points | PASS | min_migration=18 <= migrations count=316 |
+ | 2 | address_points | PASS | 6 declared, missing from seeds: none |
+ | 3 | address_points | PASS | retired=0 overlap-with-declared=none |
+ | 7 | address_points | PASS | SPEC LINK header present=true |
+@@ -751,7 +751,7 @@ this doc pass, golden recapture, the forced-change proof, and landed the commit.
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-24-batch2-p3-2-load-centreline-assessment.md b/docs/reports/2026-09-24-batch2-p3-2-load-centreline-assessment.md
+index 74f2c714a86a1c260245eac4a1bf531707ae5864..140ab8d6ff34b28f1e05a976519339860b45c586 100644
+--- a/docs/reports/2026-09-24-batch2-p3-2-load-centreline-assessment.md
++++ b/docs/reports/2026-09-24-batch2-p3-2-load-centreline-assessment.md
+@@ -628,7 +628,7 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | load_centreline | PASS | min_migration=175 <= migrations count=315 |
++| 1 | load_centreline | PASS | min_migration=175 <= migrations count=316 |
+ | 2 | load_centreline | PASS | 8 declared, missing from seeds: none |
+ | 3 | load_centreline | PASS | retired=1 overlap-with-declared=none |
+ | 7 | load_centreline | PASS | SPEC LINK header present=true |
+@@ -661,7 +661,7 @@ No `table_state`, `invariants`, `verdict`, `records_total`, `records_new`, or `r
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-24-batch2-p3-6-massing-assessment.md b/docs/reports/2026-09-24-batch2-p3-6-massing-assessment.md
+index 4bb4feceb46afc16dc462868d6edff14f52de2dc..20c3961245e7e5662d63d9fda611581b5e8dc9c3 100644
+--- a/docs/reports/2026-09-24-batch2-p3-6-massing-assessment.md
++++ b/docs/reports/2026-09-24-batch2-p3-6-massing-assessment.md
+@@ -736,7 +736,7 @@ seat re-runs **before ②** and **before ③**.
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | massing | PASS | min_migration=227 <= migrations count=315 |
++| 1 | massing | PASS | min_migration=227 <= migrations count=316 |
+ | 2 | massing | PASS | 7 declared, missing from seeds: none |
+ | 3 | massing | PASS | retired=0 overlap-with-declared=none |
+ | 7 | massing | PASS | SPEC LINK header present=true |
+@@ -769,7 +769,7 @@ seat re-runs **before ②** and **before ③**.
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-24-batch2-p3-7-parcels-assessment.md b/docs/reports/2026-09-24-batch2-p3-7-parcels-assessment.md
+index 1bbb8cab59e423cadb6ebe477d09fe453d40af52..fb21f9caa5ae0d88b4cfd49c20742e76ffde03a9 100644
+--- a/docs/reports/2026-09-24-batch2-p3-7-parcels-assessment.md
++++ b/docs/reports/2026-09-24-batch2-p3-7-parcels-assessment.md
+@@ -691,7 +691,7 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | parcels | PASS | min_migration=11 <= migrations count=315 |
++| 1 | parcels | PASS | min_migration=11 <= migrations count=316 |
+ | 2 | parcels | PASS | 9 declared, missing from seeds: none |
+ | 3 | parcels | PASS | retired=0 overlap-with-declared=none |
+ | 7 | parcels | PASS | SPEC LINK header present=true |
+@@ -724,7 +724,7 @@ The commit ③ cutover seat, on rebasing this worktree onto `fff52b7a` to recapt
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-28-batch2-p3-8-neighbourhoods-assessment.md b/docs/reports/2026-09-28-batch2-p3-8-neighbourhoods-assessment.md
+index 4e6a1985eacc5ad0dd59cbbea929be751516a242..0e23f64d8e88a901dec3c68b1cf9a1cbc99f45c5 100644
+--- a/docs/reports/2026-09-28-batch2-p3-8-neighbourhoods-assessment.md
++++ b/docs/reports/2026-09-28-batch2-p3-8-neighbourhoods-assessment.md
+@@ -998,7 +998,7 @@ count toward the 8; it is listed for completeness of the suite's `Tests 20 passe
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | neighbourhoods | PASS | min_migration=227 <= migrations count=315 |
++| 1 | neighbourhoods | PASS | min_migration=227 <= migrations count=316 |
+ | 2 | neighbourhoods | PASS | 4 declared, missing from seeds: none |
+ | 3 | neighbourhoods | PASS | retired=0 overlap-with-declared=none |
+ | 7 | neighbourhoods | PASS | SPEC LINK header present=true |
+@@ -1031,7 +1031,7 @@ count toward the 8; it is listed for completeness of the suite's `Tests 20 passe
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-29-batch2-p3-5-load-wsib-assessment.md b/docs/reports/2026-09-29-batch2-p3-5-load-wsib-assessment.md
+index 9d5d2a7fb8a25832c11d20b29e37c6f0d1f4b8e2..8a98745d9bfaa1f7f932b6b02212c087e7bc2e40 100644
+--- a/docs/reports/2026-09-29-batch2-p3-5-load-wsib-assessment.md
++++ b/docs/reports/2026-09-29-batch2-p3-5-load-wsib-assessment.md
+@@ -680,7 +680,7 @@ The harness uses a fake pool, so the run wrote nothing to any database.
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | load_wsib | PASS | min_migration=66 <= migrations count=315 |
++| 1 | load_wsib | PASS | min_migration=66 <= migrations count=316 |
+ | 2 | load_wsib | PASS | 2 declared, missing from seeds: none |
+ | 3 | load_wsib | PASS | retired=0 overlap-with-declared=none |
+ | 7 | load_wsib | PASS | SPEC LINK header present=true |
+@@ -713,7 +713,7 @@ The harness uses a fake pool, so the run wrote nothing to any database.
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-30-batch2-p3-10-enrich-centreline-assessment.md b/docs/reports/2026-09-30-batch2-p3-10-enrich-centreline-assessment.md
+index 095a0ad787fd35fb2a1b2e698cb0b6164495aa28..a53a14fbaf38ab33e3e9b7478663df3a93b44287 100644
+--- a/docs/reports/2026-09-30-batch2-p3-10-enrich-centreline-assessment.md
++++ b/docs/reports/2026-09-30-batch2-p3-10-enrich-centreline-assessment.md
+@@ -533,7 +533,7 @@ legacy full-shape reference for D2, though it is not a harness golden).
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | enrich_centreline | PASS | min_migration=225 <= migrations count=315 |
++| 1 | enrich_centreline | PASS | min_migration=225 <= migrations count=316 |
+ | 2 | enrich_centreline | PASS | 19 declared, missing from seeds: none |
+ | 3 | enrich_centreline | PASS | retired=0 overlap-with-declared=none |
+ | 7 | enrich_centreline | PASS | SPEC LINK header present=true |
+@@ -566,7 +566,7 @@ legacy full-shape reference for D2, though it is not a harness golden).
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md b/docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md
+index ffbdf2b3398fae03cf40d42585872ab97c25a8d1..ada5f0e84463a8953f4a382b182f0c251ba5dbb7 100644
+--- a/docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md
++++ b/docs/reports/2026-09-30-batch2-p3-4-load-heritage-assessment.md
+@@ -781,7 +781,7 @@ Every table and column the LEGACY step's SQL touches (reads and writes, includin
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | load_heritage | PASS | min_migration=227 <= migrations count=315 |
++| 1 | load_heritage | PASS | min_migration=227 <= migrations count=316 |
+ | 2 | load_heritage | PASS | 7 declared, missing from seeds: none |
+ | 3 | load_heritage | PASS | retired=0 overlap-with-declared=none |
+ | 7 | load_heritage | PASS | SPEC LINK header present=true |
+@@ -814,7 +814,7 @@ Every table and column the LEGACY step's SQL touches (reads and writes, includin
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-02-batch2-p3-3-load-zoning-assessment.md b/docs/reports/2026-10-02-batch2-p3-3-load-zoning-assessment.md
+index 856d58a2c68a5c11e032791ddef14deefb853acd..64c08f0f564c5da9f5264bf42fd0eb6be0447453 100644
+--- a/docs/reports/2026-10-02-batch2-p3-3-load-zoning-assessment.md
++++ b/docs/reports/2026-10-02-batch2-p3-3-load-zoning-assessment.md
+@@ -810,7 +810,7 @@ Transcribed from `.cursor/engine-briefs/zn-1-facts.md`; each bullet names the qu
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | load_zoning | PASS | min_migration=227 <= migrations count=315 |
++| 1 | load_zoning | PASS | min_migration=227 <= migrations count=316 |
+ | 2 | load_zoning | PASS | 15 declared, missing from seeds: none |
+ | 3 | load_zoning | PASS | retired=0 overlap-with-declared=none |
+ | 7 | load_zoning | PASS | SPEC LINK header present=true |
+@@ -843,7 +843,7 @@ Transcribed from `.cursor/engine-briefs/zn-1-facts.md`; each bullet names the qu
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-07-batch3-p1-1-load-coa-notices-assessment.md b/docs/reports/2026-10-07-batch3-p1-1-load-coa-notices-assessment.md
+index 59303b2c70c1c8e4091695ebdc8dabaab07336c1..3e0e579e9e2f7b2ed800b0cdaf3e26dd907b074f 100644
+--- a/docs/reports/2026-10-07-batch3-p1-1-load-coa-notices-assessment.md
++++ b/docs/reports/2026-10-07-batch3-p1-1-load-coa-notices-assessment.md
+@@ -135,7 +135,7 @@ pin and the samples (§12).
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | load_coa_notices | PASS | min_migration=249 <= migrations count=315 |
++| 1 | load_coa_notices | PASS | min_migration=249 <= migrations count=316 |
+ | 2 | load_coa_notices | PASS | 39 declared, missing from seeds: none |
+ | 3 | load_coa_notices | PASS | retired=0 overlap-with-declared=none |
+ | 7 | load_coa_notices | PASS | SPEC LINK header present=true |
+@@ -168,7 +168,7 @@ pin and the samples (§12).
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-16-batch3-p1-2-load-bylaw-map-areas-assessment.md b/docs/reports/2026-10-16-batch3-p1-2-load-bylaw-map-areas-assessment.md
+index 50dd6d89837272f75ba234b370fd05ab4adedf58..1e6d098106aa30e066d8a5e0fe36ab2f8a8ecc21 100644
+--- a/docs/reports/2026-10-16-batch3-p1-2-load-bylaw-map-areas-assessment.md
++++ b/docs/reports/2026-10-16-batch3-p1-2-load-bylaw-map-areas-assessment.md
+@@ -147,7 +147,7 @@ The generated validation scorecard is appended at capture (H6 runbook step 3) by
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | load_bylaw_map_areas | PASS | min_migration=254 <= migrations count=315 |
++| 1 | load_bylaw_map_areas | PASS | min_migration=254 <= migrations count=316 |
+ | 2 | load_bylaw_map_areas | PASS | 0 declared, missing from seeds: none |
+ | 3 | load_bylaw_map_areas | PASS | retired=0 overlap-with-declared=none |
+ | 7 | load_bylaw_map_areas | PASS | SPEC LINK header present=true |
+@@ -180,7 +180,7 @@ The generated validation scorecard is appended at capture (H6 runbook step 3) by
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-16-batch3-p1-3-link-parcel-abutments-assessment.md b/docs/reports/2026-10-16-batch3-p1-3-link-parcel-abutments-assessment.md
+index 4bf1f1f50805a98105a0cc82cd7e909556dd7daa..6fe1731e608589266f2b9cea327bc6ab7fd9d9d2 100644
+--- a/docs/reports/2026-10-16-batch3-p1-3-link-parcel-abutments-assessment.md
++++ b/docs/reports/2026-10-16-batch3-p1-3-link-parcel-abutments-assessment.md
+@@ -136,7 +136,7 @@ measurement replacing notes `expected_shape` ("inferred, not measured").
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | link_parcel_abutments | PASS | min_migration=255 <= migrations count=315 |
++| 1 | link_parcel_abutments | PASS | min_migration=255 <= migrations count=316 |
+ | 2 | link_parcel_abutments | PASS | 7 declared, missing from seeds: none |
+ | 3 | link_parcel_abutments | PASS | retired=0 overlap-with-declared=none |
+ | 7 | link_parcel_abutments | PASS | SPEC LINK header present=true |
+@@ -169,7 +169,7 @@ measurement replacing notes `expected_shape` ("inferred, not measured").
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md b/docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md
+index 4d542d5c24bc186ebd9888896b4296ae02e304e1..b9f2abf426387f72ee5bd61a5d95ceaf56272753 100644
+--- a/docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md
++++ b/docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md
+@@ -303,7 +303,7 @@ Red evidence is in `docs/reports/red-evidence/permits/pre2-artifacts-missing.jso
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-17-batch4-p1-2-coa-assessment.md b/docs/reports/2026-10-17-batch4-p1-2-coa-assessment.md
+index 15e811010fb725ecdaabd5d8bb9b9e60de30a511..c5198a62f7655d406553efb98a1c11c36c586769 100644
+--- a/docs/reports/2026-10-17-batch4-p1-2-coa-assessment.md
++++ b/docs/reports/2026-10-17-batch4-p1-2-coa-assessment.md
+@@ -311,7 +311,7 @@ The legacy shell stays the live writer until ③ (W4A-R6; Spec 124 R-EF, 124:264
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | coa | PASS | min_migration=261 <= migrations count=315 |
++| 1 | coa | PASS | min_migration=261 <= migrations count=316 |
+ | 2 | coa | PASS | 6 declared, missing from seeds: none |
+ | 3 | coa | PASS | retired=0 overlap-with-declared=none |
+ | 7 | coa | PASS | SPEC LINK header present=true |
+@@ -344,7 +344,7 @@ The legacy shell stays the live writer until ③ (W4A-R6; Spec 124 R-EF, 124:264
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-18-batch4-p4-1-assert-coa-freshness-assessment.md b/docs/reports/2026-10-18-batch4-p4-1-assert-coa-freshness-assessment.md
+index d64a163370162c52d6e7f0a89cf2c6db9d49a1fa..28cc50477a3275a4851eadaf426eb0fd9fd049b8 100644
+--- a/docs/reports/2026-10-18-batch4-p4-1-assert-coa-freshness-assessment.md
++++ b/docs/reports/2026-10-18-batch4-p4-1-assert-coa-freshness-assessment.md
+@@ -207,7 +207,7 @@ PH-2 (churn × complexity): ASSESSMENT-INCOMPLETE because the generated batch ar
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | assert_coa_freshness | PASS | min_migration=261 <= migrations count=315 |
++| 1 | assert_coa_freshness | PASS | min_migration=261 <= migrations count=316 |
+ | 2 | assert_coa_freshness | PASS | 2 declared, missing from seeds: none |
+ | 3 | assert_coa_freshness | PASS | retired=0 overlap-with-declared=none |
+ | 7 | assert_coa_freshness | PASS | SPEC LINK header present=true |
+@@ -240,7 +240,7 @@ PH-2 (churn × complexity): ASSESSMENT-INCOMPLETE because the generated batch ar
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-18-batch4-p4-2-link-coa-to-parcels-assessment.md b/docs/reports/2026-10-18-batch4-p4-2-link-coa-to-parcels-assessment.md
+index b8c2d98a8d264783c0186dfda33e45d9d9f78a63..b262b7906d80f4008d22346988cb5aa72bf36e49 100644
+--- a/docs/reports/2026-10-18-batch4-p4-2-link-coa-to-parcels-assessment.md
++++ b/docs/reports/2026-10-18-batch4-p4-2-link-coa-to-parcels-assessment.md
+@@ -258,7 +258,7 @@ Drafted ruling text, "operator approved 2026-10-18, id at integration":
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | link_coa_to_parcels | PASS | min_migration=257 <= migrations count=315 |
++| 1 | link_coa_to_parcels | PASS | min_migration=257 <= migrations count=316 |
+ | 2 | link_coa_to_parcels | PASS | 5 declared, missing from seeds: none |
+ | 3 | link_coa_to_parcels | PASS | retired=0 overlap-with-declared=none |
+ | 7 | link_coa_to_parcels | PASS | SPEC LINK header present=true |
+@@ -291,7 +291,7 @@ Drafted ruling text, "operator approved 2026-10-18, id at integration":
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-18-batch4-p4-3-enrich-coa-zoning-assessment.md b/docs/reports/2026-10-18-batch4-p4-3-enrich-coa-zoning-assessment.md
+index 374bfbead1ff25d3cf2be780e796d5d44baa2333..be759c2bfaf9fa665babaf193a6cb4fa06283d1a 100644
+--- a/docs/reports/2026-10-18-batch4-p4-3-enrich-coa-zoning-assessment.md
++++ b/docs/reports/2026-10-18-batch4-p4-3-enrich-coa-zoning-assessment.md
+@@ -194,7 +194,7 @@ The coa target runs the same module, so its purity rows are the twin's §8 (G1 c
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | enrich_coa_zoning | PASS | min_migration=204 <= migrations count=315 |
++| 1 | enrich_coa_zoning | PASS | min_migration=204 <= migrations count=316 |
+ | 2 | enrich_coa_zoning | PASS | 5 declared, missing from seeds: none |
+ | 3 | enrich_coa_zoning | PASS | retired=0 overlap-with-declared=none |
+ | 7 | enrich_coa_zoning | PASS | SPEC LINK header present=true |
+@@ -227,7 +227,7 @@ The coa target runs the same module, so its purity rows are the twin's §8 (G1 c
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-18-batch4-p4-4-classify-coa-scope-assessment.md b/docs/reports/2026-10-18-batch4-p4-4-classify-coa-scope-assessment.md
+index b39cb69c94e3cb258c18d243bf1a381678664ef3..4659f0ea6a01c5998c9f1b1441114c6eb9715e62 100644
+--- a/docs/reports/2026-10-18-batch4-p4-4-classify-coa-scope-assessment.md
++++ b/docs/reports/2026-10-18-batch4-p4-4-classify-coa-scope-assessment.md
+@@ -214,7 +214,7 @@ PH-2 (churn × complexity): ASSESSMENT-INCOMPLETE because the generated batch ar
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | classify_coa_scope | PASS | min_migration=133 <= migrations count=315 |
++| 1 | classify_coa_scope | PASS | min_migration=133 <= migrations count=316 |
+ | 2 | classify_coa_scope | PASS | 2 declared, missing from seeds: none |
+ | 3 | classify_coa_scope | PASS | retired=0 overlap-with-declared=none |
+ | 7 | classify_coa_scope | PASS | SPEC LINK header present=true |
+@@ -247,7 +247,7 @@ PH-2 (churn × complexity): ASSESSMENT-INCOMPLETE because the generated batch ar
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-18-batch4-p4-5-classify-coa-trades-assessment.md b/docs/reports/2026-10-18-batch4-p4-5-classify-coa-trades-assessment.md
+index ba1443d705f8ef51bdae6a19157c61dc9dc71543..c52c34d65d8cab0c36533e2e4140ec5c8ffebcdf 100644
+--- a/docs/reports/2026-10-18-batch4-p4-5-classify-coa-trades-assessment.md
++++ b/docs/reports/2026-10-18-batch4-p4-5-classify-coa-trades-assessment.md
+@@ -273,7 +273,7 @@ The rows are defined once, in `docs/reports/defect-ledger.md` (status and closin
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | classify_coa_trades | PASS | min_migration=216 <= migrations count=315 |
++| 1 | classify_coa_trades | PASS | min_migration=216 <= migrations count=316 |
+ | 2 | classify_coa_trades | PASS | 11 declared, missing from seeds: none |
+ | 3 | classify_coa_trades | PASS | retired=0 overlap-with-declared=none |
+ | 7 | classify_coa_trades | PASS | SPEC LINK header present=true |
+@@ -306,7 +306,7 @@ The rows are defined once, in `docs/reports/defect-ledger.md` (status and closin
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-18-batch4-p4-6-compute-coa-cost-estimates-assessment.md b/docs/reports/2026-10-18-batch4-p4-6-compute-coa-cost-estimates-assessment.md
+index d57dcd3a797c46fbf9bb2a8b7ff6d2a47688a788..9aeb9b449a669fc42c99b06fbd3913fc7bb403b2 100644
+--- a/docs/reports/2026-10-18-batch4-p4-6-compute-coa-cost-estimates-assessment.md
++++ b/docs/reports/2026-10-18-batch4-p4-6-compute-coa-cost-estimates-assessment.md
+@@ -276,7 +276,7 @@ The rows are defined once, in `docs/reports/defect-ledger.md`; this list is the
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | compute_coa_cost_estimates | PASS | min_migration=207 <= migrations count=315 |
++| 1 | compute_coa_cost_estimates | PASS | min_migration=207 <= migrations count=316 |
+ | 2 | compute_coa_cost_estimates | PASS | 21 declared, missing from seeds: none |
+ | 3 | compute_coa_cost_estimates | PASS | retired=0 overlap-with-declared=none |
+ | 7 | compute_coa_cost_estimates | PASS | SPEC LINK header present=true |
+@@ -309,7 +309,7 @@ The rows are defined once, in `docs/reports/defect-ledger.md`; this list is the
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-18-batch4-p4-7-enrich-permits-assessment.md b/docs/reports/2026-10-18-batch4-p4-7-enrich-permits-assessment.md
+index a8958a6e436c09285c8281cd65b81059e32f00e8..c714af30d3e45e28061ac067cddf1e843c420e08 100644
+--- a/docs/reports/2026-10-18-batch4-p4-7-enrich-permits-assessment.md
++++ b/docs/reports/2026-10-18-batch4-p4-7-enrich-permits-assessment.md
+@@ -259,7 +259,7 @@ PH-2 (churn × complexity): ASSESSMENT-INCOMPLETE because `docs/reports/generate
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | enrich_permits | PASS | min_migration=204 <= migrations count=315 |
++| 1 | enrich_permits | PASS | min_migration=204 <= migrations count=316 |
+ | 2 | enrich_permits | PASS | 5 declared, missing from seeds: none |
+ | 3 | enrich_permits | PASS | retired=0 overlap-with-declared=none |
+ | 7 | enrich_permits | PASS | SPEC LINK header present=true |
+@@ -292,7 +292,7 @@ PH-2 (churn × complexity): ASSESSMENT-INCOMPLETE because `docs/reports/generate
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-19-batch5-p1-1-assert-entity-tracing-assessment.md b/docs/reports/2026-10-19-batch5-p1-1-assert-entity-tracing-assessment.md
+index fcb6dec0a801bdec71155182c0bf0a65c88b7745..f1cb6136a51140b5f254082e7fa329642ae805ad 100644
+--- a/docs/reports/2026-10-19-batch5-p1-1-assert-entity-tracing-assessment.md
++++ b/docs/reports/2026-10-19-batch5-p1-1-assert-entity-tracing-assessment.md
+@@ -288,7 +288,7 @@ PH-2 (churn × complexity) is ASSESSMENT-INCOMPLETE, because the generated batch
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-19-batch5-p1-2-assert-network-health-assessment.md b/docs/reports/2026-10-19-batch5-p1-2-assert-network-health-assessment.md
+index be947f3b8fcd3ce9630b82aa72864cbd7a2ee974..04be1954f843a85311b5763537aa6d847e9b1530 100644
+--- a/docs/reports/2026-10-19-batch5-p1-2-assert-network-health-assessment.md
++++ b/docs/reports/2026-10-19-batch5-p1-2-assert-network-health-assessment.md
+@@ -291,7 +291,7 @@ Each intent is traced to the commit that introduced it (`git log -S … -- scrip
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-19-batch5-p1-3-assert-staleness-assessment.md b/docs/reports/2026-10-19-batch5-p1-3-assert-staleness-assessment.md
+index 2572b6428c549220446799844a1c6dfe756a6939..18b3c1b1ddf434552224b89abd3b0d674ab99741 100644
+--- a/docs/reports/2026-10-19-batch5-p1-3-assert-staleness-assessment.md
++++ b/docs/reports/2026-10-19-batch5-p1-3-assert-staleness-assessment.md
+@@ -291,7 +291,7 @@ PH-2 (churn × complexity) is ASSESSMENT-INCOMPLETE because the generated batch
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md b/docs/reports/2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md
+index bc8e1c98fc1c71d8e765b3ed9ca9c9da3ff59196..db275a3eb287ba1ebf0f6aa7761e475b7ba5ba24 100644
+--- a/docs/reports/2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md
++++ b/docs/reports/2026-10-19-batch5-p1-4-assert-lifecycle-phase-distribution-assessment.md
+@@ -341,7 +341,7 @@ Every PRE runs BEFORE the ② rename migration, because the legacy code reads th
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | assert_lifecycle_phase_distribution | PASS | min_migration=276 <= migrations count=315 |
++| 1 | assert_lifecycle_phase_distribution | PASS | min_migration=276 <= migrations count=316 |
+ | 2 | assert_lifecycle_phase_distribution | PASS | 197 declared, missing from seeds: none |
+ | 3 | assert_lifecycle_phase_distribution | PASS | retired=0 overlap-with-declared=none |
+ | 7 | assert_lifecycle_phase_distribution | PASS | SPEC LINK header present=true |
+@@ -374,7 +374,7 @@ Every PRE runs BEFORE the ② rename migration, because the legacy code reads th
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md b/docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md
+index 7839020cc28f691d05e517737f4c8b690bdfeb15..6c461779a81a1b0c5a061e7d08e35fe625f4fcff 100644
+--- a/docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md
++++ b/docs/reports/2026-10-22-batch6-p1-1-resolve-bylaws-assessment.md
+@@ -141,7 +141,7 @@ the measured run budget, the storage check, and the replacement of notes `expect
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | resolve_bylaws | PASS | min_migration=275 <= migrations count=315 |
++| 1 | resolve_bylaws | PASS | min_migration=275 <= migrations count=316 |
+ | 2 | resolve_bylaws | PASS | 8 declared, missing from seeds: none |
+ | 3 | resolve_bylaws | PASS | retired=0 overlap-with-declared=none |
+ | 7 | resolve_bylaws | PASS | SPEC LINK header present=true |
+@@ -174,7 +174,7 @@ the measured run budget, the storage check, and the replacement of notes `expect
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+diff --git a/docs/reports/2026-10-23-batch5-p2-1-classify-permit-phase-assessment.md b/docs/reports/2026-10-23-batch5-p2-1-classify-permit-phase-assessment.md
+index 8a5800df1d339b285b00534cf717b87f83602ee5..6e7d3d8bd5e605bfc955e4e6be875db66bc481de 100644
+--- a/docs/reports/2026-10-23-batch5-p2-1-classify-permit-phase-assessment.md
++++ b/docs/reports/2026-10-23-batch5-p2-1-classify-permit-phase-assessment.md
+@@ -271,7 +271,7 @@ This is an estimate. The legacy file is not scanned by gate E, so each code is m
+ 
+ | # | Scope | Pass | Detail |
+ |---|---|---|---|
+-| 1 | classify_permit_phase | PASS | min_migration=279 <= migrations count=315 |
++| 1 | classify_permit_phase | PASS | min_migration=279 <= migrations count=316 |
+ | 2 | classify_permit_phase | PASS | 3 declared, missing from seeds: none |
+ | 3 | classify_permit_phase | PASS | retired=0 overlap-with-declared=none |
+ | 7 | classify_permit_phase | PASS | SPEC LINK header present=true |
+@@ -304,7 +304,7 @@ This is an estimate. The legacy file is not scanned by gate E, so each code is m
+ | 42 | (registry) | PASS | DEFECT-PREFIX-UNIQUE: 49 slug(s), every defect prefix unique |
+ | 45 | (registry) | PASS | NOTES-CAP: 22 declaring notes file(s), every one <= 12 prose entries |
+ | 46 | (registry) | PASS | report-only (adoption); enforced by #44 (a)/(c) (R-DB; fold 9 C7-1/C7-2): checks[].reads declared by 3/29 step(s); write_inventory.by_mode declared by 0/29 |
+-| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 18.51 s <= 25.3 s; registry-input 27.36 s <= 27.5 s; measured 2026-10-30T19:01:39.937Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
++| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s; measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local (darwin arm64, 12 cpu), hook sha matches |
+ | 47 | (registry) | PASS | MODE-EMITS-TYPE (P2-C5): 29 step(s) mode_select per archetype; 560 emits.type check(s), 0 mismatches |
+ | 48 | (registry) | PASS | LOGIC-VERSION (P2-C3): 29 step(s) logic_version <=> code_version trigger; 35 fingerprint_inputs entr(y/ies) examined, 0 violations |
+ | 49 | (registry) | PASS | TERMINALS-RECORDS-META (#75): 29 step(s); 344 declared-key check(s), 0 violations; 170 terminal(s) unwitnessed (no capture) |
+

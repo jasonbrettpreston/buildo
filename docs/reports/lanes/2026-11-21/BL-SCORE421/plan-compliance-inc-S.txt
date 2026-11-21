@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.471Z file_sha256=1da7a1147b71aa74d7b04afba5af68135840ae450a1df719adc67a7cfb72fc42 prompt_sha256=8c773a917a3ea61d6abe6a46568838e960225d8ce8003d80a81040da8276ea59
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Description "the operator types GO in his own Terminal" — Implementation Notes "RR-0357 · task-421 · Backlog; operator, verbatim: 'GO for scorecards'" — the only GO recorded on the task is the chat GO ("RR-0357 GO for the scorecards, given in the chat before the rehearsal", MORNING-DECISIONS.md:1676), not the Terminal-typed GO that gates the run, so the run is authorized by the wrong event and AC #1 is met on paper only — fix: add a new Implementation Note recording the Terminal-typed GO verbatim with date and session id before any dev run, and keep RR-0357 as a separate earlier ruling.
+
+BUG severity=HIGH — Description "After task-420 (the rehearsal) passes" and RR-0358 "does the rehearsal provide a benefit here - if not move on" — NONE (no note or acceptance criterion records task-420 passing, and the card sits at "status: RUNNING" with "2026-11-21 taken on the board at lane launch") — the precondition is neither recorded as passed nor recorded as waived, so the card is running against an unsatisfied gate — fix: record either "task-420 PASS" or "rehearsal waived per RR-0358" as a dated note before the dev run.
+
+BUG severity=MED — Description "one generated-files commit in the form of bd1f246cc" — AC #2 "One commit of generated files only, through the hooks; step-conformance Rule 13 passes on it" — the acceptance criterion drops the "in the form of bd1f246cc" requirement and no step names the hooks, so AC #2 can pass on a commit that is not in that form — fix: add "in the form of bd1f246cc" and the named hooks to AC #2.
+
+BUG severity=MED — Description "the count row 315 to 316" against "Files: docs/reports/" — NONE (the card never names the file that carries the count row) — "only generated files changed" cannot be checked because the second changed artifact has no named path and may fall outside the Files field — fix: name the count-row file and either confirm it is under docs/reports/ or add it to Files.
+
+DEFER severity=MED — Description "Must be re-run if another migration file lands before the push" — NONE (no acceptance criterion or step compares the migration set at push time) — the re-run condition has no check, so compliance with it cannot be demonstrated — fix: add an acceptance criterion that the migration file list is identical at run time and at push time, with the comparison recorded.
+
+DEFER severity=MED — AC #2 "step-conformance Rule 13 passes on it" — NONE — Rule 13's text is not pasted, cannot see, and no step names the command that runs it on the folded commit — fix: paste Rule 13 into the context and name the exact command that runs it against the commit.
+
+DEFER severity=LOW — Description "makes ONE read-only run on dev of `step-validate.mjs --all --fast --write`" — NONE (no acceptance criterion asserts a single run or defines read-only) — "read-only" is paired with "--write" and "ONE" is unenforced, so a lane cannot tell what must not be mutated or how a second run is prevented — fix: state what read-only means here (no DB mutation, output only to docs/reports/) and add a criterion that the run happens once.
+
+MET — RR-0357 "GO for scorecards" — Implementation Notes "RR-0357 · task-421 · Backlog; operator, verbatim: 'GO for scorecards'" — the ruling is recorded on the task in the operator's words.
+MET — RR-0355 "Also recolve the scorecards issue now" — Description "Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2 (RR-0353, RR-0355)" — the card opens under and cites RR-0355.
+REJECT — doc-2 Increment S elements A.1 through G.6 ("A Search page · Brand block: MaxBLD wordmark...") — accused of being unsatisfied by this material — not a real issue, no doc-2 clause governs a docs/reports scorecard regeneration, so none binds this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 6
+
+---
+⏱  47456ms (47.5s)
+📊 Tokens — total: 16655, input: 8278, output: 8377, reasoning: 7410

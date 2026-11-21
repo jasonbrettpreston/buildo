@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.124Z file_sha256=ce7ab606332c14e317bec7b948d609559c717e109d706d2a0ea2620c14a10d68 prompt_sha256=c8c1ab110ab4bbc15734e441a8b4bdf730854765683fcfaf1dff238cf5ac8d4b
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
+
+HIGH — task-421 Description "the run script of task-420 makes ONE read-only run on dev of `step-validate.mjs --all --fast --write`" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "measured 2026-11-20T19:37:21.468Z on Bretts-Mac-Mini.local" — the row's measurement timestamp is 2026-11-20 while the card states "Card opened 2026-11-21 by the orchestrator", so this PRECOMMIT-BUDGET value cannot come from the single authorised run of task-421 and the same 22.84/33.19 pair is copied into all 35 reports — re-run on dev after the card opened and commit the 2026-11-21 measurement, or record which prior run produced these numbers and under what ruling.
+
+MED — task-421 Description "only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:510 "docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" — the row does not only re-measure, it moves the enforced registry-input ceiling from 27.5 s to 33.2 s (docs-only ceiling held at 25.3 s), and the new measurement passes by 0.01 s, a threshold change the card does not name — regenerate row 52 against the unchanged 27.5 s ceiling, or land the ceiling raise with a ruling that names it.
+
+MED — task-421 Description "the count row 315 to 316" — docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md:303-309 "| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s" — this file's only hunk is row 52, there is no `migrations count=316` edit in it, so cannot see whether its count row still reads 315 — regenerate the permits report or confirm its row 1 carries no migrations count.
+
+MED — task-421 Acceptance #1 "The operator's typed GO is recorded verbatim on the task" — RR-0357 "GO for the scorecards, given in the chat before the rehearsal" — the GO on the record is a chat GO given before the rehearsal, not the Description's "the operator types GO in his own Terminal" after task-420 passes, so the terminal precondition the card sets is not evidenced by the pasted record — record which ruling replaced the Terminal-GO precondition, or take the Terminal GO.
+
+LOW — task-421 Description "Must be re-run if another migration file lands before the push" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:476 "min_migration=41 <= migrations count=316" — the only count in evidence is 316 at the 2026-11-20 measurement, and cannot see from the diff whether a migration landed before the 2026-11-21 push — state the migration count and the last migration at commit time in the card.
+
+MET — task-421 Acceptance #2 "One commit of generated files only, through the hooks" — all hunks under docs/reports/ — every changed path in this chunk is an assessment report, no code, migration or config file appears.
+
+MET — task-421 Description "the count row 315 to 316" — docs/reports/2026-08-25-pilot1-assert-schema-assessment.md:476 "| 1 | assert_schema | PASS | min_migration=41 <= migrations count=316 |" — the count row is updated from 315 to 316 in 34 of the 35 reports.
+
+MET — RR-0358 "does the rehearsal provide a benefit here - if not move on" — the commit relies on no task-420 rehearsal artefact, so the waiver is honoured.
+
+REJECT — RR-0001 "Infra freeze lifted for the named list only; scratch-side parts now, repo checks after push 6" — accused of gating this repo commit — doc-17 states readings "are NOT the operator's words as a ruling and never feed a review as a ruling", so RR-0001 cannot bind this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+
+---
+⏱  45473ms (45.5s)
+📊 Tokens — total: 49708, input: 41542, output: 8166, reasoning: 7183

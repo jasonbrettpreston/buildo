@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:21:40.253Z file_sha256=f14d44e07e386040884f3cbf7143ba2e19b3db5355687eae58a30ccccb4eaa9c prompt_sha256=c313822973a201607a9e18f0c85a82d3331290724cc462a077bb6cdc9043f555
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SCORE421/in-out-compliance-surface-126-p10.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC#1 "The operator's typed GO is recorded verbatim on the task" — pasted line "- RR-0357 GO for the scorecards, given in the chat before the rehearsal (names task-421, RR-0357)" — the only recorded GO is a chat GO, while the Description requires "the operator types GO in his own Terminal", so AC#1 is unmet on the visible material — attach the Terminal-session GO verbatim to task-421 before this commit is folded.
+
+BUG severity=HIGH — Description "a lane checks that only generated files changed (the assessment reports under docs/reports/, the count row 315 to 316)" — docs/reports/2026-10-07-batch3-p1-1-load-coa-notices-assessment.md "+| 52 | (registry) | PASS | PRECOMMIT-BUDGET (R-EC): docs-only 22.84 s <= 25.3 s; registry-input 33.19 s <= 33.2 s" against removed "registry-input 27.36 s <= 27.5 s" — the precommit budget ceiling is raised 27.5 s to 33.2 s, a threshold change the card never names and no migration file moves — either cite the ruling that raised the ceiling or keep 27.5 s and land the raise as its own ruled diff.
+
+BUG severity=HIGH — Description "ONE read-only run on dev of `step-validate.mjs --all --fast --write`" with AC#2 "step-conformance Rule 13 passes on it" — docs/reports/2026-11-02-batch7-p1-1-compute-maxbld-scenarios-assessment.md "+| G8 | 3 | 3 | missing-invocations=0 missing-pre-invocations=0 stale-fingerprints=0 unexplained-diffs=0 net-new (R-DK)" replacing "| G8 | 0 | 3 | missing-invocations=0 missing-pre-invocations=1 stale-fingerprints=0 unexplained-diffs=0" and "+compare ran: true" replacing "compare ran: false" — the run now self-awards 17/17 and flips a stage-gated gate to pass on R-DK, which no pasted clause names — cite R-DK's register row in the card or hold G8 at its prior stage-gated score.
+
+DEFER severity=MED — Description "the count row 315 to 316" — docs/reports/2026-10-17-batch4-p1-1-permits-assessment.md carries only the row-52 hunk, while docs/reports/2026-10-07-batch3-p1-1-load-coa-notices-assessment.md carries "min_migration=249 <= migrations count=316" — seven of the 22 files (permits, assert-entity-tracing, assert-network-health, assert-staleness, compute-phase-calibration, link-coa, classify-lifecycle-phase) show no count-row change, so a stale 315 cannot be ruled out from the diff — grep the 22 files for "migrations count=315" and regenerate any hit.
+
+DEFER severity=LOW — Description "Must be re-run if another migration file lands before the push" — cannot see the migration directory in this material, and the diff goes 315 to 316 — whether a second migration landed after the 2026-11-20T19:37:21.468Z run cannot be checked here — confirm migration count at fold time and re-run if it moved.
+
+MET — Description "the count row 315 to 316" — docs/reports/2026-10-16-batch3-p1-2-load-bylaw-map-areas-assessment.md "min_migration=254 <= migrations count=316" — the count row is regenerated to 316 in every file that carries it.
+
+MET — Description "the assessment reports under docs/reports/" — every changed path in the diff begins "docs/reports/" — no file outside docs/reports/ is touched.
+
+MET — AC#2 "One commit of generated files only, through the hooks" — one unified diff over the 22 assessment reports — the material is a single diff of generated files only.
+
+REJECT — Spec 126 §11a.1 "Every displayed field binds to a source" — the change is accused of adding unbound displayed fields — these are docs assessment reports, not REPORT surface declarations, and no field is added.
+
+REJECT — Spec 126 §11a.8 "Spec 135 FE-04's lock stays OWED until the numbers are ruled" — the change is accused of setting REPORT performance-budget numbers — the row touched is the precommit hook budget, not the REPORT archetype first-render/payload budget.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 3
+
+---
+⏱  38199ms (38.2s)
+📊 Tokens — total: 40316, input: 33481, output: 6835, reasoning: 5794
