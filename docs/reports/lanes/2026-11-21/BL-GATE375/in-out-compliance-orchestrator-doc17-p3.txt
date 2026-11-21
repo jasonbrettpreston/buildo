@@ -1,4 +1,4 @@
-LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:b23cc509d80ea05b88e481604c2596994ee29264c40135282ae4677f38cbe7f8 part 1 of 1 chunk 3 of 6
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:3508140447076c0d299666e1238648381c7e8e8c014ca150b07ff79b074ae626 part 1 of 1 chunk 3 of 6
 RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","scripts/lib/review-template.js"]
 
 ---
@@ -169,7 +169,7 @@ Readings and register entries of the rulings register. They are NOT the operator
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017c75a0a90 100644
+index d52921dc5ea1751f92feb692eeab811af30bd4e1..90b7a323a9af01270733f4d3726629f5f9e751b2 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -34,11 +34,14 @@ import { spawnSync } from 'node:child_process';
@@ -446,7 +446,7 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
    // task-399: every CONFIRMED or CONFLICT id carries one outcome (TRIAGE.md, last line wins), and the outcomes are shown on the task
    if (build) {
      const dirPath = mine[0][0];
-@@ -492,6 +540,104 @@ export function closeErrors(i) {
+@@ -492,6 +540,109 @@ export function closeErrors(i) {
    return errors;
  }
  
@@ -510,7 +510,12 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
 +      }
 +      if (!good) errors.push(last);
 +    }
-+  } else if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
++  } else {
++    // a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line (reviewErrors; g375#1)
++    const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));
++    if (planFiles.length === 0) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
++    for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null).map((x) => `${id}: ${x}`));
++  }
 +  const g = textOf('GROUNDER-PLAN.md');
 +  let findings = 0;
 +  if (g === undefined) errors.push(`${id}: GROUNDER-PLAN.md is missing in ${dirNote} (a separate grounder rules every plan finding and copies the Plan line last)`);
@@ -551,7 +556,7 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
  function check(msgFile) {
    if (!msgFile) return fail(['usage: check-lane-close.mjs <commit-msg-file>']);
    const top = git(['rev-parse', '--show-toplevel']).stdout.trim() || process.cwd();
-@@ -620,7 +766,10 @@ function check(msgFile) {
+@@ -620,7 +771,10 @@ function check(msgFile) {
      const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];
      const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
      const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
@@ -564,10 +569,10 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
    // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
    const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
 diff --git a/scripts/lib/review-template.js b/scripts/lib/review-template.js
-index 28dd70b5aec22742dcddd93297eb51df363b1048..e7b35db17714c0566e23520471d015eb34a7dd11 100644
+index 28dd70b5aec22742dcddd93297eb51df363b1048..f7574a442f9c68a068ea43d496e1acb879b9c124 100644
 --- a/scripts/lib/review-template.js
 +++ b/scripts/lib/review-template.js
-@@ -108,4 +108,29 @@ function loadReviewNotesBlock(filePath) {
+@@ -108,4 +108,34 @@ function loadReviewNotesBlock(filePath) {
    return { notesPath: rel, block };
  }
  
@@ -597,5 +602,10 @@ index 28dd70b5aec22742dcddd93297eb51df363b1048..e7b35db17714c0566e23520471d015eb
 +  return out.join('\n\n');
 +}
 +
-+module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections };
++/** The number of the next review round of a task: the context-r<N>.md files already in `dir` (docs/reports/reviews/<task>/) plus one. ONE count, shared by the brief that writes the file and the launch that names it. */
++function contextRound(dir) {
++  return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
++}
++
++module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections, contextRound };
 

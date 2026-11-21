@@ -1,34 +1,37 @@
-◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:32:23.587Z file_sha256=40906aa7e1a7963160d5f1ae291c715cc3b7f2d09c27d4b56788ec416dfd31cc prompt_sha256=9ee59ac925cb212199d2e4ff04f973f6d877a97b21d5d8e2183b8bdd6b13acc1
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:42:34.140Z file_sha256=b874051b4ac4ffb5a5d2d3b10927e07e8d3766b927d477d231418698002ba0e9 prompt_sha256=9e639e3e3f99e8131230d92c7c3e22501d4710698eabe5c42197e8a0aacebeb9
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-step-132-p8.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — task-375 plan, NOT IN SCOPE "any new script" — src/tests/backlog/backlog-lane.logic.test.ts:16 "run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID })" — the suite now invokes a newly committed program docs/reports/reviews/task-375/plant-evidence.mjs plus a new docs/reports/reviews/task-375/fixture-context.md read by check-lane-close and rule-lists-table; neither path is on the card's Files line and the pasted plan rules "any new script" out of scope, and no operator ruling or recorded deviation (with its grounder ruling) names them — move the planting code into the existing test file or an existing helper, read a context file already on the Files line, or record the deviation and add both paths to the Files line before merge.
+BUG/DEFER findings:
 
-DEFER severity=MED — task-375 plan A.6 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file." — src/tests/backlog/check-lane-close.logic.test.ts:802 "it('an output must match one committed context file: the earlier round file is kept and still binds'" and "expect(r.status, r.stderr).toBe(0)" — a round-1 output still closes after context-r2.md is committed, so a lane can close on a review of superseded task text — refuse an output whose bound context is not the latest committed round, or state in the plan why the earlier round stays binding.
+```
+DEFER severity=MED — AC #14 "dry-run before evidence: refused, one error per missing item (the first names the missing evidence folder or GROUNDER-PLAN.md)" — src/tests/backlog/backlog-lane.logic.test.ts "expect(lines.length).toBeGreaterThan(1);" — the D-launch refusal test asserts only that more than one stderr line exists, so a gate that names two of the required items (evidence folder, GROUNDER-PLAN.md, the seat reports, the outcomes, the Plan hash) and stays silent on the rest still passes; the test name "one line per missing item ... (no flag turns it off)" claims more than the assertion checks — replace with an exact expected line set (evidence folder, GROUNDER-PLAN.md, one line per resolved list, the seat lines, the Plan line) as the A9 record enumerates 11 errors
+DEFER severity=LOW — A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" and A.3 "one --section per constant entry" — src/tests/backlog/backlog-lane.logic.test.ts "const SECT = '--section \"Task\" --section \"Description\" --section \"Acceptance criteria\" --section \"Decisions naming this task\" --section \"Implementation Notes\"';" — the test re-types the five section names as a literal instead of importing CONTEXT_SECTIONS, so it locks the five headings of today and not the clause "one --section per constant entry"; a sixth constant entry added later leaves the lock passing on a stale set — import CONTEXT_SECTIONS from scripts/lib/review-template.js and build SECT from it
+DEFER severity=LOW — plan v4 ruling "the context-<date>.md name -> context-rN.md" — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(s).not.toContain('context-2026-11-18.md');" — a date-form context name is still pinned in the section that lists prior reviews, so the assertion can no longer fire and the rename is only half swept from this file — drop the line or convert it to a context-rN.md pin
+DEFER severity=LOW — AC #14 "then one word edited in the task: refused with the new expected Plan line" — src/tests/backlog/backlog-lane.logic.test.ts "expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);" — the expected line is asserted as a shape, not as the hash of the edited task, so a gate that printed any 12 hex characters would pass the lock; the clause's "the new expected Plan line" is only partly proven — recompute planHash over the edited task in the test and assert the exact value
+DEFER severity=LOW — A1/A5 naming "backlog-brief.mjs writes ## Implementation Plan and ## Implementation Notes after the acceptance criteria" — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(ctx.indexOf('## Implementation Plan')).toBeGreaterThan(ctx.indexOf('## Acceptance criteria'));" — only the Plan heading's position is asserted, nothing fixes the position of "## Implementation Notes" relative to the acceptance criteria, so the half of the clause that names both headings in order is unlocked — assert the index order of both headings against the acceptance criteria heading
+```
 
-DEFER severity=MED — Acceptance criteria #2 "Tests red first, then green through the real hooks" — pasted build note "Red for this commit was a typecheck refusal (red10.out)." — the D-gate describe block added in this chunk was shown red only by a missing export, so none of its assertions is proven able to fail — record a red with planGateErrors stubbed (returns no errors) before the green.
+MET lines:
 
-DEFER severity=MED — card "D the launch gate: backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board." — src/tests/backlog/check-lane-close.logic.test.ts:985 "const fx = await planScenario({ type: 'fix' }); expect(fx.errors).toEqual([]);" — a fix launch passes with no compliance plan-phase output while the build case is refused for the same missing list 'first', so "build or fix" plan evidence is not enforced for fix — require the same per-list plan outputs for fix, or record in the plan that plan-phase compliance lenses are build-only.
+```
+MET — AC #5 (A0) "the output holds the headings \"## Implementation Plan\" and \"## Implementation Notes\"" — src/tests/backlog/backlog-brief-context.logic.test.ts (new describe, task-375 A1/A5) — both headings asserted from a real brief run, with a no-plan no-notes control
+MET — A5 naming "brief tests re-pinned to context-r1.md (backlog-brief.logic.test.ts:58, backlog-brief-context.logic.test.ts:43)" — src/tests/backlog/backlog-brief-context.logic.test.ts:43 — every context-2026-11-19.md pin re-pointed to context-r1.md across all three files, plus a test that a later brief writes r2 and leaves r1 byte-identical
+MET — D5 wiring "prints 'plan gate ok: <L> lists, <M> findings, Plan sha256:<12>'" — src/tests/backlog/backlog-lane.logic.test.ts "new RegExp(`plan gate ok: ${L} lists, \\d+ findings, Plan sha256:[0-9a-f]{12}`)" — the format is pinned and L is derived from rule-lists resolve, not typed
+MET — B.1 "adds them ... only those not already on the task" — src/tests/backlog/backlog-lane.logic.test.ts "toHaveLength(lists.length)" then "toHaveLength(lists.length - 1)" — one compliance ref per resolved list, none re-added for an id already carried
+MET — D6 "prints the line that the plan is the task text at launch, checked before launch ... still runs a plan-stage lens of its own" — src/tests/backlog/backlog-brief.logic.test.ts "The plan is the task text at launch, checked before launch" and "record deviations in Implementation Notes" — all four D6 sentences asserted against the brief output
+MET — g375#2 "the lens lines name the round the brief wrote" — src/tests/backlog/backlog-lane.logic.test.ts "expect(named).toBe(written);" and "expect(named).toBe('context-r2.md');" — the round is proven in the dry-run and in the real launch by reading the worktree
+```
 
-DEFER severity=LOW — RR-0338 "the findings that are deemed low priorities are filed in a review pile for later" — src/tests/backlog/check-lane-close.logic.test.ts:952 "const tri = 'plan-code-review#1 wontfix:\"a low note with a reason of more than thirty characters\"\n';" with round "0 folded, 0 task, 0 ruling, 1 wontfix, 0 pile" — the only LOW-finding outcome the gate tests exercise is wontfix, so the pile the ruling names is untested — add a pile outcome case with its control.
+REJECT line:
 
-DEFER severity=LOW — task-375 plan B.2 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir (08_agents.md:347); the close check refuses when one is missing." — src/tests/backlog/check-lane-close.logic.test.ts:811 "it('B2: a missing REPORT.md reference is refused and the exact add-ref command is printed; control above closes with all three'" — refusals are planted for a missing REPORT.md and a missing TRIAGE.md only, never for a missing GROUNDER.md alone — add one GROUNDER.md-only case.
+```
+REJECT — x-captures.5 "Tests write before-images into a per-file sandbox, never the real golden tree" — that the new plantEvidence helper writes into the repo tree under docs/reports/reviews/task-375/ — the helper only executes a fixture program whose writes land in the temp board, and the clause governs step before-images, which this change does not touch
+```
 
-MET — task-375 plan A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes." — src/tests/backlog/check-lane-close.logic.test.ts:795 — "refused(planted('(no pasted context provided)'), /context-r1\.md/);" all three refusals planted, each with a control.
-
-MET — task-375 plan B.1 "compliance:<list id> <file>, one per resolved list" — src/tests/backlog/backlog-lane.logic.test.ts:329 — "expect(t1).toContain(`--add-ref 'compliance:${l.id} ${l.file}'`);" and the re-take adds none twice.
-
-MET — task-375 plan A.3 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — src/tests/backlog/backlog-lane.logic.test.ts:270 — "for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }".
-
-MET — RR-0342 "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently" — src/tests/backlog/check-lane-close.logic.test.ts:963 — "gate(await planScenario({ drop: ['regression'] }), /no \"Seat: regression/);" plus the new-path control.
-
-MET — Acceptance criteria #14 "plan gate ok: <L> lists" — src/tests/backlog/backlog-lane.logic.test.ts:346 — "expect(ok.stdout).toMatch(new RegExp(`plan gate ok: ${L} lists, \\d+ findings, Plan sha256:[0-9a-f]{12}`));".
-
-MET — task-375 plan A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — src/tests/backlog/rule-lists-table.logic.test.ts:49 — "'lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'policy-124-s2-s5'".
-
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 15   Unmet: 1
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
 
 ---
-⏱  129560ms (129.6s)
-📊 Tokens — total: 57775, input: 33872, output: 23903, reasoning: 22472
+⏱  62851ms (62.9s)
+📊 Tokens — total: 39395, input: 27389, output: 12006, reasoning: 10624

@@ -1,5 +1,5 @@
-LIST agents-s7-s11 sha256:2de09e6a54d6d33e1fab1bf71c416745e152af6e5d00609f01a1300b04b765f5 material sha256:0e0ee29c97a33ede19747fa79f6dbd0176a7128a36ed4cdf6d9ca183933cb405 part 1 of 1 chunk 4 of 6
-RULE LIST agents-s7-s11 (docs/specs/00-architecture/08_agents.md, sections 7. Rules & economics; 11. Grounded Verification Protocol), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 4 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/backlog-brief-context.logic.test.ts","src/tests/backlog/backlog-brief.logic.test.ts","src/tests/backlog/backlog-lane.logic.test.ts"]
+LIST agents-s7-s11 sha256:2de09e6a54d6d33e1fab1bf71c416745e152af6e5d00609f01a1300b04b765f5 material sha256:e95826b3062cb14b56d3205eb6a61cf255460a52be3cb9b57d20e767effbe31e part 1 of 1 chunk 4 of 6
+RULE LIST agents-s7-s11 (docs/specs/00-architecture/08_agents.md, sections 7. Rules & economics; 11. Grounded Verification Protocol), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 4 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/lib/review-template.js","src/tests/backlog/backlog-brief-context.logic.test.ts","src/tests/backlog/backlog-brief.logic.test.ts","src/tests/backlog/backlog-lane.logic.test.ts"]
 
 ## 7. Rules & economics
 
@@ -87,6 +87,46 @@ Operator source lines for this section (verbatim): "E2a, E4 as long as this isnt
 Dated note 2026-11-14 (M-246, prior text kept; McQueue · lane MQ; operator, verbatim: "a - let's do it but it needs to properly point to the tasks - it was too much work to bring them into a central location"): where every queue lives, the one-line status form and the queue rules (7-day expiry, DB lane, dated-note rulings, the weekly snapshot) are in Spec 137 (`docs/specs/00-architecture/137_mcqueue.md`). Nothing in §11.8 or §11.9 changes.
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/lib/review-template.js b/scripts/lib/review-template.js
+index 28dd70b5aec22742dcddd93297eb51df363b1048..f7574a442f9c68a068ea43d496e1acb879b9c124 100644
+--- a/scripts/lib/review-template.js
++++ b/scripts/lib/review-template.js
+@@ -108,4 +108,34 @@ function loadReviewNotesBlock(filePath) {
+   return { notesPath: rel, block };
+ }
+ 
+-module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX };
++/**
++ * task-375 A2: the reviewer's context is the task, sized. ONE list of headings of the context file docs/reports/reviews/<task>/context-rN.md
++ * (CONTEXT_SECTIONS) and the plan phase's material (PLAN_SECTIONS), shared by the review tool, rule-lists.mjs lens-input and the close check.
++ */
++const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];
++const PLAN_SECTIONS = ['Description', 'Acceptance criteria', 'Implementation Plan'];
++
++/** Keep only the markdown sections whose heading line contains one of `wanted` (to the next heading of the same or higher level); throws on a missing heading. */
++function extractSections(markdown, wanted) {
++  const lines = markdown.split('\n');
++  const out = [];
++  for (const want of wanted) {
++    const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && l.includes(want));
++    if (start === -1) throw new Error(`--section "${want}": no heading contains that text`);
++    const level = lines[start].match(/^(#+)/)[1].length;
++    let end = lines.length;
++    for (let i = start + 1; i < lines.length; i += 1) {
++      const m = lines[i].match(/^(#+)\s/);
++      if (m && m[1].length <= level) { end = i; break; }
++    }
++    out.push(lines.slice(start, end).join('\n'));
++  }
++  return out.join('\n\n');
++}
++
++/** The number of the next review round of a task: the context-r<N>.md files already in `dir` (docs/reports/reviews/<task>/) plus one. ONE count, shared by the brief that writes the file and the launch that names it. */
++function contextRound(dir) {
++  return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
++}
++
++module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections, contextRound };
 diff --git a/src/tests/backlog/backlog-brief-context.logic.test.ts b/src/tests/backlog/backlog-brief-context.logic.test.ts
 index 22e1bd269953ef24a5b7700ea1ca9946ae8991bc..5637ac460a1d4497e3005b2be52d153df5577d43 100644
 --- a/src/tests/backlog/backlog-brief-context.logic.test.ts
@@ -192,7 +232,7 @@ index f3983fe9233a8f7c3760be4889ede7a0ed240ab5..8354b3080f04fe1aa98c086aaea69b38
      const body = fs.readFileSync(ctx, 'utf8');
      expect(body).toContain('Plan item CHK.5 scope check');
 diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
-index d3a9ab087c1a99c8905b35915508573a4ccb5a58..c99a2b04f43e7c36aeb0b4353c5596635573d27a 100644
+index d3a9ab087c1a99c8905b35915508573a4ccb5a58..ccebbad171d112ce7aed0c256ffe58defefc60b8 100644
 --- a/src/tests/backlog/backlog-lane.logic.test.ts
 +++ b/src/tests/backlog/backlog-lane.logic.test.ts
 @@ -11,9 +11,14 @@ const ID = { GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME:
@@ -241,13 +281,13 @@ index d3a9ab087c1a99c8905b35915508573a4ccb5a58..c99a2b04f43e7c36aeb0b4353c559663
      expect(seg).toContain('plan-review-deepseek.md');
      expect(cmd).toContain('scripts/deepseek-review.js review');
 -    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context <pasted-context file>/);
-+    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context docs\/reports\/reviews\/\S+\/context-r1\.md --section "Task"/);
++    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context docs\/reports\/reviews\/\S+\/context-r2\.md --section "Task"/);
 +  });
 +  // task-375 A3: every lens command passes the committed context (context-r1.md) and one --section per CONTEXT_SECTIONS entry; no command leaves a lens on the placeholder
 +  it('A3: plan, output and compliance commands all pass the committed context and the five sections; the date name and the pasted-context placeholder are gone', () => {
 +    const e = lensBrief('build', 'scripts/analysis/x.mjs, src/tests/');
 +    const SECT = '--section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes"';
-+    const ctx = /docs\/reports\/reviews\/\S+?\/context-r1\.md/.exec(e)?.[0] ?? '(none)';
++    const ctx = /docs\/reports\/reviews\/\S+?\/context-r2\.md/.exec(e)?.[0] ?? '(none)';
 +    expect(ctx).not.toBe('(none)');
 +    const cmds = e.match(/scripts\/deepseek-review\.js review [^`]*/g) ?? [];
 +    expect(cmds.length).toBeGreaterThanOrEqual(3);
@@ -260,7 +300,7 @@ index d3a9ab087c1a99c8905b35915508573a4ccb5a58..c99a2b04f43e7c36aeb0b4353c559663
    });
    it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
      for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
-@@ -307,6 +329,59 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+@@ -307,6 +329,73 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
      expect(extra).toMatch(/a separate grounder rules on every finding/);
      expect(extra).toContain('GROUNDER.md');
    });
@@ -316,6 +356,20 @@ index d3a9ab087c1a99c8905b35915508573a4ccb5a58..c99a2b04f43e7c36aeb0b4353c559663
 +    const r = lane(f, ['--dry-run']);
 +    expect(r.status, r.stdout + r.stderr).toBe(0);
 +    expect(r.stdout).not.toContain('plan gate');
++  });
++  it('g375#2: a board that already holds context-r1.md (the plan evidence): the lens lines name the file the brief wrote (context-r2.md), in the dry-run and in the real launch', () => {
++    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
++    expect(fs.existsSync(path.join(f.board, `docs/reports/reviews/${f.task}/context-r1.md`))).toBe(true);
++    const d = lane(f, ['--dry-run']);
++    expect(d.stdout).toContain(`docs/reports/reviews/${f.task}/context-r2.md`);
++    expect(d.stdout).not.toContain(`docs/reports/reviews/${f.task}/context-r1.md --`);
++    const r = lane(f, ['--no-launchd']);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const spec = JSON.parse(fs.readFileSync(path.join(f.base, 'lane-dir/task.json'), 'utf8')) as { extra: string[] };
++    const named = /docs\/reports\/reviews\/\S+?\/(context-r\d+\.md)/.exec(spec.extra.join('\n'))?.[1];
++    const written = fs.readdirSync(path.join(f.wt, `docs/reports/reviews/${f.task}`)).filter((n) => /^context-r\d+\.md$/.test(n)).sort().pop();
++    expect(named).toBe(written);
++    expect(named).toBe('context-r2.md');
 +  });
    it('a Files path no row matches is refused at launch with the path named (exit 3, one line, nothing written)', () => {
      const f = fixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' });

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:23:00.829Z file_sha256=b81f89d1c225c7726b3df6cfad2a28499fd3f2c196c4a0e50c63804e03f6bbc2 prompt_sha256=eb7f29151340f6e79033b172d851805f1b333fb15de9ecf218d11805e4b10b3e
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-eng-all-p12.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #13 "#13 A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — src/tests/proof-slice.db.test.ts:6 "// WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane)" — the D10b acceptance is not met by this material: the new db test has neither a red nor a green run, and it cannot go green because the variable it asserts on is, in the lane's own words, "NOT registered: no tooling_ timeout variable exists in scripts/seeds/logic_variables.json" — keep the task RUNNING, and after the id claim, seed and migration landed with the operator's typed DB GO, run `BUILDO_TEST_DB=1 npm run test:db`, paste red then green on the task, and only then treat A8 as paid
+
+DEFER severity=MED — §12.10 "MUST land with a `*.db.test.ts` file under `src/tests/db/`" — diff header "diff --git a/src/tests/proof-slice.db.test.ts b/src/tests/proof-slice.db.test.ts" (new file, src/tests/ root) — the db test is placed outside the directory the clause names for db tests (the spec's own example, src/tests/db/db-target-version.db.test.ts, is inside it) — move it to src/tests/db/proof-slice.db.test.ts with the import rewritten to './setup-testcontainer' and amend the board Files line, or record a dated deviation for the separate grounder to rule on
+
+DEFER severity=MED — §12.12 "Pure functions with arithmetic invariants ... MUST have at least one `fast-check` property test asserting the invariant" and "Files: `src/tests/property/*.property.test.ts`" — src/tests/proof-slice.logic.test.ts:289 "expect(m.timeoutMsFromVariable(120000)).toBe(120000);" — the new pure normalizer timeoutMsFromVariable carries the invariant "output is a positive integer for any accepted input" and gets example-based tests only, no property file — add src/tests/property/proof-slice-timeout.property.test.ts with a fast-check forAll asserting a positive integer is returned for accepted values and rejected otherwise
+
+DEFER severity=MED — pasted grounder defect "(1) red.out and commit.out cited by the report are not in the repo; the recorded red is for the wrong reason." — src/tests/proof-slice.db.test.ts:34 "expect(timeoutMsFromVariable(rows[0].variable_value)).toBe(entry!.default);" — the second it reads rows[0] with no length guard, so while the variable is unregistered it fails as a TypeError on undefined rather than on the pinned-seed assertion, repeating the wrong-red defect — insert "expect(rows).toHaveLength(1)" before the rows[0] read in the second it
+
+DEFER severity=LOW — AC #2 "#2 Tests red first, then green through the real hooks" — src/tests/review-template.logic.test.ts:206 "describe('task-375 A2: one section list for the reviewer context, one extractSections', () => {" and src/tests/proof-slice.logic.test.ts:286 "describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it" — no red run is pasted for either new block; the acceptance record names green only ("A6: review-template.logic.test.ts green in ef574eb02", "A7: green in 7b7d6f5f7") — run each block against the pre-fix head, keep the red output in the repo as the rest of the lane did (red9.out, red13.out), and cite it on the task
+
+DEFER severity=LOW — §13.3 "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`." — src/tests/proof-slice.db.test.ts:20 "afterAll(async () => { await pool.end().catch(() => undefined); });" — the file's only catch swallows the teardown error with no log call — emit "logWarn('proof-slice-db', 'pool end failed', { err })" in place of the silent swallow so a broken teardown is visible
+
+MET — plan A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — src/tests/review-template.logic.test.ts:211 — asserts exactly the five heading texts the plan names (Task, Description, Acceptance criteria, Decisions naming this task, Implementation Notes)
+
+MET — §12.10 "every `*.db.test.ts` self-skips via `describe.skipIf(!dbAvailable())`" — src/tests/proof-slice.db.test.ts:17 — the whole describe is wrapped in describe.skipIf(!dbAvailable()) and the file self-skips without DATABASE_URL or BUILDO_TEST_DB=1
+
+MET — plan FILES line "src/tests/proof-slice.db.test.ts, src/tests/proof-slice.logic.test.ts, src/tests/review-template.logic.test.ts" — all three paths in this chunk are on the task's Files line, so no off-line edit
+
+MET — AC #11 "#11 A6 The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green." — src/tests/review-template.logic.test.ts:202-204 — the hunk appends after the closing of the substitutePlaceholders describe and deletes nothing, so those tests are untouched
+
+REJECT — §12.1 "Biome MUST pass on all files in `src/features/leads/` before commit" — the change is accused of not running Biome on the new tests — the clause is scoped to src/features/leads/, and these files are src/tests/, outside that scope
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 4
+
+---
+⏱  80418ms (80.4s)
+📊 Tokens — total: 33797, input: 19102, output: 14695, reasoning: 13378

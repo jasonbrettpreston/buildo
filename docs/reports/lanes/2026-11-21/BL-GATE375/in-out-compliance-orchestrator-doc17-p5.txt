@@ -1,4 +1,4 @@
-LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:e6cf542f1b7ce506218e8dbbb62dc68b919c172295e8da419c1c7c6e3d91180d part 1 of 1 chunk 5 of 6
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:c5cce1509816715b8d39ac63339d229a34593fc797b4b7a7db5b9303cc87b2a1 part 1 of 1 chunk 5 of 6
 RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 5 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists-table.logic.test.ts"]
 
 ---
@@ -169,7 +169,7 @@ Readings and register entries of the rulings register. They are NOT the operator
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index 960823f50101ad5627f5f32c0cc67048824e596b..4137b9c86c70ce9e09d6fc2f01441eeefb4428c5 100644
+index 960823f50101ad5627f5f32c0cc67048824e596b..11d9ee6f9c2b31d177024c17e2d0cb8e3a712177 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -28,14 +28,18 @@ const quoteAt = (k: number) => `export const value0${k} = 'alpha quote number 0$
@@ -241,7 +241,7 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..4137b9c86c70ce9e09d6fc2f01441eee
    g('add', '-A');
    const msgFile = path.join(d, '.git/MSG');
    fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
-@@ -771,3 +785,204 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
+@@ -771,3 +785,209 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
      expect(mk('docs/reports/lanes/x/seat.md').join('\n')).toMatch(/is outside docs\/reports\/reviews\/task-9\//);
    });
  });
@@ -288,7 +288,7 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..4137b9c86c70ce9e09d6fc2f01441eee
 +type PO = {
 +  type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
 +  noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
-+  ctx?: string; badMaterial?: boolean;
++  ctx?: string; badMaterial?: boolean; junkPlan?: boolean;
 +};
 +async function planScenario(o: PO = {}) {
 +  const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
@@ -322,7 +322,7 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..4137b9c86c70ce9e09d6fc2f01441eee
 +        }
 +      }
 +    }
-+    if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.finding ? body(true) : body(false);
++    if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.junkPlan ? 'junk\n' : `${hdr('lens-code-review.md', null)}${body(false)}`;
 +    if (o.finding) files['plan-code-review.txt'] = `${hdr('lens-code-review.md', null)}BUG severity=${o.finding.sev} — clause "x" — src/a.ts:1 "y" — claim — fix\nVERDICT: PASS\n`;
 +    if (o.stray) files['notes.txt'] = 'stray\n';
 +  }
@@ -438,6 +438,11 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..4137b9c86c70ce9e09d6fc2f01441eee
 +    const t = await planScenario({ throwRead: true });
 +    expect(t.errors.length).toBeGreaterThan(0);
 +    expect(t.errors.join('\n')).toMatch(/could not read|disk gone/);
++  });
++  it('g375#1: a fix task whose plan-<lens>.txt is junk (no REVIEW header, no VERDICT line) is refused; a valid one passes (control above)', async () => {
++    gate(await planScenario({ type: 'fix', junkPlan: true }), /plan-code-review\.txt: no REVIEW header/);
++    const ok = await planScenario({ type: 'fix' });
++    expect(ok.errors).toEqual([]);
 +  });
 +  it('a fix task with one plan lens output passes; a build task with only that output is refused', async () => {
 +    const fx = await planScenario({ type: 'fix' });

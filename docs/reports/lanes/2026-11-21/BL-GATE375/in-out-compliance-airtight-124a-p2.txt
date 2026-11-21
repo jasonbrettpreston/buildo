@@ -1,4 +1,4 @@
-LIST airtight-124a sha256:a17cafde55c326338a2ee657dc9aaac1007a54b8508b6476b3097e7c93af56eb material sha256:3a90aaa2a362bcbcb49aae2016e66034f27afada8f473fd278a6eeed490d2120 part 2 of 2 chunk 1 of 5
+LIST airtight-124a sha256:a17cafde55c326338a2ee657dc9aaac1007a54b8508b6476b3097e7c93af56eb material sha256:344748d7e6677722ab67be7ac66712b9dd85e047641a718475c9de2d77998593 part 2 of 2 chunk 1 of 5
 RULE LIST airtight-124a (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md, sections Appendix §B10; Appendix §B12), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md","docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/backlog-brief.mjs","scripts/analysis/backlog-lane.mjs","scripts/analysis/proof-slice.mjs"]
 
 ## Appendix §B12 — Register rows R-BZ…R-CP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-18
@@ -79,10 +79,15 @@ index a7ddaa9bf193630036dc62ad15643bef0803c1b8..8473f0deaca970a3849fbdd5fbfec664
  
  ## 5. The weekly snapshot
 diff --git a/scripts/analysis/backlog-brief.mjs b/scripts/analysis/backlog-brief.mjs
-index 9513ff5e8c8235c41856f3ac938db0df605b1612..5f81bc87ef454c95951c3462a8d7df9b7070e92d 100644
+index 9513ff5e8c8235c41856f3ac938db0df605b1612..3af5b5ac551323a0418f2b594d8ff17b8f3a5d97 100644
 --- a/scripts/analysis/backlog-brief.mjs
 +++ b/scripts/analysis/backlog-brief.mjs
-@@ -6,10 +6,13 @@
+@@ -2,14 +2,17 @@
+ // G1 brief from the task (Backlog-home plan v8.1 section 3): emits the lane brief from the Backlog task file, so a brief is never hand-written
+ // in scratch. Prints the TKT-1 header (Spec 08 11.9, 08_agents.md:504), the quoted rules from the task's acceptance criteria and decisions,
+ // scope, done-condition (the AC list), max_fix_rounds, the Spec 137 rule 3 line, the Spec 08 substrate lines, the take order, the review
+-// command and the close step; and writes the review context file docs/reports/reviews/<task>/context-<date>.md (sha256 in the brief).
++// command and the close step; and writes the review context file docs/reports/reviews/<task>/context-rN.md (sha256 in the brief).
  // Usage: node scripts/analysis/backlog-brief.mjs --task task-N --lane <name> [--stage N] [--root <dir>] [--date YYYY-MM-DD]
  // Rules: Spec 08 TKT-1 (08_agents.md:504), Spec 08 section 7 rule 10 (a) (:341), Spec 137 rule 3 (137_mcqueue.md:84); RR-0207, RR-0212.
  import fs from 'node:fs';
@@ -103,7 +108,7 @@ index 9513ff5e8c8235c41856f3ac938db0df605b1612..5f81bc87ef454c95951c3462a8d7df9b
 -const ctxRel = `docs/reports/reviews/${taskId}/context-${date}.md`;
 +// task-375 A5: one context file per review round, context-rN.md, N = the context-r*.md files already there + 1; an earlier round's file is never overwritten.
 +const ctxDir = path.join(root, 'docs/reports/reviews', taskId);
-+const round = (fs.existsSync(ctxDir) ? fs.readdirSync(ctxDir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
++const round = createRequire(import.meta.url)('../lib/review-template.js').contextRound(ctxDir);
 +const ctxRel = `docs/reports/reviews/${taskId}/context-r${round}.md`;
  const docs = asList(t.fm.documentation);
 +// task-375 A1: the Implementation Plan and Implementation Notes fields of the task, headings inside the text demoted so they cannot end the section.
@@ -136,7 +141,7 @@ index 9513ff5e8c8235c41856f3ac938db0df605b1612..5f81bc87ef454c95951c3462a8d7df9b
    `Context pack sections: ${ctxRel} also carries Milestone, Document sections, Decisions naming this task, Prior reviews and lane reports, Dependencies (RR-0235): read it, not only the references above.`,
    `Close:`,
 diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
-index 2f98237749756e1131c9a301efb1d148a843820f..08b267bd4c67b665bd1beb73e64afbfc9b6a6a10 100644
+index 2f98237749756e1131c9a301efb1d148a843820f..d4d9f0ea7315e6199c6bdf07722dd9cfb027453a 100644
 --- a/scripts/analysis/backlog-lane.mjs
 +++ b/scripts/analysis/backlog-lane.mjs
 @@ -17,10 +17,12 @@
@@ -198,7 +203,7 @@ index 2f98237749756e1131c9a301efb1d148a843820f..08b267bd4c67b665bd1beb73e64afbfc
  if (!letter && !specGiven) process.stderr.write(`backlog-lane: note: no [group] letter in the title of milestone ${milestone || '(none)'}; groups defaults to F\n`);
  // task-358 (REVIEW.LENSES): the review line names the Spec 08 lens set (08_agents.md:334 "NEVER run one generic pass"; section 7 rules 4, 7), chosen by task type and the Files line.
 +// task-375 A3: every lens command passes the committed context file and one --section per CONTEXT_SECTIONS entry (scripts/lib/review-template.js), so the reviewer's context is the task, sized
-+const { CONTEXT_SECTIONS } = createRequire(import.meta.url)('../lib/review-template.js');
++const { CONTEXT_SECTIONS, contextRound } = createRequire(import.meta.url)('../lib/review-template.js');
 +const sectionFlags = CONTEXT_SECTIONS.map((x) => `--section "${x}"`).join(' ');
  const lensLine = (task, ctx, lists) => {
 +  const ctxArgs = `--context ${ctx} ${sectionFlags}`;
@@ -217,7 +222,7 @@ index 2f98237749756e1131c9a301efb1d148a843820f..08b267bd4c67b665bd1beb73e64afbfc
 +  return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Plan review lenses: ${plan.map(f).join(', ')}, each \`${cmd} ${ctx} --template .claude/review-templates/<lens file> ${ctxArgs}\` (the committed context file ${ctx} holds the task's Description, Acceptance criteria, Implementation Plan and Notes and the decisions naming it, one --section per entry; the same file is the context of the output lenses; without --context a lens sees "(no pasted context provided)"). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> ${ctxArgs}\`. ${per}${layout} Run the lenses of each review in parallel, one call each, outputs plan-<lens>.txt and out-<lens>.txt in the lane report dir; then a separate grounder rules every finding in GROUNDER.md (below).${grounder}`;
  };
 -const ctxRel = `docs/reports/reviews/${taskId}/context-${date}.md`;
-+const ctxRel = `docs/reports/reviews/${taskId}/context-r1.md`; // the brief writes round 1 at launch (context-rN.md, backlog-brief.mjs)
++const ctxRel = `docs/reports/reviews/${taskId}/context-r${contextRound(path.join(board, 'docs/reports/reviews', taskId))}.md`; // the round the brief writes at launch: the same count (review-template.js contextRound) over the same tree
  const ticket = (!dry && /^Ticket:.*$/m.exec(g1r.stdout)?.[0]) || `Ticket: ${taskId} (<label from the G1 ticket>) · lane ${lane} · stage ${stage}`;
  const ruleBlock = [
    `THE RULE LISTS THAT GOVERN THIS TASK (Rule lists that govern this task; resolved from the Files line through scripts/analysis/rule-lists.json: data decides; ${resolved.lists.length} lists; READ each whole before planning, never hand-pick a clause):`,

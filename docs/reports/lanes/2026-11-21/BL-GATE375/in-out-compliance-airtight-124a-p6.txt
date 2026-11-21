@@ -1,5 +1,5 @@
-LIST airtight-124a sha256:a17cafde55c326338a2ee657dc9aaac1007a54b8508b6476b3097e7c93af56eb material sha256:e2818a3cc3f6e682a94a3456aba786dddf9dd62b939907573b3e69f173c3e101 part 2 of 2 chunk 3 of 5
-RULE LIST airtight-124a (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md, sections Appendix §B10; Appendix §B12), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","scripts/lib/review-template.js","src/tests/backlog/backlog-brief-context.logic.test.ts","src/tests/backlog/backlog-brief.logic.test.ts"]
+LIST airtight-124a sha256:a17cafde55c326338a2ee657dc9aaac1007a54b8508b6476b3097e7c93af56eb material sha256:b316af605311462a79f13e5e84a7ca99847214bc90ca37d35729918a770e6b89 part 2 of 2 chunk 3 of 5
+RULE LIST airtight-124a (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md, sections Appendix §B10; Appendix §B12), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","scripts/lib/review-template.js","src/tests/backlog/backlog-brief-context.logic.test.ts"]
 
 ## Appendix §B12 — Register rows R-BZ…R-CP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-18
 
@@ -28,7 +28,7 @@ Moved from Spec 124 — Runner lane (operator y 2026-10-18, runner-lane ruling 1
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017c75a0a90 100644
+index d52921dc5ea1751f92feb692eeab811af30bd4e1..90b7a323a9af01270733f4d3726629f5f9e751b2 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -34,11 +34,14 @@ import { spawnSync } from 'node:child_process';
@@ -305,7 +305,7 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
    // task-399: every CONFIRMED or CONFLICT id carries one outcome (TRIAGE.md, last line wins), and the outcomes are shown on the task
    if (build) {
      const dirPath = mine[0][0];
-@@ -492,6 +540,104 @@ export function closeErrors(i) {
+@@ -492,6 +540,109 @@ export function closeErrors(i) {
    return errors;
  }
  
@@ -369,7 +369,12 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
 +      }
 +      if (!good) errors.push(last);
 +    }
-+  } else if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
++  } else {
++    // a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line (reviewErrors; g375#1)
++    const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));
++    if (planFiles.length === 0) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
++    for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null).map((x) => `${id}: ${x}`));
++  }
 +  const g = textOf('GROUNDER-PLAN.md');
 +  let findings = 0;
 +  if (g === undefined) errors.push(`${id}: GROUNDER-PLAN.md is missing in ${dirNote} (a separate grounder rules every plan finding and copies the Plan line last)`);
@@ -410,7 +415,7 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
  function check(msgFile) {
    if (!msgFile) return fail(['usage: check-lane-close.mjs <commit-msg-file>']);
    const top = git(['rev-parse', '--show-toplevel']).stdout.trim() || process.cwd();
-@@ -620,7 +766,10 @@ function check(msgFile) {
+@@ -620,7 +771,10 @@ function check(msgFile) {
      const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];
      const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
      const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
@@ -423,10 +428,10 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
    // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
    const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
 diff --git a/scripts/lib/review-template.js b/scripts/lib/review-template.js
-index 28dd70b5aec22742dcddd93297eb51df363b1048..e7b35db17714c0566e23520471d015eb34a7dd11 100644
+index 28dd70b5aec22742dcddd93297eb51df363b1048..f7574a442f9c68a068ea43d496e1acb879b9c124 100644
 --- a/scripts/lib/review-template.js
 +++ b/scripts/lib/review-template.js
-@@ -108,4 +108,29 @@ function loadReviewNotesBlock(filePath) {
+@@ -108,4 +108,34 @@ function loadReviewNotesBlock(filePath) {
    return { notesPath: rel, block };
  }
  
@@ -456,7 +461,12 @@ index 28dd70b5aec22742dcddd93297eb51df363b1048..e7b35db17714c0566e23520471d015eb
 +  return out.join('\n\n');
 +}
 +
-+module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections };
++/** The number of the next review round of a task: the context-r<N>.md files already in `dir` (docs/reports/reviews/<task>/) plus one. ONE count, shared by the brief that writes the file and the launch that names it. */
++function contextRound(dir) {
++  return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
++}
++
++module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections, contextRound };
 diff --git a/src/tests/backlog/backlog-brief-context.logic.test.ts b/src/tests/backlog/backlog-brief-context.logic.test.ts
 index 22e1bd269953ef24a5b7700ea1ca9946ae8991bc..5637ac460a1d4497e3005b2be52d153df5577d43 100644
 --- a/src/tests/backlog/backlog-brief-context.logic.test.ts
@@ -527,38 +537,4 @@ index 22e1bd269953ef24a5b7700ea1ca9946ae8991bc..5637ac460a1d4497e3005b2be52d153d
 +    expect(r.stdout).toContain(`${task}/context-r2.md`);
 +  });
 +});
-diff --git a/src/tests/backlog/backlog-brief.logic.test.ts b/src/tests/backlog/backlog-brief.logic.test.ts
-index f3983fe9233a8f7c3760be4889ede7a0ed240ab5..8354b3080f04fe1aa98c086aaea69b3862b091b8 100644
---- a/src/tests/backlog/backlog-brief.logic.test.ts
-+++ b/src/tests/backlog/backlog-brief.logic.test.ts
-@@ -55,7 +55,7 @@ describe('G1 backlog-brief (test 4)', () => {
-     expect(r.stdout).toMatch(/08_agents\.md:339/);
-     expect(r.stdout).toContain(`task edit ${plan} -s RUNNING -a @lane-BL-R1`);
-     expect(r.stdout).toMatch(/--plan/);
--    expect(r.stdout).toMatch(/node scripts\/deepseek-review\.js review docs\/reports\/reviews\/\S+\/context-2026-11-19\.md --context \.claude\/review-templates\/plan-review-deepseek\.md/);
-+    expect(r.stdout).toMatch(/node scripts\/deepseek-review\.js review docs\/reports\/reviews\/\S+\/context-r1\.md --template \.claude\/review-templates\/plan-review-deepseek\.md --context docs\/reports\/reviews\/\S+\/context-r1\.md --section "Task"/);
-     expect(r.stdout).toMatch(/provider claude/i);
-     expect(r.stdout).toMatch(/bash_allow/);
-     expect(r.stdout).toMatch(/--final-summary/);
-@@ -65,6 +65,11 @@ describe('G1 backlog-brief (test 4)', () => {
-     expect(r.stdout).toMatch(/from round 2 on use only --append-final-summary/);
-     expect(r.stdout).toMatch(/check-lane-close\.mjs --outcomes/);
-     expect(r.stdout).toMatch(/do NOT run --plan/);
-+    // task-375 D6: what the brief tells a lane about the plan that the launch gate checked
-+    expect(r.stdout).toMatch(/The plan is the task text at launch, checked before launch/);
-+    expect(r.stdout).toMatch(/do not edit the Description, Acceptance or Plan/);
-+    expect(r.stdout).toMatch(/record deviations in Implementation Notes/);
-+    expect(r.stdout).toMatch(/still runs at least one plan-stage lens of its own and rules its findings in its own GROUNDER\.md/);
-     expect(r.stdout).toMatch(/STATUS: ready\|blocked\|failed\|dropped/);
-   });
- 
-@@ -72,7 +77,7 @@ describe('G1 backlog-brief (test 4)', () => {
-     const { d, plan } = fixture();
-     const r = brief(d, plan);
-     expect(r.status, r.stderr).toBe(0);
--    const ctx = path.join(d, `docs/reports/reviews/${plan}/context-2026-11-19.md`);
-+    const ctx = path.join(d, `docs/reports/reviews/${plan}/context-r1.md`);
-     expect(fs.existsSync(ctx), ctx).toBe(true);
-     const body = fs.readFileSync(ctx, 'utf8');
-     expect(body).toContain('Plan item CHK.5 scope check');
 

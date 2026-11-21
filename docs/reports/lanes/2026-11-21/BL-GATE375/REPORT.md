@@ -50,3 +50,34 @@ After A0 and A2 I ran a cleanup (rm -rf of docs/reports/reviews/task-381, task-4
 
 ## Denied or not run
 A1 on the first attempt was run without the dotenv form and failed for want of the key (no data lost); the sanctioned DOTENV_CONFIG_PATH form was denied once by the permission classifier on the third run and allowed on this run. An rm of the lane-dir *.err files was refused by the safety check and re-run as rm -f "${LD:?}"/*.err. A9 and A4b on a scratch clone (removed). Not run: A8 (DB), the full suite, plan-stage lens outputs, GROUNDER.md, TRIAGE.md.
+
+## Fix round 1 (the sections above describe round 1 and are superseded where they differ)
+
+Grounder Cairn-Ground-G375 ruled the 410 round-1 findings: 115 CONFIRMED (19 MED, 94 LOW, 2 NIT), 295 REJECTED. Two code fixes were made, each red first at a failing assertion, then green through the hooks:
+- g375#1, b4f4afc39: a FIX launch runs reviewErrors (REVIEW header, template, timestamp, VERDICT) on every plan-<lens>.txt. Red: red13.out, 1 failed, "AssertionError: expected '' to match /plan-code-review\.txt: no REVIEW header/". Green: c17.out, Tests 133 passed (133).
+- g375#2, dfe326345: review-template.js contextRound(dir) is the one round count used by backlog-brief.mjs and backlog-lane.mjs, so the lens lines name the context file the brief wrote (the stale header comment of backlog-brief.mjs corrected). Red: red14.out, 1 failed, "AssertionError: expected 'plan gate ok: 9 lists, 2 findings, Pl...' to contain 'docs/reports/reviews/task-1/context-r...'". Green: c18.out, Tests 54 passed (54).
+- The stray untracked docs/reports/reviews/task-375/context-2026-11-21.md was deleted from the worktree (never committed).
+- Every LOW and NIT goes to the review pile with a pile: line in TRIAGE.md, which is written only after the grounder re-rules the re-run (the finding ids are positional and changed). No other finding was fixed in this round.
+
+Re-run: context docs/reports/reviews/task-375/context-r2.md (selected sections 41,617 characters); every in- input re-made with rule-lists.mjs lens-input over the whole-range diff (19 files, 173,752 bytes); 86 calls in the sanctioned DOTENV_CONFIG_PATH form, same names as round 1 plus the extra parts; one call (out-compliance-step-132-p2.txt) ended without a VERDICT line and was re-run once under the same name (the first output is kept at ~/Buildo-scratch/lanes-20261119/inc1b/gate375/step132-p2.first-run.txt, not committed). Result: 86 of 86 with a REVIEW header and a VERDICT line.
+
+| rule list or lens | output files | REVIEW header | VERDICT line |
+| --- | --- | --- | --- |
+| compliance agents-s5-1to3 | out-compliance-agents-s5-1to3-p1.txt to -p4.txt (4 files) | yes 4 of 4 | yes 4 of 4 |
+| compliance agents-s7-s11 | out-compliance-agents-s7-s11-p1.txt to -p6.txt (6 files) | yes 6 of 6 | yes 6 of 6 |
+| compliance queue-137 | out-compliance-queue-137-p1.txt to -p6.txt (6 files) | yes 6 of 6 | yes 6 of 6 |
+| compliance eng-all | out-compliance-eng-all-p1.txt to -p12.txt (12 files) | yes 12 of 12 | yes 12 of 12 |
+| compliance orchestrator-doc17 | out-compliance-orchestrator-doc17-p1.txt to -p6.txt (6 files) | yes 6 of 6 | yes 6 of 6 |
+| compliance step-132 | out-compliance-step-132-p1.txt to -p12.txt (12 files) | yes 12 of 12 | yes 12 of 12 |
+| compliance airtight-124a | out-compliance-airtight-124a-p1.txt to -p10.txt (10 files) | yes 10 of 10 | yes 10 of 10 |
+| compliance airtight-v3-122 | out-compliance-airtight-v3-122-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+| compliance airtight-v2-122 | out-compliance-airtight-v2-122-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+| compliance airtight-122a | out-compliance-airtight-122a-p1.txt to -p4.txt (4 files) | yes 4 of 4 | yes 4 of 4 |
+| compliance five-words | out-compliance-five-words-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+| compliance plan-protocol | out-compliance-plan-protocol-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+| compliance inc-S | out-compliance-inc-S-p1.txt to -p5.txt (5 files) | yes 5 of 5 | yes 5 of 5 |
+| compliance ms-S | out-compliance-ms-S-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+| code-review | out-code-review-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+| error-paths | out-error-paths-p1.txt to -p3.txt (3 files) | yes 3 of 3 | yes 3 of 3 |
+
+New finding count: 351 (BUG 63, DEFER 288), listed by id in FINDINGS.md, untriaged. Not done: TRIAGE.md, the GROUNDER.md copy, the closing commit, D10b (open).

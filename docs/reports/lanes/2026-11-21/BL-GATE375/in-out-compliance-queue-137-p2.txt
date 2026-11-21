@@ -1,5 +1,5 @@
-LIST queue-137 sha256:c1daa368d394cfaf048fb91073b60920973d9a0004c9769098bdb62ea98a7649 material sha256:af8dfcf96c950f5c867864450a2e854b0e67cf22a5fced057aa2da6f229af9aa part 1 of 1 chunk 2 of 6
-RULE LIST queue-137 (docs/specs/00-architecture/137_mcqueue.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.mjs","scripts/deepseek-review.js"]
+LIST queue-137 sha256:c1daa368d394cfaf048fb91073b60920973d9a0004c9769098bdb62ea98a7649 material sha256:62f19ee3d6a58fc387ddc0e5b2bf211daa42b4f262e2230bbdfd9c0d93596e34 part 1 of 1 chunk 2 of 6
+RULE LIST queue-137 (docs/specs/00-architecture/137_mcqueue.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/proof-slice.mjs","scripts/analysis/rule-lists.mjs","scripts/deepseek-review.js"]
 
 # SPEC 137 — McQueue
 
@@ -191,6 +191,30 @@ Dated note 2026-11-15 (M-246, prior text kept; MB-108; operator, verbatim: "y au
 Also deferred: Backlog.md as the source of truth ("part 2"). Not adopted. It needs an operator amendment of this spec after the infra-freeze lift, because the queue gates read the queue rows, the row ids would be re-keyed, and Backlog.md has no expiry or landed-commit check (pilot record, "Fit verdict for step 2").
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/analysis/proof-slice.mjs b/scripts/analysis/proof-slice.mjs
+index 34c8510073a1dc789cac614552961cd069ccc36a..9c330cfc24424a19941f36d2c6776c98ec228b02 100644
+--- a/scripts/analysis/proof-slice.mjs
++++ b/scripts/analysis/proof-slice.mjs
+@@ -19,7 +19,18 @@ import { gateVariable } from './gates/variables.mjs';
+ 
+ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+ const DATA = path.join(REPO, 'scripts/analysis/proof-slices.json');
+-const DEFAULT_TIMEOUT_MS = 120000;
++const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it (seed + migration); until then this typed value stays
++/**
++ * task-375 D10b: the registered tooling variable the row timeout is read from (R-EB (b); NOT yet registered: the seed entry and migration need the operator's typed DB GO after the MCINC-7 rehearsal).
++ * The name is the builder's choice, to be confirmed at registration.
++ */
++export const TIMEOUT_VARIABLE = 'tooling_proof_slice_timeout_ms';
++/** The timeout (ms) from the variable's stored value (a number or the text of one): a positive integer, else a refusal naming the variable (no default, no unbounded run). */
++export function timeoutMsFromVariable(value) {
++  const n = typeof value === 'number' ? value : typeof value === 'string' && /^\s*\d+\s*$/.test(value) ? Number(value) : Number.NaN;
++  if (!Number.isInteger(n) || n <= 0) throw new Error(`${TIMEOUT_VARIABLE} must be a positive integer number of milliseconds (got ${JSON.stringify(value)}): set it in logic_variables; there is no default and no unbounded run`);
++  return n;
++}
+ const ID_RE = /^[a-z0-9-]{1,40}$/;
+ const TASK_RE = /^task-\d+$/;
+ const KEYS = ['id', 'proof', 'argv', 'waits', 'expect', 'timeoutMs', 'suite', 'notbuilt'];
 diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
 index 90e9c71aa44d3cf554afa21cd384e5bdd8c8a70a..eba7a0202b06533f9d00f9a318b73fd344b57ac6 100644
 --- a/scripts/analysis/rule-lists.mjs

@@ -50,10 +50,15 @@ index a7ddaa9bf193630036dc62ad15643bef0803c1b8..8473f0deaca970a3849fbdd5fbfec664
  
  ## 5. The weekly snapshot
 diff --git a/scripts/analysis/backlog-brief.mjs b/scripts/analysis/backlog-brief.mjs
-index 9513ff5e8c8235c41856f3ac938db0df605b1612..5f81bc87ef454c95951c3462a8d7df9b7070e92d 100644
+index 9513ff5e8c8235c41856f3ac938db0df605b1612..3af5b5ac551323a0418f2b594d8ff17b8f3a5d97 100644
 --- a/scripts/analysis/backlog-brief.mjs
 +++ b/scripts/analysis/backlog-brief.mjs
-@@ -6,10 +6,13 @@
+@@ -2,14 +2,17 @@
+ // G1 brief from the task (Backlog-home plan v8.1 section 3): emits the lane brief from the Backlog task file, so a brief is never hand-written
+ // in scratch. Prints the TKT-1 header (Spec 08 11.9, 08_agents.md:504), the quoted rules from the task's acceptance criteria and decisions,
+ // scope, done-condition (the AC list), max_fix_rounds, the Spec 137 rule 3 line, the Spec 08 substrate lines, the take order, the review
+-// command and the close step; and writes the review context file docs/reports/reviews/<task>/context-<date>.md (sha256 in the brief).
++// command and the close step; and writes the review context file docs/reports/reviews/<task>/context-rN.md (sha256 in the brief).
  // Usage: node scripts/analysis/backlog-brief.mjs --task task-N --lane <name> [--stage N] [--root <dir>] [--date YYYY-MM-DD]
  // Rules: Spec 08 TKT-1 (08_agents.md:504), Spec 08 section 7 rule 10 (a) (:341), Spec 137 rule 3 (137_mcqueue.md:84); RR-0207, RR-0212.
  import fs from 'node:fs';
@@ -74,7 +79,7 @@ index 9513ff5e8c8235c41856f3ac938db0df605b1612..5f81bc87ef454c95951c3462a8d7df9b
 -const ctxRel = `docs/reports/reviews/${taskId}/context-${date}.md`;
 +// task-375 A5: one context file per review round, context-rN.md, N = the context-r*.md files already there + 1; an earlier round's file is never overwritten.
 +const ctxDir = path.join(root, 'docs/reports/reviews', taskId);
-+const round = (fs.existsSync(ctxDir) ? fs.readdirSync(ctxDir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
++const round = createRequire(import.meta.url)('../lib/review-template.js').contextRound(ctxDir);
 +const ctxRel = `docs/reports/reviews/${taskId}/context-r${round}.md`;
  const docs = asList(t.fm.documentation);
 +// task-375 A1: the Implementation Plan and Implementation Notes fields of the task, headings inside the text demoted so they cannot end the section.
@@ -107,7 +112,7 @@ index 9513ff5e8c8235c41856f3ac938db0df605b1612..5f81bc87ef454c95951c3462a8d7df9b
    `Context pack sections: ${ctxRel} also carries Milestone, Document sections, Decisions naming this task, Prior reviews and lane reports, Dependencies (RR-0235): read it, not only the references above.`,
    `Close:`,
 diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
-index 2f98237749756e1131c9a301efb1d148a843820f..08b267bd4c67b665bd1beb73e64afbfc9b6a6a10 100644
+index 2f98237749756e1131c9a301efb1d148a843820f..d4d9f0ea7315e6199c6bdf07722dd9cfb027453a 100644
 --- a/scripts/analysis/backlog-lane.mjs
 +++ b/scripts/analysis/backlog-lane.mjs
 @@ -17,10 +17,12 @@
@@ -169,7 +174,7 @@ index 2f98237749756e1131c9a301efb1d148a843820f..08b267bd4c67b665bd1beb73e64afbfc
  if (!letter && !specGiven) process.stderr.write(`backlog-lane: note: no [group] letter in the title of milestone ${milestone || '(none)'}; groups defaults to F\n`);
  // task-358 (REVIEW.LENSES): the review line names the Spec 08 lens set (08_agents.md:334 "NEVER run one generic pass"; section 7 rules 4, 7), chosen by task type and the Files line.
 +// task-375 A3: every lens command passes the committed context file and one --section per CONTEXT_SECTIONS entry (scripts/lib/review-template.js), so the reviewer's context is the task, sized
-+const { CONTEXT_SECTIONS } = createRequire(import.meta.url)('../lib/review-template.js');
++const { CONTEXT_SECTIONS, contextRound } = createRequire(import.meta.url)('../lib/review-template.js');
 +const sectionFlags = CONTEXT_SECTIONS.map((x) => `--section "${x}"`).join(' ');
  const lensLine = (task, ctx, lists) => {
 +  const ctxArgs = `--context ${ctx} ${sectionFlags}`;
@@ -188,7 +193,7 @@ index 2f98237749756e1131c9a301efb1d148a843820f..08b267bd4c67b665bd1beb73e64afbfc
 +  return `Review lens set (Spec 08 section 7 rule 4, 08_agents.md:334 "NEVER run one generic pass"; lens table in .claude/review-templates/README.md; task type ${task.fm.type ?? 'unknown'}${code ? '' : ', record-only: compliance only'}). Plan review lenses: ${plan.map(f).join(', ')}, each \`${cmd} ${ctx} --template .claude/review-templates/<lens file> ${ctxArgs}\` (the committed context file ${ctx} holds the task's Description, Acceptance criteria, Implementation Plan and Notes and the decisions naming it, one --section per entry; the same file is the context of the output lenses; without --context a lens sees "(no pasted context provided)"). Output review lenses (the diff; the pasted spec clauses, rulings and design text in the context file): ${out.map(f).join(', ')}, each \`${cmd} <diff file> --template .claude/review-templates/<lens file> ${ctxArgs}\`. ${per}${layout} Run the lenses of each review in parallel, one call each, outputs plan-<lens>.txt and out-<lens>.txt in the lane report dir; then a separate grounder rules every finding in GROUNDER.md (below).${grounder}`;
  };
 -const ctxRel = `docs/reports/reviews/${taskId}/context-${date}.md`;
-+const ctxRel = `docs/reports/reviews/${taskId}/context-r1.md`; // the brief writes round 1 at launch (context-rN.md, backlog-brief.mjs)
++const ctxRel = `docs/reports/reviews/${taskId}/context-r${contextRound(path.join(board, 'docs/reports/reviews', taskId))}.md`; // the round the brief writes at launch: the same count (review-template.js contextRound) over the same tree
  const ticket = (!dry && /^Ticket:.*$/m.exec(g1r.stdout)?.[0]) || `Ticket: ${taskId} (<label from the G1 ticket>) · lane ${lane} · stage ${stage}`;
  const ruleBlock = [
    `THE RULE LISTS THAT GOVERN THIS TASK (Rule lists that govern this task; resolved from the Files line through scripts/analysis/rule-lists.json: data decides; ${resolved.lists.length} lists; READ each whole before planning, never hand-pick a clause):`,
@@ -464,7 +469,7 @@ index 8f0f5c1e5fc3621aff98bb0d44876f6e1d68778e..fe6778ed6b8bbc13ae92f388e0141914
    const abs = path.resolve(filePath);
    if (!fs.existsSync(abs)) {
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017c75a0a90 100644
+index d52921dc5ea1751f92feb692eeab811af30bd4e1..90b7a323a9af01270733f4d3726629f5f9e751b2 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -34,11 +34,14 @@ import { spawnSync } from 'node:child_process';
@@ -741,7 +746,7 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
    // task-399: every CONFIRMED or CONFLICT id carries one outcome (TRIAGE.md, last line wins), and the outcomes are shown on the task
    if (build) {
      const dirPath = mine[0][0];
-@@ -492,6 +540,104 @@ export function closeErrors(i) {
+@@ -492,6 +540,109 @@ export function closeErrors(i) {
    return errors;
  }
  
@@ -805,7 +810,12 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
 +      }
 +      if (!good) errors.push(last);
 +    }
-+  } else if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
++  } else {
++    // a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line (reviewErrors; g375#1)
++    const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));
++    if (planFiles.length === 0) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
++    for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null).map((x) => `${id}: ${x}`));
++  }
 +  const g = textOf('GROUNDER-PLAN.md');
 +  let findings = 0;
 +  if (g === undefined) errors.push(`${id}: GROUNDER-PLAN.md is missing in ${dirNote} (a separate grounder rules every plan finding and copies the Plan line last)`);
@@ -846,7 +856,7 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
  function check(msgFile) {
    if (!msgFile) return fail(['usage: check-lane-close.mjs <commit-msg-file>']);
    const top = git(['rev-parse', '--show-toplevel']).stdout.trim() || process.cwd();
-@@ -620,7 +766,10 @@ function check(msgFile) {
+@@ -620,7 +771,10 @@ function check(msgFile) {
      const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];
      const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
      const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
@@ -859,10 +869,10 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
    // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
    const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
 diff --git a/scripts/lib/review-template.js b/scripts/lib/review-template.js
-index 28dd70b5aec22742dcddd93297eb51df363b1048..e7b35db17714c0566e23520471d015eb34a7dd11 100644
+index 28dd70b5aec22742dcddd93297eb51df363b1048..f7574a442f9c68a068ea43d496e1acb879b9c124 100644
 --- a/scripts/lib/review-template.js
 +++ b/scripts/lib/review-template.js
-@@ -108,4 +108,29 @@ function loadReviewNotesBlock(filePath) {
+@@ -108,4 +108,34 @@ function loadReviewNotesBlock(filePath) {
    return { notesPath: rel, block };
  }
  
@@ -892,7 +902,12 @@ index 28dd70b5aec22742dcddd93297eb51df363b1048..e7b35db17714c0566e23520471d015eb
 +  return out.join('\n\n');
 +}
 +
-+module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections };
++/** The number of the next review round of a task: the context-r<N>.md files already in `dir` (docs/reports/reviews/<task>/) plus one. ONE count, shared by the brief that writes the file and the launch that names it. */
++function contextRound(dir) {
++  return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
++}
++
++module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections, contextRound };
 diff --git a/src/tests/backlog/backlog-brief-context.logic.test.ts b/src/tests/backlog/backlog-brief-context.logic.test.ts
 index 22e1bd269953ef24a5b7700ea1ca9946ae8991bc..5637ac460a1d4497e3005b2be52d153df5577d43 100644
 --- a/src/tests/backlog/backlog-brief-context.logic.test.ts
@@ -998,7 +1013,7 @@ index f3983fe9233a8f7c3760be4889ede7a0ed240ab5..8354b3080f04fe1aa98c086aaea69b38
      const body = fs.readFileSync(ctx, 'utf8');
      expect(body).toContain('Plan item CHK.5 scope check');
 diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
-index d3a9ab087c1a99c8905b35915508573a4ccb5a58..c99a2b04f43e7c36aeb0b4353c5596635573d27a 100644
+index d3a9ab087c1a99c8905b35915508573a4ccb5a58..ccebbad171d112ce7aed0c256ffe58defefc60b8 100644
 --- a/src/tests/backlog/backlog-lane.logic.test.ts
 +++ b/src/tests/backlog/backlog-lane.logic.test.ts
 @@ -11,9 +11,14 @@ const ID = { GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME:
@@ -1047,13 +1062,13 @@ index d3a9ab087c1a99c8905b35915508573a4ccb5a58..c99a2b04f43e7c36aeb0b4353c559663
      expect(seg).toContain('plan-review-deepseek.md');
      expect(cmd).toContain('scripts/deepseek-review.js review');
 -    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context <pasted-context file>/);
-+    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context docs\/reports\/reviews\/\S+\/context-r1\.md --section "Task"/);
++    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context docs\/reports\/reviews\/\S+\/context-r2\.md --section "Task"/);
 +  });
 +  // task-375 A3: every lens command passes the committed context (context-r1.md) and one --section per CONTEXT_SECTIONS entry; no command leaves a lens on the placeholder
 +  it('A3: plan, output and compliance commands all pass the committed context and the five sections; the date name and the pasted-context placeholder are gone', () => {
 +    const e = lensBrief('build', 'scripts/analysis/x.mjs, src/tests/');
 +    const SECT = '--section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes"';
-+    const ctx = /docs\/reports\/reviews\/\S+?\/context-r1\.md/.exec(e)?.[0] ?? '(none)';
++    const ctx = /docs\/reports\/reviews\/\S+?\/context-r2\.md/.exec(e)?.[0] ?? '(none)';
 +    expect(ctx).not.toBe('(none)');
 +    const cmds = e.match(/scripts\/deepseek-review\.js review [^`]*/g) ?? [];
 +    expect(cmds.length).toBeGreaterThanOrEqual(3);
@@ -1066,7 +1081,7 @@ index d3a9ab087c1a99c8905b35915508573a4ccb5a58..c99a2b04f43e7c36aeb0b4353c559663
    });
    it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
      for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
-@@ -307,6 +329,59 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+@@ -307,6 +329,73 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
      expect(extra).toMatch(/a separate grounder rules on every finding/);
      expect(extra).toContain('GROUNDER.md');
    });
@@ -1123,11 +1138,25 @@ index d3a9ab087c1a99c8905b35915508573a4ccb5a58..c99a2b04f43e7c36aeb0b4353c559663
 +    expect(r.status, r.stdout + r.stderr).toBe(0);
 +    expect(r.stdout).not.toContain('plan gate');
 +  });
++  it('g375#2: a board that already holds context-r1.md (the plan evidence): the lens lines name the file the brief wrote (context-r2.md), in the dry-run and in the real launch', () => {
++    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
++    expect(fs.existsSync(path.join(f.board, `docs/reports/reviews/${f.task}/context-r1.md`))).toBe(true);
++    const d = lane(f, ['--dry-run']);
++    expect(d.stdout).toContain(`docs/reports/reviews/${f.task}/context-r2.md`);
++    expect(d.stdout).not.toContain(`docs/reports/reviews/${f.task}/context-r1.md --`);
++    const r = lane(f, ['--no-launchd']);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const spec = JSON.parse(fs.readFileSync(path.join(f.base, 'lane-dir/task.json'), 'utf8')) as { extra: string[] };
++    const named = /docs\/reports\/reviews\/\S+?\/(context-r\d+\.md)/.exec(spec.extra.join('\n'))?.[1];
++    const written = fs.readdirSync(path.join(f.wt, `docs/reports/reviews/${f.task}`)).filter((n) => /^context-r\d+\.md$/.test(n)).sort().pop();
++    expect(named).toBe(written);
++    expect(named).toBe('context-r2.md');
++  });
    it('a Files path no row matches is refused at launch with the path named (exit 3, one line, nothing written)', () => {
      const f = fixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' });
      refused(lane(f), /zzz-nothing\/new\.txt/);
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index 960823f50101ad5627f5f32c0cc67048824e596b..4137b9c86c70ce9e09d6fc2f01441eeefb4428c5 100644
+index 960823f50101ad5627f5f32c0cc67048824e596b..11d9ee6f9c2b31d177024c17e2d0cb8e3a712177 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -28,14 +28,18 @@ const quoteAt = (k: number) => `export const value0${k} = 'alpha quote number 0$
@@ -1199,7 +1228,7 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..4137b9c86c70ce9e09d6fc2f01441eee
    g('add', '-A');
    const msgFile = path.join(d, '.git/MSG');
    fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
-@@ -771,3 +785,204 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
+@@ -771,3 +785,209 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
      expect(mk('docs/reports/lanes/x/seat.md').join('\n')).toMatch(/is outside docs\/reports\/reviews\/task-9\//);
    });
  });
@@ -1246,7 +1275,7 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..4137b9c86c70ce9e09d6fc2f01441eee
 +type PO = {
 +  type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
 +  noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
-+  ctx?: string; badMaterial?: boolean;
++  ctx?: string; badMaterial?: boolean; junkPlan?: boolean;
 +};
 +async function planScenario(o: PO = {}) {
 +  const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
@@ -1280,7 +1309,7 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..4137b9c86c70ce9e09d6fc2f01441eee
 +        }
 +      }
 +    }
-+    if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.finding ? body(true) : body(false);
++    if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.junkPlan ? 'junk\n' : `${hdr('lens-code-review.md', null)}${body(false)}`;
 +    if (o.finding) files['plan-code-review.txt'] = `${hdr('lens-code-review.md', null)}BUG severity=${o.finding.sev} — clause "x" — src/a.ts:1 "y" — claim — fix\nVERDICT: PASS\n`;
 +    if (o.stray) files['notes.txt'] = 'stray\n';
 +  }
@@ -1396,6 +1425,11 @@ index 960823f50101ad5627f5f32c0cc67048824e596b..4137b9c86c70ce9e09d6fc2f01441eee
 +    const t = await planScenario({ throwRead: true });
 +    expect(t.errors.length).toBeGreaterThan(0);
 +    expect(t.errors.join('\n')).toMatch(/could not read|disk gone/);
++  });
++  it('g375#1: a fix task whose plan-<lens>.txt is junk (no REVIEW header, no VERDICT line) is refused; a valid one passes (control above)', async () => {
++    gate(await planScenario({ type: 'fix', junkPlan: true }), /plan-code-review\.txt: no REVIEW header/);
++    const ok = await planScenario({ type: 'fix' });
++    expect(ok.errors).toEqual([]);
 +  });
 +  it('a fix task with one plan lens output passes; a build task with only that output is refused', async () => {
 +    const fx = await planScenario({ type: 'fix' });

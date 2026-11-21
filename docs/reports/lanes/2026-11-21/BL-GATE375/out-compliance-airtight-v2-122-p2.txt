@@ -1,30 +1,23 @@
-◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:13:37.954Z file_sha256=d9f6f7f778d4012e8e47aad613a676763fffe10c8e5b6dab8ba5f6e35b641f10 prompt_sha256=81bfe7701938babc3593c6f6733ab8cfffebadd9bbdf47bbe227bdda263e75be
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:20:24.651Z file_sha256=15dc3ac667ab856f6fc0db30eedea2c748849763a54a82fc78f548ef49c4b7df prompt_sha256=29568c4006873af6dba90b7c467211284257717075575a6ef3ac6d58c08998bf
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-v2-122-p2.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — NOTE-375 B.3 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir (08_agents.md:347); the close check refuses when one is missing." — scripts/hooks/check-lane-close.mjs:467 "  if (build) {" — the reference refusal is guarded build-only, so a fix task closes with no REPORT.md, GROUNDER.md or TRIAGE.md reference on the task even though Description B says "the report, grounder and triage files are referenced at close" and a fix close already needs GROUNDER.md — move the references loop out of the build guard so fix tasks are refused too.
+```
+DEFER severity=LOW — Description A "every lens command passes the committed context, lens-input refuses without it" — scripts/hooks/check-lane-close.mjs "for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : ..., null).map((x) => `${id}: ${x}`));" — a fix launch's plan-<lens>.txt is proved only by REVIEW header, template name, timestamp and VERDICT: inputText null skips the prompt_sha256 recompute and no in-<name> input file is required, unlike the build branch which binds every plan compliance output to its context — LOW: a fix plan output made on the placeholder (or with no committed input) clears the launch gate; pass the committed context and require the in- file for fix plan outputs, or state that limit in the gate's note
+MET — 6.6.1(c) "no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed" — scripts/hooks/check-lane-close.mjs:~556 — the PLAN_SEATS JSDoc states "it cannot prove that the seat ran, ran independently or was a Sonnet agent", so the new gate declares its own limit instead of presenting a declaration as observed
+MET — 6.6.1(a) "100% mechanical: generated from code/runtime or witnessed from executed SQL, never hand-authored" — scripts/hooks/check-lane-close.mjs:~550 "export function planHash(taskText)" — the Plan identifier is sha256-recomputed from the title plus body, not hand-typed, and the diff adds no step registry or ledger row
+MET — RR-0342 "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently" — scripts/hooks/check-lane-close.mjs:~543 "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };" — regression is demanded only when the Files line names a path tracked at the board head, and the always-run reality-check rests on RR-0347
+MET — RR-0348 "these only run on the plan" — scripts/hooks/check-lane-close.mjs:~601 — seat lines are demanded only inside planGateInner against the launch's plan evidence; closeErrors carries no seat requirement
+MET — RR-0349 "Complaince on the plan and output" — scripts/hooks/check-lane-close.mjs:~601 "listProof({ id, l, phases: ['plan'], ... })" with `const phases = build ? ['out'] : ['plan', 'out'];` — plan compliance per resolved list at launch, output compliance at close
+MET — RR-0333 "don't makr the task complete until it actually works" — scripts/hooks/check-lane-close.mjs:~560 — the gate refuses (exit 3, nothing taken) rather than recording success on partial evidence; nothing in this chunk moves a task to complete
+REJECT — 6.6.1(a) — accused of adding hand-authored registry evidence (the Plan line, the Seat lines) — the Plan and seat identifiers are sha256 recomputed from committed text (planHash, seatLines), and the diff adds no step registry or ledger row, so no hand-authored registry evidence is introduced
+REJECT — 6.6.1(b) — accused of leaving the Phase 1 WITNESS marker and the R-BF lock unsatisfied — this chunk touches neither scripts/analysis/step-validate.mjs nor src/tests/spec124-register-rulings.logic.test.ts, so 6.6.1(c)'s NOT MET status stands unchanged; the obligation belongs to the witness programme, not this review-tooling change
+REJECT — 6.6.1(f) — accused of adding behaviour outside the FLEET-2 landing clause — the added behaviour (context-rN.md per round, plan gate, seat lines) is named by the pasted task text and RR-0342/0347/0348/0349, not by 6.6.1, and 6.6.1 names no obligation on review tooling
 
-BUG severity=MED — Description A "every lens command passes the committed context" — scripts/hooks/check-lane-close.mjs:439 "  if ((i.contexts ?? []).length === 0) errors.push(" — the refusal fires for every close, including a record or chore task whose lane dir holds no lens output at all, so a close the card never gates is now refused for a missing context file — push the line only when the task is build or fix, or when the lane dir holds a lens output whose prompt hash needs the context.
-
-BUG severity=MED — NOTE-375 build note (D6) "records deviations in Implementation Notes" — scripts/hooks/check-lane-close.mjs:552 "  return sha(squash(`${fm.title ?? ''} ${body}`)).slice(0, 12);" — planHash covers the whole body after the front matter, so the deviation entry the brief tells the lane to write changes the hash and the gate then refuses the very task it approved, as on the relaunch the card sanctions ("Released from lane BL-FIXTOOLS and relaunched under a new lane name") — hash only the Description, Acceptance criteria and Implementation Plan sections, or record deviations outside the hashed body.
-
-DEFER severity=MED — RR-0349 "Complaince on the plan and output. Let's start with that!" — scripts/hooks/check-lane-close.mjs:602 "  } else if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(" — a fix launch is satisfied by any single plan-*.txt and is never required to carry one plan compliance output per resolved list the way build is, so plan compliance on a fix task is unchecked — run the same per-list plan-compliance loop for fix, or record that fix's plan roster is deliberately lean.
-
-DEFER severity=LOW — RR-0342 "regression only required when code is changed" — scripts/hooks/check-lane-close.mjs:615 "const need = [...PLAN_SEATS.always, ...(entriesOf(i.taskText).some((e) => i.tracked(e)) ? PLAN_SEATS.conditional : [])];" — any tracked path in the Files line, a docs-only .md included, demands the regression seat, which is more than the ruling — trigger on paths that carry code, or record the over-requirement as a taken decision.
-
-MET — NOTE-375 A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js; extractSections moves there" — scripts/lib/review-template.js:115 "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" — the constant, PLAN_SECTIONS and extractSections are exported from the one module.
-
-MET — NOTE-375 A.4 "check-lane-close.mjs lensContexts() ... returns the selected text read from the committed context file, so the existing prompt_sha256 recompute binds it" — scripts/hooks/check-lane-close.mjs:68 "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))" — the hash is recomputed over the extracted section text, and the placeholder is a problem line, not a value.
-
-MET — NOTE-375 A.6 "every lens of a round reads that one file" — src/tests/backlog/backlog-brief-context.logic.test.ts "a later brief writes context-r2.md and leaves context-r1.md as it was (never overwritten)" — the per-round filename and the no-overwrite rule are pinned.
-
-REJECT — 6.6.1(a) "the four-part step registry ... and the §6 cross-step ledger ... are 100% mechanical" — that the new Plan hash and compliance references are hand-authored registry truth — the change adds no step registry or cross-step ledger row, planHash is computed from the task text and the compliance refs come from rule-lists resolve, so nothing hand-authored is published as registry truth.
-
-REJECT — 6.6.1(c) "no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed" — that "Plan: <id> sha256:<12>" and "compliance:<id> <file>" are unverified accuracy claims this change publishes — neither is a step registry or ledger row, and both are generated by the check rather than pasted by hand.
-
-VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 10   Unmet: 5
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+```
 
 ---
-⏱  150869ms (150.9s)
-📊 Tokens — total: 60430, input: 32981, output: 27449, reasoning: 26291
+⏱  90718ms (90.7s)
+📊 Tokens — total: 50038, input: 34019, output: 16019, reasoning: 15062

@@ -1,5 +1,5 @@
-LIST eng-all sha256:9973ef45dcba5b23a8b7b5bc5da8754c7e73c23958000a3949e1cefce2da158d material sha256:af8dfcf96c950f5c867864450a2e854b0e67cf22a5fced057aa2da6f229af9aa part 2 of 2 chunk 2 of 5
-RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.mjs","scripts/deepseek-review.js"]
+LIST eng-all sha256:9973ef45dcba5b23a8b7b5bc5da8754c7e73c23958000a3949e1cefce2da158d material sha256:af8dfcf96c950f5c867864450a2e854b0e67cf22a5fced057aa2da6f229af9aa part 2 of 2 chunk 2 of 6
+RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.mjs","scripts/deepseek-review.js"]
 
 ## 🛠️ 12. Frontend Foundation Tooling
 

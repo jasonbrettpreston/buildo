@@ -1,21 +1,30 @@
 ◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:32:30.010Z file_sha256=6b11040f90984fc5e22f75672343489b534779206ef0a20944e438abb4f3268d prompt_sha256=0bcdcd98f384cf43a5d61c8af3946bc3ce5d2aa98e896f157917c1e9f8e9734f
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:42:45.272Z file_sha256=f11b67bfbc8719a5620885ca752a97ca568c5c0cb27289d7b1ecef7a7ff1638b prompt_sha256=2aec0e9b6f2dd2f61a116241d223a9043a592a3a5da9a48dd1646afda7680218
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-step-132-p9.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — plan A.7 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — src/tests/backlog/rule-lists.logic.test.ts:735 "describe('task-375 A6: a block with no deeper heading is cut between table rows or paragraphs'" — the A6 witness exercises tableDoc rows only, the blank-line paragraph arm the plan names has no test in this chunk — add a paragraph-material split test with its control.
-DEFER severity=LOW — plan A.3/A6 "after A6 exit 0 with parts" — src/tests/backlog/rule-lists.logic.test.ts:735 "it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound'" — the body asserts l.files.length and per-row counts but never a per-part size, so "none over the bound" is carried by the title alone — assert each emitted part file length <= max.
-DEFER severity=MED — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero" — src/tests/proof-slice.db.test.ts:5 "the registered variable the proof slice runner reads its timeout from exists in the logic_variables table" — the tool still uses the literal, the build note says "DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable", so core.8 is not satisfied here — keep the task RUNNING per AC#13 until the DB GO seed plus migration lands.
-DEFER severity=LOW — AC#13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — src/tests/proof-slice.db.test.ts:21 "expect(entry, `${TIMEOUT_VARIABLE} is not in the seed`).toBeDefined();" — this asserts a seed row the build note says does not exist ("no tooling_ timeout variable exists in scripts/seeds/logic_variables.json"), so the green half has no path in this chunk — add the seed row and migration under the DB GO, or the test stays red-first only.
-DEFER severity=NIT — plan A.7 "A row or paragraph that alone passes the room is still refused naming it" — src/tests/backlog/rule-lists.logic.test.ts:760 "it('a single row that alone passes the room is refused naming the list and section (the old throw)'" body "expect(l.r.stderr).toContain('5. Register');" — only the section text is asserted, the list id the title promises is not — also assert the list id "tab" in stderr.
-MET — core.8 — src/tests/proof-slice.db.test.ts:19 "expect(entry!.min).toBe(entry!.default); expect(entry!.max).toBe(entry!.default);" — the pinned min=max=default form the clause requires for tooling numbers.
-MET — plan A.2 — src/tests/review-template.logic.test.ts:207 "expect(rt.CONTEXT_SECTIONS).toEqual(['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes']);" — one CONTEXT_SECTIONS constant with the exact five headings.
-MET — plan A.4 — src/tests/backlog/rule-lists.logic.test.ts:669 "expect(no.status, no.stderr).toBe(2);" — lens-input refuses without --context, with a control.
-MET — AC#12 — src/tests/backlog/rule-lists.logic.test.ts:653 "for (const f of ['src/app/admin/page.tsx', 'src/lib/pii/redact.ts', 'src/lib/admin-users.ts', 'scripts/pii-scrub.mjs'])" — the security lens fires for admin and PII with a no-security control.
-MET — plan B.1 — src/tests/backlog/rule-lists.logic.test.ts:790 "expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);" — a comma path is entered as the id alone and entries compare by the id token.
+BUG severity=MED — A6 "A row or paragraph that alone passes the room is still refused naming it" — src/tests/backlog/rule-lists.logic.test.ts "it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound', () => {" — the name claims "none over the bound" but the body asserts only part count and per-row occurrence, never that any part's assembled size is <= the 4000 room, so a splitter that emits an over-bound part would still pass — add `for (const x of l.text) expect(<assembled length>).toBeLessThanOrEqual(4000)`.
 
-VERDICT: PASS on compliance with the pasted clauses (all findings are DEFER, none blocking; D10b stays open under AC#13 and the task must remain RUNNING)
-Clauses checked: 18   Unmet: 0
+BUG severity=LOW — A6 "refused naming the list and section" — src/tests/backlog/rule-lists.logic.test.ts "expect(l.r.stderr).toContain('5. Register');" — the test named "refused naming the list and section" asserts only the section text, never the list id 'tab', so a stderr that omits the list name still passes — also assert `/tab/` (or the list id) in stderr.
+
+DEFER severity=LOW — AC #10 (A5) "The planted refusals of section 8, each with its control." — src/tests/backlog/check-lane-close.logic.test.ts "it('refuses a context that is the placeholder, and one without the Description heading', () => {" — two distinct refusals (placeholder, missing Description) share one test and rely only on the global control, not a per-case accepted control — split into two tests, each paired with a context that closes.
+
+DEFER severity=NIT — AC #10 (A5) planted refusals — src/tests/backlog/check-lane-close.logic.test.ts "it('refuses when no context file is committed for the task (the placeholder is not accepted)', () => {" — the body passes `ctx: false` (no context committed) while the name claims "the placeholder is not accepted", which the next case actually tests — rename or move the placeholder claim to the case that exercises it.
+
+NIT severity=NIT — AC #5 (A0), #6 (A1), #7 (A2), #8 (A3) "the output holds the headings '## Implementation Plan' and '## Implementation Notes'" — NONE — the backlog-brief, deepseek-review --dry-run, lens-input call-count evidence for A0 to A3 is not in this chunk (5 of 6), cannot see — supply in the chunk that carries the script/CLI changes so those acceptance items are verifiable.
+
+MET — AC #12 (A7 D11b) — src/tests/backlog/rule-lists.logic.test.ts describe('D11b (task-375): the security lens fires for admin and PII paths') — asserts admin, pii, admin-users and pii-scrub fire 'security' on both phases with a negative control and a stripe positive control.
+
+MET — AC #9 (A4) — src/tests/backlog/rule-lists.logic.test.ts "it('a stale open task: prints the exact add-ref command, one entry per resolved list, each starting compliance:, exit 0'" — check-tasks prints compliance: entries equal to the resolved lists with no --remove-ref, matching "each entry starting 'compliance:'".
+
+MET — A4 close binding — src/tests/backlog/check-lane-close.logic.test.ts "it('refuses a context edited after the review (the recomputed prompt hash no longer matches any committed context)', () => {" — the prompt_sha256 recompute binds the committed context file, per "the existing prompt_sha256 recompute (:65) binds it".
+
+MET — B2 — src/tests/backlog/check-lane-close.logic.test.ts "it('B2: a missing REPORT.md reference is refused and the exact add-ref command is printed; control above closes with all three', () => {" — close refuses a missing REPORT.md reference and prints the exact command, per 08_agents.md:347.
+
+MET — AC #14 (A9/D) — src/tests/backlog/check-lane-close.logic.test.ts describe('task-375 D: the launch gate (planGateErrors, PLAN_SEATS, planHash)') — refuses missing folder, GROUNDER-PLAN.md, seats, and a wrong Plan line, with a control that passes and reports lists.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
 
 ---
-⏱  125492ms (125.5s)
-📊 Tokens — total: 48207, input: 24631, output: 23576, reasoning: 22606
+⏱  107001ms (107.0s)
+📊 Tokens — total: 53767, input: 32240, output: 21527, reasoning: 20533

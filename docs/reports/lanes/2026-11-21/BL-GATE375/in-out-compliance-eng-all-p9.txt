@@ -1,5 +1,5 @@
-LIST eng-all sha256:14c620943ed05ebe68c0e07fcaebe04f3d85f21dfce57b7708d0fc32a3f6f054 material sha256:9425f21f425af21ffb18fc8c69b62db19f210ad1bca8265e912e9fe17e860d1a part 1 of 2 chunk 5 of 5
-RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 5 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/rule-lists.logic.test.ts","src/tests/proof-slice.db.test.ts","src/tests/proof-slice.logic.test.ts","src/tests/review-template.logic.test.ts"]
+LIST eng-all sha256:14c620943ed05ebe68c0e07fcaebe04f3d85f21dfce57b7708d0fc32a3f6f054 material sha256:8e18fa74a5513ea9531a5820bffdb9989ba4876e08ca5c959255dbb1c70e1508 part 1 of 2 chunk 5 of 6
+RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 5 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists-table.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
 
 # Engineering Standards & Stability Guardrails
 
@@ -317,6 +317,315 @@ Before presenting "PLAN LOCKED", the plan MUST address each applicable item belo
 
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index 960823f50101ad5627f5f32c0cc67048824e596b..11d9ee6f9c2b31d177024c17e2d0cb8e3a712177 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -28,14 +28,18 @@ const quoteAt = (k: number) => `export const value0${k} = 'alpha quote number 0$
+ const FINDING = 'BUG severity=HIGH — clause "x" — src/a.ts:1 "y" — claim — fix\n';
+ const sha = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
+ const HEX64 = 'a'.repeat(64);
+-// the prompt hash of a compliance output is what the review tool writes: sha256 of JSON [system, user] built from the repo template, the input file and the placeholder context
++// the prompt hash of a compliance output is what the review tool writes: sha256 of JSON [system, user] built from the repo template, the input file and the selected sections of the committed context
+ const TEMPLATE_TEXT = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-compliance.md'), 'utf8');
+ const LENS_TEMPLATES = ['compliance', 'code-review', 'error-paths', 'ux', 'security'].map((n) => [`.claude/review-templates/lens-${n}.md`, fs.readFileSync(path.join(ROOT, `.claude/review-templates/lens-${n}.md`), 'utf8')] as const);
+ const templateOf = (template: string) => (template === 'lens-compliance.md' ? TEMPLATE_TEXT : fs.readFileSync(path.join(ROOT, `.claude/review-templates/${template}`), 'utf8'));
+-const promptHash = (inputText: string, templateText = TEMPLATE_TEXT) => {
++// task-375 A4: the reviewer context is the selected sections of the committed context file (one value per context file)
++const CTX_FILE = fs.readFileSync(path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), 'utf8');
++const selectedOf = (text: string) => { const x = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { extractSections: (m: string, w: string[]) => string; CONTEXT_SECTIONS: string[] }; return x.extractSections(text, /^#{1,6}\s.*Implementation Notes/m.test(text) ? x.CONTEXT_SECTIONS : x.CONTEXT_SECTIONS.filter((n) => n !== 'Implementation Notes')); };
++let HASH_CTX = CTX_FILE; // the context text the outputs of the scenario being built were run with (default: the committed one)
++const promptHash = (inputText: string, templateText = TEMPLATE_TEXT, context: string = selectedOf(HASH_CTX)) => {
+   const rt = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { splitTemplate: (t: string) => { systemInstruction: string | null; userTemplate: string }; substitutePlaceholders: (t: string, v: Record<string, string>) => string };
+   const s = rt.splitTemplate(templateText);
+-  return sha(JSON.stringify([s.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.", rt.substitutePlaceholders(s.userTemplate, { plan: inputText, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' })]));
++  return sha(JSON.stringify([s.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.", rt.substitutePlaceholders(s.userTemplate, { plan: inputText, specs: context, dataContext: '(no live-DB context provided)' })]));
+ };
+ const hdr = (template: string, inputText: string | null, prompt?: string) => `REVIEW template=${template} model=deepseek-reasoner at=2026-11-20T10:00:00.000Z file_sha256=${inputText === null ? HEX64 : sha(inputText)} prompt_sha256=${prompt ?? (inputText !== null ? promptHash(inputText, templateOf(template)) : HEX64)}\n`;
+ const DIFF_FLAGS = (JSON.parse(run('node', ['-e', "import('./scripts/analysis/rule-lists.mjs').then((m)=>console.log(JSON.stringify(m.DIFF_ARGS)))"], { cwd: ROOT }).stdout) as string[]);
+@@ -67,10 +71,11 @@ type Opts = {
+   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
+   // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
+   triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean; notesBlock?: boolean;
+-  mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
++  ctx?: string | false; hashCtx?: string; refs?: false | string[]; mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
+ };
+ type TriageCtx = { ids: { id: string; word: string; sev: string }[]; sha: string; path: string; base: string; d: string };
+ function scenario(o: Opts = {}) {
++  HASH_CTX = o.hashCtx ?? CTX_FILE;
+   const d = tmp('lc');
+   const g = (...a: string[]) => run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...a], { cwd: d });
+   const w = (f: string, t: string) => { fs.mkdirSync(path.dirname(path.join(d, f)), { recursive: true }); fs.writeFileSync(path.join(d, f), t); };
+@@ -112,7 +117,7 @@ function scenario(o: Opts = {}) {
+   const splitArgs = o.split ? ['--max', String(o.split.max), '--template', path.join(d, '.git/tpl.md')] : [];
+   for (const id of ['first', 'inc-F', ...Object.keys(table.lists as object).filter((k) => k === 'xtra'), ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
+     const out = path.join(d, LD, `in-out-compliance-${id}`);
+-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
+     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
+     for (const p of r.stdout.split('\n').filter(Boolean)) {
+       const nm = path.basename(p);
+@@ -125,7 +130,7 @@ function scenario(o: Opts = {}) {
+   lane['out-code-review.txt'] = hdr('lens-code-review.md', material) + body(false);
+   if (o.split?.lens) {
+     // the non-compliance lenses split by the same tool: no --list, a lens template; the outputs are out-<lens>-pN.txt, each with its committed input
+-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--material', path.join(d, '.git/material.txt'), '--out', path.join(d, LD, 'in-out-code-review'), ...splitArgs], { cwd: d });
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--material', path.join(d, '.git/material.txt'), '--out', path.join(d, LD, 'in-out-code-review'), ...splitArgs], { cwd: d });
+     if (r.status !== 0) throw new Error(`lens-input (no list): ${r.stderr}`);
+     lane['out-code-review.txt'] = null;
+     for (const p of r.stdout.split('\n').filter(Boolean)) { const nm = path.basename(p); const inText = fs.readFileSync(p, 'utf8'); lane[nm] = inText; lane[nm.replace(/^in-/, '')] = hdr('lens-code-review.md', inText) + body(false); }
+@@ -151,6 +156,15 @@ function scenario(o: Opts = {}) {
+     fs.appendFileSync(path.join(d, o.finalTaskPath ?? TASK), `\n## Final Summary\n\n<!-- SECTION:FINAL_SUMMARY:BEGIN -->\n${(o.notesBlock ? ['no outcome block here'] : o.summary ? o.summary(block) : block).join('\n')}\n<!-- SECTION:FINAL_SUMMARY:END -->\n`);
+   }
+   for (const [n, t] of Object.entries(l)) if (t !== null) w(`${LD}/${n}`, t);
++  // task-375 A5: the review context the lane committed with its round (docs/reports/reviews/<task>/context-rN.md); B2: the references the close requires (the repo copies of the lane files)
++  if (o.ctx !== false) w('docs/reports/reviews/task-7/context-r1.md', o.ctx ?? CTX_FILE);
++  const tp = path.join(d, o.finalTaskPath ?? TASK);
++  if (!o.noTaskFile && o.refs !== false && fs.existsSync(tp)) {
++    const refs = o.refs ?? [`${LD}/REPORT.md`, `${LD}/GROUNDER.md`, ...(l['TRIAGE.md'] ? [`${LD}/TRIAGE.md`] : [])];
++    let tt = fs.readFileSync(tp, 'utf8');
++    if (!/^references:/m.test(tt)) tt = tt.replace(/\nmilestone:/, `\nreferences:\n${refs.map((r) => `  - ${r}`).join('\n')}\nmilestone:`);
++    fs.writeFileSync(tp, tt);
++  }
+   g('add', '-A');
+   const msgFile = path.join(d, '.git/MSG');
+   fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
+@@ -771,3 +785,209 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
+     expect(mk('docs/reports/lanes/x/seat.md').join('\n')).toMatch(/is outside docs\/reports\/reviews\/task-9\//);
+   });
+ });
++
++describe('task-375 A4, A5, B2: the close binds the committed review context and the references', () => {
++  const planted = (ctx: string) => { const r = scenario({ ctx }); return r; };
++  it('control: a lane with a valid committed context and the three references closes', () => {
++    const r = scenario();
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('refuses when no context file is committed for the task (the placeholder is not accepted)', () => {
++    refused(scenario({ ctx: false }), /no committed review context file/);
++  });
++  it('refuses a context that is the placeholder, and one without the Description heading', () => {
++    refused(planted('(no pasted context provided)'), /context-r1\.md/);
++    refused(planted(CTX_FILE.replace('## Description', '## Gone')), /Description/);
++  });
++  it('refuses a context edited after the review (the recomputed prompt hash no longer matches any committed context)', () => {
++    refused(planted(CTX_FILE.replace('a short description', 'a different description')), /prompt_sha256/);
++  });
++  it('an output must match one committed context file: the earlier round file is kept and still binds', () => {
++    const r = scenario({ staged: { 'docs/reports/reviews/task-7/context-r2.md': CTX_FILE.replace('a short description', 'a later round description') } });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('a missing Implementation Notes heading is refused when the task has notes, and control: tolerated when it has none', () => {
++    refused(scenario({ notesBlock: true, ctx: CTX_FILE.replace('## Implementation Notes\n(none)', '## Elsewhere\n(none)') }), /Implementation Notes/);
++    const bare = CTX_FILE.replace('## Implementation Notes\n(none)\n\n', '');
++    const ok = scenario({ ctx: bare, hashCtx: bare });
++    expect(ok.status, ok.stderr).toBe(0);
++  });
++  it('B2: a missing REPORT.md reference is refused and the exact add-ref command is printed; control above closes with all three', () => {
++    const r = scenario({ refs: ['docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md', 'docs/reports/lanes/2026-11-20/BL-COMPLY2/TRIAGE.md'] });
++    refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/);
++  });
++  it('B2: the TRIAGE.md reference is required only when the lane directory holds one', () => {
++    const noTri = scenario({ lensFinding: false, refs: [`docs/reports/lanes/2026-11-20/BL-COMPLY2/REPORT.md`, `docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md`] });
++    expect(noTri.status, noTri.stderr).toBe(0);
++    const tri = scenario({ refs: [`docs/reports/lanes/2026-11-20/BL-COMPLY2/REPORT.md`, `docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md`] });
++    refused(tri, /--add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/TRIAGE\.md/);
++  });
++});
++
++// ---- task-375 D: the launch gate (planGateErrors, PLAN_SEATS, planHash) ----
++type PO = {
++  type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
++  noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
++  ctx?: string; badMaterial?: boolean; junkPlan?: boolean;
++};
++async function planScenario(o: PO = {}) {
++  const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
++  const rl = (await import('../../../scripts/analysis/rule-lists.mjs')) as { buildLensInputs: (a: unknown) => { suffix: string; text: string }[]; resolveTask: (a: unknown) => { lists: { id: string }[] } };
++  const id = 'task-7'; const dir = `docs/reports/reviews/${id}`;
++  const mem: Record<string, string> = { 'docs/a.md': '# A\nrule one text\nrule two text\n', 'docs/ev.md': '# Ev\nthe five words and the plan protocol\n', 'docs/ms.md': '# Ms\nthe milestone objectives\n', 'docs/inc.md': '# Inc\nincrement text\n', 'src/a.ts': AFILE };
++  const d = tmp('pg');
++  for (const [p, t] of Object.entries(mem)) { fs.mkdirSync(path.dirname(path.join(d, p)), { recursive: true }); fs.writeFileSync(path.join(d, p), t); }
++  fs.mkdirSync(path.join(d, 'backlog/milestones'), { recursive: true });
++  const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
++  for (const [p, t] of LENS_TEMPLATES) mem[p] = t;
++  const type = o.type ?? 'build';
++  const roundLine = o.round === false ? '' : (o.round ?? `Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder ${dir}/GROUNDER-PLAN.md; triage ${dir}/TRIAGE-PLAN.md\n`);
++  const bodyText = `${taskText({ status: 'LATER', type, files: o.files, assignees: [] })}\n## Implementation Plan\n\n<!-- SECTION:PLAN:BEGIN -->\nthe plan text is long enough to be quoted\n${roundLine}<!-- SECTION:PLAN:END -->\n`;
++  const text0 = bodyText;
++  const ctxText = o.ctx ?? CTX_FILE;
++  HASH_CTX = ctxText;
++  const sel = selectedOf(ctxText);
++  const cut = (createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { extractSections: (t: string, w: string[]) => string; PLAN_SECTIONS: string[] }).extractSections(ctxText, ['Description', 'Acceptance criteria', 'Implementation Plan']);
++  const files: Record<string, string> = {};
++  if (!o.noFolder) {
++    files['context-r1.md'] = ctxText;
++    if (type === 'build') {
++      const lists = rl.resolveTask({ table, root: d, body: text0, type, letter: 'F' }).lists.map((l) => l.id).filter((x) => x !== o.omitList);
++      for (const lid of lists) {
++        const ins = rl.buildLensInputs({ id: lid, list: (table.lists as Record<string, unknown>)[lid], root: d, material: o.badMaterial ? 'some other text under review' : cut, templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: sel });
++        for (const x of ins) {
++          const inn = `in-plan-compliance-${lid}${x.suffix}.txt`;
++          files[inn] = x.text;
++          files[inn.replace(/^in-/, '')] = hdr('lens-compliance.md', x.text, o.placeholder ? promptHash(x.text, TEMPLATE_TEXT, '(no pasted context provided)') : undefined) + body(false);
++        }
++      }
++    }
++    if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.junkPlan ? 'junk\n' : `${hdr('lens-code-review.md', null)}${body(false)}`;
++    if (o.finding) files['plan-code-review.txt'] = `${hdr('lens-code-review.md', null)}BUG severity=${o.finding.sev} — clause "x" — src/a.ts:1 "y" — claim — fix\nVERDICT: PASS\n`;
++    if (o.stray) files['notes.txt'] = 'stray\n';
++  }
++  const seatText = (n: string) => `# ${n} seat\n### ${n.slice(0, 3)}#1 LOW: a small thing to note\n`;
++  const needsReg = (o.files ?? 'src/a.ts').split(',').map((x) => x.trim()).some((e) => (o.tracked ?? ['src/a.ts']).includes(e));
++  const names = ['integration', 'reality-check', ...(needsReg ? ['regression'] : [])].filter((n) => !(o.drop ?? []).includes(n));
++  const seatLines: string[] = [];
++  const verdicts: string[] = [];
++  for (const n of names) {
++    const rel = `${dir}/seat-${n}-1.md`;
++    const t = seatText(n);
++    if (!o.noFolder) files[`seat-${n}-1.md`] = t;
++    mem[rel] = t;
++    seatLines.push(`Seat: ${n} ${o.seatPath ?? rel} sha256:${o.seatSha ?? sha(t).slice(0, 12)}`);
++    if (!o.seatNoVerdict) verdicts.push(`${n.slice(0, 3)}#1 REJECTED docs/a.md:2 "rule one text" a small observation that changes nothing in the plan text`);
++  }
++  if (o.triage !== false && o.triage !== undefined) files['TRIAGE-PLAN.md'] = o.triage;
++  const planFiles = Object.keys(files).filter((n) => /^plan-.+\.txt$/.test(n));
++  for (const n of Object.keys(files)) mem[`${dir}/${n}`] = files[n]!;
++  const lines = ['# Plan grounder', `Grounder: ${o.grounder ?? 'grounder-agent-1'}`, `Lane: ${o.laneHdr ?? 'BL-COMPLY2'}`, ''];
++  for (const n of planFiles.sort()) if (n !== o.noRuled) lines.push(`Ruled: ${n} sha256:${sha(files[n]!).slice(0, 12)} findings:${nFind(files[n]!)}`);
++  let k = 0;
++  for (const n of planFiles.sort()) for (let j = 1; j <= nFind(files[n]!); j++) { k += 1; lines.push(`${n.replace(/\.txt$/, '')}#${j} CONFIRMED src/a.ts:${k} "${quoteAt(k)}"`); }
++  lines.push(...verdicts, ...seatLines);
++  let finalText = o.editBody ? text0 : text0;
++  const refs = [`${dir}/GROUNDER-PLAN.md`, ...(o.triage ? [`${dir}/TRIAGE-PLAN.md`] : []), ...names.map((n) => `${dir}/seat-${n}-1.md`)];
++  finalText = finalText.replace(/\nmilestone:/, `\nreferences:\n${refs.map((r) => `  - ${r}`).join('\n')}\nmilestone:`);
++  if (o.refs === false) finalText = text0;
++  if (!o.noPlanLine) lines.push(`Plan: ${id} sha256:${m.planHash(finalText)}`);
++  if (!o.noGrounder && !o.noFolder) files['GROUNDER-PLAN.md'] = `${lines.join('\n')}\n`;
++  mem[`${dir}/GROUNDER-PLAN.md`] = files['GROUNDER-PLAN.md'] ?? '';
++  if (o.editBody) finalText = finalText.replace(/the plan text is long enough/, 'the plan text is wrong enough');
++  const tracked = o.tracked ?? ['src/a.ts'];
++  return m.planGateErrors({
++    id, taskText: finalText, type, table, root: d, letter: 'F', laneName: 'BL-COMPLY2', assignees: [], folder: Object.entries(files).map(([name, text]) => ({ name, text })),
++    readRepo: (p: string) => { if (o.throwRead) throw new Error('disk gone'); return mem[p] ?? null; }, tracked: (e: string) => tracked.includes(e),
++    facts: { taskOf: () => ({ exists: false, status: '', text: '' }), decisionExists: () => false },
++  });
++}
++const gate = (r: { errors: string[] }, re: RegExp) => { expect(r.errors.join('\n')).toMatch(re); expect(r.errors.length).toBeGreaterThan(0); };
++
++describe('task-375 D: the launch gate refuses a build or fix launch whose plan was not checked', () => {
++  it('control: a build task with full plan evidence passes and reports its lists, findings and Plan line', async () => {
++    const r = await planScenario();
++    expect(r.errors).toEqual([]);
++    expect(r.lists).toBe(4);
++    expect(r.line).toMatch(/^Plan: task-7 sha256:[0-9a-f]{12}$/);
++  });
++  it('a type other than build or fix is not gated', async () => {
++    const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[] } };
++    expect(m.planGateErrors({ id: 'task-7', taskText: taskText({ status: 'LATER', type: 'record' }), type: 'record' }).errors).toEqual([]);
++  });
++  it('no evidence folder: refused, the first error names the folder', async () => {
++    const r = await planScenario({ noFolder: true });
++    expect(r.errors[0]).toMatch(/no plan evidence folder docs\/reports\/reviews\/task-7\//);
++  });
++  it('a missing plan output for one list is refused naming the list; a plan output made over the placeholder context is refused', async () => {
++    gate(await planScenario({ omitList: 'inc-F' }), /list inc-F[\s\S]*plan-compliance-inc-F/);
++    gate(await planScenario({ placeholder: true }), /prompt_sha256/);
++  });
++  it('a plan output whose material is not the plan sections of the committed context is refused (a plan review of some other text); a context with other plan text still passes when the outputs follow it (control)', async () => {
++    gate(await planScenario({ badMaterial: true }), /not the Description, Acceptance criteria and Implementation Plan sections/);
++    const ok = await planScenario({ ctx: CTX_FILE.replace('the plan text', 'another plan text') });
++    expect(ok.errors).toEqual([]);
++  });
++  it('no GROUNDER-PLAN.md; a Grounder equal to the planned lane; a Lane header that is not the launched lane', async () => {
++    gate(await planScenario({ noGrounder: true }), /GROUNDER-PLAN\.md is missing/);
++    gate(await planScenario({ grounder: 'BL-COMPLY2' }), /Grounder .* (is the lane|same as Lane)/);
++    gate(await planScenario({ laneHdr: 'BL-OTHER' }), /Lane "BL-OTHER" is not the lane being launched/);
++  });
++  it('a missing integration or reality-check Seat line is refused', async () => {
++    gate(await planScenario({ drop: ['integration'] }), /no "Seat: integration/);
++    gate(await planScenario({ drop: ['reality-check'] }), /no "Seat: reality-check/);
++  });
++  it('regression is required when the Files line names an existing path, and not when it names only new paths', async () => {
++    gate(await planScenario({ drop: ['regression'] }), /no "Seat: regression/);
++    const nw = await planScenario({ files: 'src/brand-new.ts', tracked: ['src/a.ts'] });
++    expect(nw.errors.join('\n')).not.toMatch(/Seat: regression/);
++  });
++  it('a Seat path outside the evidence folder, a Seat file with another sha, and a seat finding with no verdict are refused', async () => {
++    gate(await planScenario({ seatPath: 'docs/a.md' }), /outside docs\/reports\/reviews\/task-7\//);
++    gate(await planScenario({ seatSha: '0'.repeat(12) }), /Seat integration[\s\S]*sha256/);
++    gate(await planScenario({ seatNoVerdict: true }), /seat finding .* no verdict/);
++  });
++  it('an unruled plan output is refused', async () => {
++    gate(await planScenario({ planLens: true, noRuled: 'plan-code-review.txt' }), /no "Ruled:" line for plan-code-review\.txt/);
++  });
++  it('a CONFIRMED plan finding with no outcome is refused; with a TRIAGE-PLAN.md outcome and the round block it passes (control)', async () => {
++    gate(await planScenario({ finding: { file: 'x', sev: 'LOW' } }), /no outcome line/);
++    const tri = 'plan-code-review#1 wontfix:"a low note with a reason of more than thirty characters"\n';
++    const r = await planScenario({ finding: { file: 'x', sev: 'LOW' }, triage: tri, round: 'Plan review round 1: 0 folded, 0 task, 0 ruling, 1 wontfix, 0 pile; grounder docs/reports/reviews/task-7/GROUNDER-PLAN.md; triage docs/reports/reviews/task-7/TRIAGE-PLAN.md\n' });
++    expect(r.errors).toEqual([]);
++  });
++  it('folded: a quote present in the task passes, a quote not in the task text is refused; fixed is refused in plan mode', async () => {
++    const round = (n: string) => `Plan review round 1: ${n}; grounder docs/reports/reviews/task-7/GROUNDER-PLAN.md; triage docs/reports/reviews/task-7/TRIAGE-PLAN.md\nplan-code-review#1 HIGH folded the plan text is long enou\n`;
++    const ok = await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 folded:"the plan text is long enough"\n', round: round('1 folded, 0 task, 0 ruling, 0 wontfix, 0 pile') });
++    expect(ok.errors).toEqual([]);
++    gate(await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 folded:"this sentence is nowhere in the task"\n', round: round('1 folded, 0 task, 0 ruling, 0 wontfix, 0 pile') }), /not in the task text/);
++    gate(await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 fixed:abcdef1 src/a.ts\n', round: round('0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile') }), /fixed is refused in plan mode/);
++  });
++  it('the round block is required on the task, and the references must hold the grounder and seat files', async () => {
++    gate(await planScenario({ round: false }), /holds no "Plan review round N/);
++    gate(await planScenario({ refs: false }), /references lack docs\/reports\/reviews\/task-7\/GROUNDER-PLAN\.md: backlog task edit task-7 --add-ref/);
++  });
++  it('the Plan line: a missing one is refused; one word edited in the task after the grounder ruled is refused with the new expected line (control: unchanged passes)', async () => {
++    gate(await planScenario({ noPlanLine: true }), /no last "Plan: <task id> sha256/);
++    const bad = await planScenario({ editBody: (b) => b });
++    gate(bad, /Plan line .* is not the hash of the task as it is now[\s\S]*expected: Plan: task-7 sha256:[0-9a-f]{12}/);
++  });
++  it('a stray file in the folder is ignored (control passes) and a read error is a refusal line, never a stack trace', async () => {
++    const s = await planScenario({ stray: true });
++    expect(s.errors).toEqual([]);
++    const t = await planScenario({ throwRead: true });
++    expect(t.errors.length).toBeGreaterThan(0);
++    expect(t.errors.join('\n')).toMatch(/could not read|disk gone/);
++  });
++  it('g375#1: a fix task whose plan-<lens>.txt is junk (no REVIEW header, no VERDICT line) is refused; a valid one passes (control above)', async () => {
++    gate(await planScenario({ type: 'fix', junkPlan: true }), /plan-code-review\.txt: no REVIEW header/);
++    const ok = await planScenario({ type: 'fix' });
++    expect(ok.errors).toEqual([]);
++  });
++  it('a fix task with one plan lens output passes; a build task with only that output is refused', async () => {
++    const fx = await planScenario({ type: 'fix' });
++    expect(fx.errors).toEqual([]);
++    const bd = await planScenario({ planLens: true, omitList: 'first' });
++    gate(bd, /list first/);
++  });
++});
+diff --git a/src/tests/backlog/rule-lists-table.logic.test.ts b/src/tests/backlog/rule-lists-table.logic.test.ts
+index 9eed93f88cb936c5baf8606df4a14f124d4d1241..7082ea1a8bc4a0e01f61d4f4a7418cdbbe66884f 100644
+--- a/src/tests/backlog/rule-lists-table.logic.test.ts
++++ b/src/tests/backlog/rule-lists-table.logic.test.ts
+@@ -46,7 +46,7 @@ describe('V2.LIST round 2: the table rows', () => {
+     expect(row.why).toContain('no governing spec found: operator ruling owed');
+   });
+   it('the Spec 124 list block carries Rule 13 and the role banner rule R-GW', () => {
+-    const r = script(CLI, ['lens-input', '--list', 'policy-124-s2-s5', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('p124'), 'in-x')]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'policy-124-s2-s5', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('p124'), 'in-x')]);
+     expect(r.status, r.stderr).toBe(0);
+     const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+     expect(text).toContain('Rule 13 added by R-R');
+@@ -203,10 +203,11 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
+     expect(without).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+   });
+   it('the surface-136 lens input generated for the change holds fe.01 to fe.44 (44 distinct ids)', () => {
+-    const r = script(CLI, ['lens-input', '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
+     expect(r.status, r.stderr).toBe(0);
+     const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+     const ids = new Set(text.match(/\bfe\.\d\d\b/g));
+     expect([...ids].sort()).toEqual(Array.from({ length: 44 }, (_, i) => `fe.${String(i + 1).padStart(2, '0')}`));
+   });
+ });
++// task-375: lens-input takes --context (A4); see the deviation note on the task
 diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
 index 4fea028e03810a041655685eea7ef7cf478e765c..6c6c817b5d408c10cde578a3f608377c0f604187 100644
 --- a/src/tests/backlog/rule-lists.logic.test.ts
@@ -544,96 +853,6 @@ index 4fea028e03810a041655685eea7ef7cf478e765c..6c6c817b5d408c10cde578a3f608377c
 +    const r = m.complianceRefs([{ id: 'ms-9', file: 'docs/a, b.md' }, { id: 'eng-all', file: 'docs/e.md' }, { id: 'five', file: 'docs/f.md' }], ['compliance:eng-all some other path', 'docs/a.md']);
 +    expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);
 +    expect(r.remove).toEqual([]);
-+  });
-+});
-diff --git a/src/tests/proof-slice.db.test.ts b/src/tests/proof-slice.db.test.ts
-new file mode 100644
-index 0000000000000000000000000000000000000000..841318ca2b6b9edca229f07ded4b1edde07b6878
---- /dev/null
-+++ b/src/tests/proof-slice.db.test.ts
-@@ -0,0 +1,36 @@
-+// SPEC LINK: docs/specs/01-pipeline/132_step_standard_handbook.md x-tooling.1 (a test that needs Postgres is *.db.test.ts, run only by npm run test:db),
-+//            docs/specs/01-pipeline/124_step_standard_policy.md R-EB (b) (gate and tooling variables, R-CV pinned form),
-+//            docs/specs/00-architecture/08_agents.md:511 (MCINC-7: every DB job is rehearsed on the test stack first).
-+//
-+// task-375 D10b: the registered variable the proof slice runner reads its timeout from exists in the logic_variables table with a value the runner accepts, and it equals the pinned seed.
-+// WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane): the variable is registered by a seed + migration the operator authorises with a typed GO after the MCINC-7 rehearsal.
-+// Skipped unless BUILDO_TEST_DB=1 (or CI DATABASE_URL).
-+import { readFileSync } from 'node:fs';
-+import { join } from 'node:path';
-+
-+import type { Pool } from 'pg';
-+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-+
-+import { TIMEOUT_VARIABLE, timeoutMsFromVariable } from '../../scripts/analysis/proof-slice.mjs';
-+import { dbAvailable, getTestPool } from './db/setup-testcontainer';
-+
-+describe.skipIf(!dbAvailable())('proof-slice timeout variable (live DB)', () => {
-+  let pool: Pool;
-+  beforeAll(() => { pool = getTestPool() as Pool; });
-+  afterAll(async () => { await pool.end().catch(() => undefined); });
-+
-+  it('the variable is in logic_variables and its value is a positive integer the runner accepts', async () => {
-+    const { rows } = await pool.query('SELECT variable_value FROM logic_variables WHERE variable_key = $1', [TIMEOUT_VARIABLE]);
-+    expect(rows, `${TIMEOUT_VARIABLE} is not registered in logic_variables`).toHaveLength(1);
-+    expect(timeoutMsFromVariable(rows[0].variable_value)).toBeGreaterThan(0);
-+  });
-+  it('the database value equals the pinned seed default (R-CV form: min = max = default)', async () => {
-+    const seed = JSON.parse(readFileSync(join(process.cwd(), 'scripts/seeds/logic_variables.json'), 'utf8')) as Record<string, { default: number; min: number; max: number }>;
-+    const entry = seed[TIMEOUT_VARIABLE];
-+    expect(entry, `${TIMEOUT_VARIABLE} is not in the seed`).toBeDefined();
-+    expect(entry!.min).toBe(entry!.default);
-+    expect(entry!.max).toBe(entry!.default);
-+    const { rows } = await pool.query('SELECT variable_value FROM logic_variables WHERE variable_key = $1', [TIMEOUT_VARIABLE]);
-+    expect(timeoutMsFromVariable(rows[0].variable_value)).toBe(entry!.default);
-+  });
-+});
-diff --git a/src/tests/proof-slice.logic.test.ts b/src/tests/proof-slice.logic.test.ts
-index e0125ca1e25c031615c8abfd5e25d10f2da74b9b..4852f11ce28632d0594b9f0bf11f7f1f5551c1c0 100644
---- a/src/tests/proof-slice.logic.test.ts
-+++ b/src/tests/proof-slice.logic.test.ts
-@@ -282,3 +282,19 @@ describe('D10 task-375: the child-output ceiling is the registered variable', ()
-     expect(src).not.toMatch(/maxBuffer:\s*\d/);
-   });
- });
-+
-+describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)', () => {
-+  it('accepts a positive integer, given as a number or as the text the variable table stores', async () => {
-+    const m = await import('../../scripts/analysis/proof-slice.mjs');
-+    expect(m.timeoutMsFromVariable(120000)).toBe(120000);
-+    expect(m.timeoutMsFromVariable('90000')).toBe(90000);
-+    expect(m.timeoutMsFromVariable('1')).toBe(1);
-+  });
-+  it('refuses unset, empty, zero, negative, fractional and non-numeric values, each message names the variable', async () => {
-+    const m = await import('../../scripts/analysis/proof-slice.mjs');
-+    expect(typeof m.TIMEOUT_VARIABLE).toBe('string');
-+    for (const bad of [undefined, null, '', '   ', 0, '0', -5, '-5', 1.5, '1.5', 'abc', '12s', Number.NaN, Number.POSITIVE_INFINITY]) {
-+      expect(() => m.timeoutMsFromVariable(bad), String(bad)).toThrow(new RegExp(m.TIMEOUT_VARIABLE));
-+    }
-+  });
-+});
-diff --git a/src/tests/review-template.logic.test.ts b/src/tests/review-template.logic.test.ts
-index 7e51c2f4f2adfffbbbc6be0bf22df9a577905dfc..976f07413125f95c02f7a999c03008d044f4cc6a 100644
---- a/src/tests/review-template.logic.test.ts
-+++ b/src/tests/review-template.logic.test.ts
-@@ -202,3 +202,19 @@ describe('substitutePlaceholders — values are inserted literally, once', () =>
-     expect(out).toBe('A:P {{SPECS}} {{DATA_CONTEXT}}|B:S {{PLAN}}|C:P {{SPECS}} {{DATA_CONTEXT}}|D:');
-   });
- });
-+
-+describe('task-375 A2: one section list for the reviewer context, one extractSections', () => {
-+  // eslint-disable-next-line @typescript-eslint/no-require-imports
-+  const rt = require('../../scripts/lib/review-template');
-+  const md = ['# Review context', '## Task', 't', '## Description', 'd', '## Acceptance criteria', 'a', '## Implementation Plan', 'p', '## Implementation Notes', 'n', '## References', 'r'].join('\n');
-+  it('CONTEXT_SECTIONS and PLAN_SECTIONS are the plan constants', () => {
-+    expect(rt.CONTEXT_SECTIONS).toEqual(['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes']);
-+    expect(rt.PLAN_SECTIONS).toEqual(['Description', 'Acceptance criteria', 'Implementation Plan']);
-+  });
-+  it('extractSections cuts to the next heading of the same or higher level and throws on a missing heading', () => {
-+    const out = rt.extractSections(md, ['Description', 'Implementation Plan']);
-+    expect(out).toBe('## Description\nd\n\n## Implementation Plan\np');
-+    expect(out).not.toContain('References');
-+    expect(() => rt.extractSections(md, ['Nope'])).toThrow(/no heading contains that text/);
 +  });
 +});
 

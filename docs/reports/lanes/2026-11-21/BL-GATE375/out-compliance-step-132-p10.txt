@@ -1,26 +1,36 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:30:02.945Z file_sha256=4ac08816a9dc82a02048b2ec9d795d0f397513cc067240d305f5b7782207ca89 prompt_sha256=a8233df896479b0261752a5d801aa0970e3378516e70a436f622e3a61661c453
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:39:15.769Z file_sha256=7c23fb4f4abf0e24cb391a741a3e5efa213c8b489d1cdfd24ebd3b50af06918d prompt_sha256=f236eec94016a0cb10621697d1582f35a1bc4662359105882e9d4389fb1b656b
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-step-132-p10.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — task-375 C/D10 "D10 (proof-slice.mjs reads its timeout and buffer from registered tooling_ variables; the DB read needs the operator's DB GO after the MCINC-7 rehearsal, otherwise A, B and D ship and the task is not marked complete)" — src/tests/proof-slice.logic.test.ts:285 "describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)'" with pasted note "DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable" — the clause "no default" rests on the test title only, the new test exercises the pure converter timeoutMsFromVariable and nothing asserts the runner reads TIMEOUT_VARIABLE, unlike the D10 buffer test at :280 which asserts the source "expect(src).not.toMatch(/maxBuffer:\s*\d/)" — add the same source assertion for TIMEOUT_VARIABLE once registration lands, or retitle the block to what it checks now.
+BUG/DEFER findings first, then the MET lines for the clauses the change is most likely to break, then the verdict.
 
-DEFER severity=MED — AC #2 "Tests red first, then green through the real hooks" — src/tests/backlog/rule-lists.logic.test.ts:648 "describe('D11b (task-375): the security lens fires for admin and PII paths...'" and src/tests/proof-slice.logic.test.ts:285 carry no red evidence in the pasted material, and the only red record pasted is the earlier run's, "DEFECTS: (1) red.out and commit.out cited by the report are not in the repo; the recorded red is for the wrong reason" — red-first for the D11b, A4, A6, B1 and D10b logic tests cannot be seen — paste the red run output with these tests, not only the green commit.
+DEFER severity=MED — FINAL BUILD NOTE A.4 "rule-lists.mjs lens-input takes --context, refuses without it, and counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)." — src/tests/backlog/rule-lists.logic.test.ts "return script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'whole', '--material', m, '--out', path.join(f.d, 'out/room'), '--template', tpl, '--max', '4000', '--context', ctx]);" — the room+context test only calls the with-list path ('--list first' in base, '--list whole' in run1), no test asserts the selected sections are counted in the room on the no---list path (code-review, error-paths, ux, security) — add one no---list lens-input call with a context and assert the assembled room.
 
-DEFER severity=LOW — plan B.1 "`compliance:<list id> <file>`, one per resolved list" — src/tests/backlog/rule-lists.logic.test.ts: "expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);" — a comma path is pinned as a bare id entry, a form no pasted clause or operator ruling names, so the reference no longer shows which file the compliance doc is — state that form in the task note (or on the plan) or escape the comma so the full form holds.
+DEFER severity=MED — RR-0350 "If the panel leaves an open question - ground it and then take that as approved and let me know in the morning." — src/tests/backlog/rule-lists-table.logic.test.ts:49 "'lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md')" — this edit rides a Files-line deviation whose separate ruling is pending, the pasted notes only say "The separate grounder rules on this deviation." — ground the deviation, record the verdict and the taken-as-approved note before merge.
 
-DEFER severity=LOW — plan A.4 "counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)" — src/tests/backlog/rule-lists.logic.test.ts: "script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'first' ...)" — only the with-list path is exercised in this chunk, the no-list path cannot be seen here — add a no-list case counting the context in the room.
+DEFER severity=MED — Acceptance criteria #3 "Compliance lens run once per governing rule list with the list whole; a separate grounder verdict on file" — NONE — the output compliance review is on file (74 outputs over 14 lists) but the notes record "Grounder owed; the task stays RUNNING", so the separate grounder verdict clause is unmet — obtain the grounder verdict file and cite it before the task leaves RUNNING.
 
-REJECT — AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — that committing src/tests/proof-slice.db.test.ts is a red-by-construction test for a variable the pasted note says is "NOT registered" — not a real issue: x-tooling.1 sends Postgres tests to npm run test:db only and AC #13 keeps the task RUNNING until the operator's DB GO.
+DEFER severity=LOW — Acceptance criteria #8 "lens-input --list surface-135 with a 60,000-character material: today exit 1 naming "## Register"; after A6 exit 0 with parts; the same for policy-124-s2-s5 and bylaw-133." — NONE — the notes record "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)", so only the after-half of A6 is demonstrated — run the three lists on the pre-change head and paste the exit 1 output.
 
-MET — AC #12 (D11b) — src/tests/backlog/rule-lists.logic.test.ts:650 — asserts security in both plan and out for admin and PII paths with a negative control and a control that the existing words still fire it.
-MET — plan A.2 "CONTEXT_SECTIONS ... \"Task\", \"Description\", \"Acceptance criteria\", \"Decisions naming this task\", \"Implementation Notes\"" — src/tests/review-template.logic.test.ts:207 — pins the five exact headings and the three PLAN_SECTIONS headings.
-MET — x-tooling.1 "Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`" — src/tests/proof-slice.db.test.ts:1 — the new file is named *.db.test.ts and its header cites that clause.
-MET — plan A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — src/tests/backlog/rule-lists.logic.test.ts:660 — "refuses without --context (exit 2, says so) and control: with it exits 0".
-MET — plan A.6/A.7 "a block with no deeper heading is cut between table rows ... A row or paragraph that alone passes the room is still refused naming it" — src/tests/backlog/rule-lists.logic.test.ts A6 block — every row appears once, a fitting table is one file, and an oversized row is refused naming "5. Register".
+DEFER severity=LOW — FINAL BUILD NOTE A.6 "in splitUnits (rule-lists.mjs, the `subs.length === 0` throw, :297 at the 410 head) a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused." — src/tests/backlog/rule-lists.logic.test.ts "it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound', () => {" — the title claims "none over the bound" but the body only checks file count and row counts, never that a part stays under --max — add a per-part length assertion against 4000.
 
-VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 12   Unmet: 0
+MET — Acceptance criteria #12 (A7, D11b) — src/tests/backlog/rule-lists.logic.test.ts "describe('D11b (task-375): the security lens fires for admin and PII paths, as README.md:104 and lens-security.md:48 say', () => {" — both-directions lock, admin and PII paths fire it and a control path does not.
+
+MET — Acceptance criteria #10 (A5) — src/tests/backlog/check-lane-close.logic.test.ts "describe('task-375 A4, A5, B2: the close binds the committed review context and the references', () => {" — each planted refusal is paired with a control that closes (no context, placeholder, missing Description, edited context, missing REPORT.md, missing TRIAGE.md).
+
+MET — Acceptance criteria #9 (compliance refs) — src/tests/backlog/rule-lists.logic.test.ts "it('a stale open task: prints the exact add-ref command, one entry per resolved list, each starting compliance:, exit 0', () => {" — count equal to resolve's lists, entries start "compliance:", a matched task prints nothing.
+
+MET — Acceptance criteria #8 (A3, lens-input --context refusal) — src/tests/backlog/rule-lists.logic.test.ts "it('refuses without --context (exit 2, says so) and control: with it exits 0', () => {" — the refusal and its control are both asserted.
+
+MET — x-captures.5 (R-E, both-directions lock) — src/tests/backlog/rule-lists.logic.test.ts "it('control: a path naming none of these adds no security lens', async () => {" — every new behaviour here (D11b, A4 room, A6 split, B1 refs) ships with a passing control.
+
+MET — x-tooling.1 (R-GQ, DB tests are *.db.test.ts) — src/tests/backlog/check-lane-close.logic.test.ts, rule-lists.logic.test.ts, rule-lists-table.logic.test.ts — all three are *.logic.test.ts and spawn no Postgres.
+
+REJECT — material chunk — accused that the module-scope read of docs/reports/reviews/task-375/fixture-context.md fails at import because that file is absent — not a real issue, the build note places the shared fixture at that path and it is a data file outside this source chunk.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
 
 ---
-⏱  74752ms (74.8s)
-📊 Tokens — total: 41115, input: 27913, output: 13202, reasoning: 12080
+⏱  141787ms (141.8s)
+📊 Tokens — total: 62601, input: 35522, output: 27079, reasoning: 25763

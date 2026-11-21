@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:40:13.296Z file_sha256=bed56705d6f5c63131372e7ba55e0d5b23671a22a2fa4da5c7f09ef761f62d48 prompt_sha256=f9ea5e60ec7e8a9c558fb7d580c88c7e735f250cb1c8f079cc17a8d47b234c50
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-step-132-p12.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Acceptance criteria #2, "Tests red first, then green through the real hooks" (with #13, "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)") — src/tests/proof-slice.db.test.ts:6 "WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane)" — no red was ever observed and the file cannot be green as committed: it asserts a logic_variables row and a seed entry that the pasted note says do not exist ("no tooling_ timeout variable exists in scripts/seeds/logic_variables.json and registering one is a seed + migration + id claim the operator authorises with a typed DB GO"), so the first run is red and npm run test:db goes red for every later lane until the GO — fix: hold this file out of the tree until the DB GO, or land the seed plus migration under the GO in one commit that records red against the pre-seed DB and green after it, and paste both outputs on the task.
+
+BUG severity=MED — Plan C, "D10 (proof-slice.mjs reads its timeout and buffer from registered tooling_ variables; the DB read needs the operator's DB GO ...)" — src/tests/proof-slice.logic.test.ts:286 "describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)'" — the clause is satisfied by a test name only: the block tests the pure helper timeoutMsFromVariable and nothing asserts the runner reads the variable, while the pasted note says "DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable", so the title asserts behaviour the chunk does not prove — fix: add an assertion on the runner path (no DEFAULT_TIMEOUT_MS literal in use, timeoutMsFromVariable called with the registered value) or retitle the block to name only the helper it exercises.
+
+DEFER severity=LOW — Pasted ruling, "This plan (PLAN-375-v4, in the Implementation Plan field) GOVERNS the approved FINAL BUILD NOTE (NOTE-375.md, approved at MORNING-DECISIONS.md:1557)" — src/tests/review-template.logic.test.ts:211 "expect(rt.PLAN_SECTIONS).toEqual(['Description', 'Acceptance criteria', 'Implementation Plan']);" — no pasted clause names a PLAN_SECTIONS constant (the pasted scope A.2 names only CONTEXT_SECTIONS), and the governing Implementation Plan field is not pasted, so whether this added constant is authorised cannot see — fix: paste the Implementation Plan field or name PLAN_SECTIONS in the card text so the addition is traceable.
+
+MET — x-tooling.1, "Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`" — src/tests/proof-slice.db.test.ts:1 — the new Postgres test carries the `.db.test.ts` name and is guarded by dbAvailable().
+
+MET — Plan A.2, "The reviewer's context is these headings of that file only, with the exact heading texts: 'Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'" — src/tests/review-template.logic.test.ts:210 — CONTEXT_SECTIONS is pinned to exactly those five heading texts in that order.
+
+MET — Acceptance criteria #11, "A6 The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green" — src/tests/review-template.logic.test.ts:202 — the diff only appends after the existing substitutePlaceholders block, no existing assertion removed or altered.
+
+MET — RR-0333, "don't makr the task complete until it actually works" — pasted note "DEFAULT_TIMEOUT_MS (120000) stays in use until registration ... the task is NOT complete" — the chunk ships the partial work with the task left RUNNING, not marked complete.
+
+REJECT — x-captures.5, "Tests write before-images into a per-file sandbox, never the real golden tree" — neither test file writes any golden or before-image file, they only read a seed JSON and query logic_variables, so the clause is untouched by this chunk.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  61796ms (61.8s)
+📊 Tokens — total: 34862, input: 23065, output: 11797, reasoning: 10829

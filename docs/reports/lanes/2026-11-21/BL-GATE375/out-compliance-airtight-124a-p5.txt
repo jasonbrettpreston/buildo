@@ -1,25 +1,20 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:10:55.259Z file_sha256=511f3e77f09fea0a9d154d9809f31ea7753646a2305da5c435b93e02c93ea0c9 prompt_sha256=73318e9aba3122be4ddc0bf521433eaf58fe826ebdc868de268c6484cf4becae
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:17:33.438Z file_sha256=c7ae67f6f70ad73fc571ce934178a04cba40e4e4467503ae519e7c8601bbc940 prompt_sha256=f083f5d6359285a23a308ee9ebc9442fc0d9577982bdfe179d062a4c839ca61d
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-124a-p5.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — build note A4 close binding "no committed context is a refusal" — scripts/hooks/check-lane-close.mjs "if ((i.contexts ?? []).length === 0) errors.push(" — the presence refusal is pushed before the build/fix gate, so a task type that runs no lens is also refused a missing context — guard the push on the task types that run lens reviews (build, fix, plan), or confirm closeErrors is never reached for the rest.
-
-MET — A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — scripts/lib/review-template.js "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" — the exact five headings defined once.
-MET — A.2 "extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text" — scripts/lib/review-template.js "function extractSections(markdown, wanted)" — moved and exported alongside PLAN_SECTIONS.
-MET — A.4 "returns the selected text read from the committed context file, so the existing prompt_sha256 recompute (:65) binds it" — scripts/hooks/check-lane-close.mjs "export function lensContexts(contexts, hasNotes = true)" — returns values plus problems, consumed by reviewErrors through contexts: lc.values.
-MET — A.4 "lacks the Description, or lacks the Implementation Notes section when the task has notes" — scripts/hooks/check-lane-close.mjs "const want = !hasNotes && !/^#{1,6}\s.*Implementation Notes/m.test(c.text) ? CONTEXT_SECTIONS.filter((x) => x !== 'Implementation Notes') : CONTEXT_SECTIONS;" — refuses a missing heading only when the task has notes.
-MET — build note B2 "refuses a missing REPORT.md, GROUNDER.md or (when the lane dir holds it) TRIAGE.md reference and prints the exact backlog task edit --add-ref command" — scripts/hooks/check-lane-close.mjs "for (const n of ['REPORT.md', 'GROUNDER.md', ...(textOf('TRIAGE.md') !== undefined ? ['TRIAGE.md'] : [])])" — B2 with the exact add-ref command.
-MET — D "required seat reports, outcomes and Plan hash are not on the board" — scripts/hooks/check-lane-close.mjs "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };" — seats, planGateErrors and planHash present.
-MET — RR-0342 "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently" — scripts/hooks/check-lane-close.mjs "const need = [...PLAN_SEATS.always, ...(entriesOf(i.taskText).some((e) => i.tracked(e)) ? PLAN_SEATS.conditional : [])];" — regression seat demanded only when the Files line names a tracked path, reality-check always.
-MET — RR-0349 "Compliance on the plan and output. Let's start with that!" — scripts/hooks/check-lane-close.mjs "const phases = build ? ['out'] : ['plan', 'out'];" and "phases: ['plan']" in planGateInner — plan and output compliance both checked.
-
-REJECT — R-BB "A change set that appends a file to converted.json converted[] must stage every spec whose system-map Implementation cell names that file" — the change is accused of missing owner-spec staging — the diff touches no converted.json or census row, so R-BB has no subject.
-REJECT — R-BC "(e) ... pre-commit checks are FILE-ONLY (no DB, no network)" — the change is accused of a DB or network read in a hook — check-lane-close.mjs reads only git objects and repo files, so no violation.
-REJECT — R-BE "a generated path hand-listed in any Target Files span is RED" — the change is accused of hand-listing generated step paths — the diff changes review tooling and its tests, no step Target Files generated block.
+BUG severity=<none found> — not applicable — NONE — no clause in the pasted register (R-AX…R-BH) or the task's operator rulings is unmet by this chunk — none required
+DEFER severity=LOW — "context-rN.md (N = existing context-r*.md + 1, never overwritten)" — scripts/lib/review-template.js "return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;" — counting files (not max N) reuses a number after a gap (r1,r3 present ⇒ next write r3), so "never overwritten" holds only while rounds stay contiguous — derive N as max existing suffix + 1, not count + 1
+MET — A2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js; extractSections moves there from deepseek-review.js:106-121" — scripts/lib/review-template.js "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" — one constant plus PLAN_SECTIONS and extractSections live in the shared module
+MET — A4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes." — scripts/hooks/check-lane-close.mjs "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(...); continue; }" and "values.push(extractSections(c.text, want)); } catch (e) { problems.push(...) }" — placeholder refused, missing Description/notes heading throws into a problem line, and the prompt_sha256 recompute binds lc.values
+MET — B.3 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir (08_agents.md:347); the close check refuses when one is missing." — scripts/hooks/check-lane-close.mjs "for (const n of ['REPORT.md', 'GROUNDER.md', ...(textOf('TRIAGE.md') !== undefined ? ['TRIAGE.md'] : [])]) { ... if (!have.has(rp)) errors.push(...)" — refuses the missing repo-copy reference with the exact --add-ref command
+MET — D3 "the first 12 hex of the sha256 of the title plus the whole body after the front matter, whitespace squashed" — scripts/hooks/check-lane-close.mjs "return sha(squash(`${fm.title ?? ''} ${body}`)).slice(0, 12);" — planHash matches the ruled construction and its "Plan: id sha256:" line
+REJECT — R-BA "a step-standard item that no machine checks is not part of the standard" — the change is accused of not running the airtight gates — R-BA scopes step-validate/spec-gate checks to step descriptors and converted steps, and this chunk touches no descriptor or converted.json
+REJECT — R-BB "A change set that appends a file to converted.json converted[] must stage every spec whose system-map Implementation cell names that file" — the change is accused of not staging owner specs — no converted.json append appears in this chunk, so the commit gate is not triggered here
+REJECT — R-BG "#44 witness truthfulness" — the change is accused of bending the SQL witness gate — this chunk changes review-tooling (hook, template helper, backlog test) and adds no SQL text, so #44 has nothing to observe
 
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 12   Unmet: 0
+Clauses checked: 48   Unmet: 0
 
 ---
-⏱  172324ms (172.3s)
-📊 Tokens — total: 67389, input: 34189, output: 33200, reasoning: 32242
+⏱  171126ms (171.1s)
+📊 Tokens — total: 66648, input: 34106, output: 32542, reasoning: 31735

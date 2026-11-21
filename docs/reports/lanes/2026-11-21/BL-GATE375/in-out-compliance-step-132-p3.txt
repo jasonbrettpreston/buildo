@@ -1,5 +1,5 @@
-LIST step-132 sha256:6cd3ede6d22d32ad7392b19840a9cf619370191e29263bf375d16a79b96448e1 material sha256:af8dfcf96c950f5c867864450a2e854b0e67cf22a5fced057aa2da6f229af9aa part 1 of 2 chunk 2 of 5
-RULE LIST step-132 (docs/specs/01-pipeline/132_step_standard_handbook.md, sections 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.mjs","scripts/deepseek-review.js"]
+LIST step-132 sha256:6cd3ede6d22d32ad7392b19840a9cf619370191e29263bf375d16a79b96448e1 material sha256:af8dfcf96c950f5c867864450a2e854b0e67cf22a5fced057aa2da6f229af9aa part 1 of 2 chunk 2 of 6
+RULE LIST step-132 (docs/specs/01-pipeline/132_step_standard_handbook.md, sections 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.mjs","scripts/deepseek-review.js"]
 
 ## 2. Every step
 

@@ -1,23 +1,19 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T02:04:19.722Z file_sha256=12660e11ac3de3143e6d63440ba38ea873ae0bd71bf7ecd1e7803f9deebc2d0b prompt_sha256=4a2deef0a6d85b3ab2b274f57e6776aa1ceb0b23bd14c3ec570004da14da67d5
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T03:08:33.618Z file_sha256=2a30b8adaf1ca3b1ec1ce98eda60132fea5a48729ae1b845c7bc52f4143e32c4 prompt_sha256=a73b4f760a3753474422e13577753555cd1eab5113d9d462e3408df2fc0a638a
 🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-code-review-p2.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — scripts/hooks/check-lane-close.mjs:587 "const planCut = (text) => { try { return extractSections(text, PLAN_SECTIONS); } catch { return null; } };" — the empty catch discards which heading is missing, so a context without an Implementation Plan heading makes every resolved list fall through to materialOk and report "the stamped material is not the Description, Acceptance criteria and Implementation Plan sections of the committed context", misattributing the cause — capture e.message and push one problem line naming the context and the missing heading instead of returning null.
+DEFER severity=MED — scripts/lib/review-template.js:138 "return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;" — numbering is a count, not max(N)+1, so with context-r1.md gone and context-r2.md present the next brief writes context-r2.md and replaces a committed round file, whose sha256 the close check recomputes (the test asserts "leaves context-r1.md as it was (never overwritten)") — parse N from each name and return Math.max(0, ...Ns) + 1.
 
-DEFER severity=MED — scripts/hooks/check-lane-close.mjs:45 "const PLACEHOLDER_CONTEXT = '(no pasted context provided)';" — the placeholder text is re-typed here from the review tool with no shared source, so if deepseek-review.js ever changes that literal the placeholder refusal silently stops firing and a placeholder context is accepted as a value — export the placeholder from scripts/lib/review-template.js and require it here, the way CONTEXT_SECTIONS was centralised.
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:318 "export function lensContexts(contexts, hasNotes = true) {" — contexts has no default and the exported form was `lensContexts = () => [undefined]`, so any caller still using the zero-arg form throws "contexts is not iterable" instead of yielding the refusal line — default it: contexts = [].
 
-DEFER severity=MED — scripts/hooks/check-lane-close.mjs:318 "export function lensContexts(contexts, hasNotes = true) {" — the exported function lost its zero-argument call form (previously "export const lensContexts = () => [undefined];") and gives no default for contexts, so any remaining lensContexts() call now throws "contexts is not iterable" at the loop on the next line, a crash rather than a problem line — default the parameter to contexts = [].
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:661 "errors.push(...ge.errors);" — grounderErrors prefixes its lines with the bare label, so the plan gate prints "GROUNDER-PLAN.md has no ..." next to every neighbouring refusal that carries the task id ("errors.push(`${id}: GROUNDER-PLAN.md is missing in ${dirNote} (a separate grounder rules every plan finding and copies the Plan line last)`);"), which breaks one-item-one-id line grepping — pass label: `${id}: GROUNDER-PLAN.md`.
 
-DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:771 ".filter((x) => x.text !== null);" — a committed context-rN.md that readRepo cannot read is dropped silently, so the operator only sees the generic "no committed review context file" line or a prompt_sha256 mismatch with no file named as unreadable — keep the entry and push a refusal naming the path that could not be read.
+DEFER severity=LOW — src/tests/backlog/backlog-brief-context.logic.test.ts:173 "expect(ctx.indexOf('## Implementation Plan')).toBeGreaterThan(ctx.indexOf('## Acceptance criteria'));" — when the Acceptance heading is missing indexOf is -1 and the ordering assertion still passes, so it cannot catch the case it exists for — assert both indices are >= 0 first.
 
-DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:323 "const want = !hasNotes && !/^#{1,6}\s.*Implementation Notes/m.test(c.text) ? CONTEXT_SECTIONS.filter((x) => x !== 'Implementation Notes') : CONTEXT_SECTIONS;" — every lens command passes all five --section flags and deepseek-review throws on a heading it cannot find, so a four-section value can never equal the prompt_sha256 of a real output, and the branch produces a value that matches nothing — make the missing heading a problem line instead of a fallback value.
-
-DEFER severity=NIT — scripts/hooks/check-lane-close.mjs:627 "findings = ge.verdicts.size;" — the returned findings figure counts verdict lines parsed from GROUNDER-PLAN.md, while the findings actually present are the found array built at line 609 (used only for lensKinds), so a verdict for an id absent from the outputs inflates the "plan gate ok: <L> lists, <M> findings" line — set findings = found.length.
-
-REJECT — scripts/hooks/check-lane-close.mjs:601 "if (!good) errors.push(last);" — looks like a null can be pushed because last is initialised to null — it is correct because the inner loop always executes at least once (cands.length ? cands : the null fallback) and last ??= e runs on every non-null result, so last is a string whenever good is false.
+DEFER severity=NIT — scripts/hooks/check-lane-close.mjs:335 "function grounderErrors({ g, label = 'GROUNDER.md', lensFiles, findings, laneName, assignees, id, readRepo })" — both call sites pass a label, so the default is dead — drop the default or drop the parameter.
 
 VERDICT: PASS on code correctness
 
 ---
-⏱  217265ms (217.3s)
-📊 Tokens — total: 71751, input: 29993, output: 41758, reasoning: 40983
+⏱  217618ms (217.6s)
+📊 Tokens — total: 70611, input: 31031, output: 39580, reasoning: 39056

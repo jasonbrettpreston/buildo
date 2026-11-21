@@ -1,5 +1,5 @@
-LIST queue-137 sha256:c1daa368d394cfaf048fb91073b60920973d9a0004c9769098bdb62ea98a7649 material sha256:b23cc509d80ea05b88e481604c2596994ee29264c40135282ae4677f38cbe7f8 part 1 of 1 chunk 3 of 6
-RULE LIST queue-137 (docs/specs/00-architecture/137_mcqueue.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","scripts/lib/review-template.js"]
+LIST queue-137 sha256:c1daa368d394cfaf048fb91073b60920973d9a0004c9769098bdb62ea98a7649 material sha256:03f003ee73433b3d798709c486c9faca68615cefc3bc3401a7cf059765a6fee4 part 1 of 1 chunk 3 of 6
+RULE LIST queue-137 (docs/specs/00-architecture/137_mcqueue.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs"]
 
 # SPEC 137 — McQueue
 
@@ -192,7 +192,7 @@ Also deferred: Backlog.md as the source of truth ("part 2"). Not adopted. It nee
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017c75a0a90 100644
+index d52921dc5ea1751f92feb692eeab811af30bd4e1..90b7a323a9af01270733f4d3726629f5f9e751b2 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -34,11 +34,14 @@ import { spawnSync } from 'node:child_process';
@@ -469,7 +469,7 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
    // task-399: every CONFIRMED or CONFLICT id carries one outcome (TRIAGE.md, last line wins), and the outcomes are shown on the task
    if (build) {
      const dirPath = mine[0][0];
-@@ -492,6 +540,104 @@ export function closeErrors(i) {
+@@ -492,6 +540,109 @@ export function closeErrors(i) {
    return errors;
  }
  
@@ -533,7 +533,12 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
 +      }
 +      if (!good) errors.push(last);
 +    }
-+  } else if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
++  } else {
++    // a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line (reviewErrors; g375#1)
++    const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));
++    if (planFiles.length === 0) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
++    for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null).map((x) => `${id}: ${x}`));
++  }
 +  const g = textOf('GROUNDER-PLAN.md');
 +  let findings = 0;
 +  if (g === undefined) errors.push(`${id}: GROUNDER-PLAN.md is missing in ${dirNote} (a separate grounder rules every plan finding and copies the Plan line last)`);
@@ -574,7 +579,7 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
  function check(msgFile) {
    if (!msgFile) return fail(['usage: check-lane-close.mjs <commit-msg-file>']);
    const top = git(['rev-parse', '--show-toplevel']).stdout.trim() || process.cwd();
-@@ -620,7 +766,10 @@ function check(msgFile) {
+@@ -620,7 +771,10 @@ function check(msgFile) {
      const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];
      const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
      const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
@@ -586,39 +591,4 @@ index d52921dc5ea1751f92feb692eeab811af30bd4e1..238476a475047365988c2b4ae81b4017
    }
    // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
    const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
-diff --git a/scripts/lib/review-template.js b/scripts/lib/review-template.js
-index 28dd70b5aec22742dcddd93297eb51df363b1048..e7b35db17714c0566e23520471d015eb34a7dd11 100644
---- a/scripts/lib/review-template.js
-+++ b/scripts/lib/review-template.js
-@@ -108,4 +108,29 @@ function loadReviewNotesBlock(filePath) {
-   return { notesPath: rel, block };
- }
- 
--module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX };
-+/**
-+ * task-375 A2: the reviewer's context is the task, sized. ONE list of headings of the context file docs/reports/reviews/<task>/context-rN.md
-+ * (CONTEXT_SECTIONS) and the plan phase's material (PLAN_SECTIONS), shared by the review tool, rule-lists.mjs lens-input and the close check.
-+ */
-+const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];
-+const PLAN_SECTIONS = ['Description', 'Acceptance criteria', 'Implementation Plan'];
-+
-+/** Keep only the markdown sections whose heading line contains one of `wanted` (to the next heading of the same or higher level); throws on a missing heading. */
-+function extractSections(markdown, wanted) {
-+  const lines = markdown.split('\n');
-+  const out = [];
-+  for (const want of wanted) {
-+    const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && l.includes(want));
-+    if (start === -1) throw new Error(`--section "${want}": no heading contains that text`);
-+    const level = lines[start].match(/^(#+)/)[1].length;
-+    let end = lines.length;
-+    for (let i = start + 1; i < lines.length; i += 1) {
-+      const m = lines[i].match(/^(#+)\s/);
-+      if (m && m[1].length <= level) { end = i; break; }
-+    }
-+    out.push(lines.slice(start, end).join('\n'));
-+  }
-+  return out.join('\n\n');
-+}
-+
-+module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections };
 

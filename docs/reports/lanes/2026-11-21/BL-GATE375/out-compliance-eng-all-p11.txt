@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T03:22:21.947Z file_sha256=0c77ab1613e94bcec4e278773c69988a6fac30ca1cd57f44bc668f29be75ca78 prompt_sha256=8ddff7b28afda25597af9ac9b29e9e774ae615a8152da4450b852fa2cdda8e14
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-eng-all-p11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §2.3 "Before accessing nested object properties, explicitly check for `null` or `undefined`." — src/tests/proof-slice.db.test.ts:34 "expect(timeoutMsFromVariable(rows[0].variable_value)).toBe(entry!.default);" — the second `it` indexes `rows[0]` with no length guard (the first `it` has one at :24 "expect(rows, `${TIMEOUT_VARIABLE} is not registered in logic_variables`).toHaveLength(1);"), so the exact defect this test exists to catch, a missing `logic_variables` row, dies as a TypeError instead of the named assertion — add the same `expect(rows, ...).toHaveLength(1)` (or `rows[0]?.variable_value`) before the access at :34.
+
+BUG severity=HIGH — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — src/tests/proof-slice.db.test.ts:6 "WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane)" and build note "the logic test is green, src/tests/proof-slice.db.test.ts is written and NOT RUN" — the pure-logic half (`timeoutMsFromVariable`) needs no DB, so the operator's DB-GO deferral does not cover it, and no red is cited for D10b anywhere in the build notes (every other commit cites red7.out, red9.out, red10.out, red11.out, red13.out, red14.out), leaving AC #13 "A8 D10b test red first then green" unmet on its red half — run the logic test at the head before the accessor existed, commit red.out, and cite it in the D10b build note.
+
+DEFER severity=MED — §2.3 "If using `!`, you must document why in an inline comment." — src/tests/proof-slice.db.test.ts:31 "expect(entry!.min).toBe(entry!.default);" — four non-null assertions (`entry!.min`, `entry!.max`, `entry!.default` twice) carry no inline comment; the `toBeDefined()` at :30 narrows only for a human, not the compiler — replace with a guard (`if (!entry) throw new Error(...)`) or add the required comment.
+
+DEFER severity=MED — plan A.2 "extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text." — src/tests/review-template.logic.test.ts:205 "describe('task-375 A2: one section list for the reviewer context, one extractSections', () => {" — the assertions pin the two constants and one `extractSections` call, but nothing asserts that deepseek-review.js, rule-lists.mjs and check-lane-close.mjs no longer carry their own copy, so "one extractSections" rests on the describe title — add a source scan (deepseek-review.js does not define its own `extractSections` and requires it from scripts/lib/review-template).
+
+DEFER severity=MED — task Description C "proof-slice.mjs reads its timeout and buffer from registered tooling_ variables" — src/tests/proof-slice.logic.test.ts:285 "describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)', ...)" — the buffer twin is pinned by a source scan at :282 "expect(src).not.toMatch(/maxBuffer:\s*\d/);" but there is no twin scan forbidding the 120000 literal at the spawn site, and the build note says "DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable"; the title's "no default" is therefore not what the tests prove — add the timeout source scan (red first) so the literal's removal is forced when the variable is registered.
+
+DEFER severity=LOW — §5.5 "Parity battery ... seed JSON ↔ TS `LOGIC_VAR_DEFAULTS`, and generated doc ↔ its generator (the drift guard" — src/tests/proof-slice.db.test.ts:28 "const seed = JSON.parse(readFileSync(join(process.cwd(), 'scripts/seeds/logic_variables.json'), 'utf8')) ..." — the only cross-check is live DB against the seed JSON; nothing pins the seed row to the generated registry doc, which is exactly the drift the retro grounder logged for the sibling variable ("generated registry stale; no SPEC LINK") — add the registry-parity entry in the same commit that registers the timeout variable.
+
+MET — §5.2 test file pattern (DB replay) — src/tests/proof-slice.db.test.ts:17 — a Postgres-dependent assertion is placed in `*.db.test.ts` behind "describe.skipIf(!dbAvailable())".
+MET — plan A.2 heading texts — src/tests/review-template.logic.test.ts:210 — CONTEXT_SECTIONS asserted equal to the exact planned five headings, PLAN_SECTIONS to the three plan headings.
+MET — AC #11 "A6 The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green." — src/tests/review-template.logic.test.ts:204 — the hunk appends after "});" and edits no existing assertion.
+MET — Files line "src/tests/proof-slice.logic.test.ts, src/tests/proof-slice.db.test.ts, src/tests/review-template.logic.test.ts" — all three paths in this chunk appear on the Description Files line.
+MET — §5.1 "Never write untyped inline mocks" — src/tests/proof-slice.logic.test.ts:287 — inputs are literals to a real imported function, no mock object literals.
+
+REJECT — §1.3 "JSON.parse() output from MMKV must be structurally validated ... before casting" — accused: the db test casts `JSON.parse` output without a shape check — that clause is scoped to MMKV `PersistedClient` hydration in Expo, not a committed seed fixture read by a DB test.
+REJECT — §5.4 "create `scripts/seed-[scenario].js`" — accused: no seed script added for the timeout variable — the test runs against the testcontainer, and registering the seed row is the operator-gated step the plan defers, not a demo scenario script.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 2
+
+---
+⏱  82209ms (82.2s)
+📊 Tokens — total: 35982, input: 21154, output: 14828, reasoning: 13390
