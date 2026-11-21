@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T15:29:08.111Z file_sha256=fb623b66b07f629c5bc972051eaaf536237c09fb52242060a7fb33473043add8 prompt_sha256=62d17f97c654fee1c767f7f77610d522f579ae1f959354afff506ffcfae1537e
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — src/tests/backlog/backlog-lane.logic.test.ts:385 "const text = fs.readFileSync(fold, 'utf8');" — this chunk's own paths list is the whole change (1 of 1, 7 files) and it omits docs/reports/reviews/task-375/plant-evidence.mjs, the fixture program the plan's Q4 rules edited, so as reviewed the lane fixture cannot contain FOLD-CHECK.md and this read, the control at :387 and every other build/fix lane fixture in the file fail the new gate; cannot see the fixture program, the grounder should confirm. — Ship the plant-evidence.mjs edit in the same change so the fixture writes a FOLD-CHECK.md whose Plan line hashes the task the fixture leaves at launch.
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:659 "const fp = lastOf(/^\s*Plan:\s*(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm);" — `\s` matches newlines, so "Plan:" on one line and "task-7 sha256:..." on the next passes, and nothing ties the match to the file end, against the note's "last, alone on its line" (the same looseness lets "Verdict:" with "PASS" on the next line pass at :656). — Use [ \t]* and [ \t]+ inside the three regexes, and anchor the Plan match to the end of the text.
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:639 "const refs = [`${dir}/GROUNDER-PLAN.md`, ...(textOf('TRIAGE-PLAN.md') !== undefined ? [`${dir}/TRIAGE-PLAN.md`] : []), ...seats.map((x) => x.path)]; " — FOLD-CHECK.md is now mandatory evidence but is not in the refs check, so unlike GROUNDER-PLAN.md and TRIAGE-PLAN.md the record need not be attached to the task. — Add `${dir}/FOLD-CHECK.md` to refs, or say in the 137 note why the record is folder-only.
+REJECT — src/tests/backlog/rule-lists.logic.test.ts:603 "const s = stampOf(fs.readFileSync(n.listed[0]!, 'utf8'));" — the non-null assertion looks like it hides an empty stdout list — the preceding expect(n.listed.map((x) => path.basename(x))).toEqual(['in-out-code-review-p1.txt']) fails first, so the assertion cannot mask an empty list.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The change omits docs/reports/reviews/task-375/plant-evidence.mjs, so the lane fixture cannot carry FOLD-CHECK.md and the new test and the existing build/fix lane fixtures fail at the launch gate.
+- The Plan (and Verdict) regexes let a value sit on the next line and do not require the Plan line to be last, so malformed records pass the gate.
+- FOLD-CHECK.md is required in the evidence folder but not in the task references, unlike every other mandatory plan record.
+
+---
+⏱  144785ms (144.8s)
+📊 Tokens — total: 41104, input: 12695, output: 28409, reasoning: 27692

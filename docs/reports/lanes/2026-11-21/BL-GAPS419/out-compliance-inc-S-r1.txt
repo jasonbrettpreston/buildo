@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:29:08.084Z file_sha256=afe2f1532ea24ccd56f0726f749262cf614798c937703b75903594cbd7af50d3 prompt_sha256=50bad70875983058491985b5d4e798ecd7e36a279b932188aa1674a9dd336faa
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Q1/Q4 "Q1 the Files line is final at eight paths" and "Q4 plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)" — NONE — the diff carries no hunk for docs/reports/reviews/task-375/plant-evidence.mjs, so only 7 of the 8 final paths changed and the fixture that must plant FOLD-CHECK.md for the gate-walk lanes is untouched — add the ruled three-line fixture edit between :66 and :67 (or get the path struck from the Files line with a fresh ruling)
+
+DEFER severity=LOW — 137 note "and last, alone on its line, `Plan: <task id> sha256:<12 hex>`" — scripts/hooks/check-lane-close.mjs "const fp = lastOf(/^\s*Plan:\s*(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm);" — the gate takes the last matching Plan line anywhere in the file, so a FOLD-CHECK.md with prose or further lines after the Plan line still passes while the note says the line is last — require only whitespace after the matched Plan line before accepting it
+
+DEFER severity=LOW — AC #6 "The three test files green" / AC #5 "Existing close tests (a -p1 pair, the unsuffixed compliance control) still pass." — NONE — cannot see any run result, and the naming rule for a no-list one-file input changed with no pre-existing single-file no-list expectation shown updated in rule-lists.logic.test.ts, so either none existed or AC #5 is red — run the three files and record the result, or name the existing test that covers the old unsuffixed no-list name
+
+MET — AC #1 — src/tests/backlog/backlog-lane.logic.test.ts "expect(bad.stderr).toMatch(/FOLD-CHECK\.md is missing/);" — the new test drops the file (status 3, file named), restores it and gets "plan gate ok"
+
+MET — AC #3 — scripts/analysis/rule-lists.mjs "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — a no-list one-file input now takes -p1, asserted as 'in-out-code-review-p1.txt' in rule-lists.logic.test.ts
+
+MET — AC #4 — src/tests/backlog/check-lane-close.logic.test.ts "expect(ok.status, ok.stderr).toBe(0);" in task-419 (d) — the close check accepts the out-code-review-p1.txt pair and still refuses the unsuffixed rename
+
+MET — 137 note "a line `Checked by: <name>` (the text after the colon up to the first comma or \" (\" or the line end; not the lane and not an assignee), the last `Verdict:` line reading `Verdict: PASS`" — scripts/hooks/check-lane-close.mjs "const who = by ? by[1].split(/,| \(/)[0].trim() : '';" plus the clash loop over laneName and assignees — the named parsing, the lane/assignee clash and the last-Verdict rule all match
+
+MET — RR-0354 "change the spec's wording" — docs/specs/00-architecture/08_agents.md "Dated note 2026-11-21 (M-246, prior text kept ...): the cross-read adversary pass of 11.2 and the Cross-read Adversary row of the roster (:449) is no longer required after a fold" — the 11.2 wording is changed and the grounder re-execution with FOLD-CHECK.md is kept, mirrored by the 137 note
+
+REJECT — RR-0354 "change the spec's wording" — accused of leaving the 11.2 wording in CLAUDE.md, .claude/workflows.md, the review template packs and Spec 119 unchanged — the ruling names the spec and 08_agents.md discloses those copies as not edited by this task and reports them to the operator, so this is not a clause the change leaves unmet
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 2
+
+---
+⏱  87240ms (87.2s)
+📊 Tokens — total: 35199, input: 18939, output: 16260, reasoning: 15305

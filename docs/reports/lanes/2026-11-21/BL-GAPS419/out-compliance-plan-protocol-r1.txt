@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:29:08.098Z file_sha256=719687e9d59cd61ec538d023bd1033d73850d06e24a0a16d5000e2d2082515c6 prompt_sha256=b6fc5ae9788eb5d2f90be1bbc1d57773b6edda92e0331a1570cd2bd7a9d01b16
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Files line and Q4 ruling "Q4 plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)" — src/tests/backlog/backlog-lane.logic.test.ts:384 "expect(text).toMatch(/^Checked by: Fold-G1$/m);" — the material changes 7 paths and docs/reports/reviews/task-375/plant-evidence.mjs is absent, so the fixture never plants FOLD-CHECK.md and test (a) plus the added stale-Plan assertion at :379 cannot be green, leaving acceptance #1(a), #5(e) and #6(f) "git diff --stat shows only the Files line" unmet — add the plant-evidence.mjs edit that writes FOLD-CHECK.md into the fixture evidence folder (Checked by: Fold-G1, Verdict: PASS, Plan line) beside GROUNDER-PLAN.md.
+
+DEFER severity=MED — RR-0355 "Agreed. Let's push as soon as possible! Also recolve the scorecards issue now. The gaps are closed in parellel." — NONE — nothing in the material resolves or records the scorecards issue although the pasted decision list says RR-0355 names task-419 — record where scorecards are resolved (task id or decision) in the lane's TRIAGE, or have the ruling narrowed to exclude this task.
+
+DEFER severity=LOW — RR-0354 "change the spec's wording" — docs/specs/00-architecture/08_agents.md:479 "The copies of the 11.2 wording in CLAUDE.md, .claude/workflows.md, the review template packs and Spec 119 are not edited by this task." — the cross-read adversary requirement survives verbatim in four other governing copies, so a lane reading those still performs the pass the operator said is not needed — bounded because the lane reports it for the operator, but it should be ruled or given its own task.
+
+REJECT — Spec 137 note "not the lane and not an assignee" — the change adds an assignee clash test the card's acceptance criteria do not name — the clause pasted in the 137 note requires exactly that ("not the lane and not an assignee"), so it is named, not scope creep.
+
+MET — 137 note "a line `Checked by: <name>` (the text after the colon up to the first comma or " (" or the line end; not the lane and not an assignee)" — scripts/hooks/check-lane-close.mjs:648 — the name is split at the first comma or " (" and clash-checked against the lane and its assignees.
+MET — 137 note "the last `Verdict:` line reading `Verdict: PASS`" — scripts/hooks/check-lane-close.mjs:656 — lastOf takes the last Verdict line and refuses anything but PASS.
+MET — 137 note "last, alone on its line, `Plan: <task id> sha256:<12 hex>` equal to the hash of the task as it is at launch (the refusal prints the expected line)" — scripts/hooks/check-lane-close.mjs:659 — anchored whole-line regex compared to `line`, and the message prints "expected: ${line}".
+MET — 137 note "names a lens input made with no rule list -pN always ... a rule-list input keeps its unsuffixed name for one file" — scripts/analysis/rule-lists.mjs:426 — the empty suffix is now conditional on `list` and a single input, so a no-list one-file diff is -p1.
+MET — acceptance #3(c) "prints `<dir>/in-out-code-review-p1.txt` and writes only that" — src/tests/backlog/rule-lists.logic.test.ts:597 — asserts the listed basename and the only written file, plus stamp id "none", chunk 1 of 1.
+MET — acceptance #4(d) "The close check on a lane with out-code-review-p1.txt made from (c): exit 0" — src/tests/backlog/check-lane-close.logic.test.ts:453 — the -p1 pair closes at 0 and the renamed unsuffixed pair is still refused, so committed outputs are neither blessed nor broken.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 2
+
+---
+⏱  111854ms (111.9s)
+📊 Tokens — total: 36073, input: 15099, output: 20974, reasoning: 20026

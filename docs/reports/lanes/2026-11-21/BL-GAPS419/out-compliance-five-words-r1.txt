@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:29:08.115Z file_sha256=c9a8e12b3e7865e543d733765dc1161f660c6a08c74082e56970f945e27a2209 prompt_sha256=34cd8ae64dba6f7ed1db7f4715ce229d890efdd6f9e52efbe72456615fc3f068
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Q1/Q4 (plan rulings on the task) "Q1 the Files line is final at eight paths (the six of the card plus docs/specs/00-architecture/08_agents.md and 137_mcqueue.md ...)" / "Q4 plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)" — material header "paths: [\"docs/specs/00-architecture/08_agents.md\",\"docs/specs/00-architecture/137_mcqueue.md\",\"scripts/analysis/rule-lists.mjs\",\"scripts/hooks/check-lane-close.mjs\",\"src/tests/backlog/backlog-lane.logic.test.ts\",\"src/tests/backlog/check-lane-close.logic.test.ts\",\"src/tests/backlog/rule-lists.logic.test.ts\"]" (seven of the eight approved paths) — the ruled edit to docs/reports/reviews/task-375/plant-evidence.mjs is absent, so the fixture the new test reads ("const text = fs.readFileSync(fold, 'utf8');", src/tests/backlog/backlog-lane.logic.test.ts) has no planted FOLD-CHECK.md and acceptance #1/#6 cannot stand — add the 3-line plant of FOLD-CHECK.md (Checked by: Fold-G1, Verdict: PASS, Plan line) between :66 and :67 of plant-evidence.mjs.
+
+DEFER severity=MED — 137_mcqueue.md note "requires docs/reports/reviews/<task>/FOLD-CHECK.md, committed beside GROUNDER-PLAN.md" — scripts/hooks/check-lane-close.mjs:639 "const refs = [`${dir}/GROUNDER-PLAN.md`, ...(textOf('TRIAGE-PLAN.md') !== undefined ? [`${dir}/TRIAGE-PLAN.md`] : []), ...seats.map((x) => x.path)];" — FOLD-CHECK.md is added to no reference requirement while every present sibling record is, so a folder copy that never enters the task's references still passes — add `${dir}/FOLD-CHECK.md` to refs with the same "backlog task edit --add-ref" error (bounded: the folder read may already prove presence at HEAD).
+
+DEFER severity=LOW — RR-0351 "Gap 3 we dont need the cross check." / implementation note "Not ruled, for the operator: the scope of RR-0354" — docs/specs/00-architecture/08_agents.md "that the pass is no longer required anywhere, not only after a plan fold, is the orchestrator's reading (decision-139), not a ruling" — the governing spec now carries a scope wider than the operator's words, self-declared as an unruled reading — keep the disclosure and obtain the operator's word, or narrow the note to folds until he rules.
+
+MET — acceptance #1 (a) — scripts/hooks/check-lane-close.mjs:642 "if (fc === undefined) errors.push(`FOLD-CHECK.md is missing in ${dirNote} ..." and src/tests/backlog/backlog-lane.logic.test.ts "expect(bad.stderr).toMatch(/FOLD-CHECK\.md is missing/);" plus "expect(ok.stdout).toMatch(/plan gate ok/);" — refused at exit 3, passes with the file.
+MET — acceptance #2 (b) — src/tests/backlog/backlog-lane.logic.test.ts "expect(bad.stderr).toMatch(/FOLD-CHECK\.md: the Plan line \"Plan: task-\d+ sha256:[0-9a-f]{12}\" is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);" — stale Plan line refused with the expected line printed.
+MET — acceptance #3 (c) — scripts/analysis/rule-lists.mjs:425 "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" and "expect(n.written).toEqual(['in-out-code-review-p1.txt']);" — a no-list one-file input is -p1 and only that file is written.
+MET — acceptance #4 (d) — src/tests/backlog/check-lane-close.logic.test.ts "(4) a one-file diff reviewed with lens-input and no list closes with the name the tool wrote, out-code-review-p1.txt" with "expect(ok.status, ok.stderr).toBe(0);" — the tool-made pair closes.
+MET — gap 1 "written by the grounder and never by the script" — scripts/hooks/check-lane-close.mjs:642 "const fc = textOf('FOLD-CHECK.md');" reads the file only; no script path writes it.
+MET — RR-0354 "change the spec's wording" — docs/specs/00-architecture/08_agents.md "the cross-read adversary pass of 11.2 and the Cross-read Adversary row of the roster (:449) is no longer required after a fold" — the 11.2 wording is changed by dated note as Q5 ruled.
+MET — Q3/Q6 "the Checked by name is the text up to the first comma or \" (\" or the line end, the last of a repeated line counts" / "the clash with the lane and the assignees is kept" — scripts/hooks/check-lane-close.mjs "const who = by ? by[1].split(/,| \(/)[0].trim() : '';" and the clash calls — form and clash rules match.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 1
+
+---
+⏱  93569ms (93.6s)
+📊 Tokens — total: 31225, input: 14275, output: 16950, reasoning: 15661

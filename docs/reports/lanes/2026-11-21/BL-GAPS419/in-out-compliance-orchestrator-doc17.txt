@@ -1,5 +1,5 @@
-LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:a902e4f829d85c582c1ce86c95263b079577399eedabf7473c70e3aeabee0317 part 1 of 1 chunk 1 of 1
-RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/rule-lists.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:e55b9702485f17571cbf06724f431ee852d3e858cd4f7e763a2134df7d52d7ab part 1 of 1 chunk 1 of 1
+RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["CLAUDE.md","docs/reports/reviews/task-375/plant-evidence.mjs","docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/rule-lists.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
 
 ---
 id: doc-17
@@ -168,8 +168,40 @@ Readings and register entries of the rulings register. They are NOT the operator
 - RR-0218 2026-11-19: "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:870)
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 9107277c0163a14c4b1d3b1cad2859a80db08f97..464a3853fde3d6797d6b029133a8730ed72c03a0 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -136,11 +136,11 @@ Triggered as named steps inside WF1, WF2, WF3 — not standalone.
+ 
+ **Trigger — Reality-Check:** runs in **pipeline WF1 / WF2 / WF3 that add or change any enriched/derived field** (Spec 08 fires it by SUBJECT MATTER, not table — the old "parcel field" wording had a documented miss on record) — plan-altitude on `.cursor/active_task.md`, output-altitude on the re-run data. Skip for pure plumbing (chain wiring, manifest, non-data refactors).
+ 
+-**Cross-read Adversary** (`general-purpose`, main tree — Spec 08 §10 roster, §11.2 trigger): fires after ANY fold, before implementation — checks the folded decisions PAIRWISE for collisions, walks every checklist line for staleness, verifies the tests still cohere as a suite. Paired with a grounder that RE-EXECUTES every claim in the fold.
++**Cross-read Adversary** (`general-purpose`, main tree — Spec 08 §10 roster, §11.2 trigger): is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360). The grounder still RE-EXECUTES every claim in the fold.
+ 
+ **Idempotency Lens** (`general-purpose`, main tree — Spec 08 §10 roster): fires on any plan/diff touching a destructive write, backfill, transaction boundary, re-runnable script, or upsert. Hunts the replay/transaction/collision class: same-input-twice state, what-runs-outside-the-txn, run-2-vs-run-1's-artifacts, and fold-decision collisions. Provenance: F18, the backup-atomicity race, the stuck-interim-accretion collision — each unseen by every other seat.
+ 
+-**Grounded Verification Protocol (Spec 08 §11, Backend/Pipeline-calibrated):** no unexecuted executable claim in a plan or fold · fold-validation (grounder + Cross-read Adversary) after every fold · locks proven both directions before red is claimed · tests live IN the plan and the plan panel reviews them · CLI models are whole-file audit generators, never diff reviewers, always grounder-adjudicated. Frontend nuance: §11.5-FE — execute the domain's executable surface; never demand queries of a design judgment.
++**Grounded Verification Protocol (Spec 08 §11, Backend/Pipeline-calibrated):** no unexecuted executable claim in a plan or fold · fold-validation (the grounder re-checks the fold; for a plan launch it leaves FOLD-CHECK.md) · locks proven both directions before red is claimed · tests live IN the plan and the plan panel reviews them · CLI models are whole-file audit generators, never diff reviewers, always grounder-adjudicated. Frontend nuance: §11.5-FE — execute the domain's executable surface; never demand queries of a design judgment.
+ 
+ **Panel sizing:** **Pipeline-domain WF1/WF2 run the 5-reviewer panel** (Gemini + DeepSeek + Code Reviewer + Observability + Integration), **+ Regression Guardian when the diff touches existing code** (always fires for WF2, which by definition alters existing code; conditional for WF1), **+ Reality-Check when the diff adds/changes an enriched parcel field**. Non-pipeline WF1/WF2 run the 3 (Gemini + DeepSeek + Code Reviewer) + Guardian (same condition). WF3 = Independent + Regression Guardian (adversarial on request) **+ Reality-Check when it touches enriched parcel data**.
+ 
+diff --git a/docs/reports/reviews/task-375/plant-evidence.mjs b/docs/reports/reviews/task-375/plant-evidence.mjs
+index cec0f2fde074ee12b7cbae968af253bb7870d19e..249104b2f6fd35f612325a2b8068cfe4d8340435 100644
+--- a/docs/reports/reviews/task-375/plant-evidence.mjs
++++ b/docs/reports/reviews/task-375/plant-evidence.mjs
+@@ -62,6 +62,8 @@ const ed = (args) => { const e = spawnSync(bin, ['task', 'edit', taskId, ...args
+ ed(['--plan', 'the plan text of the fixture task']);
+ ed(['--append-plan', `Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder ${rel}/GROUNDER-PLAN.md; triage ${rel}/TRIAGE-PLAN.md`]);
+ for (const x of [`${rel}/GROUNDER-PLAN.md`, ...seats.map((n) => `${rel}/seat-${n}-1.md`)]) ed(['--add-ref', x]);
+-lines.push(...seatLines, `Plan: ${taskId} sha256:${clc.planHash(fs.readFileSync(t.file, 'utf8'))}`);
++const planLine = `Plan: ${taskId} sha256:${clc.planHash(fs.readFileSync(t.file, 'utf8'))}`;
++lines.push(...seatLines, planLine);
+ w('GROUNDER-PLAN.md', `${lines.join('\n')}\n`);
++w('FOLD-CHECK.md', `# Fold check (test evidence)\nChecked by: Fold-G1\nVerdict: PASS\n\n${planLine}\n`);
+ git('add', '-A'); const c = git('commit', '-q', '-m', 'plan evidence'); if (c.status !== 0) { console.error(c.stdout + c.stderr); process.exit(1); }
 diff --git a/docs/specs/00-architecture/08_agents.md b/docs/specs/00-architecture/08_agents.md
-index 7605b40151b4e7a3f15d11c3b3f5c72c1f418a91..87ad3e6e429b879adedb896e2906fa827e41e64a 100644
+index 7605b40151b4e7a3f15d11c3b3f5c72c1f418a91..75bcdbeded2c7bac650248050e8809e45a690cac 100644
 --- a/docs/specs/00-architecture/08_agents.md
 +++ b/docs/specs/00-architecture/08_agents.md
 @@ -475,6 +475,8 @@ A plan or fold may not contain a claim that COULD be executed but wasn't: a data
@@ -177,19 +209,19 @@ index 7605b40151b4e7a3f15d11c3b3f5c72c1f418a91..87ad3e6e429b879adedb896e2906fa82
  After folding any review round, and BEFORE implementation: **one grounder re-executes every claim in the fold** + **one cross-read adversary checks the folded decisions PAIRWISE and walks every checklist line for staleness**. Folds are read as a SET — the worst defects are collisions between corrections adopted separately (`tasks/lessons.md:117`). Sub-rules with incident bodies: **a fold must be exercised in every execution mode the file has** (the C4 `!pool` guard redded plain-Husky mode — cross-reading could not catch it, only running could) · **an expanded edit set kills every restated scope claim** ("the three SET terms. Nothing else." survived one fold past its own falsification).
  *Yield:* C4 fold-validation — 2 blocking (four-chain watchdog scope; the dropped `PIPELINE_CHAIN` harness line). C7 fold-validation — 10 defects incl. an unwritten fourth SQL expression and a falsified census query. Orchestrator folds averaged ~5 defects each across the session; the validation pass caught every one at the cost of two agents.
 +
-+Dated note 2026-11-21 (M-246, prior text kept; task-419 LAUNCH.GAPS, lane BL-GAPS419; RR-0351, RR-0352, RR-0354; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1647 "Gap 3 we dont need the cross check.", :1651 "Let's resolve 1 and 2 now.", :1663 "change the spec's wording"): the cross-read adversary pass of 11.2 and the Cross-read Adversary row of the roster (:449) is no longer required after a fold; the agent stays in the roster and may be asked for. The grounder's re-execution of every claim in the fold stays, and it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder beside GROUNDER-PLAN.md (the launch check requires it: see the Spec 137 note of the same date). SCOPE: the operator's words name the cross check and the spec's wording; that the pass is no longer required anywhere, not only after a plan fold, is the orchestrator's reading (decision-139), not a ruling. The copies of the 11.2 wording in CLAUDE.md, .claude/workflows.md, the review template packs and Spec 119 are not edited by this task.
++Dated note 2026-11-21 (M-246, prior text kept; task-419 LAUNCH.GAPS · Backlog · lane BL-GAPS419; RR-0351, RR-0352, RR-0354, RR-0360 (decision-145); operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1647 "Gap 3 we dont need the cross check.", :1651 "Let's resolve 1 and 2 now.", :1663 "change the spec's wording", :1692 "change the claude.md to remove the cross check.  The agent stays available on request is fine froma wording perspective"): the cross-read adversary pass of 11.2 and the Cross-read Adversary row of the roster (:449) is no longer required after a fold; the agent stays in the roster and may be asked for. The grounder's re-execution of every claim in the fold stays, and, for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder beside GROUNDER-PLAN.md (the launch check and the plan-prep commit require it: see the Spec 137 note of the same date; a fold checked at a later round leaves no required record). SCOPE: the operator's words name the cross check and the spec's wording; that the pass is no longer required anywhere, not only after a plan fold, is the orchestrator's reading (decision-139), not a ruling. The wording "the agent stays in the roster and may be asked for" is approved by RR-0360 (:1692). CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143); the copies in .claude/workflows.md, the review template packs and Spec 119 are not edited by this task.
  
  ### 11.3 Red-first mechanics
  Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed — a lock that was never red against the defect it names is not a lock (the 2026-08-13 envelope regex matched nothing; its "red" was the not-found branch). Red must land at the DESIGNED assertion; red-for-the-wrong-reason is a test defect found NOW. Survive-the-fix locks (green-both) are stated as such per case.
 diff --git a/docs/specs/00-architecture/137_mcqueue.md b/docs/specs/00-architecture/137_mcqueue.md
-index 8473f0deaca970a3849fbdd5fbfec664d1c09b1e..8b4408c95d67ffdc336dcfef17eb0abaaee70678 100644
+index 8473f0deaca970a3849fbdd5fbfec664d1c09b1e..95da45a4ca79c59ebbb12d8e0b10565f86a8aad4 100644
 --- a/docs/specs/00-architecture/137_mcqueue.md
 +++ b/docs/specs/00-architecture/137_mcqueue.md
 @@ -139,6 +139,8 @@ Dated note 2026-11-20 (M-246, prior text kept; correction to the task-410 note a
  
  Dated note 2026-11-21 (M-246, prior text kept; Rule 3 and Rule 10: task-375 FIX.TOOLS, lane BL-GATE375; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1517 "don't makr the task complete until it actually works", :1572 (his message pasting back "Item 10: a grounder checks the folded plan before any build starts, so I cannot launch a build on an unchecked plan."), :1595 "isnt your incentive to close despite making the necessary changes. shouldht teh incentive to make the changes so teh work actualyl works"): the close check now also recomputes each lens output's prompt hash with the committed review context (docs/reports/reviews/<task>/context-rN.md) and refuses a close whose task references lack the repo copies of REPORT.md, GROUNDER.md and, when the lane directory holds one, TRIAGE.md (it prints the exact `backlog task edit --add-ref` command); the take adds the compliance:<list id> references and `rule-lists.mjs check-tasks` prints the command for the open tasks. The LAUNCH of a build or fix task (`scripts/analysis/backlog-lane.mjs`, before the take) runs `planGateErrors` on the board HEAD: the plan evidence folder, one plan compliance output per resolved list over the plan sections of the committed context, GROUNDER-PLAN.md of a separate grounder with a verdict per finding, the required seat reports (Integration, Reality-Check, and Regression when the Files line names a tracked path), an outcome for every CONFIRMED or CONFLICT finding (mode plan: folded, task, ruling, wontfix, pile), the round block on the task and the Plan hash line, which is the hash of the task as it is at launch. It does not touch lanes already launched, tasks of other types, or a raw `backlog task edit -s RUNNING` take. WHAT THE GATE CANNOT PROVE: that the grounder or any seat ran or is a different agent (names and files are compared, an omission guard of the same kind as task-410's, 08_agents.md:239 note; forgery routes are owned by tasks 401 and 402), that the fold is complete beyond "every CONFIRMED finding has an outcome and a folded quote is in the text", that a present quote is a real fix, and that the plan is unchanged after launch. The mechanism (names, hash, forms) is the orchestrator's design on the orders above; the operator's words name only the refusal on an unchecked plan.
  
-+Dated note 2026-11-21 (M-246, prior text kept; task-419 LAUNCH.GAPS, lane BL-GAPS419; RR-0351, RR-0352, RR-0354; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1647 "Gap 3 we dont need the cross check.", :1651 "Let's resolve 1 and 2 now.", :1663 "change the spec's wording"): the launch check of the note above (`planGateErrors`, scripts/hooks/check-lane-close.mjs) also requires docs/reports/reviews/<task>/FOLD-CHECK.md, committed beside GROUNDER-PLAN.md and written by the separate plan grounder, never by a script: a line `Checked by: <name>` (the text after the colon up to the first comma or " (" or the line end; not the lane and not an assignee), the last `Verdict:` line reading `Verdict: PASS`, and last, alone on its line, `Plan: <task id> sha256:<12 hex>` equal to the hash of the task as it is at launch (the refusal prints the expected line). The body is free; the gate reads the form. WHAT IT CANNOT PROVE: that the checks were run, that the name is a real separate agent, or that the PASS is true. It does not touch tasks already launched or prepped before this note (the gate runs at launch only; none was prepped and unlaunched). In the same change the lens-input tool (scripts/analysis/rule-lists.mjs) names a lens input made with no rule list -pN always, so a one-file diff gives -p1: the close check reads an unsuffixed out-<lens>.txt as a review of the raw diff and only -pN outputs as tool-made inputs, so the tool's own output for a small diff was refused; a rule-list input keeps its unsuffixed name for one file, and committed outputs are neither blessed nor broken.
++Dated note 2026-11-21 (M-246, prior text kept; task-419 LAUNCH.GAPS · Backlog · lane BL-GAPS419; RR-0351, RR-0352, RR-0354, RR-0360 (decision-145); operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1647 "Gap 3 we dont need the cross check.", :1651 "Let's resolve 1 and 2 now.", :1663 "change the spec's wording", :1692 "change the claude.md to remove the cross check.  The agent stays available on request is fine froma wording perspective"): the launch check of the note above (see the Spec 08 note of the same date, section 11.2) (`planGateErrors`, scripts/hooks/check-lane-close.mjs) also requires docs/reports/reviews/<task>/FOLD-CHECK.md, committed beside GROUNDER-PLAN.md and written by the separate plan grounder, never by a script: a line `Checked by: <name>` (the text after the colon up to the first comma or " (" or the line end; not the lane and not an assignee), the last `Verdict:` line reading `Verdict: PASS`, and, as the last such line of the file, alone on its line, `Plan: <task id> sha256:<12 hex>` equal to the hash of the task as it is at launch (the refusal prints the expected line). The body is free; the gate reads the form. WHAT IT CANNOT PROVE: that the checks were run, that the name is a real separate agent, or that the PASS is true. It does not touch tasks already launched or prepped before this note (the gate runs at the launch and at the plan-prep commit dry run only; none was prepped and unlaunched). In the same change the lens-input tool (scripts/analysis/rule-lists.mjs) names a lens input made with no rule list -pN always, so a one-file diff gives -p1: the close check reads an unsuffixed out-<lens>.txt as a review of the raw diff and only -pN outputs as tool-made inputs, so the tool's own output for a small diff was refused; a rule-list input keeps its unsuffixed name for one file, and committed outputs are neither blessed nor broken.
 +
  Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1517`: "don't makr the task complete until it actually works"): a lane build or fix task's closing commit is refused unless the lane directory holds TRIAGE.md with one outcome line per CONFIRMED or CONFLICT id of GROUNDER.md (forms fixed, task, ruling, wontfix, pile; see the Spec 08 rule 6 note of the same date) and the task's Final Summary shows the round line and the CRITICAL, HIGH and MED outcomes. TRIAGE.md is required only when GROUNDER.md holds such an id. Rule 3 (the two-commit close) is otherwise unchanged.
  
@@ -218,7 +250,7 @@ index ac3c4d3dd664f34485b484dfece5a0e9c4557fd0..9bfc6f3ad31f44f7a7767c6017fecdb0
    return files;
  }
 diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index dc94b8f3468adb193398dc78d9b8a6837847e0c1..3861c897737bde5c3d1fd6646cc41480d5735f8e 100644
+index dc94b8f3468adb193398dc78d9b8a6837847e0c1..556bd01312806a2825a2b8475779bd0bb3b15aeb 100644
 --- a/scripts/hooks/check-lane-close.mjs
 +++ b/scripts/hooks/check-lane-close.mjs
 @@ -639,6 +639,27 @@ function planGateInner(i) {
@@ -231,7 +263,7 @@ index dc94b8f3468adb193398dc78d9b8a6837847e0c1..3861c897737bde5c3d1fd6646cc41480
 +  if (fc === undefined) errors.push(`FOLD-CHECK.md is missing in ${dirNote} (the separate grounder writes it beside GROUNDER-PLAN.md after checking the folded plan: ${form})`);
 +  else {
 +    const lastOf = (re) => [...fc.matchAll(re)].pop();
-+    const by = lastOf(/^\s*Checked by:(.*)$/gm);
++    const by = lastOf(/^[ \t]*Checked by:(.*)$/gm);
 +    const who = by ? by[1].split(/,| \(/)[0].trim() : '';
 +    if (!by) errors.push(`FOLD-CHECK.md has no "Checked by: <name>" line (${form})`);
 +    else if (!who) errors.push(`FOLD-CHECK.md: "Checked by:" names nobody (${form})`);
@@ -239,10 +271,10 @@ index dc94b8f3468adb193398dc78d9b8a6837847e0c1..3861c897737bde5c3d1fd6646cc41480
 +      if (clash(who, i.laneName)) errors.push(`FOLD-CHECK.md: Checked by "${who}" is the lane (${i.laneName}) or a name that contains or is contained in it; a separate agent must check (${form})`);
 +      for (const a of i.assignees.filter((x) => nameKey(x) !== nameKey(i.laneName))) if (clash(who, a)) errors.push(`FOLD-CHECK.md: Checked by "${who}" is, contains or is contained in an assignee of ${id} (${a}); a separate agent must check (${form})`);
 +    }
-+    const vd = lastOf(/^\s*Verdict:\s*(.*?)\s*$/gm);
++    const vd = lastOf(/^[ \t]*Verdict:[ \t]*(.*?)[ \t\r]*$/gm);
 +    if (!vd) errors.push(`FOLD-CHECK.md: no "Verdict: PASS" line (${form})`);
 +    else if (vd[1] !== 'PASS') errors.push(`FOLD-CHECK.md: the Verdict is not PASS ("${vd[1]}") (${form})`);
-+    const fp = lastOf(/^\s*Plan:\s*(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm);
++    const fp = lastOf(/^[ \t]*Plan:[ \t]*(\S+)[ \t]+sha256:([0-9a-f]{12})[ \t\r]*$/gm);
 +    if (!fp) errors.push(`FOLD-CHECK.md: no last "Plan: <task id> sha256:<12 hex>" line (${form}); expected: ${line}`);
 +    else if (`Plan: ${fp[1]} sha256:${fp[2]}` !== line) errors.push(`FOLD-CHECK.md: the Plan line "Plan: ${fp[1]} sha256:${fp[2]}" is not the hash of the task as it is now (the fold was checked on another text, so it must be checked again) (${form}); expected: ${line}`);
 +  }
@@ -250,10 +282,10 @@ index dc94b8f3468adb193398dc78d9b8a6837847e0c1..3861c897737bde5c3d1fd6646cc41480
  }
  const entriesOf = (taskText) => filesEntries(taskText) ?? [];
 diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
-index 0dfc9c60b150ea05f637586bdf1cd96f9ad0131c..d303c5485206f671b3675f8074ca980fd8aa196a 100644
+index 0dfc9c60b150ea05f637586bdf1cd96f9ad0131c..d94890d84f99555b59ed4c4378e54834b21af20a 100644
 --- a/src/tests/backlog/backlog-lane.logic.test.ts
 +++ b/src/tests/backlog/backlog-lane.logic.test.ts
-@@ -376,8 +376,30 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+@@ -376,8 +376,35 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
      const bad = lane(f, ['--dry-run']);
      expect(bad.status, bad.stdout + bad.stderr).toBe(3);
      expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);
@@ -273,8 +305,13 @@ index 0dfc9c60b150ea05f637586bdf1cd96f9ad0131c..d303c5485206f671b3675f8074ca980f
 +    expect(bad.status, bad.stdout + bad.stderr).toBe(3);
 +    expect(bad.stderr).toMatch(/FOLD-CHECK\.md is missing/);
 +    expect(statusOf(f)).toBe('LATER');
++    // the folder is read from the board HEAD: a copy that is ignored (so the board is clean) and not committed is not seen
++    fs.appendFileSync(path.join(f.board, '.git/info/exclude'), 'docs/reports/reviews/*/FOLD-CHECK.md\n');
 +    fs.writeFileSync(fold, text);
-+    git(f.board, 'add', fold);
++    const ign = lane(f, ['--dry-run']);
++    expect(ign.status, ign.stdout + ign.stderr).toBe(3);
++    expect(ign.stderr).toMatch(/FOLD-CHECK\.md is missing/);
++    git(f.board, 'add', '-f', fold);
 +    const c2 = git(f.board, 'commit', '-q', '-m', 'the fold check again');
 +    expect(c2.status, c2.stdout + c2.stderr).toBe(0);
 +    const ok = lane(f, ['--dry-run']);
@@ -284,7 +321,7 @@ index 0dfc9c60b150ea05f637586bdf1cd96f9ad0131c..d303c5485206f671b3675f8074ca980f
    it('D: a task of another type (record) is not gated and launches with no plan evidence', () => {
      const f = fixture({ files: 'docs/specs/00-architecture/08_agents.md', type: 'record' });
      const r = lane(f, ['--dry-run']);
-@@ -786,10 +808,14 @@ describe('plan-prep commit and the end to end (task-418)', () => {
+@@ -786,16 +813,22 @@ describe('plan-prep commit and the end to end (task-418)', () => {
      expect(planText(f)).toMatch(/int#1 HIGH folded /);
      const c1 = prep(f, 'commit');
      expect(c1.status, c1.stdout + c1.stderr).toBe(3);
@@ -299,8 +336,16 @@ index 0dfc9c60b150ea05f637586bdf1cd96f9ad0131c..d303c5485206f671b3675f8074ca980f
      const c2 = prep(f, 'commit');
      expect(c2.status, c2.stdout + c2.stderr).toBe(0);
      expect(c2.stdout).toMatch(/plan gate ok: \d+ lists, \d+ findings, Plan sha256:[0-9a-f]{12}/);
+     backlog(f.board, ['task', 'edit', f.task, '-d', 'Launch description text, one word edited.\n\nFiles: scripts/analysis/thing.mjs']);
+     const c3 = prep(f, 'commit');
+     expect(c3.status, c3.stdout + c3.stderr).toBe(3);
++    expect(c3.stderr).toMatch(/GROUNDER-PLAN\.md: the Plan line/);
++    expect(c3.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);
+     expect(c3.stderr).toMatch(/expected: Plan: \S+ sha256:[0-9a-f]{12}/);
+     expect(/expected: (Plan: \S+ sha256:[0-9a-f]{12})/.exec(c3.stderr)?.[1]).not.toBe(exp);
+   });
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index 912faa9ed4087fc1bd008794b2141022dd9caa9b..68b0792da7390d696b2f07bf8499974420188046 100644
+index 912faa9ed4087fc1bd008794b2141022dd9caa9b..ccec44669c60bbcd2d326bdd0b259c781ac77019 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -450,6 +450,13 @@ describe('close check: the review material is the whole change (V2.WHOLE)', () =
@@ -327,7 +372,7 @@ index 912faa9ed4087fc1bd008794b2141022dd9caa9b..68b0792da7390d696b2f07bf84999744
  async function planScenario(o: PO = {}) {
    const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
    const rl = (await import('../../../scripts/analysis/rule-lists.mjs')) as { buildLensInputs: (a: unknown) => { suffix: string; text: string }[]; resolveTask: (a: unknown) => { lists: { id: string }[] } };
-@@ -895,19 +904,69 @@ async function planScenario(o: PO = {}) {
+@@ -895,19 +904,74 @@ async function planScenario(o: PO = {}) {
    const refs = [`${dir}/GROUNDER-PLAN.md`, ...(o.triage ? [`${dir}/TRIAGE-PLAN.md`] : []), ...names.map((n) => `${dir}/seat-${n}-1.md`)];
    finalText = finalText.replace(/\nmilestone:/, `\nreferences:\n${refs.map((r) => `  - ${r}`).join('\n')}\nmilestone:`);
    if (o.refs === false) finalText = text0;
@@ -390,6 +435,11 @@ index 912faa9ed4087fc1bd008794b2141022dd9caa9b..68b0792da7390d696b2f07bf84999744
 +    // the last of a repeated line counts: a stale line then the right one passes, the right one then a stale one is refused
 +    expect((await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\n${stale}\n${p}\n` })).errors).toEqual([]);
 +    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\n${p}\n${stale}\n` }), /FOLD-CHECK\.md: the Plan line/);
++  });
++  it('g419 round 1: a Verdict whose PASS is on the next line, and a Plan line split across two lines, are refused (the form is one line each); a name that contains the lane is refused (control: a clean name passes above)', async () => {
++    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict:\nPASS\n${p}\n` }), /FOLD-CHECK\.md: (no "Verdict: PASS" line|the Verdict is not PASS)/);
++    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\n${p.replace(' sha256:', '\nsha256:')}\n` }), /FOLD-CHECK\.md: no last "Plan:/);
++    gate(await planScenario({ fold: (p) => goodFold(p, 'Cairn-BL-COMPLY2-2') }), /FOLD-CHECK\.md: Checked by "Cairn-BL-COMPLY2-2" is the lane/);
 +  });
 +  it('a fix task is gated the same way (control passes above in the fix tests; a missing file is refused)', async () => {
 +    gate(await planScenario({ type: 'fix', fold: false }), /FOLD-CHECK\.md is missing/);
