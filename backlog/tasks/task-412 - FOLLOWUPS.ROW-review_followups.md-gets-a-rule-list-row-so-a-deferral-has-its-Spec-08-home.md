@@ -3,10 +3,11 @@ id: TASK-412
 title: >-
   FOLLOWUPS.ROW review_followups.md gets a rule-list row so a deferral has its
   Spec 08 home
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-F412'
 created_date: '2026-11-20T23:40:00Z'
-updated_date: '2026-11-21T06:48:00Z'
+updated_date: '2026-11-21T06:51:00Z'
 labels:
   - McFix
   - McFix V2
@@ -19,6 +20,17 @@ references:
   - docs/reports/reviews/task-412/seat-integration-1.md
   - docs/reports/reviews/task-412/seat-reality-check-1.md
   - docs/reports/reviews/task-412/seat-regression-1.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 112012
 ---
@@ -108,4 +120,6 @@ rg#1 MED folded it does not make a f
 2026-11-21 (M-246) Plan put on the task by the orchestrator by hand: PLAN-412-v1 (sha256 b41ba4c6cc66), written by a read-only planner against the board at 4a70b85ca from this card only; the build of the six-step tasks is authorized by the operator (RR-0350, MORNING-DECISIONS.md:1638). This task is the first scripted pass through the pre-launch steps (plan-prep of task-418); its plan review evidence is in docs/reports/reviews/task-412/.
 
 2026-11-21 (M-246) Plan review round 1 of this task, the first made with plan-prep (task-418): 11 plan review outputs written by plan-prep review (83 s), the Integration, Reality-Check and Regression seats on the plan, ruled by the separate grounder Cairn-Ground-P412: 53 findings, 42 CONFIRMED (1 HIGH, 13 MED, 23 LOW, 5 NIT), 11 REJECTED; 40 folded into the plan by 13 sentence edits (FOLD-412.json as the grounder wrote it, applied mechanically), 2 to the review pile; block and references added by plan-prep post. Three open questions were ruled by the grounder with grounds (docs/reports/reviews/task-412/QUESTIONS-RULED.md) and are taken as approved on the operator's authorization (RR-0350, MORNING-DECISIONS.md:1638), reported to him: Q1 the row lets a lane write the file and does not make a file write an outcome; the note at 08_agents.md:351 is not edited by this task; whether the file replaces the TRIAGE.md pile line is the operator's to rule; Q2 the row attaches agents-s7-s11 and queue-137, as the eight other rows carrying agents-s7-s11 do; Q3 'after task-375' is read as satisfied by task-375's tooling being folded while it is still RUNNING (the operator may rule it means DONE); the other table-editing tasks land one at a time.
+
+2026-11-21 taken on the board at lane launch (lane BL-F412, worktree /Users/brettpreston_macmini/Buildo-wt-f412, branch wf1/inc1b-f412), RR-0240
 <!-- SECTION:NOTES:END -->
