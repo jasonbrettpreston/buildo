@@ -43,8 +43,13 @@ const named = decisions.filter((d) => { const rr = /^(RR-\d+)/.exec(d.title)?.[1
 for (const d of named) if (d.quote) rules.push(`${d.title}: "${d.quote}" (${d.cite ?? 'cite in the decision'})`);
 
 // The review context file (written from the task, its docs and its decisions; sha256 goes in the brief).
-const ctxRel = `docs/reports/reviews/${taskId}/context-${date}.md`;
+// task-375 A5: one context file per review round, context-rN.md, N = the context-r*.md files already there + 1; an earlier round's file is never overwritten.
+const ctxDir = path.join(root, 'docs/reports/reviews', taskId);
+const round = (fs.existsSync(ctxDir) ? fs.readdirSync(ctxDir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
+const ctxRel = `docs/reports/reviews/${taskId}/context-r${round}.md`;
 const docs = asList(t.fm.documentation);
+// task-375 A1: the Implementation Plan and Implementation Notes fields of the task, headings inside the text demoted so they cannot end the section.
+const fieldOf = (name) => (new RegExp(`<!-- SECTION:${name}:BEGIN -->\\n?([\\s\\S]*?)\\n?<!-- SECTION:${name}:END -->`).exec(t.body)?.[1] ?? '').trim().replace(/^#{1,6} /gm, '#### ') || '(none)';
 // ---- McLane context pack (task-309 R8d, RR-0235 "linked with all the relevant data"): milestone text, document sections, decisions, prior reviews, dependencies.
 const CAP_TOTAL = 120 * 1024; const CAP_BLOCK = 12 * 1024; const CAP_SUMMARY = 4000;
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -131,10 +136,12 @@ const depSection = depIds.length ? depIds.flatMap((id) => {
 }).concat(depAll.filter((x) => !depIds.includes(x)).map((x) => `- ${JSON.stringify(x)}: (not a task id; skipped)`)) : ['- (none)'];
 
 const ctx = [
-  `# Review context for ${taskId} (${label}) written ${date} by backlog-brief.mjs`, '',
+  `# Review context for ${taskId} (${label}) written ${date} by backlog-brief.mjs (round ${round})`, '',
   `## Task`, `${taskId} ${title}`, `status: ${t.fm.status} · milestone: ${t.fm.milestone ?? 'none'} · assignee: ${asList(t.fm.assignee).join(', ') || 'none'} · labels: ${asList(t.fm.labels).join(', ')}`, '',
   `## Description`, descriptionOf(t).trim() || '(none)', '',
   `## Acceptance criteria`, ...ac.map((c) => `- #${c.n} ${c.text}`), '',
+  `## Implementation Plan`, fieldOf('PLAN'), '',
+  `## Implementation Notes`, fieldOf('NOTES'), '',
   `## References`, ...(refs.length ? refs.map((r) => `- ${r}`) : ['- (none)']), '',
   `## Documents`, ...(docs.length ? docs.map((d) => `- ${d}`) : ['- (none)']), '',
   `## Decisions in force (titles; the ones this task names carry the operator's words)`,

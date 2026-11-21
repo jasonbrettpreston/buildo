@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T01:11:00Z'
+updated_date: '2026-11-21T01:14:00Z'
 labels:
   - McFix
   - McFix A
@@ -363,4 +363,6 @@ Dated note 2026-11-20 (M-246, prior text kept; RR-0350 · task-375 · Backlog; o
 BL-GATE375 build note 2026-11-21 (D11b, README.md:104, lens-security.md:48): rule-lists.mjs lensSet sec regex now includes admin and pii; red first in red.out (rule-lists.logic.test.ts:650), green by the real commit.
 
 BL-GATE375 build note (A2): CONTEXT_SECTIONS, PLAN_SECTIONS and extractSections now live in scripts/lib/review-template.js; scripts/deepseek-review.js requires extractSections from it (moved from :106-121, same text).
+
+BL-GATE375 build note (A1, A5 naming): backlog-brief.mjs writes ## Implementation Plan and ## Implementation Notes after the acceptance criteria and writes context-rN.md (N = existing context-r*.md + 1, never overwritten); brief tests re-pinned to context-r1.md (backlog-brief.logic.test.ts:58, backlog-brief-context.logic.test.ts:43).
 <!-- SECTION:NOTES:END -->

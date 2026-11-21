@@ -23,7 +23,7 @@ function fixture(extraDocs: string[] = []) {
   return { d, task, dep };
 }
 const brief = (d: string, task: string, extra: string[] = []) => script('scripts/analysis/backlog-brief.mjs', ['--task', task, '--lane', 'BL-R1', '--stage', '2', '--root', d, '--date', '2026-11-19', ...extra]);
-const ctxOf = (d: string, task: string) => fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-2026-11-19.md`), 'utf8');
+const ctxOf = (d: string, task: string) => fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-r1.md`), 'utf8');
 const section = (ctx: string, name: string) => new RegExp(`## ${name}\\n([\\s\\S]*?)(?=\\n## (?:Milestone|Document sections|Decisions naming this task|Prior reviews and lane reports|Dependencies)\\n|$)`).exec(ctx)?.[1] ?? '';
 
 describe('G1 context pack (task-309, RR-0235)', () => {
@@ -40,9 +40,9 @@ describe('G1 context pack (task-309, RR-0235)', () => {
     const { d, task } = fixture();
     const r = brief(d, task);
     expect(r.stdout).toMatch(/^Context pack sections:.*Milestone.*Document sections.*Decisions naming this task.*Prior reviews and lane reports.*Dependencies/m);
-    expect(r.stdout).toContain(`node scripts/deepseek-review.js review docs/reports/reviews/${task}/context-2026-11-19.md --context .claude/review-templates/plan-review-deepseek.md`);
+    expect(r.stdout).toContain(`node scripts/deepseek-review.js review docs/reports/reviews/${task}/context-r1.md --context .claude/review-templates/plan-review-deepseek.md`);
     expect(r.stdout).not.toContain('deepseek-review.js plan');
-    const sha = crypto.createHash('sha256').update(fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-2026-11-19.md`))).digest('hex');
+    const sha = crypto.createHash('sha256').update(fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-r1.md`))).digest('hex');
     expect(r.stdout).toContain(sha.slice(0, 12));
   });
 
@@ -138,7 +138,7 @@ describe('G1 context pack (task-309, RR-0235)', () => {
     expect(s).toContain(`docs/reports/reviews/${dep}/r1-plan.md`);
     expect(s).toContain('docs/reports/lanes/20261119/BL-R9/REPORT.md');
     expect(s).not.toContain('BL-R0');
-    expect(s).not.toContain('context-2026-11-19.md');
+    expect(s).not.toContain('context-r1.md');
     expect(s).not.toContain('context-2026-11-18.md');
   });
 
@@ -160,5 +160,37 @@ describe('G1 context pack (task-309, RR-0235)', () => {
     const sha = (o: string) => /sha256=([0-9a-f]{12})/.exec(o)?.[1];
     expect(sha(a)).toBeDefined();
     expect(sha(a)).not.toBe(sha(b));
+  });
+});
+
+describe('task-375 A1/A5: the review context holds the plan and the notes; one file per round', () => {
+  it('writes "## Implementation Plan" and "## Implementation Notes" from the task, and a plan heading inside the text cannot end the section', async () => {
+    const { d, task } = fixture();
+    backlog(d, ['task', 'edit', task, '--plan', 'PLAN-LINE-ONE\n# Inner heading\nPLAN-LINE-TWO', '--append-notes', 'NOTE-LINE-ONE']);
+    const r = brief(d, task); expect(r.status, r.stderr).toBe(0);
+    const ctx = ctxOf(d, task);
+    expect(ctx).toMatch(/^## Implementation Plan\n[\s\S]*PLAN-LINE-ONE[\s\S]*PLAN-LINE-TWO/m);
+    expect(ctx).toMatch(/^## Implementation Notes\n[\s\S]*NOTE-LINE-ONE/m);
+    expect(ctx.indexOf('## Implementation Plan')).toBeGreaterThan(ctx.indexOf('## Acceptance criteria'));
+    const rt = await import('../../../scripts/lib/review-template.js');
+    expect(rt.extractSections(ctx, ['Implementation Plan'])).toContain('PLAN-LINE-TWO');
+  });
+  it('control: a task with no plan and no notes still has both headings, reading (none)', () => {
+    const { d, task } = fixture();
+    brief(d, task);
+    const ctx = ctxOf(d, task);
+    expect(ctx).toMatch(/^## Implementation Plan\n\(none\)/m);
+    expect(ctx).toMatch(/^## Implementation Notes\n\(none\)/m);
+  });
+  it('a later brief writes context-r2.md and leaves context-r1.md as it was (never overwritten)', () => {
+    const { d, task } = fixture();
+    brief(d, task);
+    const r1 = path.join(d, `docs/reports/reviews/${task}/context-r1.md`);
+    const before = fs.readFileSync(r1, 'utf8');
+    backlog(d, ['task', 'edit', task, '--append-notes', 'LATER-NOTE']);
+    const r = brief(d, task); expect(r.status, r.stderr).toBe(0);
+    expect(fs.readFileSync(r1, 'utf8')).toBe(before);
+    expect(fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-r2.md`), 'utf8')).toContain('LATER-NOTE');
+    expect(r.stdout).toContain(`${task}/context-r2.md`);
   });
 });
