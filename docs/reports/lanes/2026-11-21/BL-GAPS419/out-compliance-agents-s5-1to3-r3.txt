@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T22:22:38.906Z file_sha256=909fed989f228e10f3584bb87cc55dcecf943ad09ec34be83f9999ba248e40a2 prompt_sha256=1c2b4abc1a6d53929471f564d4e395ef83433ecc3147ccf4487a6f3581c9f817
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card acceptance #6 and Q1 — "git diff --stat shows only the Files line" / "the Files line is final at eight paths (the six of the card plus docs/specs/00-architecture/08_agents.md and 137_mcqueue.md ... no new rule list, the nine lists are unchanged)" — CLAUDE.md:139 "+**Cross-read Adversary** ... is no longer required after a fold and stays available on request" — the diff carries a ninth file, CLAUDE.md, that is on no Files line, contradicts the pasted plan line "the copies of the 11.2 wording in CLAUDE.md, .claude/workflows.md, packs/spec08.md and Spec 119 that this task does not edit", and escapes the whole-change chunk rule which only covers files "that the Files line covers" — drop the CLAUDE.md hunk (hand it to a task whose Files line names CLAUDE.md) or amend the plan Files line and re-run the plan review and fold check.
+
+DEFER severity=MED — the pasted rulings that bind this change, "Decisions naming this task: RR-0351 ... RR-0352 ... RR-0354 ... RR-0355" — docs/specs/00-architecture/08_agents.md "+CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143)" — the new spec note records an edit and a ruling (RR-0360) the task does not carry, and it directly contradicts the pasted plan text quoted above — delete that sentence together with the hunk, or add RR-0360 to the task's decisions and CLAUDE.md to its Files line so the note is true.
+
+DEFER severity=LOW — card GAP 2 — "makes the tool and the close check agree on the name of a one-file review, without breaking outputs already committed" — src/tests/backlog/check-lane-close.logic.test.ts "the same pair renamed unsuffixed is still refused (the lock stays)" — an unsuffixed one-file no-list output committed before this change is still refused at close, so the "without breaking outputs already committed" half rests only on a spec sentence authored in this same diff, "committed outputs are neither blessed nor broken" — state in the 137 note that no such output exists on record, or accept an unsuffixed one-file no-list output whose file hash is the whole diff, so the guarantee does not rest on the note alone.
+
+REJECT — card GAP 1, "written by the grounder and never by the script" — accused: docs/reports/reviews/task-375/plant-evidence.mjs writes FOLD-CHECK.md from a script — it is a fixture program planting evidence into a fixture board, ruled in scope by Q4 ("plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)") and the spec note already says the gate cannot prove the checks ran.
+
+REJECT — card "NOT in scope: the cross-read adversary pass" — accused: the 08_agents.md and CLAUDE.md cross-read wording changes are out of scope — the card's own rulings include RR-0354 "The spec wording on the cross-read adversary is changed" and Q1 puts both spec files on the Files line for that wording, so only the CLAUDE.md copy is a scope breach, not the two spec notes.
+
+MET — card acceptance #1 (a) — src/tests/backlog/backlog-lane.logic.test.ts — "a board whose evidence folder lacks FOLD-CHECK.md ... is refused", control passes and prints "plan gate ok".
+MET — card acceptance #2 (b) — src/tests/backlog/backlog-lane.logic.test.ts — "expect(c3.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/)" with the expected line printed.
+MET — card acceptance #3 (c) — src/tests/backlog/rule-lists.logic.test.ts — "the printed path and the only file written end in -p1.txt, stamped chunk 1 of 1".
+MET — card acceptance #4 (d) — src/tests/backlog/check-lane-close.logic.test.ts — "task-419 (d) ... expect(ok.status, ok.stderr).toBe(0)".
+MET — card acceptance #5 (e) — scripts/analysis/rule-lists.mjs:425 — "list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`" keeps the rule-list unsuffixed name, control test present.
+MET — Q3 — scripts/hooks/check-lane-close.mjs:650 — "by[1].split(/,| \(/)[0].trim()" with the last of a repeated line, matching the ruled parse.
+MET — Q8 — src/tests/backlog/rule-lists.logic.test.ts — "a round file made with no list is -rN-p1".
+MET — Spec 137 note form — scripts/hooks/check-lane-close.mjs:657 — the last "Verdict: PASS" line and the last "Plan: <id> sha256:<12 hex>" line compared to the expected line, body not read.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 2
+
+---
+⏱  87936ms (87.9s)
+📊 Tokens — total: 36706, input: 18426, output: 18280, reasoning: 17116

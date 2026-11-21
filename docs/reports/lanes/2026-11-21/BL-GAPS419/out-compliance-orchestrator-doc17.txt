@@ -1,32 +1,32 @@
-◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T22:22:38.906Z file_sha256=140696b69adabf8740ec6dc00497f90c89c077eda17e8ed7277b68baf5c0ce7d prompt_sha256=2a163c9ad8e397622337022e02dfd41ffaaf3b5ab1413f5116f36ec66cb48519
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T22:44:14.823Z file_sha256=354af268dc4cb8e5166383a2d27b8d70a14eedf696aec71f902240877b9cfe9f prompt_sha256=3ec6dcbfab2cf2ce2a719fffa7eb125f8d8f77e741c701862d5ec88a9562ccdc
 🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
 
-BUG severity=HIGH — AC #6 (f) "the three test files green; git diff --stat shows only the Files line" and Implementation Notes Q1 "Q1 the Files line is final at eight paths (the six of the card plus docs/specs/00-architecture/08_agents.md and 137_mcqueue.md ...)" — CLAUDE.md:139 "+**Cross-read Adversary** ... is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360)." — the diff edits CLAUDE.md, a ninth path outside the eight-path Files line, so AC #6 and Q1 are unmet — revert the CLAUDE.md hunks in this change and widen the Files line only on a ruling that names the file.
+BUG severity=HIGH — AC#6 / Files line — "git diff --stat shows only the Files line"; "Files: scripts/hooks/check-lane-close.mjs, scripts/analysis/rule-lists.mjs, ... docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md" (and ruled Q1 "the Files line is final at eight paths") — CLAUDE.md:139 "**Cross-read Adversary** (`general-purpose`, main tree — Spec 08 §10 roster, §11.2 trigger): is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360)." — CLAUDE.md is not one of the eight Files-line paths, so AC#6 is unmet and the hunk rests on RR-0360, which is not among the "Decisions naming this task" (RR-0351, RR-0352, RR-0354, RR-0355) — drop the CLAUDE.md hunk from this change, or get the Files line amended and RR-0360 onto the card before merge.
 
-DEFER severity=MED — Implementation Notes "the copies of the 11.2 wording in CLAUDE.md, .claude/workflows.md, packs/spec08.md and Spec 119 that this task does not edit" — docs/specs/00-architecture/08_agents.md:478 "CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143); the copies in .claude/workflows.md, the review template packs and Spec 119 are not edited by this task." — the committed spec note records a CLAUDE.md edit that this task's own plan says it does not make, and the only authority it gives for that wording (RR-0360) is not among the pasted Decisions naming this task (RR-0351, RR-0352, RR-0354, RR-0355) — drop the CLAUDE.md sentence from the note when the hunk is reverted, or land the CLAUDE.md edit with the ruling that names it recorded first.
+DEFER severity=MED — ruled Q4 — "Q4 plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)" — NONE — the material is "chunk 1 of 1" of the whole change and holds no hunk for docs/reports/reviews/task-375/plant-evidence.mjs, a path that is on the Files line and ruled edited — include the edit or amend the Files line and Q4 before close.
 
-MET — AC #1 (a) — scripts/hooks/check-lane-close.mjs:642-646 — missing FOLD-CHECK.md is refused naming the file and the form, and the planted-file control prints "plan gate ok" (src/tests/backlog/backlog-lane.logic.test.ts:384-405).
+DEFER severity=MED — AC#1 — "With the file (Checked by: Fold-G1, Verdict: PASS, correct Plan line) it prints \"plan gate ok\"" — src/tests/backlog/backlog-lane.logic.test.ts:386 "const text = fs.readFileSync(fold, 'utf8');" and :389 "expect(lane(f, ['--dry-run']).status).toBe(0); // control: the planted evidence passes" — the new control reads docs/reports/reviews/<task>/FOLD-CHECK.md out of the fixture board, but no fixture change that writes that file appears in the pasted diff, so AC#1's passing control is not shown — show the fixture that plants FOLD-CHECK.md or the green run of the three files (AC#6).
 
-MET — AC #2 (b) — scripts/hooks/check-lane-close.mjs:656 — a stale Plan line is refused with "expected: ${line}", covered by the one-word body edit case (backlog-lane.logic.test.ts:829-831).
+MET — AC#2 — src/tests/backlog/check-lane-close.logic.test.ts:817 "expect(c3.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);" — the one-word body edit refuses with the stale FOLD-CHECK Plan line and prints the expected line.
 
-MET — AC #3 (c) — scripts/analysis/rule-lists.mjs:426 "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — a no-list one-file diff writes only in-out-code-review-p1.txt (rule-lists.logic.test.ts:600-607).
+MET — AC#3 — scripts/analysis/rule-lists.mjs:426 "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — a no-list one-file input is written as -p1 only.
 
-MET — AC #4 (d) — src/tests/backlog/check-lane-close.logic.test.ts:453-458 — the -p1 pair closes with status 0 and the unsuffixed rename stays refused.
+MET — AC#4 — src/tests/backlog/check-lane-close.logic.test.ts:456 "expect(ok.status, ok.stderr).toBe(0);" — the out-code-review-p1.txt pair closes green and the renamed unsuffixed pair stays refused.
 
-MET — card "written by the grounder and never by the script" — scripts/hooks/check-lane-close.mjs:643 "const fc = textOf('FOLD-CHECK.md');" — the gate only reads the record; nothing in the diff writes FOLD-CHECK.md from the gate or plan-prep.
+MET — RR-0351 — docs/specs/00-architecture/08_agents.md:478 "the cross-read adversary pass of 11.2 and the Cross-read Adversary row of the roster (:449) is no longer required after a fold; the agent stays in the roster and may be asked for" — the pass is removed as required and the agent kept.
 
-MET — 137 note "the last `Verdict:` line reading `Verdict: PASS`" and "the text after the colon up to the first comma or \" (\" or the line end; not the lane and not an assignee" — scripts/hooks/check-lane-close.mjs:650-657 — lastOf over the Verdict regex, split(/,| \(/)[0].trim(), clash against laneName and assignees (Q3, Q6).
+MET — ruled Q3 / the Checked-by form — scripts/hooks/check-lane-close.mjs:648 "const who = by ? by[1].split(/,| \(/)[0].trim() : '';" — name read to first comma or " (" or line end, last repeated line counted.
 
-MET — RR-0354 "change the spec's wording" — docs/specs/00-architecture/08_agents.md:478 dated note and docs/specs/00-architecture/137_mcqueue.md:142 dated note — the cross-read adversary pass is superseded by a dated note keeping prior text, the grounder's re-execution stays, the launch gate note is added (Q5).
+MET — ruled Q6 — scripts/hooks/check-lane-close.mjs:654 "for (const a of i.assignees.filter((x) => nameKey(x) !== nameKey(i.laneName))) if (clash(who, a))" — the lane and assignee clashes are kept.
 
-MET — Implementation Notes Q4 "plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)" — docs/reports/reviews/task-375/plant-evidence.mjs:65-69 — the fixture now plants FOLD-CHECK.md beside GROUNDER-PLAN.md with the same Plan line.
+MET — ruled Q8 — src/tests/backlog/rule-lists.logic.test.ts:606 "expect(n.written).toEqual(['in-out-code-review-r2-p1.txt']);" — a round file from lens-input is named -rN-p1.
 
-REJECT — card "without breaking outputs already committed" — accused of breaking one-file outputs already committed by forcing -pN — not real: the suffix expression keeps '' for a rule-list input with one chunk (scripts/tests control "with --list and one chunk the name stays unsuffixed"), and unsuffixed no-list outputs were already refused before this change, so nothing that passed before fails now.
+REJECT — RR-0354 "change the spec's wording" — that the change only appends a dated note and leaves 11.2's sentence "one cross-read adversary checks the folded decisions PAIRWISE" standing — "prior text kept" dated notes are the amendment form these specs use (every 137 note is written that way) and the note quotes the operator verbatim.
 
 VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 20   Unmet: 2
+Clauses checked: 16   Unmet: 3
 
 ---
-⏱  65248ms (65.2s)
-📊 Tokens — total: 39440, input: 25812, output: 13628, reasoning: 12527
+⏱  54804ms (54.8s)
+📊 Tokens — total: 36364, input: 25337, output: 11027, reasoning: 9911

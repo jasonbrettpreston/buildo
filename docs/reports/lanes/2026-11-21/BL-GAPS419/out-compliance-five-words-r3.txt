@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T22:22:38.910Z file_sha256=cd55d07481463ca0f1d92dff89578f1658921d0ca09adfcad765c6477b94c55b prompt_sha256=4dec852f7bac1af78a68120809670d535e87d4a9877a1deb362f19375459f189
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 / Q1 "The Files line is final at eight paths" + "git diff --stat shows only the Files line." — CLAUDE.md:139 "**Cross-read Adversary** (`general-purpose`, main tree — Spec 08 §10 roster, §11.2 trigger): is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360)." — the diff edits CLAUDE.md (lines 139 and 143) but CLAUDE.md is not one of the eight ruled paths (check-lane-close.mjs, rule-lists.mjs, the three src/tests/backlog test files, plant-evidence.mjs, 08_agents.md, 137_mcqueue.md), and the change's own 08_agents note says "CLAUDE.md is edited by this task on RR-0360", contradicting Q1 — fix: either re-rule Q1 to a ninth path (CLAUDE.md) and put CLAUDE.md on the Files line, or drop the CLAUDE.md edit from this diff and carry it on the RR-0360 task.
+
+MET — GAP 2 / AC #3 "(c) `node scripts/analysis/rule-lists.mjs lens-input ... --out <dir>/in-out-code-review` prints `<dir>/in-out-code-review-p1.txt` and writes only that." — scripts/analysis/rule-lists.mjs:426 — "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" gives a no-list one-file input the name -p1 and leaves the rule-list name unsuffixed.
+MET — AC #4 "(d) The close check on a lane with out-code-review-p1.txt made from (c): exit 0" — src/tests/backlog/check-lane-close.logic.test.ts:453 — the new (d) test closes on the -p1 pair and refuses the unsuffixed rename, so the old refusal stays.
+MET — AC #1 "(a) ... `backlog-lane.mjs --dry-run` exits 3, stderr "FOLD-CHECK.md"" — src/tests/backlog/backlog-lane.logic.test.ts:384 — the test asserts status 3 with "FOLD-CHECK.md is missing" and "plan gate ok" once the committed file is back.
+MET — 137 note "the text after the colon up to the first comma or " (" or the line end" — scripts/hooks/check-lane-close.mjs:649 — "const who = by ? by[1].split(/,| \(/)[0].trim() : '';" implements exactly that split.
+MET — 137 note "not the lane and not an assignee" (Q6) — scripts/hooks/check-lane-close.mjs:653 — "if (clash(who, i.laneName)) errors.push(... )" and the following assignee loop refuse the lane and every assignee.
+MET — 137 note "equal to the hash of the task as it is at launch (the refusal prints the expected line)" — scripts/hooks/check-lane-close.mjs:661 — both Plan errors end "expected: ${line}", asserted by the stale-hash tests.
+MET — GAP 1 "written by the grounder and never by the script" — scripts/hooks/check-lane-close.mjs:643 — the gate only reads "const fc = textOf('FOLD-CHECK.md');"; no writer was added to the gate or the plan-prep path.
+MET — 137 note "the last `Verdict:` line reading `Verdict: PASS`" / Q3 "the last of a repeated line counts" — scripts/hooks/check-lane-close.mjs:647 — "[...fc.matchAll(re)].pop()" takes the last occurrence for Checked by, Verdict and Plan alike.
+
+REJECT — GAP 1 "written by the grounder and never by the script" — plant-evidence.mjs writes FOLD-CHECK.md — Q4 pastes "plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)", a test fixture, and the production gate only reads the form.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 1
+
+---
+⏱  97274ms (97.3s)
+📊 Tokens — total: 36120, input: 16395, output: 19725, reasoning: 18746
