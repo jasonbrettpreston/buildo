@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-F412'
 created_date: '2026-11-20T23:40:00Z'
-updated_date: '2026-11-21T06:51:00Z'
+updated_date: '2026-11-21T06:53:00Z'
 labels:
   - McFix
   - McFix V2
@@ -122,4 +122,8 @@ rg#1 MED folded it does not make a f
 2026-11-21 (M-246) Plan review round 1 of this task, the first made with plan-prep (task-418): 11 plan review outputs written by plan-prep review (83 s), the Integration, Reality-Check and Regression seats on the plan, ruled by the separate grounder Cairn-Ground-P412: 53 findings, 42 CONFIRMED (1 HIGH, 13 MED, 23 LOW, 5 NIT), 11 REJECTED; 40 folded into the plan by 13 sentence edits (FOLD-412.json as the grounder wrote it, applied mechanically), 2 to the review pile; block and references added by plan-prep post. Three open questions were ruled by the grounder with grounds (docs/reports/reviews/task-412/QUESTIONS-RULED.md) and are taken as approved on the operator's authorization (RR-0350, MORNING-DECISIONS.md:1638), reported to him: Q1 the row lets a lane write the file and does not make a file write an outcome; the note at 08_agents.md:351 is not edited by this task; whether the file replaces the TRIAGE.md pile line is the operator's to rule; Q2 the row attaches agents-s7-s11 and queue-137, as the eight other rows carrying agents-s7-s11 do; Q3 'after task-375' is read as satisfied by task-375's tooling being folded while it is still RUNNING (the operator may rule it means DONE); the other table-editing tasks land one at a time.
 
 2026-11-21 taken on the board at lane launch (lane BL-F412, worktree /Users/brettpreston_macmini/Buildo-wt-f412, branch wf1/inc1b-f412), RR-0240
+
+2026-11-21 (lane BL-F412) red test written first: src/tests/backlog/rule-lists-table.logic.test.ts describe 'task-412: review_followups.md has its Spec 08 home' (two cases); the row follows. Note: gitFreeEnv() is not a name in the repo; the test spawns through helpers run()/script(), which strip every GIT_* variable (helpers.ts cleanEnv).
+
+2026-11-21 (lane BL-F412) commit A: row review-followups added after panel-records (lists agents-s7-s11, queue-137); the test went red at failing assertions first (red.out: resolve exit 3 not 0), now green through the hooks.
 <!-- SECTION:NOTES:END -->
