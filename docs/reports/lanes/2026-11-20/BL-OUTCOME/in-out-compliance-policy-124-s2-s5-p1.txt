@@ -1,0 +1,518 @@
+LIST policy-124-s2-s5 sha256:862c7ff5bc53ba68406a249e1ac31114df061ebe8c01ac032a0748b8be0d5de8 material sha256:24dae44221b79778393e9aaf4534d7f50da4af3ea8f6a1a1c66ff91ab3ced9ad part 1 of 2 chunk 1 of 2
+RULE LIST policy-124-s2-s5 (docs/specs/01-pipeline/124_step_standard_policy.md, sections 2. The rules; 5. Register of rulings), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/backlog-brief.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-brief.logic.test.ts"]
+
+## §2. The rules
+
+Thirteen rules (Rule 13 added by R-R, 2026-08-29). Each is enforced today, or marked ⚠ GAP with the artifact that would close it.
+
+---
+
+**1. Nothing about a step's behaviour may live only in code — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field.**
+- **Enforced by:** `checks` cannot be omitted (`step.schema.json:1095-1099`, `type:"array", minItems:1`); `scripts/ast-grep-rules/compute-shape.yml`'s five rules block the commonest hiding places (console, bare fetch, wall clock, `process.env`, forbidden `require`s) inside compute. **+ §5 R-BA gate A** (`step-validate.mjs` fast invariant #28): every `checks[].limit`/`warn_limit` is drawn from a CLOSED set (`limit_from_config` naming a declared variable, the exact string `viol == 0`, or a dated `standard-gates-ledger.json` row) — a bare number is behaviour hiding in descriptor prose instead of code, the same violation class under a different rung. **+ §5 R-BA gate C** (fast invariant #30): a step's declared `emits[]` must EQUAL the `records_meta` keys its own golden POST captures actually emit (minus the runner-owned `RUNNER_META_KEYS`, `scripts/lib/step/index.js`) — an emitted-but-undeclared key is behaviour hidden from the descriptor just as surely as a bare literal. **+ §5 R-BA gate I** (fast invariants #33-#36): banned-value coverage, staleness-disposition adjudication, census parity and defect-id uniqueness are each a closed registry a step cannot silently omit itself from.
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's four fences (`assert_schema`) were each moved to descriptor data or a named check rather than left as unexplained code. *(operator y 2026-10-20, rulings-8: under this rule and the IL-6 ruling, assert_data_bounds' `COST_MAG_ACCEPT` list moved from a compute-imported constant to `checks[].expect.accept_list`, which the compute reads from the descriptor; 124a §B19.)*
+- **Violation reads as:** a build failure at `pipeline.step()` construction (AJV) or a red `compute-shape` ast-grep scan in `.husky/pre-commit`.
+**M14 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B3 — GAP G-1 closure record (moved from Spec 124 §2 Rule 1) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B3 — GAP G-1 closure record (moved from Spec 124 §2 Rule 1) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure record of GAP G-1 (2026-08-29); Rule 1's text, Enforced-by and Violation lines stay live in Spec 124. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+
+**2. Compute contains domain logic only — no gating, ledger, lock, emission, logging side-channel, environment read, or policy comment.**
+- **Enforced by:** `compute-shape.yml` (6 rules — the original 5 plus `compute-no-postgis-branch`, R-W) + `check-step-shape.mjs` (blocking over `scripts/lib/compute/**`) + ~~`step-conformance.infra.test.ts:532-620`~~ **CORRECTED 2026-09-10 (measured, now `:611`/`:670`/`:699` — ~80 lines of drift; cite by greppable anchor, not line number, per Spec 124 §5 R-R's own lesson): `step-conformance.infra.test.ts`'s `COMPUTE_RULE_IDS` battery / "dispatch keys are exactly the descriptor's check ids" test** (dispatch keys ≡ declared check ids, proven to fire on a known-bad fixture).
+- **Archetype variance:** none, except ASSERT's compute never opens `ctx.pool` at all (its `outputs`, `recovery`, `counters` are forced `"none"`).
+- **Evidence:** the compute-shape gate's own blocking loop was found missing on 2026-08-25 (it scanned and reported but never failed the build) — fixed the same day; the incident is the strongest argument for keeping this a shape rule rather than a review checklist.
+- **Violation reads as:** a red ast-grep scan naming the file, line, and rule id.
+
+> **R-W addendum (2026-08-30).** Compute MUST NOT branch on PostGIS availability — `hasPostGIS`,
+> `pg_extension`, `postgis_version` (bare identifier, property access, or a string/SQL fragment naming one
+> of them), or a `try`/`catch` wrapped around a PostGIS-only call, are all the same anti-pattern: a second,
+> silently-selected algorithm hidden inside compute. `guards.requires: {kind: "extension", name: "postgis",
+> on_missing: "fail"}` is the only legal form — the step refuses before compute ever runs, and a database
+> genuinely missing the extension HALTS rather than silently degrading to a different answer. ~~Three
+> precedents on record~~ — **CORRECTED 2026-09-10 (measured): four** (R-W's own §5 register row, below, already
+> lists a fourth — `link_parcels` LP-D9 — this addendum text just never caught up): `link_massing` A-8 (in-memory grid/haversine fallback, retired), `compute_centroids`
+> A-1(a) (unweighted arithmetic-mean centroid fallback, retired), `link_parcels` A-1 (JS nearest-parcel
+> fallback, retired commit 7, 2026-08-30), `link_parcels` LP-D9 (Strategy 1a's `address_points_exact` predicate
+> gap, fixed commit 8a — see the §5 R-W row for the full fourth entry). **Enforced by:** a new ast-grep rule,
+> `compute-no-postgis-branch` (`compute-shape.yml`), wired through the same always-blocking
+> `check-step-shape.mjs` compute corpus as the other 8 rules — no separate wiring needed, since the driver
+> runs every rule in the file over `scripts/lib/compute/**`. Proven RED-first on
+> `scripts/steps/_schema/fixtures/compute/bad-compute-shape.js`'s `ctx.hasPostGIS` branch (added to the
+> fixture's known-violation set), GREEN on all six converted computes (`assert-schema.js`,
+> `compute-centroids.js`, `link-massing.js`, `link-parcel-addresses.js`, `link-wsib.js`, `load-ravines.js` —
+> none references `hasPostGIS`/`pg_extension`/`postgis_version` today), asserted by
+> `src/tests/step-conformance.infra.test.ts`'s `COMPUTE_RULE_IDS` prove-red battery.
+
+**3. Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal — PRESENCE of its `logic_variables` row is always FAIL (R-G), and VALIDITY is per-variable via the closed `on_invalid` enum: `fail` is MANDATORY for a verdict- or write-affecting variable, `default`/`clamp` are allowed only for the rest, each carrying a stated `why`.**
+- **Enforced by:** `compute-no-literal-url-tunable`/`-byte-window`/`-threshold` (`compute-shape.yml`) + `step-conformance.infra.test.ts:772-943` (declared ⊆ registry, declared ⊆ admin GROUPS, consumed ≡ declared, each direction proven RED) + `scripts/lib/step/config.js` (PRESENCE half: throws when a declared name has no `logic_variables` row, naming the remedy — LM-D15).
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's own first violation (`assert_schema` declared `config:"none"` while compute hard-coded `limit=20`, `Range: bytes=0-2048` and `bytes=0-8192`), remediated before pilot 2. **R-G's grounding:** the old P4 sentence ("no row ⇒ FAILED run") never distinguished presence from validity, and practice already contradicted its literal reading — `link-massing.descriptor.json` uses `on_invalid:"fail"` for only 3 of 6 variables, `load-ravines`/`assert-schema` use `default`/`clamp` for every one, each justified in `deviations[]`. This rule states the split that was already true.
+- **Violation reads as:** a red conformance test naming the literal, or a runtime throw naming the missing registry row (presence). No machine reads a validity failure yet.
+**M15 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B4 — GAP G-4 and GAP (R-D) closure records (moved from Spec 124 §2 Rule 3) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B4 — GAP G-4 and GAP (R-D) closure records (moved from Spec 124 §2 Rule 3) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure records of GAP G-4 (2026-08-29 / R-BA gate B 2026-09-26) and GAP (R-D) (2026-09-03); Rule 3's text and Enforced-by stay live; R-BA stays the live row. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+
+> **R-AU addendum (2026-09-21, operator-adjudicated).** This rule's reach is SCALAR TUNABLES.
+> Pricing DATA — a DB rate table, or a keyed catalogue of priced lines with its permitted-value
+> vocabulary — is not a tunable and is NOT externalized by porting it: it is carried byte-for-byte
+> and DECLARED in the descriptor as a NON-ADMIN SURFACE (`limitations[]`), so a reader can see that
+> the values exist, where they live, and that no admin surface edits them. Declaring them under
+> `config.logic_variables[]` would be a second source of truth for the same values and a false
+> claim of admin tunability. Every scalar the step consumes still obeys the rule above, unchanged.
+> **This is an INTERIM state carrying a named closing row, not a permanent exemption** — see §5 R-AU.
+> **CLOSED 2026-09-23 (batch-2 row 2.5, commits `7c3e85eb`/`d6cd1c7d`/`3bc1eee0`/`0f1f46fb`):** the admin
+> editor landed and the INTERIM state above no longer applies — see §5 R-AU for the closing text.
+
+**4. A rule kept in compute rather than declared data must still be written down — as a check's `why`, not a comment.**
+- **Enforced by:** nothing machine-checked. Applied narratively in the Intent Ledger, whose discoverer≠ adjudicator role split is Spec 123 §7.1 (§4.2 below states the *rule*).
+**M16 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B5 — GAP G-2 closure record (moved from Spec 124 §2 Rule 4) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B5 — GAP G-2 closure record (moved from Spec 124 §2 Rule 4) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure record of GAP G-2 (2026-08-29); Rule 4's text and Enforced-by stay live. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's coordinate-source OR-contract — kept in compute, its rule stated in the descriptor `checks[].why` and `limitations` by ruling, not by a check. *(operator y 2026-10-20, rulings-8: two gaps under this rule ride the bundled RE-FREEZE night, PIN REFREEZE-BUNDLE-1 (3)/(4) — neighbourhoods' U+2019 apostrophe normalisation and assert_global_coverage IL-11/IL-12's `has_bldg` scoping, each written today only in compute; 124a §B17, §B19.)*
+- **Violation reads as:** nothing today (this is exactly the ⚠ GAP).
+
+**5. `checks` may never be `"none"` — every step declares at least one.**
+- **Enforced by:** `step.schema.json:1095-1099` — `checks` is typed `array, minItems:1`; a step cannot construct without it.
+- **Archetype variance:** none — the one category every archetype leaves untouched, even ASSERT (which forces `outputs`/`recovery`/`counters` to `"none"` but not `checks`).
+- **Evidence:** all 3 converted steps carry 8–19 checks each; ASSERT (`assert_schema`) has the fewest live categories of any archetype but still declares 9.
+- **Violation reads as:** a schema-validation throw at `pipeline.step()` construction, before compute runs.
+
+**6. Every category is present, and every field inside it is answered — `"none"` is legal but must be written, never omitted.**
+- **Enforced by:** `step.schema.json`'s top-level `required` (~~18 categories~~ **CORRECTED 2026-09-10 (measured): 20**) plus per-field `required` arrays nested throughout.
+- **Archetype variance:** none.
+- **Evidence:** the schema itself is the enforcement; a descriptor missing any of the 18 fails AJV outright.
+- **Violation reads as:** a schema-validation throw naming the missing field.
+
+**7. A step's archetype determines which categories are live — a step may not omit a category its archetype requires, and may not answer a category its archetype forbids.**
+- **Enforced by:** `step.schema.json`'s `allOf` blocks keyed on `identity.archetype` (`step.schema.json:1373-1443`) — six profiles, one per non-degenerate archetype grouping.
+- **Archetype variance:** this rule *is* the variance mechanism — see §3 below.
+- **Evidence:** the schema comment on the ENRICHER profile names claim #54 (a `staleness.scope` on a lineage column implies a declared invalidator) as "the centroid defect made unexpressible."
+- **Violation reads as:** a schema-validation throw at construction naming the archetype and the forbidden or missing field.
+
+**8. A write target's discipline class, guard, and scope are declared per write target — never assumed for the whole step.**
+- **Enforced by:** `step.schema.json`'s `outputs.writes[].write_discipline` shape, with `if`/`then` blocks requiring `guard_why` when `guard:"none"` (`:279-280`) and `why` for `staging_full_replace` (`:291-292`).
+- **Archetype variance:** applies to INGESTOR/LINK/MATCHER/ENRICHER (any archetype whose `outputs` is an object); N/A for ASSERT (`outputs` forced `"none"`).
+- **Evidence:** `link_massing`'s E1/E2 targets declare two different disciplines (`set_based_scoped` guarded none, `guarded_upsert`) on two different write targets in the same step.
+- **Violation reads as:** a schema-validation throw naming the write target and the missing `why`.
+
+**9. A banned write shape (an unguarded set-based write, an insert-only step with no retraction) may ship only with a dated, committed, SHA-anchored ledger entry naming who approved it — a `why` string alone is not enough (promoted from pilot practice, R-I.2).**
+- **Enforced by:** `scripts/steps/_schema/grandfathered.json`, read by `assertGrandfathered` at `pipeline.step()` construction (before any pool opens) — refuses a banned value with no matching entry even when the schema's own `guard_why` is present.
+- **Archetype variance:** applies wherever `outputs` is an object; N/A for ASSERT.
+- **Evidence:** `link_massing`'s E1 target (`write_discipline.guard:"none"`) is grandfathered against commit `5bb31faf`, operator name, and date — the schema's own fixture for this shape is grandfathered the same way, so the rule cannot be satisfied by weakening the fixture.
+- **Violation reads as:** a construction-time throw refusing the descriptor, naming the ungrandfathered path.
+
+**10. The verdict is always derived from the declared checks' rows — never a parallel boolean, never a hardcoded literal.**
+- **Enforced by:** `scripts/lib/step/verdict.js` (`deriveVerdict(rows)`) is the only place a verdict is computed; `step-library.logic.test.ts:145-283` — "the verdict is ROW-DERIVED, and all three values are reachable."
+- **Archetype variance:** none — runner-owned, no archetype may opt out.
+- **Evidence:** AS-D1 (sources verdict read the raw error array, not the row set) and LM-D2 (a hand-rolled per-script cascade plus a boolean-driven severity) both closed by routing through this single function; a repo-wide grep for `'FAIL'`/`'WARN'` literals across the library returns exactly the rows inside `verdict.js` itself.
+- **Violation reads as:** a red `step-library.logic.test.ts` assertion, or (pre-conversion) a fleet-wide finding that a script structurally cannot emit WARN or FAIL.
+- **R-Q / R-R note (2026-08-29):** `step-library.logic.test.ts` is outside `step:validate`'s own run scope (spec-named as step-conformance + golden-fingerprint + `src/tests/steps/<slug>/` only), so `step:validate`'s policy matrix used to print this rule PROSE-ONLY per step rather than claiming a false enforced-green — a scope caveat, not a claim the rule is unenforced elsewhere. Separately, this commit's G6 ledger-normalization work fixed one concrete instance of a severity-conflated counter reaching the ledger (`LPA-D2`), the same defect class R-Q (`checks_failed`/`checks_warned` split, `LPA-D6`) closed in the library itself.
+- **Enforced by (WF2 "Rules 10/11/12 mechanical checkers", C1, 2026-09-03):** `scripts/analysis/step-validate.mjs`'s `checkVerdictSingleSource` closes the PROSE-ONLY gap above with a genuine mechanical checker over a closed corpus, `VERDICT_LIBRARY_CORPUS` (every `scripts/lib/step/*.js` file except `verdict.js` itself + `scripts/lib/pipeline.js` + `scripts/lib/source-version.js` — the files that see a full `rows` array and could hand-roll a second cascade). Two halves: **(a)** no unsanctioned second PASS/WARN/FAIL derivation anywhere in that corpus — `pipeline.js`'s `emitSummary` escalate-only recompute is the ONE declared, cited exception (`SANCTIONED_VERDICT_SITES`; not behaviour-identical to `deriveVerdict` — never downgrades, preserves SKIP/UNKNOWN), and `scripts/lib/source-version.js`'s prior hand-rolled duplicate was routed through `deriveVerdict` in this same commit (behaviour-identical, proven in `step-conformance.infra.test.ts`); `scripts/lib/step/plausibility.js`'s `verdictCascade` (a second duplicate, consumed by the live `assert_parcel_sanity` step) was retired outright, its one consumer now importing `deriveVerdict` directly. **(b)** a `SELF_SKIPPED` terminal's audit rows must fold to a verdict other than PASS, AND that verdict must be genuinely row-derived (≥1 declared non-INFO row, `verdict === deriveVerdict(rows)`) — **CLOSED 2026-09-09 (WF3 VRD-SKIP, Rule 10 ladder rung b, see §7 below and the `VRD-SKIP` row of `programme-items.json`, now `BUILT`):** `skipRecordsMeta`'s `status` row declares severity `WARN` with threshold `'ran'` (was `INFO`/`null`), so the checker now ships `enforced-green`. Was pinned `KNOWN-DEFECT` per Spec 123 §3.1 against `review_followups.md` ("A lock-skipped converted step verdicts as PASS", now RESOLVED) from 2026-09-03 until closure. Both halves proven both-directions: `--self-test-only` runs in-memory RED/GREEN proofs on every invocation (`step-validate.mjs`'s own `selfTest()`), and `compute-no-verdict-derivation` (`scripts/ast-grep-rules/compute-shape.yml`) bans a compute from ever assigning anything named `verdict`, proven on `scripts/steps/_schema/fixtures/compute/bad-verdict-parallel.js` + the extended `bad-compute-shape.js` battery.
+
+> **R-H addendum (2026-08-28).** Rule 10 governs HOW the verdict is derived, not WHICH severity a check should choose. That gap let pilot 3's ruling A-6 dispose `nearest_footprint_gt_lot_count` and `shared_primary_buildings` as INFO for a standing non-zero population — conflicting with Spec 48 §4.9 / `tasks/lessons.md:117`: **a metric expected to be permanently non-zero is WARN with a declared, machine-observable retighten condition — never FAIL, never INFO-by-taste.** INFO is legal ONLY for a purely descriptive counter no threshold could bound, and that exception must itself be declared in `checks[].why`. Consequence: **LM-D6/LM-D11 re-dispositioned OPEN → WARN + a declared retighten condition, carried to pilot 4** (defect ledger + review followups amended in the same commit). ⚠ **GAP G-5** — no check yet distinguishes "purely descriptive, no threshold possible" from "INFO chosen to avoid a red"; author judgment only, same class as G-2. **First closed instance (LG-29, WF3 VRD-SKIP, 2026-09-09):** a `SELF_SKIPPED` terminal is the maximal case of "a check the library could not evaluate" — zero declared checks ran — so `status:'INFO'` on the skip's own `status` row was exactly the "INFO chosen to avoid a red" failure mode G-5 names, not a purely descriptive counter (a threshold — `'ran'` — was possible all along). Closed by flipping that one row's declared severity to `WARN`; `skipRecordsMeta` (`scripts/lib/step/index.js`) is this addendum's named precedent for the self-skip case specifically.
+
+**11. A ruling that reorders a step's phases must re-derive every "before X" guarantee stated in that step's own governing spec, in the same commit (promoted from pilot practice, R-I.1).**
+- **Enforced by (STALE until this amendment — `checkOrderGuaranteesCited` existed since `b2a85079`, 2026-09-03, but this row was never updated to say so):** `scripts/analysis/step-validate.mjs`'s `checkOrderGuaranteesCited(descriptor)` — the DECLARED half only (GAP G-3's completeness half, below, stays open). Verifies every `checks[].when:"pre_write"` entry carries `order_guarantee{guarantee, spec_ref, anchor}` (schema-enforced, re-verified defensively), that `spec_ref` resolves to a real `docs/specs/**` file, that `anchor` is found LITERALLY in that file (a rotted citation REDs), and that `spec_ref` agrees with the descriptor's own `identity.spec` — a pre_write check's ordering guarantee must trace to THIS STEP's own governing spec, never an unrelated one. **Ask 6 amendment (pilot 9 commit 1, 2026-09-04):** `identity.spec` is single-valued, but a step's outputs can genuinely span more than one governing spec (`enrich_parcels`: `identity.spec` `"65"`, pass 5's own post-commit-read order_guarantee governed by Spec 78 §P3A.1 — grep-confirmed `comp_*`/`opt_*`/`optimal_config` appear only in Specs 78/88/89/100, never 55 or 65). `checkOrderGuaranteesCited` now accepts a spec-qualified anchor, `"<specnum>:<anchor text>"` — when present, the spec_ref-agreement check resolves against the QUALIFIER's own spec instead of `identity.spec`'s; an unqualified anchor is byte-for-byte the pre-existing behavior. Proven both directions against the real `docs/specs/` tree in `step-validate.mjs`'s own `selfTest()`: an unqualified anchor whose `spec_ref` disagrees with `identity.spec` still REDs (the qualifier, not the mere citation, is what licenses the disagreement); a qualified anchor naming the SAME spec `spec_ref` already points at GREENs; a qualifier naming a spec number that resolves to no file REDs.
+- ⚠ **GAP G-3** — the DECLARED half above is real and non-vacuous, but its own completeness is not proven: nothing re-checks a step's governing spec for "before X" language when the library's phase order changes generically (e.g. a future ordering change to LINK or a second ENRICHER), and nothing forces a `pre_write` check + `order_guarantee` to be AUTHORED in the first place merely because a step's spec states a "before X" guarantee — `enrich_parcels`'s own pass 5 (Spec 78 §P3A.1) needed this pilot to explicitly author `pass5_post_commit_read_order` before Rule 11 had anything to check.
+- **Archetype variance:** matters most for INGESTOR (acquire→validate→write→score) and any archetype using `checks[].when:"pre_write"`; N/A for ASSERT (no writes to order against). ENRICHER (pilot 9) is the first archetype whose post-commit phase order guarantee spans a SECOND spec beyond `identity.spec`.
+- **Evidence:** LR-D9 — converting `load_ravines` to the INGESTOR archetype silently retired Spec 59's write-order guarantee until the Regression Guardian caught it in a fold review, one commit after it shipped. `enrich_parcels` (pilot 9) — the multi-spec case above, closed by this amendment rather than left as a second per-incident fix.
+- **Violation reads as:** a `checkOrderGuaranteesCited` violation in `step:validate`'s Rule 11 matrix row (`enforced-red` when a real violation exists); GAP G-3's completeness half is still nothing today, absent a reviewer catching it by hand.
+
+**12. A write target with a destructive full retraction (`retract_when:full_only` or `retract:"all"`) declares a truthful crash-recovery posture — `"none"` is legal only with a stated why.**
+- **Enforced by:** `step.schema.json`'s `recovery.interrupted` field (required when a destructive retraction target exists) + ~~`step-conformance.infra.test.ts:1039-1073`~~ **CORRECTED 2026-09-10 (measured, now `:1647-1656` — ~600 lines of drift; cite by greppable anchor, per Spec 124 §5 R-R's own lesson): `step-conformance.infra.test.ts`'s "recovery.interrupted reddens against its destructive retraction target" battery** (RED on `"none"`, RED on missing).
+- **Archetype variance:** applies to LINK and any INGESTOR with a full-retraction write; N/A for ASSERT/RECORDER.
+- **Evidence:** a killed `link_massing` forced-FULL run left `parcel_buildings` at 29,330/520,492 rows; the next run's gate read "unchanged" and the hole persisted silently — this is the incident the rule exists to make undeclarable.
+- **Violation reads as:** a schema-validation throw at construction. *(Note, updated 2026-08-29: BOTH halves are now CLOSED. The DECLARATION half — `recovery.interrupted` and the paired `recovery.before_image` (R-M), both required, truthful, schema-enforced fields, R-M's before-image mechanism BUILT and LIVE-FIRED (`d07529af`, LG-17 — `link_massing`'s genuine forced-FULL wrote a 520,492-row before-image file before its retraction ran). The RUNTIME half — `staleness.detectInterruptedRetraction` auto-detects a `crashed`/stuck-`running` prior run for a step's own producer slugs and `selectMode` forces FULL unconditionally, wired into `runCascadePhase`/`runLinkPhase` (`LW-D20`/`LG-19`, Spec 122 R-B) — closed by a live kill-and-rerun proof against `link_wsib` that found and fixed two real bugs (a step self-detecting its own just-opened row; the check being unreachable behind the ledger gated-skip), both now regression-locked fast (fake-pool) and against real Postgres. "Declared" and "automatically enforced" are now the same posture.)*
+- **Enforced by (WF2 "Rules 10/11/12 mechanical checkers", C3, 2026-09-03) — `step:validate`'s own matrix, closing this rule's prior PROSE-ONLY gap from THAT tool's own vantage:** `scripts/analysis/step-validate.mjs`'s `checkInterruptedPostureTruthful(descriptor)`, two parts. **(a) Declaration** — the same "destructive retraction requires `force_full_on_next_run`" rule as the existing `step-conformance.infra.test.ts` R-B lock, re-verified here. **(b) Reachability** — a NEW, static, runner-derived claim beyond the declaration: for the descriptor's `execution.shape`, is `staleness.detectInterruptedRetraction` actually REACHABLE on every path through that shape's runner in `scripts/lib/step/index.js`? Derived from a source scan (`extractFunctionBody` + `runnerReachability`), never hand-listed — a runner behind a `staleness.ledgerGatedSkip` early-return is reachable only if its `bypassed` term folds in `interruptedRetraction.interrupted` BEFORE that call (the exact shape `runMaterializePhase` lacked until `febd0968`, closed AHEAD of this checker landing per Fold A item 2 of `.cursor/wf2_rules_10_12_checkers_active_task.md`); a runner with no such early-return instead reaches it via an unconditional `staleness.selectMode` call. Measured live over all 8 converted descriptors: `link`/`link_keyed`/`cascade` (the three declaring `force_full_on_next_run`) all REACHABLE; the other five declare `"none"` (no reachability claim to verify). Proven both directions via `selfTest()` (RED on the exact pre-fix `runMaterializePhase` shape reconstructed in-memory; GREEN on the post-fix shape, a LINK-shaped unconditional-`selectMode` runner, and a declaration-only violation; RED on a runner reaching neither `ledgerGatedSkip` nor `selectMode`). **Behavioural proof, WRITTEN but BLOCKED** (the DB-tier half beyond static reachability): `src/tests/db/step-crash-posture.db.test.ts` spawns a REAL `link_wsib` process, SIGTERMs it once its `pipeline_runs` row reads `running`, and asserts the row stays `running` (no SIGTERM handler exists anywhere in this codebase — grepped — so Node's default disposition abandons the in-flight `finalizeLedgerRow` call) AND the next `staleness.selectMode` call over the SAME descriptor/pool resolves `mode:"full", reason:"recover_interrupted_retraction"` — declared posture matching MEASURED behaviour, not just source reachability. Committed `describe.skip`-gated: measured live 2026-09-03 that a real converted step spawned against the ephemeral `BUILDO_TEST_DB` testcontainer always refuses at `assertDbTarget` (`scripts/lib/resolve-db.js`) — the container is named `buildo_test`, every descriptor's `database.assert_current_database` is the single literal `"postgres"` with no test-context override, and step scripts have no descriptor-path override hook either. Filed HIGH in `review_followups.md` ("WF2 Rule 12 behavioural half — no `db.test.ts` can spawn a REAL converted step against the ephemeral test container") as its own scoped WF2/WF3 — a deliberate production safety fence (Spec 122 §P0), not weakened under this WF2's time pressure. Until that lands, the STATIC reachability half above + the existing fake-pool unit lock (`src/tests/step-library.logic.test.ts`) are the enforced mechanisms. Scoped, once unblocked, to ONE archetype first (CASCADE via `link_wsib`, the same step LW-D20/LG-19 were originally found against) — the other two live shapes (`link`/`link_massing`, `link_keyed`/`link_parcels`) are `programme-items.json`'s `CRASH-BEHAV` (`nice_to_have`, `NOT_STARTED`).
+
+**13. A step validates itself — the Spec 123 §6 scorecard and this spec's own policy-coverage matrix are generated by one command, run for every converted step, and enforced (never a separate, hand-maintained track).**
+- **Enforced by:** `scripts/analysis/step-validate.mjs` (`npm run step:validate -- --step=<slug>` / `--all`): runs `validateDescriptor` (Rules 1, 5–9), the ast-grep shape gate scoped to the step's own file + compute (Rules 1–2), the step's own `src/tests/steps/<slug>/` + the shared conformance/golden-fingerprint suites, the golden-capture invocation/fingerprint/diff check (G8), and derives the full G0–G9 scorecard plus a Rules-1–13 coverage matrix — all from committed artifacts. `step-conformance.infra.test.ts` asserts every converted step's assessment report carries a `## Validation scorecard (generated)` block equal to a fresh run (drift is red). `.husky/pre-commit` runs `step:validate --all --fast` first (the vitest spawn skipped, everything else run, plus 7 always-on fast invariants); `.husky/pre-push` re-runs it plus `typecheck` (defeats a bare `--no-verify`). **+ §5 R-BA gates F/H/J/G (2026-09-26):** F floors the SCORE half (a converted step below 14/17, or a non-LF path, hard-stops without a dated ledger row — fast invariant #37); H closes the MATRIX's own status vocabulary (`MATRIX_STATUSES`, a closed enum — `computePolicyMatrix` throws on an out-of-set status); J and G close the PROCESS half the addendum below names — J at commit time (Spec-diff staged-or-declared, generated-doc freshness, `.husky/pre-commit`), G on the scorecard's own input freshness (nonzero capture per declared write target, `lib_fingerprint` staleness, explained-diff coverage — fast invariants #38-#40): Rule 13 no longer just runs the check, it proves the check's own inputs are current.
+- **Archetype variance:** none — every archetype's descriptor is validated, shape-gated, and scored the same way.
+- **Evidence:** pilots 1–5 backfilled by `step:validate --all --write` (R-R, 2026-08-29) — `link_parcel_addresses` scored 8/17 on the FIRST honest run (real hard-stop: `LPA-D2`'s ledger status wasn't literally `CLOSED`/`PIN`, and a later WF3 fix's `records_meta` shape change wasn't yet re-explained in the report), fixed by two real documentation commits rather than by loosening the gate — 14/17 after.
+- **Violation reads as:** a red `step-conformance.infra.test.ts` assertion naming the stale/missing scorecard block, or a non-zero `step:validate` exit (a hard stop on G6/G7/G8/G9 or a fast invariant) in `.husky/pre-commit`/`pre-push`.
+- **Rule 13's own boundary (R-T addendum, filed 2026-08-29, BUILT 2026-08-30 — this same programme's follow-on WF2).** `step:validate` conflates two different questions under one name: whether a step's *process* was followed (G0–G9, the policy coverage matrix) and whether a step's *data* is plausible (Spec 79/120/30 §5.4.1's bound doctrine — **not bare "§5"**, Fold B-6, 2026-08-30: Spec 30 §5 is the CI/CD section; §5.4.1 is the runtime verdict/halting-semantics section the bound doctrine actually lives in). **The rule: "the validator validates DATA (Spec 79/120/30 §5.4.1); the scorecard validates process, from structured artifacts."** Both halves are now BUILT: the scorecard half (G0–G9, as specified above) and the DATA half — `invariants[]`/`plausibility[]` bounds (threshold-derived/reachable/last-measured-value-beside-the-bound, §9 below), the seam-validation pass (`scripts/lib/step/seam.js` — over `inputs.reads.steps[]` declared step-edges, corrected from the original "`outputs.invalidates` edges" phrasing: that category is `{table,column,when}`-shaped, a step's own re-eligibility scope, not a producer→consumer edge — closes VAL-3/LDG-2/LDG-7's concern), chain-end synthesis automation (`scripts/analysis/chain-end-synthesis.mjs`, the `sources` chain's roll-up + the declared cloud trigger for `validate_only` invariants, Ask 6(b)), and R-U's chain-run correlation (`records_meta.chain_run_id`, below) that both the seam pass and chain-end synthesis join on. The layer table above states WHERE each half lives (descriptor declares, library executes, compute only measures). **The DATA/PROCESS split has a SECOND enforcement point, not just declaration (Fold B-3):** every synthetic invariant/plausibility row carries a REQUIRED, closed `source: check|invariant|plausibility` field distinct from `kind` (`scripts/lib/step/verdict.js`'s `checkRow`) — so a consumer reading only the EMITTED audit table (never the descriptor) can still tell a DATA row from a PROCESS row without re-deriving it from naming convention; chain-end synthesis and `step-validate.mjs`'s scorer both key off this field. **Scoped as BUILT, not fully DE-REGEXED**: the scorecard's own six prose-regex gates (`G0`/`G1`/`G3`/`G4`/`G5`/`G9`, `section()`/`splitTableRow()`-scraped from free-form report text) are UNCHANGED — only `G2`'s vacuous-green (Spec 123 §6's own documented defect) and the defect-ledger/`notes.json` strict-row-schema parse (`G6`/`G7`/`G4d`) were fixed, per Ask 3's own scoped default; the larger de-regex lift is filed as `nice_to_have` in `programme-items.json` (§9 below), not silently dropped. Programme item `VAL-WF2` (`batching_prereq`) CLOSES with this commit; `REGEXSC` is `SUPERSEDED` by it (unchanged from the original filing); `G2` is `PARTIAL` — the vacuous-green half closes here, the churn×complexity-plot BUILD half stays its own `S6b` item (operator ruling 2026-08-25 decision 2, `review_followups.md:2994`, unchanged).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/.claude/review-templates/README.md b/.claude/review-templates/README.md
+index 008b15f69367a7b1cdf14d92d5f2c546da1c94d5..4ee9a886c41d892a14a842299a8a54eaec55453e 100644
+--- a/.claude/review-templates/README.md
++++ b/.claude/review-templates/README.md
+@@ -106,7 +106,7 @@ Each lens asks one question, names what it is not responsible for, rejects any f
+ ### The standard
+ 
+ 1. The lenses that fire run in parallel, one DeepSeek call each, one narrow prompt each; outputs `r1-<lens>.txt`.
+-2. Then ONE tool-bearing Claude grounder adjudicates every finding against the files (round 2, Spec 08 section 5.3, "every DeepSeek finding is adjudicated by a tool-having grounder"): KEEP or REJECT with the opened `file:line`, in `TRIAGE.md`. The grounder also does the Integration check (A5) itself.
++2. Then ONE tool-bearing Claude grounder adjudicates every finding against the files (round 2, Spec 08 section 5.3, "every DeepSeek finding is adjudicated by a tool-having grounder"): CONFIRMED, REJECTED or CONFLICT with the opened `file:line`, in `GROUNDER.md`; the lane's `TRIAGE.md` holds one outcome line per CONFIRMED or CONFLICT finding (forms: `fixed`, `task`, `ruling`, `wontfix`, `pile`; `node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` checks them). The grounder also does the Integration check (A5) itself.
+ 3. Reality-Check (A7, Claude) runs only when values are served (DB fields, derived numbers); it is not a lens.
+ 4. Wording rule: a claim is "verified" only with the name of what verified it (which lens, which round, or which grounder check). "Verified" alone is not accepted.
+ 
+diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
+index 6429c107d30b566b43f95f2acc7f3fbcf127099c..385ea28b3faa0acef9d6c327fb662486b77b0741 100644
+--- a/docs/reports/generated/rule-lists-by-kind.md
++++ b/docs/reports/generated/rule-lists-by-kind.md
+@@ -96,15 +96,15 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+ | agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 13,405 | 1 |
+-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 27,384 | 1 |
+-| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 29,969 | 1 |
++| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 30,075 | 1 |
++| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 30,663 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+ | orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 9 lists | | 185,974 | 9 |
++| total | 9 lists | | 189,359 | 9 |
+ 
+ ## spec-only
+ 
+@@ -112,12 +112,12 @@ Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; miles
+ 
+ | list | document | selection | characters | parts |
+ | --- | --- | --- | ---: | ---: |
+-| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 29,969 | 1 |
+-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 27,384 | 1 |
++| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 30,663 | 1 |
++| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 30,075 | 1 |
+ | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
+ | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
+ | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
+ | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
+ | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
+-| total | 7 lists | | 140,999 | 7 |
++| total | 7 lists | | 144,384 | 7 |
+ 
+diff --git a/docs/specs/00-architecture/08_agents.md b/docs/specs/00-architecture/08_agents.md
+index dd6063128e35ffcdb558af9fe7e9439a6fd0d4ec..a0d1ddef464a1125be9959baf09b89ca94a8d66d 100644
+--- a/docs/specs/00-architecture/08_agents.md
++++ b/docs/specs/00-architecture/08_agents.md
+@@ -348,6 +348,8 @@ Legend: **I**=Integration · **RC**=Reality-Check · **SF**=Schema-Fidelity · *
+    Dated note 2026-11-19 (M-246, prior text kept; task-358 REVIEW.LENSES, lane BL-LENSES; operator, verbatim, 2026-11-19, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry 'Operator: the review protocol': "I believe deepseek does the compliance seat" and "Deepseek is respoonsible for many of these seats - too many tokens to run all claude ones"): the repo lens set is five narrow DeepSeek templates in `.claude/review-templates/`: `lens-compliance.md` (A10), `lens-code-review.md` (A3), `lens-ux.md` (A11), `lens-error-paths.md` (A2 lens 4), `lens-security.md` (A12, money/auth/PII only), plus `plan-review-deepseek.md` as the failure-modes lens; run with `scripts/deepseek-review.js review <file> --template <lens> --context <pasted context>`; the lane brief written by `backlog-lane.mjs` names the lenses by task type; one Claude grounder adjudicates every finding as round 2. Table: `.claude/review-templates/README.md`.
+ 5. **Panel sizing scales to stakes.** "quick check" → a couple of lenses, single-vote. "thoroughly audit / money code / pipeline data" → full domain roster + round-2 (manual: scale to what's asked).
+ 6. **Findings triage** (WF6): BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons.
++   Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1580`: "the findings that are deemed low priorities are filed in a review pile for later"; :1517 "don't makr the task complete until it actually works"): the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md (seat findings listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included) has one outcome line in the lane's TRIAGE.md, the last line per id judged (`node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` runs it before the close). Forms: `fixed:<sha> <path>` (the commit is an ancestor of HEAD, in the range from the launch commit, touches the path, is not reverted), `task:task-N` (the task exists, is not DROPPED and names the finding id; only for a DEFER finding), `ruling:RR-NNNN` or `ruling:decision-N` (the decision record exists), `wontfix:"<reason>"` and `pile:"<reason>"` (30+ characters; LOW and NIT only). CRITICAL, HIGH and MED close by fixed or ruling (rule 6 above: a BUG is fixed before Green Light); LOW and NIT close by any form whatever the kind (his :1580 words override rule 6 for them). Until the review_followups.md table row exists, pile lines in TRIAGE.md are the pile. The task's Final Summary carries the round line and one line per CRITICAL, HIGH or MED finding. This is part of the same omission guard as the task-410 note (it proves presence, form and git facts, never that a fix fixes); forgery routes stay with tasks 401 and 402.
++   Dated note 2026-11-20 (M-246, prior text kept; task-399 fix round 1, grounder out-code-review#1 and g399#3; decisions RR-0333 and RR-0338): the note above is corrected in three places. (1) `task:task-N` passes only when the card's text holds the finding id as a whole token; the earlier alternative (the cited file path in the card's text) is removed because any card naming the file closed the deferral, and the closing task itself is refused as the card. (2) CRITICAL, HIGH and MED close by fixed or ruling, and by task only for a DEFER finding (rule 6: DEFER goes to review_followups.md with reasons); the sentence above left the DEFER exception out. (3) A fix round does not file `out-<lens>-rN.txt`: the close requires every in- input and out- output to equal the diff of the whole range at HEAD, so after any fix commit every input is re-made with `rule-lists.mjs lens-input` and every lens output re-run under the same names (re-running only the changed chunks is task-414). The Final Summary block is looked for in the Final Summary section of the task, not the whole file.
+ 7. **The roster is a MENU, not a checklist.** Never run all ~12 roles on one change. Compose the **smallest DIVERSE panel that covers this change's actual risks** (typically 5–8 lenses) + round-2. Lens-diversity beats agent-count (manual §6.2): running the whole menu floods you with the ⅓-false-premise noise (§9) it takes longer to triage than the bugs are worth. Security fires only on money/auth/PII/admin; Op-Model Compliance only at WF6; Reality-Check/Schema-Fidelity/Ground-truth only when values/DB-fields/spec-claims are in play.
+ 8. **Spend on reality-touching agents; economize on file-readers.** Empirically (§7b), the agents that verify against reality — Reality-Check (runs code / queries the live DB), Integration, Schema-Fidelity, Ground-truth — catch the subtlest, highest-severity bugs and carry the lowest false-premise rate, because they don't guess. The file-only CLIs (Gemini/DeepSeek) are cheap breadth, not ground truth (§9 CLI blind spots). Budget accordingly: a FEW reality-touching Claude agents + a couple of cheap DeepSeek lens-passes beats a large panel of file-readers.
+ 9. **Substrate economics.** DeepSeek handles execution and static reviews at low cost; spend tool-bearing Claude only when live tree / DB / git tools are strictly required. The execution half is `PLANNED` (SUB-ENG-1) — until it ships, execution is Claude. Rule 8 ("spend on reality-touching agents") is unchanged and takes precedence: cheap breadth never substitutes for a grounder.
+diff --git a/docs/specs/00-architecture/137_mcqueue.md b/docs/specs/00-architecture/137_mcqueue.md
+index 0bd7422911ebb0776eabc751470e4384b47e516a..a7ddaa9bf193630036dc62ad15643bef0803c1b8 100644
+--- a/docs/specs/00-architecture/137_mcqueue.md
++++ b/docs/specs/00-architecture/137_mcqueue.md
+@@ -137,6 +137,8 @@ Dated note 2026-11-20 (M-246, prior text kept; task-410 V2.WHOLE, lane BL-V2WHOL
+ 
+ Dated note 2026-11-20 (M-246, prior text kept; correction to the task-410 note above): its closing sentence says Rule 3 is unchanged. That is corrected by the Rule 3 note under Rule 3 (same date, same task): for lane build and fix tasks Rule 3 is amended to the two-commit close, the operator having agreed ("agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close."); every other task keeps Rule 3 as written.
+ 
++Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1517`: "don't makr the task complete until it actually works"): a lane build or fix task's closing commit is refused unless the lane directory holds TRIAGE.md with one outcome line per CONFIRMED or CONFLICT id of GROUNDER.md (forms fixed, task, ruling, wontfix, pile; see the Spec 08 rule 6 note of the same date) and the task's Final Summary shows the round line and the CRITICAL, HIGH and MED outcomes. TRIAGE.md is required only when GROUNDER.md holds such an id. Rule 3 (the two-commit close) is otherwise unchanged.
++
+ ## 5. The weekly snapshot
+ 
+ A procedure. No tool and no code.
+diff --git a/scripts/analysis/backlog-brief.mjs b/scripts/analysis/backlog-brief.mjs
+index 4bd5b0cdb9c5ac6ebc18b3943f5532c08603f260..9513ff5e8c8235c41856f3ac938db0df605b1612 100644
+--- a/scripts/analysis/backlog-brief.mjs
++++ b/scripts/analysis/backlog-brief.mjs
+@@ -163,12 +163,12 @@ const out = [
+   '',
+   `Take order:`,
+   `  1. backlog task edit ${taskId} -s RUNNING -a ${laneArg}`,
+-  `  2. backlog task edit ${taskId} --plan "<numbered steps, one per acceptance criterion>"`,
++  `  2. If the task's Implementation Plan field already holds a plan (reviewed, ruled and checked before launch), build that plan and do NOT run --plan; only a task with no plan runs: backlog task edit ${taskId} --plan "<numbered steps, one per acceptance criterion>"`,
+   `Review (plan or output): node scripts/deepseek-review.js review ${ctxRel} --context .claude/review-templates/plan-review-deepseek.md`,
+   `  Run by the tool-bearing Claude lane with provider claude: scripts/deepseek-review.js is not in exec-policy.json bash_allow, which governs only the DeepSeek execution engine (Spec 08 section 7 rule 10 (b), 08_agents.md:341). Context file ${ctxRel} sha256=${ctxSha}.`,
+   `Context pack sections: ${ctxRel} also carries Milestone, Document sections, Decisions naming this task, Prior reviews and lane reports, Dependencies (RR-0235): read it, not only the references above.`,
+   `Close:`,
+-  `  backlog task edit ${taskId} --check-ac <n> (each criterion, with its evidence) --final-summary "<what landed, commit sha, hook result>" -s DONE|BUILT`,
++  `  backlog task edit ${taskId} --check-ac <n> (each criterion, with its evidence) --final-summary "<what landed, commit sha, hook result>" --append-final-summary "<the outcome block the close check prints: Review round N line and one line per CRITICAL, HIGH or MED finding>" -s BUILT (round 1 only; from round 2 on use only --append-final-summary so the earlier round lines stay on the page; one command; every CONFIRMED or CONFLICT finding of GROUNDER.md has an outcome line in TRIAGE.md first: node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>)`,
+   `  End the report with one line: STATUS: ready|blocked|failed|dropped`,
+   `Standing rules: attach the lane standing rules file; no push, no DB, no --no-verify.`,
+   '',
+diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
+index 449f30cf4ebc60669163cd94135c6c3478dfd0d8..d52921dc5ea1751f92feb692eeab811af30bd4e1 100644
+--- a/scripts/hooks/check-lane-close.mjs
++++ b/scripts/hooks/check-lane-close.mjs
+@@ -121,6 +121,187 @@ export function chunkErrors({ label, items, expected, diffOf = () => null, optio
+ export const BOARD_REFS = ['refs/heads/wf2/board', 'refs/remotes/origin/wf2/board'];
+ const kOf = (name) => { const x = /-p(\d+)\.txt$/.exec(name); return x ? Number(x[1]) : null; };
+ 
++/** One verdict per finding id of a GROUNDER.md: Map id -> {word, file, line, quote, reason} (the last verdict line of an id wins). */
++export function parseVerdicts(g) {
++  const verdicts = new Map();
++  for (const raw of g.split('\n')) { const v = VERDICT.exec(raw.replace(/[`*]/g, '')); if (v) verdicts.set(v[1], { word: v[2], file: v[3], line: Number(v[4]), quote: v[5], reason: v[6].trim() }); }
++  return verdicts;
++}
++
++// task-399 (FOLD.ADOPT, Spec 08 section 7 rule 3 08_agents.md:346 "fold survivors, file rejections with reasons", rule 6 :350 BUG goes to WF3 before Green Light, DEFER to review_followups.md with reasons):
++// every CONFIRMED or CONFLICT id of the grounder file carries ONE outcome line in TRIAGE.md (the last line of an id is judged). Presence, form and git facts; never judgement: it cannot prove that a fix fixes.
++const SEVS = ['CRITICAL', 'HIGH', 'MED', 'LOW', 'NIT'];
++const normSev = (s) => { const u = String(s ?? '').toUpperCase(); const k = u === 'CRIT' ? 'CRITICAL' : u === 'MEDIUM' ? 'MED' : u; return SEVS.includes(k) ? k : null; };
++/** The severity a grounder writes in the first 40 characters of its reason (earliest whole upper-case word), else null. */
++const reasonSev = (reason) => { const m = /\b(CRITICAL|CRIT|HIGH|MEDIUM|MED|LOW|NIT)\b/.exec(String(reason ?? '').slice(0, 40)); return m ? normSev(m[1]) : null; };
++/** {kind: BUG|DEFER, sev} of a lens finding line ("BUG severity=HIGH - ..."); the lens writes CRIT, read as CRITICAL. */
++export const lensKindOf = (line) => { const m = /^\s*[-*]?\s*(BUG|DEFER)\s+severity=([A-Za-z]+)/.exec(line); return { kind: m ? m[1] : 'BUG', sev: m ? normSev(m[2]) : null, line }; };
++const SEAT_LINE = /^\s*(?:#+\s+)?([a-z0-9]+)#(\d+)\s+(CRITICAL|HIGH|MED|LOW|NIT)\b/;
++const SEAT_HEAD = /^\s*Seat:\s*(\S+)\s+(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm;
++/** The `Seat: <name> <repo path> sha256:<12 hex>` lines of a GROUNDER.md, each with its file text from `read` (null when missing). */
++export const seatLines = (g, read) => [...g.matchAll(SEAT_HEAD)].map((m) => ({ name: m[1], path: m[2], sha: m[3], text: read(m[2]) }));
++const FORM_WORDS = { close: ['fixed', 'task', 'ruling', 'wontfix', 'pile'], plan: ['folded', 'task', 'ruling', 'wontfix', 'pile'] };
++const unq = (s) => { const t = String(s).trim(); const m = /^"(.*)"$/s.exec(t) ?? /^'(.*)'$/s.exec(t) ?? /^`(.*)`$/s.exec(t); return squash(m ? m[1] : t); };
++const FAIL = Symbol('fact failed');
++
++/**
++ * MODE TABLE (PLAN-399-v3 4.1; task-375 reuses it for mode 'plan'). Pure of git: every git fact is a callback in `facts`.
++ *  mode close: forms fixed, task, ruling, wontfix, pile. CRITICAL, HIGH, MED close by fixed or ruling (task only when the lens line begins DEFER); LOW and NIT by any form (operator 2026-11-20 ":1580").
++ *  mode plan: folded takes the place of fixed (fixed is refused); the rest as close. A CONFLICT id takes ruling, or fixed (close) / folded (plan), only.
++ * @param {{verdicts:Map<string,{word:string,file:string,line:number,quote:string,reason:string}>, triageText:string, lensKinds:Map<string,{kind:string,sev:string|null,line?:string}>,
++ *   facts:{resolveSha:(s:string)=>string|null, isAncestor:(f:string)=>boolean, inRange:(f:string)=>boolean, touches:(f:string,p:string)=>boolean, reverts:(f:string)=>boolean,
++ *          taskOf:(n:string)=>({exists:boolean,status:string,text:string}|null), decisionExists:(ref:string)=>boolean, taskText?:()=>string},
++ *   mode?:'close'|'plan', seats?:{name:string,path:string,sha:string,text:string|null}[], seatRoot?:string|null,
++ *   summary?:{text:string, headText:string, grounderPath:string, triagePath:string}|null}} a
++ * @returns {{errors:string[], ids:number}} refusal lines (one per failing id) and the number of CONFIRMED or CONFLICT ids checked
++ */
++export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = 'close', seats = [], seatRoot = null, summary = null, selfTask = null }) {
++  const errors = [];
++  const kinds = new Map(lensKinds ?? []);
++  // seats (Integration, Reality-Check, Ground-truth): one report each, one finding per line; its findings are BUG kind and need a verdict and an outcome like any lens finding
++  for (const s of seats) {
++    if (seatRoot && !String(s.path).startsWith(seatRoot)) { errors.push(`Seat ${s.name}: ${s.path} is outside ${seatRoot} (the seat file is read from the tree of the ${mode} mode)`); continue; }
++    if (s.text === null || s.text === undefined) { errors.push(`Seat ${s.name}: ${s.path} is not in the repo (the file the Seat line names must be committed)`); continue; }
++    if (sha(s.text).slice(0, 12) !== s.sha) { errors.push(`Seat ${s.name}: ${s.path} has sha256:${sha(s.text).slice(0, 12)}, the Seat line says sha256:${s.sha} (the seat file was edited after the grounder ruled)`); continue; }
++    const found = s.text.split('\n').map((ln) => SEAT_LINE.exec(ln)).filter(Boolean);
++    if (found.length === 0) { errors.push(`Seat ${s.name}: ${s.path} holds no finding line (form: "### <seat id>#<n> CRITICAL|HIGH|MED|LOW|NIT: ..."); a seat file with no finding line is not a seat report`); continue; }
++    for (const m of found) {
++      const id = `${m[1]}#${m[2]}`;
++      kinds.set(id, { kind: 'BUG', sev: normSev(m[3]), line: m[0].trim() });
++      if (!verdicts.has(id)) errors.push(`${id} ${m[3]}: seat finding of ${s.name} has no verdict line in GROUNDER.md (form: <id> CONFIRMED|REJECTED|CONFLICT <path>:<line> "<quote>" [reason]) [Spec 08 section 5.3, 08_agents.md:225]`);
++    }
++  }
++  // the outcome file: ONLY THE LAST LINE of an id is judged; a line for an id the grounder file does not hold is ignored
++  const last = new Map();
++  for (const raw of String(triageText ?? '').split('\n')) {
++    const m = /^\s*(?:[-*]\s+)?([A-Za-z0-9._-]+#\d+)\s+(\S.*?)\s*$/.exec(raw.replace(/[`*]/g, ''));
++    if (m && verdicts.has(m[1])) last.set(m[1], m[2]);
++  }
++  const rows = [];
++  const ids = [...verdicts].filter(([, v]) => v.word === 'CONFIRMED' || v.word === 'CONFLICT');
++  const call = (errs, what, fn) => { try { const r = fn(); if (r === undefined) { errs.push(`the fact callback for ${what} returned nothing, so it cannot be proved`); return FAIL; } return r; } catch (e) { errs.push(`the fact callback for ${what} failed: ${String(e?.message ?? e).split('\n')[0]}`); return FAIL; } };
++  for (const [id, v] of ids) {
++    const k = kinds.get(id) ?? { kind: 'BUG', sev: null };
++    const sev = reasonSev(v.reason) ?? normSev(k.sev) ?? 'CRITICAL';
++    const low = sev === 'LOW' || sev === 'NIT';
++    const conflict = v.word === 'CONFLICT';
++    const fixWord = mode === 'plan' ? 'folded' : 'fixed';
++    const allowed = conflict ? ['ruling', fixWord] : low ? FORM_WORDS[mode] : k.kind === 'DEFER' ? [fixWord, 'task', 'ruling'] : [fixWord, 'ruling'];
++    const pass = allowed.map((w) => ({ fixed: `fixed:<sha> <path the commit touches>`, folded: `folded:"<20+ characters present in the task text>"`, task: 'task:task-N (its text names this id)', ruling: 'ruling:RR-NNNN or ruling:decision-N', wontfix: 'wontfix:"<reason, 30+ characters>"', pile: 'pile:"<reason, 30+ characters>"' })[w]).join(' | ');
++    const rule = conflict ? 'Spec 08 section 5.3 (08_agents.md:225): a conflict waits for the operator ruling' : k.kind === 'DEFER' && !low ? 'Spec 08 section 7 rule 6 (08_agents.md:350): DEFER goes to review_followups.md with reasons' : low ? 'Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later)' : 'Spec 08 section 7 rule 6 (08_agents.md:350): BUG goes to WF3 before Green Light, rule 3 (:346) fold survivors';
++    const refuse = (why) => errors.push(`${id} ${sev}: ${why} [${rule}; verdict ${v.file}:${v.line}; form that passes: ${id} ${pass}]`);
++    const text = last.get(id);
++    if (text === undefined) { refuse(`no outcome line in TRIAGE.md`); continue; }
++    const fm = /^(fixed|folded|task|ruling|wontfix|pile)\s*:\s*(.*)$/s.exec(text);
++    if (!fm) { refuse(`the last TRIAGE.md line "${text.slice(0, 60)}" fits no form`); continue; }
++    const [, word, rawArg] = fm;
++    const arg = rawArg.trim();
++    if (!allowed.includes(word)) {
++      refuse(word === 'fixed' && mode === 'plan' ? 'fixed is refused in plan mode (the fix is made before a lane branch exists; use folded)' : word === 'folded' && mode !== 'plan' ? 'folded is a plan-mode form (a lane close uses fixed)' : conflict ? `a CONFLICT takes ${allowed.join(' or ')} only, not ${word}` : `${word} is not allowed for a ${sev} ${k.kind} finding${(word === 'wontfix' || word === 'pile') ? ' (wontfix and pile are for LOW and NIT only)' : word === 'task' ? ' (task is for a DEFER finding; a BUG is fixed before Green Light)' : ''}`);
++      continue;
++    }
++    const errs = [];
++    let ref = '';
++    if (word === 'fixed') {
++      const am = /^([0-9a-fA-F]{7,40})\s+(\S.*)$/.exec(arg);
++      if (!am) errs.push('fixed needs a sha (7+ hex) and the path the commit touches: fixed:<sha> <path>');
++      else {
++        const p = am[2].trim().replace(/^["'`]|["'`]$/g, '');
++        ref = am[1].slice(0, 7);
++        const full = call(errs, `sha ${am[1]}`, () => facts.resolveSha(am[1]));
++        if (full === null) errs.push(`${am[1]} is not a commit of this repo`);
++        else if (full !== FAIL) {
++          const anc = call(errs, 'the ancestor test', () => facts.isAncestor(full));
++          if (anc === false) errs.push(`${am[1]} is not an ancestor of HEAD (a rebase or amend rewrote it: record the fixed line again with the new sha)`);
++          else if (anc !== FAIL) {
++            const inr = call(errs, 'the launch range', () => facts.inRange(full));
++            if (inr === false) errs.push(`${am[1]} is not in the range from the task's launch commit to HEAD (it is older than the launch, or on another branch)`);
++            else if (inr !== FAIL) {
++              const tch = call(errs, 'the touched paths', () => facts.touches(full, p));
++              if (tch === false) errs.push(`${am[1]} does not touch ${p}`);
++              else if (tch !== FAIL) { const rv = call(errs, 'the revert search', () => facts.reverts(full)); if (rv === true) errs.push(`${am[1]} is reverted by a later commit of the range ("This reverts commit ${full}")`); }
++            }
++          }
++        }
++      }
++    } else if (word === 'folded') {
++      const q = unq(arg);
++      ref = q.slice(0, 20);
++      if (q.length < 20) errs.push('folded needs a quote of 20+ characters present in the task text');
++      else { const t = call(errs, 'the task text', () => facts.taskText()); if (t !== FAIL && !squash(t).includes(q)) errs.push(`the quote "${q.slice(0, 40)}" is not in the task text`); }
++    } else if (word === 'task') {
++      const tm = /^(task-\d+)\b/i.exec(arg);
++      if (!tm) errs.push('task needs a task id: task:task-N');
++      else {
++        ref = tm[1].toLowerCase();
++        if (selfTask && ref === String(selfTask).toLowerCase()) { errs.push(`${ref} is the closing task itself: a deferral needs another card that names ${id}`); }
++        else {
++        const ti = call(errs, `task ${ref}`, () => facts.taskOf(ref));
++        if (ti === null || (ti !== FAIL && !ti.exists)) errs.push(`${ref} has no task file`);
++        else if (ti !== FAIL) {
++          if (String(ti.status).toUpperCase() === 'DROPPED') errs.push(`${ref} is DROPPED`);
++          else if (!new RegExp(`(?<![A-Za-z0-9_-])${esc(id)}(?!\\d)`).test(ti.text)) errs.push(`the text of ${ref} does not name the finding id ${id} as a whole token (a card that only holds the cited path does not defer the finding)`);
++        }
++        }
++      }
++    } else if (word === 'ruling') {
++      const rm = /^(RR-\d{4}|decision-\d+)\b/i.exec(arg);
++      if (!rm) errs.push('ruling needs RR-NNNN or decision-N');
++      else {
++        ref = rm[1].replace(/^rr-/i, 'RR-').replace(/^decision-/i, 'decision-');
++        const ex = call(errs, `decision ${ref}`, () => facts.decisionExists(ref));
++        if (ex === false) errs.push(`${ref} has no decision record (record the operator's answer as a decision first)`);
++      }
++    } else {
++      const reason = unq(arg);
++      if (reason.length < 30) errs.push(`the ${word} reason is ${reason.length} characters; 30+ are needed after whitespace is squashed`);
++    }
++    if (errs.length) { refuse(errs.join('; ')); continue; }
++    rows.push({ id, sev, word, ref });
++  }
++  // visible on the task (step 6): the Final Summary holds the round line and one line per CRITICAL, HIGH or MED finding; checked only when every id has a good outcome
++  if (summary && errors.length === 0 && ids.length > 0) {
++    const count = (w) => rows.filter((r) => r.word === w).length;
++    const fixWord = mode === 'plan' ? 'folded' : 'fixed';
++    const head = /<!-- SECTION:FINAL_SUMMARY:BEGIN -->([\s\S]*?)<!-- SECTION:FINAL_SUMMARY:END -->/.exec(summary.headText ?? '')?.[1] ?? '';
++    const n = 1 + (head.match(/^\s*Review round \d+:/gm) ?? []).length;
++    const round = `Review round ${n}: ${count(fixWord)} ${fixWord}, ${count('task')} task, ${count('ruling')} ruling, ${count('wontfix')} wontfix, ${count('pile')} pile; grounder ${summary.grounderPath}; triage ${summary.triagePath}`;
++    const lines = rows.filter((r) => r.sev === 'CRITICAL' || r.sev === 'HIGH' || r.sev === 'MED').map((r) => `${r.id} ${r.sev} ${r.word} ${r.ref}`);
++    // the block is looked for in the Final Summary section only: a block placed in Notes does not make the outcomes visible on the page
++    const have = /<!-- SECTION:FINAL_SUMMARY:BEGIN -->([\s\S]*?)<!-- SECTION:FINAL_SUMMARY:END -->/.exec(String(summary.text ?? ''))?.[1] ?? '';
++    const miss = [round, ...lines].filter((l) => !have.includes(l));
++    if (miss.length) errors.push(`the task's Final Summary lacks ${miss.length} of ${lines.length + 1} required line(s) (the outcomes are shown on the task page, Spec 08 section 7 rule 3): ${miss.slice(0, 3).map((l) => `"${l.slice(0, 70)}"`).join(', ')}${miss.length > 3 ? ', ...' : ''}; the block is:\n${[round, ...lines].join('\n')}\n(one command: backlog task edit task-N --final-summary "<what landed>" --append-final-summary "<block>" -s BUILT)`);
++  }
++  return { errors, ids: ids.length };
++}
++
++/** The git facts the outcome check needs, as callbacks (so outcomeErrors stays pure). `L` is the task's launch commit (null: the range facts throw). */
++export function gitFacts(L) {
++  let range = null; let revText = null;
++  const need = () => { if (!L) throw new Error('the task launch commit is unknown, so the range L..HEAD cannot be computed'); };
++  const files = (dir) => git(['ls-files', '--cached', '--', dir]).stdout.split('\n').filter(Boolean);
++  return {
++    resolveSha: (s) => { if (!/^[0-9a-f]{7,40}$/i.test(s)) return null; const r = git(['rev-parse', '--verify', '--quiet', `${s}^{commit}`]); return r.status === 0 ? r.stdout.trim() : null; },
++    isAncestor: (f) => { const r = git(['merge-base', '--is-ancestor', f, 'HEAD']); if (r.status > 1) throw new Error(`git merge-base failed (status ${r.status})`); return r.status === 0; },
++    inRange: (f) => { need(); if (!range) { const r = git(['rev-list', `${L}..HEAD`]); if (r.status !== 0) throw new Error('git rev-list failed'); range = new Set(r.stdout.split('\n').filter(Boolean)); } return range.has(f); },
++    touches: (f, p) => { const r = git(['diff-tree', '--no-commit-id', '--name-only', '-r', '-m', '--no-renames', f]); if (r.status !== 0) throw new Error(`git diff-tree failed for ${f.slice(0, 9)}`); return r.stdout.split('\n').includes(p); },
++    reverts: (f) => { need(); if (revText === null) { const r = git(['log', `${L}..HEAD`, '--format=%B']); if (r.status !== 0) throw new Error('git log failed'); revText = r.stdout; } return revText.includes(`This reverts commit ${f}`); },
++    taskOf: (tid) => {
++      const n = /\d+/.exec(tid)?.[0];
++      const f = files('backlog/tasks').find((p) => new RegExp(`^backlog/tasks/task-0*${n}( -.*)?\\.md$`, 'i').test(p));
++      if (!f) return { exists: false, status: '', text: '' };
++      const x = git(['show', `:${f}`]);
++      if (x.status !== 0) throw new Error(`cannot read ${f}`);
++      return { exists: true, status: String(parseFM(x.stdout).fm.status ?? ''), text: x.stdout };
++    },
++    decisionExists: (ref) => {
++      const fs_ = files('backlog/decisions');
++      if (/^decision-\d+$/i.test(ref)) return fs_.some((p) => path.basename(p).toLowerCase().startsWith(`${ref.toLowerCase()} -`));
++      return fs_.some((p) => path.basename(p).includes(ref) || new RegExp(`^title:.*${esc(ref)}`, 'm').test(git(['show', `:${p}`]).stdout.split('\n').slice(0, 12).join('\n')));
++    },
++  };
++}
++
+ /**
+  * Every refusal for one closing task, as lines. Pure of git: the caller supplies what it read.
+  * @param {{id:string, taskText:string, fm:object, assignees:string[], headAssignees:string[], type:string, table:object, root:string, letter?:string,
+@@ -282,8 +463,7 @@ export function closeErrors(i) {
+     if (!have) errors.push(`GROUNDER.md: no "Ruled:" line for ${f.name} (expected: ${want})`);
+     else if (`Ruled: ${f.name} sha256:${have.sha} findings:${have.n}` !== want) errors.push(`GROUNDER.md: the "Ruled:" line for ${f.name} does not match the committed output (the grounder ruled on sha256:${have.sha} findings:${have.n}, the file is now ${want.replace(`Ruled: ${f.name} `, '')}: the output was edited after grounding, or the count is wrong)`);
+   }
+-  const verdicts = new Map();
+-  for (const raw of g.split('\n')) { const v = VERDICT.exec(raw.replace(/[`*]/g, '')); if (v) verdicts.set(v[1], { word: v[2], file: v[3], line: Number(v[4]), quote: v[5], reason: v[6].trim() }); }
++  const verdicts = parseVerdicts(g);
+   const seenQuote = new Map();
+   for (const f of findings) {
+     const v = verdicts.get(f.id);
+@@ -304,6 +484,11 @@ export function closeErrors(i) {
+     if (!cited.includes(q)) errors.push(`GROUNDER.md: finding ${f.id}: the quote is not on ${v.file}:${v.line}`);
+     else if (lines.filter((x) => squash(x) === cited).length > 3) errors.push(`GROUNDER.md: finding ${f.id}: the cited line occurs more than 3 times in ${v.file} (a boilerplate line proves nothing): cite a line specific to the finding`);
+   }
++  // task-399: every CONFIRMED or CONFLICT id carries one outcome (TRIAGE.md, last line wins), and the outcomes are shown on the task
++  if (build) {
++    const dirPath = mine[0][0];
++    errors.push(...outcomeErrors({ verdicts, triageText: textOf('TRIAGE.md') ?? '', lensKinds: new Map(findings.map((f) => [f.id, lensKindOf(f.line)])), facts: i.facts, mode: 'close', seats: seatLines(g, readRepo), seatRoot: `${dirPath}/`, selfTask: id, summary: { text: i.taskText, headText: i.headTaskText ?? '', grounderPath: `${dirPath}/GROUNDER.md`, triagePath: `${dirPath}/TRIAGE.md` } }).errors);
++  }
+   return errors;
+ }
+ 
+@@ -336,7 +521,7 @@ function check(msgFile) {
+     const was = git(['show', `HEAD:${f}`]);
+     const headFm = was.status === 0 ? parseFM(was.stdout).fm : {};
+     if (was.status === 0 && String(headFm.status ?? '').toUpperCase() === status) continue;
+-    moves.push({ f, now: now.stdout, fm, headFm, status });
++    moves.push({ f, now: now.stdout, fm, headFm, status, headText: was.status === 0 ? was.stdout : '' });
+   }
+   if (moves.length === 0) return 0;
+   if (!boardTable) return fail([`the board ref ${BOARD_REFS[0]} or its scripts/analysis/rule-lists.json cannot be read: a task close needs the board, because the keys that decide what is checked and the task's launch commit come from it (fail closed)`]);
+@@ -435,7 +620,7 @@ function check(msgFile) {
+     const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];
+     const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
+     const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
+-    errors.push(...closeErrors({ id, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase }));
++    errors.push(...closeErrors({ id, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase, facts: gitFacts(L), headTaskText: mv.headText }));
+   }
+   // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
+   const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
+@@ -450,4 +635,31 @@ function check(msgFile) {
+   }
+   return errors.length ? fail(errors) : 0;
+ }
+-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = check(process.argv[2]);
++/** CLI: node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>: prints "checked N ids", then one line per refusal; exit 1 on any refusal (reads the directory on disk and the git facts of the current repo). */
++export function outcomesCli(dir) {
++  if (!dir) { process.stderr.write('usage: check-lane-close.mjs --outcomes <lane dir>\n'); return 1; }
++  const abs = path.resolve(dir);
++  if (!fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) { process.stdout.write(`no lane directory ${dir}: cannot check outcomes (usage: --outcomes docs/reports/lanes/<date>/<lane>)\n`); return 1; }
++  const top = git(['rev-parse', '--show-toplevel']).stdout.trim() || process.cwd();
++  const rd = (n) => { try { return fs.readFileSync(path.join(abs, n), 'utf8'); } catch { return null; } };
++  const g = rd('GROUNDER.md');
++  if (g === null) { process.stdout.write(`no GROUNDER.md in ${dir}\n`); return 1; }
++  const lensFiles = fs.readdirSync(abs).filter(isLensOutput).sort().map((name) => ({ name, text: fs.readFileSync(path.join(abs, name), 'utf8') }));
++  const verdicts = parseVerdicts(g);
++  const rel = path.relative(top, abs).split(path.sep).join('/');
++  // the launch commit L: the first board commit that holds this lane's assignee on the task file named by the lane's TASK file
++  let L = null;
++  const num = /task-0*(\d+)/i.exec(rd('TASK') ?? '')?.[1];
++  const boardRef = BOARD_REFS.find((r) => git(['rev-parse', '--verify', '--quiet', `${r}^{commit}`]).status === 0);
++  if (num && boardRef) {
++    const bf = git(['ls-tree', '--name-only', boardRef, 'backlog/tasks/']).stdout.split('\n').find((n) => new RegExp(`^backlog/tasks/task-0*${num}( -.*)?\\.md$`, 'i').test(n));
++    if (bf) L = git(['log', boardRef, '--first-parent', '--reverse', '--format=%H', `-S@lane-${path.basename(abs)}`, '--', bf]).stdout.split('\n').filter(Boolean)[0] ?? null;
++  }
++  const r = outcomeErrors({ selfTask: num ? `task-${num}` : null, verdicts, triageText: rd('TRIAGE.md') ?? '', lensKinds: new Map(findingsIn(lensFiles).map((f) => [f.id, lensKindOf(f.line)])), facts: gitFacts(L), mode: 'close', seats: seatLines(g, (p) => { try { return fs.readFileSync(path.join(top, p), 'utf8'); } catch { return null; } }), seatRoot: `${rel}/` });
++  // a lens finding whose verdict line does not parse is a refusal here as it is at the close ("no complete verdict line"), never a silent skip
++  const unruled = findingsIn(lensFiles).filter((f) => !verdicts.has(f.id)).map((f) => `${f.id}: no complete verdict line in GROUNDER.md (form: <id> CONFIRMED|REJECTED|CONFLICT <path>:<line> "<quote>" [reason]); the close refuses it too`);
++  const all = [...r.errors, ...unruled];
++  process.stdout.write(`checked ${r.ids} ids\n${all.map((e) => `${e}\n`).join('')}`);
++  return all.length ? 1 : 0;
++}
++if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = process.argv[2] === '--outcomes' ? outcomesCli(process.argv[3]) : check(process.argv[2]);
+diff --git a/src/tests/backlog/backlog-brief.logic.test.ts b/src/tests/backlog/backlog-brief.logic.test.ts
+index e11bfc09e8da99d96b5bb13014a83a0485d6b047..f3983fe9233a8f7c3760be4889ede7a0ed240ab5 100644
+--- a/src/tests/backlog/backlog-brief.logic.test.ts
++++ b/src/tests/backlog/backlog-brief.logic.test.ts
+@@ -60,7 +60,11 @@ describe('G1 backlog-brief (test 4)', () => {
+     expect(r.stdout).toMatch(/bash_allow/);
+     expect(r.stdout).toMatch(/--final-summary/);
+     expect(r.stdout).toMatch(/--check-ac/);
+-    expect(r.stdout).toMatch(/-s DONE\|BUILT|-s DONE/);
++    expect(r.stdout).toMatch(/--append-final-summary/);
++    expect(r.stdout).toMatch(/-s BUILT/);
++    expect(r.stdout).toMatch(/from round 2 on use only --append-final-summary/);
++    expect(r.stdout).toMatch(/check-lane-close\.mjs --outcomes/);
++    expect(r.stdout).toMatch(/do NOT run --plan/);
+     expect(r.stdout).toMatch(/STATUS: ready\|blocked\|failed\|dropped/);
+   });
+ 
+

@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:41:38.488Z file_sha256=8857889cb7d018fbd1d1981acd80ac9002aa1b34f2a6d5c140441da80d26c87c prompt_sha256=f2362da03be5ad46fce27cbf41739912e453a3885fe605fa492272bcef208209
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-policy-124-s2-s5-p1.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none found; highest is MED (below)
+
+DEFER severity=MED — Spec 08 rule 6 note, task-399 FOLD.ADOPT "LOW and NIT close by any form whatever the kind (his :1580 words override rule 6 for them)" — scripts/hooks/check-lane-close.mjs (new outcomeErrors, diff hunk @@ -121,6 +121,187 @@) "const allowed = conflict ? ['ruling', fixWord] : low ? FORM_WORDS[mode] : k.kind === 'DEFER' ? [fixWord, 'task', 'ruling'] : [fixWord, 'ruling'];" — the CONFLICT branch is tested before the LOW/NIT branch, so a LOW or NIT CONFLICT id is refused the wontfix, pile and task forms the pasted clause grants it unconditionally; the close hard-refuses a low-priority conflict that the operator's :1580 words send to the pile — test low before conflict so FORM_WORDS applies to a LOW/NIT conflict, or add the CONFLICT-only-forms restriction to the same rule 6 note
+
+DEFER severity=LOW — Spec 08 rule 6 note, task-399 FOLD.ADOPT "CRITICAL, HIGH and MED close by fixed or ruling" with verdict form "GROUNDER.md (form: <id> CONFIRMED|REJECTED|CONFLICT <path>:<line> \"<quote>\" [reason])" — scripts/hooks/check-lane-close.mjs (new outcomeErrors) "const sev = reasonSev(v.reason) ?? normSev(k.sev) ?? 'CRITICAL';" — which forms are legal is keyed on a severity whose only declared carrier is free-text prose, read from the first 40 characters of the reason and otherwise from the lens line or a CRITICAL default; no pasted clause names that source, so a severity word written later than character 40 silently tightens or loosens the allowed forms — name the severity source in the rule 6 note (or a declared field on the verdict line), including the CRITICAL fallback
+
+DEFER severity=LOW — Spec 08 rule 6 note, task-399 FOLD.ADOPT "(seat findings listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included)" — scripts/hooks/check-lane-close.mjs (new outcomeErrors) "if (seatRoot && !String(s.path).startsWith(seatRoot)) { errors.push(`Seat ${s.name}: ${s.path} is outside ${seatRoot}" and "if (sha(s.text).slice(0, 12) !== s.sha) { errors.push(`Seat ${s.name}: ${s.path} has sha256:" — two refusals beyond what the clause names (path containment under the lane dir, and a seat file edited after the grounder ruled, plus "holds no finding line is not a seat report") each block a close with no clause authorising them — add these three refusals to the same dated note so the close's refusal set equals the written rule
+
+MET — Spec 08 rule 6 note, task-399 FOLD.ADOPT "the commit is an ancestor of HEAD, in the range from the launch commit, touches the path, is not reverted" — scripts/hooks/check-lane-close.mjs (gitFacts/outcomeErrors) "const anc = call(errs, 'the ancestor test', () => facts.isAncestor(full));" plus inRange, touches and "if (rv === true) errs.push" — all four git facts are checked and each failure refused
+
+MET — Spec 08 rule 6 note, task-399 fix round 1 "(2) CRITICAL, HIGH and MED close by fixed or ruling, and by task only for a DEFER finding" — scripts/hooks/check-lane-close.mjs "k.kind === 'DEFER' ? [fixWord, 'task', 'ruling'] : [fixWord, 'ruling']" — task is offered to a DEFER finding only in the non-low branch, and the refusal string says "task is for a DEFER finding; a BUG is fixed before Green Light"
+
+MET — Spec 08 rule 6 note, task-399 fix round 1 "the card's text holds the finding id as a whole token ... and the closing task itself is refused as the card" — scripts/hooks/check-lane-close.mjs "if (selfTask && ref === String(selfTask).toLowerCase())" and "new RegExp(`(?<![A-Za-z0-9_-])${esc(id)}(?!\\d)`) — both halves present, the path alternative is gone
+
+MET — Spec 08 rule 6 note, task-399 fix round 1 "The Final Summary block is looked for in the Final Summary section of the task, not the whole file." — scripts/hooks/check-lane-close.mjs "const have = /<!-- SECTION:FINAL_SUMMARY:BEGIN -->([\s\S]*?)<!-- SECTION:FINAL_SUMMARY:END -->/.exec(String(summary.text ?? ''))" — the block is matched inside the section markers only, and every missing round/CRITICAL/HIGH/MED line is printed with the exact block to append
+
+MET — 137_mcqueue note task-399 FOLD.ADOPT "TRIAGE.md is required only when GROUNDER.md holds such an id" — scripts/hooks/check-lane-close.mjs "const ids = [...verdicts].filter(([, v]) => v.word === 'CONFIRMED' || v.word === 'CONFLICT');" with the summary block gated on "ids.length > 0" — zero such ids yields zero refusals, so no TRIAGE.md is demanded
+
+REJECT — Spec 124 §2 Rule 1 "Nothing about a step's behaviour may live only in code" — the outcome-form table FORM_WORDS and the git-fact callbacks hide step policy in code — Rule 1 binds step descriptors and compute (checks, limit_from_config, emits, compute-shape); check-lane-close.mjs is a lane-close hook and declares no step, so the rule has no subject here
+
+REJECT — Spec 124 §2 Rule 10 "The verdict is always derived from the declared checks' rows" — outcomeErrors' fixed/folded/task/ruling vocabulary is a second verdict derivation — Rule 10's corpus is closed (scripts/lib/step/*.js except verdict.js, pipeline.js, source-version.js); this hook derives no step audit verdict and is outside that corpus
+
+REJECT — Spec 124 §2 Rule 13 "the Spec 123 §6 scorecard and this spec's own policy-coverage matrix are generated by one command" — docs/reports/generated/rule-lists-by-kind.md was hand-edited rather than regenerated — the numbers self-consistently move by the same +3,385 characters (27,384 to 30,075, 29,969 to 30,663, totals 185,974 to 189,359, spec-only 140,999 to 144,384), which is what a regeneration of the two edited specs produces; Rule 13's generated-artifact gate covers step assessment reports, not rule lists
+
+REJECT — .claude/review-templates/README.md standard 2 "CONFIRMED, REJECTED or CONFLICT with the opened `file:line`, in `GROUNDER.md`" — moving adjudication from TRIAGE.md to GROUNDER.md breaks the round-2 record — the same line states where TRIAGE.md now sits and how it is checked, and the two dated spec notes plus the CLI define the same split, so the README, Spec 08 and Spec 137 agree
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 1
+
+---
+⏱  79361ms (79.4s)
+📊 Tokens — total: 38155, input: 23550, output: 14605, reasoning: 12884

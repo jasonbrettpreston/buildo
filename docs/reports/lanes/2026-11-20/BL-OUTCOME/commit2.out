@@ -1,0 +1,40 @@
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > ITEM 3 (operator "1-5 y", item 3): a golden the existing golden check validates (a <state>.<target>.json under the golden folder, named in the table exempt with its check in exempt_why) is left out of the material and the close passes; the same folder with a code file renamed into it is refused 809ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H1 PLANTED DEFECT: a lane commit that cuts finished_statuses in its own table is refused (the board list decides what is a finished status); the control closes (default scenario) 406ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H1 PLANTED DEFECT: a lane commit that repoints base_ref to its own branch and widens exempt in the same commit is refused 409ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H4 PLANTED DEFECT: a lane that moves its task to another milestone is refused (the launch copy decides) 400ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H3 PLANTED DEFECT: a change to the prompt builder that the launch Files line does not name is refused; named at launch it closes 805ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H8 PLANTED DEFECT: dropping the lane assignee and retyping to doc or record, or setting the assignee to @human, in the closing commit is refused; the unchanged lane close passes (control above) 791ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H2 PLANTED DEFECT: a clone with no board ref: a commit that moves no task passes, a task close is refused with a clear line 473ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H9 PLANTED DEFECT: the lane assignee dropped in an EARLIER lane commit, then a retype to doc or record in the close, is refused: type and lane assignee come from the board copy 530ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H9 control: the three same-commit forms stay refused (see H8) and the unchanged close passes (default scenario) 398ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H9 round 6: the diff text is pinned against the config keys: the lane made its diff with diff.interHunkContext set high and the recompute still matches 431ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H9 PLANTED DEFECT: a lane that narrows its Files line at close cannot drop a rule list: the lists resolve from the union of the launch copy and the staged copy 873ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H10 PLANTED DEFECT: a task file renumbered to a number the board never held, unassigned and typed doc, closes nothing: refused in the closing commit and when the renumber came in two earlier commits 527ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H10 PLANTED DEFECT: a branch that deleted the lane task file closes nothing, even another task: refused; the same close with the file present passes (control) 539ms
+   ✓ close check: the fix round for the grounder attacks (V2.WHOLE) > H10 control: a same-number retitle of the task file is not refused (the task is found by its number, the launch commit by the board path) 400ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > control: the default close (every CONFIRMED id has a fixed line with a real lane commit and the Final Summary holds the block) passes 402ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: an id with no outcome line is refused, naming the id, its severity, the verdict and the form that passes 383ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > the LAST line of an id is judged: an earlier wrong line does not matter (control), a wrong last line is refused 791ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: a line that starts with a known id and fits no form (no path, unknown word) is refused; a line for a stale id is ignored (control) 1169ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: fixed with a fake sha, a sha not touching the path, a sha outside L..HEAD (the launch commit), is refused 1180ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: a sha reverted by a later commit of the range is refused; the same fix without the revert closes (control above) 412ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > task: on a DEFER finding passes when the task exists, is not DROPPED and names the id; refused for DROPPED, unknown, a text without the id, and x#1 against a task naming only x#12 2775ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > PLANTED DEFECT: task: on a BUG finding of HIGH severity is refused (a BUG is fixed before Green Light) 389ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > ruling: a CONFLICT closed by ruling:RR-0001 passes (control); an unknown ruling and a CONFLICT closed by task: are refused 1172ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > wontfix and pile: refused on a HIGH finding; on a LOW grounder severity (lowering the lens HIGH) they pass; a reason under 30 characters after squashing is refused; no parsable severity reads as CRITICAL 2298ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > the seat report: control passes; a missing file, a changed sha, a report with no finding line, a seat finding with no verdict and one with no outcome are refused 2491ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > visible on the task: a Final Summary with no round line, a missing finding line or wrong counts is refused, and the refusal prints the exact block; N counts the round lines of the HEAD copy 2006ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > fix round (out-compliance-queue-137#2): the block is looked for in the Final Summary section; the same block in the Notes is refused 402ms
+   ✓ outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > a lane with zero CONFIRMED ids and no TRIAGE.md passes, and the CLI prints "checked 0 ids" 604ms
+
+ Test Files  2 passed (2)
+      Tests  114 passed (114)
+   Start at  19:39:50
+   Duration  77.28s (transform 20ms, setup 9ms, collect 36ms, tests 76.19s, environment 0ms, prepare 37ms)
+
+GATE OK
+WAITS CHK.5 chk5_tables is empty: no record table is named yet (owner: the McStorage opened-lot record table, which replaces the all-lot headline fill; ruling MORNING-DECISIONS.md:704 "no all-lot headline fill"); CHK.5 enforces writes, stamp and the stale test once a table entry is verified
+POLICY CHECKS OK (commit-msg): 4 file(s)
+[wf1/inc1b-outcome bf773dd7f] fix(08_agents): the task: outcome form needs the finding id in the card; fix round 1 of task-399
+ 7 files changed, 48 insertions(+), 17 deletions(-)
+exit=0

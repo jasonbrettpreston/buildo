@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:41:38.470Z file_sha256=36b80752e0978394d5762b99f26783b2d51132f8e28892e2811c49dc246c5949 prompt_sha256=0b3314099e54bb1dff1f7e7195bc21d2e8f1dea18166480361d8201e70af1945
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md:351 (rule 6 note added by this diff) "LOW and NIT close by any form whatever the kind (his :1580 words override rule 6 for them)" — scripts/hooks/check-lane-close.mjs:189 "const allowed = conflict ? ['ruling', fixWord] : low ? FORM_WORDS[mode] : k.kind === 'DEFER' ? [fixWord, 'task', 'ruling'] : [fixWord, 'ruling'];" — a LOW or NIT finding whose grounder verdict is CONFLICT can never close by pile or wontfix, a restriction neither the added note nor the operator's :1580 words name, so the operator's override is defeated for exactly the case it was written for — test `low` before `conflict` (low ? FORM_WORDS[mode] : conflict ? ['ruling', fixWord] : ...), or name the CONFLICT carve-out in 08_agents.md:351 and 137_mcqueue.md:139 in this same commit.
+
+DEFER severity=MED — §11 Cross-Layer Contracts Check "If a new threshold is introduced, a row is added to `src/tests/contracts.infra.test.ts` mapping the JSON key to its consumer file(s) so drift becomes a CI failure" — scripts/hooks/check-lane-close.mjs:260 "if (reason.length < 30) errs.push(`the ${word} reason is ${reason.length} characters; 30+ are needed after whitespace is squashed`);" plus SEAT_HEAD "sha256:([0-9a-f]{12})" — the 30-character reason floor, the 20-character folded quote and the 12-hex seat sha are literals duplicated across the spec note (08_agents.md:351 "30+ characters", "sha256:<12 hex>"), the hook and the tests, with no `docs/specs/_contracts.json` key and no row in `src/tests/contracts.infra.test.ts` — add `lane_close.reason_min_chars`, `lane_close.folded_quote_min_chars`, `lane_close.seat_sha_hex`, row them in the contracts test and read them in the hook.
+
+DEFER severity=MED — 137_mcqueue.md:139 (note added by this diff) "the task's Final Summary shows the round line and the CRITICAL, HIGH and MED outcomes. TRIAGE.md is required only when GROUNDER.md holds such an id." — scripts/hooks/check-lane-close.mjs:266 "if (summary && errors.length === 0 && ids.length > 0) {" — the note conditions only TRIAGE.md on the id count, but the code drops the round-line requirement too, so a lane with zero CONFIRMED or CONFLICT ids closes with no round line on the page (pinned by the test "a lane with zero CONFIRMED ids and no TRIAGE.md passes") — emit and require the round line with zero counts for every lane build or fix close, or write the zero-id exception into the 137 note.
+
+DEFER severity=LOW — §2.3 "If using `!`, you must document why in an inline comment." — src/tests/backlog/check-lane-close.logic.test.ts "closeRefused({ summary: (b) => [b[0]!.replace('1 fixed', '2 fixed'), ...b.slice(1)] }, /lacks 1 of 2 required line\(s\)/);" — a non-null assertion on an array index that the prior validation does not guarantee, with no inline justification — use `(b[0] ?? '')` or add the required comment.
+
+MET — §14 "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — 08_agents.md:351, 137_mcqueue.md:139, .claude/review-templates/README.md:109 — the new close rule lands with both spec notes, the review-template runbook, the lane brief text and the hook in one commit.
+
+MET — §5.2 parity battery (generated doc ↔ generator) — docs/reports/generated/rule-lists-by-kind.md — the totals recompute from the rows (189,359 and 144,384 after +2,691 and +694), so the generated file was regenerated rather than hand-edited after the spec growth.
+
+MET — §5.3 red-green, unhappy path — src/tests/backlog/check-lane-close.logic.test.ts — every new refusal (missing outcome line, fake sha, sha not touching the path, sha outside L..HEAD, reverted sha, DROPPED card, seat sha drift, block in Notes) has a planted-defect test beside a passing control.
+
+REJECT — §9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK (`scripts/lib/pipeline.js`)" — the diff adds 187 lines to scripts/hooks/check-lane-close.mjs with no pipeline.run, emitSummary or emitMeta — not a real issue, the file is an .mjs git hook and analysis helper that opens no pool and writes no DB, so the SDK mandate does not reach it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 4
+
+---
+⏱  127058ms (127.1s)
+📊 Tokens — total: 57897, input: 33940, output: 23957, reasoning: 22795

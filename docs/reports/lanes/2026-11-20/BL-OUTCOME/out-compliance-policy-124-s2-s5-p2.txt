@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:41:38.532Z file_sha256=4b5507a170de729b4e601f0a1f23b8f8a4023dbc83dfc5cd19259b01889cc9eb prompt_sha256=850848edf63a84ecf5f0e804c6331ce712847ce18b3977694991e56d5cd83734
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — R-HK "Operator decisions are transferred by generator into decision logs and register rows, under a coverage lock ... never hand-copied" — docs/specs/00-architecture/08_agents.md:351 "operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1580`" — the operator rulings this change rests on are hand-copied out of a scratch queue file into Specs 08 and 137, with no `docs/reports/decisions/<date>-<slug>.json` log, no `decision-log.mjs --import` and no register row anywhere in the diff — import the MORNING-DECISIONS batch as a decision log and emit its register rows with `--write` in this same change before landing.
+
+BUG severity=HIGH — Spec 124 §5 "New rows are still added to Spec 124 §5." and R-GW "a historical spec decides nothing and introduces no rule id; a new rule goes to its family's register" — docs/specs/00-architecture/137_mcqueue.md:140 "a lane build or fix task's closing commit is refused unless the lane directory holds TRIAGE.md with one outcome line per CONFIRMED or CONFLICT id of GROUNDER.md" — a new binding rule (a close is refused without the TRIAGE.md outcome lines and the Final Summary block) is landed as dated notes in Specs 08 and 137, and the diff adds no register row carrying it — add one Spec 124 §5 register row recording the outcome-line close gate, and cite it from both dated notes.
+
+DEFER severity=MED — 137_mcqueue.md:140 landed rule "one outcome line per CONFIRMED or CONFLICT id of GROUNDER.md (forms fixed, task, ruling, wontfix, pile; see the Spec 08 rule 6 note of the same date)" — scripts/hooks/check-lane-close.mjs:176 "const allowed = conflict ? ['ruling', fixWord] : low ? FORM_WORDS[mode] : k.kind === 'DEFER' ? [fixWord, 'task', 'ruling'] : [fixWord, 'ruling'];" — a LOW or NIT CONFLICT finding marked `pile:"<reason>"`, which the note's five forms and its "LOW and NIT close by any form whatever the kind" allow, is refused by the code, so the code is stricter than the rule it lands — allow the LOW and NIT forms for CONFLICT, or write the CONFLICT restriction into the notes.
+
+DEFER severity=MED — walk step 4 "A change that adds behaviour no pasted clause or ruling names is a finding" (no pasted clause names a plan-mode outcome vocabulary; the Spec 08 and 137 notes name the close only) — scripts/hooks/check-lane-close.mjs:143 "const FORM_WORDS = { close: ['fixed', 'task', 'ruling', 'wontfix', 'pile'], plan: ['folded', 'task', 'ruling', 'wontfix', 'pile'] };" with the MODE TABLE comment "task-375 reuses it for mode 'plan'" — the `folded` form, its refusal of `fixed`, and its 20-character task-text quote rule govern nothing that is pasted or ruled — cite the plan-mode ruling in the register row, or land mode 'plan' only with its own ruling.
+
+DEFER severity=LOW — R-HK "a later chat amendment is recorded in the log with its quote" — scripts/hooks/check-lane-close.mjs:191 "the operator ruling :1580 (low priorities filed for later)" against docs/specs/00-architecture/08_agents.md:351 "the findings that are deemed low priorities are filed in a review pile for later" — the same operator line is rendered in two different wordings, neither marked against a committed raw record, so its verbatim fidelity cannot be checked — commit the raw MORNING-DECISIONS lines and quote each once, verbatim.
+
+MET — R-GX — docs/specs/00-architecture/137_mcqueue.md:140 — the change adds no role banner and no register-shaped `| R-x |` row to a historical spec, so the double-banner arm and the historical-id baseline arm do not trip.
+
+REJECT — R-GX — that the edited Specs 08 and 137 carry no role banner — R-GW keeps every un-bannered spec on the closed, shrink-only `role_banner_pending` list and forbids editing a spec to add one, so banner absence is the sanctioned state, not a breach.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 4   Unmet: 2
+
+---
+⏱  66441ms (66.4s)
+📊 Tokens — total: 43955, input: 31648, output: 12307, reasoning: 11257

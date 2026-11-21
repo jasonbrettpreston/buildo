@@ -1,0 +1,60 @@
+- 1
++ 0
+
+ ❯ closeRefused src/tests/backlog/check-lane-close.logic.test.ts:610:99
+    608|   return r;
+    609| };
+    610| const closeRefused = (o: Opts, re: RegExp) => { const r = scenario(o);…
+       |                                                                                                   ^
+    611| type Mod = { outcomeErrors: (a: Record<string, unknown>) => { errors: …
+    612| const loadMod = () => import(path.join(ROOT, 'scripts/hooks/check-lane…
+ ❯ src/tests/backlog/check-lane-close.logic.test.ts:713:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/tests/backlog/check-lane-close.logic.test.ts > outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > fix round (seat-regression rg#4): a missing lane directory is a refusal line and exit 1, not a stack trace
+AssertionError: expected 'no GROUNDER.md in docs/reports/lanes/…' to match /^no lane directory docs\/repo…/reports\
+
+- Expected: 
+/^no lane directory docs\/reports\/lanes\/2099-01-01\/BL-NOPE/
+
++ Received: 
+"no GROUNDER.md in docs/reports/lanes/2099-01-01/BL-NOPE
+"
+
+ ❯ src/tests/backlog/check-lane-close.logic.test.ts:718:22
+    716|     const r = script('scripts/hooks/check-lane-close.mjs', ['--outcome…
+    717|     expect(r.status, r.stderr).toBe(1);
+    718|     expect(r.stdout).toMatch(/^no lane directory docs\/reports\/lanes\…
+       |                      ^
+    719|     expect(r.stderr).not.toMatch(/ENOENT/);
+    720|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/tests/backlog/check-lane-close.logic.test.ts > outcome check: every CONFIRMED or CONFLICT finding carries an outcome (task-399) > fix round (g399#5): the --outcomes command refuses a lens finding whose verdict line does not parse (control: the default lane prints checked 1 ids, exit 0)
+AssertionError: checked 0 ids
+: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/tests/backlog/check-lane-close.logic.test.ts:723:32
+    721|   it('fix round (g399#5): the --outcomes command refuses a lens findin…
+    722|     const r = cli({ g: { verdict: () => 'CONFIRMED(NIT) src/a.ts:1 "ex…
+    723|     expect(r.status, r.stdout).toBe(1);
+       |                                ^
+    724|     expect(r.stdout.split('\n')[0]).toMatch(/^checked \d+ ids$/);
+    725|     expect(r.stdout).toMatch(/out-compliance-first#1: no complete verd…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+ Test Files  2 failed (2)
+      Tests  5 failed | 109 passed (114)
+   Start at  19:38:00
+   Duration  76.16s (transform 20ms, setup 10ms, collect 37ms, tests 75.03s, environment 0ms, prepare 37ms)
+
+exit=1

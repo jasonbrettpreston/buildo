@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:41:38.504Z file_sha256=da6cd847ac8f53831c94f380db717a2efaa34182be6c8a2897a750ef9759c46f prompt_sha256=43f655f0840dcef2d5a30171b2e51e04d85e3209ac6fd7412a1ecf7e399762f4
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+MET — plan-protocol superseding note (item 1) "the board is the plan." — scripts/analysis/backlog-brief.mjs:166 "If the task's Implementation Plan field already holds a plan (reviewed, ruled and checked before launch), build that plan and do NOT run --plan" — the launch brief now makes the card's reviewed plan authoritative, so nothing is re-written from sequence.json.
+MET — dated note item 4 "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce (`scripts/analysis/rule-lists.mjs` lensSet, `scripts/hooks/check-lane-close.mjs`), plus its separate grounder" — scripts/hooks/check-lane-close.mjs:488 "if (build) {" — the close check keeps enforcing the lane lens set and now also refuses a build-task close until every CONFIRMED or CONFLICT grounder id carries an outcome; no nine-seat roster is imposed on the lane.
+MET — dated note item 4 "plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`)" — docs/specs/00-architecture/08_agents.md:351 "Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME" — both new notes are inserted below line 348, so the operator-cited 339 and 341 still address rules 5 and 7.
+MET — dated note item 4 "the nine-seat roster below ... applies to the whole-increment plan review" — .claude/review-templates/README.md:109 "Then ONE tool-bearing Claude grounder adjudicates every finding against the files" — the material keeps one adjudicating grounder per lane finding and adds no roster to the lane path.
+DEFER severity=LOW — plan-protocol principles "keep it simple; no scope creep" — scripts/hooks/check-lane-close.mjs:488 "if (build) {" — the new mandatory TRIAGE outcome gate plus a new --outcomes subcommand rests on operator quotes that appear only inside this diff (":1580", ":1517"), not in any clause pasted for this run — record those quotes as an RR decision and cite it in the lane, so the gate stands on a pasted ruling next run.
+REJECT — dated note convention "Dated note 2026-11-20 (M-246, prior text kept; ...)" — the change is accused of editing two specs (08_agents.md, 137_mcqueue.md) to match new code — not an issue because each edit is a dated note that keeps the prior text and marks its operator source.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  73438ms (73.4s)
+📊 Tokens — total: 37267, input: 24415, output: 12852, reasoning: 12218

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:41:38.473Z file_sha256=d32582f3fd9936e6b77d3d3a7dde58c4200ad48400843622b0a78d790a971dcc prompt_sha256=0e77a38817cd3c882cdf924a5fba0cbaa9095601ad93a463493d5b9fd7d57040
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 137 note (task-399 FOLD.ADOPT, operator verbatim :1517 "don't makr the task complete until it actually works") "a lane build or fix task's closing commit is refused unless the lane directory holds TRIAGE.md with one outcome line per CONFIRMED or CONFLICT id of GROUNDER.md" — scripts/hooks/check-lane-close.mjs:488 "if (build) {" — NONE — the pasted ruling binds "build or fix", the new refusal is gated on `build` only and the definition of `build` is outside the pasted hunk, so coverage of a fix-type lane task cannot be seen — gate the call on the explicit build and fix type set and show the line that makes `build` true for a fix task.
+
+DEFER severity=MED — 08 note (task-399) "Forms: `fixed:<sha> <path>` ..., `ruling:RR-NNNN` or `ruling:decision-N` (the decision record exists)" — scripts/hooks/check-lane-close.mjs:300 "return fs_.some((p) => path.basename(p).includes(ref) || new RegExp(`^title:.*${esc(ref)}`, 'm').test(git(['show', `:${p}`]).stdout.split('\n').slice(0, 12).join('\n')));" — a bare substring match lets ruling:RR-0001 pass on a decision named ...RR-00012..., so "the decision record exists" is not proved for the form that closes CRITICAL and HIGH findings — match the RR id as a whole token in the basename or title line.
+
+DEFER severity=LOW — operator ruling 2026-11-20 :1580 "the findings that are deemed low priorities are filed in a review pile for later" — scripts/hooks/check-lane-close.mjs:185 "const sev = reasonSev(v.reason) ?? normSev(k.sev) ?? 'CRITICAL';" — severity is taken from the earliest upper-case severity word in the first 40 characters of the grounder's free-text reason before the lens `severity=` token, so a LOW lens finding whose reason opens with HIGH cannot be piled as the ruling allows — read the lens severity first, or require an explicit severity token in the reason.
+
+DEFER severity=LOW — README added line "the lane's `TRIAGE.md` holds one outcome line per CONFIRMED or CONFLICT finding (forms: `fixed`, `task`, `ruling`, `wontfix`, `pile`)" — scripts/hooks/check-lane-close.mjs:143 "const FORM_WORDS = { close: ['fixed', 'task', 'ruling', 'wontfix', 'pile'], plan: ['folded', 'task', 'ruling', 'wontfix', 'pile'] };" — the change adds a plan mode and a sixth form `folded` that no pasted clause or ruling names, the two pasted enumerations holding five forms — name the clause that authorises plan mode and `folded`, or keep the outcome model to the pasted five forms.
+
+MET — 08 note "the last line per id judged" — scripts/hooks/check-lane-close.mjs:175-179 — the `last` map overwrites per id and the loop reads only `last.get(id)`.
+
+MET — 08 note "`fixed:<sha> <path>` (the commit is an ancestor of HEAD, in the range from the launch commit, touches the path, is not reverted)" — scripts/hooks/check-lane-close.mjs:283-288 — resolveSha, isAncestor, inRange, touches and reverts are each called and each false answer becomes a refusal on the id.
+
+MET — 08 note "`wontfix:"<reason>"` and `pile:"<reason>"` (30+ characters; LOW and NIT only)" — scripts/hooks/check-lane-close.mjs:189,256-257 — wontfix and pile are outside the allowed list for CRITICAL, HIGH and MED, and `reason.length < 30` refuses.
+
+MET — 08 note "The Final Summary block is looked for in the Final Summary section of the task, not the whole file." — scripts/hooks/check-lane-close.mjs:271 — `have` is read only between the SECTION:FINAL_SUMMARY markers.
+
+MET — 137 note "TRIAGE.md is required only when GROUNDER.md holds such an id." — scripts/hooks/check-lane-close.mjs:181,263 — `ids` filters to CONFIRMED and CONFLICT, and with none the outcome loop pushes nothing and the summary check is skipped.
+
+MET — README added line "no `Seat: <name> <repo path> sha256:<12 hex>` line included" ... the Seat lines "listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included" — scripts/hooks/check-lane-close.mjs:140-142,162-173 — seat lines are parsed, their findings get a verdict requirement and an outcome requirement like any lens finding.
+
+REJECT — Spec 08 section 5.3 as cited at scripts/hooks/check-lane-close.mjs:191 "a conflict waits for the operator ruling" — the change lets a CONFLICT id close by `fixed:<sha>` without a ruling — the 5.3 body is not pasted (only this code comment and the README sentence), so the allowance cannot be judged here; cannot see.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  147200ms (147.2s)
+📊 Tokens — total: 56539, input: 28255, output: 28284, reasoning: 27044

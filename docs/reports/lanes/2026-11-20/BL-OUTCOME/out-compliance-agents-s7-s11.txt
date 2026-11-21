@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:41:38.473Z file_sha256=03e175fcd07be0149727b3ad7ca0d4a59ef0c0175b99244d4329e9b9cc93271d prompt_sha256=dda487c60b0b6253ea3d3ac28c27d9d970f0a2268aeb7efba8885a4eb401d2e7
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 08 section 7 rule 6 note (task-399) "the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md ... has one outcome line in the lane's TRIAGE.md" — scripts/hooks/check-lane-close.mjs "if (summary && errors.length === 0 && ids.length > 0) {" and "The task's Final Summary carries the round line and one line per CRITICAL, HIGH or MED finding." (clause is unconditional) — a lane close with zero CONFIRMED/CONFLICT ids is never asked for the round line, and the test "a lane with zero CONFIRMED ids and no TRIAGE.md passes" pins that gap, so the round line clause is unmet for a clean lane — compute and require the round line ("Review round N: 0 fixed, ...") whenever a lane close runs, not only when ids exist.
+
+BUG severity=HIGH — Spec 08 section 7 rule 6 note (task-399) "LOW and NIT close by any form whatever the kind (his :1580 words override rule 6 for them)" — scripts/hooks/check-lane-close.mjs "const allowed = conflict ? ['ruling', fixWord] : low ? FORM_WORDS[mode] : ..." — a CONFLICT finding whose grounder severity is LOW or NIT is refused wontfix and pile, the two forms the pasted ruling grants LOW and NIT, on a ground (section 5.3) that is not pasted — test `low` before `conflict` so LOW and NIT always take FORM_WORDS[mode], and raise the conflict restriction only if a pasted clause carries it.
+
+DEFER severity=MED — Spec 08 section 7 rule 6 note (task-399) "seat findings listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included" — scripts/hooks/check-lane-close.mjs "if (found.length === 0) { errors.push(`Seat ${s.name}: ${s.path} holds no finding line ... a seat file with no finding line is not a seat report`); continue; }" — a seat that reports clean is refused at the lane close, a requirement (minimum one finding per seat) that no pasted clause names; the clause only attaches outcomes to CONFIRMED/CONFLICT findings that exist — skip a seat file with no finding line instead of refusing it, or cite the ruling that names the minimum.
+
+DEFER severity=MED — Spec 08 section 7 rule 10 dated note "the review records of rule 10 (a) stay in `docs/reports/reviews/<task>/`; lane reports join them in the repo." — scripts/hooks/check-lane-close.mjs "if (seatRoot && !String(s.path).startsWith(seatRoot)) { errors.push(`Seat ${s.name}: ${s.path} is outside ${seatRoot} ...`); continue; }" with the close passing "seatRoot: `${dirPath}/`" — a seat report filed where the pasted rule puts review records, docs/reports/reviews/<task>/, is refused as "outside" the lane directory, so a close that follows the pasted rule cannot pass — accept both the lane directory and docs/reports/reviews/<task>/ as seat roots.
+
+DEFER severity=MED — Spec 08 section 7 rule 6 note (task-399) "`wontfix:"<reason>"` and `pile:"<reason>"` (30+ characters; LOW and NIT only)" — scripts/hooks/check-lane-close.mjs "const reason = unq(arg); if (reason.length < 30) errs.push(`the ${word} reason is ${reason.length} characters; 30+ are needed after whitespace is squashed`);" — the 30+ test is applied to the whitespace-squashed text, so a reason of 30 or more characters that contains runs of spaces is refused although the clause counts characters — measure the length of the quoted reason as written, and drop "after whitespace is squashed" from the rule text.
+
+DEFER severity=MED — Spec 08 section 7 rule 6 note (task-399) "the lane close now refuses unless every CONFIRMED or CONFLICT finding ... has one outcome line in the lane's TRIAGE.md" (the only behaviour the note names for the brief) — scripts/analysis/backlog-brief.mjs "2. If the task's Implementation Plan field already holds a plan (reviewed, ruled and checked before launch), build that plan and do NOT run --plan; only a task with no plan runs: backlog task edit ${taskId} --plan ..." — the brief now tells lanes to skip --plan on a plan-carrying task, behaviour no pasted clause or ruling names, and the same edit narrows the close status to "-s BUILT" — cite the task or ruling that owns the plan-field skip (or drop it from this change), and keep the status text to what the pasted rules name.
+
+DEFER severity=LOW — Spec 08 section 7 rule 6 note (task-399) "the last line per id judged" — scripts/hooks/check-lane-close.mjs "const m = /^\s*(?:[-*]\s+)?([A-Za-z0-9._-]+#\d+)\s+(\S.*?)\s*$/.exec(raw.replace(/[`*]/g, ''));" — a last line whose id is followed by a colon ("out#1: fixed:abc src/a.ts") does not match, is dropped, and an earlier line governs, so the last line of that id is not judged — allow optional punctuation after the id and refuse a malformed last line rather than ignoring it.
+
+MET — Spec 08 section 7 rule 6 note (task-399) "fixed:<sha> <path> (the commit is an ancestor of HEAD, in the range from the launch commit, touches the path, is not reverted)" — scripts/hooks/check-lane-close.mjs "if (anc === false) ... if (inr === false) ... if (tch === false) ... if (rv === true)" — all four git facts are checked per fixed line.
+
+MET — Spec 08 section 7 rule 6 note fix round (1) "the card's text holds the finding id as a whole token ... and the closing task itself is refused as the card" — scripts/hooks/check-lane-close.mjs "if (selfTask && ref === String(selfTask).toLowerCase())" and "(?<![A-Za-z0-9_-])${esc(id)}(?!\\d)" — whole-token match and self-card refusal both implemented and tested.
+
+MET — Spec 08 section 7 rule 6 note fix round (2) "CRITICAL, HIGH and MED close by fixed or ruling, and by task only for a DEFER finding" — scripts/hooks/check-lane-close.mjs "k.kind === 'DEFER' ? [fixWord, 'task', 'ruling'] : [fixWord, 'ruling']" — the DEFER exception is the only path to task:.
+
+MET — Spec 08 section 7 rule 6 note (task-399) "the last line per id judged" — scripts/hooks/check-lane-close.mjs "last.set(m[1], m[2])" then "const text = last.get(id)" — the last matching line per id is the one judged (subject to the parsing finding above).
+
+MET — Spec 08 section 7 rule 6 note (task-399) "`node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` runs it before the close" — scripts/hooks/check-lane-close.mjs "process.stdout.write(`checked ${r.ids} ids\n...)" and "return all.length ? 1 : 0" — the CLI prints the count, one line per refusal, exits 1.
+
+MET — Spec 08 section 7 rule 6 note fix round (3) "The Final Summary block is looked for in the Final Summary section of the task, not the whole file." — scripts/hooks/check-lane-close.mjs "const have = /<!-- SECTION:FINAL_SUMMARY:BEGIN -->([\s\S]*?)<!-- SECTION:FINAL_SUMMARY:END -->/.exec(String(summary.text ?? ''))?.[1] ?? '';" — only the section body is searched.
+
+MET — Spec 08 section 7 rule 4 note "one Claude grounder adjudicates every finding as round 2" — .claude/review-templates/README.md "CONFIRMED, REJECTED or CONFLICT with the opened `file:line`, in `GROUNDER.md`" — the README now splits verdicts (GROUNDER.md) from outcomes (TRIAGE.md), matching the pasted rule 6 note.
+
+MET — Spec 08 section 7 rule 6 note (task-399) "every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md" — scripts/hooks/check-lane-close.mjs "const ids = [...verdicts].filter(([, v]) => v.word === 'CONFIRMED' || v.word === 'CONFLICT');" — REJECTED ids correctly need no outcome.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 6
+
+---
+⏱  122181ms (122.2s)
+📊 Tokens — total: 54007, input: 30402, output: 23605, reasoning: 21542

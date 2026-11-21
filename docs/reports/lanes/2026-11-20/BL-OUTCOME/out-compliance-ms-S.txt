@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:41:38.492Z file_sha256=ce51a87e5d726e718c6716283f6cb5e9e82f395e15be395533df3811ac3def46 prompt_sha256=ddc8baa194cf3b399336f15894a2d71bd0d2faef4f301262d034b4a4d90c3c65
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — ms-S Objectives "Five principles, keep it simple, no scope creep" — scripts/hooks/check-lane-close.mjs "+export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = 'close', seats = [], seatRoot = null, summary = null, selfTask = null }) {" — the change adds a new close-blocking outcome gate with five TRIAGE forms, a `--outcomes` CLI mode, `Seat:` file sha pinning, a plan-mode `folded` form and a prescribed Final Summary line template, and no pasted clause or operator ruling pasted here names any of these; the pasted milestone clauses name search-page work only — paste the operator ruling that authorises the outcome gate, or cut the gate back to what the pasted clauses name.
+
+BUG severity=HIGH — ms-S Project objectives "A task that serves neither a designed element nor a supporting function is most likely not relevant" — material header "paths: [".claude/review-templates/README.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/backlog-brief.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-brief.logic.test.ts",...]" — every touched path is review-protocol tooling, a spec note, a generated report or a test; none is the designed report, the details page, the search page, or a function supporting the database those pages read, so the change cannot be shown to serve a designed element or a supporting function — attach the card's link to a designed element (report/details/search) or to the database that serves it, or defer this to the review-protocol backlog outside ms-S.
+
+DEFER severity=LOW — ms-S Project objectives "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — src/tests/backlog/backlog-brief.logic.test.ts "+    expect(r.stdout).toMatch(/-s BUILT/);" — the rewritten close instruction in backlog-brief.mjs no longer states the `-s DONE` alternative the old test asserted (`-s DONE|BUILT`), so lanes closing non-build tasks lose their stated close form and no pasted clause names the narrowing — keep the DONE alternative in the brief line or state which task types now close as BUILT.
+
+MET — ms-S Objectives "we need one plan - we can only execute one plan" — scripts/analysis/backlog-brief.mjs:166 — the brief now says a task whose Implementation Plan field already holds a reviewed and ruled plan must build it and "do NOT run --plan", so one task carries one plan.
+
+MET — ms-S Project objectives "standardization, ... accuracy, ..." — docs/reports/generated/rule-lists-by-kind.md totals rows — 27,384 to 30,075 and 29,969 to 30,663 sum to +3,385, and both totals rows move 185,974 to 189,359 and 140,999 to 144,384, so the generated report stays consistent with the two spec files the diff edited.
+
+REJECT — ms-S Project objectives "our objective is to finish a completed project ie a database that works and is ready" — that the change does not deliver the working database — no diff line touches database code, schema or query paths, so the clause (which names the milestone target) is neither claimed nor broken by this change.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  40817ms (40.8s)
+📊 Tokens — total: 29622, input: 22801, output: 6821, reasoning: 6019

@@ -106,7 +106,7 @@ Each lens asks one question, names what it is not responsible for, rejects any f
 ### The standard
 
 1. The lenses that fire run in parallel, one DeepSeek call each, one narrow prompt each; outputs `r1-<lens>.txt`.
-2. Then ONE tool-bearing Claude grounder adjudicates every finding against the files (round 2, Spec 08 section 5.3, "every DeepSeek finding is adjudicated by a tool-having grounder"): KEEP or REJECT with the opened `file:line`, in `TRIAGE.md`. The grounder also does the Integration check (A5) itself.
+2. Then ONE tool-bearing Claude grounder adjudicates every finding against the files (round 2, Spec 08 section 5.3, "every DeepSeek finding is adjudicated by a tool-having grounder"): CONFIRMED, REJECTED or CONFLICT with the opened `file:line`, in `GROUNDER.md`; the lane's `TRIAGE.md` holds one outcome line per CONFIRMED or CONFLICT finding (forms: `fixed`, `task`, `ruling`, `wontfix`, `pile`; `node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` checks them). The grounder also does the Integration check (A5) itself.
 3. Reality-Check (A7, Claude) runs only when values are served (DB fields, derived numbers); it is not a lens.
 4. Wording rule: a claim is "verified" only with the name of what verified it (which lens, which round, or which grounder check). "Verified" alone is not accepted.
 

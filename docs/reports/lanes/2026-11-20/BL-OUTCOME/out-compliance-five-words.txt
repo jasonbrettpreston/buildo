@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:41:38.472Z file_sha256=1b0001b67ec44e54c0c4dcfb89577564bd93c8e06921baf9d867dc316dc69b84 prompt_sha256=59896ed2e6915f7903b03860bfbdbb0661f4f82f283f5f1e3422b60deeb9459e
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Glossary "lock / lock-db / check / hook": "a lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/backlog/check-lane-close.logic.test.ts:598 "// SPEC LINK (task-399): Spec 08 section 7 rule 3" — the new enforcement tests name a task id and spec sections, no rule id and no declared alias, so under this Glossary line the outcome rule has no lock at all — put the rule id (or its alias from the rule map) in the describe/it titles of the new tests so the rule map can point at a lock.
+
+DEFER severity=MED — Glossary "lock / lock-db / check / hook": "a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook" — .claude/review-templates/README.md:109 "`node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` checks them" — the change adds a standalone CLI surface (`outcomesCli`) that is none of the four Glossary kinds (not a step-validate token, not a .husky hook, not a lock, not a lock-db), and the diff carries no rule-map row recording a kind for it — either reach it only through the existing .husky close hook, or add the new kind to the Glossary and a rule-map row beside it.
+
+MET — Glossary "lock / lock-db / check / hook" — docs/reports/generated/rule-lists-by-kind.md:105 "| total | 9 lists | | 189,359 | 9 |" — the regenerated report is internally exact: rows sum to 189,359 and the spec-only rows to 144,384, so the list bookkeeping the enforcement rows depend on is consistent.
+
+MET — Glossary "five words" — docs/reports/generated/rule-lists-by-kind.md:100 "| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |" — the five-words list and its 132 source are untouched by the diff, so gate V's mapping is not disturbed.
+
+REJECT — Glossary "RE-FREEZE #N" — accused of revising the frozen step vocabulary — the diff touches no step.schema.json, template-freeze.json or converted.json.
+
+REJECT — Glossary "archetype vs shape" — accused of changing what a step is or how it executes — no descriptor, manifest or converted.json line appears in the diff.
+
+REJECT — Glossary "#NN" — accused of citing an invariant number that does not exist — the hand-written additions cite task, rule and section numbers (task-399, rule 6, section 5.3), no #NN invariant number.
+
+REJECT — Glossary "Intent Ledger" / "G-2" — accused of a preserved-in-compute row without its why — the diff carries no assessment report, no Intent Ledger table and no §R Reflection.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 2
+
+---
+⏱  53385ms (53.4s)
+📊 Tokens — total: 33054, input: 23591, output: 9463, reasoning: 8769

@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:41:38.483Z file_sha256=a4c169f19d3861cd44cdd1788f026afde59105578575339b4d4292f058f238a0 prompt_sha256=63e61d2e1f92a22fe76aa676f5f0c82f9aa0e8fbd0e72f108079c82bf597b7fb
+🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — doc-17 header "They are NOT the operator's words as a ruling ... The operator's rulings are the decisions." — scripts/hooks/check-lane-close.mjs, outcomeErrors rule string: "Spec 08 section 7 rule 3 (08_agents.md:346) and the operator ruling :1580 (low priorities filed for later)" (same claim in the Spec 08 note "his :1580 words override rule 6 for them") — clause unmet: a MORNING-DECISIONS.md log line is named "the operator ruling" and made to override rule 6 for LOW and NIT findings, while the same change refuses any ruling: outcome unless an RR-NNNN or decision-N record exists; the note cites decisions RR-0333/RR-0338 for its own correction but no decision for the :1580 override — record :1580 as a decision and cite that id in the rule string, the Spec 08 note and the README line, or keep rule 6 for LOW and NIT BUGs.
+
+DEFER severity=LOW — doc-17 header "never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — docs/reports/generated/rule-lists-by-kind.md "| orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |" — the regenerated report keeps the readings register selectable as a whole-file rule list, and this run is fed it as governing rules, which is what the clause forbids — the kind heading is above the hunk (cannot see), so confirm the list is never selected for a review as a ruling.
+
+MET — RR-0002 "Lane tooling first (run-panel, guard, generated briefs, results gate, lane registry and pack cache, Spec 08 seat-K note draft)" — scripts/hooks/check-lane-close.mjs "export function outcomesCli(dir) {" and scripts/analysis/backlog-brief.mjs "check-lane-close.mjs --outcomes" — the results gate and the generated brief are the lane tooling the ruling names.
+
+MET — RR-0218 "approved. ensure that all the relevant specs are updated" — docs/specs/00-architecture/137_mcqueue.md new dated note 2026-11-20 — both Spec 08 rule 6 and Spec 137 carry the new close rule, not one alone.
+
+MET — RR-0189 "for your own messages you never cite any rulings" — docs/specs/00-architecture/08_agents.md "decisions RR-0333 and RR-0338" — the correction note cites decision ids rather than describing itself as verified.
+
+MET — doc-17 header "The operator's rulings are the decisions." — scripts/hooks/check-lane-close.mjs "ruling:RR-NNNN or ruling:decision-N (the decision record exists)" — the ruling outcome form is refused unless a decision record exists, so a reading cannot close a finding.
+
+MET — RR-0111 "Permit step conversion stays frozen (Spec 137 rule 11)" — docs/specs/00-architecture/137_mcqueue.md hunk before "## 5. The weekly snapshot" — the 137 edit adds a rule 3 close note and leaves rule 11 untouched.
+
+REJECT — RR-0209 "Let's stick with McLane for a name." — the change is accused of renaming the lane tooling — the diff keeps the existing lane ids and BL- lane names unchanged.
+
+REJECT — RR-0033 "serve null for storeys 0" and RR-0038 "Lot views draw the FITTED house" — the change is accused of touching product number rulings — they govern report output values, not lane-close records.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 1
+
+---
+⏱  79952ms (80.0s)
+📊 Tokens — total: 48002, input: 33008, output: 14994, reasoning: 14137
