@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-V2LIST'
 created_date: '2026-11-20T17:12:00Z'
-updated_date: '2026-11-21T14:40:00Z'
+updated_date: '2026-11-21T14:52:00Z'
 labels:
   - McFix
   - McFix V2
@@ -106,4 +106,6 @@ Step 4 audit by a separate grounder 2026-11-20 (file ~/Buildo-scratch/lanes-2026
 2026-11-20 BL-V2LIST round 7: golden snapshot globs in the table's exempt key; material only, list resolution unchanged (operator 1-5 y, MORNING-DECISIONS.md:1520, item 3).
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0353 · task-406 · Backlog; operator, verbatim: "let's resolve the scorecard the right way")
+
+Dated note 2026-11-21 (M-246, prior text kept; RR-0355 · task-406 · Backlog; operator, verbatim: "Agreed. Let's push as soon as possible! Also recolve the scorecards issue now. The gaps are closed in parellel.")
 <!-- SECTION:NOTES:END -->

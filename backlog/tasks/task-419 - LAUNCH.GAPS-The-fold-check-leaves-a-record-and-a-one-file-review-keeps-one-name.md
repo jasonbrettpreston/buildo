@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-21T14:40:00Z'
-updated_date: '2026-11-21T14:45:00Z'
+updated_date: '2026-11-21T14:52:00Z'
 labels:
   - McFix
   - McFix V2
@@ -121,4 +121,6 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0352 · task-419 · Backlog; o
 2026-11-21 (M-246) Plan put on the task by the orchestrator: PLAN-419-v1, written read-only by a separate planner against the code at 7db3a81cc. The Files line is replaced by the plan's six paths (adds src/tests/backlog/backlog-lane.logic.test.ts and docs/reports/reviews/task-375/plant-evidence.mjs; open question 1 for the plan grounder). The planner found the card's gap 2 narrower than written: the name trap holds only for lenses with no rule list (check-lane-close.mjs:508-513); compliance outputs are accepted unsuffixed (check-lane-close.mjs:373-409). The plan is reviewed, ruled, folded and fold-checked before any launch (RR-0352).
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0354 · task-419 · Backlog; operator, verbatim: "change the spec's wording")
+
+Dated note 2026-11-21 (M-246, prior text kept; RR-0355 · task-419 · Backlog; operator, verbatim: "Agreed. Let's push as soon as possible! Also recolve the scorecards issue now. The gaps are closed in parellel.")
 <!-- SECTION:NOTES:END -->
