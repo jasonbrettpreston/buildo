@@ -3,11 +3,11 @@ id: TASK-399
 title: >-
   FOLD.ADOPT A confirmed finding must carry an outcome; counted bulk rulings
   below HIGH
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-OUTCOME'
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-21T00:51:00Z'
+updated_date: '2026-11-21T01:00:00Z'
 labels:
   - McFix
   - McFix Z
@@ -36,11 +36,11 @@ Validated before writing by a separate read-only grounder (2026-11-20; verdict r
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 (a) the planted-defect tests, red first then green, through the real commit-msg hook; paste the hook output.
-- [ ] #2 (b) On the real task-410 lane directory (committed on the board): node scripts/hooks/check-lane-close.mjs --outcomes docs/reports/lanes/2026-11-20/BL-V2WHOLE prints "checked 48 ids" and exits 1. Measured before git facts (rerun with CRIT read as CRITICAL): 9 have no line, 4 are task: on a CRITICAL or HIGH BUG, 1 is a wontfix above LOW, 34 pass the form checks; the git-fact checks may add refusals. Paste that output and the passing control of the planted suite. The exit-0 half is NOT this task's acceptance: it needs real fix commits in task-410's code (outside this task's Files) or operator rulings, so it is a card for the orchestrator's records of task-410.
-- [ ] #3 (c) On task-381's real GROUNDER.md, committed by the orchestrator to docs/reports/reviews/task-399/hooks3-GROUNDER.md (the scratch path is not repo; the branch holds no copy): 36 CONFIRMED, 0 CONFLICT; run against a lane directory holding it with no TRIAGE.md: "checked 36 ids", 36 refusal lines, exit 1.
-- [ ] #4 (d) The one command of 4.2 run on task-399 itself at its close; backlog task view task-399 --plain shows the round line and the finding lines; run twice, the Final Summary holds ONE round line (the replace-then-append order is only from backlog task edit --help until this run).
-- [ ] #5 (e) Do not mark BUILT until (a) to (d) are pasted on the task (:1517).
+- [x] #1 (a) the planted-defect tests, red first then green, through the real commit-msg hook; paste the hook output.
+- [x] #2 (b) On the real task-410 lane directory (committed on the board): node scripts/hooks/check-lane-close.mjs --outcomes docs/reports/lanes/2026-11-20/BL-V2WHOLE prints "checked 48 ids" and exits 1. Measured before git facts (rerun with CRIT read as CRITICAL): 9 have no line, 4 are task: on a CRITICAL or HIGH BUG, 1 is a wontfix above LOW, 34 pass the form checks; the git-fact checks may add refusals. Paste that output and the passing control of the planted suite. The exit-0 half is NOT this task's acceptance: it needs real fix commits in task-410's code (outside this task's Files) or operator rulings, so it is a card for the orchestrator's records of task-410.
+- [x] #3 (c) On task-381's real GROUNDER.md, committed by the orchestrator to docs/reports/reviews/task-399/hooks3-GROUNDER.md (the scratch path is not repo; the branch holds no copy): 36 CONFIRMED, 0 CONFLICT; run against a lane directory holding it with no TRIAGE.md: "checked 36 ids", 36 refusal lines, exit 1.
+- [x] #4 (d) The one command of 4.2 run on task-399 itself at its close; backlog task view task-399 --plain shows the round line and the finding lines; run twice, the Final Summary holds ONE round line (the replace-then-append order is only from backlog task edit --help until this run).
+- [x] #5 (e) Do not mark BUILT until (a) to (d) are pasted on the task (:1517).
 <!-- AC:END -->
 
 ## Definition of Done
@@ -357,3 +357,14 @@ Dated note 2026-11-20 (M-246, prior text kept; RR-0342 · task-399 · Backlog; o
 
 2026-11-20 (M-246, prior text kept) WHO DOES WHAT AFTER THE GROUNDER RULES of PLAN-399-v3 and the sentence of its section 5 saying the orchestrator writes TRIAGE.md are superseded on the operator's ruling (MORNING-DECISIONS.md:1605, verbatim: "agreed", to the question as put: the lane fixes and closes, the grounder verifies each fix, the orchestrator only routes): the lane writes its own outcome lines and makes the closing commit, a separate grounder verifies each fix resolves its finding, the orchestrator only routes. Fix round 1 was already run this way; this note records, it changes no code.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Task-399 built: the lane close refuses a CONFIRMED or CONFLICT finding with no verified outcome (TRIAGE.md forms fixed, task, ruling, wontfix, pile), shows the CRITICAL, HIGH and MED outcomes in this Final Summary, and has the --outcomes command. Code commits d86373d7a and bf773dd7f (hooks: 111 and 114 tests passed), evidence 032525629, grounder CLOSE-READY after fix round 1.
+
+Review round 1: 6 fixed, 0 task, 0 ruling, 0 wontfix, 21 pile; grounder docs/reports/lanes/2026-11-20/BL-OUTCOME/GROUNDER.md; triage docs/reports/lanes/2026-11-20/BL-OUTCOME/TRIAGE.md
+g399#1 HIGH fixed 0325256
+g399#2 MED fixed 0325256
+g399#3 MED fixed bf773dd
+<!-- SECTION:FINAL_SUMMARY:END -->
