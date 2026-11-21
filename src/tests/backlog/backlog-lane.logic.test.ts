@@ -11,9 +11,14 @@ const ID = { GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 
 const git = (cwd: string, ...a: string[]) => run('git', ['-c', 'commit.gpgsign=false', ...a], { cwd, env: ID });
 const AC = 'Writes scripts/analysis/thing.mjs and the notes file docs/out/NOTES.md, nothing else';
 const SCRIPT = path.join(__dirname, '../../../scripts/analysis/backlog-lane.mjs');
+// task-375 D: a build or fix launch needs real plan evidence on the board (the launch gate); the program in docs/reports/reviews/task-375/plant-evidence.mjs writes it for a fixture board with the real helpers (lens-input inputs, REVIEW headers, GROUNDER-PLAN.md, seat reports, round block, references, Plan line) and commits it
+function plantEvidence(board: string, task: string, laneName = 'BL-T1') {
+  const r = run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID });
+  if (r.status !== 0) throw new Error(`plantEvidence: ${r.stdout}${r.stderr}`);
+}
 
 type Fx = { board: string; base: string; wt: string; main: string; pt: string; task: string; args: string[] };
-function fixture(opts: { status?: string; hook?: boolean; files?: string | null; type?: string; letter?: string; noMilestone?: boolean } = {}): Fx {
+function fixture(opts: { status?: string; hook?: boolean; files?: string | null; type?: string; letter?: string; noMilestone?: boolean; noEvidence?: boolean } = {}): Fx {
   const board = makeProject(), base = tmp('lane');
   fs.mkdirSync(path.join(board, 'backlog/milestones'), { recursive: true });
   fs.writeFileSync(path.join(board, 'backlog/milestones/m-0 - foundations.md'), `---\nid: m-0\ntitle: "Increment 1·A Foundations [${opts.letter ?? 'F'}]"\n---\n\n## Description\n\nx\n`);
@@ -26,6 +31,7 @@ function fixture(opts: { status?: string; hook?: boolean; files?: string | null;
   fs.writeFileSync(path.join(board, 'mobile/.keep'), '');
   const task = mk(board, 'Launch me', ['-d', `Launch description text.${opts.files === null ? '' : `\n\nFiles: ${opts.files ?? 'scripts/analysis/thing.mjs'}`}`, ...(opts.type ? ['--type', opts.type] : []), '--ac', AC, '--ref', 'docs/a.md', '--doc', 'docs/b.md', ...(opts.noMilestone ? [] : ['-m', 'm-0']), ...(opts.status ? ['-s', opts.status] : [])]);
   git(board, 'add', '-A'); git(board, 'commit', '-q', '-m', 'fixture');
+  if (['build', 'fix'].includes(opts.type ?? '') && !opts.noMilestone && !opts.noEvidence) plantEvidence(board, task);
   if (opts.hook) { const h = path.join(board, '.git/hooks/pre-commit'); fs.writeFileSync(h, '#!/bin/sh\nexit 1\n'); fs.chmodSync(h, 0o755); }
   const main = path.join(base, 'main');
   fs.mkdirSync(path.join(main, 'node_modules'), { recursive: true }); fs.mkdirSync(path.join(main, 'mobile/node_modules'), { recursive: true });
@@ -194,6 +200,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     let body = fs.readFileSync(file, 'utf8').replace('Launch description text.', `Launch description text. Files: ${files}`);
     if (type) body = body.replace(/^labels: .*$/m, (m) => `${m}\ntype: ${type}`);
     fs.writeFileSync(file, body);
+    if (type === 'build' || type === 'fix') plantEvidence(f.board, f.task);
     const r = lane(f, ['--dry-run']);
     const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null');
     expect(spec, r.stdout + r.stderr).not.toBeNull();
@@ -343,6 +350,37 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     const t2 = take(lane(f, ['--dry-run']).stdout);
     expect([...t2.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length - 1);
     expect(t2).not.toContain(`'compliance:${lists[0]!.id} `);
+  });
+  // task-375 D5: the launch gate
+  it('D: a build launch with no plan evidence on the board is refused, one line per missing item, nothing taken, in dry-run too (no flag turns it off)', () => {
+    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build', noEvidence: true });
+    for (const extra of [['--dry-run'], []]) {
+      const r = lane(f, extra);
+      expect(r.status, r.stdout + r.stderr).toBe(3);
+      const lines = r.stderr.trim().split('\n');
+      expect(lines[0]).toMatch(/refused: plan gate: .*no plan evidence folder docs\/reports\/reviews\/task-\d+\//);
+      expect(lines.length).toBeGreaterThan(1);
+      expect(statusOf(f)).toBe('LATER');
+      expect(fs.existsSync(f.wt)).toBe(false);
+    }
+  });
+  it('D: with the evidence the dry-run prints "plan gate ok: <L> lists" with L the resolved-list count and the Plan hash; a one-word edit of the task refuses with the new expected Plan line', () => {
+    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
+    const L = (JSON.parse(run('node', ['scripts/analysis/rule-lists.mjs', 'resolve', '--files', 'scripts/analysis/thing.mjs', '--type', 'build', '--letter', 'F'], { cwd: ROOT }).stdout) as { lists: unknown[] }).lists.length;
+    const ok = lane(f, ['--dry-run']);
+    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+    expect(ok.stdout).toMatch(new RegExp(`plan gate ok: ${L} lists, \\d+ findings, Plan sha256:[0-9a-f]{12}`));
+    backlog(f.board, ['task', 'edit', f.task, '--append-notes', 'one more word']);
+    const bad = lane(f, ['--dry-run']);
+    expect(bad.status, bad.stdout + bad.stderr).toBe(3);
+    expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);
+    expect(statusOf(f)).toBe('LATER');
+  });
+  it('D: a task of another type (record) is not gated and launches with no plan evidence', () => {
+    const f = fixture({ files: 'docs/specs/00-architecture/08_agents.md', type: 'record' });
+    const r = lane(f, ['--dry-run']);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    expect(r.stdout).not.toContain('plan gate');
   });
   it('a Files path no row matches is refused at launch with the path named (exit 3, one line, nothing written)', () => {
     const f = fixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' });

@@ -21,6 +21,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { args, asList, descriptionOf, home, parseFM, readItems, REPO, sha256, today } from './backlog-lib.mjs';
+import { planGateErrors } from '../hooks/check-lane-close.mjs';
 import { complianceRefs, DEFAULT_TABLE, DIFF_ARGS, filesText, lensSet, milestoneLetter, readTable, resolveTask, verifyResolved } from './rule-lists.mjs';
 
 const a = args();
@@ -82,6 +83,28 @@ const st = git('status', '--porcelain');
 if (st.status !== 0) refuse(`git status failed on ${board}: ${st.stderr.trim().split('\n')[0]}`);
 const dirty = st.stdout.split('\n').filter(Boolean).map((l) => l.slice(3).replace(/^.* -> /, '').replace(/^"(.*)"$/, '$1')).filter((p) => !p.startsWith('backlog/') && !/(^|\/)node_modules\/?$/.test(p)); // the node_modules links of a worktree are untracked (the .gitignore pattern has a trailing slash and a link is not a directory)
 if (dirty.length) refuse(`board checkout ${board} is dirty outside backlog/: ${dirty.slice(0, 5).join(', ')}${dirty.length > 5 ? ', ...' : ''}`);
+
+// ---- task-375 D5: THE LAUNCH GATE, the LAST refusal before the take. A build or fix task is launched only when its folded plan was checked: the plan evidence in docs/reports/reviews/<id>/ at the board HEAD
+// (context, plan compliance outputs per list, GROUNDER-PLAN.md of a separate grounder, the required seat reports, outcomes, the round block and references on the task, the Plan hash line). No flag or
+// environment variable turns it off. If the gate has a defect and blocks every launch, the rollback is a git revert of the commit that added this block; --dry-run diagnoses without a take.
+const gateType = String(t.fm.type ?? '').toLowerCase();
+if (gateType === 'build' || gateType === 'fix') {
+  const ev = `docs/reports/reviews/${taskId}`;
+  const showHead = (pth) => { const r = git('show', `HEAD:${pth}`); return r.status === 0 ? r.stdout : null; };
+  const names = git('ls-tree', '-r', '--name-only', 'HEAD', '--', `${ev}/`).stdout.split('\n').filter((x) => x && path.posix.dirname(x) === ev); // flat: a file in a subfolder is never read
+  const headTasks = git('ls-tree', '--name-only', 'HEAD', 'backlog/tasks/').stdout.split('\n').filter(Boolean);
+  const gate = planGateErrors({
+    id: taskId, taskText: fs.readFileSync(t.file, 'utf8'), type: gateType, table: ruleTable, root: board, letter: letterOf, laneName: lane, assignees: asList(t.fm.assignee).map(String),
+    folder: names.map((x) => ({ name: path.posix.basename(x), text: showHead(x) ?? '' })), readRepo: showHead,
+    tracked: (e) => git('ls-files', '--', e).stdout.trim() !== '', // the Files entry names at least one tracked path (a file, directory or glob)
+    facts: {
+      taskOf: (tid) => { const n = /\d+/.exec(tid)?.[0]; const f = headTasks.find((x) => new RegExp(`^backlog/tasks/task-0*${n}( -.*)?\\.md$`, 'i').test(x)); if (!f) return { exists: false, status: '', text: '' }; const x = showHead(f) ?? ''; return { exists: true, status: String(parseFM(x).fm.status ?? ''), text: x }; },
+      decisionExists: (ref) => git('ls-tree', '--name-only', 'HEAD', 'backlog/decisions/').stdout.split('\n').some((x) => path.posix.basename(x).toLowerCase().startsWith(`${ref.toLowerCase()} -`) || path.posix.basename(x).includes(ref)),
+    },
+  });
+  if (gate.errors.length) { for (const e of gate.errors) process.stderr.write(`backlog-lane: refused: plan gate: ${e}\n`); process.exit(3); }
+  console.log(`plan gate ok: ${gate.lists} lists, ${gate.findings} findings, ${gate.line.replace(/^Plan: \S+ /, 'Plan ')}`);
+}
 
 // ---- the commands, printed (dry-run) or run; one code path for both ----
 const fmt = (cwd, argv, env, out) => `cd ${q(cwd)} && ${env ? `${Object.entries(env).map(([k, v]) => `${k}=${q(v)}`).join(' ')} ` : ''}${argv.map(q).join(' ')}${out ? ` > ${q(out)}` : ''}`;
