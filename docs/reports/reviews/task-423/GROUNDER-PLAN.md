@@ -193,3 +193,5 @@ A (task-423, adjustments 1 and 3), then B (adjustments 4 and 2); order A, B beca
 6. Cards in order: A (task-423), B (opened after A is built); the station line by the orchestrator.
 7. Decided by you since the first round, so nothing is open for card A: the small rules sections are tasks 427 and 425 (RR-0368, :1768); the station is option C, task-424, plus the one line today (RR-0370, :1787); fix-only re-review is held and task-414 stays open (RR-0367, :1760); a medium is fixed in output round 1 and recorded from round 2 (RR-0369, :1781, card B); the caps are two rounds on a plan and three on the output (RR-0371, :1803). A fix re-runs the joined set (5 calls) instead of 11, the same cost as a fix-diff re-run.
 8. 127 findings ruled: 109 confirmed (15 high, 71 medium, 21 low, 2 nit), 18 rejected, no CONFLICT. The plan quotes RR-0361 for "It isn't 17": that entry has no RR number (it is at MORNING-DECISIONS.md:1711); decision-146 is about task-386.
+
+Plan: task-423 sha256:55e640f9bee4

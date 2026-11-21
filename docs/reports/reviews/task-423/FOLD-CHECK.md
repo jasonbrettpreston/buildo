@@ -28,5 +28,23 @@ After my first PASS the orchestrator recorded decision-154 (RR-0369) with backlo
 
 (3) PASS. planHash of the board task file, recomputed with the exported function of scripts/hooks/check-lane-close.mjs, is a1d08882148d.
 
+(Second entry closed: Plan line a1d08882148d, superseded by the third entry below.)
+
+## Third entry: fold check after the task-419 fold and plan review round 2 (re-made outputs of agents-s7-s11 and queue-137)
+
+Checked by: Cairn-Ground-P423
+
+On the board at HEAD 7b27c7974 (the plan-prep commit; the task file edits are backlog edits in the working tree of ~/Buildo-wt-board), 2026-11-21. Read-only; nothing in the repo edited.
+
+(1) PASS. The board plan field starts with PLAN-423-r2.txt (equal after whitespace squash, 16 edits F10 to F25 on the round 1 fold) and the rest is the round block that plan-prep post wrote (Plan review round 1: 101 folded, 0 task, 0 ruling, 0 wontfix, 8 pile). All new sentences are present and no replaced old sentence is left. All 101 folded quotes of TRIAGE-PLAN.md are present in the task text (0 missing). The Description holds one Files line and it equals FILES-LINE.txt.
+
+(2) PASS. NOTE.txt (round 1) and NOTE-r2.txt are both in the Implementation Notes, byte-equal to my files; NOTE-r2 states 127 findings, 109 CONFIRMED (15 HIGH, 71 MED, 21 LOW, 2 NIT), 18 REJECTED, 0 CONFLICT, 101 folded, 8 pile, as ruled. Against the task as it was at 700db70f0, everything outside the plan field, the Implementation Notes and updated_date is identical, and the old notes are a prefix of the new ones: the task diff holds only the plan field, the round block and the notes.
+
+(3) PASS. GROUNDER-PLAN.md, TRIAGE-PLAN.md and QUESTIONS-RULED.md in docs/reports/reviews/task-423/ are byte-identical to my files; the evidence folder is clean against HEAD (the two re-made outputs and their in- inputs are committed as made). The 11 Ruled lines match the committed outputs by ruledLine (11 of 11, including agents-s7-s11 sha256:35e22bcc7c96 findings:7 and queue-137 sha256:623fc1d76c29 findings:6). The launch dry run refused only the missing Plan line and the stale FOLD-CHECK Plan line, so the other checks (the whole-list recompute of all nine lists, every verdict quote on its cited line, the seat lines, the outcomes, the references) passed.
+
+(4) PASS. I read the plan whole. The Files line resolves the same nine lists the evidence holds. Cites are dated to 36a2c2d63 with the shifts of the task-419 fold stated in the header, so they do not contradict the head (700db70f0 and c6abe83db changed only evidence and backlog files after it). Section 0 to 3 agree on the join; section 6 card B states RR-0369 (a medium fixed in output round 1, recorded from round 2) and section 7 states the operator's rulings RR-0367, RR-0368, RR-0370 and RR-0371 with no open item; the card A dependency (task-419 BUILT) now holds. One note, not a contradiction: since the task-419 fold the launch gate also requires FOLD-CHECK.md, so the plan-gate fixtures of acceptance (b) carry it; the builder sees that in the existing plan-gate tests.
+
+(5) PASS. planHash of the board task file, recomputed with the exported function of scripts/hooks/check-lane-close.mjs, is 55e640f9bee4, equal to the gate's expected line.
+
 Verdict: PASS
-Plan: task-423 sha256:a1d08882148d
+Plan: task-423 sha256:55e640f9bee4
