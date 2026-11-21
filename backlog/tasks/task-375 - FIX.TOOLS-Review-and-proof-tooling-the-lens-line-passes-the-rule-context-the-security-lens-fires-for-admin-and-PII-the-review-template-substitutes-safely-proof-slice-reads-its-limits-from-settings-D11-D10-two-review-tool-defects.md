@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T03:03:00Z'
+updated_date: '2026-11-21T03:06:00Z'
 labels:
   - McFix
   - McFix A
@@ -400,4 +400,6 @@ BL-GATE375 acceptance A9 and A4b, fourth run (outputs ~/Buildo-scratch/lanes-202
 BL-GATE375 acceptance A1 and the output review, fourth run: A1 (the review tool with --dry-run in the sanctioned dotenv form, task-381 context and the five --section flags): the context slot holds 0 hits of the placeholder (6 hits sit inside the diff text, which quotes the string in rule-lists.mjs), 1 hit of 'yes to all', each of the five heading lines once, 24,823 characters (under 120000). Output review: 80 calls over the whole-range diff (19 files, 170,582 bytes) with context-r1.md: 74 compliance outputs over 14 lists, 3 code-review, 3 error-paths, all exit 0, 80 of 80 with a REVIEW header and a VERDICT line; 410 findings listed untriaged in docs/reports/lanes/2026-11-21/BL-GATE375/FINDINGS.md; report docs/reports/lanes/2026-11-21/BL-GATE375/REPORT.md. Grounder owed; the task stays RUNNING.
 
 BL-GATE375 fix round 1 (g375#1): planGateInner runs the existing reviewErrors (REVIEW header, template, timestamp, VERDICT line) on every plan-<lens>.txt of a FIX launch; a junk file is refused. Red: red13.out (1 failed, assertion expected '' to match /plan-code-review.txt: no REVIEW header/).
+
+BL-GATE375 fix round 1 (g375#2): review-template.js exports contextRound(dir) (context-r*.md count + 1); backlog-brief.mjs and backlog-lane.mjs both use it, so the lens lines name the round the brief wrote; the stale context-<date> header comment of backlog-brief.mjs is corrected. Red: red14.out (1 failed, expected the lens line to contain context-r2.md). The review-template.js Files-line path is on the line; check-lane-close.mjs is not touched by this commit.
 <!-- SECTION:NOTES:END -->

@@ -262,13 +262,13 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     const cmd = /each `([^`]+)`/.exec(seg)?.[1] ?? '';
     expect(seg).toContain('plan-review-deepseek.md');
     expect(cmd).toContain('scripts/deepseek-review.js review');
-    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context docs\/reports\/reviews\/\S+\/context-r1\.md --section "Task"/);
+    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context docs\/reports\/reviews\/\S+\/context-r2\.md --section "Task"/);
   });
   // task-375 A3: every lens command passes the committed context (context-r1.md) and one --section per CONTEXT_SECTIONS entry; no command leaves a lens on the placeholder
   it('A3: plan, output and compliance commands all pass the committed context and the five sections; the date name and the pasted-context placeholder are gone', () => {
     const e = lensBrief('build', 'scripts/analysis/x.mjs, src/tests/');
     const SECT = '--section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes"';
-    const ctx = /docs\/reports\/reviews\/\S+?\/context-r1\.md/.exec(e)?.[0] ?? '(none)';
+    const ctx = /docs\/reports\/reviews\/\S+?\/context-r2\.md/.exec(e)?.[0] ?? '(none)';
     expect(ctx).not.toBe('(none)');
     const cmds = e.match(/scripts\/deepseek-review\.js review [^`]*/g) ?? [];
     expect(cmds.length).toBeGreaterThanOrEqual(3);
@@ -381,6 +381,20 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     const r = lane(f, ['--dry-run']);
     expect(r.status, r.stdout + r.stderr).toBe(0);
     expect(r.stdout).not.toContain('plan gate');
+  });
+  it('g375#2: a board that already holds context-r1.md (the plan evidence): the lens lines name the file the brief wrote (context-r2.md), in the dry-run and in the real launch', () => {
+    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
+    expect(fs.existsSync(path.join(f.board, `docs/reports/reviews/${f.task}/context-r1.md`))).toBe(true);
+    const d = lane(f, ['--dry-run']);
+    expect(d.stdout).toContain(`docs/reports/reviews/${f.task}/context-r2.md`);
+    expect(d.stdout).not.toContain(`docs/reports/reviews/${f.task}/context-r1.md --`);
+    const r = lane(f, ['--no-launchd']);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    const spec = JSON.parse(fs.readFileSync(path.join(f.base, 'lane-dir/task.json'), 'utf8')) as { extra: string[] };
+    const named = /docs\/reports\/reviews\/\S+?\/(context-r\d+\.md)/.exec(spec.extra.join('\n'))?.[1];
+    const written = fs.readdirSync(path.join(f.wt, `docs/reports/reviews/${f.task}`)).filter((n) => /^context-r\d+\.md$/.test(n)).sort().pop();
+    expect(named).toBe(written);
+    expect(named).toBe('context-r2.md');
   });
   it('a Files path no row matches is refused at launch with the path named (exit 3, one line, nothing written)', () => {
     const f = fixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' });

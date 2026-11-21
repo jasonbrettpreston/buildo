@@ -2,7 +2,7 @@
 // G1 brief from the task (Backlog-home plan v8.1 section 3): emits the lane brief from the Backlog task file, so a brief is never hand-written
 // in scratch. Prints the TKT-1 header (Spec 08 11.9, 08_agents.md:504), the quoted rules from the task's acceptance criteria and decisions,
 // scope, done-condition (the AC list), max_fix_rounds, the Spec 137 rule 3 line, the Spec 08 substrate lines, the take order, the review
-// command and the close step; and writes the review context file docs/reports/reviews/<task>/context-<date>.md (sha256 in the brief).
+// command and the close step; and writes the review context file docs/reports/reviews/<task>/context-rN.md (sha256 in the brief).
 // Usage: node scripts/analysis/backlog-brief.mjs --task task-N --lane <name> [--stage N] [--root <dir>] [--date YYYY-MM-DD]
 // Rules: Spec 08 TKT-1 (08_agents.md:504), Spec 08 section 7 rule 10 (a) (:341), Spec 137 rule 3 (137_mcqueue.md:84); RR-0207, RR-0212.
 import fs from 'node:fs';
@@ -48,7 +48,7 @@ for (const d of named) if (d.quote) rules.push(`${d.title}: "${d.quote}" (${d.ci
 // The review context file (written from the task, its docs and its decisions; sha256 goes in the brief).
 // task-375 A5: one context file per review round, context-rN.md, N = the context-r*.md files already there + 1; an earlier round's file is never overwritten.
 const ctxDir = path.join(root, 'docs/reports/reviews', taskId);
-const round = (fs.existsSync(ctxDir) ? fs.readdirSync(ctxDir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
+const round = createRequire(import.meta.url)('../lib/review-template.js').contextRound(ctxDir);
 const ctxRel = `docs/reports/reviews/${taskId}/context-r${round}.md`;
 const docs = asList(t.fm.documentation);
 // task-375 A1: the Implementation Plan and Implementation Notes fields of the task, headings inside the text demoted so they cannot end the section.
