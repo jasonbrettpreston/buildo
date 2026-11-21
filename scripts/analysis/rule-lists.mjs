@@ -158,7 +158,7 @@ export const filesText = (body) => /(?:^|\s)Files:[ \t]*(.*)$/m.exec(String(body
 export function lensSet({ type, files }) {
   const code = ['build', 'fix'].includes(String(type ?? '').toLowerCase());
   const surface = /\bmobile\/|src\/app\/|src\/components\/|surfaces\//.test(files);
-  const sec = /entitlement|auth|stripe|metered/i.test(files);
+  const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);
   return {
     code,
     plan: ['plan-review-deepseek', ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],

@@ -638,3 +638,25 @@ describe('V2.WHOLE: the real table exempts golden snapshots by their file shape 
     for (const a of ['--diff-algorithm=myers', '--indent-heuristic', '--inter-hunk-context=0']) expect(m.DIFF_ARGS, a).toContain(a);
   });
 });
+
+describe('D11b (task-375): the security lens fires for admin and PII paths, as README.md:104 and lens-security.md:48 say', () => {
+  const lens = async (files: string) => {
+    const m = await import('../../../scripts/analysis/rule-lists.mjs');
+    return m.lensSet({ type: 'build', files }) as { plan: string[]; out: string[] };
+  };
+  it('an admin path and a PII path add the security lens on both phases', async () => {
+    for (const f of ['src/app/admin/page.tsx', 'src/lib/pii/redact.ts', 'src/lib/admin-users.ts', 'scripts/pii-scrub.mjs']) {
+      const r = await lens(f);
+      expect(r.plan, f).toContain('security');
+      expect(r.out, f).toContain('security');
+    }
+  });
+  it('control: a path naming none of these adds no security lens', async () => {
+    const r = await lens('scripts/analysis/proof-slice.mjs');
+    expect(r.plan).not.toContain('security');
+    expect(r.out).not.toContain('security');
+  });
+  it('control: the existing words still fire it', async () => {
+    expect((await lens('src/lib/stripe/webhook.ts')).out).toContain('security');
+  });
+});
