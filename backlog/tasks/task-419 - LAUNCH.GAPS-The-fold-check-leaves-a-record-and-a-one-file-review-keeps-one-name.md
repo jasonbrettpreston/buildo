@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GAPS419'
 created_date: '2026-11-21T14:40:00Z'
-updated_date: '2026-11-21T15:58:00Z'
+updated_date: '2026-11-21T22:19:00Z'
 labels:
   - McFix
   - McFix V2
@@ -199,4 +199,6 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0355 · task-419 · Backlog; o
 2026-11-21 lane BL-GAPS419 fix round 1 landed: e5c3a4818 (check-lane-close.mjs one-line reads, tests), f4c0a0b42 (spec notes with RR-0360, CLAUDE.md :139 and :143, regenerated page, Files line plus CLAUDE.md). Round 2 output review made at that head, 11 outputs, 32 findings, plant-evidence.mjs and CLAUDE.md in the material.
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0360 · task-419 · Backlog; operator, verbatim: "change the claude.md to remove the cross check.  The agent stays available on request is fine froma wording perspective")
+
+Dated note 2026-11-21 (M-246, prior text kept; RR-0370 · task-419 · Backlog; operator, verbatim: "if so approved. 2. The station: option C (one list of push checks kept in the repo, used by both the hook and the station), plus the one line today. Also want to add the spec rules section as a later task to the board.")
 <!-- SECTION:NOTES:END -->
