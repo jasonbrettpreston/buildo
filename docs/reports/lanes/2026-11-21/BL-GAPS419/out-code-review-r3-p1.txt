@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T22:22:38.908Z file_sha256=6c7dd4e3fc54314a0af4e3e4f986c5a6f6314e0c07c53c7144049591019dbcbb prompt_sha256=1eb6521fcb2051612d6a233f1a776ddf825db81f8d93d4c460fde332d4cbde24
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs "const who = by ? by[1].split(/,| \()/)[0].trim() : '';" — the Checked by name extraction and the lane/assignee clash are re-implemented here, while the same function already applies that rule to the grounder line (Spec 137 note: "the text after the colon up to the first comma or " (" or the line end; not the lane and not an assignee", Q6 calls it "the Grounder line rule"); two copies can drift and accept on one record what the other refuses — extract one helper used by both records.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs "const by = lastOf(/^[ \t]*Checked by:(.*)$/gm);" — last-wins on a repeated line means a FOLD-CHECK whose last Checked by line is the literal form the gate itself prints ("Checked by: <name>") passes the clash checks and is accepted with a placeholder instead of an agent name; no check rejects the literal "<name>" — refuse a captured name that is exactly the placeholder or empty after stripping < and >.
+
+DEFER severity=NIT — src/tests/backlog/check-lane-close.logic.test.ts "files['FOLD-CHECK.md'] = o.fold ? o.fold(planLine) : goodFold(planLine);" — with `noPlanLine: true` the fixture still plants a FOLD-CHECK carrying a valid Plan line (the push above it is conditional, this write is not), so that scenario no longer models a board that lacks the plan line as a whole and the GROUNDER-PLAN-only failure is tested against an impossible board state; gate this write on `!o.noPlanLine` too.
+
+REJECT — docs/reports/reviews/task-375/plant-evidence.mjs "w('FOLD-CHECK.md', `# Fold check (test evidence)\nChecked by: Fold-G1\nVerdict: PASS\n\n${planLine}\n`);" — looks like a script forging the record that the Spec 137 note of the same commit says is "written by the separate plan grounder, never by a script" — it is a test fixture program, and the gate's own WHAT IT CANNOT PROVE clause accepts name-and-file comparison only, so this plants exactly the evidence the fixture is meant to plant.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  178173ms (178.2s)
+📊 Tokens — total: 49734, input: 14815, output: 34919, reasoning: 34386

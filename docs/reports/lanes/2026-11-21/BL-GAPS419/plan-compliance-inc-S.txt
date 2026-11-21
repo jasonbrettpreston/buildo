@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T14:44:09.398Z file_sha256=bebf8e4ce4790ffd773aed60cfe74a44dee5eb76fac8c49922406b83034ab3ab prompt_sha256=ba10bf58c90c6f5c0a438f0e555cc6726443aadb00195298f5337f22d4652374
+🔍 Lens review of docs/reports/reviews/task-419/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 "git diff --stat shows only the Files line" (Files line includes "docs/reports/reviews/task-375/plant-evidence.mjs") — plan section 4 "d. No edit to backlog-lane.mjs, the specs, or any committed evidence." — the plan forbids editing the committed evidence file that its own Files line and landing step require to be edited, so the diff demanded by AC #6 contradicts section 4d — strike "or any committed evidence" from 4d, or scope it to the task-375/412/418 fold files, and state that plant-evidence.mjs is edited as section 6 says.
+
+BUG severity=MED — AC #2 "(b) Same board, the task body edited by one word: exit 3, FOLD-CHECK.md Plan line stale, expected line printed." — plan section 3 "last Plan line missing or not equal to `line` -> refusal (a fold check of an older plan)" — the stale FOLD-CHECK refusal is not specified to print the expected Plan line, unlike the GROUNDER-PLAN block the plan itself describes as printing it, and no section 5 test asserts that string — add "the refusal prints `line` as the expected line" to 4a and assert it in the c3 one-word-edit test.
+
+DEFER severity=LOW — card gap 1 "written by the grounder and never by the script" — plan section 3 "Checked-by missing or clash() with lane or any assignee -> refusal (reuse clash, same rule as the grounder)" — the plan adds identity refusals the pasted card and rulings do not name, importing a clash rule that is not in the pasted context — keep the refusals but say in the plan text that they implement the grounder naming rule, or reduce to the minimum the card names.
+
+DEFER severity=LOW — card "The plan (to be written read-only and reviewed before any build) names the design and the final Files line." — plan section 9 "may it grow by backlog-lane.logic.test.ts and plant-evidence.mjs (card lists four)?" — open question 1 misstates the card, whose Files line already lists six paths including those two, so the plan leaves open a point the card has settled — strike open question 1 as answered by the card.
+
+MET — card gap 2 "makes the tool and the close check agree on the name of a one-file review, without breaking outputs already committed" — plan section 3 "suffix is '' only when `list` is set and there is one file; with no list it is always -pN" — tool-only change leaves compliance names, committed -p1 pairs and the raw-diff route untouched.
+
+MET — AC #3 "prints `<dir>/in-out-code-review-p1.txt` and writes only that" — plan section 5 "stdout path ends `-p1.txt`, no unsuffixed file written".
+
+MET — AC #4 "The close check on a lane with out-code-review-p1.txt made from (c): exit 0" — plan section 5 ":420 area: a lane built by running the real lens-input on a one-file diff for code-review closes with out-code-review-p1.txt".
+
+MET — AC #5 "Existing close tests (a -p1 pair, the unsuffixed compliance control) still pass." — plan section 3 "Committed outputs still pass: the close check is not edited for gap 2".
+
+MET — card "Reuse what exists; no new tool." — plan section 3 "Rejected: ... a new tool".
+
+MET — RR-0351 "Gap 3 we dont need the cross check." — plan header "Cross-read pass is out of scope".
+
+MET — card gap 1 "written by the grounder and never by the script" — plan section 3 "Writer: the grounder; the script never writes it".
+
+MET — AC #1 "exits 3, stderr \"FOLD-CHECK.md\"" — plan section 5 "c1 stays exit 3 and its stderr names FOLD-CHECK.md".
+
+REJECT — AC #6 "git diff --stat shows only the Files line" — accused of adding board files outside the Files line via "commit B (later) = task file and queue row to DONE with evidence" — not a real issue, commit A is the diff under review and the task/queue move is a separately landed commit.
+
+REJECT — card gap 2 as written ("when a diff fits one review input, lens-input writes it without a part suffix") — accused of fixing only the no-list lenses — not a real issue, pasted Implementation Notes state "the planner found the card's gap 2 narrower than written: the name trap holds only for lenses with no rule list".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 2
+
+---
+⏱  56850ms (56.9s)
+📊 Tokens — total: 22402, input: 11991, output: 10411, reasoning: 9358

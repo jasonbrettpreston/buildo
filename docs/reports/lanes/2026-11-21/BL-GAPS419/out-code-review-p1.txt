@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T22:44:14.823Z file_sha256=130dec99451c97948de93a0bd03756dc85ce5f9b708bef52d525487db0372227 prompt_sha256=231825ec3c2ff09cdba962359b834694d144e7437b43da5319bd59cc25ad2e70
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none found. Using DEFER/REJECT below.
+
+DEFER severity=MED — src/tests/backlog/backlog-lane.logic.test.ts:385 "const text = fs.readFileSync(fold, 'utf8');" — the new test (and the plan-prep test at "const fp = path.join(dirOf(f), 'FOLD-CHECK.md');") reads a planted docs/reports/reviews/<task>/FOLD-CHECK.md, and no file in this change plants one: the Files line names docs/reports/reviews/task-375/plant-evidence.mjs but that file is absent from the diff, and no other hunk adds the file to the fixture, so both reads throw if the planter is not committed with this change — confirm plant-evidence.mjs carries the three planted lines (Checked by: Fold-G1 / Verdict: PASS / Plan:) and include it in the same change — cannot see plant-evidence.mjs, so the grounder must confirm.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts:624 "expect(n.written).toEqual(n.listed.map((x) => path.basename(x)).sort());" — written is readdirSync().sort() while listed keeps emission order p1..pN, so the two sides agree only while the chunk count is under 10 (p10 sorts before p2) — compare sorted against sorted, or compare sets — a BIGDIFF at max 9000 that yields ten or more chunks reds this control for the wrong reason.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:646 "const fc = textOf('FOLD-CHECK.md');" — the block sits at function-body level, one indent out from the block that closes above it at "  }" after the refs loop, so a task whose evidence folder is absent gets the folder error and a second "FOLD-CHECK.md is missing in ..." error for the same cause — move the FOLD-CHECK block inside the same folder guard as the refs loop so one cause yields one error.
+
+DEFER severity=NIT — scripts/hooks/check-lane-close.mjs:665 "else if (`Plan: ${fp[1]} sha256:${fp[2]}` !== line)" — a Plan line with the right hash but the wrong task id gets the same "the fold was checked on another text, so it must be checked again" message, which sends the reader to re-hash the task rather than fix the id — print which half mismatches (id vs hash) in that message.
+
+REJECT — scripts/analysis/rule-lists.mjs:427 "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — `list && ...` looks like it misbehaves for an empty rule list — `list` is null for a non-compliance template (per the doc line above, id "none") and any array, even empty, is truthy, so only the null case loses the unsuffixed name, which is the intent.
+
+REJECT — scripts/hooks/check-lane-close.mjs:660 "const vd = lastOf(/^[ \t]*Verdict:[ \t]*(.*?)[ \t\r]*$/gm);" — the lazy capture plus trailing class looks like it could truncate "PASS" — `[ \t]*` eats the single space, the lazy group expands until `[ \t\r]*$` can match at end of line, so vd[1] is exactly "PASS" for "Verdict: PASS", "Verdict: PASS  " and a CRLF line.
+
+REJECT — scripts/hooks/check-lane-close.mjs:650 "const lastOf = (re) => [...fc.matchAll(re)].pop();" — matchAll throws on a non-global regex, which looks like an unhandled crash — all three call sites carry /gm (the Checked by, Verdict and Plan patterns), and pop() of an empty array gives undefined, which each `if (!by)` / `if (!vd)` / `if (!fp)` branch handles.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none blocking; the MED item (unplanted FOLD-CHECK.md in the new board fixture) must be confirmed by the grounder before merge.
+
+---
+⏱  153165ms (153.2s)
+📊 Tokens — total: 47131, input: 14340, output: 32791, reasoning: 31825

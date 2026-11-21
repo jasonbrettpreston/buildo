@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T22:44:14.824Z file_sha256=21bf8fa73cd93386fa3a07fafdc89b5ba0e97fa152134f65c419f62e066051b2 prompt_sha256=a3f21f4d0636c005288e4430b42d3dd81de3caf18c05e0336793592afb132288
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — acceptance #6 and Q1 "#6 (f) The three test files green; git diff --stat shows only the Files line." / "the Files line is final at eight paths" — CLAUDE.md:139 "is no longer required after a fold and stays available on request"; the diff's own note says "CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143)" — the change edits CLAUDE.md, a ninth path absent from the ruled Files line, so "git diff --stat shows only the Files line" is unmet — amend the Files line to nine paths in this commit on a recorded ruling, or move the CLAUDE.md edit to its own task.
+
+BUG severity=HIGH — Q4 "Q4 plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)" — src/tests/backlog/backlog-lane.logic.test.ts "const text = fs.readFileSync(fold, 'utf8'); expect(text).toMatch(/^Checked by: Fold-G1$/m);" and no hunk for docs/reports/reviews/task-375/plant-evidence.mjs anywhere in the change — the ruled three-line fixture edit is absent (chunk 1 of 1 holds the whole change), so the planted FOLD-CHECK.md that the new launch test reads has no source in the diff — add the plant of FOLD-CHECK.md to plant-evidence.mjs, or record a ruling that the path is unchanged and name where the fixture plants the file.
+
+DEFER severity=MED — eng-standards §14 "A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit**" — docs/specs/00-architecture/08_agents.md note "the copies in .claude/workflows.md, the review template packs and Spec 119 are not edited by this task." — the ruling that retires the cross-read adversary pass leaves three copies of the 11.2 wording still requiring it, so the same-commit rule is unmet — the note reports this to the operator but the drift stays until those copies are updated in this or a named follow-up commit.
+
+MET — acceptance #3 (c) — scripts/analysis/rule-lists.mjs "suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`" — a no-list one-file input is now always -p1, and a rule-list one-file input keeps its unsuffixed name.
+MET — acceptance #1 (a) — scripts/hooks/check-lane-close.mjs "if (fc === undefined) errors.push(`FOLD-CHECK.md is missing in ${dirNote} ...`)" — a build/fix board without the committed file is refused at both the launch dry run and the plan-prep gate.
+MET — Q3 "the Checked by name is the text up to the first comma or " (" or the line end" — scripts/hooks/check-lane-close.mjs "const who = by ? by[1].split(/,| \(/)[0].trim() : '';" — the name is parsed exactly as ruled, last line wins.
+MET — 137 note "the last `Verdict:` line reading `Verdict: PASS`" — scripts/hooks/check-lane-close.mjs "const vd = lastOf(/^[ \t]*Verdict:[ \t]*(.*?)[ \t\r]*$/gm);" plus "else if (vd[1] !== 'PASS')" — only a last Verdict of PASS passes, both orders tested.
+MET — Q6 "Q6 the clash with the lane and the assignees is kept" — scripts/hooks/check-lane-close.mjs "if (clash(who, i.laneName)) errors.push(...)" and the assignee loop — lane and assignee names are refused, clean names followed by a comma or bracket pass.
+MET — 137 note "the refusal prints the expected line" — scripts/hooks/check-lane-close.mjs "expected: ${line}" — printed for both the missing and the stale Plan line.
+MET — task gap 2 "without breaking outputs already committed" — scripts/analysis/rule-lists.mjs same `list &&` guard, locked by "control: with --list and one chunk the name stays unsuffixed" — compliance outputs committed unsuffixed still close.
+MET — RR-0351 and RR-0354 — docs/specs/00-architecture/08_agents.md "the cross-read adversary pass of 11.2 and the Cross-read Adversary row of the roster (:449) is no longer required after a fold; the agent stays in the roster and may be asked for." — matches the operator's :1647 and :1692 words.
+
+REJECT — RR-0354 "change the spec's wording" — accused of leaving the 11.2 body ("one cross-read adversary checks the folded decisions PAIRWISE") unchanged — the repo's dated-note convention is "prior text kept", and the note names the superseded sentence, so the body is superseded, not stale.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 26   Unmet: 3
+
+---
+⏱  145248ms (145.2s)
+📊 Tokens — total: 55759, input: 26269, output: 29490, reasoning: 28354

@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T22:44:14.829Z file_sha256=1ffd60012dcd9142a685e0b2f8b61eb00a7282e6cd038c75e25d29862e97552e prompt_sha256=f61b8e6396cd020e3cfa239146d77b92f7aa131f820576b1c7733ff9aa4f8471
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 and Q1 eight-path Files line "Q1 the Files line is final at eight paths (the six of the card plus docs/specs/00-architecture/08_agents.md and 137_mcqueue.md for the RR-0354 wording and the gate note; no new rule list, the nine lists are unchanged)" — CLAUDE.md:139 "is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360)." — the change edits CLAUDE.md, a ninth path outside the ruled Files line, so AC #6 "git diff --stat shows only the Files line" fails and the only basis quoted for it, RR-0360 (:1692), is not among the pasted decisions naming this task (RR-0351, RR-0352, RR-0354, RR-0355) — fix: drop the CLAUDE.md hunk into its own task, or have the grounder re-rule the Files line at nine paths before merge.
+BUG severity=HIGH — Files line and Q4 "Q4 plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)" — src/tests/backlog/backlog-lane.logic.test.ts:385 "const text = fs.readFileSync(fold, 'utf8');" — the change is stamped "part 1 of 1 chunk 1 of 1" and holds no hunk for docs/reports/reviews/task-375/plant-evidence.mjs, so the ruled edit is absent and nothing visible plants the "Checked by: Fold-G1" file that AC #1 test (a) reads — fix: land the ruled three lines in plant-evidence.mjs in this change, or name the file that plants it and withdraw Q4.
+MET — AC #2 "the task body edited by one word: exit 3, FOLD-CHECK.md Plan line stale, expected line printed" — src/tests/backlog/backlog-lane.logic.test.ts:831 — the one-word edit exits 3 with the stale FOLD-CHECK.md Plan line error and the expected line.
+MET — AC #3 "prints `<dir>/in-out-code-review-p1.txt` and writes only that" — scripts/analysis/rule-lists.mjs:426 — `files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : \`-p${n}\`, text })` makes a no-list one-file input -p1, and the test asserts only that file is written.
+MET — AC #4 "The close check on a lane with out-code-review-p1.txt ... exit 0" — src/tests/backlog/check-lane-close.logic.test.ts:453 — the p1 pair closes with status 0 while the renamed unsuffixed pair is still refused.
+MET — AC #5 "the unsuffixed compliance control" — scripts/analysis/rule-lists.mjs:426 — the `list &&` guard keeps a one-file rule-list output unsuffixed, so compliance outputs keep their name.
+MET — Q3 "the text after the colon up to the first comma or " (" or the line end, the last of a repeated line counts" — scripts/hooks/check-lane-close.mjs:649 — `by[1].split(/,| \(/)[0].trim()` cuts at the first comma or " (", and the last matching line is taken.
+MET — Q6 "the clash with the lane and the assignees is kept (the Grounder line rule)" — scripts/hooks/check-lane-close.mjs:653 — the lane clash and the per-assignee clash are both enforced.
+MET — Q7 "the FOLD-CHECK Plan line is copied from the gate's expected output after post and the first commit" — scripts/hooks/check-lane-close.mjs:661 — the refusal prints `expected: ${line}` for FOLD-CHECK.md as it does for GROUNDER-PLAN.md.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 2
+
+---
+⏱  140674ms (140.7s)
+📊 Tokens — total: 45952, input: 15920, output: 30032, reasoning: 29117

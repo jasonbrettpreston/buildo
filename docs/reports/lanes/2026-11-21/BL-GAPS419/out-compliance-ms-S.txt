@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T22:44:14.824Z file_sha256=376b8b5c79a36bf4d279c00a707351b26577bbe94c048f219abd38d4c64f3ffb prompt_sha256=8dd449eaa4ca19fffb98a8a3c28657b3f028b03da4e55f70907bbce8aec55ce3
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card AC #6 "git diff --stat shows only the Files line." and pasted plan note "the copies of the 11.2 wording in CLAUDE.md, .claude/workflows.md, packs/spec08.md and Spec 119 that this task does not edit" — CLAUDE.md:139 "is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360)." — the diff edits CLAUDE.md, a path outside the ruled Files line (Q1 "the Files line is final at eight paths") and outside AC #6, and RR-0360 is cited only inside the diff, not in the pasted decisions naming this task — revert the CLAUDE.md hunk or obtain a ruling that amends the Files line to include CLAUDE.md before merge.
+
+DEFER severity=LOW — pasted Q4 "plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)" — NONE — the material is stamped "chunk 1 of 1" yet carries no hunk for docs/reports/reviews/task-375/plant-evidence.mjs, so a ruled element of the change is absent — add the fixture hunk or drop that path from the Files line and state the fixture is unchanged.
+
+DEFER severity=LOW — card AC #3 "prints `<dir>/in-out-code-review-p1.txt` and writes only that" for "`lens-input --template .claude/review-templates/lens-code-review.md`" — src/tests/backlog/rule-lists.logic.test.ts:592 "const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);" — the acceptance criterion names the real template, the added test exercises only the fixture template TPL, so the named command is not shown green — add one case that passes .claude/review-templates/lens-code-review.md as --template.
+
+REJECT — RR-0354 "The spec wording on the cross-read adversary is changed" — that docs/specs/00-architecture/08_agents.md:477 still reads "**one cross-read adversary checks the folded decisions PAIRWISE and walks every checklist line for staleness**" so 11.2 still commands the pass — the added dated note at 08_agents.md:479 states the pass "is no longer required after a fold", and dated note with prior text kept is the form this same diff uses for 137_mcqueue.md, so the wording is changed without a rewrite.
+
+MET — card GAP 1 "makes the fold check a committed record that the pre-launch steps carry and the launch check can see, written by the grounder and never by the script" — scripts/hooks/check-lane-close.mjs:643 "const fc = textOf('FOLD-CHECK.md');" — the launch gate refuses a missing record and the backlog-lane test proves an ignored, uncommitted copy at board HEAD is not seen.
+MET — card GAP 2 "makes the tool and the close check agree on the name of a one-file review, without breaking outputs already committed" — scripts/analysis/rule-lists.mjs:426 "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — a no-list one-file input is now -p1 while a rule-list input keeps its unsuffixed name.
+MET — RR-0351 "Gap 3 we dont need the cross check." — CLAUDE.md:139 "is no longer required after a fold and stays available on request" — the requirement is removed and the agent stays available.
+MET — AC #1 "a board whose folder lacks FOLD-CHECK.md: `backlog-lane.mjs --dry-run` exits 3, stderr "FOLD-CHECK.md"" — src/tests/backlog/backlog-lane.logic.test.ts:379 "expect(bad.stderr).toMatch(/FOLD-CHECK\.md is missing/);" — the refusal and the "plan gate ok" control are both asserted.
+MET — AC #2 "the task body edited by one word: exit 3, FOLD-CHECK.md Plan line stale, expected line printed" — src/tests/backlog/backlog-lane.logic.test.ts:826 "expect(c3.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);" — the stale Plan line is asserted after the one-word edit.
+MET — 137 note "as the last such line of the file, alone on its line, `Plan: <task id> sha256:<12 hex>`" — scripts/hooks/check-lane-close.mjs:660 "const fp = lastOf(/^[ \t]*Plan:[ \t]*(\S+)[ \t]+sha256:([0-9a-f]{12})[ \t\r]*$/gm);" — the last-line, alone-on-line form is enforced and prose or backticked copies are refused.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 3
+
+---
+⏱  94096ms (94.1s)
+📊 Tokens — total: 33771, input: 15130, output: 18641, reasoning: 17503

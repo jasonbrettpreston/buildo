@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T22:44:14.823Z file_sha256=354af268dc4cb8e5166383a2d27b8d70a14eedf696aec71f902240877b9cfe9f prompt_sha256=3ec6dcbfab2cf2ce2a719fffa7eb125f8d8f77e741c701862d5ec88a9562ccdc
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC#6 / Files line — "git diff --stat shows only the Files line"; "Files: scripts/hooks/check-lane-close.mjs, scripts/analysis/rule-lists.mjs, ... docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md" (and ruled Q1 "the Files line is final at eight paths") — CLAUDE.md:139 "**Cross-read Adversary** (`general-purpose`, main tree — Spec 08 §10 roster, §11.2 trigger): is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360)." — CLAUDE.md is not one of the eight Files-line paths, so AC#6 is unmet and the hunk rests on RR-0360, which is not among the "Decisions naming this task" (RR-0351, RR-0352, RR-0354, RR-0355) — drop the CLAUDE.md hunk from this change, or get the Files line amended and RR-0360 onto the card before merge.
+
+DEFER severity=MED — ruled Q4 — "Q4 plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)" — NONE — the material is "chunk 1 of 1" of the whole change and holds no hunk for docs/reports/reviews/task-375/plant-evidence.mjs, a path that is on the Files line and ruled edited — include the edit or amend the Files line and Q4 before close.
+
+DEFER severity=MED — AC#1 — "With the file (Checked by: Fold-G1, Verdict: PASS, correct Plan line) it prints \"plan gate ok\"" — src/tests/backlog/backlog-lane.logic.test.ts:386 "const text = fs.readFileSync(fold, 'utf8');" and :389 "expect(lane(f, ['--dry-run']).status).toBe(0); // control: the planted evidence passes" — the new control reads docs/reports/reviews/<task>/FOLD-CHECK.md out of the fixture board, but no fixture change that writes that file appears in the pasted diff, so AC#1's passing control is not shown — show the fixture that plants FOLD-CHECK.md or the green run of the three files (AC#6).
+
+MET — AC#2 — src/tests/backlog/check-lane-close.logic.test.ts:817 "expect(c3.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);" — the one-word body edit refuses with the stale FOLD-CHECK Plan line and prints the expected line.
+
+MET — AC#3 — scripts/analysis/rule-lists.mjs:426 "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — a no-list one-file input is written as -p1 only.
+
+MET — AC#4 — src/tests/backlog/check-lane-close.logic.test.ts:456 "expect(ok.status, ok.stderr).toBe(0);" — the out-code-review-p1.txt pair closes green and the renamed unsuffixed pair stays refused.
+
+MET — RR-0351 — docs/specs/00-architecture/08_agents.md:478 "the cross-read adversary pass of 11.2 and the Cross-read Adversary row of the roster (:449) is no longer required after a fold; the agent stays in the roster and may be asked for" — the pass is removed as required and the agent kept.
+
+MET — ruled Q3 / the Checked-by form — scripts/hooks/check-lane-close.mjs:648 "const who = by ? by[1].split(/,| \(/)[0].trim() : '';" — name read to first comma or " (" or line end, last repeated line counted.
+
+MET — ruled Q6 — scripts/hooks/check-lane-close.mjs:654 "for (const a of i.assignees.filter((x) => nameKey(x) !== nameKey(i.laneName))) if (clash(who, a))" — the lane and assignee clashes are kept.
+
+MET — ruled Q8 — src/tests/backlog/rule-lists.logic.test.ts:606 "expect(n.written).toEqual(['in-out-code-review-r2-p1.txt']);" — a round file from lens-input is named -rN-p1.
+
+REJECT — RR-0354 "change the spec's wording" — that the change only appends a dated note and leaves 11.2's sentence "one cross-read adversary checks the folded decisions PAIRWISE" standing — "prior text kept" dated notes are the amendment form these specs use (every 137 note is written that way) and the note quotes the operator verbatim.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 3
+
+---
+⏱  54804ms (54.8s)
+📊 Tokens — total: 36364, input: 25337, output: 11027, reasoning: 9911

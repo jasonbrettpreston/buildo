@@ -1,0 +1,489 @@
+LIST orchestrator-doc17 sha256:c67971d61f97fcb48101cbd6349e5bf86635646ee69facd95c0998df3783e57b material sha256:0abfda1b5512dcd727364b3089757f2a77d0487fdfde70bcc202caa98b6f97ce part 1 of 1 chunk 1 of 1
+RULE LIST orchestrator-doc17 (backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["CLAUDE.md","docs/specs/00-architecture/08_agents.md","docs/specs/00-architecture/137_mcqueue.md","scripts/analysis/rule-lists.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+
+---
+id: doc-17
+title: Orchestrator readings (not rulings)
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Orchestrator readings (not rulings)
+
+Readings and register entries of the rulings register. They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18). The operator's rulings are the decisions.
+
+## Readings
+- RR-0001 2026-11-18 2026-11-18 · RULED: automatic policy checks and evidence-based task st: Infra freeze lifted for the named list only; scratch-side parts now, repo checks after push 6 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:725)
+- RR-0002 2026-11-18 2026-11-18 · Operator: lane tooling first; independent agent reviews: Lane tooling first (run-panel, guard, generated briefs, results gate, lane registry and pack cache, Spec 08 seat-K note draft) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:716)
+- RR-0003 undated open-questions.md:1100: Daylight is the product standard: small pages v8, landing v10+ (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1100)
+- RR-0004 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Web follows the same designed choose-lot pages and states; recent-search chips on web and phone (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0006 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : Loading screen setting is 35 s (LOAD.3: max raised to 35,000 ms) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0007 2026-11-18 2026-11-18 · Operator: See details with the main page; 35 s; keep the : See details is computed together with the main page, behind the loading screen from the search pick (not on tap) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:700)
+- RR-0008 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: RULED: a lot's numbers are computed on first open, track or owner input, then stored with their stamp for that user and others; no record for lots nobody opened; no all-lot headline fill (amends ST-5, FE-39, ST-6, MB-38) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704)
+- RR-0009 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Storage ruling confirmed by the operator ("1y 2y") (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0010 undated ONE-SITTING.md:22: Open question 12 (ONE-SITTING.md): Gap Q1 (1.4): fix the two search-parser defects (street direction guard, unit-token strip) before launch? (a) yes, with (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:22)
+- RR-0011 undated ONE-SITTING.md:65: Open question 35 (ONE-SITTING.md): Gap Q2 (LS.11): W5 (choose your parcel) on the web: (b) defer until the web has a map ruling and keep the web live switc (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:65)
+- RR-0013 2026-11-17 2026-11-17 ~08:40 · Operator rulings on MB-REVIEW-20261117 section 6: Launch means users on the live customer report, not tester preview (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:568)
+- RR-0015 undated plan.md:219: Colour ruling D-1 (2026-11-14): the built report must look like the Daylight B mock; this is a colour ruling, not a whole-layout approval (~/Buildo-scratch/mcfrontend/MF-83/plan.md:219)
+- RR-0016 undated open-questions.md:866: Earlier approval: dark mock v21 (2026-11-10); superseded for colour, summary, gallery, lot views and See details sheets by the later theme and rulings (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:866)
+- RR-0017 undated open-questions.md:1094: Theme ruled: Daylight B (light) with the summary at the top (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0018 undated DELTA.md:10: Report base confirmed by the operator: Report Theme B · Daylight model, identical to pub/B.html (report-delta/DELTA.md:10); the later rulings are applied on top (CHANGES.md) (~/Buildo-scratch/lanes-20261117/report-delta/DELTA.md:10)
+- RR-0019 undated CHANGES.md:1: Page-level rulings after the brief (theme, brand, summary, units switch, one lot-size box, one disclaimer) are in CHANGES.md (~/Buildo-scratch/lanes-20261117/req-rulings/CHANGES.md:1)
+- RR-0020 undated open-questions.md:1094: Theme: Daylight B (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1094)
+- RR-0021 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word for a number with no stored row: Not yet estimated (amends the earlier label) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0022 undated open-questions.md:1073: One short disclaimer everywhere (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1073)
+- RR-0023 undated ONE-SITTING.md:64: Open question 34 (ONE-SITTING.md): Storage D1 and D2 with gap Q12: name the wait a user may have on See details and after typing the house in (only (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:64)
+- RR-0024 undated ONE-SITTING.md:15: Open question 5 (ONE-SITTING.md): MB-44 order and the three dated notes W needs (RESOLVE R10, R11, R12), plus wiring What-we-checked into the route (gap Q (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:15)
+- RR-0025 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Word for a number with no row yet: "Not yet evaluated" (the mock); never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0026 2026-11-18 2026-11-18 · Operator direction: page-level lot information in increme: The report page parts every scenario shares (header, summary at the top, About this lot rows and details, lot-size box, footer) are listed under increment 1 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:674)
+- RR-0027 undated MCBYLAWS-QUEUE.md:88: Increment 2 adds the main-wall share caps only (2026-11-03, Q1 option a); street-side yard and front-yard averaging were already in (origin:.cursor/MCBYLAWS-QUEUE.md:88)
+- RR-0029 undated open-questions.md:1124: Can you build bigger shows Not yet evaluated until MB-38/MB-44; no feeding of the legacy variance model (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0030 2026-11-17 2026-11-17 10:05 · Operator: decision list DECISIONS-20261117-1100 "ap: Status word where no row is stored: Not yet estimated; never 0 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:592)
+- RR-0031 undated open-questions.md:1145: FSI cap line stays in See details (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1145)
+- RR-0032 undated ONE-SITTING.md:23: Open question 13 (ONE-SITTING.md): Gap Q3 (1.1): customer rule for lots under 50 m2 or over 5,000 m2: (a) show the not-evaluated state with one closed reas (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:23)
+- RR-0033 undated ONE-SITTING.md:27: Open question 17 (ONE-SITTING.md): Gap Q8 + Q11 (1.5, and the permits.storeys chain 7.7, 7.8, 7.9, 7.23): serve null for storeys 0 (key kept, Spec 100 Tier (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:27)
+- RR-0034 undated ONE-SITTING.md:35: Open question 20 (ONE-SITTING.md): Q-COA and Q-COAN (CO.1, CO.2: on the critical path): (a) status-only CoA rows land in the increment 8 seed window and nu (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:35)
+- RR-0035 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Every option has a summary item at the top: a smaller summary photo + its Max Build estimate (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0036 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: On "see concepts" a smaller copy of the main image stays above the gallery (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0037 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Neighbours reach is per scenario; the houseplex reach is larger (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0038 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Lot views draw the FITTED house (storeys_fit, footprint_fit_m2, depth_fit_m, height_fit_m), not the by-law maximums (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0039 2026-11-18 2026-11-18 · Operator: the current report (answers on the Current Repo: Concept photos: 3 per scenario, chosen by scenario, lot shape and lot size (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:670)
+- RR-0040 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Concept photos per lot-size band small / medium / large (band limits are settings, values owed), with lot shape (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0041 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: Image hold R-IMG1..3 is LIFTED: the image tasks (GAP.2) are ready (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0042 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: "Most space": the tag goes on every option that has the most space; a tie goes to the lowest option number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0043 2026-11-18 2026-11-18 · Operator answers to the gap-task questions (inc-plan/gaps: The cost panel "Calculated <date>" line is dropped (costs are updated regularly) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682)
+- RR-0045 undated MCBYLAWS-QUEUE.md:89: M-344 moves from increment 3 to the sixplex increment (2026-11-03, Q5 b) (origin:.cursor/MCBYLAWS-QUEUE.md:89)
+- RR-0046 undated 78_optimal_lot_configuration.md:848: Minimum units is 2 (gap Q4 closed) (origin:docs/specs/01-pipeline/78_optimal_lot_configuration.md:848)
+- RR-0047 undated open-questions.md:1150: From the side: the houseplex is drawn with its units (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1150)
+- RR-0048 undated open-questions.md:1124: Houseplex Can you build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0049 undated ONE-SITTING.md:24: Open question 14 (ONE-SITTING.md): Gap Q5 (3.2): hold the houseplex roof rows B9.8, B9.9, B9.10 out of v1 (payload_only)? (a) yes; (b) show them. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:24)
+- RR-0050 undated MCBYLAWS-QUEUE.md:90: Increment 4 decision list ruled 2026-11-11 (record mcbylaws/inc4/DECISIONS-v2.md) (origin:.cursor/MCBYLAWS-QUEUE.md:90)
+- RR-0051 undated open-questions.md:805: One lot-size box recalculates every option; no per-card Improve accuracy button (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0052 undated open-questions.md:1124: Build bigger shows Not yet evaluated (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1124)
+- RR-0053 undated ONE-SITTING.md:26: Open question 16 (ONE-SITTING.md): Gap Q7 (4.1): fold the six small report items into the existing What lists (MB-94 c, MF-85) instead of new rows; and are (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:26)
+- RR-0054 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) is a BASEMENT secondary suite computed from the fitted house; the by-law maximum (150.10.40.40(1), 45 percent of the interior floor area) is disclosed in See details (closes Q-GAP-4) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:686)
+- RR-0055 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: Suite Size (up to) = min(basement suite size, 45% of the house's interior floor area per 150.10.40.40(1)); the cap is applied to the number (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:688)
+- RR-0056 2026-11-18 2026-11-18 · Operator: "Suite Size (up to)" on the house with a second: The basement suite size is computed from the fitted house footprint (footprint_fit_m2), then capped at 45% of the interior floor area (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:690)
+- RR-0057 2026-11-18 2026-11-18 · RULED: storage computed on first open, then stored (amend: Suite Size See details disclosure is the one-line version: "Basement suite, inside the walls. Toronto limits a secondary suite to 45% of the house's interior floor area: {X} m² on this lot." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:707)
+- RR-0058 undated Operator 2026-11-14 (verbatim: "This is not very good. We need the bui: Garden-suite face = two size and cost pairs, gain not on the card (2026-11-14) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:235)
+- RR-0059 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Operator direction 2026-11-17: fix the garden-suite card with MF-ADDON as its design (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:641)
+- RR-0061 2026-11-17 2026-11-17 ~11:50 · Decisions 2-4 after the exact-wording panel (lane : The 80,682 addon_cand rows question (Q2 (a)); the restore ruling is open (q7) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:614)
+- RR-0062 undated ONE-SITTING.md:14: Open question 4 (ONE-SITTING.md): 5.11: add the garden-suite split speed-up (same outputs, byte-identical, measured on 100 lots) before the MB-38 fill, an (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:14)
+- RR-0063 undated ONE-SITTING.md:16: Open question 6 (ONE-SITTING.md): Garden-suite card and binding (RESOLVE R2, R3, R4, R9): A1a classes and texts as written; split outputs bind by the new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:16)
+- RR-0064 undated ONE-SITTING.md:17: Open question 7 (ONE-SITTING.md): Stop storing the 14 addon_cand working rows (RESOLVE R5, R6, R7): new (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:17)
+- RR-0065 undated ONE-SITTING.md:18: Open question 8 (ONE-SITTING.md): RESOLVE R8 (offered extra): also stop storing the 26 further internal rows read by nothing? y / n. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:18)
+- RR-0066 undated ONE-SITTING.md:36: Open question 21 (ONE-SITTING.md): Q-5-COST (5.6): what prices the House tile on a garden-suite card? (a) the house type's existing cost line on main_gfa_w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:36)
+- RR-0067 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: All 59 increment 6 recommendations approved (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0068 2026-11-17 2026-11-17 ~11:20 · Operator ruling: D7 once (decisions/DECISIONS-2026: The D7 recapture runs once, on the test stack; no dev run (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:602)
+- RR-0069 2026-11-16 2026-11-16 operator literal ruling: Renovation card carries the lawfully existing owner question (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:470)
+- RR-0070 undated open-questions.md:805: No per-card Improve accuracy button on renovation cards (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:805)
+- RR-0071 undated ONE-SITTING.md:25: Open question 15 (ONE-SITTING.md): Renovation (gap Q6, inc 6 R2, R3): add the two dated notes naming RE and RF on the increments table row 6 and on LC-16, (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:25)
+- RR-0072 undated ONE-SITTING.md:37: Open question 22 (ONE-SITTING.md): Renovation cost line (inc 6 R1, R6-COST; also the semi page 7.25): (a) priced inside the on-demand one-lot path; (b) pri (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:37)
+- RR-0073 undated ONE-SITTING.md:13: Open question 3 (ONE-SITTING.md): Storage (ST-4, ST-5, ST-6): keep as ruled and record the three corrected-fact notes after push 6? y / change. (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:13)
+- RR-0074 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: Increment 6 list approved, 6c items included (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:623)
+- RR-0075 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: MB-90 cost-rate sub-points R-1..R-4 are not in the plan now (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:637)
+- RR-0076 undated ONE-SITTING.md:19: Open question 9 (ONE-SITTING.md): Increment 6c groups 1-7 and call-out A: approve all seven group lines, with the 6c notes joining the push-6 records comm (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:19)
+- RR-0077 undated ONE-SITTING.md:20: Open question 10 (ONE-SITTING.md): O-15 (e) (6c.4): is the keyed Drive set a candidate pool for the proof draw? (i) yes, with the three held map commits' l (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:20)
+- RR-0078 undated ONE-SITTING.md:21: Open question 11 (ONE-SITTING.md): Refresh lines (6c.23, 6c.24, 6c.26): six rows get status wording (MF-86, MF-66, MB-109, MF-87, MF-69, MB-74 read LATER w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:21)
+- RR-0079 undated ONE-SITTING.md:11: Open question 1 (ONE-SITTING.md): AL.9 (new, integration pass): fix the one rehearsal-script defect (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:11)
+- RR-0082 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: The increment 7 ON word comes before the single Layer 3 recapture (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:628)
+- RR-0083 2026-11-17 2026-11-17 ~13:40 (clock-corrected) · Operator: increment 6 decision s: J3 reach-settings migration is required (2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:634)
+- RR-0084 undated ONE-SITTING.md:12: Open question 2 (ONE-SITTING.md): J4 (MB-90 cost-rate refresh, staged migration 331 with the 106.2 index rebase): run it now, or move J4 and MB-90 later w (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:12)
+- RR-0085 undated MCFRONTEND-QUEUE.md:639: A coa_required sixplex card has no as-of-right headline; its figure shows in the CoA tier only (origin:.cursor/MCFRONTEND-QUEUE.md:639)
+- RR-0089 undated ONE-SITTING.md:33: Open question 18 (ONE-SITTING.md): Increment 8 rulings 8.15a, 8.17, 8.18: (A) the sixplex ON edit lands in push 9a before the J7 rehearsal; (A) the five MB (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:33)
+- RR-0090 undated ONE-SITTING.md:34: Open question 19 (ONE-SITTING.md): Q-S7FACE: what does a coa_required sixplex card show besides the badge? (a) badge only, no figure, no cost (amends :639) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:34)
+- RR-0091 undated ONE-SITTING.md:66: Open question 36 (ONE-SITTING.md): Gap Q10 and the J9 copy-forward form (8.25) and prereg numbering (8.3): record the plausibility verdicts (Q10 a); copy-f (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:66)
+- RR-0093 2026-11-15 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready: Primary measure by building: suite-only cases score the suite against the suite max (2026-11-15) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:340)
+- RR-0094 undated ONE-SITTING.md:44: Open question 24 (ONE-SITTING.md): Increment 9 R1: one dated M-362 amendment with three sub-rulings: (F2) a type with no stored same-type class leaves the (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:44)
+- RR-0095 undated ONE-SITTING.md:45: Open question 25 (ONE-SITTING.md): Increment 9 R3: how is the CoA route scored? (a) by approval; (b) by need (coa_required correct iff the notice cites a p (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:45)
+- RR-0096 undated ONE-SITTING.md:46: Open question 26 (ONE-SITTING.md): Increment 9 D-11 (9.0a): the CoA building column is filled (a) by the loader from the clause-family table; (b) loaded fr (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:46)
+- RR-0097 undated ONE-SITTING.md:47: Open question 27 (ONE-SITTING.md): Increment 9 R2 (ask after the O-15 (e) row above): record the closeness-threshold RULE now (median and p25 of the 25 on (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:47)
+- RR-0098 undated ONE-SITTING.md:38: Open question 23 (ONE-SITTING.md): Group approve lines under rulings already given: increment 8 groups A-H and the removal of 8.7 and 8.24; increment 9 gro (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:38)
+- RR-0100 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 compression runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0101 undated ONE-SITTING.md:53: Open question 28 (ONE-SITTING.md): O-15 (a) draw form c2, (b) floor 3 per modelled stratum with N as D-10 item 2, (c) you type the seed, (f) one re-key: y (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:53)
+- RR-0102 undated ONE-SITTING.md:54: Open question 29 (ONE-SITTING.md): Push 11: one landing set or two? (i) two windows, storage set first (10.3, the MB-111 migration, the 10.6 note), proof s (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:54)
+- RR-0103 undated ONE-SITTING.md:55: Open question 30 (ONE-SITTING.md): D-4 and D-10 (asked once, at the 9.3 sitting): maxima for the drawn proof lots by (A) a read-only snapshot file, or (B) (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:55)
+- RR-0104 2026-11-16 2026-11-16 operator: compression deferred, ST-3 line 1,650 provisional: MB-111 runs after increment 9 and before launch (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:430)
+- RR-0105 undated McSTORAGE-RULINGS.md:130: All-lot store is one headline record per parcel and option (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:130)
+- RR-0106 undated MCFRONTEND-QUEUE.md:498: MF-51 and MF-59 are on the launch list (origin:.cursor/MCFRONTEND-QUEUE.md:498)
+- RR-0107 undated ONE-SITTING.md:61: Open question 31 (ONE-SITTING.md): MB-109 lot views (L.1, L.2, L.3): are lot views in the live layout at launch? If yes: the dated M-465 (7) amendment nami (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:61)
+- RR-0108 undated ONE-SITTING.md:62: Open question 32 (ONE-SITTING.md): MB-100 launch call (L.4): the 39,267 lots gated whole-lot as exception_not_authored: accept and disclose, or build first (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:62)
+- RR-0109 undated ONE-SITTING.md:63: Open question 33 (ONE-SITTING.md): CoA fit and cost (Q-UNFREEZE, Q-UBOUND, Q-COACOST, Q-CORERUN): (a) unfreeze no AV3 rows; store u = 1.00 for multiplex (r (~/Buildo-scratch/lanes-20261117/inc-plan/integrate/ONE-SITTING.md:63)
+- RR-0110 undated infra-freeze-project-first.md:12: Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record) (~/.claude/projects/-Users-brettpreston-macmini/memory/infra-freeze-project-first.md:12)
+- RR-0111 undated 137_mcqueue.md:112: Permit step conversion stays frozen (Spec 137 rule 11) (origin:docs/specs/00-architecture/137_mcqueue.md:112)
+
+## Register entries (operator words as logged, kind entry)
+- RR-0112 2026-11-17: "let's do your recommendation - what a mess - please resolve..." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:640)
+- RR-0113 2026-11-17: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:642)
+- RR-0114 2026-11-17: "Each increment represents a scenario for the report? ... We are computing each result on demand - this is also new to me. In the context of " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:643)
+- RR-0115 2026-11-17: "D7 fix if you grounded this in reality and its complaint" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:645)
+- RR-0116 2026-11-17: "We may need to make different choices about storage based on teh best user outcome? Clearly, you fogot about what we were trying to achieve " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:646)
+- RR-0117 2026-11-17: "I am open to this plan - re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:648)
+- RR-0118 2026-11-17: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integratio" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:650)
+- RR-0119 2026-11-17: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652)
+- RR-0120 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:654)
+- RR-0121 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:660)
+- RR-0122 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:664)
+- RR-0123 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:668)
+- RR-0124 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:672)
+- RR-0125 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:676)
+- RR-0126 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:680)
+- RR-0127 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:684)
+- RR-0128 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:692)
+- RR-0129 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:698)
+- RR-0130 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:702)
+- RR-0131 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:709)
+- RR-0132 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:714)
+- RR-0133 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:718)
+- RR-0134 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:723)
+- RR-0135 2026-11-18: "What do we call the lane policy - so you actually follow the policies? Let's start increment 1a - with the panels on all the tasks, build pa" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:728)
+- RR-0138 2026-11-18: "1. let's push it 2. yes resort 3. add open decision to the artifact where I can answer them.  4. y  - Is there another approach to my pushes" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:732)
+- RR-0142 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:737)
+- RR-0148 2026-11-18: "Are yo confident you can do this? Why do you want your own repo now? Let's just build them right way - what's wrong with that? something tha" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:742)
+- RR-0151 2026-11-18: "Of course, yes to re-use obviosouly, yes drop - run the panel as always" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:749)
+- RR-0153 2026-11-18: "yes and it should pull the next task as something completes or move to the next task if a question remains" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:753)
+- RR-0155 2026-11-18: "Panel decides" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:757)
+- RR-0158 2026-11-18: "y - what a mess - why is the panel revisting every task - we are rebuilding the weird scratch tooling proposal into gates? this was the focu" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:763)
+- RR-0160 2026-11-18: "you added the question about selecting the new or open tasks within the increment - normally you just stop and never thinkg about it.  Queue" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:767)
+- RR-0171 2026-11-18: "wait for what numbers" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:772)
+- RR-0173 2026-11-18: "Even if the load completes quicker the animation still needs to be complete.. the button shows when its ready - anytime after the animation " (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:778)
+- RR-0175 2026-11-18: "so right now the animation takes 23 seconds - this goes to completion - the buttononly appears when the load is done - that would be at 36 s" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:782)
+- RR-0177 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:788)
+- RR-0181 2026-11-18: "yes these need to be built 2. teh search needs to idenfity if its an address with two parcels etc or mis address or its potentially a semi l" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:795)
+- RR-0183 2026-11-18: "Let's see the update incra 1b - with the new rulings and the new tasks - also need a semi question page similar to a min page" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:800)
+- RR-0185 2026-11-18: "y and your not following the McQueue rules in how to provide information to deepseek and others standard rules - which i kow you dont like t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:804)
+- RR-0187 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:808)
+- RR-0189 2026-11-18: "close the gap.  fix teh register - for your own messages you never cite any rulings or say its unveridied thats just lip service" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:812)
+- RR-0191 2026-11-18: "McRecommendations I don't think this is enough - the recommendation should be framed with an explanation that speaks to what I know the fron" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:816)
+- RR-0194 2026-11-18: "Push them.  We need to make some progress" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:822)
+- RR-0197 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:828)
+- RR-0199 2026-11-18: "run a review on this and install backlog - we also use docker - this wouldn't be a big deal either - how do we differentiate between recomme" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:832)
+- RR-0201 2026-11-18: "yes move it - I need to be able to see the board and the categories and the decisions and the research ids for each" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:836)
+- RR-0204 2026-11-18: "" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:842)
+- RR-0206 2026-11-19: "we need to use all of this.  Please add.  You should also review the project itself and the current process.  The current queue is represent" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:846)
+- RR-0209 2026-11-19: "Let's stick with McLane for a name." (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:851)
+- RR-0211 2026-11-19: "as you may have learned one of the is understandability - this has two parts simple and no scope creep.  How large is this build now? Are yo" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:865)
+- RR-0213 2026-11-19: "Opus thought this plan replaced all of Incra-1a and we could move to Incr-1b is this true - you may need to also on the board after the move" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:856)
+- RR-0216 2026-11-19: "As a second image task can you create New build professional concept images for each scenario we need three each - but for the detached hous" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:860)
+- RR-0218 2026-11-19: "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the t" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:870)
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 9107277c0163a14c4b1d3b1cad2859a80db08f97..464a3853fde3d6797d6b029133a8730ed72c03a0 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -136,11 +136,11 @@ Triggered as named steps inside WF1, WF2, WF3 — not standalone.
+ 
+ **Trigger — Reality-Check:** runs in **pipeline WF1 / WF2 / WF3 that add or change any enriched/derived field** (Spec 08 fires it by SUBJECT MATTER, not table — the old "parcel field" wording had a documented miss on record) — plan-altitude on `.cursor/active_task.md`, output-altitude on the re-run data. Skip for pure plumbing (chain wiring, manifest, non-data refactors).
+ 
+-**Cross-read Adversary** (`general-purpose`, main tree — Spec 08 §10 roster, §11.2 trigger): fires after ANY fold, before implementation — checks the folded decisions PAIRWISE for collisions, walks every checklist line for staleness, verifies the tests still cohere as a suite. Paired with a grounder that RE-EXECUTES every claim in the fold.
++**Cross-read Adversary** (`general-purpose`, main tree — Spec 08 §10 roster, §11.2 trigger): is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360). The grounder still RE-EXECUTES every claim in the fold.
+ 
+ **Idempotency Lens** (`general-purpose`, main tree — Spec 08 §10 roster): fires on any plan/diff touching a destructive write, backfill, transaction boundary, re-runnable script, or upsert. Hunts the replay/transaction/collision class: same-input-twice state, what-runs-outside-the-txn, run-2-vs-run-1's-artifacts, and fold-decision collisions. Provenance: F18, the backup-atomicity race, the stuck-interim-accretion collision — each unseen by every other seat.
+ 
+-**Grounded Verification Protocol (Spec 08 §11, Backend/Pipeline-calibrated):** no unexecuted executable claim in a plan or fold · fold-validation (grounder + Cross-read Adversary) after every fold · locks proven both directions before red is claimed · tests live IN the plan and the plan panel reviews them · CLI models are whole-file audit generators, never diff reviewers, always grounder-adjudicated. Frontend nuance: §11.5-FE — execute the domain's executable surface; never demand queries of a design judgment.
++**Grounded Verification Protocol (Spec 08 §11, Backend/Pipeline-calibrated):** no unexecuted executable claim in a plan or fold · fold-validation (the grounder re-checks the fold; for a plan launch it leaves FOLD-CHECK.md) · locks proven both directions before red is claimed · tests live IN the plan and the plan panel reviews them · CLI models are whole-file audit generators, never diff reviewers, always grounder-adjudicated. Frontend nuance: §11.5-FE — execute the domain's executable surface; never demand queries of a design judgment.
+ 
+ **Panel sizing:** **Pipeline-domain WF1/WF2 run the 5-reviewer panel** (Gemini + DeepSeek + Code Reviewer + Observability + Integration), **+ Regression Guardian when the diff touches existing code** (always fires for WF2, which by definition alters existing code; conditional for WF1), **+ Reality-Check when the diff adds/changes an enriched parcel field**. Non-pipeline WF1/WF2 run the 3 (Gemini + DeepSeek + Code Reviewer) + Guardian (same condition). WF3 = Independent + Regression Guardian (adversarial on request) **+ Reality-Check when it touches enriched parcel data**.
+ 
+diff --git a/docs/specs/00-architecture/08_agents.md b/docs/specs/00-architecture/08_agents.md
+index 7605b40151b4e7a3f15d11c3b3f5c72c1f418a91..75bcdbeded2c7bac650248050e8809e45a690cac 100644
+--- a/docs/specs/00-architecture/08_agents.md
++++ b/docs/specs/00-architecture/08_agents.md
+@@ -475,6 +475,8 @@ A plan or fold may not contain a claim that COULD be executed but wasn't: a data
+ ### 11.2 Fold-validation is a STEP, not a courtesy
+ After folding any review round, and BEFORE implementation: **one grounder re-executes every claim in the fold** + **one cross-read adversary checks the folded decisions PAIRWISE and walks every checklist line for staleness**. Folds are read as a SET — the worst defects are collisions between corrections adopted separately (`tasks/lessons.md:117`). Sub-rules with incident bodies: **a fold must be exercised in every execution mode the file has** (the C4 `!pool` guard redded plain-Husky mode — cross-reading could not catch it, only running could) · **an expanded edit set kills every restated scope claim** ("the three SET terms. Nothing else." survived one fold past its own falsification).
+ *Yield:* C4 fold-validation — 2 blocking (four-chain watchdog scope; the dropped `PIPELINE_CHAIN` harness line). C7 fold-validation — 10 defects incl. an unwritten fourth SQL expression and a falsified census query. Orchestrator folds averaged ~5 defects each across the session; the validation pass caught every one at the cost of two agents.
++
++Dated note 2026-11-21 (M-246, prior text kept; task-419 LAUNCH.GAPS · Backlog · lane BL-GAPS419; RR-0351, RR-0352, RR-0354, RR-0360 (decision-145); operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1647 "Gap 3 we dont need the cross check.", :1651 "Let's resolve 1 and 2 now.", :1663 "change the spec's wording", :1692 "change the claude.md to remove the cross check.  The agent stays available on request is fine froma wording perspective"): the cross-read adversary pass of 11.2 and the Cross-read Adversary row of the roster (:449) is no longer required after a fold; the agent stays in the roster and may be asked for. The grounder's re-execution of every claim in the fold stays, and, for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md, written by the grounder beside GROUNDER-PLAN.md (the launch check and the plan-prep commit require it: see the Spec 137 note of the same date; a fold checked at a later round leaves no required record). SCOPE: the operator's words name the cross check and the spec's wording; that the pass is no longer required anywhere, not only after a plan fold, is the orchestrator's reading (decision-139), not a ruling. The wording "the agent stays in the roster and may be asked for" is approved by RR-0360 (:1692). CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143); the copies in .claude/workflows.md, the review template packs and Spec 119 are not edited by this task.
+ 
+ ### 11.3 Red-first mechanics
+ Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed — a lock that was never red against the defect it names is not a lock (the 2026-08-13 envelope regex matched nothing; its "red" was the not-found branch). Red must land at the DESIGNED assertion; red-for-the-wrong-reason is a test defect found NOW. Survive-the-fix locks (green-both) are stated as such per case.
+diff --git a/docs/specs/00-architecture/137_mcqueue.md b/docs/specs/00-architecture/137_mcqueue.md
+index 8473f0deaca970a3849fbdd5fbfec664d1c09b1e..95da45a4ca79c59ebbb12d8e0b10565f86a8aad4 100644
+--- a/docs/specs/00-architecture/137_mcqueue.md
++++ b/docs/specs/00-architecture/137_mcqueue.md
+@@ -139,6 +139,8 @@ Dated note 2026-11-20 (M-246, prior text kept; correction to the task-410 note a
+ 
+ Dated note 2026-11-21 (M-246, prior text kept; Rule 3 and Rule 10: task-375 FIX.TOOLS, lane BL-GATE375; operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1517 "don't makr the task complete until it actually works", :1572 (his message pasting back "Item 10: a grounder checks the folded plan before any build starts, so I cannot launch a build on an unchecked plan."), :1595 "isnt your incentive to close despite making the necessary changes. shouldht teh incentive to make the changes so teh work actualyl works"): the close check now also recomputes each lens output's prompt hash with the committed review context (docs/reports/reviews/<task>/context-rN.md) and refuses a close whose task references lack the repo copies of REPORT.md, GROUNDER.md and, when the lane directory holds one, TRIAGE.md (it prints the exact `backlog task edit --add-ref` command); the take adds the compliance:<list id> references and `rule-lists.mjs check-tasks` prints the command for the open tasks. The LAUNCH of a build or fix task (`scripts/analysis/backlog-lane.mjs`, before the take) runs `planGateErrors` on the board HEAD: the plan evidence folder, one plan compliance output per resolved list over the plan sections of the committed context, GROUNDER-PLAN.md of a separate grounder with a verdict per finding, the required seat reports (Integration, Reality-Check, and Regression when the Files line names a tracked path), an outcome for every CONFIRMED or CONFLICT finding (mode plan: folded, task, ruling, wontfix, pile), the round block on the task and the Plan hash line, which is the hash of the task as it is at launch. It does not touch lanes already launched, tasks of other types, or a raw `backlog task edit -s RUNNING` take. WHAT THE GATE CANNOT PROVE: that the grounder or any seat ran or is a different agent (names and files are compared, an omission guard of the same kind as task-410's, 08_agents.md:239 note; forgery routes are owned by tasks 401 and 402), that the fold is complete beyond "every CONFIRMED finding has an outcome and a folded quote is in the text", that a present quote is a real fix, and that the plan is unchanged after launch. The mechanism (names, hash, forms) is the orchestrator's design on the orders above; the operator's words name only the refusal on an unchecked plan.
+ 
++Dated note 2026-11-21 (M-246, prior text kept; task-419 LAUNCH.GAPS · Backlog · lane BL-GAPS419; RR-0351, RR-0352, RR-0354, RR-0360 (decision-145); operator, verbatim, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1647 "Gap 3 we dont need the cross check.", :1651 "Let's resolve 1 and 2 now.", :1663 "change the spec's wording", :1692 "change the claude.md to remove the cross check.  The agent stays available on request is fine froma wording perspective"): the launch check of the note above (see the Spec 08 note of the same date, section 11.2) (`planGateErrors`, scripts/hooks/check-lane-close.mjs) also requires docs/reports/reviews/<task>/FOLD-CHECK.md, committed beside GROUNDER-PLAN.md and written by the separate plan grounder, never by a script: a line `Checked by: <name>` (the text after the colon up to the first comma or " (" or the line end; not the lane and not an assignee), the last `Verdict:` line reading `Verdict: PASS`, and, as the last such line of the file, alone on its line, `Plan: <task id> sha256:<12 hex>` equal to the hash of the task as it is at launch (the refusal prints the expected line). The body is free; the gate reads the form. WHAT IT CANNOT PROVE: that the checks were run, that the name is a real separate agent, or that the PASS is true. It does not touch tasks already launched or prepped before this note (the gate runs at the launch and at the plan-prep commit dry run only; none was prepped and unlaunched). In the same change the lens-input tool (scripts/analysis/rule-lists.mjs) names a lens input made with no rule list -pN always, so a one-file diff gives -p1: the close check reads an unsuffixed out-<lens>.txt as a review of the raw diff and only -pN outputs as tool-made inputs, so the tool's own output for a small diff was refused; a rule-list input keeps its unsuffixed name for one file, and committed outputs are neither blessed nor broken.
++
+ Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1517`: "don't makr the task complete until it actually works"): a lane build or fix task's closing commit is refused unless the lane directory holds TRIAGE.md with one outcome line per CONFIRMED or CONFLICT id of GROUNDER.md (forms fixed, task, ruling, wontfix, pile; see the Spec 08 rule 6 note of the same date) and the task's Final Summary shows the round line and the CRITICAL, HIGH and MED outcomes. TRIAGE.md is required only when GROUNDER.md holds such an id. Rule 3 (the two-commit close) is otherwise unchanged.
+ 
+ ## 5. The weekly snapshot
+diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
+index ac3c4d3dd664f34485b484dfece5a0e9c4557fd0..9bfc6f3ad31f44f7a7767c6017fecdb034086eb7 100644
+--- a/scripts/analysis/rule-lists.mjs
++++ b/scripts/analysis/rule-lists.mjs
+@@ -361,7 +361,7 @@ export function lensPromptHash({ templateText, inputText, context = NO_CONTEXT }
+  * V2.WHOLE (task-410): when the material leaves no room for a list part and is a git diff, the TOOL cuts it at file boundaries into chunks (packed in diff order, each at most the room
+  * left beside the list part); every chunk goes against every list part, files are -p1..-pN chunk by chunk (N = chunks x list parts), and each input is stamped "chunk c of m" with
+  * its path list. One file alone over the room is refused naming the file and its size. A diff is always stamped (chunk 1 of 1 when it fits), so the close check reads paths from the stamp.
+- * `list` null (a non-compliance lens template): the same chunks with an empty list part, id "none".
++ * `list` null (a non-compliance lens template): the same chunks with an empty list part, id "none"; such an input is always named -pN, even when it is the only file (task-419).
+  */
+ export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {
+   const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
+@@ -422,7 +422,8 @@ export function buildLensInputs({ id, list, root, material, templateFile, contex
+     const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: context, dataContext: '(no live-DB context provided)' }).length;
+     if (prompt > max) throw new Error(`list ${id}: part ${i + 1} would be ${prompt} characters, over the ${max} bound`);
+     const n = ci * parts.length + i + 1;
+-    files.push({ suffix: files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });
++    // task-419: a rule-list input that is one file keeps the unsuffixed name; a no-list input is always -pN (the close check reads an unsuffixed out-<lens>.txt as a review of the raw diff)
++    files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });
+   }));
+   return files;
+ }
+diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
+index dc94b8f3468adb193398dc78d9b8a6837847e0c1..556bd01312806a2825a2b8475779bd0bb3b15aeb 100644
+--- a/scripts/hooks/check-lane-close.mjs
++++ b/scripts/hooks/check-lane-close.mjs
+@@ -639,6 +639,27 @@ function planGateInner(i) {
+     const refs = [`${dir}/GROUNDER-PLAN.md`, ...(textOf('TRIAGE-PLAN.md') !== undefined ? [`${dir}/TRIAGE-PLAN.md`] : []), ...seats.map((x) => x.path)];
+     for (const rp of [...new Set(refs)]) if (!have.has(rp)) errors.push(`${id}: the task's references lack ${rp}: backlog task edit ${id} --add-ref ${rp}`);
+   }
++  // task-419: the grounder's fold check (docs/reports/reviews/<task>/FOLD-CHECK.md) is a committed record beside GROUNDER-PLAN.md; the gate reads its form, never its body
++  const fc = textOf('FOLD-CHECK.md');
++  const form = 'write "Checked by: <name>", "Verdict: PASS" and last "Plan: <task id> sha256:<12 hex>"';
++  if (fc === undefined) errors.push(`FOLD-CHECK.md is missing in ${dirNote} (the separate grounder writes it beside GROUNDER-PLAN.md after checking the folded plan: ${form})`);
++  else {
++    const lastOf = (re) => [...fc.matchAll(re)].pop();
++    const by = lastOf(/^[ \t]*Checked by:(.*)$/gm);
++    const who = by ? by[1].split(/,| \(/)[0].trim() : '';
++    if (!by) errors.push(`FOLD-CHECK.md has no "Checked by: <name>" line (${form})`);
++    else if (!who) errors.push(`FOLD-CHECK.md: "Checked by:" names nobody (${form})`);
++    else {
++      if (clash(who, i.laneName)) errors.push(`FOLD-CHECK.md: Checked by "${who}" is the lane (${i.laneName}) or a name that contains or is contained in it; a separate agent must check (${form})`);
++      for (const a of i.assignees.filter((x) => nameKey(x) !== nameKey(i.laneName))) if (clash(who, a)) errors.push(`FOLD-CHECK.md: Checked by "${who}" is, contains or is contained in an assignee of ${id} (${a}); a separate agent must check (${form})`);
++    }
++    const vd = lastOf(/^[ \t]*Verdict:[ \t]*(.*?)[ \t\r]*$/gm);
++    if (!vd) errors.push(`FOLD-CHECK.md: no "Verdict: PASS" line (${form})`);
++    else if (vd[1] !== 'PASS') errors.push(`FOLD-CHECK.md: the Verdict is not PASS ("${vd[1]}") (${form})`);
++    const fp = lastOf(/^[ \t]*Plan:[ \t]*(\S+)[ \t]+sha256:([0-9a-f]{12})[ \t\r]*$/gm);
++    if (!fp) errors.push(`FOLD-CHECK.md: no last "Plan: <task id> sha256:<12 hex>" line (${form}); expected: ${line}`);
++    else if (`Plan: ${fp[1]} sha256:${fp[2]}` !== line) errors.push(`FOLD-CHECK.md: the Plan line "Plan: ${fp[1]} sha256:${fp[2]}" is not the hash of the task as it is now (the fold was checked on another text, so it must be checked again) (${form}); expected: ${line}`);
++  }
+   return { errors, lists: r.lists.length, findings, line };
+ }
+ const entriesOf = (taskText) => filesEntries(taskText) ?? [];
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index 0dfc9c60b150ea05f637586bdf1cd96f9ad0131c..d94890d84f99555b59ed4c4378e54834b21af20a 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -376,8 +376,35 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+     const bad = lane(f, ['--dry-run']);
+     expect(bad.status, bad.stdout + bad.stderr).toBe(3);
+     expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);
++    expect(bad.stderr).toMatch(/FOLD-CHECK\.md: the Plan line "Plan: task-\d+ sha256:[0-9a-f]{12}" is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);
+     expect(statusOf(f)).toBe('LATER');
+   });
++  it('task-419 (a): a board whose evidence folder lacks FOLD-CHECK.md (committed) is refused at the launch dry run naming the file; with the file back the dry run prints "plan gate ok"', () => {
++    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
++    const fold = path.join(f.board, 'docs/reports/reviews', f.task, 'FOLD-CHECK.md');
++    const text = fs.readFileSync(fold, 'utf8');
++    expect(text).toMatch(/^Checked by: Fold-G1$/m);
++    expect(lane(f, ['--dry-run']).status).toBe(0); // control: the planted evidence passes
++    git(f.board, 'rm', '-q', fold);
++    const c = git(f.board, 'commit', '-q', '-m', 'drop the fold check');
++    expect(c.status, c.stdout + c.stderr).toBe(0);
++    const bad = lane(f, ['--dry-run']);
++    expect(bad.status, bad.stdout + bad.stderr).toBe(3);
++    expect(bad.stderr).toMatch(/FOLD-CHECK\.md is missing/);
++    expect(statusOf(f)).toBe('LATER');
++    // the folder is read from the board HEAD: a copy that is ignored (so the board is clean) and not committed is not seen
++    fs.appendFileSync(path.join(f.board, '.git/info/exclude'), 'docs/reports/reviews/*/FOLD-CHECK.md\n');
++    fs.writeFileSync(fold, text);
++    const ign = lane(f, ['--dry-run']);
++    expect(ign.status, ign.stdout + ign.stderr).toBe(3);
++    expect(ign.stderr).toMatch(/FOLD-CHECK\.md is missing/);
++    git(f.board, 'add', '-f', fold);
++    const c2 = git(f.board, 'commit', '-q', '-m', 'the fold check again');
++    expect(c2.status, c2.stdout + c2.stderr).toBe(0);
++    const ok = lane(f, ['--dry-run']);
++    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
++    expect(ok.stdout).toMatch(/plan gate ok/);
++  });
+   it('D: a task of another type (record) is not gated and launches with no plan evidence', () => {
+     const f = fixture({ files: 'docs/specs/00-architecture/08_agents.md', type: 'record' });
+     const r = lane(f, ['--dry-run']);
+@@ -786,16 +813,22 @@ describe('plan-prep commit and the end to end (task-418)', () => {
+     expect(planText(f)).toMatch(/int#1 HIGH folded /);
+     const c1 = prep(f, 'commit');
+     expect(c1.status, c1.stdout + c1.stderr).toBe(3);
++    expect(c1.stderr).toMatch(/GROUNDER-PLAN\.md: the Plan line/);
++    expect(c1.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);
+     const exp = /expected: (Plan: \S+ sha256:[0-9a-f]{12})/.exec(c1.stderr)?.[1];
+     expect(exp).toBeTruthy();
+     const gp = path.join(dirOf(f), 'GROUNDER-PLAN.md');
+     fs.writeFileSync(gp, fs.readFileSync(gp, 'utf8').replace(/^Plan: .*$/m, exp as string));
++    const fp = path.join(dirOf(f), 'FOLD-CHECK.md');
++    fs.writeFileSync(fp, fs.readFileSync(fp, 'utf8').replace(/^Plan: .*$/m, exp as string));
+     const c2 = prep(f, 'commit');
+     expect(c2.status, c2.stdout + c2.stderr).toBe(0);
+     expect(c2.stdout).toMatch(/plan gate ok: \d+ lists, \d+ findings, Plan sha256:[0-9a-f]{12}/);
+     backlog(f.board, ['task', 'edit', f.task, '-d', 'Launch description text, one word edited.\n\nFiles: scripts/analysis/thing.mjs']);
+     const c3 = prep(f, 'commit');
+     expect(c3.status, c3.stdout + c3.stderr).toBe(3);
++    expect(c3.stderr).toMatch(/GROUNDER-PLAN\.md: the Plan line/);
++    expect(c3.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);
+     expect(c3.stderr).toMatch(/expected: Plan: \S+ sha256:[0-9a-f]{12}/);
+     expect(/expected: (Plan: \S+ sha256:[0-9a-f]{12})/.exec(c3.stderr)?.[1]).not.toBe(exp);
+   });
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index 912faa9ed4087fc1bd008794b2141022dd9caa9b..ccec44669c60bbcd2d326bdd0b259c781ac77019 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -450,6 +450,13 @@ describe('close check: the review material is the whole change (V2.WHOLE)', () =
+     const r = scenario({ ...SPLIT, split: { max: 4000, lens: true } });
+     expect(r.status, r.stderr).toBe(0);
+   });
++  it('task-419 (d): a one-file diff reviewed with lens-input and no list closes with the name the tool wrote, out-code-review-p1.txt (control); the same pair renamed unsuffixed is still refused (the lock stays)', () => {
++    const one = { files: 'src/', lensFinding: false, laneWork: { 'src/one.ts': 'export const one = 1;\n' }, split: { max: 100000, lens: true } } as const;
++    const ok = scenario({ ...one, mutate: (l) => { expect(Object.keys(l)).toContain('in-out-code-review-p1.txt'); expect(Object.keys(l)).toContain('out-code-review-p1.txt'); expect(Object.keys(l)).not.toContain('in-out-code-review.txt'); return l; } });
++    expect(ok.status, ok.stderr).toBe(0);
++    const renamed = scenario({ ...one, mutate: (l) => { const { ['in-out-code-review-p1.txt']: i, ['out-code-review-p1.txt']: o, ...rest } = l; return { ...rest, 'in-out-code-review.txt': i ?? null, 'out-code-review.txt': o ?? null }; } });
++    refused(renamed, /out-code-review\.txt[\s\S]*file_sha256/);
++  });
+   it('PLANTED DEFECT: a split code-review run with its last chunk missing is refused, naming the lens', () => {
+     refused(scenario({ ...SPLIT, split: { max: 4000, lens: true }, mutate: (l) => dropLast(l, 'code-review') }), /code-review/, 23);
+   });
+@@ -829,7 +836,9 @@ type PO = {
+   type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
+   noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
+   ctx?: string; badMaterial?: boolean; junkPlan?: boolean; fixCompliance?: 'valid' | 'junk';
++  fold?: false | ((planLine: string) => string); assignees?: string[];
+ };
++const goodFold = (planLine: string, name = 'Fold-G1') => `# Fold check\nChecked by: ${name}\nVerdict: PASS\n\nthe folded plan was read again against the findings\n\n${planLine}\n`;
+ async function planScenario(o: PO = {}) {
+   const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
+   const rl = (await import('../../../scripts/analysis/rule-lists.mjs')) as { buildLensInputs: (a: unknown) => { suffix: string; text: string }[]; resolveTask: (a: unknown) => { lists: { id: string }[] } };
+@@ -895,19 +904,74 @@ async function planScenario(o: PO = {}) {
+   const refs = [`${dir}/GROUNDER-PLAN.md`, ...(o.triage ? [`${dir}/TRIAGE-PLAN.md`] : []), ...names.map((n) => `${dir}/seat-${n}-1.md`)];
+   finalText = finalText.replace(/\nmilestone:/, `\nreferences:\n${refs.map((r) => `  - ${r}`).join('\n')}\nmilestone:`);
+   if (o.refs === false) finalText = text0;
+-  if (!o.noPlanLine) lines.push(`Plan: ${id} sha256:${m.planHash(finalText)}`);
++  const planLine = `Plan: ${id} sha256:${m.planHash(finalText)}`;
++  if (!o.noPlanLine) lines.push(planLine);
++  if (!o.noFolder && o.fold !== false) files['FOLD-CHECK.md'] = o.fold ? o.fold(planLine) : goodFold(planLine);
+   if (!o.noGrounder && !o.noFolder) files['GROUNDER-PLAN.md'] = `${lines.join('\n')}\n`;
+   mem[`${dir}/GROUNDER-PLAN.md`] = files['GROUNDER-PLAN.md'] ?? '';
+   if (o.editBody) finalText = finalText.replace(/the plan text is long enough/, 'the plan text is wrong enough');
+   const tracked = o.tracked ?? ['src/a.ts'];
+   return m.planGateErrors({
+-    id, taskText: finalText, type, table, root: d, letter: 'F', laneName: 'BL-COMPLY2', assignees: [], folder: Object.entries(files).map(([name, text]) => ({ name, text })),
++    id, taskText: finalText, type, table, root: d, letter: 'F', laneName: 'BL-COMPLY2', assignees: o.assignees ?? [], folder: Object.entries(files).map(([name, text]) => ({ name, text })),
+     readRepo: (p: string) => { if (o.throwRead) throw new Error('disk gone'); return mem[p] ?? null; }, tracked: (e: string) => tracked.includes(e),
+     facts: { taskOf: () => ({ exists: false, status: '', text: '' }), decisionExists: () => false },
+   });
+ }
+ const gate = (r: { errors: string[] }, re: RegExp) => { expect(r.errors.join('\n')).toMatch(re); expect(r.errors.length).toBeGreaterThan(0); };
+ 
++describe('task-419: the launch gate requires the FOLD-CHECK.md of the grounder', () => {
++  const FORM = /write "Checked by: <name>", "Verdict: PASS" and last "Plan: <task id> sha256:<12 hex>"/;
++  const stale = `Plan: task-7 sha256:${'0'.repeat(12)}`;
++  it('control: the full evidence with a good FOLD-CHECK.md passes (the scenario default)', async () => {
++    const r = await planScenario();
++    expect(r.errors).toEqual([]);
++  });
++  it('no FOLD-CHECK.md is refused naming the file and the form; with GROUNDER-PLAN.md missing too, both files are named', async () => {
++    const r = await planScenario({ fold: false });
++    gate(r, /FOLD-CHECK\.md is missing in docs\/reports\/reviews\/task-7\//);
++    expect(r.errors.join('\n')).toMatch(FORM);
++    const both = await planScenario({ fold: false, noGrounder: true });
++    gate(both, /GROUNDER-PLAN\.md is missing/);
++    gate(both, /FOLD-CHECK\.md is missing/);
++  });
++  it('no Checked by line, and an empty name, are refused', async () => {
++    gate(await planScenario({ fold: (p) => `Verdict: PASS\n${p}\n` }), /FOLD-CHECK\.md has no "Checked by: <name>" line/);
++    gate(await planScenario({ fold: (p) => `Checked by:\nVerdict: PASS\n${p}\n` }), /FOLD-CHECK\.md: "Checked by:" names nobody/);
++    gate(await planScenario({ fold: (p) => `Checked by: , the lane\nVerdict: PASS\n${p}\n` }), /FOLD-CHECK\.md: "Checked by:" names nobody/);
++  });
++  it('a name equal to the lane, or to an assignee of the task, is refused; a clean name that is followed by a sentence naming the lane after a comma or an opening bracket passes (controls)', async () => {
++    gate(await planScenario({ fold: (p) => goodFold(p, 'BL-COMPLY2') }), /FOLD-CHECK\.md: Checked by "BL-COMPLY2" is the lane/);
++    gate(await planScenario({ assignees: ['@lane-BL-OTHER'], fold: (p) => goodFold(p, 'BL-OTHER') }), /FOLD-CHECK\.md: Checked by "BL-OTHER" is, contains or is contained in an assignee/);
++    expect((await planScenario({ assignees: ['@lane-BL-OTHER'], fold: (p) => goodFold(p, 'Fold-G1, not BL-COMPLY2 or BL-OTHER') })).errors).toEqual([]);
++    expect((await planScenario({ fold: (p) => goodFold(p, 'Fold-G1 (a separate agent from BL-COMPLY2)') })).errors).toEqual([]);
++  });
++  it('a Verdict other than PASS is refused; of two Verdict lines the last counts, in both orders', async () => {
++    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: FAIL\n${p}\n` }), /FOLD-CHECK\.md: the Verdict is not PASS/);
++    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\nVerdict: FAIL\n${p}\n` }), /FOLD-CHECK\.md: the Verdict is not PASS/);
++    expect((await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: FAIL\nVerdict: PASS\n${p}\n` })).errors).toEqual([]);
++    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\n${p}\n` }), /FOLD-CHECK\.md: no "Verdict: PASS" line/);
++  });
++  it('a stale Plan line is refused with the expected line printed; no Plan line, and a Plan line inside prose or backticks, are refused', async () => {
++    const s = await planScenario({ fold: () => goodFold(stale) });
++    gate(s, /FOLD-CHECK\.md: the Plan line "Plan: task-7 sha256:0{12}" is not the hash of the task as it is now[\s\S]*expected: Plan: task-7 sha256:[0-9a-f]{12}/);
++    expect(s.errors.join('\n')).toMatch(FORM);
++    gate(await planScenario({ fold: () => 'Checked by: Fold-G1\nVerdict: PASS\n' }), /FOLD-CHECK\.md: no last "Plan: <task id> sha256:<12 hex>" line[\s\S]*expected: Plan: task-7 sha256:[0-9a-f]{12}/);
++    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\nThe line is ${p} and nothing else.\n` }), /FOLD-CHECK\.md: no last "Plan:/);
++    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\n\`${p}\`\n` }), /FOLD-CHECK\.md: no last "Plan:/);
++    // the last of a repeated line counts: a stale line then the right one passes, the right one then a stale one is refused
++    expect((await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\n${stale}\n${p}\n` })).errors).toEqual([]);
++    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\n${p}\n${stale}\n` }), /FOLD-CHECK\.md: the Plan line/);
++  });
++  it('g419 round 1: a Verdict whose PASS is on the next line, and a Plan line split across two lines, are refused (the form is one line each); a name that contains the lane is refused (control: a clean name passes above)', async () => {
++    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict:\nPASS\n${p}\n` }), /FOLD-CHECK\.md: (no "Verdict: PASS" line|the Verdict is not PASS)/);
++    gate(await planScenario({ fold: (p) => `Checked by: Fold-G1\nVerdict: PASS\n${p.replace(' sha256:', '\nsha256:')}\n` }), /FOLD-CHECK\.md: no last "Plan:/);
++    gate(await planScenario({ fold: (p) => goodFold(p, 'Cairn-BL-COMPLY2-2') }), /FOLD-CHECK\.md: Checked by "Cairn-BL-COMPLY2-2" is the lane/);
++  });
++  it('a fix task is gated the same way (control passes above in the fix tests; a missing file is refused)', async () => {
++    gate(await planScenario({ type: 'fix', fold: false }), /FOLD-CHECK\.md is missing/);
++  });
++});
++
+ describe('task-375 D: the launch gate refuses a build or fix launch whose plan was not checked', () => {
+   it('control: a build task with full plan evidence passes and reports its lists, findings and Plan line', async () => {
+     const r = await planScenario();
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index bb6fcacbc01b47c077617363f6b2ea2b82540b72..2ece2e0df8849489760c71c126f0f29ffb7ce95a 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -585,6 +585,46 @@ describe('V2.WHOLE: lens-input splits a change that leaves no room for a list pa
+   });
+ });
+ 
++// task-419 (gap 2): the close check reads an unsuffixed out-<lens>.txt as a review of the raw diff and only -pN outputs as tool-made inputs, so the tool names a no-list input -pN always.
++describe('task-419: a no-list lens input is always named -pN; a rule-list input keeps its unsuffixed name for one file', () => {
++  const noList = (f: ReturnType<typeof fixture>, material: string, out: string, max = '20000') => {
++    const m = path.join(f.d, 'nl1.material'); fs.writeFileSync(m, material);
++    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
++    const outDir = path.join(f.d, 'out1'); fs.mkdirSync(outDir, { recursive: true });
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(outDir, out), '--template', tpl, '--max', max]);
++    return { r, outDir, listed: r.stdout.split('\n').filter(Boolean), written: fs.readdirSync(outDir).sort() };
++  };
++  it('(c) no --list, a one-file diff that fits: the printed path and the only file written end in -p1.txt, stamped chunk 1 of 1', () => {
++    const f = fixture();
++    const n = noList(f, dfile('src/a.ts', 3), 'in-out-code-review');
++    expect(n.r.status, n.r.stderr).toBe(0);
++    expect(n.listed.map((x) => path.basename(x))).toEqual(['in-out-code-review-p1.txt']);
++    expect(n.written).toEqual(['in-out-code-review-p1.txt']);
++    const s = stampOf(fs.readFileSync(n.listed[0]!, 'utf8'));
++    expect([s.id, s.chunk, s.chunks, s.paths]).toEqual(['none', 1, 1, ['src/a.ts']]);
++  });
++  it('a round file made with no list is -rN-p1: --out in-out-code-review-r2 writes in-out-code-review-r2-p1.txt', () => {
++    const f = fixture();
++    const n = noList(f, dfile('src/a.ts', 3), 'in-out-code-review-r2');
++    expect(n.r.status, n.r.stderr).toBe(0);
++    expect(n.written).toEqual(['in-out-code-review-r2-p1.txt']);
++  });
++  it('control: with --list and one chunk the name stays unsuffixed', () => {
++    const f = fixture();
++    const l = lens(f, 'first', dfile('src/a.ts', 3), 20000, 'keep');
++    expect(l.r.status, l.r.stderr).toBe(0);
++    expect(l.files.map((x) => path.basename(x))).toEqual(['keep.txt']);
++  });
++  it('control: no --list and several chunks keeps -p1..-pN, unchanged', () => {
++    const f = fixture();
++    const n = noList(f, BIGDIFF, 'in-out-code-review', '9000');
++    expect(n.r.status, n.r.stderr).toBe(0);
++    expect(n.listed.length).toBeGreaterThan(1);
++    expect(n.listed.map((x) => path.basename(x))).toEqual(n.listed.map((_, i) => `in-out-code-review-p${i + 1}.txt`));
++    expect(n.written).toEqual(n.listed.map((x) => path.basename(x)).sort());
++  });
++});
++
+ // V2.WHOLE fix round (grounder 2026-11-20): F2 the diff flags, F5 a measured chunk room, F6 the refusal for a name git quotes.
+ describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', () => {
+   it('F2: the shared diff flags include --text and --full-index (a .gitattributes -diff line cannot turn code into "Binary files differ")', async () => {
+

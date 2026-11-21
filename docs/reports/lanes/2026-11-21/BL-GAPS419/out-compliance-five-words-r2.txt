@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:53:29.846Z file_sha256=cd55d07481463ca0f1d92dff89578f1658921d0ca09adfcad765c6477b94c55b prompt_sha256=4dec852f7bac1af78a68120809670d535e87d4a9877a1deb362f19375459f189
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-five-words-r2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 (f) "git diff --stat shows only the Files line" (card Files line ends "docs/specs/00-architecture/137_mcqueue.md"; plan ruling Q1 "the Files line is final at eight paths") — CLAUDE.md diff "diff --git a/CLAUDE.md b/CLAUDE.md" — the diff touches a ninth path, CLAUDE.md, that neither the card Files line nor the ruled eight-path line names (RR-0360 is cited only by the new note at docs/specs/00-architecture/08_agents.md:481 "CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143)" and is not in the pasted Decisions naming this task), so AC #6 is unmet and the Regression and Reality-Check seat scope ruled at plan time excluded the rule file whose wording changed — fix: amend the Files line to add CLAUDE.md (as the 08 note already asserts) and re-check, or drop the CLAUDE.md hunk.
+DEFER severity=LOW — AC #6 (f) "The three test files green" — NONE — no test run output is pasted, so green status cannot be seen in this chunk — paste the three test files' `npm test` result at close.
+
+MET — AC #1 (a) — src/tests/backlog/backlog-lane.logic.test.ts:391 — a board whose folder lacks FOLD-CHECK.md is refused at the launch dry run (exit 3, /FOLD-CHECK\.md is missing/), and with the planted file the dry run exits 0 and prints "plan gate ok" (:406), including the ignored-but-uncommitted copy case (:400).
+MET — AC #2 (b) — scripts/hooks/check-lane-close.mjs:661 — a stale Plan line is refused and the expected line is printed (`expected: ${line}`), asserted after a one-word task edit at src/tests/backlog/backlog-lane.logic.test.ts:379.
+MET — AC #3 (c) — scripts/analysis/rule-lists.mjs:426 — the `list &&` guard keeps the unsuffixed name only for a rule-list input, so a no-list one-file diff is named -p1; asserted at src/tests/backlog/rule-lists.logic.test.ts:601 (printed and written name both -p1.txt).
+MET — AC #4 (d) — src/tests/backlog/check-lane-close.logic.test.ts:456 — a lane holding out-code-review-p1.txt closes with status 0, while the same pair renamed unsuffixed is still refused (:458).
+MET — AC #5 (e) — src/tests/backlog/rule-lists.logic.test.ts:612 — control: with --list and one chunk the name stays unsuffixed ('keep.txt'), and no-list multi-chunk keeps -p1..-pN (:618).
+MET — Spec 137 dated note 2026-11-21 ("the last `Verdict:` line reading `Verdict: PASS` ... `Plan: <task id> sha256:<12 hex>` equal to the hash of the task as it is at launch") — scripts/hooks/check-lane-close.mjs:658 — only the last Verdict line counts and must read PASS, and :661 compares the last Plan line to the launch hash.
+MET — plan ruling Q6 "the clash with the lane and the assignees is kept" — scripts/hooks/check-lane-close.mjs:653 — `clash(who, i.laneName)` plus a per-assignee clash refuses a Checked by name that is or contains the lane or an assignee.
+MET — RR-0360 ":1692 change the claude.md to remove the cross check.  The agent stays available on request" — CLAUDE.md:139 — the row now reads "is no longer required after a fold and stays available on request", and CLAUDE.md:143 keeps "the grounder re-checks the fold; for a plan launch it leaves FOLD-CHECK.md".
+
+REJECT — RR-0354 "change the spec's wording" — that section 11.2's body still states "one cross-read adversary checks the folded decisions PAIRWISE and walks every checklist line for staleness" — the repo's amendment form is the dated note that keeps prior text (the added note itself says "M-246, prior text kept", as the neighbouring 137 notes do), and that note removes the pass, so the wording is changed.
+REJECT — Spec 137 note "written by the separate plan grounder, never by a script" — that docs/reports/reviews/task-375/plant-evidence.mjs writes FOLD-CHECK.md — that program is the red-suite fixture that plants the whole evidence folder (it already writes GROUNDER-PLAN.md and the seat reports) and its edit is ruled in Q4; the prohibition binds plan-prep, not the fixture.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 1
+
+---
+⏱  131531ms (131.5s)
+📊 Tokens — total: 42057, input: 16395, output: 25662, reasoning: 24554

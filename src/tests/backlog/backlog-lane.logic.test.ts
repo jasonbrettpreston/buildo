@@ -376,7 +376,34 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     const bad = lane(f, ['--dry-run']);
     expect(bad.status, bad.stdout + bad.stderr).toBe(3);
     expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);
+    expect(bad.stderr).toMatch(/FOLD-CHECK\.md: the Plan line "Plan: task-\d+ sha256:[0-9a-f]{12}" is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);
     expect(statusOf(f)).toBe('LATER');
+  });
+  it('task-419 (a): a board whose evidence folder lacks FOLD-CHECK.md (committed) is refused at the launch dry run naming the file; with the file back the dry run prints "plan gate ok"', () => {
+    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
+    const fold = path.join(f.board, 'docs/reports/reviews', f.task, 'FOLD-CHECK.md');
+    const text = fs.readFileSync(fold, 'utf8');
+    expect(text).toMatch(/^Checked by: Fold-G1$/m);
+    expect(lane(f, ['--dry-run']).status).toBe(0); // control: the planted evidence passes
+    git(f.board, 'rm', '-q', fold);
+    const c = git(f.board, 'commit', '-q', '-m', 'drop the fold check');
+    expect(c.status, c.stdout + c.stderr).toBe(0);
+    const bad = lane(f, ['--dry-run']);
+    expect(bad.status, bad.stdout + bad.stderr).toBe(3);
+    expect(bad.stderr).toMatch(/FOLD-CHECK\.md is missing/);
+    expect(statusOf(f)).toBe('LATER');
+    // the folder is read from the board HEAD: a copy that is ignored (so the board is clean) and not committed is not seen
+    fs.appendFileSync(path.join(f.board, '.git/info/exclude'), 'docs/reports/reviews/*/FOLD-CHECK.md\n');
+    fs.writeFileSync(fold, text);
+    const ign = lane(f, ['--dry-run']);
+    expect(ign.status, ign.stdout + ign.stderr).toBe(3);
+    expect(ign.stderr).toMatch(/FOLD-CHECK\.md is missing/);
+    git(f.board, 'add', '-f', fold);
+    const c2 = git(f.board, 'commit', '-q', '-m', 'the fold check again');
+    expect(c2.status, c2.stdout + c2.stderr).toBe(0);
+    const ok = lane(f, ['--dry-run']);
+    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+    expect(ok.stdout).toMatch(/plan gate ok/);
   });
   it('D: a task of another type (record) is not gated and launches with no plan evidence', () => {
     const f = fixture({ files: 'docs/specs/00-architecture/08_agents.md', type: 'record' });
@@ -786,16 +813,22 @@ describe('plan-prep commit and the end to end (task-418)', () => {
     expect(planText(f)).toMatch(/int#1 HIGH folded /);
     const c1 = prep(f, 'commit');
     expect(c1.status, c1.stdout + c1.stderr).toBe(3);
+    expect(c1.stderr).toMatch(/GROUNDER-PLAN\.md: the Plan line/);
+    expect(c1.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);
     const exp = /expected: (Plan: \S+ sha256:[0-9a-f]{12})/.exec(c1.stderr)?.[1];
     expect(exp).toBeTruthy();
     const gp = path.join(dirOf(f), 'GROUNDER-PLAN.md');
     fs.writeFileSync(gp, fs.readFileSync(gp, 'utf8').replace(/^Plan: .*$/m, exp as string));
+    const fp = path.join(dirOf(f), 'FOLD-CHECK.md');
+    fs.writeFileSync(fp, fs.readFileSync(fp, 'utf8').replace(/^Plan: .*$/m, exp as string));
     const c2 = prep(f, 'commit');
     expect(c2.status, c2.stdout + c2.stderr).toBe(0);
     expect(c2.stdout).toMatch(/plan gate ok: \d+ lists, \d+ findings, Plan sha256:[0-9a-f]{12}/);
     backlog(f.board, ['task', 'edit', f.task, '-d', 'Launch description text, one word edited.\n\nFiles: scripts/analysis/thing.mjs']);
     const c3 = prep(f, 'commit');
     expect(c3.status, c3.stdout + c3.stderr).toBe(3);
+    expect(c3.stderr).toMatch(/GROUNDER-PLAN\.md: the Plan line/);
+    expect(c3.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);
     expect(c3.stderr).toMatch(/expected: Plan: \S+ sha256:[0-9a-f]{12}/);
     expect(/expected: (Plan: \S+ sha256:[0-9a-f]{12})/.exec(c3.stderr)?.[1]).not.toBe(exp);
   });

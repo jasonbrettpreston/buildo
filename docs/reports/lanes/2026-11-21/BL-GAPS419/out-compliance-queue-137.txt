@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T22:44:14.823Z file_sha256=a8dbffb43e0a96a64257691a53170e8ca514d8aabf4a8ad21155568ca856ad2d prompt_sha256=89888faa00232dbaf1fefd4fd17df42324256632220497d2e4a6b111c97f2302
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card acceptance #6 "The three test files green; git diff --stat shows only the Files line." with plan Q1 "the Files line is final at eight paths" — diff --git a/CLAUDE.md b/CLAUDE.md (CLAUDE.md:139 "**Cross-read Adversary**" and CLAUDE.md:143 "Grounded Verification Protocol" both rewritten) — the change edits a ninth path, CLAUDE.md, which is outside the final eight-path Files line, which the pasted plan note lists among "the copies of the 11.2 wording in CLAUDE.md, .claude/workflows.md, packs/spec08.md and Spec 119 that this task does not edit", and whose cited authority RR-0360 is absent from the task's pasted "Decisions naming this task" (RR-0351, RR-0352, RR-0354, RR-0355); a path outside the Files line is also outside every resolved rule list, so this edit closes unreviewed — record a ruling adding CLAUDE.md to the Files line before close (and re-resolve the lists), or drop the two CLAUDE.md edits.
+
+DEFER severity=MED — plan ruling Q4 "Q4 plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)" — NONE (no hunk in the change touches docs/reports/reviews/task-375/plant-evidence.mjs) — the Files line names that path and the plan ruled a three-line edit there, but the change carries no hunk for it, so the delivered scope is not the ruled scope and the fixture program that must plant FOLD-CHECK.md is untouched — land the ruled edit or record a ruling removing the path from the Files line.
+
+DEFER severity=LOW — card acceptance #4 "The close check on a lane with out-code-review-p1.txt made from (c): exit 0 (named test green)" — check-lane-close.logic.test.ts "const ok = scenario({ ...one, mutate: (l) => { expect(Object.keys(l)).toContain('in-out-code-review-p1.txt');" — the accepted pair is built by hand in the scenario instead of being the output of the (c) lens-input run, so (d) mirrors the name rather than testing the tool-to-check contract — feed the (c) run's actual file names into (d), or share one fixture between the two tests.
+
+REJECT — Spec 137 dated note 2026-11-21 (task-419) "WHAT IT CANNOT PROVE: that the checks were run, that the name is a real separate agent, or that the PASS is true." — the gate accepting a FOLD-CHECK.md written by anyone — the pasted note owns this limit explicitly, and forgery routes are named there as tasks 401 and 402.
+
+MET — Spec 137 dated note 2026-11-21 (task-419) "a line `Checked by: <name>` ... not the lane and not an assignee" — check-lane-close.mjs "const who = by ? by[1].split(/,| \(/)[0].trim() : '';" — parse form and lane/assignee clash enforced.
+MET — Spec 137 dated note 2026-11-21 (task-419) "the last `Verdict:` line reading `Verdict: PASS`" — check-lane-close.mjs "const vd = lastOf(/^[ \t]*Verdict:[ \t]*(.*?)[ \t\r]*$/gm);" — last Verdict line must read PASS.
+MET — Spec 137 dated note 2026-11-21 (task-419) "as the last such line of the file, alone on its line, `Plan: <task id> sha256:<12 hex>` equal to the hash of the task as it is at launch (the refusal prints the expected line)" — check-lane-close.mjs "errors.push(`FOLD-CHECK.md: the Plan line ... expected: ${line}`);" — last Plan line compared to the expected line and the expectation printed.
+MET — Spec 137 dated note 2026-11-21 (task-419) "names a lens input made with no rule list -pN always, so a one-file diff gives -p1" — rule-lists.mjs "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — list null now takes the -pN branch for a one-file input.
+MET — Spec 137 dated note 2026-11-21 (task-419) "a rule-list input keeps its unsuffixed name for one file" — rule-lists.mjs, same expression guarded by "list &&" — unchanged for the compliance path.
+MET — card acceptance #2 "Same board, the task body edited by one word: exit 3, FOLD-CHECK.md Plan line stale, expected line printed." — backlog-lane.logic.test.ts "expect(c3.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);" — stale Plan line refused at the plan-prep dry run.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+
+---
+⏱  82553ms (82.6s)
+📊 Tokens — total: 42233, input: 24291, output: 17942, reasoning: 16789

@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T14:44:09.398Z file_sha256=58e86671d8d00a42b639dd56970f4e870f1c7c8f14b2c6d04fd18ba9f9d1534d prompt_sha256=6fc4aed2e5cedec5282ccb54467fde1a8f0304a62da6cabf74ddc4ec73506c0a
+🔍 Lens review of docs/reports/reviews/task-419/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG none.
+
+DEFER severity=LOW — acceptance #1 "(a) ... With the file (Checked by: Fold-G1, Verdict: PASS, correct Plan line) it prints \"plan gate ok\"." — PLAN-419-v1 section 5 "c2 exit 0" — the success output string the clause names is asserted nowhere, only the exit code, so (a) is met only if an untested print happens to hold — assert stdout contains "plan gate ok" in the c2 case of backlog-lane.logic.test.ts alongside exit 0.
+DEFER severity=LOW — card "The plan (to be written read-only and reviewed before any build) names the design and the final Files line." — PLAN-419-v1 section 9 "1. Files line: may it grow by backlog-lane.logic.test.ts and plant-evidence.mjs (card lists four)?" — the card's Files line already lists six paths including both, so the plan leaves its own Files line open against a settled card and invites a grounder trim of two paths its tests need — state the six-path Files line as final and drop question 1.
+
+MET — RR-0351 "Gap 3 we dont need the cross check." — PLAN-419-v1 line 1 "Cross-read pass is out of scope" — the excluded adversary pass is neither designed nor built.
+MET — RR-0352 "Let's resolve 1 and 2 now." — PLAN-419-v1 section 3 "Gap 1. Record: docs/reports/reviews/<task>/FOLD-CHECK.md" and "Gap 2. Change the TOOL only" — both gaps carry a design and an acceptance trace.
+MET — card gap 1 "written by the grounder and never by the script" — PLAN-419-v1 section 3 "Writer: the grounder; the script never writes it." and "Rejected: a script-written stub" — planGateInner only reads and refuses.
+MET — card gap 2 "without breaking outputs already committed" — PLAN-419-v1 section 3 "Committed outputs still pass: the close check is not edited for gap 2" — -p1 pairs, the unsuffixed compliance control and the BL-MASSING raw-diff route each keep their accepting path.
+MET — card "Reuse what exists; no new tool" — PLAN-419-v1 section 3 "Rejected: ... a new tool" — edits are confined to the suffix expression at rule-lists.mjs:425 and one block in planGateInner.
+MET — acceptance #3 "(c) ... prints \"<dir>/in-out-code-review-p1.txt\" and writes only that." — PLAN-419-v1 section 3 "with no list it is always -pN" — lens-code-review has no list, so the one-file input is named -p1 and no unsuffixed file is written.
+
+REJECT — acceptance #6 "(f) The three test files green; git diff --stat shows only the Files line." — accused: LANDING step "commit B (later) = task file and queue row to DONE" touches paths outside the Files line — the pasted round-1 clause allows a close to stage "task files and decision records", so (f) reads against the build commit only.
+REJECT — card gap 2 "makes the tool and the close check agree on the name of a one-file review" — accused: a list lens keeps an unsuffixed one-file name, so tool and check still disagree — the pasted check accepts unsuffixed list inputs (PLAN-419-v1 section 2 "Gap 2, check, compliance: listProof ... NOT a trap"), so there is no disagreement to fix for list lenses.
+
+VERDICT: PASS
+Clauses checked: 16   Unmet: 0
+
+---
+⏱  133176ms (133.2s)
+📊 Tokens — total: 33048, input: 9358, output: 23690, reasoning: 22875

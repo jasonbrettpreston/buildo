@@ -96,15 +96,15 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
 | list | document | selection | characters | parts |
 | --- | --- | --- | ---: | ---: |
 | agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 13,405 | 1 |
-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 32,638 | 1 |
-| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 32,996 | 1 |
+| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 34,129 | 1 |
+| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 34,909 | 1 |
 | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
 | orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |
 | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 9 lists | | 194,255 | 9 |
+| total | 9 lists | | 197,659 | 9 |
 
 ## spec-only
 
@@ -112,12 +112,12 @@ Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; miles
 
 | list | document | selection | characters | parts |
 | --- | --- | --- | ---: | ---: |
-| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 32,996 | 1 |
-| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 32,638 | 1 |
+| queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 34,909 | 1 |
+| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 34,129 | 1 |
 | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,076 | 1 |
 | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
 | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
 | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
 | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
-| total | 7 lists | | 149,280 | 7 |
+| total | 7 lists | | 152,684 | 7 |
 

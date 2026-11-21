@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T22:44:14.823Z file_sha256=f4e1c855f631337df1ae034e4d359f3940d5661d73b7a32c1e27499888c75e17 prompt_sha256=ff18e3badf0b3cc8ed26e1ab1d04cd57efe0fa8decb3ebcdf2441778deb2ec7b
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — ACC #6 "The three test files green; git diff --stat shows only the Files line" — CLAUDE.md:139 "**Cross-read Adversary** (`general-purpose`, main tree — Spec 08 §10 roster, §11.2 trigger): is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360)." — the change edits CLAUDE.md (two hunks), a path that is not on the ruled Files line ("the Files line is final at eight paths"), while the pasted plan record keeps it open and excluded ("the copies of the 11.2 wording in CLAUDE.md, .claude/workflows.md, packs/spec08.md and Spec 119 that this task does not edit"), and the only authority cited, RR-0360 (:1692), is not in "Decisions naming this task" (RR-0351..RR-0355) — drop the two CLAUDE.md hunks, or re-prep the task with RR-0360 in the decisions and CLAUDE.md on the Files line before merge.
+
+BUG severity=HIGH — Q1/Files line "docs/reports/reviews/task-375/plant-evidence.mjs" and Q4 "plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)" — src/tests/backlog/backlog-lane.logic.test.ts:382 "const fold = path.join(f.board, 'docs/reports/reviews', f.task, 'FOLD-CHECK.md');" with ":386 `expect(text).toMatch(/^Checked by: Fold-G1$/m);`" — the material holds no hunk for plant-evidence.mjs, so nothing plants FOLD-CHECK.md into the fixture evidence folder and ACC #1's control read and ACC #6 (three test files green) cannot both hold as delivered — include the ruled plant-evidence.mjs edit that writes the fixture FOLD-CHECK.md.
+
+DEFER severity=LOW — ACC #3 "(c) `node scripts/analysis/rule-lists.mjs lens-input --template .claude/review-templates/lens-code-review.md --context <ctx> --material <one-file diff> --out <dir>/in-out-code-review` prints `<dir>/in-out-code-review-p1.txt`" — src/tests/backlog/rule-lists.logic.test.ts:594 "const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);" — the criterion's named template is not the one exercised, only a synthetic fixture template that also resolves to no list — add one assertion with the real lens-code-review.md template so the named invocation is the one proven.
+
+MET — ACC #1 (a) — scripts/hooks/check-lane-close.mjs:645 "if (fc === undefined) errors.push(`FOLD-CHECK.md is missing in ${dirNote} (the separate grounder writes it beside GROUNDER-PLAN.md after checking the folded plan: ${form})`);" — a missing record is refused naming the file and the form, and the planted control passes.
+
+MET — ACC #2 (b) — scripts/hooks/check-lane-close.mjs:660 "else if (`Plan: ${fp[1]} sha256:${fp[2]}` !== line) errors.push(`FOLD-CHECK.md: the Plan line ... expected: ${line}`);" — stale Plan line refused with the expected line printed.
+
+MET — ACC #3 (c) — scripts/analysis/rule-lists.mjs:426 "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — a no-list one-file input is always -pN, a rule-list one-file input keeps the unsuffixed name.
+
+MET — ACC #4 (d) — src/tests/backlog/check-lane-close.logic.test.ts:455 "expect(ok.status, ok.stderr).toBe(0);" — the out-code-review-p1.txt pair closes green.
+
+MET — Spec 137 note "committed outputs are neither blessed nor broken" — src/tests/backlog/check-lane-close.logic.test.ts:457 "refused(renamed, /out-code-review\.txt[\s\S]*file_sha256/);" — the unsuffixed pair is still refused by the close check, which the change leaves untouched.
+
+MET — RR-0351, RR-0354 (Spec 08 §11.2 note) — docs/specs/00-architecture/08_agents.md:479 "the cross-read adversary pass of 11.2 and the Cross-read Adversary row of the roster (:449) is no longer required after a fold; the agent stays in the roster and may be asked for" — the wording is changed and the agent is kept available on request.
+
+MET — Q3 — scripts/hooks/check-lane-close.mjs:649 "const who = by ? by[1].split(/,| \(/)[0].trim() : '';" with ":648 `const by = lastOf(/^[ \t]*Checked by:(.*)$/gm);`" — the name is the text up to the first comma or " (", the last repeated line counts.
+
+MET — Q6 — scripts/hooks/check-lane-close.mjs:653 "if (clash(who, i.laneName)) errors.push(`FOLD-CHECK.md: Checked by \"${who}\" is the lane (${i.laneName}) or a name that contains or is contained in it; a separate agent must check (${form})`);" — the clash with the lane and the assignees is kept.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 3
+
+---
+⏱  67207ms (67.2s)
+📊 Tokens — total: 37658, input: 23771, output: 13887, reasoning: 12597

@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T14:44:09.398Z file_sha256=dbd16cfd35fa7993c1f1e5d850a52cd14c30982044c6a165a263a8973d4bba93 prompt_sha256=3edc3a04a1a4850c40ee3d05b57d237f87a715cbb353015552ab9afee335d143
+🔍 Lens review of docs/reports/reviews/task-419/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Acceptance criterion #2 "(b) Same board, the task body edited by one word: exit 3, FOLD-CHECK.md Plan line stale, expected line printed." — plan section 4a "message at :580 to name FOLD-CHECK.md" (the only message text the plan specifies) and section 3 "last Plan line missing or not equal to `line` -> refusal" — the plan never specifies that the stale-FOLD-CHECK refusal names FOLD-CHECK.md or prints the expected line, and section 5 only asserts "c3 exit 3 with both lines stale", so criterion (b) is unmet as written — add to 4a a refusal reading "FOLD-CHECK.md Plan line stale: expected Plan: <id> sha256:<12>" and assert that string in c3.
+
+DEFER severity=MED — Card Description "The plan (to be written read-only and reviewed before any build) names the design and the final Files line." — plan section 9 "1. Files line: may it grow by backlog-lane.logic.test.ts and plant-evidence.mjs (card lists four)?" — the plan's Files line already contains both paths, so the line is provisional and the same question is self-contradictory, which leaves acceptance #6 "git diff --stat shows only the Files line" undecidable at plan-lock — answer Q1 inside the plan (the six paths are the Files line) and delete the question.
+
+DEFER severity=MED — Project objective "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — plan 4a "Checked-by missing or clash() with lane or any assignee -> refusal (reuse clash, same rule as the grounder); Verdict not PASS -> refusal" — criteria #1 and #2 require only that the missing file be refused and that the Plan line match, so the clash and Verdict gates are behaviour no pasted clause names — keep the presence and Plan-line refusals and put the clash/Verdict rule to the operator under RR-0352 or drop it.
+
+DEFER severity=MED — Implementation Note "The plan is reviewed, ruled, folded and fold-checked before any launch (RR-0352)." — plan section 6 "commit A = the two scripts, the tests and plant-evidence.mjs, through the real hooks, no task move" — once commit A lands, task-419's own launch passes the new gate and needs docs/reports/reviews/task-419/FOLD-CHECK.md, and no landing step produces it; section 9 Q2 asks the grounder without answering — add a step naming who writes 419's FOLD-CHECK.md before its launch.
+
+DEFER severity=MED — Acceptance criterion #1 "correct Plan line) it prints "plan gate ok"" — plan section 5 "c1 stays exit 3 and its stderr names FOLD-CHECK.md; c2 exit 0" — no plan test asserts the success string "plan gate ok", so that criterion output rests on unchanged existing behaviour only — assert stdout contains "plan gate ok" in c2.
+
+DEFER severity=LOW — Acceptance criterion #1 "a board whose folder lacks FOLD-CHECK.md: `backlog-lane.mjs --dry-run` exits 3, stderr "FOLD-CHECK.md"" — plan section 5 "backlog-lane.logic.test.ts:779-800 ... c1 stays exit 3 and its stderr names FOLD-CHECK.md" — c1/c2 drive the plan-prep commit flow, not the `--dry-run` invocation the criterion names — add a `--dry-run` invocation to the backlog-lane test or state in the plan that c1 is the same gate path.
+
+MET — RR-0351 "Gap 3 we dont need the cross check." — plan section 1 "Cross-read pass is out of scope ("Gap 3 we dont need the cross check.")." — the excluded pass is excluded and no step adds it.
+
+MET — RR-0352 "Let's resolve 1 and 2 now." — plan section 3 — both gaps designed, gap 1 as FOLD-CHECK.md, gap 2 in the lens-input suffix.
+
+MET — Description "written by the grounder and never by the script" — plan section 3 "Writer: the grounder; the script never writes it." — no script writes the record.
+
+MET — Description "Reuse what exists; no new tool." — plan section 3 "a new tool." listed under Rejected — no new tool is added.
+
+MET — Acceptance #3 "in-out-code-review-p1.txt and writes only that." — plan section 3 "with no list it is always -pN", section 5 "-p1.txt, no unsuffixed file written" — one name for a one-file no-list review.
+
+MET — Acceptance #4 — plan section 5 "a lane built by running the real lens-input on a one-file diff for code-review closes with out-code-review-p1.txt (control)" — the close check passes on the tool-made -p1 pair.
+
+MET — Acceptance #5 "Existing close tests (a -p1 pair, the unsuffixed compliance control) still pass." — plan section 3 "Compliance names are unchanged (lists keep unsuffixed for one file)" — the listProof route and the -p1 route are both untouched.
+
+MET — Acceptance #1, missing-file half — plan 4a "message at :580 to name FOLD-CHECK.md" — stderr names FOLD-CHECK.md when the file is absent.
+
+REJECT — Description "without breaking outputs already committed" — accused of breaking BL-MASSING's unsuffixed no-list file — that file is a raw-diff input read on check-lane-close.mjs:509-513, not a lens-input output, and the plan leaves that route untouched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 1
+
+---
+⏱  100518ms (100.5s)
+📊 Tokens — total: 24542, input: 6537, output: 18005, reasoning: 16721

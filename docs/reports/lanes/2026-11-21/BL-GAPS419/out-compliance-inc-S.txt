@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T22:44:14.829Z file_sha256=2b499d76012ebeda77297a16d15e4e53ef79bcecf322f82ebb4040ef2daef4c0 prompt_sha256=b696308e37edf9e14de74e636d4bca2eaf7c74a1f066241976735224eb504157
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 "The three test files green; git diff --stat shows only the Files line." and plan Q1 "Q1 the Files line is final at eight paths" — CLAUDE.md:139 "is no longer required after a fold and stays available on request" — the diff edits a ninth path, CLAUDE.md, which is not among the eight Files paths and whose edit rests on RR-0360, a decision not in the pasted "Decisions naming this task" list (only RR-0351, RR-0352, RR-0354, RR-0355 are pasted; RR-0354 names "the spec's wording", not CLAUDE.md) — revert CLAUDE.md from this change, or amend the Files line on the task and re-lock the plan before launch so the diff and the Files line agree.
+
+BUG severity=HIGH — plan Q4 "Q4 plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)" and AC #6 "git diff --stat shows only the Files line" — NONE — the diff carries no hunk for docs/reports/reviews/task-375/plant-evidence.mjs, yet src/tests/backlog/backlog-lane.logic.test.ts:385 "expect(text).toMatch(/^Checked by: Fold-G1$/m)" and :387 "expect(lane(f, ['--dry-run']).status).toBe(0); // control: the planted evidence passes" require the fixture to plant a FOLD-CHECK.md that nothing in this diff creates, so the named fixture program is unedited and acceptance #6's stat cannot match the Files line — add the fixture lines that write FOLD-CHECK.md (Checked by: Fold-G1, Verdict: PASS, the expected Plan line) so the (a) control is real.
+
+MET — AC #1 (a) "a board whose folder lacks FOLD-CHECK.md: `backlog-lane.mjs --dry-run` exits 3, stderr \"FOLD-CHECK.md\"" — src/tests/backlog/backlog-lane.logic.test.ts:402 "expect(bad.stderr).toMatch(/FOLD-CHECK\.md is missing/)" and :413 "expect(ok.stdout).toMatch(/plan gate ok/)" — the refusal and the passing control are both asserted.
+
+MET — AC #2 (b) "Same board, the task body edited by one word: exit 3, FOLD-CHECK.md Plan line stale, expected line printed" — src/tests/backlog/backlog-lane.logic.test.ts:379 "expect(bad.stderr).toMatch(/FOLD-CHECK\.md: the Plan line \"Plan: task-\d+ sha256:[0-9a-f]{12}\" is not the hash of the task as it is now" plus the expected line, and src/tests/backlog/check-lane-close.logic.test.ts asserts "the Plan line" for the stale case.
+
+MET — AC #3 (c) "prints `<dir>/in-out-code-review-p1.txt` and writes only that" — src/tests/backlog/rule-lists.logic.test.ts:603 "expect(n.listed.map((x) => path.basename(x))).toEqual(['in-out-code-review-p1.txt']);" and :604 "expect(n.written).toEqual(['in-out-code-review-p1.txt']);", backed by scripts/analysis/rule-lists.mjs:425 "list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`".
+
+MET — AC #4 (d) "The close check on a lane with out-code-review-p1.txt made from (c): exit 0" — src/tests/backlog/check-lane-close.logic.test.ts:455 "expect(ok.status, ok.stderr).toBe(0);" after asserting the pair is in-out-code-review-p1.txt / out-code-review-p1.txt.
+
+MET — AC #5 (e) "Existing close tests (a -p1 pair, the unsuffixed compliance control) still pass" — src/tests/backlog/rule-lists.logic.test.ts:614 "expect(l.files.map((x) => path.basename(x))).toEqual(['keep.txt']);" and no edit to the close check's compliance name path keeps the unsuffixed control intact.
+
+MET — RR-0354 "The spec wording on the cross-read adversary is changed" — docs/specs/00-architecture/08_agents.md:478 "Dated note 2026-11-21 (M-246, prior text kept; ... RR-0351, RR-0352, RR-0354, RR-0360 ...): the cross-read adversary pass of 11.2 ... is no longer required after a fold; the agent stays in the roster and may be asked for." — the spec wording is changed in place, prior text kept per repo convention.
+
+DEFER severity=LOW — plan Q3 "Q3 the Checked by name is the text up to the first comma or \" (\" or the line end, the last of a repeated line counts" — scripts/hooks/check-lane-close.mjs:648 "const by = lastOf(/^[ \t]*Checked by:(.*)$/gm);" — the 137 note records only "a line `Checked by: <name>`" with no tie-break, so the committed spec text omits the last-of-a-repeated-line rule the code applies and a file can name the lane on an earlier Checked by line and still pass — add ", the last of a repeated line counts" to the 137 note so the text states the ruled form.
+
+DEFER severity=LOW — docs/specs/00-architecture/137_mcqueue.md:142 "also requires docs/reports/reviews/<task>/FOLD-CHECK.md, committed beside GROUNDER-PLAN.md" — scripts/hooks/check-lane-close.mjs:639 "const refs = [`${dir}/GROUNDER-PLAN.md`, ..." — GROUNDER-PLAN.md's absence is refused as a missing task reference with the `--add-ref` command while FOLD-CHECK.md is not added to that list, so a task can launch with the file in the folder but absent from its references although the note puts it "beside GROUNDER-PLAN.md" — either add "`${dir}/FOLD-CHECK.md`" to the refs list or state in the note that only the committed folder copy is read.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 2
+
+---
+⏱  63748ms (63.7s)
+📊 Tokens — total: 33817, input: 20584, output: 13233, reasoning: 11790

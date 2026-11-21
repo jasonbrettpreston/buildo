@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:53:29.860Z file_sha256=b61676408019e4ab2c782e7a41afe26487152e86aa26471184555d35198bc119 prompt_sha256=3e6eca1f3a63a74199a7c85e0dda073e4fb10817b6260908ac34a255d4b5c01a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-ms-S-r2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 "The three test files green; git diff --stat shows only the Files line." (and the Description line "Files: scripts/hooks/check-lane-close.mjs, ... 137_mcqueue.md") — CLAUDE.md:139 "the Cross-read Adversary ... is no longer required after a fold and stays available on request" (and CLAUDE.md:143 "fold-validation (the grounder re-checks the fold; for a plan launch it leaves FOLD-CHECK.md)") — the diff touches a ninth path, CLAUDE.md, which is in neither the card's eight-path Files line nor the ruled Q1 ("Q1 the Files line is final at eight paths"), and the spec note the same diff adds admits it ("CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143)") while RR-0360 is absent from the card's pasted "Decisions naming this task" (RR-0351, RR-0352, RR-0354, RR-0355) — clause unmet, the change exceeds the Files line it was accepted against — add CLAUDE.md to the task's Files line and to the Q1 record (or move the CLAUDE.md edit to its own task on RR-0360) before merge.
+
+DEFER severity=MED — RR-0354 "change the spec's wording" — docs/specs/00-architecture/08_agents.md note added by this diff: "the copies in .claude/workflows.md, the review template packs and Spec 119 are not edited by this task." — the wording change lands in Spec 08 and CLAUDE.md only, so three other governing copies still state the pass is required after a fold, contradicting the new 11.2 text — file a follow-up task (or a superseded line in the note) to align those copies.
+
+DEFER severity=LOW — AC #6 "The three test files green; git diff --stat shows only the Files line." — src/tests/backlog/rule-lists.logic.test.ts:589 "describe('task-419: a no-list lens input is always named -pN; a rule-list input keeps its unsuffixed name for one file'" — the "green" half of AC #6 is evidenced in the material only by test names, no run output is pasted, so it cannot be seen — attach the three test files' run result to docs/reports/reviews/task-419/ as the AC requires.
+
+REJECT — Spec 137 note "written by the separate plan grounder, never by a script" — that docs/reports/reviews/task-375/plant-evidence.mjs:70 "w('FOLD-CHECK.md', `# Fold check (test evidence)\nChecked by: Fold-G1\nVerdict: PASS\n\n${planLine}\n`)" is the gate's record being script-written — not a real issue: this is the task-375 fixture program that plants evidence into a scratch repo for tests, named as editable by Q4 ("plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)"), and it writes no record for any real task.
+
+MET — AC #1 — src/tests/backlog/backlog-lane.logic.test.ts:383 — missing FOLD-CHECK.md gives `--dry-run` exit 3 with /FOLD-CHECK\.md is missing/, restored committed file gives "plan gate ok", and the ignored uncommitted copy is still refused.
+
+MET — AC #2 — src/tests/backlog/backlog-lane.logic.test.ts:820 — the one-word body edit yields exit 3 and "FOLD-CHECK\.md: the Plan line ... expected: Plan: ...", alongside the GROUNDER-PLAN.md line.
+
+MET — AC #3 — scripts/analysis/rule-lists.mjs:425 "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — a no-list one-file input now always gets -p1, and the rule-list single-file name stays unsuffixed.
+
+MET — AC #4 — src/tests/backlog/check-lane-close.logic.test.ts:453 — a lane holding in/out-code-review-p1.txt from a no-list lens-input closes at exit 0.
+
+MET — RR-0351 "Gap 3 we dont need the cross check." / RR-0354 "change the spec's wording" — docs/specs/00-architecture/08_agents.md:478 — the 11.2 pass and the roster row are stood down after a fold, the grounder's re-execution stays, and the agent "stays in the roster and may be asked for".
+
+MET — Spec 137 note "a line `Checked by: <name>` ... the last `Verdict:` line reading `Verdict: PASS`, and, as the last such line of the file, alone on its line, `Plan: <task id> sha256:<12 hex>`" — scripts/hooks/check-lane-close.mjs:646-657 — the gate reads exactly that form (comma/" (" cut, lane and assignee clash, last Verdict, last Plan line against the expected `line`) and refuses with the expected line printed.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+
+---
+⏱  63494ms (63.5s)
+📊 Tokens — total: 27097, input: 15605, output: 11492, reasoning: 10312

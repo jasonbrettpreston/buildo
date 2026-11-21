@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T22:22:38.905Z file_sha256=a6fe96dc5aa6eb4bfbbbf4f8cf1f93bb629bff3ad155da93b8f67837665be647 prompt_sha256=6a2afb32aa2f7ffd1c0ee50ed6bb56401a886ce0f41ce37528cf639c6a3b82b9
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 "The three test files green; git diff --stat shows only the Files line." and Q1 "Q1 the Files line is final at eight paths" — diff --git a/CLAUDE.md b/CLAUDE.md "+**Cross-read Adversary** (`general-purpose`, main tree — Spec 08 §10 roster, §11.2 trigger): is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360)." — the change edits a ninth path, CLAUDE.md, which the eight-path Files line and the pasted Q1 answer ("the copies of the 11.2 wording in CLAUDE.md ... that this task does not edit") both exclude, so the scope clause is unmet — add CLAUDE.md to the task's Files line and record RR-0360 in "Decisions naming this task", or drop the two CLAUDE.md hunks from this change.
+DEFER severity=LOW — AC #6 "The three test files green" — NONE — the diff carries the three test files' new cases but no run output, so greenness of the three files cannot be seen here — attach the three suites' PASS output to the lane's PASS lines before close.
+REJECT — 137 note "written by the separate plan grounder, never by a script" — the change has docs/reports/reviews/task-375/plant-evidence.mjs writing FOLD-CHECK.md — this is the test fixture that already writes GROUNDER-PLAN.md for the board fixtures, not plan evidence the gate consumes.
+MET — AC #1 — src/tests/backlog/backlog-lane.logic.test.ts "a board whose evidence folder lacks FOLD-CHECK.md (committed) is refused at the launch dry run naming the file; with the file back the dry run prints "plan gate ok"" — exit 3 on the missing file and exit 0 plus "plan gate ok" on the control are both exercised.
+MET — AC #2 — src/tests/backlog/backlog-lane.logic.test.ts "expect(c3.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);" — the one-word body edit turns the FOLD-CHECK Plan line stale and the expected line is printed.
+MET — AC #3 — src/tests/backlog/rule-lists.logic.test.ts "expect(n.listed.map((x) => path.basename(x))).toEqual(['in-out-code-review-p1.txt']);" — a no-list one-file input is printed and written only as -p1.
+MET — AC #4 — src/tests/backlog/check-lane-close.logic.test.ts "expect(ok.status, ok.stderr).toBe(0);" — a lane holding out-code-review-p1.txt closes green.
+MET — AC #5 — src/tests/backlog/rule-lists.logic.test.ts "control: with --list and one chunk the name stays unsuffixed" — the compliance unsuffixed control and the existing -p1 pair are preserved.
+MET — 137 note "a rule-list input keeps its unsuffixed name for one file, and committed outputs are neither blessed nor broken" — scripts/analysis/rule-lists.mjs "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — only no-list inputs change name; the close check's reading of unsuffixed outputs is untouched.
+MET — 137 note "the last `Verdict:` line reading `Verdict: PASS` ... as the last such line of the file, alone on its line, `Plan: <task id> sha256:<12 hex>`" — scripts/hooks/check-lane-close.mjs "const fp = lastOf(/^[ \t]*Plan:[ \t]*(\S+)[ \t]+sha256:([0-9a-f]{12})[ \t\r]*$/gm);" — the form the pasted note fixes is the form the gate reads.
+MET — plan-protocol dated note 2026-11-20 "plus its separate grounder (Spec 08 section 7 rules 5 and 7...)" — scripts/hooks/check-lane-close.mjs "FOLD-CHECK.md is missing in ${dirNote} (the separate grounder writes it beside GROUNDER-PLAN.md after checking the folded plan" — the lane gate now demands the separate grounder's committed record.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 1
+
+---
+⏱  59390ms (59.4s)
+📊 Tokens — total: 29081, input: 17219, output: 11862, reasoning: 10843

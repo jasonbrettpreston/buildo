@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T15:53:29.845Z file_sha256=a6fe96dc5aa6eb4bfbbbf4f8cf1f93bb629bff3ad155da93b8f67837665be647 prompt_sha256=6a2afb32aa2f7ffd1c0ee50ed6bb56401a886ce0f41ce37528cf639c6a3b82b9
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-plan-protocol-r2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Q1 ("the Files line is final at eight paths (the six of the card plus docs/specs/00-architecture/08_agents.md and 137_mcqueue.md for the RR-0354 wording and the gate note)") and AC#6 ("git diff --stat shows only the Files line") — CLAUDE.md:139 "**Cross-read Adversary** ... is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360)." (and the Grounded Verification Protocol edit, line 143) — the diff edits CLAUDE.md, a ninth path absent from the ruled eight-path Files line, so AC#6 cannot be met; note the 08_agents.md note itself says "CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143)", contradicting Q1 — fix: add CLAUDE.md to the Files line (RR-0360 orders the edit) so the declared scope matches the diff, or drop the CLAUDE.md edit.
+
+DEFER severity=LOW — RR-0354 "change the spec's wording" — docs/specs/00-architecture/08_agents.md:476 "one grounder re-executes every claim in the fold** + **one cross-read adversary checks the folded decisions PAIRWISE" — the operative 11.2 sentence and the roster row at :449 are left as written; only a dated note appended after 11.2 supersedes them, so a reader at :449 is not told the pass is dropped — rationale: the project's dated-note ("prior text kept") convention is used throughout this material, so this is expected and safe to defer.
+
+REJECT — RR-0351 "Gap 3 we dont need the cross check." — that editing the cross-read adversary wording exceeds "not in scope: the cross-read adversary pass" — RR-0354 "change the spec's wording" and RR-0360 ":1692 change the claude.md to remove the cross check" name this task and direct the wording change; the pass itself is not performed.
+
+REJECT — 137_mcqueue.md note "the gate runs at the launch and at the plan-prep commit dry run only" — that the added FOLD-CHECK gate would refuse already-built tasks 412/418 — the check sits inside `planGateInner` run via `planGateErrors` at launch/plan-prep only (tests drive `lane(f, ['--dry-run'])` and `prep(f,'commit')`), so already-BUILT tasks are untouched.
+
+MET — RR-0352 "Let's resolve 1 and 2 now." — scripts/hooks/check-lane-close.mjs FOLD-CHECK gate plus scripts/analysis/rule-lists.mjs "list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`" — both gaps (fold record, one-file name) implemented.
+MET — Acceptance #3 (c) — src/tests/backlog/rule-lists.logic.test.ts "expect(n.listed.map((x) => path.basename(x))).toEqual(['in-out-code-review-p1.txt'])" — one-file no-list input is named -p1.
+MET — Acceptance #1 (a) — src/tests/backlog/backlog-lane.logic.test.ts "expect(bad.stderr).toMatch(/FOLD-CHECK\.md is missing/)" — missing fold record refused at exit 3; control "plan gate ok" present.
+MET — 137_mcqueue.md note "written by the separate plan grounder, never by a script" — check-lane-close.mjs "clash(who, i.laneName)" and the assignee loop — the Checked by name cannot be the lane or an assignee.
+MET — RR-0351 "Gap 3 we dont need the cross check." — CLAUDE.md:139 "is no longer required after a fold and stays available on request" — pass dropped, agent retained on request.
+MET — 137_mcqueue.md note "a rule-list input keeps its unsuffixed name for one file, and committed outputs are neither blessed nor broken" — rule-lists.mjs keeps `''` suffix only when `list` is truthy and single — compliance/committed outputs unchanged.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+
+---
+⏱  99363ms (99.4s)
+📊 Tokens — total: 36579, input: 17219, output: 19360, reasoning: 18383

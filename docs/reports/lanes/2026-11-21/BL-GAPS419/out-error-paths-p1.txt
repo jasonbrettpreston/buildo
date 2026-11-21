@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-21T22:44:14.835Z file_sha256=130dec99451c97948de93a0bd03756dc85ce5f9b708bef52d525487db0372227 prompt_sha256=16b683aab514ae2535e563a412281931adb4cf08b772a360bb0a2d76e665e318
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs:426 "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — the -pN name is keyed on the truthiness of `list`, not on whether the input carries a rule list, so any truthy value a caller passes for a task that resolves no list leaves a one-file input unsuffixed, which is the exact name the close check reads as a raw-diff review, and the gap-2 refusal returns; the new tests only cover `--list` absent (undefined) — decide on the resolved part (one part and no list id, as `list` null yields id "none") and add a zero-list case to the task-419 describe block; cannot see the CLI's no-list argument.
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts "readRepo: (p: string) => { if (o.throwRead) throw new Error('disk gone'); return mem[p] ?? null; }" — the fixture already supports a throwing folder read, but no task-419 case runs FOLD-CHECK.md under `throwRead`, so the one new read in the launch gate is unpinned: if `textOf` does not absorb the throw, the launch dies with a stack trace instead of returning the refusal list — add `throwRead: true` to one task-419 case and assert the gate returns errors naming the unreadable file rather than throwing.
+
+DEFER severity=NIT — scripts/hooks/check-lane-close.mjs:645 "if (fc === undefined) errors.push(`FOLD-CHECK.md is missing in ${dirNote} (the separate grounder writes it beside GROUNDER-PLAN.md after checking the folded plan: ${form})`);" — the missing-file refusal does not print the expected `line` that is already in scope, so the grounder's only way to learn the hash to write is to create the file and be refused a second time on the stale Plan line; the form names "sha256:<12 hex>" but no value — append "expected: ${line}" here as the stale branch does below.
+
+REJECT — scripts/hooks/check-lane-close.mjs:645 "if (fc === undefined) errors.push(`FOLD-CHECK.md is missing in ${dirNote} ..." — an empty or whitespace-only FOLD-CHECK.md looks like it could slip a truthiness test — only undefined takes the missing branch, an empty file falls to the form checks and yields three errors, fail-closed.
+
+REJECT — scripts/analysis/rule-lists.mjs:424 "const n = ci * parts.length + i + 1;" — re-running lens-input looks like it could duplicate a review input under a new name — the number is deterministic from the material (same input, same chunk count, same suffix), so a repeat overwrites the same file, the write is idempotent by filename, and rules.mjs names no time, pid or random part.
+
+REJECT — scripts/hooks/check-lane-close.mjs "for (const a of i.assignees.filter((x) => nameKey(x) !== nameKey(i.laneName))) if (clash(who, a))" — skipping the lane's own assignee looks like a hole for a fold check signed with the lane name — a name equal to the lane is caught on the preceding branch "if (clash(who, i.laneName))", so the skip cannot let the lane through.
+
+VERDICT: PASS on error-path safety
+Paths walked: missing FOLD-CHECK.md, empty FOLD-CHECK.md, stale Plan line, duplicate Checked by/Verdict/Plan lines, CRLF and indent variants, folder read error, a no-list lens-input re-run, an unsuffixed output left beside a -p1 sibling, a repeated launch take after the gate   Unguarded: 1 (the folder-read throw on FOLD-CHECK.md, textOf not visible)
+
+---
+⏱  127990ms (128.0s)
+📊 Tokens — total: 37712, input: 14357, output: 23355, reasoning: 22477

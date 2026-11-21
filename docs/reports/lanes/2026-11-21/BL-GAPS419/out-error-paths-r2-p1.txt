@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-21T15:53:29.854Z file_sha256=6c7dd4e3fc54314a0af4e3e4f986c5a6f6314e0c07c53c7144049591019dbcbb prompt_sha256=25a3d0c32a5d75a6e40fb5db5f078c2345c0c0fb7286449372638357e305eb56
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-error-paths-r2-p1.txt (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> is not used below; no blocking error-path defect was found in the pasted material.
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:661 "the fold was checked on another text, so it must be checked again" — the record is bound to the whole task text, so any write to the task after the fold check (the take's launch note visible on the card, a notes or refs edit) changes the expected Plan line and refuses a re-run of the launch, while the spec requires a separate grounder to rewrite FOLD-CHECK.md, so a retry after a failed first launch is a fresh grounder round, not a re-run — rationale: bounded to a relaunch, the refusal prints the expected line and the status stays LATER (`expect(statusOf(f)).toBe('LATER')`), and whether the gate skips a task that is no longer LATER is not visible in this diff (grounder to check).
+
+DEFER severity=MED — docs/specs/00-architecture/137_mcqueue.md:142 "committed outputs are neither blessed nor broken" — a lane in flight that already committed the tool's unsuffixed `in-out-code-review.txt` and `out-code-review.txt` from a one-file no-list run still fails close on file_sha256 and can only get out by renaming both files, so the card's "without breaking outputs already committed" holds only for lanes not yet committed — rationale: the remediation is one `git mv` of the pair plus a re-run of the close check, and the test keeps the old lock deliberately (`the same pair renamed unsuffixed is still refused (the lock stays)`).
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs:426 "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — a one-chunk no-list run now writes into the same `-p1` name a previous multi-chunk run of the same `--out` used, and the tool does not clear the out directory, so a re-run after a rebase leaves stale `-p2`..`-pN` siblings beside a chunk 1 of 1 and the set read at close can mix two runs — rationale: whether the close check refuses an extra chunk cannot be seen here; the p1 content is the whole new diff, so blast radius is a stale extra input, not a wrong p1.
+
+REJECT — scripts/hooks/check-lane-close.mjs:643 "const fc = textOf('FOLD-CHECK.md');" — an absent file looks like a crash path and a zero-byte or prose-only file looks like a silent pass — the missing case is one explicit refusal, and a defined-but-empty text falls to the else branch where Checked by, Verdict and Plan are each checked, so an empty file yields three errors, fail-closed.
+
+REJECT — scripts/hooks/check-lane-close.mjs:647 "const lastOf = (re) => [...fc.matchAll(re)].pop();" — a grounder that appends a second record, or a lane that double-submits the launch, could appear to make a stale line win — every form line takes the last occurrence and the gate performs read-only calls (textOf, clash, planHash), so two runs write nothing and an appended older Plan line cannot override the newest.
+
+REJECT — scripts/hooks/check-lane-close.mjs:649 "const who = by ? by[1].split(/,| \(/)[0].trim() : '';" — a Checked by value with a trailing ", not BL-COMPLY2" ignores everything after the comma, so the lane and assignee clash is trivially bypassed — the spec note of the same change says the gate cannot prove the name is a real separate agent and forgery routes are owned by tasks 401 and 402, and the parse is the grounder's ruled Q3, so this is a security-lens surface, not an error-path one.
+
+VERDICT: PASS on error-path safety
+Paths walked: missing FOLD-CHECK.md, gitignored-but-present FOLD-CHECK.md, empty and prose-only FOLD-CHECK.md, absent and empty Checked by, non-PASS Verdict, missing/stale/inline Plan line, repeated form lines, body edit making both records stale, retry of a refused launch, re-run of lens-input into a reused out dir, pre-change unsuffixed pair at close, multi-chunk to one-chunk re-run, no timeout or network calls in the change   Unguarded: 0
+
+---
+⏱  117303ms (117.3s)
+📊 Tokens — total: 35303, input: 14832, output: 20471, reasoning: 19466

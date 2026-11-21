@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T22:44:14.824Z file_sha256=4a0b5210f4479c773425cafe624e73e34f5f89ae4fbf572da1410e70f1f2e632 prompt_sha256=e36b0e55b44e895732142533fb417e7a6c8ff57e0a07bb564326386d6fd6f4dc
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-gaps419/docs/reports/lanes/2026-11-21/BL-GAPS419/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 (f) and Q1 — "#6 (f) The three test files green; git diff --stat shows only the Files line." / "Q1 the Files line is final at eight paths (the six of the card plus docs/specs/00-architecture/08_agents.md and 137_mcqueue.md for the RR-0354 wording and the gate note)" — CLAUDE.md "diff --git a/CLAUDE.md b/CLAUDE.md" adding "**Cross-read Adversary** ... is no longer required after a fold and stays available on request (Spec 08 §11.2 dated note 2026-11-21, RR-0351, RR-0354, RR-0360)." — clause unmet: CLAUDE.md is not one of the eight ruled Files paths and the pasted Implementation Notes list the CLAUDE.md copy among the ones "that this task does not edit", so the diff touches a file outside the Files line — fix: revert both CLAUDE.md hunks before merge, or amend the Files line and record RR-0360 first and re-run the fold check.
+
+BUG severity=HIGH — Q4 — "Q4 plant-evidence.mjs is edited (a fixture program, 3 lines between :66 and :67)" — NONE (no hunk for docs/reports/reviews/task-375/plant-evidence.mjs in the material, although the Files line names it) — clause unmet: an edit the plan ruled and put on the Files line is absent from the change — fix: add the ruled three lines at :66-:67 that plant the FOLD-CHECK.md evidence, then re-run the three test files.
+
+DEFER severity=MED — AC #1 (a) — "With the file (Checked by: Fold-G1, Verdict: PASS, correct Plan line) it prints "plan gate ok"." — src/tests/backlog/backlog-lane.logic.test.ts "const text = fs.readFileSync(fold, 'utf8');" — the new control reads a planted FOLD-CHECK.md whose Plan line must equal the launch-time hash, but cannot see any write of that file in this test file or a fixture helper change in the material, so the green half of (a) rests on code that is not in the diff — fix: have the fixture (or the Q4 plant-evidence.mjs edit) write "Checked by: Fold-G1", "Verdict: PASS" and the gate's expected Plan line before the control dry run.
+
+DEFER severity=MED — Implementation Notes, "the copies of the 11.2 wording in CLAUDE.md, .claude/workflows.md, packs/spec08.md and Spec 119 that this task does not edit" — docs/specs/00-architecture/08_agents.md (added note) "CLAUDE.md is edited by this task on RR-0360 (lines 139 and 143)" — clause unmet: the committed spec note asserts an edit and a ruling that the pasted Decisions list (RR-0351, RR-0352, RR-0354, RR-0355 only) and the ruled Files line do not carry — fix: drop that sentence from the note, or add RR-0360 to the task's decisions and CLAUDE.md to the Files line before merge.
+
+DEFER severity=LOW — Spec 137 note (added) "equal to the hash of the task as it is at launch (the refusal prints the expected line)" — scripts/hooks/check-lane-close.mjs "errors.push(`FOLD-CHECK.md is missing in ${dirNote} (the separate grounder writes it beside GROUNDER-PLAN.md after checking the folded plan: ${form})`);" — the missing-file refusal prints the form but not the expected Plan line, while the same clause says the refusal prints the expected line — fix: append "; expected: ${line}" to the missing-file message.
+
+MET — AC #3 (c) — scripts/analysis/rule-lists.mjs "files.push({ suffix: list && files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });" — a no-list one-file input is now named -p1 and a rule-list one-file input keeps its unsuffixed name.
+MET — AC #4 (d) — src/tests/backlog/check-lane-close.logic.test.ts "expect(ok.status, ok.stderr).toBe(0);" on the in-out-code-review-p1 pair, with the unsuffixed rename still refused.
+MET — AC #1 first half — scripts/hooks/check-lane-close.mjs "FOLD-CHECK.md is missing in ${dirNote}" — the refusal names the file and the launch dry run exits 3.
+MET — AC #2 (b) — src/tests/backlog/backlog-lane.logic.test.ts "expect(c3.stderr).toMatch(/FOLD-CHECK\.md: the Plan line/);" — the stale Plan line after a one-word body edit, with the expected line asserted.
+MET — Spec 137 note, separate grounder — scripts/hooks/check-lane-close.mjs "clash(who, i.laneName)" and the assignee loop refuse the lane or an assignee as "Checked by".
+MET — Q3 — scripts/hooks/check-lane-close.mjs "by[1].split(/,| \(/)[0].trim()" with lastOf for the repeated line, the text up to the first comma or " (" and the last occurrence counts.
+MET — Q8 — src/tests/backlog/rule-lists.logic.test.ts "expect(n.written).toEqual(['in-out-code-review-r2-p1.txt']);" — a round file made with no list is -rN-p1.
+MET — RR-0351 and RR-0354 — docs/specs/00-architecture/08_agents.md (added 11.2 note) — the cross-read pass is no longer required and the grounder's re-execution stays with FOLD-CHECK.md.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 5
+
+---
+⏱  100275ms (100.3s)
+📊 Tokens — total: 36870, input: 16744, output: 20126, reasoning: 18785

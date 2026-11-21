@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T14:44:09.398Z file_sha256=4ccd6d845a43ce483a67d096ea3f308b1f47b734c59df3b67f8a65e8c372c712 prompt_sha256=2168f9a3eabbf8404fe79ae0d9bef182fc41198eab24c7f77ca3a419fd0333a2
+🔍 Lens review of docs/reports/reviews/task-419/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §3 Rule 3 "The status line changes in the same commit as the work." and §1 rule 3 note "a commit that changes `src/`, `scripts/`, `mobile/` or `migrations/` carries a `Task: task-N` trailer and that task or draft file is in the same diff" — PLAN-419-v1 §6 "commit A = the two scripts, the tests and plant-evidence.mjs, through the real hooks, no task move (self-edit rule :681-682); commit B (later) = task file and queue row to DONE with evidence" — commit A changes scripts/ and src/tests with no task file and no status line, and the only pasted exception to Rule 3 is for "lane build and fix tasks", which the plan never says task-419 is (task line "status: LATER · milestone: m-1 · assignee: none"); the cited self-edit rule :681-682 is not in the pasted context — state the lane and the amended Rule 3 basis, or land the status line and the task file in commit A and adjust §7(f).
+
+BUG severity=HIGH — Spec 137 §4 rule 12 dated note (task-410) "the closing commit stages a path other than the lane's report directory, the task's review context directory, task files and decision records" — PLAN-419-v1 §6 "commit B (later) = task file and queue row to DONE with evidence" — a queue row is not in the permitted set, and this plan task's row is its Backlog file (Spec 137 §1 Rule 2 note "a plan task that is not a queue row: its Backlog file is its row"), so commit B either stages a refused path or names a row that does not exist — drop the queue row from commit B, or show it is the task file.
+
+DEFER severity=MED — Spec 137 §4 rule 12 dated note (task-366) "the close of a lane's task ... now also needs, in the repo copy of the lane report (`docs/reports/lanes/<date>/<lane>/`), one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding" and task-375 note "refuses a close whose task references lack the repo copies of REPORT.md, GROUNDER.md and, when the lane directory holds one, TRIAGE.md" — PLAN-419-v1 §6 "commit B (later) = task file and queue row to DONE with evidence" — commit B names no lane report directory, compliance output, GROUNDER.md, TRIAGE.md or references, so the close is refused unless the lane adds them unplanned — name the lane directory and its required files in §6, or state why these close requirements do not apply.
+
+DEFER severity=MED — Card "The plan (to be written read-only and reviewed before any build) names the design and the final Files line." — PLAN-419-v1 §9 "Files line: may it grow by backlog-lane.logic.test.ts and plant-evidence.mjs (card lists four)?" — the final Files line is left to the grounder and the count is wrong, the card lists six paths, so the plan does not name it as final — state the six paths as final and drop open question 1.
+
+DEFER severity=LOW — Card "makes the fold check a committed record that the pre-launch steps carry and the launch check can see, written by the grounder and never by the script" — PLAN-419-v1 §3 "Checked-by missing or clash() with lane or any assignee -> refusal (reuse clash, same rule as the grounder)" — the assignee-clash refusal is behaviour no pasted clause or ruling names; the card names only the grounder-versus-script split — apply the clash to the lane only, or get the grounder to name assignees.
+
+MET — RR-0351 "Gap 3 we dont need the cross check." — PLAN-419-v1 §1 "Cross-read pass is out of scope" — the excluded pass is excluded.
+
+MET — RR-0352 "Let's resolve 1 and 2 now." — PLAN-419-v1 §3 "Gap 1." and "Gap 2." — both gaps have a design with a writer and a naming rule.
+
+MET — Card "Reuse what exists; no new tool." — PLAN-419-v1 §3 "Rejected: ... a new tool" — the plan edits planGateInner and buildLensInputs and adds no tool.
+
+MET — Card "without breaking outputs already committed" — PLAN-419-v1 §3 "Committed outputs still pass: the close check is not edited for gap 2; -p1 pairs keep their path (:487-503); unsuffixed compliance keeps listProof; BL-MASSING keeps :509-513." — the committed naming routes are preserved.
+
+REJECT — Spec 137 §3 Rule 1 "Every row has ONE status line, REPLACED when the status changes" — the plan is accused of adding a second status line for task-419 (the FOLD-CHECK.md Verdict) — not a real issue, the Verdict line is evidence in docs/reports, not a row status line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 4
+
+---
+⏱  231232ms (231.2s)
+📊 Tokens — total: 60077, input: 15161, output: 44916, reasoning: 43743
