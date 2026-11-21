@@ -1,21 +1,29 @@
-◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
-REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T00:12:55.672Z file_sha256=30a8d0ab97177d90a245536c7e9b88b765dd3acb6a38745a5cb79a41dda977a1 prompt_sha256=026fad86c3ffbb2f084f52b8b6b103fabd21dd22a980550476d8db34ae83897e
-🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/outcome/diff.patch (model: deepseek-reasoner)
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T00:41:38.550Z file_sha256=144c5750b90a4bb09ef50963f1e7d46d8579b9fdacd60e93f219a57dc834118d prompt_sha256=d34cf3642a92222d0ecc6713ca07a48f428a925b4a6d64e04b0f200f4570b995
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/outcome/diff2.patch (model: deepseek-reasoner)
 
-BUG severity=HIGH — scripts/hooks/check-lane-close.mjs `!new RegExp(`(?<![A-Za-z0-9_-])${esc(id)}(?!\\d)`).test(ti.text) && !ti.text.includes(v.file)` — the `task:` outcome passes when the follow-up task text merely contains the cited file path, so an unrelated task on the same file satisfies the outcome without naming the finding, and both notes in this diff say it must "name the finding id" — require the id token only (drop the `|| ti.text.includes(v.file)` alternative, i.e. make the error `!test(ti.text)`).
+BUG severity=MED — scripts/hooks/check-lane-close.mjs:138 "const SEAT_LINE = /^\s*(?:#+\s+)?([a-z0-9]+)#(\d+)\s+(CRITICAL|HIGH|MED|LOW|NIT)\b/;" — the seat finding id group is lower-case letters and digits only, so any hyphenated seat finding id (the shape this change's own notes use, "grounder out-code-review#1", "out-compliance-queue-137#2") never matches, found.length is 0, and a well formed seat report is refused with "holds no finding line"; the triage id regex in the same function uses "([A-Za-z0-9._-]+#\d+)" — widen the group to [A-Za-z0-9._-]+ and add a test with a hyphenated seat id.
 
-DEFER severity=MED — scripts/hooks/check-lane-close.mjs `const SEAT_LINE = /^\s*(?:#+\s+)?([a-z0-9]+)#(\d+)\s+(CRITICAL|HIGH|MED|LOW|NIT)\b/;` — the seat finding-id prefix allows only lowercase alphanumerics while the TRIAGE line parser uses `([A-Za-z0-9._-]+#\d+)` and lens ids are hyphenated, so a seat report line like `### reality-check#1 HIGH:` is not recognized, `found.length` is 0 and the close is refused with "holds no finding line" (or the verdict is mis-severity CRITICAL) — widen the class to match the TRIAGE parser, e.g. `([A-Za-z0-9][A-Za-z0-9._-]*)#(\d+)`.
+BUG severity=MED — scripts/hooks/check-lane-close.mjs:154 "export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = 'close', seats = [], seatRoot = null, summary = null, selfTask = null }) {" — the @param type above it lists verdicts, triageText, lensKinds, facts, mode, seats, seatRoot and summary but not selfTask, so the option used two screens down ("if (selfTask && ref === String(selfTask).toLowerCase())") is outside the documented parameter type and both call sites pass it unchecked; add "selfTask?:string|null" to the @param object.
 
-DEFER severity=LOW — scripts/hooks/check-lane-close.mjs `const head = /<!-- SECTION:FINAL_SUMMARY:BEGIN -->([\s\S]*?)<!-- SECTION:FINAL_SUMMARY:END -->/.exec(summary.headText ?? '')?.[1] ?? '';` — non-global `exec` takes only the first FINAL_SUMMARY section of the HEAD task, so when HEAD holds a second section (exactly what the `priorRound` test appends) the round number undercounts and the check can accept an already-present `Review round 2:` line rather than requiring the new one — count `Review round \d+:` across the whole `headText` (global match / matchAll over every section) instead of only the first section.
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:184 "const k = kinds.get(id) ?? { kind: 'BUG', sev: null };" — only kind and sev of a map value are ever read, so the line field written for every seat finding ("kinds.set(id, { kind: 'BUG', sev: normSev(m[3]), line: m[0].trim() })") and returned by lensKindOf is dead data; drop line from the value or print it in the no-verdict refusal.
 
-DEFER severity=NIT — scripts/hooks/check-lane-close.mjs `kinds.set(id, { kind: 'BUG', sev: normSev(m[3]), line: m[0].trim() });` — the `line` field put on the kinds map (and returned by `lensKindOf`) is never read anywhere in `outcomeErrors`, dead data the diff introduces — drop the `line` property or surface it in the refusal messages.
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:642 "const rd = (n) => { try { return fs.readFileSync(path.join(abs, n), 'utf8'); } catch { return null; } };" — every read error is swallowed, so EACCES or EISDIR is reported to the operator as "no GROUNDER.md in <dir>" or as a missing TRIAGE.md, naming the wrong cause; keep returning null but write e.code to stderr when e.code is not ENOENT.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:645 "const lensFiles = fs.readdirSync(abs).filter(isLensOutput).sort().map((name) => ({ name, text: fs.readFileSync(path.join(abs, name), 'utf8') }));" — an unreadable lens output throws out of outcomesCli and Node prints a stack trace, which contradicts the lane's own rule in the new test ("expect(r.stderr).not.toMatch(/ENOENT/)"); read these through the guarded helper and emit a refusal line naming the file.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:297 "const n = /\d+/.exec(tid)?.[0];" — a zero padded ref such as task:task-0399 keeps its zeros, so the lookup regex "task-0*0399" never matches the real "backlog/tasks/task-399 - ....md" and the close is refused with "has no task file", while the exact string compare against selfTask does not recognise it as the closing task either; Number() the digits before building both.
+
+DEFER severity=NIT — src/tests/backlog/check-lane-close.logic.test.ts "const tctx: TriageCtx = { ids: verdictRows, sha: laneSha, path: laneFirst, base: baseSha, d };" — no triage callback in the added tests reads ctx.ids or ctx.d (they use sha, path, base only), so two fields of TriageCtx are dead; drop them or use one in a test that asserts the parsed severities.
+
+REJECT — scripts/hooks/check-lane-close.mjs:255 "const lines = rows.filter((r) => r.sev === 'CRITICAL' || r.sev === 'HIGH' || r.sev === 'MED').map((r) => `${r.id} ${r.sev} ${r.word} ${r.ref}`);" — it looks like a wontfix or pile row would demand a summary line ending in a trailing space, because ref is never assigned on that branch; not reachable, because wontfix and pile are allowed only when sev is LOW or NIT and those rows are filtered out of this list.
 
 VERDICT: FAIL on code correctness
 Top 3 defects (if FAIL):
-- The `task:` outcome passes on the cited file path alone, not the finding id, so an unrelated same-file task satisfies the guard.
-- The seat finding-id regex (`[a-z0-9]+`) is narrower than the TRIAGE/verdict id form (`[A-Za-z0-9._-]+`), so hyphenated or uppercase seat ids are rejected as "holds no finding line".
-- The round counter reads only the first FINAL_SUMMARY section of the HEAD task, undercounting rounds once a second section exists.
+- SEAT_LINE's id charset excludes hyphens, so valid seat reports are refused as "holds no finding line"
+- outcomeErrors' documented parameter type omits selfTask, which it destructures and uses
+- outcomesCli reads lens outputs unguarded and reports every TRIAGE/GROUNDER read error as a missing file
 
 ---
-⏱  274573ms (274.6s)
-📊 Tokens — total: 76250, input: 20534, output: 55716, reasoning: 54981
+⏱  144866ms (144.9s)
+📊 Tokens — total: 49235, input: 21745, output: 27490, reasoning: 26339

@@ -1,19 +1,26 @@
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:12:55.669Z file_sha256=0e2558675a9ef7016791f48348f74a664fce0bdc3c7fd8faaa1507ae5eddeb71 prompt_sha256=55d6c0d956a57f92049d63a1c7ba9c7d75adb3b290bba50c643860f96fa02d37
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T00:41:38.472Z file_sha256=1b0001b67ec44e54c0c4dcfb89577564bd93c8e06921baf9d867dc316dc69b84 prompt_sha256=59896ed2e6915f7903b03860bfbdbb0661f4f82f283f5f1e3422b60deeb9459e
 🔍 Lens review of docs/reports/lanes/2026-11-20/BL-OUTCOME/in-out-compliance-five-words.txt (model: deepseek-reasoner)
 
-REJECT — Glossary "lock / lock-db / check / hook" "a lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — accused: the new suites (`src/tests/backlog/check-lane-close.logic.test.ts`, `backlog-brief.logic.test.ts`) name task-399 and spec section pointers ("SPEC LINK (task-399): Spec 08 section 7 rule 3"), not a rule id or declared alias, so they are not locks — not a real issue for this lens: the clause defines the enforcement kind, it does not require this change's tests to be a lock, and the rule-map row that would assign the kind is not pasted.
-REJECT — Glossary "#NN" "Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates" — accused: the diff cites 08_agents.md:346, :350, :225 and 124a:296 — not a real issue: those are file:line pointers to specs, not step-validate fast-invariant numbers, so the clause is not engaged; whether the cited lines hold what is claimed is a Ground-truth question, not mine.
-REJECT — Glossary "†" "An id or code pointer that lands with another branch (rule-map `meta.pending_integration`)" — accused: task-399, task-375, task-401/402, task-410 and PLAN-399-v3 are cited without the † marker — not a real issue: whether any of these is a pending-integration id lives in the rule map, which is not pasted (cannot see).
-MET — Glossary "five words" "STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates" — paths "[\".claude/review-templates/README.md\",\"docs/reports/generated/rule-lists-by-kind.md\",\"docs/specs/00-architecture/08_agents.md\",\"docs/specs/00-architecture/137_mcqueue.md\",\"scripts/analysis/backlog-brief.mjs\",\"scripts/hooks/check-lane-close.mjs\",...]" — no step descriptor, manifest key, compute hook or gate-V input is touched, so no five-words output changes.
-MET — Glossary "seam" "cross-step seams are producer → consumer edges (`inputs.reads.steps`); the ENRICHER write seam is `ctx.exec` / `ctx.joinUpdate`" — "scripts/hooks/check-lane-close.mjs" "export function gitFacts(L) {" — the new code reads git refs and lane files only; it adds no step edge and issues no DML through a runner seam.
-MET — Glossary "Intent Ledger" "The table in a step's assessment report listing each behaviour of the legacy step and its disposition" and "G-2 ... every preserved-in-compute Intent Ledger row names where its rule is written" — paths list above — no assessment report, `preserved-in-runner` row or `checkPreservedInComputeHasWhy` input is touched, so neither clause can be broken here.
-REJECT — scope (no card or ruling pasted) — accused: the diff adds a whole lane-close outcome subsystem (TRIAGE.md forms, seats, `--outcomes`, plan mode) that no pasted clause names — not a real issue for this lens: the pasted context is the Glossary only, the operator words the diff itself quotes (:1517, :1580) are material under review, not governing context, so scope compliance cannot be assessed (cannot see the card).
-REJECT — Glossary "Gate A … K, V" "implemented in `scripts/analysis/gates/` or in `scripts/analysis/step-validate.mjs` (gates H, K and V live there)" — accused: a new gate-like CLI lives in `scripts/hooks/check-lane-close.mjs` — not a real issue: the clause scopes only the lettered R-BA gates and gate V; `--outcomes` is not claimed to be one of those tokens, and no pasted clause forbids another close check.
+DEFER severity=MED — Glossary "lock / lock-db / check / hook": "a lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/backlog/check-lane-close.logic.test.ts:598 "// SPEC LINK (task-399): Spec 08 section 7 rule 3" — the new enforcement tests name a task id and spec sections, no rule id and no declared alias, so under this Glossary line the outcome rule has no lock at all — put the rule id (or its alias from the rule map) in the describe/it titles of the new tests so the rule map can point at a lock.
 
-VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 6   Unmet: 0
+DEFER severity=MED — Glossary "lock / lock-db / check / hook": "a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook" — .claude/review-templates/README.md:109 "`node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` checks them" — the change adds a standalone CLI surface (`outcomesCli`) that is none of the four Glossary kinds (not a step-validate token, not a .husky hook, not a lock, not a lock-db), and the diff carries no rule-map row recording a kind for it — either reach it only through the existing .husky close hook, or add the new kind to the Glossary and a rule-map row beside it.
+
+MET — Glossary "lock / lock-db / check / hook" — docs/reports/generated/rule-lists-by-kind.md:105 "| total | 9 lists | | 189,359 | 9 |" — the regenerated report is internally exact: rows sum to 189,359 and the spec-only rows to 144,384, so the list bookkeeping the enforcement rows depend on is consistent.
+
+MET — Glossary "five words" — docs/reports/generated/rule-lists-by-kind.md:100 "| five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |" — the five-words list and its 132 source are untouched by the diff, so gate V's mapping is not disturbed.
+
+REJECT — Glossary "RE-FREEZE #N" — accused of revising the frozen step vocabulary — the diff touches no step.schema.json, template-freeze.json or converted.json.
+
+REJECT — Glossary "archetype vs shape" — accused of changing what a step is or how it executes — no descriptor, manifest or converted.json line appears in the diff.
+
+REJECT — Glossary "#NN" — accused of citing an invariant number that does not exist — the hand-written additions cite task, rule and section numbers (task-399, rule 6, section 5.3), no #NN invariant number.
+
+REJECT — Glossary "Intent Ledger" / "G-2" — accused of a preserved-in-compute row without its why — the diff carries no assessment report, no Intent Ledger table and no §R Reflection.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 2
 
 ---
-⏱  58363ms (58.4s)
-📊 Tokens — total: 32879, input: 22382, output: 10497, reasoning: 9551
+⏱  53385ms (53.4s)
+📊 Tokens — total: 33054, input: 23591, output: 9463, reasoning: 8769
