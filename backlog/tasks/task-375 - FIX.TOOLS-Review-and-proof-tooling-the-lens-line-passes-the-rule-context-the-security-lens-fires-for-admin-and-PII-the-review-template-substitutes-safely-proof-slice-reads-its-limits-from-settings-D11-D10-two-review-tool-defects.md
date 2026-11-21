@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T01:57:00Z'
+updated_date: '2026-11-21T01:59:00Z'
 labels:
   - McFix
   - McFix A
@@ -391,4 +391,6 @@ BL-GATE375 build note (D5 wiring, the LAST commit of backlog-lane.mjs): after th
 BL-GATE375 build note (D6): backlog-brief.mjs prints the line that the plan is the task text at launch, checked before launch, that the lane does not edit Description, Acceptance or Plan, records deviations in Implementation Notes and still runs a plan-stage lens of its own. Red: red12.out.
 
 BL-GATE375 build note (section 10): ONE dated note under the TKT-1 note of 08_agents.md (context-rN.md; the plan-only seats) and a dated note in 137_mcqueue.md after the :138 note (the close refusals and the launch gate, what it cannot prove), prior text kept.
+
+BL-GATE375 acceptance, third run (outputs in ~/Buildo-scratch/lanes-20261119/inc1b/gate375/acc). A0: node scripts/analysis/backlog-brief.mjs --task task-381 --lane BL-ACC --root . : exit 0, context-r1.md holds 2 of the 2 headings '## Implementation Plan' and '## Implementation Notes'. A1: NOT RUN: scripts/deepseek-review.js needs the API key from the environment file even for --dry-run, and the dotenv form was denied by the permission classifier for this run. A2 (buildLensInputs with the 5 sections, material 17,753 characters): task-381 15 lists, 5 sections 2121 characters, 17 calls, 0 refused (expected 17); task-410 10 lists, 14181 characters, 11 calls, 0 refused; task-267 18 lists, 9416 characters, 21 calls, 0 refused. A3 (lens-input CLI, 60,000-character material): surface-135 exit 0 3 parts, policy-124-s2-s5 exit 0 3 parts, bylaw-133 exit 0 3 parts; the 'today exit 1' half was not re-run on the old head (UNVERIFIED). A4: check-tasks on the live board exit 0, prints 106 commands; for task-101 (LATER, type record, not build) the command carries 6 compliance: entries = 6 lists of resolve; the 'after running the printed command' half is NOT RUN (it edits another task). A5: the planted refusals with controls are the tests in check-lane-close.logic.test.ts, backlog-lane.logic.test.ts, rule-lists.logic.test.ts, backlog-brief-context.logic.test.ts (green in the commits). A6: review-template.logic.test.ts green in ef574eb02. A7: green in 7b7d6f5f7. A8: OPEN (no DB). A9: NOT RUN.
 <!-- SECTION:NOTES:END -->
