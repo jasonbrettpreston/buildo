@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-21T22:20:00Z'
+updated_date: '2026-11-21T22:42:00Z'
 labels:
   - McFix
   - McFix V2
@@ -35,3 +36,9 @@ Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's r
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-21 (M-246) This card takes over these findings of the task-419 output review, deferred here by the task-419 grounder (Cairn-Ground-O419, GROUNDER round 3) on the operator's ruling that the other copies are changed: out-compliance-eng-all-r1#2, out-compliance-orchestrator-doc17-r1#2, out-compliance-plan-protocol-r1#3, out-compliance-eng-all-r2#2, out-compliance-ms-S-r2#2, out-compliance-orchestrator-doc17-r2#3. Spec 119: the grounder could not locate the copy; this task finds it by reading and adds its path to the Files line at its plan.
+<!-- SECTION:NOTES:END -->
