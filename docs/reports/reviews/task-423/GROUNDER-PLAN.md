@@ -195,3 +195,5 @@ A (task-423, adjustments 1 and 3), then B (adjustments 4 and 2); order A, B beca
 6. Cards in order: A (task-423), B (opened after A is built); the station line by the orchestrator.
 7. Only you can decide: (a) whether the large specs get a small rules section or are consolidated, so surface, phone and storage tasks reach one or two calls (your own option); (b) the move of the station into the repo (the freeze named list, MORNING-DECISIONS.md:745); (c) dropping adjustment 5 from the five you approved: it is not built, task-414 stays open, a fix re-runs the joined set (5 calls) instead of 11, the same cost as a fix-diff re-run.
 8. 129 findings ruled: 113 confirmed (16 high, 72 medium, 23 low, 2 nit), 16 rejected, no CONFLICT. The plan quotes RR-0361 for "It isn't 17": that entry has no RR number (it is at MORNING-DECISIONS.md:1711); decision-146 is about task-386.
+
+Plan: task-423 sha256:b485973db7df
