@@ -759,6 +759,23 @@ describe('plan-prep commit and the end to end (task-418)', () => {
     expect(head(f)).not.toBe(h0);
     expect(git(f.board, 'show', '--name-only', '--format=', 'HEAD').stdout.trim()).toBe(`docs/reports/reviews/${f.task}/TRIAGE-PLAN.md`);
   });
+  it('fix round 1 (g418#1): --launch-args cannot turn the launch dry run into a real launch: the identity flags and --dry-run it carries are refused, the task stays LATER with no worktree and no branch; the control without the override is a dry run', () => {
+    const f = prepFixture({ evidence: true });
+    const bad = prep(f, 'commit', ['--launch-args', JSON.stringify(['--dry-run', 'x', '--no-launchd', ...f.args.slice(6)])]);
+    expect(bad.status, bad.stdout + bad.stderr).toBe(3);
+    expect(bad.stderr.trim().split('\n')).toHaveLength(1);
+    expect(bad.stderr).toMatch(/^plan-prep: refused: .*--dry-run/);
+    expect(statusOf(f)).toBe('LATER');
+    expect(fs.existsSync(f.wt)).toBe(false);
+    expect(git(f.board, 'branch', '--list', 'wf2/t1').stdout.trim()).toBe('');
+    for (const flag of ['--task', '--lane', '--board']) refusal(prep(f, 'commit', ['--launch-args', JSON.stringify([flag, 'other'])]), new RegExp(flag));
+    expect(statusOf(f)).toBe('LATER');
+    const ok = prep(f, 'commit');
+    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+    expect(ok.stdout).toMatch(/plan gate ok/);
+    expect(statusOf(f)).toBe('LATER');
+    expect(fs.existsSync(f.wt)).toBe(false);
+  });
   it('11 and 14: a CONFIRMED HIGH folded: post, commit (the dry run prints the expected Plan line), the grounder copies it, commit again prints "plan gate ok"; one word edited in the task refuses with the new expected line', () => {
     const f = prepFixture({ evidence: true });
     stripRound(f);

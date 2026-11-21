@@ -576,7 +576,16 @@ export async function planPrep(a) {
       return st.stdout.split('\n').filter(Boolean).map((l) => l.slice(3).replace(/^.* -> /, '').replace(/^"(.*)"$/, '$1')).filter((p) => !p.startsWith('backlog/') && !p.startsWith(`${ev}/`) && !/(^|\/)node_modules\/?$/.test(p));
     };
     const notDirty = () => { const d = dirtyOutside(); if (d.length) refuse(`board checkout ${board} is dirty outside backlog/ and ${ev}/: ${d.slice(0, 5).join(', ')}${d.length > 5 ? ', ...' : ''}`); };
-    const launchArgs = () => { try { const v = JSON.parse(str('launch-args', '[]')); return Array.isArray(v) ? v.map(String) : []; } catch { throw new Stop(2, 'usage: --launch-args must be a JSON array of strings'); } };
+    // test-only seam: the launch dry run takes the fixture's own paths (--main, --panel-tools, ...) and NOTHING else. Only these flags, each with a plain value, are accepted: identity (--task, --lane, --board), --dry-run and every flag that launches or takes are refused, and the gate argv puts the identity and --dry-run last
+    const LAUNCH_ARG_FLAGS = ['--main', '--panel-tools', '--backlog-bin', '--worktree', '--lane-dir', '--date'];
+    const launchArgs = () => {
+      let v;
+      try { v = JSON.parse(str('launch-args', '[]')); } catch { throw new Stop(2, 'usage: --launch-args must be a JSON array of strings'); }
+      if (!Array.isArray(v)) throw new Stop(2, 'usage: --launch-args must be a JSON array of strings');
+      const out = v.map(String);
+      for (let i = 0; i < out.length; i += 2) if (!LAUNCH_ARG_FLAGS.includes(out[i]) || out[i + 1] === undefined || out[i + 1].startsWith('--')) refuse(`--launch-args carries "${out[i]}": only ${LAUNCH_ARG_FLAGS.join(', ')}, each with a value, are accepted (the launch dry run never launches)`);
+      return out;
+    };
 
     if (phase === 'review') return await reviewPhase();
     if (phase === 'post') return await postPhase();
@@ -719,7 +728,7 @@ export async function planPrep(a) {
       const changed = git('status', '--porcelain', '--untracked-files=all', '--', ev).stdout.trim() !== '';
       const addArgv = ['git', 'add', '--', ev];
       const commitArgv = ['git', 'commit', '-q', '-m', `docs(08_agents): plan review evidence for ${taskId}`, '--', ev];
-      const gateArgv = ['node', path.join(HERE, 'backlog-lane.mjs'), '--task', taskId, '--lane', lane, '--board', board, '--dry-run', ...launchArgs()];
+      const gateArgv = ['node', path.join(HERE, 'backlog-lane.mjs'), ...launchArgs(), '--task', taskId, '--lane', lane, '--board', board, '--dry-run'];
       if (changed) { say(board, addArgv); say(board, commitArgv); } else console.log(`plan-prep commit: ${ev}/ is already committed`);
       say(board, gateArgv);
       if (dry) return 0;

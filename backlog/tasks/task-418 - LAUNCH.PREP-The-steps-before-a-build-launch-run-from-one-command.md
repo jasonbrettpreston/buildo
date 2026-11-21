@@ -5,7 +5,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-PREP418'
 created_date: '2026-11-21T00:24:00Z'
-updated_date: '2026-11-21T06:03:00Z'
+updated_date: '2026-11-21T06:20:00Z'
 labels:
   - McFix
   - McFix V2
@@ -237,4 +237,6 @@ rg#4 MED folded one review round per
 (b) plan-prep review --task task-412 --lane BL-FOLLOWROW --board <clone> --dry-run (a scratch plan set on 412 in the clone only): exit 0; counts: backlog-brief 1, lens-input 9, compliance review commands 9, plan-lens review commands 2 (plan-review-deepseek.md, lens-error-paths.md); git status --porcelain before and after identical (only the scratch plan edit under backlog/). DEVIATION from the plan sentence 'builds the inputs in memory to name the parts': the dry run names each input file as in-plan-compliance-<id>[-pN].txt, because the part count comes from the context the brief writes and the dry run writes nothing.
 (d) the same without --dry-run on task-412 with its empty plan field: 'plan-prep: refused: task-412: the Implementation Plan field is empty (backlog task edit task-412 --plan ...): there is nothing to review', exit 3, one line, nothing written.
 (c), (e) and (f) NOT RUN: they need real DeepSeek calls and agent steps on task-412 (owed after the fold; task-412 is the first scripted proof).
+
+2026-11-21 (M-246) BL-PREP418 fix round 1 (grounder Cairn-Ground-O418, g418#1 = out-compliance-eng-all#3 MED): --launch-args could carry --dry-run and the identity flags and turn the commit phase's launch dry run into a real launch. Red test first (commit phase with --launch-args '["--dry-run","x","--no-launchd",...]': expect refusal, task LATER, no worktree, no branch).
 <!-- SECTION:NOTES:END -->
