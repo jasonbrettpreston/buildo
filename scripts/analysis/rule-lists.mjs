@@ -47,8 +47,10 @@ export function splitDiff(text) {
 export const diffPaths = (text) => (splitDiff(text) ?? []).map((s) => s.path);
 
 export const readTable = (file = DEFAULT_TABLE) => JSON.parse(fs.readFileSync(file, 'utf8'));
+/** The environment of a git call that must read the repository its cwd names: every GIT_* variable removed (a commit hook exports GIT_DIR, GIT_INDEX_FILE and GIT_WORK_TREE, which would make a call in another directory answer from the calling repository; precedent: scripts/analysis/mcbylaws-loop/loop-gate.mjs, src/tests/backlog/helpers.ts). */
+export const gitFreeEnv = () => Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
 export function trackedFiles(root) {
-  const r = spawnSync('git', ['-c', 'core.quotepath=false', 'ls-files', '-z'], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 28 });
+  const r = spawnSync('git', ['-c', 'core.quotepath=false', 'ls-files', '-z'], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 28, env: gitFreeEnv() });
   if (r.status !== 0) throw new Error(`git ls-files failed in ${root}: ${String(r.stderr).trim().split('\n')[0]}`);
   return r.stdout.split('\0').filter(Boolean);
 }

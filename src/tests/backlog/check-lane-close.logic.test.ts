@@ -838,6 +838,9 @@ async function planScenario(o: PO = {}) {
   const d = tmp('pg');
   for (const [p, t] of Object.entries(mem)) { fs.mkdirSync(path.dirname(path.join(d, p)), { recursive: true }); fs.writeFileSync(path.join(d, p), t); }
   fs.mkdirSync(path.join(d, 'backlog/milestones'), { recursive: true });
+  // the gate reads the tracked files of root (git ls-files), so the fixture is a real repository, as the lane-test fixtures are (the environment of a commit hook must not stand in for it)
+  const gi = (...x: string[]) => run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...x], { cwd: d });
+  gi('init', '-q', '.'); gi('add', '-A'); gi('commit', '-q', '-m', 'fixture');
   const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
   for (const [p, t] of LENS_TEMPLATES) mem[p] = t;
   const type = o.type ?? 'build';

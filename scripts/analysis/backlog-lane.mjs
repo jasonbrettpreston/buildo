@@ -22,7 +22,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { args, asList, descriptionOf, home, parseFM, readItems, REPO, sha256, today } from './backlog-lib.mjs';
 import { planGateErrors } from '../hooks/check-lane-close.mjs';
-import { complianceRefs, DEFAULT_TABLE, DIFF_ARGS, filesText, lensSet, milestoneLetter, readTable, resolveTask, verifyResolved } from './rule-lists.mjs';
+import { complianceRefs, gitFreeEnv, DEFAULT_TABLE, DIFF_ARGS, filesText, lensSet, milestoneLetter, readTable, resolveTask, verifyResolved } from './rule-lists.mjs';
 
 const a = args();
 const str = (k, d) => (a[k] && a[k] !== true ? String(a[k]) : d);
@@ -53,7 +53,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const briefScript = path.join(here, 'backlog-brief.mjs');
 const jobScript = path.join(REPO, 'scripts/board/board-commit.zsh');
 
-const sh = (cwd, argv) => spawnSync(argv[0], argv.slice(1), { cwd, encoding: 'utf8', maxBuffer: 1 << 26 });
+const sh = (cwd, argv) => spawnSync(argv[0], argv.slice(1), { cwd, encoding: 'utf8', maxBuffer: 1 << 26, env: gitFreeEnv() }); // the board is named by cwd, never by an ambient GIT_DIR of a hook
 const git = (...g) => sh(board, ['git', '-c', 'core.quotepath=false', ...g]);
 
 // ---- preflight: everything that can be checked, before the first write ----
@@ -114,7 +114,7 @@ const fail = (what, r) => { process.stderr.write(`backlog-lane: FAILED at ${what
 const step = (what, cwd, argv, { env, out, must = true } = {}) => {
   console.log(`$ ${fmt(cwd, argv, env, out)}`);
   if (dry) return { status: 0, stdout: '', stderr: '' };
-  const r = spawnSync(argv[0], argv.slice(1), { cwd, encoding: 'utf8', maxBuffer: 1 << 26, env: env ? { ...process.env, ...env } : process.env });
+  const r = spawnSync(argv[0], argv.slice(1), { cwd, encoding: 'utf8', maxBuffer: 1 << 26, env: { ...gitFreeEnv(), ...(env ?? {}) } });
   if (out && r.status === 0) fs.writeFileSync(out, r.stdout);
   if (must && r.status !== 0) fail(what, r);
   return r;

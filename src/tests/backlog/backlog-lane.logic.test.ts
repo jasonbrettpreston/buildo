@@ -2,6 +2,7 @@
 // scripts/analysis/backlog-lane.mjs --task task-N --lane <name>: the whole lane launch from the task file, on a temp board (a git repo with a Backlog project, helpers.ts) and a fake panel-tools directory.
 // No launchctl in tests: `--no-launchd` runs the board-commit job script inline instead of kickstarting the agent.
 import { describe, expect, it } from 'vitest';
+import { spawnSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -395,6 +396,13 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     const written = fs.readdirSync(path.join(f.wt, `docs/reports/reviews/${f.task}`)).filter((n) => /^context-r\d+\.md$/.test(n)).sort().pop();
     expect(named).toBe(written);
     expect(named).toBe('context-r2.md');
+  });
+  it('task-375 suite fix: a launch dry-run run with GIT_DIR, GIT_INDEX_FILE and GIT_WORK_TREE of ANOTHER repository set (as inside a hook) still reads the board it was given', () => {
+    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
+    const real = run('git', ['rev-parse', '--absolute-git-dir'], { cwd: ROOT }).stdout.trim();
+    const r = spawnSync('node', [SCRIPT, ...f.args, '--dry-run'], { encoding: 'utf8', env: { ...process.env, ...ID, GIT_DIR: real, GIT_INDEX_FILE: path.join(real, 'index'), GIT_WORK_TREE: ROOT } });
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    expect(r.stdout).toMatch(/plan gate ok: \d+ lists/);
   });
   it('a Files path no row matches is refused at launch with the path named (exit 3, one line, nothing written)', () => {
     const f = fixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' });
