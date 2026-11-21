@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T04:55:00Z'
+updated_date: '2026-11-21T05:01:00Z'
 labels:
   - McFix
   - McFix A
@@ -25,6 +25,8 @@ references:
   - docs/reports/reviews/task-375/CROSS-READ.md
   - docs/reports/reviews/task-375/READBACK-375-v4.md
   - docs/reports/lanes/2026-11-21/BL-GATE375/REPORT.md
+  - docs/reports/lanes/2026-11-21/BL-GATE375/GROUNDER.md
+  - docs/reports/lanes/2026-11-21/BL-GATE375/TRIAGE.md
 type: build
 ordinal: 75012
 ---
@@ -409,3 +411,38 @@ BL-GATE375 fix round 2 (g375#11): the fix branch of planGateInner expects lens-c
 
 BL-GATE375 fix round 2 done: g375#11 fixed (0bf6c680d, red15.out failing assertion, green c20.out 134 passed); fresh context-r3.md, every in- input re-made and all 94 out- outputs re-run under the same names (94 of 94 with a REVIEW header and a VERDICT line; three calls re-run once); 435 findings untriaged in FINDINGS.md; D10b stays open.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+WHAT IS BUILT: parts A (the reviewer's context is the task, sized), B (compliance references on each task and at close), D (the launch gate with the plan seats) and D11b (the security lens for admin and PII paths) are built and through the hooks. D10b's DB read and acceptance A8 are OPEN pending the operator's DB GO, so this task is NOT complete and stays RUNNING. src/tests/proof-slice.db.test.ts asserts a variable that is not registered, so the DB CI job is red by construction until the registration lands.
+
+Review round 1: 19 fixed, 0 task, 0 ruling, 0 wontfix, 96 pile; grounder docs/reports/lanes/2026-11-21/BL-GATE375/GROUNDER.md; triage docs/reports/lanes/2026-11-21/BL-GATE375/TRIAGE.md  (ruling on cb5eb3d08: 410 ids, 115 CONFIRMED = 19 MED + 94-0 LOW/NIT; fix commits dfe326345 and b4f4afc39)
+out-code-review-p1#1 MED fixed dfe3263
+out-compliance-agents-s5-1to3-p1#1 MED fixed dfe3263
+out-compliance-agents-s5-1to3-p2#2 MED fixed b4f4afc
+out-compliance-agents-s7-s11-p1#3 MED fixed dfe3263
+out-compliance-airtight-124a-p1#1 MED fixed dfe3263
+out-compliance-airtight-124a-p2#1 MED fixed dfe3263
+out-compliance-airtight-v2-122-p1#2 MED fixed dfe3263
+out-compliance-airtight-v3-122-p1#1 MED fixed dfe3263
+out-compliance-eng-all-p1#2 MED fixed dfe3263
+out-compliance-eng-all-p2#4 MED fixed dfe3263
+out-compliance-five-words-p1#1 MED fixed dfe3263
+out-compliance-inc-S-p1#1 MED fixed dfe3263
+out-compliance-ms-S-p1#1 MED fixed dfe3263
+out-compliance-orchestrator-doc17-p1#2 MED fixed dfe3263
+out-compliance-plan-protocol-p1#1 MED fixed dfe3263
+out-compliance-queue-137-p1#1 MED fixed dfe3263
+out-compliance-step-132-p1#4 MED fixed dfe3263
+out-compliance-step-132-p2#1 MED fixed dfe3263
+out-error-paths-p1#1 MED fixed dfe3263
+
+Review round 2: 4 fixed, 0 task, 0 ruling, 0 wontfix, 128 pile; grounder docs/reports/lanes/2026-11-21/BL-GATE375/GROUNDER.md; triage docs/reports/lanes/2026-11-21/BL-GATE375/TRIAGE.md  (ruling on 87c647d26: 351 ids, 132 CONFIRMED = 4 MED + 124 LOW + 4 NIT; fix commit 0bf6c680d)
+out-compliance-airtight-122a-p2#2 MED fixed 0bf6c68
+out-compliance-inc-S-p3#3 MED fixed 0bf6c68
+out-compliance-queue-137-p3#2 MED fixed 0bf6c68
+out-compliance-step-132-p5#2 MED fixed 0bf6c68
+
+Review round 3: 0 fixed, 0 task, 0 ruling, 0 wontfix, 167 pile; grounder docs/reports/lanes/2026-11-21/BL-GATE375/GROUNDER.md; triage docs/reports/lanes/2026-11-21/BL-GATE375/TRIAGE.md  (final ruling on 3763cae90: 435 ids, 167 CONFIRMED all LOW or NIT)
+<!-- SECTION:FINAL_SUMMARY:END -->
