@@ -19,7 +19,7 @@ import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { args, parseFM, readItems, REPO, sha256 } from './backlog-lib.mjs';
+import { args, asList, parseFM, readItems, REPO, sha256 } from './backlog-lib.mjs';
 import { globToRegExp, matchesAny } from './mcbylaws/paths.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -443,12 +443,28 @@ export function parseLensInput(text) {
 /** The text of a whole list as the helper reads it (all blocks), for the whole-list comparison. */
 export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');
 
+// ---- compliance references (task-375 B1, his :1541 "labelled means i need to know its a compliance document") ----
+/**
+ * The references a task carries for its resolved lists: one "compliance:<list id> <file>" per list, compared by the id token (the text before the first space). A file path with a comma is entered
+ * as "compliance:<list id>" alone (backlog splits --add-ref at commas; ms-9 is the only such list). {add} the entries for lists the task does not carry yet; {remove} the compliance: entries of
+ * lists that no longer resolve. `lists` [{id, file}]; `refs` the task's references.
+ */
+export function complianceRefs(lists, refs) {
+  const idOf = (r) => /^compliance:(\S+)/.exec(String(r).trim())?.[1];
+  const have = new Map((refs ?? []).filter((r) => idOf(r)).map((r) => [idOf(r), String(r).trim()]));
+  const want = new Set(lists.map((l) => l.id));
+  return {
+    add: lists.filter((l) => !have.has(l.id)).map((l) => (String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`)),
+    remove: [...have].filter(([id]) => !want.has(id)).map(([, r]) => r),
+  };
+}
+
 // ---- the check over every open task, and the generated page (task-406, V2.LIST) ----
 /** Every open task (not finished, not DROPPED) of root's backlog/tasks: {resolve: [ids], notYet: [{id, cls, reason}], bad: [lines]}. A task with a Files line that resolves must carry the every_task and milestone lists. */
 export function checkTasks({ table, root }) {
   const tracked = trackedFiles(root);
   const done = new Set([...(table.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']), 'DROPPED'].map((s) => s.toUpperCase()));
-  const out = { resolve: [], notYet: [], bad: [] };
+  const out = { resolve: [], notYet: [], bad: [], refs: [] };
   for (const t of readItems(root)) {
     if (done.has(String(t.fm.status ?? '').toUpperCase())) continue;
     const letter = milestoneLetter(root, t.fm.milestone);
@@ -456,7 +472,12 @@ export function checkTasks({ table, root }) {
     try { r = resolveTask({ table, root, body: t.body, type: String(t.fm.type ?? ''), letter, tracked }); } catch (e) { out.bad.push(`${t.id}: cannot resolve: ${String(e.message).split('\n')[0]}`); continue; }
     if (!r.error) {
       const miss = verifyResolved(table, r, letter, String(t.fm.type ?? ''));
-      if (miss.length) out.bad.push(`${t.id}: resolves but ${miss.join('; ')}`); else out.resolve.push(t.id);
+      if (miss.length) out.bad.push(`${t.id}: resolves but ${miss.join('; ')}`);
+      else {
+        out.resolve.push(t.id);
+        const c = complianceRefs(r.lists, asList(t.fm.references));
+        if (c.add.length || c.remove.length) out.refs.push({ id: t.id, ...c }); // task-375 B1: the exact command that brings the task's compliance: references in step
+      }
       continue;
     }
     const m = /matched by no row[^:]*: (.*?) \(add a row/.exec(r.error);
@@ -549,6 +570,11 @@ function cli() {
     console.log(`check-tasks: open ${c.resolve.length + c.notYet.length + c.bad.length}: resolve ${c.resolve.length}, not yet resolvable ${c.notYet.length}${c.bad.length ? `, FAILED ${c.bad.length}` : ''}`);
     const heads = ['a Files path matches no row (a governance gap: add a row or fix the Files line)', 'other reason', 'no Files line (the author adds one before launch)'];
     for (let cls = 0; cls < 3; cls++) { const g = c.notYet.filter((x) => x.cls === cls); if (g.length) { console.log(`not yet resolvable, ${heads[cls]}: ${g.length}`); for (const x of g) console.log(`  ${x.id}: ${x.reason}`); } }
+    if (c.refs.length) {
+      const q1 = (x) => `'${String(x).replace(/'/g, "'\\''")}'`;
+      console.log(`compliance references out of step with the resolved lists: ${c.refs.length} task(s); run each printed command (exit stays 0)`);
+      for (const x of c.refs) console.log(`  backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}`);
+    }
     if (c.bad.length) { for (const b of c.bad) console.log(`FAILED ${b}`); die(1, `${c.bad.length} open task(s) resolve without the every_task or milestone lists`); }
   } else if (cmd === 'page') {
     const file = path.join(root, PAGE);

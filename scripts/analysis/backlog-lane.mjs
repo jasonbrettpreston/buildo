@@ -21,7 +21,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { args, asList, descriptionOf, home, parseFM, readItems, REPO, sha256, today } from './backlog-lib.mjs';
-import { DEFAULT_TABLE, DIFF_ARGS, filesText, lensSet, milestoneLetter, readTable, resolveTask, verifyResolved } from './rule-lists.mjs';
+import { complianceRefs, DEFAULT_TABLE, DIFF_ARGS, filesText, lensSet, milestoneLetter, readTable, resolveTask, verifyResolved } from './rule-lists.mjs';
 
 const a = args();
 const str = (k, d) => (a[k] && a[k] !== true ? String(a[k]) : d);
@@ -102,7 +102,9 @@ const note = `${date} taken on the board at lane launch (lane ${lane}, worktree 
 const head0 = dry ? '' : git('rev-parse', 'HEAD').stdout.trim();
 
 // 1-2. take, kickstart, wait
-step('take', board, [bin, 'task', 'edit', taskId, '-s', 'RUNNING', '-a', `@lane-${lane}`, '--append-notes', note]);
+// task-375 B1: the compliance references of the resolved lists the task does not carry yet go in the same edit (his :1541: a compliance document is labelled)
+const addRefs = complianceRefs(resolved.lists, asList(t.fm.references)).add.flatMap((e) => ['--add-ref', e]);
+step('take', board, [bin, 'task', 'edit', taskId, '-s', 'RUNNING', '-a', `@lane-${lane}`, '--append-notes', note, ...addRefs]);
 taken = !dry;
 if (a['no-launchd'] === true) step('board commit job', board, ['zsh', '-f', jobScript], { env: { BOARD_ROOT: board } });
 else step('kickstart', board, ['launchctl', 'kickstart', '-k', `gui/${process.getuid()}/com.maxbld.board-commit`]);

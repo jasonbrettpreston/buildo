@@ -329,6 +329,21 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     expect(line).toContain('--section "Implementation Notes"');
     expect(line).not.toMatch(/--context \.claude\/review-templates/);
   });
+  // task-375 B1: the take adds the compliance:<list id> <file> references, only the ids the task does not carry yet
+  it('B1: the take command adds one compliance reference per resolved list; a list already referenced is not added again', () => {
+    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
+    const lists = (JSON.parse(run('node', ['scripts/analysis/rule-lists.mjs', 'resolve', '--files', 'scripts/analysis/thing.mjs', '--type', 'build', '--letter', 'F'], { cwd: ROOT }).stdout) as { lists: { id: string; file: string }[] }).lists;
+    const take = (o: string) => /^\$ cd \S+ && .*task edit \S+ -s RUNNING.*$/m.exec(o)?.[0] ?? '';
+    const r1 = lane(f, ['--dry-run']);
+    const t1 = take(r1.stdout);
+    expect(t1).toBeTruthy();
+    expect([...t1.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length);
+    for (const l of lists) expect(t1).toContain(`--add-ref 'compliance:${l.id} ${l.file}'`);
+    backlog(f.board, ['task', 'edit', f.task, '--add-ref', `compliance:${lists[0]!.id} an older path`]);
+    const t2 = take(lane(f, ['--dry-run']).stdout);
+    expect([...t2.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length - 1);
+    expect(t2).not.toContain(`'compliance:${lists[0]!.id} `);
+  });
   it('a Files path no row matches is refused at launch with the path named (exit 3, one line, nothing written)', () => {
     const f = fixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' });
     refused(lane(f), /zzz-nothing\/new\.txt/);

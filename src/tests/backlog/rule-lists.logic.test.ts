@@ -753,3 +753,52 @@ describe('task-375 A6: a block with no deeper heading is cut between table rows 
     expect(l.r.stderr).toContain('5. Register');
   });
 });
+
+describe('task-375 B1: compliance references (compliance:<list id> <file>) on each task, and check-tasks prints the commands for the open ones', () => {
+  const board = () => {
+    const f = fixture();
+    const t = JSON.parse(fs.readFileSync(f.table, 'utf8')) as Record<string, unknown>;
+    t.every_task = ['queue']; t.milestone_docs = { F: ['crlf'] };
+    fs.writeFileSync(f.table, JSON.stringify(t));
+    fs.mkdirSync(path.join(f.d, 'backlog/milestones'), { recursive: true });
+    fs.writeFileSync(path.join(f.d, 'backlog/milestones/m-0 - a.md'), '---\nid: m-0\ntitle: "A [F]"\n---\n');
+    const w = (n: string, refs: string[], body: string, status = 'WAITS') => { const p = path.join(f.d, `backlog/tasks/task-${n} - x.md`); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, `---\nid: TASK-${n}\ntitle: x\nstatus: ${status}\ntype: build\nmilestone: m-0\n${refs.length ? `references:\n${refs.map((r) => `  - '${r}'`).join('\n')}\n` : ''}---\n\n## Description\n\n${body}\n`); };
+    return { f, w };
+  };
+  const resolved = (f: ReturnType<typeof fixture>, files: string) => (JSON.parse(script(CLI, ['resolve', '--root', f.d, '--table', f.table, '--files', files, '--type', 'build', '--letter', 'F']).stdout) as Res).lists;
+  it('a stale open task: prints the exact add-ref command, one entry per resolved list, each starting compliance:, exit 0', () => {
+    const { f, w } = board();
+    w('1', ['docs/a.md'], 'Files: src/two.ts');
+    const want = resolved(f, 'src/two.ts');
+    const r = script(CLI, ['check-tasks', '--root', f.d, '--table', f.table]);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    const line = r.stdout.split('\n').find((l) => l.includes('backlog task edit task-1 ')) ?? '';
+    expect(line).toBeTruthy();
+    const entries = [...line.matchAll(/--add-ref '(compliance:[^']*)'/g)].map((m) => m[1]!);
+    expect(entries).toHaveLength(want.length);
+    for (const l of want) expect(entries).toContain(`compliance:${l.id} ${l.file}`);
+    expect(line).not.toContain('--remove-ref');
+  });
+  it('control: a task whose entries match its lists prints no command, a task with part of them prints only the rest, a stale entry gets --remove-ref', () => {
+    const { f, w } = board();
+    const want = resolved(f, 'src/two.ts');
+    w('2', want.map((l) => `compliance:${l.id} ${l.file}`), 'Files: src/two.ts');
+    w('3', [`compliance:${want[0]!.id} ${want[0]!.file}`], 'Files: src/two.ts');
+    w('4', [...want.map((l) => `compliance:${l.id} ${l.file}`), 'compliance:gone docs/gone.md'], 'Files: src/two.ts');
+    const r = script(CLI, ['check-tasks', '--root', f.d, '--table', f.table]);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    expect(r.stdout).not.toContain('backlog task edit task-2 ');
+    const l3 = r.stdout.split('\n').find((l) => l.includes('backlog task edit task-3 ')) ?? '';
+    expect([...l3.matchAll(/--add-ref '(compliance:[^']*)'/g)]).toHaveLength(want.length - 1);
+    expect(l3).not.toContain(`'compliance:${want[0]!.id} `);
+    const l4 = r.stdout.split('\n').find((l) => l.includes('backlog task edit task-4 ')) ?? '';
+    expect(l4).toContain("--remove-ref 'compliance:gone docs/gone.md'");
+    expect(l4).not.toContain('--add-ref');
+  });
+  it('complianceRefs: an entry for a file path with a comma is the id alone (backlog splits --add-ref at commas); entries compare by the id token', async () => {
+    const m = await import('../../../scripts/analysis/rule-lists.mjs');
+    const r = m.complianceRefs([{ id: 'ms-9', file: 'docs/a, b.md' }, { id: 'eng-all', file: 'docs/e.md' }, { id: 'five', file: 'docs/f.md' }], ['compliance:eng-all some other path', 'docs/a.md']);
+    expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);
+    expect(r.remove).toEqual([]);
+  });
+});
