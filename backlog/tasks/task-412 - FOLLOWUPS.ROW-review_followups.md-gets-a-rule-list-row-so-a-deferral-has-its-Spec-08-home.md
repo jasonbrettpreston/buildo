@@ -7,7 +7,7 @@ status: BUILT
 assignee:
   - '@lane-BL-F412'
 created_date: '2026-11-20T23:40:00Z'
-updated_date: '2026-11-21T07:06:00Z'
+updated_date: '2026-11-21T14:40:00Z'
 labels:
   - McFix
   - McFix V2
@@ -144,6 +144,8 @@ rg#1 MED folded it does not make a f
 2026-11-21 ACCEPTANCE (lane BL-F412, commit 52a49566e): (a) resolve --files docs/reports/review_followups.md --type build --letter S exit 0, lists: agents-s7-s11 queue-137 five-words plan-protocol inc-S ms-S. (b) validate: rule-lists: ok 55 lists, 23 rows (branch start had 22 rows, so N+1). (c) page --check: rule-lists: docs/reports/generated/rule-lists-by-kind.md is current. (d) red: red.out, both new cases failed at assertions (resolve refused, 'matched by no row', exit 3 not 0); green: commit.out, 21 passed, commit through real hooks, none bypassed. (e) git show --stat HEAD:  ...-list-row-so-a-deferral-has-its-Spec-08-home.md |  6 ++++-; scripts/analysis/rule-lists.json                   |  6 +++++; src/tests/backlog/rule-lists-table.logic.test.ts   | 30 ++++++++++++++++++++++;
 
 2026-11-21 CORRECTION (lane BL-F412, fix round 1): my earlier note that gitFreeEnv() 'does not exist in the repo' is false: scripts/analysis/rule-lists.mjs:53 exports it. The test's helper cleanEnv (src/tests/backlog/helpers.ts:30) strips the same GIT_* keys and is equivalent for the test (the output grounder's ruling).
+
+Dated note 2026-11-21 (M-246, prior text kept; RR-0351 · task-412 · Backlog; operator, verbatim: "Gap 3 we dont need the cross check.")
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
