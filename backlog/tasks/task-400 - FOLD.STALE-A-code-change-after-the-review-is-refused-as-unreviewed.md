@@ -4,7 +4,7 @@ title: FOLD.STALE A code change after the review is refused as unreviewed
 status: LATER
 assignee: []
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-20T17:12:00Z'
+updated_date: '2026-11-21T00:25:00Z'
 labels:
   - McFix
   - McFix Z
@@ -34,3 +34,9 @@ Validated before writing by a separate read-only grounder (2026-11-20; verdict r
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-11-20 operator ruling (M-246, prior text kept), ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1610, verbatim: "approved", to the list he pasted back; the item for this task as put to him: "Record 385, 397, 400 and 404 as dropped, and 371 and 377 as closed superseded. Recommended yes.". The decision record tool holds one record per quote and cite (decision-126, RR-0341, carries the same approval), so this note is the record on this task. No status is moved by hand.
+<!-- SECTION:NOTES:END -->

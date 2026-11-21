@@ -7,7 +7,7 @@ status: WAITS
 assignee:
   - '@lane-BL-LOAD2'
 created_date: '2026-11-19T04:57:00Z'
-updated_date: '2026-11-20T17:36:00Z'
+updated_date: '2026-11-21T00:25:00Z'
 due_date: '2026-11-26'
 labels:
   - S
@@ -119,4 +119,6 @@ Dated note 2026-11-19 (lane BL-LOAD2; prior text kept): seam answers for LOAD.4 
 HELD (operator 2026-11-20 "4. Hold the three unbuilt pages until the pilot result"): build as rows of the page table once the PAGE.TABLE pilot passes.
 
 Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder, 2026-11-20 (the lane verifies each cited fact before building): these are lifecycle states of the report screen: rows in the existing report lifecycle data (report-presentation.json) drawn by the existing ReportBinding; no new builder function and no move into the page-table builder (approved item 3 "Leave the reports as components"). Still required for 1·B (RR-0176 MD:785; RR-0179 MD:789). After the pilot folds; 317 after 267 stage 2 and LD-1, 2, 3, 5.
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0341 · task-267 · Backlog; operator, verbatim: "approved")
 <!-- SECTION:NOTES:END -->

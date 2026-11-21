@@ -4,7 +4,7 @@ title: PAGE.SEARCH-W The web search page drawn from the same table rows
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:24:00Z'
-updated_date: '2026-11-20T17:36:00Z'
+updated_date: '2026-11-21T00:25:00Z'
 labels:
   - McFix
   - McFix G
@@ -38,4 +38,6 @@ WAITS on PAGE.SEARCH-M. Same rows, targets web; the existing render half of the 
 
 <!-- SECTION:NOTES:BEGIN -->
 Operator 2026-11-20, verbatim: "Let the grounder resolve them all as long as the result is compliant" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1476). Resolved by the separate grounder, 2026-11-20 (the lane verifies each cited fact before building): convert as the operator ruled ("Convert the other three pages only after the pilot passes", approved, MD:1421-1422; Spec 126:74 "no page code"), in order 391 map, 392 phone search, 393 web search, then 394; none starts until the pilot grounder re-pass says PASS and the pilot is folded. A block kind the card does not name is a halt and a question (Spec 124a:988). No web builder file without the operator word (MD:1439). The page-table field is named platforms (values web, mobile), not targets (Spec 126:238-248; surface.schema.json identity.platforms).
+
+2026-11-20 operator ruling (M-246, prior text kept), ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1610, verbatim: "approved", to the list he pasted back; the item for this task as put to him: "The web search page is drawn inside the existing search binding. Recommended yes.". The decision record tool holds one record per quote and cite (decision-126, RR-0341, carries the same approval), so this note is the record on this task. No status is moved by hand.
 <!-- SECTION:NOTES:END -->

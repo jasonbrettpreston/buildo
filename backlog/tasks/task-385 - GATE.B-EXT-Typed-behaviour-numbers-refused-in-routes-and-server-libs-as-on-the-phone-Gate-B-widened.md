@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T17:12:00Z'
+updated_date: '2026-11-21T00:25:00Z'
 labels:
   - McFix
   - McFix C
@@ -40,4 +40,6 @@ Plan section C; after task-367 and task-378. Plan grounder: Gate B (scripts/anal
 
 <!-- SECTION:NOTES:BEGIN -->
 McFix V2 review 2026-11-20 (orchestrator recommendation, not a ruling; status not changed by hand): Recommend DROPPED: it extends Gate B, and the operator ruled the gates are accident guards with no further hardening (ruling "a", MORNING-DECISIONS.md:1449). Typed behaviour numbers are now caught by the compliance review with Spec 126 P4 and Spec 128 Rule 3 attached.
+
+2026-11-20 operator ruling (M-246, prior text kept), ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1610, verbatim: "approved", to the list he pasted back; the item for this task as put to him: "Record 385, 397, 400 and 404 as dropped, and 371 and 377 as closed superseded. Recommended yes.". The decision record tool holds one record per quote and cite (decision-126, RR-0341, carries the same approval), so this note is the record on this task. No status is moved by hand.
 <!-- SECTION:NOTES:END -->

@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-ENFORCE'
 created_date: '2026-11-20T13:31:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-21T00:25:00Z'
 labels:
   - McFix
   - McFix E
@@ -70,4 +70,6 @@ Operator 2026-11-20 (verbatim): "Essentially if its not enforced it doesnt get d
 2026-11-20 operator RULED (verbatim: 'yes. you are making a mess. What a diaster?  Show me you can fix this without just creating a fasade?'; MORNING-DECISIONS.md entry 'cut the enforcement work to the three refusals'): scope cut to the push-range arm on the existing push gate (after task-366 lands) and the lane-guard rule-list refusal (operator typed go). Measures 1, 4, 5 and the lane-guard repo copy are PARKED; no build. Each refusal is accepted only after a separate agent's bypass attempts are shown refused.
 
 2026-11-20 second job: merged plan (PLAN-2-MERGED.md, orchestrator draft, copied unchanged), FACTS-2.md, lens round on it (96 findings, FINDINGS-2.md, untriaged); task stays RUNNING: grounder owed.
+
+2026-11-20 operator ruling (M-246, prior text kept), ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1610, verbatim: "approved", to the list he pasted back; the item for this task as put to him: "Record 385, 397, 400 and 404 as dropped, and 371 and 377 as closed superseded. Recommended yes.". The decision record tool holds one record per quote and cite (decision-126, RR-0341, carries the same approval), so this note is the record on this task. No status is moved by hand.
 <!-- SECTION:NOTES:END -->
