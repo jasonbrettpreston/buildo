@@ -1,2 +1,0 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-❌ File not found: /Users/brettpreston_macmini/Buildo-wt-mig334/docs/reports/lanes/2026-11-21/BL-MIG334/in--compliance-five-words.txt
