@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-FIXTOOLS'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-20T23:39:00Z'
+updated_date: '2026-11-21T00:33:00Z'
 labels:
   - McFix
   - McFix A
@@ -123,4 +123,6 @@ Dated note 2026-11-20 (M-246, prior text kept; RR-0338 · task-375 · Backlog; o
 Dated note 2026-11-20 (M-246, prior text kept; RR-0339 · task-375 · Backlog; operator, verbatim: "yes hardening rounds.  Today's were warranted, but not endless.")
 
 Dated note 2026-11-20 (M-246, prior text kept; RR-0340 · task-375 · Backlog; operator, verbatim: "can we address these in the plan? Let's get this right - add the the existing tasks and do a second pass on the recommendations")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0342 · task-375 · Backlog; operator, verbatim: "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently")
 <!-- SECTION:NOTES:END -->

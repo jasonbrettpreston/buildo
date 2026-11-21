@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-OUTCOME'
 created_date: '2026-11-20T16:34:00Z'
-updated_date: '2026-11-20T23:55:00Z'
+updated_date: '2026-11-21T00:33:00Z'
 labels:
   - McFix
   - McFix Z
@@ -282,4 +282,6 @@ Dated note 2026-11-20 (M-246, prior text kept; RR-0340 · task-399 · Backlog; o
 2026-11-20 plan text corrected by one sentence (C1 of the round-3 grounder, docs/reports/reviews/task-399/GROUNDER-PANEL2.md): hand step 7 now states how the last round's fold is checked and that it is the last panel round. Plan sha256 now 60e3c08c3b85.
 
 2026-11-20 taken on the board at lane launch (lane BL-OUTCOME, worktree /Users/brettpreston_macmini/Buildo-wt-outcome, branch wf1/inc1b-outcome), RR-0240
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0342 · task-399 · Backlog; operator, verbatim: "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently")
 <!-- SECTION:NOTES:END -->
