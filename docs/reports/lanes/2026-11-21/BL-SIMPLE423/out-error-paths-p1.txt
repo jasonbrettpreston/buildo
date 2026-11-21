@@ -1,0 +1,18 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-21T23:29:07.725Z file_sha256=db21842ea84e90ed5b4cf21e20141e5d1aa87c6efea15fbbaa9e61ab5a1b7f68 prompt_sha256=e08814d9beb2fc28e1acf0e7c2f2c937d7fa616f8b537dd41286e5786d10d8e5
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs "the launch gate put it there; the hash is not compared at close" — the skip that suppresses every plan-*.txt is keyed on the task id alone (`planOnBoard` matches `m[1].toLowerCase() === String(id)`), so a GROUNDER-PLAN.md whose Plan line names the task but carries a `sha256:` from any other plan text still opens the skip; no close-time fact ties the evidence to the launched plan — recompute the launched plan hash and require it equal the `sha256:` field before treating plan findings as ruled
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs "Compliance lens, ONE JOINED RUN PER STAGE" — the stage now rests on one review call set: a single DeepSeek timeout, non-2xx or malformed reply loses every list's coverage where the per-list form kept the 8 that succeeded (the close still refuses, so fail-closed, but the whole stage must be re-run) — reuse the plan-prep pattern that names the failing file (`in-plan-compliance-rules…` at test 5) so a failed part is identified and only that part is re-requested
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs "the per-list set (a stage holding both is refused)" — a task launched before the join that re-runs the new tool mid-lane writes `out-compliance-rules.txt` beside its existing `out-compliance-<list id>.txt` and then cannot close until the old files are deleted by hand; nothing removes them — on refusal name the stale per-list files to delete, or ignore per-list files once the joined set verifies complete
+
+DEFER severity=NIT — scripts/analysis/rule-lists.mjs "cannot join: list ${id} is not in the table" — `lens-input --list rules --lists rules` dies(1) with "list rules is not in the table" though `rules` is the reserved joined id, pointing the operator at the wrong cause — special-case a JOINED_ID entry in `--lists` to say the reserved id may not be listed
+
+VERDICT: PASS on error-path safety
+Paths walked: joinLists (CLI die and close try/catch), complianceSetErrors (none, gap -p1/-p3, both-forms, wrong resolved set, mixed plan/out forms), planOnBoard (absent at L, empty, wrong id, missing file via git show), planProof refactor (first-success vs first-error), plan-prep joined call failure cleanup, lensFiles plan filter, empty --lists guard (CLI die 2), input-vs-output name discrimination (in- not counted)   Unguarded: 0
+
+---
+⏱  119721ms (119.7s)
+📊 Tokens — total: 53233, input: 31813, output: 21420, reasoning: 20823

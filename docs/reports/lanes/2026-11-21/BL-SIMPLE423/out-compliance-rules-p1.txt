@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T23:29:07.680Z file_sha256=39165b0940e9b5568ba17fcf97332034e91b411fcc88aa26588d3fa3ddc548db prompt_sha256=8bac3ea5e7c154d8ba0f3f2847c0b82a84e5d8788d6bedc0b8a99a12027498e4
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-compliance-rules-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-423 acceptance #3 (c) "a lane folder with no plan-*.txt closes when GROUNDER-PLAN.md at L is non-empty with a Plan line" — docs/specs/00-architecture/137_mcqueue.md:144 "The close reads GROUNDER-PLAN.md at the launch commit for the plan evidence" — the pasted task-419 note in the same file (137_mcqueue.md:142) puts the Plan line in another file, "the launch check ... also requires docs/reports/reviews/<task>/FOLD-CHECK.md ... as the last such line of the file, alone on its line, `Plan: <task id> sha256:<12 hex>`", and neither this chunk nor any pasted clause makes GROUNDER-PLAN.md carry a `Plan:` line, so the plan-once switch has no producer and acceptance #3 cannot pass — state in the note that GROUNDER-PLAN.md itself carries the `Plan: <task id> sha256:` line (and who writes it), or key the switch to the FOLD-CHECK.md line the launch gate already checks.
+
+BUG severity=MED — RR-0363 "No review of paperwork." — scripts/analysis/backlog-lane.mjs:183 "for each phase P (plan: --material-from ${ctx}, which cuts Description, Acceptance criteria and Implementation Plan from it; out: --material <diff file>)" — the same paragraph then says the plan-stage outputs are "neither required nor read", so the brief still orders the plan compliance calls the card exists to remove, and a lane that obeys it produces unread paperwork — restrict the command loop to the output phase and say the plan stage is plan-prep's, not the lane's.
+
+BUG severity=MED — RR-0367 "1 y 2 med gets fixed in the plan if verified ... 3. y" (plan findings ruled once) — scripts/analysis/backlog-brief.mjs:178 "Review (plan or output): node scripts/deepseek-review.js review ${ctxRel} --template .claude/review-templates/plan-review-deepseek.md --context ${ctxRel} ${sectionFlags}" — three lines below the changed "the lane runs no plan lens and its GROUNDER.md rules the output findings only", the brief still hands the lane a plan review command and the plan template, so one brief says both yes and no — drop the plan form from that Review line (or gate it on plan evidence being absent) so the brief carries one instruction.
+
+DEFER severity=LOW — new Spec 137 note "The coupling between the specs and the tooling is rule-lists.mjs and check-lane-close.mjs only" — scripts/analysis/backlog-lane.mjs:183 "Compliance lens, ONE JOINED RUN PER STAGE" — the same diff carries the protocol text into backlog-lane.mjs and backlog-brief.mjs, so the spec sentence is not true of the tree it ships with — name the brief among the couplings, or drop the word "only".
+
+MET — acceptance #4 (d) "A table list named rules is refused by validate" — scripts/analysis/rule-lists.mjs:130 — validateTable refuses the id JOINED_ID with a named error.
+MET — RR-0363 "We just need the rules for deepseek." — scripts/analysis/rule-lists.mjs:118 — joinLists joins the resolved lists whole into one list named rules, packed by the existing code.
+MET — acceptance #1 (a) "in table order" — scripts/analysis/rule-lists.mjs:118 — members are taken in table key order, not in the order given to --lists.
+MET — acceptance #4 (d) "the brief names the joined command and no longer says to copy plan-*.txt" — scripts/analysis/backlog-lane.mjs:186 — the joined command is printed and the grounder now copies out-*.txt only.
+MET — new Spec 137 note "a stage that holds both forms is refused" — .claude/review-templates/README.md:158 — the both-forms refusal is stated for the close.
+MET — task scope "the join of the resolved rule lists into one compliance review packed by size, and plan findings ruled once" — scripts/analysis/rule-lists.mjs:115-124 — no card B, C or D behaviour (medium outcomes, paperwork allow-list, station line) is added in this chunk.
+
+REJECT — acceptance #5 (e) "Counts pinned in rule-lists.logic.test.ts as at most" — the counts are not pinned in this material — the test file is in the other chunk of the same change and cannot be seen here.
+REJECT — RR-0369 "the first round of MEdiums on the outputs are corrected with Highs and criticals" — not built in this change — the task's own scope line puts the medium rule in card B and card A builds only the join and plan-once.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 4
+
+---
+⏱  103299ms (103.3s)
+📊 Tokens — total: 41158, input: 22303, output: 18855, reasoning: 17763

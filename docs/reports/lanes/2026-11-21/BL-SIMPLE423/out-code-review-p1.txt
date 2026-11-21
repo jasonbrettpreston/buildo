@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T23:29:07.730Z file_sha256=db21842ea84e90ed5b4cf21e20141e5d1aa87c6efea15fbbaa9e61ab5a1b7f68 prompt_sha256=4213c335e65bf9bf1f6465ee14db60e6cdd2c0f4b71c5adc0124f6f558830225
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/hooks/check-lane-close.mjs:430 "const isJoined = new RegExp(`^(plan|out)-compliance-${JOINED_ID}(-p\\d+)?\\.txt$`);" — a joined lane's later round file (`out-compliance-rules-r2.txt`, or `out-compliance-r2.txt`, the name the layout block itself prescribes: "a later (fix) round (r2, r3, ...) is filed beside them as out-<lens>[-<list id>]-rN.txt") does not match isJoined but does match isAny, so it is counted as the per-list form and the folder with round 1 plus round 2 is refused with "holds both the joined ... and the per-list ... compliance outputs" — RR-0369 requires a round 2. — allow a round suffix in both patterns, e.g. `(-p\d+)?(-r\d+)?\.txt$` for isJoined and exclude it from `p`.
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:445 "const e = proof({ id: JOINED_ID, file: t.lists[JOINED_ID].file }, joinedPh, t);" — this passes a two-field stand-in to listProof whose `file` is a description string, not a path ("the N resolved lists (...)"), whereas every other caller passes the full resolved list; if listProof (or renderLensInput's `list.whole`/`list.sections` read) uses the object rather than re-resolving `table.lists[l.id]`, the joined proof throws or stamps a different prompt (listProof body is not in the diff: cannot see). — pass `t.lists[JOINED_ID]` itself so `members`/`whole` are present, or state in a comment that listProof resolves from table.
+
+DEFER severity=MED — src/tests/backlog/rule-lists.logic.test.ts:872 "fs.readdirSync(path.join(ROOT, 'backlog/tasks')).find((f) => f.startsWith(`task-${n} - `)) as string" — the `as string` erases a real null: if the task file is renamed or absent, `find` returns undefined and `path.join` throws "Path must be a string" instead of failing with a readable assertion. — assert the found name first (`const name = ...; expect(name, `task-${n}`).toBeDefined();`) and drop the cast.
+
+DEFER severity=MED — src/tests/backlog/rule-lists.logic.test.ts:895 "expect((m.parseLensInput(cut) as unknown as { ok: boolean }).ok).toBe(false);" — the JM type declared twenty lines earlier says `parseLensInput: (t: string) => { listPart: string; id: string } | null`, then the same value is cast through `unknown` to a shape with `.ok`; if the real function returns null on a bad stamp this dereference throws TypeError and the test never asserts anything. — type parseLensInput once, with its real result shape, and assert on that.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:456 "export const planOnBoard = (text, id) =>" — exported but no file in the diff imports it (check-lane-close's own test imports only `planGateErrors` and `planHash`), so the export is unused surface. — drop `export`, or import it in the test that exercises absent/empty/no-Plan-line.
+
+REJECT — scripts/analysis/rule-lists.mjs:362 "const where = list?.members ? `${list.members.length} lists: ${list.members.map((m) => m.id).join(', ')}` : list ? `${list.file}, ${sel}` : '';" — the map parameter `m` shadows the chunk-count parameter `m` used by `const mark = paths ? ` chunk ${c} of ${m}` : '';` — the arrow body reads only `m.id`, and `mark`/`stamp` are evaluated outside that arrow, so the chunk count is intact and the per-list text is byte-identical to the old `(${list.file}, ${sel})`, which keeps committed per-list prompts verifying.
+
+REJECT — scripts/analysis/rule-lists.mjs:361 "const sel = list ? (list.whole ? 'whole file' : `sections ${list.sections.join('; ')}`) : '';" — the refactor looks like it could change the head text and break the prompt hash of already-committed per-list inputs — `where` reproduces `${list.file}, ${sel}` exactly for a non-member list, and the joined list is created with `whole: true` in joinLists, so `list.sections.join` is never reached for it.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- A joined lane's round-2 file is classified as the per-list form and the close is refused for holding "both forms".
+- The joined proof hands listProof a stand-in `{id, file}` whose file is a description, not a path (listProof body not visible in the diff).
+- Two test casts (`as string`, `as unknown as { ok: boolean }`) erase nullability the declared types carry.
+
+---
+⏱  131901ms (131.9s)
+📊 Tokens — total: 56712, input: 31796, output: 24916, reasoning: 23753

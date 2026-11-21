@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T23:29:07.719Z file_sha256=9e9a9b5dec84381ddddfa8d6606360658c8108f9db9f132421b1c0fefc4b13a9 prompt_sha256=2d6c298a2616274c45efd1ab774153c50052f819735cb172bff895a50e2caf18
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-compliance-rules-p5.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings:
+
+DEFER severity=MED — AC#3 "a lane folder with no plan-*.txt closes when GROUNDER-PLAN.md at L is non-empty with a Plan line ... absent at L with plan-*.txt present keeps the old rule (control)" / RR-0367 "1 y 2 med gets fixed in the plan ... 3. y" — scripts/analysis/backlog-lane.mjs:183 "for each phase P (plan: --material-from ${ctx}, which cuts Description, Acceptance criteria and Implementation Plan from it; out: --material <diff file>)" — the generated lane brief still tells the lane to run a plan-phase compliance lens, while the sibling brief backlog-brief.mjs:177 says "the lane runs no plan lens" and the same sentence here says "(the plan stage is ruled once, at the plan: when the plan evidence is on the board, plan-*.txt files are neither required nor read)", so a lane reading "for each phase P (plan: ...)" can re-run the plan review the ruling says is done once — scope the phase loop to "out" (or gate "plan" explicitly on GROUNDER-PLAN.md absent at the launch commit) so the brief cannot direct a plan-phase run when the board evidence exists.
+
+MET — AC#4(d) "A table list named rules is refused by validate" — scripts/analysis/rule-lists.mjs:130 "if (id === JOINED_ID) { bad.push(`list ${id}: the id \"${JOINED_ID}\" is the joined list of lens-input --list ${JOINED_ID} (task-423); name the list otherwise`); continue; }" — validate refuses the reserved id.
+
+MET — AC#4(d) "the brief names the joined command and no longer says to copy plan-*.txt" — scripts/analysis/backlog-lane.mjs:183 "node scripts/analysis/rule-lists.mjs lens-input --list rules --lists ${ids.join(',')}" and scripts/analysis/backlog-lane.mjs:189 "copy out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/" — the joined form is named and the plan-*.txt copy step is gone.
+
+MET — AC#1 "the stitched list parts equal the whole text of the nine lists in table order" — scripts/analysis/rule-lists.mjs:99 "if (Array.isArray(list.members)) return list.members.flatMap(...)" with scripts/analysis/rule-lists.mjs:118 "const sorted = Object.keys(table.lists).filter((k) => want.has(k));" and "members: sorted.map((id) => ({ id, ...table.lists[id] }))" — members are the table-ordered lists, whole, concatenated in order.
+
+MET — AC#3/RR-0367 plan ruled once in the evidence rules — .claude/review-templates/README.md point 4 "a `plan-*.txt` is read at close only when GROUNDER-PLAN.md at the launch commit is absent, empty or has no Plan line" and scripts/analysis/backlog-brief.mjs:177 "plan findings were ruled once, at the plan: the lane runs no plan lens and its GROUNDER.md rules the output findings only" — documented to match the once-at-the-plan ruling.
+
+MET — RR-0363 "no other reviews" scope of the added behaviour — scripts/analysis/backlog-lane.mjs:181 "the per-list files out-compliance-<list id>[-pN].txt of the old form ... are still accepted for a task launched before the join" and docs/specs/00-architecture/137_mcqueue.md note "The per-list set is still accepted for a task launched before this note, and a stage that holds both forms is refused" — the join adds no new lens, only packs the resolved lists; nothing is added beyond the card.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  117210ms (117.2s)
+📊 Tokens — total: 51073, input: 29415, output: 21658, reasoning: 20782

@@ -1,0 +1,562 @@
+LIST rules sha256:ddf3305976a75fa7859153fe8b1d7db6e9e78c228e63d6fe7fd29036f8cc8e16 material sha256:6e2dbffee2359d470b03ceadf75a38aab8fafe943f5c9aefdef97e8fe6cbcb6b part 1 of 6 chunk 2 of 2
+RULE LIST rules (9 lists: five-words, plan-protocol, eng-all, queue-137, agents-s7-s11, agents-s5-1to3, orchestrator-doc17, inc-S, ms-S), part 1 of 6. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-brief.logic.test.ts","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+
+## Glossary
+
+- **slug**: A step's name: its `scripts/manifest.json` key and `identity.name`. Not its file name (table 1b).
+- **archetype vs shape**: `identity.archetype` (INGESTOR, LINK, MATCHER, ENRICHER, MATERIALIZER, BACKFILL, ASSERT, RECORDER) is what the step is; it selects required and forbidden descriptor fields and is checked against the census. `execution.shape` is which runner phase executes it (table 1a). A MATCHER has shape `cascade`; a RECORDER may have no shape.
+- **phase**: One of the runner functions in table 1a that owns a step's reads, writes and transactions.
+- **compute hook**: A named function or value on the compute module that a phase calls or reads (for example `compute.buildMatchSql`); the main function is called once after the phase.
+- **PH-0 … PH-8**: Spec 121 §3 assessment phases used in Spec 123: PH-0 is the boundary freeze (it reads every write and derives the archetype), PH-4 the risk class. Not the programme stages P0–P3.
+- **① ② ③**: The three conversion commits: ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]` (`scripts/steps/_schema/converted.json`).
+- **stage**: A pending step's declared progress in `converted.json` `pending[]` (`red_suite` … `shape_clean`); it decides which gates cannot yet be answered.
+- **RE-FREEZE #N**: A numbered, reviewed revision of the frozen step vocabulary (`scripts/steps/_schema/step.schema.json`, `template-freeze.json`). A field is added or deleted only by one.
+- **#NN**: A `step-validate` fast invariant, by number (for example #44 the read/write witness, #54 swap order). Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates.
+- **Gate A … K, V**: Lettered R-BA gates (A…K, plus V for the five words), implemented in `scripts/analysis/gates/` or in `scripts/analysis/step-validate.mjs` (gates H, K and V live there). Gate E is compute purity, Gate F the score floor. Not the scorecard.
+- **PURITY-G0 … PURITY-G13**: Gate E compute-purity finding codes. Not rule ids; never the scorecard gates.
+- **SCORECARD-G0 … SCORECARD-G9**: Spec 123 scorecard gates G0–G9 (G7 test adequacy, G8 differential); rule ids `G0`…`G9` carry these aliases.
+- **V3 (standard) vs V3 (vocabulary)**: `standard=V3` is the McDonald's Airtight V3 label (R-EY). The rule id `V3` (alias SPEC122A-V3) is the Spec 122a `guards.schema_drift` vocabulary row.
+- **SPEC121-M1 … SPEC121-M14**: Spec 121 cadence items, retired as a set. `M14` also names an unrelated spec-move id in Spec 124; the alias SPEC121-M14 means the Spec 121 item.
+- **five words**: R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates.
+- **bracket**: A capture taken inside a perturbation (a forced cohort, delete-and-reinsert or derived-status), so a guarded write path writes something; replayed only through the same bracket (#38).
+- **OWED**: Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps.
+- **class-A**: Spec 123 risk class A (PH-4): the highest test intensity; its behaviours need a both-directions lock.
+- **LDG-10, EP-PIN-D17**: Programme items in `scripts/steps/_schema/programme-items.json` (cutover prerequisites).
+- **W4A-Rn**: Wave-4 assessment rulings drafted outside the register; their register rows are owed (rule-map `meta.register_rows_owed`).
+- **lock / lock-db / check / hook**: Enforcement kinds in the rule map. A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`; a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook.
+- **Intent Ledger**: The table in a step's assessment report listing each behaviour of the legacy step and its disposition, one of the closed `DISPOSITION_VOCAB` (`scripts/analysis/step-validate.mjs`): preserved-in-runner, preserved-in-validator, preserved-in-compute, encoded-as-descriptor-field, encoded-as-deviation, knowingly-retired. Scored by scorecard G3; G-2 reads it.
+- **G-2**: Spec 124 GAP G-2 (Rule 4): every preserved-in-compute Intent Ledger row names where its rule is written (`checkPreservedInComputeHasWhy`). Not scorecard G2.
+- **§R Reflection**: The closing section of a step's assessment report recording what the conversion taught; scorecard G9 checks it exists.
+- **seam**: A declared hand-off between steps or between compute and the runner: cross-step seams are producer → consumer edges (`inputs.reads.steps`); the ENRICHER write seam is `ctx.exec` / `ctx.joinUpdate`, where the runner, not compute, issues the DML.
+- **sources chain**: The `sources` chain in `scripts/manifest.json` `chains`: the ordered ingest-and-derive steps run by `run-chain.js`; other chains (for example `coa`) are listed beside it.
+- **P0 … P3**: Programme stages of the step-optimisation programme (Spec 122/123). Not the assessment phases PH-0 … PH-8. Spec 122 also uses "P0" for a top-priority missing schema category ("six missing P0 categories", 122a §A5 and 122a R6); history.1's "P0 categories adjudication" is that sense, not the stage.
+- **†**: An id or code pointer that lands with another branch (rule-map `meta.pending_integration`).
+
+> **Role: standard.**
+> Dated note 2026-11-20 (M-246, prior text kept; operator, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry "2026-11-20 · Operator RULES on five open items", :1504; item 3 put to him: "3. Plan protocol line 8 superseded by Spec 137: recommended yes."; operator, verbatim: "yes to all"): the first bullet of section 0 below ("The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board).", line 8 of this file before this note was added) is superseded by Spec 137 (RR-0205, `docs/specs/00-architecture/137_mcqueue.md:18`): the board is the plan.
+> Dated note 2026-11-20 (M-246, prior text kept; same entry, :1504; item 4 put to him: "4. Narrow lens set binds a lane task: recommended yes."; operator, verbatim: "yes to all"): the nine-seat roster below (seats R,C,I,D,G,O,W,X then F: the Panel row of the section 2 table and the "Per increment" line of section 3, lines 20 and 34 of this file before this note was added) applies to the whole-increment plan review; a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce (`scripts/analysis/rule-lists.mjs` lensSet, `scripts/hooks/check-lane-close.mjs`), plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`).
+
+# Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00)
+Operator, verbatim: "re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which we can remove later depending if they fit the plan ... These early plans need to be reviewed, grounded with the panel. We need a build pass and then optimization. The biggest thing is this cant take forever ... simple and no scope creep ... Dont make more ungrounded recommendations."
+Principles (buildo-grounded-rules): standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep.
+
+## 0. One plan, no new plan
+- The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board). Nothing is re-written from scratch. Every existing task stays until a step below removes it with a cited reason.
+- Increments 1-5 are RE-OPENED in sequence.json as increments "1".."5", one per built scenario: 1-2 detached house, 3 houseplex 2-4, 4 house with secondary suite, 5 garden suite. Their engine work stays DONE (cited); only the missing slice parts are added as tasks.
+- Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added.
+
+## 1. Done = the scenario works for a customer (the slice definition)
+An increment is done only when, on a real lot on the real page: (1) engine rows right (answer key); (2) stored as ruled (headline / on demand, per the storage sitting); (3) page section + binding; (4) display text; (5) public route; (6) cost line; (7) CoA per option; (8) search hand-off where the scenario needs one; (9) measured check on the page. Built ONCE with the first slice (detached house): the route (MB-44 W), the headline table (MB-38), the text registry, the cost capture, the CoA mechanism, the check. Later slices add data + one check.
+
+## 2. Steps, in order (per increment, 1 first)
+| Step | What | Gate |
+|---|---|---|
+| A. Merge | Add the slice tasks to sequence.json from the existing sources only: gap-register/REGISTER.md, resolve-design/items.json, replan SCENARIO-SLICES.md (18 slice items), CoA regression, storage-outcome. Duplicates merged, never doubled. Old tasks untouched. | every added task has a source line; board re-rendered |
+| B. Fit check | Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE. NONE goes on a removal list with its evidence (grep), not deleted. | design-fit seat X |
+| C. Panel | Seats R,C,I,D,G,O,W,X then F on the increment's task list (tasks, order, dependencies). Beyond-research parts GROUNDED / STRIPPED / STILL OPEN. | check.mjs, check-cites, check-quotes PASS |
+| D. Build pass | Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines |
+| E. Optimisation | Merge, fold into existing nights/pushes, drop the removal list items the operator approves; nothing new added here. | F on the final wording |
+| F. One sitting | One page per increment: the task list, the removal list, rulings only where a rule is genuinely open (searched first). | operator's words logged |
+
+## 3. Simplicity guards (to stop task growth)
+- No new research topics. Only the sources in step A.
+- A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source.
+- Every step reports: tasks before, added (with source), removed-candidate, after. The count must not grow without a source per task.
+- Rulings: only when a search of the record finds none; the search is quoted.
+- One lane per increment at a time; increment 1-2 (detached house) first, the others queue behind it.
+
+## 4. Operator order, 2026-11-17 ~22:20 (supersedes the step order in section 2)
+Operator, verbatim: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integration, context, compliance etc. (for every task) 2 - optimize all the tasks within the increment (we need to complete this quickly) and then runa build pass and review any potential pushes in advance. When you get to incremement six - need to incorporate all the relevant tasks from the current plan. Do all nine increments this way tonight. In the end like today this needs to be one plan... we know what we are working on.. keep it simple."
+Per increment: 1. ADD the slice tasks (section 2 step A) and REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict). 2. OPTIMISE the increment's tasks (merge, fold into existing nights/pushes, removal list; nothing new). 3. BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step). Then the one-page sitting.
+Increments: 1-2 detached house, 3 houseplex, 4 house with suite, 5 garden suite, 6 renovations (with 6c owner inputs; incorporate every relevant task already in the current plan), 7 semi renovation, 8 sixplex, 9 merged measure, 10 proof set (+ Launch gate L). Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason) + SITTING.md + PASS lines. The orchestrator applies each patch to sequence.json after checking, so the end result is ONE plan.
+
+## 5. Joining steps (operator 2026-11-17 ~22:40, verbatim: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project ie a database that works and is ready 3. yes - this is the mess we created we need to clean it up 4. yes. 5. yes we need to finish this as quickly as possible today was a massive setback - we cant continue to make these mistakes - the infastrcuture may need to change as per your earlier grounding issues etc. yes add them")
+1. INTEGRATION PASS (after the last increment, before the board is final): across all increments check ids/dependsOn exist, one DB job at a time (Spec 137 rule 9), one recapture per increment, push order and contents, storage room vs the ST-3 line, shared-piece ids from increment 1-2 used consistently. Panel R,C,I,D,G,W,X then F. Output: one sequence.json.
+2. LAUNCH-SHARED home: work that serves the finished product but no single scenario (search fixes, McFrontend launch list MCFRONTEND-QUEUE.md:498 - billing, account, tracked lots, landing, lawyer check -, McTest harness, the shared pieces) lives in increment "1-2 shared" or the Launch gate, from the gap register and the launch list only. Objective: a completed project - a database that works and is ready, served to the customer.
+3. ONE SITTING: the orchestrator merges every increment's SITTING.md and the pending sittings (6c, 7, 8, 9, 10, design, gaps, storage) into one, duplicates merged, anything already ruled recorded not asked (search quoted).
+4. HELD MERGE: when the CoA regression and the storage review land, their items go into their increments and only those items are re-reviewed (seats + F).
+5. TIME: every task carries an estimate (MEASURED with source, or GUESS labelled); the integration pass shows the critical path to the customer-ready product.
+6. INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule) and is listed in the plan as tasks with sources: e.g. ground.mjs pack contention, the forbidden-name guard on command lines, lanes reading only seat tails, design-fit check in every panel (done: seat X).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
+index 556bd01312806a2825a2b8475779bd0bb3b15aeb..9ad7f7b7ee1cb4f21aeecc52683a50ac52e9997f 100644
+--- a/scripts/hooks/check-lane-close.mjs
++++ b/scripts/hooks/check-lane-close.mjs
+@@ -10,6 +10,8 @@
+ //  * Files against the diff: every path changed since the lane branch point (merge-base with the table's base_ref) or staged, outside docs/reports and backlog, is covered by the task's
+ //    Files line; a build or fix task whose Files resolve to no rule list is refused;
+ //  * every_task (V2.LIST, task-406): the table's every_task lists are attached to every task by the resolver, so each needs its compliance output like any list; a table with no every_task is refused;
++//  * task-423: the compliance proof is ONE joined output set per stage (out-compliance-rules[-pN].txt, the resolved lists joined whole by joinLists) or the per-list set (a stage holding both is refused);
++//    plan findings are ruled once: with GROUNDER-PLAN.md at the launch commit non-empty and holding a Plan line, no plan-*.txt is required and none is read for findings;
+ //  * the LENS SET the task type calls for (scripts/analysis/rule-lists.mjs lensSet, the function the launch brief uses): per attached rule list one compliance output
+ //    (out-compliance-<list id>.txt; plan- or out- for a non build/fix task; ONE file or parts -p1..-pK with no gap), and for a build or fix task also out-<lens>.txt for code-review,
+ //    error-paths (ux, security by the Files line) and at least one plan-stage output. Each required output starts with the review tool's REVIEW header (template name matching the lens,
+@@ -37,7 +39,7 @@ import path from 'node:path';
+ import { createRequire } from 'node:module';
+ import { fileURLToPath } from 'node:url';
+ import { asList, parseFM } from '../analysis/backlog-lib.mjs';
+-import { coveredBy, DIFF_ARGS, diffPaths, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
++import { coveredBy, DIFF_ARGS, diffPaths, JOINED_ID, joinLists, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
+ import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
+ 
+ const { CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections } = createRequire(import.meta.url)('../lib/review-template.js');
+@@ -418,6 +420,41 @@ function listProof({ id, l, phases, files, textOf, table, root, readBase, ctxVal
+   return ok ? null : `${id}: list ${l.id} (${l.file}) has no valid compliance lens output in ${dirNote}: write ${phases.join(' or ')}-compliance-${l.id}.txt${why.length ? ` (${why.join('; ')})` : ''}; ${layout}`;
+ }
+ 
++/**
++ * task-423 (PROTOCOL.SIMPLE, adjustment 1): the compliance proof of a stage in either form. The JOINED form is out-compliance-rules[-pN].txt (the resolved lists joined whole by joinLists, proved by listProof as one
++ * list named rules); the PER-LIST form is out-compliance-<list id>[-pN].txt for every list (kept for a task launched before the join). The form is decided per phase from the files in the folder: a phase holding both
++ * is refused, a phase holding neither is refused naming the joined file first (the per-list refusals follow). `proof(l, phases, table)` is one listProof call; `lists` the resolved lists; returns the refusal lines.
++ */
++function complianceSetErrors({ id, lists, phases, files, table, dirNote, proof }) {
++  const named = (ph, re) => files.some((f) => re.test(f.name) && f.name.startsWith(`${ph}-compliance-`));
++  const isJoined = new RegExp(`^(plan|out)-compliance-${JOINED_ID}(-p\\d+)?\\.txt$`);
++  const isAny = /^(plan|out)-compliance-.+\.txt$/;
++  const errors = [];
++  const joinedPh = []; const perPh = [];
++  for (const ph of phases) {
++    const j = named(ph, isJoined);
++    const p = files.some((f) => isAny.test(f.name) && f.name.startsWith(`${ph}-compliance-`) && !isJoined.test(f.name));
++    if (j && p) errors.push(`${id}: ${dirNote} holds both the joined (${ph}-compliance-${JOINED_ID}*.txt) and the per-list (${ph}-compliance-<list id>*.txt) compliance outputs of the ${ph} stage: keep one form per stage`);
++    else if (j) joinedPh.push(ph);
++    else if (p) perPh.push(ph);
++  }
++  const none = joinedPh.length === 0 && perPh.length === 0 && errors.length === 0;
++  if (none) {
++    errors.push(`${id}: no joined compliance lens output in ${dirNote}: write ${phases.map((p) => `${p}-compliance-${JOINED_ID}.txt`).join(' or ')} (rule-lists.mjs lens-input --list ${JOINED_ID} --lists ${lists.map((l) => l.id).join(',')}), or one per list as below`);
++    perPh.push(...phases);
++  }
++  if (joinedPh.length) {
++    let t;
++    try { t = joinLists(table, lists.map((l) => l.id)); } catch (e) { return [...errors, `${id}: ${String(e.message).split('\n')[0]}`]; }
++    const e = proof({ id: JOINED_ID, file: t.lists[JOINED_ID].file }, joinedPh, t);
++    if (e) errors.push(e);
++  }
++  if (perPh.length) for (const l of lists) { const e = proof(l, perPh, table); if (e) errors.push(e); }
++  return errors;
++}
++/** task-423 (adjustment 3): true when the plan evidence is on the board: GROUNDER-PLAN.md at the launch commit is non-empty and holds a "Plan: <task id> sha256:<12 hex>" line (the launch gate put it there; the hash is not compared at close). */
++export const planOnBoard = (text, id) => typeof text === 'string' && text.trim() !== '' && [...text.matchAll(/^\s*Plan:\s*(\S+)\s+sha256:[0-9a-f]{12}\s*$/gm)].some((m) => m[1].toLowerCase() === String(id).toLowerCase());
++
+ export function closeErrors(i) {
+   const { id, type, readRepo } = i;
+   const readBase = i.readBase ?? readRepo; // F10: templates come from the range base
+@@ -474,10 +511,7 @@ export function closeErrors(i) {
+ 
+   // (a) one compliance lens output per list, with its REVIEW header, bound to the committed input and to the whole list
+   const phases = build ? ['out'] : ['plan', 'out'];
+-  for (const l of r.lists) {
+-    const e = listProof({ id, l, phases, files, textOf, table: i.table, root: i.root, readBase, ctxValues: lc.values, expected, diffOf: i.diffOf, optionalPaths: i.optionalPaths, dirNote, layout });
+-    if (e) errors.push(e);
+-  }
++  errors.push(...complianceSetErrors({ id, lists: r.lists, phases, files, table: i.table, dirNote, proof: (l, phs, tbl) => listProof({ id, l, phases: phs, files, textOf, table: tbl, root: i.root, readBase, ctxValues: lc.values, expected, diffOf: i.diffOf, optionalPaths: i.optionalPaths, dirNote, layout }) }));
+   // (a') the rest of the lens set a build or fix task calls for, and a plan-stage output
+   if (build) {
+     const set = lensSet({ type, files: filesText(i.taskText) });
+@@ -513,11 +547,13 @@ export function closeErrors(i) {
+         else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, whole, { what: 'the recomputed diff of the whole task range (the diff file the lens must have read, made with the command in the brief)', templateText: readBase(`.claude/review-templates/lens-${lens}.md`), contexts: lc.values }).map((x) => `${id}: ${x}`));
+       }
+     }
+-    if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7); ${layout}`);
++    // task-423 (adjustment 3): plan findings are ruled once, at the plan: with the plan evidence on the board no plan-stage output is required in the lane folder
++    if (!i.planOnBoard && !files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7); ${layout}`);
+   }
+ 
+   // finding lines: a loose reading must count the same as the strict one
+-  const lensFiles = files.filter((f) => isLensOutput(f.name)).sort((a, b) => a.name.localeCompare(b.name));
++  // task-423 (adjustment 3): with the plan evidence on the board a plan-*.txt in the lane folder is ignored (its findings were ruled at the plan)
++  const lensFiles = files.filter((f) => isLensOutput(f.name) && !(i.planOnBoard && f.name.startsWith('plan-'))).sort((a, b) => a.name.localeCompare(b.name));
+   for (const f of lensFiles) {
+     const strict = findingsIn([f]).length;
+     const loose = looseFindingCount(f.text);
+@@ -588,18 +624,19 @@ function planGateInner(i) {
+   if (type === 'build') {
+     // one valid plan compliance output per resolved list, whose stamped material is the plan sections of the context whose text produced its prompt hash
+     const cands = contexts.map((c) => ({ value: lensContexts([{ name: c.name, text: c.text }], hasNotes).values[0] ?? null, cut: planCut(c.text), name: `${dir}/${c.name}` })).filter((c) => c.value !== null);
+-    for (const l of r.lists) {
++    // task-423: joined (plan-compliance-rules*) or per-list plan evidence; each proof is tried against every committed context
++    const planProof = (l, phs, tbl) => {
+       let last = null;
+-      let good = false;
+       for (const c of cands.length ? cands : [{ value: null, cut: null, name: '' }]) {
+-        const e = listProof({ id, l, phases: ['plan'], files, textOf, table: i.table, root: i.root, readBase: i.readRepo, ctxValues: c.value === null ? [] : [c.value], expected: [], diffOf: () => null, optionalPaths: [], dirNote,
+-          layout: `put plan-compliance-<list id>[-pN].txt and its in-<same name> directly in ${dirNote} (written by rule-lists.mjs lens-input --list <id> --material-from <context-rN.md> --out <folder>/in-plan-compliance-<id>)`,
++        const e = listProof({ id, l, phases: phs, files, textOf, table: tbl, root: i.root, readBase: i.readRepo, ctxValues: c.value === null ? [] : [c.value], expected: [], diffOf: () => null, optionalPaths: [], dirNote,
++          layout: `put plan-compliance-rules[-pN].txt (or plan-compliance-<list id>[-pN].txt per list) and its in-<same name> directly in ${dirNote} (written by rule-lists.mjs lens-input --list rules --lists <ids> (or --list <id>) --material-from <context-rN.md> --out <folder>/in-plan-compliance-<name>)`,
+           materialOk: (p) => (c.cut !== null && p.material === c.cut ? null : `the stamped material is not the Description, Acceptance criteria and Implementation Plan sections of the committed context ${c.name || '(none)'} (a plan review of some other text)`) });
+-        if (e === null) { good = true; break; }
++        if (e === null) return null;
+         last ??= e;
+       }
+-      if (!good) errors.push(last);
+-    }
++      return last;
++    };
++    errors.push(...complianceSetErrors({ id, lists: r.lists, phases: ['plan'], files, table: i.table, dirNote, proof: planProof }));
+   } else {
+     // a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line (reviewErrors; g375#1)
+     const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));
+@@ -755,6 +792,8 @@ function check(msgFile) {
+       baseTask = lx.status === 0 ? lx.stdout : null;
+     }
+     const baseFm = baseTask ? parseFM(baseTask).fm : null;
++    // task-423 (adjustment 3): the plan evidence on the board at the launch commit (the launch gate refused before the take unless it was there)
++    const planBoard = L ? planOnBoard(git(['show', `${L}:docs/reports/reviews/${id}/GROUNDER-PLAN.md`]).stdout, id) : false;
+     const type = String(boardFm?.type ?? baseFm?.type ?? mv.fm.type ?? '').toLowerCase();
+     if (baseFm && String(baseFm.milestone ?? '') !== String(mv.fm.milestone ?? '')) errors.push(`${id}: the milestone is ${mv.fm.milestone} here but ${baseFm.milestone} at its launch: a lane may not move its task to another milestone (the milestone decides which objectives lists apply)`);
+     // H3: the prompt builder and the review tool decide what a recomputed prompt hash proves; they may not differ from the range base unless the task's launch Files line covers them
+@@ -795,7 +834,7 @@ function check(msgFile) {
+     // task-375 A5: every committed context file of the task (docs/reports/reviews/<id>/context-rN.md), the INDEX first, then HEAD (the order readRepo uses), never the range base
+     const ctxDir = `docs/reports/reviews/${id}/`;
+     const contexts = [...new Set([...git(['ls-files', '--cached', '--', ctxDir]).stdout.split('\n'), ...git(['ls-tree', '-r', '--name-only', 'HEAD', '--', ctxDir]).stdout.split('\n')].filter((q) => new RegExp(`^${esc(ctxDir)}context-r\\d+\\.md$`).test(q)))].sort().map((q) => ({ name: q, text: readRepo(q) })).filter((x) => x.text !== null);
+-    errors.push(...closeErrors({ id, contexts, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase, facts: gitFacts(L), headTaskText: mv.headText }));
++    errors.push(...closeErrors({ id, contexts, planOnBoard: planBoard, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase, facts: gitFacts(L), headTaskText: mv.headText }));
+   }
+   // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
+   const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
+diff --git a/src/tests/backlog/backlog-brief.logic.test.ts b/src/tests/backlog/backlog-brief.logic.test.ts
+index 8354b3080f04fe1aa98c086aaea69b3862b091b8..c13283a97df35f28028ca3b72cd7b69e1e921991 100644
+--- a/src/tests/backlog/backlog-brief.logic.test.ts
++++ b/src/tests/backlog/backlog-brief.logic.test.ts
+@@ -69,7 +69,8 @@ describe('G1 backlog-brief (test 4)', () => {
+     expect(r.stdout).toMatch(/The plan is the task text at launch, checked before launch/);
+     expect(r.stdout).toMatch(/do not edit the Description, Acceptance or Plan/);
+     expect(r.stdout).toMatch(/record deviations in Implementation Notes/);
+-    expect(r.stdout).toMatch(/still runs at least one plan-stage lens of its own and rules its findings in its own GROUNDER\.md/);
++    expect(r.stdout).toMatch(/plan findings were ruled once, at the plan: the lane runs no plan lens and its GROUNDER\.md rules the output findings only/);
++    expect(r.stdout).not.toMatch(/still runs at least one plan-stage lens/);
+     expect(r.stdout).toMatch(/STATUS: ready\|blocked\|failed\|dropped/);
+   });
+ 
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index d94890d84f99555b59ed4c4378e54834b21af20a..82d33b7f6b8d0adbbf15779c90355ba762e5f311 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -277,7 +277,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+     for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }
+     expect(e).not.toContain('<pasted-context file>');
+     expect(e).not.toMatch(/context-<date>|context-20\d\d/);
+-    expect(e).toContain(`lens-input --list L --context ${ctx}`);
++    expect(e).toMatch(new RegExp(`lens-input --list rules --lists \\S+ --context ${ctx.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
+     expect(e).toContain('plan: --material-from');
+     expect(e).toMatch(/lens-input --context \S+ --material <diff file>/);
+   });
+@@ -319,12 +319,16 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+     expect(inputs).toContain('draft, operator to confirm it binds');
+     expect(inputs).toContain('backlog/docs/increments/doc-1 - Increment-F-requirements.md');
+   });
+-  it('the lens line runs the compliance lens once per list through the helper, other lenses stay, and the separate-grounder rule is written in', () => {
++  it('task-423 (d): the lens line names the joined command over every resolved list id and the files out-compliance-rules, no longer says to copy plan-*.txt, and still accepts the per-list files; other lenses stay and the separate-grounder rule is written in', () => {
+     const { extra } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' });
+-    for (const l of ['mobile-98', 'eng-all', 'storage-doc16', 'inc-F']) {
+-      expect(extra).toContain('plan-compliance-' + l);
+-      expect(extra).toContain('out-compliance-' + l);
+-    }
++    const m = /lens-input --list rules --lists (\S+) --context/.exec(extra);
++    expect(m, extra.slice(0, 200)).not.toBeNull();
++    for (const l of ['mobile-98', 'eng-all', 'storage-doc16', 'inc-F']) expect((m as RegExpExecArray)[1]!.split(',')).toContain(l);
++    expect(extra).toContain('out-compliance-rules[-pN].txt');
++    expect(extra).toContain('ONE JOINED RUN PER STAGE');
++    expect(extra).not.toContain('ONCE PER RULE LIST');
++    expect(extra).not.toContain('copy plan-*.txt');
++    expect(extra).toContain('out-compliance-<list id>[-pN].txt of the old form');
+     expect(extra).toContain('scripts/analysis/rule-lists.mjs lens-input');
+     expect(extra).toContain('lens-code-review.md');
+     expect(extra).toContain('lens-error-paths.md');
+@@ -466,7 +470,7 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+     expect(brief).toContain('Rule lists that govern this task');
+     expect(brief).toContain('mobile-98: docs/specs/03-mobile/98_mobile_testing_protocol.md');
+     expect(brief).toContain('storage-doc16');
+-    expect(brief).toContain('plan-compliance-mobile-98');
++    expect(brief).toMatch(/lens-input --list rules --lists \S*mobile-98/);
+     expect(brief).toContain('own input');
+     expect(brief).toContain('own extra');
+     expect(fs.readFileSync(spec, 'utf8')).not.toContain('Rule lists that govern'); // the orchestrator's own file is not rewritten
+@@ -571,14 +575,15 @@ describe('plan-prep review (task-418): refusals, one line, nothing written; each
+ describe('plan-prep review: the calls and what they leave', () => {
+   it('5: one failing call is named, exit 1, the files of that run are deleted and the re-run succeeds; all succeeding writes every in- and plan- file', () => {
+     const f = prepFixture();
+-    const bad = review(f, [], { STUB_FAIL: 'plan-compliance-queue-137' });
++    const bad = review(f, [], { STUB_FAIL: 'plan-compliance-rules' });
+     expect(bad.status, bad.stdout + bad.stderr).toBe(1);
+-    expect(bad.stderr).toMatch(/in-plan-compliance-queue-137\.txt/);
++    expect(bad.stderr).toMatch(/in-plan-compliance-rules(-p\d+)?\.txt/);
+     expect(names(f, /^(in-)?plan-/)).toEqual([]);
+     const ok = review(f);
+     expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+     const outs = names(f, /^plan-compliance-.*\.txt$/);
+-    expect(outs.length).toBeGreaterThan(3);
++    expect(outs.length).toBeGreaterThan(0);
++    expect(outs.every((n) => /^plan-compliance-rules(-p\d+)?\.txt$/.test(n))).toBe(true); // task-423: one joined call set, not one per list
+     expect(names(f, /^in-plan-compliance-.*\.txt$/)).toHaveLength(outs.length);
+     expect(names(f, /^plan-(plan-review-deepseek|error-paths)\.txt$/)).toHaveLength(2);
+     expect(names(f, /^FINDINGS-PLAN\.md$/)).toHaveLength(1);
+@@ -605,11 +610,12 @@ describe('plan-prep review: the calls and what they leave', () => {
+     const ctx = fs.readFileSync(path.join(dirOf(f), 'context-r1.md'), 'utf8');
+     const table = rl.readTable();
+     const rs = rl.resolveTask({ table, root: f.board, body: fs.readFileSync(taskFile(f), 'utf8'), type: 'build', letter: 'F' });
+-    for (const l of rs.lists as { id: string }[]) for (const x of rl.buildLensInputs({ id: l.id, list: table.lists[l.id], root: f.board, material: rt.extractSections(ctx, rt.PLAN_SECTIONS), templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: rt.extractSections(ctx, rt.CONTEXT_SECTIONS) }))
++    const joined = rl.joinLists(table, (rs.lists as { id: string }[]).map((l) => l.id));
++    for (const l of [{ id: 'rules' }]) for (const x of rl.buildLensInputs({ id: l.id, list: joined.lists[l.id], root: f.board, material: rt.extractSections(ctx, rt.PLAN_SECTIONS), templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: rt.extractSections(ctx, rt.CONTEXT_SECTIONS) }))
+       expect(fs.readFileSync(path.join(dirOf(f), `in-plan-compliance-${l.id}${x.suffix}.txt`), 'utf8')).toBe(x.text);
+     const g = prepFixture(); backlog(g.board, ['task', 'edit', g.task, '-d', 'another description\n\nFiles: scripts/analysis/thing.mjs']);
+     expect(review(g).status).toBe(0);
+-    const a = names(f, /^in-plan-compliance-eng-all/)[0] as string;
++    const a = names(f, /^in-plan-compliance-rules/)[0] as string;
+     expect(fs.readFileSync(path.join(dirOf(g), a), 'utf8')).not.toBe(fs.readFileSync(path.join(dirOf(f), a), 'utf8'));
+   });
+   it('8: with context-r1.md present the phase writes context-r2.md and leaves r1 untouched', () => {
+@@ -642,7 +648,8 @@ describe('plan-prep review: the calls and what they leave', () => {
+     expect(r.status, r.stdout + r.stderr).toBe(0);
+     expect(first(r)).toMatch(/^\$ cd .* && node \S*backlog-brief\.mjs /);
+     const li = r.stdout.split('\n').filter((l) => /lens-input/.test(l)).length;
+-    expect(li).toBeGreaterThan(3);
++    expect(li).toBe(1); // task-423: one joined lens-input call
++    expect(r.stdout).toMatch(/lens-input --root \S+ --list rules --lists \S+ --context/);
+     expect(r.stdout.split('\n').filter((l) => /scripts\/deepseek-review\.js review .*lens-compliance\.md/.test(l))).toHaveLength(li);
+     expect(r.stdout).toMatch(/DOTENV_CONFIG_PATH=\S+ node -r \S*dotenv\/config scripts\/deepseek-review\.js review \S+ --template \.claude\/review-templates\/plan-review-deepseek\.md --context \S+ --section Task /);
+     expect(status(f)).toBe(before);
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index ccec44669c60bbcd2d326bdd0b259c781ac77019..0348d4d663048a3ed35634d0c3eaf0cbd7bae050 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -71,7 +71,7 @@ type Opts = {
+   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
+   // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
+   triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean; notesBlock?: boolean;
+-  ctx?: string | false; hashCtx?: string; refs?: false | string[]; mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
++  joined?: boolean | 'other'; planBoard?: string; ctx?: string | false; hashCtx?: string; refs?: false | string[]; mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
+ };
+ type TriageCtx = { ids: { id: string; word: string; sev: string }[]; sha: string; path: string; base: string; d: string };
+ function scenario(o: Opts = {}) {
+@@ -91,6 +91,7 @@ function scenario(o: Opts = {}) {
+   if (!o.noDecision) w('backlog/decisions/decision-1 - RR-0001-test-ruling.md', '---\nid: decision-1\ntitle: RR-0001 test ruling\n---\n');
+   if (o.otherTask) w(OTHER, `${taskText({ id: 'TASK-8', status: o.otherStatus ?? 'RUNNING', type: o.otherType, assignees: o.otherAssignees })}${o.otherExtra ?? ''}`);
+   for (const [p, x] of LENS_TEMPLATES) w(p, x);
++  if (o.planBoard !== undefined) w('docs/reports/reviews/task-7/GROUNDER-PLAN.md', o.planBoard); // task-423: the plan evidence on the board at the launch commit
+   g('add', '-A'); g('commit', '-qm', 'base'); g('branch', 'wf2/board');
+   const baseSha = g('rev-parse', 'HEAD').stdout.trim();
+   const laneWork = o.laneWork ?? { 'src/a.ts': `${AFILE}// lane work\n` };
+@@ -115,15 +116,15 @@ function scenario(o: Opts = {}) {
+   fs.writeFileSync(path.join(d, '.git/material.txt'), material);
+   fs.writeFileSync(path.join(d, '.git/tpl.md'), '## System persona\nsys\n\n## User prompt\nPLAN:\n{{PLAN}}\nSPECS:\n{{SPECS}}\n');
+   const splitArgs = o.split ? ['--max', String(o.split.max), '--template', path.join(d, '.git/tpl.md')] : [];
+-  for (const id of ['first', 'inc-F', ...Object.keys(table.lists as object).filter((k) => k === 'xtra'), ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
++  for (const id of o.joined ? ['rules'] : ['first', 'inc-F', ...Object.keys(table.lists as object).filter((k) => k === 'xtra'), ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
+     const out = path.join(d, LD, `in-out-compliance-${id}`);
+-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, ...(id === 'rules' ? ['--lists', o.joined === 'other' ? 'first,inc-F,msf' : 'first,inc-F,ev,msf'] : []), '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
+     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
+     for (const p of r.stdout.split('\n').filter(Boolean)) {
+       const nm = path.basename(p);
+       const inText = fs.readFileSync(p, 'utf8');
+       lane[nm] = inText;
+-      lane[nm.replace(/^in-/, '')] = hdr('lens-compliance.md', inText) + body(id === 'first' && o.lensFinding !== false, o.finding);
++      lane[nm.replace(/^in-/, '')] = hdr('lens-compliance.md', inText) + body((id === 'first' || id === 'rules') && o.lensFinding !== false, o.finding);
+     }
+     if (r.status !== 0) { lane[`in-out-compliance-${id}.txt`] = ''; lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', '') + body(id === 'first' && o.lensFinding !== false, o.finding); }
+   }
+@@ -836,12 +837,12 @@ type PO = {
+   type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
+   noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
+   ctx?: string; badMaterial?: boolean; junkPlan?: boolean; fixCompliance?: 'valid' | 'junk';
+-  fold?: false | ((planLine: string) => string); assignees?: string[];
++  fold?: false | ((planLine: string) => string); assignees?: string[]; joinedPlan?: boolean | 'other' | 'both';
+ };
+ const goodFold = (planLine: string, name = 'Fold-G1') => `# Fold check\nChecked by: ${name}\nVerdict: PASS\n\nthe folded plan was read again against the findings\n\n${planLine}\n`;
+ async function planScenario(o: PO = {}) {
+   const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
+-  const rl = (await import('../../../scripts/analysis/rule-lists.mjs')) as { buildLensInputs: (a: unknown) => { suffix: string; text: string }[]; resolveTask: (a: unknown) => { lists: { id: string }[] } };
++  const rl = (await import('../../../scripts/analysis/rule-lists.mjs')) as unknown as { buildLensInputs: (a: unknown) => { suffix: string; text: string }[]; joinLists: (t: unknown, ids: string[]) => { lists: Record<string, unknown> }; resolveTask: (a: unknown) => { lists: { id: string }[] } };
+   const id = 'task-7'; const dir = `docs/reports/reviews/${id}`;
+   const mem: Record<string, string> = { 'docs/a.md': '# A\nrule one text\nrule two text\n', 'docs/ev.md': '# Ev\nthe five words and the plan protocol\n', 'docs/ms.md': '# Ms\nthe milestone objectives\n', 'docs/inc.md': '# Inc\nincrement text\n', 'src/a.ts': AFILE };
+   const d = tmp('pg');
+@@ -865,8 +866,12 @@ async function planScenario(o: PO = {}) {
+     files['context-r1.md'] = ctxText;
+     if (type === 'build') {
+       const lists = rl.resolveTask({ table, root: d, body: text0, type, letter: 'F' }).lists.map((l) => l.id).filter((x) => x !== o.omitList);
+-      for (const lid of lists) {
+-        const ins = rl.buildLensInputs({ id: lid, list: (table.lists as Record<string, unknown>)[lid], root: d, material: o.badMaterial ? 'some other text under review' : cut, templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: sel });
++      // task-423: the joined plan evidence (plan-compliance-rules*) over the resolved lists; 'other' joins one list fewer; 'both' also writes the per-list set
++      const forms: { lid: string; list: unknown }[] = [];
++      if (o.joinedPlan) forms.push({ lid: 'rules', list: rl.joinLists(table, o.joinedPlan === 'other' ? lists.filter((x) => x !== 'ev') : lists).lists.rules });
++      if (!o.joinedPlan || o.joinedPlan === 'both') for (const lid of lists) forms.push({ lid, list: (table.lists as Record<string, unknown>)[lid] });
++      for (const { lid, list } of forms) {
++        const ins = rl.buildLensInputs({ id: lid, list, root: d, material: o.badMaterial ? 'some other text under review' : cut, templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: sel });
+         for (const x of ins) {
+           const inn = `in-plan-compliance-${lid}${x.suffix}.txt`;
+           files[inn] = x.text;
+@@ -1064,3 +1069,70 @@ describe('task-375 D: the launch gate refuses a build or fix launch whose plan w
+     gate(bd, /list first/);
+   });
+ });
++
++// ---- task-423 (PROTOCOL.SIMPLE, card A): adjustment 1 (the joined compliance set per stage) and adjustment 3 (plan findings ruled once) ----
++// Rule: 08_agents.md section 7 rule 4 and section 5.3; 137_mcqueue.md Rule 3 and Rule 10. The per-list form of every test above is the control: it stays accepted.
++const PLAN_LINE = 'Plan: task-7 sha256:0123456789ab\n';
++describe('task-423 (b): the close accepts a joined output set and still accepts the per-list set', () => {
++  it('a joined output set (out-compliance-rules.txt over the resolved lists joined whole) is accepted', () => {
++    const r = scenario({ joined: true });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('control: the per-list set is accepted', () => {
++    const r = scenario();
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('a folder holding both forms for one phase is refused', () => {
++    refused(scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-first.txt': l['out-compliance-rules.txt'] as string }) }), /both the joined \(out-compliance-rules\*\.txt\) and the per-list/);
++  });
++  it('a joined set with a gap (-p1 and -p3) is refused', () => {
++    refused(scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-rules.txt': null, 'out-compliance-rules-p1.txt': l['out-compliance-rules.txt'] as string, 'out-compliance-rules-p3.txt': l['out-compliance-rules.txt'] as string }) }), /rules[\s\S]*p2/);
++  });
++  it('a joined set made for a different resolved list (one list left out) is refused', () => {
++    refused(scenario({ joined: 'other' }), /do not carry the whole list rules|not what lens-input writes for its own stamp/);
++  });
++  it('a joined input with a part shortened after the stamp is refused; control: the untouched set was accepted above', () => {
++    refused(scenario({ joined: true, mutate: (l) => ({ ...l, 'in-out-compliance-rules.txt': (l['in-out-compliance-rules.txt'] as string).replace('rule two text', '') }) }), /stamped sha256 does not match|REVIEW header file_sha256/);
++  });
++  it('neither form: the refusal names the joined file first, and the per-list refusals follow', () => {
++    const r = scenario({ mutate: (l) => Object.fromEntries(Object.entries(l).filter(([n]) => !/compliance/.test(n))) });
++    refused(r, /no joined compliance lens output[\s\S]*out-compliance-rules\.txt/);
++    expect(r.stderr).toMatch(/out-compliance-inc-F\.txt/);
++  });
++});
++
++describe('task-423 (b): the plan gate accepts joined or per-list plan evidence', () => {
++  it('joined plan evidence (plan-compliance-rules) over the resolved lists passes the gate; control: the per-list evidence passes', async () => {
++    const j = await planScenario({ joinedPlan: true });
++    expect(j.errors, j.errors.join('\n')).toEqual([]);
++    const p = await planScenario();
++    expect(p.errors, p.errors.join('\n')).toEqual([]);
++  });
++  it('both forms for the plan phase, and a joined set made for a different resolved list, are refused', async () => {
++    gate(await planScenario({ joinedPlan: 'both' }), /holds both the joined \(plan-compliance-rules\*\.txt\) and the per-list/);
++    gate(await planScenario({ joinedPlan: 'other' }), /do not carry the whole list rules|not what lens-input writes for its own stamp/);
++  });
++});
++
++describe('task-423 (c): plan findings are ruled once, at the plan', () => {
++  const noPlan = (l: Lane) => ({ ...l, 'plan-code-review.txt': null });
++  it('a lane folder with no plan-*.txt closes when GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line', () => {
++    const r = scenario({ planBoard: `# plan grounder\n${PLAN_LINE}`, mutate: noPlan });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('a plan-*.txt with a finding in the folder is ignored: no Ruled line and no finding id of it is demanded', () => {
++    const r = scenario({ planBoard: PLAN_LINE, mutate: (l) => { const x = { ...l, 'plan-code-review.txt': body(true) }; return { ...x, 'GROUNDER.md': grounder({ ...x, 'plan-code-review.txt': null }) }; } });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('GROUNDER-PLAN.md absent at the launch commit with no plan-*.txt is refused; so is an empty one, or one with no Plan line', () => {
++    refused(scenario({ mutate: noPlan }), /no plan-stage lens output/);
++    refused(scenario({ planBoard: '\n', mutate: noPlan }), /no plan-stage lens output/);
++    refused(scenario({ planBoard: '# plan grounder\nno plan line here\n', mutate: noPlan }), /no plan-stage lens output/);
++    refused(scenario({ planBoard: 'Plan: task-99 sha256:0123456789ab\n', mutate: noPlan }), /no plan-stage lens output/);
++  });
++  it('control: absent at the launch commit with plan-*.txt present keeps the old rule (the plan finding needs its Ruled line and verdict)', () => {
++    const ok = scenario();
++    expect(ok.status, ok.stderr).toBe(0);
++    refused(scenario({ mutate: (l) => ({ ...l, 'plan-code-review.txt': body(true), 'GROUNDER.md': grounder({ ...l, 'plan-code-review.txt': null }) }) }), /plan-code-review/);
++  });
++});
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 2ece2e0df8849489760c71c126f0f29ffb7ce95a..85b2fa9482294b9d10236dfb95cd8ee0fad050e2 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -863,3 +863,95 @@ describe('task-375 (suite fix): the repo a read names is the one its root names,
+     expect(() => m.trackedFiles(tmp('norepo'))).toThrow(/git ls-files failed/);
+   });
+ });
++
++// ---- task-423 (PROTOCOL.SIMPLE, card A, adjustment 1): the resolved lists joined whole into one virtual list, packed by size ----
++// Rule: 08_agents.md section 7 rule 4 and section 5.3 (the compliance lens reviews the whole lists, never trimmed); PLAN-PROTOCOL.md:3 simple, no scope creep.
++type JM = { joinLists: (t: unknown, ids: string[]) => { lists: Record<string, { members?: { id: string }[]; file: string; whole?: boolean }> }; parseLensInput: (t: string) => { listPart: string; id: string } | null; wholeListText: (l: unknown, root: string, id: string) => string; readTable: () => { lists: Record<string, unknown> } };
++const jmod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<JM>;
++const filesLineOf = (n: number) => /^Files: (.*)$/m.exec(fs.readFileSync(path.join(ROOT, 'backlog/tasks', fs.readdirSync(path.join(ROOT, 'backlog/tasks')).find((f) => f.startsWith(`task-${n} -`)) as string), 'utf8'))?.[1] as string;
++const FILES_423 = 'scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, scripts/analysis/backlog-brief.mjs, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/backlog-brief.logic.test.ts';
++const resolvedIds = (files: string) => { const r = script(CLI, ['resolve', '--files', files, '--type', 'build', '--letter', 'S']); expect(r.status, r.stderr).toBe(0); return ids(JSON.parse(r.stdout) as Res); };
++// a reviewer context of the size the plan stage carries (rulings context about 4,620 characters)
++const BIGCTX = (d: string) => CTX(d, 'the description', `\n## Pad\n${'x'.repeat(4400)}\n`);
++const joinedCount = (listIds: string[], material: number, max?: number) => {
++  const d = tmp('join');
++  const m = path.join(d, 'mat.txt'); fs.writeFileSync(m, 'm'.repeat(material));
++  const r = script(CLI, ['lens-input', '--list', 'rules', '--lists', listIds.join(','), '--material', m, '--context', BIGCTX(d), '--out', path.join(d, 'in-x-compliance-rules'), ...(max ? ['--max', String(max)] : [])]);
++  return { r, files: r.stdout.split('\n').filter(Boolean) };
++};
++
++describe('task-423 (a): joined input: the nine lists of the tooling kind, whole, in table order, packed by size', () => {
++  it('writes at most 3 files for the tooling kind at a plan material of 12,400 characters; the stitched list parts equal the whole text of the nine lists in table order', async () => {
++    const m = await jmod();
++    const lists = resolvedIds(FILES_423);
++    expect(lists).toHaveLength(9);
++    const { r, files } = joinedCount(lists, 12400);
++    expect(r.status, r.stderr).toBe(0);
++    expect(files.length).toBeGreaterThan(0);
++    expect(files.length).toBeLessThanOrEqual(3);
++    const t = m.readTable();
++    const order = Object.keys(t.lists).filter((k) => lists.includes(k));
++    const want = order.map((id) => m.wholeListText(t.lists[id], ROOT, id)).join('').replace(/\s+/g, '');
++    const got = files.map((f) => (m.parseLensInput(fs.readFileSync(f, 'utf8')) as { listPart: string }).listPart).join('').replace(/\s+/g, '');
++    expect(got).toBe(want);
++    expect(fs.readFileSync(files[0] as string, 'utf8')).toMatch(/^LIST rules sha256:[0-9a-f]{64} material sha256:[0-9a-f]{64} part 1 of \d+\nRULE LIST rules \(9 lists: /);
++  });
++  it('with --max small the parts are more and every file is under the bound; control: an input with a part shortened no longer matches its stamp', async () => {
++    const m = await jmod();
++    const lists = resolvedIds(FILES_423);
++    const big = joinedCount(lists, 12400);
++    const small = joinedCount(lists, 12400, 60000);
++    expect(small.r.status, small.r.stderr).toBe(0);
++    expect(small.files.length).toBeGreaterThan(big.files.length);
++    for (const f of small.files) expect(fs.readFileSync(f, 'utf8').length, f).toBeLessThan(60000);
++    const text = fs.readFileSync(big.files[0] as string, 'utf8');
++    expect((m.parseLensInput(text) as { id: string }).id).toBe('rules');
++    const at = text.indexOf('\n\n') + 2; // the start of the list part, after the stamp and head lines
++    const cut = text.slice(0, at) + text.slice(at + 50);
++    expect(cut).not.toBe(text);
++    expect((m.parseLensInput(cut) as unknown as { ok: boolean }).ok).toBe(false);
++  });
++  it('joinLists: one extra list named rules with the members whole in table order; an id not in the table, or a table list named rules, is refused', async () => {
++    const m = await jmod();
++    const t = m.readTable();
++    const j = m.joinLists(t, ['plan-protocol', 'five-words']);
++    expect(j.lists.rules?.members?.map((x) => x.id)).toEqual(Object.keys(t.lists).filter((k) => ['plan-protocol', 'five-words'].includes(k)));
++    expect(j.lists.rules?.whole).toBe(true);
++    expect(() => m.joinLists(t, ['nope'])).toThrow(/nope/);
++    const f = fixture();
++    const bad = JSON.parse(fs.readFileSync(f.table, 'utf8'));
++    bad.lists.rules = { file: 'docs/a.md', whole: true, generated_by: 'hand-written' };
++    fs.writeFileSync(f.table, JSON.stringify(bad));
++    const v = script(CLI, ['validate', '--root', f.d, '--table', f.table]);
++    expect(v.status).toBe(1);
++    expect(v.stderr).toMatch(/list rules: the id "rules"/);
++  });
++});
++
++describe('task-423 (e): counts pinned at most, on the real table', () => {
++  it('the tooling kind and the task-419 Files line: 3 compliance files at the plan (material 12,400) and 3 at the output (diff 29,700); the task-412 Files line: 3 and 3', () => {
++    for (const files of [FILES_423, filesLineOf(419), filesLineOf(412)]) {
++      const lists = resolvedIds(files);
++      for (const mat of [12400, 29700]) {
++        const { r, files: out } = joinedCount(lists, mat);
++        expect(r.status, `${files.slice(0, 40)} ${mat}: ${r.stderr}`).toBe(0);
++        expect(out.length, `${files.slice(0, 40)} material ${mat}`).toBeLessThanOrEqual(3);
++      }
++    }
++  });
++  it('the old per-list form is unchanged: one lens-input per list still writes that list alone (control)', () => {
++    const d = tmp('perlist');
++    const m = path.join(d, 'mat.txt'); fs.writeFileSync(m, 'm'.repeat(12400));
++    const r = script(CLI, ['lens-input', '--list', 'five-words', '--material', m, '--context', BIGCTX(d), '--out', path.join(d, 'in-x-compliance-five-words')]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout.trim().split('\n')).toHaveLength(1);
++    expect(fs.readFileSync(r.stdout.trim(), 'utf8')).toMatch(/^LIST five-words sha256:/);
++  });
++  it('lens-input --list rules with no --lists is refused with a usage line', () => {
++    const d = tmp('nolists');
++    const m = path.join(d, 'mat.txt'); fs.writeFileSync(m, 'm');
++    const r = script(CLI, ['lens-input', '--list', 'rules', '--material', m, '--context', BIGCTX(d), '--out', path.join(d, 'in-x')]);
++    expect(r.status).toBe(2);
++    expect(r.stderr).toMatch(/--lists/);
++  });
++});
+
