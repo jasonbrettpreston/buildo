@@ -13,3 +13,6 @@
 - Known limits: the red attempt failed at 18 assertions as designed (no typecheck stop).
 
 STATUS: ready (grounder owed)
+
+## Fix round 1 (g418#1 = out-compliance-eng-all#3)
+Seam: kept, whitelisted. launchArgs() accepts only --main, --panel-tools, --backlog-bin, --worktree, --lane-dir, --date, each with a plain value; anything else (--dry-run, --task, --lane, --board, --no-launchd, ...) is refused with one line (exit 3), and the gate argv is [...launchArgs, --task, --lane, --board, --dry-run] so identity and --dry-run come last. Kept because the commit-phase tests need the fixture's own paths for the real gate dry run; removing it would leave tests on the developer's real ~/Buildo paths.

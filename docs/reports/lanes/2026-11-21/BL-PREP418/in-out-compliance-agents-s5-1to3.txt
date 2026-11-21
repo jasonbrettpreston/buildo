@@ -1,4 +1,4 @@
-LIST agents-s5-1to3 sha256:56726f1e8e2c1a3935426321609275da970041e9c086b2bda04cbb9a1354097d material sha256:2a0d70ad24074448de20e9d120880b8f1780550f7c19433b4abe4a8333316eb4 part 1 of 1 chunk 1 of 1
+LIST agents-s5-1to3 sha256:56726f1e8e2c1a3935426321609275da970041e9c086b2bda04cbb9a1354097d material sha256:e2dc87c7b0afddb2476cc0e2b2a175aae96f378c6c6771a6ad71a81840ddc0a0 part 1 of 1 chunk 1 of 1
 RULE LIST agents-s5-1to3 (docs/specs/00-architecture/08_agents.md, sections 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.mjs","src/tests/backlog/backlog-lane.logic.test.ts"]
 
 ### 5.1 Compliance (spec → code)
@@ -31,7 +31,7 @@ Dated note 2026-11-20 (M-246, prior text kept; fourth correction to the task-410
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
-index 8d21af1d78827b49438e784113d62aebd5f1f192..32cd1b109f64e4f207d248ad6eefc3abf3cd5642 100644
+index 8d21af1d78827b49438e784113d62aebd5f1f192..ac3c4d3dd664f34485b484dfece5a0e9c4557fd0 100644
 --- a/scripts/analysis/rule-lists.mjs
 +++ b/scripts/analysis/rule-lists.mjs
 @@ -12,14 +12,16 @@
@@ -53,7 +53,7 @@ index 8d21af1d78827b49438e784113d62aebd5f1f192..32cd1b109f64e4f207d248ad6eefc3ab
  import { globToRegExp, matchesAny } from './mcbylaws/paths.mjs';
  
  const HERE = path.dirname(fileURLToPath(import.meta.url));
-@@ -523,6 +525,222 @@ export function renderPage({ table, root }) {
+@@ -523,6 +525,231 @@ export function renderPage({ table, root }) {
    return o.join('\n') + '\n';
  }
  
@@ -108,7 +108,16 @@ index 8d21af1d78827b49438e784113d62aebd5f1f192..32cd1b109f64e4f207d248ad6eefc3ab
 +      return st.stdout.split('\n').filter(Boolean).map((l) => l.slice(3).replace(/^.* -> /, '').replace(/^"(.*)"$/, '$1')).filter((p) => !p.startsWith('backlog/') && !p.startsWith(`${ev}/`) && !/(^|\/)node_modules\/?$/.test(p));
 +    };
 +    const notDirty = () => { const d = dirtyOutside(); if (d.length) refuse(`board checkout ${board} is dirty outside backlog/ and ${ev}/: ${d.slice(0, 5).join(', ')}${d.length > 5 ? ', ...' : ''}`); };
-+    const launchArgs = () => { try { const v = JSON.parse(str('launch-args', '[]')); return Array.isArray(v) ? v.map(String) : []; } catch { throw new Stop(2, 'usage: --launch-args must be a JSON array of strings'); } };
++    // test-only seam: the launch dry run takes the fixture's own paths (--main, --panel-tools, ...) and NOTHING else. Only these flags, each with a plain value, are accepted: identity (--task, --lane, --board), --dry-run and every flag that launches or takes are refused, and the gate argv puts the identity and --dry-run last
++    const LAUNCH_ARG_FLAGS = ['--main', '--panel-tools', '--backlog-bin', '--worktree', '--lane-dir', '--date'];
++    const launchArgs = () => {
++      let v;
++      try { v = JSON.parse(str('launch-args', '[]')); } catch { throw new Stop(2, 'usage: --launch-args must be a JSON array of strings'); }
++      if (!Array.isArray(v)) throw new Stop(2, 'usage: --launch-args must be a JSON array of strings');
++      const out = v.map(String);
++      for (let i = 0; i < out.length; i += 2) if (!LAUNCH_ARG_FLAGS.includes(out[i]) || out[i + 1] === undefined || out[i + 1].startsWith('--')) refuse(`--launch-args carries "${out[i]}": only ${LAUNCH_ARG_FLAGS.join(', ')}, each with a value, are accepted (the launch dry run never launches)`);
++      return out;
++    };
 +
 +    if (phase === 'review') return await reviewPhase();
 +    if (phase === 'post') return await postPhase();
@@ -251,7 +260,7 @@ index 8d21af1d78827b49438e784113d62aebd5f1f192..32cd1b109f64e4f207d248ad6eefc3ab
 +      const changed = git('status', '--porcelain', '--untracked-files=all', '--', ev).stdout.trim() !== '';
 +      const addArgv = ['git', 'add', '--', ev];
 +      const commitArgv = ['git', 'commit', '-q', '-m', `docs(08_agents): plan review evidence for ${taskId}`, '--', ev];
-+      const gateArgv = ['node', path.join(HERE, 'backlog-lane.mjs'), '--task', taskId, '--lane', lane, '--board', board, '--dry-run', ...launchArgs()];
++      const gateArgv = ['node', path.join(HERE, 'backlog-lane.mjs'), ...launchArgs(), '--task', taskId, '--lane', lane, '--board', board, '--dry-run'];
 +      if (changed) { say(board, addArgv); say(board, commitArgv); } else console.log(`plan-prep commit: ${ev}/ is already committed`);
 +      say(board, gateArgv);
 +      if (dry) return 0;
@@ -276,7 +285,7 @@ index 8d21af1d78827b49438e784113d62aebd5f1f192..32cd1b109f64e4f207d248ad6eefc3ab
  // ---- CLI ----
  function cli() {
    const [cmd] = process.argv.slice(2);
-@@ -590,9 +808,9 @@ function cli() {
+@@ -590,9 +817,9 @@ function cli() {
    } else if (cmd === 'findings') {
      const dir = str('dir', '');
      if (!dir || !fs.existsSync(dir)) die(2, 'usage: findings --dir <lane report dir>');
@@ -291,7 +300,7 @@ index 8d21af1d78827b49438e784113d62aebd5f1f192..32cd1b109f64e4f207d248ad6eefc3ab
  }
  if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) cli();
 diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
-index 65f0246932067880484c606429b08f780b57cfe6..bfd860fb01c7b1d8e0c2f6e0f458641030bae8a7 100644
+index 65f0246932067880484c606429b08f780b57cfe6..0dfc9c60b150ea05f637586bdf1cd96f9ad0131c 100644
 --- a/src/tests/backlog/backlog-lane.logic.test.ts
 +++ b/src/tests/backlog/backlog-lane.logic.test.ts
 @@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
@@ -302,7 +311,7 @@ index 65f0246932067880484c606429b08f780b57cfe6..bfd860fb01c7b1d8e0c2f6e0f4586410
  import * as path from 'node:path';
  import { backlog, backlogBin, makeProject, mk, ROOT, run, tmp } from './helpers';
  
-@@ -460,3 +461,325 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+@@ -460,3 +461,342 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
      refused(lane(fixture({ letter: 'Q' })), /increment.*Q|Q.*increment/);
    });
  });
@@ -603,6 +612,23 @@ index 65f0246932067880484c606429b08f780b57cfe6..bfd860fb01c7b1d8e0c2f6e0f4586410
 +    expect(ok.stdout + ok.stderr).toMatch(/plan gate/);
 +    expect(head(f)).not.toBe(h0);
 +    expect(git(f.board, 'show', '--name-only', '--format=', 'HEAD').stdout.trim()).toBe(`docs/reports/reviews/${f.task}/TRIAGE-PLAN.md`);
++  });
++  it('fix round 1 (g418#1): --launch-args cannot turn the launch dry run into a real launch: the identity flags and --dry-run it carries are refused, the task stays LATER with no worktree and no branch; the control without the override is a dry run', () => {
++    const f = prepFixture({ evidence: true });
++    const bad = prep(f, 'commit', ['--launch-args', JSON.stringify(['--dry-run', 'x', '--no-launchd', ...f.args.slice(6)])]);
++    expect(bad.status, bad.stdout + bad.stderr).toBe(3);
++    expect(bad.stderr.trim().split('\n')).toHaveLength(1);
++    expect(bad.stderr).toMatch(/^plan-prep: refused: .*--dry-run/);
++    expect(statusOf(f)).toBe('LATER');
++    expect(fs.existsSync(f.wt)).toBe(false);
++    expect(git(f.board, 'branch', '--list', 'wf2/t1').stdout.trim()).toBe('');
++    for (const flag of ['--task', '--lane', '--board']) refusal(prep(f, 'commit', ['--launch-args', JSON.stringify([flag, 'other'])]), new RegExp(flag));
++    expect(statusOf(f)).toBe('LATER');
++    const ok = prep(f, 'commit');
++    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
++    expect(ok.stdout).toMatch(/plan gate ok/);
++    expect(statusOf(f)).toBe('LATER');
++    expect(fs.existsSync(f.wt)).toBe(false);
 +  });
 +  it('11 and 14: a CONFIRMED HIGH folded: post, commit (the dry run prints the expected Plan line), the grounder copies it, commit again prints "plan gate ok"; one word edited in the task refuses with the new expected line', () => {
 +    const f = prepFixture({ evidence: true });
