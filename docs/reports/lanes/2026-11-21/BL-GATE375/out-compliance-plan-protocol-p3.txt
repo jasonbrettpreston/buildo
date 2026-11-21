@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:27:19.069Z file_sha256=36827d6e5b1a12447c797ae19e006444ea617afb3a92283459f5cc84014cd2bf prompt_sha256=7355462291ef4829fa71ea5148a797f9809aee396bcc38ab4101bf7fddd5ac6e
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-plan-protocol-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 "A1 scripts/deepseek-review.js review <task-381 diff> ... --context <that file> with the five --section flags and --dry-run: 0 hits of "(no pasted context provided)", at least 1 hit of "yes to all", the five heading lines present, prompt under 120000 characters." — src/tests/backlog/check-lane-close.logic.test.ts "+it('refuses a context that is the placeholder, and one without the Description heading'" or NONE — the only named proof that a real compliance prompt carries the task text is recorded NOT RUN, and the diff proves only the refusal of a placeholder, never the positive path (0 hits of the placeholder, 1 hit of an operator quote, prompt under 120000) — run the A1 dry run on task-381's committed context and paste the hit counts and prompt length on the task, keep the refusal test as the negative control.
+
+BUG severity=HIGH — AC #2 "Tests red first, then green through the real hooks" — pasted build note "Red for this commit was a typecheck refusal (complianceRefs not exported), in red7.out." (also "Red for this commit was a typecheck refusal (red10.out).") — a typecheck refusal is not a red test of the behaviour, so the plan protocol step D gate "red-first tests named, exact commands. | PASS lines" is unmet for the B1 and D1-D5 commits, and the pasted retro already records "red.out and commit.out cited by the report are not in the repo; the recorded red is for the wrong reason" — name the failing assertion and its exact command in red7.out and red10.out (or redo the red with the new tests failing for the reason the fix addresses).
+
+BUG severity=MED — AC #9 "choose the task on the day 375 launches: a LATER build task not recommended for drop; task-400 is, and its Files line collides with this task)" — pasted build note "for task-101 (LATER, type record, not build) the command carries 6 compliance: entries = 6 lists of resolve" — the clause asks for a LATER build task, the recorded live-board evidence used a type record task, so the build-task resolve path the A4 change actually serves is unproven on the board — run check-tasks proof on a LATER build task that is not recommended for drop and paste the command and the count.
+
+BUG severity=MED — A.7 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — src/tests/backlog/rule-lists.logic.test.ts "+it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound'" or NONE — only the table-row half of the clause has a test; the diff adds no case that cuts a block of blank-line paragraphs, so half the named behaviour rests on the build note alone — add a paragraph-only block over the room, assert it splits at blank lines with every paragraph appearing once.
+
+BUG severity=MED — A.4 "rule-lists.mjs lens-input takes --context, refuses without it, and counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)." — src/tests/backlog/rule-lists.logic.test.ts "+const no = base(f, []); ... expect(no.status, no.stderr).toBe(2);" — both the refusal and the room counting are tested only on the --list path ('--list', 'first', '--list', 'whole'); the no-list path is exercised at V2.WHOLE with --context but asserts nothing about the context being counted or refused — add a no-list case with a context too big for --max (exit 1 naming the context) and one with no --context (exit 2).
+
+DEFER severity=LOW — AC #8 "today exit 1 naming "## Register"; after A6 exit 0 with parts; the same for policy-124-s2-s5 and bylaw-133." — pasted build note "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the before half of the clause is unverified and the diff's A6 tests use a synthetic table document, not the three named lists, so the measured claim in the plan is not reproduced by this material — re-run the three named lists on the pre-A6 head and on HEAD and paste exit codes and part counts, or have the operator amend the acceptance.
+
+MET — A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js; extractSections moves there" — src/tests/review-template.logic.test.ts (new A2 describe, added at end of file) — asserts the five headings exactly, PLAN_SECTIONS as Description, Acceptance criteria, Implementation Plan, and that extractSections throws on a missing heading.
+
+MET — A.4 close binding "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes" — src/tests/backlog/check-lane-close.logic.test.ts (task-375 A4/A5/B2 describe) — planted placeholder, missing Description, context edited after the review and missing Implementation Notes are each refused, each with a control that closes.
+
+MET — B.3 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir" — src/tests/backlog/check-lane-close.logic.test.ts "+refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/)" — a missing REPORT.md is refused with the exact add-ref command and TRIAGE.md is required when the lane dir holds one.
+
+MET — C (D11b) "the security lens fires for admin and PII paths (README.md :104 and lens-security.md:48 say they fire it)" — src/tests/backlog/rule-lists.logic.test.ts (D11b describe) — admin and PII paths add the security lens on both phases, with two controls (a neutral path and the existing stripe word).
+
+REJECT — A.7 "A row or paragraph that alone passes the room is still refused naming it" — accused of being untested by a name-only test — the diff does assert a real run: src/tests/backlog/rule-lists.logic.test.ts "expect(l.r.stderr).toContain('5. Register')" on a status 1, so the refusal is exercised, not merely named.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 6
+
+---
+⏱  90927ms (90.9s)
+📊 Tokens — total: 46706, input: 30224, output: 16482, reasoning: 14998

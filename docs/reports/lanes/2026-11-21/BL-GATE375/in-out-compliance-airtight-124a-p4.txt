@@ -1,0 +1,268 @@
+LIST airtight-124a sha256:a17cafde55c326338a2ee657dc9aaac1007a54b8508b6476b3097e7c93af56eb material sha256:af8dfcf96c950f5c867864450a2e854b0e67cf22a5fced057aa2da6f229af9aa part 2 of 2 chunk 2 of 5
+RULE LIST airtight-124a (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md, sections Appendix §B10; Appendix §B12), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.mjs","scripts/deepseek-review.js"]
+
+## Appendix §B12 — Register rows R-BZ…R-CP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-18
+
+Moved from Spec 124 — Runner lane (operator y 2026-10-18, runner-lane ruling 17): Spec 124 was at 371/380 lines and owes the runner-lane rows (R-DM and the drafts allocated from R-DX) beside the badges lane R-DW. Rows R-BZ…R-CP (the next contiguous block after M25) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.
+
+| R-BZ | **Compute purity is a closed answer (operator 2026-10-10; McDonald's Airtight V3, operator 2026-10-11).** Gate E (SCALABLE, fast invariant #32) widens from the literal ban to codes G0–G13 (122a §A26): `compute-purity.mjs` over compute and its `require` closure, plus ast-grep siblings in `compute-shape.yml`. Ledger keys `<rule>@<fp>#<n>` / `<rule>@<line text>#<n>`; `matchLedger` lets one row cover one violation (C2). Purity rows close on their seam's `programme-items.json` id (CP-S1…S5, CP-PLANA, CP-PERMITS) and are RED once that item is BUILT, SUPERSEDED or missing (C3). A function-scope tunable const is a bypass (Rule 3, Q5). `mPerDegLat = 111320` (load_parcels, metres per degree of latitude) is a `physical_constant`. R-BA's hard stop is narrowed for purity codes only, on a closed list: enrich_centreline, massing, load_heritage, load_centreline, neighbourhoods, load_zoning (Q6 A); every other post-2026-09-26 or future conversion needs ZERO findings. #44 compute-attributed FAILs turn hard at max(CP-S1, P1-C9). | Rules 2, 3; amends R-BA, R-BG | 122a §A26; 122 §5 |
+| R-CA | **Compute-layer corrections to reality (operator 2026-10-10).** (i) An ASSERT compute may read through `ctx.pool` read-only, every relation declared, no DML/DDL/txn/maintenance (G4, G5); §3's "no `ctx.pool` reachable" was never true. (ii) Spec 122 §5.6 "never writes a row" STANDS: ENRICHER `passes[].run(client)` writes are interim, ledgered, and move behind the library write seam (CP-S3). | Rule 2, §3 | 122a §A26 |
+| R-CB | **R-BG(iv) is a baseline rule; seam/ordering reads accept every finished status (operator 2026-10-12, purity seam S1 OQ-1, ruled for 122/122a/124/124a compliance).** R-BG(iv)'s status set {completed, completed_with_warnings}, never completed_with_errors, never a `write_skipped_pre_write_warn` run, governs PRIOR-RUN BASELINES only (the one run-history reader `readRunHistory`, `scripts/lib/step/ledger.js`). An ordering/seam read (`checkSeam`, `scripts/lib/step/seam.js`) is not a baseline: it accepts every finished status {completed, completed_with_warnings, completed_with_errors} — a covered FAIL run is a finished run (122a:572) — and adopts only the shared warn-skip predicate and the `id DESC` tie-break. Locks: `src/tests/ledger-reader.logic.test.ts` (baseline set), a green lock in `src/tests/step-seam.logic.test.ts` (cwe stays accepted). S1-P (2026-10-13): `ctx.producer` / `readRunHistory` take an explicit closed `statuses` list per read, default the R-BG(iv) baseline; an activity or verdict read declares its wider terminal set in the descriptor pin (`staleness.pins[].statuses`), never the baseline. | Clarifies: R-BG (iv) scope | Spec 122a:572 |
+| R-CC | **A chain-run step row's status is derived from its verdict; the literal `'completed'` is retired (operator 2026-10-12, purity seam S1 OQ-6, per 122a:571-572).** `run-chain.js` writes each step row's status from ONE fold over that run's `records_meta.audit_table.rows` (the stored `.verdict` is cross-checked; a mismatch writes a `verdict_mismatch` audit row) — closed mapping: PASS→`completed`; WARN→`completed_with_warnings`; covered FAIL (step exit 0, fold FAIL)→`completed_with_errors`; SKIP→`completed`; UNKNOWN / null / missing or empty `audit_table` / unrecognised status / malformed summary→`completed_with_warnings` plus a `verdict_unavailable{reason}` audit row (null ≠ PASS, never `completed`). A thrown or non-zero step stays `failed`; `deferred_to_full` is untouched. Chain status equals the fold over the step-row statuses of that run (failed > completed_with_errors > completed_with_warnings > completed). `runLedgerGateDecision`'s upstream predicates KEEP the O-6 fail-safe (bare `'completed'`; widening them was measured 2026-10-01 to flip compute_centroids and link_parcel_addresses RUN→SKIP): a downstream of a `completed_with_warnings` / `completed_with_errors` upstream RUNs (operator confirmed "keep" 2026-10-12, Q-S1-a — the cost is extra downstream runs, never a wrong skip). Forward-only: history is not backfilled. Locks: run-chain status tests per mapping row (red-first where the status differs from today's literal), a chain⇔step invariant test, a seeded test that a completed_with_warnings upstream (with or without changes) forces RUN (O-6 fail-safe); the `run-chain-budget.logic` / `chain-cascade.integration` source scans updated knowingly. | Amends: R-BG (iv) consumers; Spec 122a:571-572 enforced in code | Spec 122a:571-572 |
+| R-CD | **An ASSERT's snapshot upsert is a compute-returned plan the runner executes (operator 2026-10-12, purity seam S2 Q4).** assert_engine_health returns `write_plan {table, sql, rows, report_check}`; `runWritePlan` runs it per-row autocommit on the pool (txn_scope `none`), stops at the first failing row, reports the declared `report_check` through `ctx.report` (one WARN row) and threads `records_meta.records_updated`; no compute-side DML. | R-BZ G5/G13 | `rcd-write-plan.logic`, `aeh-write-plan.logic` |
+| R-CE | **A calendar date derives from `ctx.clock` in the zone named by `pipeline_timezone` (operator 2026-10-12 / 2026-10-13, S2 Q5 + F3-2).** Bound as parameters (`to_timestamp($ms / 1000) AT TIME ZONE $zone`); `captured_at` binds the clock too; no `CURRENT_DATE`/`NOW()` in compute; the zone is never a literal. `pipeline_timezone` is the first string-typed logic variable: a seed `type: "string"` + closed `enum` (UTC · America/Toronto, default UTC = the measured session zone), declared with `enum` and `on_invalid: "fail"` only (schema-enforced). | Rule 3; R-BZ G6 | `aeh-clock-date.logic`, `string-logic-variable.logic` |
+| R-CF | **A session GUC a read depends on is declared (operator 2026-10-12, S2).** `execution.read_gucs[] {read, name, value}` against a closed allowlist (initially `enable_indexscan = off`); the runner issues SET/RESET around that read on its pinned client; compute holds no SET/RESET text (G4). RE-FREEZE. | R-BZ G4 | `step-schema.logic`, refresh_snapshot locks |
+| R-CG | **`execution.maintenance` may declare a dynamic-target arm (operator 2026-10-12; measurement ruled 2026-10-13, S2 F3-3).** `{operation, select: "dead_tuple_ratio", limit_from_config, why}` — the runner selects every public table with `n_live_tup > 0` and dead/(live+dead) above the named variable after compute, for ASSERT as well as ENRICHER, and writes one `sys_maintenance_selected_<op>` row even when nothing is selected. ONE fleet measurement, dead/(live+dead) (`scripts/lib/dead-tuple-ratio.js`, Spec 122a:391-396), shared by runner, AEH, `/api/quality` and the anomaly detector. RE-FREEZE. | R-BZ G4/G7 | `maintenance-dynamic-arm.logic`, `dead-ratio-one-measurement.logic` |
+| R-CH | **A vocab-coverage read is a runner-owned READ ONLY snapshot (operator 2026-10-12, S2).** `ctx.readSnapshot` (BEGIN READ ONLY, `SET LOCAL statement_timeout` from `execution.statement_timeout_minutes_from_config`, ROLLBACK) for ASSERT steps; the shared lib exposes a never-throwing client core that the legacy wrapper (`vocab-coverage-pool.js`) wraps outside the compute closure. | R-BZ G1/G4 | `read-snapshot.logic`, `vocab-coverage-core.logic` |
+| R-CI | **Scope-ledger hygiene DELETEs are library-owned ledger statements (operator 2026-10-12, S3).** EP-D10 prune and the step-start retire run in `scripts/lib/step/scope-retire.js` on a declared write target recorded in `write_discipline.why` / `before_image_why`; they never go through `ctx.retract`, and the descriptor's no-DELETE claim is corrected in the same landing. | R-BZ G5 | `purity-s3-exec-seam.logic`, enrich_parcels D20 |
+| R-CJ | **A guard-suppressed hygiene action emits one WARN row naming the guard's answer (operator 2026-10-12, S3).** `scope_retire_lock_held` carries `holder_run_id` and `rows_retained` (0 written as 0); no row when the guard is not tripped; null counters mean the probe did not run. | Rule 10 | enrich_parcels violations |
+| R-CK | **An ENRICHER pass DML runs through `ctx.exec(writesRef, sql, params)` (operator 2026-10-12, S3; wording ruled 2026-10-13).** The seam validates the declared target and the verb (UPDATE/INSERT/DELETE), executes on the pass client and returns the result; it is counter-neutral — counters stay pass-derived; compute never calls `client.query` for DML. | R-BZ G5; Spec 122a §A26 G5 | `purity-s3-exec-seam.logic` |
+| R-CL | **A uniqueness invariant over a declared read table is a `checks[]` row, not a compute throw (operator 2026-10-12, S4; refined 2026-10-13).** Its measurement read is declared under `checks[].reads` (R-BJ); unless the table's own key enforces it — then the key is cited and locked (e.g. `archetype_cost_rates.archetype` PRIMARY KEY, migration 205 + a live `pg_constraint` test) and no check is added. | Rule 10 | `cost-meta-no-logic-variables.logic`, DB PK test |
+| R-CM | **`ctx.config.$meta` is a library-owned, read-only map of declared logic-variable stamps (operator 2026-10-12, S4).** `updated_at` rides the SAME `logic_variables` statement as the value (F11 holds), non-enumerable so config stamps and hashes are unchanged; compute reads stamps from it, never `logic_variables` SQL; hooks receive `{pool, config, producer}`, never a bare pool. | R-BZ G1/G8 | `config-meta.logic` |
+| R-CN | **A gate-E ledger row names the file it allows (operator 2026-10-12; amends R-BZ's key).** A gate-E row carries `file`, the repo-relative posix path; `step` equals its basename (`validateRow`; a non-E row carrying `file` is refused). `matchLedger` keys gate E on `(step, file, item)`, and the `#n` ordinal counts per file (`gateEOrdinal`). So one row allows one site in one file (C2), and a same-named file in another directory is never covered. All 172 gate-E rows were re-keyed mechanically from their unique current finding (0 ambiguous, measured 2026-10-12); `filed`/`step`/`item` are unchanged, so the V3 freeze holds. | Rule 1; amends R-BZ | `ledger-key-file.logic.test.ts`; `ledger.mjs` selfTest (11/11b) |
+| R-CO | **A test never writes a before-image into the real golden tree (operator 2026-10-14; amends R-M's test surface).** Every vitest file runs inside a per-file before-image sandbox installed by `src/tests/setup.ts` (`src/tests/helpers/before-image-sandbox.ts`): fs calls on a path inside `docs/reports/golden/<slug>/before-image/` resolve under a per-file `os.tmpdir()` root that `afterAll` removes, while the library still returns its repo-relative path. The library (`write.js#persistBeforeImageRows`) is unchanged, so `lib_fingerprint` does not move. Real-run before-images stay local: `.gitignore` covers `docs/reports/golden/*/before-image/`. | Rule 4; amends R-M (Spec 124a) | `before-image-test-isolation.infra.test.ts` (real disk, unmapped `lstat`: no file after the writer runs on a real slug) |
+| R-CP | **A live test asserts that its child process completed before it asserts on that process's output (operator 2026-10-14; closes LM-D14's test-side recurrence).** A test that spawns `step-validate.mjs` (or another long CLI) first proves the run finished: no spawn error, no signal, an expected exit code, the summary header, and at least one score row per converted step (`notLookedReasons(run, convertedCount)` in `src/tests/helpers/step-validate-run.ts` returns `[]`). Only then does it assert on the output. An absence-only assertion (`not.toMatch(FAIL)`, `not.toContain(downgrade)`) is never sufficient alone. Spawn timeouts sit above the measured run time (420 s against 214 s). | Rule 4; §7 LM-D14 | `gate-score-floor` T6, `gate-captures` T6e, `gate-registries` T8b, `gate-five-words` T5/T5b, `programme-backlog` RED-proof P9, `deepseek-exec-fences` F14; each proven red by a killed/crashed-run mutant |
+
+
+---
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
+index 90e9c71aa44d3cf554afa21cd384e5bdd8c8a70a..eba7a0202b06533f9d00f9a318b73fd344b57ac6 100644
+--- a/scripts/analysis/rule-lists.mjs
++++ b/scripts/analysis/rule-lists.mjs
+@@ -19,13 +19,15 @@ import fs from 'node:fs';
+ import { createRequire } from 'node:module';
+ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+-import { args, parseFM, readItems, REPO, sha256 } from './backlog-lib.mjs';
++import { args, asList, parseFM, readItems, REPO, sha256 } from './backlog-lib.mjs';
+ import { globToRegExp, matchesAny } from './mcbylaws/paths.mjs';
+ 
+ const HERE = path.dirname(fileURLToPath(import.meta.url));
+ export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');
+ const BOUND = 120000; // scripts/deepseek-review.js MAX_PROMPT_CHARS
+ const RESERVE = 800; // stamp, header and separator of one lens input file
++/** The text a lens sees when no --context is given (the review tool's own placeholder). */
++const NO_CONTEXT = '(no pasted context provided)';
+ const MARKER = '\n=== MATERIAL UNDER REVIEW (everything below this line) ===\n';
+ /** V2.WHOLE (task-410): the one diff command the brief, the lens input and the close check share (every flag pinned, so the text is the same on every machine). */
+ // --text and --full-index (V2.WHOLE fix round): a .gitattributes line `*.ts -diff` makes git print "Binary files differ" for code; --text prints the text whatever the attributes say, --full-index fixes the index line length
+@@ -158,7 +160,7 @@ export const filesText = (body) => /(?:^|\s)Files:[ \t]*(.*)$/m.exec(String(body
+ export function lensSet({ type, files }) {
+   const code = ['build', 'fix'].includes(String(type ?? '').toLowerCase());
+   const surface = /\bmobile\/|src\/app\/|src\/components\/|surfaces\//.test(files);
+-  const sec = /entitlement|auth|stripe|metered/i.test(files);
++  const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);
+   return {
+     code,
+     plan: ['plan-review-deepseek', ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],
+@@ -291,10 +293,38 @@ export function findingsIn(files) {
+ }
+ 
+ // ---- lens input ----
++/**
++ * task-375 A6 (his :1546 "or split smaller"; the cut at rows and paragraphs is the orchestrator's reading): a block with no deeper heading is cut between table rows or blank-line
++ * paragraphs and the pieces packed in order up to `max`. A row or paragraph that alone passes `max`, or a block with no row or blank line to cut at, is refused naming it (the old throw).
++ * A row is judged without its neighbours and, mid-table, without its column header.
++ */
++function splitFlat(text, max, label, id) {
++  const pieces = [];
++  let cur = [];
++  const flush = () => { if (cur.length) { pieces.push(cur.join('\n')); cur = []; } };
++  const lines = text.split('\n');
++  const head = /^#{1,6}\s/.test(lines[0]) ? 1 : 0; // the block's own heading line stays with the first piece (a part of only a heading would judge nothing)
++  for (const [i, ln] of lines.entries()) {
++    if (i < head) cur.push(ln);
++    else if (/^\s*\|/.test(ln)) { if (!(head && pieces.length === 0 && cur.length === 1)) flush(); cur.push(ln); flush(); } else if (ln.trim() === '') { if (!(head && pieces.length === 0 && cur.length === 1)) flush(); } else cur.push(ln);
++  }
++  flush();
++  const big = pieces.find((x) => x.length > max);
++  if (big) throw Object.assign(new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading, table row or blank line to split at that fits (a piece of ${big.length} characters; room for list text in one file: ${max})`), { room: true, size: big.length });
++  const out = [];
++  let acc = [];
++  let len = 0;
++  for (const x of pieces) {
++    if (acc.length && len + x.length + 1 > max) { out.push(acc.join('\n')); acc = []; len = 0; }
++    acc.push(x); len += x.length + 1;
++  }
++  if (acc.length) out.push(acc.join('\n'));
++  return out;
++}
+ function splitUnits(text, max, label, id) {
+   if (text.length <= max) return [text];
+   const subs = headings(text).filter((h) => h.offset > 0);
+-  if (subs.length === 0) throw Object.assign(new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading to split at (room for list text in one file: ${max})`), { room: true, size: text.length });
++  if (subs.length === 0) return splitFlat(text, max, label, id);
+   const level = Math.min(...subs.map((h) => h.level));
+   const cuts = [0, ...subs.filter((h) => h.level === level).map((h) => h.offset), text.length];
+   const out = [];
+@@ -314,7 +344,7 @@ export function renderLensInput({ id, list, part, i, n, material, paths, c, m })
+   return `${stamp}\n${head}\n\n${part}${MARKER}${material}\n`;
+ }
+ /** The prompt hash the review tool writes in its REVIEW header: sha256 of JSON [system, user] for a lens template, the input file as {{PLAN}} and the context as {{SPECS}} (today the tool's placeholder string; a task that passes a real context file passes its text here). */
+-export function lensPromptHash({ templateText, inputText, context = '(no pasted context provided)' }) {
++export function lensPromptHash({ templateText, inputText, context = NO_CONTEXT }) {
+   const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
+   const split = rt.splitTemplate(templateText);
+   const system = split.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.";
+@@ -329,12 +359,12 @@ export function lensPromptHash({ templateText, inputText, context = '(no pasted
+  * its path list. One file alone over the room is refused naming the file and its size. A diff is always stamped (chunk 1 of 1 when it fits), so the close check reads paths from the stamp.
+  * `list` null (a non-compliance lens template): the same chunks with an empty list part, id "none".
+  */
+-export function buildLensInputs({ id, list, root, material, templateFile, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {
++export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {
+   const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
+   const split = rt.splitTemplate(fs.readFileSync(templateFile, 'utf8'));
+   const sys = (split.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.").length;
+   const k = (split.userTemplate.match(/\{\{PLAN\}\}/g) ?? []).length || 1;
+-  const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++  const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context, dataContext: '(no live-DB context provided)' }).length;
+   const avail = Math.floor((max - fixed - 200) / k);
+   const room = (msg, size) => Object.assign(new Error(msg), { room: true, size });
+   const partsFor = (unitMax) => {
+@@ -359,7 +389,7 @@ export function buildLensInputs({ id, list, root, material, templateFile, max =
+     parts = partsFor(unitMax);
+     // F13: the room test above is an estimate; when the FINAL prompt (stamp, head with the path list, marker) of the widest part would pass the bound, the material is chunked too
+     const widest = parts.reduce((x, y) => (y.length > x.length ? y : x), '');
+-    const finalLen = sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: widest, i: parts.length, n: parts.length, material, paths: segs ? chunks[0].paths : null, c: 1, m: 1 }), specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++    const finalLen = sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: widest, i: parts.length, n: parts.length, material, paths: segs ? chunks[0].paths : null, c: 1, m: 1 }), specs: context, dataContext: '(no live-DB context provided)' }).length;
+     if (finalLen > max) throw room(`the input with the rendered head would be ${finalLen} characters, over the ${max} bound`, widest.length);
+   } catch (e) {
+     if (!e.room || !segs) throw e;
+@@ -372,7 +402,7 @@ export function buildLensInputs({ id, list, root, material, templateFile, max =
+     }
+     // the room of a chunk is MEASURED (V2.WHOLE fix round): the stamp, the head with the chunk's own path list and the marker are rendered for the longest list part and counted, so a long path list cannot push an input over the bound
+     const longest = parts.reduce((x, y) => (y.length > x.length ? y : x), '');
+-    const promptOf = (paths, text) => sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: longest, i: 99999, n: 99999, material: text, paths, c: 99999, m: 99999 }), specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++    const promptOf = (paths, text) => sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: longest, i: 99999, n: 99999, material: text, paths, c: 99999, m: 99999 }), specs: context, dataContext: '(no live-DB context provided)' }).length;
+     chunks = [];
+     for (const s of segs) {
+       const last = chunks[chunks.length - 1];
+@@ -385,7 +415,7 @@ export function buildLensInputs({ id, list, root, material, templateFile, max =
+   const files = [];
+   chunks.forEach((ch, ci) => parts.forEach((p, i) => {
+     const text = renderLensInput({ id, list, part: p, i: i + 1, n: parts.length, material: ch.text, paths: ch.paths, c: ci + 1, m: chunks.length });
+-    const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++    const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: context, dataContext: '(no live-DB context provided)' }).length;
+     if (prompt > max) throw new Error(`list ${id}: part ${i + 1} would be ${prompt} characters, over the ${max} bound`);
+     const n = ci * parts.length + i + 1;
+     files.push({ suffix: files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });
+@@ -413,12 +443,28 @@ export function parseLensInput(text) {
+ /** The text of a whole list as the helper reads it (all blocks), for the whole-list comparison. */
+ export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');
+ 
++// ---- compliance references (task-375 B1, his :1541 "labelled means i need to know its a compliance document") ----
++/**
++ * The references a task carries for its resolved lists: one "compliance:<list id> <file>" per list, compared by the id token (the text before the first space). A file path with a comma is entered
++ * as "compliance:<list id>" alone (backlog splits --add-ref at commas; ms-9 is the only such list). {add} the entries for lists the task does not carry yet; {remove} the compliance: entries of
++ * lists that no longer resolve. `lists` [{id, file}]; `refs` the task's references.
++ */
++export function complianceRefs(lists, refs) {
++  const idOf = (r) => /^compliance:(\S+)/.exec(String(r).trim())?.[1];
++  const have = new Map((refs ?? []).filter((r) => idOf(r)).map((r) => [idOf(r), String(r).trim()]));
++  const want = new Set(lists.map((l) => l.id));
++  return {
++    add: lists.filter((l) => !have.has(l.id)).map((l) => (String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`)),
++    remove: [...have].filter(([id]) => !want.has(id)).map(([, r]) => r),
++  };
++}
++
+ // ---- the check over every open task, and the generated page (task-406, V2.LIST) ----
+ /** Every open task (not finished, not DROPPED) of root's backlog/tasks: {resolve: [ids], notYet: [{id, cls, reason}], bad: [lines]}. A task with a Files line that resolves must carry the every_task and milestone lists. */
+ export function checkTasks({ table, root }) {
+   const tracked = trackedFiles(root);
+   const done = new Set([...(table.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']), 'DROPPED'].map((s) => s.toUpperCase()));
+-  const out = { resolve: [], notYet: [], bad: [] };
++  const out = { resolve: [], notYet: [], bad: [], refs: [] };
+   for (const t of readItems(root)) {
+     if (done.has(String(t.fm.status ?? '').toUpperCase())) continue;
+     const letter = milestoneLetter(root, t.fm.milestone);
+@@ -426,7 +472,12 @@ export function checkTasks({ table, root }) {
+     try { r = resolveTask({ table, root, body: t.body, type: String(t.fm.type ?? ''), letter, tracked }); } catch (e) { out.bad.push(`${t.id}: cannot resolve: ${String(e.message).split('\n')[0]}`); continue; }
+     if (!r.error) {
+       const miss = verifyResolved(table, r, letter, String(t.fm.type ?? ''));
+-      if (miss.length) out.bad.push(`${t.id}: resolves but ${miss.join('; ')}`); else out.resolve.push(t.id);
++      if (miss.length) out.bad.push(`${t.id}: resolves but ${miss.join('; ')}`);
++      else {
++        out.resolve.push(t.id);
++        const c = complianceRefs(r.lists, asList(t.fm.references));
++        if (c.add.length || c.remove.length) out.refs.push({ id: t.id, ...c }); // task-375 B1: the exact command that brings the task's compliance: references in step
++      }
+       continue;
+     }
+     const m = /matched by no row[^:]*: (.*?) \(add a row/.exec(r.error);
+@@ -495,11 +546,20 @@ function cli() {
+     const list = id ? table.lists[id] : null; // no --list: a non-compliance lens template, the chunks alone (V2.WHOLE)
+     if (id && !list) die(1, `no list ${id} in ${tableFile}`);
+     if (!id && !a.template) die(2, 'usage: lens-input needs --list <id>, or --template <lens file> alone to split the material for a non-compliance lens');
++    // task-375 A4: the reviewer's context is the task, sized: the selected sections of the committed context file are counted in the room. --material-from <context-rN.md> cuts the plan phase material from it (and is its own context).
++    const matFrom = str('material-from', ''); const ctxFile = str('context', matFrom);
+     const matFile = str('material', ''); const outPrefix = str('out', '');
+-    if (!matFile || !outPrefix || !fs.existsSync(matFile)) die(2, 'usage: lens-input [--list <id>] --material <file> --out <prefix> [--template <lens file>] [--max <n>]');
++    if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> (the reviewer context of the task; the selected sections are counted in the room); --material-from <context-rN.md> is its own context');
++    if ((!matFile && !matFrom) || !outPrefix || (matFile && !fs.existsSync(matFile)) || !fs.existsSync(ctxFile) || (matFrom && !fs.existsSync(matFrom))) die(2, 'usage: lens-input [--list <id>] (--material <file> | --material-from <context-rN.md>) --context <context-rN.md> --out <prefix> [--template <lens file>] [--max <n>]');
++    let context; let material;
++    try {
++      const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
++      context = rt.extractSections(fs.readFileSync(ctxFile, 'utf8'), rt.CONTEXT_SECTIONS);
++      material = matFrom ? rt.extractSections(fs.readFileSync(matFrom, 'utf8'), rt.PLAN_SECTIONS) : fs.readFileSync(matFile, 'utf8');
++    } catch (e) { die(1, e.message); }
+     if (a.max !== undefined && !(Number.isFinite(Number(a.max)) && Number(a.max) > 0)) die(1, `--max must be a positive number (got ${a.max}); the bound has to be enforced`);
+     let files;
+-    try { files = buildLensInputs({ id, list, root, material: fs.readFileSync(matFile, 'utf8'), templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }
++    try { files = buildLensInputs({ id, list, root, material, context, templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }
+     const dir = path.dirname(path.resolve(outPrefix)); const base = path.basename(outPrefix);
+     fs.mkdirSync(dir, { recursive: true });
+     for (const f of fs.readdirSync(dir)) if (f === `${base}.txt` || new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-p\\d+\\.txt$`).test(f)) fs.rmSync(path.join(dir, f));
+@@ -510,6 +570,11 @@ function cli() {
+     console.log(`check-tasks: open ${c.resolve.length + c.notYet.length + c.bad.length}: resolve ${c.resolve.length}, not yet resolvable ${c.notYet.length}${c.bad.length ? `, FAILED ${c.bad.length}` : ''}`);
+     const heads = ['a Files path matches no row (a governance gap: add a row or fix the Files line)', 'other reason', 'no Files line (the author adds one before launch)'];
+     for (let cls = 0; cls < 3; cls++) { const g = c.notYet.filter((x) => x.cls === cls); if (g.length) { console.log(`not yet resolvable, ${heads[cls]}: ${g.length}`); for (const x of g) console.log(`  ${x.id}: ${x.reason}`); } }
++    if (c.refs.length) {
++      const q1 = (x) => `'${String(x).replace(/'/g, "'\\''")}'`;
++      console.log(`compliance references out of step with the resolved lists: ${c.refs.length} task(s); run each printed command (exit stays 0)`);
++      for (const x of c.refs) console.log(`  backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}`);
++    }
+     if (c.bad.length) { for (const b of c.bad) console.log(`FAILED ${b}`); die(1, `${c.bad.length} open task(s) resolve without the every_task or milestone lists`); }
+   } else if (cmd === 'page') {
+     const file = path.join(root, PAGE);
+diff --git a/scripts/deepseek-review.js b/scripts/deepseek-review.js
+index 8f0f5c1e5fc3621aff98bb0d44876f6e1d68778e..fe6778ed6b8bbc13ae92f388e01419146adb6cb5 100644
+--- a/scripts/deepseek-review.js
++++ b/scripts/deepseek-review.js
+@@ -26,7 +26,7 @@ const fs = require('fs');
+ const crypto = require('crypto');
+ const path = require('path');
+ const OpenAI = require('openai');
+-const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock } = require('./lib/review-template');
++const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');
+ 
+ // `--fast` selects deepseek-chat (V3) for a quick lens tier; DEEPSEEK_MODEL overrides both.
+ const MODEL = process.env.DEEPSEEK_MODEL || (process.argv.includes('--fast') ? 'deepseek-chat' : 'deepseek-reasoner');
+@@ -102,24 +102,6 @@ async function callDeepSeek(prompt, systemInstruction = null) {
+   }
+ }
+ 
+-/** Keep only the markdown sections whose heading line contains one of `wanted` (to the next heading of the same or higher level). */
+-function extractSections(markdown, wanted) {
+-  const lines = markdown.split('\n');
+-  const out = [];
+-  for (const want of wanted) {
+-    const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && l.includes(want));
+-    if (start === -1) throw new Error(`--section "${want}": no heading contains that text`);
+-    const level = lines[start].match(/^(#+)/)[1].length;
+-    let end = lines.length;
+-    for (let i = start + 1; i < lines.length; i += 1) {
+-      const m = lines[i].match(/^(#+)\s/);
+-      if (m && m[1].length <= level) { end = i; break; }
+-    }
+-    out.push(lines.slice(start, end).join('\n'));
+-  }
+-  return out.join('\n\n');
+-}
+-
+ function readFileOrFail(filePath) {
+   const abs = path.resolve(filePath);
+   if (!fs.existsSync(abs)) {
+

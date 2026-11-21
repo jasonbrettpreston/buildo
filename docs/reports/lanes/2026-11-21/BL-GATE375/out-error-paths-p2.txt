@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-21T02:33:13.858Z file_sha256=12660e11ac3de3143e6d63440ba38ea873ae0bd71bf7ecd1e7803f9deebc2d0b prompt_sha256=66c5819136c8a499b0df5c70b5153ad2f21c2ee2236d203c43d69e0b3900878a
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-error-paths-p2.txt (model: deepseek-reasoner)
+
+BUG severity=MED — scripts/hooks/check-lane-close.mjs:771 "].sort().map((q) => ({ name: q, text: readRepo(q) })).filter((x) => x.text !== null);" — the two new git reads return status 1 with stdout '' on failure (the `git` helper keeps status but this call ignores it), so a git failure or an unreadable context file is dropped and surfaces as "no committed review context file ... written by backlog-brief.mjs" plus a prompt_sha256 mismatch on every output; the real failure is never shown and the operator re-writes a file that already exists — check `git(...).status` for both calls and emit each unreadable context by name as its own refusal line before the no-context line.
+
+BUG severity=MED — scripts/lib/review-template.js:131 "out.push(lines.slice(start, end).join('\n'));" — a heading with an empty body (heading immediately followed by a same or higher heading) extracts to the heading line alone, does not throw, so lensContexts accepts it: a committed context-r1.md holding "## Description" and nothing under it satisfies the close, the prompt hash binds an empty task, and planGateInner's `p.material === c.cut` accepts a plan lens whose material is a bare heading — after the heading slice, refuse when the body lines are blank (or equal to the heading) with the same message as a missing heading.
+
+BUG severity=MED — scripts/hooks/check-lane-close.mjs:68 "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))" — `.some` over every committed context-rN.md means that once an edit writes context-r2.md (the "never overwritten" test path at src/tests/backlog/backlog-brief-context.logic.test.ts:178 sets exactly this up) an output made and ruled against the superseded context-r1.md still verifies, so the close passes on a review of task text that has since changed — require the output to match the newest round file, or the round the report names, instead of any of them.
+
+BUG severity=MED — scripts/hooks/check-lane-close.mjs:438 "if ((i.contexts ?? []).length === 0) errors.push(`${id}: no committed review context file docs/reports/reviews/${id}/context-rN.md" — the refusal is pushed unconditionally at the top of closeErrors, before the `mine.length === 0` return and before any `build` test, so any caller of closeErrors that does not pass contexts (the guard around the call at check() is not in this chunk, cannot see; a plan or record task close) is refused for a file it never needed — gate the push on the lane task types that owe a lens proof, or make every caller pass contexts explicitly.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:44 "const { CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections } = createRequire(import.meta.url)('../lib/review-template.js');" — a missing or syntactically broken review-template.js throws at import before any check runs, so every commit the hook sees dies with an uncaught stack trace and no named refusal — wrap the require in a try and write a fail-closed refusal line naming the file.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:322 "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(" — `c.text` is dereferenced with no type guard while the caller filters only `!== null`, so an undefined text from any readRepo/readBase implementation passes the filter and throws a TypeError out of closeErrors (no try at the call site in this chunk, cannot see an outer guard) — filter on `typeof x.text === 'string'` or guard the trim.
+
+REJECT — src/tests/backlog/backlog-lane.logic.test.ts:345 "expect([...t2.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length - 1);" — looks like a re-take would append the compliance references twice — handled: the take adds only the ids the task does not already carry, and the test pre-adds lists[0] and asserts one fewer occurrence, so a repeat take is a no-op for the ids already present.
+
+REJECT — scripts/hooks/check-lane-close.mjs:415 "if (gap !== -1) { why.push(`${base}: parts ${parts.join(',')} have a gap, ${base}-p${gap + 1}.txt is missing`); continue; }" — looks like a lost split part would be silently joined into a shorter proof — handled: a gap refuses the whole list output naming the exact missing part, so a half-finished re-run cannot pass as a whole-list review.
+
+VERDICT: PASS on error-path safety
+Paths walked: no committed context (empty), unreadable context and git failure (silent empty), empty section body, second review round against a superseded context, re-take and repeat --add-ref, split parts gap, module load failure   Unguarded: 2
+
+---
+⏱  158757ms (158.8s)
+📊 Tokens — total: 56676, input: 30010, output: 26666, reasoning: 25515

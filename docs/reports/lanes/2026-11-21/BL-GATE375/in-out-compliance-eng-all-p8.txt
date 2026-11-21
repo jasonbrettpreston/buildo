@@ -1,0 +1,639 @@
+LIST eng-all sha256:9973ef45dcba5b23a8b7b5bc5da8754c7e73c23958000a3949e1cefce2da158d material sha256:69ca784b4fdb665aae670673e7e7f97d55a9303f328cf91641a88922b7c6dc72 part 2 of 2 chunk 4 of 5
+RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 4 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/backlog-brief.logic.test.ts","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists-table.logic.test.ts"]
+
+## 🛠️ 12. Frontend Foundation Tooling
+
+> **Status:** Adopted as of 2026-04-07 for the lead feed feature build (`src/features/leads/`). To be expanded to other frontend code as proven valuable.
+
+### 12.1 Biome (React Logic Linting)
+- **Rule:** Biome MUST pass on all files in `src/features/leads/` before commit. Initially scoped to leads; expand after 2-4 weeks of validation.
+- **Critical rules (never disable):** `useHookAtTopLevel`, `noFloatingPromises`, `useExhaustiveDependencies`, `useExhaustiveDependencies`, `noUnusedVariables`
+- **Why:** These three rules catch the React logic failures we want to prevent: hook ordering bugs, unawaited promises, stale closures
+- **Note:** ESLint (`next lint`) continues to run on `scripts/` and the rest of `src/`. Do NOT replace ESLint repo-wide.
+
+### 12.2 Server State (TanStack Query)
+- **Rule:** All API data fetching uses `useQuery` / `useMutation` / `useInfiniteQuery`. NEVER use `useEffect` for data fetching.
+- **Cache persistence:** Use `PersistQueryClientProvider` with IndexedDB (`idb-keyval`) for offline support. 24h `maxAge`.
+- **Query key normalization:** Round geographic coordinates to 3 decimals (~110m) before including in query keys to prevent GPS jitter from creating unbounded cache entries.
+- **Why:** Eliminates race conditions, automatic loading/error states, automatic background refetching, cache deduplication.
+
+### 12.3 Form Management (React Hook Form + Zod)
+- **Rule:** All forms use React Hook Form for state management and Zod for schema validation. Resolver: `@hookform/resolvers/zod`.
+- **Never:** Use local `useState` for form fields. Use uncontrolled inputs registered via RHF.
+- **Why:** RHF is uncontrolled, eliminating per-keystroke re-renders. Zod schemas double as TypeScript types.
+
+### 12.4 Global State (Zustand, NOT React Context)
+- **Rule (scoped):** Inside `src/features/leads/`, NEVER use `React.createContext` or `useContext` for global state. Use Zustand stores. AST-grep enforces.
+- **Persistence:** Use `zustand/middleware` `persist` for filter state that should survive page reloads.
+- **Allowed Context exceptions:** 3rd-party providers (`QueryClientProvider`, `ThemeProvider`, etc.) are not in scope of this rule because they are wrappers, not application state.
+- **Why:** Context triggers re-renders on every consumer for any state change. Zustand subscribes per-selector, avoiding the cascade.
+
+### 12.5 UI Primitives (Shadcn UI + Mobile-First)
+- **Rule:** Use Shadcn UI for foundational primitives — Modals, Drawers, Dropdowns, Forms, Date Pickers. Run `npx shadcn@latest add [component]` to install each.
+- **Mobile rule:** On mobile viewports, NEVER use centered `<Dialog>` modals. Use Shadcn `<Drawer>` (powered by Vaul) for all popups, sheets, contextual menus, and forms.
+- **Why:** Shadcn provides accessible, touch-friendly primitives out of the box. Vaul provides iOS-grade gesture physics (`cubic-bezier(0.32, 0.72, 0, 1)`) that reaching the close button on a centered modal cannot match on mobile.
+
+### 12.6 List Virtualization (TanStack Virtual)
+- **Rule:** Any list/feed/grid expected to render more than 50 items MUST be wrapped in `useVirtualizer` from `@tanstack/react-virtual`.
+- **Why:** Rendering thousands of DOM nodes crashes mobile browsers and tanks frame rate. Virtualization renders only visible items + a small overscan buffer.
+
+### 12.7 Toast Notifications (Sonner)
+- **Rule:** Use Shadcn's Sonner integration for all success/error/info notifications. Use `toast.success()`, `toast.error()`, `toast.info()`.
+- **Never:** Build custom alert banners. Never use `alert()`, `confirm()`, or `prompt()` (they freeze the entire mobile browser).
+- **Why:** Sonner stacks neatly, supports swipe-to-dismiss, and never blocks the UI thread.
+
+### 12.8 SQL Linting & Migration Safety
+- **Rule:** All NEW migration files must pass `sqlfluff lint --dialect postgres`. Existing migrations (001-069) are grandfathered.
+- **Rule:** All NEW migrations must pass `scripts/validate-migration.js`, which catches:
+  - `DROP TABLE` or `DROP COLUMN` without explicit user confirmation comment
+  - `CREATE INDEX` (non-CONCURRENT) on tables with >100K rows
+  - Missing `-- DOWN` block
+  - `UPDATE` without `WHERE` clause (full-table scan risk)
+- **Rule:** All migrations must include a DOWN section that reverses the UP changes.
+- **Why:** Backwards compatibility, rollback safety, no production lock incidents.
+
+### 12.10 Real-DB Integration Tests (testcontainers + CI service)
+- **Status:** Adopted 2026-04-08 after the Phase 0+1+2 holistic review. Mocked-pool tests cannot catch SQL syntax errors, constraint violations, FK cascades, geography casts, or column-width truncation — that bug class accounted for ~40% of recent holistic-review findings.
+- **Rule:** Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts` file under `src/tests/db/` that exercises the constraint against a real Postgres.
+- **Local opt-in:** `BUILDO_TEST_DB=1 npm run test:db` spawns a container of the target engine image, `docs/specs/_contracts.json` `db_target.test_image` (`public.ecr.aws/supabase/postgres:17.6.1.167`: PG 17 / PostGIS 3.3, the image the local Supabase stack runs), via testcontainers, connects as the non-superuser `postgres` role, applies migrations 001..NNN via `scripts/migrate.js`, runs the suite, tears down. Requires Docker. The CI service container runs the same image. The pin is locked by T-PIN-1 (`src/tests/db-test-harness-target.infra.test.ts`) and T-PIN-2 (`src/tests/db/db-target-version.db.test.ts`) (WF3 PostGIS pin, 2026-10-03).
+- **CI:** `.github/workflows/db-tests.yml` provides a Postgres service container; runs on every PR that touches migrations, db client, or db tests.
+- **Skip semantics:** When neither `DATABASE_URL` nor `BUILDO_TEST_DB=1` is set, every `*.db.test.ts` self-skips via `describe.skipIf(!dbAvailable())`. The standard `npm run test` is unaffected.
+- **Target guard (WF3 2026-10-03):** the globalSetup picks its target with the pure `decideTestDbTarget(env)` in `src/tests/db/setup-testcontainer.ts`. An exported `DATABASE_URL` is migrated only when it is a disposable test DB: a loopback host with `CI=true` (the CI service container) or `BUILDO_TEST_DB_EXTERNAL=1`, or a non-loopback host with `BUILDO_TEST_DB_EXTERNAL=1`. The local Supabase dev stack (loopback port 54322) is never migrated, whatever flags are set. A qualifying URL wins over `BUILDO_TEST_DB=1` (CI runs `npm run test:db`, which always sets it). A URL that does not qualify is replaced by a testcontainer when `BUILDO_TEST_DB=1` is set; otherwise the suite aborts with a `REFUSING` error that names the target with the password redacted. Locked by `src/tests/test-db-setup-guard.logic.test.ts`.
+- **Why:** A real DB catches the bugs that locked our team into "reading SQL by eye" for 3+ phases. The migration 030 self-heal that this section's WF shipped removes the 1a blocker that was forcing the mock-only fallback.
+
+### 12.11 Footgun Lint Gate (AST-grep + grep)
+- **Status:** Adopted 2026-04-08. Five pattern bans wired into pre-commit + manual `npm run ast-grep:leads`. Initially scoped to `src/features/leads/` and (rule-by-rule) `src/lib/`. Expand per the §12 conservative model.
+- **Rules enforced** (each maps to a bug class the holistic reviews keep flagging):
+  1. **silent-catch-fallback** — bans `try/catch { return [] / null / emptyResult() }`. Caught Phase 2 holistic CRIT (`getLeadFeed` swallowing DB errors as 200 empty feeds, commit 0a3e680).
+  2. **env-default-in-lib** — bans `process.env.X || 'default'` inside `src/features/leads/`. A typo silently uses the default instead of failing loud. Suppressable per-line with justification.
+  3. **comment-rot** — grep heuristic: any file with `// never throws` / `// always returns` AND a `throw` statement is flagged. Caught Phase 0+1+2 holistic HIGH (stale "never throws" comment in feed/route.ts, commit 449fb2a).
+  4. **silent-row-drop** — grep heuristic: any file with `.filter((x): x is _ => x !== null)` AND no `logWarn` call is flagged. Caught Phase 0+1+2 holistic MED (`mapRow` silent null filter).
+  5. **pool-boundary** — bans `new Pool(` instantiation outside `src/lib/db/`, `src/tests/`, `scripts/`. Per CLAUDE.md Backend Mode rule 3.
+- **Suppression:** `// ast-grep-disable-next-line <rule-id>` with a one-line justification. Audited in code review.
+- **Files:** rule definitions live in `scripts/ast-grep-rules/*.yml`; the grep-based heuristics + runner live in `scripts/hooks/ast-grep-leads.sh`.
+
+### 12.12 Property-Based Tests (`fast-check`)
+- **Status:** Adopted 2026-04-08 after Phase 0+1+2 holistic review caught arithmetic-invariant violations (fit_score=23, buildLeadKey '0'/'00' drift) that example-based tests missed.
+- **Rule:** Pure functions with arithmetic invariants — scoring formulas, key normalizers, distance/unit conversions, cursor comparators — MUST have at least one `fast-check` property test asserting the invariant. Example-based tests are still required for happy paths and explicit edge cases.
+- **What counts as an invariant:** a property that holds for ALL inputs of the type. Examples: `forAll(input => relevance_score(input) <= 100)`, `forAll(input => buildLeadKey(input) === buildLeadKey(normalize(input)))`, `forAll(a < b => format(a) <= format(b))`.
+- **Files:** `src/tests/property/*.property.test.ts`. Run via `npm run test:property` or as part of the standard `npm run test`.
+- **Why:** A counterexample-finding test does the work that human review can't — it tries 100+ inputs and shrinks failures to a minimal reproduction. The Phase 0+1+2 buildLeadKey fix would have shipped 4 phases earlier with this in place.
+
+### 12.13 Mutation Testing (Stryker)
+- **Status:** Adopted 2026-04-08. **Automated** via `.github/workflows/mutation.yml` — runs weekly (Monday 12:00 UTC) AND on every PR that touches a mutation target file. **Not** manual: relying on humans to remember a weekly task is how the value gets lost.
+- **Rule:** The 4 high-stakes pure modules (`cost-model.ts`, `distance.ts`, `record-lead-view.ts`, `builder-query.ts`) and their `.test.ts` siblings are the mutation surface. Mutation score must stay ≥ 50% (script breaks below; CI job fails).
+- **What it catches:** "snapshot-style change-detector tests" where `expect(result).toBe(20)` locks the value but doesn't exercise it in any meaningful behavior assertion. Stryker injects mutations (flip `>=` to `>`, swap constants, remove conditionals, etc.) and watches for surviving mutants — every survivor is a test gap.
+- **Local usage:** `npm run test:mutation:dry` (verifies the runner setup, ~1 min) and `npm run test:mutation` (full run, ~3-5 min on 4 files / 439 mutants).
+- **CI usage:** Triggered by:
+  1. Weekly cron — Mondays 12:00 UTC, surfaces drift in test quality even when no PR is open
+  2. Per-PR — only when a target file or its test changed (path filter in the workflow)
+  3. Manual `workflow_dispatch` — one-off audits from the Actions tab
+- **Triage:** For each surviving mutant, EITHER add a focused test that kills it (preferred) OR add a `// stryker disable next-line <mutator>` with justification. Stryker HTML reports are uploaded as a build artifact for 30 days.
+- **Why not pre-commit:** Full runs take minutes. Pre-commit gates must be sub-second to avoid friction. CI absorbs the cost without blocking dev iteration.
+
+### 12.14 Semantic-Diff Narrator (Pre-Commit, Opt-In)
+- **Status:** Adopted 2026-04-08. Opt-in via `BUILDO_DIFF_NARRATOR=1`. Default OFF.
+- **Rule:** When enabled, every `git commit` runs the staged diff through Gemini and appends a 3-5 bullet summary to the commit message footer. Catches stale comments, contract drift, side effects in pure functions, and unexpected files in the diff BEFORE the commit lands.
+- **Critical:** **Fails open** on any error (missing key, network timeout, parse failure, empty diff). Never blocks a commit on its own. Test coverage in `src/tests/diff-narrator.logic.test.ts` locks the fail-open contract.
+- **Cost:** ~$0.0001 per commit, ~2-5s latency. Negligible for the value when enabled.
+- **Enable:** `echo 'export BUILDO_DIFF_NARRATOR=1' >> ~/.bashrc` (or your shell rc).
+- **Files:** `scripts/diff-narrator.js` (the Node script), `scripts/hooks/diff-narrator.sh` (the wrapper), `.husky/prepare-commit-msg` (the git hook).
+
+### 12.9 Animation & Gestures (Motion for React)
+- **Rule:** Use `motion` package (formerly Framer Motion) for swipe-to-delete, layout transitions, drag interactions, and button press animations.
+- **Spring config standard:** `{ type: 'spring', stiffness: 400, damping: 20, mass: 1 }` for button interactions. The Motion default (stiffness 1, damping 10) is intentionally weak and feels sluggish.
+- **Never:** Write custom CSS keyframes for complex interactions. Never animate layout properties (use `transform` / `opacity`).
+- **Why:** Hardware-accelerated, gesture-tracking, declarative.
+
+---
+
+
+## 📊 13. Observability Standards
+
+> **Status:** Adopted as of 2026-04-07. Building observability in from day one of the frontend rebuild — lessons learned from the painful retrofit on the backend pipeline.
+
+### 13.1 Product Telemetry (PostHog)
+- **Tool:** PostHog (self-hosted free tier covers 1M events/month)
+- **Wrapper:** All event capture goes through `src/lib/observability/capture.ts` exporting `captureEvent(name, properties)`. The wrapper handles SSR safety, type-safe event names, and provider abstraction.
+- **Type-safe event names:** Define a `EventName` union type. New events require adding to the union (catches typos at compile time).
+- **Mandatory coverage:** Every interactive handler in `src/features/leads/` (`onClick`, `onSubmit`, `onChange` for filters) MUST call `captureEvent()`. AST-grep enforces inside the leads feature.
+- **PII handling:** Never include user names, emails, addresses in event properties. Use Firebase UID (pseudonymous) for user identification.
+
+### 13.2 Error Tracking (Sentry)
+- **Tool:** Sentry (free tier covers 5K events/month)
+- **Wiring:** All `app/[...]/error.tsx` route boundaries call `Sentry.captureException(error, { extra: { digest: error.digest } })` in their `useEffect`.
+- **Source maps:** Uploaded to Sentry on every production build via `@sentry/nextjs` plugin.
+- **Local dev:** Errors logged to console only (Sentry disabled in dev to preserve free tier).
+
+### 13.3 Backend Structured Logging (`logInfo` / `logWarn` / `logError`)
+- **Tool:** `src/lib/logger.ts` exports `logError`, `logWarn`, `logInfo`. Each emits a structured JSON line: `{ level, tag, event, timestamp, ...context }`.
+- **Rule:** API routes MUST emit at least one `logInfo` per successful request with `{user_id, duration_ms, ...key_params}` for observability.
+- **Rule:** All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`. ESLint enforces.
+- **Rule:** Pipeline scripts use `pipeline.log.info/warn/error` from the SDK, which routes to the same underlying logger.
+
+### 13.4 Performance Monitoring (Lighthouse CI)
+- **Tool:** Lighthouse CI in GitHub Actions, runs on every PR.
+- **Hard budgets (CI fails below these):**
+  - Performance: ≥90 mobile (Moto G4 emulation)
+  - Accessibility: ≥95
+  - Best Practices: ≥90
+  - LCP: <2.5s
+  - CLS: <0.1
+  - TBT: <200ms
+- **Why:** Catches performance regressions before merge. Enforces the "right foundation" goal.
+
+### 13.5 Feature Flags (PostHog Flags)
+- **Tool:** PostHog feature flags (included in free tier, integrated with telemetry)
+- **Rule:** Any new user-facing feature MUST be wrapped in a feature flag check at the route level. The lead feed launches behind `feature_lead_feed_v1`.
+- **Rollout pattern:** 0% → 10% (internal testing) → 25% → 50% → 100%. Each step gated on no-error-rate-spike in Sentry.
+- **Why:** Decouples deploy from release. Enables instant rollback without redeploy.
+
+---
+
+
+## 🛡️ 14. The Prevention Loop (findings → protocols → gates)
+
+Detection is not enough. **Every CRITICAL/HIGH review finding (Spec 08 roster) is triaged with a second question beyond "fix it": *"what standing rule would have prevented this whole CLASS, and where does it live?"*** The rule is placed here (or in the domain doc), and where deterministic, **promoted to a machine-read GATE** (husky footgun / ESLint / migration hook) — the strongest form: *a NO-GO the machine reads cannot be shipped past; a guideline eventually will* (operating-manual §2.4). This is the rule-oriented mirror of Spec 05's lesson-routing; the Roster Manager (Spec 08 §5.9) recommends new entries.
+
+**Registry (extracted from real findings — domain-tagged; promote guideline → gate as effort allows):**
+
+| Rule | Class it prevents | Domain | Form |
+|------|-------------------|--------|------|
+| Every `INSERT` provides all **NOT-NULL** columns; every `SELECT` feeding a typed client includes **every field the client type declares** | `lead_analytics` NOT-NULL crash; `DETAIL_COLUMNS` omission → dead UI | backend + admin | Schema-Fidelity agent → *candidate footgun* |
+| An `ON CONFLICT` INSERT **`GROUP BY`s the arbiter expression**, never the raw inputs it's derived from | the `21000` LPAD `lead_key` double-hit | backend | Schema-Fidelity → *candidate lint* |
+| Every **privileged mutation + its audit row** commit in ONE `withTransaction` (extends §R9 from `scripts/` to API routes) | reconcile/retry-cancel unaudited-mutation hole | admin + backend | guideline → *extend footgun* |
+| A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit** | period-end drift (Spec 95/97 stale vs code) | cross-cutting | Ground-truth/Compliance |
+| Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions** | traceability rot; stale cross-refs | cross-cutting | *candidate gate* (Spec 08 §5.10) |
+| A webhook/event that can arrive from a **superseded object** must match the CURRENT owning id before mutating state | the P26 stale-subscription downgrade | backend | guideline |
+
+**Domain protocol specs own their domain-tagged rows and point back here** (this §14 is the cross-cutting canonical registry): **Spec 47** (`docs/specs/01-pipeline/47_pipeline_script_protocol.md`, backend/pipeline), **Spec 34** (`docs/specs/02-web-admin/34_web_admin_testing_protocol.md`, admin), **Spec 90** (`docs/specs/03-mobile/90_mobile_engineering_protocol.md`, frontend/mobile).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/backlog-brief.logic.test.ts b/src/tests/backlog/backlog-brief.logic.test.ts
+index f3983fe9233a8f7c3760be4889ede7a0ed240ab5..8354b3080f04fe1aa98c086aaea69b3862b091b8 100644
+--- a/src/tests/backlog/backlog-brief.logic.test.ts
++++ b/src/tests/backlog/backlog-brief.logic.test.ts
+@@ -55,7 +55,7 @@ describe('G1 backlog-brief (test 4)', () => {
+     expect(r.stdout).toMatch(/08_agents\.md:339/);
+     expect(r.stdout).toContain(`task edit ${plan} -s RUNNING -a @lane-BL-R1`);
+     expect(r.stdout).toMatch(/--plan/);
+-    expect(r.stdout).toMatch(/node scripts\/deepseek-review\.js review docs\/reports\/reviews\/\S+\/context-2026-11-19\.md --context \.claude\/review-templates\/plan-review-deepseek\.md/);
++    expect(r.stdout).toMatch(/node scripts\/deepseek-review\.js review docs\/reports\/reviews\/\S+\/context-r1\.md --template \.claude\/review-templates\/plan-review-deepseek\.md --context docs\/reports\/reviews\/\S+\/context-r1\.md --section "Task"/);
+     expect(r.stdout).toMatch(/provider claude/i);
+     expect(r.stdout).toMatch(/bash_allow/);
+     expect(r.stdout).toMatch(/--final-summary/);
+@@ -65,6 +65,11 @@ describe('G1 backlog-brief (test 4)', () => {
+     expect(r.stdout).toMatch(/from round 2 on use only --append-final-summary/);
+     expect(r.stdout).toMatch(/check-lane-close\.mjs --outcomes/);
+     expect(r.stdout).toMatch(/do NOT run --plan/);
++    // task-375 D6: what the brief tells a lane about the plan that the launch gate checked
++    expect(r.stdout).toMatch(/The plan is the task text at launch, checked before launch/);
++    expect(r.stdout).toMatch(/do not edit the Description, Acceptance or Plan/);
++    expect(r.stdout).toMatch(/record deviations in Implementation Notes/);
++    expect(r.stdout).toMatch(/still runs at least one plan-stage lens of its own and rules its findings in its own GROUNDER\.md/);
+     expect(r.stdout).toMatch(/STATUS: ready\|blocked\|failed\|dropped/);
+   });
+ 
+@@ -72,7 +77,7 @@ describe('G1 backlog-brief (test 4)', () => {
+     const { d, plan } = fixture();
+     const r = brief(d, plan);
+     expect(r.status, r.stderr).toBe(0);
+-    const ctx = path.join(d, `docs/reports/reviews/${plan}/context-2026-11-19.md`);
++    const ctx = path.join(d, `docs/reports/reviews/${plan}/context-r1.md`);
+     expect(fs.existsSync(ctx), ctx).toBe(true);
+     const body = fs.readFileSync(ctx, 'utf8');
+     expect(body).toContain('Plan item CHK.5 scope check');
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index d3a9ab087c1a99c8905b35915508573a4ccb5a58..c99a2b04f43e7c36aeb0b4353c5596635573d27a 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -11,9 +11,14 @@ const ID = { GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME:
+ const git = (cwd: string, ...a: string[]) => run('git', ['-c', 'commit.gpgsign=false', ...a], { cwd, env: ID });
+ const AC = 'Writes scripts/analysis/thing.mjs and the notes file docs/out/NOTES.md, nothing else';
+ const SCRIPT = path.join(__dirname, '../../../scripts/analysis/backlog-lane.mjs');
++// task-375 D: a build or fix launch needs real plan evidence on the board (the launch gate); the program in docs/reports/reviews/task-375/plant-evidence.mjs writes it for a fixture board with the real helpers (lens-input inputs, REVIEW headers, GROUNDER-PLAN.md, seat reports, round block, references, Plan line) and commits it
++function plantEvidence(board: string, task: string, laneName = 'BL-T1') {
++  const r = run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID });
++  if (r.status !== 0) throw new Error(`plantEvidence: ${r.stdout}${r.stderr}`);
++}
+ 
+ type Fx = { board: string; base: string; wt: string; main: string; pt: string; task: string; args: string[] };
+-function fixture(opts: { status?: string; hook?: boolean; files?: string | null; type?: string; letter?: string; noMilestone?: boolean } = {}): Fx {
++function fixture(opts: { status?: string; hook?: boolean; files?: string | null; type?: string; letter?: string; noMilestone?: boolean; noEvidence?: boolean } = {}): Fx {
+   const board = makeProject(), base = tmp('lane');
+   fs.mkdirSync(path.join(board, 'backlog/milestones'), { recursive: true });
+   fs.writeFileSync(path.join(board, 'backlog/milestones/m-0 - foundations.md'), `---\nid: m-0\ntitle: "Increment 1·A Foundations [${opts.letter ?? 'F'}]"\n---\n\n## Description\n\nx\n`);
+@@ -26,6 +31,7 @@ function fixture(opts: { status?: string; hook?: boolean; files?: string | null;
+   fs.writeFileSync(path.join(board, 'mobile/.keep'), '');
+   const task = mk(board, 'Launch me', ['-d', `Launch description text.${opts.files === null ? '' : `\n\nFiles: ${opts.files ?? 'scripts/analysis/thing.mjs'}`}`, ...(opts.type ? ['--type', opts.type] : []), '--ac', AC, '--ref', 'docs/a.md', '--doc', 'docs/b.md', ...(opts.noMilestone ? [] : ['-m', 'm-0']), ...(opts.status ? ['-s', opts.status] : [])]);
+   git(board, 'add', '-A'); git(board, 'commit', '-q', '-m', 'fixture');
++  if (['build', 'fix'].includes(opts.type ?? '') && !opts.noMilestone && !opts.noEvidence) plantEvidence(board, task);
+   if (opts.hook) { const h = path.join(board, '.git/hooks/pre-commit'); fs.writeFileSync(h, '#!/bin/sh\nexit 1\n'); fs.chmodSync(h, 0o755); }
+   const main = path.join(base, 'main');
+   fs.mkdirSync(path.join(main, 'node_modules'), { recursive: true }); fs.mkdirSync(path.join(main, 'mobile/node_modules'), { recursive: true });
+@@ -166,7 +172,7 @@ describe('backlog-lane real launch on the temp board (AC #1)', () => {
+     expect(brief.toString()).toMatch(/^FAKE BRIEF/);
+     const sha = crypto.createHash('sha256').update(brief).digest('hex');
+     expect(r.stdout.trim().split('\n').pop()).toBe(`BRIEF-FILE: ${path.join(ld, 'BRIEF.md')} sha256=${sha}`);
+-    expect(fs.existsSync(path.join(f.wt, `docs/reports/reviews/${f.task}/context-2026-11-19.md`))).toBe(true);
++    expect(fs.existsSync(path.join(f.wt, `docs/reports/reviews/${f.task}/context-r1.md`))).toBe(true);
+   });
+   it('uses --spec instead of a generated task.json when given', () => {
+     const f = fixture();
+@@ -194,6 +200,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+     let body = fs.readFileSync(file, 'utf8').replace('Launch description text.', `Launch description text. Files: ${files}`);
+     if (type) body = body.replace(/^labels: .*$/m, (m) => `${m}\ntype: ${type}`);
+     fs.writeFileSync(file, body);
++    if (type === 'build' || type === 'fix') plantEvidence(f.board, f.task);
+     const r = lane(f, ['--dry-run']);
+     const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null');
+     expect(spec, r.stdout + r.stderr).not.toBeNull();
+@@ -255,7 +262,22 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+     const cmd = /each `([^`]+)`/.exec(seg)?.[1] ?? '';
+     expect(seg).toContain('plan-review-deepseek.md');
+     expect(cmd).toContain('scripts/deepseek-review.js review');
+-    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context <pasted-context file>/);
++    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context docs\/reports\/reviews\/\S+\/context-r1\.md --section "Task"/);
++  });
++  // task-375 A3: every lens command passes the committed context (context-r1.md) and one --section per CONTEXT_SECTIONS entry; no command leaves a lens on the placeholder
++  it('A3: plan, output and compliance commands all pass the committed context and the five sections; the date name and the pasted-context placeholder are gone', () => {
++    const e = lensBrief('build', 'scripts/analysis/x.mjs, src/tests/');
++    const SECT = '--section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes"';
++    const ctx = /docs\/reports\/reviews\/\S+?\/context-r1\.md/.exec(e)?.[0] ?? '(none)';
++    expect(ctx).not.toBe('(none)');
++    const cmds = e.match(/scripts\/deepseek-review\.js review [^`]*/g) ?? [];
++    expect(cmds.length).toBeGreaterThanOrEqual(3);
++    for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }
++    expect(e).not.toContain('<pasted-context file>');
++    expect(e).not.toMatch(/context-<date>|context-20\d\d/);
++    expect(e).toContain(`lens-input --list L --context ${ctx}`);
++    expect(e).toContain('plan: --material-from');
++    expect(e).toMatch(/lens-input --context \S+ --material <diff file>/);
+   });
+   it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
+     for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
+@@ -307,6 +329,59 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+     expect(extra).toMatch(/a separate grounder rules on every finding/);
+     expect(extra).toContain('GROUNDER.md');
+   });
++  it('A3: the review line of the extra block (the plan template as --context) is the lens form with the committed context', () => {
++    const { extra } = dry({ files: 'scripts/analysis/x.mjs, src/tests/', type: 'build' });
++    const line = /Review \(review mode[^\n]*/.exec(extra)?.[0] ?? '';
++    expect(line).toContain('--template .claude/review-templates/plan-review-deepseek.md --context docs/reports/reviews/');
++    expect(line).toContain('--section "Implementation Notes"');
++    expect(line).not.toMatch(/--context \.claude\/review-templates/);
++  });
++  // task-375 B1: the take adds the compliance:<list id> <file> references, only the ids the task does not carry yet
++  it('B1: the take command adds one compliance reference per resolved list; a list already referenced is not added again', () => {
++    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
++    const lists = (JSON.parse(run('node', ['scripts/analysis/rule-lists.mjs', 'resolve', '--files', 'scripts/analysis/thing.mjs', '--type', 'build', '--letter', 'F'], { cwd: ROOT }).stdout) as { lists: { id: string; file: string }[] }).lists;
++    const take = (o: string) => /^\$ cd \S+ && .*task edit \S+ -s RUNNING.*$/m.exec(o)?.[0] ?? '';
++    const r1 = lane(f, ['--dry-run']);
++    const t1 = take(r1.stdout);
++    expect(t1).toBeTruthy();
++    expect([...t1.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length);
++    for (const l of lists) expect(t1).toContain(`--add-ref 'compliance:${l.id} ${l.file}'`);
++    backlog(f.board, ['task', 'edit', f.task, '--add-ref', `compliance:${lists[0]!.id} an older path`]);
++    const t2 = take(lane(f, ['--dry-run']).stdout);
++    expect([...t2.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length - 1);
++    expect(t2).not.toContain(`'compliance:${lists[0]!.id} `);
++  });
++  // task-375 D5: the launch gate
++  it('D: a build launch with no plan evidence on the board is refused, one line per missing item, nothing taken, in dry-run too (no flag turns it off)', () => {
++    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build', noEvidence: true });
++    for (const extra of [['--dry-run'], []]) {
++      const r = lane(f, extra);
++      expect(r.status, r.stdout + r.stderr).toBe(3);
++      const lines = r.stderr.trim().split('\n');
++      expect(lines[0]).toMatch(/refused: plan gate: .*no plan evidence folder docs\/reports\/reviews\/task-\d+\//);
++      expect(lines.length).toBeGreaterThan(1);
++      expect(statusOf(f)).toBe('LATER');
++      expect(fs.existsSync(f.wt)).toBe(false);
++    }
++  });
++  it('D: with the evidence the dry-run prints "plan gate ok: <L> lists" with L the resolved-list count and the Plan hash; a one-word edit of the task refuses with the new expected Plan line', () => {
++    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
++    const L = (JSON.parse(run('node', ['scripts/analysis/rule-lists.mjs', 'resolve', '--files', 'scripts/analysis/thing.mjs', '--type', 'build', '--letter', 'F'], { cwd: ROOT }).stdout) as { lists: unknown[] }).lists.length;
++    const ok = lane(f, ['--dry-run']);
++    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
++    expect(ok.stdout).toMatch(new RegExp(`plan gate ok: ${L} lists, \\d+ findings, Plan sha256:[0-9a-f]{12}`));
++    backlog(f.board, ['task', 'edit', f.task, '--append-notes', 'one more word']);
++    const bad = lane(f, ['--dry-run']);
++    expect(bad.status, bad.stdout + bad.stderr).toBe(3);
++    expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);
++    expect(statusOf(f)).toBe('LATER');
++  });
++  it('D: a task of another type (record) is not gated and launches with no plan evidence', () => {
++    const f = fixture({ files: 'docs/specs/00-architecture/08_agents.md', type: 'record' });
++    const r = lane(f, ['--dry-run']);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    expect(r.stdout).not.toContain('plan gate');
++  });
+   it('a Files path no row matches is refused at launch with the path named (exit 3, one line, nothing written)', () => {
+     const f = fixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' });
+     refused(lane(f), /zzz-nothing\/new\.txt/);
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index 960823f50101ad5627f5f32c0cc67048824e596b..4137b9c86c70ce9e09d6fc2f01441eeefb4428c5 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -28,14 +28,18 @@ const quoteAt = (k: number) => `export const value0${k} = 'alpha quote number 0$
+ const FINDING = 'BUG severity=HIGH — clause "x" — src/a.ts:1 "y" — claim — fix\n';
+ const sha = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
+ const HEX64 = 'a'.repeat(64);
+-// the prompt hash of a compliance output is what the review tool writes: sha256 of JSON [system, user] built from the repo template, the input file and the placeholder context
++// the prompt hash of a compliance output is what the review tool writes: sha256 of JSON [system, user] built from the repo template, the input file and the selected sections of the committed context
+ const TEMPLATE_TEXT = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-compliance.md'), 'utf8');
+ const LENS_TEMPLATES = ['compliance', 'code-review', 'error-paths', 'ux', 'security'].map((n) => [`.claude/review-templates/lens-${n}.md`, fs.readFileSync(path.join(ROOT, `.claude/review-templates/lens-${n}.md`), 'utf8')] as const);
+ const templateOf = (template: string) => (template === 'lens-compliance.md' ? TEMPLATE_TEXT : fs.readFileSync(path.join(ROOT, `.claude/review-templates/${template}`), 'utf8'));
+-const promptHash = (inputText: string, templateText = TEMPLATE_TEXT) => {
++// task-375 A4: the reviewer context is the selected sections of the committed context file (one value per context file)
++const CTX_FILE = fs.readFileSync(path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), 'utf8');
++const selectedOf = (text: string) => { const x = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { extractSections: (m: string, w: string[]) => string; CONTEXT_SECTIONS: string[] }; return x.extractSections(text, /^#{1,6}\s.*Implementation Notes/m.test(text) ? x.CONTEXT_SECTIONS : x.CONTEXT_SECTIONS.filter((n) => n !== 'Implementation Notes')); };
++let HASH_CTX = CTX_FILE; // the context text the outputs of the scenario being built were run with (default: the committed one)
++const promptHash = (inputText: string, templateText = TEMPLATE_TEXT, context: string = selectedOf(HASH_CTX)) => {
+   const rt = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { splitTemplate: (t: string) => { systemInstruction: string | null; userTemplate: string }; substitutePlaceholders: (t: string, v: Record<string, string>) => string };
+   const s = rt.splitTemplate(templateText);
+-  return sha(JSON.stringify([s.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.", rt.substitutePlaceholders(s.userTemplate, { plan: inputText, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' })]));
++  return sha(JSON.stringify([s.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.", rt.substitutePlaceholders(s.userTemplate, { plan: inputText, specs: context, dataContext: '(no live-DB context provided)' })]));
+ };
+ const hdr = (template: string, inputText: string | null, prompt?: string) => `REVIEW template=${template} model=deepseek-reasoner at=2026-11-20T10:00:00.000Z file_sha256=${inputText === null ? HEX64 : sha(inputText)} prompt_sha256=${prompt ?? (inputText !== null ? promptHash(inputText, templateOf(template)) : HEX64)}\n`;
+ const DIFF_FLAGS = (JSON.parse(run('node', ['-e', "import('./scripts/analysis/rule-lists.mjs').then((m)=>console.log(JSON.stringify(m.DIFF_ARGS)))"], { cwd: ROOT }).stdout) as string[]);
+@@ -67,10 +71,11 @@ type Opts = {
+   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
+   // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
+   triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean; notesBlock?: boolean;
+-  mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
++  ctx?: string | false; hashCtx?: string; refs?: false | string[]; mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
+ };
+ type TriageCtx = { ids: { id: string; word: string; sev: string }[]; sha: string; path: string; base: string; d: string };
+ function scenario(o: Opts = {}) {
++  HASH_CTX = o.hashCtx ?? CTX_FILE;
+   const d = tmp('lc');
+   const g = (...a: string[]) => run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...a], { cwd: d });
+   const w = (f: string, t: string) => { fs.mkdirSync(path.dirname(path.join(d, f)), { recursive: true }); fs.writeFileSync(path.join(d, f), t); };
+@@ -112,7 +117,7 @@ function scenario(o: Opts = {}) {
+   const splitArgs = o.split ? ['--max', String(o.split.max), '--template', path.join(d, '.git/tpl.md')] : [];
+   for (const id of ['first', 'inc-F', ...Object.keys(table.lists as object).filter((k) => k === 'xtra'), ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
+     const out = path.join(d, LD, `in-out-compliance-${id}`);
+-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
+     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
+     for (const p of r.stdout.split('\n').filter(Boolean)) {
+       const nm = path.basename(p);
+@@ -125,7 +130,7 @@ function scenario(o: Opts = {}) {
+   lane['out-code-review.txt'] = hdr('lens-code-review.md', material) + body(false);
+   if (o.split?.lens) {
+     // the non-compliance lenses split by the same tool: no --list, a lens template; the outputs are out-<lens>-pN.txt, each with its committed input
+-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--material', path.join(d, '.git/material.txt'), '--out', path.join(d, LD, 'in-out-code-review'), ...splitArgs], { cwd: d });
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--material', path.join(d, '.git/material.txt'), '--out', path.join(d, LD, 'in-out-code-review'), ...splitArgs], { cwd: d });
+     if (r.status !== 0) throw new Error(`lens-input (no list): ${r.stderr}`);
+     lane['out-code-review.txt'] = null;
+     for (const p of r.stdout.split('\n').filter(Boolean)) { const nm = path.basename(p); const inText = fs.readFileSync(p, 'utf8'); lane[nm] = inText; lane[nm.replace(/^in-/, '')] = hdr('lens-code-review.md', inText) + body(false); }
+@@ -151,6 +156,15 @@ function scenario(o: Opts = {}) {
+     fs.appendFileSync(path.join(d, o.finalTaskPath ?? TASK), `\n## Final Summary\n\n<!-- SECTION:FINAL_SUMMARY:BEGIN -->\n${(o.notesBlock ? ['no outcome block here'] : o.summary ? o.summary(block) : block).join('\n')}\n<!-- SECTION:FINAL_SUMMARY:END -->\n`);
+   }
+   for (const [n, t] of Object.entries(l)) if (t !== null) w(`${LD}/${n}`, t);
++  // task-375 A5: the review context the lane committed with its round (docs/reports/reviews/<task>/context-rN.md); B2: the references the close requires (the repo copies of the lane files)
++  if (o.ctx !== false) w('docs/reports/reviews/task-7/context-r1.md', o.ctx ?? CTX_FILE);
++  const tp = path.join(d, o.finalTaskPath ?? TASK);
++  if (!o.noTaskFile && o.refs !== false && fs.existsSync(tp)) {
++    const refs = o.refs ?? [`${LD}/REPORT.md`, `${LD}/GROUNDER.md`, ...(l['TRIAGE.md'] ? [`${LD}/TRIAGE.md`] : [])];
++    let tt = fs.readFileSync(tp, 'utf8');
++    if (!/^references:/m.test(tt)) tt = tt.replace(/\nmilestone:/, `\nreferences:\n${refs.map((r) => `  - ${r}`).join('\n')}\nmilestone:`);
++    fs.writeFileSync(tp, tt);
++  }
+   g('add', '-A');
+   const msgFile = path.join(d, '.git/MSG');
+   fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
+@@ -771,3 +785,204 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
+     expect(mk('docs/reports/lanes/x/seat.md').join('\n')).toMatch(/is outside docs\/reports\/reviews\/task-9\//);
+   });
+ });
++
++describe('task-375 A4, A5, B2: the close binds the committed review context and the references', () => {
++  const planted = (ctx: string) => { const r = scenario({ ctx }); return r; };
++  it('control: a lane with a valid committed context and the three references closes', () => {
++    const r = scenario();
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('refuses when no context file is committed for the task (the placeholder is not accepted)', () => {
++    refused(scenario({ ctx: false }), /no committed review context file/);
++  });
++  it('refuses a context that is the placeholder, and one without the Description heading', () => {
++    refused(planted('(no pasted context provided)'), /context-r1\.md/);
++    refused(planted(CTX_FILE.replace('## Description', '## Gone')), /Description/);
++  });
++  it('refuses a context edited after the review (the recomputed prompt hash no longer matches any committed context)', () => {
++    refused(planted(CTX_FILE.replace('a short description', 'a different description')), /prompt_sha256/);
++  });
++  it('an output must match one committed context file: the earlier round file is kept and still binds', () => {
++    const r = scenario({ staged: { 'docs/reports/reviews/task-7/context-r2.md': CTX_FILE.replace('a short description', 'a later round description') } });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('a missing Implementation Notes heading is refused when the task has notes, and control: tolerated when it has none', () => {
++    refused(scenario({ notesBlock: true, ctx: CTX_FILE.replace('## Implementation Notes\n(none)', '## Elsewhere\n(none)') }), /Implementation Notes/);
++    const bare = CTX_FILE.replace('## Implementation Notes\n(none)\n\n', '');
++    const ok = scenario({ ctx: bare, hashCtx: bare });
++    expect(ok.status, ok.stderr).toBe(0);
++  });
++  it('B2: a missing REPORT.md reference is refused and the exact add-ref command is printed; control above closes with all three', () => {
++    const r = scenario({ refs: ['docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md', 'docs/reports/lanes/2026-11-20/BL-COMPLY2/TRIAGE.md'] });
++    refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/);
++  });
++  it('B2: the TRIAGE.md reference is required only when the lane directory holds one', () => {
++    const noTri = scenario({ lensFinding: false, refs: [`docs/reports/lanes/2026-11-20/BL-COMPLY2/REPORT.md`, `docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md`] });
++    expect(noTri.status, noTri.stderr).toBe(0);
++    const tri = scenario({ refs: [`docs/reports/lanes/2026-11-20/BL-COMPLY2/REPORT.md`, `docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md`] });
++    refused(tri, /--add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/TRIAGE\.md/);
++  });
++});
++
++// ---- task-375 D: the launch gate (planGateErrors, PLAN_SEATS, planHash) ----
++type PO = {
++  type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
++  noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
++  ctx?: string; badMaterial?: boolean;
++};
++async function planScenario(o: PO = {}) {
++  const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
++  const rl = (await import('../../../scripts/analysis/rule-lists.mjs')) as { buildLensInputs: (a: unknown) => { suffix: string; text: string }[]; resolveTask: (a: unknown) => { lists: { id: string }[] } };
++  const id = 'task-7'; const dir = `docs/reports/reviews/${id}`;
++  const mem: Record<string, string> = { 'docs/a.md': '# A\nrule one text\nrule two text\n', 'docs/ev.md': '# Ev\nthe five words and the plan protocol\n', 'docs/ms.md': '# Ms\nthe milestone objectives\n', 'docs/inc.md': '# Inc\nincrement text\n', 'src/a.ts': AFILE };
++  const d = tmp('pg');
++  for (const [p, t] of Object.entries(mem)) { fs.mkdirSync(path.dirname(path.join(d, p)), { recursive: true }); fs.writeFileSync(path.join(d, p), t); }
++  fs.mkdirSync(path.join(d, 'backlog/milestones'), { recursive: true });
++  const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
++  for (const [p, t] of LENS_TEMPLATES) mem[p] = t;
++  const type = o.type ?? 'build';
++  const roundLine = o.round === false ? '' : (o.round ?? `Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder ${dir}/GROUNDER-PLAN.md; triage ${dir}/TRIAGE-PLAN.md\n`);
++  const bodyText = `${taskText({ status: 'LATER', type, files: o.files, assignees: [] })}\n## Implementation Plan\n\n<!-- SECTION:PLAN:BEGIN -->\nthe plan text is long enough to be quoted\n${roundLine}<!-- SECTION:PLAN:END -->\n`;
++  const text0 = bodyText;
++  const ctxText = o.ctx ?? CTX_FILE;
++  HASH_CTX = ctxText;
++  const sel = selectedOf(ctxText);
++  const cut = (createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { extractSections: (t: string, w: string[]) => string; PLAN_SECTIONS: string[] }).extractSections(ctxText, ['Description', 'Acceptance criteria', 'Implementation Plan']);
++  const files: Record<string, string> = {};
++  if (!o.noFolder) {
++    files['context-r1.md'] = ctxText;
++    if (type === 'build') {
++      const lists = rl.resolveTask({ table, root: d, body: text0, type, letter: 'F' }).lists.map((l) => l.id).filter((x) => x !== o.omitList);
++      for (const lid of lists) {
++        const ins = rl.buildLensInputs({ id: lid, list: (table.lists as Record<string, unknown>)[lid], root: d, material: o.badMaterial ? 'some other text under review' : cut, templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: sel });
++        for (const x of ins) {
++          const inn = `in-plan-compliance-${lid}${x.suffix}.txt`;
++          files[inn] = x.text;
++          files[inn.replace(/^in-/, '')] = hdr('lens-compliance.md', x.text, o.placeholder ? promptHash(x.text, TEMPLATE_TEXT, '(no pasted context provided)') : undefined) + body(false);
++        }
++      }
++    }
++    if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.finding ? body(true) : body(false);
++    if (o.finding) files['plan-code-review.txt'] = `${hdr('lens-code-review.md', null)}BUG severity=${o.finding.sev} — clause "x" — src/a.ts:1 "y" — claim — fix\nVERDICT: PASS\n`;
++    if (o.stray) files['notes.txt'] = 'stray\n';
++  }
++  const seatText = (n: string) => `# ${n} seat\n### ${n.slice(0, 3)}#1 LOW: a small thing to note\n`;
++  const needsReg = (o.files ?? 'src/a.ts').split(',').map((x) => x.trim()).some((e) => (o.tracked ?? ['src/a.ts']).includes(e));
++  const names = ['integration', 'reality-check', ...(needsReg ? ['regression'] : [])].filter((n) => !(o.drop ?? []).includes(n));
++  const seatLines: string[] = [];
++  const verdicts: string[] = [];
++  for (const n of names) {
++    const rel = `${dir}/seat-${n}-1.md`;
++    const t = seatText(n);
++    if (!o.noFolder) files[`seat-${n}-1.md`] = t;
++    mem[rel] = t;
++    seatLines.push(`Seat: ${n} ${o.seatPath ?? rel} sha256:${o.seatSha ?? sha(t).slice(0, 12)}`);
++    if (!o.seatNoVerdict) verdicts.push(`${n.slice(0, 3)}#1 REJECTED docs/a.md:2 "rule one text" a small observation that changes nothing in the plan text`);
++  }
++  if (o.triage !== false && o.triage !== undefined) files['TRIAGE-PLAN.md'] = o.triage;
++  const planFiles = Object.keys(files).filter((n) => /^plan-.+\.txt$/.test(n));
++  for (const n of Object.keys(files)) mem[`${dir}/${n}`] = files[n]!;
++  const lines = ['# Plan grounder', `Grounder: ${o.grounder ?? 'grounder-agent-1'}`, `Lane: ${o.laneHdr ?? 'BL-COMPLY2'}`, ''];
++  for (const n of planFiles.sort()) if (n !== o.noRuled) lines.push(`Ruled: ${n} sha256:${sha(files[n]!).slice(0, 12)} findings:${nFind(files[n]!)}`);
++  let k = 0;
++  for (const n of planFiles.sort()) for (let j = 1; j <= nFind(files[n]!); j++) { k += 1; lines.push(`${n.replace(/\.txt$/, '')}#${j} CONFIRMED src/a.ts:${k} "${quoteAt(k)}"`); }
++  lines.push(...verdicts, ...seatLines);
++  let finalText = o.editBody ? text0 : text0;
++  const refs = [`${dir}/GROUNDER-PLAN.md`, ...(o.triage ? [`${dir}/TRIAGE-PLAN.md`] : []), ...names.map((n) => `${dir}/seat-${n}-1.md`)];
++  finalText = finalText.replace(/\nmilestone:/, `\nreferences:\n${refs.map((r) => `  - ${r}`).join('\n')}\nmilestone:`);
++  if (o.refs === false) finalText = text0;
++  if (!o.noPlanLine) lines.push(`Plan: ${id} sha256:${m.planHash(finalText)}`);
++  if (!o.noGrounder && !o.noFolder) files['GROUNDER-PLAN.md'] = `${lines.join('\n')}\n`;
++  mem[`${dir}/GROUNDER-PLAN.md`] = files['GROUNDER-PLAN.md'] ?? '';
++  if (o.editBody) finalText = finalText.replace(/the plan text is long enough/, 'the plan text is wrong enough');
++  const tracked = o.tracked ?? ['src/a.ts'];
++  return m.planGateErrors({
++    id, taskText: finalText, type, table, root: d, letter: 'F', laneName: 'BL-COMPLY2', assignees: [], folder: Object.entries(files).map(([name, text]) => ({ name, text })),
++    readRepo: (p: string) => { if (o.throwRead) throw new Error('disk gone'); return mem[p] ?? null; }, tracked: (e: string) => tracked.includes(e),
++    facts: { taskOf: () => ({ exists: false, status: '', text: '' }), decisionExists: () => false },
++  });
++}
++const gate = (r: { errors: string[] }, re: RegExp) => { expect(r.errors.join('\n')).toMatch(re); expect(r.errors.length).toBeGreaterThan(0); };
++
++describe('task-375 D: the launch gate refuses a build or fix launch whose plan was not checked', () => {
++  it('control: a build task with full plan evidence passes and reports its lists, findings and Plan line', async () => {
++    const r = await planScenario();
++    expect(r.errors).toEqual([]);
++    expect(r.lists).toBe(4);
++    expect(r.line).toMatch(/^Plan: task-7 sha256:[0-9a-f]{12}$/);
++  });
++  it('a type other than build or fix is not gated', async () => {
++    const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[] } };
++    expect(m.planGateErrors({ id: 'task-7', taskText: taskText({ status: 'LATER', type: 'record' }), type: 'record' }).errors).toEqual([]);
++  });
++  it('no evidence folder: refused, the first error names the folder', async () => {
++    const r = await planScenario({ noFolder: true });
++    expect(r.errors[0]).toMatch(/no plan evidence folder docs\/reports\/reviews\/task-7\//);
++  });
++  it('a missing plan output for one list is refused naming the list; a plan output made over the placeholder context is refused', async () => {
++    gate(await planScenario({ omitList: 'inc-F' }), /list inc-F[\s\S]*plan-compliance-inc-F/);
++    gate(await planScenario({ placeholder: true }), /prompt_sha256/);
++  });
++  it('a plan output whose material is not the plan sections of the committed context is refused (a plan review of some other text); a context with other plan text still passes when the outputs follow it (control)', async () => {
++    gate(await planScenario({ badMaterial: true }), /not the Description, Acceptance criteria and Implementation Plan sections/);
++    const ok = await planScenario({ ctx: CTX_FILE.replace('the plan text', 'another plan text') });
++    expect(ok.errors).toEqual([]);
++  });
++  it('no GROUNDER-PLAN.md; a Grounder equal to the planned lane; a Lane header that is not the launched lane', async () => {
++    gate(await planScenario({ noGrounder: true }), /GROUNDER-PLAN\.md is missing/);
++    gate(await planScenario({ grounder: 'BL-COMPLY2' }), /Grounder .* (is the lane|same as Lane)/);
++    gate(await planScenario({ laneHdr: 'BL-OTHER' }), /Lane "BL-OTHER" is not the lane being launched/);
++  });
++  it('a missing integration or reality-check Seat line is refused', async () => {
++    gate(await planScenario({ drop: ['integration'] }), /no "Seat: integration/);
++    gate(await planScenario({ drop: ['reality-check'] }), /no "Seat: reality-check/);
++  });
++  it('regression is required when the Files line names an existing path, and not when it names only new paths', async () => {
++    gate(await planScenario({ drop: ['regression'] }), /no "Seat: regression/);
++    const nw = await planScenario({ files: 'src/brand-new.ts', tracked: ['src/a.ts'] });
++    expect(nw.errors.join('\n')).not.toMatch(/Seat: regression/);
++  });
++  it('a Seat path outside the evidence folder, a Seat file with another sha, and a seat finding with no verdict are refused', async () => {
++    gate(await planScenario({ seatPath: 'docs/a.md' }), /outside docs\/reports\/reviews\/task-7\//);
++    gate(await planScenario({ seatSha: '0'.repeat(12) }), /Seat integration[\s\S]*sha256/);
++    gate(await planScenario({ seatNoVerdict: true }), /seat finding .* no verdict/);
++  });
++  it('an unruled plan output is refused', async () => {
++    gate(await planScenario({ planLens: true, noRuled: 'plan-code-review.txt' }), /no "Ruled:" line for plan-code-review\.txt/);
++  });
++  it('a CONFIRMED plan finding with no outcome is refused; with a TRIAGE-PLAN.md outcome and the round block it passes (control)', async () => {
++    gate(await planScenario({ finding: { file: 'x', sev: 'LOW' } }), /no outcome line/);
++    const tri = 'plan-code-review#1 wontfix:"a low note with a reason of more than thirty characters"\n';
++    const r = await planScenario({ finding: { file: 'x', sev: 'LOW' }, triage: tri, round: 'Plan review round 1: 0 folded, 0 task, 0 ruling, 1 wontfix, 0 pile; grounder docs/reports/reviews/task-7/GROUNDER-PLAN.md; triage docs/reports/reviews/task-7/TRIAGE-PLAN.md\n' });
++    expect(r.errors).toEqual([]);
++  });
++  it('folded: a quote present in the task passes, a quote not in the task text is refused; fixed is refused in plan mode', async () => {
++    const round = (n: string) => `Plan review round 1: ${n}; grounder docs/reports/reviews/task-7/GROUNDER-PLAN.md; triage docs/reports/reviews/task-7/TRIAGE-PLAN.md\nplan-code-review#1 HIGH folded the plan text is long enou\n`;
++    const ok = await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 folded:"the plan text is long enough"\n', round: round('1 folded, 0 task, 0 ruling, 0 wontfix, 0 pile') });
++    expect(ok.errors).toEqual([]);
++    gate(await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 folded:"this sentence is nowhere in the task"\n', round: round('1 folded, 0 task, 0 ruling, 0 wontfix, 0 pile') }), /not in the task text/);
++    gate(await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 fixed:abcdef1 src/a.ts\n', round: round('0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile') }), /fixed is refused in plan mode/);
++  });
++  it('the round block is required on the task, and the references must hold the grounder and seat files', async () => {
++    gate(await planScenario({ round: false }), /holds no "Plan review round N/);
++    gate(await planScenario({ refs: false }), /references lack docs\/reports\/reviews\/task-7\/GROUNDER-PLAN\.md: backlog task edit task-7 --add-ref/);
++  });
++  it('the Plan line: a missing one is refused; one word edited in the task after the grounder ruled is refused with the new expected line (control: unchanged passes)', async () => {
++    gate(await planScenario({ noPlanLine: true }), /no last "Plan: <task id> sha256/);
++    const bad = await planScenario({ editBody: (b) => b });
++    gate(bad, /Plan line .* is not the hash of the task as it is now[\s\S]*expected: Plan: task-7 sha256:[0-9a-f]{12}/);
++  });
++  it('a stray file in the folder is ignored (control passes) and a read error is a refusal line, never a stack trace', async () => {
++    const s = await planScenario({ stray: true });
++    expect(s.errors).toEqual([]);
++    const t = await planScenario({ throwRead: true });
++    expect(t.errors.length).toBeGreaterThan(0);
++    expect(t.errors.join('\n')).toMatch(/could not read|disk gone/);
++  });
++  it('a fix task with one plan lens output passes; a build task with only that output is refused', async () => {
++    const fx = await planScenario({ type: 'fix' });
++    expect(fx.errors).toEqual([]);
++    const bd = await planScenario({ planLens: true, omitList: 'first' });
++    gate(bd, /list first/);
++  });
++});
+diff --git a/src/tests/backlog/rule-lists-table.logic.test.ts b/src/tests/backlog/rule-lists-table.logic.test.ts
+index 9eed93f88cb936c5baf8606df4a14f124d4d1241..7082ea1a8bc4a0e01f61d4f4a7418cdbbe66884f 100644
+--- a/src/tests/backlog/rule-lists-table.logic.test.ts
++++ b/src/tests/backlog/rule-lists-table.logic.test.ts
+@@ -46,7 +46,7 @@ describe('V2.LIST round 2: the table rows', () => {
+     expect(row.why).toContain('no governing spec found: operator ruling owed');
+   });
+   it('the Spec 124 list block carries Rule 13 and the role banner rule R-GW', () => {
+-    const r = script(CLI, ['lens-input', '--list', 'policy-124-s2-s5', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('p124'), 'in-x')]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'policy-124-s2-s5', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('p124'), 'in-x')]);
+     expect(r.status, r.stderr).toBe(0);
+     const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+     expect(text).toContain('Rule 13 added by R-R');
+@@ -203,10 +203,11 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
+     expect(without).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+   });
+   it('the surface-136 lens input generated for the change holds fe.01 to fe.44 (44 distinct ids)', () => {
+-    const r = script(CLI, ['lens-input', '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
+     expect(r.status, r.stderr).toBe(0);
+     const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+     const ids = new Set(text.match(/\bfe\.\d\d\b/g));
+     expect([...ids].sort()).toEqual(Array.from({ length: 44 }, (_, i) => `fe.${String(i + 1).padStart(2, '0')}`));
+   });
+ });
++// task-375: lens-input takes --context (A4); see the deviation note on the task
+

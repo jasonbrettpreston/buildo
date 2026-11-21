@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T01:59:00Z'
+updated_date: '2026-11-21T02:37:00Z'
 labels:
   - McFix
   - McFix A
@@ -24,6 +24,7 @@ references:
   - docs/reports/reviews/task-375/FOLD-VALIDATION.md
   - docs/reports/reviews/task-375/CROSS-READ.md
   - docs/reports/reviews/task-375/READBACK-375-v4.md
+  - docs/reports/lanes/2026-11-21/BL-GATE375/REPORT.md
 type: build
 ordinal: 75012
 ---
@@ -393,4 +394,8 @@ BL-GATE375 build note (D6): backlog-brief.mjs prints the line that the plan is t
 BL-GATE375 build note (section 10): ONE dated note under the TKT-1 note of 08_agents.md (context-rN.md; the plan-only seats) and a dated note in 137_mcqueue.md after the :138 note (the close refusals and the launch gate, what it cannot prove), prior text kept.
 
 BL-GATE375 acceptance, third run (outputs in ~/Buildo-scratch/lanes-20261119/inc1b/gate375/acc). A0: node scripts/analysis/backlog-brief.mjs --task task-381 --lane BL-ACC --root . : exit 0, context-r1.md holds 2 of the 2 headings '## Implementation Plan' and '## Implementation Notes'. A1: NOT RUN: scripts/deepseek-review.js needs the API key from the environment file even for --dry-run, and the dotenv form was denied by the permission classifier for this run. A2 (buildLensInputs with the 5 sections, material 17,753 characters): task-381 15 lists, 5 sections 2121 characters, 17 calls, 0 refused (expected 17); task-410 10 lists, 14181 characters, 11 calls, 0 refused; task-267 18 lists, 9416 characters, 21 calls, 0 refused. A3 (lens-input CLI, 60,000-character material): surface-135 exit 0 3 parts, policy-124-s2-s5 exit 0 3 parts, bylaw-133 exit 0 3 parts; the 'today exit 1' half was not re-run on the old head (UNVERIFIED). A4: check-tasks on the live board exit 0, prints 106 commands; for task-101 (LATER, type record, not build) the command carries 6 compliance: entries = 6 lists of resolve; the 'after running the printed command' half is NOT RUN (it edits another task). A5: the planted refusals with controls are the tests in check-lane-close.logic.test.ts, backlog-lane.logic.test.ts, rule-lists.logic.test.ts, backlog-brief-context.logic.test.ts (green in the commits). A6: review-template.logic.test.ts green in ef574eb02. A7: green in 7b7d6f5f7. A8: OPEN (no DB). A9: NOT RUN.
+
+BL-GATE375 acceptance A9 and A4b, fourth run (outputs ~/Buildo-scratch/lanes-20261119/inc1b/gate375/a9/; run on a scratch git clone --shared of this worktree, removed afterwards, so this worktree was never touched: git status --short shows no tracked change). A9 on task-401 (LATER, build, 9 resolved lists), dry-run only: (1) before evidence: exit 3, 11 errors, one per missing item, the first 'plan gate: task-401: no plan evidence folder docs/reports/reviews/task-401/ on the board', then one 'list <id> ... has no valid compliance lens output' for each of the 9 lists (agents-s5-1to3, agents-s7-s11, queue-137, eng-all, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S) and 'GROUNDER-PLAN.md is missing'. (2) with test evidence (context, 9 plan outputs with inputs, integration and reality-check Seat lines, no regression seat because the Files line names only paths that do not exist yet, round block, references, Plan line): exit 0, 'plan gate ok: 9 lists, 2 findings, Plan sha256:76fa8e5f3005'. (3) one appended note to the task: exit 3, 'GROUNDER-PLAN.md: the Plan line "Plan: task-401 sha256:76fa8e5f3005" is not the hash of the task as it is now ... expected: Plan: task-401 sha256:6017e6ec7b94'. (4) clone deleted. A4b on the same clone: check-tasks printed the add-ref command for task-101 (6 compliance: entries = 6 lists); after running it check-tasks --root <clone> printed nothing for task-101 (0 lines, exit 0) and backlog task view shows the compliance: entries on the References line.
+
+BL-GATE375 acceptance A1 and the output review, fourth run: A1 (the review tool with --dry-run in the sanctioned dotenv form, task-381 context and the five --section flags): the context slot holds 0 hits of the placeholder (6 hits sit inside the diff text, which quotes the string in rule-lists.mjs), 1 hit of 'yes to all', each of the five heading lines once, 24,823 characters (under 120000). Output review: 80 calls over the whole-range diff (19 files, 170,582 bytes) with context-r1.md: 74 compliance outputs over 14 lists, 3 code-review, 3 error-paths, all exit 0, 80 of 80 with a REVIEW header and a VERDICT line; 410 findings listed untriaged in docs/reports/lanes/2026-11-21/BL-GATE375/FINDINGS.md; report docs/reports/lanes/2026-11-21/BL-GATE375/REPORT.md. Grounder owed; the task stays RUNNING.
 <!-- SECTION:NOTES:END -->

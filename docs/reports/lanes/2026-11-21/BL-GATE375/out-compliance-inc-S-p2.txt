@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:20:12.673Z file_sha256=1625d4c7a088f043e6aa542d68de67a7ce4ca4d4790d673eccea254a812fa9ac prompt_sha256=1ed84503ba6f15916fda3af0618448a82e999adfe846161924d6135037929d94
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 — "#6 A1 scripts/deepseek-review.js review <task-381 diff> --template .claude/review-templates/lens-compliance.md --context <that file> with the five --section flags and --dry-run" and its pass conditions "0 hits of '(no pasted context provided)', at least 1 hit of 'yes to all', the five heading lines present, prompt under 120000 characters" — scripts/deepseek-review.js:30 "const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');" — clause unmet: the pasted acceptance says "A1: NOT RUN: scripts/deepseek-review.js needs the API key from the environment file even for --dry-run, and the dotenv form was denied by the permission classifier for this run", so the --context path of this file has no end-to-end proof on a real task — run the A1 dry run with the key and paste its output on the task.
+
+DEFER severity=LOW — AC #7 — "#7 A2 rule-lists.mjs lens-input for each of the 15 resolved lists of task-381 with that context: paste each exit code, selected-section count and call count" — NONE, pasted evidence "A2 (buildLensInputs with the 5 sections, material 17,753 characters): task-381 15 lists, 5 sections 2121 characters, 17 calls, 0 refused" — the clause names lens-input and per-list exit codes, the evidence used buildLensInputs directly, so the CLI refusal path and the exit codes are not shown — run lens-input per list and paste each exit code.
+
+DEFER severity=LOW — AC #8 — "#8 A3 lens-input --list surface-135 with a 60,000-character material: today exit 1 naming '## Register'; after A6 exit 0 with parts" — pasted evidence "surface-135 exit 0 3 parts, policy-124-s2-s5 exit 0 3 parts, bylaw-133 exit 0 3 parts; the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the before half of the clause is unproven — run the same lens-input on the pre-change head and paste exit 1 naming "## Register".
+
+DEFER severity=LOW — AC #9 — "A4 check-tasks on the live board prints the exact backlog task edit --add-ref command for at least one stale open task, each entry starting 'compliance:'" — scripts/analysis/rule-lists.mjs:452 "remove: [...have].filter(([id]) => !want.has(id)).map(([, r]) => r)," — the diff also prints --remove-ref commands, a behaviour no pasted clause or ruling names, and whether backlog task edit accepts --remove-ref is not in the pasted text — confirm the flag from backlog help before any printed command is run, or print only the named --add-ref form.
+
+DEFER severity=LOW — A.7 — "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" and "A row or paragraph that alone passes the room is still refused naming it" — scripts/analysis/rule-lists.mjs:301 "if (!(head && pieces.length === 0 && cur.length === 1)) flush(); cur.push(ln); flush();" — the block heading is glued to the first row or paragraph, so when that pair alone passes the room the whole list is refused even though each of heading and row fits — when the merged first piece is over the room, cut after the heading instead of refusing.
+
+MET — A.2 — scripts/deepseek-review.js:30 — extractSections is removed here and imported from scripts/lib/review-template.js, so the review tool, lens-input and the close check cut the same text.
+MET — A.4 — scripts/analysis/rule-lists.mjs:550 — the CLI "const matFrom = str('material-from', ''); const ctxFile = str('context', matFrom);" refuses without a context ("if (!ctxFile) die(2,") and the selected text is counted in the room on both paths ("fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context,").
+MET — A.7 and AC #8 — scripts/analysis/rule-lists.mjs:326 — "if (subs.length === 0) return splitFlat(text, max, label, id);" the no-deeper-heading block is cut at table rows and blank-line paragraphs, the old refusal kept for a piece that alone passes the room.
+MET — D11b — scripts/analysis/rule-lists.mjs:163 — "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" admin and PII now fire the security lens.
+MET — B.1 — scripts/analysis/rule-lists.mjs:452 — complianceRefs writes "compliance:<list id> <file>", id alone for a path with a comma, compared by the id token before first space.
+MET — B.2 — scripts/analysis/rule-lists.mjs:480 — "if (c.add.length || c.remove.length) out.refs.push({ id: t.id, ...c });" collected only after verifyResolved, printed as backlog task edit commands with the exit unchanged.
+MET — AC #3 — pasted header "RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1" — this run carries the rule list whole.
+
+REJECT — the grounder resolution's "stamps its sha256" — accused: lens-input writes no context hash into the input — the governing plan's NOT IN SCOPE rules out "a second pasted file or context stamp" and binds the context by the prompt_sha256 recompute over the committed context file.
+REJECT — Files line — accused: an edit to a path off the Files line — this chunk edits only scripts/analysis/rule-lists.mjs and scripts/deepseek-review.js, both named on the Files line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  195923ms (195.9s)
+📊 Tokens — total: 60067, input: 23955, output: 36112, reasoning: 34747

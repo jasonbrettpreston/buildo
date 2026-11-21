@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:23:28.682Z file_sha256=4a12f45a1cb87dd72f4476c3e5abf85bc8cadd75fd03f9719a2610375136acc7 prompt_sha256=5983dee3ddf0f004483ea6a681e52f423fee107b75fa5de198bf59919c8150dc
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-ms-S-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0342 "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently" — src/tests/backlog/check-lane-close.logic.test.ts "it('regression is required when the Files line names an existing path, and not when it names only new paths'" and "const needsReg = (o.files ?? 'src/a.ts').split(',').map((x) => x.trim()).some((e) => (o.tracked ?? ['src/a.ts']).includes(e));" — the seat trigger is any tracked path, so a docs-only build task is forced to a Regression seat the ruling does not require, and Acceptance #14's "existing path" wording is wider than the ruling — narrow the trigger to code paths or record the operator ruling before the gate refuses launches.
+
+DEFER severity=MED — plan B.1 "Entry (field `references`, not `documentation` ...): `compliance:<list id> <file>`, one per resolved list." — src/tests/backlog/rule-lists.logic.test.ts "expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);" — for a list file path containing a comma the entry is written as the id alone, so the form the plan names is not held and the compliance document is not named on the task, with no pasted ruling authorising it — get the ruling for a comma-safe reference form, or keep the file in the entry.
+
+DEFER severity=MED — plan A.4 "counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)" — src/tests/backlog/rule-lists.logic.test.ts "script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'whole', '--material', m, '--out', path.join(f.d, 'out/room'), '--template', tpl, '--max', '4000', '--context', ctx])" — only the with-list path asserts the context is counted in the room, no test covers the no-list path — add a no-list case asserting the same room arithmetic.
+
+DEFER severity=LOW — plan A.7 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — src/tests/backlog/rule-lists.logic.test.ts "it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound'" — every A6 case is a table, no case splits a paragraph block — add a paragraph-only block case that splits at blank lines.
+
+DEFER severity=MED — Acceptance #6 "A1 scripts/deepseek-review.js review <task-381 diff> ... with the five --section flags and --dry-run: 0 hits of '(no pasted context provided)', at least 1 hit of 'yes to all', the five heading lines present, prompt under 120000 characters" — pasted note "A1: NOT RUN: scripts/deepseek-review.js needs the API key from the environment file even for --dry-run" — no run is recorded in the pasted material and this chunk holds no substitute — run it with the key and paste the output before the task leaves RUNNING.
+
+DEFER severity=LOW — Acceptance #8 "lens-input --list surface-135 with a 60,000-character material: today exit 1 naming '## Register'; after A6 exit 0 with parts" — pasted note "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the before half of A3 is unproven on the pasted evidence — re-run it on the old head and paste the exit code and stderr.
+
+MET — plan A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — src/tests/review-template.logic.test.ts — "expect(rt.CONTEXT_SECTIONS).toEqual(['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes']);" pins the one constant with the exact heading texts.
+
+MET — plan A.2 "extractSections moves there ... so the review tool, lens-input and the close check cut the same text" — src/tests/review-template.logic.test.ts — "expect(() => rt.extractSections(md, ['Nope'])).toThrow(/no heading contains that text/);" proves a missing heading throws, no silent drop.
+
+MET — plan A.4 "lens-input takes --context, refuses without it, and counts the selected sections in the room" — src/tests/backlog/rule-lists.logic.test.ts — "expect(no.status, no.stderr).toBe(2);" with a control that passes with the context.
+
+MET — plan B.1 "one per resolved list" — src/tests/backlog/rule-lists.logic.test.ts — "expect(entries).toHaveLength(want.length);" makes the printed entries equal resolve's list count, each starting compliance:.
+
+MET — plan D "refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board" — src/tests/backlog/check-lane-close.logic.test.ts — "describe('task-375 D: the launch gate refuses a build or fix launch whose plan was not checked'" covers folder, list outputs, grounder, lane header, seats, outcomes and Plan line, each with a control.
+
+MET — plan A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes" — src/tests/backlog/check-lane-close.logic.test.ts — "refuses a context that is the placeholder, and one without the Description heading" plus the notes-presence case with its control.
+
+REJECT — Acceptance #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — accused of not reading the timeout from the database yet — the card names the condition "the DB read needs the operator's DB GO after the MCINC-7 rehearsal, otherwise A, B and D ship and the task is not marked complete", and the note keeps the task RUNNING with src/tests/proof-slice.db.test.ts written and skipped.
+
+REJECT — Acceptance #3 "Compliance lens run once per governing rule list with the list whole" — accused of splitting a list into parts — the operator ruled "or split smaller" (quoted in plan A.7) and PLAN-375-v4 governs where it differs, so the split is the ordered behaviour.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 0
+
+---
+⏱  146927ms (146.9s)
+📊 Tokens — total: 56209, input: 28610, output: 27599, reasoning: 26099

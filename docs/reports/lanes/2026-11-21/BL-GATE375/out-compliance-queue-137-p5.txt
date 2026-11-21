@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:28:50.081Z file_sha256=272e2cfad166228ba3ff599bb46d41457dfa08bb793b5ff69ff2f4dbb91b08a6 prompt_sha256=45e63fb8c709c5a399df69ff01f889ec8567479ce7c03eb7ceba4774960a534c
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-queue-137-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 dated note 2026-11-21 (task-375) "The LAUNCH of a build or fix task ... runs planGateErrors on the board HEAD: ... one plan compliance output per resolved list over the plan sections of the committed context" — src/tests/backlog/check-lane-close.logic.test.ts:980 "it('a fix task with one plan lens output passes; a build task with only that output is refused'" and :981 "const fx = await planScenario({ type: 'fix' });" — the fix control passes with only plan-code-review.txt and no per-list plan compliance output, so the launch requirement is shown for build only while the note names build or fix (and PLAN-375-v4 A.5 "A build or fix task needs the compliance PLAN phase as well"), so either the gate or resolveTask drops the lists for fix — plant the per-list plan outputs in the fix control plus a refusal when one is missing for a fix task, or record the fix exemption in the 137 note.
+
+DEFER severity=LOW — Spec 137 dated note 2026-11-21 (task-375) "GROUNDER-PLAN.md of a separate grounder with a verdict per finding" — src/tests/backlog/check-lane-close.logic.test.ts:885 "for (const n of planFiles.sort()) for (let j = 1; j <= nFind(files[n]!); j++) { k += 1; lines.push(" — the harness always emits a CONFIRMED line per plan-output finding, so no planted refusal covers a ruled plan output whose finding has no verdict (only the seat verdict and a missing Ruled line are tested) — add an option that drops one CONFIRMED line and expect a refusal.
+
+DEFER severity=LOW — task-375 deviation note 2026-11-21 "The separate grounder rules on this deviation." — NONE — the separate grounder's ruling on the one-path Files-line extension for src/tests/backlog/rule-lists-table.logic.test.ts cannot see anywhere in the pasted context — confirm that ruling is on the board before this task closes.
+
+REJECT — RR-0342 "regression only required when code is changed and reality check is only required when a figure is changed" — the tests demand a Reality-Check seat on every build or fix plan — not a real issue: RR-0347 "If it can't tell if a figure is changed than it just runs anyways for now" and the 137 note of 2026-11-21 list Reality-Check among the required seat reports.
+
+MET — Spec 137 dated note 2026-11-21 (task-375) "the close check now also recomputes each lens output's prompt hash with the committed review context (docs/reports/reviews/<task>/context-rN.md)" — src/tests/backlog/check-lane-close.logic.test.ts:40 — promptHash defaults to selectedOf(HASH_CTX), scenario writes context-r1.md at :160, and the test at :800 refuses a context edited after the review.
+
+MET — Spec 137 dated note 2026-11-21 (task-375) "refuses a close whose task references lack the repo copies of REPORT.md, GROUNDER.md and, when the lane directory holds one, TRIAGE.md (it prints the exact `backlog task edit --add-ref` command)" — src/tests/backlog/check-lane-close.logic.test.ts:812 and :816 — the REPORT refusal asserts the exact add-ref command and TRIAGE is required only when the lane dir holds it.
+
+MET — Spec 137 dated note 2026-11-21 (task-375) "the Plan hash line, which is the hash of the task as it is at launch" — src/tests/backlog/check-lane-close.logic.test.ts:968 — a missing Plan line is refused and a one-word edit after the grounder ruled is refused with the new expected line.
+
+MET — Spec 137 dated note 2026-11-21 (task-375) "The LAUNCH of a build or fix task ... the required seat reports (Integration, Reality-Check, and Regression when the Files line names a tracked path)" — src/tests/backlog/check-lane-close.logic.test.ts:938 — regression is refused when the Files line names a tracked path and not required when it names only a new path.
+
+MET — PLAN-375-v4 A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — src/tests/backlog/rule-lists-table.logic.test.ts:49 and :206 — both lens-input calls now pass --context docs/reports/reviews/task-375/fixture-context.md, the path the deviation note names.
+
+MET — PLAN-375-v4 A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes" — src/tests/backlog/check-lane-close.logic.test.ts:795 — placeholder, missing Description and missing Implementation Notes (with notes) are each refused with a passing control.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+
+---
+⏱  219843ms (219.8s)
+📊 Tokens — total: 72259, input: 30131, output: 42128, reasoning: 40987

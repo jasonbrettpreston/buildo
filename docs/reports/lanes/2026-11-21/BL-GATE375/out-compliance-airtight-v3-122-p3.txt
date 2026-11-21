@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:15:02.498Z file_sha256=f343811e962c324b258f3a1b807db04840e2d2b4454e8988c09d4a7c6c773968 prompt_sha256=af3572318159d4b08cff55d58a012d4c56628b67c016dc002f3b493e49610550
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-v3-122-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Plan §B.1/§B.2 "`compliance:<list id> <file>`, one per resolved list" and "for each open task whose compliance: entries differ from the resolved lists ... the exact `backlog task edit task-N --add-ref ...` command" — src/tests/backlog/rule-lists.logic.test.ts "const r = m.complianceRefs([{ id: 'ms-9', file: 'docs/a, b.md' }, { id: 'eng-all', file: 'docs/e.md' }, { id: 'five', file: 'docs/f.md' }], ['compliance:eng-all some other path', 'docs/a.md']);" plus "expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);" and "expect(r.remove).toEqual([]);" — a same-id entry whose `<file>` differs from the resolved list is counted as present, so check-tasks prints no command for a difference B.2 says must be printed and the stale path is never corrected — when the id matches but the file token differs emit `--remove-ref` for the stale entry and `--add-ref` for the resolved one, and pin that pair in this test.
+
+DEFER severity=MED — AC #3 "Compliance lens run once per governing rule list with the list whole; a separate grounder verdict on file" and the deviation note "The separate grounder rules on this deviation." — NONE — no separate grounder verdict for BL-GATE375 (nor for the one-path Files-line deviation that let src/tests/backlog/rule-lists-table.logic.test.ts be edited) appears in the pasted record, so the chunk merges unverified against RR-0346 "The lane fixes and closes a grounder verifies the orchestrator routes" — obtain and paste the grounder's verdict on the deviation before merge.
+
+DEFER severity=LOW — Plan §A.6 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file" — src/tests/backlog/check-lane-close.logic.test.ts "const r = scenario({ staged: { 'docs/reports/reviews/task-7/context-r2.md': CTX_FILE.replace('a short description', 'a later round description') } });" — HASH_CTX stays at CTX_FILE so every output in that scenario is hashed over context-r1.md, and nothing shows an output hashed over a later round's context-r2.md is accepted, which is the per-round binding the clause names — set hashCtx to the r2 text in that scenario (and keep the r1 file present) so the second-round binding is actually exercised.
+
+MET — RR-0343 "labelled means i need to know its a compliance document" — src/tests/backlog/rule-lists.logic.test.ts "expect(entries).toContain(`compliance:${l.id} ${l.file}`);" — every printed add-ref carries the compliance: label, distinct from other references.
+
+MET — Plan §A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — src/tests/review-template.logic.test.ts "expect(rt.CONTEXT_SECTIONS).toEqual(['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes']);" — the five headings are pinned to one constant, and the same function is used by the close test through createRequire.
+
+MET — Plan §A.5 planted refusal "committed context edited after the review" — src/tests/backlog/check-lane-close.logic.test.ts "refused(planted(CTX_FILE.replace('a short description', 'a different description')), /prompt_sha256/);" — the edited committed context is refused on the recomputed prompt hash, with its control above it.
+
+MET — Plan §B.3 "the close check refuses when one is missing" — src/tests/backlog/check-lane-close.logic.test.ts "refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/);" — the missing repo-copy reference is refused and the exact add-ref command is printed.
+
+MET — Plan §A.6 "A row or paragraph that alone passes the room is still refused naming it" — src/tests/backlog/rule-lists.logic.test.ts "expect(l.r.stderr).toContain('5. Register');" — the over-room single row keeps the old refusal naming list and section, and the split test asserts each row appears once.
+
+MET — Plan C / AC #12 "D11b the security regex at rule-lists.mjs:128 misses admin and PII" — src/tests/backlog/rule-lists.logic.test.ts "for (const f of ['src/app/admin/page.tsx', 'src/lib/pii/redact.ts', 'src/lib/admin-users.ts', 'scripts/pii-scrub.mjs']) {" — admin and PII paths fire the security lens on both phases, with a control path that does not and the pre-existing words still firing it.
+
+MET — §5.5 Condition 4 "Enforced by `scripts/ast-grep-rules/compute-shape.yml` over `scripts/lib/compute/**`" — no changed path in this chunk is under scripts/lib/compute/**.
+
+REJECT — §5.5 Condition 4 rules 1 to 6 and the compute-literals gate — the change is accused of breaching the compute shape, purity and tunable-literal clauses — every path in this chunk is a test file under src/tests/, so the dispatch table, ctx.report, injected seam, helper-marker, checks[].why and ctx.config clauses have no subject here.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 3
+
+---
+⏱  133228ms (133.2s)
+📊 Tokens — total: 53838, input: 29332, output: 24506, reasoning: 23205

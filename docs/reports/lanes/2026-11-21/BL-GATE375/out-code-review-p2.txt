@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T02:04:19.722Z file_sha256=12660e11ac3de3143e6d63440ba38ea873ae0bd71bf7ecd1e7803f9deebc2d0b prompt_sha256=4a2deef0a6d85b3ab2b274f57e6776aa1ceb0b23bd14c3ec570004da14da67d5
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:587 "const planCut = (text) => { try { return extractSections(text, PLAN_SECTIONS); } catch { return null; } };" — the empty catch discards which heading is missing, so a context without an Implementation Plan heading makes every resolved list fall through to materialOk and report "the stamped material is not the Description, Acceptance criteria and Implementation Plan sections of the committed context", misattributing the cause — capture e.message and push one problem line naming the context and the missing heading instead of returning null.
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:45 "const PLACEHOLDER_CONTEXT = '(no pasted context provided)';" — the placeholder text is re-typed here from the review tool with no shared source, so if deepseek-review.js ever changes that literal the placeholder refusal silently stops firing and a placeholder context is accepted as a value — export the placeholder from scripts/lib/review-template.js and require it here, the way CONTEXT_SECTIONS was centralised.
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:318 "export function lensContexts(contexts, hasNotes = true) {" — the exported function lost its zero-argument call form (previously "export const lensContexts = () => [undefined];") and gives no default for contexts, so any remaining lensContexts() call now throws "contexts is not iterable" at the loop on the next line, a crash rather than a problem line — default the parameter to contexts = [].
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:771 ".filter((x) => x.text !== null);" — a committed context-rN.md that readRepo cannot read is dropped silently, so the operator only sees the generic "no committed review context file" line or a prompt_sha256 mismatch with no file named as unreadable — keep the entry and push a refusal naming the path that could not be read.
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs:323 "const want = !hasNotes && !/^#{1,6}\s.*Implementation Notes/m.test(c.text) ? CONTEXT_SECTIONS.filter((x) => x !== 'Implementation Notes') : CONTEXT_SECTIONS;" — every lens command passes all five --section flags and deepseek-review throws on a heading it cannot find, so a four-section value can never equal the prompt_sha256 of a real output, and the branch produces a value that matches nothing — make the missing heading a problem line instead of a fallback value.
+
+DEFER severity=NIT — scripts/hooks/check-lane-close.mjs:627 "findings = ge.verdicts.size;" — the returned findings figure counts verdict lines parsed from GROUNDER-PLAN.md, while the findings actually present are the found array built at line 609 (used only for lensKinds), so a verdict for an id absent from the outputs inflates the "plan gate ok: <L> lists, <M> findings" line — set findings = found.length.
+
+REJECT — scripts/hooks/check-lane-close.mjs:601 "if (!good) errors.push(last);" — looks like a null can be pushed because last is initialised to null — it is correct because the inner loop always executes at least once (cands.length ? cands : the null fallback) and last ??= e runs on every non-null result, so last is a string whenever good is false.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  217265ms (217.3s)
+📊 Tokens — total: 71751, input: 29993, output: 41758, reasoning: 40983

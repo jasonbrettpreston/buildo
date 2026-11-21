@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:23:04.396Z file_sha256=0753ac96ea76f5087798eb881e987eaf7e983fdfed67ba75b06d5aa5accd4247 prompt_sha256=9d6a0788da2168344e6a8291585f951c9f472f78c9544e50d5de8a4cb6eab567
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+BUG/DEFER/MET/REJECT review of chunk 2 (check-lane-close.mjs, review-template.js, and the three backlog test files) against the pasted ms-S rule list and the pasted task-375 clauses/rulings.
+
+DEFER severity=MED — RR-0342 "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently" — scripts/hooks/check-lane-close.mjs "const need = [...PLAN_SEATS.always, ...(entriesOf(i.taskText).some((e) => i.tracked(e)) ? PLAN_SEATS.conditional : [])];" — the regression seat fires on any Files path that is tracked at the board head, so a build task naming only a tracked doc or a tracked directory (e.g. docs/specs/) is required to carry a regression seat though no code changed; bounded to a wrong refusal, READBACK-375-v4 Q1 (not pasted) may have approved the wider trigger — narrow the condition to code paths, or paste Q1 so the wider trigger is the ruled one.
+
+DEFER severity=MED — NOT IN SCOPE "the V2L15 early-return change; any new script." — src/tests/backlog/backlog-lane.logic.test.ts "const r = run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID });" — the tests depend on a new runnable program docs/reports/reviews/task-375/plant-evidence.mjs that the plan declares out of scope and that the Files line does not name (the only sanctioned Files edit was rule-lists-table.logic.test.ts); test-only and reversible — plant the evidence from an existing test helper, or record the new file on the plan with the operator's word.
+
+DEFER severity=MED — A.5 "A build or fix task needs the compliance PLAN phase as well (:178 phases = both), Spec 08 section 7 rule 1 (:336 \"both mandatory per WF\")." — scripts/hooks/check-lane-close.mjs "} else if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);" — the launch gate requires a per-list compliance plan output for build but accepts any single plan-<lens>.txt for fix, so a fix task can launch with no compliance plan output; v4 (not fully pasted) deletes the close both-phases rule but the "both mandatory per WF" clause remains — decide from the pasted plan whether fix carries compliance plan at launch and run listProof phases ['plan'] for fix if so.
+
+MET — A2 one constant — scripts/lib/review-template.js "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" — a single shared constant with extractSections living beside it, imported by the close check.
+
+MET — A4 placeholder refused — scripts/hooks/check-lane-close.mjs "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(" — a context that is the placeholder is a problem line, never a value.
+
+MET — A4 Implementation Notes only when the task has notes — scripts/hooks/check-lane-close.mjs "const want = !hasNotes && !/^#{1,6}\s.*Implementation Notes/m.test(c.text) ? CONTEXT_SECTIONS.filter((x) => x !== 'Implementation Notes') : CONTEXT_SECTIONS;" — the notes heading is required exactly when the task has notes.
+
+MET — B2 close references — scripts/hooks/check-lane-close.mjs "for (const n of ['REPORT.md', 'GROUNDER.md', ...(textOf('TRIAGE.md') !== undefined ? ['TRIAGE.md'] : [])]) {" — a build/fix close refuses a missing REPORT.md, GROUNDER.md or present TRIAGE.md reference and prints the add-ref command.
+
+MET — D Plan hash and gate — scripts/hooks/check-lane-close.mjs "export function planHash(taskText) {" — title plus body after the front matter squashed to 12 hex, with planGateErrors exported pure of git and a catch that turns any read error into one refusal line.
+
+MET — A1 context-rN.md per round — src/tests/backlog/backlog-brief-context.logic.test.ts "fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-r1.md`), 'utf8');" — the context is named context-rN.md and a later brief writes context-r2.md without overwriting r1.
+
+REJECT — RR-0342 "reality check is only required when a figure is changed" — the change puts reality-check in PLAN_SEATS.always, required on every plan — not a real issue: RR-0347 "If it can't tell if a figure is changed than it just runs anyways for now" and the pasted v4 ruling "the Integration and Reality-Check seats on every build or fix plan" supersede the conditional for reality-check.
+
+REJECT — RR-0349 "Compliance on the plan and output." — the change does not require compliance on the build output because closeErrors uses "build ? ['out']" — not a real issue: that line is unchanged context in the hunk and build still requires out-compliance; the plan phase moved to the launch gate per the v4 note, not dropped.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+
+---
+⏱  173174ms (173.2s)
+📊 Tokens — total: 61511, input: 30783, output: 30728, reasoning: 29452

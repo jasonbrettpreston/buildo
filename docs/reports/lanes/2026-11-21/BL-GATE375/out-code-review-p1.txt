@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T02:04:19.718Z file_sha256=fb39431392a6f7a23758ce28d0f2e487e62292f03d31101fa10fccddebaac311 prompt_sha256=c56c5098224c6d4ba3f19d50c9c3ee8eb6593b5c8c6c8cdfef7c53e1b056efe6
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/analysis/backlog-lane.mjs "const ctxRel = `docs/reports/reviews/${taskId}/context-r1.md`; // the brief writes round 1 at launch (context-rN.md, backlog-brief.mjs)" — the brief computes N as "existing context-r*.md + 1" while this file hardcodes r1, so on a second lane for the same task or any re-run of the brief before the take it writes context-r2.md and every plan/output lens command and the spec's Review line still name context-r1.md (lens-input then refuses for a file that is not there, or the lens is hashed over a stale round and the close recompute fails) — derive ctxRel the same way (count docs/reports/reviews/<id>/context-r*.md in the checkout) or take the path the brief prints.
+
+BUG severity=MED — scripts/analysis/backlog-lane.mjs "const names = git('ls-tree', '-r', '--name-only', 'HEAD', '--', `${ev}/`).stdout.split('\n').filter((x) => x && path.posix.dirname(x) === ev)" — git quotes unusual paths (non-ASCII, e.g. the `·` used in titles and notes), so a quoted evidence filename fails `dirname(x) === ev` and the same read feeds headTasks/taskOf and decisionExists, whose regex and `basename` tests then miss a task or decision file that exists and the gate refuses a valid launch; the dirty check in the same file already unquotes (".replace(/^\"(.*)\"$/, '$1')") and DIFF_ARGS pins `-c core.quotepath=false` — pass `-c core.quotepath=false` to these three ls-tree calls (or use `-z`) and unquote as the dirty check does.
+
+BUG severity=MED — scripts/analysis/backlog-brief.mjs "  2. If the task's Implementation Plan field already holds a plan (reviewed, ruled and checked before launch), build that plan and do NOT run --plan; only a task with no plan runs: backlog task edit ${taskId} --plan ..." next to the added "The plan is the task text at launch ... do not re-plan, do not edit the Description, Acceptance or Plan" — the generated brief now tells the lane both to run `--plan` on a task that has no plan and never to edit the Plan, two contradictory instructions in one brief — drop or rewrite line 2 in the same change so one instruction survives.
+
+DEFER severity=LOW — scripts/analysis/backlog-lane.mjs "const showHead = (pth) => { const r = git('show', `HEAD:${pth}`); return r.status === 0 ? r.stdout : null; };" — a failing `git show` is turned into null and then into `text: ''` and its stderr is thrown away, so the operator is told "no valid compliance lens output" for what may be a git error — write `r.stderr` to stderr before returning null.
+
+DEFER severity=LOW — scripts/analysis/proof-slice.mjs "export function timeoutMsFromVariable(value) {" — nothing in the file calls it and `TIMEOUT_VARIABLE` is referenced only in its own error message (the runner still reads DEFAULT_TIMEOUT_MS), so both exports are dead on the production path until registration, and the refusal it implements can never fire in a run — keep them for the DB GO but say so in the report and give the runner a single call site guarded by "variable absent means DEFAULT_TIMEOUT_MS" or none at all.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "else if (ln.trim() === '') { if (!(head && pieces.length === 0 && cur.length === 1)) flush(); }" — the blank line itself is never pushed into `cur`, so two paragraphs split into separate pieces are packed back as "para1\npara2" and the part no longer holds the paragraph break the list has — push the empty line into the next piece (or rejoin pieces with the blank line) so a packed part reads as the source text.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- context-r1.md hardcoded in backlog-lane.mjs against the brief's computed context-r${round}.md
+- the launch gate and its task/decision lookups read git paths without core.quotepath=false or the unquoting the file already uses
+- the generated brief carries the old `--plan` instruction beside the new "do not edit the Plan" line
+
+---
+⏱  147526ms (147.5s)
+📊 Tokens — total: 56013, input: 29589, output: 26424, reasoning: 25415

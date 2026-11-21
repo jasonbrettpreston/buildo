@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:15:08.497Z file_sha256=a309aaaa522abcdb0ca866dcb327f65df375fb5dc703ea51cb750b2ab7756685 prompt_sha256=2e18e5bbca3dffbfb9f724a03ffe3bae9a3c29494578871b8f9fc30d53d289e0
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-eng-all-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task #6 A.2 / 08_agents.md added note "one --section per entry of CONTEXT_SECTIONS (scripts/lib/review-template.js: Task, Description, Acceptance criteria, Decisions naming this task, Implementation Notes)" — scripts/analysis/backlog-brief.mjs "`## Decisions in force (titles; the ones this task names carry the operator's words)`" — the context file it writes has no "Decisions naming this task" heading, and the plan says extractSections matches by substring and deepseek-review.js throws on a heading it cannot find, so the operator rulings never enter the reviewer's context, and A1 was NOT RUN to catch it — rename the heading to "## Decisions naming this task" (or align CONTEXT_SECTIONS to the file's heading), then run A1 and paste it.
+
+BUG severity=HIGH — 08_agents.md added note "one per review round and never overwritten (N = the context-r*.md files already there + 1)" — scripts/analysis/backlog-lane.mjs "`const ctxRel = \`docs/reports/reviews/${taskId}/context-r1.md\`; // the brief writes round 1 at launch (context-rN.md, backlog-brief.mjs)`" — backlog-lane hardcodes round 1 while backlog-brief writes context-rN.md (existing + 1), so a relaunched task (this one, BL-FIXTOOLS to BL-GATE375) reviews against a stale context-r1.md or a missing file, silently — compute the same N = existing context-r*.md + 1 in backlog-lane (or read it from the brief) so the review line names that round's file.
+
+DEFER severity=MED — task #6 "with the five --section flags and --dry-run: 0 hits of "(no pasted context provided)", at least 1 hit of "yes to all", the five heading lines present" — NONE — A1 was NOT RUN ("A1: NOT RUN: scripts/deepseek-review.js needs the API key ... permission classifier denied"), so the five-flag extraction is unverified and the heading defect above is not caught — run A1 and paste its output before this task leaves RUNNING.
+
+DEFER severity=LOW — task Description C "D10 (proof-slice.mjs reads its timeout and buffer from registered tooling_ variables ... otherwise A, B and D ship and the task is not marked complete)" — scripts/analysis/proof-slice.mjs "`const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it`" — the runner still uses the literal, only a helper plus a comment exist, so D10b is satisfied only by a comment — acceptable only while the operator DB GO is absent; keep the task RUNNING per AC #13.
+
+MET — task #5 (A0) "the output holds the headings "## Implementation Plan" and "## Implementation Notes"" — scripts/analysis/backlog-brief.mjs "`## Implementation Plan`, fieldOf('PLAN'), '', `## Implementation Notes`, fieldOf('NOTES')" — both headings are written after the acceptance criteria.
+
+MET — 08_agents.md added note "(1) ... Every lens command passes it with --context and one --section per entry of CONTEXT_SECTIONS" — scripts/analysis/backlog-lane.mjs "`const ctxArgs = `--context ${ctx} ${sectionFlags}`;`" — every plan and output lens command carries the committed context and per-section flags.
+
+MET — task D "the launch gate: backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board" — scripts/analysis/backlog-lane.mjs "`if (gate.errors.length) { for (const e of gate.errors) process.stderr.write(`backlog-lane: refused: plan gate: ${e}\n`); process.exit(3); }`" — planGateErrors runs on build/fix before the take.
+
+MET — RR-0343 "labelled means i need to know its a compliance document" — scripts/analysis/backlog-lane.mjs "`const addRefs = complianceRefs(resolved.lists, asList(t.fm.references)).add.flatMap((e) => ['--add-ref', e]);`" — the take adds the compliance: references.
+
+MET — task A5 backlog-brief "context-rN.md (N = existing context-r*.md + 1, never overwritten)" — scripts/analysis/backlog-brief.mjs "`const round = (fs.existsSync(ctxDir) ? fs.readdirSync(ctxDir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;`" — the brief computes the round and does not overwrite.
+
+MET — task "docs/specs/00-architecture/08_agents.md takes ONE dated note carrying two points (context-rN.md; the plan-only seats)" — docs/specs/00-architecture/08_agents.md added "Dated note 2026-11-21 ... two points. (1) The review context file ... (2) The tool-having seats ... run on the PLAN only" — one dated note carrying both points.
+
+REJECT — task Description C "D10 ... the DB read needs the operator's DB GO after the MCINC-7 rehearsal, otherwise A, B and D ship and the task is not marked complete" — accused of shipping D10b unbuilt — acceptance #13 explicitly allows "otherwise the task stays RUNNING"; the task is RUNNING, so no completion breach, only the deferred item above.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 3
+
+---
+⏱  181565ms (181.6s)
+📊 Tokens — total: 64580, input: 30777, output: 33803, reasoning: 32533

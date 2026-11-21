@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:09:25.341Z file_sha256=8cf5eb9a54601fe1eb5801186d25b63e8c00884fdfedeebb506d2ca5a3574eda prompt_sha256=d7b5dfbe3cbb3b4066ee85476e4473d56d9c39efe92db2a9a0f9e8df192854c8
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-124a-p10.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none; see DEFER lines below for the only clause gaps in this chunk — NONE — no CRIT/HIGH clause violation is visible in this material — no fix required before merge.
+
+DEFER severity=MED — plan A.4 "counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)" — src/tests/backlog/rule-lists.logic.test.ts "return script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'whole', '--material', m, '--out', path.join(f.d, 'out/room'), '--template', tpl, '--max', '4000', '--context', ctx]);" — every room-count case in this chunk passes --list, the no-list code-review path is never exercised, so its context budgeting is unproven here — add a lens-input case with no --list and assert the context is counted and an oversized one is refused.
+
+DEFER severity=MED — Description A "split at table rows and paragraphs" — src/tests/backlog/rule-lists.logic.test.ts "const tableDoc = (n: number) => '# T\n\n## 5. Register\n\n| id | rule |\n| --- | --- |\n'" — the A6 tests only cut tables at rows; no case feeds a no-deeper-heading block of blank-line paragraphs, so the paragraph half of the split requirement is untested in this chunk (cannot see the other chunks) — add a paragraph-block document split test with its single-oversize-piece refusal control.
+
+DEFER severity=LOW — AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — src/tests/proof-slice.logic.test.ts "expect(m.timeoutMsFromVariable(120000)).toBe(120000);" and "expect(typeof m.TIMEOUT_VARIABLE).toBe('string');" — these stay green even though the build note says "DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable", so the test does not guard the D10 requirement that the runner read it — after the DB GO add a source scan or spawn assertion that the runner reads the variable; until then keep the task RUNNING.
+
+NIT severity=NIT — plan A.2 "Not Milestone, Document sections or Prior reviews: the rule lists carry them" — src/tests/review-template.logic.test.ts "expect(rt.CONTEXT_SECTIONS).toEqual(['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes']);" — the constant is asserted but no test shows those three sections are excluded from extractSections output — add an input carrying Milestone, Document sections and Prior reviews and assert they are omitted.
+
+REJECT — R-CP "A test that spawns step-validate.mjs (or another long CLI) first proves the run finished ... an expected exit code" — the lens() helper and "control: the same table that fits is one file" read r.stdout before checking status — not a real issue: every consumer asserts a positive result (l.r.status, or a specific files.length), so a crashed run fails, and lens-input is not the long step-validate CLI R-CP names.
+
+MET — AC #12 "A7 D11b test red first then green" — src/tests/backlog/rule-lists.logic.test.ts "for (const f of ['src/app/admin/page.tsx', 'src/lib/pii/redact.ts', 'src/lib/admin-users.ts', 'scripts/pii-scrub.mjs'])" — asserts plan and out carry the security lens for admin and PII paths, with a control that a plain path adds none.
+
+MET — AC #11 "A6 The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green" — src/tests/review-template.logic.test.ts "describe('substitutePlaceholders — values are inserted literally, once'" — the existing tests are retained and the A2 block is appended, not replacing them.
+
+MET — plan B.2 "check-tasks ... prints ... the exact `backlog task edit task-N --add-ref ...` command" — src/tests/backlog/rule-lists.logic.test.ts "expect(entries).toHaveLength(want.length);" — asserts one compliance: entry per resolved list, exit 0, plus a control that a matching task prints nothing and a stale ref gets --remove-ref.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  139109ms (139.1s)
+📊 Tokens — total: 49056, input: 22696, output: 26360, reasoning: 25332

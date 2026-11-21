@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:31:53.413Z file_sha256=a8e91103543b93e8d0ec1f2f56dc5818580f8410e143265bfa110d260c6b7a80 prompt_sha256=e7b94b3933d33e432dd25cc1899aaa41c2eab9d6ab953f364bd5918f61ccbd8a
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-step-132-p7.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-375 plan NOT IN SCOPE "any new script" — src/tests/backlog/backlog-lane.logic.test.ts:17 "const r = run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID });" — the change adds and depends on a new executable script that the plan rules out of scope and the Files line does not name, so the test suite needs a program outside src/tests — move the fixture planting into the test file (or a declared src/tests fixture) or get the path named on the Files line by a grounder ruling.
+
+DEFER severity=MED — task-375 design A.3 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — src/tests/backlog/backlog-brief.logic.test.ts:58 "plan-review-deepseek.md --context docs/reports/reviews/\S+/context-r1.md --section" (sole section value is Task) — this pin cannot tell one section from five, so if production emits only Task the plan reviewer gets no Description, Acceptance, Decisions or rulings, the D11a defect at the plan phase; A.3 for the brief's plan lens stays unverified — pin all five --section flags on that command.
+
+DEFER severity=MED — task-375 plan A.4 "rule-lists.mjs lens-input takes --context, refuses without it, and counts the selected sections in the room" — src/tests/backlog/backlog-lane.logic.test.ts:275 "expect(e).toContain('plan: --material-from');" — --material-from and the separate --material form are pinned as new lens-input options that no pasted clause or operator ruling names — ground the option in the plan text or drop it and its assertion.
+
+DEFER severity=LOW — task-375 AC #14 "refused, one error per missing item (the first names the missing evidence folder or GROUNDER-PLAN.md)" — src/tests/backlog/check-lane-close.logic.test.ts:889 "expect(r.errors[0]).toMatch(/no plan evidence folder docs\/reports\/reviews\/task-7\//);" — only the first error is pinned (and the lane test only asserts lines.length > 1), so a gate returning one error for eleven missing items still passes — assert the exact per-item error count (folder, each missing list, GROUNDER-PLAN.md).
+
+DEFER severity=LOW — task-375 AC #2 "Tests red first, then green through the real hooks" — pasted BL-GATE375 note "Red: red11.out (2 failed)" — red-first rests on a note naming an output file not present in this material, and the retro grounder already recorded "red.out and commit.out cited by the report are not in the repo" — attach the red output at a repo path on the task, or cite the commit that contains it.
+
+MET — RR-0342 "regression only required when code is changed" — src/tests/backlog/backlog-lane.logic.test.ts:410 "expect(nw.errors.join('\n')).not.toMatch(/Seat: regression/);" — regression seat is demanded only when the Files line names an existing path.
+
+MET — task-375 design B.1 "only those not already on the task, so a re-take after the undo adds none twice" — src/tests/backlog/backlog-lane.logic.test.ts:349 "expect([...t2.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length - 1);" — an already referenced compliance list is not added again.
+
+MET — task-375 plan B.3 "the close check refuses when one is missing" — src/tests/backlog/check-lane-close.logic.test.ts:812 "refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/);" — a missing report reference is refused with the exact add-ref command printed.
+
+MET — task-375 scope D "refuses a build or fix launch whose plan evidence ... are not on the board" — src/tests/backlog/backlog-lane.logic.test.ts:389 "expect(lines[0]).toMatch(/refused: plan gate: .*no plan evidence folder docs\/reports\/reviews\/task-\d+\//);" — a build launch with no plan evidence folder is refused with nothing taken.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 1
+
+---
+⏱  187842ms (187.8s)
+📊 Tokens — total: 65546, input: 30590, output: 34956, reasoning: 33918

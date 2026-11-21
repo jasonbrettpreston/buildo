@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:28:45.870Z file_sha256=6d53b7092b2c1377601e6c710793d603460f0df50c8a9588ec29d720a99cbe39 prompt_sha256=f0bd89bbb627a707262e135e356e2c10e007869f5830e3aa1f19b2e55b66e2a2
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-queue-137-p4.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none found in this chunk; the three test files re-pin only behaviour the pasted Rule 3 notes and PLAN-375-v4 name — NONE — cannot see a clause unmet by the test changes — no fix required
+
+DEFER severity=LOW — Spec 137 §4 Rule 3 dated note 2026-11-21 (task-375) "one plan compliance output per resolved list over the plan sections of the committed context, GROUNDER-PLAN.md of a separate grounder with a verdict per finding" — src/tests/backlog/backlog-lane.logic.test.ts:15 "the program in docs/reports/reviews/task-375/plant-evidence.mjs writes it for a fixture board with the real helpers" — cannot see that script in chunk 4, so the claim that the fixtures carry real stamped evidence (REVIEW headers, one stamped input per list, grounder verdict per finding, seat lines, Plan line) cannot be verified from this chunk — confirm plant-evidence.mjs is committed in the chunk that carries docs/reports/reviews/task-375/ and that it writes the named items
+
+MET — Spec 137 §4 Rule 3 dated note 2026-11-21 "the close check now also recomputes each lens output's prompt hash with the committed review context (docs/reports/reviews/<task>/context-rN.md)" — src/tests/backlog/backlog-brief-context.logic.test.ts:26, :164 — ctxOf and the new round test pin context-r1.md and context-r2.md, not the date name
+MET — Spec 137 §4 Rule 3 dated note 2026-11-21 "the take adds the compliance:<list id> references" — src/tests/backlog/backlog-lane.logic.test.ts:332 — B1 asserts one --add-ref 'compliance:<id> <file>' per resolved list and none re-added
+MET — Spec 137 §4 Rule 3 dated note 2026-11-21 "the round block on the task and the Plan hash line, which is the hash of the task as it is at launch" — src/tests/backlog/backlog-lane.logic.test.ts:373, :383 — D asserts "plan gate ok: <L> lists ... Plan sha256:<12>" and refusal on a one-word task edit with the new expected Plan line
+MET — Plan A.3 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — src/tests/backlog/backlog-lane.logic.test.ts:258-269 — A3 asserts every deepseek-review command carries --context context-r1.md and the five --section flags, and no "--context .claude/review-templates"
+MET — Plan A.1/A.2 "backlog-brief.mjs writes ## Implementation Plan and ## Implementation Notes ... context-rN.md" — src/tests/backlog/backlog-brief-context.logic.test.ts:166-174 — the new describe asserts both headings, their position after Acceptance criteria, and context-r2.md leaves r1 untouched
+MET — Plan D6 "backlog-brief.mjs prints the line that the plan is the task text at launch, checked before launch ... records deviations in Implementation Notes and still runs a plan-stage lens of its own" — src/tests/backlog/backlog-brief.logic.test.ts:68-72 — the four added expectations match the D6 wording
+MET — Operator filing "labelled means i need to know its a compliance document" (RR-0343) and Plan B.1 "Entry (field references, not documentation) ... only those not already on the task" — src/tests/backlog/backlog-lane.logic.test.ts:337-343 — B1 compares by the compliance:<list id> token and does not re-add an existing one
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+
+---
+⏱  100970ms (101.0s)
+📊 Tokens — total: 46029, input: 27052, output: 18977, reasoning: 18107

@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:04:19.725Z file_sha256=94be6752dfbe983b4a8f9c41dfdf025c7bd1a2d8975661f4aede14526482b7ac prompt_sha256=2a491342d8a97614e4f308e6d2d6da85755cc8890966310aa0974fd7645016e9
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-agents-s5-1to3-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card AC #6, A1 "A1 scripts/deepseek-review.js review <task-381 diff> --template .claude/review-templates/lens-compliance.md --context <that file> with the five --section flags and --dry-run: 0 hits of (no pasted context provided), at least 1 hit of yes to all, the five heading lines present, prompt under 120000 characters" — NONE, the pasted acceptance record says "A1: NOT RUN: scripts/deepseek-review.js needs the API key from the environment file even for --dry-run" — the A1 clause has no output on the task, so it is unmet — run A1 with the key and paste the four measurements before close.
+
+BUG severity=MED — card AC #9, A4 "choose the task on the day 375 launches: a LATER build task not recommended for drop" — NONE, the pasted record says "for task-101 (LATER, type record, not build) the command carries 6 compliance: entries" — the witness task is a record task, not the LATER build task the clause names, so the clause is unmet as witnessed — rerun check-tasks on a LATER build task not recommended for drop and paste its command and the after-run silence.
+
+DEFER severity=MED — card AC #11, A6 "A6 The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green" — src/tests/review-template.logic.test.ts:208 "const rt = require('../../scripts/lib/review-template');" — the new suite loads the module with a bare require in an ESM test file while sibling test files in this same change use createRequire(import.meta.url), so collection can throw and take the A6 tests down with it — load it with createRequire(import.meta.url) as src/tests/backlog/rule-lists.logic.test.ts:7 does.
+
+DEFER severity=LOW — card AC #8, A3 "lens-input --list surface-135 with a 60,000-character material: today exit 1 naming ## Register; after A6 exit 0 with parts" — NONE, the pasted record says "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the before half of A6 is unverified, so its red-first evidence is a claim only — run the old-head command or record why the before half is dropped.
+
+DEFER severity=LOW — plan B.1 "compliance:<list id> <file>, one per resolved list" — src/tests/backlog/rule-lists.logic.test.ts:781 "expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);" — for a file path containing a comma the test pins an entry of the id alone, a form no pasted clause or ruling names — record the comma rule in the B1 note, or keep the id plus file form.
+
+MET — A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js; extractSections moves there" — src/tests/review-template.logic.test.ts:210 — CONTEXT_SECTIONS is the five named headings, PLAN_SECTIONS is the plan cut, extractSections throws on a missing heading.
+
+MET — A.4 "rule-lists.mjs lens-input takes --context, refuses without it, and counts the selected sections in the room" — src/tests/backlog/rule-lists.logic.test.ts (A4 describe) — refuses without --context (exit 2), refuses a context missing Description, counts the context in the room, --material-from cuts the plan sections.
+
+MET — A.5 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file" — src/tests/backlog/check-lane-close.logic.test.ts (A4, A5, B2 describe) — no committed context is a refusal, a context edited after the review breaks the recomputed prompt_sha256, an earlier round file still binds.
+
+MET — B.2 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir; the close check refuses when one is missing" — src/tests/backlog/check-lane-close.logic.test.ts (B2 its) — missing REPORT.md refused with the exact add-ref command, TRIAGE.md required only when the lane dir holds it.
+
+MET — A.6 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — src/tests/backlog/rule-lists.logic.test.ts (A6 describe) — a table too big splits at rows, every row once, a row alone over the room is refused naming the section.
+
+MET — D11b "the security lens fires for admin and PII paths" — src/tests/backlog/rule-lists.logic.test.ts (D11b describe) — admin and PII paths add the security lens on plan and output, control adds none, stripe still fires it.
+
+MET — B.1 "check-tasks prints, for each open task whose compliance: entries differ from the resolved lists, the exact backlog task edit task-N --add-ref ... command" — src/tests/backlog/rule-lists.logic.test.ts (B1 describe) — command printed per missing list, only the rest for a partial task, --remove-ref for a stale entry, none for a matching task.
+
+MET — D, card AC #14 "dry-run before evidence: refused, one error per missing item (the first names the missing evidence folder or GROUNDER-PLAN.md)" — src/tests/backlog/check-lane-close.logic.test.ts (D describe) — no folder refused first, Grounder equal to Lane refused, seat and Plan line refusals with controls.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 2
+
+---
+⏱  134946ms (134.9s)
+📊 Tokens — total: 57189, input: 31431, output: 25758, reasoning: 24455

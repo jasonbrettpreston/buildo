@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:07:00.868Z file_sha256=8cd6b0460ef29bf32eb04bd6b2cc18de49c0c59387723a52456cd092fd68d02c prompt_sha256=09cf65781b1a503b9b5b0459bff69fc34e0cfacbafc92631d816715270b0ecd9
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-agents-s7-s11-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-375 AC #6 (A1) "A1 scripts/deepseek-review.js review <task-381 diff> --template .claude/review-templates/lens-compliance.md --context <that file> with the five --section flags and --dry-run: 0 hits of \"(no pasted context provided)\", at least 1 hit of \"yes to all\"" — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(r.stdout).toContain(`node scripts/deepseek-review.js review docs/reports/reviews/${task}/context-r1.md --template ...")" together with the pasted note "A1: NOT RUN: scripts/deepseek-review.js needs the API key from the environment file even for --dry-run, and the dotenv form was denied by the permission classifier for this run." — the clause is satisfied only by string pins in tests, no executed run on a real task exists, and a clause satisfied only by a test pin is UNMET — run the exact five-section command through an allowed invocation and paste the hit counts, or record the rule 10(b) reason and leave the task RUNNING.
+
+BUG severity=HIGH — pasted plan scope "build exactly that plan, do not re-plan" and "NOT IN SCOPE: ... re-using unchanged chunks; dropping lists; a second pasted file or context stamp; a label; milestone_docs handling (verifyResolved already refuses an absent key); the V2L15 early-return change; any new script." — src/tests/backlog/backlog-lane.logic.test.ts "run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID })" — the change adds a new executable script at a path that is on no Files line, parked in the folder the build note itself calls "(the one folder the Files check always allows)", so the file-scope check cannot see it — inline the planting into the test, or move the helper under src/tests/backlog/ and get the Files line extended with a grounder ruling the way rule-lists-table.logic.test.ts was.
+
+DEFER severity=MED — task-375 AC #8 (A3) "lens-input --list surface-135 with a 60,000-character material: today exit 1 naming \"## Register\"; after A6 exit 0 with parts" and 08_agents.md 11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed" — pasted note "A3 (lens-input CLI, 60,000-character material): surface-135 exit 0 3 parts, policy-124-s2-s5 exit 0 3 parts, bylaw-133 exit 0 3 parts; the 'today exit 1' half was not re-run on the old head (UNVERIFIED)." — the before-side of the split lock is unproven, so the split is only shown to pass, not to fail on the old refusal — run lens-input at the pre-change head for surface-135, policy-124-s2-s5 and bylaw-133 and paste the exit 1 naming "## Register".
+
+DEFER severity=LOW — task-375 AC #14 (A9) "dry-run before evidence: refused, one error per missing item (the first names the missing evidence folder or GROUNDER-PLAN.md)" — src/tests/backlog/backlog-lane.logic.test.ts "expect(lines.length).toBeGreaterThan(1);" — the one-error-per-missing-item clause has no lock, a single generic refusal line keeps this test green — assert the exact line count (evidence folder, one per resolved list, GROUNDER-PLAN.md) and that each list id appears in its own line.
+
+DEFER severity=LOW — pasted build note D6 "still runs at least one plan-stage lens of its own and rules its findings in its own GROUNDER.md" — src/tests/backlog/backlog-lane.logic.test.ts "expect(e).toContain('plan: --material-from');" — only a literal phrase is pinned, no test shows a plan-stage lens command carrying the Implementation Plan text (the five --section flags omit it), so the plan reaching a plan lens rests on wording — pin the actual lens-input plan command and assert its material holds the Implementation Plan text.
+
+MET — §11.9 TKT-1 dated note 2026-11-21 "one per review round and never overwritten" — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(fs.readFileSync(r1, 'utf8')).toBe(before);" and "context-r2.md" — r2 is written and r1 is proven unchanged, with the brief stdout naming r2.
+
+MET — §11.9 TKT-1 dated note 2026-11-21 "Every lens command passes it with --context and one --section per entry of CONTEXT_SECTIONS" — src/tests/backlog/backlog-lane.logic.test.ts "for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }" — plan, output and compliance commands each carry the committed context and the five named sections.
+
+MET — §11.9 TKT-1 dated note 2026-11-21 and the retro defect "the plan-lens --context value is the literal placeholder" — src/tests/backlog/backlog-lane.logic.test.ts "expect(e).not.toContain('<pasted-context file>');" and "expect(line).not.toMatch(/--context \.claude\/review-templates/);" — both the placeholder and the template-as-context shape are locked out.
+
+MET — task-375 AC #5 (A0) "the output holds the headings \"## Implementation Plan\" and \"## Implementation Notes\"" — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(ctx).toMatch(/^## Implementation Plan\n\(none\)/m);" with "expect(ctx.indexOf('## Implementation Plan')).toBeGreaterThan(ctx.indexOf('## Acceptance criteria'));" — both headings present with a no-plan control, ordered after the acceptance criteria.
+
+MET — task-375 AC #14 (A9) "after ... \"plan gate ok: <L> lists\" with L equal to the resolved-list count; then one word edited in the task: refused with the new expected Plan line" — src/tests/backlog/backlog-lane.logic.test.ts "expect(ok.stdout).toMatch(new RegExp(`plan gate ok: ${L} lists, \\d+ findings, Plan sha256:[0-9a-f]{12}`));" plus "expect(bad.stderr).toMatch(/is not the hash of the task as it is now/" — the pass line and the stale-hash refusal both have locks.
+
+MET — RR-0349 "Complaince on the plan and output" — src/tests/backlog/backlog-lane.logic.test.ts "expect(cmds.length).toBeGreaterThanOrEqual(3);" — plan, output and compliance lens commands are all required to pass the context.
+
+MET — pasted B1 "only those not already on the task, so a re-take after the undo adds none twice" — src/tests/backlog/backlog-lane.logic.test.ts "expect(t2).not.toContain(`'compliance:${lists[0]!.id} `);" — a second take omits the already referenced list.
+
+REJECT — task-375 C/D10b "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — accused of shipping the proof-slice DB test unrun — the Description rules "otherwise A, B and D ship and the task is not marked complete", the note records "A8: OPEN (no DB)" and the task is not moved to DONE.
+
+REJECT — §11.9 TKT-1 dated note 2026-11-21 CONTEXT_SECTIONS — accused of a section-order mismatch — the note names the five entries and does not fix their order, and the pinned flags are exactly Task, Description, Acceptance criteria, Decisions naming this task, Implementation Notes.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 3
+
+---
+⏱  118597ms (118.6s)
+📊 Tokens — total: 49109, input: 26662, output: 22447, reasoning: 20594

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T02:04:19.720Z file_sha256=1267213e749d1657337749262b3c681ed10aadf2ab3929acb231cdf0057a96de prompt_sha256=e7dc90a8df4df547d1084ffb07cad528a8b6c474fe127cf0a695fef1e352b57f
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-code-review-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — src/tests/review-template.logic.test.ts:206 "const rt = require('../../scripts/lib/review-template');" — a bare require is undefined in this repo's ESM test modules, which is why the same commit loads the same module through createRequire at src/tests/backlog/rule-lists.logic.test.ts:7, and rt is left untyped any so CONTEXT_SECTIONS and extractSections are unchecked — fix: replace it with createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) and type the result as { extractSections: (t: string, w: string[]) => string; CONTEXT_SECTIONS: string[]; PLAN_SECTIONS: string[] }.
+
+BUG severity=MED — src/tests/backlog/check-lane-close.logic.test.ts:888 "let finalText = o.editBody ? text0 : text0;" — both branches are the same and the declared callback (b: string) => string is never invoked, so planScenario({ editBody: (b) => b }) still changes the plan text through the hardcoded replace of "the plan text is long enough" with "the plan text is wrong enough", and the "control: unchanged passes" the test title promises never runs — fix: let finalText = o.editBody ? o.editBody(text0) : text0 and delete the hardcoded replace.
+
+DEFER severity=MED — src/tests/proof-slice.db.test.ts:28 "const seed = JSON.parse(readFileSync(join(process.cwd(), 'scripts/seeds/logic_variables.json'), 'utf8')) as Record<string, { default: number; min: number; max: number }>;" — the cast asserts the seed stores a numeric default while the DB column is text and timeoutMsFromVariable returns a number, so the later toBe(entry.default) comparison is unchecked and would fail on a text seed; process.cwd() also resolves the seed from wherever vitest was started rather than from ROOT — fix: read the entry as unknown, compare through timeoutMsFromVariable, and build the path from ROOT.
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts:863 "if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.finding ? body(true) : body(false);" — the body(true) branch is dead because the next line overwrites plan-code-review.txt whenever o.finding is set — rationale: a reader cannot tell which content the gate was given, simplify to body(false).
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts:848 "as { extractSections: (t: string, w: string[]) => string; PLAN_SECTIONS: string[] }).extractSections(ctxText, ['Description', 'Acceptance criteria', 'Implementation Plan'])" — PLAN_SECTIONS is declared in the cast and never used, the section list is hand-copied, so a change to the constant leaves this fixture silently disagreeing with the tool it feeds — fix: pass PLAN_SECTIONS.
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts:163 "if (!/^references:/m.test(tt)) tt = tt.replace(/\nmilestone:/," — when the task text already carries a references: block the o.refs the caller passed are silently dropped, and when there is no "\nmilestone:" line the replace is a no-op, so a scenario can close on references it never set — fix: throw when the insertion point is missing instead of a silent no-op.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts:647 "const lens = async (files: string) => {" — this shadows the module-level "function lens(f: ReturnType<typeof fixture>, list: string, material: string, max: number, name = 'o')" that the A6 tests in the same file call, so a reader or a later edit confuses the two — fix: rename the local helper to lensSet.
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts:977 "expect(t.errors.join('\n')).toMatch(/could not read|disk gone/);" — the assertion passes on any line containing the raw error text, so a leaked stack trace would still satisfy it while the test title claims "never a stack trace" — fix: also assert the joined errors do not match /\n\s+at /.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- review-template.logic.test.ts calls a bare require in an ESM module where the neighbouring test uses createRequire, and leaves the module untyped any.
+- planScenario's editBody callback is never invoked and "let finalText = o.editBody ? text0 : text0" has identical branches, so the edit test exercises a hardcoded change, not the caller's.
+- Dead/duplicated fixture data: the body(true) branch of plan-code-review.txt is overwritten immediately, and PLAN_SECTIONS is declared in the cast while a literal section list is passed.
+
+---
+⏱  122891ms (122.9s)
+📊 Tokens — total: 53167, input: 27820, output: 25347, reasoning: 24211

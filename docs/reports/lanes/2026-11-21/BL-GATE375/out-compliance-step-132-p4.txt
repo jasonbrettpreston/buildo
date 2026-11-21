@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:30:58.037Z file_sha256=e62b846250a750be2469a6b582e22ed8d4490d05aedc1e38856703a3631fdd73 prompt_sha256=b756fe8e42486e2123bb50324ca49aa823b7c81a5602c51e726e80d4a72496c4
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-step-132-p4.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — RR-0343 and lens-compliance.md:12/:37 "every operator ruling pasted in the context" — scripts/analysis/rule-lists.mjs:362 "export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = ... })" (with :31 "const NO_CONTEXT = '(no pasted context provided)';" and :347 the same default on lensPromptHash) — the refusal without a context exists only in the CLI at :552 "if (!ctxFile) die(2, ...)", so any library caller still renders and hashes the placeholder, the exact defect the ruling closes and the string AC #6 counts to 0 — make context a required argument of buildLensInputs (throw naming the caller) and keep the placeholder only where a legacy REPORT header hash must be recomputed.
+DEFER severity=LOW — plan item 7 "A row or paragraph that alone passes the room is still refused naming it" — scripts/analysis/rule-lists.mjs:311 "if (big) throw Object.assign(new Error(`list ${id}: section \"${label}\" is ${text.length} characters and has no deeper heading, table row or blank line to split at that fits (a piece of ${big.length} characters; ...`)" — the refusal names the section and the piece length only, so the operator cannot find the over-long row (the split discards line numbers) — include the row's first 60 characters or its original line offset in the message.
+REJECT — plan item 7 "joins the stamped parts and compares them with the whole list, whitespace aside" — splitFlat drops blank lines (:306 "else if (ln.trim() === '') { ... flush(); }" never pushes the line) so the parts do not reassemble byte-identically — the approved text already allows whitespace differences on the close recompute, so this is not a breach.
+REJECT — plan B.2 "the exact `backlog task edit task-N --add-ref ...` command" — check-tasks also prints --remove-ref entries (:550 "[...x.add.map(...), ...x.remove.map(...)]") — the Implementation Notes build note B1 names "the exact backlog task edit --add-ref / --remove-ref command for each", so the addition is ruled in.
+MET — plan A.2 "extractSections moves there from deepseek-review.js:106-121" — scripts/deepseek-review.js:29 "const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');" — the local copy is deleted and the shared one imported by every caller.
+MET — plan A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — scripts/analysis/rule-lists.mjs:552 "if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> ...')" — refusal present, exit 2, before any file is written.
+MET — plan A.4 "counts the selected sections in the room on both paths" — scripts/analysis/rule-lists.mjs:365 "const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context, ..." — the context text enters fixed, finalLen, promptOf and the final prompt, so the --template-only path and the list path are both measured.
+MET — D11b "the security regex at rule-lists.mjs:128 misses admin and PII" — scripts/analysis/rule-lists.mjs:163 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — both terms added, so the security lens fires.
+MET — plan B.1 "`compliance:<list id> <file>`, one per resolved list" — scripts/analysis/rule-lists.mjs:452 "complianceRefs(lists, refs)" with "add: lists.filter((l) => !have.has(l.id)).map((l) => (String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`))" — the label form, the comma rule and the add-only-if-missing rule are implemented.
+MET — plan B.2 and AC #9 "check-tasks ... prints the exact backlog task edit --add-ref command ...; exit 0" — scripts/analysis/rule-lists.mjs:550 "backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}" — one command per stale resolving task, shell-quoted, and the refs block does not call die.
+```
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  85464ms (85.5s)
+📊 Tokens — total: 42381, input: 26669, output: 15712, reasoning: 14637

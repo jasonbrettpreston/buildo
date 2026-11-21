@@ -1,0 +1,48 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:13:13.993Z file_sha256=0225bd550f123ca94bcdbbe934e8134fffb87d2912d5ec8eecb821d02c468587 prompt_sha256=5bfe7b43a63e0b590720ec88eecb5ef99d4728ba6c5a4923428a0ffcb34c8791
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-v2-122-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #1 "Each defect is confirmed on the head before fixing, with file:line" — NONE, task acceptance third run: "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the A6 defect (lens-input refusing a block with no deeper heading) is fixed in the diff with no reproduction on the head, so AC #1 and the first half of AC #8 are unmet — check out a pre-A6 head, run lens-input --list surface-135 with a 60,000-character material, paste the exit 1 and the "## Register" message on the task.
+
+BUG severity=HIGH — 08_agents.md 2026-11-21 note "(N = the context-r*.md files already there + 1), written by `scripts/analysis/backlog-brief.mjs`" — scripts/analysis/backlog-lane.mjs "const ctxRel = `docs/reports/reviews/${taskId}/context-r1.md`; // the brief writes round 1 at launch (context-rN.md, backlog-brief.mjs)" — the lane's review line and every lens command pin round 1 for all rounds, while the brief writes round N, so a relaunch or a fix round feeds the reviewer round-1 text and the close check (which accepts any context-rN.md) cannot see it — have backlog-lane compute the round the way the brief does (existing context-r*.md + 1) or read the path the brief wrote, and re-pin the lane test.
+
+BUG severity=HIGH — AC #6 "scripts/deepseek-review.js review <task-381 diff> --template .claude/review-templates/lens-compliance.md --context <that file> with the five --section flags and --dry-run: 0 hits of (no pasted context provided), at least 1 hit of yes to all" — NONE, task acceptance third run: "A1: NOT RUN: scripts/deepseek-review.js needs the API key from the environment file even for --dry-run" — the one measurement proving the reviewer no longer receives the placeholder is absent, and the build note's own rule is "Do not mark the task complete until 1 to 5 are on the task" — run A1 with the env file and paste its dry-run prompt and hit counts on the task before this closes.
+
+DEFER severity=MED — AC #9 "choose the task on the day 375 launches: a LATER build task not recommended for drop" — NONE, task acceptance third run: "for task-101 (LATER, type record, not build) the command carries 6 compliance: entries" — the check-tasks demonstration ran on a record task, not the build task the clause names — repeat it on a LATER build task and paste its command and the resolve count for its Files line.
+
+DEFER severity=MED — Description A "the reviewer's context is the task, sized (Implementation Plan and Implementation Notes in the context" — scripts/analysis/backlog-brief.mjs "?? '').trim().replace(/^#{1,6} /gm, '#### ') || '(none)';" — when the SECTION markers are absent the field renders "(none)" and AC #5's heading count still passes, so the headings can be present with no plan or notes text reaching the reviewer, and no guard asserts the text is non-empty — assert a non-empty Plan and Notes block for a task whose fields are set, and fail the brief when they are empty.
+
+DEFER severity=MED — 137_mcqueue.md 2026-11-21 note "runs `planGateErrors` on the board HEAD" — scripts/analysis/backlog-lane.mjs "taskText: fs.readFileSync(t.file, 'utf8')" — the gate hashes the working-tree task file while the evidence and task facts are read from HEAD, and the dirty-board refusal exempts backlog/, so the note's "board HEAD" is not what is hashed — hash the HEAD copy of the task file, or reword the note to the task file as it is at launch.
+
+DEFER severity=LOW — AC #7 "rule-lists.mjs lens-input for each of the 15 resolved lists of task-381 with that context: paste each exit code, selected-section count and call count" — NONE, task acceptance third run: "A2 (buildLensInputs with the 5 sections, material 17,753 characters)" — the counts come from the library function, not from the CLI the clause names, and no exit code is recorded — run the CLI for the 15 lists and paste exit codes beside the counts.
+
+DEFER severity=LOW — AC #10 "The planted refusals of section 8, each with its control." — NONE, task acceptance third run: "A5: the planted refusals with controls are the tests in check-lane-close.logic.test.ts, backlog-lane.logic.test.ts, rule-lists.logic.test.ts, backlog-brief-context.logic.test.ts" — the clause is answered by test file names, not by the five planted refusals with their controls (placeholder context, no Description, context edited after review, stale compliance entries, missing report reference) — paste each refusal and its control, or name the test case that plants each one.
+
+MET — Description "docs/specs/00-architecture/08_agents.md takes ONE dated note carrying two points (context-rN.md; the plan-only seats)" — docs/specs/00-architecture/08_agents.md "+   Dated note 2026-11-21 (M-246, prior text kept; task-375 FIX.TOOLS" — one dated note, point (1) context-rN.md and point (2) the plan-only seats, prior text kept, no other 08_agents edit in the chunk.
+
+MET — B.1 "`compliance:<list id> <file>`, one per resolved list" — scripts/analysis/rule-lists.mjs "export function complianceRefs(lists, refs)" — add/remove compared by the id token, a comma path entered as the id alone, and the take adds only the missing entries.
+
+MET — B.2 "check-tasks (existing command) prints ... the exact `backlog task edit task-N --add-ref ...` command" — scripts/analysis/rule-lists.mjs "backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}" — printed per stale open task with the exit unchanged.
+
+MET — D.5 "before the take" — scripts/analysis/backlog-lane.mjs "if (gate.errors.length) { for (const e of gate.errors) process.stderr.write(`backlog-lane: refused: plan gate: ${e}\n`); process.exit(3); }" — runs after the dirty-board refusal and before step('take'), with no flag to disable and the same path under --dry-run.
+
+MET — A.3 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — scripts/analysis/backlog-lane.mjs "const ctxArgs = `--context ${ctx} ${sectionFlags}`;" — plan, output and non-list lens commands carry it, and the templates are passed as --template.
+
+MET — A.7 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — scripts/analysis/rule-lists.mjs "if (subs.length === 0) return splitFlat(text, max, label, id);" — heading kept with its first row, an oversized row or paragraph still refused naming it.
+
+MET — C "D11b the security regex at rule-lists.mjs:128 misses admin and PII" — scripts/analysis/rule-lists.mjs "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — admin and pii added to the security lens trigger.
+
+MET — A.5 "one context file per review round, context-rN.md, N = the context-r*.md files already there + 1" — scripts/analysis/backlog-brief.mjs "const ctxRel = `docs/reports/reviews/${taskId}/context-r${round}.md`;" — the brief writes round N and names it in its own review lines.
+
+REJECT — 6.6.1 (a) "100% mechanical ... generated from code/runtime or witnessed from executed SQL, never hand-authored" — the change is accused of hand-authoring a registry or ledger row — the diff touches review tooling, two dated spec notes and proof-slice only; no step registry, descriptor, DATA or CONSUMERS row appears in any of the eight files, so 6.6.1 is not engaged.
+
+REJECT — 6.6.1 (c) "no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed" — the change is accused of describing unverified registry or ledger rows as accurate — the two notes describe the close check and the launch gate and state what the launch gate cannot prove, and no registry or ledger row is described as accurate.
+
+REJECT — Description C "proof-slice.mjs reads its timeout and buffer from registered tooling_ variables" — shipping TIMEOUT_VARIABLE unregistered with DEFAULT_TIMEOUT_MS still in use — the same Description permits A, B and D to ship without the DB GO provided the task is not marked complete, and the notes state the task is not complete (status RUNNING).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 34   Unmet: 8
+
+---
+⏱  114417ms (114.4s)
+📊 Tokens — total: 53104, input: 32577, output: 20527, reasoning: 18409

@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:28:05.799Z file_sha256=e2d073a13f35d8f36490306439b4370331dade40789f8bd2c2aa06c3d51e66b7 prompt_sha256=9d64bbf8f85d342281a00a8f7a196cfeeb7ba5dddf92c8906b01e7d84095a384
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-queue-137-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 / plan A.1 "A1 scripts/deepseek-review.js review <task-381 diff> --template .claude/review-templates/lens-compliance.md --context <that file> with the five --section flags and --dry-run: 0 hits of "(no pasted context provided)", at least 1 hit of "yes to all", the five heading lines present, prompt under 120000 characters." — scripts/deepseek-review.js:29 "const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');" — the clause is unmet on the record, which says "A1: NOT RUN", so the moved extractSections and the tool's --context/--section path have never been shown to put the task text and a ruling into the prompt — run A1 with the key available and paste the transcript on task-375 before close.
+
+DEFER severity=MED — plan D6 "the lane does not edit Description, Acceptance or Plan, records deviations in Implementation Notes" — NONE — the record says "the Files line is extended by ONE path, src/tests/backlog/rule-lists-table.logic.test.ts", an edit of the Description after launch, pending the separate grounder's ruling on the deviation — bounded: no list is added or removed (14 before and 14 after) and the deviation is recorded in the notes.
+
+DEFER severity=LOW — plan A.6 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — scripts/analysis/rule-lists.mjs "if (!(head && pieces.length === 0 && cur.length === 1)) flush(); cur.push(ln); flush();" — when the block heading and its first table row together pass max while the row alone fits, the list is refused although a cut exists at the row boundary — put the heading in its own piece in that case.
+
+DEFER severity=LOW — plan A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — scripts/analysis/rule-lists.mjs "export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND })" — the exported chunker still defaults to the placeholder, so a caller other than the CLI builds an input whose prompt carries "(no pasted context provided)" — make every call site pass the context or drop the default once the call sites are converted.
+
+DEFER severity=LOW — Spec 137 §4 Rule 3 note 2026-11-21 "`rule-lists.mjs check-tasks` prints the command for the open tasks" — scripts/analysis/rule-lists.mjs "if (miss.length) out.bad.push(`${t.id}: resolves but ${miss.join('; ')}`); else {" — an open task that resolves but fails verifyResolved is listed in bad and gets no compliance command, so check-tasks exits 1 with the reference fix unprinted — collect the refs before the verifyResolved branch.
+
+DEFER severity=LOW — task AC #1 "Each defect is confirmed on the head before fixing, with file:line" and AC #8 "lens-input --list surface-135 with a 60,000-character material: today exit 1 naming "## Register"" — NONE — the record says "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)", so the before-half of the A6 defect is unproven — run the old-head command once and paste it beside the after-half.
+
+MET — Spec 137 §4 Rule 3 note 2026-11-21 "the take adds the compliance:<list id> references and `rule-lists.mjs check-tasks` prints the command for the open tasks" — scripts/analysis/rule-lists.mjs "console.log(`  backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}`)" — the exact command is printed for each out-of-step open task and the exit stays 0.
+
+MET — plan B.1 "`compliance:<list id> <file>`, one per resolved list ... only those not already on the task" — scripts/analysis/rule-lists.mjs "add: lists.filter((l) => !have.has(l.id)).map((l) => (String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`))" — one entry per resolved list, compared by the id token, none added twice.
+
+MET — plan B.2 "verifyResolved first" — scripts/analysis/rule-lists.mjs "const c = complianceRefs(r.lists, asList(t.fm.references));" sits only in the `else` of the `miss.length` test, so refs are reported only for tasks that resolve and verify.
+
+MET — plan A.2 "extractSections moves there from deepseek-review.js:106-121" — scripts/deepseek-review.js:29 plus the deleted local function — the one implementation is now required from './lib/review-template' by the review tool.
+
+MET — plan D11b "the security lens fires for admin and PII paths" — scripts/analysis/rule-lists.mjs "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — admin and PII now turn the security lens on for code tasks.
+
+MET — plan A.4 "counts the selected sections in the room on both paths" — scripts/analysis/rule-lists.mjs "const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context, dataContext: '(no live-DB context provided)' }).length;" and the three prompt-length checks that also pass "specs: context" — the context text is counted with and without a list.
+
+MET — plan A.6 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — scripts/analysis/rule-lists.mjs "if (subs.length === 0) return splitFlat(text, max, label, id);" — the old throw is replaced by the flat cut at rows and paragraphs.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 3
+
+---
+⏱  174591ms (174.6s)
+📊 Tokens — total: 59934, input: 27125, output: 32809, reasoning: 31388

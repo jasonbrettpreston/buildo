@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:26:24.144Z file_sha256=be144fcb6275428331e83476f24e0c5d2250dcccc70c06d63fccca4f13e20fe0 prompt_sha256=b50796da70d29de9a3819033231e17817f638778a4f2b221973774c9e0ddaeda
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-plan-protocol-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card "#2 Tests red first, then green through the real hooks" — `src/tests/backlog/backlog-brief-context.logic.test.ts` "expect(rt.extractSections(ctx, ['Implementation Plan'])).toContain('PLAN-LINE-TWO');" vs `scripts/lib/review-template.js` "if (m && m[1].length <= level) { end = i; break; }" — the pasted extractSections ends the plan section at the level-1 "# Inner heading", so this assertion passes only if backlog-brief demotes or escapes that heading (backlog-brief.mjs is not in this chunk); if the plan is written verbatim the lane test is red and AC #2 is unmet — point extractSections at the demotion (or record it in a build note) so the proof is red-first then green as claimed.
+
+DEFER severity=LOW — card "NOT IN SCOPE: ... any new script." — `src/tests/backlog/backlog-lane.logic.test.ts` "path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs')" — the lane tests add a new .mjs program under docs/reports/reviews/task-375/ that is not on the Files line — it is a test fixture under the folder the Files check always allows and is named in the D5 build note, so low risk.
+
+MET — plan-protocol dated note "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce" — `scripts/hooks/check-lane-close.mjs` "const e = listProof({ id, l, phases, files, textOf, table: i.table, ... })" — the close check still resolves each list and proves its compliance output.
+
+MET — card A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — `scripts/lib/review-template.js` "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" — exact heading texts, single constant, extractSections co-located.
+
+MET — card A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes" — `scripts/hooks/check-lane-close.mjs` "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(...); continue; }" — placeholder refused, and a missing heading throws into a problem line via extractSections.
+
+MET — v4 seats / RR-0342 / RR-0347 / RR-0348 "these only run on the plan" — `scripts/hooks/check-lane-close.mjs` "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };" — integration and reality-check always, regression conditional, checked only in planGateErrors (plan, not output).
+
+MET — card D3 "the first 12 hex of the sha256 of the title plus the whole body after the front matter, whitespace squashed" — `scripts/hooks/check-lane-close.mjs` "return sha(squash(`${fm.title ?? ''} ${body}`)).slice(0, 12);" — matches the stated Plan hash definition.
+
+MET — v4 "A.5 both-phases close rule -> deleted (plan evidence moves to the launch gate)" — `scripts/hooks/check-lane-close.mjs` "const phases = build ? ['out'] : ['plan', 'out'];" — a build or fix close requires only the output compliance phase; plan evidence lives in planGateErrors.
+
+MET — card D5 "the Plan line ... copies the Plan line last" — `scripts/hooks/check-lane-close.mjs` "const pl = [...g.matchAll(/^\s*Plan:\s*(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm)].pop();" — last Plan line compared to planHash of the current task, with the exact edit command printed for references.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  181099ms (181.1s)
+📊 Tokens — total: 66361, input: 32397, output: 33964, reasoning: 33038

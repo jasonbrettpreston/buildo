@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:18:10.148Z file_sha256=90c8d9754fafb456006b4061475b525fecc9ca12b8b9e26b54531a4954e75556 prompt_sha256=79897318099ea6f0f78f6aff423285dd57e36c89b9aacc7e3b100b60f3cabc85
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-eng-all-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — §12.12 "Pure functions with arithmetic invariants ... MUST have at least one `fast-check` property test asserting the invariant" — src/tests/backlog/check-lane-close.logic.test.ts:901 "expect(r.line).toMatch(/^Plan: task-7 sha256:[0-9a-f]{12}$/);" — the change adds normalizer/set pure functions (planHash, complianceRefs, extractSections) with example-based cases only and no src/tests/property/*.property.test.ts, so the buildLeadKey-style invariant is unproven for all inputs — add forAll(t => planHash(squash(t)) === planHash(t)) and forAll(refs => complianceRefs(lists, refs).add is empty after applying, per the planHash and complianceRefs exports.
+
+DEFER severity=MED — task D "backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board" — src/tests/backlog/check-lane-close.logic.test.ts:853 "if (type === 'build') {" — the per-list compliance plan outputs are generated for build only, so the fix control at :986 ("const fx = await planScenario({ type: 'fix' });") passes with one plan lens and no list evidence, a narrower fix gate than the card's "build or fix" words — either plant the resolved-list plan outputs in a fix fixture and require them, or record the narrower fix reading on the task.
+
+DEFER severity=LOW — AC #14 "dry-run before evidence: refused, one error per missing item" — src/tests/backlog/backlog-lane.logic.test.ts:362 "expect(lines.length).toBeGreaterThan(1);" — the assertion accepts any count above one, so a regression that collapses eleven items into two lines still passes — assert the exact count: one evidence-folder line, one line per resolved list, one GROUNDER-PLAN.md line.
+
+DEFER severity=LOW — plan "NOT IN SCOPE: ... any new script" — src/tests/backlog/backlog-lane.logic.test.ts:17 "path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs')" — the lane tests depend on a new Node program that writes and commits board evidence and it carries no deviation note like the rule-lists-table path does — record it as a deviation on the task or inline the evidence writer into the test helper.
+
+DEFER severity=LOW — AC #14 "copied the printed Plan line last" — src/tests/backlog/check-lane-close.logic.test.ts:984 "gate(await planScenario({ noPlanLine: true }), /no last \"Plan: <task id> sha256/);" — only the missing-Plan-line case is planted; a Plan line present but not last is untested despite "last" being the clause's word — add a fixture that pushes the Plan line before the Seat lines and assert the refusal.
+
+MET — plan A.3 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — src/tests/backlog/backlog-brief.logic.test.ts:58 — the re-pinned regex demands --template, --context docs/reports/reviews/<task>/context-r1.md and --section "Task".
+
+MET — plan A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes" — src/tests/backlog/check-lane-close.logic.test.ts:798-814 — planted refusals with controls for the placeholder, a missing Description, a context edited after the review and the notes-heading tolerance.
+
+MET — B.3 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir" — src/tests/backlog/check-lane-close.logic.test.ts:815-818 — a missing REPORT.md is refused and the exact --add-ref command is printed.
+
+MET — RR-0342 "regression only required when code is changed" — src/tests/backlog/check-lane-close.logic.test.ts:965-970 — the tracked-path fixture drops the regression seat and the new-path fixture passes without it.
+
+REJECT — §12.1, §12.2, §12.3, §12.4, §12.5, §12.6, §12.7, §12.9 — accused of not applying Biome, TanStack Query, RHF/Zod, Zustand, Shadcn, virtualizer, Sonner and motion — the four files are backlog logic tests under src/tests/backlog/ and none sits under src/features/leads/, so those clauses do not bind this material.
+
+REJECT — §12.10 "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a *.db.test.ts" — accused of shipping a migration without a real-DB test — no migration file is in this chunk; the D10b work is recorded as OPEN with the DB GO withheld, which is what AC #13 requires.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+
+---
+⏱  115356ms (115.4s)
+📊 Tokens — total: 51761, input: 29909, output: 21852, reasoning: 20687

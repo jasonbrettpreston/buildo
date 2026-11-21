@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:14:12.810Z file_sha256=b6c1ffdc2ad51b04be7be5217b43a2e6a930f26f84f49716efaf25e20026198e prompt_sha256=4bccfbabe3803717c7e13b6826b9cd88e1e1ed6c394e37cdb71aa253e69570a8
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-v3-122-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan A.6 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file." — scripts/analysis/backlog-lane.mjs "const ctxRel = `docs/reports/reviews/${taskId}/context-r1.md`; // the brief writes round 1 at launch (context-rN.md, backlog-brief.mjs)" — the lane hardcodes round 1 for every lens, lens-input and `--material-from`, while the brief it spawns writes "N = the context-r*.md files already there + 1", so on the release-and-relaunch this task prescribes (BL-FIXTOOLS to BL-GATE375, a review dir that already holds context files) and on every later fix round the lane names a stale or absent round-1 file — fix: compute the round in backlog-lane the same way backlog-brief does (count context-r*.md under docs/reports/reviews/<task>/) and use that path in ctxRel.
+
+DEFER severity=MED — RR-0346 "agreed" and the v4 text "the lane fixes, writes its own outcome lines and closes, a separate grounder verifies each fix, the orchestrator only routes (:1605)" — scripts/analysis/backlog-brief.mjs "the lane still runs at least one plan-stage lens of its own and rules its findings in its own GROUNDER.md" — the added Take-order line tells the lane to rule its own findings, contradicting the same brief's "You do not rule on your own findings: ... the orchestrator launches a grounder that is not you, who writes GROUNDER.md there" and the operator's separate-grounder ruling — fix: say the lane's findings are ruled by a separate grounder in GROUNDER.md, not by the lane.
+
+DEFER severity=LOW — AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — scripts/analysis/proof-slice.mjs "const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it" — the shipped runner reads no variable, `timeoutMsFromVariable` has no caller in the material, and the recorded run has the DB test written and NOT RUN, so nothing here shows the red-then-green the acceptance names — fix: keep the export out of the shipped module until the variable is registered, or wire the runner to read it with the refusal path live.
+
+DEFER severity=LOW — plan A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — scripts/analysis/rule-lists.mjs "export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = ... })" — the refusal lives only in the CLI, so the exported builder and `lensPromptHash` still default to "(no pasted context provided)" and a caller that omits the context gets a placeholder prompt the hash recompute will bless — fix: make the parameter required in `buildLensInputs` and `lensPromptHash`, and pass the placeholder explicitly only where a legacy output is being re-checked.
+
+MET — RR-0343 "labelled means i need to know its a compliance document" — scripts/analysis/rule-lists.mjs "add: lists.filter((l) => !have.has(l.id)).map((l) => (String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`))" — every resolved list is written as a `compliance:<id>` reference, added at take only when missing.
+
+MET — plan C "D11 the security lens fires for admin and PII paths" — scripts/analysis/rule-lists.mjs "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — the two terms are added to the lens-set trigger.
+
+MET — plan A.3 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — scripts/analysis/backlog-lane.mjs "const ctxArgs = `--context ${ctx} ${sectionFlags}`;" and "review ${ctxRel} --template .claude/review-templates/plan-review-deepseek.md --context ${ctxRel} ${sectionFlags}" — the template is passed as `--template`, no longer as `--context`, on the plan, output and compliance lines.
+
+MET — plan A.2 "the exact heading texts: 'Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'" and "## Implementation Plan" — scripts/analysis/backlog-brief.mjs "`## Implementation Plan`, fieldOf('PLAN'), ''," — the two new sections are written after the acceptance criteria and the context file carries all five selected headings.
+
+MET — plan A.4 "--material-from <context-rN.md> cuts the plan phase material from it (and is its own context)" — scripts/analysis/rule-lists.mjs "const matFrom = str('material-from', ''); const ctxFile = str('context', matFrom);" and "if (!ctxFile) die(2, ...)" — the plan material is the PLAN_SECTIONS cut and the CLI refuses without a context.
+
+MET — plan B.1 "the take adds only the missing compliance: references in the same edit" — scripts/analysis/backlog-lane.mjs "const addRefs = complianceRefs(resolved.lists, asList(t.fm.references)).add.flatMap((e) => ['--add-ref', e]);" — only absent entries are appended to the existing take edit.
+
+REJECT — 122 §5.5 items 1 to 6, dispatch table, ctx seams, ctx.config — that the new code has no per-check dispatch table, no `ctx.report`/`ctx.log` seams and no `ctx.config` reads — §5.5 is "Enforced by `scripts/ast-grep-rules/compute-shape.yml` over `scripts/lib/compute/**`" and this diff touches no compute module, so the clause does not reach these files.
+
+REJECT — 122 §5.5 "a hard-coded INTERVAL/date/numeric bound or UPPER_SNAKE constant is Rule 3 (tunables externalized) violated from inside compute" — that `DEFAULT_TIMEOUT_MS = 120000` and `TIMEOUT_VARIABLE` are an unregistered literal deciding a run — that rule set applies to `scripts/lib/compute/**` modules scanned by compute-literals.mjs, not to `scripts/analysis/proof-slice.mjs`; the timeout item here is the task's own D10b, deferred under the pasted Description C pending the DB GO.
+
+REJECT — RR-0348 "these only run on the plan" — that the docs note adds Integration, Reality-Check and Regression to the plan without operator authority — the same ruling and RR-0342/:1620-:1630 are the authority quoted in the note ("Integration and Reality-Check on every build or fix launch, Regression when the Files line names a path tracked at the board head"), and no seat is required on the output.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 2
+
+---
+⏱  128368ms (128.4s)
+📊 Tokens — total: 54551, input: 31101, output: 23450, reasoning: 21830

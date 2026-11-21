@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-21T02:33:05.292Z file_sha256=fb39431392a6f7a23758ce28d0f2e487e62292f03d31101fa10fccddebaac311 prompt_sha256=d6debb893602841abf7a8f5e625c8d811e9c79e7993098d5c32cb7f65be1403c
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/analysis/backlog-lane.mjs "const ctxRel = `docs/reports/reviews/${taskId}/context-r1.md`; // the brief writes round 1 at launch (context-rN.md, backlog-brief.mjs)" against scripts/analysis/backlog-brief.mjs "const round = (fs.existsSync(ctxDir) ? fs.readdirSync(ctxDir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1" — on a relaunch (the release and relaunch this task's own notes cover) or any second brief run the brief writes context-r2.md while every lens, lens-input and review line in the lane brief still types context-r1.md, which exists, so the reviewer is fed the previous launch's task text and no refusal fires — have backlog-brief print the path it wrote and have backlog-lane read that path, or compute the same round in one shared function.
+
+DEFER severity=MED — scripts/analysis/backlog-brief.mjs "const round = (fs.existsSync(ctxDir) ? fs.readdirSync(ctxDir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1" — the number is a readdir count, so two brief runs for one task pick the same context-rN.md and the later write replaces it against the stated "never overwritten", which either breaks the close prompt-hash recompute or binds outputs to text that changed; open the file exclusively (wx) and step to N+1 on EEXIST; the write call itself is not in this chunk, cannot see it.
+
+DEFER severity=MED — scripts/analysis/backlog-brief.mjs "const fieldOf = (name) => (new RegExp(`<!-- SECTION:${name}:BEGIN -->\\n?([\\s\\S]*?)\\n?<!-- SECTION:${name}:END -->`).exec(t.body)?.[1] ?? '').trim().replace(/^#{1,6} /gm, '#### ') || '(none)'" — a notes block whose BEGIN marker has no matching END (a truncated edit) reads as '(none)' while the '## Implementation Notes' heading is still emitted, so the close check's missing-notes refusal cannot fire and the reviewer silently gets no rulings — refuse the brief with a non-zero exit naming the field when a BEGIN marker has no END.
+
+DEFER severity=MED — scripts/deepseek-review.js "-    const start = lines.findIndex((l) => /^#{1,6}\\s/.test(l) && l.includes(want));" (moved unchanged into scripts/lib/review-template.js) — the section cut takes the first heading whose text merely contains the wanted name, and only the Plan and Notes fields have their headings demoted, so a Description carrying a line like "### Implementation Notes" is cut in place of the real section, and because the close check cuts the same wrong text the prompt hash binds and nothing refuses — match the exact heading text at line start, or demote headings in every context section backlog-brief writes.
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs "const have = new Map((refs ?? []).filter((r) => idOf(r)).map((r) => [idOf(r), String(r).trim()]));" with "add: lists.filter((l) => !have.has(l.id))" — the comparison is by list id only, so when a resolved list's file path changes the task keeps compliance:<id> <old file>, add and remove are both empty, check-tasks prints nothing, and the label points at a wrong or deleted file with no detection — compare the whole entry (id and file token) and print a remove plus add pair when they differ.
+
+REJECT — scripts/analysis/backlog-lane.mjs "const addRefs = complianceRefs(resolved.lists, asList(t.fm.references)).add.flatMap((e) => ['--add-ref', e]);" — looks like a re-take after the undo adds the same references a second time — handled: the add list is computed against the references the task already carries at that moment, keyed on the compliance:<list id> token, so a second take adds none.
+
+REJECT — scripts/analysis/backlog-lane.mjs "if (gate.errors.length) { for (const e of gate.errors) process.stderr.write(`backlog-lane: refused: plan gate: ${e}\n`); process.exit(3); }" — looks like a hard block that can wedge every launch — handled: it runs before the take and writes nothing, so a refusal leaves the board untouched, --dry-run runs the same gate for diagnosis, and the rollback is the single-commit revert named in the comment.
+
+REJECT — scripts/analysis/proof-slice.mjs "if (!Number.isInteger(n) || n <= 0) throw new Error(`${TIMEOUT_VARIABLE} must be a positive integer number of milliseconds" — looks like an unset or empty setting kills a proof run — handled: it fails closed naming the variable rather than defaulting or running unbounded, and it is not wired to the run yet, so DEFAULT_TIMEOUT_MS keeps today's behaviour until registration.
+
+VERDICT: FAIL on error-path safety
+Paths walked: relaunch and second brief run (context-rN naming), concurrent or repeated brief write, malformed Implementation Notes field, section cut by substring, compliance reference drift on a changed list file, re-take double add, launch gate refusal, unset timeout variable   Unguarded: 5
+
+---
+⏱  83645ms (83.6s)
+📊 Tokens — total: 43311, input: 29606, output: 13705, reasoning: 12497

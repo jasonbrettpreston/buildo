@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:30:02.945Z file_sha256=4ac08816a9dc82a02048b2ec9d795d0f397513cc067240d305f5b7782207ca89 prompt_sha256=a8233df896479b0261752a5d801aa0970e3378516e70a436f622e3a61661c453
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-step-132-p10.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-375 C/D10 "D10 (proof-slice.mjs reads its timeout and buffer from registered tooling_ variables; the DB read needs the operator's DB GO after the MCINC-7 rehearsal, otherwise A, B and D ship and the task is not marked complete)" — src/tests/proof-slice.logic.test.ts:285 "describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)'" with pasted note "DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable" — the clause "no default" rests on the test title only, the new test exercises the pure converter timeoutMsFromVariable and nothing asserts the runner reads TIMEOUT_VARIABLE, unlike the D10 buffer test at :280 which asserts the source "expect(src).not.toMatch(/maxBuffer:\s*\d/)" — add the same source assertion for TIMEOUT_VARIABLE once registration lands, or retitle the block to what it checks now.
+
+DEFER severity=MED — AC #2 "Tests red first, then green through the real hooks" — src/tests/backlog/rule-lists.logic.test.ts:648 "describe('D11b (task-375): the security lens fires for admin and PII paths...'" and src/tests/proof-slice.logic.test.ts:285 carry no red evidence in the pasted material, and the only red record pasted is the earlier run's, "DEFECTS: (1) red.out and commit.out cited by the report are not in the repo; the recorded red is for the wrong reason" — red-first for the D11b, A4, A6, B1 and D10b logic tests cannot be seen — paste the red run output with these tests, not only the green commit.
+
+DEFER severity=LOW — plan B.1 "`compliance:<list id> <file>`, one per resolved list" — src/tests/backlog/rule-lists.logic.test.ts: "expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);" — a comma path is pinned as a bare id entry, a form no pasted clause or operator ruling names, so the reference no longer shows which file the compliance doc is — state that form in the task note (or on the plan) or escape the comma so the full form holds.
+
+DEFER severity=LOW — plan A.4 "counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)" — src/tests/backlog/rule-lists.logic.test.ts: "script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'first' ...)" — only the with-list path is exercised in this chunk, the no-list path cannot be seen here — add a no-list case counting the context in the room.
+
+REJECT — AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — that committing src/tests/proof-slice.db.test.ts is a red-by-construction test for a variable the pasted note says is "NOT registered" — not a real issue: x-tooling.1 sends Postgres tests to npm run test:db only and AC #13 keeps the task RUNNING until the operator's DB GO.
+
+MET — AC #12 (D11b) — src/tests/backlog/rule-lists.logic.test.ts:650 — asserts security in both plan and out for admin and PII paths with a negative control and a control that the existing words still fire it.
+MET — plan A.2 "CONTEXT_SECTIONS ... \"Task\", \"Description\", \"Acceptance criteria\", \"Decisions naming this task\", \"Implementation Notes\"" — src/tests/review-template.logic.test.ts:207 — pins the five exact headings and the three PLAN_SECTIONS headings.
+MET — x-tooling.1 "Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`" — src/tests/proof-slice.db.test.ts:1 — the new file is named *.db.test.ts and its header cites that clause.
+MET — plan A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — src/tests/backlog/rule-lists.logic.test.ts:660 — "refuses without --context (exit 2, says so) and control: with it exits 0".
+MET — plan A.6/A.7 "a block with no deeper heading is cut between table rows ... A row or paragraph that alone passes the room is still refused naming it" — src/tests/backlog/rule-lists.logic.test.ts A6 block — every row appears once, a fitting table is one file, and an oversized row is refused naming "5. Register".
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  74752ms (74.8s)
+📊 Tokens — total: 41115, input: 27913, output: 13202, reasoning: 12080

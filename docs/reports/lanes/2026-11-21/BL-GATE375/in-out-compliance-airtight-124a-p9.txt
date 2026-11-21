@@ -1,0 +1,344 @@
+LIST airtight-124a sha256:624f3fa615f2d5b62a9d93f7cce2ed56d1c4329414c0a656bb3a2d80da889e3a material sha256:9425f21f425af21ffb18fc8c69b62db19f210ad1bca8265e912e9fe17e860d1a part 1 of 2 chunk 5 of 5
+RULE LIST airtight-124a (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md, sections Appendix §B10; Appendix §B12), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 5 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/rule-lists.logic.test.ts","src/tests/proof-slice.db.test.ts","src/tests/proof-slice.logic.test.ts","src/tests/review-template.logic.test.ts"]
+
+## Appendix §B10 — Register rows R-AX…R-BH (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-17
+
+Moved from Spec 124 — Phase 4 step 0 (QUEUE 2026-10-17, operator y "M24 as the first commit of phase 4"): Spec 124 had 1 line / ~37 B of arm (iv) headroom after N6 (R-CY…R-DH) and owes the phase-4 rows (LDG-10 witness reconciliation first). Rows R-AX…R-BH (the next contiguous block after M21; R-BI was reserved and never written) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.
+
+| R-AX | **A frozen `execution.*` POSTURE enum is `executed` only where a named executor or a NAMED DECLARED CHECK consumes it; a value with neither is `retire`d in place, and a step declaring a tolerant posture (`skip`/`quarantine`) must CITE the check that bounds it.** R-X's registry is extended to the posture enums it named as "not yet built", in its own file (`execution-posture-disposition.json`, closed menu `executed`\|`descriptive`\|`retire`) rather than in `write-class-disposition.json`, mirroring R-AJ's split for the duration declarations. **Measured 2026-09-21:** `on_row_error` and `on_row_error_max_pct` had **zero** readers in `scripts/lib/**` and `scripts/analysis/step-validate.mjs` while 18/18 converted steps declared them; `quarantine` had **zero** declarers and no sink (Spec 120 §6's `step_quarantine` unbuilt; migrations 245-247 consumed by unrelated work) — `retire`d in place, never pruned (R-X). **The runner is NOT the enforcer, and that is a ruling, not an omission:** across the ten runner entry points only `runIngestPhase`'s validate phase does per-row work (`index.js:670`), and it already counts and gates; all other per-row work is compute's, so **R-AT**'s "ownership is by USE, never by declared class" makes a `ctx.rowError()` seam a counter the runner does not produce — the same class-gated form R-AT records as tried and REFUTED. The bound is enforced where it already lived: a FAIL-severity declared check (§7 rung (b)), now CITED by the new `execution.on_row_error_why.liveness {kind:"check", ref}` and verified by `step-validate` fast invariant **#27 ROW-ERROR-GATE** (renumbered live from the plan's working #26, which pre-existing WF3 COUNTER-ROOT already occupied — measured 2026-09-21). Rung (c) (`limit_from_config`) holds for both live citations landed by this WF2 (`load_ravines`/`ravine_geometry_skipped_pct`, `compute_parcel_cost_estimates`/`engine_error_count`) — invariant #27 requires only a real FAIL-severity, bound-carrying check, not a config-resolved one, so a future citation whose check has a literal (not config-driven) bound still passes; `enrich_parcels`' own truthing (`fail_fast`→`skip`, citing `opt_config_engine_errors`, which carries a FAIL-severity `limit` but no `limit_from_config` yet — F-4) is PREPARED (descriptor edit, why-text, both register rows written) but its golden recapture is a genuine `--full` 5-pass recompute that did not complete inside this session's time budget (still executing after 25+ minutes, within the plan's own ~40-minute worst-case estimate, §4) — landed separately, own follow-up commit, not abandoned or re-drafted. The two live literal `on_row_error_max_pct` values (`load_ravines` 0.05, `compute_parcel_cost_estimates` 0) each **duplicated** a registered logic variable and are deleted as **Rule 3** violations; the field stays in the schema as `x-banned-for-new`. Separately fixed, **F-1, HIGH:** the `if/then` at `step.schema.json` (`on_row_error`/`on_row_error_max_pct`) used `properties` where its three siblings use `required`, so `skip`/`quarantine` with **no** bound at all validated (AJV-proven live against `compute_centroids` pre-fix, and against the fixed schema post-fix, both directions). Paid as **RE-FREEZE #12** (one additive field carrying `x-ruling`, one conditional rewritten, one `x-banned-for-new` marker) — `--refresh` + Spec 122 §8 amended in the same commit (R-E lock). Locks L1.1-L5.2 (execution-posture-disposition.infra.test.ts) + the invariant's own self-test arms, all RED-first. | §5 R-X (this row is its named generalization for the posture enums); §2 Rule 1 (nothing hidden), Rule 3 (no literal threshold), Rule 4 (the rule is written down as a check's `why`); R-AT (counter ownership) | `scripts/steps/_schema/execution-posture-disposition.json`; `src/tests/execution-posture-disposition.infra.test.ts`; `scripts/analysis/step-validate.mjs` #27; Spec 122 §8 RE-FREEZE #12; Spec 120 §3.2/§4.1a③/§6 |
+
+| R-AY | **A step that produces a PRICED or MODELLED output declares the PRODUCT POPULATION it is for, as a bound on its own producing step, and every pass deriving from the same source honours the same bound.** A population is a declared predicate over registered logic variables (never a literal, never an id accept-list), it carries a reset arm for rows that leave it, and a parcel outside it stores the declared "not modelled" sentinel with a typed reason — never a stale value and never a priced one. An id accept-list that exists to excuse out-of-population outputs is retired by the bound, not curated. **Founding measurement (2026-09-21):** `enrich_parcels` had already ruled 26,203 parcels out of the max-build model (`emit=false`, 6,397 of them `lot_too_large`) while `compute_parcel_cost_estimates` priced reno menus on 18,529 of them — $77,593,312,011.51 of $598.7 B in `cost_gut_total`, including 103 of 103 parcels above $50 M and all 42 ids of `COST_ADDITION_GT50M_LEGIT`. **Landed:** the population bound (Spec 88 §2.1) gained `max_buildable_gfa_sqm IS NOT NULL` (in the max-build model) AND `cur_floor_gfa_sqm <= product_scope_max_existing_gfa_sqm` (new logic variable, default 750, exclusive) alongside the existing `upper(zoning_class) LIKE 'R%'` filter — result: 26,525 menus retracted, $80.43 B, 0 lines > $10 M; `COST_ADDITION_GT50M_LEGIT` (42 accepted ids) retired whole, dissolved by the bound rather than curated down. *Amends:* §2 Rules 1 and 3; §7 Step 2 rung (a). *Locks:* both-directions in `src/tests/steps/compute_parcel_cost_estimates/violations.test.ts` + `logic-var-parity.logic.test.ts`. **§4.6 recurrence:** the same bound must be honoured by slice 1's apportionment and by enrich-permits §4D propagation — neither is built yet; named here so the NEXT pass that derives from this source cannot silently skip the bound the way `compute_parcel_cost_estimates` originally did. | §2 Rule 1, Rule 3; §7 Step 2 rung (a) | Spec 88 §2.1/§2.4/§2.5/§2.8-§2.11; `ffeb703b` (S0.2, bound + retract arm), `2301f4a7` (S0.4, accept-list retired); `src/tests/steps/compute_parcel_cost_estimates/violations.test.ts`; `src/tests/logic-var-parity.logic.test.ts` |
+| R-AZ | **A per-invocation ROW CAP (`--limit=N`) is NOT a step-standard override and is RETIRED BY STANDARD at conversion — declared as a `deviations[]` entry (the `compute_parcel_cost_estimates` 2026-09-21 DRY-RUN entry is the template), never carried, never given a schema home.** Adjudicated 2026-09-23 against Rule 1's rung ladder (and Spec 122's `io_budget` precedent — no field is invented before the rungs are exhausted): **(a) `config.logic_variables[]`** (Rule 3 names "limit" a tunable) REJECTED — a cap is a per-invocation debug bound, not a steady-state value; a standing admin row makes every scheduled run silently partial (the `LINK_MASSING_FORCE_FULL`-left-standing class `override_force_full_present` exists to catch) and is a false affordance under R-A. **(a′) `execution.invocation`** REJECTED — a per-chain argv PIN for manifest↔descriptor drift, not a runtime-read value. **Enforced by (2026-10-03, WF3 chain_args, LP-D17):** `scripts/analysis/generate-chain-args.mjs --check`, a pre-commit line after `src-sql-ledger.mjs --check` (position locked GREEN/RED in `src/tests/hooks-composition.infra.test.ts`). For every step in `converted.json`, `manifest.json` `chain_args` is GENERATED from `execution.invocation` (a chain with non-empty `argv` ⇒ a key; `--write` rewrites only the drifted entry); the invocation's chains must equal the manifest chains that list the slug; a declared or manifest-`env` `PIPELINE_CHAIN` must be absent or equal the chain. Fixtures both directions: `src/tests/chain-args-generated.infra.test.ts`. NOT covered: unconverted steps' hand-written `chain_args`. Found by `link_parcels`, whose descriptor `sources.argv ["--full"]` had no manifest counterpart from conversion (b37087f3) until this gate, so run-chain never passed it. **(a″) `override.dry_run`'s argv arm** REJECTED — `^--[a-z][a-z0-9-]*$` is a bare flag, it cannot carry a value. **(a‴) `execution.phases[].scope`** REJECTED — the frozen `full\|incremental\|deferred` enum is WHICH rows are eligible, not how many. **(b)/(c)** inexpressible as a check or a shape rule. **(d) a new `override.row_cap` arm with `x-ruling`** REJECTED on cost vs need, not expressibility: a capped run is a PARTIAL-POPULATION WRITE with no truthful ledger form — `source-version.js#readPriorRunMeta` selects the latest `status='completed'` row with no other filter, so the capped run becomes the next run's drift/trigger baseline and a trend input, and it can never be a G8 golden input; honouring it generically means a seam in the runner-injected `passCtx.stream`, which cannot cap a set-based pass, so honesty would need a per-pass "streams" declaration on top of the arm, plus `records_meta.row_cap`, an audit row, baseline exclusion, a RE-FREEZE entry, baseline regen, validator matrix and locks (~12 artifacts). **Need, measured 2026-09-23:** ONE converted step of 18 ever had it, operator-debug only, never chain-passed (`manifest.json chain_args` carries no `--limit`), and that step already retired it as a declared deviation with Spec 88's as-built §"Every run is a full run (D1)" agreeing; four UNCONVERTED scripts still carry it (`compute-coa-cost-estimates.js`, `compute-cost-estimates.js`, `enrich-web-search.js`, `enrich-wsib.js`) and retire it at conversion under THIS row rather than re-opening the Ask per step. **The standard debug affordances are** `override.dry_run` (the harness end-to-end, zero writes — R-AV's closed half) and the `src/tests/steps/<slug>/` fixture tier (compute on a bounded population); a bounded PRODUCTION run is not something the standard offers. **Consequences:** R-AV's "regains `--dry-run`/`--limit`" clause is struck to `--dry-run` only; `programme-items.json` `B2-DRYRUN-SEAM` narrows and flips BUILT; the five ENRICHERs' `dry_run` declaration revisits stay a separately owed item. **Spec 120 is the programme's precursor, not an owner** (operator, 2026-09-23) — owners are 122 (runner library, schema), 124, 88, 123 PH-5. | §2 Rule 1 rung ladder, Rule 3, Rule 12 / `override`; R-A; R-AV; Spec 122 §5.1 (no per-step escape hatch) | `scripts/analysis/generate-chain-args.mjs`; `scripts/steps/_schema/step.schema.json` (unchanged — no RE-FREEZE); `scripts/lib/source-version.js#readPriorRunMeta`; `scripts/lib/step/index.js` `passCtx.stream`; `scripts/compute-parcel-cost-estimates.descriptor.json` `deviations[]`; `src/tests/spec124-register-rulings.logic.test.ts` |
+| R-BA | **"McDonald's Airtight" — a step-standard item that no machine checks is not part of the standard.** Five words, each a `step-validate.mjs --step=<slug>` PASS/FAIL line drawn ONLY from a CLOSED answer set (never prose): STANDARDIZED (gate A closed check bounds; gate I registry coverage), OBSERVABLE (gate C emits≡declared; gate D generated consumer registry), SCALABLE (gate B `on_invalid` enum; gate E compute-literal ban), UNDERSTANDABLE (gate F scorecard floor 14/17 + LF-only; gate J spec-staged hook), ACCURATE (gate G forced-nonzero capture + explained G8 diffs; gate K red-first proof is a committed vitest JSON artifact, never the bare word RED). Every gate's closed set is one of: `limit_from_config`/a declared variable, an exact zero-tolerance string, or a dated row in the ONE shared allowlist `scripts/steps/_schema/standard-gates-ledger.json` (`scripts/analysis/gates/ledger.mjs`) — never a bare literal or an unenforced checklist line. An ORPHAN row (its violation since fixed) is RED (R-X closing-row posture) — the remediation commit that fixes a violation deletes its own row. **Scope (operator, 2026-09-26):** every gate is a HARD STOP — no ledger rows permitted — for steps in development now (`load_centreline`, `massing`, `neighbourhoods`) and every future conversion, and it applies **from ① (amended 2026-09-27):** `step-validate --step=<slug>` and the pre-commit `--staged` run evaluate a PENDING slug that has a descriptor exactly as if converted (the registry gates read `converted.json` through `scripts/analysis/gates/converted-set.mjs` with the slug registered), so an in-development step meets every gate at its next commit (its declared R-K stage still excludes the capture-derived gates #30/#31/#38-#41 as it does G7/G8; `--all` is never overlaid) — superseding discovery at ③ and the separate gate-B/D reruns at cutover; on the 20 already-converted steps, CRITICAL/HIGH findings get a quick fix now and every remaining finding lands as a DATED ledger row closing at "chain_sources conversion complete" (R-AQ). Status below. | §2 Rule 1, Rule 3, Rule 10, Rule 13; §7 rung ladder | `.cursor/wf2_conversion_standard_gates_active_task.md`; `scripts/analysis/gates/ledger.mjs` |
+| R-BB | **OWNER-SPEC-DIFF — a cutover's owner-spec diff is a commit gate, never a commit-message claim (2026-09-29).** A change set that appends a file to `converted.json` `converted[]` must stage every spec whose system-map Implementation cell names that file (`archive/` rows excluded), OR that file's census row declares `spec_diff: "N-A"` + `spec_diff_reason` (≥ 20 chars; legal only on a `status: "converted"` row). Fast invariant **#43**, COMMIT-SCOPED: `step-validate.mjs --staged` runs it before its no-target early return (pre-commit judges index vs HEAD, pre-push HEAD~1..HEAD) and a FAIL is a hard stop; it is never a `fastInvariants()` scorecard row, because its answer depends on git state. `npm run cutover` names the owner specs in its closing note. **Replaces** Spec 123 §7 row 9(b)'s "or 'N-A' stated in the body" convention (missed at batch-2 rows 2.1/2.2, repaired by `e053102c`); Spec 123 is at its byte budget, so this row is where that amendment lives. (The R-BA status table below belongs to R-BA.) | Amends: Spec 123 §7 row 9(b) | `scripts/analysis/gates/owner-spec-diff.mjs`; `src/tests/owner-spec-diff.{logic,infra}.test.ts`; programme item `B2-OWNER-SPEC-DIFF` |
+| R-BC | **CHAIN COMPLETION — a chain is complete only when (a)+(b)+(c)+(d) all hold, each a mechanical gate; "complete" is never asserted (operator ruling 2026-09-29).** **(a) CONVERTED:** every `manifest.chains.<chain>` slug's `manifest.scripts[slug].file` is in `converted.json` `converted[]`, except a declared `step-archetype-census.json` `exemptions[]` row (`python_step_excluded` / `no_file` / `runner_owned`). **(b) NO LEDGER:** zero `standard-gates-ledger.json` rows whose `step` is a chain step — every `pending_remediation`/`pending_recapture` row names its closing brief, and completion is the point they must all be closed. **(c) LEDGER COMPLETE:** programme item `LDG-10` — all five Spec 122 §6 edge classes proven complete on fixtures in both directions: table edges reconcile declared reads/writes with runtime lineage (`records_meta.pipeline_meta`), zero undeclared; `records_meta` contracts with zero undeclared readers including readers outside the chain (gate D, invariant #31, widened from `records_meta` keys to table readers); version pins/watermarks declared in `staleness`; every derived join key has an invalidator (re-verify the Spec 122 §6.4a centroid gap against migration 245's trigger arm); ordering derived from declared edges, replacing the hand-written `chain.logic.test.ts` chain-order assertions. Detail: Spec 122 §6.6. **(d) CLOUD ACCEPTED:** the per-slug ACC-1 table for every chain step (R-AQ.1; programme item `EP-PIN-D17`'s flip clause, `scripts/analysis/chain-end-synthesis.mjs`). **Measured 2026-09-29, sources (28 slugs):** (a) FAIL — 4 unconverted (`load_heritage`, `enrich_centreline`, `load_wsib`, `load_zoning`), `reconcile` exempt; (b) FAIL — 160 rows; (c) FAIL — LDG-10 NOT_STARTED; (d) FAIL — EP-PIN-D17 PARTIAL. Both LDG-10 and EP-PIN-D17 are `cutover_prereq` items blocking every census `C6` slug, so `checkCutoverPrereqs` stops a post-sources cutover until (c) and (d) close. (a)/(b) have no programme item of their own yet — they are read directly from the two JSON registries. **APPENDED 2026-09-29 (operator) — a fifth condition, (e), and a strict-zero ruling; the lead's "(a)+(b)+(c)+(d)" now reads "(a)–(e)".** **(e) TOOLING INTEGRATED** — programme item `CHAIN-TOOLING`, checked ONCE at chain end, must not slow anything: (1) every fast invariant / generated-artifact drift check introduced during the chain (e.g. #43 OWNER-SPEC-DIFF; any planned generated-Target-Files drift check) runs at pre-commit, locked by extending `src/tests/hooks-composition.infra.test.ts` — no new machinery; (2) pre-commit checks are FILE-ONLY (no DB, no network; DB checks belong to `npm run test:db` or `npm run cloud:pre`), and measured pre-commit wall time stays ≤ +10% vs the chain-start baseline, measured before/after (the budget); (3) `node scripts/ai-env-check.mjs` prints one status line per chain derived from the registries — converted count, open ledger rows, LDG-10 status, cloud-acceptance status; (4) `cloud:pre`'s `seed_rows_present` covers EVERY key in `scripts/seeds/logic_variables.json`, not only converted descriptors' `config.logic_variables[]` (`scripts/analysis/cloud-pre-dispatch.mjs`) — closes the gap where the runner-owned reconcile vars `run_stranded_after_minutes` / `run_heartbeat_fresh_minutes` are seeded but unchecked. **Strict zero, no allowlists:** (b) admits NO ledger row of any disposition — pending or permanent (`non_tunable`, `physical_constant`, `unit_conversion`, `coordinate_reference`); (c) LDG-10 has NO allowlist or exception file — zero undeclared edges in every edge class. A gate or edge that genuinely cannot be met is fixed by changing the gate or the descriptor through a Spec 124 §5 row plus an `Operator-Ruling:` commit trailer, never by a parked row. (Grounded 2026-09-29: the trailer is NEW — zero `Operator-Ruling:` trailers in the last 300 commits and no hook reads one yet; there is no invariant "#42 defect-prefix" — the nearest gate is #36 DEFECT-ID-UNIQUENESS; #43 already runs at pre-commit via `step-validate.mjs --staged --fast`; no pre-commit wall-time baseline is recorded anywhere yet, so CHAIN-TOOLING takes the first measurement.) | Amends: R-AQ / R-AQ.1 ("end of conversion" now defined); Spec 122 §6 (completeness gated) | `scripts/steps/_schema/programme-items.json` LDG-10, EP-PIN-D17; `scripts/steps/_schema/converted.json`; `scripts/steps/_schema/step-archetype-census.json` `exemptions[]`; `scripts/steps/_schema/standard-gates-ledger.json`; Spec 122 §6.6; programme item `CHAIN-TOOLING`; `src/tests/hooks-composition.infra.test.ts`; `scripts/ai-env-check.mjs`; `scripts/analysis/cloud-pre-dispatch.mjs` |
+| R-BD | **Retired input argv ↔ declared filesystem input — a GOLD-PRE capture taken with a retired input argv stands in for its declared invocation only under a closed predicate (operator ruling 2026-09-29; discoverer: load_wsib ② seat + research seat; adjudicator: operator, §4.2).** GOLD-PRE matches `${chain}::${args}` exactly, but a legacy loader that loads ONLY via an input argv (load_wsib `--file <csv>` — the WSIB CSV cannot be downloaded) cannot be captured with the converted step's declared args. A PRE doc stands in for declared key `chain::<declared args>` iff ALL hold: **(a)** same chain, and args = the declared args + exactly one `[flag, path]` pair whose `flag` appears verbatim (token-bounded) in some descriptor `deviations[].from` (load_wsib WS-D4 names `--file`); **(b)** the descriptor declares exactly one `inputs.reads.externals[]` of `kind:"filesystem"`, and `path`'s basename matches that external's `path` basename under `resolveLocalSource` semantics (stem `*`, stem case-insensitive, `.ext` case-sensitive); **(c)** every PRE `table_state[].content_hash` equals the paired POST doc's (same key; table sets equal, non-empty). No md5 clause (operator declined). No `GOLD_PRE_KNOWN_GAPS` pin (R-BA/R-BC). A mode flag (`--full`) is never a pair — enrich_parcels' pin is untouched. | Amends: Spec 122 §5.3 / R-C / G8 (GOLD-PRE) | `scripts/analysis/step-validate.mjs` `retiredInputPreMatch`, `computePreInvocationsMissing`; `src/tests/gold-pre-retired-input.logic.test.ts` |
+| R-BE | **Generated step Target Files — a step's files, data and edges are generated into its owner spec, never hand-listed (2026-09-30, WF2 generated Target Files).** Census `owner_specs` (entries AND exemptions) names each sources step's owner spec(s); `npm run target-files` writes a `generated:target-files` block first under each owner spec's `### Target Files` — files = the `computeSourceFingerprint` inputs (`capture-step-golden.js` helpers) + `src/tests/steps/<slug>/`; data/upstream/downstream = the cross-step ledger (`stepUpstreams`, CREATE migration per table); consumers = `consumer-registry.json` — and a `generated:chain-members:<chain>` block in Specs 41–44. One home: a generated path hand-listed in any Target Files span is RED. `--check` is its own pre-commit line (a spec-, census- or snapshot-only commit never reaches `fastInvariants()`); cutover and ledger `--refresh` regenerate. `npm run step:registry -- <slug\|path>` prints the sub-list byte-identical plus an advisory grep; a PreToolUse hook shows it on a session's first read/edit of a step file. **Retired knowingly:** #43's system-map inference (#43 reads census `owner_specs`) and touching Spec 43 on every sources cutover; a spec whose only diff is inside its generated blocks, and `00_system_map.md`, no longer count as a spec touch (#43, gate J1). #43 owners = UNION of base and staged census rows (`owner-spec-diff.mjs` header). | Amends: R-BB; R-BA gate J1; satisfies R-BC(e)(1)'s Target-Files drift check | `scripts/analysis/gates/{step-registry,generated-blocks}.mjs`; `scripts/analysis/{generate-target-files,step-registry}.mjs`; `scripts/hooks/step-registry-context.{sh,mjs}`; `src/tests/{step-registry.logic,generate-target-files.infra,step-registry-hook.logic}.test.ts`; programme item `GEN-TARGET-FILES` |
+| R-BF | **McDonald's Airtight V2 (registry & cross-step) = R-BA + every step-registry and cross-step-ledger row generated or witnessed, never hand-kept; declared == observed (operator 2026-09-30, named 2026-10-01).** Status NOT MET; full text Spec 122 §6.6.1. | Amends: R-BA (registry/ledger truth word); R-BE; LDG-10 | Spec 122 §6.6.1 |
+| R-BG | **#44 witness truthfulness — the gate observes what a step really does; it is changed by a §5 row + `Operator-Ruling:` trailer, never bent per step (operator 2026-10-02, WF3 witness-unblock).** (i) check (b) honours `written:"db_default"` in both directions: a db_default column is not required in the traced write, and a traced write of it is a `b:` violation; (ii) the resolver resolves every statement of a multi-statement text, CTE names bind through enclosing and sibling scopes, function-alias column lists bind, and session temp tables bind like CTEs (a temp that shadows a catalog table is FAIL:INPUT); (iii) PRODUCER is tested on comment-stripped text (string literals and dollar-quoted bodies kept); (iv) a prior-run baseline is status ∈ {completed, completed_with_warnings}, never completed_with_errors, never a run carrying the `write_skipped_pre_write_warn` audit row. Locks: R1–R4, R17 (C1); R5–R7, R14, R16, R20–R22, C-a–C-c (C2/C2b/C2c); R8, R9, R15, R19 (C3; R15 replaces the ⑦e source-text lock with an AST lock). R10–R13, R18 (C4). Runner-owned ledger writes (a standalone run's own `pipeline_runs` INSERT/UPDATE, `writes: {}`) are not step writes for checks (c)/(d) — lock: "gate #44 — runner-owned ledger writes are not step writes" in `src/tests/sql-witness-gate.logic.test.ts`. | Amends: R-BF; Spec 122 §6.6.1(e) | Spec 122 §6.6.1(e) |
+| R-BH | **Phase 2 DERIVE (registry truth, 2026-10-03, plan folds 8–17) — a descriptor value a machine can derive or check is gated; a value nothing checks is labelled declared-only.** **Enforced** by fast invariant #47 MODE-EMITS-TYPE (`scripts/analysis/gates/mode-emits-type.mjs`; hard stop per slug, no allowlist): (i) `staleness.mode_select` — LINK or MATCHER ⇒ `tri_state`, or `none` only beside an `outputs.invalidates[]` row `by: "full_rescan"` (the runner's `resolveLinkGate` then resolves every run `full`, reason `full_rescan`, and refuses a `retract: "all"` target); INGESTOR with a `staleness.trigger[]` entry `signal: "source_validator"` ⇒ `skip`; every other case ⇒ `none`; (ii) each golden POST `records_meta` value of a declared `emits[]` key matches its `type` — `null` passes any type, an integer passes `number`, any other mismatch is RED; key presence stays gate C's, and a capture that does not parse or carries no `records_meta` object is skipped by this check. Locks M1–M9, E1–E6, C1–C2, L1–L2 in `src/tests/gate-mode-emits-type.infra.test.ts`. (iii) `scripts/lib/massing-full-gate.js` is deleted; locks R1–R6 in `src/tests/link-massing-mode-gate.logic.test.ts` (R6: link_massing keeps "`logic_version` ≠ `none` ⇔ a `code_version` trigger"). **Declared-only (no gate built at drafting):** that rule for every other step and `fingerprint_inputs` = real imports (P2-C3); `last_measured` from captures (P2-C4); manifest `step_timeout_minutes` generated from the descriptor (P2-C2). `staleness-disposition.json`'s `fingerprint_inputs` rows stay `descriptive` (gate I #34 checks that each row is adjudicated, not that the input is read). | Amends: R-AJ; plan fold 8 item 8 (LINK ⇒ `tri_state`, widened by fold 17 item 1) | Spec 122 §6.6.1(f) |
+
+
+---
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 4fea028e03810a041655685eea7ef7cf478e765c..6c6c817b5d408c10cde578a3f608377c0f604187 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -4,6 +4,7 @@
+ // import row, record-only default, lens input (one file when small, split by the list's own headings when big, never trims, refuses what cannot fit).
+ import { describe, expect, it } from 'vitest';
+ import * as fs from 'node:fs';
++import { createRequire } from 'node:module';
+ import * as path from 'node:path';
+ import { ROOT, run, script, tmp } from './helpers';
+ 
+@@ -225,12 +226,17 @@ describe('resolve on a fixture tree (AC #2)', () => {
+   });
+ });
+ 
++const CTX = (d: string, desc = 'the description', extra = '') => {
++  const p = path.join(d, 'context-r1.md');
++  fs.writeFileSync(p, `# Review context\n\n## Task\ntask-1 t\n\n## Description\n${desc}\n\n## Acceptance criteria\n- #1 a\n\n## Implementation Plan\nTHE-PLAN\n\n## Implementation Notes\n(none)\n\n## Decisions naming this task\n- (none)\n${extra}`);
++  return p;
++};
+ const TPL = '## System persona\nsys\n\n## User prompt\nSPECS:\n{{SPECS}}\nPLAN:\n{{PLAN}}\nAGAIN:\n{{PLAN}}\n';
+ function lens(f: ReturnType<typeof fixture>, list: string, material: string, max: number, name = 'o') {
+   const m = path.join(f.d, `${name}.material`); fs.writeFileSync(m, material);
+   const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+   const out = path.join(f.d, 'out', name);
+-  const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', list, '--material', m, '--out', out, '--template', tpl, '--max', String(max)]);
++  const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', list, '--material', m, '--out', out, '--template', tpl, '--max', String(max), '--context', CTX(f.d)]);
+   const files = r.stdout.split('\n').filter(Boolean);
+   return { r, files, text: files.map((x) => fs.readFileSync(x, 'utf8')) };
+ }
+@@ -333,7 +339,7 @@ describe('V2.LIST: every task gets the five words, the plan protocol and its mil
+     expect(t.lists['eng-all']).toMatchObject({ file: 'docs/specs/00_engineering_standards.md', whole: true });
+   });
+   it('the Glossary block of Spec 132 carries the five words statement, and the repo plan protocol carries the five principles line', () => {
+-    const r = script(CLI, ['lens-input', '--list', 'five-words', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fw'), 'in-x')]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'five-words', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fw'), 'in-x')]);
+     expect(r.status, r.stderr).toBe(0);
+     const text = fs.readFileSync(r.stdout.trim().split('\n')[0] as string, 'utf8');
+     expect(text).toContain('STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE');
+@@ -568,7 +574,7 @@ describe('V2.WHOLE: lens-input splits a change that leaves no room for a list pa
+     const f = fixture();
+     const m = path.join(f.d, 'nl.material'); fs.writeFileSync(m, BIGDIFF);
+     const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+-    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/nl'), '--template', tpl, '--max', '9000']);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/nl'), '--template', tpl, '--max', '9000']);
+     expect(r.status, r.stderr).toBe(0);
+     const files = r.stdout.split('\n').filter(Boolean);
+     const st = files.map((x) => stampOf(fs.readFileSync(x, 'utf8')));
+@@ -592,7 +598,7 @@ describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', ()
+     const d = names.map((p) => dfile(p, 1)).join('');
+     const m = path.join(f.d, 'f5.material'); fs.writeFileSync(m, d);
+     const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+-    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f5'), '--template', tpl, '--max', '40000']);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f5'), '--template', tpl, '--max', '40000']);
+     expect(r.status, r.stderr).toBe(0);
+     const files = r.stdout.split('\n').filter(Boolean);
+     const texts = files.map((x) => fs.readFileSync(x, 'utf8'));
+@@ -614,7 +620,7 @@ describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', ()
+     const m = path.join(f.d, 'f13.material'); fs.writeFileSync(m, d);
+     const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+     const max = 2 * (d.length + 900) + 300;
+-    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f13'), '--template', tpl, '--max', String(max)]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f13'), '--template', tpl, '--max', String(max)]);
+     expect(r.status, r.stderr).toBe(0);
+     const texts = r.stdout.split('\n').filter(Boolean).map((x) => fs.readFileSync(x, 'utf8'));
+     expect(texts.length).toBeGreaterThan(1);
+@@ -638,3 +644,161 @@ describe('V2.WHOLE: the real table exempts golden snapshots by their file shape
+     for (const a of ['--diff-algorithm=myers', '--indent-heuristic', '--inter-hunk-context=0']) expect(m.DIFF_ARGS, a).toContain(a);
+   });
+ });
++
++describe('D11b (task-375): the security lens fires for admin and PII paths, as README.md:104 and lens-security.md:48 say', () => {
++  const lens = async (files: string) => {
++    const m = await import('../../../scripts/analysis/rule-lists.mjs');
++    return m.lensSet({ type: 'build', files }) as { plan: string[]; out: string[] };
++  };
++  it('an admin path and a PII path add the security lens on both phases', async () => {
++    for (const f of ['src/app/admin/page.tsx', 'src/lib/pii/redact.ts', 'src/lib/admin-users.ts', 'scripts/pii-scrub.mjs']) {
++      const r = await lens(f);
++      expect(r.plan, f).toContain('security');
++      expect(r.out, f).toContain('security');
++    }
++  });
++  it('control: a path naming none of these adds no security lens', async () => {
++    const r = await lens('scripts/analysis/proof-slice.mjs');
++    expect(r.plan).not.toContain('security');
++    expect(r.out).not.toContain('security');
++  });
++  it('control: the existing words still fire it', async () => {
++    expect((await lens('src/lib/stripe/webhook.ts')).out).toContain('security');
++  });
++});
++
++describe('task-375 A4: lens-input takes the reviewer context, counts it in the room and can cut the plan material from it', () => {
++  const base = (f: ReturnType<typeof fixture>, extra: string[]) => {
++    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
++    const m = path.join(f.d, 'mat.txt'); fs.writeFileSync(m, 'MAT');
++    return script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'first', '--out', path.join(f.d, 'out/ctx'), '--template', tpl, ...extra, ...(extra.includes('--material-from') ? [] : ['--material', m])]);
++  };
++  it('refuses without --context (exit 2, says so) and control: with it exits 0', () => {
++    const f = fixture();
++    const no = base(f, []);
++    expect(no.status, no.stderr).toBe(2);
++    expect(no.stderr).toMatch(/--context/);
++    const yes = base(f, ['--context', CTX(f.d)]);
++    expect(yes.status, yes.stderr).toBe(0);
++  });
++  it('a context without a required heading is refused naming the heading', () => {
++    const f = fixture();
++    const p = path.join(f.d, 'bad.md'); fs.writeFileSync(p, '# x\n\n## Task\nt\n');
++    const r = base(f, ['--context', p]);
++    expect(r.status).toBe(1);
++    expect(r.stderr).toMatch(/Description/);
++  });
++  it('the selected sections are counted in the room: no input plus its context passes --max; a context too big for the room is refused', () => {
++    const f = fixture();
++    const run1 = (ctx: string) => { const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL); const m = path.join(f.d, 'mat.txt'); fs.writeFileSync(m, 'MAT'); return script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'whole', '--material', m, '--out', path.join(f.d, 'out/room'), '--template', tpl, '--max', '4000', '--context', ctx]); };
++    const small = run1(CTX(f.d));
++    expect(small.status, small.stderr).toBe(0);
++    const midCtx = CTX(f.d, 'D'.repeat(400));
++    const mid = run1(midCtx);
++    expect(mid.status, mid.stderr).toBe(0);
++    const rt = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js'));
++    const sel = rt.extractSections(fs.readFileSync(midCtx, 'utf8'), rt.CONTEXT_SECTIONS);
++    const files = mid.stdout.split('\n').filter(Boolean);
++    expect(files.length).toBeGreaterThanOrEqual(small.stdout.split('\n').filter(Boolean).length);
++    for (const x of files) expect(('sys' + rt.substitutePlaceholders('SPECS:\n{{SPECS}}\nPLAN:\n{{PLAN}}\nAGAIN:\n{{PLAN}}\n', { plan: fs.readFileSync(x, 'utf8'), specs: sel })).length).toBeLessThanOrEqual(4000);
++    const huge = run1(CTX(f.d, 'D'.repeat(3900)));
++    expect(huge.status).toBe(1);
++  });
++  it('--material-from cuts the plan sections (Description, Acceptance criteria, Implementation Plan) and uses the same file as the context', () => {
++    const f = fixture();
++    const c = CTX(f.d);
++    const r = base(f, ['--material-from', c]);
++    expect(r.status, r.stderr).toBe(0);
++    const t = fs.readFileSync(r.stdout.split('\n').filter(Boolean)[0]!, 'utf8');
++    expect(t).toContain('THE-PLAN');
++    expect(t).toContain('## Acceptance criteria');
++    expect(t).not.toContain('## Implementation Notes');
++  });
++  it('--material-from a file without an Implementation Plan heading is refused', () => {
++    const f = fixture();
++    const p = path.join(f.d, 'noplan.md'); fs.writeFileSync(p, '# x\n\n## Task\nt\n\n## Description\nd\n\n## Acceptance criteria\na\n\n## Decisions naming this task\n-\n\n## Implementation Notes\nn\n');
++    const r = base(f, ['--material-from', p]);
++    expect(r.status).toBe(1);
++    expect(r.stderr).toMatch(/Implementation Plan/);
++  });
++});
++
++describe('task-375 A6: a block with no deeper heading is cut between table rows or paragraphs', () => {
++  const tableDoc = (n: number) => '# T\n\n## 5. Register\n\n| id | rule |\n| --- | --- |\n' + Array.from({ length: n }, (_, i) => `| R${i} | rule text number ${i} that is long enough to count ${'x'.repeat(40)} |`).join('\n') + '\n\n## 6. Next\n\nafter\n';
++  const mk = (doc: string) => {
++    const f = fixture();
++    fs.writeFileSync(path.join(f.d, 'docs/t.md'), doc);
++    const t = JSON.parse(fs.readFileSync(f.table, 'utf8'));
++    t.lists.tab = { file: 'docs/t.md', sections: ['5. Register'], generated_by: 'hand-written' };
++    fs.writeFileSync(f.table, JSON.stringify(t));
++    return f;
++  };
++  it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound', () => {
++    const f = mk(tableDoc(60));
++    const l = lens(f, 'tab', 'MAT', 4000);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    expect(l.files.length).toBeGreaterThan(1);
++    const all = l.text.join('\n');
++    for (let i = 0; i < 60; i++) expect(all.split(`| R${i} |`).length - 1, 'R' + i).toBe(1);
++  });
++  it('control: the same table that fits is one file', () => {
++    const f = mk(tableDoc(5));
++    const l = lens(f, 'tab', 'MAT', 20000);
++    expect(l.files).toHaveLength(1);
++  });
++  it('a single row that alone passes the room is refused naming the list and section (the old throw)', () => {
++    const f = mk('# T\n\n## 5. Register\n\n| id | rule |\n| --- | --- |\n| R0 | ' + 'y'.repeat(5000) + ' |\n');
++    const l = lens(f, 'tab', 'MAT', 4000);
++    expect(l.r.status).toBe(1);
++    expect(l.r.stderr).toContain('5. Register');
++  });
++});
++
++describe('task-375 B1: compliance references (compliance:<list id> <file>) on each task, and check-tasks prints the commands for the open ones', () => {
++  const board = () => {
++    const f = fixture();
++    const t = JSON.parse(fs.readFileSync(f.table, 'utf8')) as Record<string, unknown>;
++    t.every_task = ['queue']; t.milestone_docs = { F: ['crlf'] };
++    fs.writeFileSync(f.table, JSON.stringify(t));
++    fs.mkdirSync(path.join(f.d, 'backlog/milestones'), { recursive: true });
++    fs.writeFileSync(path.join(f.d, 'backlog/milestones/m-0 - a.md'), '---\nid: m-0\ntitle: "A [F]"\n---\n');
++    const w = (n: string, refs: string[], body: string, status = 'WAITS') => { const p = path.join(f.d, `backlog/tasks/task-${n} - x.md`); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, `---\nid: TASK-${n}\ntitle: x\nstatus: ${status}\ntype: build\nmilestone: m-0\n${refs.length ? `references:\n${refs.map((r) => `  - '${r}'`).join('\n')}\n` : ''}---\n\n## Description\n\n${body}\n`); };
++    return { f, w };
++  };
++  const resolved = (f: ReturnType<typeof fixture>, files: string) => (JSON.parse(script(CLI, ['resolve', '--root', f.d, '--table', f.table, '--files', files, '--type', 'build', '--letter', 'F']).stdout) as Res).lists;
++  it('a stale open task: prints the exact add-ref command, one entry per resolved list, each starting compliance:, exit 0', () => {
++    const { f, w } = board();
++    w('1', ['docs/a.md'], 'Files: src/two.ts');
++    const want = resolved(f, 'src/two.ts');
++    const r = script(CLI, ['check-tasks', '--root', f.d, '--table', f.table]);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const line = r.stdout.split('\n').find((l) => l.includes('backlog task edit task-1 ')) ?? '';
++    expect(line).toBeTruthy();
++    const entries = [...line.matchAll(/--add-ref '(compliance:[^']*)'/g)].map((m) => m[1]!);
++    expect(entries).toHaveLength(want.length);
++    for (const l of want) expect(entries).toContain(`compliance:${l.id} ${l.file}`);
++    expect(line).not.toContain('--remove-ref');
++  });
++  it('control: a task whose entries match its lists prints no command, a task with part of them prints only the rest, a stale entry gets --remove-ref', () => {
++    const { f, w } = board();
++    const want = resolved(f, 'src/two.ts');
++    w('2', want.map((l) => `compliance:${l.id} ${l.file}`), 'Files: src/two.ts');
++    w('3', [`compliance:${want[0]!.id} ${want[0]!.file}`], 'Files: src/two.ts');
++    w('4', [...want.map((l) => `compliance:${l.id} ${l.file}`), 'compliance:gone docs/gone.md'], 'Files: src/two.ts');
++    const r = script(CLI, ['check-tasks', '--root', f.d, '--table', f.table]);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    expect(r.stdout).not.toContain('backlog task edit task-2 ');
++    const l3 = r.stdout.split('\n').find((l) => l.includes('backlog task edit task-3 ')) ?? '';
++    expect([...l3.matchAll(/--add-ref '(compliance:[^']*)'/g)]).toHaveLength(want.length - 1);
++    expect(l3).not.toContain(`'compliance:${want[0]!.id} `);
++    const l4 = r.stdout.split('\n').find((l) => l.includes('backlog task edit task-4 ')) ?? '';
++    expect(l4).toContain("--remove-ref 'compliance:gone docs/gone.md'");
++    expect(l4).not.toContain('--add-ref');
++  });
++  it('complianceRefs: an entry for a file path with a comma is the id alone (backlog splits --add-ref at commas); entries compare by the id token', async () => {
++    const m = await import('../../../scripts/analysis/rule-lists.mjs');
++    const r = m.complianceRefs([{ id: 'ms-9', file: 'docs/a, b.md' }, { id: 'eng-all', file: 'docs/e.md' }, { id: 'five', file: 'docs/f.md' }], ['compliance:eng-all some other path', 'docs/a.md']);
++    expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);
++    expect(r.remove).toEqual([]);
++  });
++});
+diff --git a/src/tests/proof-slice.db.test.ts b/src/tests/proof-slice.db.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..841318ca2b6b9edca229f07ded4b1edde07b6878
+--- /dev/null
++++ b/src/tests/proof-slice.db.test.ts
+@@ -0,0 +1,36 @@
++// SPEC LINK: docs/specs/01-pipeline/132_step_standard_handbook.md x-tooling.1 (a test that needs Postgres is *.db.test.ts, run only by npm run test:db),
++//            docs/specs/01-pipeline/124_step_standard_policy.md R-EB (b) (gate and tooling variables, R-CV pinned form),
++//            docs/specs/00-architecture/08_agents.md:511 (MCINC-7: every DB job is rehearsed on the test stack first).
++//
++// task-375 D10b: the registered variable the proof slice runner reads its timeout from exists in the logic_variables table with a value the runner accepts, and it equals the pinned seed.
++// WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane): the variable is registered by a seed + migration the operator authorises with a typed GO after the MCINC-7 rehearsal.
++// Skipped unless BUILDO_TEST_DB=1 (or CI DATABASE_URL).
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++
++import type { Pool } from 'pg';
++import { afterAll, beforeAll, describe, expect, it } from 'vitest';
++
++import { TIMEOUT_VARIABLE, timeoutMsFromVariable } from '../../scripts/analysis/proof-slice.mjs';
++import { dbAvailable, getTestPool } from './db/setup-testcontainer';
++
++describe.skipIf(!dbAvailable())('proof-slice timeout variable (live DB)', () => {
++  let pool: Pool;
++  beforeAll(() => { pool = getTestPool() as Pool; });
++  afterAll(async () => { await pool.end().catch(() => undefined); });
++
++  it('the variable is in logic_variables and its value is a positive integer the runner accepts', async () => {
++    const { rows } = await pool.query('SELECT variable_value FROM logic_variables WHERE variable_key = $1', [TIMEOUT_VARIABLE]);
++    expect(rows, `${TIMEOUT_VARIABLE} is not registered in logic_variables`).toHaveLength(1);
++    expect(timeoutMsFromVariable(rows[0].variable_value)).toBeGreaterThan(0);
++  });
++  it('the database value equals the pinned seed default (R-CV form: min = max = default)', async () => {
++    const seed = JSON.parse(readFileSync(join(process.cwd(), 'scripts/seeds/logic_variables.json'), 'utf8')) as Record<string, { default: number; min: number; max: number }>;
++    const entry = seed[TIMEOUT_VARIABLE];
++    expect(entry, `${TIMEOUT_VARIABLE} is not in the seed`).toBeDefined();
++    expect(entry!.min).toBe(entry!.default);
++    expect(entry!.max).toBe(entry!.default);
++    const { rows } = await pool.query('SELECT variable_value FROM logic_variables WHERE variable_key = $1', [TIMEOUT_VARIABLE]);
++    expect(timeoutMsFromVariable(rows[0].variable_value)).toBe(entry!.default);
++  });
++});
+diff --git a/src/tests/proof-slice.logic.test.ts b/src/tests/proof-slice.logic.test.ts
+index e0125ca1e25c031615c8abfd5e25d10f2da74b9b..4852f11ce28632d0594b9f0bf11f7f1f5551c1c0 100644
+--- a/src/tests/proof-slice.logic.test.ts
++++ b/src/tests/proof-slice.logic.test.ts
+@@ -282,3 +282,19 @@ describe('D10 task-375: the child-output ceiling is the registered variable', ()
+     expect(src).not.toMatch(/maxBuffer:\s*\d/);
+   });
+ });
++
++describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)', () => {
++  it('accepts a positive integer, given as a number or as the text the variable table stores', async () => {
++    const m = await import('../../scripts/analysis/proof-slice.mjs');
++    expect(m.timeoutMsFromVariable(120000)).toBe(120000);
++    expect(m.timeoutMsFromVariable('90000')).toBe(90000);
++    expect(m.timeoutMsFromVariable('1')).toBe(1);
++  });
++  it('refuses unset, empty, zero, negative, fractional and non-numeric values, each message names the variable', async () => {
++    const m = await import('../../scripts/analysis/proof-slice.mjs');
++    expect(typeof m.TIMEOUT_VARIABLE).toBe('string');
++    for (const bad of [undefined, null, '', '   ', 0, '0', -5, '-5', 1.5, '1.5', 'abc', '12s', Number.NaN, Number.POSITIVE_INFINITY]) {
++      expect(() => m.timeoutMsFromVariable(bad), String(bad)).toThrow(new RegExp(m.TIMEOUT_VARIABLE));
++    }
++  });
++});
+diff --git a/src/tests/review-template.logic.test.ts b/src/tests/review-template.logic.test.ts
+index 7e51c2f4f2adfffbbbc6be0bf22df9a577905dfc..976f07413125f95c02f7a999c03008d044f4cc6a 100644
+--- a/src/tests/review-template.logic.test.ts
++++ b/src/tests/review-template.logic.test.ts
+@@ -202,3 +202,19 @@ describe('substitutePlaceholders — values are inserted literally, once', () =>
+     expect(out).toBe('A:P {{SPECS}} {{DATA_CONTEXT}}|B:S {{PLAN}}|C:P {{SPECS}} {{DATA_CONTEXT}}|D:');
+   });
+ });
++
++describe('task-375 A2: one section list for the reviewer context, one extractSections', () => {
++  // eslint-disable-next-line @typescript-eslint/no-require-imports
++  const rt = require('../../scripts/lib/review-template');
++  const md = ['# Review context', '## Task', 't', '## Description', 'd', '## Acceptance criteria', 'a', '## Implementation Plan', 'p', '## Implementation Notes', 'n', '## References', 'r'].join('\n');
++  it('CONTEXT_SECTIONS and PLAN_SECTIONS are the plan constants', () => {
++    expect(rt.CONTEXT_SECTIONS).toEqual(['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes']);
++    expect(rt.PLAN_SECTIONS).toEqual(['Description', 'Acceptance criteria', 'Implementation Plan']);
++  });
++  it('extractSections cuts to the next heading of the same or higher level and throws on a missing heading', () => {
++    const out = rt.extractSections(md, ['Description', 'Implementation Plan']);
++    expect(out).toBe('## Description\nd\n\n## Implementation Plan\np');
++    expect(out).not.toContain('References');
++    expect(() => rt.extractSections(md, ['Nope'])).toThrow(/no heading contains that text/);
++  });
++});
+

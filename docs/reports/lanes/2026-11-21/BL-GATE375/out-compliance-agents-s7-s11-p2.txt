@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:06:34.759Z file_sha256=d232cda2acf240982deae0f6554003dc260a232de11f2d02a49431fa58b5abd3 prompt_sha256=fa6f351e92707260a314200df3d00713530796530b449f4c0a45b8d3b0109658
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-agents-s7-s11-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md §11.3 "Every lock is proven in BOTH directions (fails on the old shape, passes on the new) before red is claimed" and AC #8 "A3 lens-input --list surface-135 with a 60,000-character material: today exit 1 naming \"## Register\"; after A6 exit 0 with parts" — rule-lists.mjs:296 "if (subs.length === 0) return splitFlat(text, max, label, id);" — the acceptance record says "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)", so the splitFlat lock is green-only and the red the clause demands does not exist — run lens-input on a pre-change worktree for surface-135, policy-124-s2-s5 and bylaw-133 and paste the exit 1 output.
+
+BUG severity=HIGH — AC #6 "A1 scripts/deepseek-review.js review <task-381 diff> --template ... --context <that file> with the five --section flags and --dry-run: 0 hits of \"(no pasted context provided)\", at least 1 hit of \"yes to all\", the five heading lines present, prompt under 120000 characters" — deepseek-review.js:29 "const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');" — the record says "A1: NOT RUN: scripts/deepseek-review.js needs the API key from the environment file even for --dry-run", so the one defect this task exists to close (placeholder in the reviewer's context slot) is unproven on the tool path the diff touches — rerun A1 with the env file and paste the placeholder-hit count and the prompt sha256.
+
+DEFER severity=MED — AC #7 "rule-lists.mjs lens-input for each of the 15 resolved lists of task-381 with that context: paste each exit code, selected-section count and call count" — rule-lists.mjs:553 "context = rt.extractSections(fs.readFileSync(ctxFile, 'utf8'), rt.CONTEXT_SECTIONS);" — the recorded run is "A2 (buildLensInputs with the 5 sections, material 17,753 characters)", a library call, so no exit code was pasted and the new CLI refusal path (extractSections throwing on a real context-rN.md missing any of the five headings) is never exercised — rerun A2 through the lens-input CLI and paste 15 exit codes plus the task-410 and task-267 runs.
+
+DEFER severity=MED — 08_agents.md dated note 2026-11-21 "rule-lists.mjs lens-input refuses without --context" — rule-lists.mjs:551 "const matFrom = str('material-from', ''); const ctxFile = str('context', matFrom);" — a call with --material-from alone runs with no --context, so the literal refusal clause is not met, and no pasted clause names --material-from (it appears only in the lane's own build note) — require --context unconditionally, or get --material-from named in a ruling before relying on it.
+
+DEFER severity=LOW — AC #9 "choose the task on the day 375 launches: a LATER build task not recommended for drop; task-400 is, and its Files line collides with this task" — rule-lists.mjs:479 "const c = complianceRefs(r.lists, asList(t.fm.references));" — the recorded sample is "for task-101 (LATER, type record, not build) the command carries 6 compliance: entries = 6 lists of resolve", so no build task was shown — print and paste the command for one LATER build task.
+
+DEFER severity=MED — AC #12 "A7 D11b test red first then green" — rule-lists.mjs:163 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — the red rests on "'red first in red.out (rule-lists.logic.test.ts:650)'", a bare file name, the same name the retro grounder reported as "red.out and commit.out cited by the report are not in the repo", and no repo path is pasted for the new red either — name the committed path (or sha) holding the failing rule-lists.logic.test.ts:650 run.
+
+DEFER severity=LOW — AC #10 "The planted refusals of section 8, each with its control" — rule-lists.mjs:553 "if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> (the reviewer context of the task; the selected sections are counted in the room); --material-from <context-rN.md> is its own context');" — the record shows only "A5: the planted refusals with controls are the tests in ... (green in the commits)", no red for any planted refusal, so per §11.3 the refusal locks are unproven — paste each planted refusal failing before the change, or record them as uncovered in TRIAGE.
+
+MET — 08_agents.md dated note 2026-11-21 "rule-lists.mjs lens-input refuses without --context" — rule-lists.mjs:553 — the CLI dies with exit 2 when no context is reachable, and every buildLensInputs call site now counts and substitutes the real context.
+
+MET — plan A.4 "counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)" — rule-lists.mjs:364 "const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context, dataContext: '(no live-DB context provided)' }).length;" — the context length is subtracted from avail on the list path and the no-list path alike.
+
+MET — plan A.7 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — rule-lists.mjs:296 — splitFlat cuts at "|" rows and blank lines and keeps the old refusal only for a piece that alone passes the room.
+
+MET — README.md:104, lens-security.md:48 (D11b) "the security lens fires for admin and PII" — rule-lists.mjs:163 — admin and pii added to the sec regex that gates the security lens in both plan and output sets.
+
+MET — plan B.2 "check-tasks (existing command) prints, for each open task whose compliance: entries differ from the resolved lists (verifyResolved first), the exact backlog task edit task-N --add-ref ... command" — rule-lists.mjs:577 "backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}" — refs are computed only after verifyResolved passes and the exact command is printed with shell-safe quoting, exit unchanged.
+
+MET — plan A.2 "extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text" — deepseek-review.js:29 — the local copy is removed and the import now comes from ./lib/review-template (the new definition is not in this chunk, so its text is cannot-see here).
+
+REJECT — AC #9 "the exact backlog task edit task-N --add-ref ... command" — the printed command also carries --remove-ref, which B.2 does not name — AC #9's "after running the printed command, check-tasks prints nothing for it" cannot hold unless stale compliance: entries are removed, so the removal is required by the same clause.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 7
+
+---
+⏱  170067ms (170.1s)
+📊 Tokens — total: 57000, input: 26735, output: 30265, reasoning: 28530

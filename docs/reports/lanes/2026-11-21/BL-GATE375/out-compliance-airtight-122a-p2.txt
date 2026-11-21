@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T02:08:59.550Z file_sha256=83cc4d90bf5590edd56fec4dd2dee17846f5691c55558912d972a050295eb1fb prompt_sha256=124c83c55b4d446f397314099a131593f76baff686f7866e07f31a2b0dd09a35
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-122a-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #6 (A1) "A1 scripts/deepseek-review.js review <task-381 diff> --template .claude/review-templates/lens-compliance.md --context <that file> with the five --section flags and --dry-run: 0 hits of '(no pasted context provided)', at least 1 hit of 'yes to all'" — pasted acceptance note "A1: NOT RUN: scripts/deepseek-review.js needs the API key from the environment file even for --dry-run" — the assembled-prompt proof that the review tool no longer sees the placeholder is not on file, only a context-heading test exists, so AC #6 is UNMET — run the dry-run with the environment key and paste the 0-hit and the yes-to-all hit.
+
+BUG severity=MED — AC #9 (A4) "choose the task on the day 375 launches: a LATER build task not recommended for drop" — pasted acceptance note "for task-101 (LATER, type record, not build) the command carries 6 compliance: entries" — the required LATER build task was not used and the after-running half was proven only on a record task — run check-tasks on a LATER build task and paste its add-ref command then the empty output after running it.
+
+DEFER severity=MED — AC #8 (A3) "today exit 1 naming '## Register'; after A6 exit 0 with parts" — pasted acceptance note "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the pre-fix refusal is asserted but never run on the head, so the splitSmaller defect is not confirmed on the head as AC #1 asks — re-run lens-input on the old head and paste the exit 1 naming '## Register'.
+
+MET — A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes." — scripts/hooks/check-lane-close.mjs "if (c.text.trim() === PLACEHOLDER_CONTEXT) ... continue;" and "try { values.push(extractSections(c.text, want)); } catch (e) { problems.push(...) }" — placeholder and any missing required heading both become refusal problem lines.
+
+MET — A.6 "The context file is regenerated before each review round and committed with the round" — src/tests/backlog/backlog-brief-context.logic.test.ts "a later brief writes context-r2.md and leaves context-r1.md as it was (never overwritten)" — a second round writes r2 and leaves r1.
+
+MET — D3 "the first 12 hex of the sha256 of the title plus the whole body after the front matter, whitespace squashed" — scripts/hooks/check-lane-close.mjs "return sha(squash(`${fm.title ?? ''} ${body}`)).slice(0, 12);" — matches D3.
+
+MET — RR-0342 "regression only required when code is changed and reality check is only required when a figure is changed" — scripts/hooks/check-lane-close.mjs "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };" — regression stays conditional, integration and reality-check always.
+
+MET — A27 item 13 "A test that needs Postgres is `*.db.test.ts`" — src/tests/backlog/backlog-brief-context.logic.test.ts — the new tests are `.logic.test.ts`, and the Postgres proof stays a separate proof-slice.db.test.ts.
+
+REJECT — A26 R-BZ "SQL over pipeline_runs/sync_runs/logic_variables/schema_migrations/trade_configurations" — the change is accused of adding compute SQL, DDL, txn or direct writes — chunk 2 edits scripts/hooks/check-lane-close.mjs, scripts/lib/review-template.js and backlog tests only, no compute module or its AST require closure.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  115621ms (115.6s)
+📊 Tokens — total: 55533, input: 33590, output: 21943, reasoning: 21052

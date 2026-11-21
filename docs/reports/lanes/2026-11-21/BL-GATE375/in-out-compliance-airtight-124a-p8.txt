@@ -1,0 +1,463 @@
+LIST airtight-124a sha256:a17cafde55c326338a2ee657dc9aaac1007a54b8508b6476b3097e7c93af56eb material sha256:904e0ea4e347cdcff7e50691e37778f7b15e67a285e551c0afd04025aea7eafd part 2 of 2 chunk 4 of 5
+RULE LIST airtight-124a (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md, sections Appendix §B10; Appendix §B12), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 4 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists-table.logic.test.ts"]
+
+## Appendix §B12 — Register rows R-BZ…R-CP (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-18
+
+Moved from Spec 124 — Runner lane (operator y 2026-10-18, runner-lane ruling 17): Spec 124 was at 371/380 lines and owes the runner-lane rows (R-DM and the drafts allocated from R-DX) beside the badges lane R-DW. Rows R-BZ…R-CP (the next contiguous block after M25) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.
+
+| R-BZ | **Compute purity is a closed answer (operator 2026-10-10; McDonald's Airtight V3, operator 2026-10-11).** Gate E (SCALABLE, fast invariant #32) widens from the literal ban to codes G0–G13 (122a §A26): `compute-purity.mjs` over compute and its `require` closure, plus ast-grep siblings in `compute-shape.yml`. Ledger keys `<rule>@<fp>#<n>` / `<rule>@<line text>#<n>`; `matchLedger` lets one row cover one violation (C2). Purity rows close on their seam's `programme-items.json` id (CP-S1…S5, CP-PLANA, CP-PERMITS) and are RED once that item is BUILT, SUPERSEDED or missing (C3). A function-scope tunable const is a bypass (Rule 3, Q5). `mPerDegLat = 111320` (load_parcels, metres per degree of latitude) is a `physical_constant`. R-BA's hard stop is narrowed for purity codes only, on a closed list: enrich_centreline, massing, load_heritage, load_centreline, neighbourhoods, load_zoning (Q6 A); every other post-2026-09-26 or future conversion needs ZERO findings. #44 compute-attributed FAILs turn hard at max(CP-S1, P1-C9). | Rules 2, 3; amends R-BA, R-BG | 122a §A26; 122 §5 |
+| R-CA | **Compute-layer corrections to reality (operator 2026-10-10).** (i) An ASSERT compute may read through `ctx.pool` read-only, every relation declared, no DML/DDL/txn/maintenance (G4, G5); §3's "no `ctx.pool` reachable" was never true. (ii) Spec 122 §5.6 "never writes a row" STANDS: ENRICHER `passes[].run(client)` writes are interim, ledgered, and move behind the library write seam (CP-S3). | Rule 2, §3 | 122a §A26 |
+| R-CB | **R-BG(iv) is a baseline rule; seam/ordering reads accept every finished status (operator 2026-10-12, purity seam S1 OQ-1, ruled for 122/122a/124/124a compliance).** R-BG(iv)'s status set {completed, completed_with_warnings}, never completed_with_errors, never a `write_skipped_pre_write_warn` run, governs PRIOR-RUN BASELINES only (the one run-history reader `readRunHistory`, `scripts/lib/step/ledger.js`). An ordering/seam read (`checkSeam`, `scripts/lib/step/seam.js`) is not a baseline: it accepts every finished status {completed, completed_with_warnings, completed_with_errors} — a covered FAIL run is a finished run (122a:572) — and adopts only the shared warn-skip predicate and the `id DESC` tie-break. Locks: `src/tests/ledger-reader.logic.test.ts` (baseline set), a green lock in `src/tests/step-seam.logic.test.ts` (cwe stays accepted). S1-P (2026-10-13): `ctx.producer` / `readRunHistory` take an explicit closed `statuses` list per read, default the R-BG(iv) baseline; an activity or verdict read declares its wider terminal set in the descriptor pin (`staleness.pins[].statuses`), never the baseline. | Clarifies: R-BG (iv) scope | Spec 122a:572 |
+| R-CC | **A chain-run step row's status is derived from its verdict; the literal `'completed'` is retired (operator 2026-10-12, purity seam S1 OQ-6, per 122a:571-572).** `run-chain.js` writes each step row's status from ONE fold over that run's `records_meta.audit_table.rows` (the stored `.verdict` is cross-checked; a mismatch writes a `verdict_mismatch` audit row) — closed mapping: PASS→`completed`; WARN→`completed_with_warnings`; covered FAIL (step exit 0, fold FAIL)→`completed_with_errors`; SKIP→`completed`; UNKNOWN / null / missing or empty `audit_table` / unrecognised status / malformed summary→`completed_with_warnings` plus a `verdict_unavailable{reason}` audit row (null ≠ PASS, never `completed`). A thrown or non-zero step stays `failed`; `deferred_to_full` is untouched. Chain status equals the fold over the step-row statuses of that run (failed > completed_with_errors > completed_with_warnings > completed). `runLedgerGateDecision`'s upstream predicates KEEP the O-6 fail-safe (bare `'completed'`; widening them was measured 2026-10-01 to flip compute_centroids and link_parcel_addresses RUN→SKIP): a downstream of a `completed_with_warnings` / `completed_with_errors` upstream RUNs (operator confirmed "keep" 2026-10-12, Q-S1-a — the cost is extra downstream runs, never a wrong skip). Forward-only: history is not backfilled. Locks: run-chain status tests per mapping row (red-first where the status differs from today's literal), a chain⇔step invariant test, a seeded test that a completed_with_warnings upstream (with or without changes) forces RUN (O-6 fail-safe); the `run-chain-budget.logic` / `chain-cascade.integration` source scans updated knowingly. | Amends: R-BG (iv) consumers; Spec 122a:571-572 enforced in code | Spec 122a:571-572 |
+| R-CD | **An ASSERT's snapshot upsert is a compute-returned plan the runner executes (operator 2026-10-12, purity seam S2 Q4).** assert_engine_health returns `write_plan {table, sql, rows, report_check}`; `runWritePlan` runs it per-row autocommit on the pool (txn_scope `none`), stops at the first failing row, reports the declared `report_check` through `ctx.report` (one WARN row) and threads `records_meta.records_updated`; no compute-side DML. | R-BZ G5/G13 | `rcd-write-plan.logic`, `aeh-write-plan.logic` |
+| R-CE | **A calendar date derives from `ctx.clock` in the zone named by `pipeline_timezone` (operator 2026-10-12 / 2026-10-13, S2 Q5 + F3-2).** Bound as parameters (`to_timestamp($ms / 1000) AT TIME ZONE $zone`); `captured_at` binds the clock too; no `CURRENT_DATE`/`NOW()` in compute; the zone is never a literal. `pipeline_timezone` is the first string-typed logic variable: a seed `type: "string"` + closed `enum` (UTC · America/Toronto, default UTC = the measured session zone), declared with `enum` and `on_invalid: "fail"` only (schema-enforced). | Rule 3; R-BZ G6 | `aeh-clock-date.logic`, `string-logic-variable.logic` |
+| R-CF | **A session GUC a read depends on is declared (operator 2026-10-12, S2).** `execution.read_gucs[] {read, name, value}` against a closed allowlist (initially `enable_indexscan = off`); the runner issues SET/RESET around that read on its pinned client; compute holds no SET/RESET text (G4). RE-FREEZE. | R-BZ G4 | `step-schema.logic`, refresh_snapshot locks |
+| R-CG | **`execution.maintenance` may declare a dynamic-target arm (operator 2026-10-12; measurement ruled 2026-10-13, S2 F3-3).** `{operation, select: "dead_tuple_ratio", limit_from_config, why}` — the runner selects every public table with `n_live_tup > 0` and dead/(live+dead) above the named variable after compute, for ASSERT as well as ENRICHER, and writes one `sys_maintenance_selected_<op>` row even when nothing is selected. ONE fleet measurement, dead/(live+dead) (`scripts/lib/dead-tuple-ratio.js`, Spec 122a:391-396), shared by runner, AEH, `/api/quality` and the anomaly detector. RE-FREEZE. | R-BZ G4/G7 | `maintenance-dynamic-arm.logic`, `dead-ratio-one-measurement.logic` |
+| R-CH | **A vocab-coverage read is a runner-owned READ ONLY snapshot (operator 2026-10-12, S2).** `ctx.readSnapshot` (BEGIN READ ONLY, `SET LOCAL statement_timeout` from `execution.statement_timeout_minutes_from_config`, ROLLBACK) for ASSERT steps; the shared lib exposes a never-throwing client core that the legacy wrapper (`vocab-coverage-pool.js`) wraps outside the compute closure. | R-BZ G1/G4 | `read-snapshot.logic`, `vocab-coverage-core.logic` |
+| R-CI | **Scope-ledger hygiene DELETEs are library-owned ledger statements (operator 2026-10-12, S3).** EP-D10 prune and the step-start retire run in `scripts/lib/step/scope-retire.js` on a declared write target recorded in `write_discipline.why` / `before_image_why`; they never go through `ctx.retract`, and the descriptor's no-DELETE claim is corrected in the same landing. | R-BZ G5 | `purity-s3-exec-seam.logic`, enrich_parcels D20 |
+| R-CJ | **A guard-suppressed hygiene action emits one WARN row naming the guard's answer (operator 2026-10-12, S3).** `scope_retire_lock_held` carries `holder_run_id` and `rows_retained` (0 written as 0); no row when the guard is not tripped; null counters mean the probe did not run. | Rule 10 | enrich_parcels violations |
+| R-CK | **An ENRICHER pass DML runs through `ctx.exec(writesRef, sql, params)` (operator 2026-10-12, S3; wording ruled 2026-10-13).** The seam validates the declared target and the verb (UPDATE/INSERT/DELETE), executes on the pass client and returns the result; it is counter-neutral — counters stay pass-derived; compute never calls `client.query` for DML. | R-BZ G5; Spec 122a §A26 G5 | `purity-s3-exec-seam.logic` |
+| R-CL | **A uniqueness invariant over a declared read table is a `checks[]` row, not a compute throw (operator 2026-10-12, S4; refined 2026-10-13).** Its measurement read is declared under `checks[].reads` (R-BJ); unless the table's own key enforces it — then the key is cited and locked (e.g. `archetype_cost_rates.archetype` PRIMARY KEY, migration 205 + a live `pg_constraint` test) and no check is added. | Rule 10 | `cost-meta-no-logic-variables.logic`, DB PK test |
+| R-CM | **`ctx.config.$meta` is a library-owned, read-only map of declared logic-variable stamps (operator 2026-10-12, S4).** `updated_at` rides the SAME `logic_variables` statement as the value (F11 holds), non-enumerable so config stamps and hashes are unchanged; compute reads stamps from it, never `logic_variables` SQL; hooks receive `{pool, config, producer}`, never a bare pool. | R-BZ G1/G8 | `config-meta.logic` |
+| R-CN | **A gate-E ledger row names the file it allows (operator 2026-10-12; amends R-BZ's key).** A gate-E row carries `file`, the repo-relative posix path; `step` equals its basename (`validateRow`; a non-E row carrying `file` is refused). `matchLedger` keys gate E on `(step, file, item)`, and the `#n` ordinal counts per file (`gateEOrdinal`). So one row allows one site in one file (C2), and a same-named file in another directory is never covered. All 172 gate-E rows were re-keyed mechanically from their unique current finding (0 ambiguous, measured 2026-10-12); `filed`/`step`/`item` are unchanged, so the V3 freeze holds. | Rule 1; amends R-BZ | `ledger-key-file.logic.test.ts`; `ledger.mjs` selfTest (11/11b) |
+| R-CO | **A test never writes a before-image into the real golden tree (operator 2026-10-14; amends R-M's test surface).** Every vitest file runs inside a per-file before-image sandbox installed by `src/tests/setup.ts` (`src/tests/helpers/before-image-sandbox.ts`): fs calls on a path inside `docs/reports/golden/<slug>/before-image/` resolve under a per-file `os.tmpdir()` root that `afterAll` removes, while the library still returns its repo-relative path. The library (`write.js#persistBeforeImageRows`) is unchanged, so `lib_fingerprint` does not move. Real-run before-images stay local: `.gitignore` covers `docs/reports/golden/*/before-image/`. | Rule 4; amends R-M (Spec 124a) | `before-image-test-isolation.infra.test.ts` (real disk, unmapped `lstat`: no file after the writer runs on a real slug) |
+| R-CP | **A live test asserts that its child process completed before it asserts on that process's output (operator 2026-10-14; closes LM-D14's test-side recurrence).** A test that spawns `step-validate.mjs` (or another long CLI) first proves the run finished: no spawn error, no signal, an expected exit code, the summary header, and at least one score row per converted step (`notLookedReasons(run, convertedCount)` in `src/tests/helpers/step-validate-run.ts` returns `[]`). Only then does it assert on the output. An absence-only assertion (`not.toMatch(FAIL)`, `not.toContain(downgrade)`) is never sufficient alone. Spawn timeouts sit above the measured run time (420 s against 214 s). | Rule 4; §7 LM-D14 | `gate-score-floor` T6, `gate-captures` T6e, `gate-registries` T8b, `gate-five-words` T5/T5b, `programme-backlog` RED-proof P9, `deepseek-exec-fences` F14; each proven red by a killed/crashed-run mutant |
+
+
+---
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index d3a9ab087c1a99c8905b35915508573a4ccb5a58..c99a2b04f43e7c36aeb0b4353c5596635573d27a 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -11,9 +11,14 @@ const ID = { GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME:
+ const git = (cwd: string, ...a: string[]) => run('git', ['-c', 'commit.gpgsign=false', ...a], { cwd, env: ID });
+ const AC = 'Writes scripts/analysis/thing.mjs and the notes file docs/out/NOTES.md, nothing else';
+ const SCRIPT = path.join(__dirname, '../../../scripts/analysis/backlog-lane.mjs');
++// task-375 D: a build or fix launch needs real plan evidence on the board (the launch gate); the program in docs/reports/reviews/task-375/plant-evidence.mjs writes it for a fixture board with the real helpers (lens-input inputs, REVIEW headers, GROUNDER-PLAN.md, seat reports, round block, references, Plan line) and commits it
++function plantEvidence(board: string, task: string, laneName = 'BL-T1') {
++  const r = run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID });
++  if (r.status !== 0) throw new Error(`plantEvidence: ${r.stdout}${r.stderr}`);
++}
+ 
+ type Fx = { board: string; base: string; wt: string; main: string; pt: string; task: string; args: string[] };
+-function fixture(opts: { status?: string; hook?: boolean; files?: string | null; type?: string; letter?: string; noMilestone?: boolean } = {}): Fx {
++function fixture(opts: { status?: string; hook?: boolean; files?: string | null; type?: string; letter?: string; noMilestone?: boolean; noEvidence?: boolean } = {}): Fx {
+   const board = makeProject(), base = tmp('lane');
+   fs.mkdirSync(path.join(board, 'backlog/milestones'), { recursive: true });
+   fs.writeFileSync(path.join(board, 'backlog/milestones/m-0 - foundations.md'), `---\nid: m-0\ntitle: "Increment 1·A Foundations [${opts.letter ?? 'F'}]"\n---\n\n## Description\n\nx\n`);
+@@ -26,6 +31,7 @@ function fixture(opts: { status?: string; hook?: boolean; files?: string | null;
+   fs.writeFileSync(path.join(board, 'mobile/.keep'), '');
+   const task = mk(board, 'Launch me', ['-d', `Launch description text.${opts.files === null ? '' : `\n\nFiles: ${opts.files ?? 'scripts/analysis/thing.mjs'}`}`, ...(opts.type ? ['--type', opts.type] : []), '--ac', AC, '--ref', 'docs/a.md', '--doc', 'docs/b.md', ...(opts.noMilestone ? [] : ['-m', 'm-0']), ...(opts.status ? ['-s', opts.status] : [])]);
+   git(board, 'add', '-A'); git(board, 'commit', '-q', '-m', 'fixture');
++  if (['build', 'fix'].includes(opts.type ?? '') && !opts.noMilestone && !opts.noEvidence) plantEvidence(board, task);
+   if (opts.hook) { const h = path.join(board, '.git/hooks/pre-commit'); fs.writeFileSync(h, '#!/bin/sh\nexit 1\n'); fs.chmodSync(h, 0o755); }
+   const main = path.join(base, 'main');
+   fs.mkdirSync(path.join(main, 'node_modules'), { recursive: true }); fs.mkdirSync(path.join(main, 'mobile/node_modules'), { recursive: true });
+@@ -166,7 +172,7 @@ describe('backlog-lane real launch on the temp board (AC #1)', () => {
+     expect(brief.toString()).toMatch(/^FAKE BRIEF/);
+     const sha = crypto.createHash('sha256').update(brief).digest('hex');
+     expect(r.stdout.trim().split('\n').pop()).toBe(`BRIEF-FILE: ${path.join(ld, 'BRIEF.md')} sha256=${sha}`);
+-    expect(fs.existsSync(path.join(f.wt, `docs/reports/reviews/${f.task}/context-2026-11-19.md`))).toBe(true);
++    expect(fs.existsSync(path.join(f.wt, `docs/reports/reviews/${f.task}/context-r1.md`))).toBe(true);
+   });
+   it('uses --spec instead of a generated task.json when given', () => {
+     const f = fixture();
+@@ -194,6 +200,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+     let body = fs.readFileSync(file, 'utf8').replace('Launch description text.', `Launch description text. Files: ${files}`);
+     if (type) body = body.replace(/^labels: .*$/m, (m) => `${m}\ntype: ${type}`);
+     fs.writeFileSync(file, body);
++    if (type === 'build' || type === 'fix') plantEvidence(f.board, f.task);
+     const r = lane(f, ['--dry-run']);
+     const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null');
+     expect(spec, r.stdout + r.stderr).not.toBeNull();
+@@ -255,7 +262,22 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+     const cmd = /each `([^`]+)`/.exec(seg)?.[1] ?? '';
+     expect(seg).toContain('plan-review-deepseek.md');
+     expect(cmd).toContain('scripts/deepseek-review.js review');
+-    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context <pasted-context file>/);
++    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context docs\/reports\/reviews\/\S+\/context-r1\.md --section "Task"/);
++  });
++  // task-375 A3: every lens command passes the committed context (context-r1.md) and one --section per CONTEXT_SECTIONS entry; no command leaves a lens on the placeholder
++  it('A3: plan, output and compliance commands all pass the committed context and the five sections; the date name and the pasted-context placeholder are gone', () => {
++    const e = lensBrief('build', 'scripts/analysis/x.mjs, src/tests/');
++    const SECT = '--section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes"';
++    const ctx = /docs\/reports\/reviews\/\S+?\/context-r1\.md/.exec(e)?.[0] ?? '(none)';
++    expect(ctx).not.toBe('(none)');
++    const cmds = e.match(/scripts\/deepseek-review\.js review [^`]*/g) ?? [];
++    expect(cmds.length).toBeGreaterThanOrEqual(3);
++    for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }
++    expect(e).not.toContain('<pasted-context file>');
++    expect(e).not.toMatch(/context-<date>|context-20\d\d/);
++    expect(e).toContain(`lens-input --list L --context ${ctx}`);
++    expect(e).toContain('plan: --material-from');
++    expect(e).toMatch(/lens-input --context \S+ --material <diff file>/);
+   });
+   it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
+     for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
+@@ -307,6 +329,59 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+     expect(extra).toMatch(/a separate grounder rules on every finding/);
+     expect(extra).toContain('GROUNDER.md');
+   });
++  it('A3: the review line of the extra block (the plan template as --context) is the lens form with the committed context', () => {
++    const { extra } = dry({ files: 'scripts/analysis/x.mjs, src/tests/', type: 'build' });
++    const line = /Review \(review mode[^\n]*/.exec(extra)?.[0] ?? '';
++    expect(line).toContain('--template .claude/review-templates/plan-review-deepseek.md --context docs/reports/reviews/');
++    expect(line).toContain('--section "Implementation Notes"');
++    expect(line).not.toMatch(/--context \.claude\/review-templates/);
++  });
++  // task-375 B1: the take adds the compliance:<list id> <file> references, only the ids the task does not carry yet
++  it('B1: the take command adds one compliance reference per resolved list; a list already referenced is not added again', () => {
++    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
++    const lists = (JSON.parse(run('node', ['scripts/analysis/rule-lists.mjs', 'resolve', '--files', 'scripts/analysis/thing.mjs', '--type', 'build', '--letter', 'F'], { cwd: ROOT }).stdout) as { lists: { id: string; file: string }[] }).lists;
++    const take = (o: string) => /^\$ cd \S+ && .*task edit \S+ -s RUNNING.*$/m.exec(o)?.[0] ?? '';
++    const r1 = lane(f, ['--dry-run']);
++    const t1 = take(r1.stdout);
++    expect(t1).toBeTruthy();
++    expect([...t1.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length);
++    for (const l of lists) expect(t1).toContain(`--add-ref 'compliance:${l.id} ${l.file}'`);
++    backlog(f.board, ['task', 'edit', f.task, '--add-ref', `compliance:${lists[0]!.id} an older path`]);
++    const t2 = take(lane(f, ['--dry-run']).stdout);
++    expect([...t2.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length - 1);
++    expect(t2).not.toContain(`'compliance:${lists[0]!.id} `);
++  });
++  // task-375 D5: the launch gate
++  it('D: a build launch with no plan evidence on the board is refused, one line per missing item, nothing taken, in dry-run too (no flag turns it off)', () => {
++    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build', noEvidence: true });
++    for (const extra of [['--dry-run'], []]) {
++      const r = lane(f, extra);
++      expect(r.status, r.stdout + r.stderr).toBe(3);
++      const lines = r.stderr.trim().split('\n');
++      expect(lines[0]).toMatch(/refused: plan gate: .*no plan evidence folder docs\/reports\/reviews\/task-\d+\//);
++      expect(lines.length).toBeGreaterThan(1);
++      expect(statusOf(f)).toBe('LATER');
++      expect(fs.existsSync(f.wt)).toBe(false);
++    }
++  });
++  it('D: with the evidence the dry-run prints "plan gate ok: <L> lists" with L the resolved-list count and the Plan hash; a one-word edit of the task refuses with the new expected Plan line', () => {
++    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
++    const L = (JSON.parse(run('node', ['scripts/analysis/rule-lists.mjs', 'resolve', '--files', 'scripts/analysis/thing.mjs', '--type', 'build', '--letter', 'F'], { cwd: ROOT }).stdout) as { lists: unknown[] }).lists.length;
++    const ok = lane(f, ['--dry-run']);
++    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
++    expect(ok.stdout).toMatch(new RegExp(`plan gate ok: ${L} lists, \\d+ findings, Plan sha256:[0-9a-f]{12}`));
++    backlog(f.board, ['task', 'edit', f.task, '--append-notes', 'one more word']);
++    const bad = lane(f, ['--dry-run']);
++    expect(bad.status, bad.stdout + bad.stderr).toBe(3);
++    expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);
++    expect(statusOf(f)).toBe('LATER');
++  });
++  it('D: a task of another type (record) is not gated and launches with no plan evidence', () => {
++    const f = fixture({ files: 'docs/specs/00-architecture/08_agents.md', type: 'record' });
++    const r = lane(f, ['--dry-run']);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    expect(r.stdout).not.toContain('plan gate');
++  });
+   it('a Files path no row matches is refused at launch with the path named (exit 3, one line, nothing written)', () => {
+     const f = fixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' });
+     refused(lane(f), /zzz-nothing\/new\.txt/);
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index 960823f50101ad5627f5f32c0cc67048824e596b..4137b9c86c70ce9e09d6fc2f01441eeefb4428c5 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -28,14 +28,18 @@ const quoteAt = (k: number) => `export const value0${k} = 'alpha quote number 0$
+ const FINDING = 'BUG severity=HIGH — clause "x" — src/a.ts:1 "y" — claim — fix\n';
+ const sha = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
+ const HEX64 = 'a'.repeat(64);
+-// the prompt hash of a compliance output is what the review tool writes: sha256 of JSON [system, user] built from the repo template, the input file and the placeholder context
++// the prompt hash of a compliance output is what the review tool writes: sha256 of JSON [system, user] built from the repo template, the input file and the selected sections of the committed context
+ const TEMPLATE_TEXT = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-compliance.md'), 'utf8');
+ const LENS_TEMPLATES = ['compliance', 'code-review', 'error-paths', 'ux', 'security'].map((n) => [`.claude/review-templates/lens-${n}.md`, fs.readFileSync(path.join(ROOT, `.claude/review-templates/lens-${n}.md`), 'utf8')] as const);
+ const templateOf = (template: string) => (template === 'lens-compliance.md' ? TEMPLATE_TEXT : fs.readFileSync(path.join(ROOT, `.claude/review-templates/${template}`), 'utf8'));
+-const promptHash = (inputText: string, templateText = TEMPLATE_TEXT) => {
++// task-375 A4: the reviewer context is the selected sections of the committed context file (one value per context file)
++const CTX_FILE = fs.readFileSync(path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), 'utf8');
++const selectedOf = (text: string) => { const x = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { extractSections: (m: string, w: string[]) => string; CONTEXT_SECTIONS: string[] }; return x.extractSections(text, /^#{1,6}\s.*Implementation Notes/m.test(text) ? x.CONTEXT_SECTIONS : x.CONTEXT_SECTIONS.filter((n) => n !== 'Implementation Notes')); };
++let HASH_CTX = CTX_FILE; // the context text the outputs of the scenario being built were run with (default: the committed one)
++const promptHash = (inputText: string, templateText = TEMPLATE_TEXT, context: string = selectedOf(HASH_CTX)) => {
+   const rt = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { splitTemplate: (t: string) => { systemInstruction: string | null; userTemplate: string }; substitutePlaceholders: (t: string, v: Record<string, string>) => string };
+   const s = rt.splitTemplate(templateText);
+-  return sha(JSON.stringify([s.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.", rt.substitutePlaceholders(s.userTemplate, { plan: inputText, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' })]));
++  return sha(JSON.stringify([s.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.", rt.substitutePlaceholders(s.userTemplate, { plan: inputText, specs: context, dataContext: '(no live-DB context provided)' })]));
+ };
+ const hdr = (template: string, inputText: string | null, prompt?: string) => `REVIEW template=${template} model=deepseek-reasoner at=2026-11-20T10:00:00.000Z file_sha256=${inputText === null ? HEX64 : sha(inputText)} prompt_sha256=${prompt ?? (inputText !== null ? promptHash(inputText, templateOf(template)) : HEX64)}\n`;
+ const DIFF_FLAGS = (JSON.parse(run('node', ['-e', "import('./scripts/analysis/rule-lists.mjs').then((m)=>console.log(JSON.stringify(m.DIFF_ARGS)))"], { cwd: ROOT }).stdout) as string[]);
+@@ -67,10 +71,11 @@ type Opts = {
+   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
+   // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
+   triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean; notesBlock?: boolean;
+-  mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
++  ctx?: string | false; hashCtx?: string; refs?: false | string[]; mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
+ };
+ type TriageCtx = { ids: { id: string; word: string; sev: string }[]; sha: string; path: string; base: string; d: string };
+ function scenario(o: Opts = {}) {
++  HASH_CTX = o.hashCtx ?? CTX_FILE;
+   const d = tmp('lc');
+   const g = (...a: string[]) => run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...a], { cwd: d });
+   const w = (f: string, t: string) => { fs.mkdirSync(path.dirname(path.join(d, f)), { recursive: true }); fs.writeFileSync(path.join(d, f), t); };
+@@ -112,7 +117,7 @@ function scenario(o: Opts = {}) {
+   const splitArgs = o.split ? ['--max', String(o.split.max), '--template', path.join(d, '.git/tpl.md')] : [];
+   for (const id of ['first', 'inc-F', ...Object.keys(table.lists as object).filter((k) => k === 'xtra'), ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
+     const out = path.join(d, LD, `in-out-compliance-${id}`);
+-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
+     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
+     for (const p of r.stdout.split('\n').filter(Boolean)) {
+       const nm = path.basename(p);
+@@ -125,7 +130,7 @@ function scenario(o: Opts = {}) {
+   lane['out-code-review.txt'] = hdr('lens-code-review.md', material) + body(false);
+   if (o.split?.lens) {
+     // the non-compliance lenses split by the same tool: no --list, a lens template; the outputs are out-<lens>-pN.txt, each with its committed input
+-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--material', path.join(d, '.git/material.txt'), '--out', path.join(d, LD, 'in-out-code-review'), ...splitArgs], { cwd: d });
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--material', path.join(d, '.git/material.txt'), '--out', path.join(d, LD, 'in-out-code-review'), ...splitArgs], { cwd: d });
+     if (r.status !== 0) throw new Error(`lens-input (no list): ${r.stderr}`);
+     lane['out-code-review.txt'] = null;
+     for (const p of r.stdout.split('\n').filter(Boolean)) { const nm = path.basename(p); const inText = fs.readFileSync(p, 'utf8'); lane[nm] = inText; lane[nm.replace(/^in-/, '')] = hdr('lens-code-review.md', inText) + body(false); }
+@@ -151,6 +156,15 @@ function scenario(o: Opts = {}) {
+     fs.appendFileSync(path.join(d, o.finalTaskPath ?? TASK), `\n## Final Summary\n\n<!-- SECTION:FINAL_SUMMARY:BEGIN -->\n${(o.notesBlock ? ['no outcome block here'] : o.summary ? o.summary(block) : block).join('\n')}\n<!-- SECTION:FINAL_SUMMARY:END -->\n`);
+   }
+   for (const [n, t] of Object.entries(l)) if (t !== null) w(`${LD}/${n}`, t);
++  // task-375 A5: the review context the lane committed with its round (docs/reports/reviews/<task>/context-rN.md); B2: the references the close requires (the repo copies of the lane files)
++  if (o.ctx !== false) w('docs/reports/reviews/task-7/context-r1.md', o.ctx ?? CTX_FILE);
++  const tp = path.join(d, o.finalTaskPath ?? TASK);
++  if (!o.noTaskFile && o.refs !== false && fs.existsSync(tp)) {
++    const refs = o.refs ?? [`${LD}/REPORT.md`, `${LD}/GROUNDER.md`, ...(l['TRIAGE.md'] ? [`${LD}/TRIAGE.md`] : [])];
++    let tt = fs.readFileSync(tp, 'utf8');
++    if (!/^references:/m.test(tt)) tt = tt.replace(/\nmilestone:/, `\nreferences:\n${refs.map((r) => `  - ${r}`).join('\n')}\nmilestone:`);
++    fs.writeFileSync(tp, tt);
++  }
+   g('add', '-A');
+   const msgFile = path.join(d, '.git/MSG');
+   fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
+@@ -771,3 +785,204 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
+     expect(mk('docs/reports/lanes/x/seat.md').join('\n')).toMatch(/is outside docs\/reports\/reviews\/task-9\//);
+   });
+ });
++
++describe('task-375 A4, A5, B2: the close binds the committed review context and the references', () => {
++  const planted = (ctx: string) => { const r = scenario({ ctx }); return r; };
++  it('control: a lane with a valid committed context and the three references closes', () => {
++    const r = scenario();
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('refuses when no context file is committed for the task (the placeholder is not accepted)', () => {
++    refused(scenario({ ctx: false }), /no committed review context file/);
++  });
++  it('refuses a context that is the placeholder, and one without the Description heading', () => {
++    refused(planted('(no pasted context provided)'), /context-r1\.md/);
++    refused(planted(CTX_FILE.replace('## Description', '## Gone')), /Description/);
++  });
++  it('refuses a context edited after the review (the recomputed prompt hash no longer matches any committed context)', () => {
++    refused(planted(CTX_FILE.replace('a short description', 'a different description')), /prompt_sha256/);
++  });
++  it('an output must match one committed context file: the earlier round file is kept and still binds', () => {
++    const r = scenario({ staged: { 'docs/reports/reviews/task-7/context-r2.md': CTX_FILE.replace('a short description', 'a later round description') } });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('a missing Implementation Notes heading is refused when the task has notes, and control: tolerated when it has none', () => {
++    refused(scenario({ notesBlock: true, ctx: CTX_FILE.replace('## Implementation Notes\n(none)', '## Elsewhere\n(none)') }), /Implementation Notes/);
++    const bare = CTX_FILE.replace('## Implementation Notes\n(none)\n\n', '');
++    const ok = scenario({ ctx: bare, hashCtx: bare });
++    expect(ok.status, ok.stderr).toBe(0);
++  });
++  it('B2: a missing REPORT.md reference is refused and the exact add-ref command is printed; control above closes with all three', () => {
++    const r = scenario({ refs: ['docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md', 'docs/reports/lanes/2026-11-20/BL-COMPLY2/TRIAGE.md'] });
++    refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/);
++  });
++  it('B2: the TRIAGE.md reference is required only when the lane directory holds one', () => {
++    const noTri = scenario({ lensFinding: false, refs: [`docs/reports/lanes/2026-11-20/BL-COMPLY2/REPORT.md`, `docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md`] });
++    expect(noTri.status, noTri.stderr).toBe(0);
++    const tri = scenario({ refs: [`docs/reports/lanes/2026-11-20/BL-COMPLY2/REPORT.md`, `docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md`] });
++    refused(tri, /--add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/TRIAGE\.md/);
++  });
++});
++
++// ---- task-375 D: the launch gate (planGateErrors, PLAN_SEATS, planHash) ----
++type PO = {
++  type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
++  noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
++  ctx?: string; badMaterial?: boolean;
++};
++async function planScenario(o: PO = {}) {
++  const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
++  const rl = (await import('../../../scripts/analysis/rule-lists.mjs')) as { buildLensInputs: (a: unknown) => { suffix: string; text: string }[]; resolveTask: (a: unknown) => { lists: { id: string }[] } };
++  const id = 'task-7'; const dir = `docs/reports/reviews/${id}`;
++  const mem: Record<string, string> = { 'docs/a.md': '# A\nrule one text\nrule two text\n', 'docs/ev.md': '# Ev\nthe five words and the plan protocol\n', 'docs/ms.md': '# Ms\nthe milestone objectives\n', 'docs/inc.md': '# Inc\nincrement text\n', 'src/a.ts': AFILE };
++  const d = tmp('pg');
++  for (const [p, t] of Object.entries(mem)) { fs.mkdirSync(path.dirname(path.join(d, p)), { recursive: true }); fs.writeFileSync(path.join(d, p), t); }
++  fs.mkdirSync(path.join(d, 'backlog/milestones'), { recursive: true });
++  const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
++  for (const [p, t] of LENS_TEMPLATES) mem[p] = t;
++  const type = o.type ?? 'build';
++  const roundLine = o.round === false ? '' : (o.round ?? `Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder ${dir}/GROUNDER-PLAN.md; triage ${dir}/TRIAGE-PLAN.md\n`);
++  const bodyText = `${taskText({ status: 'LATER', type, files: o.files, assignees: [] })}\n## Implementation Plan\n\n<!-- SECTION:PLAN:BEGIN -->\nthe plan text is long enough to be quoted\n${roundLine}<!-- SECTION:PLAN:END -->\n`;
++  const text0 = bodyText;
++  const ctxText = o.ctx ?? CTX_FILE;
++  HASH_CTX = ctxText;
++  const sel = selectedOf(ctxText);
++  const cut = (createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { extractSections: (t: string, w: string[]) => string; PLAN_SECTIONS: string[] }).extractSections(ctxText, ['Description', 'Acceptance criteria', 'Implementation Plan']);
++  const files: Record<string, string> = {};
++  if (!o.noFolder) {
++    files['context-r1.md'] = ctxText;
++    if (type === 'build') {
++      const lists = rl.resolveTask({ table, root: d, body: text0, type, letter: 'F' }).lists.map((l) => l.id).filter((x) => x !== o.omitList);
++      for (const lid of lists) {
++        const ins = rl.buildLensInputs({ id: lid, list: (table.lists as Record<string, unknown>)[lid], root: d, material: o.badMaterial ? 'some other text under review' : cut, templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: sel });
++        for (const x of ins) {
++          const inn = `in-plan-compliance-${lid}${x.suffix}.txt`;
++          files[inn] = x.text;
++          files[inn.replace(/^in-/, '')] = hdr('lens-compliance.md', x.text, o.placeholder ? promptHash(x.text, TEMPLATE_TEXT, '(no pasted context provided)') : undefined) + body(false);
++        }
++      }
++    }
++    if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.finding ? body(true) : body(false);
++    if (o.finding) files['plan-code-review.txt'] = `${hdr('lens-code-review.md', null)}BUG severity=${o.finding.sev} — clause "x" — src/a.ts:1 "y" — claim — fix\nVERDICT: PASS\n`;
++    if (o.stray) files['notes.txt'] = 'stray\n';
++  }
++  const seatText = (n: string) => `# ${n} seat\n### ${n.slice(0, 3)}#1 LOW: a small thing to note\n`;
++  const needsReg = (o.files ?? 'src/a.ts').split(',').map((x) => x.trim()).some((e) => (o.tracked ?? ['src/a.ts']).includes(e));
++  const names = ['integration', 'reality-check', ...(needsReg ? ['regression'] : [])].filter((n) => !(o.drop ?? []).includes(n));
++  const seatLines: string[] = [];
++  const verdicts: string[] = [];
++  for (const n of names) {
++    const rel = `${dir}/seat-${n}-1.md`;
++    const t = seatText(n);
++    if (!o.noFolder) files[`seat-${n}-1.md`] = t;
++    mem[rel] = t;
++    seatLines.push(`Seat: ${n} ${o.seatPath ?? rel} sha256:${o.seatSha ?? sha(t).slice(0, 12)}`);
++    if (!o.seatNoVerdict) verdicts.push(`${n.slice(0, 3)}#1 REJECTED docs/a.md:2 "rule one text" a small observation that changes nothing in the plan text`);
++  }
++  if (o.triage !== false && o.triage !== undefined) files['TRIAGE-PLAN.md'] = o.triage;
++  const planFiles = Object.keys(files).filter((n) => /^plan-.+\.txt$/.test(n));
++  for (const n of Object.keys(files)) mem[`${dir}/${n}`] = files[n]!;
++  const lines = ['# Plan grounder', `Grounder: ${o.grounder ?? 'grounder-agent-1'}`, `Lane: ${o.laneHdr ?? 'BL-COMPLY2'}`, ''];
++  for (const n of planFiles.sort()) if (n !== o.noRuled) lines.push(`Ruled: ${n} sha256:${sha(files[n]!).slice(0, 12)} findings:${nFind(files[n]!)}`);
++  let k = 0;
++  for (const n of planFiles.sort()) for (let j = 1; j <= nFind(files[n]!); j++) { k += 1; lines.push(`${n.replace(/\.txt$/, '')}#${j} CONFIRMED src/a.ts:${k} "${quoteAt(k)}"`); }
++  lines.push(...verdicts, ...seatLines);
++  let finalText = o.editBody ? text0 : text0;
++  const refs = [`${dir}/GROUNDER-PLAN.md`, ...(o.triage ? [`${dir}/TRIAGE-PLAN.md`] : []), ...names.map((n) => `${dir}/seat-${n}-1.md`)];
++  finalText = finalText.replace(/\nmilestone:/, `\nreferences:\n${refs.map((r) => `  - ${r}`).join('\n')}\nmilestone:`);
++  if (o.refs === false) finalText = text0;
++  if (!o.noPlanLine) lines.push(`Plan: ${id} sha256:${m.planHash(finalText)}`);
++  if (!o.noGrounder && !o.noFolder) files['GROUNDER-PLAN.md'] = `${lines.join('\n')}\n`;
++  mem[`${dir}/GROUNDER-PLAN.md`] = files['GROUNDER-PLAN.md'] ?? '';
++  if (o.editBody) finalText = finalText.replace(/the plan text is long enough/, 'the plan text is wrong enough');
++  const tracked = o.tracked ?? ['src/a.ts'];
++  return m.planGateErrors({
++    id, taskText: finalText, type, table, root: d, letter: 'F', laneName: 'BL-COMPLY2', assignees: [], folder: Object.entries(files).map(([name, text]) => ({ name, text })),
++    readRepo: (p: string) => { if (o.throwRead) throw new Error('disk gone'); return mem[p] ?? null; }, tracked: (e: string) => tracked.includes(e),
++    facts: { taskOf: () => ({ exists: false, status: '', text: '' }), decisionExists: () => false },
++  });
++}
++const gate = (r: { errors: string[] }, re: RegExp) => { expect(r.errors.join('\n')).toMatch(re); expect(r.errors.length).toBeGreaterThan(0); };
++
++describe('task-375 D: the launch gate refuses a build or fix launch whose plan was not checked', () => {
++  it('control: a build task with full plan evidence passes and reports its lists, findings and Plan line', async () => {
++    const r = await planScenario();
++    expect(r.errors).toEqual([]);
++    expect(r.lists).toBe(4);
++    expect(r.line).toMatch(/^Plan: task-7 sha256:[0-9a-f]{12}$/);
++  });
++  it('a type other than build or fix is not gated', async () => {
++    const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[] } };
++    expect(m.planGateErrors({ id: 'task-7', taskText: taskText({ status: 'LATER', type: 'record' }), type: 'record' }).errors).toEqual([]);
++  });
++  it('no evidence folder: refused, the first error names the folder', async () => {
++    const r = await planScenario({ noFolder: true });
++    expect(r.errors[0]).toMatch(/no plan evidence folder docs\/reports\/reviews\/task-7\//);
++  });
++  it('a missing plan output for one list is refused naming the list; a plan output made over the placeholder context is refused', async () => {
++    gate(await planScenario({ omitList: 'inc-F' }), /list inc-F[\s\S]*plan-compliance-inc-F/);
++    gate(await planScenario({ placeholder: true }), /prompt_sha256/);
++  });
++  it('a plan output whose material is not the plan sections of the committed context is refused (a plan review of some other text); a context with other plan text still passes when the outputs follow it (control)', async () => {
++    gate(await planScenario({ badMaterial: true }), /not the Description, Acceptance criteria and Implementation Plan sections/);
++    const ok = await planScenario({ ctx: CTX_FILE.replace('the plan text', 'another plan text') });
++    expect(ok.errors).toEqual([]);
++  });
++  it('no GROUNDER-PLAN.md; a Grounder equal to the planned lane; a Lane header that is not the launched lane', async () => {
++    gate(await planScenario({ noGrounder: true }), /GROUNDER-PLAN\.md is missing/);
++    gate(await planScenario({ grounder: 'BL-COMPLY2' }), /Grounder .* (is the lane|same as Lane)/);
++    gate(await planScenario({ laneHdr: 'BL-OTHER' }), /Lane "BL-OTHER" is not the lane being launched/);
++  });
++  it('a missing integration or reality-check Seat line is refused', async () => {
++    gate(await planScenario({ drop: ['integration'] }), /no "Seat: integration/);
++    gate(await planScenario({ drop: ['reality-check'] }), /no "Seat: reality-check/);
++  });
++  it('regression is required when the Files line names an existing path, and not when it names only new paths', async () => {
++    gate(await planScenario({ drop: ['regression'] }), /no "Seat: regression/);
++    const nw = await planScenario({ files: 'src/brand-new.ts', tracked: ['src/a.ts'] });
++    expect(nw.errors.join('\n')).not.toMatch(/Seat: regression/);
++  });
++  it('a Seat path outside the evidence folder, a Seat file with another sha, and a seat finding with no verdict are refused', async () => {
++    gate(await planScenario({ seatPath: 'docs/a.md' }), /outside docs\/reports\/reviews\/task-7\//);
++    gate(await planScenario({ seatSha: '0'.repeat(12) }), /Seat integration[\s\S]*sha256/);
++    gate(await planScenario({ seatNoVerdict: true }), /seat finding .* no verdict/);
++  });
++  it('an unruled plan output is refused', async () => {
++    gate(await planScenario({ planLens: true, noRuled: 'plan-code-review.txt' }), /no "Ruled:" line for plan-code-review\.txt/);
++  });
++  it('a CONFIRMED plan finding with no outcome is refused; with a TRIAGE-PLAN.md outcome and the round block it passes (control)', async () => {
++    gate(await planScenario({ finding: { file: 'x', sev: 'LOW' } }), /no outcome line/);
++    const tri = 'plan-code-review#1 wontfix:"a low note with a reason of more than thirty characters"\n';
++    const r = await planScenario({ finding: { file: 'x', sev: 'LOW' }, triage: tri, round: 'Plan review round 1: 0 folded, 0 task, 0 ruling, 1 wontfix, 0 pile; grounder docs/reports/reviews/task-7/GROUNDER-PLAN.md; triage docs/reports/reviews/task-7/TRIAGE-PLAN.md\n' });
++    expect(r.errors).toEqual([]);
++  });
++  it('folded: a quote present in the task passes, a quote not in the task text is refused; fixed is refused in plan mode', async () => {
++    const round = (n: string) => `Plan review round 1: ${n}; grounder docs/reports/reviews/task-7/GROUNDER-PLAN.md; triage docs/reports/reviews/task-7/TRIAGE-PLAN.md\nplan-code-review#1 HIGH folded the plan text is long enou\n`;
++    const ok = await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 folded:"the plan text is long enough"\n', round: round('1 folded, 0 task, 0 ruling, 0 wontfix, 0 pile') });
++    expect(ok.errors).toEqual([]);
++    gate(await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 folded:"this sentence is nowhere in the task"\n', round: round('1 folded, 0 task, 0 ruling, 0 wontfix, 0 pile') }), /not in the task text/);
++    gate(await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 fixed:abcdef1 src/a.ts\n', round: round('0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile') }), /fixed is refused in plan mode/);
++  });
++  it('the round block is required on the task, and the references must hold the grounder and seat files', async () => {
++    gate(await planScenario({ round: false }), /holds no "Plan review round N/);
++    gate(await planScenario({ refs: false }), /references lack docs\/reports\/reviews\/task-7\/GROUNDER-PLAN\.md: backlog task edit task-7 --add-ref/);
++  });
++  it('the Plan line: a missing one is refused; one word edited in the task after the grounder ruled is refused with the new expected line (control: unchanged passes)', async () => {
++    gate(await planScenario({ noPlanLine: true }), /no last "Plan: <task id> sha256/);
++    const bad = await planScenario({ editBody: (b) => b });
++    gate(bad, /Plan line .* is not the hash of the task as it is now[\s\S]*expected: Plan: task-7 sha256:[0-9a-f]{12}/);
++  });
++  it('a stray file in the folder is ignored (control passes) and a read error is a refusal line, never a stack trace', async () => {
++    const s = await planScenario({ stray: true });
++    expect(s.errors).toEqual([]);
++    const t = await planScenario({ throwRead: true });
++    expect(t.errors.length).toBeGreaterThan(0);
++    expect(t.errors.join('\n')).toMatch(/could not read|disk gone/);
++  });
++  it('a fix task with one plan lens output passes; a build task with only that output is refused', async () => {
++    const fx = await planScenario({ type: 'fix' });
++    expect(fx.errors).toEqual([]);
++    const bd = await planScenario({ planLens: true, omitList: 'first' });
++    gate(bd, /list first/);
++  });
++});
+diff --git a/src/tests/backlog/rule-lists-table.logic.test.ts b/src/tests/backlog/rule-lists-table.logic.test.ts
+index 9eed93f88cb936c5baf8606df4a14f124d4d1241..7082ea1a8bc4a0e01f61d4f4a7418cdbbe66884f 100644
+--- a/src/tests/backlog/rule-lists-table.logic.test.ts
++++ b/src/tests/backlog/rule-lists-table.logic.test.ts
+@@ -46,7 +46,7 @@ describe('V2.LIST round 2: the table rows', () => {
+     expect(row.why).toContain('no governing spec found: operator ruling owed');
+   });
+   it('the Spec 124 list block carries Rule 13 and the role banner rule R-GW', () => {
+-    const r = script(CLI, ['lens-input', '--list', 'policy-124-s2-s5', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('p124'), 'in-x')]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'policy-124-s2-s5', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('p124'), 'in-x')]);
+     expect(r.status, r.stderr).toBe(0);
+     const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+     expect(text).toContain('Rule 13 added by R-R');
+@@ -203,10 +203,11 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
+     expect(without).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+   });
+   it('the surface-136 lens input generated for the change holds fe.01 to fe.44 (44 distinct ids)', () => {
+-    const r = script(CLI, ['lens-input', '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
+     expect(r.status, r.stderr).toBe(0);
+     const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+     const ids = new Set(text.match(/\bfe\.\d\d\b/g));
+     expect([...ids].sort()).toEqual(Array.from({ length: 44 }, (_, i) => `fe.${String(i + 1).padStart(2, '0')}`));
+   });
+ });
++// task-375: lens-input takes --context (A4); see the deviation note on the task
+
