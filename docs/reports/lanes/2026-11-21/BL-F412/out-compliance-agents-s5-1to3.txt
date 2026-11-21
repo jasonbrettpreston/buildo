@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:56:07.469Z file_sha256=fb0eb57311b84986a9fe9b1905ee99453b20c0d6e80d6c0b80b317058a30cf34 prompt_sha256=f68e7a920aa070c68b9aedea283d145be00a337825f70f165b4e023519981423
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-f412/docs/reports/lanes/2026-11-21/BL-F412/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings first, then MET lines.
+
+```
+DEFER severity=LOW — §5.3 "Rejected findings are written to the plan *with reasons* so they don't return every round (§8.8)" — src/tests/backlog/rule-lists-table.logic.test.ts NONE; the record is in the card notes "53 findings, 42 CONFIRMED (1 HIGH, 13 MED, 23 LOW, 5 NIT), 11 REJECTED; 40 folded into the plan by 13 sentence edits (FOLD-412.json as the grounder wrote it, applied mechanically), 2 to the review pile" — the notes name FOLD-412.json only for the 40 confirmed folds and give no destination or reasons for the 11 REJECTED, so §5.3's "with reasons" half cannot be seen — name the file/section holding the 11 rejections with their reasons on the card (or paste it), before this lane closes.
+```
+
+```
+MET — card Files line "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" — scripts/analysis/rule-lists.json:194 and src/tests/backlog/rule-lists-table.logic.test.ts:217 — exactly those two paths are changed, no third file in the diff
+MET — card Scope "Scope: one table row and its test." — scripts/analysis/rule-lists.json:193 — one row object, id "review-followups", plus one describe block, nothing else added
+MET — card Description "the pile: outcome of task-399 (RR-0338) points here once it exists" — scripts/analysis/rule-lists.json:197 — the row's why opens "task-412 (RR-0336, RR-0338)" so the pile reference the card names is carried
+MET — Q2 ruling (taken as approved, RR-0350) "the row attaches agents-s7-s11 and queue-137, as the eight other rows carrying agents-s7-s11 do" — scripts/analysis/rule-lists.json:196 — "lists": ["agents-s7-s11", "queue-137"] exactly, matching the sibling row at :190
+MET — Q1 ruling (taken as approved, RR-0350) "the note at 08_agents.md:351 is not edited by this task" — no hunk on docs/specs/00-architecture/08_agents.md — the diff touches neither 08_agents.md nor any spec file
+MET — round-3 note (1) "a lane whose own table differs from the board's in any of those four keys is refused" — scripts/analysis/rule-lists.json:193 — base_ref, finished_statuses, protected_paths and exempt are untouched; only a rows entry is added
+MET — round-3 note (2) "a task whose Files line names the table is judged by its branch table for lists and rows, with every_task still from the base" — scripts/analysis/rule-lists.json:194 — the Files line names the table and the change is a rows-only addition; every_task is not touched, so the branch-table route the note allows is the one used
+MET — round-3 note (2) "The rest of the table (lists, rows, every_task) and the lens templates are read from the range base" — scripts/analysis/rule-lists.json:198 — the added row is self-contained (id, globs, lists, why); no existing row, no template and no mcbylaws path map is redefined or copied
+```
+
+```
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+```
+
+Reviewed but not raised, for the record: Spec 08 §7 rule 6 itself (quoted in the row's why and in the test comment as 08_agents.md:350) is not pasted, so its wording cannot be verified here; whether the spec line is still true against the live tree is Ground-truth's, not this lens's. The card line "Not started; plan and panel before launch" is satisfied to the extent the pasted notes show plan review round 1 with 11 outputs and a separate grounder; a distinct panel record is not shown and is not named by any pasted clause.
+
+---
+⏱  56663ms (56.7s)
+📊 Tokens — total: 16899, input: 7017, output: 9882, reasoning: 8944

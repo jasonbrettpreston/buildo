@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:56:07.645Z file_sha256=4f0ce538c9dec979e04c58461f0353eed44d7b5bdd9e7b6fca1a1d85a2d3d8cf prompt_sha256=711ace6ca56af4300d113807f21662b435be0fbc4baa5ccbb6849a44928b8f02
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-f412/docs/reports/lanes/2026-11-21/BL-F412/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — Glossary "lock" — "A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it" — src/tests/backlog/rule-lists-table.logic.test.ts:215 "// task-412 FOLLOWUPS.ROW: Spec 08 section 7 rule 6 ... names docs/reports/review_followups.md" — the rule id FOLLOWUPS.ROW lives only in a comment, the describe and it titles name "task-412" and "Spec 08 section 7 rule 6", and whether FOLLOWUPS.ROW is a declared rule-map id or alias cannot see (scripts/analysis/rule-map.json not pasted) — put FOLLOWUPS.ROW in the describe title and cite the rule-map row that declares it
+DEFER severity=LOW — RR-0338 — "Low-priority findings go to a review pile; Reality-Check and Integration on the additions" — NONE — the pasted Implementation Notes record the Integration and Reality-Check seats only "on the plan", no review evidence for these two additions is pasted — attach the output-mode Reality-Check and Integration records for this chunk before merge
+DEFER severity=LOW — card — "Not started; plan and panel before launch" — NONE — the notes name plan review round 1 and the grounder Cairn-Ground-P412 but no panel record for task-412 is pasted — cite the panel record path in the implementation notes
+MET — card scope — scripts/analysis/rule-lists.json:193 — "one table row and its test" is met by exactly one new row (id review-followups) plus one test block
+MET — card Files — scripts/analysis/rule-lists.json:194 — "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" is met, no third file touched
+MET — Q2 — scripts/analysis/rule-lists.json:196 — "the row attaches agents-s7-s11 and queue-137" is met literally: "lists": ["agents-s7-s11", "queue-137"]
+MET — card rule — scripts/analysis/rule-lists.json:195 — "Spec 08 section 7 rule 6 (DEFER goes to review_followups.md with reasons)" is met by "globs": ["docs/reports/review_followups.md"]
+MET — card defect statement — src/tests/backlog/rule-lists-table.logic.test.ts:240 — "matches no row ... so a lane cannot write it" is asserted: "expect(bad.status, bad.stderr).toBe(3);" with "matched by no row"
+MET — Q1 — NONE — "the note at 08_agents.md:351 is not edited by this task" is met, the diff touches no file under docs/specs/
+REJECT — card scope — that the planted RED scaffolding ("fs.mkdirSync", "git init") adds behaviour the card did not name — the scaffolding only exercises the row's own refusal path, no product behaviour is added
+REJECT — Q3 — that "after task-375" is unmet because task-375 is still RUNNING — the ruling pasted settles it: "read as satisfied by task-375's tooling being folded while it is still RUNNING"
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  40695ms (40.7s)
+📊 Tokens — total: 12136, input: 4986, output: 7150, reasoning: 6402

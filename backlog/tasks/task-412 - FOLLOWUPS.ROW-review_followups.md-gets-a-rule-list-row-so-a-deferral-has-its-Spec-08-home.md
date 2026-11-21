@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-F412'
 created_date: '2026-11-20T23:40:00Z'
-updated_date: '2026-11-21T06:53:00Z'
+updated_date: '2026-11-21T06:57:00Z'
 labels:
   - McFix
   - McFix V2
@@ -31,6 +31,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-21/BL-F412/REPORT.md
 type: build
 ordinal: 112012
 ---
@@ -126,4 +127,6 @@ rg#1 MED folded it does not make a f
 2026-11-21 (lane BL-F412) red test written first: src/tests/backlog/rule-lists-table.logic.test.ts describe 'task-412: review_followups.md has its Spec 08 home' (two cases); the row follows. Note: gitFreeEnv() is not a name in the repo; the test spawns through helpers run()/script(), which strip every GIT_* variable (helpers.ts cleanEnv).
 
 2026-11-21 (lane BL-F412) commit A: row review-followups added after panel-records (lists agents-s7-s11, queue-137); the test went red at failing assertions first (red.out: resolve exit 3 not 0), now green through the hooks.
+
+2026-11-21 ACCEPTANCE (lane BL-F412, commit 52a49566e): (a) resolve --files docs/reports/review_followups.md --type build --letter S exit 0, lists: agents-s7-s11 queue-137 five-words plan-protocol inc-S ms-S. (b) validate: rule-lists: ok 55 lists, 23 rows (branch start had 22 rows, so N+1). (c) page --check: rule-lists: docs/reports/generated/rule-lists-by-kind.md is current. (d) red: red.out, both new cases failed at assertions (resolve refused, 'matched by no row', exit 3 not 0); green: commit.out, 21 passed, commit through real hooks, none bypassed. (e) git show --stat HEAD:  ...-list-row-so-a-deferral-has-its-Spec-08-home.md |  6 ++++-; scripts/analysis/rule-lists.json                   |  6 +++++; src/tests/backlog/rule-lists-table.logic.test.ts   | 30 ++++++++++++++++++++++;
 <!-- SECTION:NOTES:END -->

@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:56:07.680Z file_sha256=811584ecd5a013a3ab8d19ddd6d9ba5051909a96c66cd637bacee40e8ee7b21e prompt_sha256=3801badc64f3accd1e5e8dd3b29bad7afcfbe472e6bf5c7c475679bd5e6c5340
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-f412/docs/reports/lanes/2026-11-21/BL-F412/in-out-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — none — M-246 note item 4 "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce (`scripts/analysis/rule-lists.mjs` lensSet, `scripts/hooks/check-lane-close.mjs`), plus its separate grounder" — src/tests/backlog/rule-lists-table.logic.test.ts:216 "task-412 FOLLOWUPS.ROW: Spec 08 section 7 rule 6 ("DEFER -> review_followups.md with reasons", 08_agents.md:350)" — NONE
+
+That is a malformed line; the real findings follow in the corrected block.
+
+DEFER severity=MED — M-246 note item 4 "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce ... plus its separate grounder" — plan-protocol card note "11 plan review outputs written by plan-prep review (83 s), the Integration, Reality-Check and Regression seats on the plan, ruled by the separate grounder Cairn-Ground-P412" — the pasted evidence names three seats and a grounder, not the lane's Spec 08 section 7 lens set, and docs/reports/reviews/task-412/ cannot see — paste the lane panel record or its PASS lines onto the card before merge.
+
+DEFER severity=LOW — task-412 "Not started; plan and panel before launch." — plan-protocol card note "2026-11-21 taken on the board at lane launch (lane BL-F412, worktree /Users/brettpreston_macmini/Buildo-wt-f412, branch wf1/inc1b-f412), RR-0240" — the lane is already launched while the only plan evidence pasted is round 1 with three seats, the panel gate PASS lines cannot see — attach the panel gate evidence to the card before close.
+
+DEFER severity=NIT — task-412 "Rule: Spec 08 section 7 rule 6 (DEFER goes to review_followups.md with reasons)." — src/tests/backlog/rule-lists-table.logic.test.ts:216 "08_agents.md:350" versus pasted note "(Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`)" — the pasted mapping puts rule 6 at :340, so the :350 anchor cannot be reconciled from pasted text — verify the line against the file and correct the comment or cite only the section.
+
+MET — task-412 "Scope: one table row and its test." — scripts/analysis/rule-lists.json:194 "id": "review-followups" — exactly one row added, globs the named file.
+
+MET — task-412 "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" — diff header b/scripts/analysis/rule-lists.json and b/src/tests/backlog/rule-lists-table.logic.test.ts — only the two named files are touched.
+
+MET — Q2 ruling "the row attaches agents-s7-s11 and queue-137, as the eight other rows carrying agents-s7-s11 do" — scripts/analysis/rule-lists.json:195 "lists": ["agents-s7-s11", "queue-137"] — exactly those two lists.
+
+MET — Q1 ruling "the note at 08_agents.md:351 is not edited by this task" — diff touches only rule-lists.json and the test file — no spec file edit.
+
+MET — task-412 "Today docs/reports/review_followups.md matches no row of scripts/analysis/rule-lists.json, so a lane cannot write it" — scripts/analysis/rule-lists.json:193 "globs": ["docs/reports/review_followups.md"] — the exact path now resolves, and the planted case asserts exit 3 "matched by no row" without it.
+
+MET — RR-0338 "the findings that are deemed low priorities are filed in a review pile for later" — scripts/analysis/rule-lists.json:193-196 — the review-pile file is now writable by a lane with its governing lists.
+
+REJECT — task-412 "Spec 08 section 7 rule 6 (DEFER goes to review_followups.md with reasons)" — accused of not enforcing "with reasons" in review_followups.md — Q1 pasted ruling says "the row lets a lane write the file and does not make a file write an outcome", so enforcement is outside this clause.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  51044ms (51.0s)
+📊 Tokens — total: 14542, input: 5810, output: 8732, reasoning: 7707

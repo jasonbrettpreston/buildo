@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:56:07.713Z file_sha256=472353648fef39529fc9e6b5492a5f9b79428397ad21ff59137ae35e428cb5e6 prompt_sha256=30dee26e7cf3e49d0471212a9a6bbbefb85f33c9ad67efe821f41d5d66aced4a
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-f412/docs/reports/lanes/2026-11-21/BL-F412/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0336 item 1 "a table row for review_followups.md, after task-375" — NONE — the ruling's ordering condition is met only under the grounder's reading, "Q3 'after task-375' is read as satisfied by task-375's tooling being folded while it is still RUNNING (the operator may rule it means DONE)", and task-375 is not DONE — record the Q3 reading in the card's Decisions section, or land the row only once task-375 is DONE if the operator rules that.
+
+DEFER severity=LOW — the row's own governing basis, Spec 08 section 7 rule 6 and Spec 137 rule 2, is not pasted — scripts/analysis/rule-lists.json "Spec 08 section 7 rule 6 (\"DEFER -> review_followups.md with reasons\", 08_agents.md:350) names docs/reports/review_followups.md, so Spec 08 sections 7 and 11 (the list that holds rule 6) and Spec 137 (rule 2, the card) govern it" — the glob and list set rest on clause text I cannot see, so their exactness cannot be judged — paste 08_agents.md:350 and Spec 137 rule 2 with the review, or mark the row's citation as unverified.
+
+DEFER severity=NIT — Q2 "the row attaches agents-s7-s11 and queue-137, as the eight other rows carrying agents-s7-s11 do" — scripts/analysis/rule-lists.json "\"lists\": [\"agents-s7-s11\", \"queue-137\"]" — the eight comparator rows are not pasted, so the absence of the surface lists (surface-128, surface-126) used by the neighbouring panel-record row cannot be checked — paste the eight comparator rows or state in the card that no surface list applies to a reports file.
+
+MET — task card "Scope: one table row and its test." — scripts/analysis/rule-lists.json "id": "review-followups" plus src/tests/backlog/rule-lists-table.logic.test.ts "describe('task-412: review_followups.md has its Spec 08 home'" — exactly one row and one test block, nothing else.
+
+MET — task card "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" — the two diff headers — the change touches only the two named files.
+
+MET — RR-0338 "the findings that are deemed low priorities are filed in a review pile for later" — scripts/analysis/rule-lists.json "\"globs\": [\"docs/reports/review_followups.md\"]" — the pile file now resolves to a row, which the Q1 ruling scopes as letting a lane write it and not as making a file write an outcome.
+
+MET — RR-0350 "If the panel leaves an open question - ground it and then take that as approved and let me know in the morning." — "Three open questions were ruled by the grounder with grounds (docs/reports/reviews/task-412/QUESTIONS-RULED.md) and are taken as approved" — the open questions Q1 to Q3 are grounded and reported.
+
+MET — task card "Not started; plan and panel before launch." — "Plan review round 1 of this task, the first made with plan-prep (task-418): 11 plan review outputs" — the pre-launch plan review step is evidenced.
+
+REJECT — doc-2 Increment S requirements, element clauses A.1 to G.6 and the built/counts lines — accused of not moving the search page element statuses the table records — no doc-2 clause names scripts/analysis/rule-lists.json, docs/reports/review_followups.md or "review-followups"; the whole file governs the search pages and the report hand-off.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+
+---
+⏱  30164ms (30.2s)
+📊 Tokens — total: 14954, input: 9650, output: 5304, reasoning: 4432

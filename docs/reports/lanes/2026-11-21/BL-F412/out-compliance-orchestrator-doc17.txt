@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:56:07.611Z file_sha256=e9857c53ec1534087c978ee005c56fbf19dbc6980ea4ee6be7697a093aa95698 prompt_sha256=44af65417a41ee363fdecb9294073997c1351124733a7d652ac33e7ad79e989c
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-f412/docs/reports/lanes/2026-11-21/BL-F412/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — card ordering "a table row for review_followups.md, after task-375; until then a deferral goes to a named task" — Implementation Notes "Q3 'after task-375' is read as satisfied by task-375's tooling being folded while it is still RUNNING (the operator may rule it means DONE)" — the sequencing condition is carried by a grounded reading, not an operator ruling, and the pasted note itself says the operator may read it as DONE; docs/reports/reviews/task-412/QUESTIONS-RULED.md cannot see — before merge either show task-375 DONE or record the operator's one-word ruling on Q3 next to the row.
+
+DEFER severity=LOW — Q2 "the row attaches agents-s7-s11 and queue-137, as the eight other rows carrying agents-s7-s11 do" — src/tests/backlog/rule-lists-table.logic.test.ts "expect(rows[0]!.lists).toEqual(expect.arrayContaining(['agents-s7-s11', 'queue-137']))" — the arrayContaining plus the id filter pass if the row later gains a third list, and the file's lists() union would still pass if a second row also matched the file, so the test named "through exactly one row" cannot detect either drift — assert exact equality on the row's lists and assert the file resolves through exactly one row of the real table.
+
+MET — card scope "Scope: one table row and its test." — scripts/analysis/rule-lists.json:193 — exactly one row added, one describe block added, no other table edit.
+
+MET — card "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" — the diff touches those two files and no others.
+
+MET — Spec 08 section 7 rule 6 "DEFER -> review_followups.md with reasons" — scripts/analysis/rule-lists.json "globs": ["docs/reports/review_followups.md"] — the named file is now a table row, which is what the rule requires to be writable.
+
+MET — Q1 "the note at 08_agents.md:351 is not edited by this task" — the diff contains no 08_agents.md hunk.
+
+MET — RR-0336 item 1 (a table row for review_followups.md) — the row with id "review-followups" exists with the file glob.
+
+MET — RR-0338 "the findings that are deemed low priorities are filed in a review pile for later" — the row targets docs/reports/review_followups.md, the pile file.
+
+MET — Q2 "the row attaches agents-s7-s11 and queue-137" — scripts/analysis/rule-lists.json "lists": ["agents-s7-s11", "queue-137"] — the row carries exactly the two named lists.
+
+REJECT — doc-17 readings (e.g. "RR-0105 ... All-lot store is one headline record per parcel and option") — that these readings bind the row's content — doc-17 states "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)", so only the card and the quoted operator decisions were checked.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+
+---
+⏱  37911ms (37.9s)
+📊 Tokens — total: 20676, input: 14403, output: 6273, reasoning: 5530

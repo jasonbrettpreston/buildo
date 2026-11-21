@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T06:56:07.752Z file_sha256=717d1141205684609bf95a2a49087ff4d1f23042bd12bf34b15e3a68e2ae3479 prompt_sha256=d43544e9f1303f9db12d86a1975e175c18a3997ec995b6f6e7553519815b30c2
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-f412/docs/reports/lanes/2026-11-21/BL-F412/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — card Description, "Operator approved the item (RR-0336, item 1 of the list put to him: a table row for review_followups.md, after task-375; until then a deferral goes to a named task)" — NONE — the card's own note says "task-375's tooling being folded while it is still RUNNING", so on the plain reading the row lands before "after task-375" and only Q3's grounded reading lets it pass, and Q3 itself warns "(the operator may rule it means DONE)" — hold the row until the operator rules what "after task-375" means, or record that ruling on the card before merge.
+
+DEFER severity=LOW — card section "Decisions naming this task", "RR-0336 Items 0 to 8 approved for task-399 and task-375" — NONE — the only pasted RR-0336 text approves items for task-399 and task-375 and says only "approved" as its verbatim, the item naming docs/reports/review_followups.md exists only in the card's prose and cannot be seen — paste RR-0336 item 1 verbatim onto the card or into the row's why field.
+
+REJECT — Q1 ruling, "the row lets a lane write the file and does not make a file write an outcome" — that the change does not implement the DEFER behavior and does not create docs/reports/review_followups.md — Q1 ruled the row's job is exactly to let a lane write the file, and whether the file replaces the TRIAGE.md pile line is the operator's to rule.
+
+REJECT — card, "Not started; plan and panel before launch" — that the row landed without the panel step — the notes record "11 plan review outputs" from the Integration, Reality-Check and Regression seats ruled by grounder Cairn-Ground-P412, with evidence at docs/reports/reviews/task-412/, before the lane launch.
+
+MET — card Files line, "Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts" — scripts/analysis/rule-lists.json:193 and src/tests/backlog/rule-lists-table.logic.test.ts:217 — the diff touches exactly those two files, no others.
+
+MET — card Rule line, "Spec 08 section 7 rule 6 (DEFER goes to review_followups.md with reasons)" — scripts/analysis/rule-lists.json:195 — the added glob is exactly "docs/reports/review_followups.md".
+
+MET — Q2 ruling, "the row attaches agents-s7-s11 and queue-137" — scripts/analysis/rule-lists.json:196 — the lists array is ["agents-s7-s11", "queue-137"].
+
+MET — card scope, "Scope: one table row and its test." — scripts/analysis/rule-lists.json:194 and src/tests/backlog/rule-lists-table.logic.test.ts:217 — one JSON row plus one describe block, no other behavior added.
+
+MET — card, "Today docs/reports/review_followups.md matches no row of scripts/analysis/rule-lists.json, so a lane cannot write it" — src/tests/backlog/rule-lists-table.logic.test.ts:240 — with the row filtered out the resolver exits 3 "matched by no row", with it exit 0, so the row is what admits the file.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+
+---
+⏱  83263ms (83.3s)
+📊 Tokens — total: 18952, input: 4196, output: 14756, reasoning: 13982

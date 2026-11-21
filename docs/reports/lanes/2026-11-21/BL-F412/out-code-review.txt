@@ -1,0 +1,13 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T06:56:07.401Z file_sha256=bc91b6ae4f6e4a8d68a63251a0fed013c1d46427257a01eb553553ad06b15da4 prompt_sha256=3af1be086af1d2f7417d5f982f34411681d2d890c03bbd5da9441297a5e8043b
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-wt-f412/docs/reports/lanes/2026-11-21/BL-F412/in-out-code-review.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — src/tests/backlog/rule-lists-table.logic.test.ts:233 "expect(rows[0]!.lists).toEqual(expect.arrayContaining(['agents-s7-s11', 'queue-137']))" — arrayContaining passes if the row gains extra or wrong lists, so a regression that over-attaches lists slips through, unlike the neighbour row whose lists are fixed — assert the exact set with toEqual(['agents-s7-s11', 'queue-137']) since the single row must carry exactly these.
+REJECT — src/tests/backlog/rule-lists-table.logic.test.ts:233 "expect(rows[0]!.lists)" — the non-null assertion looks like it hides a possible undefined deref — it is guarded by "expect(rows).toHaveLength(1)" at line 232, so rows[0] is defined whenever this line is reached.
+REJECT — src/tests/backlog/rule-lists-table.logic.test.ts:238 "expect(control.status, control.stderr).toBe(0)" — passing stderr as the second argument looks like a mixed-up assertion target — it is Jest's failure-message argument, used intentionally for diagnostics, and mirrors line 240.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  43147ms (43.1s)
+📊 Tokens — total: 11197, input: 3406, output: 7791, reasoning: 7519
