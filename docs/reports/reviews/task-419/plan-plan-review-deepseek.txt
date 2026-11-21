@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-21T14:44:09.397Z file_sha256=667231279a60124a7ca749f37ff0ce08ebd913730cc7c34c930c2454cc4813b8 prompt_sha256=a1a8663483ba263a5ffa32dd5ca02441d3914dc12c2564ae61f6a26ac9806eb5
+🔍 Lens review of docs/reports/reviews/task-419/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — §3 Design / §4 EXACT EDITS — the plan adds the FOLD-CHECK.md gate and its format, but edits no grounder brief or procedure telling the grounder *what* to write; the only real example (task-412) already lacks `Verdict:` and the `Plan:` line, so the first launch after this lands will exit 3 against a free-form report — add the exact three-line format to the grounder's standing brief/procedure (or plan-prep instructions) in the same landing, or the record has an enforcer and no author.
+DEFER severity=MED — §9 open question 2 / §3 — the gate change is retroactive to every launch, so any already-prepped task (GROUNDER-PLAN.md committed, not yet launched) will suddenly exit 3 with no FOLD-CHECK.md; the plan defers to the grounder but never counts them — enumerate now (`git ls-files 'docs/reports/reviews/*/GROUNDER-PLAN.md'` × task status ≠ BUILT/DONE) and either pre-write those files or add a one-time exemption; bounded (write the file) but a silent, operator-blocking rollout.
+BUG severity=MED — §3 "Can prove: committed at board HEAD" — the whole "committed record" claim depends on planGateInner's `textOf` resolving from `git show HEAD:<path>` and not the working tree; if it reads working files, an uncommitted FOLD-CHECK.md passes and Gap 1's goal is not met — verify `textOf`'s implementation (or commit-then-read flow) before locking, else change it to read HEAD.
+DEFER severity=MED — §7 acceptance (c) vs (d) — (c) names the output `in-out-code-review-p1.txt` while (d) expects the close check to see `out-code-review-p1.txt`; if the tool's `--out` base produces `in-out-…` the close check (reading `out-…`) never finds it — pin the exact filename the tool prints and make (c)/(d) use the identical base.
+DEFER severity=MED — §3 / §5 — the -p1 change alters the canonical name for no-list lenses; the plan does not grep for *other* consumers of the unsuffixed `out-<lens>.txt` name (review poster, findings aggregator, plan-prep) that could break — run `grep -rn "out-code-review\|out-error-paths\|out-ux\|out-security" scripts/ src/tests/` and confirm no downstream reader expects the unsuffixed name.
+DEFER severity=MED — §3 "a last line `Plan: <task id> sha256:<12>`" — the body is "free (the grounder's report, pasted)", so a last-line parser can match a `Plan: …` line quoted inside the prose and pick the wrong hash — anchor the parser to a line starting exactly `Plan: <task-id> sha256:<12hex>` and/or require it be the literal last non-empty line.
+DEFER severity=LOW — §5 "default plants a good FOLD-CHECK.md" — adding a file to the default fixture can break any plant test that asserts the exact evidence-directory contents — grep plant-evidence/`git ls-files` assertions and update expected file sets.
+DEFER severity=LOW — §3 suffix rule — for a no-list lens with zero files the old expression yields '' but the new "no list → always -pN" yields -pN; confirm a zero-material lens path doesn't exist or that -pN is the intended name there.
+NIT — §4b docstring (:358-362) — make it state "no-list lens always -pN; list lens single file unsuffixed" so future readers can't reintroduce the mismatch.
+
+VERDICT: FAIL on plan-readiness for implementation
+
+Top 3 operational blockers (if FAIL):
+- No edit to the grounder's brief/procedure: the gate will reject the grounder's free-form report (task-412 already lacks Verdict + Plan line) on the first launch after landing.
+- The retroactive gate has no enumeration of already-prepped-but-not-launched tasks — unknown number of pending launches will silently exit 3.
+- The "committed record" guarantee hinges on `textOf` reading HEAD, not the working tree — unverified and load-bearing for Gap 1.
+
+Top 3 unverified data premises (regardless of verdict):
+- Prepped-but-not-launched task set: `comm -23 <(git ls-files 'docs/reports/reviews/*/GROUNDER-PLAN.md' | cut -d/ -f4 | sort -u) <(git grep -l 'status: BUILT\|status: DONE' -- backlog/tasks | cut -d/ -f3 | sort -u)` — confirm the blast radius before shipping the retroactive gate.
+- No committed *tool-made unsuffixed* no-list output: `git ls-files 'docs/reports/reviews/*/out-*.txt' | grep -vE '\-p[0-9]+\.txt$'` then grep each for a `LIST none` stamp — confirms the -p1 change breaks nothing already committed.
+- `textOf` resolution source: inspect the function (or `git show HEAD:docs/reports/reviews/<task>/FOLD-CHECK.md` behavior) — confirm the gate refuses an uncommitted file, proving Gap 1's "committed at HEAD" claim.
+
+---
+⏱  88663ms (88.7s)
+📊 Tokens — total: 32012, input: 17193, output: 14819, reasoning: 13629
