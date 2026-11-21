@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-21T16:43:00Z'
-updated_date: '2026-11-21T17:09:00Z'
+updated_date: '2026-11-21T22:01:00Z'
 labels:
   - McFix
   - McFix V2
@@ -175,4 +175,6 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0365 · task-423 · Backlog; o
 2026-11-21 (M-246) Plan put on the task by the orchestrator: PLAN-423-v2 (sha256 fc2dc2c9d913…), written read-only by a separate planner, the cut version ordered by the operator (RR-0365, verbatim: "yes cut the plan and have the panel review the plan - review - ground - present the plan with tasks ready to execute"). The plan field carries the WHOLE plan (six adjustments, cards A to D) so the panel reviews it whole; this task is card A (adjustments 1 and 3) and the Files line is card A's. Cards B, C and D are opened only after the operator has seen the grounded plan. His nine steps are his understanding of the existing process, not a new plan (his correction of the same day). Nothing is built before he has seen the grounded plan.
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0366 · task-423 · Backlog; operator, verbatim: "Each of the five tasks is pre-approved to get this to work right.  Theses tasks are pre approved but let's limit the output reviews to csomething reasonable")
+
+Dated note 2026-11-21 (M-246, prior text kept; RR-0367 · task-423 · Backlog; operator, verbatim: "1 y 2 med gets fixed in the plan if verified and for the output - I guess it depends on how serious med concerns are? If they are important then they should be fixed too.  3. y 4. hold 5. tools live in the repo is there another option")
 <!-- SECTION:NOTES:END -->
