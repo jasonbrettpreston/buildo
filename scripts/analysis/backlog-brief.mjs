@@ -168,7 +168,7 @@ const out = [
   `  Run by the tool-bearing Claude lane with provider claude: scripts/deepseek-review.js is not in exec-policy.json bash_allow, which governs only the DeepSeek execution engine (Spec 08 section 7 rule 10 (b), 08_agents.md:341). Context file ${ctxRel} sha256=${ctxSha}.`,
   `Context pack sections: ${ctxRel} also carries Milestone, Document sections, Decisions naming this task, Prior reviews and lane reports, Dependencies (RR-0235): read it, not only the references above.`,
   `Close:`,
-  `  backlog task edit ${taskId} --check-ac <n> (each criterion, with its evidence) --final-summary "<what landed, commit sha, hook result>" --append-final-summary "<the outcome block the close check prints: Review round N line and one line per CRITICAL, HIGH or MED finding>" -s BUILT (one command; every CONFIRMED or CONFLICT finding of GROUNDER.md has an outcome line in TRIAGE.md first: node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>)`,
+  `  backlog task edit ${taskId} --check-ac <n> (each criterion, with its evidence) --final-summary "<what landed, commit sha, hook result>" --append-final-summary "<the outcome block the close check prints: Review round N line and one line per CRITICAL, HIGH or MED finding>" -s BUILT (round 1 only; from round 2 on use only --append-final-summary so the earlier round lines stay on the page; one command; every CONFIRMED or CONFLICT finding of GROUNDER.md has an outcome line in TRIAGE.md first: node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>)`,
   `  End the report with one line: STATUS: ready|blocked|failed|dropped`,
   `Standing rules: attach the lane standing rules file; no push, no DB, no --no-verify.`,
   '',

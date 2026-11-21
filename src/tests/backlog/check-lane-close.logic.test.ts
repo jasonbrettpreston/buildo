@@ -66,7 +66,7 @@ type Opts = {
   split?: { max: number; skip?: string; alter?: (diff: string) => string; lens?: boolean; plain?: boolean };
   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
   // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
-  triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean;
+  triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean; notesBlock?: boolean;
   mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
 };
 type TriageCtx = { ids: { id: string; word: string; sev: string }[]; sha: string; path: string; base: string; d: string };
@@ -147,7 +147,8 @@ function scenario(o: Opts = {}) {
     const got = verdictRows.map((r) => { const m = tri.map((ln) => new RegExp(`^${r.id.replace(/[#.]/g, '\\$&')} (\\w+):(\\S+)`).exec(ln)).filter(Boolean).pop(); return { ...r, form: m?.[1] ?? 'none', ref: m?.[1] === 'fixed' ? (m[2] as string).slice(0, 7) : (m?.[2] ?? '') }; });
     const n = (k: string) => got.filter((r) => r.form === k).length;
     const block = [`Review round ${o.priorRound ? 2 : 1}: ${n('fixed')} fixed, ${n('task')} task, ${n('ruling')} ruling, ${n('wontfix')} wontfix, ${n('pile')} pile; grounder ${LD}/GROUNDER.md; triage ${LD}/TRIAGE.md`, ...got.filter((r) => ['CRITICAL', 'HIGH', 'MED'].includes(r.sev)).map((r) => `${r.id} ${r.sev} ${r.form} ${r.ref}`)];
-    fs.appendFileSync(path.join(d, o.finalTaskPath ?? TASK), `\n## Final Summary\n\n<!-- SECTION:FINAL_SUMMARY:BEGIN -->\n${(o.summary ? o.summary(block) : block).join('\n')}\n<!-- SECTION:FINAL_SUMMARY:END -->\n`);
+    if (o.notesBlock) fs.appendFileSync(path.join(d, o.finalTaskPath ?? TASK), `\n## Implementation Notes\n\n<!-- SECTION:NOTES:BEGIN -->\n${block.join('\n')}\n<!-- SECTION:NOTES:END -->\n`);
+    fs.appendFileSync(path.join(d, o.finalTaskPath ?? TASK), `\n## Final Summary\n\n<!-- SECTION:FINAL_SUMMARY:BEGIN -->\n${(o.notesBlock ? ['no outcome block here'] : o.summary ? o.summary(block) : block).join('\n')}\n<!-- SECTION:FINAL_SUMMARY:END -->\n`);
   }
   for (const [n, t] of Object.entries(l)) if (t !== null) w(`${LD}/${n}`, t);
   g('add', '-A');
@@ -660,8 +661,11 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome 
     closeRefused({ ...t, triage: () => `${ID} task:task-99\n` }, /task-99 has no task file/);
     // the verdict cites a path no other task text holds, so only the id token can match
     const far = { g: { verdict: () => 'CONFIRMED src/long.ts:1 "export const L0 = 0;"' } } as const;
-    closeRefused({ ...t, ...far, ...other('\nnothing about it\n') }, /names neither the finding id/);
-    closeRefused({ ...t, ...far, ...other(`\nfollow-up for ${ID}2 and out-compliance-first#12\n`) }, /names neither the finding id/);
+    closeRefused({ ...t, ...far, ...other('\nnothing about it\n') }, /does not name the finding id/);
+    closeRefused({ ...t, ...far, ...other(`\nfollow-up for ${ID}2 and out-compliance-first#12\n`) }, /does not name the finding id/);
+    // task-399 fix round (out-code-review#1): a card that holds only the CITED PATH does not defer the finding; the closing task itself is never the card
+    closeRefused({ ...t, ...other('\nthe file src/a.ts is mentioned here, the finding id is not\n') }, /does not name the finding id/);
+    closeRefused({ ...t, triage: () => `${ID} task:task-7\n` }, /task-7 is the closing task itself/);
   });
   it('PLANTED DEFECT: task: on a BUG finding of HIGH severity is refused (a BUG is fixed before Green Light)', () => {
     closeRefused({ otherTask: true, otherExtra: `\n${ID}\n`, triage: () => `${ID} task:task-8\n` }, /task is not allowed for a HIGH BUG finding/);
@@ -704,6 +708,21 @@ describe('outcome check: every CONFIRMED or CONFLICT finding carries an outcome 
     const second = scenario({ priorRound: true });
     expect(second.status, second.stderr).toBe(0);
     closeRefused({ priorRound: true, summary: (b) => b.map((x) => x.replace('Review round 2', 'Review round 1')) }, /Review round 2: 1 fixed/);
+  });
+  it('fix round (out-compliance-queue-137#2): the block is looked for in the Final Summary section; the same block in the Notes is refused', () => {
+    closeRefused({ notesBlock: true }, /Final Summary lacks 2 of 2 required line\(s\)/);
+  });
+  it('fix round (seat-regression rg#4): a missing lane directory is a refusal line and exit 1, not a stack trace', () => {
+    const r = script('scripts/hooks/check-lane-close.mjs', ['--outcomes', 'docs/reports/lanes/2099-01-01/BL-NOPE'], { cwd: ROOT });
+    expect(r.status, r.stderr).toBe(1);
+    expect(r.stdout).toMatch(/^no lane directory docs\/reports\/lanes\/2099-01-01\/BL-NOPE/);
+    expect(r.stderr).not.toMatch(/ENOENT/);
+  });
+  it('fix round (g399#5): the --outcomes command refuses a lens finding whose verdict line does not parse (control: the default lane prints checked 1 ids, exit 0)', () => {
+    const r = cli({ g: { verdict: () => 'CONFIRMED(NIT) src/a.ts:1 "export const value01 = \'alpha quote number 01\';"' } });
+    expect(r.status, r.stdout).toBe(1);
+    expect(r.stdout.split('\n')[0]).toMatch(/^checked \d+ ids$/);
+    expect(r.stdout).toMatch(/out-compliance-first#1: no complete verdict line/);
   });
   it('a lane with zero CONFIRMED ids and no TRIAGE.md passes, and the CLI prints "checked 0 ids"', () => {
     const r = scenario({ lensFinding: false });

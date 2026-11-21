@@ -155,7 +155,7 @@ const FAIL = Symbol('fact failed');
  *   summary?:{text:string, headText:string, grounderPath:string, triagePath:string}|null}} a
  * @returns {{errors:string[], ids:number}} refusal lines (one per failing id) and the number of CONFIRMED or CONFLICT ids checked
  */
-export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = 'close', seats = [], seatRoot = null, summary = null }) {
+export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = 'close', seats = [], seatRoot = null, summary = null, selfTask = null }) {
   const errors = [];
   const kinds = new Map(lensKinds ?? []);
   // seats (Integration, Reality-Check, Ground-truth): one report each, one finding per line; its findings are BUG kind and need a verdict and an outcome like any lens finding
@@ -234,11 +234,14 @@ export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = '
       if (!tm) errs.push('task needs a task id: task:task-N');
       else {
         ref = tm[1].toLowerCase();
+        if (selfTask && ref === String(selfTask).toLowerCase()) { errs.push(`${ref} is the closing task itself: a deferral needs another card that names ${id}`); }
+        else {
         const ti = call(errs, `task ${ref}`, () => facts.taskOf(ref));
         if (ti === null || (ti !== FAIL && !ti.exists)) errs.push(`${ref} has no task file`);
         else if (ti !== FAIL) {
           if (String(ti.status).toUpperCase() === 'DROPPED') errs.push(`${ref} is DROPPED`);
-          else if (!new RegExp(`(?<![A-Za-z0-9_-])${esc(id)}(?!\\d)`).test(ti.text) && !ti.text.includes(v.file)) errs.push(`the text of ${ref} names neither the finding id ${id} (as a whole token) nor the cited path ${v.file}`);
+          else if (!new RegExp(`(?<![A-Za-z0-9_-])${esc(id)}(?!\\d)`).test(ti.text)) errs.push(`the text of ${ref} does not name the finding id ${id} as a whole token (a card that only holds the cited path does not defer the finding)`);
+        }
         }
       }
     } else if (word === 'ruling') {
@@ -264,7 +267,8 @@ export function outcomeErrors({ verdicts, triageText, lensKinds, facts, mode = '
     const n = 1 + (head.match(/^\s*Review round \d+:/gm) ?? []).length;
     const round = `Review round ${n}: ${count(fixWord)} ${fixWord}, ${count('task')} task, ${count('ruling')} ruling, ${count('wontfix')} wontfix, ${count('pile')} pile; grounder ${summary.grounderPath}; triage ${summary.triagePath}`;
     const lines = rows.filter((r) => r.sev === 'CRITICAL' || r.sev === 'HIGH' || r.sev === 'MED').map((r) => `${r.id} ${r.sev} ${r.word} ${r.ref}`);
-    const have = String(summary.text ?? '');
+    // the block is looked for in the Final Summary section only: a block placed in Notes does not make the outcomes visible on the page
+    const have = /<!-- SECTION:FINAL_SUMMARY:BEGIN -->([\s\S]*?)<!-- SECTION:FINAL_SUMMARY:END -->/.exec(String(summary.text ?? ''))?.[1] ?? '';
     const miss = [round, ...lines].filter((l) => !have.includes(l));
     if (miss.length) errors.push(`the task's Final Summary lacks ${miss.length} of ${lines.length + 1} required line(s) (the outcomes are shown on the task page, Spec 08 section 7 rule 3): ${miss.slice(0, 3).map((l) => `"${l.slice(0, 70)}"`).join(', ')}${miss.length > 3 ? ', ...' : ''}; the block is:\n${[round, ...lines].join('\n')}\n(one command: backlog task edit task-N --final-summary "<what landed>" --append-final-summary "<block>" -s BUILT)`);
   }
@@ -483,7 +487,7 @@ export function closeErrors(i) {
   // task-399: every CONFIRMED or CONFLICT id carries one outcome (TRIAGE.md, last line wins), and the outcomes are shown on the task
   if (build) {
     const dirPath = mine[0][0];
-    errors.push(...outcomeErrors({ verdicts, triageText: textOf('TRIAGE.md') ?? '', lensKinds: new Map(findings.map((f) => [f.id, lensKindOf(f.line)])), facts: i.facts, mode: 'close', seats: seatLines(g, readRepo), seatRoot: `${dirPath}/`, summary: { text: i.taskText, headText: i.headTaskText ?? '', grounderPath: `${dirPath}/GROUNDER.md`, triagePath: `${dirPath}/TRIAGE.md` } }).errors);
+    errors.push(...outcomeErrors({ verdicts, triageText: textOf('TRIAGE.md') ?? '', lensKinds: new Map(findings.map((f) => [f.id, lensKindOf(f.line)])), facts: i.facts, mode: 'close', seats: seatLines(g, readRepo), seatRoot: `${dirPath}/`, selfTask: id, summary: { text: i.taskText, headText: i.headTaskText ?? '', grounderPath: `${dirPath}/GROUNDER.md`, triagePath: `${dirPath}/TRIAGE.md` } }).errors);
   }
   return errors;
 }
@@ -635,6 +639,7 @@ function check(msgFile) {
 export function outcomesCli(dir) {
   if (!dir) { process.stderr.write('usage: check-lane-close.mjs --outcomes <lane dir>\n'); return 1; }
   const abs = path.resolve(dir);
+  if (!fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) { process.stdout.write(`no lane directory ${dir}: cannot check outcomes (usage: --outcomes docs/reports/lanes/<date>/<lane>)\n`); return 1; }
   const top = git(['rev-parse', '--show-toplevel']).stdout.trim() || process.cwd();
   const rd = (n) => { try { return fs.readFileSync(path.join(abs, n), 'utf8'); } catch { return null; } };
   const g = rd('GROUNDER.md');
@@ -650,8 +655,11 @@ export function outcomesCli(dir) {
     const bf = git(['ls-tree', '--name-only', boardRef, 'backlog/tasks/']).stdout.split('\n').find((n) => new RegExp(`^backlog/tasks/task-0*${num}( -.*)?\\.md$`, 'i').test(n));
     if (bf) L = git(['log', boardRef, '--first-parent', '--reverse', '--format=%H', `-S@lane-${path.basename(abs)}`, '--', bf]).stdout.split('\n').filter(Boolean)[0] ?? null;
   }
-  const r = outcomeErrors({ verdicts, triageText: rd('TRIAGE.md') ?? '', lensKinds: new Map(findingsIn(lensFiles).map((f) => [f.id, lensKindOf(f.line)])), facts: gitFacts(L), mode: 'close', seats: seatLines(g, (p) => { try { return fs.readFileSync(path.join(top, p), 'utf8'); } catch { return null; } }), seatRoot: `${rel}/` });
-  process.stdout.write(`checked ${r.ids} ids\n${r.errors.map((e) => `${e}\n`).join('')}`);
-  return r.errors.length ? 1 : 0;
+  const r = outcomeErrors({ selfTask: num ? `task-${num}` : null, verdicts, triageText: rd('TRIAGE.md') ?? '', lensKinds: new Map(findingsIn(lensFiles).map((f) => [f.id, lensKindOf(f.line)])), facts: gitFacts(L), mode: 'close', seats: seatLines(g, (p) => { try { return fs.readFileSync(path.join(top, p), 'utf8'); } catch { return null; } }), seatRoot: `${rel}/` });
+  // a lens finding whose verdict line does not parse is a refusal here as it is at the close ("no complete verdict line"), never a silent skip
+  const unruled = findingsIn(lensFiles).filter((f) => !verdicts.has(f.id)).map((f) => `${f.id}: no complete verdict line in GROUNDER.md (form: <id> CONFIRMED|REJECTED|CONFLICT <path>:<line> "<quote>" [reason]); the close refuses it too`);
+  const all = [...r.errors, ...unruled];
+  process.stdout.write(`checked ${r.ids} ids\n${all.map((e) => `${e}\n`).join('')}`);
+  return all.length ? 1 : 0;
 }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) process.exitCode = process.argv[2] === '--outcomes' ? outcomesCli(process.argv[3]) : check(process.argv[2]);

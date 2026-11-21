@@ -62,6 +62,7 @@ describe('G1 backlog-brief (test 4)', () => {
     expect(r.stdout).toMatch(/--check-ac/);
     expect(r.stdout).toMatch(/--append-final-summary/);
     expect(r.stdout).toMatch(/-s BUILT/);
+    expect(r.stdout).toMatch(/from round 2 on use only --append-final-summary/);
     expect(r.stdout).toMatch(/check-lane-close\.mjs --outcomes/);
     expect(r.stdout).toMatch(/do NOT run --plan/);
     expect(r.stdout).toMatch(/STATUS: ready\|blocked\|failed\|dropped/);
