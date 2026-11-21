@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-REPORTOWN2'
 created_date: '2026-11-20T15:08:00Z'
-updated_date: '2026-11-20T20:35:00Z'
+updated_date: '2026-11-21T05:21:00Z'
 labels:
   - McFix
   - McFix B
@@ -101,4 +101,6 @@ Retro review by a separate grounder 2026-11-20 (task-405), work as on the board:
 Grounder read of part two 2026-11-20 (branch wf1/inc1b-reportown2, b1fff68cd; read check before a fold, not a ruling): purpose HOLDS by the grounder's own runs (the three report files resolve to surface-136, 126, 127, 128, 135; 44 fe ids in a real input); three strings render byte-identical; 105 goldens differ only in the fingerprint line. NOT COMPLETE, owed before a close: (1) the shrink-only pin has three holes: it compares counts, so removing one attribute and adding aria-label words passes; text inside a ternary or template literal is not seen; a library component also counts, so the pin can shrink only by deleting elements (total 318, not 317); (2) five lists have no output review because the list itself exceeds the room: surface-126, surface-128, surface-135, airtight-124a, policy-124-s2-s5; the output lenses ran on a hand-reduced diff; (3) trailer MF-57 chosen under RR-0332 (MORNING-DECISIONS.md:1432) though ReportView.tsx was built under MF-14: orchestrator reading, not ruled; (4) no test asserts the Details text; (5) wf1/inc1b-areafactor restamped the same 105 goldens: the second branch to land rebases and regenerates with the capture tools, no hand merge. Fold HELD by the orchestrator until the task-410 grounder rules how a folded task closes.
 
 2026-11-20 dated note (BL-REPORTOWN2, after the rebase onto wf2/board): the commit trailer McFrontend-Task: MF-57 was the lane's choice under RR-0332, the operator ruling at ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1431-1432 on the McFrontend row for a fix, Operator, verbatim: "2. y 1 a" (1 (a): a McFix task may file its commits under the McFrontend row that built what it fixes). ReportView.tsx was built under MF-14 (MF-14, the one REPORT renderer, DONE 2026-11-09). The choice of MF-57 is the lane's own and is not an operator ruling.
+
+2026-11-21 dated note (BL-REPORTOWN2): the push-station suite at board head d9f2143a7 failed src/tests/surfaces/auth-class-parity.infra.test.ts (2 failures: R-18 P-1 SURFACE binding_web_report: declares no auth_class_parity check). Cause: the descriptor created by ec063fd58 held only a components_owned check; Spec 128 R-18 (128_surface_standard_policy.md:220) needs an auth_class_parity check at FAIL for a scope A-C descriptor, and the exceptions list may only shrink. Fix: the check binding_web_report_auth_class_parity (FAIL, blocking, when pre) added to the census entry and the descriptor (same form as binding_web_static); registry doc regenerated. Not shown red by this lane through the hook (the related run selects src and scripts code files only, not a descriptor json): the suite log is the red.
 <!-- SECTION:NOTES:END -->

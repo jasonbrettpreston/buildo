@@ -122,6 +122,14 @@
       "blocking": true,
       "when": "pre",
       "why": "The three files are owned by this entry (Spec 128 R-13 totality) and listed as web REPORT modules in bindings.json (FE-31 C-3); C-2b and C-8 judge them against the pin in C-12."
+    },
+    {
+      "id": "binding_web_report_auth_class_parity",
+      "kind": "auth_class_parity",
+      "severity": "FAIL",
+      "blocking": true,
+      "when": "pre",
+      "why": "Spec 128 R-18: guards.session entitled (class authenticated) equals the class of its consumer, the MaxBLD report page behind the parcel_tool gate; the renderer calls no contract and has no route of its own. Checked by src/tests/surfaces/auth-class-parity.infra.test.ts."
     }
   ],
   "invariants": "none",
@@ -198,7 +206,7 @@
     }
   ],
   "interpretation": "none",
-  "notes": "task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here). Dated note 2026-11-20 (BL-REPORTOWN2, part two): the three files are listed in bindings.json modules and src/components/report/** is a frontend glob; reduced_motion is honoured (src/app/globals.css:182-185, locked by report-checked.logic.test.ts C5); the three display strings of ReportView.tsx moved to content (report-presentation.json states.view).",
+  "notes": "task-384 STD.REPORT-OWN (dated 2026-11-20). Archetype REPORT, the archetype of the modules it owns. The census ref S-095 is claimed in the ID ledger (S-094 was the last). Dated note 2026-11-20 (grounder, task-384): deviations, touch_target_min_px, labels and dark_mode carry the schema value UNRESEARCHED (copied values from the mobile entry measured nothing here). Dated note 2026-11-20 (BL-REPORTOWN2, part two): the three files are listed in bindings.json modules and src/components/report/** is a frontend glob; reduced_motion is honoured (src/app/globals.css:182-185, locked by report-checked.logic.test.ts C5); the three display strings of ReportView.tsx moved to content (report-presentation.json states.view). Dated note 2026-11-21 (BL-REPORTOWN2): the check binding_web_report_auth_class_parity added; the push-station suite failed R-18 P-1 for this entry (it declared no auth_class_parity check).",
   "x-draft": {
     "shard": "web-product",
     "files": [
