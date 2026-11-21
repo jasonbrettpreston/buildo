@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SCORE421'
 created_date: '2026-11-21T14:53:00Z'
-updated_date: '2026-11-21T15:28:00Z'
+updated_date: '2026-11-21T15:49:00Z'
 labels:
   - McFix
 milestone: m-1
@@ -82,4 +82,6 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0357 · task-421 · Backlog; o
 2026-11-21 lane BL-SCORE421: generated-files commit 2fd17001d landed through the hooks (hook output in the lane report dir is commit.out in the lane folder); review lenses run (plan and out compliance per rule list, plan-review-deepseek); FINDINGS.md filed in docs/reports/lanes/2026-11-21/BL-SCORE421/; grounder owed (the orchestrator launches a grounder that is not this lane); task left RUNNING.
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0359 · task-421 · Backlog; operator, verbatim: "That's ridiculous to fold before the grounder review - the focus is on getting it right")
+
+2026-11-21 Rule 13 evidence for AC #2 (lane BL-SCORE421, read from the files, no suite run by the lane): the push station ran the full suite on the folded commit 849770c4c (run folder ~/Buildo-scratch/push-station/runs/849770c4c-20261121-102628; pass file ~/Buildo-scratch/push-station/pass/849770c4c204f463a25aa4df889cbc958e29c502.pass). suite.log line 1500: ' ✓ src/tests/step-conformance.infra.test.ts (735 tests) 197953ms'; suite.json: that file status passed, 735 assertions, 0 failed, numFailedTests 0, success true. Spec 124 Rule 13 test src/tests/step-conformance.infra.test.ts:2435-2455. Grounder Cairn-Ground-O421 ruled 313 findings (GROUNDER.md in the lane report dir): 21 CONFIRMED all LOW; the fold before the grounder ruled is decision-144 (RR-0359).
 <!-- SECTION:NOTES:END -->
