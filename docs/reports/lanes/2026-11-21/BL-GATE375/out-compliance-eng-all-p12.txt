@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:21:35.527Z file_sha256=e54817ef2510aa940943a55e009b81642fffb96c9cfaaeea7b4060fe464f7f75 prompt_sha256=9f255555592361c65dc011e5ec864a4e862ea731bd018b6c7717885da759d8e7
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-eng-all-p12.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — spec §12.10 CI "runs on every PR that touches migrations, db client, or db tests" and AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — src/tests/proof-slice.db.test.ts:1 "WRITTEN, NOT RUN by the lane that built it ... the variable is registered by a seed + migration the operator authorises with a typed GO" / "expect(rows, `${TIMEOUT_VARIABLE} is not registered in logic_variables`).toHaveLength(1)" — this chunk adds a db test, so the db-tests job runs on this PR, and the only assertion is that a variable the lane's own note says is NOT registered exists, so the gate is red by construction and "red first then green" is unreachable without the GO — hold the file out of this branch and land it in the DB-GO commit with the seed and migration, or the PR carries a permanently failing §12.10 job
+
+DEFER severity=MED — AC #6 "0 hits of \"(no pasted context provided)\"" — pasted note "the context slot holds 0 hits of the placeholder (6 hits sit inside the diff text, which quotes the string in rule-lists.mjs)" — the assembled prompt has 6 hits, not 0, so the criterion is met only under the lane's own re-reading of "context slot" — re-run A1 on a material that does not quote the placeholder string and paste the hit count
+
+DEFER severity=MED — AC #1 "Each defect is confirmed on the head before fixing, with file:line" and AC #8 "today exit 1 naming \"## Register\"" — pasted note "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the A6 defect is asserted from the plan's measurement, not confirmed on the head, so AC #1 and the first half of AC #8 are unmet — run lens-input --list surface-135 on the pre-A6 head and paste the exit code and the "## Register" line
+
+DEFER severity=MED — AC #7 "rule-lists.mjs lens-input for each of the 15 resolved lists of task-381 with that context: paste each exit code, selected-section count and call count" — pasted note "A2 (buildLensInputs with the 5 sections, material 17,753 characters): task-381 15 lists ... 17 calls, 0 refused" — the library function was called, not the lens-input CLI, and no exit codes are pasted, so the clause's command is not the one exercised — re-run through lens-input with --context and paste per-list exit code, selected-section count and call count
+
+DEFER severity=MED — D6 rule "the lane does not edit Description, Acceptance or Plan, records deviations in Implementation Notes" — pasted note "2026-11-21 DEVIATION (BL-GATE375, third run ...): the Files line is extended by ONE path, src/tests/backlog/rule-lists-table.logic.test.ts ... Nothing else in the Description changed" — the Files line sits inside the Description, so the lane edited the Description and the "one path" was added by the lane, not by the orchestrator through the CLI (the pasted FILES-line instruction says "to set first, through the backlog CLI") — revert the Files-line edit and have the orchestrator add the path through backlog, keeping the deviation note only
+
+DEFER severity=LOW — plan A.4 "counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)" — src/tests/backlog/rule-lists.logic.test.ts "['lens-input', '--root', f.d, '--table', f.table, '--list', 'whole', ...]" — only the with-list path is exercised; the no --list path that carries code-review, error-paths, ux and security has no test in this chunk — add one refusal/pass pair invoking lens-input with --context and no --list
+
+DEFER severity=LOW — plan A.7 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — src/tests/backlog/rule-lists.logic.test.ts "const tableDoc = (n: number) => '# T\n\n## 5. Register\n\n| id | rule |\n| --- | --- |\n' + Array.from(...)" — only table rows are tested; the blank-line paragraph cut the same clause names is asserted nowhere in this chunk — add a paragraph-only block over the room and assert the pieces join back with each paragraph once
+
+DEFER severity=LOW — plan B.1 "`compliance:<list id> <file>`, one per resolved list" — src/tests/backlog/rule-lists.logic.test.ts "expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md'])" — for a path containing a comma the entry drops the file, which is not the format the clause names and no pasted ruling authorises the short form — record the comma-path exception on the task or keep `compliance:<id> <file>` and escape the comma
+
+MET — spec §12.10 Skip semantics "every `*.db.test.ts` self-skips via `describe.skipIf(!dbAvailable())`" — src/tests/proof-slice.db.test.ts:14 "describe.skipIf(!dbAvailable())('proof-slice timeout variable (live DB)'" — the standard suite is unaffected
+
+MET — plan A.2 "One constant CONTEXT_SECTIONS ... with the exact heading texts: \"Task\", \"Description\", \"Acceptance criteria\", \"Decisions naming this task\", \"Implementation Notes\"" — src/tests/review-template.logic.test.ts "expect(rt.CONTEXT_SECTIONS).toEqual(['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'])"
+
+MET — plan A.6 "every row appears once across the parts, none over the bound" — src/tests/backlog/rule-lists.logic.test.ts "for (let i = 0; i < 60; i++) expect(all.split(`| R${i} |`).length - 1, 'R' + i).toBe(1)"
+
+MET — plan A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — src/tests/backlog/rule-lists.logic.test.ts "expect(no.status, no.stderr).toBe(2); expect(no.stderr).toMatch(/--context/)"
+
+MET — AC #9 "each entry starting \"compliance:\", the count equal to the lists printed by rule-lists.mjs resolve for its Files line" — src/tests/backlog/rule-lists.logic.test.ts "for (const l of want) expect(entries).toContain(`compliance:${l.id} ${l.file}`)"
+
+MET — AC #12 "A7 D11b test red first then green" — src/tests/backlog/rule-lists.logic.test.ts "for (const f of ['src/app/admin/page.tsx', 'src/lib/pii/redact.ts', 'src/lib/admin-users.ts', 'scripts/pii-scrub.mjs'])"
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 6
+
+---
+⏱  74371ms (74.4s)
+📊 Tokens — total: 38837, input: 24614, output: 14223, reasoning: 12593

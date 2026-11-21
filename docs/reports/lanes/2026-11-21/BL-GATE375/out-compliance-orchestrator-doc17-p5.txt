@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:31:25.081Z file_sha256=c5dd37434ca89fe42c88096e9ae903c996a09e18d4bb8d568e4340fce3c8600f prompt_sha256=60c83da6121521d19a585617737e9a9517c1c3ebf3013fe9b96aba11aee23d07
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-orchestrator-doc17-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card B.3 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir (08_agents.md:347); the close check refuses when one is missing." — src/tests/backlog/check-lane-close.logic.test.ts "it('B2: the TRIAGE.md reference is required only when the lane directory holds one', () => {" — the pinned behaviour makes the TRIAGE reference optional, so a lane that simply never writes TRIAGE.md closes with two of the three references the clause names — require the TRIAGE reference whenever the lane holds any output finding, or amend the clause to say "when the lane dir holds one" so the condition is not the lane's own choice.
+
+DEFER severity=MED — card "FILES line to set first, through the backlog CLI: ... and their tests under src/tests/" — src/tests/backlog/rule-lists-table.logic.test.ts:49 "['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'surface-136', ...]" (also check-lane-close.logic.test.ts "const CTX_FILE = fs.readFileSync(path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), 'utf8');") — two suites now depend on a test fixture stored in a task review folder that no Files-line entry names, in the one folder the Files check always allows, so the dependency escapes the Files-line gate and a cleanup of task-375's review folder reddens unrelated tests — move the fixture to src/tests/backlog/fixtures/ beside review-context.md and name it on the Files line.
+
+DEFER severity=LOW — card AC #14 "'plan gate ok: <L> lists' with L equal to the resolved-list count" — src/tests/backlog/check-lane-close.logic.test.ts "expect(r.line).toMatch(/^Plan: task-7 sha256:[0-9a-f]{12}$/);" — the acceptance's exact dry-run line is asserted nowhere in this chunk (only the Plan line), so the launch output AC #14 names is not pinned here; cannot see whether backlog-lane.logic.test.ts pins it — add an assertion on the "plan gate ok: <L> lists" line in the lane test that prints it.
+
+REJECT — doc-17 readings — any finding resting on an RR entry — the pasted header says "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)", so the RR-0001 to RR-0218 list is not binding and no finding here rests on it.
+
+MET — card A.2, refuse placeholder and missing Description — src/tests/backlog/check-lane-close.logic.test.ts "it('refuses a context that is the placeholder, and one without the Description heading'" — both refusals planted with the control above.
+
+MET — card A.2, Implementation Notes refused when the task has notes — src/tests/backlog/check-lane-close.logic.test.ts "it('a missing Implementation Notes heading is refused when the task has notes, and control: tolerated when it has none'" — refusal and its no-notes control.
+
+MET — card A.4, prompt_sha256 binds the committed context — src/tests/backlog/check-lane-close.logic.test.ts "rt.substitutePlaceholders(s.userTemplate, { plan: inputText, specs: context, dataContext: '(no live-DB context provided)' })" and "it('an output must match one committed context file: the earlier round file is kept and still binds'".
+
+MET — card A.3, every lens command passes --context — src/tests/backlog/rule-lists-table.logic.test.ts:49 and :206 hunks, both add "'--context'".
+
+MET — card B.3, missing REPORT.md reference refused with the exact add-ref command — src/tests/backlog/check-lane-close.logic.test.ts "refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/);".
+
+MET — card D, gate refuses missing grounder, wrong Grounder, wrong Lane header, missing seats, unruled output, missing outcome and stale Plan hash — the planScenario tests in src/tests/backlog/check-lane-close.logic.test.ts gate each in turn with its control.
+
+MET — RR-0342 regression trigger — src/tests/backlog/check-lane-close.logic.test.ts "it('regression is required when the Files line names an existing path, and not when it names only new paths'" — pins the existing-path trigger and the new-path control.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  180089ms (180.1s)
+📊 Tokens — total: 65742, input: 32693, output: 33049, reasoning: 31948

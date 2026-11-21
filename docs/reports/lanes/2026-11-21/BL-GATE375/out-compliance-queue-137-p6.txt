@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:36:47.640Z file_sha256=f7a7a095a526744a6273237a655e209f180292798c9661d95dc51bae0f2d3c88 prompt_sha256=f6a27962dcd0c61e6e21564d72d810222eea0ceb158c1a87810b1160e96397c0
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-queue-137-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-375 A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes." — scripts/hooks/check-lane-close.mjs "if ((i.contexts ?? []).length === 0) errors.push(`${id}: no committed review context file docs/reports/reviews/${id}/context-rN.md ...`);" — a fourth, blanket close refusal that the card does not name, fired for every task type at close and for any task whose committed context still carries the pre-v4 `context-<date>.md` name (the A5 reader only matches "new RegExp(`^${esc(ctxDir)}context-r\\d+\\.md$`)"), so such a close is refused on a ground outside the pasted clauses — scope it to build or fix tasks, or to tasks whose files carry `plan-`/`out-` lens outputs, and give an old-name context file a problem line naming `context-rN.md` instead of a bare "none committed".
+
+DEFER severity=LOW — task-375 A.4 "so the existing prompt_sha256 recompute (:65) binds it" — scripts/hooks/check-lane-close.mjs "for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, /^plan-compliance-/.test(f.name) ? 'lens-compliance.md' : ... , null).map((x) => `${id}: ${x}`));" — a fix launch's plan outputs pass the gate with inputText null, so reviewErrors skips the prompt hash entirely and plan evidence not made from the committed context is accepted at launch, the binding only happening at close — pass the committed `in-<name>` text and `contexts: lc.values` for fix plan outputs, or refuse a plan output whose `in-` file is absent.
+
+DEFER severity=LOW — plan D "backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board." — scripts/hooks/check-lane-close.mjs "export function planGateErrors(i) {" — nothing in the material under review calls planGateErrors, so the gate clause rests entirely on the backlog-lane.mjs chunk and I cannot see the exit 3 path, the take ordering or the "--dry-run ... plan gate ok" line here — confirm the wiring chunk and its red test are in the same change before this chunk is counted as meeting D.
+
+MET — 137 §6 "the commit check above stays deferred." — scripts/hooks/check-lane-close.mjs — every new refusal concerns review artifacts (context files, Plan/Ruled/Seat lines, references); none refuses a missing task status line, a missing expiry or DROPPED without a quoted ruling, so the deferred check is not built.
+
+MET — RR-0348 "these only run on the plan" — scripts/hooks/check-lane-close.mjs "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };" — the seat loop lives only inside planGateInner; closeErrors contains no seat check, so no seat runs on the output.
+
+MET — RR-0342 "regression only required when code is changed" — scripts/hooks/check-lane-close.mjs "const need = [...PLAN_SEATS.always, ...(entriesOf(i.taskText).some((e) => i.tracked(e)) ? PLAN_SEATS.conditional : [])];" — regression is demanded only when a Files entry is tracked at the board head.
+
+MET — task-375 A.4 "the existing prompt_sha256 recompute (:65) binds it" — scripts/hooks/check-lane-close.mjs "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))" — the hash is now recomputed only against extracted CONTEXT_SECTIONS values threaded from check(), so a placeholder-context output can no longer match.
+
+MET — task-375 B.3 "the close check refuses when one is missing" — scripts/hooks/check-lane-close.mjs "if (!have.has(rp)) errors.push(`${id}: the task's references lack the repo copy ${rp}: backlog task edit ${id} --add-ref ${rp}`);" — REPORT.md, GROUNDER.md and, when present, TRIAGE.md of the lane dir are required references with the exact command printed.
+
+MET — task-375 A9 "one word edited in the task: refused with the new expected Plan line" — scripts/hooks/check-lane-close.mjs "const pl = [...g.matchAll(/^\s*Plan:\s*(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm)].pop();" — the last Plan line is compared with the recomputed planHash and the expected line is printed on mismatch.
+
+REJECT — 137 §6 — accused of building the deferred commit check in check-lane-close.mjs — the added refusals are review-artifact and Plan-line checks, not the queue row's status line, expiry or a DROPPED ruling; the section is untouched.
+
+REJECT — RR-0342 — accused of requiring the reality-check seat unconditionally against "reality check is only required when a figure is changed" — the later verbatim ruling RR-0347 "If it can't tell if a figure is changed than it just runs anyways for now" and the v4 ruling the card says governs ("the Integration and Reality-Check seats on every build or fix plan") make it unconditional for now.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 0
+
+---
+⏱  136275ms (136.3s)
+📊 Tokens — total: 49106, input: 24834, output: 24272, reasoning: 23006

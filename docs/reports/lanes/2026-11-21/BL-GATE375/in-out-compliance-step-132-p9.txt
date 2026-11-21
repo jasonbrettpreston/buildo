@@ -1,0 +1,528 @@
+LIST step-132 sha256:6cd3ede6d22d32ad7392b19840a9cf619370191e29263bf375d16a79b96448e1 material sha256:c725c114ed1c931176a276196b51748815a803735f1c8e6e78b89b62e03bd46b part 1 of 2 chunk 5 of 6
+RULE LIST step-132 (docs/specs/01-pipeline/132_step_standard_handbook.md, sections 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 5 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/rule-lists-table.logic.test.ts"]
+
+## 2. Every step
+
+What every step declares and does, whatever its archetype.
+
+- **core.1** A step is three files: a descriptor (data only), a compute module and a thin shell that exports `pipeline.step(descriptor, compute)`. File names are hyphenated and need not match the slug; §1 table 1b lists every step's real paths. `scripts/steps/_schema/step.schema.json` is the vocabulary; prose never adds a field. Behaviour lives in descriptor data, a declared check, a shape rule or (last resort) a new schema field, never only in code (Rule 1).
+  *Why:* One place says what a step is, and the schema, not a reviewer, decides what is valid.
+  Rules: `Rule-1` `A1` `R2` · history: `P1` `GAP-G-1`
+
+- **core.2** All 20 categories are present and every field is answered; write `"none"` (with a why where the schema asks) instead of leaving a field out. Declare at least one check.
+  *Why:* An omitted field cannot be told apart from a forgotten one; "none" is a decision someone made.
+  Rules: `Rule-5` `Rule-6` · history: `R-Y` `K1`
+
+- **core.3** Use the closed vocabulary: full-word archetypes; a lock id unique across manifest, one-time and backfill scripts; `guards.schema_drift` none/propagate/pause (rule id V3, alias SPEC122A-V3, which is not the V3 standard); staleness as scope × trigger; typed `empty_source`; and the cross-step majority forms (`batch`, `spec_version`, terminal ids, flat emits with every declared emit present on every run and an empty cursor reading 0 (CHAT-90), notes keys). The old `outputs.writes[].replay` / `append_unsafe` field is deleted (V4, now history).
+  *Why:* Shared names let one library, one gate and one admin page read every step the same way.
+  Rules: `R-DE` `V1` (SPEC122A-V1) `V2` (SPEC122A-V2) `V3` (SPEC122A-V3) `V5` (SPEC122A-V5) `V6` (SPEC122A-V6) · history: `V4` (SPEC122A-V4)
+
+- **core.4** Take the archetype from the code: PH-0 derives it, and the census (`step-archetype-census.json`) must agree with the descriptor (#25). The archetype selects the required and forbidden categories. A step whose only write is a snapshot it exists to record is a RECORDER, not an ASSERT with a hidden write.
+  *Why:* The archetype drives which fields are required, so a wrong label silently drops checks.
+  Rules: `R-AE` `R-AO` `Rule-7`
+
+- **core.5** Where a machine can derive a descriptor value, it is gated rather than trusted: `mode_select` per archetype and emit types that match the captures (#47).
+  *Why:* A value the machine can check should never be the author's word alone.
+  Rules: `R-BH`
+
+- **core.6** The verdict comes only from check rows. Each row is PASS, WARN (through `warn_limit` / `warn_limit_from_config`) or its declared severity. `checks_failed` counts FAIL rows and `checks_warned` counts WARN rows. A metric that is never zero is WARN with a stated retighten condition; INFO is only for a purely descriptive counter. A uniqueness invariant is a check row, not a throw. A legacy exclusive ceiling becomes an inclusive `ceiling_max` with a declared deviation.
+  *Why:* A parallel boolean or a severity chosen to dodge red hides failures from the run row and the admin page.
+  Rules: `R-H` `R-Q` `R-AD` `R-CL` `Rule-10` `Rule-10-addendum-R-H` `GAP-G-5` `R-FD` `R-JV` `R-KD` · history: `W4A-R2`
+
+- **core.7** A rule kept inside compute is still written down: as a check's `why`, or as an Intent Ledger row naming where it lives, never only as a code comment (`checkPreservedInComputeHasWhy`).
+  *Why:* Nothing about a step's behaviour may live only in code.
+  Rules: `Rule-4` · history: `P5` `GAP-G-2`
+
+- **core.8** EXTERNALIZED. Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero. Step variables are named `<slug>_<name>`; a name shared by two or more steps comes only from the closed `SHARED_LOGIC_VARIABLES` map, and legacy shared names are renamed by migration with values carried. Unit constants and definitional windows are pinned (min = max). Runner and gate numbers are pinned `step_*` / `gate_*` / `tooling_*` variables. A missing `logic_variables` row fails the run; `on_invalid` is `fail` for any verdict- or write-affecting variable. A variable is retired by a `config.retired[]` declaration, never deleted. A model constant ratified elsewhere becomes a variable with its existing value as default.
+  *Why:* The operator tunes the system from the admin page; a literal in code is a setting nobody can see or change.
+  Rules: `R-A` `R-G` `R-AW` `R-CV` `R-DR` `R-EB` `Rule-3` `R-FC` `R-FE` `R-JW` `R-KN` `R-KR` `R-LA` · history: `R-AU` `Rule-3-addendum-R-AU` `P4` `GAP-G-4` `W4A-R1` `W4A-R3` `Q-C3`
+
+- **core.9** Compute is pure. It receives `ctx` (config with `$meta`, clock, catalog, descriptor, `withinLimit`), reports every check value through `ctx.report(id, value)` and returns rows, a `write_plan` or `records_meta`. The runner owns every read set-up, write, transaction, session GUC (`execution.read_gucs`), catalog probe (`guards.requires` / `ctx.catalog`), calendar date (`ctx.clock` in `pipeline_timezone`) and the verdict. An ASSERT may read `ctx.pool` read-only over declared relations (R-CA (i)). Compute never branches on PostGIS; it never reads `logic_variables` SQL; a config value aliased inside a check body still counts as compute deciding (PURITY-G7). Gate E purity codes PURITY-G0…PURITY-G13 must read zero for a new conversion; the escape-hatch ban is an ast-grep rule.
+  *Why:* Pure compute can be tested with plain inputs, replayed from captures and reviewed without a database.
+  Rules: `R-W` `R-BZ` `R-CA` `R-CE` `R-CF` `R-CM` `R-CX` `R-CY` `R-DC` `Rule-2` `Rule-2-addendum-R-W` `A2` `K3` `R-KF` `R-KJ` `R-KT` · history: `P2`
+
+- **core.10** Compute reads the `ctx` shape the runner's dispatch for its descriptor actually builds (a multi-primary INGESTOR gets `acquired.primaries[id]` and `written.by_target.<table>`, not the flat shape), and its compute lock builds that ctx through the real dispatch, stubbing only DB and network answers.
+  *Why:* A hand-built ctx in a test can pass while the real run reads zeros.
+  Rules: `R-EW` `R-FG`
+
+- **core.11** Output is observable. `emits[]` equals what the captures emit and stays flat; dynamic-keyed telemetry rides a check row's `detail`, capped by a variable. A step that can skip declares a `when:"pre"` check; one that can scope-defer also declares a `deferred_to_full` terminal. Every run row carries the propagated `chain_run_id`.
+  *Why:* A skipped or deferred run must say why in its own audit table, and runs correlate by id, not by time window.
+  Rules: `R-P` `R-U` `R-BU` `R-EP` `R-KS` · history: `Q-W4G-3`
+
+- **core.12** Declare write discipline per write target, never per step: mechanic ⊥ guard ⊥ scope ⊥ retract. A banned write shape ships only with a dated, SHA-anchored `grandfathered.json` entry naming its why; guard `none` needs a why. A target on an RLS-enabled table declares `guards.requires: rls_bypass_or_policy`. One upsert binds at most 65,535 parameters, so the batch keeps the measured worst case under it.
+  *Why:* Write safety differs per table; a per-step answer is wrong for at least one target.
+  Rules: `R-CT` `R-CU` `Rule-8` `Rule-9` `V7` (SPEC122A-V7) `R-KB`
+
+- **core.13** A destructive retraction declares a truthful crash posture (`recovery.interrupted`) and a `recovery.before_image`; the library writes the before-image before retracting, and the runner forces FULL after an interrupted run.
+  *Why:* A run killed half-way must never leave a half-retracted table that the next run calls unchanged.
+  Rules: `R-B` `R-M` `Rule-12`
+
+- **core.14** Declared equals witnessed. Acquisition reads go in `inputs.reads`; measurement reads (check SQL, emits) in `checks[].reads`; per-mode statement counts in `outputs.write_inventory.by_mode`; version pins in `staleness.pins`; invalidators in `outputs.invalidates[]` with a closed `by`. Fast invariant #44 traces what the step really runs and fails any gap; an unresolved invalidator fails (#44 (i)); a pin on a producer still awaiting captures prints OWED. Prior-run baselines accept only completed/completed_with_warnings runs.
+  *Why:* The cross-step ledger is only true if it is measured, never re-typed.
+  Rules: `R-BF` `R-BG` `R-BJ` `R-BK` `R-BL` `R-BM` `R-BW` `R-CB` `R-CW` `R-DB` `R-DG` `R-DI` `R-DO` `R-EA` `R-ER` `R-ES` `R-FF` `R-GP` `R-HA` `R-JF` · history: `W4A-R4`
+
+- **core.15** Every frozen enum value and every `execution.*` declaration has a disposition in its registry: executed (with a named executor or check), descriptive, or retired.
+  *Why:* A field that looks enforced but has no executor is a promise nobody keeps.
+  Rules: `R-X` `R-AJ` `R-AX` · history: `M4` (SPEC121-M4)
+
+- **core.16** The step is admin-verifiable: its registry, description, table-map and telemetry entries are derived from the descriptor (#51); range badges come from declared check bounds; each logic variable shows whether it is in effect (#53).
+  *Why:* The operator checks a step's output on the admin page, so the page must be derived, not hand-kept.
+  Rules: `R-DL` `R-DV` `R-DW` `R-EO`
+
+- **core.17** A priced or modelled output declares the population it is for, as a query bound on the producing step.
+  *Why:* A number without its population cannot be checked or compared.
+  Rules: `R-AY` `R-BT`
+
+- **core.18** Overrides are honest: `override.dry_run` is `"none"` unless the step honours it, and per-invocation row caps (`--limit=N`) are retired by deviation.
+  *Why:* A dry run that writes, or a cap that hides rows, makes the run report false.
+  Rules: `R-AV` `R-AZ` `R-GS` `R-GT`
+
+## 3. By archetype
+
+The archetype comes from `identity.archetype` (see `step-archetype-census.json`); it selects the required fields, and `execution.shape` selects the phase (§1). Every line in section 2 applies too.
+
+### INGESTOR
+
+Acquires an outside source and writes it into its own tables.
+
+- **ingestor.1** Phases run acquire → validate → write → score. Every "before X" guarantee in the owner spec becomes a `pre_write` check carrying an `order_guarantee` whose anchor is a literal sentence of that spec.
+  *Why:* A FAIL reported after rows are already written is a guarantee broken.
+  Rules: `Rule-11` `GAP-G-3`
+
+- **ingestor.2** A source-version skip is taken only when the target is non-empty.
+  *Why:* Skipping on an unchanged hash over an empty table leaves it empty for good.
+  Rules: `R-DD`
+
+- **ingestor.3** Primaries: a `ckan_datastore` primary is first-class (null geometry, targetless, union groups, per-member truth); a PDF document set is an acquisition format.
+  *Why:* Each source form gets one library path instead of a per-step reader.
+  Rules: `R-BY` `R-DX`
+
+- **ingestor.4** Derived secondary targets are written from a runner-owned prior-state read inside the primary transaction; one may be non-fatal (`on_error: warn_row`) with a declared zero-bound WARN check.
+  *Why:* The derived write stays atomic with its source and a failure still shows up as a row.
+  Rules: `R-DM` `R-DY`
+
+- **ingestor.5** A `written:"seen"` column is a runner-clock column touched for every fed key and excluded from the guard; its target declares `idempotent_rerun: "declared_drift"`, and the rerun proof passes only when rewritten == touched exactly.
+  *Why:* The touch rewrites rows on every run by design, so `zero_writes` would be a false claim.
+  Rules: `R-DZ` `R-EX`
+
+- **ingestor.6** Worked examples (one step each): load_parcels replaces geometry only on a material change beyond a variable tolerance; close_stale_permits folds into load_permits' declared retraction; coa made its change-detection hash timezone-independent at the cost of one measured re-upsert.
+  *Why:* Shows how the general rules were applied where they were first needed.
+  Rules: `R-BS` `R-BX` `R-EN` `R-EV` `R-JB`
+
+### LINK
+
+Joins two populations and writes the link rows or columns.
+
+- **link.1** `mode_select` is `tri_state`, or `none` with a `full_rescan` invalidator (the mode gate itself is R-BH (i), on core.5). Crash posture is `force_full_on_next_run`, and an autonomous FULL run happens only on a chain whose `chain_args` declare `--full`.
+  *Why:* A destructive rescan must be chosen on purpose, never by accident after a crash.
+  Rules: `R-L`
+
+- **link.2** `runLinkPhase` (shape `link`) serves more than one LINK family through opt-in arms; counter names come from the match plan. Other LINK steps run their own phase: shape `link_keyed` (`runLinkKeyedPhase`), `link_column` (`runLinkColumnPhase`); a MATCHER runs `runCascadePhase` (shape `cascade`), which hosts any declared cascade target, link_coa among them (R-JY, from the bundled runner night). §1 table 1a lists which step uses which. A match plan may also declare a closed `extra_counters` set, summed per batch (R-IG, from the bundled RE-FREEZE night).
+  *Why:* One library path, not a copy per link step.
+  Rules: `R-EG` `R-IG` `R-JY`
+
+- **link.3** Worked examples: a link-rate floor's denominator is the entity population, not the source-row count (link_wsib); a full-rescan LINK may keep its junction current with a declared material-geometry trigger (`guards.requires`, link_parcel_abutments).
+  *Why:* Shows the rules applied where they were first needed.
+  Rules: `R-N` `R-CR`
+
+- **link.4** Open operator question Q-B1: a better neighbour front-setback estimator (`front_setback_est_m`; owed to the Spec 130 lane). Since 2026-10-19 (operator ruling; Spec 130:93, Spec 131 LC-58, Spec 69a M-205(1) dated note) averaging is evaluated: max(neighbour estimate + `fya_porch_allowance_m`, the zone default), always "needs survey"; Q-B1 stays open only for a better estimator. A reader must not read a parcel with no abutment pairs (deleted until the next run by R-CR's trigger) as "no neighbours". Separately, R-CR's trigger form is replaced by the fleet keyed-delete arm when that lands; that does not close Q-B1. (124a R-CR's own cell still says averaging stays `not_evaluated` until Q-B1; that cell is stale, owed to a ruling lane.)
+  *Why:* An unanswered question stays visible on its own line, next to the rule that raised it.
+  Rules: `Q-B1`
+
+### MATCHER
+
+A LINK whose join is a fuzzy, tiered match. Everything under LINK applies except the phase: a MATCHER declares shape `cascade` and runs `runCascadePhase`, not `runLinkPhase`.
+
+- **matcher.1** Accuracy is a sampled precision/recall against a before-image, recorded at each repair, never a self-consistent predicate.
+  *Why:* A matcher graded against itself always passes.
+  Rules: `R-O`
+
+### ENRICHER
+
+Adds derived columns to rows another step owns, in scoped passes.
+
+- **enricher.1** No Layer-1 skip: a legacy skip gate moves into the write scope as a declared deviation, or, if it has no runner home and no lineage column, is knowingly retired.
+  *Why:* An ENRICHER that skips whole runs hides rows that changed upstream.
+  Rules: `R-AR` `R-AR.1`
+
+- **enricher.2** `runEnrichPhase` is generic: hooks are optional `enrich_hooks` declarations and intervals come from config. Pass DML goes through `ctx.exec(writesRef, sql, params)`; scope-ledger hygiene DELETEs are library-owned, and a guard-suppressed hygiene action emits one WARN row. Updated counters belong to whichever mechanism wrote the rows this run. One per-batch transaction may carry a step's statements (`ctx.flushBatch([...])`, a SAVEPOINT per warn_row statement), and an ENRICHER may write derived rows (R-JZ, from the bundled runner night). (Dated note 2026-10-26, `2026-10-26-batch-m#CHAT-174.ENRICHER2-HELD-NOTE`: the ENRICHER derive arm is held by CHAT-167 until designed with CLP ②; validate refuses `derive` on an ENRICHER by name.) (Dated note 2026-10-26, `2026-10-26-batch-r#CHAT-189.CLPD-Q4`, `2026-10-26-batch-r#CHAT-189.CLPD-Q5`: the ENRICHER derive arm is ruled for CLP ②; the list form's SAVEPOINT per warn_row statement is retired (a named refusal; the savepoint is the runner's derived-history write), and in an ENRICHER that declares derived rows `ctx.exec`, `joinUpdate` and `retract` refuse its root and history tables.)
+  *Why:* Writes stay behind the runner seam, and counters are not double-counted.
+  Rules: `R-AK` `R-AT` `R-CI` `R-CJ` `R-CK` `R-JZ`
+
+- **enricher.3** `execution.maintenance` may declare a dead-tuple-ratio dynamic-target arm, measured once and shared.
+  *Why:* Vacuum decisions follow the table's real state, from one measurement.
+  Rules: `R-CG`
+
+### MATERIALIZER
+
+Rebuilds a derived table from tables other steps own.
+
+- **materializer.1** `recovery.reset` is not none. `materialize_form` is `insert_select` or `rows` (rows computed in JS; the runner owns reads, writes and transactions), or `replace` (the whole table replaced through the existing staging executor in one transaction; zero rows leave it untouched; R-JX, from the bundled runner night); batch size comes from config.
+  *Why:* Rebuilds must be resumable, and JS rows must not bring their own I/O.
+  Rules: `R-EH` `R-JG` `R-JX` · history: `Q-MZ`
+
+### BACKFILL
+
+Fills historical rows in batches.
+
+- **backfill.1** Batch size comes from config. A one-time backfill leaves its chain once a measured run inserts 0 rows (backfill_realtor_permit_trades).
+  *Why:* A finished backfill should stop costing a chain slot.
+  Rules: `R-EM`
+
+### ASSERT
+
+Measures data quality and writes nothing but its own run row.
+
+- **assert.1** `outputs`, `recovery` and `counters` are none. Compute may read `ctx.pool` read-only over declared relations (R-CA (i), on core.9, corrects older text that says no pool is reachable); vocabulary-coverage reads use a runner-owned READ ONLY snapshot.
+  *Why:* An ASSERT measures; it must not change what it measures.
+  Rules: `R-CH`
+
+- **assert.2** Worked example: assert_schema checks at chain start that every declared logic variable has a DB row.
+  *Why:* A missing variable is caught before any step reads it.
+  Rules: `R-D`
+
+### RECORDER
+
+Records a snapshot it exists to publish.
+
+- **recorder.1** A RECORDER's `outputs` is an object (never `none`) and its snapshot write is declared in `outputs.writes[]`. Either `runRecorderPhase` executes it (shape `recorder`), or the step declares no shape and compute returns a `write_plan` that the runner executes after compute (`runWritePlan`, R-CD). (`outputs.publish` was deleted at a RE-FREEZE; Spec 124 §3's Rule 7 table still names it.)
+  *Why:* The snapshot is the step's purpose, so it is declared, not hidden.
+  Rules: `R-CD`
+
+### EFFECTOR
+
+Acts on the outside world (sends, calls, notifies). Census only until its first RE-FREEZE; not yet in the step.schema.json enum.
+
+- **effector.1** Four gates: a kill switch or injected transport, an exactly-once ledger, captured intended effects, and a dry run. Outside calls are replayed from recorded responses.
+  *Why:* An effect on the outside world cannot be rolled back, so it must be switchable, counted once and rehearsable.
+  Rules: `R-EI`
+
+### RUNNER (a home, not an archetype)
+
+Concerns the runner owns for every step.
+
+- **runner.1** Reconcile runs as a step at the head of the sources chain. A slug whose concern the runner owns (`reconcile`, `observe_chain`) is a declared `runner_owned` exemption, not a conversion; a step is retired, not converted, only under a closed predicate.
+  *Why:* Every chained slug has exactly one honest status.
+  Rules: `R-AP` `R-EJ` `R-EK` `A3`
+
+- **runner.2** Seam validation and chain-end synthesis derive from declared step edges; a chain step row's status is derived from its verdict (PASS → completed, WARN → completed_with_warnings, a covered FAIL → completed_with_errors); a hard-coded `'completed'` is retired.
+  *Why:* A chain that says completed after a FAIL is lying.
+  Rules: `R-V` `R-CC` `Q-S1-a`
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
+index 960823f50101ad5627f5f32c0cc67048824e596b..b3fff939796ee199358af6172b012a46cb4066e3 100644
+--- a/src/tests/backlog/check-lane-close.logic.test.ts
++++ b/src/tests/backlog/check-lane-close.logic.test.ts
+@@ -28,14 +28,18 @@ const quoteAt = (k: number) => `export const value0${k} = 'alpha quote number 0$
+ const FINDING = 'BUG severity=HIGH — clause "x" — src/a.ts:1 "y" — claim — fix\n';
+ const sha = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
+ const HEX64 = 'a'.repeat(64);
+-// the prompt hash of a compliance output is what the review tool writes: sha256 of JSON [system, user] built from the repo template, the input file and the placeholder context
++// the prompt hash of a compliance output is what the review tool writes: sha256 of JSON [system, user] built from the repo template, the input file and the selected sections of the committed context
+ const TEMPLATE_TEXT = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-compliance.md'), 'utf8');
+ const LENS_TEMPLATES = ['compliance', 'code-review', 'error-paths', 'ux', 'security'].map((n) => [`.claude/review-templates/lens-${n}.md`, fs.readFileSync(path.join(ROOT, `.claude/review-templates/lens-${n}.md`), 'utf8')] as const);
+ const templateOf = (template: string) => (template === 'lens-compliance.md' ? TEMPLATE_TEXT : fs.readFileSync(path.join(ROOT, `.claude/review-templates/${template}`), 'utf8'));
+-const promptHash = (inputText: string, templateText = TEMPLATE_TEXT) => {
++// task-375 A4: the reviewer context is the selected sections of the committed context file (one value per context file)
++const CTX_FILE = fs.readFileSync(path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), 'utf8');
++const selectedOf = (text: string) => { const x = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { extractSections: (m: string, w: string[]) => string; CONTEXT_SECTIONS: string[] }; return x.extractSections(text, /^#{1,6}\s.*Implementation Notes/m.test(text) ? x.CONTEXT_SECTIONS : x.CONTEXT_SECTIONS.filter((n) => n !== 'Implementation Notes')); };
++let HASH_CTX = CTX_FILE; // the context text the outputs of the scenario being built were run with (default: the committed one)
++const promptHash = (inputText: string, templateText = TEMPLATE_TEXT, context: string = selectedOf(HASH_CTX)) => {
+   const rt = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { splitTemplate: (t: string) => { systemInstruction: string | null; userTemplate: string }; substitutePlaceholders: (t: string, v: Record<string, string>) => string };
+   const s = rt.splitTemplate(templateText);
+-  return sha(JSON.stringify([s.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.", rt.substitutePlaceholders(s.userTemplate, { plan: inputText, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' })]));
++  return sha(JSON.stringify([s.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.", rt.substitutePlaceholders(s.userTemplate, { plan: inputText, specs: context, dataContext: '(no live-DB context provided)' })]));
+ };
+ const hdr = (template: string, inputText: string | null, prompt?: string) => `REVIEW template=${template} model=deepseek-reasoner at=2026-11-20T10:00:00.000Z file_sha256=${inputText === null ? HEX64 : sha(inputText)} prompt_sha256=${prompt ?? (inputText !== null ? promptHash(inputText, templateOf(template)) : HEX64)}\n`;
+ const DIFF_FLAGS = (JSON.parse(run('node', ['-e', "import('./scripts/analysis/rule-lists.mjs').then((m)=>console.log(JSON.stringify(m.DIFF_ARGS)))"], { cwd: ROOT }).stdout) as string[]);
+@@ -67,10 +71,11 @@ type Opts = {
+   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
+   // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
+   triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean; notesBlock?: boolean;
+-  mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
++  ctx?: string | false; hashCtx?: string; refs?: false | string[]; mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
+ };
+ type TriageCtx = { ids: { id: string; word: string; sev: string }[]; sha: string; path: string; base: string; d: string };
+ function scenario(o: Opts = {}) {
++  HASH_CTX = o.hashCtx ?? CTX_FILE;
+   const d = tmp('lc');
+   const g = (...a: string[]) => run('git', ['-c', 'user.email=t@t', '-c', 'user.name=t', ...a], { cwd: d });
+   const w = (f: string, t: string) => { fs.mkdirSync(path.dirname(path.join(d, f)), { recursive: true }); fs.writeFileSync(path.join(d, f), t); };
+@@ -112,7 +117,7 @@ function scenario(o: Opts = {}) {
+   const splitArgs = o.split ? ['--max', String(o.split.max), '--template', path.join(d, '.git/tpl.md')] : [];
+   for (const id of ['first', 'inc-F', ...Object.keys(table.lists as object).filter((k) => k === 'xtra'), ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
+     const out = path.join(d, LD, `in-out-compliance-${id}`);
+-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
+     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
+     for (const p of r.stdout.split('\n').filter(Boolean)) {
+       const nm = path.basename(p);
+@@ -125,7 +130,7 @@ function scenario(o: Opts = {}) {
+   lane['out-code-review.txt'] = hdr('lens-code-review.md', material) + body(false);
+   if (o.split?.lens) {
+     // the non-compliance lenses split by the same tool: no --list, a lens template; the outputs are out-<lens>-pN.txt, each with its committed input
+-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--material', path.join(d, '.git/material.txt'), '--out', path.join(d, LD, 'in-out-code-review'), ...splitArgs], { cwd: d });
++    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--material', path.join(d, '.git/material.txt'), '--out', path.join(d, LD, 'in-out-code-review'), ...splitArgs], { cwd: d });
+     if (r.status !== 0) throw new Error(`lens-input (no list): ${r.stderr}`);
+     lane['out-code-review.txt'] = null;
+     for (const p of r.stdout.split('\n').filter(Boolean)) { const nm = path.basename(p); const inText = fs.readFileSync(p, 'utf8'); lane[nm] = inText; lane[nm.replace(/^in-/, '')] = hdr('lens-code-review.md', inText) + body(false); }
+@@ -151,6 +156,15 @@ function scenario(o: Opts = {}) {
+     fs.appendFileSync(path.join(d, o.finalTaskPath ?? TASK), `\n## Final Summary\n\n<!-- SECTION:FINAL_SUMMARY:BEGIN -->\n${(o.notesBlock ? ['no outcome block here'] : o.summary ? o.summary(block) : block).join('\n')}\n<!-- SECTION:FINAL_SUMMARY:END -->\n`);
+   }
+   for (const [n, t] of Object.entries(l)) if (t !== null) w(`${LD}/${n}`, t);
++  // task-375 A5: the review context the lane committed with its round (docs/reports/reviews/<task>/context-rN.md); B2: the references the close requires (the repo copies of the lane files)
++  if (o.ctx !== false) w('docs/reports/reviews/task-7/context-r1.md', o.ctx ?? CTX_FILE);
++  const tp = path.join(d, o.finalTaskPath ?? TASK);
++  if (!o.noTaskFile && o.refs !== false && fs.existsSync(tp)) {
++    const refs = o.refs ?? [`${LD}/REPORT.md`, `${LD}/GROUNDER.md`, ...(l['TRIAGE.md'] ? [`${LD}/TRIAGE.md`] : [])];
++    let tt = fs.readFileSync(tp, 'utf8');
++    if (!/^references:/m.test(tt)) tt = tt.replace(/\nmilestone:/, `\nreferences:\n${refs.map((r) => `  - ${r}`).join('\n')}\nmilestone:`);
++    fs.writeFileSync(tp, tt);
++  }
+   g('add', '-A');
+   const msgFile = path.join(d, '.git/MSG');
+   fs.writeFileSync(msgFile, o.msg ?? `feat(08_agents): close\n\n${o.trailer === false ? '' : (o.trailer ?? 'Task: task-7')}\n`);
+@@ -771,3 +785,215 @@ describe('outcome check: the mode table, seats and failing callbacks (outcomeErr
+     expect(mk('docs/reports/lanes/x/seat.md').join('\n')).toMatch(/is outside docs\/reports\/reviews\/task-9\//);
+   });
+ });
++
++describe('task-375 A4, A5, B2: the close binds the committed review context and the references', () => {
++  const planted = (ctx: string) => { const r = scenario({ ctx }); return r; };
++  it('control: a lane with a valid committed context and the three references closes', () => {
++    const r = scenario();
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('refuses when no context file is committed for the task (the placeholder is not accepted)', () => {
++    refused(scenario({ ctx: false }), /no committed review context file/);
++  });
++  it('refuses a context that is the placeholder, and one without the Description heading', () => {
++    refused(planted('(no pasted context provided)'), /context-r1\.md/);
++    refused(planted(CTX_FILE.replace('## Description', '## Gone')), /Description/);
++  });
++  it('refuses a context edited after the review (the recomputed prompt hash no longer matches any committed context)', () => {
++    refused(planted(CTX_FILE.replace('a short description', 'a different description')), /prompt_sha256/);
++  });
++  it('an output must match one committed context file: the earlier round file is kept and still binds', () => {
++    const r = scenario({ staged: { 'docs/reports/reviews/task-7/context-r2.md': CTX_FILE.replace('a short description', 'a later round description') } });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('a missing Implementation Notes heading is refused when the task has notes, and control: tolerated when it has none', () => {
++    refused(scenario({ notesBlock: true, ctx: CTX_FILE.replace('## Implementation Notes\n(none)', '## Elsewhere\n(none)') }), /Implementation Notes/);
++    const bare = CTX_FILE.replace('## Implementation Notes\n(none)\n\n', '');
++    const ok = scenario({ ctx: bare, hashCtx: bare });
++    expect(ok.status, ok.stderr).toBe(0);
++  });
++  it('B2: a missing REPORT.md reference is refused and the exact add-ref command is printed; control above closes with all three', () => {
++    const r = scenario({ refs: ['docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md', 'docs/reports/lanes/2026-11-20/BL-COMPLY2/TRIAGE.md'] });
++    refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/);
++  });
++  it('B2: the TRIAGE.md reference is required only when the lane directory holds one', () => {
++    const noTri = scenario({ lensFinding: false, refs: [`docs/reports/lanes/2026-11-20/BL-COMPLY2/REPORT.md`, `docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md`] });
++    expect(noTri.status, noTri.stderr).toBe(0);
++    const tri = scenario({ refs: [`docs/reports/lanes/2026-11-20/BL-COMPLY2/REPORT.md`, `docs/reports/lanes/2026-11-20/BL-COMPLY2/GROUNDER.md`] });
++    refused(tri, /--add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/TRIAGE\.md/);
++  });
++});
++
++// ---- task-375 D: the launch gate (planGateErrors, PLAN_SEATS, planHash) ----
++type PO = {
++  type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
++  noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
++  ctx?: string; badMaterial?: boolean; junkPlan?: boolean; fixCompliance?: 'valid' | 'junk';
++};
++async function planScenario(o: PO = {}) {
++  const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
++  const rl = (await import('../../../scripts/analysis/rule-lists.mjs')) as { buildLensInputs: (a: unknown) => { suffix: string; text: string }[]; resolveTask: (a: unknown) => { lists: { id: string }[] } };
++  const id = 'task-7'; const dir = `docs/reports/reviews/${id}`;
++  const mem: Record<string, string> = { 'docs/a.md': '# A\nrule one text\nrule two text\n', 'docs/ev.md': '# Ev\nthe five words and the plan protocol\n', 'docs/ms.md': '# Ms\nthe milestone objectives\n', 'docs/inc.md': '# Inc\nincrement text\n', 'src/a.ts': AFILE };
++  const d = tmp('pg');
++  for (const [p, t] of Object.entries(mem)) { fs.mkdirSync(path.dirname(path.join(d, p)), { recursive: true }); fs.writeFileSync(path.join(d, p), t); }
++  fs.mkdirSync(path.join(d, 'backlog/milestones'), { recursive: true });
++  const table = JSON.parse(JSON.stringify(TABLE)) as Record<string, unknown>;
++  for (const [p, t] of LENS_TEMPLATES) mem[p] = t;
++  const type = o.type ?? 'build';
++  const roundLine = o.round === false ? '' : (o.round ?? `Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder ${dir}/GROUNDER-PLAN.md; triage ${dir}/TRIAGE-PLAN.md\n`);
++  const bodyText = `${taskText({ status: 'LATER', type, files: o.files, assignees: [] })}\n## Implementation Plan\n\n<!-- SECTION:PLAN:BEGIN -->\nthe plan text is long enough to be quoted\n${roundLine}<!-- SECTION:PLAN:END -->\n`;
++  const text0 = bodyText;
++  const ctxText = o.ctx ?? CTX_FILE;
++  HASH_CTX = ctxText;
++  const sel = selectedOf(ctxText);
++  const cut = (createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as { extractSections: (t: string, w: string[]) => string; PLAN_SECTIONS: string[] }).extractSections(ctxText, ['Description', 'Acceptance criteria', 'Implementation Plan']);
++  const files: Record<string, string> = {};
++  if (!o.noFolder) {
++    files['context-r1.md'] = ctxText;
++    if (type === 'build') {
++      const lists = rl.resolveTask({ table, root: d, body: text0, type, letter: 'F' }).lists.map((l) => l.id).filter((x) => x !== o.omitList);
++      for (const lid of lists) {
++        const ins = rl.buildLensInputs({ id: lid, list: (table.lists as Record<string, unknown>)[lid], root: d, material: o.badMaterial ? 'some other text under review' : cut, templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: sel });
++        for (const x of ins) {
++          const inn = `in-plan-compliance-${lid}${x.suffix}.txt`;
++          files[inn] = x.text;
++          files[inn.replace(/^in-/, '')] = hdr('lens-compliance.md', x.text, o.placeholder ? promptHash(x.text, TEMPLATE_TEXT, '(no pasted context provided)') : undefined) + body(false);
++        }
++      }
++    }
++    if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.junkPlan ? 'junk\n' : `${hdr('lens-code-review.md', null)}${body(false)}`;
++    if (type === 'fix' && o.fixCompliance) files['plan-compliance-first.txt'] = o.fixCompliance === 'junk' ? 'junk\n' : `${hdr('lens-compliance.md', null)}${body(false)}`;
++    if (o.finding) files['plan-code-review.txt'] = `${hdr('lens-code-review.md', null)}BUG severity=${o.finding.sev} — clause "x" — src/a.ts:1 "y" — claim — fix\nVERDICT: PASS\n`;
++    if (o.stray) files['notes.txt'] = 'stray\n';
++  }
++  const seatText = (n: string) => `# ${n} seat\n### ${n.slice(0, 3)}#1 LOW: a small thing to note\n`;
++  const needsReg = (o.files ?? 'src/a.ts').split(',').map((x) => x.trim()).some((e) => (o.tracked ?? ['src/a.ts']).includes(e));
++  const names = ['integration', 'reality-check', ...(needsReg ? ['regression'] : [])].filter((n) => !(o.drop ?? []).includes(n));
++  const seatLines: string[] = [];
++  const verdicts: string[] = [];
++  for (const n of names) {
++    const rel = `${dir}/seat-${n}-1.md`;
++    const t = seatText(n);
++    if (!o.noFolder) files[`seat-${n}-1.md`] = t;
++    mem[rel] = t;
++    seatLines.push(`Seat: ${n} ${o.seatPath ?? rel} sha256:${o.seatSha ?? sha(t).slice(0, 12)}`);
++    if (!o.seatNoVerdict) verdicts.push(`${n.slice(0, 3)}#1 REJECTED docs/a.md:2 "rule one text" a small observation that changes nothing in the plan text`);
++  }
++  if (o.triage !== false && o.triage !== undefined) files['TRIAGE-PLAN.md'] = o.triage;
++  const planFiles = Object.keys(files).filter((n) => /^plan-.+\.txt$/.test(n));
++  for (const n of Object.keys(files)) mem[`${dir}/${n}`] = files[n]!;
++  const lines = ['# Plan grounder', `Grounder: ${o.grounder ?? 'grounder-agent-1'}`, `Lane: ${o.laneHdr ?? 'BL-COMPLY2'}`, ''];
++  for (const n of planFiles.sort()) if (n !== o.noRuled) lines.push(`Ruled: ${n} sha256:${sha(files[n]!).slice(0, 12)} findings:${nFind(files[n]!)}`);
++  let k = 0;
++  for (const n of planFiles.sort()) for (let j = 1; j <= nFind(files[n]!); j++) { k += 1; lines.push(`${n.replace(/\.txt$/, '')}#${j} CONFIRMED src/a.ts:${k} "${quoteAt(k)}"`); }
++  lines.push(...verdicts, ...seatLines);
++  let finalText = o.editBody ? text0 : text0;
++  const refs = [`${dir}/GROUNDER-PLAN.md`, ...(o.triage ? [`${dir}/TRIAGE-PLAN.md`] : []), ...names.map((n) => `${dir}/seat-${n}-1.md`)];
++  finalText = finalText.replace(/\nmilestone:/, `\nreferences:\n${refs.map((r) => `  - ${r}`).join('\n')}\nmilestone:`);
++  if (o.refs === false) finalText = text0;
++  if (!o.noPlanLine) lines.push(`Plan: ${id} sha256:${m.planHash(finalText)}`);
++  if (!o.noGrounder && !o.noFolder) files['GROUNDER-PLAN.md'] = `${lines.join('\n')}\n`;
++  mem[`${dir}/GROUNDER-PLAN.md`] = files['GROUNDER-PLAN.md'] ?? '';
++  if (o.editBody) finalText = finalText.replace(/the plan text is long enough/, 'the plan text is wrong enough');
++  const tracked = o.tracked ?? ['src/a.ts'];
++  return m.planGateErrors({
++    id, taskText: finalText, type, table, root: d, letter: 'F', laneName: 'BL-COMPLY2', assignees: [], folder: Object.entries(files).map(([name, text]) => ({ name, text })),
++    readRepo: (p: string) => { if (o.throwRead) throw new Error('disk gone'); return mem[p] ?? null; }, tracked: (e: string) => tracked.includes(e),
++    facts: { taskOf: () => ({ exists: false, status: '', text: '' }), decisionExists: () => false },
++  });
++}
++const gate = (r: { errors: string[] }, re: RegExp) => { expect(r.errors.join('\n')).toMatch(re); expect(r.errors.length).toBeGreaterThan(0); };
++
++describe('task-375 D: the launch gate refuses a build or fix launch whose plan was not checked', () => {
++  it('control: a build task with full plan evidence passes and reports its lists, findings and Plan line', async () => {
++    const r = await planScenario();
++    expect(r.errors).toEqual([]);
++    expect(r.lists).toBe(4);
++    expect(r.line).toMatch(/^Plan: task-7 sha256:[0-9a-f]{12}$/);
++  });
++  it('a type other than build or fix is not gated', async () => {
++    const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[] } };
++    expect(m.planGateErrors({ id: 'task-7', taskText: taskText({ status: 'LATER', type: 'record' }), type: 'record' }).errors).toEqual([]);
++  });
++  it('no evidence folder: refused, the first error names the folder', async () => {
++    const r = await planScenario({ noFolder: true });
++    expect(r.errors[0]).toMatch(/no plan evidence folder docs\/reports\/reviews\/task-7\//);
++  });
++  it('a missing plan output for one list is refused naming the list; a plan output made over the placeholder context is refused', async () => {
++    gate(await planScenario({ omitList: 'inc-F' }), /list inc-F[\s\S]*plan-compliance-inc-F/);
++    gate(await planScenario({ placeholder: true }), /prompt_sha256/);
++  });
++  it('a plan output whose material is not the plan sections of the committed context is refused (a plan review of some other text); a context with other plan text still passes when the outputs follow it (control)', async () => {
++    gate(await planScenario({ badMaterial: true }), /not the Description, Acceptance criteria and Implementation Plan sections/);
++    const ok = await planScenario({ ctx: CTX_FILE.replace('the plan text', 'another plan text') });
++    expect(ok.errors).toEqual([]);
++  });
++  it('no GROUNDER-PLAN.md; a Grounder equal to the planned lane; a Lane header that is not the launched lane', async () => {
++    gate(await planScenario({ noGrounder: true }), /GROUNDER-PLAN\.md is missing/);
++    gate(await planScenario({ grounder: 'BL-COMPLY2' }), /Grounder .* (is the lane|same as Lane)/);
++    gate(await planScenario({ laneHdr: 'BL-OTHER' }), /Lane "BL-OTHER" is not the lane being launched/);
++  });
++  it('a missing integration or reality-check Seat line is refused', async () => {
++    gate(await planScenario({ drop: ['integration'] }), /no "Seat: integration/);
++    gate(await planScenario({ drop: ['reality-check'] }), /no "Seat: reality-check/);
++  });
++  it('regression is required when the Files line names an existing path, and not when it names only new paths', async () => {
++    gate(await planScenario({ drop: ['regression'] }), /no "Seat: regression/);
++    const nw = await planScenario({ files: 'src/brand-new.ts', tracked: ['src/a.ts'] });
++    expect(nw.errors.join('\n')).not.toMatch(/Seat: regression/);
++  });
++  it('a Seat path outside the evidence folder, a Seat file with another sha, and a seat finding with no verdict are refused', async () => {
++    gate(await planScenario({ seatPath: 'docs/a.md' }), /outside docs\/reports\/reviews\/task-7\//);
++    gate(await planScenario({ seatSha: '0'.repeat(12) }), /Seat integration[\s\S]*sha256/);
++    gate(await planScenario({ seatNoVerdict: true }), /seat finding .* no verdict/);
++  });
++  it('an unruled plan output is refused', async () => {
++    gate(await planScenario({ planLens: true, noRuled: 'plan-code-review.txt' }), /no "Ruled:" line for plan-code-review\.txt/);
++  });
++  it('a CONFIRMED plan finding with no outcome is refused; with a TRIAGE-PLAN.md outcome and the round block it passes (control)', async () => {
++    gate(await planScenario({ finding: { file: 'x', sev: 'LOW' } }), /no outcome line/);
++    const tri = 'plan-code-review#1 wontfix:"a low note with a reason of more than thirty characters"\n';
++    const r = await planScenario({ finding: { file: 'x', sev: 'LOW' }, triage: tri, round: 'Plan review round 1: 0 folded, 0 task, 0 ruling, 1 wontfix, 0 pile; grounder docs/reports/reviews/task-7/GROUNDER-PLAN.md; triage docs/reports/reviews/task-7/TRIAGE-PLAN.md\n' });
++    expect(r.errors).toEqual([]);
++  });
++  it('folded: a quote present in the task passes, a quote not in the task text is refused; fixed is refused in plan mode', async () => {
++    const round = (n: string) => `Plan review round 1: ${n}; grounder docs/reports/reviews/task-7/GROUNDER-PLAN.md; triage docs/reports/reviews/task-7/TRIAGE-PLAN.md\nplan-code-review#1 HIGH folded the plan text is long enou\n`;
++    const ok = await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 folded:"the plan text is long enough"\n', round: round('1 folded, 0 task, 0 ruling, 0 wontfix, 0 pile') });
++    expect(ok.errors).toEqual([]);
++    gate(await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 folded:"this sentence is nowhere in the task"\n', round: round('1 folded, 0 task, 0 ruling, 0 wontfix, 0 pile') }), /not in the task text/);
++    gate(await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 fixed:abcdef1 src/a.ts\n', round: round('0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile') }), /fixed is refused in plan mode/);
++  });
++  it('the round block is required on the task, and the references must hold the grounder and seat files', async () => {
++    gate(await planScenario({ round: false }), /holds no "Plan review round N/);
++    gate(await planScenario({ refs: false }), /references lack docs\/reports\/reviews\/task-7\/GROUNDER-PLAN\.md: backlog task edit task-7 --add-ref/);
++  });
++  it('the Plan line: a missing one is refused; one word edited in the task after the grounder ruled is refused with the new expected line (control: unchanged passes)', async () => {
++    gate(await planScenario({ noPlanLine: true }), /no last "Plan: <task id> sha256/);
++    const bad = await planScenario({ editBody: (b) => b });
++    gate(bad, /Plan line .* is not the hash of the task as it is now[\s\S]*expected: Plan: task-7 sha256:[0-9a-f]{12}/);
++  });
++  it('a stray file in the folder is ignored (control passes) and a read error is a refusal line, never a stack trace', async () => {
++    const s = await planScenario({ stray: true });
++    expect(s.errors).toEqual([]);
++    const t = await planScenario({ throwRead: true });
++    expect(t.errors.length).toBeGreaterThan(0);
++    expect(t.errors.join('\n')).toMatch(/could not read|disk gone/);
++  });
++  it('g375#1: a fix task whose plan-<lens>.txt is junk (no REVIEW header, no VERDICT line) is refused; a valid one passes (control above)', async () => {
++    gate(await planScenario({ type: 'fix', junkPlan: true }), /plan-code-review\.txt: no REVIEW header/);
++    const ok = await planScenario({ type: 'fix' });
++    expect(ok.errors).toEqual([]);
++  });
++  it('g375#11: a fix launch with a valid plan-code-review.txt AND a valid plan-compliance-<list>.txt (template lens-compliance.md) passes; control: a junk plan-compliance-<list>.txt is still refused', async () => {
++    const ok = await planScenario({ type: 'fix', fixCompliance: 'valid' });
++    expect(ok.errors).toEqual([]);
++    gate(await planScenario({ type: 'fix', fixCompliance: 'junk' }), /plan-compliance-first\.txt: no REVIEW header/);
++  });
++  it('a fix task with one plan lens output passes; a build task with only that output is refused', async () => {
++    const fx = await planScenario({ type: 'fix' });
++    expect(fx.errors).toEqual([]);
++    const bd = await planScenario({ planLens: true, omitList: 'first' });
++    gate(bd, /list first/);
++  });
++});
+diff --git a/src/tests/backlog/rule-lists-table.logic.test.ts b/src/tests/backlog/rule-lists-table.logic.test.ts
+index 9eed93f88cb936c5baf8606df4a14f124d4d1241..7082ea1a8bc4a0e01f61d4f4a7418cdbbe66884f 100644
+--- a/src/tests/backlog/rule-lists-table.logic.test.ts
++++ b/src/tests/backlog/rule-lists-table.logic.test.ts
+@@ -46,7 +46,7 @@ describe('V2.LIST round 2: the table rows', () => {
+     expect(row.why).toContain('no governing spec found: operator ruling owed');
+   });
+   it('the Spec 124 list block carries Rule 13 and the role banner rule R-GW', () => {
+-    const r = script(CLI, ['lens-input', '--list', 'policy-124-s2-s5', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('p124'), 'in-x')]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'policy-124-s2-s5', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('p124'), 'in-x')]);
+     expect(r.status, r.stderr).toBe(0);
+     const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+     expect(text).toContain('Rule 13 added by R-R');
+@@ -203,10 +203,11 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
+     expect(without).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
+   });
+   it('the surface-136 lens input generated for the change holds fe.01 to fe.44 (44 distinct ids)', () => {
+-    const r = script(CLI, ['lens-input', '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
+     expect(r.status, r.stderr).toBe(0);
+     const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
+     const ids = new Set(text.match(/\bfe\.\d\d\b/g));
+     expect([...ids].sort()).toEqual(Array.from({ length: 44 }, (_, i) => `fe.${String(i + 1).padStart(2, '0')}`));
+   });
+ });
++// task-375: lens-input takes --context (A4); see the deviation note on the task
+

@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:22:49.984Z file_sha256=21c44b0271b3c2946867c1b3dc8524250aee35c34bfc33da7eaddff0297a5533 prompt_sha256=db34e347efb7444b9ffa12fef3946da7dfdc05508f5f6cbca5b120c2256a2a6e
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-eng-all-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — plan A.4 "the existing prompt_sha256 recompute (:65) binds it" and A.3 "every lens command, plan and output, passes --context <the committed context file>" — scripts/hooks/check-lane-close.mjs "errors.push(...reviewErrors(f.name, f.text," ... ", null)" — a FIX launch's plan lens outputs go through reviewErrors with inputText null and no templateText and no contexts, so the prompt hash is never recomputed and no committed in- input is required: a plan-<lens>.txt made over the placeholder context (the D11a defect this card exists to remove) passes the launch gate, and close never revisits it because phases = ['out'] for a fix — require the committed in-<name> input beside each plan-<lens>.txt and pass templateText plus that round's context value so the hash check applies, as the build branch already does.
+
+DEFER severity=LOW — plan B.3 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir (08_agents.md:347); the close check refuses when one is missing." — scripts/hooks/check-lane-close.mjs "if (build) {" and "for (const n of ['REPORT.md', 'GROUNDER.md', ...(textOf('TRIAGE.md') !== undefined ? ['TRIAGE.md'] : [])]) {" — the reference refusal is gated on build, so a non-build close whose lane dir holds these copies is never refused for a missing reference, though the pasted bullet is unqualified — move the loop out of the build guard, or record the build/fix-only scope in the plan text.
+
+DEFER severity=LOW — §12.12 "Pure functions with arithmetic invariants, scoring formulas, key normalizers, distance/unit conversions, cursor comparators, MUST have at least one `fast-check` property test asserting the invariant." — scripts/hooks/check-lane-close.mjs "export function planHash(taskText) {" — a new key normalizer (title plus body, whitespace squashed) lands with no fast-check property test, and the card's Files line names no src/tests/property/ path so the test cannot land inside this card — add a whitespace-invariance property for planHash under src/tests/property/ and extend the Files line.
+
+DEFER severity=LOW — plan A.6 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file." — scripts/lib/review-template.js "return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;" — count plus one, not highest plus one: a dir holding r1 and r3 yields round 3 and the brief writes over context-r3.md, destroying the file earlier lens outputs were hashed over, and no pasted clause names overwriting a committed round — take the maximum existing round plus one.
+
+DEFER severity=LOW — §13.3 "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`." — scripts/hooks/check-lane-close.mjs "catch (e) { return { errors: [`${i.id}: the plan gate could not read the evidence: ${String(e?.message ?? e).split('\n')[0]}`], lists: 0, findings: 0, line: '' }; }" — the read failure is turned into a refusal line with no structured log record, and planCut's "catch { return null; }" drops the extractSections message so a missing "## Implementation Plan" heading is reported as "a plan review of some other text" — log the caught error and carry the extractSections message into the refusal.
+
+MET — plan A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — scripts/lib/review-template.js — "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" carries the exact five heading texts in one exported constant, with PLAN_SECTIONS and extractSections beside it.
+
+MET — plan A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes" — scripts/hooks/check-lane-close.mjs — "if (c.text.trim() === PLACEHOLDER_CONTEXT)" plus "try { values.push(extractSections(c.text, want)); } catch (e) { problems.push(" produce a named problem line for each of the three planted refusals, and the placeholder value never enters the hash set.
+
+MET — plan A.5 "every committed context file of the task (docs/reports/reviews/<id>/context-rN.md), the INDEX first, then HEAD" — scripts/hooks/check-lane-close.mjs — "git(['ls-files', '--cached', '--', ctxDir])" and "git(['ls-tree', '-r', '--name-only', 'HEAD', '--', ctxDir])" read the index and HEAD only, never the range base.
+
+MET — RR-0348 "these only run on the plan" — scripts/hooks/check-lane-close.mjs — "const seats = seatLines(g, i.readRepo);" appears only inside planGateInner, so seats are gated at the launch on the plan and closeErrors adds no seat check on the output.
+
+MET — plan D3 "the first 12 hex of the sha256 of the title plus the whole body after the front matter, whitespace squashed" — scripts/hooks/check-lane-close.mjs — "return sha(squash(`${fm.title ?? ''} ${body}`)).slice(0, 12);" keeps front matter out of the hash, so B2's --add-ref cannot move the Plan line while a one-word body edit does (A9).
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 5
+
+---
+⏱  163621ms (163.6s)
+📊 Tokens — total: 60610, input: 30150, output: 30460, reasoning: 29127

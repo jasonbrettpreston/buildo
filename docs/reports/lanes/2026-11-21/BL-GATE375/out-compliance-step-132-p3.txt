@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:40:09.986Z file_sha256=8eae162ba1454cc21536754f0b0006bd6f9444fbd66bf34e8c158d4a11414f37 prompt_sha256=387f42438f597436104e3d79efb2c6f6a45ac768f28b0a222c3499ac24786985
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-step-132-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — A4 "rule-lists.mjs lens-input takes --context, refuses without it" — scripts/analysis/rule-lists.mjs "export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND })" — the refusal exists only in the CLI branch, so any other caller that omits the context (tests today, a tool tomorrow) silently rebuilds the placeholder prompt that D11a was, which is the one thing this card exists to stop — make `context` a required argument in buildLensInputs and lensPromptHash (throw naming it) and let the CLI's die stay.
+
+DEFER severity=MED — #8 A3 "lens-input --list surface-135 with a 60,000-character material: today exit 1 naming \"## Register\"; after A6 exit 0 with parts" — pasted "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the before-state of the A6 defect is never witnessed, so AC #1 "Each defect is confirmed on the head before fixing, with file:line" and AC #8's first half are unmet — run lens-input on the pre-A6 head and paste the exit code and the "## Register" line.
+
+DEFER severity=MED — #2 "Tests red first, then green through the real hooks" — pasted "red first in red.out (rule-lists.logic.test.ts:650), green by the real commit" against this task's own finding "red.out and commit.out cited by the report are not in the repo; the recorded red is for the wrong reason" — cannot see red.out or its content in this chunk, and the same citation form was already found absent once on this task — commit the red output (or paste it on the task) with the D11b commit.
+
+DEFER severity=LOW — #7 A2 "paste each exit code, selected-section count and call count" — pasted "task-381 15 lists, 5 sections 2121 characters, 17 calls, 0 refused" — no per-list exit code is pasted for any of the three tasks, so "none refused" rests on a total rather than the exits the criterion names — paste the 15, 10 and 18 exits.
+
+DEFER severity=LOW — B.1 "`compliance:<list id> <file>`, one per resolved list" — scripts/analysis/rule-lists.mjs "const have = new Map((refs ?? []).filter((r) => idOf(r)).map((r) => [idOf(r), String(r).trim()]));" — two compliance: entries for one list collapse into a single map key, so a duplicate appears in neither {add} nor {remove} and the printed command leaves the References line carrying two entries for one list — count occurrences per id and put the extra on the remove list.
+
+MET — #12 A7 (D11b, README.md:104, lens-security.md:48) — scripts/analysis/rule-lists.mjs "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — admin and PII paths now fire the security lens.
+
+MET — #8 A6 "cut between table rows or blank-line paragraphs instead of being refused" — scripts/analysis/rule-lists.mjs splitFlat "else if (/^\s*\|/.test(ln)) { ... cur.push(ln); flush(); }" — a headingless block is cut at rows and blank lines, and a piece alone over the room throws naming the list and section.
+
+MET — A4 "lens-input takes --context, refuses without it, and counts the selected sections in the room on both paths" — scripts/analysis/rule-lists.mjs "if (!ctxFile) die(2, 'usage: ...')" with `context` threaded into fixed, finalLen, promptOf and prompt.
+
+MET — A2 "extractSections moves there from deepseek-review.js:106-121" — scripts/deepseek-review.js "const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');" and the local copy deleted.
+
+MET — #9 A4 "check-tasks prints the exact backlog task edit --add-ref command for at least one stale open task, each entry starting \"compliance:\"" — scripts/analysis/rule-lists.mjs "console.log(`  backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}`)" with exit left at 0.
+
+REJECT — core.1 to core.18 — accused of not keeping the three-file step shape, the descriptor vocabulary and the rest of section 2 — scripts/analysis/rule-lists.mjs and scripts/deepseek-review.js are review tooling, no pasted clause of section 2 or 3 names a review-tool file, so no step rule binds this diff.
+
+REJECT — core.9 — accused of impure compute or a hand-built ctx — no compute module, runner dispatch or step descriptor is in the diff.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 54   Unmet: 5
+
+---
+⏱  133733ms (133.7s)
+📊 Tokens — total: 47278, input: 24051, output: 23227, reasoning: 22047

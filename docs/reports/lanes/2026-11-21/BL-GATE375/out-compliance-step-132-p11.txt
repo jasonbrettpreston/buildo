@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:39:04.000Z file_sha256=30993ebd99cdfea08ef3d0ec7e00eabbaa587f6676b528e66c8314a899be62a5 prompt_sha256=af435b2c20eb0f5544fc9de871acda44d8cd692d867f03b99c65e8f79ba313c4
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-step-132-p11.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none found in this chunk.
+
+DEFER severity=MED — core.8 "Every number a step, gate, admin surface or tool uses is a registered logic variable or an exact zero" — src/tests/proof-slice.logic.test.ts "describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)'" vs the pasted note "DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable" — the clause is carried only by a test name and an unregistered helper, the tool still uses the literal — register tooling_proof_slice_timeout_ms (seed row, migration, id claim) under the operator's DB GO and have proof-slice.mjs call timeoutMsFromVariable, keeping the task RUNNING until then.
+
+DEFER severity=MED — card A.4 "counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)" — src/tests/backlog/rule-lists.logic.test.ts "script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'first', '--out', path.join(f.d, 'out/ctx'), '--template', tpl, ...extra" — cannot see any pasted test of the no-list path with a context, so half the plan requirement is unverified — add one case that calls lens-input with --context and no --list and pins the refusal and the counting.
+
+DEFER severity=MED — AC #2 "Tests red first, then green through the real hooks" — pasted note "Red for this commit was a typecheck refusal (complianceRefs not exported), in red7.out" is cited for B1 only — the pasted notes cite no red file for the A2 review-template commit or the A4/A6 lens-input commit, so red first cannot be seen for the tests added here — cite the red output for those commits in the build notes.
+
+DEFER severity=LOW — card B.1 "`compliance:<list id> <file>`, one per resolved list" — src/tests/backlog/rule-lists.logic.test.ts "expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);" — for a comma path the entry drops the file, a form the plan does not name — record that deviation in Implementation Notes with its why (backlog splits --add-ref at commas).
+
+DEFER severity=LOW — card A.6 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — src/tests/backlog/rule-lists.logic.test.ts "const tableDoc = (n: number) => '# T\n\n## 5. Register\n\n| id | rule |" — only the table-row arm is tested; cannot see a case for the blank-line paragraph arm — add one paragraph-block split case and its control.
+
+DEFER severity=LOW — AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — src/tests/proof-slice.db.test.ts "// Skipped unless BUILDO_TEST_DB=1 (or CI DATABASE_URL)." with "NOT registered: no tooling_ timeout variable exists in scripts/seeds/logic_variables.json" — the file is red on any test:db run until the seed row lands, so the suite is not green and the header states it — keep it unrun and unreported as green, and add the seed and migration in the same DB GO commit.
+
+MET — D11b, "README.md:104 and lens-security.md:48 say" the security lens fires for admin and PII — src/tests/backlog/rule-lists.logic.test.ts "for (const f of ['src/app/admin/page.tsx', 'src/lib/pii/redact.ts', 'src/lib/admin-users.ts', 'scripts/pii-scrub.mjs'])" — both phases asserted plus a control.
+
+MET — card A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — src/tests/review-template.logic.test.ts "expect(rt.CONTEXT_SECTIONS).toEqual(['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes']);" — the five heading texts are pinned to the plan's list.
+
+MET — card A.4 "lens-input takes --context, refuses without it" — src/tests/backlog/rule-lists.logic.test.ts "expect(no.status, no.stderr).toBe(2);" — refusal with exit code and message plus the with-context control.
+
+MET — card A.6 / AC #8 "after A6 exit 0 with parts" — src/tests/backlog/rule-lists.logic.test.ts "expect(l.files.length).toBeGreaterThan(1);" and every row appearing once across the parts.
+
+MET — AC #9 "each entry starting 'compliance:'" — src/tests/backlog/rule-lists.logic.test.ts "for (const l of want) expect(entries).toContain(`compliance:${l.id} ${l.file}`);" — one add-ref per resolved list and no --remove-ref on a fresh task.
+
+REJECT — AC #13 / RR-0333 "don't makr the task complete until it actually works" — accused of shipping D10b unfinished — the card's own words permit exactly this unless the DB is done: "otherwise A, B and D ship and the task is not marked complete", and the pasted note records the task stays RUNNING.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+
+---
+⏱  65902ms (65.9s)
+📊 Tokens — total: 37706, input: 25295, output: 12411, reasoning: 11132

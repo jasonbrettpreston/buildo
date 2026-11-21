@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:35:47.125Z file_sha256=c43243c48fc0b82dcb7580ba98f87c83dd762e67a37e4fb1c5df11967354f2f5 prompt_sha256=28a1fb25e8b0032acf1e12cf50006188a13023be7436f72d02deb5f42303ba41
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-queue-137-p4.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — A4 "rule-lists.mjs lens-input takes --context, refuses without it, and counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)." — rule-lists.mjs:368 "export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {" — the refusal lives only in the CLI (`if (!ctxFile) die(2, ...)`) while the exported builder still substitutes the placeholder for any caller that omits the argument, which is the exact prompt D11a proved was sent in real runs; a test can pin that text again — make `context` a required argument of buildLensInputs (throw when undefined) and let the non-compliance template path pass an explicit context.
+
+DEFER severity=LOW — A.7 "A row or paragraph that alone passes the room is still refused naming it." — rule-lists.mjs:305 "has no deeper heading, table row or blank line to split at that fits (a piece of ${big.length} characters; room for list text in one file: ${max})" — the refusal names the list, the section label and a length, not the row or paragraph itself, so the author cannot find the offending piece in a 77 KB section — append the first ~80 characters of `big` to the message.
+
+MET — 137 §6 "A commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling. It is infrastructure work. It is carded for the infra-freeze lift and is not built now." — rule-lists.mjs:575 "run each printed command (exit stays 0)" — the new references output refuses nothing and leaves exit 0, so no deferred commit check is built here.
+
+MET — 137 §6 "the generated index is built now as a read-only board outside the repo (§5a). The commit check above stays deferred." — NONE in this diff — check-tasks prints per-task edit commands to stdout only and writes no index file into the repo; nothing in the three files generates a queue index.
+
+MET — 137 §6 "Also deferred: Backlog.md as the source of truth" — rule-lists.mjs:474 "const c = complianceRefs(r.lists, asList(t.fm.references));" — the task remains the source and only its references field is read; Backlog.md is not adopted.
+
+MET — A.2 "extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text." — deepseek-review.js:29 "const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');" with the local copy deleted — one extractor is now shared.
+
+MET — A.4 "counts the selected sections in the room on both paths" — rule-lists.mjs:367 "const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context, dataContext: '(no live-DB context provided)' }).length;" and the same `specs: context` at finalLen, promptOf and the per-file prompt — the context text is counted in every room computation, list and no-list path alike.
+
+MET — A.6 "in splitUnits (rule-lists.mjs, the `subs.length === 0` throw, :297 at the 410 head) a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused." — rule-lists.mjs:325 "if (subs.length === 0) return splitFlat(text, max, label, id);" — the old throw is replaced by the row and paragraph cut, with the over-room piece still refused.
+
+MET — C "D11b the security regex at rule-lists.mjs:128 misses admin and PII (README.md :104 and lens-security.md:48 say they fire it)." — rule-lists.mjs:163 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — admin and PII file paths now select the security lens.
+
+MET — B.1 "a file path with a comma is entered as \"compliance:<list id>\" alone (backlog splits --add-ref at commas; ms-9 is the only such list)" — rule-lists.mjs:455 "String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`" — entry format and the comma rule match the approved text.
+
+MET — AC #9 "exit 0; after running the printed command, check-tasks prints nothing for it" — rule-lists.mjs:574 "for (const x of c.refs) console.log(`  backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}`);" — the command is printed per stale task, entries start "compliance:", and the run still exits 0.
+
+REJECT — C "the DB read needs the operator's DB GO after the MCINC-7 rehearsal, otherwise A, B and D ship and the task is not marked complete" — accused: `timeoutMsFromVariable` is exported but nothing calls it, so the timeout clause is met only by a comment — not a real issue: the pasted clause conditions the timeout read on the DB GO, the card reads "status: RUNNING" and AC #13 says the task stays RUNNING without it, so keeping DEFAULT_TIMEOUT_MS and not wiring the variable is the behaviour the clause names.
+
+REJECT — B.2 "the exact `backlog task edit task-N --add-ref ...` command" — accused: the printed command also carries --remove-ref, which no pasted clause names — not a real issue: B.2 fires on entries that "differ from the resolved lists", and a compliance: entry for a list that no longer resolves can only be brought into step by removing it; the comparison is by id token, so a live list is never removed.
+
+REJECT — A.7 "The close recompute needs no change: it joins the stamped parts and compares them with the whole list, whitespace aside." — accused: splitFlat drops the blank-line separators, so the parts no longer rejoin to the whole list and the close recompute would fail — not a real issue: the pasted clause compares whitespace aside, and blank separators are whitespace.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+
+---
+⏱  82529ms (82.5s)
+📊 Tokens — total: 35057, input: 19312, output: 15745, reasoning: 14257

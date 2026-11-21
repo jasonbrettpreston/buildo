@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:22:01.196Z file_sha256=ff58a9f6d1c8175eb9ef3e597c74848347fccc0c1a9e57a4da64e8595f698012 prompt_sha256=5a9cd5822553c764f5b9c22d624de55a0ba30407968f0d926fa286166e460f0b
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-eng-all-p2.txt (model: deepseek-reasoner)
+
+BUG severity=none listed; findings below are DEFER/MET/REJECT only.
+
+DEFER severity=MED — eng-all §14 registry "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions**" — scripts/analysis/backlog-brief.mjs:6 "// Rules: Spec 08 TKT-1 (08_agents.md:504), Spec 08 section 7 rule 10 (a) (:341), Spec 137 rule 3 (137_mcqueue.md:84); RR-0207, RR-0212." — the file's spec-link line is unchanged although the diff adds context-rN.md, the two new sections and the --section flags ruled by the 2026-11-21 note at 08_agents.md:524, and backlog-lane.mjs adds a new import of scripts/hooks/check-lane-close.mjs with its Rules line also unchanged — add the 2026-11-21 note and the new hooks coupling to both Rules lines in this commit.
+
+DEFER severity=MED — RR-0342 "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently" — scripts/analysis/backlog-lane.mjs:98 "tracked: (e) => git('ls-files', '--', e).stdout.trim() !== '', // the Files entry names at least one tracked path" — the Regression seat is required only when a Files entry is already tracked at the board head, so a build that adds only new code files launches with no Regression seat although code changes; the A9 note on task-401 records exactly that case — widen the trigger to a Files entry that is code even when untracked, or record the narrower reading (the AC #14 "existing path" wording) as a decision.
+
+DEFER severity=LOW — eng-all §12.12 "Pure functions with arithmetic invariants ... MUST have at least one `fast-check` property test asserting the invariant." — scripts/analysis/proof-slice.mjs:27 "export function timeoutMsFromVariable(value) {" — the new pure converter carries a numeric invariant (an accepted value is a positive integer, any other input throws) and only the example-based src/tests/proof-slice.logic.test.ts — add a forAll property (returned value greater than zero, non-positive throws) under src/tests/property/.
+
+DEFER severity=LOW — task-375 Description A "the reviewer's context is the task, sized (Implementation Plan and Implementation Notes in the context ...)" — scripts/analysis/backlog-brief.mjs:54 "const fieldOf = (name) => (new RegExp(`<!-- SECTION:${name}:BEGIN -->\\n?([\\s\\S]*?)\\n?<!-- SECTION:${name}:END -->`).exec(t.body)?.[1] ?? '').trim().replace(/^#{1,6} /gm, '#### ') || '(none)';" — every heading inside the plan and notes text is rewritten to `#### ` in the context file, a transformation no pasted clause names, so the reviewer reads text that differs from the task file — record it as a deviation, or leave the text unchanged and make the section cut use the SECTION markers.
+
+DEFER severity=LOW — AC #7 "A2 rule-lists.mjs lens-input for each of the 15 resolved lists of task-381 with that context: paste each exit code, selected-section count and call count" — pasted A2 note "A2 (buildLensInputs with the 5 sections, material 17,753 characters)" — the criterion's CLI run and its exit codes are not evidenced; the internal function was measured instead — run lens-input for the 15 lists and paste the exit codes, or record the substitution as a deviation.
+
+MET — task-375 Description "08_agents.md takes ONE dated note carrying two points (context-rN.md; the plan-only seats)" — docs/specs/00-architecture/08_agents.md:524 "+   Dated note 2026-11-21 (M-246, prior text kept; task-375 FIX.TOOLS, lane BL-GATE375, Increment 1·B" — one note, points (1) and (2), prior text kept, no deletions.
+
+MET — AC #5 "the output holds the headings \"## Implementation Plan\" and \"## Implementation Notes\"" — scripts/analysis/backlog-brief.mjs:143 "+  `## Implementation Plan`, fieldOf('PLAN'), ''," — both sections are written after the acceptance criteria.
+
+MET — plan B.1 "The take step ... adds them in the same `backlog task edit` with repeated --add-ref, only those not already on the task" — scripts/analysis/backlog-lane.mjs:129 "+const addRefs = complianceRefs(resolved.lists, asList(t.fm.references)).add.flatMap((e) => ['--add-ref', e]);" — the take step carries ...addRefs in the same edit.
+
+MET — plan A.3 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — scripts/analysis/backlog-lane.mjs:174 "+  const ctxArgs = `--context ${ctx} ${sectionFlags}`;" — the plan, output and compliance commands all carry ctxArgs, and the template is passed as --template.
+
+MET — plan D5 "each error is a stderr line (exit 3, nothing taken)" — scripts/analysis/backlog-lane.mjs:106 "+  if (gate.errors.length) { for (const e of gate.errors) process.stderr.write(`backlog-lane: refused: plan gate: ${e}\n`); process.exit(3); }" — placed after the dirty-board check and before step('take'), with no flag or env switch.
+
+MET — plan A.5 "one context file per review round, context-rN.md, N = the context-r*.md files already there + 1" — scripts/analysis/backlog-brief.mjs:51 "+const round = createRequire(import.meta.url)('../lib/review-template.js').contextRound(ctxDir);" — the brief names the file from the shared round count.
+
+REJECT — eng-all §13.3 "All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`. ESLint enforces." — accused: the new "console.log(`plan gate ok: ...`)" and process.stderr.write in backlog-lane.mjs bypass the SDK logger — not a real issue: §13.3 names API routes and pipeline scripts, this is the queue launcher under scripts/analysis/, and no catch block or console.error is added.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 40   Unmet: 0
+
+---
+⏱  213066ms (213.1s)
+📊 Tokens — total: 71415, input: 29577, output: 41838, reasoning: 40341

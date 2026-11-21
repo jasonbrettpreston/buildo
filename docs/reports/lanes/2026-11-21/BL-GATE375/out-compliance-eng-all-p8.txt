@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:24:25.532Z file_sha256=ce319867d88f83df9a775fd7de5c863f3e377e54f041b9bca4639a0300148252 prompt_sha256=543cee0eed2268d16f7bb7defaa38405e4fb60fcb5fd62ff2e3010f689e79be8
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-eng-all-p8.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-375 AC #14 "one error per missing item (the first names the missing evidence folder or GROUNDER-PLAN.md)" — src/tests/backlog/backlog-lane.logic.test.ts "expect(lines.length).toBeGreaterThan(1);" — the no-evidence fixture lacks the folder, GROUNDER-PLAN.md, the seat lines, the outcomes and the Plan line, but the test pins only "more than one" stderr line, so a gate printing the folder line plus one generic line stays green — assert a named line for each missing item (GROUNDER-PLAN.md, seat lines, outcomes, Plan line).
+
+DEFER severity=MED — task-375 PLAN-375-v4 A.3 "every lens command, plan and output, passes --context <the committed context file> and one --section per CONTEXT_SECTIONS entry" — src/tests/backlog/backlog-lane.logic.test.ts "expect(line).toContain('--section \"Implementation Notes\"');" — the extra-block review line is checked for one of the five sections only, so four could be dropped from that command and the test stays green — pin the full five-section string on that line, as the A3 test does.
+
+DEFER severity=MED — §12.12 "Pure functions with arithmetic invariants ... MUST have at least one `fast-check` property test asserting the invariant" — src/tests/backlog/backlog-lane.logic.test.ts "it('B1: the take command adds one compliance reference per resolved list; a list already referenced is not added again'" — the new pure comparators (complianceRefs add-idempotence by id token, contextRound) get example-based tests only, and I cannot see a src/tests/property/*.property.test.ts entry for them in this chunk — add one fast-check property (adding the same refs twice adds none; contextRound never returns a number a file already carries).
+
+DEFER severity=LOW — task-375 PLAN-375-v4 A.6 "every lens of a round reads that one file" — src/tests/backlog/backlog-brief-context.logic.test.ts "const ctxOf = (d: string, task: string) => fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-r1.md`), 'utf8');" — the shared helper is pinned to round 1, so any test in that file that runs the brief twice reads the stale round-1 file while the lane reads the newest round — have ctxOf take a round argument or read the highest context-rN.md.
+
+MET — D11a / PLAN-375-v4 A.3 "the lens templates are passed as --template, no longer as --context" — src/tests/backlog/backlog-brief.logic.test.ts "context-r1\.md --template \.claude\/review-templates\/plan-review-deepseek\.md --context docs\/reports\/reviews\/\S+\/context-r1\.md --section \"Task\"" — the template is pinned as --template and the committed context as --context.
+
+MET — AC #5 "the output holds the headings \"## Implementation Plan\" and \"## Implementation Notes\"" — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(ctx).toMatch(/^## Implementation Plan\n[\s\S]*PLAN-LINE-ONE[\s\S]*PLAN-LINE-TWO/m);" — both headings and the inner-heading containment are asserted.
+
+MET — PLAN-375-v4 A.6 "The context file is regenerated before each review round and committed with the round" — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(fs.readFileSync(r1, 'utf8')).toBe(before);" — r1 is proven untouched and the note lands in context-r2.md.
+
+MET — PLAN-375-v4 B.1 "one per resolved list ... only those not already on the task" — src/tests/backlog/backlog-lane.logic.test.ts "expect([...t2.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length - 1);" — one add-ref per resolved list, the existing one not re-added.
+
+MET — task-375 AC #14 "plan gate ok: <L> lists ... then one word edited in the task: refused with the new expected Plan line" — src/tests/backlog/backlog-lane.logic.test.ts "expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);" — both the ok line and the stale Plan hash refusal with the expected line are pinned.
+
+MET — task-375 PLAN-375-v4 D "refuses a build or fix launch whose plan evidence ... are not on the board" — src/tests/backlog/backlog-lane.logic.test.ts "it('D: a task of another type (record) is not gated and launches with no plan evidence'" — the refusal has a control proving non build/fix types are not gated.
+
+REJECT — task-375 AC #14 "its evidence is a test set made for this acceptance" — accused: plantEvidence.mjs synthesizes REVIEW headers, seat lines and round blocks instead of using real lens output — why: AC #14 names a test set made for the acceptance as the allowed evidence, and the pasted build note names this program.
+
+REJECT — §12.1 "Biome MUST pass on all files in `src/features/leads/`" — accused: no Biome evidence for the changed test files — why: the clause is scoped to src/features/leads/, and these paths are src/tests/backlog/.
+
+REJECT — §12.10 "Every NEW migration that adds a CHECK constraint, FK with cascade, or PostGIS expression MUST land with a `*.db.test.ts`" — accused: no db test with this change — why: the diff adds no migration and no schema expression.
+
+VERDICT: PASS on compliance with the pasted clauses (no CRIT or HIGH unmet; the four items above are coverage risks, not clause breaches shown by the diff)
+Clauses checked: 24   Unmet: 0
+
+---
+⏱  137223ms (137.2s)
+📊 Tokens — total: 49389, input: 23654, output: 25735, reasoning: 24363

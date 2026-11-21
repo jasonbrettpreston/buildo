@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:23:00.547Z file_sha256=b4fc2d60823d73e60101e8593c8c50717964057ed7cfefbd5bcb8a2758ccc07d prompt_sha256=20f31fcbd04e75032fccc92112bfe8786388661651f4df7999a037720b64049e
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-eng-all-p7.txt (model: deepseek-reasoner)
+
+BUG severity=<none> is not used; see DEFER lines. All findings below are deferrable risks, no CRIT/HIGH unmet clause found.
+
+DEFER severity=MED — #14 A9 "dry-run before evidence: refused, one error per missing item (the first names the missing evidence folder or GROUNDER-PLAN.md)" — src/tests/backlog/backlog-lane.logic.test.ts "expect(lines.length).toBeGreaterThan(1);" — the gate test pins only more-than-one stderr line, so a regression that collapses per-item lines down to two still passes and the "one line per missing item" rule is not provably held — assert the exact missing-item set (evidence folder, GROUNDER-PLAN.md, Plan line, seat lines, outcomes, one per resolved list) or its count, not >1.
+
+DEFER severity=LOW — #9 A4 "node scripts/analysis/rule-lists.mjs check-tasks ... (choose the task on the day 375 launches: a LATER build task not recommended for drop; task-400 is, and its Files line collides with this task)" — pasted Implementation Notes "for task-101 (LATER, type record, not build) the command carries 6 compliance: entries" — the recorded A4 evidence uses a record task, not the LATER build task the acceptance names, so the demonstration misses the type the clause selects — re-run check-tasks plus the printed add-ref and the post-view on a LATER build task other than task-400 and paste it.
+
+DEFER severity=LOW — #5 A0 "the output holds the headings \"## Implementation Plan\" and \"## Implementation Notes\"" — src/tests/backlog/backlog-brief-context.logic.test.ts:27 "new RegExp(`## ${name}\\n([\\s\\S]*?)(?=\\n## (?:Milestone|Document sections|Decisions naming this task|Prior reviews and lane reports|Dependencies)\\n|$)`) — placing the two new headings after Acceptance criteria but not adding them to this terminator list means a section() read of Description or Acceptance criteria now swallows Implementation Plan and Notes — add Implementation Plan and Implementation Notes to the alternation so section boundaries stay correct.
+
+DEFER severity=LOW — #8 A3 "lens-input --list surface-135 with a 60,000-character material: today exit 1 naming \"## Register\"; after A6 exit 0 with parts; the same for policy-124-s2-s5 and bylaw-133" — pasted note "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the before-state half of the acceptance cannot be seen in the material, only the after-state is recorded — paste the old-head exit 1 output naming "## Register" or mark the clause unmet.
+
+DEFER severity=NIT — #5 A0 / #10 A5 (the clause the describe names) — src/tests/backlog/backlog-brief-context.logic.test.ts "describe('task-375 A1/A5: the review context holds the plan and the notes; one file per round'" — the label cites A1 (review-tool dry-run, #6) and A5 (planted refusals, #10) while the block actually proves the A0 headings and the context-rN rule, so traceability to acceptance is wrong — relabel to A0 and the context-rN rule.
+
+MET — #5 A0 "the output holds the headings \"## Implementation Plan\" and \"## Implementation Notes\"" — src/tests/backlog/backlog-brief-context.logic.test.ts — the new test asserts both headings and that Implementation Plan sits after Acceptance criteria.
+
+MET — A.6 "the context file is regenerated before each review round and committed with the round" — src/tests/backlog/backlog-brief-context.logic.test.ts — "a later brief writes context-r2.md and leaves context-r1.md as it was (never overwritten)" asserts r1 unchanged and r2 gets LATER-NOTE.
+
+MET — g375#2 build note "the lens lines name the round the brief wrote" — src/tests/backlog/backlog-lane.logic.test.ts — the g375#2 test asserts the dry-run and the real launch both name context-r2.md and that the named round equals the written round.
+
+MET — D5 wiring "each error is a stderr line (exit 3, nothing taken); --dry-run runs it too" — src/tests/backlog/backlog-lane.logic.test.ts — the D gate test loops dry-run and real, asserts exit 3, status LATER, and no worktree.
+
+MET — B1 "adds them in the same backlog task edit with repeated --add-ref ... only those not already on the task" — src/tests/backlog/backlog-lane.logic.test.ts — the B1 test asserts one compliance reference per resolved list and that an already-referenced list is not added again.
+
+MET — D6 "the plan is the task text at launch, checked before launch ... do not edit the Description, Acceptance or Plan ... record deviations in Implementation Notes" — src/tests/backlog/backlog-brief.logic.test.ts — the four new stdout assertions pin those brief lines.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  125963ms (126.0s)
+📊 Tokens — total: 49158, input: 25706, output: 23452, reasoning: 22287

@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:08:02.657Z file_sha256=aeb2f0bbbe30365f51f5fdde9e63db0339132b746a9db39909c352915c3962a2 prompt_sha256=3f140fc632bd416e2a89bba4e66a2e04825168548bf6f22260d420906af019a2
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-agents-s5-1to3-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — SCOPE A.5 "A build or fix task needs the compliance PLAN phase as well" and RR-0349 "Compliance on the plan and output" — scripts/hooks/check-lane-close.mjs "if (planFiles.length === 0) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);" — a fix launch requires only at least one plan lens, not one compliance plan output per resolved list, and its plan files go through "reviewErrors(f.name, f.text, ..., null)" so no input and no prompt-hash/context binding is required — require plan-compliance-<list> per resolved list for a fix launch and recompute its prompt hash from the committed context.
+
+DEFER severity=LOW — SCOPE B.3 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir (08_agents.md:347); the close check refuses when one is missing." — scripts/hooks/check-lane-close.mjs "for (const n of ['REPORT.md', 'GROUNDER.md', ...(textOf('TRIAGE.md') !== undefined ? ['TRIAGE.md'] : [])])" — TRIAGE.md is required only when the lane dir already holds one, so a lane that never writes TRIAGE.md is not refused for the missing reference the pasted clause names — make the TRIAGE.md reference unconditional, or record in the clause that the conditional is the rule.
+
+DEFER severity=LOW — SCOPE A.6 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file." — scripts/hooks/check-lane-close.mjs "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))" — an output is accepted if its hash matches any committed context-rN.md, so a round-1 output survives a regenerated round-2 context and the close cannot tell which round an output belongs to — bind each output to the round's context (stamp the round and compare), not to any committed context.
+
+MET — SCOPE C / D11b "the security regex at rule-lists.mjs:128 misses admin and PII" — scripts/analysis/rule-lists.mjs "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — admin and PII now fire the security lens.
+MET — SCOPE A.4 "lens-input takes --context, refuses without it" — scripts/analysis/rule-lists.mjs "if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> ..." — refuses without a context.
+MET — SCOPE A.4 "counts the selected sections in the room on both paths" — scripts/analysis/rule-lists.mjs "specs: context," — the selected context text is counted in the room check on the list and no-list paths.
+MET — SCOPE A.6 "a block with no deeper heading is cut between table rows or blank-line paragraphs" — scripts/analysis/rule-lists.mjs "if (subs.length === 0) return splitFlat(text, max, label, id);" — refused blocks are now cut at rows/paragraphs instead of only refused.
+MET — SCOPE B.2 "the repo copies of REPORT.md, GROUNDER.md" — scripts/hooks/check-lane-close.mjs "for (const n of ['REPORT.md', 'GROUNDER.md', ..." — report and grounder references are refused when missing and the add-ref command is printed.
+MET — SCOPE A.4 "prints the exact backlog task edit task-N --add-ref ... command" — scripts/analysis/rule-lists.mjs "backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...]" — the exact command is printed, exit unchanged.
+
+REJECT — RR-0342 "regression only required when code is changed" — accused: the regression seat fires for any tracked path, docs included — the grounded READBACK-375-v4 Q1/Q2 answers taken as approved at :1638 (RR-0350) rule that a directory or glob tracked entry counts, so the wide trigger is the recorded decision.
+REJECT — SCOPE B.1 "compliance:<list id> <file>, one per resolved list" — accused: complianceRefs emits compliance:<id> with no file for comma paths — the pasted B.1 build note explicitly records the comma exception (ms-9) as approved, so this is intended.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  335286ms (335.3s)
+📊 Tokens — total: 76574, input: 33927, output: 42647, reasoning: 41570

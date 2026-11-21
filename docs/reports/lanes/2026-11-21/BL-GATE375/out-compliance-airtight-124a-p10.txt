@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:14:27.726Z file_sha256=33dd577b7d652d1b992f4b3df35852b82168f00e33388bebd00ae1801a2c57e6 prompt_sha256=192b66b4b455573c25ecb6d993224c64524a8222ab53b25db7c8c356f56b29ed
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-124a-p10.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan A.5 "A build or fix task needs the compliance PLAN phase as well (:178 phases = both), Spec 08 section 7 rule 1 (:336 both mandatory per WF)" — src/tests/backlog/check-lane-close.logic.test.ts (hunk @@ -771,3 +785,215 @@) "const fx = await planScenario({ type: 'fix' }); expect(fx.errors).toEqual([]);" — a fix launch passes planGateErrors with only plan-code-review.txt and no plan-compliance-<list>.txt at all, so the compliance plan phase is not required for fix launches while A.5 names build or fix — require one plan-compliance-<list>[-pN].txt output per resolved list on the fix branch and add its planted refusal plus control, as the build branch already does.
+
+DEFER severity=MED — R-CP "A test that spawns step-validate.mjs (or another long CLI) first proves the run finished: no spawn error, no signal, an expected exit code" — src/tests/backlog/rule-lists.logic.test.ts (hunk @@ -638,3 +644,161 @@) "const l = lens(f, 'tab', 'MAT', 20000); expect(l.files).toHaveLength(1);" — the A6 control asserts on the child CLI's stdout paths with no exit-code assertion, unlike its neighbours — assert expect(l.r.status, l.r.stderr).toBe(0) before reading l.files.
+
+DEFER severity=MED — plan A.4 "counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)" — src/tests/backlog/rule-lists.logic.test.ts "const base = (f, extra) => { ... script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'first', ...])" — every room assertion in the A4 block goes through --list; the no-list invocations only gained --context and assert exit 0 — add a no-list case (no --list) whose oversized context is refused for room, with its control.
+
+DEFER severity=MED — plan A.6 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file" — src/tests/backlog/check-lane-close.logic.test.ts "it('an output must match one committed context file: the earlier round file is kept and still binds', ...) { ... expect(r.status, r.stderr).toBe(0);" — the close accepts outputs bound to context-r1.md while context-r2.md with a changed Description is committed, so evidence taken before the task text changed still closes — refuse an output whose bound context is superseded by a later committed docs/reports/reviews/<task>/context-rN.md.
+
+DEFER severity=LOW — plan A.2 "deepseek-review.js throws on a heading it cannot find (:111) and matches by substring, so a section cannot be dropped silently" — src/tests/backlog/check-lane-close.logic.test.ts "return x.extractSections(text, /^#{1,6}\s.*Implementation Notes/m.test(text) ? x.CONTEXT_SECTIONS : x.CONTEXT_SECTIONS.filter((n) => n !== 'Implementation Notes'));" — the no-notes control hashes a four-section prompt that the real five --section review run throws on, so that tolerated path is proven against a hash no real run can produce — build the control from a real review invocation or refuse any context missing a CONTEXT_SECTIONS heading.
+
+MET — R-CO — src/tests/backlog/check-lane-close.logic.test.ts "+  if (o.ctx !== false) w('docs/reports/reviews/task-7/context-r1.md', o.ctx ?? CTX_FILE);" — every new write lands under tmp('lc') or tmp('pg'), nothing touches docs/reports/golden/*/before-image/.
+MET — AC #12, D11b — src/tests/backlog/rule-lists.logic.test.ts:650 "expect(r.plan, f).toContain('security');" — admin and PII paths fire the security lens on both phases, with a negative control.
+MET — plan A.4 (placeholder refusal) — src/tests/backlog/check-lane-close.logic.test.ts "refused(planted('(no pasted context provided)'), /context-r1\.md/);" — the placeholder context is a planted refusal.
+MET — SCOPE B.3 (missing report reference) — src/tests/backlog/check-lane-close.logic.test.ts "refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/);" — the close refuses and prints the exact command.
+MET — SCOPE B.1 (compliance references) — src/tests/backlog/rule-lists.logic.test.ts "expect(entries).toHaveLength(want.length);" — check-tasks prints one compliance: add-ref entry per resolved list, counted against resolve.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+
+---
+⏱  113352ms (113.4s)
+📊 Tokens — total: 52673, input: 30717, output: 21956, reasoning: 20778

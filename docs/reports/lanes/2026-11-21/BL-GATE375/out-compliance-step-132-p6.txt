@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:40:59.327Z file_sha256=5f79ee4d28f80f74d0587544791e692bce331669b9821391c253c0b2c51aa72a prompt_sha256=250e9d14b7cbba822305d8544db0574fae5b53f7fb918a9e67c6856ae0ac0270
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-step-132-p6.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #3 "Compliance lens run once per governing rule list with the list whole; a separate grounder verdict on file" — scripts/hooks/check-lane-close.mjs:planGateInner (fix branch) "for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, /^plan-compliance-/.test(f.name) ? 'lens-compliance.md' :" — a fix launch's plan-compliance-<list>.txt is judged only for a REVIEW header, template and VERDICT with inputText null, so no committed in- input, no LIST stamp and no whole-list recompute is required, and a hand-written one-file pass admits the launch — run listProof({phases:['plan'], ...}) for fix launches as the build branch does.
+
+DEFER severity=MED — RR-0342 "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently" — scripts/hooks/check-lane-close.mjs:planGateInner "const need = [...PLAN_SEATS.always, ...(entriesOf(i.taskText).some((e) => i.tracked(e)) ? PLAN_SEATS.conditional : [])];" — any tracked Files entry, a docs or spec path included, forces the regression seat although no code changes, wider than the ruling's "only when code is changed" — trigger on the tracked entries that are code paths, or on the range's changed code paths.
+
+DEFER severity=LOW — x-tooling.3 "Programme promises are declared data in `programme-items.json`, generated and gated" — scripts/hooks/check-lane-close.mjs "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };" — the seat roster the operator ruled is typed into a hook script, so it is neither declared data nor generator-gated — move the roster to programme-items.json and read it, or record on the task why the roster is not a programme item.
+
+DEFER severity=LOW — x-rulings.1 "Cited ids must resolve" — scripts/hooks/check-lane-close.mjs "his :1615, :1620, :1625, :1630" — the seat rules are cited by line numbers of a scratch decision file rather than the register rows the task already carries (RR-0342, RR-0347, RR-0348), so the citation does not resolve in the repo — cite the RR ids.
+
+MET — plan A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — scripts/lib/review-template.js "module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections, contextRound };" — the constant and extractSections are exported from the one library the review tool, lens-input and close check share.
+
+MET — plan A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes" — scripts/hooks/check-lane-close.mjs "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(" and "const want = !hasNotes && !/^#{1,6}\s.*Implementation Notes/m.test(c.text) ? CONTEXT_SECTIONS.filter((x) => x !== 'Implementation Notes') : CONTEXT_SECTIONS;" — placeholder is a problem line, never a value; the headings are required via extractSections' throw.
+
+MET — plan A.4 "so the existing prompt_sha256 recompute (:65) binds it" — scripts/hooks/check-lane-close.mjs "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))" — the recompute now runs over the extracted context values and fails closed with none.
+
+MET — plan D "the plan sections of the context whose text produced its prompt hash" — scripts/hooks/check-lane-close.mjs "materialOk: (p) => (c.cut !== null && p.material === c.cut ? null : `the stamped material is not the Description, Acceptance criteria and Implementation Plan sections of the committed context" — a plan input whose material is not that context's PLAN_SECTIONS cut is refused.
+
+MET — plan D "planHash (title plus body after the front matter, whitespace squashed, 12 hex)" — scripts/hooks/check-lane-close.mjs "return sha(squash(`${fm.title ?? ''} ${body}`)).slice(0, 12);".
+
+MET — plan B.3 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md" — scripts/hooks/check-lane-close.mjs "if (!have.has(rp)) errors.push(`${id}: the task's references lack ${rp}: backlog task edit ${id} --add-ref ${rp}`);" — TRIAGE.md only when the lane dir holds it, as written.
+
+MET — RR-0348 "these only run on the plan" — scripts/hooks/check-lane-close.mjs "const seats = seatLines(g, i.readRepo);" appears only inside planGateInner; closeErrors does not require a seat report.
+
+MET — A9 "(the first names the missing evidence folder or GROUNDER-PLAN.md)" — scripts/hooks/check-lane-close.mjs "if (files.length === 0) errors.push(`${id}: no plan evidence folder ${dirNote} on the board" is pushed before the per-list and GROUNDER-PLAN lines.
+
+REJECT — x-validate.1 "it runs in the hooks, never as a separate track" — accused: the plan gate grades evidence in backlog-lane.mjs's launch instead of in the hook — this clause governs step-validate and the scorecard for a converted step, nothing in it names lane plan evidence, and the close-side proof still runs in the commit-msg hook.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+
+---
+⏱  111524ms (111.5s)
+📊 Tokens — total: 54306, input: 34113, output: 20193, reasoning: 18848

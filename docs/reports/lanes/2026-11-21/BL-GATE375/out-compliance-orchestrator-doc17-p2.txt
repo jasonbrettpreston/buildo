@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:29:38.609Z file_sha256=d0e15175c2c627871c9520566511b67fc6ce4be7a6ff62baa5897a1715a94658 prompt_sha256=46a84e5d7654d8b9a2dae20854986d3a69c72855d5c9398e7fe529b2c85d5dd7
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-orchestrator-doc17-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-375 Description C "D10 (proof-slice.mjs reads its timeout and buffer from registered tooling_ variables; the DB read needs the operator's DB GO after the MCINC-7 rehearsal, otherwise A, B and D ship and the task is not marked complete)" — scripts/analysis/proof-slice.mjs:22 "const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it (seed + migration); until then this typed value stays" — the timeout is carried by an export and a comment, nothing reads TIMEOUT_VARIABLE, so the clause holds only while the card stays not complete — at the DB GO register the seed row and read the variable, keep the card RUNNING until then.
+
+DEFER severity=MED — Acceptance #8 "A3 lens-input --list surface-135 with a 60,000-character material: today exit 1 naming \"## Register\"; after A6 exit 0 with parts" — NONE — the lane's own note, BL-GATE375 acceptance third run "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)", leaves the before half of the clause undemonstrated — run lens-input on the pre-change head with the same 60,000-character material and paste the exit 1 output.
+
+DEFER severity=LOW — Acceptance #9 "choose the task on the day 375 launches: a LATER build task not recommended for drop" — NONE — BL-GATE375 acceptance third run "for task-101 (LATER, type record, not build) the command carries 6 compliance: entries = 6 lists of resolve" shows the demonstration task is not the build task the clause names — re-run check-tasks against a LATER build task and paste the printed command.
+
+DEFER severity=LOW — Acceptance #12 "A7 D11b test red first then green" — NONE — the claim "red first in red.out (rule-lists.logic.test.ts:650)" cites red.out while the pasted grounder says "red.out and commit.out cited by the report are not in the repo"; the lane's own reds are red7.out to red15.out — cite the redN.out file that holds the failing D11b assertion.
+
+DEFER severity=NIT — Scope B.2 "the exact `backlog task edit task-N --add-ref ...` command" — scripts/analysis/rule-lists.mjs:576 "console.log(`  backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}`)" — the printed command also removes compliance refs, a behaviour the pasted plan does not name — name removal in the plan or drop the remove list.
+
+MET — Scope A.7 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — scripts/analysis/rule-lists.mjs:325 "if (subs.length === 0) return splitFlat(text, max, label, id);" — splitUnits falls back to splitFlat and a lone oversized piece is still refused at :311 "if (big) throw Object.assign(new Error(`list ${id}: section \"${label}\" is ${text.length} characters ...".
+
+MET — Description D11 / plan C "D11b the security regex at rule-lists.mjs:128 misses admin and PII" — scripts/analysis/rule-lists.mjs:163 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — admin and pii are added to the terms that fire the security lens.
+
+MET — Scope B.1 "`compliance:<list id> <file>`, one per resolved list" — scripts/analysis/rule-lists.mjs:457 "add: lists.filter((l) => !have.has(l.id)).map((l) => (String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`))," — one compliance: entry per missing list, compared by the id token at :453.
+
+MET — Scope B.2 "check-tasks (existing command) prints ... the exact `backlog task edit task-N --add-ref ...` command" — scripts/analysis/rule-lists.mjs:478 "if (c.add.length || c.remove.length) out.refs.push({ id: t.id, ...c });" — refs are collected only after verifyResolved passes (miss.length 0) and the check-tasks branch at :573 prints them without dying.
+
+MET — Scope A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — scripts/analysis/rule-lists.mjs:552 "if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> (the reviewer context of the task; the selected sections are counted in the room); ...');" — the CLI refuses with exit 2 before any material is read.
+
+MET — Scope A.4 "counts the selected sections in the room on both paths" — scripts/analysis/rule-lists.mjs:367 "const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context, dataContext: '(no live-DB context provided)' }).length;" with :392 and the per-part :418 prompt count, the context length is counted on the fitting path and the chunked path.
+
+MET — Scope A.2 "extractSections moves there from deepseek-review.js:106-121" — scripts/deepseek-review.js:30 "const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');" — the local copy is deleted and the shared function imported.
+
+MET — RR-0333 "don't makr the task complete until it actually works" — NONE — the card header reads "status: RUNNING" and the lane note reads "the runner does not yet read the variable; the task is NOT complete", so the card has not been moved to complete over an open defect.
+
+REJECT — Acceptance #3 "Compliance lens run once per governing rule list with the list whole" — accused that splitFlat's parts break the list-whole rule — not a real issue: plan A.7 "the close recompute ... joins the stamped parts and compares them with the whole list, whitespace aside" and acceptance #8 requires the parts.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+
+---
+⏱  228866ms (228.9s)
+📊 Tokens — total: 74453, input: 29937, output: 44516, reasoning: 43061

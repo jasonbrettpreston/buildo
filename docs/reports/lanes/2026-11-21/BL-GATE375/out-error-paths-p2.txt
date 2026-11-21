@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-21T04:42:31.589Z file_sha256=135f57ced043e73a806651d81e398842e991e9328ec1823c036e89fbec192a09 prompt_sha256=4f78c310e0ef172660d3d119e54e3e3ecc8a6624648fb8a5c0f9a55c2dad3444
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-error-paths-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/hooks/check-lane-close.mjs ":65" "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))" — the close accepts a lens output hashed over ANY committed context-rN.md, so after round 2 is written (new rulings in Implementation Notes) a round-1 output re-pasted under the same name still passes; the comment's "one file per review round" is not enforced by any key — bind the output to the newest round (max N) or require the round in the REVIEW header and refuse a mismatch.
+
+BUG severity=MED — scripts/lib/review-template.js ":131" "return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;" — the round is chosen by a count, not by claiming the name, so a second brief (a retry after a partly failed run, two tabs) computes the same N and writeFileSync overwrites context-rN.md; the "never overwritten" test only proves the sequential case — create with fs.openSync(p,'wx') and step to N+1 on EEXIST.
+
+BUG severity=MED — scripts/hooks/check-lane-close.mjs ":551" "errors.push(...reviewErrors(f.name, f.text, /^plan-compliance-/.test(f.name) ? 'lens-compliance.md' : f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null)" — a fix launch passes inputText null, so no in- file is required and prompt_sha256 is never recomputed: a hand-written plan-*.txt with a REVIEW header and a VERDICT line satisfies the gate — read in-plan-*.txt like the build branch and pass contexts so the hash is bound.
+
+BUG severity=MED — scripts/lib/review-template.js ":120" "if (m && m[1].length <= level) { end = i; break; }" — the cut is fence-blind and heading-substring based (":115" "const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && l.includes(want));"), so a heading inside the task's own plan text ends the section early, silently: nothing throws, the reviewer gets a short context and the prompt hash binds the short text, so no refusal fires — skip lines inside ``` fences, and refuse or warn when a section ends at the first inner heading instead of the next sibling heading.
+
+BUG severity=MED — scripts/hooks/check-lane-close.mjs ":775" "const contexts = [...new Set([...git(['ls-files', '--cached', '--', ctxDir]).stdout.split('\n'), ...git(['ls-tree', '-r', '--name-only', 'HEAD', '--', ctxDir]).stdout.split('\n')]" — two new git spawns per closing task use a helper with no timeout and no status check ("const git = (a) => { const r = spawnSync('git', ..." at :44), so a hung git (index.lock, NFS) blocks the commit with no bound and a failed git reads as an empty list, i.e. "no committed review context", blaming the lane — pass timeout to spawnSync and emit its own refusal line when status is not 0.
+
+BUG severity=LOW — scripts/hooks/check-lane-close.mjs ":569" "last ??= e;" — on a build launch the reported refusal is the FIRST failing candidate, and cands are sorted by name, so the error names the oldest round (r1) even when the real mismatch is the newest; the operator chases the wrong context file — keep the failure for the newest candidate, or join one line per candidate.
+
+BUG severity=LOW — scripts/hooks/check-lane-close.mjs ":779" ".map((q) => ({ name: q, text: readRepo(q) })).filter((x) => x.text !== null);" — a committed context that readRepo cannot read is dropped without a line, so the round silently disappears from the candidate set and with the any-of match above an older output can still pass — push a refusal line naming the unreadable context instead of filtering it out.
+
+REJECT — scripts/hooks/check-lane-close.mjs ":317" "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(" — looks unsafe that only an exact trimmed match is caught; handled: the placeholder is what the review tool substitutes as the whole slot, and an empty or truncated file falls through to extractSections, which throws and becomes a refusal line, and no committed context at all is a refusal added at ":441".
+
+VERDICT: FAIL on error-path safety
+Paths walked: error (git read failure, extractSections throw, readRepo null), empty (no contexts, empty evidence folder, empty output text), retry (brief re-run, round re-generation after a fix round), double-submit (two brief runs, re-pasted seat and plan outputs), time-out (git spawn in the commit-msg hook), degrade-safety (git failure, unreadable context, fix-launch plan evidence), idempotency and dedup (context round key, context-to-output binding)
+Unguarded: 3
+
+---
+⏱  92673ms (92.7s)
+📊 Tokens — total: 46521, input: 31296, output: 15225, reasoning: 14023

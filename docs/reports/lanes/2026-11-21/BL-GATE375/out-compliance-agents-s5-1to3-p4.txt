@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:09:24.640Z file_sha256=922a9487b08545d2f888f8945110aff7d105326e0643e3111d25853d269650fe prompt_sha256=6522d8626b319fce0fecc3fd6223481d2ae209d0b5cad6f4029d5e7b9e438d5d
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-agents-s5-1to3-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — src/tests/proof-slice.db.test.ts:30 "expect(entry, `${TIMEOUT_VARIABLE} is not in the seed`).toBeDefined();" — this test can never go green: the lane's own note says "no tooling_ timeout variable exists in scripts/seeds/logic_variables.json and registering one is a seed + migration + id claim the operator authorises with a typed DB GO", so the first run of test:db fails on an assertion the task is not authorised to satisfy — add a skipIf on the seed entry being present (or hold the file outside the suite) until the seed and migration land with the operator's GO, so test:db stays green while the task stays RUNNING.
+
+BUG severity=MED — PLAN B.1 "Entry (field `references`, not `documentation` ...): `compliance:<list id> <file>`, one per resolved list" — src/tests/backlog/rule-lists.logic.test.ts:798 "entries compare by the id token" and :801 "expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);" — the id token alone decides presence, so the pasted ref "compliance:eng-all some other path" counts as the eng-all entry and the `<file>` half is never verified; a task can carry the right ids pointing at the wrong document and check-tasks prints nothing, which is not what "one per resolved list" of `compliance:<list id> <file>` means — compare id and file together, keeping the comma-path (id alone) entry as the single stated exception.
+
+BUG severity=MED — 08_agents.md 2026-11-20 note (task-410) "a list is split by its own headings when list plus material pass the review tool bound, never trimmed" — src/tests/backlog/rule-lists.logic.test.ts:737 "a table too big for one file is split at rows, every row appears once across the parts, none over the bound" with no size assertion in the body (:740 to :743 assert only exit 0, part count and row multiplicity) — the "none over the bound" half exists only in the test name, so an oversized part would pass unobserved and the bound clause is satisfied by a title — add the per-part rendered-length assertion against --max (4000) for every file returned.
+
+DEFER severity=MED — PLAN A.4 "counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)" — src/tests/backlog/rule-lists.logic.test.ts:695 "'--list', 'whole'" (the only room test) and no call in this chunk passes --context with no --list — the no-list path that carries code-review, error-paths, ux and security is untested against the context size, so the second half of the clause is unevidenced here — add one lens-template call with --context and no --list, and assert its rendered size against --max.
+
+DEFER severity=LOW — PLAN A.4 "counts the selected sections in the room" — src/tests/backlog/rule-lists.logic.test.ts:705 "'sys' + rt.substitutePlaceholders('SPECS:\n{{SPECS}}\nPLAN:\n{{PLAN}}\nAGAIN:\n{{PLAN}}\n', ..." while TPL is "## System persona\nsys\n\n## User prompt\nSPECS:" — the test's own bound is about 36 characters looser than the template it is checking, so a part just over --max by that margin passes the assertion — substitute into TPL and measure that string.
+
+DEFER severity=LOW — AC #11 "The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green" — src/tests/review-template.logic.test.ts:208 "const rt = require('../../scripts/lib/review-template');" — a bare require at describe-body level in a vitest ESM module, where the sibling test in this same chunk needs createRequire(import.meta.url) (src/tests/backlog/rule-lists.logic.test.ts:7) to obtain one, risks throwing before the kept tests run — use createRequire(import.meta.url) or a top-level import.
+
+REJECT — PLAN A.2 / AC #6 — that CONTEXT_SECTIONS is wrong to omit "Implementation Plan" though the v4 text says the context holds "Implementation Plan and Implementation Notes" — AC #6 pins "the five --section flags" and the plan reaches the reviewer through the PLAN_SECTIONS material cut, so the five-heading constant is what the pasted text names.
+
+MET — PLAN A.2 "One constant CONTEXT_SECTIONS ... 'Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'" — src/tests/review-template.logic.test.ts:211 — asserts that exact five-element array plus PLAN_SECTIONS.
+MET — D11b "the security lens fires for admin and PII" — src/tests/backlog/rule-lists.logic.test.ts:658 — admin, pii, admin-users and pii-scrub each expect 'security' in plan and out, with a negative control.
+MET — PLAN A.6 "cut between table rows or blank-line paragraphs instead of being refused" — src/tests/backlog/rule-lists.logic.test.ts:743 — each of R0 to R59 appears exactly once across the parts, and a single oversized row still keeps the old refusal naming "5. Register".
+MET — PLAN B.2 "the exact `backlog task edit task-N --add-ref ...` command" — src/tests/backlog/rule-lists.logic.test.ts:779 — one add-ref per resolved list, no remove-ref when all are missing, and a stale entry draws --remove-ref alone.
+MET — AC #4 "A lens run on a file containing dollar sequences and placeholder tokens sends the text unchanged, once" — src/tests/review-template.logic.test.ts:202 — the substitutePlaceholders literal-insertion tests are kept intact and the new describe is appended after them.
+MET — PLAN A.4 (D1-D5 note "the stamped material must be the PLAN_SECTIONS cut of the context") — src/tests/backlog/rule-lists.logic.test.ts:715 — --material-from yields THE-PLAN and "## Acceptance criteria" and excludes "## Implementation Notes".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 3
+
+---
+⏱  111427ms (111.4s)
+📊 Tokens — total: 48770, input: 23230, output: 25540, reasoning: 24076

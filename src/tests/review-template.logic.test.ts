@@ -202,3 +202,19 @@ describe('substitutePlaceholders — values are inserted literally, once', () =>
     expect(out).toBe('A:P {{SPECS}} {{DATA_CONTEXT}}|B:S {{PLAN}}|C:P {{SPECS}} {{DATA_CONTEXT}}|D:');
   });
 });
+
+describe('task-375 A2: one section list for the reviewer context, one extractSections', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const rt = require('../../scripts/lib/review-template');
+  const md = ['# Review context', '## Task', 't', '## Description', 'd', '## Acceptance criteria', 'a', '## Implementation Plan', 'p', '## Implementation Notes', 'n', '## References', 'r'].join('\n');
+  it('CONTEXT_SECTIONS and PLAN_SECTIONS are the plan constants', () => {
+    expect(rt.CONTEXT_SECTIONS).toEqual(['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes']);
+    expect(rt.PLAN_SECTIONS).toEqual(['Description', 'Acceptance criteria', 'Implementation Plan']);
+  });
+  it('extractSections cuts to the next heading of the same or higher level and throws on a missing heading', () => {
+    const out = rt.extractSections(md, ['Description', 'Implementation Plan']);
+    expect(out).toBe('## Description\nd\n\n## Implementation Plan\np');
+    expect(out).not.toContain('References');
+    expect(() => rt.extractSections(md, ['Nope'])).toThrow(/no heading contains that text/);
+  });
+});

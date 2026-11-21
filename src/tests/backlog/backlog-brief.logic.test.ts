@@ -55,7 +55,7 @@ describe('G1 backlog-brief (test 4)', () => {
     expect(r.stdout).toMatch(/08_agents\.md:339/);
     expect(r.stdout).toContain(`task edit ${plan} -s RUNNING -a @lane-BL-R1`);
     expect(r.stdout).toMatch(/--plan/);
-    expect(r.stdout).toMatch(/node scripts\/deepseek-review\.js review docs\/reports\/reviews\/\S+\/context-2026-11-19\.md --context \.claude\/review-templates\/plan-review-deepseek\.md/);
+    expect(r.stdout).toMatch(/node scripts\/deepseek-review\.js review docs\/reports\/reviews\/\S+\/context-r1\.md --template \.claude\/review-templates\/plan-review-deepseek\.md --context docs\/reports\/reviews\/\S+\/context-r1\.md --section "Task"/);
     expect(r.stdout).toMatch(/provider claude/i);
     expect(r.stdout).toMatch(/bash_allow/);
     expect(r.stdout).toMatch(/--final-summary/);
@@ -65,6 +65,11 @@ describe('G1 backlog-brief (test 4)', () => {
     expect(r.stdout).toMatch(/from round 2 on use only --append-final-summary/);
     expect(r.stdout).toMatch(/check-lane-close\.mjs --outcomes/);
     expect(r.stdout).toMatch(/do NOT run --plan/);
+    // task-375 D6: what the brief tells a lane about the plan that the launch gate checked
+    expect(r.stdout).toMatch(/The plan is the task text at launch, checked before launch/);
+    expect(r.stdout).toMatch(/do not edit the Description, Acceptance or Plan/);
+    expect(r.stdout).toMatch(/record deviations in Implementation Notes/);
+    expect(r.stdout).toMatch(/still runs at least one plan-stage lens of its own and rules its findings in its own GROUNDER\.md/);
     expect(r.stdout).toMatch(/STATUS: ready\|blocked\|failed\|dropped/);
   });
 
@@ -72,7 +77,7 @@ describe('G1 backlog-brief (test 4)', () => {
     const { d, plan } = fixture();
     const r = brief(d, plan);
     expect(r.status, r.stderr).toBe(0);
-    const ctx = path.join(d, `docs/reports/reviews/${plan}/context-2026-11-19.md`);
+    const ctx = path.join(d, `docs/reports/reviews/${plan}/context-r1.md`);
     expect(fs.existsSync(ctx), ctx).toBe(true);
     const body = fs.readFileSync(ctx, 'utf8');
     expect(body).toContain('Plan item CHK.5 scope check');

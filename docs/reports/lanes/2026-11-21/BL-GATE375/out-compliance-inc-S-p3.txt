@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:26:54.908Z file_sha256=1d2a7e114bf7792f4d986765257d3977a6238c36aea2f48667a8e9d266861d90 prompt_sha256=5863210144bb5d46f2434fa423124c02209ac6a048de327113365c18eef97842
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-inc-S-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — A.6 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file." — scripts/hooks/check-lane-close.mjs:68 "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))" — an output hashed over an earlier round's context-rN.md passes at a later round, so the per-round binding A.6 names is not proved by the recompute — match the output only against the highest-numbered context-rN.md (numeric order, not the lexical `.sort()` used in check()).
+
+DEFER severity=MED — A9 "after the orchestrator has produced the evidence ... and copied the printed Plan line last: \"plan gate ok: <L> lists\"" — scripts/hooks/check-lane-close.mjs:645 "const pl = [...g.matchAll(/^\s*Plan:\s*(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm)].pop();" — the check takes the last Plan: occurrence anywhere, so a GROUNDER-PLAN.md with new text appended after the grounder's ruling still passes although the Plan line is not last — require the Plan line to be the last non-blank line of GROUNDER-PLAN.md.
+
+DEFER severity=LOW — A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes." — scripts/hooks/check-lane-close.mjs:439 "if ((i.contexts ?? []).length === 0) errors.push(`${id}: no committed review context file docs/reports/reviews/${id}/context-rN.md ...`)" — the refusal fires for a close that owes no lens output at all (a non-build task with a lane dir and no output to bind), which is not one of the three refusals A.4 names — raise the line only when the task is build/fix or at least one lens output exists.
+
+REJECT — v4 "B.2 close refusal on stale references -> deleted (check-tasks prints the commands, the take adds them)" — the new block refuses a close whose references lack REPORT.md, GROUNDER.md or TRIAGE.md — that is NOTE-375 B.3 ("At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md"), which v4 keeps; only the stale compliance: comparison is deleted, and none is added here.
+
+REJECT — D5 "a build or fix launch runs planGateErrors on the board HEAD evidence" — planGateErrors is exported but not called from the launch — backlog-lane.mjs is not in this chunk of the change; its wiring is reviewed in its own run.
+
+MET — A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js; extractSections moves there ... so the review tool, lens-input and the close check cut the same text." — scripts/lib/review-template.js:115 "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" with extractSections and PLAN_SECTIONS exported.
+
+MET — A.4 "Refuse a context that is the placeholder ..." — scripts/hooks/check-lane-close.mjs:322 "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(...)" and the extractSections throw collected as a problem line, never a value.
+
+MET — A.4 "so the existing prompt_sha256 recompute (:65) binds it" — scripts/hooks/check-lane-close.mjs:481 "lensContexts(i.contexts ?? [], hasNotes)" feeding "ctxValues: lc.values" into every reviewErrors call that has an input.
+
+MET — D2 "integration and reality-check on every launch ... regression when the Files line names at least one path tracked at the board head" — scripts/hooks/check-lane-close.mjs:553 "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };" with "entriesOf(i.taskText).some((e) => i.tracked(e))".
+
+MET — D3 "the first 12 hex of the sha256 of the title plus the whole body after the front matter, whitespace squashed" — scripts/hooks/check-lane-close.mjs:559 "return sha(squash(`${fm.title ?? ''} ${body}`)).slice(0, 12);".
+
+MET — D5 "any read error is a refusal line, never a stack trace" — scripts/hooks/check-lane-close.mjs:575 "try { return planGateInner(i); } catch (e) { return { errors: [`${id}: the plan gate could not read the evidence: ...`]".
+
+MET — B.3 "the close check refuses when one is missing" and prints the command — scripts/hooks/check-lane-close.mjs:472 "errors.push(`${id}: the task's references lack the repo copy ${rp}: backlog task edit ${id} --add-ref ${rp}`)".
+
+MET — A.1/A.6 naming — src/tests/backlog/backlog-brief-context.logic.test.ts:26 "context-r1.md" and :196 "expect(r.stdout).toContain(`${task}/context-r2.md`)" pin the per-round file the brief writes.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 2
+
+---
+⏱  113841ms (113.8s)
+📊 Tokens — total: 54559, input: 33756, output: 20803, reasoning: 19576

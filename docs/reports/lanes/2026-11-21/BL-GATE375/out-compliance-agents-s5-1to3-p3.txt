@@ -1,0 +1,42 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:08:02.657Z file_sha256=a1701734484b9e3408ab978590d5de699465ab34f47240493e3943ba097b2f6f prompt_sha256=6a4e14d9032f2b83989e88b3179de7ee3f5306962e50ec4b71ae784512818d49
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-agents-s5-1to3-p3.txt (model: deepseek-reasoner)
+
+BUG severity=none found (see DEFER lines)
+
+DEFER severity=MED — A6 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file." — src/tests/backlog/check-lane-close.logic.test.ts:806 "it('an output must match one committed context file: the earlier round file is kept and still binds', () => { ... expect(r.status, r.stderr).toBe(0); });" — the close binds an output to ANY committed context-rN.md, so after a newer round file is committed an output made over the superseded context still closes; the per-round reading of A6 is not enforced and the test pins the weaker rule — make the close prefer or require the context-rN.md of the output's own round (e.g. the highest N committed at close) and refuse an output whose prompt_sha256 matches only an older round file.
+
+DEFER severity=MED — RR-0342 "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently" — src/tests/backlog/check-lane-close.logic.test.ts:938 "it('regression is required when the Files line names an existing path, and not when it names only new paths'" and the recorded rule "regression when the Files line names a path tracked at the board head, a directory or glob entry counts" — the gate treats any tracked path as "code is changed", so a build task whose Files line names only a tracked document is refused for a missing regression seat — narrow the trigger to code paths (by extension or by the table's protected/frontend maps) so a doc-only build launch is not refused.
+
+DEFER severity=LOW — NOTE-375 scope "NOT IN SCOPE: ... the V2L15 early-return change; any new script." — src/tests/backlog/backlog-lane.logic.test.ts:17 "run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID })" — a new program under docs/reports/reviews/task-375/ is added and no pasted line on the Files line or in the plan names it — fold the planting logic into the existing lane test file, or get the path named on the Files line with a ruling that records the exception.
+
+DEFER severity=LOW — A4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes." — scripts/lib/review-template.js:123 "const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && l.includes(want));" — a heading that merely contains the word (for example "## Description of the seats", "## Task force") satisfies the Description and Task tests, so a context that lacks the task's own section is not refused — require the heading text to equal the wanted text (trim trailing # and space) before accepting the section.
+
+DEFER severity=LOW — A6 "The context file is regenerated before each review round and committed with the round" — scripts/lib/review-template.js:139 "return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;" — the next round number is the file COUNT plus one, so a gap in the numbering (r1 and r3 present, r2 gone) makes the next brief write context-r3.md and overwrite a committed round file that prior outputs were hashed against — take max(N) + 1, or refuse when the target name already exists.
+
+MET — A2 "these headings of that file only, with the exact heading texts: \"Task\", \"Description\", \"Acceptance criteria\", \"Decisions naming this task\", \"Implementation Notes\"" — scripts/lib/review-template.js:115 — CONTEXT_SECTIONS holds exactly that list in that order.
+
+MET — A2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js; extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text." — scripts/lib/review-template.js:119 — extractSections is defined and exported beside the constant, and the brief test imports it from the lib rather than from the review tool.
+
+MET — A5 naming "the context-<date>.md name -> context-rN.md" — src/tests/backlog/backlog-brief-context.logic.test.ts:26 — ctxOf reads context-r1.md, and the third new test asserts a later brief writes context-r2.md and leaves context-r1.md unchanged.
+
+MET — A3 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — src/tests/backlog/backlog-lane.logic.test.ts:270 — the A3 test collects every "scripts/deepseek-review.js review" command in the brief and requires "--context …/context-r2.md" plus the five --section flags on each.
+
+MET — D6 "backlog-brief.mjs prints the line that the plan is the task text at launch, checked before launch, that the lane does not edit Description, Acceptance or Plan, records deviations in Implementation Notes and still runs a plan-stage lens of its own." — src/tests/backlog/backlog-brief.logic.test.ts:69 "expect(r.stdout).toMatch(/The plan is the task text at launch, checked before launch/);" — all four sentences are pinned.
+
+MET — operator ruling 2026-11-20 (round 6) "scripts/lib/review-template.js and scripts/deepseek-review.js, which decide what a recomputed prompt hash proves, may not differ from the range base unless the task's launch Files line covers them." — the task Files line "Files: scripts/analysis/backlog-lane.mjs, … scripts/lib/review-template.js, …" — review-template.js is on the launch Files line, so the edits to it are permitted.
+
+MET — D "the launch gate: backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board." — src/tests/backlog/backlog-lane.logic.test.ts:345 — the test asserts exit 3 for both paths, "--dry-run" and no flag, with the status left LATER and no worktree, so no flag turns the gate off.
+
+REJECT — NOTE-375 B.2 "The close check refuses the closing task on the same difference." — that the close does not refuse a task whose compliance: references differ from the resolved lists — PLAN-375-v4 deletes that sentence ("B.2 close refusal on stale references -> deleted (check-tasks prints the commands, the take adds them)") and v4 governs where the two differ.
+
+REJECT — NOTE-375 A "backlog-brief.mjs writes ONE more section in the existing context-<date>.md: \"## Implementation Notes\"" — that the brief writes a second new section, "## Implementation Plan", which the approved note did not ask for — v4 replaces that sentence: "\"ONE more section\" (Implementation Notes) -> two sections (Implementation Plan and Implementation Notes)".
+
+REJECT — A2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — that adding PLAN_SECTIONS is a second, unruled context list — the clause fixes the reviewer-context list in one place; PLAN_SECTIONS is the plan-phase material the D launch gate needs and does not replace CONTEXT_SECTIONS.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  123214ms (123.2s)
+📊 Tokens — total: 56598, input: 32122, output: 24476, reasoning: 22772

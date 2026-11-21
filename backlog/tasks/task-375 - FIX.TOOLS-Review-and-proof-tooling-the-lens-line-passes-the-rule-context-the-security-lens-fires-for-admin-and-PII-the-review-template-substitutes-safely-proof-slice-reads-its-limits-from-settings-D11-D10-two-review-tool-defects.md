@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T01:06:00Z'
+updated_date: '2026-11-21T05:01:00Z'
 labels:
   - McFix
   - McFix A
@@ -24,6 +24,9 @@ references:
   - docs/reports/reviews/task-375/FOLD-VALIDATION.md
   - docs/reports/reviews/task-375/CROSS-READ.md
   - docs/reports/reviews/task-375/READBACK-375-v4.md
+  - docs/reports/lanes/2026-11-21/BL-GATE375/REPORT.md
+  - docs/reports/lanes/2026-11-21/BL-GATE375/GROUNDER.md
+  - docs/reports/lanes/2026-11-21/BL-GATE375/TRIAGE.md
 type: build
 ordinal: 75012
 ---
@@ -31,7 +34,7 @@ ordinal: 75012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY.md and GROUNDER.md (task-368), on the handbook pass of the pushed 1·B change. Operator 2026-11-20 (verbatim): "essential we have a non compliance build again - the entire reason for this approach". Scope now (2026-11-20, PLAN-375-v4 in the Implementation Plan field governs; build exactly that plan, do not re-plan): A the reviewer's context is the task, sized (Implementation Plan and Implementation Notes in the context, one CONTEXT_SECTIONS constant, every lens command passes the committed context, lens-input refuses without it, context-rN.md per round, split at table rows and paragraphs); B the compliance documents are written on each task as references starting "compliance:" and the report, grounder and triage files are referenced at close; C the earlier defects D10 (proof-slice.mjs reads its timeout and buffer from registered tooling_ variables; the DB read needs the operator's DB GO after the MCINC-7 rehearsal, otherwise A, B and D ship and the task is not marked complete) and D11 (the security lens fires for admin and PII paths); D the launch gate: backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board. Where the generated brief says to run --plan, do not: the plan is the task text. .claude/review-templates/lens-compliance.md is on the Files line and is NOT edited. docs/specs/00-architecture/08_agents.md takes ONE dated note carrying two points (context-rN.md; the plan-only seats). Files: scripts/analysis/backlog-lane.mjs, scripts/analysis/backlog-brief.mjs, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/deepseek-review.js, scripts/lib/review-template.js, .claude/review-templates/lens-compliance.md, scripts/analysis/proof-slice.mjs, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/backlog-brief.logic.test.ts, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts, src/tests/proof-slice.logic.test.ts, src/tests/proof-slice.db.test.ts, src/tests/review-template.logic.test.ts
+Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY.md and GROUNDER.md (task-368), on the handbook pass of the pushed 1·B change. Operator 2026-11-20 (verbatim): "essential we have a non compliance build again - the entire reason for this approach". Scope now (2026-11-20, PLAN-375-v4 in the Implementation Plan field governs; build exactly that plan, do not re-plan): A the reviewer's context is the task, sized (Implementation Plan and Implementation Notes in the context, one CONTEXT_SECTIONS constant, every lens command passes the committed context, lens-input refuses without it, context-rN.md per round, split at table rows and paragraphs); B the compliance documents are written on each task as references starting "compliance:" and the report, grounder and triage files are referenced at close; C the earlier defects D10 (proof-slice.mjs reads its timeout and buffer from registered tooling_ variables; the DB read needs the operator's DB GO after the MCINC-7 rehearsal, otherwise A, B and D ship and the task is not marked complete) and D11 (the security lens fires for admin and PII paths); D the launch gate: backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board. Where the generated brief says to run --plan, do not: the plan is the task text. .claude/review-templates/lens-compliance.md is on the Files line and is NOT edited. docs/specs/00-architecture/08_agents.md takes ONE dated note carrying two points (context-rN.md; the plan-only seats). Files: scripts/analysis/backlog-lane.mjs, scripts/analysis/backlog-brief.mjs, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/deepseek-review.js, scripts/lib/review-template.js, .claude/review-templates/lens-compliance.md, scripts/analysis/proof-slice.mjs, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/backlog-brief.logic.test.ts, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, src/tests/proof-slice.logic.test.ts, src/tests/proof-slice.db.test.ts, src/tests/review-template.logic.test.ts
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -359,4 +362,87 @@ Dated note 2026-11-20 (M-246, prior text kept; RR-0350 · task-375 · Backlog; o
 2026-11-20 (M-246, prior text kept) This plan (PLAN-375-v4, in the Implementation Plan field) GOVERNS the approved FINAL BUILD NOTE (NOTE-375.md, approved at MORNING-DECISIONS.md:1557) where they differ, on the operator's orders at :1572 and :1580 and the second pass (:1590). Approved sentences it replaces: "ONE more section" (Implementation Notes) -> two sections (Implementation Plan and Implementation Notes); A.5 both-phases close rule -> deleted (plan evidence moves to the launch gate); B.2 close refusal on stale references -> deleted (check-tasks prints the commands, the take adds them); the context-<date>.md name -> context-rN.md; "no shim (RR-0328)" -> that sentence is the orchestrator's reading, not his words. v4 rulings: the Integration and Reality-Check seats on every build or fix plan and the Regression seat when existing code is changed, as Claude Sonnet agents, on the plan only (:1615, :1620, :1625, :1630); no seat on the output; the lane fixes, writes its own outcome lines and closes, a separate grounder verifies each fix, the orchestrator only routes (:1605); a BUILT task does not move to DONE without an output compliance review and a grounder's ruling (:1595). Released from lane BL-FIXTOOLS and relaunched under a new lane name with the launch script's own undo (his yes at the :1517 entry). The v4 fold was read back by a separate grounder (docs/reports/reviews/task-375/READBACK-375-v4.md); its four grounded answers are taken as approved on :1638 and reported to him.
 
 2026-11-21 taken on the board at lane launch (lane BL-GATE375, worktree /Users/brettpreston_macmini/Buildo-wt-gate375, branch wf1/inc1b-gate375), RR-0240
+
+BL-GATE375 build note 2026-11-21 (D11b, README.md:104, lens-security.md:48): rule-lists.mjs lensSet sec regex now includes admin and pii; red first in red.out (rule-lists.logic.test.ts:650), green by the real commit.
+
+BL-GATE375 build note (A2): CONTEXT_SECTIONS, PLAN_SECTIONS and extractSections now live in scripts/lib/review-template.js; scripts/deepseek-review.js requires extractSections from it (moved from :106-121, same text).
+
+BL-GATE375 build note (A1, A5 naming): backlog-brief.mjs writes ## Implementation Plan and ## Implementation Notes after the acceptance criteria and writes context-rN.md (N = existing context-r*.md + 1, never overwritten); brief tests re-pinned to context-r1.md (backlog-brief.logic.test.ts:58, backlog-brief-context.logic.test.ts:43).
+
+BL-GATE375 build note (A4 lens-input, A6): rule-lists.mjs lens-input takes --context (refused without; exit 2), counts the CONTEXT_SECTIONS text in the room on both paths (buildLensInputs context param), --material-from cuts PLAN_SECTIONS and is its own context; splitFlat cuts a block with no deeper heading at table rows and blank-line paragraphs (a piece alone over the room keeps the old refusal naming list and section). Existing lens-input test calls pass a fixture context (src/tests/backlog/fixtures/review-context.md).
+
+BL-GATE375 deviation note: the plan's Files line does not name src/tests/backlog/rule-lists-table.logic.test.ts, whose lens-input calls at :49 and :206 pass no --context and so fail once lens-input refuses without it (A4); check-task-files refuses an edit of that file, so it is NOT edited here and goes red at the push suite until the Files line names it. The shared test context lives at docs/reports/reviews/task-375/fixture-context.md (the one folder the Files check always allows).
+
+BL-GATE375 build note (A4 close binding, A5, B2): check-lane-close.mjs lensContexts(contexts, hasNotes) returns the CONTEXT_SECTIONS text of every committed docs/reports/reviews/<task>/context-rN.md (index first, then HEAD, read in check()) and problem lines for the placeholder or a missing Description or Implementation Notes heading; the prompt_sha256 recompute uses it (an output must match one context file); no committed context is a refusal; B2 refuses a missing REPORT.md, GROUNDER.md or (when the lane dir holds it) TRIAGE.md reference and prints the exact backlog task edit --add-ref command. The test helper scenario() writes a valid context and the three references.
+
+BL-GATE375 build note (A3): backlog-lane.mjs lens line and review line, and backlog-brief.mjs review line, pass the committed context (context-r1.md) with one --section per CONTEXT_SECTIONS entry on every deepseek-review command (plan, output, compliance), lens-input gets --context and, in the plan phase, --material-from; the lens templates are passed as --template, no longer as --context. Pins re-made: backlog-lane.logic.test.ts :169 and :258, backlog-brief.logic.test.ts :58, backlog-brief-context.logic.test.ts :43.
+
+BL-GATE375 build note (B1): rule-lists.mjs exports complianceRefs(lists, refs) ({add, remove}, compared by the id token, a path with a comma entered as compliance:<id> alone); checkTasks collects the stale open tasks and check-tasks prints the exact backlog task edit --add-ref / --remove-ref command for each (exit unchanged); backlog-lane.mjs's take adds only the missing compliance: references in the same edit. Red for this commit was a typecheck refusal (complianceRefs not exported), in red7.out.
+
+BL-GATE375 build note (D10b, PARTIAL, DB read OPEN): proof-slice.mjs exports TIMEOUT_VARIABLE ('tooling_proof_slice_timeout_ms', the builder's name, NOT registered: no tooling_ timeout variable exists in scripts/seeds/logic_variables.json and registering one is a seed + migration + id claim the operator authorises with a typed DB GO after the MCINC-7 rehearsal) and timeoutMsFromVariable(value), which refuses unset, empty, non-positive-integer values naming the variable; the logic test is green, src/tests/proof-slice.db.test.ts is written and NOT RUN. DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable; the task is NOT complete.
+
+BL-GATE375 build note (A3 docs): .claude/review-templates/README.md How-to-run section now names context-rN.md, the five --section flags and lens-input --context / --material-from (the plan's README item for A3).
+
+2026-11-21 DEVIATION (BL-GATE375, third run; precedent: task-399's lane added a path its change forced): the Files line is extended by ONE path, src/tests/backlog/rule-lists-table.logic.test.ts. Why: A4 makes rule-lists.mjs lens-input refuse without --context, and that test calls lens-input twice with no --context (src/tests/backlog/rule-lists-table.logic.test.ts:49 and :206), so both go red at the push suite; check-task-files refused the edit while the path was off the line. Nothing else in the Description changed. rule-lists.mjs resolve for the new Files line: 14 lists before and 14 after, none added, none removed (no new output compliance review owed for a new list). The separate grounder rules on this deviation.
+
+BL-GATE375 build note: rule-lists-table.logic.test.ts :49 and :206 now pass --context docs/reports/reviews/task-375/fixture-context.md (deviation above); red in red9.out (2 failed), green by the commit.
+
+BL-GATE375 build note (D1-D5 in check-lane-close.mjs): listProof and grounderErrors are extracted from closeErrors (behaviour preserving, the existing close tests are the proof); planGateErrors (pure; any read error is a refusal line), planHash (title plus body after the front matter, whitespace squashed, 12 hex), PLAN_SEATS (always integration and reality-check; regression when the Files line names a path tracked at the board head, a directory or glob entry counts) are exported; it reuses outcomeErrors with mode 'plan', seatLines, parseVerdicts and extractSections. Plan inputs are checked per committed context: the stamped material must be the PLAN_SECTIONS cut of the context whose text produced the output's prompt hash. Not wired into backlog-lane.mjs in this commit. Red for this commit was a typecheck refusal (red10.out).
+
+BL-GATE375 build note (D5 wiring, the LAST commit of backlog-lane.mjs): after the existing refusals and the dirty-board check and BEFORE the take, a build or fix launch runs planGateErrors on the board HEAD evidence (docs/reports/reviews/<id>/, flat) and the task file; each error is a stderr line (exit 3, nothing taken); --dry-run runs it too and prints 'plan gate ok: <L> lists, <M> findings, Plan sha256:<12>'. Rollback if it blocks every launch: git revert of this one commit. Lane test fixtures plant real stamped evidence with docs/reports/reviews/task-375/plant-evidence.mjs. Red: red11.out (2 failed).
+
+BL-GATE375 build note (D6): backlog-brief.mjs prints the line that the plan is the task text at launch, checked before launch, that the lane does not edit Description, Acceptance or Plan, records deviations in Implementation Notes and still runs a plan-stage lens of its own. Red: red12.out.
+
+BL-GATE375 build note (section 10): ONE dated note under the TKT-1 note of 08_agents.md (context-rN.md; the plan-only seats) and a dated note in 137_mcqueue.md after the :138 note (the close refusals and the launch gate, what it cannot prove), prior text kept.
+
+BL-GATE375 acceptance, third run (outputs in ~/Buildo-scratch/lanes-20261119/inc1b/gate375/acc). A0: node scripts/analysis/backlog-brief.mjs --task task-381 --lane BL-ACC --root . : exit 0, context-r1.md holds 2 of the 2 headings '## Implementation Plan' and '## Implementation Notes'. A1: NOT RUN: scripts/deepseek-review.js needs the API key from the environment file even for --dry-run, and the dotenv form was denied by the permission classifier for this run. A2 (buildLensInputs with the 5 sections, material 17,753 characters): task-381 15 lists, 5 sections 2121 characters, 17 calls, 0 refused (expected 17); task-410 10 lists, 14181 characters, 11 calls, 0 refused; task-267 18 lists, 9416 characters, 21 calls, 0 refused. A3 (lens-input CLI, 60,000-character material): surface-135 exit 0 3 parts, policy-124-s2-s5 exit 0 3 parts, bylaw-133 exit 0 3 parts; the 'today exit 1' half was not re-run on the old head (UNVERIFIED). A4: check-tasks on the live board exit 0, prints 106 commands; for task-101 (LATER, type record, not build) the command carries 6 compliance: entries = 6 lists of resolve; the 'after running the printed command' half is NOT RUN (it edits another task). A5: the planted refusals with controls are the tests in check-lane-close.logic.test.ts, backlog-lane.logic.test.ts, rule-lists.logic.test.ts, backlog-brief-context.logic.test.ts (green in the commits). A6: review-template.logic.test.ts green in ef574eb02. A7: green in 7b7d6f5f7. A8: OPEN (no DB). A9: NOT RUN.
+
+BL-GATE375 acceptance A9 and A4b, fourth run (outputs ~/Buildo-scratch/lanes-20261119/inc1b/gate375/a9/; run on a scratch git clone --shared of this worktree, removed afterwards, so this worktree was never touched: git status --short shows no tracked change). A9 on task-401 (LATER, build, 9 resolved lists), dry-run only: (1) before evidence: exit 3, 11 errors, one per missing item, the first 'plan gate: task-401: no plan evidence folder docs/reports/reviews/task-401/ on the board', then one 'list <id> ... has no valid compliance lens output' for each of the 9 lists (agents-s5-1to3, agents-s7-s11, queue-137, eng-all, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S) and 'GROUNDER-PLAN.md is missing'. (2) with test evidence (context, 9 plan outputs with inputs, integration and reality-check Seat lines, no regression seat because the Files line names only paths that do not exist yet, round block, references, Plan line): exit 0, 'plan gate ok: 9 lists, 2 findings, Plan sha256:76fa8e5f3005'. (3) one appended note to the task: exit 3, 'GROUNDER-PLAN.md: the Plan line "Plan: task-401 sha256:76fa8e5f3005" is not the hash of the task as it is now ... expected: Plan: task-401 sha256:6017e6ec7b94'. (4) clone deleted. A4b on the same clone: check-tasks printed the add-ref command for task-101 (6 compliance: entries = 6 lists); after running it check-tasks --root <clone> printed nothing for task-101 (0 lines, exit 0) and backlog task view shows the compliance: entries on the References line.
+
+BL-GATE375 acceptance A1 and the output review, fourth run: A1 (the review tool with --dry-run in the sanctioned dotenv form, task-381 context and the five --section flags): the context slot holds 0 hits of the placeholder (6 hits sit inside the diff text, which quotes the string in rule-lists.mjs), 1 hit of 'yes to all', each of the five heading lines once, 24,823 characters (under 120000). Output review: 80 calls over the whole-range diff (19 files, 170,582 bytes) with context-r1.md: 74 compliance outputs over 14 lists, 3 code-review, 3 error-paths, all exit 0, 80 of 80 with a REVIEW header and a VERDICT line; 410 findings listed untriaged in docs/reports/lanes/2026-11-21/BL-GATE375/FINDINGS.md; report docs/reports/lanes/2026-11-21/BL-GATE375/REPORT.md. Grounder owed; the task stays RUNNING.
+
+BL-GATE375 fix round 1 (g375#1): planGateInner runs the existing reviewErrors (REVIEW header, template, timestamp, VERDICT line) on every plan-<lens>.txt of a FIX launch; a junk file is refused. Red: red13.out (1 failed, assertion expected '' to match /plan-code-review.txt: no REVIEW header/).
+
+BL-GATE375 fix round 1 (g375#2): review-template.js exports contextRound(dir) (context-r*.md count + 1); backlog-brief.mjs and backlog-lane.mjs both use it, so the lens lines name the round the brief wrote; the stale context-<date> header comment of backlog-brief.mjs is corrected. Red: red14.out (1 failed, expected the lens line to contain context-r2.md). The review-template.js Files-line path is on the line; check-lane-close.mjs is not touched by this commit.
+
+BL-GATE375 fix round 1 done: g375#1 (b4f4afc39) and g375#2 (dfe326345) fixed red first at failing assertions (red13.out, red14.out); every in- input re-made and all 86 out- outputs re-run under the same names with context-r2.md (all with a REVIEW header and a VERDICT line; one call re-run once for a missing VERDICT line); 351 findings untriaged in FINDINGS.md; every LOW and NIT goes to the pile in TRIAGE.md after the grounder re-rules; D10b stays open.
+
+BL-GATE375 fix round 2 (g375#11): the fix branch of planGateInner expects lens-compliance.md for plan-compliance-<list>[-pN].txt (the names the close uses for fix tasks), so a valid per-list plan compliance output on a fix launch is no longer refused; a junk one still is. Red: red15.out (1 failed, expected [ Array(1) ] to deeply equal []).
+
+BL-GATE375 fix round 2 done: g375#11 fixed (0bf6c680d, red15.out failing assertion, green c20.out 134 passed); fresh context-r3.md, every in- input re-made and all 94 out- outputs re-run under the same names (94 of 94 with a REVIEW header and a VERDICT line; three calls re-run once); 435 findings untriaged in FINDINGS.md; D10b stays open.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+WHAT IS BUILT: parts A (the reviewer's context is the task, sized), B (compliance references on each task and at close), D (the launch gate with the plan seats) and D11b (the security lens for admin and PII paths) are built and through the hooks. D10b's DB read and acceptance A8 are OPEN pending the operator's DB GO, so this task is NOT complete and stays RUNNING. src/tests/proof-slice.db.test.ts asserts a variable that is not registered, so the DB CI job is red by construction until the registration lands.
+
+Review round 1: 19 fixed, 0 task, 0 ruling, 0 wontfix, 96 pile; grounder docs/reports/lanes/2026-11-21/BL-GATE375/GROUNDER.md; triage docs/reports/lanes/2026-11-21/BL-GATE375/TRIAGE.md  (ruling on cb5eb3d08: 410 ids, 115 CONFIRMED = 19 MED + 94-0 LOW/NIT; fix commits dfe326345 and b4f4afc39)
+out-code-review-p1#1 MED fixed dfe3263
+out-compliance-agents-s5-1to3-p1#1 MED fixed dfe3263
+out-compliance-agents-s5-1to3-p2#2 MED fixed b4f4afc
+out-compliance-agents-s7-s11-p1#3 MED fixed dfe3263
+out-compliance-airtight-124a-p1#1 MED fixed dfe3263
+out-compliance-airtight-124a-p2#1 MED fixed dfe3263
+out-compliance-airtight-v2-122-p1#2 MED fixed dfe3263
+out-compliance-airtight-v3-122-p1#1 MED fixed dfe3263
+out-compliance-eng-all-p1#2 MED fixed dfe3263
+out-compliance-eng-all-p2#4 MED fixed dfe3263
+out-compliance-five-words-p1#1 MED fixed dfe3263
+out-compliance-inc-S-p1#1 MED fixed dfe3263
+out-compliance-ms-S-p1#1 MED fixed dfe3263
+out-compliance-orchestrator-doc17-p1#2 MED fixed dfe3263
+out-compliance-plan-protocol-p1#1 MED fixed dfe3263
+out-compliance-queue-137-p1#1 MED fixed dfe3263
+out-compliance-step-132-p1#4 MED fixed dfe3263
+out-compliance-step-132-p2#1 MED fixed dfe3263
+out-error-paths-p1#1 MED fixed dfe3263
+
+Review round 2: 4 fixed, 0 task, 0 ruling, 0 wontfix, 128 pile; grounder docs/reports/lanes/2026-11-21/BL-GATE375/GROUNDER.md; triage docs/reports/lanes/2026-11-21/BL-GATE375/TRIAGE.md  (ruling on 87c647d26: 351 ids, 132 CONFIRMED = 4 MED + 124 LOW + 4 NIT; fix commit 0bf6c680d)
+out-compliance-airtight-122a-p2#2 MED fixed 0bf6c68
+out-compliance-inc-S-p3#3 MED fixed 0bf6c68
+out-compliance-queue-137-p3#2 MED fixed 0bf6c68
+out-compliance-step-132-p5#2 MED fixed 0bf6c68
+
+Review round 3: 0 fixed, 0 task, 0 ruling, 0 wontfix, 167 pile; grounder docs/reports/lanes/2026-11-21/BL-GATE375/GROUNDER.md; triage docs/reports/lanes/2026-11-21/BL-GATE375/TRIAGE.md  (final ruling on 3763cae90: 435 ids, 167 CONFIRMED all LOW or NIT)
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -46,7 +46,7 @@ describe('V2.LIST round 2: the table rows', () => {
     expect(row.why).toContain('no governing spec found: operator ruling owed');
   });
   it('the Spec 124 list block carries Rule 13 and the role banner rule R-GW', () => {
-    const r = script(CLI, ['lens-input', '--list', 'policy-124-s2-s5', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('p124'), 'in-x')]);
+    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'policy-124-s2-s5', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('p124'), 'in-x')]);
     expect(r.status, r.stderr).toBe(0);
     const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
     expect(text).toContain('Rule 13 added by R-R');
@@ -203,10 +203,11 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
     expect(without).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
   });
   it('the surface-136 lens input generated for the change holds fe.01 to fe.44 (44 distinct ids)', () => {
-    const r = script(CLI, ['lens-input', '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
+    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
     expect(r.status, r.stderr).toBe(0);
     const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
     const ids = new Set(text.match(/\bfe\.\d\d\b/g));
     expect([...ids].sort()).toEqual(Array.from({ length: 44 }, (_, i) => `fe.${String(i + 1).padStart(2, '0')}`));
   });
 });
+// task-375: lens-input takes --context (A4); see the deviation note on the task

@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:15:24.500Z file_sha256=38c0572baf039368fd09a64bd41f42750b1253a0a44662295c24236870632846 prompt_sha256=4bd6618fae0d7863756cd52dd5891a7ec812061fb05f90751837e4e5972f662a
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-124a-p2.txt (model: deepseek-reasoner)
+
+BUG-severity lines are absent: no CRIT or HIGH against the pasted clauses was found; the DEFER lines below are the only risks.
+
+```
+DEFER severity=MED — Task Description D "the launch gate: backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board" — scripts/analysis/backlog-lane.mjs:96 "id: taskId, taskText: fs.readFileSync(t.file, 'utf8'), type: gateType, table: ruleTable, root: board, letter: letterOf, laneName: lane, assignees: asList(t.fm.assignee).map(String)," — the Plan hash is computed over the working-tree task file while every other gate input is read from HEAD, and the dirty check at :85 exempts backlog/, so a dirty task file yields a Plan hash that is not "on the board" — read the task text with the same showHead helper the folder and decision facts use.
+DEFER severity=LOW — Task Description C "proof-slice.mjs reads its timeout and buffer from registered tooling_ variables" — scripts/analysis/proof-slice.mjs:23 "const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it (seed + migration); until then this typed value stays" — the timeout stays a typed literal and timeoutMsFromVariable has no caller in this chunk, so D10b is not met, only deferred — permitted only by the Description's own condition that "A, B and D ship and the task is not marked complete", so no close on it.
+DEFER severity=LOW — Task Description "Where the generated brief says to run --plan, do not: the plan is the task text." — scripts/analysis/backlog-brief.mjs:177 "  2. If the task's Implementation Plan field already holds a plan (reviewed, ruled and checked before launch), build that plan and do NOT run --plan; only a task with no plan runs: backlog task edit ${taskId} --plan "<numbered steps, one per acceptance criterion>"" against scripts/analysis/backlog-brief.mjs:178 "do not re-plan, do not edit the Description, Acceptance or Plan" — the same Take order now prints two contrary instructions, one telling a planless task to run --plan and the next forbidding re-planning — delete or gate step 2 on the task type so the brief cannot be read as authorising --plan.
+DEFER severity=LOW — Task Description D "backlog-lane.mjs refuses a build or fix launch" — scripts/analysis/backlog-lane.mjs:96 "letter: letterOf" — no definition of letterOf appears anywhere in this chunk and the file's own letter value is a string const declared later at backlog-lane.mjs:171, so if letterOf is declared after this block the gate throws before it can refuse a single launch — confirm letterOf is a function declared above :96, or pass the milestone letter the way :171 computes it.
+```
+
+```
+MET — Task A1 "the Implementation Plan and Implementation Notes fields of the task" — scripts/analysis/backlog-brief.mjs:144 — "## Implementation Plan" and "## Implementation Notes" are written from fieldOf('PLAN') / fieldOf('NOTES') with inner headings demoted to '#### '.
+MET — Task A5 "context-rN.md per round and never overwritten" — scripts/analysis/backlog-brief.mjs:50 — ctxRel is built from contextRound(ctxDir), so N is the existing count plus one and an earlier round is not rewritten.
+MET — Task A3 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — scripts/analysis/backlog-lane.mjs:178 — ctxArgs is built once from CONTEXT_SECTIONS and interpolated into the plan lens, output lens and per-list compliance lens commands.
+MET — Task B1 "The take step ... adds them in the same backlog task edit with repeated --add-ref, only those not already on the task" — scripts/analysis/backlog-lane.mjs:132 — addRefs is complianceRefs(resolved.lists, asList(t.fm.references)).add mapped to repeated --add-ref and spread into the take step at :133.
+MET — Acceptance criterion #5 "the output holds the headings '## Implementation Plan' and '## Implementation Notes'" — scripts/analysis/backlog-brief.mjs:144 — both heading lines are emitted unconditionally by the context array.
+MET — RR-0348 "these only run on the plan" — docs/specs/00-architecture/08_agents.md:522 — the dated note records the tool-having seats on the plan only and states "no seat is required on the output".
+MET — Task D "the launch gate: backlog-lane.mjs refuses a build or fix launch" — scripts/analysis/backlog-lane.mjs:105 — each planGateErrors line is written to stderr and the process exits 3 before the take, on the build and fix types only.
+```
+
+```
+REJECT — R-BZ through R-CP (Spec 124a LIVE REGISTER rows) — accused of not implementing the compute-purity, seam, ledger and before-image rows — those rows bind compute modules, scripts/lib/step/*, run-chain.js, the ledger readers and vitest before-image behaviour, and none of the six paths in this chunk is any of those.
+REJECT — R-CP "A live test asserts that its child process completed before it asserts on that process's output" — accused on proof-slice.mjs and backlog-lane.mjs spawning — the rule binds tests that spawn step-validate.mjs or another long CLI, and no test file is in this chunk; src/tests/proof-slice.db.test.ts is not one of the six paths.
+```
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 43   Unmet: 0
+
+---
+⏱  85907ms (85.9s)
+📊 Tokens — total: 46036, input: 28323, output: 17713, reasoning: 16403

@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:16:21.164Z file_sha256=2094282bb5dbd4778667ce2eae5100e5576b44f0a28104089fcc7d45d1a5a466 prompt_sha256=b43715d95fbdffd93cc2c6e5181ea8dbb2ce0a322d7f1860bd1c3ce1da5ec31a
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-124a-p4.txt (model: deepseek-reasoner)
+
+BUG severity=NONE-PLACEHOLDER-OMITTED
+
+DEFER severity=MED — FINAL BUILD NOTE B.1/B.2 "`compliance:<list id> <file>`, one per resolved list" and "for each open task whose compliance: entries differ from the resolved lists" — scripts/analysis/rule-lists.mjs @@ -413,12 +443,28 @@ "const idOf = (r) => /^compliance:(\S+)/.exec(String(r).trim())?.[1];" plus "add: lists.filter((l) => !have.has(l.id))" — the comparison is by id token only, so a ref that carries the right list id but a stale or wrong file path, and a second duplicate entry for the same id, are never reported as differing; the printed command therefore leaves the task short of "one per resolved list" — key `have` on the whole entry text per id and emit a remove of the mismatched or duplicate entry beside the add of the resolved one
+
+DEFER severity=LOW — FINAL BUILD NOTE A.4 "rule-lists.mjs lens-input takes --context, refuses without it, and counts the selected sections in the room on both paths" — scripts/analysis/rule-lists.mjs @@ -329,12 +359,12 @@ "export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = ... })" — the exported builder still silently builds an input over the placeholder when a caller omits context, so the refusal exists only in the CLI and a library caller gets an input the close check will later reject — drop the default on buildLensInputs and throw "context required", keeping NO_CONTEXT as the lensPromptHash default only
+
+DEFER severity=LOW — AC #9 "prints the exact backlog task edit --add-ref command for at least one stale open task" and B.1 "adds them in the same `backlog task edit` with repeated --add-ref" — scripts/analysis/rule-lists.mjs @@ -510,6 +570,11 @@ "...x.remove.map((e) => `--remove-ref ${q1(e)}`)" — check-tasks also prints --remove-ref for compliance: entries of lists that no longer resolve, behaviour no pasted line names and which deletes a reference the operator may have written by hand — print the adds only, or record the remove arm as its own named item before it ships
+
+DEFER severity=LOW — FINAL BUILD NOTE A.7 "A row or paragraph that alone passes the room is still refused naming it" (i.e. only such a piece is refused) — scripts/analysis/rule-lists.mjs @@ -291,10 +293,38 @@ "if (!(head && pieces.length === 0 && cur.length === 1)) flush(); cur.push(ln); flush();" with "const big = pieces.find((x) => x.length > max);" — the block heading is glued to the first table row, so a row that alone fits the room is refused when heading plus row passes max — measure the row alone for the refusal test and glue the heading only for output
+
+MET — FINAL BUILD NOTE A.4 "lens-input takes --context, refuses without it" — scripts/analysis/rule-lists.mjs @@ -495,10 +546,20 @@ "if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> ...')" — the CLI exits 2 when --context is absent, and --material-from doubles as its own context
+
+MET — FINAL BUILD NOTE A.4 "counts the selected sections in the room on both paths" — scripts/analysis/rule-lists.mjs @@ -329,12 +359,12 @@ "const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context, dataContext: ... }).length;" — the context is counted once in `fixed` and again in `promptOf` and the final per-part render, so with a list and with no --list the same room applies
+
+MET — FINAL BUILD NOTE A.7 "in splitUnits (rule-lists.mjs, the `subs.length === 0` throw ...) a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — scripts/analysis/rule-lists.mjs "function splitFlat(text, max, label, id)" with "else if (/^\s*\|/.test(ln)) { ... flush();" and "else if (ln.trim() === '') { ... flush();" — the old unconditional throw is now the splitFlat fallback
+
+MET — FINAL BUILD NOTE A.7 "A row or paragraph that alone passes the room is still refused naming it" (the refusal half) — scripts/analysis/rule-lists.mjs "throw Object.assign(new Error(`list ${id}: section \"${label}\" is ... has no deeper heading, table row or blank line to split at that fits ...`), { room: true, size: big.length })" — the refusal keeps the list id and section name and keeps the `room` flag the chunking fallback relies on
+
+MET — task card C / D11b "the security regex at rule-lists.mjs:128 misses admin and PII" — scripts/analysis/rule-lists.mjs @@ -158,7 +160,7 @@ "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — admin and pii now fire the security lens, case-insensitive, on the same Files-text test
+
+MET — FINAL BUILD NOTE A.1 "extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text" — scripts/deepseek-review.js @@ -26,7 +26,7 @@ "const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');" with the local copy at @@ -102,24 +102,6 @@ deleted — one implementation, required from the shared module
+
+MET — FINAL BUILD NOTE B.2 "check-tasks (existing command) prints, for each open task ... the exact `backlog task edit task-N --add-ref ...` command" and AC #9 "exit 0" — scripts/analysis/rule-lists.mjs @@ -510,6 +570,11 @@ "for (const x of c.refs) console.log(`  backlog task edit ${x.id} ...`)" with no die on refs — the command is printed per stale task and the exit stays 0
+
+REJECT — Appendix §B12 (R-BZ, R-CC, R-CD, R-CE, R-CF, R-CG, R-CH, R-CI, R-CJ, R-CK, R-CL, R-CM, R-CN) — accused of leaving the step-standard rules unmet — none of these rows names review-tool code: R-BZ governs "compute-purity.mjs over compute and its `require` closure", R-CC governs "run-chain.js writes each step row's status", R-CN governs a gate-E ledger row; scripts/analysis/rule-lists.mjs and scripts/deepseek-review.js write no step row, no ledger row and run no compute, so no clause in this part is engaged by the chunk
+
+REJECT — FINAL BUILD NOTE A.7 with AC #4 "sends the text unchanged" — accused of altering the material because splitFlat drops the blank lines it cuts at — the plan's own comparison is whitespace-insensitive: "The close recompute needs no change: it joins the stamped parts and compares them with the whole list, whitespace aside" — the dropped separators do not break the close recompute
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 1
+
+---
+⏱  91276ms (91.3s)
+📊 Tokens — total: 39418, input: 22116, output: 17302, reasoning: 15589

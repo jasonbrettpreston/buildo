@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:17:27.256Z file_sha256=b2ee7dd2007988d8b7ae63699a042936608174fb20cbcca30e328d1b8c9b7961 prompt_sha256=4201bba2a8e7d5834528190b8f7fda03a57e74c318a89ad633d6080a66848dfa
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-124a-p8.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #2 "Tests red first, then green through the real hooks" "Red for this commit was a typecheck refusal (complianceRefs not exported), in red7.out" — src/tests/backlog/backlog-lane.logic.test.ts "+    expect([...t1.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length);" — the B1 behaviour this test pins was never shown red: its recorded red is a compile error, and the gate commit's is the same ("Red for this commit was a typecheck refusal (red10.out)") — re-run this B1 assertion and one planGate assertion against the pre-change head and record those failing assertions as the red, then land the green.
+
+DEFER severity=MED — R-CP "Only then does it assert on the output." — src/tests/backlog/backlog-brief-context.logic.test.ts "+    brief(d, task);\n+    const ctx = ctxOf(d, task);" (control test) and "+    brief(d, task);\n+    const before = fs.readFileSync(r1, 'utf8');" (round test) — two new tests read the file the child wrote with the exit status discarded, so a brief that writes both headings and then fails passes, while the sibling tests in the same block do "+    const r = brief(d, task); expect(r.status, r.stderr).toBe(0);" — capture the run and assert status and stderr before ctxOf.
+
+DEFER severity=MED — R-CP "A test that spawns step-validate.mjs (or another long CLI) first proves the run finished: no spawn error, no signal, an expected exit code" — src/tests/backlog/backlog-lane.logic.test.ts "+    const r1 = lane(f, ['--dry-run']);\n+    const t1 = take(r1.stdout);\n+    expect(t1).toBeTruthy();" — the B1 test asserts on lane's stdout without checking its exit code, so a refused launch surfaces as a missing take line — add "expect(r1.status, r1.stdout + r1.stderr).toBe(0);" before take().
+
+DEFER severity=MED — card "NOT IN SCOPE: ... any new script." — src/tests/backlog/backlog-lane.logic.test.ts "+  const r = run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID });" — every build or fix fixture now depends on a new executable program that is on no Files line and is excluded by name from the card's scope — either name it on the Files line and have the separate grounder rule on the deviation (as done for rule-lists-table.logic.test.ts), or plant the evidence with existing helpers.
+
+DEFER severity=LOW — R-CO "Every vitest file runs inside a per-file before-image sandbox installed by src/tests/setup.ts" — same line, the child is spawned with ROOT (the real repo) and no cwd — the sandbox lives in the vitest process, so any write or commit the helper performs resolves against the real tree outside that isolation — run the helper with cwd set to the fixture board and assert the repo tree is unchanged after the test.
+
+DEFER severity=LOW — card "A the reviewer's context is the task, sized (Implementation Plan and Implementation Notes in the context, one CONTEXT_SECTIONS constant, every lens command passes the committed context ...)" — src/tests/backlog/backlog-lane.logic.test.ts "+    const SECT = '--section \"Task\" --section \"Description\" --section \"Acceptance criteria\" --section \"Decisions naming this task\" --section \"Implementation Notes\"';" — the Plan section is written to the context file but is not among the five sections any lens is told to paste, so the governing plan (PLAN-375-v4 itself) never reaches the reviewer, and this test pins that state — add "Implementation Plan" to the constant and this list, or record a ruling that the plan is deliberately excluded.
+
+MET — card "A the reviewer's context is the task ... every lens command passes the committed context, lens-input refuses without it, context-rN.md per round" — src/tests/backlog/backlog-lane.logic.test.ts "+    for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }" — every matched deepseek-review command is asserted to carry the committed context file and all five sections, and the placeholder is asserted gone.
+
+MET — AC #5 "the output holds the headings \"## Implementation Plan\" and \"## Implementation Notes\"" — src/tests/backlog/backlog-brief-context.logic.test.ts "+    expect(ctx).toMatch(/^## Implementation Plan\n[\s\S]*PLAN-LINE-ONE[\s\S]*PLAN-LINE-TWO/m);" plus the "(none)" control — both headings written from the task, with an inner heading unable to end the section.
+
+MET — retro defect "(2) D11a half fixed: the plan-lens --context value is the literal placeholder at scripts/analysis/backlog-lane.mjs:156 and its test pins the placeholder text" — src/tests/backlog/backlog-lane.logic.test.ts "+    expect(line).not.toMatch(/--context \\.claude\\/review-templates/);" — the test now pins the real context path and the template-as-context form is refused.
+
+MET — RR-0343 "labelled means i need to know its a compliance document" — src/tests/backlog/backlog-lane.logic.test.ts "+    for (const l of lists) expect(t1).toContain(`--add-ref 'compliance:${l.id} ${l.file}'`);" — one labelled "compliance:" entry per resolved list, and the already-referenced one is not repeated.
+
+MET — card "D the launch gate: backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board." — src/tests/backlog/backlog-lane.logic.test.ts "+      expect(r.status, r.stdout + r.stderr).toBe(3);" and "+      expect(statusOf(f)).toBe('LATER');" — refusal with one line per missing item, nothing taken, dry-run included, with the record type as control.
+
+MET — card "Where the generated brief says to run --plan, do not: the plan is the task text." — src/tests/backlog/backlog-brief.logic.test.ts "+    expect(r.stdout).toMatch(/The plan is the task text at launch, checked before launch/);" — the brief now says the plan is the task text and that Description, Acceptance and Plan are not edited.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 22   Unmet: 4
+
+---
+⏱  109473ms (109.5s)
+📊 Tokens — total: 44532, input: 22400, output: 22132, reasoning: 20576

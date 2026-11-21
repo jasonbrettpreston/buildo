@@ -1,0 +1,488 @@
+LIST inc-S sha256:294dccfb5cb249211234ece578abcd1c8efe723cdca65ea17f8e270941993db8 material sha256:9425f21f425af21ffb18fc8c69b62db19f210ad1bca8265e912e9fe17e860d1a part 1 of 1 chunk 5 of 5
+RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 5 of 5 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/rule-lists.logic.test.ts","src/tests/proof-slice.db.test.ts","src/tests/proof-slice.logic.test.ts","src/tests/review-template.logic.test.ts"]
+
+---
+id: doc-2
+title: Increment S requirements
+type: specification
+created_date: '2026-11-19T04:56:00Z'
+updated_date: '2026-11-19T04:56:00Z'
+---
+# Increment S requirements
+
+Source: elements-by-inc.json, built.json (as of origin 154e7b13f), matrix-verified.json, current.json of the snapshot docs/reports/plan-import/raw/2026-11-19.
+
+## Built state
+The search pages are built on mobile (search page, choose-your-lot map page, semi question page) and in part on web (the web search page is built but sends no lookup while the live switch is false). The lookup route, resolver, meter and the report hand-off contract are on origin. Not built: direction and unit parsing (plan 1.4), the reports-left line, the candidate locality line, the clear button, the intersection map, web choose-your-parcel, the web footer, building footprints and street names on the map, the help link on the map page. All of it is the old dark look (zinc and #0e0e10), not Daylight.
+counts: {"BUILT":42,"BUILT-NO-DATA":7,"NOT BUILT":16}
+
+- F-SEARCH-MOBILE Mobile parcel search page: SEARCH binding (props), search screen, recent searches, match logic: ON ORIGIN (origin/wf1/mb-rulings); queue: phone check and device run OWED, UNVERIFIED on device
+- F-SEARCH-WEB Web search page (W4): the one web SEARCH binding, SearchPageClient mount, live switch: PARTLY: page built, controls disabled and no lookup request while MAXBLD_WEB_LIVE is false
+- F-LOTMAP Choose-your-lot map page (S-071): LIST binding with map projection, lot cards, states: ON ORIGIN (origin/wf1/mb-rulings); queue Status DONE
+- F-LOOKUP-RESOLVER Lookup resolver: address parse, exact match on parcels normalized keys, typeahead on address_points, classification: ON ORIGIN (origin/wf1/mb-rulings)
+- F-SHELL Product shelf and parcel-tool screens: ParcelShelf (Lookup, Tracked Lots, Account), tracked.tsx and account.tsx (example rows): PARTLY: shelf built; tracked and account are stubs
+- F-LANDING MaxBLD web landing (web_landing) with the footer legal line, and the MaxBLD post-login target: ON ORIGIN (origin/wf1/mb-rulings)
+- F-ADMIN-LOOKUP Admin Parcel Cost Model Tool (admin search over the same resolver) and SearchPermitsSheet (lead-gen permit search): ON ORIGIN (origin/wf1/mb-rulings)
+
+## Scenario
+Search first: the current search pages = latest rendering small-pages-v8 ("MaxBLD Small Pages" https://claude.ai/artifact/8KLUsAtd4JN6r2j8CxZSU7, 2026-11-12) + later rulings; built status from the 2026-11-17 sweep (search-delta/CURRENT-SEARCH.md, 176 quotes PASS)
+
+## Elements
+| id | element | where | status | deliverers | built |
+|---|---|---|---|---|---|
+| A.1 | A Search page · Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | details | AVAILABLE | GAP.13 | BUILT |
+| A.2 | A Search page · Search box: one pill, placeholder Enter lot address, search icon | main | AVAILABLE |  | BUILT |
+| A.3 | A Search page · Typeahead resolution of the typed text (street-prefix, up to 10) | main | AVAILABLE |  | BUILT |
+| A.4 | A Search page · Typed street direction (E/W/N/S) kept in the match | details | NOT-BUILT (parser) | 1.4 | NOT BUILT |
+| A.5 | A Search page · Unit number typed after the address | details | NOT-BUILT | 1.4 | NOT BUILT |
+| A.6 | A Search page · Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | details | NOT-BOUND · MISSED by the sweep | SRCH.A6 LS.12 LS.3 | NOT BUILT |
+| A.7 | A Search page · Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | details | AVAILABLE |  | BUILT |
+| A.8 | A Search page · Searching state: query in the box, the word Searching, clear button | details | AVAILABLE |  | BUILT |
+| A.9 | A Search page · Outside Toronto state: Lots are only available in Toronto. | details | AVAILABLE |  | BUILT |
+| A.10 | A Search page · Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | details | AVAILABLE | LS.6 | BUILT |
+| A.11 | A Search page · Clear (x) button inside the box | details | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| A.12 | A Search page · Bottom tab bar: Lookup, Tracked Lots, Account (app) | details | AVAILABLE · MISSED by the sweep | MF-49 | BUILT |
+| A.13 | A Search page · In-bar Account button (MF-35 builds it amber) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.1 | B Address confusion · Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | main | AVAILABLE |  | BUILT |
+| B.2 | B Address confusion · Select button after the pick (Select, Open the selected lot) | main | AVAILABLE |  | BUILT |
+| B.3 | B Address confusion · Candidate row area line (locality, e.g. Downtown Toronto) | details | NOT-BOUND · REMOVED by the design |  | NOT BUILT |
+| B.4 | B Address confusion · Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | main | AVAILABLE |  | BUILT |
+| B.5 | B Address confusion · Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | main | AVAILABLE |  | BUILT |
+| B.6 | B Address confusion · Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | main | AVAILABLE |  | BUILT |
+| B.7 | B Address confusion · Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | details | SERVED-NOT-POPULATED | SRCH.C12 LS.12 LS.6 | BUILT-NO-DATA |
+| B.8 | B Address confusion · Faint tappable neighbour outlines on the unlinked state | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| B.9 | B Address confusion · No-match state: No parcel found for that address. | details | AVAILABLE |  | BUILT |
+| B.10 | B Address confusion · Intersection on the map (corner lots at the centreline node) | details | NOT-BUILT · REMOVED by the design | LS.11 | NOT BUILT |
+| C.1 | C Lot confusion (lot map) · Heading: This address covers 2 lots. Which one do you mean? | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.2 | C Lot confusion (lot map) · Search pill on top (clear returns to search); hidden h1 Choose your lot | details | NOT TRACED · MISSED by the sweep | MF-53 | BUILT |
+| C.3 | C Lot confusion (lot map) · Map: each matched lot outlined (amber), neighbours in zinc | main | AVAILABLE |  | BUILT |
+| C.4 | C Lot confusion (lot map) · Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | main | AVAILABLE |  | BUILT |
+| C.5 | C Lot confusion (lot map) · Building footprint on each lot (or none), drawn on the map | main | NOT TRACED · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.6 | C Lot confusion (lot map) · Address pin and the street name drawn on the road (Dunmore Lane) | details | AVAILABLE · MISSED by the sweep | GAP.13 | BUILT |
+| C.7 | C Lot confusion (lot map) · Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | main | UNDESIGNED-DATA · MISSED by the sweep | GAP.13 | NOT BUILT |
+| C.8 | C Lot confusion (lot map) · Lot card size line: 1,614 sq ft · 150 m² | main | AVAILABLE |  | BUILT |
+| C.9 | C Lot confusion (lot map) · Lot card frontage and zoning string (7.6m • CR 2.5 style) | details | AVAILABLE · REMOVED by the design |  | BUILT |
+| C.10 | C Lot confusion (lot map) · Selection shared by map tap and card (radiogroup Choose a lot) | main | NOT TRACED · MISSED by the sweep | GAP.13 | BUILT |
+| C.11 | C Lot confusion (lot map) · Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | main | AVAILABLE |  | BUILT |
+| C.12 | C Lot confusion (lot map) · Link: Not sure which lot? Get help with an address | details | NOT-BOUND | SRCH.C12 LS.12 LS.6 | NOT BUILT |
+| C.13 | C Lot confusion (lot map) · Loading, error, rate-limit, entitlement, schema-drift states of the map page | details | AVAILABLE |  | BUILT |
+| C.14 | C Lot confusion (lot map) · Routing: one printed address over two or more lots opens this page (shown only then) | main | AVAILABLE |  | BUILT |
+| D.1 | D Semi question page · Page shown only when the lot is unsure (before the report) | main | AVAILABLE |  | BUILT |
+| D.2 | D Semi question page · Lot form on the lookup hit (detected, basis, unsure) | details | AVAILABLE |  | BUILT |
+| D.3 | D Semi question page · Question: Is this house one half of a semi-detached pair? | main | AVAILABLE |  | BUILT |
+| D.4 | D Semi question page · Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | main | AVAILABLE |  | BUILT |
+| D.5 | D Semi question page · Continue button (Choose an answer when none picked; Open the report with this answer) | main | AVAILABLE |  | BUILT |
+| D.6 | D Semi question page · Back to search link | details | AVAILABLE |  | BUILT |
+| D.7 | D Semi question page · Question-page states: loading, error, rate limit, entitlement, schema drift | details | AVAILABLE |  | BUILT |
+| D.8 | D Semi question page · Owner answer stored (a reopened lot does not ask again) | main | BOUND-NOT-STORED | GAP.12 | BUILT-NO-DATA |
+| D.9 | D Semi question page · Input: distance from your wall to the shared line, with an assumed default and an assumption line | main | NOT-BUILT | SRCH.SEMI MF-89 7.25 GAP.12 | NOT BUILT |
+| D.10 | D Semi question page · Semi override applied in the report | main | NOT-BUILT | SRCH.SEMI 7.25 | NOT BUILT |
+| D.11 | D Semi question page · Evidence columns linked_parcel_count, best_shared_len_m | details | STORED-NOT-SERVED |  | BUILT-NO-DATA |
+| E.1 | E Web search pages · W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | main | SERVED-NOT-POPULATED | LS.12 1.3 | BUILT-NO-DATA |
+| E.2 | E Web search pages · Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | details | AVAILABLE · MISSED by the sweep | MF-44 MF-46 | NOT BUILT |
+| E.3 | E Web search pages · W5 choose your parcel on the web, address list (text_candidates) | main | SERVED-NOT-POPULATED | LS.12 | NOT BUILT |
+| E.4 | E Web search pages · W5 on the web for several lots, no lot linked and intersection (map) | main | NOT-BUILT | LS.11 | NOT BUILT |
+| E.5 | E Web search pages · W6 web report route /parcel-tool/{lot} | main | NOT-BUILT | LS.12 1.3 MB-44 | BUILT-NO-DATA |
+| E.6 | E Web search pages · Recent-search chips on the web frame | details | NOT TRACED · MISSED by the sweep | LS.11 | NOT BUILT |
+| F.1 | F Landing (search entry and sample) · Hero call to action: Start free trial (to /signup); no search box on the landing page | main | NOT-BUILT | MF-76 | BUILT |
+| F.2 | F Landing (search entry and sample) · How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | details | NOT TRACED · MISSED by the sweep | MF-76 | BUILT |
+| F.3 | F Landing (search entry and sample) · Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | main | NOT TRACED · MISSED by the sweep | LS.7 | BUILT |
+| F.4 | F Landing (search entry and sample) · Landing legal line | details | AVAILABLE | LS.6 | BUILT |
+| F.5 | F Landing (search entry and sample) · After login the user lands on the search page (never the dashboard) | details | AVAILABLE |  | BUILT |
+| G.1 | G Hand-off to the report · Unique match goes straight to the report (no extra page) | main | AVAILABLE |  | BUILT |
+| G.2 | G Hand-off to the report · Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | main | NOT TRACED · MISSED by the sweep | 1.3 MF-62 | BUILT-NO-DATA |
+| G.3 | G Hand-off to the report · Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | main | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.4 | G Hand-off to the report · Skip control during the animation | details | NOT TRACED · MISSED by the sweep | MF-62 | BUILT |
+| G.5 | G Hand-off to the report · Report page for the lot on a hit | main | NOT-BUILT | MB-44 1.3 | BUILT-NO-DATA |
+| G.6 | G Hand-off to the report · Report meter: a hit counts one report; report limit page when exhausted | details | AVAILABLE | LS.12 | BUILT |
+
+## Search pages today (search-delta/current.json)
+| page | id | element | status | tasks |
+|---|---|---|---|---|
+| A Search page | A.1 | Brand block: MaxBLD wordmark with the tagline Lot Intelligence, centred; hidden h1 Search a Toronto lot (no Lookup title) | AVAILABLE | NO TASK |
+| A Search page | A.2 | Search box: one pill, placeholder Enter lot address, search icon | AVAILABLE | NO TASK |
+| A Search page | A.3 | Typeahead resolution of the typed text (street-prefix, up to 10) | AVAILABLE | NO TASK |
+| A Search page | A.4 | Typed street direction (E/W/N/S) kept in the match | AVAILABLE | 1.4 |
+| A Search page | A.5 | Unit number typed after the address | NOT-BUILT | 1.4 |
+| A Search page | A.6 | Reports-left line under the box: 6 of 10 reports left until 9 Dec 2026 | NOT-BOUND | SRCH.A6 |
+| A Search page | A.7 | Recent searches: up to 3 chips under the box (label Recent), each routes to /lookup?q= | AVAILABLE | NO TASK |
+| A Search page | A.8 | Searching state: query in the box, the word Searching, clear button | AVAILABLE | NO TASK |
+| A Search page | A.9 | Outside Toronto state: Lots are only available in Toronto. | AVAILABLE | NO TASK |
+| A Search page | A.10 | Legal line: This is an estimate, not 100% accurate. Not legal advice. Confirm with a lot survey and the City. | AVAILABLE | LS.6 |
+| A Search page | A.11 | Clear (x) button inside the box | NOT TRACED | NO TASK |
+| A Search page | A.12 | Bottom tab bar: Lookup, Tracked Lots, Account (app) | AVAILABLE | NO TASK |
+| A Search page | A.13 | In-bar Account button (MF-35 builds it amber) | AVAILABLE | NO TASK |
+| B Address confusion | B.1 | Candidate list (text_candidates): radio cards, the differing word amber, nothing pre-checked, Select disabled until a pick | AVAILABLE | NO TASK |
+| B Address confusion | B.2 | Select button after the pick (Select, Open the selected lot) | AVAILABLE | NO TASK |
+| B Address confusion | B.3 | Candidate row area line (locality, e.g. Downtown Toronto) | NOT-BOUND | NO TASK |
+| B Address confusion | B.4 | Needs-more-info notice: That looks like an intersection. Type a house number to see the lots. | AVAILABLE | NO TASK |
+| B Address confusion | B.5 | Needs-more-info notice: Many lots at this address. This address has many lots. Add a unit number or pick a nearby address. | AVAILABLE | NO TASK |
+| B Address confusion | B.6 | Gentle error: No lot linked yet. We found {address}, but the City data does not link it to a lot yet. Try a nearby address or report it. | AVAILABLE | NO TASK |
+| B Address confusion | B.7 | Link: Get help with an address (to /help?topic=wrong-lot) under every notice; report it inside the no-lot message | SERVED-NOT-POPULATED | SRCH.C12 |
+| B Address confusion | B.8 | Faint tappable neighbour outlines on the unlinked state | AVAILABLE | NO TASK |
+| B Address confusion | B.9 | No-match state: No parcel found for that address. | AVAILABLE | NO TASK |
+| B Address confusion | B.10 | Intersection on the map (corner lots at the centreline node) | NOT-BUILT | LS.11 |
+| C Lot confusion (lot map) | C.1 | Heading: This address covers 2 lots. Which one do you mean? | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.2 | Search pill on top (clear returns to search); hidden h1 Choose your lot | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.3 | Map: each matched lot outlined (amber), neighbours in zinc | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.4 | Lettered lot markers (A, B) at the lot centroid; chosen lot filled amber | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.5 | Building footprint on each lot (or none), drawn on the map | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.6 | Address pin and the street name drawn on the road (Dunmore Lane) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.7 | Lot card line: Lot A · has the house · faces Dunmore Lane; Lot B · no building · at the back | UNDESIGNED-DATA | NO TASK |
+| C Lot confusion (lot map) | C.8 | Lot card size line: 1,614 sq ft · 150 m² | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.9 | Lot card frontage and zoning string (7.6m • CR 2.5 style) | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.10 | Selection shared by map tap and card (radiogroup Choose a lot) | NOT TRACED | NO TASK |
+| C Lot confusion (lot map) | C.11 | Button: Choose a lot (disabled) then Continue with Lot A; hint Pick a lot on the map or in the list. | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.12 | Link: Not sure which lot? Get help with an address | NOT-BOUND | SRCH.C12 |
+| C Lot confusion (lot map) | C.13 | Loading, error, rate-limit, entitlement, schema-drift states of the map page | AVAILABLE | NO TASK |
+| C Lot confusion (lot map) | C.14 | Routing: one printed address over two or more lots opens this page (shown only then) | AVAILABLE | NO TASK |
+| D Semi question page | D.1 | Page shown only when the lot is unsure (before the report) | AVAILABLE | NO TASK |
+| D Semi question page | D.2 | Lot form on the lookup hit (detected, basis, unsure) | AVAILABLE | NO TASK |
+| D Semi question page | D.3 | Question: Is this house one half of a semi-detached pair? | AVAILABLE | NO TASK |
+| D Semi question page | D.4 | Three answers: Yes, it is one half of a semi; No, it is detached; Not sure | AVAILABLE | NO TASK |
+| D Semi question page | D.5 | Continue button (Choose an answer when none picked; Open the report with this answer) | AVAILABLE | NO TASK |
+| D Semi question page | D.6 | Back to search link | AVAILABLE | NO TASK |
+| D Semi question page | D.7 | Question-page states: loading, error, rate limit, entitlement, schema drift | AVAILABLE | NO TASK |
+| D Semi question page | D.8 | Owner answer stored (a reopened lot does not ask again) | BOUND-NOT-STORED | NO TASK |
+| D Semi question page | D.9 | Input: distance from your wall to the shared line, with an assumed default and an assumption line | NOT-BUILT | SRCH.SEMI |
+| D Semi question page | D.10 | Semi override applied in the report | NOT-BUILT | SRCH.SEMI 7.25 |
+| D Semi question page | D.11 | Evidence columns linked_parcel_count, best_shared_len_m | STORED-NOT-SERVED | NO TASK |
+| E Web search pages | E.1 | W4 web search page: the same parts under the web top bar (Lookup, Tracked Lots, Account) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.2 | Web footer: legal line, Terms of Service, Privacy Policy, Help and Support, copyright | AVAILABLE | NO TASK |
+| E Web search pages | E.3 | W5 choose your parcel on the web, address list (text_candidates) | SERVED-NOT-POPULATED | LS.12 |
+| E Web search pages | E.4 | W5 on the web for several lots, no lot linked and intersection (map) | NOT-BUILT | LS.11 |
+| E Web search pages | E.5 | W6 web report route /parcel-tool/{lot} | NOT-BUILT | LS.12 1.3 |
+| E Web search pages | E.6 | Recent-search chips on the web frame | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.1 | Hero call to action: Start free trial (to /signup); no search box on the landing page | NOT-BUILT | NO TASK |
+| F Landing (search entry and sample) | F.2 | How it works step 1: Enter a Toronto address (Just the street address), a search-pill picture with a sample address | NOT TRACED | NO TASK |
+| F Landing (search entry and sample) | F.3 | Sample frame: the processing demo ends in the sample report inside the frame; no View report button, nothing navigates | NOT TRACED | LS.7 |
+| F Landing (search entry and sample) | F.4 | Landing legal line | AVAILABLE | LS.6 |
+| F Landing (search entry and sample) | F.5 | After login the user lands on the search page (never the dashboard) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.1 | Unique match goes straight to the report (no extra page) | AVAILABLE | NO TASK |
+| G Hand-off to the report | G.2 | Processing screen after the lot is known: address in the bar, lot outline draws, each check resolves into its ruled fact (What we checked) | NOT TRACED | 1.3 |
+| G Hand-off to the report | G.3 | Ready line: The Building Possibilities Report for {address} is ready., then the report opens (app by itself; web View report button) | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.4 | Skip control during the animation | NOT TRACED | NO TASK |
+| G Hand-off to the report | G.5 | Report page for the lot on a hit | NOT-BUILT | MB-44 1.3 |
+| G Hand-off to the report | G.6 | Report meter: a hit counts one report; report limit page when exhausted | AVAILABLE | LS.12 |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 4fea028e03810a041655685eea7ef7cf478e765c..6c6c817b5d408c10cde578a3f608377c0f604187 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -4,6 +4,7 @@
+ // import row, record-only default, lens input (one file when small, split by the list's own headings when big, never trims, refuses what cannot fit).
+ import { describe, expect, it } from 'vitest';
+ import * as fs from 'node:fs';
++import { createRequire } from 'node:module';
+ import * as path from 'node:path';
+ import { ROOT, run, script, tmp } from './helpers';
+ 
+@@ -225,12 +226,17 @@ describe('resolve on a fixture tree (AC #2)', () => {
+   });
+ });
+ 
++const CTX = (d: string, desc = 'the description', extra = '') => {
++  const p = path.join(d, 'context-r1.md');
++  fs.writeFileSync(p, `# Review context\n\n## Task\ntask-1 t\n\n## Description\n${desc}\n\n## Acceptance criteria\n- #1 a\n\n## Implementation Plan\nTHE-PLAN\n\n## Implementation Notes\n(none)\n\n## Decisions naming this task\n- (none)\n${extra}`);
++  return p;
++};
+ const TPL = '## System persona\nsys\n\n## User prompt\nSPECS:\n{{SPECS}}\nPLAN:\n{{PLAN}}\nAGAIN:\n{{PLAN}}\n';
+ function lens(f: ReturnType<typeof fixture>, list: string, material: string, max: number, name = 'o') {
+   const m = path.join(f.d, `${name}.material`); fs.writeFileSync(m, material);
+   const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+   const out = path.join(f.d, 'out', name);
+-  const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', list, '--material', m, '--out', out, '--template', tpl, '--max', String(max)]);
++  const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', list, '--material', m, '--out', out, '--template', tpl, '--max', String(max), '--context', CTX(f.d)]);
+   const files = r.stdout.split('\n').filter(Boolean);
+   return { r, files, text: files.map((x) => fs.readFileSync(x, 'utf8')) };
+ }
+@@ -333,7 +339,7 @@ describe('V2.LIST: every task gets the five words, the plan protocol and its mil
+     expect(t.lists['eng-all']).toMatchObject({ file: 'docs/specs/00_engineering_standards.md', whole: true });
+   });
+   it('the Glossary block of Spec 132 carries the five words statement, and the repo plan protocol carries the five principles line', () => {
+-    const r = script(CLI, ['lens-input', '--list', 'five-words', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fw'), 'in-x')]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'five-words', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fw'), 'in-x')]);
+     expect(r.status, r.stderr).toBe(0);
+     const text = fs.readFileSync(r.stdout.trim().split('\n')[0] as string, 'utf8');
+     expect(text).toContain('STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE');
+@@ -568,7 +574,7 @@ describe('V2.WHOLE: lens-input splits a change that leaves no room for a list pa
+     const f = fixture();
+     const m = path.join(f.d, 'nl.material'); fs.writeFileSync(m, BIGDIFF);
+     const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+-    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/nl'), '--template', tpl, '--max', '9000']);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/nl'), '--template', tpl, '--max', '9000']);
+     expect(r.status, r.stderr).toBe(0);
+     const files = r.stdout.split('\n').filter(Boolean);
+     const st = files.map((x) => stampOf(fs.readFileSync(x, 'utf8')));
+@@ -592,7 +598,7 @@ describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', ()
+     const d = names.map((p) => dfile(p, 1)).join('');
+     const m = path.join(f.d, 'f5.material'); fs.writeFileSync(m, d);
+     const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+-    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f5'), '--template', tpl, '--max', '40000']);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f5'), '--template', tpl, '--max', '40000']);
+     expect(r.status, r.stderr).toBe(0);
+     const files = r.stdout.split('\n').filter(Boolean);
+     const texts = files.map((x) => fs.readFileSync(x, 'utf8'));
+@@ -614,7 +620,7 @@ describe('V2.WHOLE fix round: DIFF_ARGS, chunk room and the unreadable name', ()
+     const m = path.join(f.d, 'f13.material'); fs.writeFileSync(m, d);
+     const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
+     const max = 2 * (d.length + 900) + 300;
+-    const r = script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f13'), '--template', tpl, '--max', String(max)]);
++    const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', f.d, '--table', f.table, '--material', m, '--out', path.join(f.d, 'out/f13'), '--template', tpl, '--max', String(max)]);
+     expect(r.status, r.stderr).toBe(0);
+     const texts = r.stdout.split('\n').filter(Boolean).map((x) => fs.readFileSync(x, 'utf8'));
+     expect(texts.length).toBeGreaterThan(1);
+@@ -638,3 +644,161 @@ describe('V2.WHOLE: the real table exempts golden snapshots by their file shape
+     for (const a of ['--diff-algorithm=myers', '--indent-heuristic', '--inter-hunk-context=0']) expect(m.DIFF_ARGS, a).toContain(a);
+   });
+ });
++
++describe('D11b (task-375): the security lens fires for admin and PII paths, as README.md:104 and lens-security.md:48 say', () => {
++  const lens = async (files: string) => {
++    const m = await import('../../../scripts/analysis/rule-lists.mjs');
++    return m.lensSet({ type: 'build', files }) as { plan: string[]; out: string[] };
++  };
++  it('an admin path and a PII path add the security lens on both phases', async () => {
++    for (const f of ['src/app/admin/page.tsx', 'src/lib/pii/redact.ts', 'src/lib/admin-users.ts', 'scripts/pii-scrub.mjs']) {
++      const r = await lens(f);
++      expect(r.plan, f).toContain('security');
++      expect(r.out, f).toContain('security');
++    }
++  });
++  it('control: a path naming none of these adds no security lens', async () => {
++    const r = await lens('scripts/analysis/proof-slice.mjs');
++    expect(r.plan).not.toContain('security');
++    expect(r.out).not.toContain('security');
++  });
++  it('control: the existing words still fire it', async () => {
++    expect((await lens('src/lib/stripe/webhook.ts')).out).toContain('security');
++  });
++});
++
++describe('task-375 A4: lens-input takes the reviewer context, counts it in the room and can cut the plan material from it', () => {
++  const base = (f: ReturnType<typeof fixture>, extra: string[]) => {
++    const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL);
++    const m = path.join(f.d, 'mat.txt'); fs.writeFileSync(m, 'MAT');
++    return script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'first', '--out', path.join(f.d, 'out/ctx'), '--template', tpl, ...extra, ...(extra.includes('--material-from') ? [] : ['--material', m])]);
++  };
++  it('refuses without --context (exit 2, says so) and control: with it exits 0', () => {
++    const f = fixture();
++    const no = base(f, []);
++    expect(no.status, no.stderr).toBe(2);
++    expect(no.stderr).toMatch(/--context/);
++    const yes = base(f, ['--context', CTX(f.d)]);
++    expect(yes.status, yes.stderr).toBe(0);
++  });
++  it('a context without a required heading is refused naming the heading', () => {
++    const f = fixture();
++    const p = path.join(f.d, 'bad.md'); fs.writeFileSync(p, '# x\n\n## Task\nt\n');
++    const r = base(f, ['--context', p]);
++    expect(r.status).toBe(1);
++    expect(r.stderr).toMatch(/Description/);
++  });
++  it('the selected sections are counted in the room: no input plus its context passes --max; a context too big for the room is refused', () => {
++    const f = fixture();
++    const run1 = (ctx: string) => { const tpl = path.join(f.d, 'tpl.md'); fs.writeFileSync(tpl, TPL); const m = path.join(f.d, 'mat.txt'); fs.writeFileSync(m, 'MAT'); return script(CLI, ['lens-input', '--root', f.d, '--table', f.table, '--list', 'whole', '--material', m, '--out', path.join(f.d, 'out/room'), '--template', tpl, '--max', '4000', '--context', ctx]); };
++    const small = run1(CTX(f.d));
++    expect(small.status, small.stderr).toBe(0);
++    const midCtx = CTX(f.d, 'D'.repeat(400));
++    const mid = run1(midCtx);
++    expect(mid.status, mid.stderr).toBe(0);
++    const rt = createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js'));
++    const sel = rt.extractSections(fs.readFileSync(midCtx, 'utf8'), rt.CONTEXT_SECTIONS);
++    const files = mid.stdout.split('\n').filter(Boolean);
++    expect(files.length).toBeGreaterThanOrEqual(small.stdout.split('\n').filter(Boolean).length);
++    for (const x of files) expect(('sys' + rt.substitutePlaceholders('SPECS:\n{{SPECS}}\nPLAN:\n{{PLAN}}\nAGAIN:\n{{PLAN}}\n', { plan: fs.readFileSync(x, 'utf8'), specs: sel })).length).toBeLessThanOrEqual(4000);
++    const huge = run1(CTX(f.d, 'D'.repeat(3900)));
++    expect(huge.status).toBe(1);
++  });
++  it('--material-from cuts the plan sections (Description, Acceptance criteria, Implementation Plan) and uses the same file as the context', () => {
++    const f = fixture();
++    const c = CTX(f.d);
++    const r = base(f, ['--material-from', c]);
++    expect(r.status, r.stderr).toBe(0);
++    const t = fs.readFileSync(r.stdout.split('\n').filter(Boolean)[0]!, 'utf8');
++    expect(t).toContain('THE-PLAN');
++    expect(t).toContain('## Acceptance criteria');
++    expect(t).not.toContain('## Implementation Notes');
++  });
++  it('--material-from a file without an Implementation Plan heading is refused', () => {
++    const f = fixture();
++    const p = path.join(f.d, 'noplan.md'); fs.writeFileSync(p, '# x\n\n## Task\nt\n\n## Description\nd\n\n## Acceptance criteria\na\n\n## Decisions naming this task\n-\n\n## Implementation Notes\nn\n');
++    const r = base(f, ['--material-from', p]);
++    expect(r.status).toBe(1);
++    expect(r.stderr).toMatch(/Implementation Plan/);
++  });
++});
++
++describe('task-375 A6: a block with no deeper heading is cut between table rows or paragraphs', () => {
++  const tableDoc = (n: number) => '# T\n\n## 5. Register\n\n| id | rule |\n| --- | --- |\n' + Array.from({ length: n }, (_, i) => `| R${i} | rule text number ${i} that is long enough to count ${'x'.repeat(40)} |`).join('\n') + '\n\n## 6. Next\n\nafter\n';
++  const mk = (doc: string) => {
++    const f = fixture();
++    fs.writeFileSync(path.join(f.d, 'docs/t.md'), doc);
++    const t = JSON.parse(fs.readFileSync(f.table, 'utf8'));
++    t.lists.tab = { file: 'docs/t.md', sections: ['5. Register'], generated_by: 'hand-written' };
++    fs.writeFileSync(f.table, JSON.stringify(t));
++    return f;
++  };
++  it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound', () => {
++    const f = mk(tableDoc(60));
++    const l = lens(f, 'tab', 'MAT', 4000);
++    expect(l.r.status, l.r.stderr).toBe(0);
++    expect(l.files.length).toBeGreaterThan(1);
++    const all = l.text.join('\n');
++    for (let i = 0; i < 60; i++) expect(all.split(`| R${i} |`).length - 1, 'R' + i).toBe(1);
++  });
++  it('control: the same table that fits is one file', () => {
++    const f = mk(tableDoc(5));
++    const l = lens(f, 'tab', 'MAT', 20000);
++    expect(l.files).toHaveLength(1);
++  });
++  it('a single row that alone passes the room is refused naming the list and section (the old throw)', () => {
++    const f = mk('# T\n\n## 5. Register\n\n| id | rule |\n| --- | --- |\n| R0 | ' + 'y'.repeat(5000) + ' |\n');
++    const l = lens(f, 'tab', 'MAT', 4000);
++    expect(l.r.status).toBe(1);
++    expect(l.r.stderr).toContain('5. Register');
++  });
++});
++
++describe('task-375 B1: compliance references (compliance:<list id> <file>) on each task, and check-tasks prints the commands for the open ones', () => {
++  const board = () => {
++    const f = fixture();
++    const t = JSON.parse(fs.readFileSync(f.table, 'utf8')) as Record<string, unknown>;
++    t.every_task = ['queue']; t.milestone_docs = { F: ['crlf'] };
++    fs.writeFileSync(f.table, JSON.stringify(t));
++    fs.mkdirSync(path.join(f.d, 'backlog/milestones'), { recursive: true });
++    fs.writeFileSync(path.join(f.d, 'backlog/milestones/m-0 - a.md'), '---\nid: m-0\ntitle: "A [F]"\n---\n');
++    const w = (n: string, refs: string[], body: string, status = 'WAITS') => { const p = path.join(f.d, `backlog/tasks/task-${n} - x.md`); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, `---\nid: TASK-${n}\ntitle: x\nstatus: ${status}\ntype: build\nmilestone: m-0\n${refs.length ? `references:\n${refs.map((r) => `  - '${r}'`).join('\n')}\n` : ''}---\n\n## Description\n\n${body}\n`); };
++    return { f, w };
++  };
++  const resolved = (f: ReturnType<typeof fixture>, files: string) => (JSON.parse(script(CLI, ['resolve', '--root', f.d, '--table', f.table, '--files', files, '--type', 'build', '--letter', 'F']).stdout) as Res).lists;
++  it('a stale open task: prints the exact add-ref command, one entry per resolved list, each starting compliance:, exit 0', () => {
++    const { f, w } = board();
++    w('1', ['docs/a.md'], 'Files: src/two.ts');
++    const want = resolved(f, 'src/two.ts');
++    const r = script(CLI, ['check-tasks', '--root', f.d, '--table', f.table]);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const line = r.stdout.split('\n').find((l) => l.includes('backlog task edit task-1 ')) ?? '';
++    expect(line).toBeTruthy();
++    const entries = [...line.matchAll(/--add-ref '(compliance:[^']*)'/g)].map((m) => m[1]!);
++    expect(entries).toHaveLength(want.length);
++    for (const l of want) expect(entries).toContain(`compliance:${l.id} ${l.file}`);
++    expect(line).not.toContain('--remove-ref');
++  });
++  it('control: a task whose entries match its lists prints no command, a task with part of them prints only the rest, a stale entry gets --remove-ref', () => {
++    const { f, w } = board();
++    const want = resolved(f, 'src/two.ts');
++    w('2', want.map((l) => `compliance:${l.id} ${l.file}`), 'Files: src/two.ts');
++    w('3', [`compliance:${want[0]!.id} ${want[0]!.file}`], 'Files: src/two.ts');
++    w('4', [...want.map((l) => `compliance:${l.id} ${l.file}`), 'compliance:gone docs/gone.md'], 'Files: src/two.ts');
++    const r = script(CLI, ['check-tasks', '--root', f.d, '--table', f.table]);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    expect(r.stdout).not.toContain('backlog task edit task-2 ');
++    const l3 = r.stdout.split('\n').find((l) => l.includes('backlog task edit task-3 ')) ?? '';
++    expect([...l3.matchAll(/--add-ref '(compliance:[^']*)'/g)]).toHaveLength(want.length - 1);
++    expect(l3).not.toContain(`'compliance:${want[0]!.id} `);
++    const l4 = r.stdout.split('\n').find((l) => l.includes('backlog task edit task-4 ')) ?? '';
++    expect(l4).toContain("--remove-ref 'compliance:gone docs/gone.md'");
++    expect(l4).not.toContain('--add-ref');
++  });
++  it('complianceRefs: an entry for a file path with a comma is the id alone (backlog splits --add-ref at commas); entries compare by the id token', async () => {
++    const m = await import('../../../scripts/analysis/rule-lists.mjs');
++    const r = m.complianceRefs([{ id: 'ms-9', file: 'docs/a, b.md' }, { id: 'eng-all', file: 'docs/e.md' }, { id: 'five', file: 'docs/f.md' }], ['compliance:eng-all some other path', 'docs/a.md']);
++    expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);
++    expect(r.remove).toEqual([]);
++  });
++});
+diff --git a/src/tests/proof-slice.db.test.ts b/src/tests/proof-slice.db.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..841318ca2b6b9edca229f07ded4b1edde07b6878
+--- /dev/null
++++ b/src/tests/proof-slice.db.test.ts
+@@ -0,0 +1,36 @@
++// SPEC LINK: docs/specs/01-pipeline/132_step_standard_handbook.md x-tooling.1 (a test that needs Postgres is *.db.test.ts, run only by npm run test:db),
++//            docs/specs/01-pipeline/124_step_standard_policy.md R-EB (b) (gate and tooling variables, R-CV pinned form),
++//            docs/specs/00-architecture/08_agents.md:511 (MCINC-7: every DB job is rehearsed on the test stack first).
++//
++// task-375 D10b: the registered variable the proof slice runner reads its timeout from exists in the logic_variables table with a value the runner accepts, and it equals the pinned seed.
++// WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane): the variable is registered by a seed + migration the operator authorises with a typed GO after the MCINC-7 rehearsal.
++// Skipped unless BUILDO_TEST_DB=1 (or CI DATABASE_URL).
++import { readFileSync } from 'node:fs';
++import { join } from 'node:path';
++
++import type { Pool } from 'pg';
++import { afterAll, beforeAll, describe, expect, it } from 'vitest';
++
++import { TIMEOUT_VARIABLE, timeoutMsFromVariable } from '../../scripts/analysis/proof-slice.mjs';
++import { dbAvailable, getTestPool } from './db/setup-testcontainer';
++
++describe.skipIf(!dbAvailable())('proof-slice timeout variable (live DB)', () => {
++  let pool: Pool;
++  beforeAll(() => { pool = getTestPool() as Pool; });
++  afterAll(async () => { await pool.end().catch(() => undefined); });
++
++  it('the variable is in logic_variables and its value is a positive integer the runner accepts', async () => {
++    const { rows } = await pool.query('SELECT variable_value FROM logic_variables WHERE variable_key = $1', [TIMEOUT_VARIABLE]);
++    expect(rows, `${TIMEOUT_VARIABLE} is not registered in logic_variables`).toHaveLength(1);
++    expect(timeoutMsFromVariable(rows[0].variable_value)).toBeGreaterThan(0);
++  });
++  it('the database value equals the pinned seed default (R-CV form: min = max = default)', async () => {
++    const seed = JSON.parse(readFileSync(join(process.cwd(), 'scripts/seeds/logic_variables.json'), 'utf8')) as Record<string, { default: number; min: number; max: number }>;
++    const entry = seed[TIMEOUT_VARIABLE];
++    expect(entry, `${TIMEOUT_VARIABLE} is not in the seed`).toBeDefined();
++    expect(entry!.min).toBe(entry!.default);
++    expect(entry!.max).toBe(entry!.default);
++    const { rows } = await pool.query('SELECT variable_value FROM logic_variables WHERE variable_key = $1', [TIMEOUT_VARIABLE]);
++    expect(timeoutMsFromVariable(rows[0].variable_value)).toBe(entry!.default);
++  });
++});
+diff --git a/src/tests/proof-slice.logic.test.ts b/src/tests/proof-slice.logic.test.ts
+index e0125ca1e25c031615c8abfd5e25d10f2da74b9b..4852f11ce28632d0594b9f0bf11f7f1f5551c1c0 100644
+--- a/src/tests/proof-slice.logic.test.ts
++++ b/src/tests/proof-slice.logic.test.ts
+@@ -282,3 +282,19 @@ describe('D10 task-375: the child-output ceiling is the registered variable', ()
+     expect(src).not.toMatch(/maxBuffer:\s*\d/);
+   });
+ });
++
++describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)', () => {
++  it('accepts a positive integer, given as a number or as the text the variable table stores', async () => {
++    const m = await import('../../scripts/analysis/proof-slice.mjs');
++    expect(m.timeoutMsFromVariable(120000)).toBe(120000);
++    expect(m.timeoutMsFromVariable('90000')).toBe(90000);
++    expect(m.timeoutMsFromVariable('1')).toBe(1);
++  });
++  it('refuses unset, empty, zero, negative, fractional and non-numeric values, each message names the variable', async () => {
++    const m = await import('../../scripts/analysis/proof-slice.mjs');
++    expect(typeof m.TIMEOUT_VARIABLE).toBe('string');
++    for (const bad of [undefined, null, '', '   ', 0, '0', -5, '-5', 1.5, '1.5', 'abc', '12s', Number.NaN, Number.POSITIVE_INFINITY]) {
++      expect(() => m.timeoutMsFromVariable(bad), String(bad)).toThrow(new RegExp(m.TIMEOUT_VARIABLE));
++    }
++  });
++});
+diff --git a/src/tests/review-template.logic.test.ts b/src/tests/review-template.logic.test.ts
+index 7e51c2f4f2adfffbbbc6be0bf22df9a577905dfc..976f07413125f95c02f7a999c03008d044f4cc6a 100644
+--- a/src/tests/review-template.logic.test.ts
++++ b/src/tests/review-template.logic.test.ts
+@@ -202,3 +202,19 @@ describe('substitutePlaceholders — values are inserted literally, once', () =>
+     expect(out).toBe('A:P {{SPECS}} {{DATA_CONTEXT}}|B:S {{PLAN}}|C:P {{SPECS}} {{DATA_CONTEXT}}|D:');
+   });
+ });
++
++describe('task-375 A2: one section list for the reviewer context, one extractSections', () => {
++  // eslint-disable-next-line @typescript-eslint/no-require-imports
++  const rt = require('../../scripts/lib/review-template');
++  const md = ['# Review context', '## Task', 't', '## Description', 'd', '## Acceptance criteria', 'a', '## Implementation Plan', 'p', '## Implementation Notes', 'n', '## References', 'r'].join('\n');
++  it('CONTEXT_SECTIONS and PLAN_SECTIONS are the plan constants', () => {
++    expect(rt.CONTEXT_SECTIONS).toEqual(['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes']);
++    expect(rt.PLAN_SECTIONS).toEqual(['Description', 'Acceptance criteria', 'Implementation Plan']);
++  });
++  it('extractSections cuts to the next heading of the same or higher level and throws on a missing heading', () => {
++    const out = rt.extractSections(md, ['Description', 'Implementation Plan']);
++    expect(out).toBe('## Description\nd\n\n## Implementation Plan\np');
++    expect(out).not.toContain('References');
++    expect(() => rt.extractSections(md, ['Nope'])).toThrow(/no heading contains that text/);
++  });
++});
+

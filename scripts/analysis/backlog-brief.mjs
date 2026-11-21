@@ -2,14 +2,17 @@
 // G1 brief from the task (Backlog-home plan v8.1 section 3): emits the lane brief from the Backlog task file, so a brief is never hand-written
 // in scratch. Prints the TKT-1 header (Spec 08 11.9, 08_agents.md:504), the quoted rules from the task's acceptance criteria and decisions,
 // scope, done-condition (the AC list), max_fix_rounds, the Spec 137 rule 3 line, the Spec 08 substrate lines, the take order, the review
-// command and the close step; and writes the review context file docs/reports/reviews/<task>/context-<date>.md (sha256 in the brief).
+// command and the close step; and writes the review context file docs/reports/reviews/<task>/context-rN.md (sha256 in the brief).
 // Usage: node scripts/analysis/backlog-brief.mjs --task task-N --lane <name> [--stage N] [--root <dir>] [--date YYYY-MM-DD]
 // Rules: Spec 08 TKT-1 (08_agents.md:504), Spec 08 section 7 rule 10 (a) (:341), Spec 137 rule 3 (137_mcqueue.md:84); RR-0207, RR-0212.
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import { args, asList, descriptionOf, die, parseFM, planLabels, readItems, REPO, sha256, today } from './backlog-lib.mjs';
 
+// task-375 A3: the committed context file is passed to the review tool with one --section per CONTEXT_SECTIONS entry
+const sectionFlags = createRequire(import.meta.url)('../lib/review-template.js').CONTEXT_SECTIONS.map((x) => `--section "${x}"`).join(' ');
 const a = args();
 const root = path.resolve(a.root || REPO);
 const date = a.date && a.date !== true ? a.date : today();
@@ -43,8 +46,13 @@ const named = decisions.filter((d) => { const rr = /^(RR-\d+)/.exec(d.title)?.[1
 for (const d of named) if (d.quote) rules.push(`${d.title}: "${d.quote}" (${d.cite ?? 'cite in the decision'})`);
 
 // The review context file (written from the task, its docs and its decisions; sha256 goes in the brief).
-const ctxRel = `docs/reports/reviews/${taskId}/context-${date}.md`;
+// task-375 A5: one context file per review round, context-rN.md, N = the context-r*.md files already there + 1; an earlier round's file is never overwritten.
+const ctxDir = path.join(root, 'docs/reports/reviews', taskId);
+const round = createRequire(import.meta.url)('../lib/review-template.js').contextRound(ctxDir);
+const ctxRel = `docs/reports/reviews/${taskId}/context-r${round}.md`;
 const docs = asList(t.fm.documentation);
+// task-375 A1: the Implementation Plan and Implementation Notes fields of the task, headings inside the text demoted so they cannot end the section.
+const fieldOf = (name) => (new RegExp(`<!-- SECTION:${name}:BEGIN -->\\n?([\\s\\S]*?)\\n?<!-- SECTION:${name}:END -->`).exec(t.body)?.[1] ?? '').trim().replace(/^#{1,6} /gm, '#### ') || '(none)';
 // ---- McLane context pack (task-309 R8d, RR-0235 "linked with all the relevant data"): milestone text, document sections, decisions, prior reviews, dependencies.
 const CAP_TOTAL = 120 * 1024; const CAP_BLOCK = 12 * 1024; const CAP_SUMMARY = 4000;
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -131,10 +139,12 @@ const depSection = depIds.length ? depIds.flatMap((id) => {
 }).concat(depAll.filter((x) => !depIds.includes(x)).map((x) => `- ${JSON.stringify(x)}: (not a task id; skipped)`)) : ['- (none)'];
 
 const ctx = [
-  `# Review context for ${taskId} (${label}) written ${date} by backlog-brief.mjs`, '',
+  `# Review context for ${taskId} (${label}) written ${date} by backlog-brief.mjs (round ${round})`, '',
   `## Task`, `${taskId} ${title}`, `status: ${t.fm.status} · milestone: ${t.fm.milestone ?? 'none'} · assignee: ${asList(t.fm.assignee).join(', ') || 'none'} · labels: ${asList(t.fm.labels).join(', ')}`, '',
   `## Description`, descriptionOf(t).trim() || '(none)', '',
   `## Acceptance criteria`, ...ac.map((c) => `- #${c.n} ${c.text}`), '',
+  `## Implementation Plan`, fieldOf('PLAN'), '',
+  `## Implementation Notes`, fieldOf('NOTES'), '',
   `## References`, ...(refs.length ? refs.map((r) => `- ${r}`) : ['- (none)']), '',
   `## Documents`, ...(docs.length ? docs.map((d) => `- ${d}`) : ['- (none)']), '',
   `## Decisions in force (titles; the ones this task names carry the operator's words)`,
@@ -164,7 +174,8 @@ const out = [
   `Take order:`,
   `  1. backlog task edit ${taskId} -s RUNNING -a ${laneArg}`,
   `  2. If the task's Implementation Plan field already holds a plan (reviewed, ruled and checked before launch), build that plan and do NOT run --plan; only a task with no plan runs: backlog task edit ${taskId} --plan "<numbered steps, one per acceptance criterion>"`,
-  `Review (plan or output): node scripts/deepseek-review.js review ${ctxRel} --context .claude/review-templates/plan-review-deepseek.md`,
+  `  The plan is the task text at launch, checked before launch (plan evidence folder, grounder file and seat reports on the board; the launch gate refuses otherwise): do not re-plan, do not edit the Description, Acceptance or Plan, record deviations in Implementation Notes; the lane still runs at least one plan-stage lens of its own and rules its findings in its own GROUNDER.md.`,
+  `Review (plan or output): node scripts/deepseek-review.js review ${ctxRel} --template .claude/review-templates/plan-review-deepseek.md --context ${ctxRel} ${sectionFlags}`,
   `  Run by the tool-bearing Claude lane with provider claude: scripts/deepseek-review.js is not in exec-policy.json bash_allow, which governs only the DeepSeek execution engine (Spec 08 section 7 rule 10 (b), 08_agents.md:341). Context file ${ctxRel} sha256=${ctxSha}.`,
   `Context pack sections: ${ctxRel} also carries Milestone, Document sections, Decisions naming this task, Prior reviews and lane reports, Dependencies (RR-0235): read it, not only the references above.`,
   `Close:`,

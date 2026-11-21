@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:16:49.661Z file_sha256=3108cc3fc735c569347edaf1debafb62050b3c363e57b241655c7a441c8a17c8 prompt_sha256=84dd31134787d5b4e157b0215447986f7c6a81a0dba1e5e7736b9863928a3cee
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-124a-p5.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Description D "the launch gate: backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board" — scripts/hooks/check-lane-close.mjs:609 "f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null)" — on a fix launch the plan outputs are passed with inputText null, so no committed in-plan-*.txt and no prompt_sha256 recompute is required, and a plan output built over the placeholder (the D11a defect this task closes) passes the launch gate — fix: pass the lensContexts values and require the committed input for the fix-launch plan outputs, as the build branch does through listProof.
+
+DEFER severity=LOW — A4 build note "problem lines for the placeholder or a missing Description or Implementation Notes heading" — scripts/hooks/check-lane-close.mjs:322 "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(...); continue; }" — the placeholder is refused only when the whole context file equals it, so a context file whose section bodies carry the placeholder is accepted and its prompt_sha256 binds a placeholder prompt — fix: test for the placeholder inside each extracted section (the extracted context carries no diff text, so no false hit on the A1 measurement).
+
+DEFER severity=LOW — acceptance A9 build note "(2) with test evidence (context, 9 plan outputs with inputs, integration and reality-check Seat lines, ... round block, references, Plan line)" — scripts/hooks/check-lane-close.mjs:629 "the Implementation Plan field holds no \"Plan review round N: <a> folded, <b> task, <c> ruling, <d> wontfix, <e> pile; grounder <path>; triage <path>\" line" — the gate is a hard stop on a round-line syntax that appears nowhere in the pasted context (the governing PLAN-375-v4 sits in the Implementation Plan field, not pasted: cannot see whether it fixes this format), so a launch can be refused for a line no pasted clause specifies — fix: name the plan sentence that fixes the format in the error text, or accept the outcomes the pasted evidence names.
+
+REJECT — RR-0342 "reality check is only required when a figure is changed or you can figure something else independently" — the change makes the reality-check seat unconditional (PLAN_SEATS.always) — not a real issue: the approved v4 ruling pasted in the card says "the Integration and Reality-Check seats on every build or fix plan" and "where they differ, this plan governs", and RR-0347 "it just runs anyways for now".
+
+REJECT — Appendix §B10 R-BA gate K "red-first proof is a committed vitest JSON artifact, never the bare word RED" — the change's red-first evidence is .out files (red10.out, red13.out), not committed JSON — not a real issue: R-BA gates run through step-validate --step over converted steps, and neither path here is a step descriptor or in a chain.
+
+REJECT — A2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js ... with the exact heading texts" — extractSections accepts any heading that contains a wanted text rather than an exact heading — not a real issue: the card requires that behaviour ("deepseek-review.js throws on a heading it cannot find (:111) and matches by substring, so a section cannot be dropped silently").
+
+MET — A2 (one CONTEXT_SECTIONS, five exact headings) — scripts/lib/review-template.js:115 — "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];"
+MET — plan material cut from the context — scripts/lib/review-template.js:116 — "const PLAN_SECTIONS = ['Description', 'Acceptance criteria', 'Implementation Plan'];"
+MET — A4 (no committed context is a refusal) — scripts/hooks/check-lane-close.mjs:585 — "if (contexts.length === 0 && files.length > 0) errors.push(`${id}: no committed review context file ${dirNote}context-rN.md: the plan outputs' prompt hash is recomputed with it`);"
+MET — A4 (prompt_sha256 recompute binds the context) — scripts/hooks/check-lane-close.mjs:68 — "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))"
+MET — B2 (repo copies of REPORT.md, GROUNDER.md, TRIAGE.md referenced, exact command printed) — scripts/hooks/check-lane-close.mjs:471 — "if (!have.has(rp)) errors.push(`${id}: the task's references lack the repo copy ${rp}: backlog task edit ${id} --add-ref ${rp}`);"
+MET — D2 (seats: integration and reality-check always, regression only when a Files entry is tracked) — scripts/hooks/check-lane-close.mjs:549 — "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };"
+MET — D3/D5 (Plan line last, hash of title plus body after the front matter) — scripts/hooks/check-lane-close.mjs:635 — "const pl = [...g.matchAll(/^\s*Plan:\s*(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm)].pop();"
+MET — D5 (plan evidence folder and per-list plan compliance outputs stamped with the PLAN_SECTIONS material) — scripts/hooks/check-lane-close.mjs:596 — "materialOk: (p) => (c.cut !== null && p.material === c.cut ? null : `the stamped material is not the Description, Acceptance criteria and Implementation Plan sections of the committed context ${c.name || '(none)'} (a plan review of some other text)`)"
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 19   Unmet: 0
+
+---
+⏱  167398ms (167.4s)
+📊 Tokens — total: 66417, input: 32773, output: 33644, reasoning: 32253

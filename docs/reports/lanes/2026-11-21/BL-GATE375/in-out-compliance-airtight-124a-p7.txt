@@ -1,0 +1,272 @@
+LIST airtight-124a sha256:624f3fa615f2d5b62a9d93f7cce2ed56d1c4329414c0a656bb3a2d80da889e3a material sha256:9e4269d80a2ac0f7c5767c3ed44c9c8f1c10ca20bdcce7706c6a7b66f1d9ac39 part 1 of 2 chunk 4 of 6
+RULE LIST airtight-124a (docs/specs/01-pipeline/124a_step_standard_policy_appendix.md, sections Appendix §B10; Appendix §B12), part 1 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 4 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/backlog-brief-context.logic.test.ts","src/tests/backlog/backlog-brief.logic.test.ts","src/tests/backlog/backlog-lane.logic.test.ts"]
+
+## Appendix §B10 — Register rows R-AX…R-BH (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-17
+
+Moved from Spec 124 — Phase 4 step 0 (QUEUE 2026-10-17, operator y "M24 as the first commit of phase 4"): Spec 124 had 1 line / ~37 B of arm (iv) headroom after N6 (R-CY…R-DH) and owes the phase-4 rows (LDG-10 witness reconciliation first). Rows R-AX…R-BH (the next contiguous block after M21; R-BI was reserved and never written) stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii) resolves them in 124a LIVE REGISTER sections. New rows are still added to Spec 124 §5.
+
+| R-AX | **A frozen `execution.*` POSTURE enum is `executed` only where a named executor or a NAMED DECLARED CHECK consumes it; a value with neither is `retire`d in place, and a step declaring a tolerant posture (`skip`/`quarantine`) must CITE the check that bounds it.** R-X's registry is extended to the posture enums it named as "not yet built", in its own file (`execution-posture-disposition.json`, closed menu `executed`\|`descriptive`\|`retire`) rather than in `write-class-disposition.json`, mirroring R-AJ's split for the duration declarations. **Measured 2026-09-21:** `on_row_error` and `on_row_error_max_pct` had **zero** readers in `scripts/lib/**` and `scripts/analysis/step-validate.mjs` while 18/18 converted steps declared them; `quarantine` had **zero** declarers and no sink (Spec 120 §6's `step_quarantine` unbuilt; migrations 245-247 consumed by unrelated work) — `retire`d in place, never pruned (R-X). **The runner is NOT the enforcer, and that is a ruling, not an omission:** across the ten runner entry points only `runIngestPhase`'s validate phase does per-row work (`index.js:670`), and it already counts and gates; all other per-row work is compute's, so **R-AT**'s "ownership is by USE, never by declared class" makes a `ctx.rowError()` seam a counter the runner does not produce — the same class-gated form R-AT records as tried and REFUTED. The bound is enforced where it already lived: a FAIL-severity declared check (§7 rung (b)), now CITED by the new `execution.on_row_error_why.liveness {kind:"check", ref}` and verified by `step-validate` fast invariant **#27 ROW-ERROR-GATE** (renumbered live from the plan's working #26, which pre-existing WF3 COUNTER-ROOT already occupied — measured 2026-09-21). Rung (c) (`limit_from_config`) holds for both live citations landed by this WF2 (`load_ravines`/`ravine_geometry_skipped_pct`, `compute_parcel_cost_estimates`/`engine_error_count`) — invariant #27 requires only a real FAIL-severity, bound-carrying check, not a config-resolved one, so a future citation whose check has a literal (not config-driven) bound still passes; `enrich_parcels`' own truthing (`fail_fast`→`skip`, citing `opt_config_engine_errors`, which carries a FAIL-severity `limit` but no `limit_from_config` yet — F-4) is PREPARED (descriptor edit, why-text, both register rows written) but its golden recapture is a genuine `--full` 5-pass recompute that did not complete inside this session's time budget (still executing after 25+ minutes, within the plan's own ~40-minute worst-case estimate, §4) — landed separately, own follow-up commit, not abandoned or re-drafted. The two live literal `on_row_error_max_pct` values (`load_ravines` 0.05, `compute_parcel_cost_estimates` 0) each **duplicated** a registered logic variable and are deleted as **Rule 3** violations; the field stays in the schema as `x-banned-for-new`. Separately fixed, **F-1, HIGH:** the `if/then` at `step.schema.json` (`on_row_error`/`on_row_error_max_pct`) used `properties` where its three siblings use `required`, so `skip`/`quarantine` with **no** bound at all validated (AJV-proven live against `compute_centroids` pre-fix, and against the fixed schema post-fix, both directions). Paid as **RE-FREEZE #12** (one additive field carrying `x-ruling`, one conditional rewritten, one `x-banned-for-new` marker) — `--refresh` + Spec 122 §8 amended in the same commit (R-E lock). Locks L1.1-L5.2 (execution-posture-disposition.infra.test.ts) + the invariant's own self-test arms, all RED-first. | §5 R-X (this row is its named generalization for the posture enums); §2 Rule 1 (nothing hidden), Rule 3 (no literal threshold), Rule 4 (the rule is written down as a check's `why`); R-AT (counter ownership) | `scripts/steps/_schema/execution-posture-disposition.json`; `src/tests/execution-posture-disposition.infra.test.ts`; `scripts/analysis/step-validate.mjs` #27; Spec 122 §8 RE-FREEZE #12; Spec 120 §3.2/§4.1a③/§6 |
+
+| R-AY | **A step that produces a PRICED or MODELLED output declares the PRODUCT POPULATION it is for, as a bound on its own producing step, and every pass deriving from the same source honours the same bound.** A population is a declared predicate over registered logic variables (never a literal, never an id accept-list), it carries a reset arm for rows that leave it, and a parcel outside it stores the declared "not modelled" sentinel with a typed reason — never a stale value and never a priced one. An id accept-list that exists to excuse out-of-population outputs is retired by the bound, not curated. **Founding measurement (2026-09-21):** `enrich_parcels` had already ruled 26,203 parcels out of the max-build model (`emit=false`, 6,397 of them `lot_too_large`) while `compute_parcel_cost_estimates` priced reno menus on 18,529 of them — $77,593,312,011.51 of $598.7 B in `cost_gut_total`, including 103 of 103 parcels above $50 M and all 42 ids of `COST_ADDITION_GT50M_LEGIT`. **Landed:** the population bound (Spec 88 §2.1) gained `max_buildable_gfa_sqm IS NOT NULL` (in the max-build model) AND `cur_floor_gfa_sqm <= product_scope_max_existing_gfa_sqm` (new logic variable, default 750, exclusive) alongside the existing `upper(zoning_class) LIKE 'R%'` filter — result: 26,525 menus retracted, $80.43 B, 0 lines > $10 M; `COST_ADDITION_GT50M_LEGIT` (42 accepted ids) retired whole, dissolved by the bound rather than curated down. *Amends:* §2 Rules 1 and 3; §7 Step 2 rung (a). *Locks:* both-directions in `src/tests/steps/compute_parcel_cost_estimates/violations.test.ts` + `logic-var-parity.logic.test.ts`. **§4.6 recurrence:** the same bound must be honoured by slice 1's apportionment and by enrich-permits §4D propagation — neither is built yet; named here so the NEXT pass that derives from this source cannot silently skip the bound the way `compute_parcel_cost_estimates` originally did. | §2 Rule 1, Rule 3; §7 Step 2 rung (a) | Spec 88 §2.1/§2.4/§2.5/§2.8-§2.11; `ffeb703b` (S0.2, bound + retract arm), `2301f4a7` (S0.4, accept-list retired); `src/tests/steps/compute_parcel_cost_estimates/violations.test.ts`; `src/tests/logic-var-parity.logic.test.ts` |
+| R-AZ | **A per-invocation ROW CAP (`--limit=N`) is NOT a step-standard override and is RETIRED BY STANDARD at conversion — declared as a `deviations[]` entry (the `compute_parcel_cost_estimates` 2026-09-21 DRY-RUN entry is the template), never carried, never given a schema home.** Adjudicated 2026-09-23 against Rule 1's rung ladder (and Spec 122's `io_budget` precedent — no field is invented before the rungs are exhausted): **(a) `config.logic_variables[]`** (Rule 3 names "limit" a tunable) REJECTED — a cap is a per-invocation debug bound, not a steady-state value; a standing admin row makes every scheduled run silently partial (the `LINK_MASSING_FORCE_FULL`-left-standing class `override_force_full_present` exists to catch) and is a false affordance under R-A. **(a′) `execution.invocation`** REJECTED — a per-chain argv PIN for manifest↔descriptor drift, not a runtime-read value. **Enforced by (2026-10-03, WF3 chain_args, LP-D17):** `scripts/analysis/generate-chain-args.mjs --check`, a pre-commit line after `src-sql-ledger.mjs --check` (position locked GREEN/RED in `src/tests/hooks-composition.infra.test.ts`). For every step in `converted.json`, `manifest.json` `chain_args` is GENERATED from `execution.invocation` (a chain with non-empty `argv` ⇒ a key; `--write` rewrites only the drifted entry); the invocation's chains must equal the manifest chains that list the slug; a declared or manifest-`env` `PIPELINE_CHAIN` must be absent or equal the chain. Fixtures both directions: `src/tests/chain-args-generated.infra.test.ts`. NOT covered: unconverted steps' hand-written `chain_args`. Found by `link_parcels`, whose descriptor `sources.argv ["--full"]` had no manifest counterpart from conversion (b37087f3) until this gate, so run-chain never passed it. **(a″) `override.dry_run`'s argv arm** REJECTED — `^--[a-z][a-z0-9-]*$` is a bare flag, it cannot carry a value. **(a‴) `execution.phases[].scope`** REJECTED — the frozen `full\|incremental\|deferred` enum is WHICH rows are eligible, not how many. **(b)/(c)** inexpressible as a check or a shape rule. **(d) a new `override.row_cap` arm with `x-ruling`** REJECTED on cost vs need, not expressibility: a capped run is a PARTIAL-POPULATION WRITE with no truthful ledger form — `source-version.js#readPriorRunMeta` selects the latest `status='completed'` row with no other filter, so the capped run becomes the next run's drift/trigger baseline and a trend input, and it can never be a G8 golden input; honouring it generically means a seam in the runner-injected `passCtx.stream`, which cannot cap a set-based pass, so honesty would need a per-pass "streams" declaration on top of the arm, plus `records_meta.row_cap`, an audit row, baseline exclusion, a RE-FREEZE entry, baseline regen, validator matrix and locks (~12 artifacts). **Need, measured 2026-09-23:** ONE converted step of 18 ever had it, operator-debug only, never chain-passed (`manifest.json chain_args` carries no `--limit`), and that step already retired it as a declared deviation with Spec 88's as-built §"Every run is a full run (D1)" agreeing; four UNCONVERTED scripts still carry it (`compute-coa-cost-estimates.js`, `compute-cost-estimates.js`, `enrich-web-search.js`, `enrich-wsib.js`) and retire it at conversion under THIS row rather than re-opening the Ask per step. **The standard debug affordances are** `override.dry_run` (the harness end-to-end, zero writes — R-AV's closed half) and the `src/tests/steps/<slug>/` fixture tier (compute on a bounded population); a bounded PRODUCTION run is not something the standard offers. **Consequences:** R-AV's "regains `--dry-run`/`--limit`" clause is struck to `--dry-run` only; `programme-items.json` `B2-DRYRUN-SEAM` narrows and flips BUILT; the five ENRICHERs' `dry_run` declaration revisits stay a separately owed item. **Spec 120 is the programme's precursor, not an owner** (operator, 2026-09-23) — owners are 122 (runner library, schema), 124, 88, 123 PH-5. | §2 Rule 1 rung ladder, Rule 3, Rule 12 / `override`; R-A; R-AV; Spec 122 §5.1 (no per-step escape hatch) | `scripts/analysis/generate-chain-args.mjs`; `scripts/steps/_schema/step.schema.json` (unchanged — no RE-FREEZE); `scripts/lib/source-version.js#readPriorRunMeta`; `scripts/lib/step/index.js` `passCtx.stream`; `scripts/compute-parcel-cost-estimates.descriptor.json` `deviations[]`; `src/tests/spec124-register-rulings.logic.test.ts` |
+| R-BA | **"McDonald's Airtight" — a step-standard item that no machine checks is not part of the standard.** Five words, each a `step-validate.mjs --step=<slug>` PASS/FAIL line drawn ONLY from a CLOSED answer set (never prose): STANDARDIZED (gate A closed check bounds; gate I registry coverage), OBSERVABLE (gate C emits≡declared; gate D generated consumer registry), SCALABLE (gate B `on_invalid` enum; gate E compute-literal ban), UNDERSTANDABLE (gate F scorecard floor 14/17 + LF-only; gate J spec-staged hook), ACCURATE (gate G forced-nonzero capture + explained G8 diffs; gate K red-first proof is a committed vitest JSON artifact, never the bare word RED). Every gate's closed set is one of: `limit_from_config`/a declared variable, an exact zero-tolerance string, or a dated row in the ONE shared allowlist `scripts/steps/_schema/standard-gates-ledger.json` (`scripts/analysis/gates/ledger.mjs`) — never a bare literal or an unenforced checklist line. An ORPHAN row (its violation since fixed) is RED (R-X closing-row posture) — the remediation commit that fixes a violation deletes its own row. **Scope (operator, 2026-09-26):** every gate is a HARD STOP — no ledger rows permitted — for steps in development now (`load_centreline`, `massing`, `neighbourhoods`) and every future conversion, and it applies **from ① (amended 2026-09-27):** `step-validate --step=<slug>` and the pre-commit `--staged` run evaluate a PENDING slug that has a descriptor exactly as if converted (the registry gates read `converted.json` through `scripts/analysis/gates/converted-set.mjs` with the slug registered), so an in-development step meets every gate at its next commit (its declared R-K stage still excludes the capture-derived gates #30/#31/#38-#41 as it does G7/G8; `--all` is never overlaid) — superseding discovery at ③ and the separate gate-B/D reruns at cutover; on the 20 already-converted steps, CRITICAL/HIGH findings get a quick fix now and every remaining finding lands as a DATED ledger row closing at "chain_sources conversion complete" (R-AQ). Status below. | §2 Rule 1, Rule 3, Rule 10, Rule 13; §7 rung ladder | `.cursor/wf2_conversion_standard_gates_active_task.md`; `scripts/analysis/gates/ledger.mjs` |
+| R-BB | **OWNER-SPEC-DIFF — a cutover's owner-spec diff is a commit gate, never a commit-message claim (2026-09-29).** A change set that appends a file to `converted.json` `converted[]` must stage every spec whose system-map Implementation cell names that file (`archive/` rows excluded), OR that file's census row declares `spec_diff: "N-A"` + `spec_diff_reason` (≥ 20 chars; legal only on a `status: "converted"` row). Fast invariant **#43**, COMMIT-SCOPED: `step-validate.mjs --staged` runs it before its no-target early return (pre-commit judges index vs HEAD, pre-push HEAD~1..HEAD) and a FAIL is a hard stop; it is never a `fastInvariants()` scorecard row, because its answer depends on git state. `npm run cutover` names the owner specs in its closing note. **Replaces** Spec 123 §7 row 9(b)'s "or 'N-A' stated in the body" convention (missed at batch-2 rows 2.1/2.2, repaired by `e053102c`); Spec 123 is at its byte budget, so this row is where that amendment lives. (The R-BA status table below belongs to R-BA.) | Amends: Spec 123 §7 row 9(b) | `scripts/analysis/gates/owner-spec-diff.mjs`; `src/tests/owner-spec-diff.{logic,infra}.test.ts`; programme item `B2-OWNER-SPEC-DIFF` |
+| R-BC | **CHAIN COMPLETION — a chain is complete only when (a)+(b)+(c)+(d) all hold, each a mechanical gate; "complete" is never asserted (operator ruling 2026-09-29).** **(a) CONVERTED:** every `manifest.chains.<chain>` slug's `manifest.scripts[slug].file` is in `converted.json` `converted[]`, except a declared `step-archetype-census.json` `exemptions[]` row (`python_step_excluded` / `no_file` / `runner_owned`). **(b) NO LEDGER:** zero `standard-gates-ledger.json` rows whose `step` is a chain step — every `pending_remediation`/`pending_recapture` row names its closing brief, and completion is the point they must all be closed. **(c) LEDGER COMPLETE:** programme item `LDG-10` — all five Spec 122 §6 edge classes proven complete on fixtures in both directions: table edges reconcile declared reads/writes with runtime lineage (`records_meta.pipeline_meta`), zero undeclared; `records_meta` contracts with zero undeclared readers including readers outside the chain (gate D, invariant #31, widened from `records_meta` keys to table readers); version pins/watermarks declared in `staleness`; every derived join key has an invalidator (re-verify the Spec 122 §6.4a centroid gap against migration 245's trigger arm); ordering derived from declared edges, replacing the hand-written `chain.logic.test.ts` chain-order assertions. Detail: Spec 122 §6.6. **(d) CLOUD ACCEPTED:** the per-slug ACC-1 table for every chain step (R-AQ.1; programme item `EP-PIN-D17`'s flip clause, `scripts/analysis/chain-end-synthesis.mjs`). **Measured 2026-09-29, sources (28 slugs):** (a) FAIL — 4 unconverted (`load_heritage`, `enrich_centreline`, `load_wsib`, `load_zoning`), `reconcile` exempt; (b) FAIL — 160 rows; (c) FAIL — LDG-10 NOT_STARTED; (d) FAIL — EP-PIN-D17 PARTIAL. Both LDG-10 and EP-PIN-D17 are `cutover_prereq` items blocking every census `C6` slug, so `checkCutoverPrereqs` stops a post-sources cutover until (c) and (d) close. (a)/(b) have no programme item of their own yet — they are read directly from the two JSON registries. **APPENDED 2026-09-29 (operator) — a fifth condition, (e), and a strict-zero ruling; the lead's "(a)+(b)+(c)+(d)" now reads "(a)–(e)".** **(e) TOOLING INTEGRATED** — programme item `CHAIN-TOOLING`, checked ONCE at chain end, must not slow anything: (1) every fast invariant / generated-artifact drift check introduced during the chain (e.g. #43 OWNER-SPEC-DIFF; any planned generated-Target-Files drift check) runs at pre-commit, locked by extending `src/tests/hooks-composition.infra.test.ts` — no new machinery; (2) pre-commit checks are FILE-ONLY (no DB, no network; DB checks belong to `npm run test:db` or `npm run cloud:pre`), and measured pre-commit wall time stays ≤ +10% vs the chain-start baseline, measured before/after (the budget); (3) `node scripts/ai-env-check.mjs` prints one status line per chain derived from the registries — converted count, open ledger rows, LDG-10 status, cloud-acceptance status; (4) `cloud:pre`'s `seed_rows_present` covers EVERY key in `scripts/seeds/logic_variables.json`, not only converted descriptors' `config.logic_variables[]` (`scripts/analysis/cloud-pre-dispatch.mjs`) — closes the gap where the runner-owned reconcile vars `run_stranded_after_minutes` / `run_heartbeat_fresh_minutes` are seeded but unchecked. **Strict zero, no allowlists:** (b) admits NO ledger row of any disposition — pending or permanent (`non_tunable`, `physical_constant`, `unit_conversion`, `coordinate_reference`); (c) LDG-10 has NO allowlist or exception file — zero undeclared edges in every edge class. A gate or edge that genuinely cannot be met is fixed by changing the gate or the descriptor through a Spec 124 §5 row plus an `Operator-Ruling:` commit trailer, never by a parked row. (Grounded 2026-09-29: the trailer is NEW — zero `Operator-Ruling:` trailers in the last 300 commits and no hook reads one yet; there is no invariant "#42 defect-prefix" — the nearest gate is #36 DEFECT-ID-UNIQUENESS; #43 already runs at pre-commit via `step-validate.mjs --staged --fast`; no pre-commit wall-time baseline is recorded anywhere yet, so CHAIN-TOOLING takes the first measurement.) | Amends: R-AQ / R-AQ.1 ("end of conversion" now defined); Spec 122 §6 (completeness gated) | `scripts/steps/_schema/programme-items.json` LDG-10, EP-PIN-D17; `scripts/steps/_schema/converted.json`; `scripts/steps/_schema/step-archetype-census.json` `exemptions[]`; `scripts/steps/_schema/standard-gates-ledger.json`; Spec 122 §6.6; programme item `CHAIN-TOOLING`; `src/tests/hooks-composition.infra.test.ts`; `scripts/ai-env-check.mjs`; `scripts/analysis/cloud-pre-dispatch.mjs` |
+| R-BD | **Retired input argv ↔ declared filesystem input — a GOLD-PRE capture taken with a retired input argv stands in for its declared invocation only under a closed predicate (operator ruling 2026-09-29; discoverer: load_wsib ② seat + research seat; adjudicator: operator, §4.2).** GOLD-PRE matches `${chain}::${args}` exactly, but a legacy loader that loads ONLY via an input argv (load_wsib `--file <csv>` — the WSIB CSV cannot be downloaded) cannot be captured with the converted step's declared args. A PRE doc stands in for declared key `chain::<declared args>` iff ALL hold: **(a)** same chain, and args = the declared args + exactly one `[flag, path]` pair whose `flag` appears verbatim (token-bounded) in some descriptor `deviations[].from` (load_wsib WS-D4 names `--file`); **(b)** the descriptor declares exactly one `inputs.reads.externals[]` of `kind:"filesystem"`, and `path`'s basename matches that external's `path` basename under `resolveLocalSource` semantics (stem `*`, stem case-insensitive, `.ext` case-sensitive); **(c)** every PRE `table_state[].content_hash` equals the paired POST doc's (same key; table sets equal, non-empty). No md5 clause (operator declined). No `GOLD_PRE_KNOWN_GAPS` pin (R-BA/R-BC). A mode flag (`--full`) is never a pair — enrich_parcels' pin is untouched. | Amends: Spec 122 §5.3 / R-C / G8 (GOLD-PRE) | `scripts/analysis/step-validate.mjs` `retiredInputPreMatch`, `computePreInvocationsMissing`; `src/tests/gold-pre-retired-input.logic.test.ts` |
+| R-BE | **Generated step Target Files — a step's files, data and edges are generated into its owner spec, never hand-listed (2026-09-30, WF2 generated Target Files).** Census `owner_specs` (entries AND exemptions) names each sources step's owner spec(s); `npm run target-files` writes a `generated:target-files` block first under each owner spec's `### Target Files` — files = the `computeSourceFingerprint` inputs (`capture-step-golden.js` helpers) + `src/tests/steps/<slug>/`; data/upstream/downstream = the cross-step ledger (`stepUpstreams`, CREATE migration per table); consumers = `consumer-registry.json` — and a `generated:chain-members:<chain>` block in Specs 41–44. One home: a generated path hand-listed in any Target Files span is RED. `--check` is its own pre-commit line (a spec-, census- or snapshot-only commit never reaches `fastInvariants()`); cutover and ledger `--refresh` regenerate. `npm run step:registry -- <slug\|path>` prints the sub-list byte-identical plus an advisory grep; a PreToolUse hook shows it on a session's first read/edit of a step file. **Retired knowingly:** #43's system-map inference (#43 reads census `owner_specs`) and touching Spec 43 on every sources cutover; a spec whose only diff is inside its generated blocks, and `00_system_map.md`, no longer count as a spec touch (#43, gate J1). #43 owners = UNION of base and staged census rows (`owner-spec-diff.mjs` header). | Amends: R-BB; R-BA gate J1; satisfies R-BC(e)(1)'s Target-Files drift check | `scripts/analysis/gates/{step-registry,generated-blocks}.mjs`; `scripts/analysis/{generate-target-files,step-registry}.mjs`; `scripts/hooks/step-registry-context.{sh,mjs}`; `src/tests/{step-registry.logic,generate-target-files.infra,step-registry-hook.logic}.test.ts`; programme item `GEN-TARGET-FILES` |
+| R-BF | **McDonald's Airtight V2 (registry & cross-step) = R-BA + every step-registry and cross-step-ledger row generated or witnessed, never hand-kept; declared == observed (operator 2026-09-30, named 2026-10-01).** Status NOT MET; full text Spec 122 §6.6.1. | Amends: R-BA (registry/ledger truth word); R-BE; LDG-10 | Spec 122 §6.6.1 |
+| R-BG | **#44 witness truthfulness — the gate observes what a step really does; it is changed by a §5 row + `Operator-Ruling:` trailer, never bent per step (operator 2026-10-02, WF3 witness-unblock).** (i) check (b) honours `written:"db_default"` in both directions: a db_default column is not required in the traced write, and a traced write of it is a `b:` violation; (ii) the resolver resolves every statement of a multi-statement text, CTE names bind through enclosing and sibling scopes, function-alias column lists bind, and session temp tables bind like CTEs (a temp that shadows a catalog table is FAIL:INPUT); (iii) PRODUCER is tested on comment-stripped text (string literals and dollar-quoted bodies kept); (iv) a prior-run baseline is status ∈ {completed, completed_with_warnings}, never completed_with_errors, never a run carrying the `write_skipped_pre_write_warn` audit row. Locks: R1–R4, R17 (C1); R5–R7, R14, R16, R20–R22, C-a–C-c (C2/C2b/C2c); R8, R9, R15, R19 (C3; R15 replaces the ⑦e source-text lock with an AST lock). R10–R13, R18 (C4). Runner-owned ledger writes (a standalone run's own `pipeline_runs` INSERT/UPDATE, `writes: {}`) are not step writes for checks (c)/(d) — lock: "gate #44 — runner-owned ledger writes are not step writes" in `src/tests/sql-witness-gate.logic.test.ts`. | Amends: R-BF; Spec 122 §6.6.1(e) | Spec 122 §6.6.1(e) |
+| R-BH | **Phase 2 DERIVE (registry truth, 2026-10-03, plan folds 8–17) — a descriptor value a machine can derive or check is gated; a value nothing checks is labelled declared-only.** **Enforced** by fast invariant #47 MODE-EMITS-TYPE (`scripts/analysis/gates/mode-emits-type.mjs`; hard stop per slug, no allowlist): (i) `staleness.mode_select` — LINK or MATCHER ⇒ `tri_state`, or `none` only beside an `outputs.invalidates[]` row `by: "full_rescan"` (the runner's `resolveLinkGate` then resolves every run `full`, reason `full_rescan`, and refuses a `retract: "all"` target); INGESTOR with a `staleness.trigger[]` entry `signal: "source_validator"` ⇒ `skip`; every other case ⇒ `none`; (ii) each golden POST `records_meta` value of a declared `emits[]` key matches its `type` — `null` passes any type, an integer passes `number`, any other mismatch is RED; key presence stays gate C's, and a capture that does not parse or carries no `records_meta` object is skipped by this check. Locks M1–M9, E1–E6, C1–C2, L1–L2 in `src/tests/gate-mode-emits-type.infra.test.ts`. (iii) `scripts/lib/massing-full-gate.js` is deleted; locks R1–R6 in `src/tests/link-massing-mode-gate.logic.test.ts` (R6: link_massing keeps "`logic_version` ≠ `none` ⇔ a `code_version` trigger"). **Declared-only (no gate built at drafting):** that rule for every other step and `fingerprint_inputs` = real imports (P2-C3); `last_measured` from captures (P2-C4); manifest `step_timeout_minutes` generated from the descriptor (P2-C2). `staleness-disposition.json`'s `fingerprint_inputs` rows stay `descriptive` (gate I #34 checks that each row is adjudicated, not that the input is read). | Amends: R-AJ; plan fold 8 item 8 (LINK ⇒ `tri_state`, widened by fold 17 item 1) | Spec 122 §6.6.1(f) |
+
+
+---
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/backlog-brief-context.logic.test.ts b/src/tests/backlog/backlog-brief-context.logic.test.ts
+index 22e1bd269953ef24a5b7700ea1ca9946ae8991bc..5637ac460a1d4497e3005b2be52d153df5577d43 100644
+--- a/src/tests/backlog/backlog-brief-context.logic.test.ts
++++ b/src/tests/backlog/backlog-brief-context.logic.test.ts
+@@ -23,7 +23,7 @@ function fixture(extraDocs: string[] = []) {
+   return { d, task, dep };
+ }
+ const brief = (d: string, task: string, extra: string[] = []) => script('scripts/analysis/backlog-brief.mjs', ['--task', task, '--lane', 'BL-R1', '--stage', '2', '--root', d, '--date', '2026-11-19', ...extra]);
+-const ctxOf = (d: string, task: string) => fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-2026-11-19.md`), 'utf8');
++const ctxOf = (d: string, task: string) => fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-r1.md`), 'utf8');
+ const section = (ctx: string, name: string) => new RegExp(`## ${name}\\n([\\s\\S]*?)(?=\\n## (?:Milestone|Document sections|Decisions naming this task|Prior reviews and lane reports|Dependencies)\\n|$)`).exec(ctx)?.[1] ?? '';
+ 
+ describe('G1 context pack (task-309, RR-0235)', () => {
+@@ -40,9 +40,9 @@ describe('G1 context pack (task-309, RR-0235)', () => {
+     const { d, task } = fixture();
+     const r = brief(d, task);
+     expect(r.stdout).toMatch(/^Context pack sections:.*Milestone.*Document sections.*Decisions naming this task.*Prior reviews and lane reports.*Dependencies/m);
+-    expect(r.stdout).toContain(`node scripts/deepseek-review.js review docs/reports/reviews/${task}/context-2026-11-19.md --context .claude/review-templates/plan-review-deepseek.md`);
++    expect(r.stdout).toContain(`node scripts/deepseek-review.js review docs/reports/reviews/${task}/context-r1.md --template .claude/review-templates/plan-review-deepseek.md --context docs/reports/reviews/${task}/context-r1.md --section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes"`);
+     expect(r.stdout).not.toContain('deepseek-review.js plan');
+-    const sha = crypto.createHash('sha256').update(fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-2026-11-19.md`))).digest('hex');
++    const sha = crypto.createHash('sha256').update(fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-r1.md`))).digest('hex');
+     expect(r.stdout).toContain(sha.slice(0, 12));
+   });
+ 
+@@ -138,7 +138,7 @@ describe('G1 context pack (task-309, RR-0235)', () => {
+     expect(s).toContain(`docs/reports/reviews/${dep}/r1-plan.md`);
+     expect(s).toContain('docs/reports/lanes/20261119/BL-R9/REPORT.md');
+     expect(s).not.toContain('BL-R0');
+-    expect(s).not.toContain('context-2026-11-19.md');
++    expect(s).not.toContain('context-r1.md');
+     expect(s).not.toContain('context-2026-11-18.md');
+   });
+ 
+@@ -162,3 +162,35 @@ describe('G1 context pack (task-309, RR-0235)', () => {
+     expect(sha(a)).not.toBe(sha(b));
+   });
+ });
++
++describe('task-375 A1/A5: the review context holds the plan and the notes; one file per round', () => {
++  it('writes "## Implementation Plan" and "## Implementation Notes" from the task, and a plan heading inside the text cannot end the section', async () => {
++    const { d, task } = fixture();
++    backlog(d, ['task', 'edit', task, '--plan', 'PLAN-LINE-ONE\n# Inner heading\nPLAN-LINE-TWO', '--append-notes', 'NOTE-LINE-ONE']);
++    const r = brief(d, task); expect(r.status, r.stderr).toBe(0);
++    const ctx = ctxOf(d, task);
++    expect(ctx).toMatch(/^## Implementation Plan\n[\s\S]*PLAN-LINE-ONE[\s\S]*PLAN-LINE-TWO/m);
++    expect(ctx).toMatch(/^## Implementation Notes\n[\s\S]*NOTE-LINE-ONE/m);
++    expect(ctx.indexOf('## Implementation Plan')).toBeGreaterThan(ctx.indexOf('## Acceptance criteria'));
++    const rt = await import('../../../scripts/lib/review-template.js');
++    expect(rt.extractSections(ctx, ['Implementation Plan'])).toContain('PLAN-LINE-TWO');
++  });
++  it('control: a task with no plan and no notes still has both headings, reading (none)', () => {
++    const { d, task } = fixture();
++    brief(d, task);
++    const ctx = ctxOf(d, task);
++    expect(ctx).toMatch(/^## Implementation Plan\n\(none\)/m);
++    expect(ctx).toMatch(/^## Implementation Notes\n\(none\)/m);
++  });
++  it('a later brief writes context-r2.md and leaves context-r1.md as it was (never overwritten)', () => {
++    const { d, task } = fixture();
++    brief(d, task);
++    const r1 = path.join(d, `docs/reports/reviews/${task}/context-r1.md`);
++    const before = fs.readFileSync(r1, 'utf8');
++    backlog(d, ['task', 'edit', task, '--append-notes', 'LATER-NOTE']);
++    const r = brief(d, task); expect(r.status, r.stderr).toBe(0);
++    expect(fs.readFileSync(r1, 'utf8')).toBe(before);
++    expect(fs.readFileSync(path.join(d, `docs/reports/reviews/${task}/context-r2.md`), 'utf8')).toContain('LATER-NOTE');
++    expect(r.stdout).toContain(`${task}/context-r2.md`);
++  });
++});
+diff --git a/src/tests/backlog/backlog-brief.logic.test.ts b/src/tests/backlog/backlog-brief.logic.test.ts
+index f3983fe9233a8f7c3760be4889ede7a0ed240ab5..8354b3080f04fe1aa98c086aaea69b3862b091b8 100644
+--- a/src/tests/backlog/backlog-brief.logic.test.ts
++++ b/src/tests/backlog/backlog-brief.logic.test.ts
+@@ -55,7 +55,7 @@ describe('G1 backlog-brief (test 4)', () => {
+     expect(r.stdout).toMatch(/08_agents\.md:339/);
+     expect(r.stdout).toContain(`task edit ${plan} -s RUNNING -a @lane-BL-R1`);
+     expect(r.stdout).toMatch(/--plan/);
+-    expect(r.stdout).toMatch(/node scripts\/deepseek-review\.js review docs\/reports\/reviews\/\S+\/context-2026-11-19\.md --context \.claude\/review-templates\/plan-review-deepseek\.md/);
++    expect(r.stdout).toMatch(/node scripts\/deepseek-review\.js review docs\/reports\/reviews\/\S+\/context-r1\.md --template \.claude\/review-templates\/plan-review-deepseek\.md --context docs\/reports\/reviews\/\S+\/context-r1\.md --section "Task"/);
+     expect(r.stdout).toMatch(/provider claude/i);
+     expect(r.stdout).toMatch(/bash_allow/);
+     expect(r.stdout).toMatch(/--final-summary/);
+@@ -65,6 +65,11 @@ describe('G1 backlog-brief (test 4)', () => {
+     expect(r.stdout).toMatch(/from round 2 on use only --append-final-summary/);
+     expect(r.stdout).toMatch(/check-lane-close\.mjs --outcomes/);
+     expect(r.stdout).toMatch(/do NOT run --plan/);
++    // task-375 D6: what the brief tells a lane about the plan that the launch gate checked
++    expect(r.stdout).toMatch(/The plan is the task text at launch, checked before launch/);
++    expect(r.stdout).toMatch(/do not edit the Description, Acceptance or Plan/);
++    expect(r.stdout).toMatch(/record deviations in Implementation Notes/);
++    expect(r.stdout).toMatch(/still runs at least one plan-stage lens of its own and rules its findings in its own GROUNDER\.md/);
+     expect(r.stdout).toMatch(/STATUS: ready\|blocked\|failed\|dropped/);
+   });
+ 
+@@ -72,7 +77,7 @@ describe('G1 backlog-brief (test 4)', () => {
+     const { d, plan } = fixture();
+     const r = brief(d, plan);
+     expect(r.status, r.stderr).toBe(0);
+-    const ctx = path.join(d, `docs/reports/reviews/${plan}/context-2026-11-19.md`);
++    const ctx = path.join(d, `docs/reports/reviews/${plan}/context-r1.md`);
+     expect(fs.existsSync(ctx), ctx).toBe(true);
+     const body = fs.readFileSync(ctx, 'utf8');
+     expect(body).toContain('Plan item CHK.5 scope check');
+diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
+index d3a9ab087c1a99c8905b35915508573a4ccb5a58..ccebbad171d112ce7aed0c256ffe58defefc60b8 100644
+--- a/src/tests/backlog/backlog-lane.logic.test.ts
++++ b/src/tests/backlog/backlog-lane.logic.test.ts
+@@ -11,9 +11,14 @@ const ID = { GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME:
+ const git = (cwd: string, ...a: string[]) => run('git', ['-c', 'commit.gpgsign=false', ...a], { cwd, env: ID });
+ const AC = 'Writes scripts/analysis/thing.mjs and the notes file docs/out/NOTES.md, nothing else';
+ const SCRIPT = path.join(__dirname, '../../../scripts/analysis/backlog-lane.mjs');
++// task-375 D: a build or fix launch needs real plan evidence on the board (the launch gate); the program in docs/reports/reviews/task-375/plant-evidence.mjs writes it for a fixture board with the real helpers (lens-input inputs, REVIEW headers, GROUNDER-PLAN.md, seat reports, round block, references, Plan line) and commits it
++function plantEvidence(board: string, task: string, laneName = 'BL-T1') {
++  const r = run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID });
++  if (r.status !== 0) throw new Error(`plantEvidence: ${r.stdout}${r.stderr}`);
++}
+ 
+ type Fx = { board: string; base: string; wt: string; main: string; pt: string; task: string; args: string[] };
+-function fixture(opts: { status?: string; hook?: boolean; files?: string | null; type?: string; letter?: string; noMilestone?: boolean } = {}): Fx {
++function fixture(opts: { status?: string; hook?: boolean; files?: string | null; type?: string; letter?: string; noMilestone?: boolean; noEvidence?: boolean } = {}): Fx {
+   const board = makeProject(), base = tmp('lane');
+   fs.mkdirSync(path.join(board, 'backlog/milestones'), { recursive: true });
+   fs.writeFileSync(path.join(board, 'backlog/milestones/m-0 - foundations.md'), `---\nid: m-0\ntitle: "Increment 1·A Foundations [${opts.letter ?? 'F'}]"\n---\n\n## Description\n\nx\n`);
+@@ -26,6 +31,7 @@ function fixture(opts: { status?: string; hook?: boolean; files?: string | null;
+   fs.writeFileSync(path.join(board, 'mobile/.keep'), '');
+   const task = mk(board, 'Launch me', ['-d', `Launch description text.${opts.files === null ? '' : `\n\nFiles: ${opts.files ?? 'scripts/analysis/thing.mjs'}`}`, ...(opts.type ? ['--type', opts.type] : []), '--ac', AC, '--ref', 'docs/a.md', '--doc', 'docs/b.md', ...(opts.noMilestone ? [] : ['-m', 'm-0']), ...(opts.status ? ['-s', opts.status] : [])]);
+   git(board, 'add', '-A'); git(board, 'commit', '-q', '-m', 'fixture');
++  if (['build', 'fix'].includes(opts.type ?? '') && !opts.noMilestone && !opts.noEvidence) plantEvidence(board, task);
+   if (opts.hook) { const h = path.join(board, '.git/hooks/pre-commit'); fs.writeFileSync(h, '#!/bin/sh\nexit 1\n'); fs.chmodSync(h, 0o755); }
+   const main = path.join(base, 'main');
+   fs.mkdirSync(path.join(main, 'node_modules'), { recursive: true }); fs.mkdirSync(path.join(main, 'mobile/node_modules'), { recursive: true });
+@@ -166,7 +172,7 @@ describe('backlog-lane real launch on the temp board (AC #1)', () => {
+     expect(brief.toString()).toMatch(/^FAKE BRIEF/);
+     const sha = crypto.createHash('sha256').update(brief).digest('hex');
+     expect(r.stdout.trim().split('\n').pop()).toBe(`BRIEF-FILE: ${path.join(ld, 'BRIEF.md')} sha256=${sha}`);
+-    expect(fs.existsSync(path.join(f.wt, `docs/reports/reviews/${f.task}/context-2026-11-19.md`))).toBe(true);
++    expect(fs.existsSync(path.join(f.wt, `docs/reports/reviews/${f.task}/context-r1.md`))).toBe(true);
+   });
+   it('uses --spec instead of a generated task.json when given', () => {
+     const f = fixture();
+@@ -194,6 +200,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+     let body = fs.readFileSync(file, 'utf8').replace('Launch description text.', `Launch description text. Files: ${files}`);
+     if (type) body = body.replace(/^labels: .*$/m, (m) => `${m}\ntype: ${type}`);
+     fs.writeFileSync(file, body);
++    if (type === 'build' || type === 'fix') plantEvidence(f.board, f.task);
+     const r = lane(f, ['--dry-run']);
+     const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null');
+     expect(spec, r.stdout + r.stderr).not.toBeNull();
+@@ -255,7 +262,22 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
+     const cmd = /each `([^`]+)`/.exec(seg)?.[1] ?? '';
+     expect(seg).toContain('plan-review-deepseek.md');
+     expect(cmd).toContain('scripts/deepseek-review.js review');
+-    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context <pasted-context file>/);
++    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context docs\/reports\/reviews\/\S+\/context-r2\.md --section "Task"/);
++  });
++  // task-375 A3: every lens command passes the committed context (context-r1.md) and one --section per CONTEXT_SECTIONS entry; no command leaves a lens on the placeholder
++  it('A3: plan, output and compliance commands all pass the committed context and the five sections; the date name and the pasted-context placeholder are gone', () => {
++    const e = lensBrief('build', 'scripts/analysis/x.mjs, src/tests/');
++    const SECT = '--section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes"';
++    const ctx = /docs\/reports\/reviews\/\S+?\/context-r2\.md/.exec(e)?.[0] ?? '(none)';
++    expect(ctx).not.toBe('(none)');
++    const cmds = e.match(/scripts\/deepseek-review\.js review [^`]*/g) ?? [];
++    expect(cmds.length).toBeGreaterThanOrEqual(3);
++    for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }
++    expect(e).not.toContain('<pasted-context file>');
++    expect(e).not.toMatch(/context-<date>|context-20\d\d/);
++    expect(e).toContain(`lens-input --list L --context ${ctx}`);
++    expect(e).toContain('plan: --material-from');
++    expect(e).toMatch(/lens-input --context \S+ --material <diff file>/);
+   });
+   it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
+     for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
+@@ -307,6 +329,73 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
+     expect(extra).toMatch(/a separate grounder rules on every finding/);
+     expect(extra).toContain('GROUNDER.md');
+   });
++  it('A3: the review line of the extra block (the plan template as --context) is the lens form with the committed context', () => {
++    const { extra } = dry({ files: 'scripts/analysis/x.mjs, src/tests/', type: 'build' });
++    const line = /Review \(review mode[^\n]*/.exec(extra)?.[0] ?? '';
++    expect(line).toContain('--template .claude/review-templates/plan-review-deepseek.md --context docs/reports/reviews/');
++    expect(line).toContain('--section "Implementation Notes"');
++    expect(line).not.toMatch(/--context \.claude\/review-templates/);
++  });
++  // task-375 B1: the take adds the compliance:<list id> <file> references, only the ids the task does not carry yet
++  it('B1: the take command adds one compliance reference per resolved list; a list already referenced is not added again', () => {
++    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
++    const lists = (JSON.parse(run('node', ['scripts/analysis/rule-lists.mjs', 'resolve', '--files', 'scripts/analysis/thing.mjs', '--type', 'build', '--letter', 'F'], { cwd: ROOT }).stdout) as { lists: { id: string; file: string }[] }).lists;
++    const take = (o: string) => /^\$ cd \S+ && .*task edit \S+ -s RUNNING.*$/m.exec(o)?.[0] ?? '';
++    const r1 = lane(f, ['--dry-run']);
++    const t1 = take(r1.stdout);
++    expect(t1).toBeTruthy();
++    expect([...t1.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length);
++    for (const l of lists) expect(t1).toContain(`--add-ref 'compliance:${l.id} ${l.file}'`);
++    backlog(f.board, ['task', 'edit', f.task, '--add-ref', `compliance:${lists[0]!.id} an older path`]);
++    const t2 = take(lane(f, ['--dry-run']).stdout);
++    expect([...t2.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length - 1);
++    expect(t2).not.toContain(`'compliance:${lists[0]!.id} `);
++  });
++  // task-375 D5: the launch gate
++  it('D: a build launch with no plan evidence on the board is refused, one line per missing item, nothing taken, in dry-run too (no flag turns it off)', () => {
++    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build', noEvidence: true });
++    for (const extra of [['--dry-run'], []]) {
++      const r = lane(f, extra);
++      expect(r.status, r.stdout + r.stderr).toBe(3);
++      const lines = r.stderr.trim().split('\n');
++      expect(lines[0]).toMatch(/refused: plan gate: .*no plan evidence folder docs\/reports\/reviews\/task-\d+\//);
++      expect(lines.length).toBeGreaterThan(1);
++      expect(statusOf(f)).toBe('LATER');
++      expect(fs.existsSync(f.wt)).toBe(false);
++    }
++  });
++  it('D: with the evidence the dry-run prints "plan gate ok: <L> lists" with L the resolved-list count and the Plan hash; a one-word edit of the task refuses with the new expected Plan line', () => {
++    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
++    const L = (JSON.parse(run('node', ['scripts/analysis/rule-lists.mjs', 'resolve', '--files', 'scripts/analysis/thing.mjs', '--type', 'build', '--letter', 'F'], { cwd: ROOT }).stdout) as { lists: unknown[] }).lists.length;
++    const ok = lane(f, ['--dry-run']);
++    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
++    expect(ok.stdout).toMatch(new RegExp(`plan gate ok: ${L} lists, \\d+ findings, Plan sha256:[0-9a-f]{12}`));
++    backlog(f.board, ['task', 'edit', f.task, '--append-notes', 'one more word']);
++    const bad = lane(f, ['--dry-run']);
++    expect(bad.status, bad.stdout + bad.stderr).toBe(3);
++    expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);
++    expect(statusOf(f)).toBe('LATER');
++  });
++  it('D: a task of another type (record) is not gated and launches with no plan evidence', () => {
++    const f = fixture({ files: 'docs/specs/00-architecture/08_agents.md', type: 'record' });
++    const r = lane(f, ['--dry-run']);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    expect(r.stdout).not.toContain('plan gate');
++  });
++  it('g375#2: a board that already holds context-r1.md (the plan evidence): the lens lines name the file the brief wrote (context-r2.md), in the dry-run and in the real launch', () => {
++    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
++    expect(fs.existsSync(path.join(f.board, `docs/reports/reviews/${f.task}/context-r1.md`))).toBe(true);
++    const d = lane(f, ['--dry-run']);
++    expect(d.stdout).toContain(`docs/reports/reviews/${f.task}/context-r2.md`);
++    expect(d.stdout).not.toContain(`docs/reports/reviews/${f.task}/context-r1.md --`);
++    const r = lane(f, ['--no-launchd']);
++    expect(r.status, r.stdout + r.stderr).toBe(0);
++    const spec = JSON.parse(fs.readFileSync(path.join(f.base, 'lane-dir/task.json'), 'utf8')) as { extra: string[] };
++    const named = /docs\/reports\/reviews\/\S+?\/(context-r\d+\.md)/.exec(spec.extra.join('\n'))?.[1];
++    const written = fs.readdirSync(path.join(f.wt, `docs/reports/reviews/${f.task}`)).filter((n) => /^context-r\d+\.md$/.test(n)).sort().pop();
++    expect(named).toBe(written);
++    expect(named).toBe('context-r2.md');
++  });
+   it('a Files path no row matches is refused at launch with the path named (exit 3, one line, nothing written)', () => {
+     const f = fixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' });
+     refused(lane(f), /zzz-nothing\/new\.txt/);
+

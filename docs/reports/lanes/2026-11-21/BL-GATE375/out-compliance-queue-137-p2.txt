@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:35:41.433Z file_sha256=4e1e3d0a0b2ae62d95010ff4bb5e02db1d2d564f3bc4fca580e4348fc83464a7 prompt_sha256=a8313b09db61fb36917860fe6f45bb698e8f97eb8af28dfdd3d3061850a048cb
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-queue-137-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-375 Acceptance #7 "A2 rule-lists.mjs lens-input for each of the 15 resolved lists of task-381 with that context: paste each exit code, selected-section count and call count: expected 17 calls in total" — no line in this chunk's diff shows a per-list exit code, selected-section count and call count for each of the 15 lists; the pasted note "A2 (buildLensInputs with the 5 sections, material 17,753 characters): task-381 15 lists, 5 sections 2121 characters, 17 calls, 0 refused" reports the function-level totals only, not per-list exit codes as the criterion requires — the acceptance criterion is not met as written — run `lens-input` for each of the 15 list ids with the task-381 context and paste the 15 exit codes, 15 section counts and 15 call counts on the task.
+
+DEFER severity=MED — task-375 Description A.6 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file." — scripts/analysis/backlog-lane.mjs "contextRound(path.join(board, 'docs/reports/reviews', taskId))" versus scripts/analysis/backlog-brief.mjs "const ctxDir = path.join(root, 'docs/reports/reviews', taskId);" — the lane counts rounds in the board checkout while the brief writes under its own root (the lane worktree), so once the two trees differ the printed lens line can name context-r1.md while the brief wrote context-r2.md — compute the round over the same root the brief writes to, or have the brief print the round and the lane copy it.
+
+DEFER severity=MED — task-375 "A.5 both-phases close rule -> deleted (plan evidence moves to the launch gate)" — scripts/analysis/backlog-lane.mjs "The close of this task is refused without an out-compliance output per list, an out-<lens>.txt for every other output lens named above, a plan-stage output (plan-<lens>.txt), and the grounder file below" — the brief still tells every lane the close is refused without a plan-stage output, the rule the governing plan deletes and the launch gate now owns (cannot see whether the close check still enforces it, in which case the deletion itself is unimplemented) — drop the plan-stage output from that sentence and point the lane at the launch gate.
+
+DEFER severity=LOW — docs/specs/00-architecture/08_agents.md note "one per review round and never overwritten (N = the context-r*.md files already there + 1)" — scripts/analysis/backlog-brief.mjs "N = the context-r*.md files already there + 1; an earlier round's file is never overwritten." — with a gap in the numbering (r1 and r3 present, r2 absent) count+1 names r3 again and overwrites it, so "never overwritten" is not guaranteed by the formula (contextRound's body is in another chunk, cannot see) — refuse when the target name already exists, or use max(N)+1.
+
+DEFER severity=LOW — task-375 Acceptance #8 "lens-input --list surface-135 with a 60,000-character material: today exit 1 naming "## Register"; after A6 exit 0 with parts" — Implementation Notes "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the criterion's baseline half is not demonstrated — run lens-input --list surface-135 on the pre-A6 head and paste the exit 1 naming "## Register", or record the criterion as amended.
+
+DEFER severity=LOW — task-375 Acceptance #9 "choose the task on the day 375 launches: a LATER build task not recommended for drop; task-400 is, and its Files line collides with this task" — Implementation Notes "for task-101 (LATER, type record, not build)" — the acceptance named a LATER build task and the run used a record task, so the criterion as written is not met even though the command and the count match — rerun on a LATER build task other than task-400 and paste the command.
+
+DEFER severity=LOW — task-375 Acceptance #3 "Compliance lens run once per governing rule list with the list whole; a separate grounder verdict on file" — Implementation Notes "Grounder owed; the task stays RUNNING" and "351 findings untriaged in FINDINGS.md" — no separate grounder verdict is on file for the rounds run — have the separate grounder rule the round-1 and round-2 findings and commit GROUNDER.md before BUILT.
+
+MET — 137_mcqueue.md section 6 "a commit check that refuses a missing status line, a missing expiry, or DROPPED without a quoted ruling ... is not built now" — docs/specs/00-architecture/137_mcqueue.md dated note "the close check now also recomputes each lens output's prompt hash with the committed review context" — the change builds refusals on plan evidence and lane references, none of the three deferred subjects, so the deferred check stays deferred.
+
+MET — 08_agents.md note "Every lens command passes it with --context and one --section per entry of CONTEXT_SECTIONS" — scripts/analysis/backlog-lane.mjs "const sectionFlags = CONTEXT_SECTIONS.map((x) => `--section "${x}"`).join(' ');" — applied to the plan, output and compliance commands via ctxArgs.
+
+MET — RR-0348 "these only run on the plan" — docs/specs/00-architecture/08_agents.md "run on the PLAN only ... no seat is required on the output" — the note records the deviation from rule 1, rule 7 and the 6.4 table against the operator's :1630 words.
+
+MET — RR-0343 "labelled means i need to know its a compliance document" — scripts/analysis/backlog-lane.mjs "complianceRefs(resolved.lists, asList(t.fm.references)).add.flatMap((e) => ['--add-ref', e])" — compliance references are added on the take under the compliance: prefix.
+
+MET — task-375 Description D "backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board" — scripts/analysis/backlog-lane.mjs "if (gate.errors.length) { for (const e of gate.errors) process.stderr.write(...); process.exit(3); }" — the gate sits after the dirty-board refusal and before the take, with no bypass flag.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 7
+
+---
+⏱  139949ms (139.9s)
+📊 Tokens — total: 50424, input: 24402, output: 26022, reasoning: 24530

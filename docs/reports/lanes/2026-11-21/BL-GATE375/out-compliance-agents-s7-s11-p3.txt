@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:11:13.830Z file_sha256=f95dded0fdf4c5a0d266b0f8da269f5928bdaae8926393f6a4c2e52435cdd220 prompt_sha256=f25b7a384c9847dbbb3add587580e8032745448101ec3b718e031eb1e4d0a047
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-agents-s7-s11-p3.txt (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> lines: none found.
+
+DEFER severity=MED — task-375 A4 "every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry" — scripts/hooks/check-lane-close.mjs "for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, /^plan-compliance-/.test(f.name) ? 'lens-compliance.md' : ... , null).map((x) => `${id}: ${x}`));" — a FIX launch's plan lens outputs are checked with inputText null and no ctxValues, so the prompt hash is never recomputed and a plan output hashed over "(no pasted context provided)" passes the launch gate, which is the exact hole A4 closes at the output close — pass lc.values plus the committed plan input (or require in-plan-<lens>.txt beside each plan-<lens>.txt) and recompute.
+
+DEFER severity=MED — task-375 A6 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file." — scripts/hooks/check-lane-close.mjs "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))" — any committed round's context satisfies the hash, so an output made against context-r1.md still passes after context-r2.md is committed and the fix-round rule ("every lens output re-run under the same names") is not proved — bind each output to the round's context (highest context-rN.md, or the N carried in the file name).
+
+DEFER severity=MED — 08_agents.md:347 note "The lane close step copies the lane's REPORT.md (and its TRIAGE.md and the review output, when they exist) into docs/reports/lanes/<date>/<lane>/ in the lane's last commit, and the task's references point at that repo copy" — scripts/hooks/check-lane-close.mjs "for (const n of ['REPORT.md', 'GROUNDER.md', ...(textOf('TRIAGE.md') !== undefined ? ['TRIAGE.md'] : [])])" — the close never requires a reference to the repo copy of the review output, so that reference can still resolve outside the repo i.e. the 162-reference defect the note records is only partly closed — add the review output's repo copy to the required references when the lane dir holds one.
+
+DEFER severity=LOW — approved design text "copied the printed Plan line last" — scripts/hooks/check-lane-close.mjs "const pl = [...g.matchAll(/^\s*Plan:\s*(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm)].pop();" — the last occurrence of a Plan line is taken, not the last line of the file, so a grounder that leaves the Plan line mid-file still passes although the clause says it is copied last — require the final non-blank line of GROUNDER-PLAN.md to be the Plan line.
+
+MET — task-375 A4 (placeholder, missing Description, missing Implementation Notes refused) — scripts/hooks/check-lane-close.mjs "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(...)" and "try { values.push(extractSections(c.text, want)); } catch (e) { problems.push(...)" — every bad context yields a problem line and no value.
+
+MET — task-375 A4 "check-lane-close.mjs lensContexts() returns the selected text read from the committed context file, so the existing prompt_sha256 recompute (:65) binds it" — scripts/hooks/check-lane-close.mjs "const lc = lensContexts(i.contexts ?? [], hasNotes);" with "ctxValues: lc.values" — the binding is the committed context text, not the old undefined placeholder.
+
+MET — task-375 A4 "no committed context is a refusal" — scripts/hooks/check-lane-close.mjs "if ((i.contexts ?? []).length === 0) errors.push(`${id}: no committed review context file docs/reports/reviews/${id}/context-rN.md ..." — fail closed.
+
+MET — RR-0342 "regression only required when code is changed" and RR-0347 "If it can't tell if a figure is changed than it just runs anyways" — scripts/hooks/check-lane-close.mjs "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };" with "entriesOf(i.taskText).some((e) => i.tracked(e))" — the seats follow the written triggers.
+
+MET — RR-0348 "these only run on the plan" — scripts/hooks/check-lane-close.mjs "planGateErrors" is called only from the launch path; closeErrors' output roster is unchanged (phases "build ? ['out'] : ['plan', 'out']") — no seat is demanded on the output.
+
+MET — approved design text "planHash (title plus body after the front matter, whitespace squashed, 12 hex)" — scripts/hooks/check-lane-close.mjs "const { fm, body } = parseFM(taskText); return sha(squash(`${fm.title ?? ''} ${body}`)).slice(0, 12);" — one hash, front matter outside it.
+
+MET — task-375 D "planGateErrors" placement per the TKT-1 note 2026-11-21 — scripts/hooks/check-lane-close.mjs "export function planGateErrors(i)" — the launch gate's error function lives where the spec note names it.
+
+REJECT — accepted-limits clause "This is part of the same omission guard ... it proves presence, form and git facts, never that a fix fixes" — the seat check is accused of not proving that the Integration, Reality-Check or Regression seat actually ran — the diff's own comment states the same limit ("it cannot prove that the seat ran"), so it is a named, accepted gap, not a new omission.
+
+REJECT — RR-0342 "regression only required when code is changed" — the Regression trigger is accused of using "a path tracked at the board head" rather than "code is changed" — the trigger is the readback-grounded form pasted as approved ("a directory or glob entry counts: READBACK-375-v4.md Q1", taken as approved), and the ruling restricts when regression is required, it does not mandate it on every change.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+
+---
+⏱  99241ms (99.2s)
+📊 Tokens — total: 54621, input: 33486, output: 21135, reasoning: 19662

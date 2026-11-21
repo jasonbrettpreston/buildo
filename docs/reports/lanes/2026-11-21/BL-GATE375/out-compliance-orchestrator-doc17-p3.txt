@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:30:47.091Z file_sha256=955034185df6f0591ba70b97681a3896cf174155e45213ed428d9eb05e5178cb prompt_sha256=188e25a521e1c162484ce7b9342a5f870dbe3b96291b638d3553a04280cf23f2
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-orchestrator-doc17-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Task Description A and NOTE-375 A.4 "A the reviewer's context is the task, sized (Implementation Plan and Implementation Notes in the context, one CONTEXT_SECTIONS constant, every lens command passes the committed context ...)" / "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes." — scripts/hooks/check-lane-close.mjs:322 "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(...); continue; }" and :324 "try { values.push(extractSections(c.text, want)); } catch (e) { ... }" — only an exact whole-file placeholder is refused and nothing checks that the extracted value carries any text, so a committed context-rN.md whose headings are present but empty is pushed as a valid value, the output's prompt_sha256 recomputes against it, and a lens that saw no task text and no ruling still closes and launches — refuse an empty extracted value (and an empty Description or Implementation Plan body) as a problem line before it becomes a value.
+
+DEFER severity=MED — NOTE-375 B.3 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir (08_agents.md:347); the close check refuses when one is missing." — scripts/hooks/check-lane-close.mjs:467 "if (build) {" with :469 "for (const n of ['REPORT.md', 'GROUNDER.md', ...(textOf('TRIAGE.md') !== undefined ? ['TRIAGE.md'] : [])])" — a fix task closes with no reference proof at all, the clause names no task type — run the loop for build or fix, the two lane closes closeErrors already treats as lane tasks.
+
+DEFER severity=MED — Task Description A "every lens command passes the committed context" — scripts/hooks/check-lane-close.mjs:607 "errors.push(...reviewErrors(f.name, f.text, /^plan-compliance-/.test(f.name) ? 'lens-compliance.md' : ... , null).map((x) => `${id}: ${x}`));" — a fix-launch plan output is accepted on a REVIEW header and a VERDICT line only, the null input skips the prompt_sha256 recompute, so plan evidence produced with no context passes the launch gate — pass the committed in-<name> input and the context values so the hash is recomputed, as the build branch does through listProof.
+
+REJECT — NOTE-375 A.5 "A build or fix task needs the compliance PLAN phase as well (:178 phases = both)" — the change keeps "const phases = build ? ['out'] : ['plan','out'];" and so drops the plan compliance phase at close for build tasks — the Implementation Notes record "A.5 both-phases close rule -> deleted (plan evidence moves to the launch gate)" and PLAN-375-v4 GOVERNS NOTE-375 where they differ, so the deletion is the approved text.
+
+REJECT — RR-0342 "reality check is only required when a figure is changed or you can figure something else independently" — PLAN_SEATS.always requires a reality-check seat at every build or fix launch — the Implementation Notes record the v4 ruling "the Integration and Reality-Check seats on every build or fix plan ... on the plan only (:1615, :1620, :1625, :1630)", taken as approved on MORNING-DECISIONS.md:1638, so always-on reality-check is the ruling in force.
+
+MET — NOTE-375 A.4 "check-lane-close.mjs lensContexts() ... returns the selected text read from the committed context file, so the existing prompt_sha256 recompute (:65) binds it" — scripts/hooks/check-lane-close.mjs:65 "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))" — the recompute takes the committed context values, passed as ctxValues/lc.values by listProof and closeErrors.
+
+MET — NOTE-375 A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes." — scripts/hooks/check-lane-close.mjs:323 "const want = !hasNotes && !/^#{1,6}\s.*Implementation Notes/m.test(c.text) ? CONTEXT_SECTIONS.filter((x) => x !== 'Implementation Notes') : CONTEXT_SECTIONS;" — a missing required heading is a caught extractSections throw turned into a problem line, never a value.
+
+MET — Task Description D "the launch gate: backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board" — scripts/hooks/check-lane-close.mjs:553 "return sha(squash(`${fm.title ?? ''} ${body}`)).slice(0, 12);" — the Plan line is recomputed from the task as it is now and compared with a hard expected string.
+
+MET — RR-0342 "regression only required when code is changed" — scripts/hooks/check-lane-close.mjs:621 "const need = [...PLAN_SEATS.always, ...(entriesOf(i.taskText).some((e) => i.tracked(e)) ? PLAN_SEATS.conditional : [])];" — the regression seat is demanded only when the Files line names a path tracked at the board head.
+
+MET — RR-0348 "these only run on the plan" — scripts/hooks/check-lane-close.mjs:619 "// the seats" inside planGateInner — the seat reports are demanded at the launch (plan) gate only, closeErrors demands none.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 2
+
+---
+⏱  196273ms (196.3s)
+📊 Tokens — total: 71262, input: 35459, output: 35803, reasoning: 34503

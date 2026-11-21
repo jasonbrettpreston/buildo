@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:13:38.027Z file_sha256=a23d37614058dba1018488168f6b7f997d7d8f4aaae1e485b113fd1a927d2d45 prompt_sha256=de2e076fb3340acb8bfcdc83885fee91f8445e0ca864a70899c66bf9197dde6b
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-122a-p4.txt (model: deepseek-reasoner)
+
+BUG severity=MED — Appendix §A27 line 13 "under `src/tests/db/`, or beside its step under `src/tests/steps/<slug>/`" — src/tests/proof-slice.db.test.ts:1 "diff --git a/src/tests/proof-slice.db.test.ts" — the Postgres test sits at the top level of src/tests/, neither under src/tests/db/ nor under src/tests/steps/<slug>/ (proof-slice.mjs is analysis tooling with no step slug), so the named location is unmet — move it to src/tests/db/proof-slice.db.test.ts and rebase its imports ('./setup-testcontainer', '../../../scripts/analysis/proof-slice.mjs').
+
+DEFER severity=LOW — Acceptance #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — pasted D10b note "the logic test is green, src/tests/proof-slice.db.test.ts is written and NOT RUN" — no red file is named for the new timeoutMsFromVariable logic test or for the new A2 review-template block, while every other commit in the same notes names a redN.out — paste the red for both new blocks, or record them as open alongside the DB read.
+
+DEFER severity=NIT — Appendix §A27 line 13 "never a per-file package.json list (`step-conformance.infra`)" — NONE — this chunk carries no package.json, so I cannot see that `npm run test` excludes and `npm run test:db` includes `**/*.db.test.ts` — confirm both script globs on the head in the close evidence.
+
+MET — Acceptance #11 "A6 The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green" — src/tests/review-template.logic.test.ts:206 "describe('task-375 A2: one section list for the reviewer context, one extractSections', () => {" — the new block is appended after the existing describes and edits none of them.
+
+MET — Appendix §A27 line 13 "A test that needs Postgres is `*.db.test.ts`" — src/tests/proof-slice.db.test.ts:1 — the file carries the .db.test.ts suffix, so the naming half of the clause is met.
+
+MET — Appendix §A26 G0 "The purity codes run over compute **and its AST `require` closure**" — src/tests/proof-slice.logic.test.ts:286 "describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)'" — both edited files test analysis tooling, are not compute and are not in a compute require closure, so G1 to G13 owe no answer token here.
+
+REJECT — Appendix §A26 G1 "SQL over `pipeline_runs`/`sync_runs`/`logic_variables`/`schema_migrations`/`trade_configurations`" — the db test runs "SELECT variable_value FROM logic_variables WHERE variable_key = $1" at src/tests/proof-slice.db.test.ts:23 — G0 scopes these codes to compute and its AST require closure; a test that requires a module is not inside that module's closure, so this is not a G1 site.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 1
+
+---
+⏱  76574ms (76.6s)
+📊 Tokens — total: 33034, input: 17932, output: 15102, reasoning: 14353

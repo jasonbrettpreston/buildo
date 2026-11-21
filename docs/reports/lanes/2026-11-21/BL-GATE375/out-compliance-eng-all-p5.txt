@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:22:38.673Z file_sha256=93276e8a3393b3e1308318078cf39547d5644da00ab3e6629543c0643ecaf06a prompt_sha256=a235dfdfc35eba5bc7cf703d81cfa636f22bff7fe8d175c5236b5677d5f6d156
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-eng-all-p5.txt (model: deepseek-reasoner)
+
+MET — A.2 CONTEXT_SECTIONS, one constant with exact heading texts — "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" — the five heading texts and their order match the plan's list exactly, and the constant lives in scripts/lib/review-template.js as required, exported alongside the old exports.
+
+MET — A.2 PLAN_SECTIONS and extractSections shared — "const PLAN_SECTIONS = ['Description', 'Acceptance criteria', 'Implementation Plan'];" — the plan-phase material is exactly the three sections D5 names, cut by the shared extractSections rather than a second copy.
+
+MET — A.4 lensContexts binds the prompt hash to the committed context — "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))" — the prompt_sha256 recompute now tests the CONTEXT_SECTIONS text of the committed context-rN.md files passed as lc.values, and listProof feeds that same array.
+
+MET — A.4 refuse placeholder, missing Description, missing Implementation Notes when the task has notes — "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(" with "const want = !hasNotes && !/^#{1,6}\s.*Implementation Notes/m.test(c.text) ? CONTEXT_SECTIONS.filter((x) => x !== 'Implementation Notes') : CONTEXT_SECTIONS;" — a placeholder context is a problem line, and a task with notes plus a context lacking Implementation Notes throws through extractSections into a problem line.
+
+MET — A.5 both-phases close rule deleted — "const phases = build ? ['out'] : ['plan', 'out'];" — a build or fix close now demands only the output compliance phase, the plan evidence having moved to the launch gate.
+
+MET — RR-0348 seats run on the plan only — "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };" — the seats are required only in GROUNDER-PLAN.md inside planGateInner, never at close.
+
+MET — D5 Plan line last and recomputed, B.3 close references — "const pl = [...g.matchAll(/^\s*Plan:\s*(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm)].pop();" and "for (const n of ['REPORT.md', 'GROUNDER.md', ...(textOf('TRIAGE.md') !== undefined ? ['TRIAGE.md'] : [])])" — the last Plan line is compared to planHash(taskText) and a missing report/grounder/triage reference is refused with the exact add-ref command.
+
+REJECT — A.2 "extractSections moves there from deepseek-review.js" — accused of leaving a second copy in deepseek-review.js — that file is in another chunk and cannot be seen here; the arrival in review-template.js and the createRequire import in check-lane-close.mjs are correct in this chunk, so this run cannot prove a duplicate.
+
+REJECT — A.4 context refusal stricter than the enumerated refusals — accused of refusing a context missing Task/Acceptance/Decisions though A.4 names only Description and Implementation Notes — A.2 defines the reviewer's context as exactly those five headings and acceptance A1 records all five heading lines present, so requiring them is the letter of the plan.
+
+REJECT — RR-0328 "outputs hashed over the placeholder are refused afterwards and there is no shim" — accused of having no migration path for old outputs — the ruling orders exactly that refusal, so refusing them is intended behaviour, not a defect.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  206336ms (206.3s)
+📊 Tokens — total: 71435, input: 32202, output: 39233, reasoning: 38391

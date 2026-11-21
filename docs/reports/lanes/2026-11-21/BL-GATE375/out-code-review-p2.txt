@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T04:08:02.657Z file_sha256=135f57ced043e73a806651d81e398842e991e9328ec1823c036e89fbec192a09 prompt_sha256=940304e1665348da67b04f2e6d0aad91ed6a50ffe47fd5f68335d94a1d7700b6
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-code-review-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — src/tests/backlog/backlog-brief-context.logic.test.ts:26 "const section = (ctx: string, name: string) => new RegExp(`## ${name}\\n([\\s\\S]*?)(?=\\n## (?:Milestone|Document sections|Decisions naming this task|Prior reviews and lane reports|Dependencies)\\n|$)`).exec(ctx)?.[1] ?? '';" — the lookahead still lists only the old headings while the brief now inserts "## Implementation Plan" and "## Implementation Notes" after Acceptance criteria, so any section extracted before them (Task, Description, Acceptance criteria) swallows both new sections up to Milestone, a stale helper the change makes wrong — add `|Implementation Plan|Implementation Notes` to the alternation.
+
+DEFER severity=MED — scripts/hooks/check-lane-close.mjs:438 "if ((i.contexts ?? []).length === 0) errors.push(`${id}: no committed review context file docs/reports/reviews/${id}/context-rN.md (written by backlog-brief.mjs, one per review round, committed with the round): the prompt hash of every lens output is recomputed with it`);" — unlike the sibling references check that is guarded "if (build) {" a few lines later, this requirement is unguarded, so any task type that reaches this point and has no context-rN.md (a record/drop/task close the brief never writes one for) is refused before the early `if (mine.length === 0)` return can let it through — guard it to build and fix (the only phases listProof/reviewErrors consume contexts for).
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs "findings = ge.verdicts.size;" — the "M findings" figure is the count of distinct verdict ids the grounder wrote, not the count of findings the lens outputs actually returned (`found = findingsIn(lensFiles)`), so an extra verdict line for an id no lens reported inflates the number; use `findings = found.length` (the grounder check already errors on any unruled finding).
+
+DEFER severity=LOW — scripts/lib/review-template.js "return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\\d+\\.md$/.test(f)).length : 0) + 1;" — this counts context files rather than the highest round number plus one, so a gap (for example context-r1.md removed but context-r3.md kept) makes the next round return 3 and overwrite an existing context-r3.md, breaking the "never overwritten" guarantee; take Math.max over the parsed N and add one.
+
+DEFER severity=NIT — scripts/hooks/check-lane-close.mjs "for (const c of cands.length ? cands : [{ value: null, cut: null, name: '' }]) {" — when no usable context exists this fallback feeds `materialOk` a null cut so every list is refused with "the stamped material is not the Description, Acceptance criteria and Implementation Plan sections of the committed context (none)", a false diagnosis on top of the real "no committed review context file" line already pushed; skip the list loop (or emit a single context error) instead.
+
+VERDICT: PASS on code correctness
+
+Note: the extracted listProof and grounderErrors are behaviour preserving against the removed inline code, and the new exports (PLAN_SEATS, planHash, planGateErrors, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections, contextRound) are all referenced, so no dead code was introduced in this chunk.
+
+---
+⏱  161965ms (162.0s)
+📊 Tokens — total: 66329, input: 31279, output: 35050, reasoning: 34260

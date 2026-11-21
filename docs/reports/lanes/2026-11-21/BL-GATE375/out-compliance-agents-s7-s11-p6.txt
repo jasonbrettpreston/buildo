@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:12:30.936Z file_sha256=17a229178a72e2d495af03ca50657d894f404a3c851aa7d0552952d3b079502a prompt_sha256=0f7603536956a2435214dcefc85f20df9e34455785b50cf01cc4d82eb985f0c4
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-agents-s7-s11-p6.txt (model: deepseek-reasoner)
+
+BUG severity=MED — 08_agents.md §11.3 "Red must land at the DESIGNED assertion; red-for-the-wrong-reason is a test defect found NOW." — src/tests/backlog/rule-lists.logic.test.ts:813 "it('complianceRefs: an entry for a file path with a comma is the id alone (backlog splits --add-ref at commas); entries compare by the id token'" — the pasted red for this lock is "Red for this commit was a typecheck refusal (complianceRefs not exported), in red7.out", so it never reds on the comma-split/id-token assertion it names — first write the naive full-path entry, record the assertion red, then the fix.
+
+BUG severity=MED — 08_agents.md §11.1 "a plan or fold may not contain a claim that COULD be executed but wasn't" — pasted "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — AC #8 requires the pre-A6 lens-input on surface-135 to exit 1 naming "## Register"; only the unit test models it, the real command was not run — run the old-head CLI with a 60,000-character material and paste exit 1 naming "## Register".
+
+BUG severity=MED — 08_agents.md §11.3 "a lock that was never red against the defect it names is not a lock" — src/tests/proof-slice.logic.test.ts:285 "describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)'" — the test exercises only timeoutMsFromVariable's validation, never that the runner reads the variable, and the build note admits "DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable", so it cannot red on the literal the defect names — add the source-scan red that the runner consumes TIMEOUT_VARIABLE, as the D10 buffer test does with "not.toMatch(/maxBuffer:\s*\d/)".
+
+DEFER severity=LOW — 08_agents.md §11.3 "Survive-the-fix locks (green-both) are stated as such per case." — src/tests/backlog/rule-lists.logic.test.ts:722 "it('a single row that alone passes the room is refused naming the list and section (the old throw)'" — this asserts behaviour unchanged before and after A6 yet is not stated as a green-both lock, and the name says "passes the room" where the 5000-char row exceeds it — rename to state it survives A6 and say "exceeds the room".
+
+DEFER severity=LOW — 08_agents.md §11.2 "an expanded edit set kills every restated scope claim" — src/tests/backlog/rule-lists.logic.test.ts:4 "lens input (one file when small, split by the list's own headings when big, never trims, refuses what cannot fit)" — A6 also splits a heading-less block at table rows and blank-line paragraphs, so "refuses what cannot fit" is now stale for those blocks — extend the header comment to name the row and paragraph split.
+
+REJECT — 08_agents.md §11.1 "No unexecuted executable claim" — src/tests/proof-slice.db.test.ts is written and never run — not a real issue here because AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" and the build note "the task is NOT complete" keep it open, not claimed green.
+
+MET — 08_agents.md §7.7 "Security fires only on money/auth/PII/admin" — src/tests/backlog/rule-lists.logic.test.ts:647 — D11b fires the security lens for admin and PII paths and a control path naming neither adds none.
+MET — 08_agents.md §11.3 "proven in BOTH directions" — src/tests/backlog/rule-lists.logic.test.ts:706 — A6 test splits an oversized table at rows while the control "the same table that fits is one file" stays one.
+MET — 08_agents.md §11.4 / A.2 "One constant CONTEXT_SECTIONS" — src/tests/review-template.logic.test.ts:205 — asserts CONTEXT_SECTIONS equals the five exact headings and extractSections throws on a missing heading.
+MET — RR-0343 "labelled means i need to know its a compliance document" — src/tests/backlog/rule-lists.logic.test.ts:790 — complianceRefs and check-tasks produce entries starting "compliance:" distinct from other references.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 5
+
+---
+⏱  96677ms (96.7s)
+📊 Tokens — total: 48749, input: 28643, output: 20106, reasoning: 19041

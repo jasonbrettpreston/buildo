@@ -108,4 +108,34 @@ function loadReviewNotesBlock(filePath) {
   return { notesPath: rel, block };
 }
 
-module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX };
+/**
+ * task-375 A2: the reviewer's context is the task, sized. ONE list of headings of the context file docs/reports/reviews/<task>/context-rN.md
+ * (CONTEXT_SECTIONS) and the plan phase's material (PLAN_SECTIONS), shared by the review tool, rule-lists.mjs lens-input and the close check.
+ */
+const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];
+const PLAN_SECTIONS = ['Description', 'Acceptance criteria', 'Implementation Plan'];
+
+/** Keep only the markdown sections whose heading line contains one of `wanted` (to the next heading of the same or higher level); throws on a missing heading. */
+function extractSections(markdown, wanted) {
+  const lines = markdown.split('\n');
+  const out = [];
+  for (const want of wanted) {
+    const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && l.includes(want));
+    if (start === -1) throw new Error(`--section "${want}": no heading contains that text`);
+    const level = lines[start].match(/^(#+)/)[1].length;
+    let end = lines.length;
+    for (let i = start + 1; i < lines.length; i += 1) {
+      const m = lines[i].match(/^(#+)\s/);
+      if (m && m[1].length <= level) { end = i; break; }
+    }
+    out.push(lines.slice(start, end).join('\n'));
+  }
+  return out.join('\n\n');
+}
+
+/** The number of the next review round of a task: the context-r<N>.md files already in `dir` (docs/reports/reviews/<task>/) plus one. ONE count, shared by the brief that writes the file and the launch that names it. */
+function contextRound(dir) {
+  return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
+}
+
+module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections, contextRound };

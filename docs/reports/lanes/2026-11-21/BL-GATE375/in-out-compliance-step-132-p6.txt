@@ -1,0 +1,668 @@
+LIST step-132 sha256:5bf284c053f515fe13656559a2b7889d57d2fca656be8645340319c147cd4622 material sha256:a66a6c53fc500b2aec7ad3bfe0037c30ef7a8911d26862731d7972bc9ec4b9e5 part 2 of 2 chunk 3 of 6
+RULE LIST step-132 (docs/specs/01-pipeline/132_step_standard_handbook.md, sections 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 3 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/hooks/check-lane-close.mjs","scripts/lib/review-template.js"]
+
+## 4. Cross-cutting
+
+### Lifecycle stages
+
+How a step moves from legacy script to converted.
+
+- **x-stages.1** A step's stage is declared data in `converted.json` `pending[]`: `red_suite` → `descriptor_only` → `compute_ported` → `runner_wired` → `shape_clean` (or `shape_clean_pending_recapture`) → converted. Red tests are declared there, never a code skip. The declared stage alone decides which gates cannot yet be answered (`stageAwaitsCaptures`); a pending row with no descriptor file does not block whole-registry selection.
+  *Why:* Progress is visible and a half-built step is graded for what it is.
+  Rules: `R-K` `R-K.1` `R-DU` `R-EF` `R-K.2` · history: `M5` (SPEC121-M5)
+
+- **x-stages.2** The commits are ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]`. A pending step lands ② at `compute_ported` with its legacy shell live, and may swap its shell before ③ only once every declared upstream (`inputs.reads.steps`) is converted, or pending past ② and not awaiting captures (`stageAwaitsCaptures`); fast invariant #54 checks this, and an unregistered or unknown upstream fails.
+  *Why:* A downstream step never runs on a converted shell before its producer.
+  Rules: `R-EQ` `Q-R-EQ-1` `R-FH` `R-JQ` · history: `W4A-R6`
+
+- **x-stages.3** A net-new step (no legacy predecessor) has no PRE capture; its G8 reference is its committed POST. It is accepted as net-new only with the full R-DK evidence set: census `legacy: "none"`, no git history of the script before its descriptor, no `legacy_citation`, a `recapture.json` entry with `via` bracket or env, a red-evidence artifact (gate K) and a rerun-zero proof on every POST. Otherwise fast invariant #22 refuses it by name, and any PRE file on an accepted slug is RED.
+  *Why:* There is nothing older to compare against.
+  Rules: `R-DK` · history: `R-CS`
+
+- **x-stages.4** A cutover stages every owner spec named in the system map, or declares `Spec-diff: N-A` (#43). Target Files are generated into the owner spec; every spec that names a chained step classifies it; fleet counts are derived from registries, never retyped.
+  *Why:* Specs and registries stay in step with the code without anyone remembering to update them.
+  Rules: `R-AF` `R-AN` `R-BB` `R-BE`
+
+### Captures, goldens and proof
+
+How a conversion proves it changed nothing it did not mean to.
+
+- **x-captures.1** Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets; a ledger-gated step whose bracket recipe passes no force env has that bracket retaken before its standalone capture, CHAT-89); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs. A post witness trace with no golden capture and no `recapture.json` entry is an orphan: it is deleted by literal path only when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints, otherwise it gets a recipe and is retaken (R-IJ).
+  *Why:* A capture nobody can retake proves nothing.
+  Rules: `R-AC` `R-AI` `R-BQ` `R-CZ` `R-DQ` `R-IJ` `R-JP` `R-KC`
+
+- **x-captures.2** A forced-write table is proven by a bracket: a perturbation cohort (when a guard includes the step's own stamp), delete-and-reinsert (INSERT-only), or derived-status (derived targets), counted through gate G's `count_path`. A PRE taken with a retired input argv stands in only under a closed predicate.
+  *Why:* A rerun that writes nothing proves nothing about a guarded write path.
+  Rules: `R-AS` `R-BD` `R-BR` `R-DN` `R-DP` `R-ET` `R-GZ` `R-JH` `R-KA`
+
+- **x-captures.3** The golden differential is a mechanical fingerprint gate (G8, #38/#40). Every diff is explained only in `docs/reports/golden/<slug>/explained-diffs.json`, citing a Defect Ledger id; an unexplainable differential stops the work.
+  *Why:* A commit message saying "diff is fine" is not evidence.
+  Rules: `R-C` `R-DA` `K4` `G8` (SCORECARD-G8) `R-GR`
+
+- **x-captures.4** A step that calls a paid or outside API is captured and replayed from committed recorded responses.
+  *Why:* Tests and captures must not spend money or depend on someone else's uptime.
+  Rules: `R-EL`
+
+- **x-captures.5** A class-A behaviour (Spec 123 risk class A) is proven by a both-directions lock, shown red then green (scorecard G7; mutation testing is not a gate). Tests write before-images into a per-file sandbox, never the real golden tree. A live test proves its child process completed before asserting on its output.
+  *Why:* A test that cannot fail, or that reads output that never arrived, proves nothing.
+  Rules: `R-E` `R-CO` `R-CP` `G7` (SCORECARD-G7) · history: `M7` (SPEC121-M7)
+
+### Cross-step order
+
+How steps that share tables are ordered and checked.
+
+- **x-crossstep.1** A same-statement write guard is not a chain-order edge. ORDER rows with neither endpoint converted and unproduced reads whose inserter is unconverted are counted against a shrink-only ceiling, not hard. Gate D reads one converted-set view.
+  *Why:* The ledger stays strict for converted steps without blocking on legacy ones.
+  Rules: `R-BN` `R-BO` `R-BP` `R-EE`
+
+### step-validate and the scorecard
+
+The one command that grades a step.
+
+- **x-validate.1** One command grades a step: `node scripts/analysis/step-validate.mjs --step=<slug>` (or `--all`, `--staged`, `--fast`). It validates the DATA (descriptor, fast invariants) and the scorecard grades the PROCESS; it runs in the hooks, never as a separate track.
+  *Why:* One integrated answer, the same at the desk and in the hook.
+  Rules: `R-R` `Rule-13` `Rule-13-addendum-R-T`
+
+- **x-validate.2** The scorecard gates G0–G9 (Spec 123 §6; aliases SCORECARD-G0…SCORECARD-G9, not the Gate E purity codes): G0 boundary freeze, G1 archaeology, G2 churn × complexity, G3 Intent Ledger (only tables with a Disposition column are scored), G4 risk class, G5 seam map, G6 classification with Defect Ledger ids, G7 test adequacy, G8 differential, G9 §R Reflection. Ship bar: ≥14/17 with G6–G8 full; with E3 on it is 17/17. Markdown header and separator rows are never counted as data.
+  *Why:* The assessment is graded by machine, the same for every step.
+  Rules: `R-F` `R-FA` `G0` (SCORECARD-G0) `G1` (SCORECARD-G1) `G2` (SCORECARD-G2) `G3` (SCORECARD-G3) `G4` (SCORECARD-G4) `G5` (SCORECARD-G5) `G6` (SCORECARD-G6) `G9` (SCORECARD-G9) `SHIP-BAR` `R-FB` `R-JD` `R-KM` `R-LC`
+
+### The V3 label
+
+What `standard=V3` means and how it is enforced.
+
+- **x-v3.1** `standard=V3` prints only when all nine R-EY conditions hold, fail closed: (1) compute purity clean, (2) no gate-ledger allowance, (3) #44 PASS with nothing attributed, (4) no blocking registry failure, (5) no stage-gated red, (6) G0–G8 at max with no other hard stop, (7) the five words all PASS with nothing deferred, (8) no unmet `cutover_prereq`, (9) every exception naming the step cites a register id. Otherwise it prints `standard=V2 (fails: …)`. E1 (ratchet: a step that read V3 never drops) and E2 (cutover gate) are on; E3 (every converted step V3) is built off behind `gate_v3_hard_gate_enabled`. R-IH stage 1: `step-validate` prints an advisory `R-EY (9) why-only` line for each step with a deviation whose only register id is in `why`, plus a run total; no verdict changes until stage 3 reads `adjudicated_by` only.
+  *Why:* One list replaces the older "five words", "six parts" and "four conditions"; the label means the same thing everywhere.
+  Rules: `R-IH` `R-IK` `R-JC` `R-BA` `R-CN` `R-DT` `R-EY` `STD-VERSIONS`
+
+- **x-v3.2** An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint. That night is split (R-II): night 1 carries the citations, and the refresh_snapshot producer-read waits for its own RE-FREEZE at permits ③.
+  *Why:* Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate.
+  Rules: `R-FI` `R-FJ` `R-FK` `R-FL` `R-FM` `R-FN` `R-FO` `R-FP` `R-FQ` `R-FR` `R-FS` `R-FT` `R-FU` `R-FV` `R-FW` `R-FX` `R-FY` `R-FZ` `R-GA` `R-GB` `R-GC` `R-GD` `R-GE` `R-GG` `R-GH` `R-GI` `R-GJ` `R-GK` `R-GL` `R-GM` `R-GN` `R-GO` `R-II` `R-KG` `R-KH` `R-KV` `R-KX` `R-LE` `R-LS` `R-LT` `R-LU` `R-LV` `R-LW` `R-LX` `R-LY` `R-LZ` `R-MA` `R-MB` `R-MC` · history: `R-GF`
+
+- **x-v3.3** An exception entry with no operator decision found (the condition-9 census class c) goes to the operator as a family ruling, recorded by decision log and register row like any other: the 2026-10-20 rulings are R-HN…R-HZ (V3 Exception Rulings page and chat CHAT-22) and the CoA cutover rulings R-IA…R-IF (R-IB and R-IC also cover enrich_permits' twin deviations, operator CHAT-24). A conversion retires a legacy audit row, `records_meta` key, constant row or log-only query only when the entry cites a consumer grep with zero readers or shows the counted mechanism is gone (R-HR, a named exception to Spec 123 §3.1); a legacy defect corrected inline is ratified per entry, never as a general rule (R-HQ). Citations on a fingerprint-locked descriptor ride the bundled RE-FREEZE night.
+  *Why:* Condition (9) needs every exception to cite a ruling, and a family ruling with its evidence condition stated once is cheaper to check than one ruling per entry.
+  Rules: `R-HN` `R-HO` `R-HP` `R-HQ` `R-HR` `R-HS` `R-HT` `R-HU` `R-HV` `R-HW` `R-HX` `R-HY` `R-HZ` `R-IA` `R-IB` `R-IC` `R-ID` `R-IE` `R-IF` `R-JE` `R-JK` `R-JL` `R-JM` `R-JU` `R-KE`
+
+### Rulings protocol and the resolution ladder
+
+What to do when the standard does not answer your question.
+
+- **x-rulings.1** When no rung answers, use the protocol: one pass discovers and proposes (closed Intent Ledger vocabulary); a different party adjudicates, named and dated; the ruling gets a dated register row in Spec 124 §5 (or a 124a LIVE REGISTER section) that answers the seven admission questions and names a lock; the same commit adds the both-directions test and amends the spec; a pilot-local defect becomes a ruling only if it will recur in another archetype; a document move is tool-performed and verified by a line-set diff. Cited ids must resolve.
+  *Why:* A rule without a lock is not a rule, and the person who found a problem does not get to rule on it.
+  Rules: `R-I` `R-J` `R-AA` `R-AM` `R-DF` `P4-1` `P4-2` `P4-3` `P4-4` `P4-5` `P4-6` `P4-7` `R-KO`
+
+- **x-rulings.2** Resolution ladder: ground the problem (query, grep, read; cite the owner spec from the system map); classify it CONTRACT / INCIDENTAL / DEFECT; resolve at the first fitting rung (descriptor, declared check, logic variable, library change, shape rule, new schema field); if none fits or two conflict, go to the protocol; add a both-directions test and re-run the golden capture; record a Defect Ledger id and a §R Reflection entry when it may recur. Route each learning to the most enforced artifact that can hold it.
+  *Why:* The cheapest enforced answer wins, and lessons are kept where a machine reads them.
+  Rules: `L7-0` `L7-1` `L7-2` `L7-3` `L7-4` `L7-5` · history: `M9` (SPEC121-M9) `M10` (SPEC121-M10)
+
+- **x-rulings.3** Where the standard is written: Spec 122 is the standard (the live schema and behaviour) and the Spec 124 register is the policy; on policy the register governs, on the schema and behaviour Spec 122 does. Spec 123 is the standard for the conversion procedure and its G0–G9 gates. This handbook is Spec 132, generated from both through the rule map; cite a line as `Spec 132 §<line id> (R-xx)`. Every spec opens with one role banner (authority register, standard, design, historical, generated handbook); a historical spec adds no rule id, so a new rule goes to the register.
+  *Why:* Each question has one home, and a reader knows from the first lines what a spec may decide.
+  Rules: `R-GU` `R-GV` `R-GW` `R-GX` `R-HH` `R-HI` `R-HJ` `R-IY`
+
+- **x-rulings.4** Operator decisions are transferred by generator, never by hand: each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`; `node scripts/analysis/decision-log.mjs --write` emits a register-row skeleton per approved decision, and every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`; `--check` at pre-commit fails on an uncovered decision or a citation of an unknown one. Each log is re-derived at `--check` from its raw record under `docs/reports/decisions/raw/`, so a hand-edited log fails. Rulings recorded this way for a step not yet built (resolve_bylaws, Spec 134) govern its plan; a report surface has one declaration (R-RS).
+  *Why:* A ruling transferred by hand is a ruling that can be forgotten; the log is the operator's own words and the check proves each one landed.
+  Rules: `R-GY` `R-HB` `R-HC` `R-HD` `R-HE` `R-HF` `R-HG` `R-HK` `R-HL` `R-HM` `R-IL` `R-IM` `R-IN` `R-IO` `R-IP` `R-IQ` `R-IR` `R-IS` `R-IT` `R-IU` `R-IV` `R-IW` `R-IX` `R-IZ` `R-JA` `R-JI` `R-JJ` `R-JN` `R-JO` `R-JR`
+
+### Verification before integration and acceptance
+
+What must be independently checked before work lands.
+
+- **x-verify.1** Before an integrate-N branch is built, a fresh lane that did not write the work verifies every landing lane's claims read-only (cited ids and quotes, red-first tests red on the parent, counts and exit codes reproduced). The report lives at `docs/reports/verification/<branch>.md` and every integrate commit cites it (`.husky/commit-msg`).
+  *Why:* Self-reported results are not evidence; an independent re-check is.
+  Rules: `R-EZ` · history: `M14` (SPEC121-M14)
+
+- **x-verify.2** Cloud acceptance runs are pinned to a commit sha, use partial `--only` / `--from` runs, and form one end-of-sources acceptance set; ceilings are never raised (resize instead); EP-PIN-D17 blocks every post-sources legacy slug. A chain is complete only when converted, with no ledger rows, LDG-10 complete, cloud accepted and tooling integrated.
+  *Why:* Acceptance grades the code that will ship, once, with nothing waved through.
+  Rules: `R-AB` `R-AL` `R-AQ` `R-AQ.1` `R-BC` `R-ED`
+
+### Tooling, hooks and commit form
+
+How the repo machinery runs.
+
+- **x-tooling.1** Pre-commit is file-only, staged-scoped and inside a pinned time budget (#52), and runs every generator `--check`. The full suite runs at pre-push (8 forks; pre-commit 4; never above 10). Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`. Lanes serialise DB writers, full suites and landings on the host (R-CQ, a process rule; nothing enforces it). `migrate.js --only` applies chosen migrations in order, failing closed on dependencies.
+  *Why:* Commits stay fast and safe on the shared host; slow and DB work runs where it belongs.
+  Rules: `R-GQ` `R-AG` `R-CQ` `R-DH` `R-DJ` `R-DS` `R-EC` `R-EU` `R-KI` `R-KL` `R-KP` `R-KY` `R-LB` `R-LF` `R-LG` `R-LH` `R-LI` `R-LJ` `R-LK` `R-LL` `R-LM` `R-LN` `R-LO` `R-LP` `R-LQ` · history: `R-BV`
+
+- **x-tooling.2** Commit form: after two full-form conversions of an archetype, later ones may land compressed (three commits), and compressed is then the default; full form needs a stated reason in the assessment.
+  *Why:* Ceremony is spent where an archetype is still new.
+  Rules: `R-PACE-1` `R-AH`
+
+- **x-tooling.3** Programme promises are declared data in `programme-items.json`, generated and gated; a programme-gate precondition is locked both directions, never a printed count. A proposal to add a box states its measured read/write cost at production scale. Stop and redesign if a per-step override is needed.
+  *Why:* Promises that live only in prose get forgotten.
+  Rules: `R-T` `R-Z` `P3` `K2` `R-KK` `R-KQ` `R-KU` `R-LR` `R-KW` `R-KZ` `R-LD`
+
+- **x-tooling.4** This handbook's own success test: a new engineer can build, read and diagnose a step from it alone.
+  *Why:* Spec 120's test, kept from Spec 121 M2.
+  Rules: history: `M2` (SPEC121-M2)
+
+## 6. Rules with no or partial machine check (80 in force)
+
+"A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 50 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
+
+Enforcement across all 444 mapped ids: 296 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 80 none (see the glossary).
+
+| Rule | Class | Line | Reason |
+|---|---|---|---|
+| R-H | partial | core.6 | partial: skip-row WARN locked (skipRecordsMeta); the INFO-vs-WARN choice itself is unchecked (GAP G-5, 124:137) |
+| R-J | none | x-rulings.1 | no machine check: document governance |
+| R-N | none | link.3 | no lock named (commit e01cad11) |
+| R-O | none | matcher.1 | no machine check: assessment-report narrative only |
+| R-AB | partial | x-verify.2 | partial: chain-sources-workflow.infra warns that an unpinned run is "NOT valid as an R-AB acceptance run"; acceptance-set completeness unchecked |
+| R-BT | none | core.17 | no lock: "no lock yet — PLANNED with the step" (124a:237) |
+| R-BY | partial | ingestor.3 | partial: ingest-prereq-pdf-acquire.logic (not named in row) |
+| R-CJ | partial | enricher.2 | partial: purity-s3-exec-seam.logic (scope_retire_lock_held; not named in row) |
+| R-CT | partial | core.12 | partial: per-step locks only (steps/coa/violations D3 and the classify_coa_* violations assert their targets declare rls_bypass_or_policy); write.js assertWritePrivileges checks declared tables at runtime; fleet gate owed (V3 lane C1) |
+| R-CU | partial | core.12 | partial: generator-locked execution.batch (INGESTOR); library split owed (V3 lane C2) |
+| R-DF | partial | x-rulings.1 | partial: spec124-register-locks.logic now reads every register row (widened 2026-10-20, observe-1), but 101 unlabelled and 15 lockless pre-R-CX rows sit on its shrink-only grandfather lists |
+| R-EL | partial | x-captures.4 | partial: c6-rulings.infra; live-call FAIL owed (PIN C6-6-RECORDED) |
+| R-EW | partial | core.10 | partial: src/tests/steps/coa/dispatch.logic.test.ts locks (i) for coa only; (ii) every other converted step's compute lock built through the real dispatch is not asserted (older hand-built locks on the closed list PIN R-EW-LOCKS) |
+| R-EX | partial | ingestor.5 | partial: src/tests/capture-rerun-proof.logic.test.ts locks the seen_drift proof (rewritten == touched, row delta 0, projected hash) and the zero_writes FAIL; no static check that every seen-column target declares declared_drift (caught only when the POST proof runs) |
+| Rule-11 | partial | ingestor.1 | partial: checkOrderGuaranteesCited (declared half only; GAP G-3 open) |
+| Rule-10-addendum-R-H | none | core.6 | no machine check for INFO-vs-WARN (GAP G-5) |
+| P4-1 | none | x-rulings.1 | no machine check: procedural |
+| P4-2 | none | x-rulings.1 | no machine check except R-EZ commit-msg citation for integrate branches |
+| P4-4 | partial | x-rulings.1 | partial: spec124-register-locks.logic names-a-lock arm covers every row, with 15 lockless pre-R-CX rows grandfathered (shrink-only) |
+| P4-6 | none | x-rulings.1 | no machine check: G9 checks the Reflection section exists |
+| L7-0 | none | x-rulings.2 | no machine check found (consolidate-1 inventory) |
+| L7-3 | none | x-rulings.2 | no machine check found (consolidate-1 inventory) |
+| K2 | none | x-tooling.3 | no machine check: programme stop criterion; UNCERTAIN who checks |
+| GAP-G-3 | none | ingestor.1 | no machine check: completeness half open |
+| GAP-G-5 | none | core.6 | no machine check: author judgment |
+| R-FD | none | core.6 | no machine check: assert-coa-freshness.infra locks the two bounds' externalization, not the inclusive form or the retired fail>warn refusal (moved from W4A-R2, whose register row R-FD is) |
+| Q-B1 | none | link.4 | no machine check: an open operator question; its interim constraint (averaging not_evaluated) is prose in the 124a R-CR row |
+| Rule-1 | partial | core.1 | partial: step-conformance.infra — compute-shape rules fire on the known-bad fixture (the compute slice of Rule 1 only) |
+| Rule-5 | partial | core.2 | partial: step-schema.logic — checks may never be "none" (checks:[] minItems not fixture-tested) |
+| V6 | partial | core.3 | partial: s4-empty-source-guard-real-descriptors.logic — typed empty_source string and array forms halt end-to-end (illegal form rejection untested) |
+| R-AW | partial | core.8 | partial: logic-var-parity.logic — seed/code literal parity for the founding instance only; no fleet check |
+| R-FC | partial | core.8 | partial: r-de-vocabulary.logic — <slug>_<name> end-state naming; migration with values carried not asserted (moved from W4A-R1, whose register row R-FC is) |
+| R-CF | partial | core.9 | partial: refresh-snapshot-query-consolidation.logic — one step declares execution.read_gucs and sets no GUC in compute; runner issuing the GUC not asserted |
+| Rule-8 | partial | core.12 | partial: step-schema.logic — per-target guard_why if/then fires; step-level discipline refusal untested |
+| R-FF | none | core.14 | no machine check: classify-coa-scope.infra asserts the legacy script contract, not the by:"pin" watermark form; only the reader side is locked (R-DO/R-ER) (moved from W4A-R4, whose register row R-FF is) |
+| R-AY | partial | core.17 | partial: steps/compute_parcel_cost_estimates/violations — founding step's population bound only; not required fleet-wide |
+| R-EV | partial | ingestor.6 | partial: steps/coa/compute.logic — TZ-independent data_hash; admission conditions (a)-(d) not asserted |
+| R-CR | partial | link.3 | partial: migration-255-parcel-abutments.infra — trigger installed; guards.requires declaration not asserted |
+| R-CI | partial | enricher.2 | partial: purity-s3-exec-seam.logic — undeclared writesRef refused; library-owned hygiene DELETEs not asserted |
+| R-AI | partial | x-captures.1 | partial: step-conformance.infra — indirect: step-validate self-test (expectedCaptureChains fixtures) passes |
+| R-CP | partial | x-captures.5 | partial: gate-score-floor.infra — notLookedReasons locked both ways; not that every live test calls it |
+| Rule-13 | partial | x-validate.1 | partial: step-conformance.infra — scorecard block staleness only |
+| Rule-13-addendum-R-T | partial | x-validate.1 | partial: step-library.logic — invariants/plausibility EVERY_RUN executor rows; DATA-vs-PROCESS split not asserted |
+| P4-3 | partial | x-rulings.1 | partial: spec124-register-locks.logic — register rows parse with unique ids; statement/amends columns unchecked |
+| L7-2 | none | x-rulings.2 | no machine check: rung ordering is a judgement call; no test (verify-12 N1 re-audit) |
+| R-AQ | partial | x-verify.2 | partial: run-chain-selection.logic — --only/--from partial-run mechanism; "one acceptance set" not asserted |
+| R-AH | partial | x-tooling.2 | partial: step-conformance.infra — indirect: step-validate self-test (checkCompressedFormDefault fixtures) passes |
+| R-KF | none | core.9 | OWED MB-31: step-closure.logic.test.ts (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KI | none | x-tooling.1 | OWED MB-68: hook arms; hooks-composition.infra (MB-68) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KJ | none | core.9 | OWED MB-31: the R4-09 input-allowlist test (step-closure.logic.test.ts) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KK | none | x-tooling.3 | OWED MB-67: mcbylaws-queue-check.mjs (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KQ | none | x-tooling.3 | OWED MB-73: mcbylaws-promises.logic.test.ts (MB-73) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KS | none | core.11 | OWED MB-31: trace test in catalogue lock (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-KT | none | core.9 | OWED MB-31: step-closure.logic.test.ts input allowlist (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-KU | none | x-tooling.3 | OWED MB-73: mcbylaws-promises.logic.test.ts red fixtures (MB-73) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-LR | none | x-tooling.3 | OWED MB-67: gate arm (MB-67) refuses any McBylaws script or night whose database target is not 127.0.0.1:54322, red fixture a remote target (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-KW | none | x-tooling.3 | OWED MB-67: mcbylaws-queue-check.mjs on temp repos Q1..Q5 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-KX | none | x-v3.2 | OWED MB-67: hold.mjs H1..H7 per-commit parent-tree check (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LB | none | x-tooling.1 | OWED MB-67: precommit-budget.mjs --measure with a re-pinned evidence file (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LG | none | x-tooling.1 | OWED MB-68: loop-gate record schema tests (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LH | none | x-tooling.1 | OWED MB-68: loop-gate regression-ratchet and oracle-first red fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LI | none | x-tooling.1 | OWED MB-68: loop-gate oracle-first red fixtures, split-commit and glob-miss cases (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LJ | none | x-tooling.1 | OWED MB-68: loop-gate one-increment fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LK | none | x-tooling.1 | OWED MB-68: loop-gate floor_fell fixture on an OWED line (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LL | none | x-tooling.1 | OWED MB-68: loop-gate --mode ci prints "external groups: not run in CI" (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LM | none | x-tooling.1 | OWED MB-68: loop-gate canary fixture (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LN | none | x-tooling.1 | OWED MB-68: hooks-composition.infra: the loop arm is wired by MB-67 only (MB-67, MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LO | none | x-tooling.1 | OWED MB-68: loop-gate verify --json prints rounds_since_thresholds (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LP | none | x-tooling.1 | OWED MB-68: loop-gate fast-set and full-set runs (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LQ | none | x-tooling.1 | OWED MB-68: loop-gate reason-length red fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LS | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LT | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LU | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LV | none | x-v3.2 | OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LW | none | x-v3.2 | OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LX | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LY | none | x-v3.2 | OWED MB-67: the gate tests do not yet name R-LY (recorded 2026-10-31-batch-an) |
+| R-LZ | none | x-v3.2 | OWED MB-79: no test names R-LZ yet (recorded 2026-10-31-batch-an) |
+| R-MB | none | x-v3.2 | OWED MB-84: the lock is the gate exceptions test and the MB-84 push-gate run (recorded 2026-11-03-batch-av) |
+| R-MC | none | x-v3.2 | OWED MB-79 (f): no test names R-MC yet (recorded 2026-11-03-batch-aw) |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
+index d52921dc5ea1751f92feb692eeab811af30bd4e1..dc94b8f3468adb193398dc78d9b8a6837847e0c1 100644
+--- a/scripts/hooks/check-lane-close.mjs
++++ b/scripts/hooks/check-lane-close.mjs
+@@ -34,11 +34,14 @@ import { spawnSync } from 'node:child_process';
+ import crypto from 'node:crypto';
+ import fs from 'node:fs';
+ import path from 'node:path';
++import { createRequire } from 'node:module';
+ import { fileURLToPath } from 'node:url';
+ import { asList, parseFM } from '../analysis/backlog-lib.mjs';
+ import { coveredBy, DIFF_ARGS, diffPaths, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
+ import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
+ 
++const { CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections } = createRequire(import.meta.url)('../lib/review-template.js');
++const PLACEHOLDER_CONTEXT = '(no pasted context provided)';
+ const git = (a) => { const r = spawnSync('git', ['-c', 'core.quotepath=false', ...a], { encoding: 'utf8', maxBuffer: 1 << 28 }); return { status: r.status ?? 1, stdout: r.stdout ?? '' }; };
+ const fail = (lines) => { for (const l of lines) process.stderr.write(`check-lane-close: ${l}\n`); return 1; };
+ const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+@@ -62,7 +65,7 @@ function reviewErrors(name, text, template, inputText, opt = {}) {
+   // F3: the prompt hash is recomputed from the repo template, the committed input and the context value the tool used; an arbitrary or hand-written value does not match
+   if (opt.templateText !== undefined && inputText !== null) {
+     if (opt.templateText === null) e.push(`${name}: the review template ${template} is not in the repo (index or HEAD), so prompt_sha256 cannot be recomputed (fail closed)`);
+-    else if (!lensContexts().some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c }))) e.push(`${name}: the REVIEW header prompt_sha256 is not the hash of the prompt the review tool builds from ${template}, the committed input and the context (an output not made by the tool on that input, or an edited input)`);
++    else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c }))) e.push(`${name}: the REVIEW header prompt_sha256 is not the hash of the prompt the review tool builds from ${template}, the committed input and the context (an output not made by the tool on that input, or an edited input)`);
+   }
+   if (!/^VERDICT:/m.test(text)) e.push(`${name}: no VERDICT line (a failed run is not a lens output)`);
+   return e;
+@@ -308,10 +311,112 @@ export function gitFacts(L) {
+  *          laneFiles:{dir:string,name:string,text:string}[], changed:string[], expectedPaths?:string[], diffOf?:(paths:string[])=>string|null, readRepo:(p:string)=>string|null}} i
+  */
+ /**
+- * HOOK POINT (task-375, the reviewer context): the context values a lens run may have used. Today the review tool is run with no --context, so its placeholder is the one value; when task-375 builds the
+- * context option, this returns the context text the lane passed (read from the committed pasted-context file) and prompt_sha256 is recomputed with it. Nothing else changes in the check.
++ * task-375 A4: the context values a lens run may have used. `contexts` [{name, text}] are the committed context files of the task (docs/reports/reviews/<task>/context-rN.md); each one's value is the text of
++ * its CONTEXT_SECTIONS (the sections the review tool is passed with --section), so the prompt_sha256 recompute binds it. A context that is the placeholder, lacks a required heading (the Description,
++ * and Implementation Notes when the task has notes) is a problem line, never a value. An output must match one value (one file per review round).
+  */
+-export const lensContexts = () => [undefined];
++export function lensContexts(contexts, hasNotes = true) {
++  const values = [];
++  const problems = [];
++  for (const c of contexts) {
++    if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(`${c.name}: the review context is the placeholder "${PLACEHOLDER_CONTEXT}": the lenses must run with the committed context file (--context and one --section per ${CONTEXT_SECTIONS.join(', ')})`); continue; }
++    const want = !hasNotes && !/^#{1,6}\s.*Implementation Notes/m.test(c.text) ? CONTEXT_SECTIONS.filter((x) => x !== 'Implementation Notes') : CONTEXT_SECTIONS;
++    try { values.push(extractSections(c.text, want)); } catch (e) { problems.push(`${c.name}: ${e.message} (the context must hold the headings ${want.join(', ')})`); }
++  }
++  return { values, problems };
++}
++
++/**
++ * task-375 D5 (extracted from closeErrors, behaviour preserving): the separate grounder file `g` (named `label` in the messages) against the lens outputs `lensFiles` and their `findings`:
++ * Grounder differs from the Lane header, the lane being worked or launched and every other assignee; one Ruled line per output, recomputed; one verdict per finding with a quote on its cited line.
++ * Returns { errors, verdicts } (verdicts: parseVerdicts of g).
++ */
++function grounderErrors({ g, label = 'GROUNDER.md', lensFiles, findings, laneName, assignees, id, readRepo }) {
++  const errors = [];
++  const head = g.split('\n').slice(0, 25).join('\n');
++  const gr = /^\s*Grounder:\s*(.+?)\s*$/m.exec(head)?.[1];
++  const lh = /^\s*Lane:\s*(.+?)\s*$/m.exec(head)?.[1];
++  if (!gr) errors.push(`${label} has no "Grounder: <name>" header line`);
++  if (!lh) errors.push(`${label} has no "Lane: <name>" header line`);
++  if (gr && lh && clash(gr, lh)) errors.push(`${label}: Grounder "${gr}" is the same as Lane "${lh}" (or contains or is contained in it); a separate agent must ground`);
++  if (gr && clash(gr, laneName)) errors.push(`${label}: Grounder "${gr}" is the lane (${laneName}) or a name that contains or is contained in it; a separate agent must ground`);
++  if (gr) for (const a of assignees.filter((x) => nameKey(x) !== nameKey(laneName))) if (clash(gr, a)) errors.push(`${label}: Grounder "${gr}" is, contains or is contained in an assignee of ${id} (${a}); a separate agent must ground`);
++  const ruled = new Map();
++  for (const ln of g.split('\n')) { const m = /^\s*Ruled:\s*(\S+)\s+sha256:([0-9a-f]{12})\s+findings:(\d+)\s*$/.exec(ln); if (m) ruled.set(m[1], { sha: m[2], n: Number(m[3]) }); }
++  for (const f of lensFiles) {
++    const want = ruledLine(f.name, f.text);
++    const have = ruled.get(f.name);
++    if (!have) errors.push(`${label}: no "Ruled:" line for ${f.name} (expected: ${want})`);
++    else if (`Ruled: ${f.name} sha256:${have.sha} findings:${have.n}` !== want) errors.push(`${label}: the "Ruled:" line for ${f.name} does not match the committed output (the grounder ruled on sha256:${have.sha} findings:${have.n}, the file is now ${want.replace(`Ruled: ${f.name} `, '')}: the output was edited after grounding, or the count is wrong)`);
++  }
++  const verdicts = parseVerdicts(g);
++  const seenQuote = new Map();
++  for (const f of findings) {
++    const v = verdicts.get(f.id);
++    const form = 'form: <id> CONFIRMED|REJECTED|CONFLICT <path>:<line> "<quote>" [reason]';
++    if (!v) { errors.push(`${label}: finding ${f.id} has no complete verdict line (${form}): ${f.line.slice(0, 90)}`); continue; }
++    const q = squash(v.quote);
++    if (q.length < 20) { errors.push(`${label}: finding ${f.id}: the quote must be 20+ characters taken from ${v.file}:${v.line}`); continue; }
++    if (seenQuote.has(q)) errors.push(`${label}: finding ${f.id} has the same quote as ${seenQuote.get(q)}; each finding needs its own quote from the line it concerns`);
++    else seenQuote.set(q, f.id);
++    if (v.word !== 'CONFIRMED' && v.reason.length < 30) errors.push(`${label}: finding ${f.id} is ${v.word} with a reason under 30 characters (Spec 08 5.3: rejections carry reasons; a conflict says what the operator must rule)`);
++    if (path.isAbsolute(v.file) || v.file.split('/').includes('..')) { errors.push(`${label}: finding ${f.id}: ${v.file} must be a repo-relative path`); continue; }
++    if (v.file.startsWith('docs/reports/lanes/')) { errors.push(`${label}: finding ${f.id}: ${v.file} is a lane report; cite the code or the spec the grounder opened, not a lens output`); continue; }
++    const text = readRepo(v.file);
++    if (text === null) { errors.push(`${label}: finding ${f.id}: ${v.file} is not in the repo (index or HEAD)`); continue; }
++    const lines = text.split('\n');
++    if (v.line < 1 || v.line > lines.length) { errors.push(`${label}: finding ${f.id}: ${v.file} has no line ${v.line} (${lines.length} lines)`); continue; }
++    const cited = squash(lines[v.line - 1]);
++    if (!cited.includes(q)) errors.push(`${label}: finding ${f.id}: the quote is not on ${v.file}:${v.line}`);
++    else if (lines.filter((x) => squash(x) === cited).length > 3) errors.push(`${label}: finding ${f.id}: the cited line occurs more than 3 times in ${v.file} (a boilerplate line proves nothing): cite a line specific to the finding`);
++  }
++  return { errors, verdicts };
++}
++
++/**
++ * task-375 D5 (extracted from closeErrors, behaviour preserving): the proof of ONE rule list's compliance lens output(s) in `files` for the given phases: REVIEW header and prompt hash, committed input, stamp,
++ * whole-list recompute, chunk coverage (out phase). Returns the refusal line, or null when valid. `materialOk(p)` (plan gate): an extra problem text for a parsed input, or null.
++ */
++function listProof({ id, l, phases, files, textOf, table, root, readBase, ctxValues, expected, diffOf, optionalPaths, dirNote, layout, materialOk }) {
++  const why = [];
++  let ok = false;
++  for (const ph of phases) {
++    const base = `${ph}-compliance-${l.id}`;
++    const single = textOf(`${base}.txt`);
++    const parts = files.map((f) => new RegExp(`^${esc(base)}-p(\\d+)\\.txt$`).exec(f.name)).filter(Boolean).map((x) => Number(x[1])).sort((a, b) => a - b);
++    if (single !== undefined && parts.length) { why.push(`${base}.txt and ${base}-pN.txt both exist (one file, or -p1..-pK)`); continue; }
++    const names = single !== undefined ? [`${base}.txt`] : parts.map((n) => `${base}-p${n}.txt`);
++    if (names.length === 0) continue;
++    const gap = parts.findIndex((n, k) => n !== k + 1);
++    if (gap !== -1) { why.push(`${base}: parts ${parts.join(',')} have a gap, ${base}-p${gap + 1}.txt is missing`); continue; }
++    const bad = [];
++    const listParts = [];
++    for (const n of names) {
++      const input = textOf(`in-${n}`);
++      if (input === undefined) { bad.push(`${n}: the input in-${n} that the review tool read is not committed beside it`); continue; }
++      bad.push(...reviewErrors(n, textOf(n) ?? '', 'lens-compliance.md', input, { templateText: readBase('.claude/review-templates/lens-compliance.md'), contexts: ctxValues }));
++      const p = parseLensInput(input);
++      if (!p) bad.push(`in-${n}: first line is not "LIST <id> sha256:<hex> material sha256:<hex> part i of n" (rule-lists.mjs lens-input writes it)`);
++      else if (p.id !== l.id) bad.push(`in-${n}: stamped for list ${p.id}, expected ${l.id}`);
++      else if (!p.ok) bad.push(`in-${n}: the stamped sha256 does not match the list text or the material in the file (the input was edited)`);
++      else if (renderLensInput({ id: p.id, list: table.lists[p.id], part: p.listPart, i: p.part, n: p.parts, material: p.material, paths: p.chunk === undefined ? null : p.paths, c: p.chunk, m: p.chunks }) !== input) bad.push(`in-${n}: not what lens-input writes for its own stamp (the head line, the paths or the text around the list part or the material was edited)`);
++      else if (materialOk && materialOk(p)) bad.push(`in-${n}: ${materialOk(p)}`);
++      else listParts.push(p);
++    }
++    if (!bad.length) {
++      let whole;
++      try { whole = listBlocks(table.lists[l.id], root, l.id).map((b) => b.text).join(''); } catch (e) { bad.push(`list ${l.id}: ${String(e.message).split('\n')[0]}`); }
++      // V2.WHOLE: every chunk holds the whole list (its parts 1..n together); the coverage of the change is proved per list
++      const chunks = new Map();
++      for (const p of listParts) { const c = p.chunk ?? 1; chunks.set(c, [...(chunks.get(c) ?? []), p]); }
++      for (const [c, ps] of chunks) if (whole !== undefined && ps.sort((a, b) => a.part - b.part).map((p) => p.listPart).join('').replace(/\s+/g, '') !== whole.replace(/\s+/g, '')) bad.push(`the committed inputs${chunks.size > 1 ? ` of chunk ${c}` : ''} do not carry the whole list ${l.id} (${l.file}) as it is now: the list was shortened, softened or is out of date`);
++      if (ph === 'out' && expected.length) bad.push(...chunkErrors({ label: `${base}`, items: names.map((n, x) => ({ name: `in-${n}`, k: kOf(n), p: listParts[x] })), expected, diffOf: diffOf, optional: optionalPaths }));
++    }
++    if (bad.length) { why.push(bad.join('; ')); continue; }
++    ok = true;
++  }
++  return ok ? null : `${id}: list ${l.id} (${l.file}) has no valid compliance lens output in ${dirNote}: write ${phases.join(' or ')}-compliance-${l.id}.txt${why.length ? ` (${why.join('; ')})` : ''}; ${layout}`;
++}
+ 
+ export function closeErrors(i) {
+   const { id, type, readRepo } = i;
+@@ -330,6 +435,10 @@ export function closeErrors(i) {
+   try { r = resolveTask({ table: i.table, root: i.root, body: i.taskText, type, letter: i.letter }); } catch (e) { return [`${id}: cannot read the rule-list table or one of its path maps: ${String(e.message).split('\n')[0]}`]; }
+   if (r.error) return [`${id}: ${r.error.replace(/^refused: /, '')}`];
+   const errors = [];
++  const hasNotes = /<!-- SECTION:NOTES:BEGIN -->/.test(i.taskText);
++  const lc = lensContexts(i.contexts ?? [], hasNotes);
++  if ((i.contexts ?? []).length === 0) errors.push(`${id}: no committed review context file docs/reports/reviews/${id}/context-rN.md (written by backlog-brief.mjs, one per review round, committed with the round): the prompt hash of every lens output is recomputed with it`);
++  for (const x of lc.problems) errors.push(`${id}: ${x}`);
+   const expected = i.expectedPaths ?? []; // V2.WHOLE: the changed paths of the task range minus the exempt ones (check() computes them)
+   // F1: the proof is never skipped silently: a build or fix task whose range holds no file outside the exempt paths (the lane was folded into the base already, or the base is wrong) is refused
+   if (build && i.rangeEmpty) errors.push(`${id}: no file the task's Files line covers changed between the task's launch commit and HEAD, so the review cannot be proved to cover any change (the launch commit is the board commit that took the task for its lane assignee)`);
+@@ -354,47 +463,20 @@ export function closeErrors(i) {
+   if (mine.length === 0) return [...errors, `${id}: no ${dirNote} holds a TASK file naming exactly ${id} (a lane report dir is scoped to one task: write the task id in TASK; a dir used for another task does not count); ${layout}`];
+   const files = mine.flatMap(([, fs_]) => fs_);
+   const textOf = (n) => files.find((f) => f.name === n)?.text;
++  // task-375 B2: the task's references hold the repo copies of REPORT.md, GROUNDER.md and, when the lane directory holds one, TRIAGE.md (08_agents.md:357 note); the exact command is printed
++  if (build) {
++    const have = new Set(asList(i.fm?.references).map((x) => String(x).trim()));
++    for (const n of ['REPORT.md', 'GROUNDER.md', ...(textOf('TRIAGE.md') !== undefined ? ['TRIAGE.md'] : [])]) {
++      const rp = `${mine[0][0]}/${n}`;
++      if (!have.has(rp)) errors.push(`${id}: the task's references lack the repo copy ${rp}: backlog task edit ${id} --add-ref ${rp}`);
++    }
++  }
+ 
+   // (a) one compliance lens output per list, with its REVIEW header, bound to the committed input and to the whole list
+   const phases = build ? ['out'] : ['plan', 'out'];
+   for (const l of r.lists) {
+-    const why = [];
+-    let ok = false;
+-    for (const ph of phases) {
+-      const base = `${ph}-compliance-${l.id}`;
+-      const single = textOf(`${base}.txt`);
+-      const parts = files.map((f) => new RegExp(`^${esc(base)}-p(\\d+)\\.txt$`).exec(f.name)).filter(Boolean).map((x) => Number(x[1])).sort((a, b) => a - b);
+-      if (single !== undefined && parts.length) { why.push(`${base}.txt and ${base}-pN.txt both exist (one file, or -p1..-pK)`); continue; }
+-      const names = single !== undefined ? [`${base}.txt`] : parts.map((n) => `${base}-p${n}.txt`);
+-      if (names.length === 0) continue;
+-      const gap = parts.findIndex((n, k) => n !== k + 1);
+-      if (gap !== -1) { why.push(`${base}: parts ${parts.join(',')} have a gap, ${base}-p${gap + 1}.txt is missing`); continue; }
+-      const bad = [];
+-      const listParts = [];
+-      for (const n of names) {
+-        const input = textOf(`in-${n}`);
+-        if (input === undefined) { bad.push(`${n}: the input in-${n} that the review tool read is not committed beside it`); continue; }
+-        bad.push(...reviewErrors(n, textOf(n) ?? '', 'lens-compliance.md', input, { templateText: readBase('.claude/review-templates/lens-compliance.md') }));
+-        const p = parseLensInput(input);
+-        if (!p) bad.push(`in-${n}: first line is not "LIST <id> sha256:<hex> material sha256:<hex> part i of n" (rule-lists.mjs lens-input writes it)`);
+-        else if (p.id !== l.id) bad.push(`in-${n}: stamped for list ${p.id}, expected ${l.id}`);
+-        else if (!p.ok) bad.push(`in-${n}: the stamped sha256 does not match the list text or the material in the file (the input was edited)`);
+-        else if (renderLensInput({ id: p.id, list: i.table.lists[p.id], part: p.listPart, i: p.part, n: p.parts, material: p.material, paths: p.chunk === undefined ? null : p.paths, c: p.chunk, m: p.chunks }) !== input) bad.push(`in-${n}: not what lens-input writes for its own stamp (the head line, the paths or the text around the list part or the material was edited)`);
+-        else listParts.push(p);
+-      }
+-      if (!bad.length) {
+-        let whole;
+-        try { whole = listBlocks(i.table.lists[l.id], i.root, l.id).map((b) => b.text).join(''); } catch (e) { bad.push(`list ${l.id}: ${String(e.message).split('\n')[0]}`); }
+-        // V2.WHOLE: every chunk holds the whole list (its parts 1..n together); the coverage of the change is proved per list
+-        const chunks = new Map();
+-        for (const p of listParts) { const c = p.chunk ?? 1; chunks.set(c, [...(chunks.get(c) ?? []), p]); }
+-        for (const [c, ps] of chunks) if (whole !== undefined && ps.sort((a, b) => a.part - b.part).map((p) => p.listPart).join('').replace(/\s+/g, '') !== whole.replace(/\s+/g, '')) bad.push(`the committed inputs${chunks.size > 1 ? ` of chunk ${c}` : ''} do not carry the whole list ${l.id} (${l.file}) as it is now: the list was shortened, softened or is out of date`);
+-        if (ph === 'out' && expected.length) bad.push(...chunkErrors({ label: `${base}`, items: names.map((n, x) => ({ name: `in-${n}`, k: kOf(n), p: listParts[x] })), expected, diffOf: i.diffOf, optional: i.optionalPaths }));
+-      }
+-      if (bad.length) { why.push(bad.join('; ')); continue; }
+-      ok = true;
+-    }
+-    if (!ok) errors.push(`${id}: list ${l.id} (${l.file}) has no valid compliance lens output in ${dirNote}: write ${phases.join(' or ')}-compliance-${l.id}.txt${why.length ? ` (${why.join('; ')})` : ''}; ${layout}`);
++    const e = listProof({ id, l, phases, files, textOf, table: i.table, root: i.root, readBase, ctxValues: lc.values, expected, diffOf: i.diffOf, optionalPaths: i.optionalPaths, dirNote, layout });
++    if (e) errors.push(e);
+   }
+   // (a') the rest of the lens set a build or fix task calls for, and a plan-stage output
+   if (build) {
+@@ -412,7 +494,7 @@ export function closeErrors(i) {
+           const nm = `out-${lens}-p${x}.txt`;
+           const input = textOf(`in-${nm}`);
+           if (input === undefined) { errors.push(`${id}: ${nm}: the input in-${nm} that the review tool read is not committed beside it`); continue; }
+-          errors.push(...reviewErrors(nm, textOf(nm) ?? '', `lens-${lens}.md`, input, { templateText: readBase(`.claude/review-templates/lens-${lens}.md`) }).map((y) => `${id}: ${y}`));
++          errors.push(...reviewErrors(nm, textOf(nm) ?? '', `lens-${lens}.md`, input, { templateText: readBase(`.claude/review-templates/lens-${lens}.md`), contexts: lc.values }).map((y) => `${id}: ${y}`));
+           const p = parseLensInput(input);
+           if (p && p.ok && p.id === 'none' && renderLensInput({ id: 'none', list: null, part: '', i: p.part, n: p.parts, material: p.material, paths: p.chunk === undefined ? null : p.paths, c: p.chunk, m: p.chunks }) !== input) errors.push(`${id}: in-${nm}: not what lens-input writes for its own stamp (the head line, the paths or the text around the material was edited)`);
+           else if (!p || p.id !== 'none' || !p.ok || p.listPart.trim() !== '') errors.push(`${id}: in-${nm}: not an input written by lens-input for a lens with no rule list (first line "LIST none sha256:... part 1 of 1 chunk c of m", stamps matching its text)`);
+@@ -428,7 +510,7 @@ export function closeErrors(i) {
+         const whole = expected.length && i.diffOf ? i.diffOf(expected) : '';
+         if (expected.length === 0) errors.push(...reviewErrors(n, t, `lens-${lens}.md`, null).map((x) => `${id}: ${x}`));
+         else if (whole === null || whole === '') errors.push(`${id}: ${n}: the whole-range diff text cannot be recomputed, so the file the lens read cannot be proved`);
+-        else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, whole, { what: 'the recomputed diff of the whole task range (the diff file the lens must have read, made with the command in the brief)', templateText: readBase(`.claude/review-templates/lens-${lens}.md`) }).map((x) => `${id}: ${x}`));
++        else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, whole, { what: 'the recomputed diff of the whole task range (the diff file the lens must have read, made with the command in the brief)', templateText: readBase(`.claude/review-templates/lens-${lens}.md`), contexts: lc.values }).map((x) => `${id}: ${x}`));
+       }
+     }
+     if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7); ${layout}`);
+@@ -447,43 +529,9 @@ export function closeErrors(i) {
+   if (!(build || findings.length > 0)) return errors;
+   const g = textOf('GROUNDER.md');
+   if (g === undefined) return [...errors, `${id}: GROUNDER.md is missing in ${dirNote}${build ? ' (a build or fix task always needs a separate grounder verdict)' : ` (a lens returned ${findings.length} finding(s))`}`];
+-  const head = g.split('\n').slice(0, 25).join('\n');
+-  const gr = /^\s*Grounder:\s*(.+?)\s*$/m.exec(head)?.[1];
+-  const lh = /^\s*Lane:\s*(.+?)\s*$/m.exec(head)?.[1];
+-  if (!gr) errors.push('GROUNDER.md has no "Grounder: <name>" header line');
+-  if (!lh) errors.push('GROUNDER.md has no "Lane: <name>" header line');
+-  if (gr && lh && clash(gr, lh)) errors.push(`GROUNDER.md: Grounder "${gr}" is the same as Lane "${lh}" (or contains or is contained in it); a separate agent must ground`);
+-  if (gr && clash(gr, laneName)) errors.push(`GROUNDER.md: Grounder "${gr}" is the lane (${laneName}) or a name that contains or is contained in it; a separate agent must ground`);
+-  if (gr) for (const a of i.assignees.filter((x) => nameKey(x) !== nameKey(laneName))) if (clash(gr, a)) errors.push(`GROUNDER.md: Grounder "${gr}" is, contains or is contained in an assignee of ${id} (${a}); a separate agent must ground`);
+-  const ruled = new Map();
+-  for (const ln of g.split('\n')) { const m = /^\s*Ruled:\s*(\S+)\s+sha256:([0-9a-f]{12})\s+findings:(\d+)\s*$/.exec(ln); if (m) ruled.set(m[1], { sha: m[2], n: Number(m[3]) }); }
+-  for (const f of lensFiles) {
+-    const want = ruledLine(f.name, f.text);
+-    const have = ruled.get(f.name);
+-    if (!have) errors.push(`GROUNDER.md: no "Ruled:" line for ${f.name} (expected: ${want})`);
+-    else if (`Ruled: ${f.name} sha256:${have.sha} findings:${have.n}` !== want) errors.push(`GROUNDER.md: the "Ruled:" line for ${f.name} does not match the committed output (the grounder ruled on sha256:${have.sha} findings:${have.n}, the file is now ${want.replace(`Ruled: ${f.name} `, '')}: the output was edited after grounding, or the count is wrong)`);
+-  }
+-  const verdicts = parseVerdicts(g);
+-  const seenQuote = new Map();
+-  for (const f of findings) {
+-    const v = verdicts.get(f.id);
+-    const form = 'form: <id> CONFIRMED|REJECTED|CONFLICT <path>:<line> "<quote>" [reason]';
+-    if (!v) { errors.push(`GROUNDER.md: finding ${f.id} has no complete verdict line (${form}): ${f.line.slice(0, 90)}`); continue; }
+-    const q = squash(v.quote);
+-    if (q.length < 20) { errors.push(`GROUNDER.md: finding ${f.id}: the quote must be 20+ characters taken from ${v.file}:${v.line}`); continue; }
+-    if (seenQuote.has(q)) errors.push(`GROUNDER.md: finding ${f.id} has the same quote as ${seenQuote.get(q)}; each finding needs its own quote from the line it concerns`);
+-    else seenQuote.set(q, f.id);
+-    if (v.word !== 'CONFIRMED' && v.reason.length < 30) errors.push(`GROUNDER.md: finding ${f.id} is ${v.word} with a reason under 30 characters (Spec 08 5.3: rejections carry reasons; a conflict says what the operator must rule)`);
+-    if (path.isAbsolute(v.file) || v.file.split('/').includes('..')) { errors.push(`GROUNDER.md: finding ${f.id}: ${v.file} must be a repo-relative path`); continue; }
+-    if (v.file.startsWith('docs/reports/lanes/')) { errors.push(`GROUNDER.md: finding ${f.id}: ${v.file} is a lane report; cite the code or the spec the grounder opened, not a lens output`); continue; }
+-    const text = readRepo(v.file);
+-    if (text === null) { errors.push(`GROUNDER.md: finding ${f.id}: ${v.file} is not in the repo (index or HEAD)`); continue; }
+-    const lines = text.split('\n');
+-    if (v.line < 1 || v.line > lines.length) { errors.push(`GROUNDER.md: finding ${f.id}: ${v.file} has no line ${v.line} (${lines.length} lines)`); continue; }
+-    const cited = squash(lines[v.line - 1]);
+-    if (!cited.includes(q)) errors.push(`GROUNDER.md: finding ${f.id}: the quote is not on ${v.file}:${v.line}`);
+-    else if (lines.filter((x) => squash(x) === cited).length > 3) errors.push(`GROUNDER.md: finding ${f.id}: the cited line occurs more than 3 times in ${v.file} (a boilerplate line proves nothing): cite a line specific to the finding`);
+-  }
++  const ge = grounderErrors({ g, label: 'GROUNDER.md', lensFiles, findings, laneName, assignees: i.assignees, id, readRepo });
++  errors.push(...ge.errors);
++  const verdicts = ge.verdicts;
+   // task-399: every CONFIRMED or CONFLICT id carries one outcome (TRIAGE.md, last line wins), and the outcomes are shown on the task
+   if (build) {
+     const dirPath = mine[0][0];
+@@ -492,6 +540,109 @@ export function closeErrors(i) {
+   return errors;
+ }
+ 
++/**
++ * task-375 D2: the tool-having seats a build or fix launch requires in GROUNDER-PLAN.md (his :1615, :1620, :1625, :1630): one constant. integration and reality-check on every launch (reality-check:
++ * "if it can't tell if a figure is changed than it just runs anyways for now"); regression when the Files line names at least one path tracked at the board head (a directory or glob entry counts:
++ * READBACK-375-v4.md Q1; build and fix both carry the seats: Q2). Emptying a name is the later decision of his :1625. The check proves presence, sha256 and that every finding was ruled and closed;
++ * it cannot prove that the seat ran, ran independently or was a Sonnet agent.
++ */
++export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };
++
++/** D3: the Plan hash of a task: the first 12 hex of the sha256 of the title plus the whole body after the front matter, whitespace squashed (front matter, which holds status, assignee and references, is outside it). */
++export function planHash(taskText) {
++  const { fm, body } = parseFM(taskText);
++  return sha(squash(`${fm.title ?? ''} ${body}`)).slice(0, 12);
++}
++
++/**
++ * task-375 D5: every refusal of the LAUNCH GATE for one build or fix task, as lines; pure of git (the caller reads the board head and passes it in). Other task types return no errors by design.
++ * @param {{id:string, taskText:string, type:string, table:object, root:string, letter?:string, laneName:string, assignees:string[], folder:{name:string,text:string}[],
++ *          readRepo:(p:string)=>string|null, tracked:(entry:string)=>boolean, facts:object}} i
++ *   folder: the flat files of docs/reports/reviews/<id>/ at the board head; readRepo reads the board head; facts: taskOf and decisionExists of the board head (outcomeErrors callbacks).
++ * @returns {{errors:string[], lists:number, findings:number, line:string}} line is the expected "Plan: <id> sha256:<12>" line
++ */
++export function planGateErrors(i) {
++  // any read error is a refusal line, never a stack trace
++  try { return planGateInner(i); } catch (e) { return { errors: [`${i.id}: the plan gate could not read the evidence: ${String(e?.message ?? e).split('\n')[0]}`], lists: 0, findings: 0, line: '' }; }
++}
++function planGateInner(i) {
++  const { id, type } = i;
++  const line = `Plan: ${id} sha256:${planHash(i.taskText)}`;
++  if (type !== 'build' && type !== 'fix') return { errors: [], lists: 0, findings: 0, line };
++  const dir = `docs/reports/reviews/${id}`;
++  const errors = [];
++  let r;
++  try { r = resolveTask({ table: i.table, root: i.root, body: i.taskText, type, letter: i.letter }); } catch (e) { return { errors: [`${id}: cannot read the rule-list table or one of its path maps: ${String(e.message).split('\n')[0]}`], lists: 0, findings: 0, line }; }
++  if (r.error) return { errors: [`${id}: ${r.error.replace(/^refused: /, '')}`], lists: 0, findings: 0, line };
++  const files = i.folder ?? [];
++  const textOf = (n) => files.find((f) => f.name === n)?.text;
++  const dirNote = `${dir}/`;
++  if (files.length === 0) errors.push(`${id}: no plan evidence folder ${dirNote} on the board (context-rN.md, the plan lens outputs with their in- inputs, GROUNDER-PLAN.md, the seat reports: the orchestrator writes and commits them before the launch)`);
++  // the review contexts of the task, and what the plan inputs may have been made from
++  const contexts = files.filter((f) => /^context-r\d+\.md$/.test(f.name)).sort((a, b) => a.name.localeCompare(b.name));
++  const hasNotes = /<!-- SECTION:NOTES:BEGIN -->/.test(i.taskText);
++  const lc = lensContexts(contexts.map((f) => ({ name: `${dir}/${f.name}`, text: f.text })), hasNotes);
++  if (contexts.length === 0 && files.length > 0) errors.push(`${id}: no committed review context file ${dirNote}context-rN.md: the plan outputs' prompt hash is recomputed with it`);
++  for (const x of lc.problems) errors.push(`${id}: ${x}`);
++  const planCut = (text) => { try { return extractSections(text, PLAN_SECTIONS); } catch { return null; } };
++  if (type === 'build') {
++    // one valid plan compliance output per resolved list, whose stamped material is the plan sections of the context whose text produced its prompt hash
++    const cands = contexts.map((c) => ({ value: lensContexts([{ name: c.name, text: c.text }], hasNotes).values[0] ?? null, cut: planCut(c.text), name: `${dir}/${c.name}` })).filter((c) => c.value !== null);
++    for (const l of r.lists) {
++      let last = null;
++      let good = false;
++      for (const c of cands.length ? cands : [{ value: null, cut: null, name: '' }]) {
++        const e = listProof({ id, l, phases: ['plan'], files, textOf, table: i.table, root: i.root, readBase: i.readRepo, ctxValues: c.value === null ? [] : [c.value], expected: [], diffOf: () => null, optionalPaths: [], dirNote,
++          layout: `put plan-compliance-<list id>[-pN].txt and its in-<same name> directly in ${dirNote} (written by rule-lists.mjs lens-input --list <id> --material-from <context-rN.md> --out <folder>/in-plan-compliance-<id>)`,
++          materialOk: (p) => (c.cut !== null && p.material === c.cut ? null : `the stamped material is not the Description, Acceptance criteria and Implementation Plan sections of the committed context ${c.name || '(none)'} (a plan review of some other text)`) });
++        if (e === null) { good = true; break; }
++        last ??= e;
++      }
++      if (!good) errors.push(last);
++    }
++  } else {
++    // a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line (reviewErrors; g375#1)
++    const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));
++    if (planFiles.length === 0) errors.push(`${id}: a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)`);
++    for (const f of planFiles) errors.push(...reviewErrors(f.name, f.text, /^plan-compliance-/.test(f.name) ? 'lens-compliance.md' : f.name === 'plan-plan-review-deepseek.txt' ? 'plan-review-deepseek.md' : `lens-${f.name.replace(/^plan-/, '').replace(/(-p\d+)?\.txt$/, '')}.md`, null).map((x) => `${id}: ${x}`));
++  }
++  const g = textOf('GROUNDER-PLAN.md');
++  let findings = 0;
++  if (g === undefined) errors.push(`${id}: GROUNDER-PLAN.md is missing in ${dirNote} (a separate grounder rules every plan finding and copies the Plan line last)`);
++  else {
++    const lensFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name)).sort((a, b) => a.name.localeCompare(b.name));
++    const found = findingsIn(lensFiles);
++    const ge = grounderErrors({ g, label: 'GROUNDER-PLAN.md', lensFiles, findings: found, laneName: i.laneName, assignees: i.assignees, id, readRepo: i.readRepo });
++    errors.push(...ge.errors);
++    const lh = /^\s*Lane:\s*(.+?)\s*$/m.exec(g.split('\n').slice(0, 25).join('\n'))?.[1];
++    if (lh && nameKey(lh) !== nameKey(i.laneName)) errors.push(`GROUNDER-PLAN.md: Lane "${lh}" is not the lane being launched (${i.laneName})`);
++    // the seats
++    const seats = seatLines(g, i.readRepo);
++    const need = [...PLAN_SEATS.always, ...(entriesOf(i.taskText).some((e) => i.tracked(e)) ? PLAN_SEATS.conditional : [])];
++    for (const n of need) if (!seats.some((x) => x.name.toLowerCase() === n)) errors.push(`GROUNDER-PLAN.md: no "Seat: ${n} <repo path inside ${dirNote}> sha256:<12 hex>" line (a ${n} seat report is required at every build or fix launch${n === 'regression' ? ': the Files line names a path that exists at the board head' : ''})`);
++    // outcomes of every CONFIRMED or CONFLICT id (mode plan) and the round block on the task
++    const planField = /<!-- SECTION:PLAN:BEGIN -->([\s\S]*?)<!-- SECTION:PLAN:END -->/.exec(i.taskText)?.[1] ?? '';
++    const rounds = planField.split('\n').filter((l) => /^\s*Plan review round \d+:/.test(l));
++    const wrap = (t) => `<!-- SECTION:FINAL_SUMMARY:BEGIN -->${t}<!-- SECTION:FINAL_SUMMARY:END -->`;
++    const asRound = (t) => t.replace(/Plan review round/g, 'Review round');
++    if (rounds.length === 0) errors.push(`${id}: the Implementation Plan field holds no "Plan review round N: <a> folded, <b> task, <c> ruling, <d> wontfix, <e> pile; grounder <path>; triage <path>" line (backlog task edit ${id} --append-plan ...)`);
++    const oc = outcomeErrors({ verdicts: ge.verdicts, triageText: textOf('TRIAGE-PLAN.md') ?? '', lensKinds: new Map(found.map((f) => [f.id, lensKindOf(f.line)])), facts: { ...i.facts, taskText: () => i.taskText }, mode: 'plan', seats, seatRoot: dirNote, selfTask: id,
++      summary: rounds.length ? { text: wrap(asRound(planField)), headText: wrap(asRound(rounds.slice(0, -1).join('\n'))), grounderPath: `${dir}/GROUNDER-PLAN.md`, triagePath: `${dir}/TRIAGE-PLAN.md` } : null });
++    errors.push(...oc.errors.map((x) => x.replace(/Final Summary/g, 'Implementation Plan field')));
++    findings = ge.verdicts.size;
++    // the Plan line, last
++    const pl = [...g.matchAll(/^\s*Plan:\s*(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm)].pop();
++    if (!pl) errors.push(`GROUNDER-PLAN.md: no last "Plan: <task id> sha256:<12 hex>" line; expected: ${line}`);
++    else if (`Plan: ${pl[1]} sha256:${pl[2]}` !== line) errors.push(`GROUNDER-PLAN.md: the Plan line "Plan: ${pl[1]} sha256:${pl[2]}" is not the hash of the task as it is now (the title or body was edited after the grounder ruled, so the plan must be grounded again); expected: ${line}`);
++    // references on the task: the repo paths of the grounder file, the triage file (when there is one) and every seat report
++    const have = new Set(asList(parseFM(i.taskText).fm.references).map((x) => String(x).trim()));
++    const refs = [`${dir}/GROUNDER-PLAN.md`, ...(textOf('TRIAGE-PLAN.md') !== undefined ? [`${dir}/TRIAGE-PLAN.md`] : []), ...seats.map((x) => x.path)];
++    for (const rp of [...new Set(refs)]) if (!have.has(rp)) errors.push(`${id}: the task's references lack ${rp}: backlog task edit ${id} --add-ref ${rp}`);
++  }
++  return { errors, lists: r.lists.length, findings, line };
++}
++const entriesOf = (taskText) => filesEntries(taskText) ?? [];
++
+ function check(msgFile) {
+   if (!msgFile) return fail(['usage: check-lane-close.mjs <commit-msg-file>']);
+   const top = git(['rev-parse', '--show-toplevel']).stdout.trim() || process.cwd();
+@@ -620,7 +771,10 @@ function check(msgFile) {
+     const unionFiles = [...new Set([...(filesEntries(baseTask ?? '') ?? []), ...(filesEntries(mv.now) ?? [])])];
+     const resolveText = unionFiles.length ? mv.now.replace(/Files:[ \t]*.*$/m, `Files: ${unionFiles.join(', ')}`) : mv.now;
+     const allAssignees = [...new Set([...assignees, ...asList(mv.headFm.assignee).map(String), ...(boardFm ? asList(boardFm.assignee).map(String) : [])])];
+-    errors.push(...closeErrors({ id, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase, facts: gitFacts(L), headTaskText: mv.headText }));
++    // task-375 A5: every committed context file of the task (docs/reports/reviews/<id>/context-rN.md), the INDEX first, then HEAD (the order readRepo uses), never the range base
++    const ctxDir = `docs/reports/reviews/${id}/`;
++    const contexts = [...new Set([...git(['ls-files', '--cached', '--', ctxDir]).stdout.split('\n'), ...git(['ls-tree', '-r', '--name-only', 'HEAD', '--', ctxDir]).stdout.split('\n')].filter((q) => new RegExp(`^${esc(ctxDir)}context-r\\d+\\.md$`).test(q)))].sort().map((q) => ({ name: q, text: readRepo(q) })).filter((x) => x.text !== null);
++    errors.push(...closeErrors({ id, contexts, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase, facts: gitFacts(L), headTaskText: mv.headText }));
+   }
+   // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
+   const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));
+diff --git a/scripts/lib/review-template.js b/scripts/lib/review-template.js
+index 28dd70b5aec22742dcddd93297eb51df363b1048..f7574a442f9c68a068ea43d496e1acb879b9c124 100644
+--- a/scripts/lib/review-template.js
++++ b/scripts/lib/review-template.js
+@@ -108,4 +108,34 @@ function loadReviewNotesBlock(filePath) {
+   return { notesPath: rel, block };
+ }
+ 
+-module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX };
++/**
++ * task-375 A2: the reviewer's context is the task, sized. ONE list of headings of the context file docs/reports/reviews/<task>/context-rN.md
++ * (CONTEXT_SECTIONS) and the plan phase's material (PLAN_SECTIONS), shared by the review tool, rule-lists.mjs lens-input and the close check.
++ */
++const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];
++const PLAN_SECTIONS = ['Description', 'Acceptance criteria', 'Implementation Plan'];
++
++/** Keep only the markdown sections whose heading line contains one of `wanted` (to the next heading of the same or higher level); throws on a missing heading. */
++function extractSections(markdown, wanted) {
++  const lines = markdown.split('\n');
++  const out = [];
++  for (const want of wanted) {
++    const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && l.includes(want));
++    if (start === -1) throw new Error(`--section "${want}": no heading contains that text`);
++    const level = lines[start].match(/^(#+)/)[1].length;
++    let end = lines.length;
++    for (let i = start + 1; i < lines.length; i += 1) {
++      const m = lines[i].match(/^(#+)\s/);
++      if (m && m[1].length <= level) { end = i; break; }
++    }
++    out.push(lines.slice(start, end).join('\n'));
++  }
++  return out.join('\n\n');
++}
++
++/** The number of the next review round of a task: the context-r<N>.md files already in `dir` (docs/reports/reviews/<task>/) plus one. ONE count, shared by the brief that writes the file and the launch that names it. */
++function contextRound(dir) {
++  return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1;
++}
++
++module.exports = { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, NOTES_SUFFIX, CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections, contextRound };
+

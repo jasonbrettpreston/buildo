@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-21T04:42:50.935Z file_sha256=7319070df6a93a6688af2336e1c7588ea7e8cf64a22768e6d85402e31070e00a prompt_sha256=88fb7f35ff0de762fe91956c3478eea40fe7d507fd1502b653b2f37c331ac69c
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-error-paths-p3.txt (model: deepseek-reasoner)
+
+BUG/DEFER lines:
+
+DEFER severity=MED — src/tests/proof-slice.db.test.ts:20 "afterAll(async () => { await pool.end().catch(() => undefined); });" — when getTestPool throws in beforeAll, pool is still undefined and this teardown throws its own TypeError, hiding the connection failure and leaving the pool open — guard with `if (pool) await pool.end().catch(() => undefined)`.
+
+DEFER severity=MED — src/tests/backlog/check-lane-close.logic.test.ts "expect(t.errors.join('\n')).toMatch(/could not read|disk gone/);" — the test titled "a read error is a refusal line, never a stack trace" also passes on the raw thrown message 'disk gone' or on a stack trace containing it, so the never-a-stack-trace half is unpinned — assert the exact refusal prefix and add `expect(...).not.toMatch(/\n\s+at /)`.
+
+DEFER severity=MED — src/tests/backlog/rule-lists.logic.test.ts "it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound', () => {" — the body checks the row multiset and the part count but never a part length, so splitFlat can emit a part over --max and this test stays green (the room bound is asserted only in the A4 context test) — add the same substitutePlaceholders length assertion per part.
+
+DEFER severity=MED — src/tests/backlog/check-lane-close.logic.test.ts:805 "it('an output must match one committed context file: the earlier round file is kept and still binds', () => {" — the close passes an output hashed against round 1's context even after a later round committed a changed description, so a review of superseded task text stays valid and no path refuses it — either pin that a context superseded by a later context-rN.md no longer satisfies the recompute, or record on the task that any committed round binds.
+
+DEFER severity=MED — src/tests/proof-slice.logic.test.ts "expect(m.timeoutMsFromVariable(120000)).toBe(120000);" — the suite is green while the runner still uses DEFAULT_TIMEOUT_MS, and the only proof the variable is registered is the DB test skipped by describe.skipIf(!dbAvailable()), so D10b degrades to a silent skip with no failure in the default run — add a logic assertion that proof-slice.mjs no longer holds a literal timeout, and fail rather than skip when BUILDO_TEST_DB is set but the row is absent.
+
+DEFER severity=LOW — src/tests/proof-slice.db.test.ts:34 "expect(timeoutMsFromVariable(rows[0].variable_value)).toBe(entry!.default);" — the second it has no length guard, so an unregistered variable (empty result) fails as a TypeError on undefined instead of the named message the first it gives — add `expect(rows).toHaveLength(1)` before reading rows[0].
+
+DEFER severity=LOW — src/tests/review-template.logic.test.ts "expect(() => rt.extractSections(md, ['Nope'])).toThrow(/no heading contains that text/);" — only the missing heading is pinned; an empty section body and a heading that appears twice are not, so a bare "## Description" satisfies the close's Description presence check while the reviewer gets an empty context — add cases for empty body and duplicate heading, and refuse an empty selected section.
+
+REJECT — src/tests/backlog/rule-lists.logic.test.ts "expect(r.add).toEqual(['compliance:ms-9', 'compliance:five docs/f.md']);" — a repeated take looks like it could add duplicate references — handled: complianceRefs compares by the id token, so a re-take adds nothing twice and a comma path enters as the id alone.
+
+VERDICT: PASS on error-path safety
+Paths walked: missing committed context, placeholder context, context without Description, edited context (hash mismatch), missing Implementation Notes, missing REPORT/TRIAGE references, readRepo throw, missing evidence folder, missing plan output, junk plan output, empty logic_variables row, bad timeout values, split over the room, single row over the room, duplicate compliance refs   Unguarded: 4
+
+---
+⏱  78091ms (78.1s)
+📊 Tokens — total: 44301, input: 28816, output: 15485, reasoning: 14548

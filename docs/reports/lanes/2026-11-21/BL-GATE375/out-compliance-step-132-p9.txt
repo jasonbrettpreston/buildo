@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:42:23.805Z file_sha256=4daaaa716eb878cebe037216de1d4fdae70a5c055f6f40d575330a91a36d0525 prompt_sha256=680ea0c47b7ee832755f07be1e628603bf8a4d6de5fbd88afbaec2bf953f95df
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-step-132-p9.txt (model: deepseek-reasoner)
+
+BUG: none found at CRIT/HIGH.
+
+DEFER severity=MED — plan A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes." — `src/tests/backlog/check-lane-close.logic.test.ts:798` "refused(planted('(no pasted context provided)'), /context-r1\.md/);" — the placeholder refusal is pinned only by the context file path, which a prompt_sha256 mismatch message also names, so the placeholder branch could be deleted and the test stays green — assert the placeholder-specific message text (e.g. /is the placeholder/) instead of the file path.
+
+DEFER severity=LOW — card D "the launch gate: backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board." — `src/tests/backlog/check-lane-close.logic.test.ts:960` "gate(await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 fixed:abcdef1 src/a.ts\n', ... }), /fixed is refused in plan mode/);" — a plan-mode refusal of the "fixed" outcome is pinned by this test but named by no pasted clause or ruling (the pasted outcome vocabulary is folded, task, ruling, wontfix, pile) — either cite the ruling that forbids "fixed" before lock or drop the assertion.
+
+DEFER severity=LOW — A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js; extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text." — `src/tests/backlog/check-lane-close.logic.test.ts:39` "x.extractSections(text, /^#{1,6}\s.*Implementation Notes/m.test(text) ? x.CONTEXT_SECTIONS : x.CONTEXT_SECTIONS.filter((n) => n !== 'Implementation Notes'))" — the test adds a fourth, test-local cutting rule and hashes with it, so a header it writes green can differ from what the close check's lensContexts recomputes (the tool's own notes handling is not in this chunk, cannot see) — assert the hash against the exported lensContexts output rather than a re-derived filter.
+
+DEFER severity=NIT — AC #14 "after the orchestrator has produced the evidence ...: 'plan gate ok: <L> lists' with L equal to the resolved-list count" — `src/tests/backlog/check-lane-close.logic.test.ts:858` "expect(nw.errors.join('\n')).not.toMatch(/Seat: regression/);" — the new-path control asserts only the absence of one error, so any other gate error still leaves it green — assert expect(nw.errors).toEqual([]) as the other controls do.
+
+MET — RR-0342 "regression only required when code is changed" — `src/tests/backlog/check-lane-close.logic.test.ts:900` "gate(await planScenario({ drop: ['regression'] }), /no \"Seat: regression/);" — regression is required when the Files line names a tracked path and not for a new path only, matching the v4 ruling.
+
+MET — RR-0347 "If it can't tell if a figure is changed than it just runs anyways" — `src/tests/backlog/check-lane-close.logic.test.ts:898` "gate(await planScenario({ drop: ['reality-check'] }), /no \"Seat: reality-check/);" — reality-check is unconditional, as ruled.
+
+MET — AC #14 "dry-run before evidence: refused, one error per missing item (the first names the missing evidence folder or GROUNDER-PLAN.md)" — `src/tests/backlog/check-lane-close.logic.test.ts:872` "expect(r.errors[0]).toMatch(/no plan evidence folder docs\/reports\/reviews\/task-7\//);" — the first error names the folder.
+
+MET — B.3 / 08_agents.md:347 "the task's references point at the repo copy of the lane files" — `src/tests/backlog/check-lane-close.logic.test.ts:815` "refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/);" — the missing report reference is refused with the exact edit command.
+
+MET — plan A.4 "lacks the Description, or lacks the Implementation Notes section when the task has notes" — `src/tests/backlog/check-lane-close.logic.test.ts:799` "refused(planted(CTX_FILE.replace('## Description', '## Gone')), /Description/);" — both refusals plus the no-notes control are present.
+
+MET — build note D5 "planGateErrors (pure; any read error is a refusal line)" — `src/tests/backlog/check-lane-close.logic.test.ts:975` "expect(t.errors.join('\n')).toMatch(/could not read|disk gone/);" — a thrown read is a refusal line, not a stack trace.
+
+MET — plan A.6 "The context file is regenerated before each review round and committed with the round" — `src/tests/backlog/check-lane-close.logic.test.ts:160` "if (o.ctx !== false) w('docs/reports/reviews/task-7/context-r1.md', o.ctx ?? CTX_FILE);" — the scenario commits a context-rN.md and an output may bind an earlier round file.
+
+MET — A4 "rule-lists.mjs lens-input takes --context, refuses without it" (tested with the deviated fixture) — `src/tests/backlog/rule-lists-table.logic.test.ts:49` "script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'policy-124-s2-s5', ...])" — the two lens-input calls now pass a context, matching the deviation note pasted on the task.
+
+REJECT — A5 / section 8 "compliance entries differing from the resolved lists" — the change lacks a close refusal test for stale compliance references — v4 explicitly deletes that close refusal ("B.2 close refusal on stale references -> deleted (check-tasks prints the commands, the take adds them)"), so no test is owed.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+
+---
+⏱  99667ms (99.7s)
+📊 Tokens — total: 46364, input: 27372, output: 18992, reasoning: 17499

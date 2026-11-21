@@ -11,9 +11,14 @@ const ID = { GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@t', GIT_COMMITTER_NAME: 
 const git = (cwd: string, ...a: string[]) => run('git', ['-c', 'commit.gpgsign=false', ...a], { cwd, env: ID });
 const AC = 'Writes scripts/analysis/thing.mjs and the notes file docs/out/NOTES.md, nothing else';
 const SCRIPT = path.join(__dirname, '../../../scripts/analysis/backlog-lane.mjs');
+// task-375 D: a build or fix launch needs real plan evidence on the board (the launch gate); the program in docs/reports/reviews/task-375/plant-evidence.mjs writes it for a fixture board with the real helpers (lens-input inputs, REVIEW headers, GROUNDER-PLAN.md, seat reports, round block, references, Plan line) and commits it
+function plantEvidence(board: string, task: string, laneName = 'BL-T1') {
+  const r = run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID });
+  if (r.status !== 0) throw new Error(`plantEvidence: ${r.stdout}${r.stderr}`);
+}
 
 type Fx = { board: string; base: string; wt: string; main: string; pt: string; task: string; args: string[] };
-function fixture(opts: { status?: string; hook?: boolean; files?: string | null; type?: string; letter?: string; noMilestone?: boolean } = {}): Fx {
+function fixture(opts: { status?: string; hook?: boolean; files?: string | null; type?: string; letter?: string; noMilestone?: boolean; noEvidence?: boolean } = {}): Fx {
   const board = makeProject(), base = tmp('lane');
   fs.mkdirSync(path.join(board, 'backlog/milestones'), { recursive: true });
   fs.writeFileSync(path.join(board, 'backlog/milestones/m-0 - foundations.md'), `---\nid: m-0\ntitle: "Increment 1·A Foundations [${opts.letter ?? 'F'}]"\n---\n\n## Description\n\nx\n`);
@@ -26,6 +31,7 @@ function fixture(opts: { status?: string; hook?: boolean; files?: string | null;
   fs.writeFileSync(path.join(board, 'mobile/.keep'), '');
   const task = mk(board, 'Launch me', ['-d', `Launch description text.${opts.files === null ? '' : `\n\nFiles: ${opts.files ?? 'scripts/analysis/thing.mjs'}`}`, ...(opts.type ? ['--type', opts.type] : []), '--ac', AC, '--ref', 'docs/a.md', '--doc', 'docs/b.md', ...(opts.noMilestone ? [] : ['-m', 'm-0']), ...(opts.status ? ['-s', opts.status] : [])]);
   git(board, 'add', '-A'); git(board, 'commit', '-q', '-m', 'fixture');
+  if (['build', 'fix'].includes(opts.type ?? '') && !opts.noMilestone && !opts.noEvidence) plantEvidence(board, task);
   if (opts.hook) { const h = path.join(board, '.git/hooks/pre-commit'); fs.writeFileSync(h, '#!/bin/sh\nexit 1\n'); fs.chmodSync(h, 0o755); }
   const main = path.join(base, 'main');
   fs.mkdirSync(path.join(main, 'node_modules'), { recursive: true }); fs.mkdirSync(path.join(main, 'mobile/node_modules'), { recursive: true });
@@ -166,7 +172,7 @@ describe('backlog-lane real launch on the temp board (AC #1)', () => {
     expect(brief.toString()).toMatch(/^FAKE BRIEF/);
     const sha = crypto.createHash('sha256').update(brief).digest('hex');
     expect(r.stdout.trim().split('\n').pop()).toBe(`BRIEF-FILE: ${path.join(ld, 'BRIEF.md')} sha256=${sha}`);
-    expect(fs.existsSync(path.join(f.wt, `docs/reports/reviews/${f.task}/context-2026-11-19.md`))).toBe(true);
+    expect(fs.existsSync(path.join(f.wt, `docs/reports/reviews/${f.task}/context-r1.md`))).toBe(true);
   });
   it('uses --spec instead of a generated task.json when given', () => {
     const f = fixture();
@@ -194,6 +200,7 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     let body = fs.readFileSync(file, 'utf8').replace('Launch description text.', `Launch description text. Files: ${files}`);
     if (type) body = body.replace(/^labels: .*$/m, (m) => `${m}\ntype: ${type}`);
     fs.writeFileSync(file, body);
+    if (type === 'build' || type === 'fix') plantEvidence(f.board, f.task);
     const r = lane(f, ['--dry-run']);
     const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null');
     expect(spec, r.stdout + r.stderr).not.toBeNull();
@@ -255,7 +262,22 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     const cmd = /each `([^`]+)`/.exec(seg)?.[1] ?? '';
     expect(seg).toContain('plan-review-deepseek.md');
     expect(cmd).toContain('scripts/deepseek-review.js review');
-    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context <pasted-context file>/);
+    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context docs\/reports\/reviews\/\S+\/context-r2\.md --section "Task"/);
+  });
+  // task-375 A3: every lens command passes the committed context (context-r1.md) and one --section per CONTEXT_SECTIONS entry; no command leaves a lens on the placeholder
+  it('A3: plan, output and compliance commands all pass the committed context and the five sections; the date name and the pasted-context placeholder are gone', () => {
+    const e = lensBrief('build', 'scripts/analysis/x.mjs, src/tests/');
+    const SECT = '--section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes"';
+    const ctx = /docs\/reports\/reviews\/\S+?\/context-r2\.md/.exec(e)?.[0] ?? '(none)';
+    expect(ctx).not.toBe('(none)');
+    const cmds = e.match(/scripts\/deepseek-review\.js review [^`]*/g) ?? [];
+    expect(cmds.length).toBeGreaterThanOrEqual(3);
+    for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }
+    expect(e).not.toContain('<pasted-context file>');
+    expect(e).not.toMatch(/context-<date>|context-20\d\d/);
+    expect(e).toContain(`lens-input --list L --context ${ctx}`);
+    expect(e).toContain('plan: --material-from');
+    expect(e).toMatch(/lens-input --context \S+ --material <diff file>/);
   });
   it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
     for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
@@ -306,6 +328,73 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     expect(extra).toContain('lens-error-paths.md');
     expect(extra).toMatch(/a separate grounder rules on every finding/);
     expect(extra).toContain('GROUNDER.md');
+  });
+  it('A3: the review line of the extra block (the plan template as --context) is the lens form with the committed context', () => {
+    const { extra } = dry({ files: 'scripts/analysis/x.mjs, src/tests/', type: 'build' });
+    const line = /Review \(review mode[^\n]*/.exec(extra)?.[0] ?? '';
+    expect(line).toContain('--template .claude/review-templates/plan-review-deepseek.md --context docs/reports/reviews/');
+    expect(line).toContain('--section "Implementation Notes"');
+    expect(line).not.toMatch(/--context \.claude\/review-templates/);
+  });
+  // task-375 B1: the take adds the compliance:<list id> <file> references, only the ids the task does not carry yet
+  it('B1: the take command adds one compliance reference per resolved list; a list already referenced is not added again', () => {
+    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
+    const lists = (JSON.parse(run('node', ['scripts/analysis/rule-lists.mjs', 'resolve', '--files', 'scripts/analysis/thing.mjs', '--type', 'build', '--letter', 'F'], { cwd: ROOT }).stdout) as { lists: { id: string; file: string }[] }).lists;
+    const take = (o: string) => /^\$ cd \S+ && .*task edit \S+ -s RUNNING.*$/m.exec(o)?.[0] ?? '';
+    const r1 = lane(f, ['--dry-run']);
+    const t1 = take(r1.stdout);
+    expect(t1).toBeTruthy();
+    expect([...t1.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length);
+    for (const l of lists) expect(t1).toContain(`--add-ref 'compliance:${l.id} ${l.file}'`);
+    backlog(f.board, ['task', 'edit', f.task, '--add-ref', `compliance:${lists[0]!.id} an older path`]);
+    const t2 = take(lane(f, ['--dry-run']).stdout);
+    expect([...t2.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length - 1);
+    expect(t2).not.toContain(`'compliance:${lists[0]!.id} `);
+  });
+  // task-375 D5: the launch gate
+  it('D: a build launch with no plan evidence on the board is refused, one line per missing item, nothing taken, in dry-run too (no flag turns it off)', () => {
+    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build', noEvidence: true });
+    for (const extra of [['--dry-run'], []]) {
+      const r = lane(f, extra);
+      expect(r.status, r.stdout + r.stderr).toBe(3);
+      const lines = r.stderr.trim().split('\n');
+      expect(lines[0]).toMatch(/refused: plan gate: .*no plan evidence folder docs\/reports\/reviews\/task-\d+\//);
+      expect(lines.length).toBeGreaterThan(1);
+      expect(statusOf(f)).toBe('LATER');
+      expect(fs.existsSync(f.wt)).toBe(false);
+    }
+  });
+  it('D: with the evidence the dry-run prints "plan gate ok: <L> lists" with L the resolved-list count and the Plan hash; a one-word edit of the task refuses with the new expected Plan line', () => {
+    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
+    const L = (JSON.parse(run('node', ['scripts/analysis/rule-lists.mjs', 'resolve', '--files', 'scripts/analysis/thing.mjs', '--type', 'build', '--letter', 'F'], { cwd: ROOT }).stdout) as { lists: unknown[] }).lists.length;
+    const ok = lane(f, ['--dry-run']);
+    expect(ok.status, ok.stdout + ok.stderr).toBe(0);
+    expect(ok.stdout).toMatch(new RegExp(`plan gate ok: ${L} lists, \\d+ findings, Plan sha256:[0-9a-f]{12}`));
+    backlog(f.board, ['task', 'edit', f.task, '--append-notes', 'one more word']);
+    const bad = lane(f, ['--dry-run']);
+    expect(bad.status, bad.stdout + bad.stderr).toBe(3);
+    expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);
+    expect(statusOf(f)).toBe('LATER');
+  });
+  it('D: a task of another type (record) is not gated and launches with no plan evidence', () => {
+    const f = fixture({ files: 'docs/specs/00-architecture/08_agents.md', type: 'record' });
+    const r = lane(f, ['--dry-run']);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    expect(r.stdout).not.toContain('plan gate');
+  });
+  it('g375#2: a board that already holds context-r1.md (the plan evidence): the lens lines name the file the brief wrote (context-r2.md), in the dry-run and in the real launch', () => {
+    const f = fixture({ files: 'scripts/analysis/thing.mjs', type: 'build' });
+    expect(fs.existsSync(path.join(f.board, `docs/reports/reviews/${f.task}/context-r1.md`))).toBe(true);
+    const d = lane(f, ['--dry-run']);
+    expect(d.stdout).toContain(`docs/reports/reviews/${f.task}/context-r2.md`);
+    expect(d.stdout).not.toContain(`docs/reports/reviews/${f.task}/context-r1.md --`);
+    const r = lane(f, ['--no-launchd']);
+    expect(r.status, r.stdout + r.stderr).toBe(0);
+    const spec = JSON.parse(fs.readFileSync(path.join(f.base, 'lane-dir/task.json'), 'utf8')) as { extra: string[] };
+    const named = /docs\/reports\/reviews\/\S+?\/(context-r\d+\.md)/.exec(spec.extra.join('\n'))?.[1];
+    const written = fs.readdirSync(path.join(f.wt, `docs/reports/reviews/${f.task}`)).filter((n) => /^context-r\d+\.md$/.test(n)).sort().pop();
+    expect(named).toBe(written);
+    expect(named).toBe('context-r2.md');
   });
   it('a Files path no row matches is refused at launch with the path named (exit 3, one line, nothing written)', () => {
     const f = fixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' });

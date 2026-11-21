@@ -1,0 +1,36 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:26:42.841Z file_sha256=1625d4c7a088f043e6aa542d68de67a7ce4ca4d4790d673eccea254a812fa9ac prompt_sha256=f21da1cdf83e65b7407a1c9b30c05ef0836613459127d391c57388ae71634aa6
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> lines: none.
+
+DEFER severity=LOW — A.4 "rule-lists.mjs lens-input takes --context, refuses without it, and counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security)." — scripts/analysis/rule-lists.mjs:550 "const matFrom = str('material-from', ''); const ctxFile = str('context', matFrom);" — a run with --material-from and no --context never reaches the refusal at :552, so "refuses without it" holds only for the --material form, and --material-from being its own context is named only by the lane's build note, not by a pasted clause or operator ruling — fix: require --context as its own flag, let --material-from only choose the PLAN_SECTIONS material cut, and paste the ruling if the substitution is intended.
+
+DEFER severity=LOW — A.6 "A row or paragraph that alone passes the room is still refused naming it." — scripts/analysis/rule-lists.mjs:311 "const big = pieces.find((x) => x.length > max);" with :304 "const head = /^#{1,6}\s/.test(lines[0]) ? 1 : 0;" and the first-piece guard "if (!(head && pieces.length === 0 && cur.length === 1)) flush();" — the first piece is the block heading plus the first row, so a row that fits the room alone is refused when heading plus row passes max, an over-refusal the clause does not name — fix: keep the heading out of the piece-length test and attach it to the first packed part after packing.
+
+DEFER severity=LOW — A.4 "lens-input refuses without it" and D11a "the reviewer's context slot held the placeholder in real runs" — scripts/analysis/rule-lists.mjs:362 "context = NO_CONTEXT" in "export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = ... })" — any programmatic caller that omits context (the CLI guards, the exported function does not) still assembles a prompt whose {{SPECS}} is the placeholder, the exact defect being fixed, with no refusal at that boundary — fix: refuse inside buildLensInputs when context is absent or equals NO_CONTEXT.
+
+DEFER severity=NIT — B.1 "Entry (field `references`, not `documentation` ...): `compliance:<list id> <file>`, one per resolved list." — scripts/analysis/rule-lists.mjs:457 "String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`" — for a list whose file path holds a comma the entry names no document — rationale: backlog --add-ref splits at commas so the bare entry is the only command that runs, and the operator's "labelled means i need to know its a compliance document" is still met by the prefix; record it as a known exception.
+
+MET — A.6 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — scripts/analysis/rule-lists.mjs:324 "if (subs.length === 0) return splitFlat(text, max, label, id);" — the old throw is replaced by the row/paragraph cut, with the over-room refusal kept at :311.
+
+MET — D11 "the security lens fires for admin and PII paths" — scripts/analysis/rule-lists.mjs:163 "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — admin and pii are now security terms.
+
+MET — A.4 "counts the selected sections in the room on both paths" — scripts/analysis/rule-lists.mjs:367 "const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context, dataContext: '(no live-DB context provided)' }).length;" — the one `fixed` value sizes both the with-list and the no-list path.
+
+MET — A.1 "extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text" — scripts/deepseek-review.js:29 "const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');" — the local copy is deleted from the tool and the shared one required (the shared text itself is in another chunk, cannot see).
+
+MET — B.2 "the exact `backlog task edit task-N --add-ref ...` command" — scripts/analysis/rule-lists.mjs:576 "backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}" — one quoted command per stale open task, printed without die, exit unchanged.
+
+MET — B.1 "only those not already on the task" (add/remove by id token) — scripts/analysis/rule-lists.mjs:454 "const have = new Map((refs ?? []).filter((r) => idOf(r)).map((r) => [idOf(r), String(r).trim()]));" — an entry already carried is not added again, and refs are collected only after verifyResolved passes at :478.
+
+MET — B.1 "verifyResolved first" — scripts/analysis/rule-lists.mjs:478 "const c = complianceRefs(r.lists, asList(t.fm.references));" sits in the else branch of "if (miss.length) out.bad.push(...)", so only a task that resolves and verifies gets a refs command.
+
+REJECT — stamped context hash on the lens input — the change is accused of not stamping the --context sha256 in the lens-input stamp (this review's own stamp carries list and material shas only) — the governing FINAL BUILD NOTE puts "a second pasted file or context stamp" in NOT IN SCOPE, and the close binds the context by the prompt_sha256 recompute instead.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+
+---
+⏱  152054ms (152.1s)
+📊 Tokens — total: 53426, input: 24619, output: 28807, reasoning: 27413

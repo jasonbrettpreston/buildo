@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:25:06.598Z file_sha256=c3ef76115e6fc4367fd0549de822678f60a9d96a1c82560c000f19b90c057d53 prompt_sha256=578484e6cff8199faaf37533bbd89587bb836f922554d0fa33d92f8c03109b6a
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-five-words-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #9 "for at least one stale open task (choose the task on the day 375 launches: a LATER build task not recommended for drop; task-400 is, and its Files line collides with this task)" — Implementation Notes "for task-101 (LATER, type record, not build) the command carries 6 compliance: entries = 6 lists of resolve" — the A4 evidence is on a record task, so check-tasks is not shown on the LATER build class the take and the launch gate act on, which is the class the acceptance names — re-run A4 in a scratch clone on a LATER build task that is not task-400 and paste the printed command, the follow-up silence and the task view References line
+
+DEFER severity=MED — AC #7 "rule-lists.mjs lens-input for each of the 15 resolved lists of task-381 with that context: paste each exit code, selected-section count and call count: expected 17 calls in total, none refused" — Implementation Notes "A2 (buildLensInputs with the 5 sections, material 17,753 characters): task-381 15 lists, 5 sections 2121 characters, 17 calls, 0 refused (expected 17)" — the counts come from buildLensInputs, not from the lens-input CLI the acceptance names, so the CLI's per-list exit codes are not pasted — run the CLI once per resolved list with the task-381 context and paste exit code, section count and call count
+
+DEFER severity=MED — AC #8 "today exit 1 naming '## Register'; after A6 exit 0 with parts; the same for policy-124-s2-s5 and bylaw-133" — Implementation Notes "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the after half is pasted but the before half, which AC #1 (defect confirmed on the head with file:line) also requires, is not — run the three lists on the pre-change head and paste the exit code and the '## Register' refusal
+
+MET — D "the launch gate: backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board" — scripts/analysis/backlog-lane.mjs "if (gate.errors.length) { for (const e of gate.errors) process.stderr.write(`backlog-lane: refused: plan gate: ${e}\n`); process.exit(3); }" — the gate runs after the dirty-board check and before the take, with no flag or env switch
+
+MET — A3 "every lens command passes --context <the committed context file> and one --section per constant entry" — scripts/analysis/backlog-lane.mjs "const ctxArgs = `--context ${ctx} ${sectionFlags}`;" and scripts/analysis/backlog-brief.mjs "--template .claude/review-templates/plan-review-deepseek.md --context ${ctxRel} ${sectionFlags}" — plan, output and compliance review commands all carry the committed context and the section flags
+
+MET — A4 "lens-input takes --context, refuses without it" — scripts/analysis/rule-lists.mjs "if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> (the reviewer context of the task; the selected sections are counted in the room)" — refusal is exit 2 and --material-from supplies its own context
+
+MET — A6 "a block with no deeper heading is cut between table rows or blank-line paragraphs" — scripts/analysis/rule-lists.mjs "if (subs.length === 0) return splitFlat(text, max, label, id);" — splitFlat cuts at table rows and blank lines and still refuses a piece alone over the room, naming the section
+
+MET — A5 "one context file per review round, context-rN.md, N = the context-r*.md files already there + 1" — scripts/analysis/backlog-brief.mjs "const ctxRel = `docs/reports/reviews/${taskId}/context-r${round}.md`;" — the round comes from contextRound over the target directory
+
+MET — B1 "the take adds them in the same backlog task edit with repeated --add-ref ... only those not already on the task" — scripts/analysis/backlog-lane.mjs "const addRefs = complianceRefs(resolved.lists, asList(t.fm.references)).add.flatMap((e) => ['--add-ref', e]);" — complianceRefs compares by the id token, so a re-take adds none twice
+
+MET — D11b "the security lens fires for admin and PII paths" — scripts/analysis/rule-lists.mjs "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — admin and pii are added to the lensSet security trigger
+
+MET — section 10 "docs/specs/00-architecture/08_agents.md takes ONE dated note carrying two points (context-rN.md; the plan-only seats)" — docs/specs/00-architecture/08_agents.md "Dated note 2026-11-21 (M-246, prior text kept; task-375 FIX.TOOLS ...): two points. (1) The review context file of a task is docs/reports/reviews/<task>/context-rN.md ... (2) The tool-having seats ... run on the PLAN only" — one note, both points, prior text kept
+
+REJECT — five-words Glossary — the change to the review tool, brief, lane launcher, proof-slice and spec notes is accused of ignoring the five-words clause — no Glossary entry names a slug, archetype, shape, phase, compute hook, gate V token, bracket, OWED, class-A, seam, Intent Ledger, G-2, lock, hook or RE-FREEZE field that any pasted diff line edits, so the list binds no line of this chunk
+
+REJECT — AC #6 "0 hits of '(no pasted context provided)'" — the run is accused of failing the zero-hit count with 6 hits — the hits sit inside the material (rule-lists.mjs quotes the string) and the context slot has 0, which is the clause's object
+
+REJECT — C "proof-slice.mjs reads its timeout and buffer from registered tooling_ variables" — the typed DEFAULT_TIMEOUT_MS = 120000 is accused of leaving D10 unmet — the Description conditions the DB read on the operator's typed DB GO and AC #13 keeps the task RUNNING, which the notes record
+
+REJECT — AC #3 "Compliance lens run once per governing rule list with the list whole" — A6 splitting a list block at table rows is accused of not sending the list whole — the operator's "or split smaller" and plan A.7 authorise the split and the close joins the stamped parts against the whole list
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 3
+
+---
+⏱  248034ms (248.0s)
+📊 Tokens — total: 80081, input: 32018, output: 48063, reasoning: 46515

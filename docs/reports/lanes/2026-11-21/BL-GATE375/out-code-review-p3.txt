@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T04:08:02.657Z file_sha256=7319070df6a93a6688af2336e1c7588ea7e8cf64a22768e6d85402e31070e00a prompt_sha256=aade1b48fed1876be8f152e85532a804875c1b83463d70fe49d0d78a8aaaa9bc
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-code-review-p3.txt (model: deepseek-reasoner)
+
+BUG severity=MED — src/tests/review-template.logic.test.ts:208 "const rt = require('../../scripts/lib/review-template');" — a bare `require` in an ESM-transformed `.ts` test, untyped (returns `any`), while every sibling test in this chunk reaches the same module through `createRequire(import.meta.url)` ("createRequire(import.meta.url)(path.join(ROOT, 'scripts/lib/review-template.js')) as {...}"); if the vitest module mode has no `require` (cannot see the config), this throws at collection and takes the whole file with it — fix: use `createRequire(import.meta.url)(...)` with the typed cast the other tests use.
+
+BUG severity=MED — src/tests/backlog/check-lane-close.logic.test.ts "editBody?: (b: string) => string;" — the callback is never invoked, `planScenario` only branches on its truthiness and applies a hardcoded replace ("if (o.editBody) finalText = finalText.replace(/the plan text is long enough/, 'the plan text is wrong enough');"), so the `(b) => b` passed in the Plan-line test proves nothing and any future caller's transform is silently discarded — fix: `finalText = o.editBody ? o.editBody(finalText) : finalText;`.
+
+BUG severity=MED — src/tests/proof-slice.db.test.ts "expect(timeoutMsFromVariable(rows[0].variable_value)).toBe(entry!.default);" — the second test indexes `rows[0]` without the length guard the first test carries, so an unregistered variable (or running this test alone via `-t`) throws `TypeError: Cannot read properties of undefined` instead of naming `TIMEOUT_VARIABLE` — fix: assert `rows` has length 1 before reading `rows[0]`.
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts "let finalText = o.editBody ? text0 : text0;" — both branches are identical, dead code that reads as if two paths existed — fix: `let finalText = text0;`.
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts "extractSections(ctxText, ['Description', 'Acceptance criteria', 'Implementation Plan'])" — the plan sections are hardcoded here while the same helper reads `CONTEXT_SECTIONS` from the module for `sel`, so a change to the exported `PLAN_SECTIONS` leaves these gate tests cutting a stale section list and still passing — fix: read `PLAN_SECTIONS` off the required module, as `selectedOf` does.
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts "as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string }" — typing the input as `unknown` discards all checking of the ~20 `planScenario` call sites and of the one-field call "m.planGateErrors({ id: 'task-7', taskText: ..., type: 'record' })", so a misspelled fixture key is never caught — fix: type the input object instead of `unknown`.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "const t = JSON.parse(fs.readFileSync(f.table, 'utf8'));" — implicit `any`, while the same diff's `board()` helper casts the identical read "(JSON.parse(fs.readFileSync(f.table, 'utf8')) as Record<string, unknown>)", so a table shape change surfaces as a property `TypeError` mid-test rather than a type error — fix: cast as the sibling does.
+
+DEFER severity=NIT — src/tests/backlog/rule-lists.logic.test.ts "const lens = async (files: string) => {" — shadows the module-level helper "function lens(f: ReturnType<typeof fixture>, list: string, material: string, max: number, name = 'o')" declared in the same file, so `lens(...)` means two different things in one file — fix: name it `lensSetOf` or `lensesFor`.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  81898ms (81.9s)
+📊 Tokens — total: 46065, input: 28799, output: 17266, reasoning: 16314

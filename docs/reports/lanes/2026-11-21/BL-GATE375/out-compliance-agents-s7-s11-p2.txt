@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:10:44.707Z file_sha256=2ed517c998b5edc9976d052594c08b64708fe21497c6ce7f3880307a9a6df6f0 prompt_sha256=bedcae988f474b58903c02983a2ed5811f7fd55e8c8d1b804b1768506b3169ec
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-agents-s7-s11-p2.txt (model: deepseek-reasoner)
+
+BUG severity=MED — task-375 plan A6, operator "or split smaller", "a block with no deeper heading is cut between table rows or blank-line paragraphs and the pieces packed in order up to `max`" — scripts/analysis/rule-lists.mjs "the block's own heading line stays with the first piece" and the flush suppression `if (!(head && pieces.length === 0 && cur.length === 1)) flush(); cur.push(ln); flush();` — the heading is forced into the first row/paragraph piece, so a heading plus a first unit that together pass the room are refused even though the unit alone fits, which the clause says must be cut between — fix: emit the heading as its own piece (or cut between heading and first unit) when heading + first unit > max.
+
+DEFER severity=LOW — task-375 plan A6 "A row or paragraph that alone passes `max`, or a block with no row or blank line to cut at, is refused naming it (the old throw)" — scripts/analysis/rule-lists.mjs "has no deeper heading, table row or blank line to split at that fits (a piece of ${big.length} characters; room for list text in one file: ${max})" — the refusal names the section label and the oversized piece length but not the offending row or paragraph, so an operator cannot locate one row inside a 77 KB register — fix: include the first line or the byte offset of the oversized piece in the message.
+
+DEFER severity=LOW — walk rule 4 / task-375 plan B2 "check-tasks (existing command) prints ... the exact `backlog task edit task-N --add-ref ...` command" — scripts/analysis/rule-lists.mjs "backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)]" — the printed command also carries `--remove-ref` for entries of lists that no longer resolve, which no pasted clause names — fix: get a ruling/card for the removal path or print only `--add-ref` as the clause states.
+
+MET — task-375 2026-11-21 note (1) "`rule-lists.mjs lens-input` refuses without `--context`" — scripts/analysis/rule-lists.mjs "if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md>" — lens-input exits 2 with no --context.
+
+MET — D11b / Description "the security lens fires for admin and PII paths" — scripts/analysis/rule-lists.mjs "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — admin and pii now trigger the security lens.
+
+MET — RR-0343 "labelled means i need to know its a compliance document" and B1 "`compliance:<list id> <file>`" — scripts/analysis/rule-lists.mjs "compliance:${l.id} ${l.file}" — each resolved list becomes a `compliance:` reference.
+
+MET — task-375 plan A2 "extractSections moves there from deepseek-review.js:106-121" — scripts/deepseek-review.js "-const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock } = require('./lib/review-template');" / "+const { ..., extractSections } = require('./lib/review-template');" and the local function removed — the review tool now cuts via the shared lib.
+
+MET — task-375 2026-11-21 note (1) "Every lens command passes it with `--context`" and plan A "lens-input refuses without it" — scripts/analysis/rule-lists.mjs "const matFrom = str('material-from', ''); const ctxFile = str('context', matFrom);" — the context is required and --material-from is its own context.
+
+REJECT — Description C "proof-slice.mjs reads its timeout and buffer from registered tooling_ variables" — accused that D10b is unmet because DEFAULT_TIMEOUT_MS still governs — not a real issue: the same clause allows it ("otherwise A, B and D ship and the task is not marked complete"), the pasted task status is RUNNING, and the diff ships only the reader plus refusal, which is the permitted interim.
+
+REJECT — spec 08 §7 rule 7 "Security fires only on money/auth/PII/admin" — accused that adding `admin` over-fires the security lens — not a real issue: the pasted rule names admin as a trigger the lens is meant to fire on.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 3
+
+---
+⏱  106140ms (106.1s)
+📊 Tokens — total: 49772, input: 27964, output: 21808, reasoning: 20774

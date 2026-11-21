@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-21T04:08:02.657Z file_sha256=e34beb582acd2bda98a35418ca82c4d5c8f7f53fc934bad0357bd0bf9590e3c3 prompt_sha256=138be7b44be127089258d278849e5c02853dc597e3fadd6c1ebfc99cf50f3f0e
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — scripts/analysis/backlog-lane.mjs:94 "taskText: fs.readFileSync(t.file, 'utf8'), type: gateType, table: ruleTable, root: board" — the gate hashes the working-tree task file while the evidence folder, the referenced tasks and the Plan line are all read from HEAD ("showHead", "headTasks"), and the dirty check at :84 deliberately tolerates uncommitted "backlog/" edits ("filter((p) => !p.startsWith('backlog/') ...)"), so a plan edited but never committed can pass the gate against a Plan line that matches no commit — read the task with showHead (or refuse a task file that differs from HEAD) so the hashed text is the committed one.
+
+BUG severity=MED — scripts/analysis/backlog-lane.mjs:97 "tracked: (e) => git('ls-files', '--', e).stdout.trim() !== ''" — a failing git ls-files (bad pathspec, not a repo, unreadable index) yields empty stdout and is read as "not tracked", so the Regression seat silently drops out of the gate instead of being demanded — test r.status and emit a refusal line naming the pathspec and r.stderr.
+
+BUG severity=MED — scripts/analysis/backlog-lane.mjs:89 "const showHead = (pth) => { const r = git('show', `HEAD:${pth}`); return r.status === 0 ? r.stdout : null; };" — a git read failure is collapsed to null and then to an empty file ("text: showHead(x) ?? ''"), so a broken object read is reported as missing or invalid evidence and the git stderr is never logged — log `git show HEAD:<path>: ${r.stderr}` on the refusal line and keep the two cases (absent, unreadable) distinct.
+
+BUG severity=MED — scripts/analysis/backlog-lane.mjs:101 "startsWith(`${ref.toLowerCase()} - `) || path.posix.basename(x).includes(ref)" — the fallback accepts a decision id that is only a prefix of an existing one (RR-033 resolving to "RR-0333 - ....md"), so the gate passes a reference to a decision that does not exist — match on the id token only (`startsWith(\`${ref} \`)` or an exact id regexp) and list "backlog/decisions/" once instead of one git ls-tree per reference.
+
+BUG severity=MED — scripts/analysis/backlog-lane.mjs:127 "step('take', board, [bin, 'task', 'edit', taskId, '-s', 'RUNNING', '-a', `@lane-${lane}`, '--append-notes', note, ...addRefs]);" — the take appends a note to the task body straight after the gate hashed that body (A9 step 3 shows an appended note changes the expected Plan line), so the committed Plan line stops describing the task and every relaunch of the same build or fix task is refused until the line is regenerated — exclude the launch note from planHash, or re-hash after the take and record that hash.
+
+DEFER severity=MED — scripts/analysis/backlog-lane.mjs:94 "table: ruleTable, root: board, letter: letterOf, laneName: lane" — cannot see where ruleTable and letterOf are declared; the only letter binding the diff shows is "const letter = /\[([^\]]+)\]\s*$/..." at new line 173, after this gate at :94, so an undefined or TDZ reference would abort every build/fix launch — grounder to confirm both are declared above the gate.
+
+DEFER severity=LOW — scripts/analysis/backlog-brief.mjs:53 ".trim().replace(/^#{1,6} /gm, '#### ')" — the demotion hits every line starting with "#" to 6 hashes and a space, including shell or comment lines inside fenced code blocks in the plan and notes, so the reviewer's material is not the task text unchanged — skip lines inside ``` fences when demoting headings.
+
+DEFER severity=NIT — scripts/analysis/rule-lists.mjs:556 "const matFrom = str('material-from', ''); const ctxFile = str('context', matFrom);" — a bare "--context" with no value is not refused when "--material-from" is present, because str() falls back to the default, so the exact silently-degrading flag shape the task is fixing reappears on --context — check `a.context === true` and die(2) naming the flag.
+
+VERDICT: FAIL on code correctness
+Top 3 defects (if FAIL):
+- The launch gate hashes the working-tree task file while all evidence is read from HEAD, so an uncommitted plan can pass.
+- Git failures in the gate's tracked/showHead callbacks are swallowed into "untracked" or "missing evidence" and never logged.
+- decisionExists accepts a decision id that is only a prefix of an existing file, so a nonexistent decision reference passes the gate.
+
+---
+⏱  191087ms (191.1s)
+📊 Tokens — total: 68148, input: 30438, output: 37710, reasoning: 36611

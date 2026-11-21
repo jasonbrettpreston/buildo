@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:25:33.690Z file_sha256=80bf33b4263d118e8f2ea55446aa6dba0a25a4c74919bee715136357fb94282b prompt_sha256=feb2761511d48685d51b4bface7cd85efb6d7a4ef1f4e47c2efe640a7bfaf820
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-five-words-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0349 "Complaince on the plan and output. Let's start with that!" — scripts/hooks/check-lane-close.mjs:~610 "a fix task needs at least one plan-<lens>.txt in ${dirNote} (Spec 08 rule 4 and 6.4: the lean plan roster)" — a fix launch passes the gate with any single plan-<lens>.txt (a plan-code-review output alone), no plan compliance output per resolved list is required, and the close still reads "const phases = build ? ['out'] : ['plan', 'out'];" so a fix task's plan is never proved compliant with its governing lists anywhere — in planGateInner's fix branch require one valid plan-compliance-<list>[-pN].txt per resolved list, as the build branch already does.
+
+DEFER severity=MED — A.6 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file." — scripts/hooks/check-lane-close.mjs:~68 "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c })))" — the recompute accepts a match against any committed context-rN.md, so a close whose outputs split between context-r1.md and context-r2.md passes and the one-file-per-round clause is not proved — refuse a close whose outputs do not all match the same context file (bind them to the highest context-rN).
+
+DEFER severity=LOW — B.3 "the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir (08_agents.md:347); the close check refuses when one is missing." — scripts/hooks/check-lane-close.mjs:~470 "for (const n of ['REPORT.md', 'GROUNDER.md', ...(textOf('TRIAGE.md') !== undefined ? ['TRIAGE.md'] : [])])" — TRIAGE.md is required only when the lane dir already holds it, so the "refuses when one is missing" half is not enforced for it — require the TRIAGE.md reference unconditionally, or record the conditional in the clause.
+
+MET — A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js; extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text." — scripts/lib/review-template.js:115 "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" with extractSections exported and imported by the close via createRequire — the constant and the cutter are shared.
+
+MET — A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes." — scripts/hooks/check-lane-close.mjs:~316 "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(" plus the extractSections throw path, both pushed as refusals in closeErrors — the three refusals hold.
+
+MET — Description A "context-rN.md per round" — scripts/lib/review-template.js:~139 "function contextRound(dir) { return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1; }" — one count, a new file per round, never overwritten.
+
+MET — RR-0348 "these only run on the plan" and RR-0342 "regression only required when code is changed" — scripts/hooks/check-lane-close.mjs:~553 "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };" evaluated only inside planGateInner, the seats never added to the close path.
+
+MET — Description D "refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board" — scripts/hooks/check-lane-close.mjs:planGateInner — folder error, listProof per list on the plan phase, GROUNDER-PLAN.md via grounderErrors, seatLines against PLAN_SEATS, outcomeErrors mode 'plan', and "const pl = [...g.matchAll(/^\s*Plan:\s*(\S+)\s+sha256:([0-9a-f]{12})\s*$/gm)].pop();" compared with planHash — all five gate items present.
+
+MET — B.3 (the REPORT.md and GROUNDER.md half) — scripts/hooks/check-lane-close.mjs:~470 "if (!have.has(rp)) errors.push(`${id}: the task's references lack the repo copy ${rp}: backlog task edit ${id} --add-ref ${rp}`);" — the exact add-ref command is printed.
+
+REJECT — A.3, A.7, B.1, C — accused of not changing backlog-lane.mjs, backlog-brief.mjs, rule-lists.mjs and proof-slice.mjs — those files are not in this chunk (cannot see), so no finding is made here.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 3
+
+---
+⏱  169361ms (169.4s)
+📊 Tokens — total: 65454, input: 32859, output: 32595, reasoning: 31419

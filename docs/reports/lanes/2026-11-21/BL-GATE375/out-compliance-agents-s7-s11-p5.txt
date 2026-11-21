@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:11:32.889Z file_sha256=e47bd44115f1a54a8dca0c2f8ef6b7fabd45941c16b0f8526107896c03aa13bb prompt_sha256=db1dd8b8b4ef9dd1ede5ba7934fbb5d51e4822a7751ddeeee7abb35137923511
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-agents-s7-s11-p5.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md §11.3 "Red must land at the DESIGNED assertion; red-for-the-wrong-reason is a test defect found NOW." — src/tests/backlog/check-lane-close.logic.test.ts (diff, task-375 A4/A5 describe) "const planted = (ctx: string) => { const r = scenario({ ctx }); return r; }; ... refused(planted('(no pasted context provided)'), /context-r1\.md/);" or NONE — `planted` passes only `ctx`, so `HASH_CTX` stays `CTX_FILE` and every output header is hashed over the real sections while the committed context is the placeholder, so the close refuses on prompt_sha256 whatever the placeholder branch does; the assertion `/context-r1\.md/` matches either message, and the sibling `refused(planted(CTX_FILE.replace('## Description', '## Gone')), /Description/)` has the same untested branch, so deleting the placeholder or Description check leaves both tests green (A5 acceptance #10 not proven) — pass `hashCtx` equal to the planted text so the hash binds and assert the placeholder/Description problem line itself.
+
+BUG severity=MED — 08_agents.md §11.3 "Red must land at the DESIGNED assertion" and task-375 AC "#10 A5 The planted refusals of section 8, each with its control." — src/tests/backlog/check-lane-close.logic.test.ts "refused(scenario({ notesBlock: true, ctx: CTX_FILE.replace('## Implementation Notes\n(none)', '## Elsewhere\n(none)') }), /Implementation Notes/);" and "const bare = CTX_FILE.replace('## Implementation Notes\n(none)\n\n', '');" or NONE — the refusal scenario leaves `hashCtx` at `CTX_FILE`, so the output hash is computed over a context that still holds the heading that the committed context dropped, and the refusal is reachable from the prompt_sha256 line; the control is trusted to have removed the heading with no assertion that the replace matched, so a no-op replace silently makes the control vacuous — set `hashCtx` to the edited text for the refusal and assert `bare` no longer matches the heading before expecting status 0.
+
+DEFER severity=MED — task-375 Description D "a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board" — src/tests/backlog/check-lane-close.logic.test.ts "const roundLine = o.round === false ? '' : (o.round ?? `Plan review round 1: 0 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder ${dir}/GROUNDER-PLAN.md; triage ${dir}/TRIAGE-PLAN.md\n`);" with "if (o.triage !== false && o.triage !== undefined) files['TRIAGE-PLAN.md'] = o.triage;" or NONE — the default control closes with a round block naming `docs/reports/reviews/task-7/TRIAGE-PLAN.md` while that file is never committed (no `o.triage`), and the control expects `errors` empty, so the gate accepts an outcomes pointer at a non-existent file and "outcomes on the board" is not actually checked by the passing path — commit the named TRIAGE-PLAN.md in the default fixture or refuse a round block whose triage path is absent, and test both.
+
+MET — task-375 A4 (rule-lists.mjs lens-input takes --context) — src/tests/backlog/rule-lists-table.logic.test.ts:49 and :206 in the diff — both lens-input calls now pass `--context path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md')`, so the new refusal does not red them.
+
+MET — 2026-11-21 dated note (task-375) "the close check recomputes each output's prompt hash with the committed context" — check-lane-close.logic.test.ts "context: string = selectedOf(HASH_CTX)" — the close test hashes over the CONTEXT_SECTIONS cut of the committed context, not the placeholder.
+
+MET — 2026-11-21 dated note (task-375) "rule-lists.mjs lens-input refuses without --context, and the close check ... recomputes each output's prompt hash" — check-lane-close.logic.test.ts "refused(planted(CTX_FILE.replace('a short description', 'a different description')), /prompt_sha256/);" — an edited context is refused on the hash.
+
+MET — 2026-11-20 rule 6 note "at close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md" (task-375 B2) — check-lane-close.logic.test.ts "refused(r, /backlog task edit task-7 --add-ref docs\/reports\/lanes\/2026-11-20\/BL-COMPLY2\/REPORT\.md/);" — a missing reference is refused with the exact add-ref command, and TRIAGE.md is required only when the lane dir holds one.
+
+MET — task-375 AC "#14 ... then one word edited in the task: refused with the new expected Plan line" — check-lane-close.logic.test.ts "gate(bad, /Plan line .* is not the hash of the task as it is now[\s\S]*expected: Plan: task-7 sha256:[0-9a-f]{12}/);" — the Plan line mismatch is refused and prints the new expected line.
+
+MET — 2026-11-20 rule 6 note "fixed:<sha> <path> (the commit is an ancestor of HEAD ...)" — check-lane-close.logic.test.ts "gate(await planScenario({ finding: { file: 'x', sev: 'HIGH' }, triage: 'plan-code-review#1 fixed:abcdef1 src/a.ts' ... }), /fixed is refused in plan mode/);" — fixed is not accepted at plan altitude.
+
+MET — 2026-11-21 dated note (task-375) "Integration and Reality-Check on every build or fix launch, Regression when the Files line names a path tracked at the board head" — planScenario "const names = ['integration', 'reality-check', ...(needsReg ? ['regression'] : [])]" plus the drop tests — the three seat lines are required exactly by the written triggers.
+
+REJECT — task-375 Description Files line — accused: src/tests/backlog/rule-lists-table.logic.test.ts is edited though the pasted Files line does not name it — the pasted 2026-11-21 deviation note records the line extended by that one path because A4 forces its two lens-input calls red, so this is declared scope awaiting the named grounder ruling, not hidden scope.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  95440ms (95.4s)
+📊 Tokens — total: 50694, input: 30720, output: 19974, reasoning: 18415

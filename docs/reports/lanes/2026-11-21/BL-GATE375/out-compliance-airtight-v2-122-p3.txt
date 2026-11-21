@@ -1,0 +1,40 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:18:32.149Z file_sha256=809648b0b6c307a62f3fdf8ef759627d1e8199a232f276fb18f43d7ac29471f0 prompt_sha256=7bbe398204229c98334441c2855c11f777b7d58909fc078156870d8385896ce8
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-v2-122-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #2 "Tests red first, then green through the real hooks" and AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — src/tests/proof-slice.logic.test.ts:286 "describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)'" — no red run is recorded for D10b anywhere (the pasted note says "the logic test is green, src/tests/proof-slice.db.test.ts is written and NOT RUN") and the runner still uses DEFAULT_TIMEOUT_MS, so the acceptance is unmet — record the failing assertion against the pre-change runner (a redN.out like the other items) and keep the task RUNNING.
+
+DEFER severity=MED — 6.6.1(c) "no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed" — src/tests/proof-slice.db.test.ts:5 "the registered variable the proof slice runner reads its timeout from exists in the logic_variables table with a value the runner accepts, and it equals the pinned seed" — the logic_variables row is not registered (pasted: "no tooling_ timeout variable exists in scripts/seeds/logic_variables.json") and the test is skipped without BUILDO_TEST_DB, so a registry row is asserted accurate while neither generated, enforced nor witnessed — word the header as the requirement it is and withhold the accuracy claim until the seed and migration land.
+
+DEFER severity=MED — AC #3 "a separate grounder verdict on file" — NONE — the pasted note states "Grounder owed; the task stays RUNNING", so this change has no separate grounder verdict on file — land the grounder verdict before any status move or close.
+
+DEFER severity=LOW — plan A.7 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — src/tests/backlog/rule-lists.logic.test.ts "it('a table too big for one file is split at rows, every row appears once across the parts, none over the bound'" — no test exercises the blank-line paragraph cut, and the title's "none over the bound" is never asserted, so the paragraph half of A.7 and the size bound rest on no evidence — add a paragraph-only fixture and assert each part is within --max.
+
+DEFER severity=LOW — AC #1 "Each defect is confirmed on the head before fixing, with file:line" — NONE — D11b is recorded as "rule-lists.mjs:128" but D10b is recorded with no line ("D10 timeout DEFAULT_TIMEOUT_MS = 120000 typed"), so the D10b confirmation does not carry the required file:line — add the proof-slice.mjs line of DEFAULT_TIMEOUT_MS to the notes.
+
+REJECT — 6.6.1(b) "The Phase 1 WITNESS gate (#44) must carry the exact string R-BF WITNESS GATE (#44)" — accused: this diff adds no such marker in scripts/analysis/step-validate.mjs — not a real issue: 6.6.1(e) states the C9 marker is "Not yet built (slice B)" and (c) must stay NOT MET, so the absence is the specified state.
+
+REJECT — plan B.1 "compliance:<list id> <file>, one per resolved list" — accused: complianceRefs drops the file path when the path holds a comma — not a real issue: the pasted build note records it ("a path with a comma entered as compliance:<id> alone") and the deviation is on the task as D6 requires, and 6.6.1 does not reach it.
+
+REJECT — RR-0342 "reality check is only required when a figure is changed or you can figure something else independently" — accused: the plan gate demands the Reality-Check seat on every build or fix plan — not a real issue: RR-0347 rules it "runs anyways for now" when it cannot be told, and the approved v4 plan orders Integration and Reality-Check on every build or fix plan.
+
+MET — AC #12 "A7 D11b test red first then green" — src/tests/backlog/rule-lists.logic.test.ts:648 "describe('D11b (task-375): the security lens fires for admin and PII paths, as README.md:104 and lens-security.md:48 say'" — admin and PII paths assert the security lens on both phases, with a negative control.
+
+MET — RR-0343 "labelled means i need to know its a compliance document" — src/tests/backlog/rule-lists.logic.test.ts "each starting compliance:" — complianceRefs add entries carry the compliance: token and the per-list count equals resolve.
+
+MET — A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js; extractSections moves there" — src/tests/review-template.logic.test.ts:207 "CONTEXT_SECTIONS and PLAN_SECTIONS are the plan constants" — the five headings and PLAN_SECTIONS are pinned exactly.
+
+MET — A.4 "rule-lists.mjs lens-input takes --context, refuses without it" — src/tests/backlog/rule-lists.logic.test.ts "refuses without --context (exit 2, says so) and control: with it exits 0".
+
+MET — A.5 "The planted refusals of section 8, each with its control" — src/tests/backlog/check-lane-close.logic.test.ts:789 "describe('task-375 A4, A5, B2: the close binds the committed review context and the references'" — placeholder, missing Description, context edited after the review, missing Notes and missing reference are each refused beside a passing control.
+
+MET — B.3 "the close check refuses when one is missing" — src/tests/backlog/check-lane-close.logic.test.ts "B2: a missing REPORT.md reference is refused and the exact add-ref command is printed".
+
+MET — AC #11 "A6 The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green" — src/tests/review-template.logic.test.ts:207 — the new describe is appended after the substitutePlaceholders block and leaves it untouched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 24   Unmet: 5
+
+---
+⏱  143283ms (143.3s)
+📊 Tokens — total: 60450, input: 31787, output: 28663, reasoning: 27244

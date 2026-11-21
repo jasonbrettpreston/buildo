@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:28:10.870Z file_sha256=54e21e6b2c8178059910f49081a59c133a15df119e3bb21a8e72848a41e3e971 prompt_sha256=11937a019ef7075bc1c7221133e6a5de95f8463679cbe84a91b9dfb073120b7f
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-inc-S-p4.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — FINAL BUILD NOTE, NOT IN SCOPE "any new script" — src/tests/backlog/backlog-lane.logic.test.ts:15 "run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()]" — the change depends on a new program that the approved plan lists as out of scope, and no pasted operator ruling authorizes it — inline the evidence planting in the test helper, or have the operator amend the plan and Files line before merge
+BUG severity=MED — FINAL BUILD NOTE, NOT IN SCOPE "a second pasted file or context stamp" — src/tests/backlog/check-lane-close.logic.test.ts:33 "fs.readFileSync(path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), 'utf8')" — the scenarios read a second pasted context (fixture-context.md) beside the committed context-r1.md that the close binds, which the plan rules out — use the brief-generated context or an existing docs file so one context file binds the round
+DEFER severity=MED — A4 lens-input "in the plan phase, --material-from" — src/tests/backlog/backlog-lane.logic.test.ts:278 "expect(e).toContain('plan: --material-from')" and the only lens-input template asserted is "lens-input --context \S+ --material <diff file>" — the plan-phase flag is pinned as a label string, not as an actual lens-input invocation, so the clause is satisfied only by text — assert the plan-phase lens-input command itself carries --material-from
+REJECT — acceptance #3 "compliance entries differing from the resolved lists" — accused of having no close test — v4 deletes that refusal, "B.2 close refusal on stale references -> deleted (check-tasks prints the commands, the take adds them)", so no close test is owed
+MET — A3 "every lens command ... passes --context <the committed context file> and one --section per entry" — src/tests/backlog/backlog-lane.logic.test.ts:270 "expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT)" — every deepseek-review command is checked for the committed context and the five sections
+MET — A3 "the context-<date>.md name -> context-rN.md" — src/tests/backlog/backlog-lane.logic.test.ts:175 "context-r1.md" and :412 "context-r2.md" — the date name is gone and the round name is pinned in dry-run and real launch
+MET — A4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes" — src/tests/backlog/check-lane-close.logic.test.ts:795 "refuses a context that is the placeholder, and one without the Description heading" — planted refusals with controls
+MET — B2 "the close check refuses when one is missing" — src/tests/backlog/check-lane-close.logic.test.ts:806 "a missing REPORT.md reference is refused and the exact add-ref command is printed" — REPORT.md and the conditional TRIAGE.md refusals
+MET — D "backlog-lane.mjs refuses a build or fix launch whose plan evidence ... are not on the board" — src/tests/backlog/backlog-lane.logic.test.ts:390 "a build launch with no plan evidence ... exit 3, nothing taken, in dry-run too" — the launch gate is exercised through the lane, not only the pure function
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  156135ms (156.1s)
+📊 Tokens — total: 63951, input: 31711, output: 32240, reasoning: 31400

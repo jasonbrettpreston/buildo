@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:37:01.291Z file_sha256=dac18ac1f7b169a6d96f81bc6b26f69101f488d2ca603a6ba2ab4811d6c19a02 prompt_sha256=786ec831e2982b32e7078171f7420a7b4e777cfb6ea7cd7b37023fc1669bcf0f
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-queue-137-p7.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — none meets; see finding below — clause ref: plan A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — code: scripts/lib/review-template.js "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" — claim: none, this is MET (listed below); this line intentionally not a finding.
+
+DEFER severity=LOW — plan A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — src/tests/backlog/backlog-lane.logic.test.ts "const SECT = '--section \"Task\" --section \"Description\" --section \"Acceptance criteria\" --section \"Decisions naming this task\" --section \"Implementation Notes\"';" — the canonical section list is copied as a test literal instead of imported from CONTEXT_SECTIONS, so a change to the constant is held by a second copy, a drift risk — keep only if the pin is wanted, otherwise read the constant from review-template.js in the assertion.
+
+MET — plan A.2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js" — scripts/lib/review-template.js "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" — one constant defined and exported.
+
+MET — Spec 137 §4 note 2026-11-21 "the committed review context (docs/reports/reviews/<task>/context-rN.md)" — scripts/lib/review-template.js "function contextRound(dir) { return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\d+\.md$/.test(f)).length : 0) + 1; }" — the round filename is centralized in one helper.
+
+MET — plan A.3 "extractSections moves there from deepseek-review.js:106-121" — scripts/lib/review-template.js "if (start === -1) throw new Error(`--section \"${want}\": no heading contains that text`);" — extraction moved and throws on a missing heading, not dropped silently.
+
+MET — Acceptance #5 "the output holds the headings \"## Implementation Plan\" and \"## Implementation Notes\"" — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(ctx).toMatch(/^## Implementation Plan\n[\s\S]*PLAN-LINE-ONE[\s\S]*PLAN-LINE-TWO/m);" — both headings pinned.
+
+MET — plan A.5/A.6 "context-rN.md per round ... never overwritten" — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(fs.readFileSync(r1, 'utf8')).toBe(before); ... context-r2.md ... toContain('LATER-NOTE')" — pins r1 preserved and r2 written with the later note.
+
+MET — plan B.1 "adds them ... only those not already on the task" (RR-0343 "labelled means i need to know its a compliance document") — src/tests/backlog/backlog-lane.logic.test.ts "expect([...t2.matchAll(/--add-ref 'compliance:/g)]).toHaveLength(lists.length - 1);" — pins no duplicate compliance ref on re-take.
+
+MET — Spec 137 §4 note 2026-11-21 "the Plan hash line, which is the hash of the task as it is at launch" — src/tests/backlog/backlog-lane.logic.test.ts "expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\s\S]*expected: Plan: task-\d+ sha256:[0-9a-f]{12}/);" — pins the Plan hash refusal.
+
+MET — RR-0333 "don't makr the task complete until it actually works" — src/tests/backlog/backlog-lane.logic.test.ts "expect(statusOf(f)).toBe('LATER'); expect(fs.existsSync(f.wt)).toBe(false);" — launch refused, task not taken.
+
+REJECT — plan A "Implementation Plan and Implementation Notes in the context" — accused of omitting Implementation Plan from CONTEXT_SECTIONS — because the plan text is delivered as --material-from via PLAN_SECTIONS and acceptance #6 fixes five --section flags, so the omission is intended, not a miss.
+
+REJECT — FINAL BUILD NOTE A "no new file" — accused of creating context-r2.md as a new file — because PLAN-375-v4 replaces the context-<date>.md name with context-rN.md per round and A.6 regenerates the context each round.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  94289ms (94.3s)
+📊 Tokens — total: 46821, input: 28490, output: 18331, reasoning: 17274

@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:15:51.510Z file_sha256=27b03aa154fa08b7e84070d551aec1cd1dd777c75fa72006f9881b8ff5238ce4 prompt_sha256=3c93480870d136a69c0f6531038fc6c4ef46626b6e6d9fd499ebd5f2a94548ec
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-124a-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #1 "Each defect is confirmed on the head before fixing, with file:line" and AC #8 "today exit 1 naming '## Register'; after A6 exit 0 with parts" — pasted acceptance record "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)" — the pre-fix refusal that splitFlat replaces is asserted, not shown, so an approved acceptance clause for this exact hunk is not on the task — run lens-input --list surface-135 with the 60,000-character material against the 410 head, paste exit 1 naming "## Register" beside the post-fix exit 0 with parts, for all three lists (surface-135, policy-124-s2-s5, bylaw-133).
+
+DEFER severity=MED — plan B.1 "Entry (field `references`, not `documentation`): `compliance:<list id> <file>`, one per resolved list" — rule-lists.mjs "(String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`)" — for the one list whose path carries a comma the entry drops its file, a form no pasted clause names, so the label says compliance but not which document — record the carve-out as an approved note from the grounder ruling, or write the id-only form for every list and say so in the plan.
+
+DEFER severity=LOW — plan B.2 "prints, for each open task whose compliance: entries differ from the resolved lists ... the exact `backlog task edit task-N --add-ref ...` command" — rule-lists.mjs "[...x.remove.map((e) => `--remove-ref ${q1(e)}`)]" — check-tasks now prints a --remove-ref mutation that removes a reference the operator put on a task, and no pasted clause rules a remove arm — keep the add arm only until the orchestrator rules, or fold the remove into the same B.1 ruling.
+
+DEFER severity=LOW — AC #4 "A lens run on a file containing dollar sequences and placeholder tokens sends the text unchanged, once (test, red first)" — rule-lists.mjs "specs: context" at five substitution sites — the task's whole context now enters the template as a replacement value at five sites and the escaping that keeps `$&`, `$'` and `{{PLAN}}` unchanged is inside review-template.js, which is not in this chunk, cannot see — confirm the unchanged-once property on the chunk that carries review-template.js and review-template.logic.test.ts.
+
+MET — plan A2 "extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text" — deepseek-review.js "-const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock } = require('./lib/review-template');" plus the deleted "function extractSections(markdown, wanted) {" — the tool now requires the one shared cutter and keeps no local copy.
+MET — AC #12 (A7, D11b) "the security lens fires for admin and PII paths" — rule-lists.mjs "const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);" — both terms now select the security lens for a build or fix task.
+MET — plan A4 "rule-lists.mjs lens-input takes --context, refuses without it" — rule-lists.mjs "if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> ...')" — the CLI refuses with exit 2 when no context is named, and --material-from is its own context.
+MET — plan A4 "counts the selected sections in the room on both paths (with a list, and with no --list ...)" — rule-lists.mjs "const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context, ... }).length;" — the context is counted in avail, in the widest-part test, in promptOf and in the per-file prompt bound, and the no-list path shares buildLensInputs.
+MET — plan A6 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — rule-lists.mjs "if (subs.length === 0) return splitFlat(text, max, label, id);" — the old throw is replaced by the row and paragraph cut, and "if (big) throw ... has no deeper heading, table row or blank line to split at that fits" keeps the refusal for a piece that alone passes the room.
+MET — plan B.2 "check-tasks ... exit 0" with "the exact backlog task edit task-N --add-ref command" — rule-lists.mjs "console.log(`  backlog task edit ${x.id} ${...}`)" and "run each printed command (exit stays 0)" — the exact command is printed per stale task with its count of entries and the exit is unchanged.
+
+REJECT — R-AX to R-BH (Appendix §B10 register) — accused of not meeting a step-standard row (R-BA's closed gates, R-BC chain completion, R-BH mode-emits-type) — every row's scope is converted or in-development steps, `scripts/steps/_schema/*` and `step-validate.mjs`, and neither scripts/analysis/rule-lists.mjs nor scripts/deepseek-review.js is a step file in any pasted clause.
+REJECT — Grounder resolution 2026-11-20 (c) "rule-lists.mjs lens-input takes --context, refuses without it, stamps its sha256" — accused of the missing context stamp on the lens input — the governing PLAN-375-v4 says "NOT IN SCOPE: ... a second pasted file or context stamp", and the plan governs where the two differ.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+
+---
+⏱  131998ms (132.0s)
+📊 Tokens — total: 51796, input: 25993, output: 25803, reasoning: 24497

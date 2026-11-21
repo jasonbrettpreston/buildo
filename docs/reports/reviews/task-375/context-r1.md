@@ -1,0 +1,678 @@
+# Review context for task-375 (no plan id) written 2026-11-21 by backlog-brief.mjs (round 1)
+
+## Task
+task-375 FIX.TOOLS Review and proof tooling: the lens line passes the rule context, the security lens fires for admin and PII, the review template substitutes safely, proof-slice reads its limits from settings (D11, D10, two review-tool defects)
+status: RUNNING · milestone: m-1 · assignee: @lane-BL-GATE375 · labels: McFix, McFix A
+
+## Description
+Source: grounder verdicts docs/reports/lanes/2026-11-20/BL-GROUND/VERDICTS-SUMMARY.md and GROUNDER.md (task-368), on the handbook pass of the pushed 1·B change. Operator 2026-11-20 (verbatim): "essential we have a non compliance build again - the entire reason for this approach". Scope now (2026-11-20, PLAN-375-v4 in the Implementation Plan field governs; build exactly that plan, do not re-plan): A the reviewer's context is the task, sized (Implementation Plan and Implementation Notes in the context, one CONTEXT_SECTIONS constant, every lens command passes the committed context, lens-input refuses without it, context-rN.md per round, split at table rows and paragraphs); B the compliance documents are written on each task as references starting "compliance:" and the report, grounder and triage files are referenced at close; C the earlier defects D10 (proof-slice.mjs reads its timeout and buffer from registered tooling_ variables; the DB read needs the operator's DB GO after the MCINC-7 rehearsal, otherwise A, B and D ship and the task is not marked complete) and D11 (the security lens fires for admin and PII paths); D the launch gate: backlog-lane.mjs refuses a build or fix launch whose plan evidence, separate grounder file, required seat reports, outcomes and Plan hash are not on the board. Where the generated brief says to run --plan, do not: the plan is the task text. .claude/review-templates/lens-compliance.md is on the Files line and is NOT edited. docs/specs/00-architecture/08_agents.md takes ONE dated note carrying two points (context-rN.md; the plan-only seats). Files: scripts/analysis/backlog-lane.mjs, scripts/analysis/backlog-brief.mjs, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/deepseek-review.js, scripts/lib/review-template.js, .claude/review-templates/lens-compliance.md, scripts/analysis/proof-slice.mjs, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/backlog-brief.logic.test.ts, src/tests/backlog/backlog-brief-context.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, src/tests/proof-slice.logic.test.ts, src/tests/proof-slice.db.test.ts, src/tests/review-template.logic.test.ts
+
+## Acceptance criteria
+- #1 Each defect is confirmed on the head before fixing, with file:line
+- #2 Tests red first, then green through the real hooks
+- #3 Compliance lens run once per governing rule list with the list whole; a separate grounder verdict on file
+- #4 A lens run on a file containing dollar sequences and placeholder tokens sends the text unchanged, once (test, red first)
+- #5 A0 In a lane worktree: node scripts/analysis/backlog-brief.mjs --task task-381 ... (the committed context on wf1/inc1b-hooks3 has no Implementation Notes heading): the output holds the headings "## Implementation Plan" and "## Implementation Notes".
+- #6 A1 scripts/deepseek-review.js review <task-381 diff> --template .claude/review-templates/lens-compliance.md --context <that file> with the five --section flags and --dry-run: 0 hits of "(no pasted context provided)", at least 1 hit of "yes to all", the five heading lines present, prompt under 120000 characters.
+- #7 A2 rule-lists.mjs lens-input for each of the 15 resolved lists of task-381 with that context: paste each exit code, selected-section count and call count: expected 17 calls in total, none refused; the same for the contexts of task-410 and task-267.
+- #8 A3 lens-input --list surface-135 with a 60,000-character material: today exit 1 naming "## Register"; after A6 exit 0 with parts; the same for policy-124-s2-s5 and bylaw-133.
+- #9 A4 node scripts/analysis/rule-lists.mjs check-tasks on the live board prints the exact backlog task edit --add-ref command for at least one stale open task (choose the task on the day 375 launches: a LATER build task not recommended for drop; task-400 is, and its Files line collides with this task), each entry starting "compliance:", the count equal to the lists printed by rule-lists.mjs resolve for its Files line; exit 0; after running the printed command, check-tasks prints nothing for it and backlog task view <id> --plain shows the entries on the References line.
+- #10 A5 The planted refusals of section 8, each with its control.
+- #11 A6 The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green.
+- #12 A7 D11b test red first then green.
+- #13 A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING).
+- #14 A9 The gate on a real task still LATER (chosen on the day; its evidence is a test set made for this acceptance and is reverted, not that task's plan evidence): dry-run before evidence: refused, one error per missing item (the first names the missing evidence folder or GROUNDER-PLAN.md); after the orchestrator has produced the evidence by D1 and D2 (the integration and reality-check Seat lines, and a regression Seat line when the Files line names an existing path) and copied the printed Plan line last: "plan gate ok: <L> lists" with L equal to the resolved-list count; then one word edited in the task: refused with the new expected Plan line; the edit is reverted.
+
+## Implementation Plan
+PLAN-375-v4 (build plan, self-contained: a lane executes it with no other file). Task: FIX.TOOLS, review and proof tooling. v4 = v3 (second pass and round-3 corrections C2 to C4) plus his rulings of MORNING-DECISIONS.md :1593 to :1638, re-based on task-399 as built. Basis: board branch wf2/board head 85d001ba5 for the board; task-399 as built on branch wf1/inc1b-outcome (worktree ~/Buildo-wt-outcome) at bf773dd7f, fix round 1 (task-399 folds first; its line numbers are hints at that head). Rules are cited by number first; file:line at c15fab7ec for Spec 08 and 137 unless marked "399 head".
+Serves: supporting function of the compliance review every Increment 1.B task passes through; advances none of doc-2 elements A to G. Estimate: GUESS two lane days, not timed.
+
+0. THE OPERATOR'S WORDS THIS PLAN RESTS ON (verbatim, MORNING-DECISIONS.md line in front; everything else is the orchestrator's design and is marked so)
+:1517 "don't makr the task complete until it actually works"
+:1522 "you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y"
+:1546 "agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close ... Just deliver the priority compliance item or the comprehensive summary that fits - files too large to review even when split. or split smaller"
+:1557 "approved" (items 0 to 8; 2 golden exemption yes, 3 hunk split no, 4 handbook no, 5 priority ranking no, 6 compliance entries on every open task after 375 yes, 7 re-run changed chunks yes after 375, 8 hold other lanes' reviews until 375 folds yes)
+:1541 "labelled means i need to know its a compliance document"
+:1572 his message pastes back two sentences that originate in the orchestrator's list (not his own wording): "Item 10: a grounder checks the folded plan before any build starts, so I cannot launch a build on an unchecked plan." and "Task 399: no close without an outcome for every confirmed finding, so I cannot let findings drop."; his own words there: "Can we add these to the three tasks remaining taks for the four steps.  run the full panel on them? We need to get this right?"
+:1580 "the findings that are deemed low priorities are filed in a review pile for later" ... "run reality check and integration as well" (for the additions) ... "We test them to reasonable levels and move on"
+:1595 "1y 2 n - run a review on the output with the compliance and ground lens 3. yes we neeed reality check and integration and also potentially regression to run at your discrecition 4. more details. isnt your incentive to close despite making the necessary changes. shouldht teh incentive to make the changes so teh work actualyl works. 5. how much of a delay - explain further" (his answers to the five questions put to him; RR-0342 / decision-127 records the seat triggers)
+:1600 "5 yes." (to the question "the orchestrator does the pre-launch steps by hand for task-375, scripting them is the first task after 375")
+:1605 "agreed" (to question 4 as revised: the lane fixes each confirmed finding and writes its own outcome line, a separate grounder verifies each fix resolves its finding, the lane makes the closing commit, the orchestrator writes no outcome and makes no close; his concern :1593-region, quoted at :1604: "isnt your incentive to close despite making the necessary changes. shouldht teh incentive to make the changes so teh work actualyl works")
+:1615 "397 reality check and regression need to be claude sonnet . they need to be included in the protocol - grounding is different than reality check - whcih independantly runs the calculations and regression looks back over previous decisions"
+:1620 "Let's include them in the protocol as they are defined in the spec  - regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently"
+:1625 "If it can't tell if a figure is changed than it just runs anyways for now and we can determine later if its not required"
+:1630 "these only run on the plan" (the seats of the table put to him: Integration, Reality-Check, Regression)
+:1634 "Complaince on the plan and output. Let's start with that! The most mportant part is fixing the plan. Agreed?" (his proposal; the orchestrator reads it as compliance on plan and output, seats on the plan only)
+:1638 "You are good to build them tonight! If the panel leaves an open question - ground it and then take that as approved and let me know in the morning.  Teh goal is to get all six steps working tonight"
+:1610 "approved" (the four audit items as pasted; task-397 is LATER on the board and its DeepSeek-template scope is superseded by D2 (no status of it is moved until he answers, :1608 reading); his :1615 words put the seats in the protocol, which this task carries in section D, the orchestrator's routing)
+:1585 "yes hardening rounds.  Today's were warranted, but not endless"; :1590 "can we address these in the plan? ... add the the existing tasks and do a second pass on the recommendations"
+RR-0328 (decision-113, :1422) is only "remember the app is not beign used - we are in development". The task's Implementation Notes hold the approved sentence "there is no shim (RR-0328)": that is the orchestrator's reading of RR-0328, not his words; the approved text is kept (M-246: prior text kept) and the dated note of step 1 below appends the correction.
+The six steps are the orchestrator's listing back to him (:1575 entry; the orchestrator READS his "Yes" at :1580 as yes to them, :1579 reading 4: a reading), written in PLAN-399-v3 section 0 and in the task-399 text. This task is steps 1 (A), 2 to 4 (D), and the compliance documents on each task (B).
+
+1. WHAT IS BUILT, IN ONE LINE EACH
+A the reviewer's context is the task, sized; B compliance documents are written on each task and marked; C the two original fixes (D10b, D11b); D the launch refuses a build or fix whose folded plan was not checked, requires the plan-stage seat reports of D2, and the plan review is posted on the task.
+This task makes the scripts do what Spec 08 and the README already rule: 08_agents.md:348 (the dated note under rule 4: the lens runs with --context <pasted context>), README.md:115 ("the pasted spec clauses, rulings and design text go in a separate --context file"), lens-compliance.md:12, :14, :30, 08_agents.md:357 note (task references point at the repo copy of lane files), and for D Spec 08 section 11.2 (:473 "After folding any review round, and BEFORE implementation: one grounder re-executes every claim in the fold") with rule 4 (:347) and rule 1 (:344). D is the orchestrator's mechanism for the operator's :1572 words; his words name only the refusal.
+
+2. HOW THIS TASK ITSELF IS LAUNCHED (the plan gate does not exist yet; hand steps by the orchestrator, in this order; commands run from ~/Buildo-wt-board)
+Launch AFTER task-399 (it provides outcomeErrors) under a NEW lane name (the old worktree and branch of BL-FIXTOOLS exist and the task is RUNNING @lane-BL-FIXTOOLS: backlog-lane.mjs refuses by status :63-64, worktree :67-68, branch :69-70; release and relaunch are covered by his yes at the :1517 entry, through the launch script's own undo: backlog task edit task-375 -s LATER -a ""). Its own launch precedes the gate, so its plan check, written on the build authorization of :1638, is the panel already recorded (the DeepSeek lens set and the Integration, Reality-Check and Ground-truth seats, ruled by a separate grounder, GROUNDER-PLANS.md; validated by FOLD-VALIDATION.md and CROSS-READ.md) PLUS the changes of v4 (his :1595 to :1638 rulings), which a separate grounder reads back against this text word for word (Spec 08 11.2) before launch; task-399 folds first. The records are stored in docs/reports/reviews/task-375/ and committed by hand (the board job commits only backlog/; the launch refuses a board dirty outside backlog/).
+ 1. Append, never replace, ONE dated note (M-246, prior text kept): backlog task edit task-375 --append-notes "<note>". It says: this plan (PLAN-375-v4) GOVERNS the approved FINAL BUILD NOTE (NOTE-375.md, approved at :1557) where they differ, on his :1572 and :1580 orders and the second pass, and lists each approved sentence it replaces: "ONE more section" (Implementation Notes) -> two sections (Implementation Plan and Implementation Notes); A.5 both-phases close rule -> deleted (plan evidence moves to the launch gate); B.2 close refusal on stale references -> deleted (check-tasks prints the commands, the take adds them); the context-<date>.md name -> context-rN.md; "no shim (RR-0328)" -> the sentence is the orchestrator's reading, not his words; and the v4 rulings: seats Integration and Reality-Check on every build or fix plan and Regression when existing code is changed, on the plan only (:1630), no seat on the output. Never --notes.
+ 2. Rewrite the Description scope lines and the Files line (section 3) in the same step: backlog task edit task-375 --description "<description>". It also states that where the generated brief says to run --plan or closes without the round block, this plan overrides it (the lane reads the old brief until this task changes it; the brief's Take-order and Close lines are changed by task-399, which lands first).
+ 3. backlog task edit task-375 --plan "<this text>"; then --ac for each of A0 to A9 (they append after the existing AC 1 to 4 and number 5 onward: the lane maps them by the labels A0 to A9).
+ 4. Record the verbatim rulings task-399 did not record (:1541, :1572 as put, the second sentence of :1546, and :1595, :1600, :1605, :1615, :1620, :1625, :1630, :1634, :1638; RR-0342 already records the seat triggers) as backlog decisions and add each RR number to the task text with --append-notes; cards are opened by task-399's hand step 5, not again here.
+ 5. Copy the panel records into docs/reports/reviews/task-375/ (GROUNDER-PLANS.md as GROUNDER-PANEL2.md, FILED-LOW.md, the three seat reports, FOLD-VALIDATION.md, CROSS-READ.md, the plan-*.txt outputs; panel names kept: there is no gate yet). Re-run the plan compliance lens for agents-s5-1to3 and queue-137 on the v3 text (those two lists' files changed in the task-410 fold after the panel ran); the grounder rules the new findings. The grounder's round-3 rulings (GROUNDER-R2.md) are appended to the GROUNDER-PANEL2.md copy and their sentence corrections applied word for word, then read back against the plan by the same grounder (Spec 08 11.2); this is the last panel round (his :1585): a CONFIRMED finding after it is folded by its own sentence or filed in FILED-LOW.md and opens no further panel.
+ 6. Post the review on the task: one --add-ref per repo path (GROUNDER-PANEL2.md, FILED-LOW.md, the three seat reports, FOLD-VALIDATION.md, CROSS-READ.md; measured: a 600-character path and 47 references are accepted, a comma splits one argument into two), then backlog task edit task-375 --append-plan "Plan review round 1: <a> folded, <b> task, <c> ruling, <d> wontfix, <e> pile; grounder <path>" and one line "<id> <SEV> folded <first 20 characters of the quote>" per CONFIRMED HIGH or MED finding of the 375 plan outputs (under the plan field, not the notes: the notes are read by every reviewer as rulings).
+ 7. Commit docs/reports/reviews/task-375 by hand on wf2/board (git add, then git commit with a docs(137_mcqueue): message; docs commits need no Task trailer). 8. node scripts/analysis/backlog-lane.mjs --task task-375 --lane <new name> --dry-run, then without --dry-run.
+What a brief written before task-399 folded tells a lane (the lane of this task gets task-399's lines) and v4 overrides: Take order 2 "backlog task edit --plan ..." (do not run it: the plan is the task text), and the Close line without the round block (task-399's 4.2 command). Other lanes' reviews run AFTER this folds (:1557 item 8). Plan panels for later launches run AFTER this folds: evidence made earlier was hashed over the placeholder context and is refused. A revert of this task leaves lanes reviewed since without a context; the final summary records the fold sha.
+
+WHO DOES WHAT AFTER THE GROUNDER RULES (his :1605 "agreed" to question 4 as revised, with his concern quoted there: the incentive is to make the changes so the work actually works, not to close; the orchestrator only routes)
+ a. The LANE fixes each CONFIRMED finding (code, its tests, the re-made inputs) and WRITES ITS OWN outcome lines in TRIAGE.md. The orchestrator writes no outcome line and makes no close.
+ b. A SEPARATE grounder verifies, finding by finding, that each fix resolves its finding, and re-rules in GROUNDER.md. A fix round re-makes every input with rule-lists.mjs lens-input and re-runs every lens output under the SAME names (task-399 as built, 08_agents.md note of fix round 1, 399 head :352: the close requires every in- input and out- output to equal the diff of the whole range at HEAD; out-<lens>-rN.txt is wrong; re-running only changed chunks is task-414). max_fix_rounds (2, in the brief) bounds the rounds by hand (his :1585).
+ c. The LANE makes the closing commit (records only: its lane directory, task file, review folder, decisions; Rule 3 two-commit form, :1546), with the one command of the brief's Close line (backlog-brief.mjs :171 as task-399 changed it), after node scripts/hooks/check-lane-close.mjs --outcomes <lane dir> prints no refusal. The lane adds the GROUNDER.md reference once the grounder has ruled.
+ d. The orchestrator routes: it launches the grounder and the lane's further Agent calls and records the operator's rulings as decisions when he gives them. What the check CAN tell: a separate grounder's file whose Ruled hash is that of the CURRENT outputs (so outputs re-run after a fix were looked at again) and an outcome per finding. What it CANNOT tell: that the grounder verified each fix, or that a fix resolves its finding (a Fix-verified mechanism was not added: no existing field carries it).
+ e. A plan change after launch is only release and relaunch (the launch script's undo, fresh evidence), or the lane's dated deviation note; the orchestrator never edits Description, Acceptance or Plan of a RUNNING task.
+ f. Hand steps for THIS task (his :1600 "5 yes."): the steps above and in section 2 are done by hand by the orchestrator; scripting them is task-418, the first task after this one, before other build tasks launch. They are done by hand for later launches until task-418 lands.
+ g. A task already BUILT does not move to DONE without an output compliance review and a grounder's ruling (his :1595 "2 n - run a review on the output with the compliance and ground lens"). check-lane-close.mjs :523 region (399 head; :338 at c15fab7ec) already skips only the SAME status, so a BUILT to DONE move re-runs the whole proof against the lane files; this task changes nothing there, and no card is opened to loosen it. No exception for the four audited tasks (his answer names none).
+
+3. FILES LINE
+scripts/analysis/backlog-lane.mjs, scripts/analysis/backlog-brief.mjs, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/deepseek-review.js, scripts/lib/review-template.js, .claude/review-templates/lens-compliance.md (on the line, NOT edited: the close reads the template from the range base, so an edit refuses every output), scripts/analysis/proof-slice.mjs, docs/specs/00-architecture/08_agents.md (ONE dated note carrying two points: context-rN.md, and the plan-only seats; see section 10), docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md (items 2, 3 and 5 and the :142-146 command describe what A3, A4, B and D change; updated in the commit that changes the lens commands), and their tests under src/tests/ (backlog/*.logic.test.ts, proof-slice.logic.test.ts, proof-slice.db.test.ts, review-template.logic.test.ts). rule-lists.json is not on the line (no gate_from key); docs/specs/00-architecture/08_agents.md is on the line for ONE dated note under the TKT-1 note (:521) carrying two points: (1) the review context file is context-rN.md, not context-<date>.md (A3, A5), in the same commit as the rename (engineering standards section 14); (2) the tool-having seats run on the PLAN only (his :1630), which differs from rule 1 (:344, both altitudes mandatory) and from the section 6.4 table that also lists Integration and Regression on the output roster, and Reality-Check is required at every build or fix launch for now (his :1625), which differs from rule 7 (:351) (section 10); the resolved lists are the same 14 with it (measured).
+
+A. THE REVIEWER KNOWS THE TASK, SIZED (existing files only)
+A1 backlog-brief.mjs writes two more sections in the existing context file: "## Implementation Plan" and "## Implementation Notes". (Its Take-order line :166 and Close line :171 were changed by task-399, as built: Take-order says a plan already in the Implementation Plan field is built and --plan is NOT run; Close carries --append-final-summary "<outcome block>", "round 1 only" for --final-summary and from round 2 only --append-final-summary. This task does not touch those two lines.)
+A2 The reviewer's context is exactly these headings, one constant CONTEXT_SECTIONS in scripts/lib/review-template.js: "Task", "Description", "Acceptance criteria", "Decisions naming this task", "Implementation Notes". The plan-phase MATERIAL is the sections named in a second constant PLAN_SECTIONS: "Description", "Acceptance criteria", "Implementation Plan" (three of the four context sections overlap this material, so in the plan phase only the Implementation Plan is new text; the call counts below are measured for the diff phase). rule-lists.mjs lens-input gains --material-from <context-rN.md>, which cuts PLAN_SECTIONS with extractSections and writes the stamped input: that is the one command that writes a plan input. extractSections moves from deepseek-review.js:106-121 to review-template.js so the review tool, lens-input and the close cut the same text; it throws on a missing heading (:111). Measured (task-381, 15 resolved lists, buildLensInputs, diff 19,138 bytes): no context 17 calls; the five sections (2,126 characters) 17 calls, none refused; the whole 32,698-character context 38 calls (gt2 reproduced; the Reality-Check seat measured 20 with another charging rule: the direction holds). Not Milestone, Document sections or Prior reviews: the rule lists carry them.
+A3 backlog-lane.mjs: every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry, including the compliance command (:150 "per", which passes none today) and the lines that pass a TEMPLATE as --context (backlog-lane.mjs:178, backlog-brief.mjs:167; README.md:115 says that wraps the lens in the generic prompt). Those are all the call sites (grep deepseek-review in scripts/analysis: four lines). README.md items 2, 3 and 5 and the :142-146 command are updated in the same commit. The lens line the launch prints names context-r1.md (written by the brief at launch; the date name context-<date>.md, backlog-brief.mjs:46 and backlog-lane.mjs:159, is retired and the run-mclane audit line "context-<date>.md present" is updated in the same commit). Pins that change with it: backlog-lane.logic.test.ts:257 and :245, backlog-brief.logic.test.ts:58, backlog-brief-context.logic.test.ts:43.
+A4 rule-lists.mjs lens-input takes --context and refuses without it (CLI branch; buildLensInputs keeps its default so renderPage is unchanged) and counts the selected sections in the room on both paths. check-lane-close.mjs lensContexts() (:314 at the 399 head, :133 at c15fab7ec; today [undefined]) returns the selected-section text of every committed context file of the task, so the existing prompt_sha256 recompute (:65) binds it. It refuses a context that is the placeholder, lacks the Description, or lacks Implementation Notes when the task has notes. The placeholder is refused after this folds and outputs reviewed before it are re-run, with no compatibility path (his :1595 "1y": ruled).
+A5 Each review round writes its own context file docs/reports/reviews/<task>/context-rN.md, never overwritten, N = the number of context-r*.md files already there + 1 (the folder also holds plan evidence), committed with the round; the lane writes the file for a later round before it runs the round. check() lists docs/reports/reviews/<id>/ (it lists only docs/reports/lanes today) reading the INDEX first, then HEAD (the order readRepo uses; not the range base, which misses every context the lane committed after launch), and passes the texts into closeErrors' input. An output must match one context file. (A plan-and-output both-phases rule was DELETED: see section 7.)
+A6 Split smaller (:1546 "or split smaller" is his; cutting at table rows and blank-line paragraphs is the orchestrator's reading): in splitUnits (rule-lists.mjs, the subs.length === 0 throw) a block with no deeper heading is cut between table rows or paragraphs. Measured: with a 60,000-character material 3 of the 55 lists are refused today (surface-135 "## Register", policy-124-s2-s5 section 5, bylaw-133 "General / cross-cutting"). The close recompute joins the stamped parts and compares with the whole list, whitespace aside (no change). A row or paragraph that alone passes the room, or a block with no row or blank line to cut at, is still refused naming it (the old throw). Stated limit: a row is judged without its neighbours and, mid-table, without its column header. Not built: a priority ranking or a summary (:1557 items 4 and 5: No); hunk splitting (item 3: No).
+
+B. COMPLIANCE DOCUMENTS ON THE TASK, MARKED (:1541)
+B1 Field references (not documentation: backlog-brief.mjs:65-98 pastes every documentation entry into the context). One entry per resolved list: "compliance:<list id> <file>" compared by the id token (the text before the first space). A file path with a comma is entered as "compliance:ms-9" alone (backlog splits --add-ref at commas; ms-9 is the only such list, 16 tasks of m-11). The take step (backlog-lane.mjs:104) adds them in the same backlog task edit with repeated --add-ref, only those whose id is not already on the task. For the tasks that are already open, the existing command rule-lists.mjs check-tasks (it already resolves every open task, rule-lists.mjs:507) is extended to print, per open task whose compliance: entries differ from the resolved lists, the exact backlog task edit task-N --add-ref ... command (and --remove-ref for entries no longer resolved); exit stays 0 (rule-lists.logic.test.ts:434-438 unchanged); this is the route of the approved note and of his :1557 item 6 ("compliance entries on every open task after 375", the orchestrator runs the printed commands once after the fold). No new flag, and no close refusal on stale references. A list added to a Files line after the take is not labelled until check-tasks is run again (stated).
+B2 At close the task's references hold the repo copies of REPORT.md, GROUNDER.md (137_mcqueue.md:134 names it as a close artifact) and, when the lane directory holds one, TRIAGE.md (08_agents.md:357 note: "when they exist"); the close refuses a missing one of them and prints the exact backlog task edit --add-ref command.
+
+C. STILL OPEN IN THIS TASK (original approved scope)
+D10b proof-slice.mjs reads its timeout from the registered variable (needs the operator's DB GO and an id claim; the DB GO is asked only after the MCINC-7 rehearsal on the test stack, JOB_TARGET=teststack, then step-validate.mjs --staged and mcbylaws/gate.mjs --ci on the captures: Spec 08 11.8 MCINC-7, :511, which its 2026-11-12 note (:510) applies to every DB job). The read is a function that takes the value as an argument; the DB read is proved by proof-slice.db.test.ts (Spec 132 x-tooling.1: a test needing Postgres is *.db.test.ts, run only by npm run test:db). An unset, empty or non-positive-integer variable refuses with a message naming it (no default, no unbounded run). D11b the security regex at rule-lists.mjs:161 (const sec = /entitlement|auth|stripe|metered/i) misses admin and PII (README.md:104 and lens-security.md:48 say it fires for both). If the DB GO is not given, A, B and D still ship and the task is NOT marked complete (:1517).
+The template defects of the original card were fixed by task-366 ({{PLAN}} once at lens-compliance.md:34; function replacer in review-template.js): do not edit them.
+
+D. THE LAUNCH REFUSES A BUILD WITH AN UNCHECKED PLAN (:1572; mechanism is the orchestrator's)
+D0 Grounded first: Spec 08 11.2 (:473) already rules it and rule 4 (:347) and 5.3 (:225) require a tool-having grounder on every finding; no tool enforces the order (the close needs one plan-stage output, check-lane-close.mjs:434 at the 399 head, :253 at c15fab7ec; --stage only prints; the --plan field is read by nothing; no hook looks at a launch). Rejected: a refusal on the first code commit (a new check on every commit); a stage field (a new mechanism); a refusal in the board commit (the board job warns and leaves every pending backlog edit in the tree on a hook failure, scripts/board/board-commit.zsh, so one refused task would hold all). DELETED from the earlier plan: the close re-proof at L and the gate_from key, the plan-sha subcommand, the Cross-read check, the close refusal on stale references, the both-phases rule (reasons in section 7); kept: the check-tasks printer (the approved route).
+D1 WHO WRITES THE PLAN, WHERE IT LIVES, WHO COMMITS WHAT. The orchestrator writes the folded plan into the task (backlog task edit --plan, --ac, --notes) and sets the Files line. The plan IS the task text (Description, Acceptance Criteria, Implementation Plan, Implementation Notes); the lane does not plan. Evidence lives flat in docs/reports/reviews/<id>/ on wf2/board (the folder 08_agents.md:357 and check-task-files.mjs:70 name and always allow):
+  context-rN.md (A5);
+  type build: plan-compliance-<list id>[-pN].txt with in-<same name> for EVERY resolved list, the input written by node scripts/analysis/rule-lists.mjs lens-input --list <id> --material-from <context-rN.md> --out <folder>/in-plan-compliance-<id> (A2); type fix: at least one plan-<lens>.txt (Spec 08 rule 4 and 6.4 give WF3 output review and a LEAN plan roster; the fix reading is the orchestrator's, one condition in the code);
+  GROUNDER-PLAN.md: header "Grounder: <name>" and "Lane: <the planned lane name>"; one "Ruled: <file> sha256:<12> findings:<n>" per plan-*.txt (the existing form); one verdict per finding id "<id> CONFIRMED|REJECTED|CONFLICT <path>:<line> "<quote 20+>" <reason>" (the existing form: lens ids and seat ids; the path has no spaces, so a finding about the task text cites the committed context-rN.md); one "Seat: <name> <repo path> sha256:<12>" per tool-having seat; the last line "Plan: <task id> sha256:<12 hex>"; and a free-text cross-read note (11.2's adversary) which NO check reads;
+  seat-integration-N.md (and any other seat report): ONE report per task, finding lines matching the form of the mode table (for example "### int#1 HIGH: ...");
+  The panel records of task-399 and task-375 keep the panel names and are not re-keyed; the D1 names apply to the first task launched after the gate.
+MODE TABLE (one place; PLAN-399-v3 section 4.1 holds the same table word for word)
+  mode close (lane close, 399): forms fixed, task, ruling, wontfix, pile. CRITICAL, HIGH, MED close by fixed or ruling (task only when the finding's lens line begins DEFER). LOW and NIT close by ANY form whatever the kind (his :1580 overrides rule 6, 08_agents.md:350, for LOW and NIT; said in the dated note). Seat files are read from the lane directory. TRIAGE.md is required only when GROUNDER.md holds at least one CONFIRMED or CONFLICT id. The round line counts fixed.
+  mode plan (launch gate, 375): forms folded, task, ruling, wontfix, pile; fixed is refused (the fix is made before a lane branch exists). folded:"<20+ characters present in the task text now>" takes the place of fixed for CRITICAL, HIGH, MED; the DEFER rule for task is the same; LOW and NIT any form. Seat files are read from docs/reports/reviews/<id>/. TRIAGE-PLAN.md is required only when GROUNDER-PLAN.md holds at least one CONFIRMED or CONFLICT id. The round line counts folded.
+  A CONFLICT id takes ruling (or fixed in close, folded in plan) only; a CONFLICT waiting for the operator keeps the task RUNNING (close) or unlaunched (plan).
+  TRIAGE-PLAN.md: one outcome per CONFIRMED or CONFLICT id, by the mode table below (mode plan), required only when GROUNDER-PLAN.md holds at least one such id; the last line per id is judged.
+  The orchestrator COMMITS the evidence folder by hand on wf2/board through the normal hooks (a docs commit; the board job commits only backlog/, so it never does; the launch refuses a board dirty outside backlog/). References and the round block go on the task with the backlog CLI (the board job commits those).
+D2 SEATS (his rulings :1615, :1620, :1625, :1630; the routing into this task is the orchestrator's: task-397 is LATER on the board, its DeepSeek-template scope superseded here). The tool-having seats are Claude Sonnet agents with tools, as the spec defines them (CLAUDE.md:133 Regression, :137 Reality-Check; RR-0342) and run on the PLAN ONLY; the output keeps the DeepSeek lens set per rule list and the separate grounder, who also verifies fixes; NO seat is required on the output. At a build or fix launch the gate requires, by name, in GROUNDER-PLAN.md, one "Seat: <name> <repo path> sha256:<12 hex>" line (the grammar task-399 built: SEAT_HEAD, check-lane-close.mjs :140, read by seatLines :142 at the 399 head; the path is inside docs/reports/reviews/<id>/, checked by seatRoot):
+  integration: always (his :1595 "3. yes ... integration"; Spec 08 6.4 plan roster names it in every row, 08_agents.md:312).
+  reality-check: on EVERY build and fix launch for now (his :1620 "only required when a figure is changed or you can figure something else independently" and :1625 "If it can't tell if a figure is changed than it just runs anyways for now and we can determine later if its not required"). Nothing can show that a task changes no figure yet (no script reads that from a Files line: unverified for any signal), so the default he ruled applies.
+  regression: when the task changes EXISTING code (his :1620 "regression only required when code is changed"). The smallest checkable signal from what exists: the task's Files line names at least one path that exists at the board head (git ls-files -- <entry> prints at least one tracked file for a file, directory or glob entry; the launch resolves the Files line through resolveTask, which calls filesEntries, rule-lists.mjs:147). WHAT IT CANNOT TELL: a task that only ADDS files inside an existing directory or glob (it will ask for a Regression report it does not need: the safe direction), and a change to existing code through a path the Files line does not name (the H6 gap, a card). Ground-truth and Schema-Fidelity seats are optional: any Seat line listed is checked the same way.
+  The required names are ONE constant (PLAN_SEATS in check-lane-close.mjs: the always list [integration, reality-check] and the conditional [regression]); emptying a name is the later decision of :1625. No new mechanism: seat files, Seat lines, sha256 and "every seat finding id has a verdict and an outcome" are task-399's seat mechanism (outcomeErrors seats, seatRoot, mode 'plan'). THE REFUSAL CHECKS presence, the sha256 of the file and that every finding in it was ruled and closed. IT CANNOT CHECK that the seat ran, ran independently, ran its calculations (Reality-Check) or looked back over earlier decisions (Regression), or whether it was a Sonnet agent.
+D3 THE PLAN HASH. "Plan: <id> sha256:<12>" is the first 12 hex of the sha256 of the task title plus the whole body after the front matter, whitespace squashed (the 12-hex width is the existing Ruled form). Checked ONLY at launch, on the board file as it is, BEFORE the take: so the take's own edit (heading, markers, note) is never in it, with no stripping rule. Front matter (status, assignee, labels, references) is outside it. The refusal message prints the expected line, so the grounder, as its LAST act, runs the dry-run and copies the line: this adds no subcommand (the Ruled lines of the existing check do the same). Any later edit to the title or body (an acceptance set, a note) changes the hash and the launch is refused: the plan must be grounded again. That is the point of the step. An undone or failed launch also voids the line (the undo, backlog task edit -s LATER -a "", keeps the take note, backlog-lane.mjs:87 and :100): the grounder then re-runs the dry-run, checks that the only change is the take edit and copies the new line (a hash refresh, no re-review). Measured by the fold validator on task-400: hash be2122d18b19 before the take edit, 5f5a0c32f0e5 after; --ref and --add-label leave it unchanged.
+D4 VISIBLE ON THE TASK (steps 2 and 3, at PLAN time). Before the hash: the task's references (front matter) hold the repo paths of GROUNDER-PLAN.md, TRIAGE-PLAN.md (when it exists) and each seat report, each by its own --add-ref (measured: a 600-character path and 47 references are accepted; a comma splits one argument); and the task's Implementation PLAN field (appended with --append-plan; not the notes, which every reviewer reads as rulings and which the context charges in every list part) holds the plan round block: "Plan review round N: <a> folded, <b> task, <c> ruling, <d> wontfix, <e> pile; grounder <path>; triage <path>" and one line "<id> <SEV> <form word> <ref>" per CONFIRMED or CONFLICT finding of effective severity CRITICAL, HIGH or MED (ref for folded = the first 20 characters of the quote). N = 1 + the number of "Plan review round" lines already there. The launch recomputes counts and lines from GROUNDER-PLAN.md and TRIAGE-PLAN.md and refuses when the task text lacks them or a reference is missing. It does not require the DeepSeek outputs as references (8 to 22 of them: they are in the folder).
+D5 THE GATE. backlog-lane.mjs, after its existing refusals (:63-70 and the Files and list checks) and BEFORE the take and any write, reads the evidence from the board HEAD (git ls-tree and show) and the task from the board file and runs planGateErrors, exported from check-lane-close.mjs, which reuses what is there: the per-list verification body of closeErrors (:361-393 region at the 399 head, :180-212 at c15fab7ec: REVIEW header, parseLensInput stamp, whole-list recompute against the board tree, the context of A5) and the grounder block (:443-482 region at the 399 head, :264-306 at c15fab7ec: Grounder differs from Lane, assignees and the lane being launched by clash(); one Ruled line per plan-*.txt recomputed; one verdict per finding with a quote on its cited line) are EXTRACTED into two functions that closeErrors and planGateErrors both call (behaviour preserving: the existing check-lane-close tests are green before and after); the grounder function keeps calling parseVerdicts (check-lane-close.mjs :125 at the 399 head, already exported) and returns { errors, verdicts, findings }; task-399's call of outcomeErrors({ verdicts, triageText, lensKinds, facts, mode, seats, seatRoot, summary, selfTask }) (:490 at the 399 head, returning { errors, ids }) is moved into the same function in the same commit, and planGateErrors calls it with mode 'plan', seats from seatLines(GROUNDER-PLAN.md, read) and seatRoot docs/reports/reviews/<id>/ (the PLAN_SEATS presence check of D2 is added there), plus the Seat, Plan, round block, reference and outcome (mode 'plan') checks. Applies to type build and fix. Any stray or unmatched file name in the folder is ignored; any read error is a refusal line, never a stack trace. No flag or environment variable turns it off (precedent: the McBylaws gate in .husky/pre-commit). --dry-run runs it and prints the errors, or "plan gate ok: <L> lists, <M> findings, Plan sha256:<12>". The gate call is the LAST commit of backlog-lane.mjs: if the gate has a defect and blocks every launch, the rollback is a git revert of that one commit (named in the final summary; planGateErrors stays unused and the other changes stay); --dry-run diagnoses without a take. The plan gate also checks the stamped material of every plan input equals extractSections(context-rN.md, PLAN_SECTIONS) for the context file whose text produces the output's prompt_sha256 (a plan review of some other text is refused).
+D6 WHAT THE BRIEF TELLS THE LANE (A1): the plan is the task text at launch, checked before launch (evidence folder and references on the task); do not re-plan and do not edit the Description, Acceptance or Plan; record deviations in Implementation Notes; the lane still runs at least one plan-stage lens of its own (check-lane-close.mjs :434 at the 399 head is unchanged) and rules its findings in its own GROUNDER.md.
+D7 WHO THE GATE DOES NOT TOUCH (explicit): it runs only at a launch through backlog-lane.mjs, so no lane already launched is re-checked (35 RUNNING at c15fab7ec, 29 with a lane assignee; 31 BUILT); types other than build and fix launch with no plan evidence by design (record, check, doc: 56 of the 76 launchable tasks today); tasks with no Files line or no resolvable list are already refused at launch by the existing preflight (139 of 180 open build or fix tasks, measured by the fold validator). Lanes launched before this folds meet the close refusals of A4 and B2 only if their branch has merged the board (.husky/commit-msg runs the lane's own copy of the script). The gate adds the refusal for the 20 resolvable not-started build or fix tasks. Cost per such task, measured by the Reality-Check seat: about 13.5 plan-phase compliance calls (270 for the 20; the five-section context charged once), roughly 54 minutes at the observed 5 calls per minute (UNVERIFIED: no per-call timing is recorded), plus one grounder, the seat reports of D2 (Integration, Reality-Check, and Regression when the task changes existing code) and one orchestrator fold. The close then still needs the output-phase set as today.
+WHAT THE GATE CANNOT PROVE (stated in the 137_mcqueue.md note): that the grounder or any seat ran, or is a different agent (names and files are compared: an omission guard; forgery routes are tasks 401 and 402); that the fold is complete beyond "every CONFIRMED finding has an outcome and a folded quote is in the text"; that a quote that is present is a real fix; that the plan is unchanged AFTER launch (the hash proves the plan at launch only); and a raw "backlog task edit -s RUNNING -a @lane-..." (the six running tasks without a lane assignee and the raw takes of tasks 179, 187, 232 show it is used): it launches with no check. Step 4 binds the orchestrator only when he launches through the script.
+
+7. DELETED, AND WHY THE SIX STEPS STILL HOLD
+Step 4 is enforced by the launch refusal alone; the close never needed the plan. Close re-proof and gate_from: 375 could not close under its own gate, and the key exempted only one of the new refusals. Plan hash at close: the take changes it for 29 of 61 real launches (remeasured on the board history). Both-phases rule: a plan-only set for a build task is already refused today (phases is ['out'] for build, check-lane-close.mjs:178; run on c15fab7ec: status 1, 4 list errors; with ['plan','out'] status 0), and plan outputs go stale for every list whose file the task edits: plan evidence is now checked at launch against the board tree, output evidence at close against the lane tree. Cross-read check (names only), the close refusal on stale references, plan-sha: no step needs them (the printer stays, in check-tasks).
+
+8. TESTS (red first through the real hooks, DoD #2; each lock proven both ways, 08_agents.md 11.3; each spawned-CLI test first asserts exit status, no signal and the expected header before absence assertions, R-CP 124a:296)
+Each of A to D has a failing .logic.test.ts under src/tests/backlog/ run before its source change; one fixture helper (scenario() in check-lane-close.logic.test.ts) writes valid plan evidence and a valid context file and is reused.
+Existing tests that go red and are changed in the same commit: every scenario() test of check-lane-close.logic.test.ts (the helper promptHash and hdr hash the placeholder context; 27 of 86 tests expect exit 0); backlog-lane.logic.test.ts :245, :257 (the lens line literal), :299, :335, :352 (typed build tasks launched in --dry-run: the gate refuses them without evidence, no flag turns it off, so the fixture builds real stamped evidence); backlog-brief.logic.test.ts:58; backlog-brief-context.logic.test.ts:43; rule-lists.logic.test.ts:434-438 stays green (live board, exit 0).
+Planted refusals, each with a passing control: placeholder context; context without the Description; committed context edited after the review; a later round does not overwrite an earlier context; a missing report reference at close; ms-9 with commas; the take adds only missing compliance ids; check-tasks prints the command for a stale task and nothing for a task in step, exit 0; D11b security for an admin or PII path; D10b bad variable (red first). Plan gate: no evidence folder; a missing plan output for one list; a plan output over the placeholder; no GROUNDER-PLAN.md; Grounder equal to the planned lane; a missing integration or reality-check Seat line; a missing regression Seat line when the Files line names an existing path (and not when it names only new paths); a Seat path outside docs/reports/reviews/<id>/; a Seat file with another sha; a seat finding with no verdict or no outcome; an unruled plan output; a CONFIRMED plan finding with no outcome; a folded quote not in the task text; the Plan line after a one-word task edit (refused) and for a task with no notes section before a take (passes: hash is before the take); a stray file (ignored); a read error (a refusal line); a refused launch changes no status; a fix task with one plan lens output passes, a build task with the same is refused.
+
+9. ACCEPTANCE (commands, real inputs, output pasted on the task; do not mark complete until A0 to A9 are on it, :1517)
+A0 In a lane worktree: node scripts/analysis/backlog-brief.mjs --task task-381 ... (the committed context on wf1/inc1b-hooks3 has no Implementation Notes heading): the output holds the headings "## Implementation Plan" and "## Implementation Notes".
+A1 scripts/deepseek-review.js review <task-381 diff> --template .claude/review-templates/lens-compliance.md --context <that file> with the five --section flags and --dry-run: 0 hits of "(no pasted context provided)", at least 1 hit of "yes to all", the five heading lines present, prompt under 120000 characters.
+A2 rule-lists.mjs lens-input for each of the 15 resolved lists of task-381 with that context: paste each exit code, selected-section count and call count: expected 17 calls in total, none refused; the same for the contexts of task-410 and task-267.
+A3 lens-input --list surface-135 with a 60,000-character material: today exit 1 naming "## Register"; after A6 exit 0 with parts; the same for policy-124-s2-s5 and bylaw-133.
+A4 node scripts/analysis/rule-lists.mjs check-tasks on the live board prints the exact backlog task edit --add-ref command for at least one stale open task (choose the task on the day 375 launches: a LATER build task not recommended for drop; task-400 is, and its Files line collides with this task), each entry starting "compliance:", the count equal to the lists printed by rule-lists.mjs resolve for its Files line; exit 0; after running the printed command, check-tasks prints nothing for it and backlog task view <id> --plain shows the entries on the References line.
+A5 The planted refusals of section 8, each with its control.
+A6 The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green.
+A7 D11b test red first then green. A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING).
+A9 The gate on a real task still LATER (chosen on the day; its evidence is a test set made for this acceptance and is reverted, not that task's plan evidence): dry-run before evidence: refused, one error per missing item (the first names the missing evidence folder or GROUNDER-PLAN.md); after the orchestrator has produced the evidence by D1 and D2 (the integration and reality-check Seat lines, and a regression Seat line when the Files line names an existing path) and copied the printed Plan line last: "plan gate ok: <L> lists" with L equal to the resolved-list count; then one word edited in the task: refused with the new expected Plan line; the edit is reverted.
+
+10. LANDING, CARDS, OPERATOR ITEMS
+Each source file change in its own commit (protected paths; each carries "Task: task-375" and the task file in the same diff, notes append, no status move); ONE dated note under the TKT-1 note of 08_agents.md (:521) carrying both points: context-rN.md replaces context-<date>.md, and the tool-having seats run on the plan only (quoting his words with their lines: :1615, :1620, :1625, :1630, :1595; it says this differs from rule 1 (:344), rule 7 (:351) and the 6.4 table, which lists Integration and Regression on the output roster too, and that the output keeps the DeepSeek lens set and the separate grounder who also verifies fixes, :1605) and a dated note in section 4 of 137_mcqueue.md after the :138 note, headed with the rule it concerns (M-246 form, prior text kept), for the new close refusals and the launch gate, quoting only the verbatim words of section 0 and saying that the gate is part of the same omission guard as task-410's (08_agents.md:239 note) with forgery routes owned by tasks 401 and 402; the closing commit holds records only (Rule 3 two-commit form, :1546).
+Cards: opened by task-399's hand step 5 (golden before-image exemption, re-run only changed chunks = task-414, the review_followups.md row, H6 BL-V2WHOLE GROUNDER.md:261, scripting the hand steps = task-418, registration of the existing gate literals: 12-hex width, 120000-character bound, 30-character reason minimum; this task adds none) and not again here.
+
+THE MECHANISM OF D IS THE ORCHESTRATOR'S DESIGN on his :1572 and :1580 orders (his words name only the refusal on an unchecked plan); the plan hash, Seat and folded forms, file names and the round block are additions of the orchestrator (DoD #8, 124a R-IZ). The seat names and when each is required are HIS rulings (:1595 to :1630), the checkable signals are the orchestrator's.
+
+NOT IN SCOPE: a new --refs-only flag (check-tasks serves); hunk-level split, the golden exemption, re-using unchanged chunks, dropping lists, a second context stamp, a label, milestone_docs handling, the V2L15 early-return change, any new script (the gate is a function of check-lane-close.mjs), a board-commit hook on the take, requiring a seat on the output (his :1630), a Fix-verified field, the review_followups.md row.
+RULES CITED (c15fab7ec): 08_agents.md rule 1 :344, rule 3 :346, rule 4 :347 (note :348), rule 6 :350, 5.3 :225, 6.4 :312, rule 9 note :354 (:356 at the 399 head), 11.1 :469, 11.2 :473, 11.3 :477, note :357; 137_mcqueue.md Rule 3 :98, notes :100 :136 :138; README.md:104, :115; lens-compliance.md:12, :14, :30; lens-security.md:48; 124a R-CP :296; Spec 132 core.8 :154; check-task-files.mjs:70.
+
+OPERATOR RULINGS (the five items P1 to P5 of v3 are ANSWERED; his words with the MD line; RR-0342 (decision-127, backlog/decisions on the board) records the seat triggers; the others are recorded as decisions by hand step 4)
+P1 earlier reviews are re-run, no compatibility path: YES (:1595 "1y"). The AWAITS mark and the alternative (a launch-time cutoff) are removed from A4.
+P2 a BUILT task moves to DONE without re-proof: NO (:1595 "2 n - run a review on the output with the compliance and ground lens"). It needs an output compliance review and a grounder's ruling first. The behaviour at check-lane-close.mjs :523 region (:338 at c15fab7ec) is unchanged and stated as the rule (WHO DOES WHAT, g); the card that would have loosened it is dropped.
+P3 seats: YES, as ruled in pieces (:1595, :1620, :1625, :1630): Integration and Reality-Check on every build and fix plan, Regression when existing code is changed, plan only; section D2.
+P4 who fixes, verifies and closes: AGREED as revised (:1605 "agreed"): section 2, WHO DOES WHAT.
+P5 hand steps for this task, scripting is the first task after it: YES (:1600 "5 yes."); scripting is task-418.
+OPEN QUESTIONS the rulings leave, each with its grounded recommendation, to be ruled by a separate grounder and taken as approved on his :1638 authorization, logged for the morning:
+Q1 Does a Files line that names an existing directory or glob but only adds files count as "changes existing code" for the Regression seat? Recommend yes (count it): the check cannot tell add from modify, over-asking is the safe direction, and it matches his :1625 default for what cannot be told. If no: the signal becomes "a Files entry that is an existing FILE", which misses directory entries.
+Q2 Do build and fix types both carry the three seats? Recommend yes: the question put at :1593 says "every build plan", the orchestrator's reading there (3) says "build and fix plans", and he answered yes; type fix keeps the lean evidence (one plan lens, D1) but the seats are the same. If no: fix tasks require Integration only.
+Q3 Is a seat required on the output later? Recommend not required now (:1630) and revisit after the first three tasks pass the gate (his :1634 asks the output question as a proposal, not a ruling); seats listed at close are still checked by task-399's seatLines.
+Q4 Does the grounder's verification of each fix need a checked field? Recommend no for now: no existing field carries it; the current Ruled hash proves the outputs were re-ruled after the re-run. State the limit (done in WHO DOES WHAT, d). If a field is wanted, it is a card after task-418.
+
+Plan review round 1: 81 folded, 0 task, 0 ruling, 0 wontfix, 57 pile; grounder docs/reports/reviews/task-375/GROUNDER-PANEL2.md
+plan-compliance-375-agents-s5-1to3#4 MED folded A plan-and-output bo
+plan-compliance-375-agents-s7-s11#3 MED folded mode plan (launch ga
+plan-compliance-375-agents-s7-s11#6 MED folded a free-text cross-re
+plan-compliance-375-airtight-122a#1 MED folded the DB read is prove
+plan-compliance-375-airtight-124a#1 MED folded each spawned-CLI tes
+plan-compliance-375-five-words#1 MED folded the DB read is prove
+plan-compliance-375-ms-S#1 MED folded THE MECHANISM OF D I
+plan-compliance-375-ms-S#3 MED folded OPERATOR ITEMS (yes
+plan-compliance-375-orchestrator-doc17#2 MED folded THE MECHANISM OF D I
+plan-compliance-375-orchestrator-doc17#4 MED folded A plan-and-output bo
+plan-compliance-375-queue-137#1 MED folded Each source file cha
+plan-compliance-375-queue-137#2 MED folded a raw "backlog task
+plan-compliance-375-step-132#2 MED folded the DB read is prove
+plan-compliance-375-step-132#3 MED folded Record the verbatim
+plan-compliance-375-step-132#5 MED folded type fix: at least o
+plan-error-paths-375#2 MED folded Checked ONLY at laun
+plan-error-paths-375#3 MED folded Close re-proof and g
+plan-error-paths-375#4 MED folded Step 4 is enforced b
+plan-error-paths-375#5 MED folded An unset, empty or n
+plan-plan-review-deepseek-375#1 HIGH folded Checked ONLY at laun
+plan-plan-review-deepseek-375#3 MED folded a raw "backlog task
+plan-plan-review-deepseek-375#6 MED folded Any stray or unmatch
+plan-plan-review-deepseek-375#9 MED folded Evidence lives flat
+int2#1 HIGH folded Close re-proof and g
+int2#2 HIGH folded plan evidence is now
+int2#3 HIGH folded mode plan (launch ga
+int2#4 HIGH folded A9 The gate on a rea
+int2#5 HIGH folded D7 WHO THE GATE DOES
+int2#6 MED folded Close re-proof and g
+int2#7 MED folded Checked ONLY at laun
+int2#8 MED folded D1 WHO WRITES THE PL
+int2#9 MED folded The plan-phase MATER
+int2#10 MED folded The orchestrator COM
+int2#11 MED folded Existing tests that
+int2#13 MED folded The gate adds the re
+int2#18 MED folded Post the review on t
+rc2#6 MED folded A CONFLICT id takes
+rc2#7 HIGH folded Checked ONLY at laun
+rc2#8 MED folded folded:"<20+ charact
+rc2#9 MED folded Applies to type buil
+gt2#1 HIGH folded A9 The gate on a rea
+gt2#2 MED folded Both-phases rule: a
+gt2#3 MED folded type fix: at least o
+gt2#4 MED folded file:line are at c15
+gt2#6 MED folded after the :138 note
+gt2#10 MED folded red first through th
+gt2#11 MED folded mode plan (launch ga
+gt2#12 MED folded THE MECHANISM OF D I
+gt2#13 MED folded Cards: opened by tas
+gt2#19 MED folded mode plan (launch ga
+fv#1 HIGH folded --material-from <con
+fv#2 MED folded An undone or failed
+fv#4 MED folded finding lines matchi
+fv#6 MED folded GROUNDER.md (137_mcq
+fv#7 MED folded items 2, 3 and 5 and
+fv#9 MED folded Re-run the plan comp
+xr#1 HIGH folded this plan (PLAN-375-
+xr#2 HIGH folded MODE TABLE (one plac
+xr#4 MED folded where the generated
+xr#5 MED folded LOW and NIT close by
+xr#6 MED folded reading the INDEX fi
+xr#7 MED folded N = the number of co
+xr#8 MED folded GROUNDER.md (137_mcq
+xr#9 MED folded the board job warns
+xr#10 MED folded runs the lane's own
+xr#11 MED folded OPERATOR ITEMS (yes
+xr#12 MED folded (not his own wording
+xr#13 MED folded under the plan field
+xr#14 MED folded the grounder functio
+xr#15 MED folded Record the verbatim
+xr#16 MED folded N = 1 + the number o
+xr#17 MED folded WHO DOES WHAT AFTER
+xr#18 MED folded Post the review on t
+xr#19 MED folded No new flag, and no
+xr#20 MED folded Seat files are read
+xr#21 MED folded A plan change after
+xr#22 MED folded cards are opened by
+xr#23 MED folded Built on the recomme
+plan-compliance-375-agents-s7-s11-r2#1 MED folded rule-lists.json is n
+plan-compliance-375-agents-s7-s11-r2#4 MED folded the DB GO is asked o
+g2#2 MED folded The grounder's round
+
+## Implementation Notes
+2026-11-20 taken on the board at lane launch (lane BL-FIXTOOLS, worktree /Users/brettpreston_macmini/Buildo-wt-fixtools, branch wf1/inc1b-fixtools), RR-0240
+
+Grounder verdict 2026-11-20 (separate read-only agent, launched by the orchestrator): SAFE TO FOLD as a PARTIAL fix; folded onto wf2/board. Fixed: D10 buffer (proof-slice.mjs reads tooling_spawn_max_buffer_mb). STILL OPEN, task not done: D10 timeout DEFAULT_TIMEOUT_MS = 120000 typed (needs a migration number from the ID ledger, seed row, registry doc; operator typed GO for the DB); D11b security lens terms for admin and PII at scripts/analysis/rule-lists.mjs:128; the plan-lens --context token is a placeholder, not a path. The commit subject "proof runner tunables registered" overstates: one existing variable is read, none registered.
+
+Retro review by a separate grounder 2026-11-20 (task-405), work as on the board: GROUNDER.md at ~/Buildo-scratch/lanes-20261119/inc1b/retro/BL-FIXTOOLS/GROUNDER.md (sha256 085db47ef2f6…, 67 findings: 26 CONFIRMED, 41 REJECTED). DEFECTS: (1) red.out and commit.out cited by the report are not in the repo; the recorded red is for the wrong reason. (2) D11a half fixed: the plan-lens --context value is the literal placeholder at scripts/analysis/backlog-lane.mjs:156 and its test pins the placeholder text; :177 passes a template as --context with no --template. (3) commit subject 'tunables registered' overstates: one existing variable read, none registered. (4) the seed tooling_spawn_max_buffer_mb description omits proof-slice.mjs; generated registry stale; no SPEC LINK. (5) a child cut at the ceiling reads 'killed by SIGTERM'; the ENOBUFS branch has no test. STILL OPEN, task stays RUNNING: D10b DEFAULT_TIMEOUT_MS = 120000 literal; D11b the security lens pattern in rule-lists.mjs misses admin and PII. Review tool (not this task): a timeout prints the partial answer twice; a trailing --template with no value silently degrades. Ten resolved lists have no output.
+
+Grounder resolution 2026-11-20 (operator: "yes, ground it and resolve it. don't makr the task complete until it actually works.", MORNING-DECISIONS.md:1517) for D11a, to build AFTER task-410 folds (it edits the same functions: buildLensInputs, parseLensInput, the lens-input CLI, reviewErrors, the compliance block of closeErrors, lensLine): PROVEN: the reviewer's context slot held the placeholder in real runs (prompt_sha256 of three BL-V2WHOLE outputs recomputed with specs='(no pasted context provided)' matches their headers); at the output phase the reviewer sees no task text and no ruling. Rule: .claude/review-templates/lens-compliance.md:12 and :37 ('every operator ruling pasted in the context'); 08_agents.md:338; review-templates/README.md:115. Smallest change: (a) scripts/analysis/backlog-brief.mjs also writes docs/reports/reviews/<task>/pasted-<date>.md (task line, Description, acceptance criteria, decisions naming the task, Implementation Notes); (b) backlog-lane.mjs :156 names that real path and :177 passes --template and --context correctly; (c) rule-lists.mjs lens-input takes --context, refuses without it, stamps its sha256, and counts its size in the budget; (d) the close check refuses an input whose stamp lacks the context hash, whose pasted file is empty, the placeholder, or lacks the task's own Description, and recomputes prompt_sha256 against the REVIEW header. Acceptance on real inputs: the assembled prompt for a real task has 0 hits for the placeholder and at least one hit for a verbatim operator quote from the task. Files line must be extended for rule-lists.mjs, check-lane-close.mjs, backlog-brief.mjs and their tests. Still open in this task: D10b, D11b.
+
+Operator 2026-11-20, verbatim (MORNING-DECISIONS.md entry 'Operator ORDERS the audit of the three tasks, the compliance documents on each task, and the update of task-375'): "Run the audit and add the compliance documents to each task. I want them labelled if possible to see if it actually get s done. UIpdate 375". ADDED TO THIS TASK on his word: the governing compliance documents (the rule lists the launch resolves from the Files line) are written onto each backlog task in backlog's own fields, with a visible label showing whether it was done. Orchestrator reading, not his words: the exact fields and label are to come from the audit grounder's recommendation against what backlog already has (documentation, references, labels); nothing is built until that is recorded here. Build order unchanged: after task-410 and task-399.
+
+CORRECTION 2026-11-20 to the note above. Operator, verbatim (MORNING-DECISIONS.md entry 'Operator CORRECTS the reading of "labelled"'): "labelled means i need to know its a compliance document". So: each governing compliance document written onto a task is marked as a compliance document, distinct from the task's other references. The orchestrator's earlier reading (a label showing whether it was done) is withdrawn.
+
+Operator 2026-11-20, verbatim: "approved" (MORNING-DECISIONS.md entry "Operator APPROVES items 0 to 8"; item 0: "Append the two final notes to tasks 399 and 375"). FINAL BUILD NOTE from the four-step audit (FOUR-STEP-AUDIT.md, round 2 folded; file NOTE-375.md), appended verbatim; where it differs from earlier text of this task, this note governs:
+BUILD-READY 2026-11-20 (audit ~/Buildo-scratch/lanes-20261119/inc1b/retro/FOUR-STEP-AUDIT.md, round 2 folded). This task makes the scripts do what Spec 08 and the README already rule: 08_agents.md:341 (the lens runs with --context <pasted context>), .claude/review-templates/README.md:115 ("the pasted spec clauses, rulings and design text go in a separate --context file"), lens-compliance.md:12 and :37 ("every operator ruling pasted in the context"), and 08_agents.md:347 (the task's references point at the repo copy of the lane files). Operator, verbatim: "labelled means i need to know its a compliance document" (MORNING-DECISIONS.md, entry 'CORRECTS the reading of "labelled"'); MORNING-DECISIONS.md:1517 "don't makr the task complete until it actually works"; :1520 "you are probaley rebuilding stuff that already exists". Order: launch AFTER task-410 and task-399 are folded. Launch under a NEW lane name (the old worktree and branch of BL-FIXTOOLS exist and the launch refuses them, backlog-lane.mjs :70-72); release and relaunch are covered by his yes (MD:1517 entry). Other open lanes run their reviews AFTER this folds: outputs hashed over the placeholder are refused afterwards and there is no shim (RR-0328). A revert of this task has the same effect on lanes reviewed since; the final summary records the fold sha (DoD #7).
+FILES line to set first, through the backlog CLI: scripts/analysis/backlog-lane.mjs, scripts/analysis/backlog-brief.mjs, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/deepseek-review.js, scripts/lib/review-template.js, .claude/review-templates/lens-compliance.md, scripts/analysis/proof-slice.mjs, and their tests under src/tests/ (backlog/*.logic.test.ts, proof-slice.logic.test.ts, review-template.logic.test.ts). Add the acceptance below with `backlog task edit task-375 --ac`.
+SCOPE
+A. The reviewer knows the task, from what exists (no new file, no second stamp):
+ 1. backlog-brief.mjs writes ONE more section in the existing context-<date>.md: "## Implementation Notes" (the task's notes, where rulings are recorded).
+ 2. The reviewer's context is these headings of that file only, with the exact heading texts: "Task", "Description", "Acceptance criteria", "Decisions naming this task", "Implementation Notes". One constant CONTEXT_SECTIONS in scripts/lib/review-template.js; extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text. Not Milestone, Document sections or Prior reviews: the rule lists carry them. Measured on task-381's 15 resolved lists (v2whole rule-lists.mjs buildLensInputs, material = its 19,138-character diff): the whole context file (32,698 characters) raises the compliance calls from 17 to 38 (surface-135 alone 18 parts); a 78 KB context (task-267 size) gives 88 calls and one list refused; the five sections (2,126 characters) give 17 calls, none refused.
+ 3. backlog-lane.mjs lens line (:156, :177): every lens command, plan and output, passes --context <the committed context file> and one --section per constant entry. deepseek-review.js throws on a heading it cannot find (:111) and matches by substring, so a section cannot be dropped silently.
+ 4. rule-lists.mjs lens-input takes --context, refuses without it, and counts the selected sections in the room on both paths (with a list, and with no --list for code-review, error-paths, ux, security). check-lane-close.mjs lensContexts() (:133 at the 410 head) returns the selected text read from the committed context file, so the existing prompt_sha256 recompute (:65) binds it. Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes.
+ 5. A build or fix task needs the compliance PLAN phase as well (:178 phases = both), Spec 08 section 7 rule 1 (:336 "both mandatory per WF").
+ 6. The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file.
+ 7. Split smaller (operator, MORNING-DECISIONS.md entry 'AGREES the Rule 3 amendment and RULES on material too large to review': "or split smaller"): in splitUnits (rule-lists.mjs, the `subs.length === 0` throw, :297 at the 410 head) a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused. Measured with the five-section context: with a 60,000-character material 3 of the 55 lists are refused today: surface-135 "## Register" 77,056 characters (46 table rows, longest 8,077), policy-124-s2-s5 section 5 (55,839), bylaw-133 "General / cross-cutting" (74 KB). The close recompute needs no change: it joins the stamped parts and compares them with the whole list, whitespace aside. A row or paragraph that alone passes the room is still refused naming it. Stated limit: a row is judged without its neighbours. Not built: a priority ranking of rules (nothing in the repo ranks rules: no priority field in rule-lists.json, the README lens table or lens-compliance.md) and a summary in place of a list (the generated handbooks five-words, step-132, bylaw-133 and surface-136 already ARE attached as summaries; replacing the whole Specs 126 and 135 by 136 was ruled the other way on 2026-11-20).
+B. Compliance documents on the task, marked:
+ 1. Entry (field `references`, not `documentation`: backlog-brief.mjs:65-98 pastes every documentation entry into the context; no label): `compliance:<list id> <file>`, one per resolved list. The take step (backlog-lane.mjs take command, ~:108) adds them in the same `backlog task edit` with repeated --add-ref (backlog help: repeatable), only those not already on the task, so a re-take after the undo adds none twice.
+ 2. check-tasks (existing command) prints, for each open task whose compliance: entries differ from the resolved lists (verifyResolved first), the exact `backlog task edit task-N --add-ref ...` command; the orchestrator runs them once after this folds (check-tasks is in no hook today: grep). The close check refuses the closing task on the same difference.
+ 3. At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md of the lane dir (08_agents.md:347); the close check refuses when one is missing.
+C. Still open in this task, as already specified in its notes: D10b timeout variable (needs the operator's DB GO and an id claim); D11b the security regex at rule-lists.mjs:128 misses admin and PII (README.md :104 and lens-security.md:48 say they fire it).
+NOT IN SCOPE: hunk-level split of one file's diff (the close recompute compares each chunk with the git diff of its paths: a new mechanism, needs the operator) and exempting generated golden before-images (a table row, own card, needs the operator); re-using unchanged chunks; dropping lists; a second pasted file or context stamp; a label; milestone_docs handling (verifyResolved already refuses an absent key); the V2L15 early-return change; any new script.
+ACCEPTANCE on real inputs (run the commands, paste the output on this task; no figure is taken from a lane report): 0. In a lane worktree run the new backlog-brief.mjs for task-381 (the committed context file on wf1/inc1b-hooks3 has no Implementation Notes heading). 1. deepseek-review.js review <task-381 diff> --template .claude/review-templates/lens-compliance.md --context <that file> with the five --section flags and --dry-run: 0 hits of "(no pasted context provided)", at least 1 hit of "yes to all", the five heading lines present, prompt under 120000 characters. 2. rule-lists.mjs lens-input for each of the 15 resolved lists of task-381 with that context: paste the call counts (expected about 17, none refused), and the same for the contexts of task-410 and task-267. 3. Planted refusals: placeholder context; context without the Description; committed context edited after the review; compliance entries differing from the resolved lists; a missing report reference. 4. backlog task view task-381 --plain shows one compliance: entry per resolved list on the References line. 5. check-tasks prints the edit command for one stale open task. 6. The dollar-sequence and placeholder-once tests (AC #4) stay green. Each source file change in its own commit (protected paths); no task status move in them. Do not mark the task complete until 1 to 5 are on the task.
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0333 · task-375 · Backlog; operator, verbatim: "don't makr the task complete until it actually works")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0334 · task-375 · Backlog; operator, verbatim: "you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0335 · task-375 · Backlog; operator, verbatim: "agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close.")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0336 · task-375 · Backlog; operator, verbatim: "approved")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0337 · task-375 · Backlog; operator, verbatim: "Can we add these to the three tasks remaining taks for the four steps.  run the full panel on them?")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0338 · task-375 · Backlog; operator, verbatim: "the findings that are deemed low priorities are filed in a review pile for later")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0339 · task-375 · Backlog; operator, verbatim: "yes hardening rounds.  Today's were warranted, but not endless.")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0340 · task-375 · Backlog; operator, verbatim: "can we address these in the plan? Let's get this right - add the the existing tasks and do a second pass on the recommendations")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0342 · task-375 · Backlog; operator, verbatim: "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0343 · task-375 · Backlog; operator, verbatim: "labelled means i need to know its a compliance document")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0344 · task-375 · Backlog; operator, verbatim: "1y 2 n - run a review on the output with the compliance and ground lens 3. yes we neeed reality check and integration and also potentially regression to run at your discrecition 4. more details. isnt your incentive to close despite making the necessary changes. shouldht teh incentive to make the changes so teh work actualyl works. 5. how much of a delay - explain further")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0345 · task-375 · Backlog; operator, verbatim: "5 yes.")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0346 · task-375 · Backlog; operator, verbatim: "agreed")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0347 · task-375 · Backlog; operator, verbatim: "If it can't tell if a figure is changed than it just runs anyways for now and we can determine later if its not required")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0348 · task-375 · Backlog; operator, verbatim: "these only run on the plan")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0349 · task-375 · Backlog; operator, verbatim: "Thoughts on whether it makes sense to run on the output as well? Complaince on the plan and output. Let's start with that! The most mportant part is fixing the plan. Agreed?")
+
+Dated note 2026-11-20 (M-246, prior text kept; RR-0350 · task-375 · Backlog; operator, verbatim: "You are good to build them tonight! If the panel leaves an open question - ground it and then take that as approved and let me know in the morning.  Teh goal is to get all six steps working tonight")
+
+2026-11-20 (M-246, prior text kept) This plan (PLAN-375-v4, in the Implementation Plan field) GOVERNS the approved FINAL BUILD NOTE (NOTE-375.md, approved at MORNING-DECISIONS.md:1557) where they differ, on the operator's orders at :1572 and :1580 and the second pass (:1590). Approved sentences it replaces: "ONE more section" (Implementation Notes) -> two sections (Implementation Plan and Implementation Notes); A.5 both-phases close rule -> deleted (plan evidence moves to the launch gate); B.2 close refusal on stale references -> deleted (check-tasks prints the commands, the take adds them); the context-<date>.md name -> context-rN.md; "no shim (RR-0328)" -> that sentence is the orchestrator's reading, not his words. v4 rulings: the Integration and Reality-Check seats on every build or fix plan and the Regression seat when existing code is changed, as Claude Sonnet agents, on the plan only (:1615, :1620, :1625, :1630); no seat on the output; the lane fixes, writes its own outcome lines and closes, a separate grounder verifies each fix, the orchestrator only routes (:1605); a BUILT task does not move to DONE without an output compliance review and a grounder's ruling (:1595). Released from lane BL-FIXTOOLS and relaunched under a new lane name with the launch script's own undo (his yes at the :1517 entry). The v4 fold was read back by a separate grounder (docs/reports/reviews/task-375/READBACK-375-v4.md); its four grounded answers are taken as approved on :1638 and reported to him.
+
+2026-11-21 taken on the board at lane launch (lane BL-GATE375, worktree /Users/brettpreston_macmini/Buildo-wt-gate375, branch wf1/inc1b-gate375), RR-0240
+
+BL-GATE375 build note 2026-11-21 (D11b, README.md:104, lens-security.md:48): rule-lists.mjs lensSet sec regex now includes admin and pii; red first in red.out (rule-lists.logic.test.ts:650), green by the real commit.
+
+BL-GATE375 build note (A2): CONTEXT_SECTIONS, PLAN_SECTIONS and extractSections now live in scripts/lib/review-template.js; scripts/deepseek-review.js requires extractSections from it (moved from :106-121, same text).
+
+BL-GATE375 build note (A1, A5 naming): backlog-brief.mjs writes ## Implementation Plan and ## Implementation Notes after the acceptance criteria and writes context-rN.md (N = existing context-r*.md + 1, never overwritten); brief tests re-pinned to context-r1.md (backlog-brief.logic.test.ts:58, backlog-brief-context.logic.test.ts:43).
+
+BL-GATE375 build note (A4 lens-input, A6): rule-lists.mjs lens-input takes --context (refused without; exit 2), counts the CONTEXT_SECTIONS text in the room on both paths (buildLensInputs context param), --material-from cuts PLAN_SECTIONS and is its own context; splitFlat cuts a block with no deeper heading at table rows and blank-line paragraphs (a piece alone over the room keeps the old refusal naming list and section). Existing lens-input test calls pass a fixture context (src/tests/backlog/fixtures/review-context.md).
+
+BL-GATE375 deviation note: the plan's Files line does not name src/tests/backlog/rule-lists-table.logic.test.ts, whose lens-input calls at :49 and :206 pass no --context and so fail once lens-input refuses without it (A4); check-task-files refuses an edit of that file, so it is NOT edited here and goes red at the push suite until the Files line names it. The shared test context lives at docs/reports/reviews/task-375/fixture-context.md (the one folder the Files check always allows).
+
+BL-GATE375 build note (A4 close binding, A5, B2): check-lane-close.mjs lensContexts(contexts, hasNotes) returns the CONTEXT_SECTIONS text of every committed docs/reports/reviews/<task>/context-rN.md (index first, then HEAD, read in check()) and problem lines for the placeholder or a missing Description or Implementation Notes heading; the prompt_sha256 recompute uses it (an output must match one context file); no committed context is a refusal; B2 refuses a missing REPORT.md, GROUNDER.md or (when the lane dir holds it) TRIAGE.md reference and prints the exact backlog task edit --add-ref command. The test helper scenario() writes a valid context and the three references.
+
+BL-GATE375 build note (A3): backlog-lane.mjs lens line and review line, and backlog-brief.mjs review line, pass the committed context (context-r1.md) with one --section per CONTEXT_SECTIONS entry on every deepseek-review command (plan, output, compliance), lens-input gets --context and, in the plan phase, --material-from; the lens templates are passed as --template, no longer as --context. Pins re-made: backlog-lane.logic.test.ts :169 and :258, backlog-brief.logic.test.ts :58, backlog-brief-context.logic.test.ts :43.
+
+BL-GATE375 build note (B1): rule-lists.mjs exports complianceRefs(lists, refs) ({add, remove}, compared by the id token, a path with a comma entered as compliance:<id> alone); checkTasks collects the stale open tasks and check-tasks prints the exact backlog task edit --add-ref / --remove-ref command for each (exit unchanged); backlog-lane.mjs's take adds only the missing compliance: references in the same edit. Red for this commit was a typecheck refusal (complianceRefs not exported), in red7.out.
+
+BL-GATE375 build note (D10b, PARTIAL, DB read OPEN): proof-slice.mjs exports TIMEOUT_VARIABLE ('tooling_proof_slice_timeout_ms', the builder's name, NOT registered: no tooling_ timeout variable exists in scripts/seeds/logic_variables.json and registering one is a seed + migration + id claim the operator authorises with a typed DB GO after the MCINC-7 rehearsal) and timeoutMsFromVariable(value), which refuses unset, empty, non-positive-integer values naming the variable; the logic test is green, src/tests/proof-slice.db.test.ts is written and NOT RUN. DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable; the task is NOT complete.
+
+BL-GATE375 build note (A3 docs): .claude/review-templates/README.md How-to-run section now names context-rN.md, the five --section flags and lens-input --context / --material-from (the plan's README item for A3).
+
+2026-11-21 DEVIATION (BL-GATE375, third run; precedent: task-399's lane added a path its change forced): the Files line is extended by ONE path, src/tests/backlog/rule-lists-table.logic.test.ts. Why: A4 makes rule-lists.mjs lens-input refuse without --context, and that test calls lens-input twice with no --context (src/tests/backlog/rule-lists-table.logic.test.ts:49 and :206), so both go red at the push suite; check-task-files refused the edit while the path was off the line. Nothing else in the Description changed. rule-lists.mjs resolve for the new Files line: 14 lists before and 14 after, none added, none removed (no new output compliance review owed for a new list). The separate grounder rules on this deviation.
+
+BL-GATE375 build note: rule-lists-table.logic.test.ts :49 and :206 now pass --context docs/reports/reviews/task-375/fixture-context.md (deviation above); red in red9.out (2 failed), green by the commit.
+
+BL-GATE375 build note (D1-D5 in check-lane-close.mjs): listProof and grounderErrors are extracted from closeErrors (behaviour preserving, the existing close tests are the proof); planGateErrors (pure; any read error is a refusal line), planHash (title plus body after the front matter, whitespace squashed, 12 hex), PLAN_SEATS (always integration and reality-check; regression when the Files line names a path tracked at the board head, a directory or glob entry counts) are exported; it reuses outcomeErrors with mode 'plan', seatLines, parseVerdicts and extractSections. Plan inputs are checked per committed context: the stamped material must be the PLAN_SECTIONS cut of the context whose text produced the output's prompt hash. Not wired into backlog-lane.mjs in this commit. Red for this commit was a typecheck refusal (red10.out).
+
+BL-GATE375 build note (D5 wiring, the LAST commit of backlog-lane.mjs): after the existing refusals and the dirty-board check and BEFORE the take, a build or fix launch runs planGateErrors on the board HEAD evidence (docs/reports/reviews/<id>/, flat) and the task file; each error is a stderr line (exit 3, nothing taken); --dry-run runs it too and prints 'plan gate ok: <L> lists, <M> findings, Plan sha256:<12>'. Rollback if it blocks every launch: git revert of this one commit. Lane test fixtures plant real stamped evidence with docs/reports/reviews/task-375/plant-evidence.mjs. Red: red11.out (2 failed).
+
+BL-GATE375 build note (D6): backlog-brief.mjs prints the line that the plan is the task text at launch, checked before launch, that the lane does not edit Description, Acceptance or Plan, records deviations in Implementation Notes and still runs a plan-stage lens of its own. Red: red12.out.
+
+BL-GATE375 build note (section 10): ONE dated note under the TKT-1 note of 08_agents.md (context-rN.md; the plan-only seats) and a dated note in 137_mcqueue.md after the :138 note (the close refusals and the launch gate, what it cannot prove), prior text kept.
+
+BL-GATE375 acceptance, third run (outputs in ~/Buildo-scratch/lanes-20261119/inc1b/gate375/acc). A0: node scripts/analysis/backlog-brief.mjs --task task-381 --lane BL-ACC --root . : exit 0, context-r1.md holds 2 of the 2 headings '## Implementation Plan' and '## Implementation Notes'. A1: NOT RUN: scripts/deepseek-review.js needs the API key from the environment file even for --dry-run, and the dotenv form was denied by the permission classifier for this run. A2 (buildLensInputs with the 5 sections, material 17,753 characters): task-381 15 lists, 5 sections 2121 characters, 17 calls, 0 refused (expected 17); task-410 10 lists, 14181 characters, 11 calls, 0 refused; task-267 18 lists, 9416 characters, 21 calls, 0 refused. A3 (lens-input CLI, 60,000-character material): surface-135 exit 0 3 parts, policy-124-s2-s5 exit 0 3 parts, bylaw-133 exit 0 3 parts; the 'today exit 1' half was not re-run on the old head (UNVERIFIED). A4: check-tasks on the live board exit 0, prints 106 commands; for task-101 (LATER, type record, not build) the command carries 6 compliance: entries = 6 lists of resolve; the 'after running the printed command' half is NOT RUN (it edits another task). A5: the planted refusals with controls are the tests in check-lane-close.logic.test.ts, backlog-lane.logic.test.ts, rule-lists.logic.test.ts, backlog-brief-context.logic.test.ts (green in the commits). A6: review-template.logic.test.ts green in ef574eb02. A7: green in 7b7d6f5f7. A8: OPEN (no DB). A9: NOT RUN.
+
+BL-GATE375 acceptance A9 and A4b, fourth run (outputs ~/Buildo-scratch/lanes-20261119/inc1b/gate375/a9/; run on a scratch git clone --shared of this worktree, removed afterwards, so this worktree was never touched: git status --short shows no tracked change). A9 on task-401 (LATER, build, 9 resolved lists), dry-run only: (1) before evidence: exit 3, 11 errors, one per missing item, the first 'plan gate: task-401: no plan evidence folder docs/reports/reviews/task-401/ on the board', then one 'list <id> ... has no valid compliance lens output' for each of the 9 lists (agents-s5-1to3, agents-s7-s11, queue-137, eng-all, orchestrator-doc17, five-words, plan-protocol, inc-S, ms-S) and 'GROUNDER-PLAN.md is missing'. (2) with test evidence (context, 9 plan outputs with inputs, integration and reality-check Seat lines, no regression seat because the Files line names only paths that do not exist yet, round block, references, Plan line): exit 0, 'plan gate ok: 9 lists, 2 findings, Plan sha256:76fa8e5f3005'. (3) one appended note to the task: exit 3, 'GROUNDER-PLAN.md: the Plan line "Plan: task-401 sha256:76fa8e5f3005" is not the hash of the task as it is now ... expected: Plan: task-401 sha256:6017e6ec7b94'. (4) clone deleted. A4b on the same clone: check-tasks printed the add-ref command for task-101 (6 compliance: entries = 6 lists); after running it check-tasks --root <clone> printed nothing for task-101 (0 lines, exit 0) and backlog task view shows the compliance: entries on the References line.
+
+## References
+- docs/reports/lanes/2026-11-20/BL-FIXTOOLS/REPORT.md
+- docs/reports/reviews/task-375/GROUNDER-PANEL2.md
+- docs/reports/reviews/task-375/FILED-LOW.md
+- docs/reports/reviews/task-375/seat-integration-2.md
+- docs/reports/reviews/task-375/seat-reality-check-2.md
+- docs/reports/reviews/task-375/seat-ground-truth-2.md
+- docs/reports/reviews/task-375/FOLD-VALIDATION.md
+- docs/reports/reviews/task-375/CROSS-READ.md
+- docs/reports/reviews/task-375/READBACK-375-v4.md
+
+## Documents
+- (none)
+
+## Decisions in force (titles; the ones this task names carry the operator's words)
+- RR-0005 2026-11-18 · Operator direction: page-level lot information in increme
+- RR-0087 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0315 Plan: go on sections A and B; tasks added to Increment 1B
+- RR-0316 Plan: close check folded as built
+- RR-0317 Plan: review enforcement only
+- RR-0318 Plan: section E accepted
+- RR-0319 C2 failed compute: error screen with Try again, not counted
+- RR-0320 C3 legal line at the bottom of the phone search page
+- RR-0321 D13 semi page buttons 48 px is the operator ruling
+- RR-0322 C5 engine numbers to every paying user at once
+- RR-0323 D1 freshness compare left until stored records exist
+- RR-0324 Semi page cache write accepted as built
+- RR-0088 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0325 Phone keeps its 3 retries (reading)
+- RR-0326 Web search legal line at the bottom (reading)
+- RR-0327 Page structure to table-driven pages: the five items go ahead
+- RR-0328 The app is not in use, in development — "remember the app is not beign used - we are in development" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1422)
+- RR-0329 Task 370 dropped from Increment 1B (reading of the answer)
+- RR-0330 Six-row table as put, including task-348 answered (reading)
+- RR-0331 Report meter stays in the lookup route
+- RR-0332 A McFix task may file under the McFrontend row that built what it fixes
+- RR-0333 A task is not complete until it works — "don't makr the task complete until it actually works" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1517)
+- RR-0334 Five reviewer-input items agreed, existing mechanisms first — "you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1522)
+- RR-0092 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0335 Rule 3 two-commit close for lane build and fix tasks — "agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close." (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1546)
+- RR-0336 Items 0 to 8 approved for task-399 and task-375 — "approved" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1557)
+- RR-0337 Two binding checks added to the existing tasks, full panel on them — "Can we add these to the three tasks remaining taks for the four steps.  run the full panel on them?" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1572)
+- RR-0338 Low-priority findings go to a review pile; Reality-Check and Integration on the additions — "the findings that are deemed low priorities are filed in a review pile for later" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1580)
+- RR-0339 Hardening rounds are warranted and bounded — "yes hardening rounds.  Today's were warranted, but not endless." (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1585)
+- RR-0340 Four uncovered parts of the six steps go into the plans, with a second pass — "can we address these in the plan? Let's get this right - add the the existing tasks and do a second pass on the recommendations" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1590)
+- RR-0341 Loading screen gives up after 60 seconds
+- RR-0342 Regression and Reality-Check seats in the lane protocol, by their written triggers — "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1620)
+- RR-0343 Compliance documents on a task are labelled as compliance — "labelled means i need to know its a compliance document" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1541)
+- RR-0344 Reviews re-run; BUILT needs an output review; seats on plans — "1y 2 n - run a review on the output with the compliance and ground lens 3. yes we neeed reality check and integration and also potentially regression to run at your discrecition 4. more details. isnt your incentive to close despite making the necessary changes. shouldht teh incentive to make the changes so teh work actualyl works. 5. how much of a delay - explain further" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1595)
+- RR-0099 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0345 Pre-launch steps by hand for task-375 then scripted — "5 yes." (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1600)
+- RR-0346 The lane fixes and closes a grounder verifies the orchestrator routes — "agreed" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1605)
+- RR-0347 Reality-Check runs when it cannot be told that no figure changes — "If it can't tell if a figure is changed than it just runs anyways for now and we can determine later if its not required" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1625)
+- RR-0348 The tool-having seats run on the plan only — "these only run on the plan" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1630)
+- RR-0349 Starting shape compliance on plan and output — "Thoughts on whether it makes sense to run on the output as well? Complaince on the plan and output. Let's start with that! The most mportant part is fixing the plan. Agreed?" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1634)
+- RR-0350 Build authorized tonight open questions grounded and taken as approved — "You are good to build them tonight! If the panel leaves an open question - ground it and then take that as approved and let me know in the morning.  Teh goal is to get all six steps working tonight" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1638)
+- RR-0136 Operator: start Increment 1·A
+- RR-0137 Operator: completeness, holistic and per-increment optimisation
+- RR-0139 Operator: push 6, re-sort, answer page
+- RR-0140 Operator: faster pushes and GOs asked
+- RR-0141 Operator: Q-LT-1
+- RR-0143 Operator answer IMG-1: six lot-size bands
+- RR-0012 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0144 Operator answer PRG-1: purge rule
+- RR-0145 Operator answer TRK-1: tracked lots refresh
+- RR-0146 Operator answer PG-1: pushes and GOs
+- RR-0147 Operator answer NAME-1
+- RR-0149 Increment 1·A tooling location
+- RR-0150 Infra freeze named list
+- RR-0152 Increment 1·A re-use and drops
+- RR-0154 Work pulling
+- RR-0156 Push 6 literal test
+- RR-0157 Push 6 R-MD
+- RR-0014 McSTORAGE-RULINGS.md:5
+- RR-0159 Push 6 recapture; 1·A panel scope
+- RR-0161 Work pulling
+- RR-0162 Answer ONE-1
+- RR-0163 Answer ONE-2
+- RR-0164 Answer ONE-4
+- RR-0165 Answer ONE-5
+- RR-0166 Answer ONE-12
+- RR-0167 Answer ONE-13
+- RR-0168 Answer ONE-21
+- RR-0169 Answer ONE-22
+- RR-0028 open-questions.md:1088
+- RR-0170 Answer ONE-35
+- RR-0172 Search lot map street name
+- RR-0174 Loading screen
+- RR-0176 Loading screen
+- RR-0178 MB-44 W timing
+- RR-0179 Load-failure page
+- RR-0180 Web recent-search chips
+- RR-0182 Search identification and semi wiring
+- RR-0184 Semi question page design
+- RR-0186 Inc6 protection window
+- RR-0044 2026-11-18 · Operator direction: page-level lot information in increme
+- RR-0188 Push 6 recapture
+- RR-0190 Enforcement
+- RR-0192 Operator oversight scope
+- RR-0193 McRecommendations
+- RR-0195 Push CHK.5/CHK.3
+- RR-0196 Push CHK.5/CHK.3
+- RR-0198 Push 6 recapture
+- RR-0200 Recommendation tracking tools
+- RR-0202 Backlog working board
+- RR-0203 Backlog working board
+- RR-0060 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0205 Backlog home of the plan
+- RR-0207 Backlog: use all features, bring content and process over, ensure use
+- RR-0208 Gates: assess necessity; Backlog to make the process followed and reviews validated
+- RR-0210 McLane is the lane policy name
+- RR-0212 Backlog plan v8 scope: loader + three gates
+- RR-0214 1·A not replaced; relevancy pass after the move
+- RR-0215 Images round 4 directions
+- RR-0217 Concept gallery scope
+- RR-0219 Backlog plan v8 approved
+- 2026-11-18 re-use ruling: drop INFRA.2 guard.mjs and CHK.4 (operator words)
+- RR-0080 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- Q-H2 drop the J5 storeys backfill chain (7.7-7.9, 7.23)
+- RR-0232 Open decisions: grounding and verified recommendation
+- RR-0233 Operator expertise scope
+- RR-0235 McLane brief: full context from milestone, reviews and decisions
+- RR-0242 One-command lane launch
+- RR-0248 Increment 1·A parallel lanes
+- RR-0264 Semi page placeholder in 1·B
+- RR-0270 Web search footer: once, approved
+- RR-0273 Shared footer component
+- RR-0271 LOAD.1 drives the report now, ST.P1 split
+- RR-0081 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0277 Search fuzzy matching reuses the permit address spec
+- RR-0278 Report meter counts on report production only
+- RR-0281 No clear-search button (A.11 not required)
+- RR-0282 Daylight restyle token substitutions stay as built
+- RR-0284 Lot map: two data reads allowed (C.5 footprint, C.7 card line)
+- RR-0299 SRCH.C12 support address is a placeholder until launch
+- RR-0300 1·B blockers as OPERATOR tasks
+- RR-0298 Status changes only by the launch script
+- RR-0301 task-341 approved: run tasks 121, 122, 123 now, then LOAD.1, LOAD.2, LOAD.4
+- RR-0302 Loose ends task per milestone
+- RR-0086 2026-11-15 morning: INC5 recapture commit 068a51af0, not push-ready
+- RR-0303 design-elements file: produce now if not a big job
+- RR-0306 task-342 answered: the proof tool does not wait for the design-fit check
+- RR-0307 task-340 answered: A.6 is built now from the existing entitlement read, compliant and researched first
+- RR-0308 Semi question mock approved (task-319)
+- RR-0309 Regenerated semi mock approved (task-319 stage 2)
+- RR-0310 A.6 reset date served as a Toronto-time label (task-320)
+- RR-0311 A.6 zero reports left still shows the line (task-352 question 1)
+- RR-0312 No plan: an error page with a way to sign up (task-352 question 2)
+- RR-0313 Search box says Enter a Toronto address (task-352 question 3)
+- RR-0314 Outside-Toronto notice stays
+
+## Milestone
+m-1 Increment 1·B Search [S]
+
+### Description
+
+Increment S (re-opened, scenario slice)
+
+### Problems
+- None named in the S brief (docs/reports/plan-import/raw/2026-11-19/search-brief.json carries inc, deliverable and specs only).
+- Found by the R10 validation pass (task-316, 2026-11-19), text left as found: the first two Storage set-up lines below still say a 35 s loading screen and LOAD.3; RR-0176 (decision-43, supersedes RR-0174) rules no 35 s cap and LOAD.3 dropped (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- Found by the R10 validation pass: two Storage set-up lines and four Register rulings lines end with the word undefined where a quote belongs (generator defect, draft task on backlog-brief.mjs); doc-16 section 5 row S still reads LOAD.1 to LOAD.3 (backlog/docs/doc-16 - McStorage-policy-v2.md:108)
+
+### Project objectives
+- Objective: finish a completed project, a database that works and is ready (operator 2026-11-17) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "our objective is to finish a completed project ie a database that works and is ready"
+- The database exists to service the designed report, details and search page (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "the database is created to service the existing report and details as clairfied in the McFrontend. This includes the search page"
+- A task that serves neither a designed element nor a supporting function is most likely not relevant (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:635) "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code"
+- Five principles, keep it simple, no scope creep (~/Buildo-scratch/panel-tools/PLAN-PROTOCOL.md:3) "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep"
+- One plan only (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:652) "we need one plan - we can only execute one plan"
+
+### Increment objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion (docs/reports/plan-import/raw/2026-11-19/search-brief.json inc; ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- The search identifies two-or-more parcels at one address, a mis-typed address, or a possible semi lot, and wires each to the report; the semi calculation stays in Increment 7 (7.25) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- What the customer sees: the 65 designed search elements A (search page), B (address confusion), C (lot confusion, lot map), D (semi question page), E (web search pages), F (landing entry), G (hand-off to the report) (backlog/docs/increments/doc-2 - Increment-S-requirements.md:27) "| id | element | where | status | deliverers | built |"
+
+### Objectives
+- Search comes before increment 1: the search page, then (1) address confusion, (2) lot confusion; most of it is already built (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+
+### Deliverable
+- A user types any Toronto address, resolves address or lot confusion through the designed pages (choose your lot, and the three states: intersection, no lot linked, many lots), and lands on the report (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:682) "Readings: (1) Q-GAP-0 image hold R-IMG1..3 LIFTED (dated note owed, M-246 form). (2) Q-GAP-2 "Most space": every option, a tie goes to the l"
+- The search pages follow the Daylight product standard (small pages v8); today they are still old dark on origin (mobile/src/constants/parcelSearch.ts:58) (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1100) "R-D1 Daylight is the product standard: small pages (v8), landing (v10+), report (B v3: summary + concept gallery), demo "
+
+### Specs
+- Spec 89 parcel cost model tool (search parser rules): origin:docs/specs/02-web-admin/89_parcel_cost_model_tool.md
+- Spec 126 MaxBLD surface standard: origin:docs/specs/02-web-admin/126_maxbld_surface_standard.md
+- Current search (latest rendering + later rulings): ~/Buildo-scratch/lanes-20261117/search-delta/CURRENT-SEARCH.md
+- MORNING-DECISIONS.md: ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md
+- McFrontend phase1 open-questions.md (search and small-pages rulings): ~/Buildo-scratch/mcfrontend/phase1/open-questions.md
+- PROTOCOL.md: ~/Buildo-scratch/panel-tools/PROTOCOL.md
+
+### Rulings
+- Search pages come first in the plan, before increment 1 (RR-0005) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "the search pages should be even before the increment 1"
+- Search parser: fix the street direction guard and the unit-token strip before launch (RR-0166) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-12 a"
+- W5 choose your parcel on the web is deferred and the web live switch stays off (RR-0170) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-35 b"
+- Lot map: the street name on the road comes from the map's own road labels (RR-0172) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:775) "Map's road labels (Recommended)"
+- The 'faces the street' rule question was withdrawn by the operator (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:774) "why does this matter? do you not know how to do the lookup?"
+- Loading screen: the animation keeps its own length and always runs to completion; the button waits for the report AND See details; LOAD.3 not needed (RR-0176, supersedes RR-0174 which said 35,000 ms) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- The customer read module W (1.3) is built now in Increment 1 (RR-0178) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "1. it has to happen now - read the objectives"
+- A load-failure page is a task, built from the other small pages (RR-0179) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "2. Add it as a task using the othr mini pages as a template"
+- Web recent-search chips (E.6) stay deferred (RR-0180) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "3. This can stay defferred for now"
+- 1·B builds A.6 and C.12 as their own tasks and identifies the semi lot; the semi calculation stays in 7.25 (RR-0182) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- The semi question page is designed like the other small pages: a v8 mock for approval, then built (RR-0184) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:801) "also need a semi question page similar to a min page"
+- Small pages: Daylight ("modern") is the product standard (R-D1) (~/Buildo-scratch/mcfrontend/phase1/open-questions.md:1098) "Just looking at the small pages - love it! Let's go with modern."
+- Increment 1·B starts as a validation pass of its tasks, the semi page placeholder, the McFrontend fields and page tasks, dependencies and the prior panel records (RR-0257) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1019) "This work has been done - just validation."
+
+### Storage set-up
+- McStorage policy v2: a lot's numbers (main page and See details) are computed on first open from the search page (behind the 35 s loading screen), on track, or on owner input; stored with the stamp (Layer 2 table_version, evaluator_version, settings sha); a stale record is never served and is recomputed; no record for unopened lots; no all-lot fill (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:704; ~/Buildo-scratch/lanes-20261117/storage-policy/McSTORAGE-POLICY-v2.md) "undefined"
+- Loading screen: starts at the search pick, waits for the numbers up to 35,000 ms (LOAD.1 to LOAD.3); skipped for a re-opened lot (its record is read); no screen for owner input or the Tracked Lots list (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696; ~/Buildo-scratch/mcfrontend/MF-62/plan.md:44) "undefined"
+- Search shows addresses only; the pick (lookup hit) starts the one-lot compute (LOAD.1) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:696) "undefined"
+- ST-5 AMENDED 2026-11-18 (store on first open; prior text kept, superseded where it conflicts) (~/Buildo-scratch/mcbylaws/McSTORAGE-RULINGS.md:126) "undefined"
+
+### Register rulings of this group (operator words)
+- RR-0005 2026-11-18: Search pages first in the plan, before increment 1 (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:673) "Operator, verbatim: "because we have done this plan by increments what about the "This Lot" information (Main page) and details as well as t"
+- RR-0137 2026-11-18: For increments 1b-10: all tasks present to fulfil each increment's objectives and deliverables (rulings most relevant, McStorage policy, compliance, project objectives; ensure relevancy); tasks optimised holistically, then within each increment, updated in the plan (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:729) "ensure all tasks are present to fufill the increments objectives and deliverables"
+- RR-0144 2026-11-18: Stored lot records are purged after 90 days unopened (operator answer PRG-1 a); tracked lots are never purged while tracked (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "PRG-1 a (purge after 90 days unopened)"
+- RR-0145 2026-11-18: Tracked lots are refreshed in the background when the stamp moves (operator answer TRK-1 a) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "TRK-1 a (background refresh of tracked lots when the stamp moves)"
+- RR-0154 2026-11-18: When a task completes the next ready task starts at once; a task blocked on an operator question goes to the answer page and work moves to the next unblocked task; nothing waits idle. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:754) "it should pull the next task as something completes or move to the next task if a question remains"
+- RR-0166 2026-11-18: Search parser (1.4): fix the two defects before launch (street direction guard, unit-token strip), with two labels and one dated note on Spec 89 line 33 (ONE-12 a) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-12 a"
+- RR-0170 2026-11-18: W5 (choose your parcel) on the web: deferred; the web live switch stays off (ONE-35 b) (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:738) "ONE-35 b"
+- RR-0172 2026-11-18: Lot map: the street name on the road comes from the map's own road labels; no new data read or drawing code. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:775) "Map's road labels (Recommended)"
+- RR-0174 2026-11-18: Loading screen: the animation always runs its full set length (report_check_min_ms = 35,000 ms, default and maximum); the button to open the report shows when the lot's numbers are ready, at any time after the animation completes. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:779) "the animation still needs to be complete.. the button shows when its ready - anytime after the animation completes"
+- RR-0176 2026-11-18: Loading screen: the animation keeps its own length (23 s today, may change later) and always runs to completion; the button to open the report shows only when the report AND See details are loaded, however long that takes (no 35 s cap); the 35,000 ms setting change (LOAD.3) is not needed now. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:785) "yes that is correct"
+- RR-0178 2026-11-18: MB-44: T now, per-increment checks now, and the customer read module W (1.3) built NOW in Increment 1 (not after J9 in increment 8), because McStorage policy v2 computes at the search pick (MD:704). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "1. it has to happen now - read the objectives"
+- RR-0179 2026-11-18: New task: the load-failure page shown when a lot's report or See details fails to load, built from the other small pages (small-pages-v8) as its template. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "2. Add it as a task using the othr mini pages as a template"
+- RR-0180 2026-11-18: Web recent-search chips (E.6) stay deferred. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:789) "3. This can stay defferred for now"
+- RR-0182 2026-11-18: Increment 1·B builds A.6 (reports-left line, app search page) and C.12 (help link) as their own tasks; the search identifies two-or-more parcels, a mis-typed address, or a possible semi lot; the search portion and the semi question page are done now with the wiring (link) to the report; the semi calculation stays in Increment 7 (7.25). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:796) "Maybe the search portion done now with the page."
+- RR-0184 2026-11-18: The semi question page is designed like the other small pages (small-pages-v8 Daylight): a mock from the v8 template for operator approval, then built (SRCH.SEMI). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:801) "also need a semi question page similar to a min page"
+- RR-0186 2026-11-18: Increment-6 protection rules 1, 3, 7 and 9 are closed (D7 done); suites and pushes only through the push station and the operator; DB jobs only on the operator typed GO; rules 2, 4, 5, 6, 8, 10, 11 stay until push 6 lands. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:805) "y and your not following the McQueue rules"
+- RR-0190 2026-11-18: Lane launches need an authorized plan for any repo worktree they write; every register row is marked operator words or orchestrator reading and only operator words feed reviews as rulings; orchestrator replies that recommend or name a ruling must cite file:line, an RR id or UNVERIFIED (enforced by hooks). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:813) "close the gap.  fix teh register"
+- RR-0192 2026-11-18: Questions come to the operator only on database structure, the frontend, the user experience and storage; everything else is decided under the six-criteria rule, reviewed and logged as a McRecommendation card for audit. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:819) "I dont provide oversight on questions beyond the databse strcuture, the frontend the user experience and storage"
+- RR-0193 2026-11-18: McRecommendations: every recommendation is a card in the repo decision log with customer / UX / space / DB-logic framing, options, rulings (operator words only), sources, research kept separate from the recommendation status (judgment only, reviewed, proven), five principles, what it serves, computed confidence and outcome. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:817) "the recommendation should be framed with an explanation that speaks to what I know"
+- RR-0202 2026-11-18: The increment plan moves into the repo queue rows (Spec 137); the Backlog board generated from them is the working board, showing per task its increment, decisions and research (review/run) IDs. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:837) "I need to be able to see the board and the categories and the decisions and the research ids for each"
+- RR-0203 2026-11-18: The move of the increment plan into the repo queues is done by a committed generator with --check, from a committed raw snapshot; nothing hand-copied. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:839) "use a generator"
+- RR-0205 2026-11-18: The increment plan lives in Backlog.md in the repo (milestones = increments, assignees = lanes, priority/ordinal, dependencies, decision and research refs per task); the operator organises on the board; queue rows stay and are linked by id; loaded once by an import script. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:843) "yes of course"
+- RR-0207 2026-11-19: Backlog: every feature is used; each increment's objectives, rulings, citations and storage objectives move over; the existing process (handbooks, Spec 08) is carried over; process documents are updated; the move is structured so the system is actually used. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:847) "Make sure opus actually uses the system"
+- RR-0208 2026-11-19: The board data exists in the artifact and the procedures in Spec 08; the failure is scratch work, made-up responses and wrong reviewer context; hence the gates and full Backlog use. Each new gate is assessed as necessary or not, with how to do it right. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:848) "determine if the new gates etc are necessary and how to do this right"
+- RR-0210 2026-11-19: The lane policy is named McLane in the Spec 08 and Spec 137 dated notes of the Backlog-home plan; McDecision is not adopted. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:852) "Let's stick with McLane for a name."
+- RR-0212 2026-11-19: The Backlog-home plan is the loader plus the three enforcement pieces, with Backlog's own browser as the board; the v7 board job, mirror synchroniser, import verifier and structural gate are dropped (simple, no scope creep). (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:867) "we needd the loader and the three gates"
+- RR-0214 2026-11-19: Increment 1·A is not replaced by the Backlog plan; after the move every task on the board is re-checked for relevancy against the plan (kept / merged / changed) before 1·B starts. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:857) "ensure the tasks are updated and relevancy determined in light of the plan"
+- RR-0219 2026-11-19: Backlog-home plan v8 is authorized (PLAN LOCKED): loader + three gates + Backlog's browser; D1-D5, D7-D10 as recommended; every relevant spec note lands; every imported task carries all available information; the 1·A tasks are updated or removed against the plan through the panel. (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:871) "approved. ensure that all the relevant specs are updated and all the increment tasks with all the new information that can be given to the tasks"
+
+### Compliance codes in use
+- None named: no 1·B task (task-12, 13, 14, 68, 69, 266, 267, 268, and the promoted and created task-317 to task-325) carries a comp: label (checked on the task files, 2026-11-19).
+
+### Decisions
+Every file in backlog/decisions whose Groups line names S or whose Tasks named line names a 1·B plan id (checked 2026-11-19, R10):
+- decision-1: RR-0005 2026-11-18 · Operator direction: page-level lot information in increme
+- decision-15: RR-0137 Operator: completeness, holistic and per-increment optimisation
+- decision-20: RR-0144 Operator answer PRG-1: purge rule
+- decision-21: RR-0145 Operator answer TRK-1: tracked lots refresh
+- decision-27: RR-0154 Work pulling
+- decision-36: RR-0166 Answer ONE-12
+- decision-40: RR-0170 Answer ONE-35
+- decision-41: RR-0172 Search lot map street name
+- decision-42: RR-0174 Loading screen
+- decision-43: RR-0176 Loading screen
+- decision-44: RR-0178 MB-44 W timing
+- decision-45: RR-0179 Load-failure page
+- decision-46: RR-0180 Web recent-search chips
+- decision-47: RR-0182 Search identification and semi wiring
+- decision-48: RR-0184 Semi question page design
+- decision-49: RR-0186 Inc6 protection window
+- decision-51: RR-0190 Enforcement
+- decision-52: RR-0192 Operator oversight scope
+- decision-53: RR-0193 McRecommendations
+- decision-58: RR-0202 Backlog working board
+- decision-59: RR-0203 Backlog working board
+- decision-60: RR-0205 Backlog home of the plan
+- decision-61: RR-0207 Backlog: use all features, bring content and process over, ensure use
+- decision-62: RR-0208 Gates: assess necessity; Backlog to make the process followed and reviews validated
+- decision-63: RR-0210 McLane is the lane policy name
+- decision-64: RR-0212 Backlog plan v8 scope: loader + three gates
+- decision-65: RR-0214 1·A not replaced; relevancy pass after the move
+- decision-68: RR-0219 Backlog plan v8 approved
+
+### Documents
+- Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md
+- McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md#L27) and docs/reports/plan-import/raw/2026-11-19/elements-by-inc.json#S
+- McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md#L108-L108 and docs/reports/plan-import/raw/2026-11-19/storage-by-group.json#S
+
+## Document sections
+Cap: 120 KB in total, 12 KB per block (document blocks below; an omitted block costs its notice against the total); a block that would pass the total is listed as omitted. Sections named in a link (#L<n>-<m> or a section title) are read; with none named, the first 12 KB.
+
+### Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md (not readable: ENOENT; read it at Requirements: backlog/docs/increments/doc-2 - Increment-S-requirements.md)
+
+### McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md (not readable: ENOENT; read it at McFrontend elements: the Elements section of that doc (backlog/docs/increments/doc-2 - Increment-S-requirements.md)
+
+### McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md (not readable: ENOENT; read it at McStorage policy for this increment: backlog/docs/doc-16 - McStorage-policy-v2.md)
+
+## Decisions naming this task
+- RR-0328 The app is not in use, in development (names RR-0328) — "remember the app is not beign used - we are in development" (~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1422)
+- RR-0333 A task is not complete until it works (names task-375, RR-0333) — "don't makr the task complete until it actually works" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1517)
+- RR-0334 Five reviewer-input items agreed, existing mechanisms first (names task-375, RR-0334) — "you are probaley rebuilding stuff that already exists you do this all the time. 1-5 y" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1522)
+- RR-0335 Rule 3 two-commit close for lane build and fix tasks (names task-375, RR-0335) — "agreed - The grounder's recommendation: amend Rule 3 for lane build and fix tasks to the two-commit close." (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1546)
+- RR-0336 Items 0 to 8 approved for task-399 and task-375 (names task-375, RR-0336) — "approved" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1557)
+- RR-0337 Two binding checks added to the existing tasks, full panel on them (names task-375, RR-0337) — "Can we add these to the three tasks remaining taks for the four steps.  run the full panel on them?" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1572)
+- RR-0338 Low-priority findings go to a review pile; Reality-Check and Integration on the additions (names task-375, RR-0338) — "the findings that are deemed low priorities are filed in a review pile for later" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1580)
+- RR-0339 Hardening rounds are warranted and bounded (names task-375, RR-0339) — "yes hardening rounds.  Today's were warranted, but not endless." (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1585)
+- RR-0340 Four uncovered parts of the six steps go into the plans, with a second pass (names task-375, RR-0340) — "can we address these in the plan? Let's get this right - add the the existing tasks and do a second pass on the recommendations" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1590)
+- RR-0342 Regression and Reality-Check seats in the lane protocol, by their written triggers (names task-375, RR-0342) — "regression only required when code is changed and reality check is only required when a figure is changed or you can figure something else independently" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1620)
+- RR-0343 Compliance documents on a task are labelled as compliance (names task-375, RR-0343) — "labelled means i need to know its a compliance document" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1541)
+- RR-0344 Reviews re-run; BUILT needs an output review; seats on plans (names task-375, RR-0344) — "1y 2 n - run a review on the output with the compliance and ground lens 3. yes we neeed reality check and integration and also potentially regression to run at your discrecition 4. more details. isnt your incentive to close despite making the necessary changes. shouldht teh incentive to make the changes so teh work actualyl works. 5. how much of a delay - explain further" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1595)
+- RR-0345 Pre-launch steps by hand for task-375 then scripted (names task-375, RR-0345) — "5 yes." (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1600)
+- RR-0346 The lane fixes and closes a grounder verifies the orchestrator routes (names task-375, RR-0346) — "agreed" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1605)
+- RR-0347 Reality-Check runs when it cannot be told that no figure changes (names task-375, RR-0347) — "If it can't tell if a figure is changed than it just runs anyways for now and we can determine later if its not required" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1625)
+- RR-0348 The tool-having seats run on the plan only (names task-375, RR-0348) — "these only run on the plan" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1630)
+- RR-0349 Starting shape compliance on plan and output (names task-375, RR-0349) — "Thoughts on whether it makes sense to run on the output as well? Complaince on the plan and output. Let's start with that! The most mportant part is fixing the plan. Agreed?" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1634)
+- RR-0350 Build authorized tonight open questions grounded and taken as approved (names task-375, RR-0350) — "You are good to build them tonight! If the panel leaves an open question - ground it and then take that as approved and let me know in the morning.  Teh goal is to get all six steps working tonight" (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1638)
+
+## Prior reviews and lane reports
+### task-375 (this task)
+- docs/reports/reviews/task-375/CROSS-READ.md
+- docs/reports/reviews/task-375/FILED-LOW.md
+- docs/reports/reviews/task-375/FOLD-VALIDATION.md
+- docs/reports/reviews/task-375/GROUNDER-PANEL2.md
+- docs/reports/reviews/task-375/PLAN-375-v3.md
+- docs/reports/reviews/task-375/PLAN-375-v4.md
+- docs/reports/reviews/task-375/READBACK-375-v4.md
+- docs/reports/reviews/task-375/fixture-context.md
+- docs/reports/reviews/task-375/seat-ground-truth-2.md
+- docs/reports/reviews/task-375/seat-integration-2.md
+- docs/reports/reviews/task-375/seat-reality-check-2.md
+- docs/reports/lanes/2026-11-20/BL-FIXTOOLS/REPORT.md (lane report naming task-375)
+- docs/reports/lanes/2026-11-20/BL-V2LIST/REPORT.md (lane report naming task-375)
+- docs/reports/lanes/2026-11-20/BL-V2WHOLE/REPORT.md (lane report naming task-375)
+
+## Dependencies
+- (none)

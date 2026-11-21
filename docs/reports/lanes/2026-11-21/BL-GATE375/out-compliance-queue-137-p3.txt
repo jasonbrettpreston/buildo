@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:35:45.212Z file_sha256=c3c98aa5fc73664db70903265d83022c5a40875547425a99b80b82cb83da665d prompt_sha256=4ec8ff5316b11f330561dd9e60de71c189d04dc90f28b0d1eed1609f22625fe3
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-queue-137-p3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — A4 "rule-lists.mjs lens-input takes --context, refuses without it" — scripts/analysis/rule-lists.mjs:362 "templateFile, context = NO_CONTEXT, max =" — only the CLI refuses; the exported builder still substitutes the placeholder for any caller that omits a context, the exact D11a defect this task exists to close, and such an input is caught only later at close — make context a required argument of buildLensInputs and throw naming the missing context, keep NO_CONTEXT only in lensPromptHash.
+
+DEFER severity=MED — A6 "or split smaller" and "Stated limit: a row is judged without its neighbours." — scripts/analysis/rule-lists.mjs:299 "A row is judged without its neighbours and, mid-table, without its column header." — every packed piece after the first is cut without the table's header and delimiter rows (row branch flushes each `|` line on its own at :309), so a compliance lens judging a piece cannot tell which column a value belongs to, a limit the plan does not state — repeat the header and delimiter rows at the head of every piece cut from the same table.
+
+DEFER severity=MED — B2 "prints, for each open task whose compliance: entries differ from the resolved lists, the exact `backlog task edit task-N --add-ref ...` command" — scripts/analysis/rule-lists.mjs:458 "remove: [...have].filter(([id]) => !want.has(id)).map(([, r]) => r)," — the change also prints `--remove-ref` and the orchestrator runs every printed command (106 on the live board), which strips compliance labels from tasks whose Files line narrowed, the record RR-0343 asks to keep — print add commands only, or record the removal rule on the task note before any remove is printed.
+
+DEFER severity=LOW — B1 "`compliance:<list id> <file>`, one per resolved list" — scripts/analysis/rule-lists.mjs:457 "String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`" — for the one list whose path holds a comma the entry carries the id and no file, so the label does not point an operator at the document — carry the file in a second form (a note line or a second ref) or record the exception on the task when such a ref is added.
+
+DEFER severity=LOW — C "D10 (proof-slice.mjs reads its timeout and buffer from registered tooling_ variables)" — scripts/analysis/proof-slice.mjs:24 "const DEFAULT_TIMEOUT_MS = 120000; // task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it" — the timeout half is satisfied only by the comment and an exported helper nothing calls, so D10 ships unread only on the clause's own condition — no code change now; keep task-375 RUNNING and ACC #13 open until the DB GO, and never cite D10 as shipped.
+
+MET — D11 "D11 (the security lens fires for admin and PII paths)" — scripts/analysis/rule-lists.mjs:163 — the sec test now reads /entitlement|auth|stripe|metered|admin|pii/i, so admin and PII paths resolve the security lens.
+
+MET — A2 "extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text" — scripts/deepseek-review.js:29 — the local copy is deleted and extractSections is required from ./lib/review-template, so one implementation is shared.
+
+MET — A6 "a block with no deeper heading is cut between table rows or blank-line paragraphs instead of being refused" — scripts/analysis/rule-lists.mjs:329 "if (subs.length === 0) return splitFlat(text, max, label, id);" — the old throw is replaced by the row and paragraph cut.
+
+MET — Spec 137 Rule 3 note "`rule-lists.mjs check-tasks` prints the command for the open tasks" — scripts/analysis/rule-lists.mjs:576 — check-tasks prints `backlog task edit <id> --add-ref ...` per stale open task and leaves the exit at 0 unless a task resolves without the every_task or milestone lists.
+
+REJECT — grounder resolution "rule-lists.mjs lens-input takes --context, refuses without it, stamps its sha256" — the change is accused of not stamping the context hash in the lens input — the binding is made by the close check recomputing prompt_sha256 against the committed docs/reports/reviews/<task>/context-rN.md (pasted build note A4 close binding), so no stamp inside the input text is named by the governing plan.
+
+REJECT — D11 "the security lens fires for admin and PII paths" — the change is accused of firing on incidental substrings of a Files line — the Files line is a path list and a false positive only adds one lens, no refusal or wrong status follows.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  112146ms (112.1s)
+📊 Tokens — total: 48655, input: 28094, output: 20561, reasoning: 19427

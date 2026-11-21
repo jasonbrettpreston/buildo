@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:17:57.485Z file_sha256=354a5052d462a03cf6b7488c4ed5456076608db387cdc20910e05e2eea681169 prompt_sha256=08224b25b75889632d8f0e1e2a07985369e768f08250d308b5d54d0c3852ac96
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-v2-122-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #4 "A lens run on a file containing dollar sequences and placeholder tokens sends the text unchanged, once (test, red first)" — .claude/review-templates/README.md "Double each `$` in the inputs and neutralise any placeholder token until the tool is fixed." — the hunk rewrites this same how-to section for the context-rN.md flow yet leaves the manual workaround standing, and no safe-substitution change or its red-first test appears in this chunk (scripts/lib/review-template.js and src/tests/review-template.logic.test.ts are chunk 2/3, cannot see); either the tool is still unsafe or the instruction is stale — remove the workaround sentence in the same commit that fixes substitutePlaceholders and cite its red output on the task.
+
+DEFER severity=LOW — plan B2 "check-tasks (existing command) prints, for each open task whose compliance: entries differ from the resolved lists (verifyResolved first), the exact `backlog task edit task-N --add-ref ...` command" — scripts/analysis/rule-lists.mjs "for (const x of c.refs) console.log(`  backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}`);" — the removal half and the `--remove-ref` flag are named in no pasted ruling, and that flag's existence in the backlog CLI is asserted on no pasted line, so the printed command can fail as written — confirm `--remove-ref` in the backlog CLI and record the removal half on the card, or print removals as a separate command the orchestrator runs deliberately.
+
+DEFER severity=LOW — AC #9 "a LATER build task not recommended for drop" — "A4: check-tasks on the live board exit 0, prints 106 commands; for task-101 (LATER, type record, not build) the command carries 6 compliance: entries = 6 lists of resolve" — the acceptance is evidenced on a record task, not the LATER build task the clause names, so the clause as written is not demonstrated — paste the same output for a LATER build task, or record the substitution as a deviation on the task.
+
+DEFER severity=LOW — 6.6.1(c) "no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed" — docs/specs/00-architecture/137_mcqueue.md "the close check now also recomputes each lens output's prompt hash with the committed review context (docs/reports/reviews/<task>/context-rN.md)" — the dated note states the enforcement in the present tense while the code it names (scripts/hooks/check-lane-close.mjs) is not in this chunk, so the enforcement cannot be witnessed here (cannot see) — land the note with the code that enforces it, or mark it designed-not-built the way 6.6.1(b) does.
+
+MET — AC #5 "the output holds the headings \"## Implementation Plan\" and \"## Implementation Notes\"" — scripts/analysis/backlog-brief.mjs "`## Implementation Plan`, fieldOf('PLAN'), ''," — both headings are written unconditionally after the acceptance criteria.
+
+MET — RR-0343 "labelled means i need to know its a compliance document" — scripts/analysis/rule-lists.mjs "`compliance:${l.id} ${l.file}`" — each resolved list is written as a compliance: reference and the take adds only the missing ones.
+
+MET — 6.6.1(c) "no registry or ledger row may be described as accurate unless it is generated, enforced or witnessed" — scripts/analysis/proof-slice.mjs "task-375 D10b OPEN: replaced by the registered variable below once the operator's DB GO registers it" — the new variable is declared NOT registered, so no accuracy claim is made for an unwitnessed setting.
+
+REJECT — 6.6.1(a) "the four-part step registry [...] and the §6 cross-step ledger [...] are 100% mechanical" — accused of not generating or witnessing any registry or ledger row — this change touches lane and review tooling only (no descriptor, witness trace, pipeline_meta or ledger row), so clause (a) does not bind it.
+
+REJECT — AC #13 "A8 D10b test red first then green (needs the DB GO; otherwise the task stays RUNNING)" — accused of shipping proof-slice.mjs on the typed "const DEFAULT_TIMEOUT_MS = 120000" — the Description authorises exactly this: "the DB read needs the operator's DB GO after the MCINC-7 rehearsal, otherwise A, B and D ship and the task is not marked complete".
+
+REJECT — 6.6.1(b) "The Phase 1 WITNESS gate (#44) must carry the exact string `R-BF WITNESS GATE (#44)` in `scripts/analysis/step-validate.mjs`" — accused of leaving that marker absent — this diff does not touch step-validate.mjs or the witness path, and no pasted clause asks this change to set that marker; (c) status stays NOT MET by design.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 0
+
+---
+⏱  142303ms (142.3s)
+📊 Tokens — total: 60994, input: 33426, output: 27568, reasoning: 26399

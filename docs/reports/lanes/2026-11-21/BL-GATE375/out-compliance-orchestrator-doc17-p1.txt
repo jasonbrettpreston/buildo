@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:29:34.906Z file_sha256=849c6deb4426c9c1c970348d1f1c53ba3c15375cd721dea1ed4e6761d6cf967d prompt_sha256=efc1b3bb08a7f4f91f752403a653e948624312cc68994cece6961d3439176aa8
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings:
+
+DEFER severity=MED — A5 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file." — scripts/analysis/backlog-lane.mjs "const ctxRel = `docs/reports/reviews/${taskId}/context-r${contextRound(path.join(board, 'docs/reports/reviews', taskId))}.md`; // ... the same count (review-template.js contextRound) over the same tree" — the round is counted over the board checkout while backlog-brief.mjs counts and writes over `--root` (the worktree); the two trees differ whenever an earlier round is in the worktree but not yet folded to the board, and the printed lens line then names a context file the brief did not write — use the path the brief printed (its stdout line / sha256) instead of recomputing the round over `board`.
+
+DEFER severity=MED — task-375 A.4 "Refuse a context that is the placeholder, lacks the Description, or lacks the Implementation Notes section when the task has notes." — scripts/analysis/backlog-brief.mjs "const fieldOf = (name) => (new RegExp(`<!-- SECTION:${name}:BEGIN -->...`).exec(t.body)?.[1] ?? '').trim().replace(/^#{1,6} /gm, '#### ') || '(none)';" and "`## Implementation Notes`, fieldOf('NOTES'), ''," — the writer always emits the heading and substitutes "(none)" when the markers are absent, so a task whose notes are stored outside SECTION:NOTES ships a context that has the heading and no notes and the close check's "lacks the Implementation Notes section" guard cannot fire — emit the heading only when the field carries text, and let the brief (not the sentinel) report an empty notes field.
+
+DEFER severity=LOW — AC #4 "A lens run on a file containing dollar sequences and placeholder tokens sends the text unchanged, once (test, red first)." — .claude/review-templates/README.md "Double each `$` in the inputs and neutralise any placeholder token until the tool is fixed." — this diff edits the How-to-run section for A3 but leaves standing the workaround text that tells reviewers the substitution defect is unfixed, against the behaviour this task ships — replace that sentence with the fixed behaviour (or name the task that makes it stale).
+
+MET — A3 — scripts/analysis/backlog-lane.mjs "const ctxArgs = `--context ${ctx} ${sectionFlags}`;" used in plan, output and compliance lens lines, and --template is passed with a value in "review ${ctxRel} --template .claude/review-templates/plan-review-deepseek.md --context ${ctxRel} ${sectionFlags}" — every lens command of this file now carries the committed context and one --section per CONTEXT_SECTIONS entry.
+
+MET — A1 — scripts/analysis/backlog-brief.mjs "`## Implementation Plan`, fieldOf('PLAN'), '', `## Implementation Notes`, fieldOf('NOTES'), ''," — the two named sections are written after the acceptance criteria.
+
+MET — A5 naming — scripts/analysis/backlog-brief.mjs "const round = createRequire(import.meta.url)('../lib/review-template.js').contextRound(ctxDir); const ctxRel = `docs/reports/reviews/${taskId}/context-r${round}.md`;" — context-rN.md, N = existing context-r*.md + 1, no context-<date>.md.
+
+MET — B1 — scripts/analysis/backlog-lane.mjs "const addRefs = complianceRefs(resolved.lists, asList(t.fm.references)).add.flatMap((e) => ['--add-ref', e]);" added to the same take step — compliance: references go in one edit, only the missing ones.
+
+MET — D5 — scripts/analysis/backlog-lane.mjs "if (gate.errors.length) { for (const e of gate.errors) process.stderr.write(`backlog-lane: refused: plan gate: ${e}\n`); process.exit(3); }" placed after the dirty-board refusal and before step('take', ...), with no flag and no env switch — the launch gate is the last refusal before the take.
+
+MET — D6 — scripts/analysis/backlog-brief.mjs "The plan is the task text at launch, checked before launch ... do not re-plan, do not edit the Description, Acceptance or Plan, record deviations in Implementation Notes; the lane still runs at least one plan-stage lens of its own" — the brief prints the no-re-plan line.
+
+MET — section 10 — docs/specs/00-architecture/08_agents.md "Dated note 2026-11-21 (M-246, prior text kept; task-375 FIX.TOOLS, lane BL-GATE375, Increment 1·B; ...): two points." and docs/specs/00-architecture/137_mcqueue.md "Dated note 2026-11-21 (M-246, prior text kept; Rule 3 and Rule 10: task-375 ...)" — one dated note each, prior text kept, and the 137 note carries the close refusals, the gate and "WHAT THE GATE CANNOT PROVE".
+
+REJECT — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)." — accused of feeding scratch line quotes into the spec notes as rulings — the quotes cited in the notes (:1595, :1620, :1625, :1630, :1605) are the same words carried by the pasted decisions RR-0344, RR-0342, RR-0347, RR-0348 and RR-0346 with the same line cites, so they are decisions, not readings.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 0
+
+---
+⏱  110086ms (110.1s)
+📊 Tokens — total: 55702, input: 35027, output: 20675, reasoning: 19360

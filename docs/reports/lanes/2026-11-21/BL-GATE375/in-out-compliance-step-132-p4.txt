@@ -1,0 +1,466 @@
+LIST step-132 sha256:5bf284c053f515fe13656559a2b7889d57d2fca656be8645340319c147cd4622 material sha256:af8dfcf96c950f5c867864450a2e854b0e67cf22a5fced057aa2da6f229af9aa part 2 of 2 chunk 2 of 6
+RULE LIST step-132 (docs/specs/01-pipeline/132_step_standard_handbook.md, sections 2. Every step; 3. By archetype; 4. Cross-cutting; 6. Rules with no or partial machine check), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 6 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["scripts/analysis/rule-lists.mjs","scripts/deepseek-review.js"]
+
+## 4. Cross-cutting
+
+### Lifecycle stages
+
+How a step moves from legacy script to converted.
+
+- **x-stages.1** A step's stage is declared data in `converted.json` `pending[]`: `red_suite` → `descriptor_only` → `compute_ported` → `runner_wired` → `shape_clean` (or `shape_clean_pending_recapture`) → converted. Red tests are declared there, never a code skip. The declared stage alone decides which gates cannot yet be answered (`stageAwaitsCaptures`); a pending row with no descriptor file does not block whole-registry selection.
+  *Why:* Progress is visible and a half-built step is graded for what it is.
+  Rules: `R-K` `R-K.1` `R-DU` `R-EF` `R-K.2` · history: `M5` (SPEC121-M5)
+
+- **x-stages.2** The commits are ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]`. A pending step lands ② at `compute_ported` with its legacy shell live, and may swap its shell before ③ only once every declared upstream (`inputs.reads.steps`) is converted, or pending past ② and not awaiting captures (`stageAwaitsCaptures`); fast invariant #54 checks this, and an unregistered or unknown upstream fails.
+  *Why:* A downstream step never runs on a converted shell before its producer.
+  Rules: `R-EQ` `Q-R-EQ-1` `R-FH` `R-JQ` · history: `W4A-R6`
+
+- **x-stages.3** A net-new step (no legacy predecessor) has no PRE capture; its G8 reference is its committed POST. It is accepted as net-new only with the full R-DK evidence set: census `legacy: "none"`, no git history of the script before its descriptor, no `legacy_citation`, a `recapture.json` entry with `via` bracket or env, a red-evidence artifact (gate K) and a rerun-zero proof on every POST. Otherwise fast invariant #22 refuses it by name, and any PRE file on an accepted slug is RED.
+  *Why:* There is nothing older to compare against.
+  Rules: `R-DK` · history: `R-CS`
+
+- **x-stages.4** A cutover stages every owner spec named in the system map, or declares `Spec-diff: N-A` (#43). Target Files are generated into the owner spec; every spec that names a chained step classifies it; fleet counts are derived from registries, never retyped.
+  *Why:* Specs and registries stay in step with the code without anyone remembering to update them.
+  Rules: `R-AF` `R-AN` `R-BB` `R-BE`
+
+### Captures, goldens and proof
+
+How a conversion proves it changed nothing it did not mean to.
+
+- **x-captures.1** Captures are reproducible from committed data alone: every capture has a `recapture.json` entry, and `node scripts/analysis/capture-step-golden.js --replay-all` prints the retake commands from those entries (plain and env captures first, then brackets; a ledger-gated step whose bracket recipe passes no force env has that bracket retaken before its standalone capture, CHAT-89); capture pairs follow the declared chain variance. Every harness run is ledgered as captured, never a baseline. PRE captures are committed before re-runs. A post witness trace with no golden capture and no `recapture.json` entry is an orphan: it is deleted by literal path only when a recipe-backed trace of the same slug witnesses a superset of its statement fingerprints, otherwise it gets a recipe and is retaken (R-IJ).
+  *Why:* A capture nobody can retake proves nothing.
+  Rules: `R-AC` `R-AI` `R-BQ` `R-CZ` `R-DQ` `R-IJ` `R-JP` `R-KC`
+
+- **x-captures.2** A forced-write table is proven by a bracket: a perturbation cohort (when a guard includes the step's own stamp), delete-and-reinsert (INSERT-only), or derived-status (derived targets), counted through gate G's `count_path`. A PRE taken with a retired input argv stands in only under a closed predicate.
+  *Why:* A rerun that writes nothing proves nothing about a guarded write path.
+  Rules: `R-AS` `R-BD` `R-BR` `R-DN` `R-DP` `R-ET` `R-GZ` `R-JH` `R-KA`
+
+- **x-captures.3** The golden differential is a mechanical fingerprint gate (G8, #38/#40). Every diff is explained only in `docs/reports/golden/<slug>/explained-diffs.json`, citing a Defect Ledger id; an unexplainable differential stops the work.
+  *Why:* A commit message saying "diff is fine" is not evidence.
+  Rules: `R-C` `R-DA` `K4` `G8` (SCORECARD-G8) `R-GR`
+
+- **x-captures.4** A step that calls a paid or outside API is captured and replayed from committed recorded responses.
+  *Why:* Tests and captures must not spend money or depend on someone else's uptime.
+  Rules: `R-EL`
+
+- **x-captures.5** A class-A behaviour (Spec 123 risk class A) is proven by a both-directions lock, shown red then green (scorecard G7; mutation testing is not a gate). Tests write before-images into a per-file sandbox, never the real golden tree. A live test proves its child process completed before asserting on its output.
+  *Why:* A test that cannot fail, or that reads output that never arrived, proves nothing.
+  Rules: `R-E` `R-CO` `R-CP` `G7` (SCORECARD-G7) · history: `M7` (SPEC121-M7)
+
+### Cross-step order
+
+How steps that share tables are ordered and checked.
+
+- **x-crossstep.1** A same-statement write guard is not a chain-order edge. ORDER rows with neither endpoint converted and unproduced reads whose inserter is unconverted are counted against a shrink-only ceiling, not hard. Gate D reads one converted-set view.
+  *Why:* The ledger stays strict for converted steps without blocking on legacy ones.
+  Rules: `R-BN` `R-BO` `R-BP` `R-EE`
+
+### step-validate and the scorecard
+
+The one command that grades a step.
+
+- **x-validate.1** One command grades a step: `node scripts/analysis/step-validate.mjs --step=<slug>` (or `--all`, `--staged`, `--fast`). It validates the DATA (descriptor, fast invariants) and the scorecard grades the PROCESS; it runs in the hooks, never as a separate track.
+  *Why:* One integrated answer, the same at the desk and in the hook.
+  Rules: `R-R` `Rule-13` `Rule-13-addendum-R-T`
+
+- **x-validate.2** The scorecard gates G0–G9 (Spec 123 §6; aliases SCORECARD-G0…SCORECARD-G9, not the Gate E purity codes): G0 boundary freeze, G1 archaeology, G2 churn × complexity, G3 Intent Ledger (only tables with a Disposition column are scored), G4 risk class, G5 seam map, G6 classification with Defect Ledger ids, G7 test adequacy, G8 differential, G9 §R Reflection. Ship bar: ≥14/17 with G6–G8 full; with E3 on it is 17/17. Markdown header and separator rows are never counted as data.
+  *Why:* The assessment is graded by machine, the same for every step.
+  Rules: `R-F` `R-FA` `G0` (SCORECARD-G0) `G1` (SCORECARD-G1) `G2` (SCORECARD-G2) `G3` (SCORECARD-G3) `G4` (SCORECARD-G4) `G5` (SCORECARD-G5) `G6` (SCORECARD-G6) `G9` (SCORECARD-G9) `SHIP-BAR` `R-FB` `R-JD` `R-KM` `R-LC`
+
+### The V3 label
+
+What `standard=V3` means and how it is enforced.
+
+- **x-v3.1** `standard=V3` prints only when all nine R-EY conditions hold, fail closed: (1) compute purity clean, (2) no gate-ledger allowance, (3) #44 PASS with nothing attributed, (4) no blocking registry failure, (5) no stage-gated red, (6) G0–G8 at max with no other hard stop, (7) the five words all PASS with nothing deferred, (8) no unmet `cutover_prereq`, (9) every exception naming the step cites a register id. Otherwise it prints `standard=V2 (fails: …)`. E1 (ratchet: a step that read V3 never drops) and E2 (cutover gate) are on; E3 (every converted step V3) is built off behind `gate_v3_hard_gate_enabled`. R-IH stage 1: `step-validate` prints an advisory `R-EY (9) why-only` line for each step with a deviation whose only register id is in `why`, plus a run total; no verdict changes until stage 3 reads `adjudicated_by` only.
+  *Why:* One list replaces the older "five words", "six parts" and "four conditions"; the label means the same thing everywhere.
+  Rules: `R-IH` `R-IK` `R-JC` `R-BA` `R-CN` `R-DT` `R-EY` `STD-VERSIONS`
+
+- **x-v3.2** An operator decision found only in a plan or assessment (a pilot plan's rulings, an accepted deviation) is recorded as a register row before a step can cite it: the V3 condition-9 backfill recorded 33 such decisions as rows R-FI…R-GO (124a §B21/§B22), and each exception entry they govern cites its row. A citation on a converted descriptor's `deviations[]` entry is appended on the bundled RE-FREEZE night, because the edit moves the capture fingerprint. That night is split (R-II): night 1 carries the citations, and the refresh_snapshot producer-read waits for its own RE-FREEZE at permits ③.
+  *Why:* Condition (9) needs a resolvable id on every exception, and a decision that lives only in a plan file is invisible to the gate.
+  Rules: `R-FI` `R-FJ` `R-FK` `R-FL` `R-FM` `R-FN` `R-FO` `R-FP` `R-FQ` `R-FR` `R-FS` `R-FT` `R-FU` `R-FV` `R-FW` `R-FX` `R-FY` `R-FZ` `R-GA` `R-GB` `R-GC` `R-GD` `R-GE` `R-GG` `R-GH` `R-GI` `R-GJ` `R-GK` `R-GL` `R-GM` `R-GN` `R-GO` `R-II` `R-KG` `R-KH` `R-KV` `R-KX` `R-LE` `R-LS` `R-LT` `R-LU` `R-LV` `R-LW` `R-LX` `R-LY` `R-LZ` `R-MA` `R-MB` `R-MC` · history: `R-GF`
+
+- **x-v3.3** An exception entry with no operator decision found (the condition-9 census class c) goes to the operator as a family ruling, recorded by decision log and register row like any other: the 2026-10-20 rulings are R-HN…R-HZ (V3 Exception Rulings page and chat CHAT-22) and the CoA cutover rulings R-IA…R-IF (R-IB and R-IC also cover enrich_permits' twin deviations, operator CHAT-24). A conversion retires a legacy audit row, `records_meta` key, constant row or log-only query only when the entry cites a consumer grep with zero readers or shows the counted mechanism is gone (R-HR, a named exception to Spec 123 §3.1); a legacy defect corrected inline is ratified per entry, never as a general rule (R-HQ). Citations on a fingerprint-locked descriptor ride the bundled RE-FREEZE night.
+  *Why:* Condition (9) needs every exception to cite a ruling, and a family ruling with its evidence condition stated once is cheaper to check than one ruling per entry.
+  Rules: `R-HN` `R-HO` `R-HP` `R-HQ` `R-HR` `R-HS` `R-HT` `R-HU` `R-HV` `R-HW` `R-HX` `R-HY` `R-HZ` `R-IA` `R-IB` `R-IC` `R-ID` `R-IE` `R-IF` `R-JE` `R-JK` `R-JL` `R-JM` `R-JU` `R-KE`
+
+### Rulings protocol and the resolution ladder
+
+What to do when the standard does not answer your question.
+
+- **x-rulings.1** When no rung answers, use the protocol: one pass discovers and proposes (closed Intent Ledger vocabulary); a different party adjudicates, named and dated; the ruling gets a dated register row in Spec 124 §5 (or a 124a LIVE REGISTER section) that answers the seven admission questions and names a lock; the same commit adds the both-directions test and amends the spec; a pilot-local defect becomes a ruling only if it will recur in another archetype; a document move is tool-performed and verified by a line-set diff. Cited ids must resolve.
+  *Why:* A rule without a lock is not a rule, and the person who found a problem does not get to rule on it.
+  Rules: `R-I` `R-J` `R-AA` `R-AM` `R-DF` `P4-1` `P4-2` `P4-3` `P4-4` `P4-5` `P4-6` `P4-7` `R-KO`
+
+- **x-rulings.2** Resolution ladder: ground the problem (query, grep, read; cite the owner spec from the system map); classify it CONTRACT / INCIDENTAL / DEFECT; resolve at the first fitting rung (descriptor, declared check, logic variable, library change, shape rule, new schema field); if none fits or two conflict, go to the protocol; add a both-directions test and re-run the golden capture; record a Defect Ledger id and a §R Reflection entry when it may recur. Route each learning to the most enforced artifact that can hold it.
+  *Why:* The cheapest enforced answer wins, and lessons are kept where a machine reads them.
+  Rules: `L7-0` `L7-1` `L7-2` `L7-3` `L7-4` `L7-5` · history: `M9` (SPEC121-M9) `M10` (SPEC121-M10)
+
+- **x-rulings.3** Where the standard is written: Spec 122 is the standard (the live schema and behaviour) and the Spec 124 register is the policy; on policy the register governs, on the schema and behaviour Spec 122 does. Spec 123 is the standard for the conversion procedure and its G0–G9 gates. This handbook is Spec 132, generated from both through the rule map; cite a line as `Spec 132 §<line id> (R-xx)`. Every spec opens with one role banner (authority register, standard, design, historical, generated handbook); a historical spec adds no rule id, so a new rule goes to the register.
+  *Why:* Each question has one home, and a reader knows from the first lines what a spec may decide.
+  Rules: `R-GU` `R-GV` `R-GW` `R-GX` `R-HH` `R-HI` `R-HJ` `R-IY`
+
+- **x-rulings.4** Operator decisions are transferred by generator, never by hand: each set of rulings (a review-page export or a chat ruling with its quote, and any later amendment with its quote) is committed verbatim as `docs/reports/decisions/<date>-<slug>.json`; `node scripts/analysis/decision-log.mjs --write` emits a register-row skeleton per approved decision, and every approved decision becomes a register row (Spec 124, Spec 69a or Spec 131 by subject) that cites `<log stem>#<decision id>`; `--check` at pre-commit fails on an uncovered decision or a citation of an unknown one. Each log is re-derived at `--check` from its raw record under `docs/reports/decisions/raw/`, so a hand-edited log fails. Rulings recorded this way for a step not yet built (resolve_bylaws, Spec 134) govern its plan; a report surface has one declaration (R-RS).
+  *Why:* A ruling transferred by hand is a ruling that can be forgotten; the log is the operator's own words and the check proves each one landed.
+  Rules: `R-GY` `R-HB` `R-HC` `R-HD` `R-HE` `R-HF` `R-HG` `R-HK` `R-HL` `R-HM` `R-IL` `R-IM` `R-IN` `R-IO` `R-IP` `R-IQ` `R-IR` `R-IS` `R-IT` `R-IU` `R-IV` `R-IW` `R-IX` `R-IZ` `R-JA` `R-JI` `R-JJ` `R-JN` `R-JO` `R-JR`
+
+### Verification before integration and acceptance
+
+What must be independently checked before work lands.
+
+- **x-verify.1** Before an integrate-N branch is built, a fresh lane that did not write the work verifies every landing lane's claims read-only (cited ids and quotes, red-first tests red on the parent, counts and exit codes reproduced). The report lives at `docs/reports/verification/<branch>.md` and every integrate commit cites it (`.husky/commit-msg`).
+  *Why:* Self-reported results are not evidence; an independent re-check is.
+  Rules: `R-EZ` · history: `M14` (SPEC121-M14)
+
+- **x-verify.2** Cloud acceptance runs are pinned to a commit sha, use partial `--only` / `--from` runs, and form one end-of-sources acceptance set; ceilings are never raised (resize instead); EP-PIN-D17 blocks every post-sources legacy slug. A chain is complete only when converted, with no ledger rows, LDG-10 complete, cloud accepted and tooling integrated.
+  *Why:* Acceptance grades the code that will ship, once, with nothing waved through.
+  Rules: `R-AB` `R-AL` `R-AQ` `R-AQ.1` `R-BC` `R-ED`
+
+### Tooling, hooks and commit form
+
+How the repo machinery runs.
+
+- **x-tooling.1** Pre-commit is file-only, staged-scoped and inside a pinned time budget (#52), and runs every generator `--check`. The full suite runs at pre-push (8 forks; pre-commit 4; never above 10). Tests needing Postgres are `*.db.test.ts` and run only under `npm run test:db`. Lanes serialise DB writers, full suites and landings on the host (R-CQ, a process rule; nothing enforces it). `migrate.js --only` applies chosen migrations in order, failing closed on dependencies.
+  *Why:* Commits stay fast and safe on the shared host; slow and DB work runs where it belongs.
+  Rules: `R-GQ` `R-AG` `R-CQ` `R-DH` `R-DJ` `R-DS` `R-EC` `R-EU` `R-KI` `R-KL` `R-KP` `R-KY` `R-LB` `R-LF` `R-LG` `R-LH` `R-LI` `R-LJ` `R-LK` `R-LL` `R-LM` `R-LN` `R-LO` `R-LP` `R-LQ` · history: `R-BV`
+
+- **x-tooling.2** Commit form: after two full-form conversions of an archetype, later ones may land compressed (three commits), and compressed is then the default; full form needs a stated reason in the assessment.
+  *Why:* Ceremony is spent where an archetype is still new.
+  Rules: `R-PACE-1` `R-AH`
+
+- **x-tooling.3** Programme promises are declared data in `programme-items.json`, generated and gated; a programme-gate precondition is locked both directions, never a printed count. A proposal to add a box states its measured read/write cost at production scale. Stop and redesign if a per-step override is needed.
+  *Why:* Promises that live only in prose get forgotten.
+  Rules: `R-T` `R-Z` `P3` `K2` `R-KK` `R-KQ` `R-KU` `R-LR` `R-KW` `R-KZ` `R-LD`
+
+- **x-tooling.4** This handbook's own success test: a new engineer can build, read and diagnose a step from it alone.
+  *Why:* Spec 120's test, kept from Spec 121 M2.
+  Rules: history: `M2` (SPEC121-M2)
+
+## 6. Rules with no or partial machine check (80 in force)
+
+"A step-standard item that no machine checks is not part of the standard" (R-BA). These in-force rules are not fully machine-checked yet. The list only shrinks: `src/tests/handbook-rule-map.logic.test.ts` caps it, and `step-validate --all` prints the count. 50 have no check and 30 are partial; 20 more entries are retired ids kept so the seed count reconciles.
+
+Enforcement across all 444 mapped ids: 296 lock, 1 lock-db, 37 check, 0 hook, 30 partial (any kind, listed below or retired), 80 none (see the glossary).
+
+| Rule | Class | Line | Reason |
+|---|---|---|---|
+| R-H | partial | core.6 | partial: skip-row WARN locked (skipRecordsMeta); the INFO-vs-WARN choice itself is unchecked (GAP G-5, 124:137) |
+| R-J | none | x-rulings.1 | no machine check: document governance |
+| R-N | none | link.3 | no lock named (commit e01cad11) |
+| R-O | none | matcher.1 | no machine check: assessment-report narrative only |
+| R-AB | partial | x-verify.2 | partial: chain-sources-workflow.infra warns that an unpinned run is "NOT valid as an R-AB acceptance run"; acceptance-set completeness unchecked |
+| R-BT | none | core.17 | no lock: "no lock yet — PLANNED with the step" (124a:237) |
+| R-BY | partial | ingestor.3 | partial: ingest-prereq-pdf-acquire.logic (not named in row) |
+| R-CJ | partial | enricher.2 | partial: purity-s3-exec-seam.logic (scope_retire_lock_held; not named in row) |
+| R-CT | partial | core.12 | partial: per-step locks only (steps/coa/violations D3 and the classify_coa_* violations assert their targets declare rls_bypass_or_policy); write.js assertWritePrivileges checks declared tables at runtime; fleet gate owed (V3 lane C1) |
+| R-CU | partial | core.12 | partial: generator-locked execution.batch (INGESTOR); library split owed (V3 lane C2) |
+| R-DF | partial | x-rulings.1 | partial: spec124-register-locks.logic now reads every register row (widened 2026-10-20, observe-1), but 101 unlabelled and 15 lockless pre-R-CX rows sit on its shrink-only grandfather lists |
+| R-EL | partial | x-captures.4 | partial: c6-rulings.infra; live-call FAIL owed (PIN C6-6-RECORDED) |
+| R-EW | partial | core.10 | partial: src/tests/steps/coa/dispatch.logic.test.ts locks (i) for coa only; (ii) every other converted step's compute lock built through the real dispatch is not asserted (older hand-built locks on the closed list PIN R-EW-LOCKS) |
+| R-EX | partial | ingestor.5 | partial: src/tests/capture-rerun-proof.logic.test.ts locks the seen_drift proof (rewritten == touched, row delta 0, projected hash) and the zero_writes FAIL; no static check that every seen-column target declares declared_drift (caught only when the POST proof runs) |
+| Rule-11 | partial | ingestor.1 | partial: checkOrderGuaranteesCited (declared half only; GAP G-3 open) |
+| Rule-10-addendum-R-H | none | core.6 | no machine check for INFO-vs-WARN (GAP G-5) |
+| P4-1 | none | x-rulings.1 | no machine check: procedural |
+| P4-2 | none | x-rulings.1 | no machine check except R-EZ commit-msg citation for integrate branches |
+| P4-4 | partial | x-rulings.1 | partial: spec124-register-locks.logic names-a-lock arm covers every row, with 15 lockless pre-R-CX rows grandfathered (shrink-only) |
+| P4-6 | none | x-rulings.1 | no machine check: G9 checks the Reflection section exists |
+| L7-0 | none | x-rulings.2 | no machine check found (consolidate-1 inventory) |
+| L7-3 | none | x-rulings.2 | no machine check found (consolidate-1 inventory) |
+| K2 | none | x-tooling.3 | no machine check: programme stop criterion; UNCERTAIN who checks |
+| GAP-G-3 | none | ingestor.1 | no machine check: completeness half open |
+| GAP-G-5 | none | core.6 | no machine check: author judgment |
+| R-FD | none | core.6 | no machine check: assert-coa-freshness.infra locks the two bounds' externalization, not the inclusive form or the retired fail>warn refusal (moved from W4A-R2, whose register row R-FD is) |
+| Q-B1 | none | link.4 | no machine check: an open operator question; its interim constraint (averaging not_evaluated) is prose in the 124a R-CR row |
+| Rule-1 | partial | core.1 | partial: step-conformance.infra — compute-shape rules fire on the known-bad fixture (the compute slice of Rule 1 only) |
+| Rule-5 | partial | core.2 | partial: step-schema.logic — checks may never be "none" (checks:[] minItems not fixture-tested) |
+| V6 | partial | core.3 | partial: s4-empty-source-guard-real-descriptors.logic — typed empty_source string and array forms halt end-to-end (illegal form rejection untested) |
+| R-AW | partial | core.8 | partial: logic-var-parity.logic — seed/code literal parity for the founding instance only; no fleet check |
+| R-FC | partial | core.8 | partial: r-de-vocabulary.logic — <slug>_<name> end-state naming; migration with values carried not asserted (moved from W4A-R1, whose register row R-FC is) |
+| R-CF | partial | core.9 | partial: refresh-snapshot-query-consolidation.logic — one step declares execution.read_gucs and sets no GUC in compute; runner issuing the GUC not asserted |
+| Rule-8 | partial | core.12 | partial: step-schema.logic — per-target guard_why if/then fires; step-level discipline refusal untested |
+| R-FF | none | core.14 | no machine check: classify-coa-scope.infra asserts the legacy script contract, not the by:"pin" watermark form; only the reader side is locked (R-DO/R-ER) (moved from W4A-R4, whose register row R-FF is) |
+| R-AY | partial | core.17 | partial: steps/compute_parcel_cost_estimates/violations — founding step's population bound only; not required fleet-wide |
+| R-EV | partial | ingestor.6 | partial: steps/coa/compute.logic — TZ-independent data_hash; admission conditions (a)-(d) not asserted |
+| R-CR | partial | link.3 | partial: migration-255-parcel-abutments.infra — trigger installed; guards.requires declaration not asserted |
+| R-CI | partial | enricher.2 | partial: purity-s3-exec-seam.logic — undeclared writesRef refused; library-owned hygiene DELETEs not asserted |
+| R-AI | partial | x-captures.1 | partial: step-conformance.infra — indirect: step-validate self-test (expectedCaptureChains fixtures) passes |
+| R-CP | partial | x-captures.5 | partial: gate-score-floor.infra — notLookedReasons locked both ways; not that every live test calls it |
+| Rule-13 | partial | x-validate.1 | partial: step-conformance.infra — scorecard block staleness only |
+| Rule-13-addendum-R-T | partial | x-validate.1 | partial: step-library.logic — invariants/plausibility EVERY_RUN executor rows; DATA-vs-PROCESS split not asserted |
+| P4-3 | partial | x-rulings.1 | partial: spec124-register-locks.logic — register rows parse with unique ids; statement/amends columns unchecked |
+| L7-2 | none | x-rulings.2 | no machine check: rung ordering is a judgement call; no test (verify-12 N1 re-audit) |
+| R-AQ | partial | x-verify.2 | partial: run-chain-selection.logic — --only/--from partial-run mechanism; "one acceptance set" not asserted |
+| R-AH | partial | x-tooling.2 | partial: step-conformance.infra — indirect: step-validate self-test (checkCompressedFormDefault fixtures) passes |
+| R-KF | none | core.9 | OWED MB-31: step-closure.logic.test.ts (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KI | none | x-tooling.1 | OWED MB-68: hook arms; hooks-composition.infra (MB-68) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KJ | none | core.9 | OWED MB-31: the R4-09 input-allowlist test (step-closure.logic.test.ts) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KK | none | x-tooling.3 | OWED MB-67: mcbylaws-queue-check.mjs (MB-67) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KQ | none | x-tooling.3 | OWED MB-73: mcbylaws-promises.logic.test.ts (MB-73) (recorded 2026-10-30-batch-aj, lock not yet built) |
+| R-KS | none | core.11 | OWED MB-31: trace test in catalogue lock (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-KT | none | core.9 | OWED MB-31: step-closure.logic.test.ts input allowlist (MB-31) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-KU | none | x-tooling.3 | OWED MB-73: mcbylaws-promises.logic.test.ts red fixtures (MB-73) (recorded 2026-10-30-batch-ak, lock not yet built) |
+| R-LR | none | x-tooling.3 | OWED MB-67: gate arm (MB-67) refuses any McBylaws script or night whose database target is not 127.0.0.1:54322, red fixture a remote target (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-KW | none | x-tooling.3 | OWED MB-67: mcbylaws-queue-check.mjs on temp repos Q1..Q5 (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-KX | none | x-v3.2 | OWED MB-67: hold.mjs H1..H7 per-commit parent-tree check (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LB | none | x-tooling.1 | OWED MB-67: precommit-budget.mjs --measure with a re-pinned evidence file (MB-67) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LG | none | x-tooling.1 | OWED MB-68: loop-gate record schema tests (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LH | none | x-tooling.1 | OWED MB-68: loop-gate regression-ratchet and oracle-first red fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LI | none | x-tooling.1 | OWED MB-68: loop-gate oracle-first red fixtures, split-commit and glob-miss cases (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LJ | none | x-tooling.1 | OWED MB-68: loop-gate one-increment fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LK | none | x-tooling.1 | OWED MB-68: loop-gate floor_fell fixture on an OWED line (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LL | none | x-tooling.1 | OWED MB-68: loop-gate --mode ci prints "external groups: not run in CI" (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LM | none | x-tooling.1 | OWED MB-68: loop-gate canary fixture (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LN | none | x-tooling.1 | OWED MB-68: hooks-composition.infra: the loop arm is wired by MB-67 only (MB-67, MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LO | none | x-tooling.1 | OWED MB-68: loop-gate verify --json prints rounds_since_thresholds (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LP | none | x-tooling.1 | OWED MB-68: loop-gate fast-set and full-set runs (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LQ | none | x-tooling.1 | OWED MB-68: loop-gate reason-length red fixtures (MB-68) (recorded 2026-10-30-batch-al, lock not yet built) |
+| R-LS | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LT | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LU | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LV | none | x-v3.2 | OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LW | none | x-v3.2 | OWED MB-68: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LX | none | x-v3.2 | OWED MB-67: the lock is named by the owning task (recorded 2026-10-31-batch-am, lock not yet built) |
+| R-LY | none | x-v3.2 | OWED MB-67: the gate tests do not yet name R-LY (recorded 2026-10-31-batch-an) |
+| R-LZ | none | x-v3.2 | OWED MB-79: no test names R-LZ yet (recorded 2026-10-31-batch-an) |
+| R-MB | none | x-v3.2 | OWED MB-84: the lock is the gate exceptions test and the MB-84 push-gate run (recorded 2026-11-03-batch-av) |
+| R-MC | none | x-v3.2 | OWED MB-79 (f): no test names R-MC yet (recorded 2026-11-03-batch-aw) |
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
+index 90e9c71aa44d3cf554afa21cd384e5bdd8c8a70a..eba7a0202b06533f9d00f9a318b73fd344b57ac6 100644
+--- a/scripts/analysis/rule-lists.mjs
++++ b/scripts/analysis/rule-lists.mjs
+@@ -19,13 +19,15 @@ import fs from 'node:fs';
+ import { createRequire } from 'node:module';
+ import path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+-import { args, parseFM, readItems, REPO, sha256 } from './backlog-lib.mjs';
++import { args, asList, parseFM, readItems, REPO, sha256 } from './backlog-lib.mjs';
+ import { globToRegExp, matchesAny } from './mcbylaws/paths.mjs';
+ 
+ const HERE = path.dirname(fileURLToPath(import.meta.url));
+ export const DEFAULT_TABLE = path.join(HERE, 'rule-lists.json');
+ const BOUND = 120000; // scripts/deepseek-review.js MAX_PROMPT_CHARS
+ const RESERVE = 800; // stamp, header and separator of one lens input file
++/** The text a lens sees when no --context is given (the review tool's own placeholder). */
++const NO_CONTEXT = '(no pasted context provided)';
+ const MARKER = '\n=== MATERIAL UNDER REVIEW (everything below this line) ===\n';
+ /** V2.WHOLE (task-410): the one diff command the brief, the lens input and the close check share (every flag pinned, so the text is the same on every machine). */
+ // --text and --full-index (V2.WHOLE fix round): a .gitattributes line `*.ts -diff` makes git print "Binary files differ" for code; --text prints the text whatever the attributes say, --full-index fixes the index line length
+@@ -158,7 +160,7 @@ export const filesText = (body) => /(?:^|\s)Files:[ \t]*(.*)$/m.exec(String(body
+ export function lensSet({ type, files }) {
+   const code = ['build', 'fix'].includes(String(type ?? '').toLowerCase());
+   const surface = /\bmobile\/|src\/app\/|src\/components\/|surfaces\//.test(files);
+-  const sec = /entitlement|auth|stripe|metered/i.test(files);
++  const sec = /entitlement|auth|stripe|metered|admin|pii/i.test(files);
+   return {
+     code,
+     plan: ['plan-review-deepseek', ...(code && surface ? ['ux'] : []), ...(code ? ['error-paths'] : []), ...(code && sec ? ['security'] : [])],
+@@ -291,10 +293,38 @@ export function findingsIn(files) {
+ }
+ 
+ // ---- lens input ----
++/**
++ * task-375 A6 (his :1546 "or split smaller"; the cut at rows and paragraphs is the orchestrator's reading): a block with no deeper heading is cut between table rows or blank-line
++ * paragraphs and the pieces packed in order up to `max`. A row or paragraph that alone passes `max`, or a block with no row or blank line to cut at, is refused naming it (the old throw).
++ * A row is judged without its neighbours and, mid-table, without its column header.
++ */
++function splitFlat(text, max, label, id) {
++  const pieces = [];
++  let cur = [];
++  const flush = () => { if (cur.length) { pieces.push(cur.join('\n')); cur = []; } };
++  const lines = text.split('\n');
++  const head = /^#{1,6}\s/.test(lines[0]) ? 1 : 0; // the block's own heading line stays with the first piece (a part of only a heading would judge nothing)
++  for (const [i, ln] of lines.entries()) {
++    if (i < head) cur.push(ln);
++    else if (/^\s*\|/.test(ln)) { if (!(head && pieces.length === 0 && cur.length === 1)) flush(); cur.push(ln); flush(); } else if (ln.trim() === '') { if (!(head && pieces.length === 0 && cur.length === 1)) flush(); } else cur.push(ln);
++  }
++  flush();
++  const big = pieces.find((x) => x.length > max);
++  if (big) throw Object.assign(new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading, table row or blank line to split at that fits (a piece of ${big.length} characters; room for list text in one file: ${max})`), { room: true, size: big.length });
++  const out = [];
++  let acc = [];
++  let len = 0;
++  for (const x of pieces) {
++    if (acc.length && len + x.length + 1 > max) { out.push(acc.join('\n')); acc = []; len = 0; }
++    acc.push(x); len += x.length + 1;
++  }
++  if (acc.length) out.push(acc.join('\n'));
++  return out;
++}
+ function splitUnits(text, max, label, id) {
+   if (text.length <= max) return [text];
+   const subs = headings(text).filter((h) => h.offset > 0);
+-  if (subs.length === 0) throw Object.assign(new Error(`list ${id}: section "${label}" is ${text.length} characters and has no deeper heading to split at (room for list text in one file: ${max})`), { room: true, size: text.length });
++  if (subs.length === 0) return splitFlat(text, max, label, id);
+   const level = Math.min(...subs.map((h) => h.level));
+   const cuts = [0, ...subs.filter((h) => h.level === level).map((h) => h.offset), text.length];
+   const out = [];
+@@ -314,7 +344,7 @@ export function renderLensInput({ id, list, part, i, n, material, paths, c, m })
+   return `${stamp}\n${head}\n\n${part}${MARKER}${material}\n`;
+ }
+ /** The prompt hash the review tool writes in its REVIEW header: sha256 of JSON [system, user] for a lens template, the input file as {{PLAN}} and the context as {{SPECS}} (today the tool's placeholder string; a task that passes a real context file passes its text here). */
+-export function lensPromptHash({ templateText, inputText, context = '(no pasted context provided)' }) {
++export function lensPromptHash({ templateText, inputText, context = NO_CONTEXT }) {
+   const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
+   const split = rt.splitTemplate(templateText);
+   const system = split.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.";
+@@ -329,12 +359,12 @@ export function lensPromptHash({ templateText, inputText, context = '(no pasted
+  * its path list. One file alone over the room is refused naming the file and its size. A diff is always stamped (chunk 1 of 1 when it fits), so the close check reads paths from the stamp.
+  * `list` null (a non-compliance lens template): the same chunks with an empty list part, id "none".
+  */
+-export function buildLensInputs({ id, list, root, material, templateFile, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {
++export function buildLensInputs({ id, list, root, material, templateFile, context = NO_CONTEXT, max = Number(process.env.DEEPSEEK_REVIEW_MAX_CHARS) || BOUND }) {
+   const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
+   const split = rt.splitTemplate(fs.readFileSync(templateFile, 'utf8'));
+   const sys = (split.systemInstruction ?? "You are a focused reviewer. Follow the prompt's output format strictly.").length;
+   const k = (split.userTemplate.match(/\{\{PLAN\}\}/g) ?? []).length || 1;
+-  const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++  const fixed = sys + rt.substitutePlaceholders(split.userTemplate, { plan: '', specs: context, dataContext: '(no live-DB context provided)' }).length;
+   const avail = Math.floor((max - fixed - 200) / k);
+   const room = (msg, size) => Object.assign(new Error(msg), { room: true, size });
+   const partsFor = (unitMax) => {
+@@ -359,7 +389,7 @@ export function buildLensInputs({ id, list, root, material, templateFile, max =
+     parts = partsFor(unitMax);
+     // F13: the room test above is an estimate; when the FINAL prompt (stamp, head with the path list, marker) of the widest part would pass the bound, the material is chunked too
+     const widest = parts.reduce((x, y) => (y.length > x.length ? y : x), '');
+-    const finalLen = sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: widest, i: parts.length, n: parts.length, material, paths: segs ? chunks[0].paths : null, c: 1, m: 1 }), specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++    const finalLen = sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: widest, i: parts.length, n: parts.length, material, paths: segs ? chunks[0].paths : null, c: 1, m: 1 }), specs: context, dataContext: '(no live-DB context provided)' }).length;
+     if (finalLen > max) throw room(`the input with the rendered head would be ${finalLen} characters, over the ${max} bound`, widest.length);
+   } catch (e) {
+     if (!e.room || !segs) throw e;
+@@ -372,7 +402,7 @@ export function buildLensInputs({ id, list, root, material, templateFile, max =
+     }
+     // the room of a chunk is MEASURED (V2.WHOLE fix round): the stamp, the head with the chunk's own path list and the marker are rendered for the longest list part and counted, so a long path list cannot push an input over the bound
+     const longest = parts.reduce((x, y) => (y.length > x.length ? y : x), '');
+-    const promptOf = (paths, text) => sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: longest, i: 99999, n: 99999, material: text, paths, c: 99999, m: 99999 }), specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++    const promptOf = (paths, text) => sys + rt.substitutePlaceholders(split.userTemplate, { plan: renderLensInput({ id, list, part: longest, i: 99999, n: 99999, material: text, paths, c: 99999, m: 99999 }), specs: context, dataContext: '(no live-DB context provided)' }).length;
+     chunks = [];
+     for (const s of segs) {
+       const last = chunks[chunks.length - 1];
+@@ -385,7 +415,7 @@ export function buildLensInputs({ id, list, root, material, templateFile, max =
+   const files = [];
+   chunks.forEach((ch, ci) => parts.forEach((p, i) => {
+     const text = renderLensInput({ id, list, part: p, i: i + 1, n: parts.length, material: ch.text, paths: ch.paths, c: ci + 1, m: chunks.length });
+-    const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: '(no pasted context provided)', dataContext: '(no live-DB context provided)' }).length;
++    const prompt = sys + rt.substitutePlaceholders(split.userTemplate, { plan: text, specs: context, dataContext: '(no live-DB context provided)' }).length;
+     if (prompt > max) throw new Error(`list ${id}: part ${i + 1} would be ${prompt} characters, over the ${max} bound`);
+     const n = ci * parts.length + i + 1;
+     files.push({ suffix: files.length === 0 && chunks.length * parts.length === 1 ? '' : `-p${n}`, text });
+@@ -413,12 +443,28 @@ export function parseLensInput(text) {
+ /** The text of a whole list as the helper reads it (all blocks), for the whole-list comparison. */
+ export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');
+ 
++// ---- compliance references (task-375 B1, his :1541 "labelled means i need to know its a compliance document") ----
++/**
++ * The references a task carries for its resolved lists: one "compliance:<list id> <file>" per list, compared by the id token (the text before the first space). A file path with a comma is entered
++ * as "compliance:<list id>" alone (backlog splits --add-ref at commas; ms-9 is the only such list). {add} the entries for lists the task does not carry yet; {remove} the compliance: entries of
++ * lists that no longer resolve. `lists` [{id, file}]; `refs` the task's references.
++ */
++export function complianceRefs(lists, refs) {
++  const idOf = (r) => /^compliance:(\S+)/.exec(String(r).trim())?.[1];
++  const have = new Map((refs ?? []).filter((r) => idOf(r)).map((r) => [idOf(r), String(r).trim()]));
++  const want = new Set(lists.map((l) => l.id));
++  return {
++    add: lists.filter((l) => !have.has(l.id)).map((l) => (String(l.file).includes(',') ? `compliance:${l.id}` : `compliance:${l.id} ${l.file}`)),
++    remove: [...have].filter(([id]) => !want.has(id)).map(([, r]) => r),
++  };
++}
++
+ // ---- the check over every open task, and the generated page (task-406, V2.LIST) ----
+ /** Every open task (not finished, not DROPPED) of root's backlog/tasks: {resolve: [ids], notYet: [{id, cls, reason}], bad: [lines]}. A task with a Files line that resolves must carry the every_task and milestone lists. */
+ export function checkTasks({ table, root }) {
+   const tracked = trackedFiles(root);
+   const done = new Set([...(table.finished_statuses ?? ['BUILT', 'DONE', 'MERGED']), 'DROPPED'].map((s) => s.toUpperCase()));
+-  const out = { resolve: [], notYet: [], bad: [] };
++  const out = { resolve: [], notYet: [], bad: [], refs: [] };
+   for (const t of readItems(root)) {
+     if (done.has(String(t.fm.status ?? '').toUpperCase())) continue;
+     const letter = milestoneLetter(root, t.fm.milestone);
+@@ -426,7 +472,12 @@ export function checkTasks({ table, root }) {
+     try { r = resolveTask({ table, root, body: t.body, type: String(t.fm.type ?? ''), letter, tracked }); } catch (e) { out.bad.push(`${t.id}: cannot resolve: ${String(e.message).split('\n')[0]}`); continue; }
+     if (!r.error) {
+       const miss = verifyResolved(table, r, letter, String(t.fm.type ?? ''));
+-      if (miss.length) out.bad.push(`${t.id}: resolves but ${miss.join('; ')}`); else out.resolve.push(t.id);
++      if (miss.length) out.bad.push(`${t.id}: resolves but ${miss.join('; ')}`);
++      else {
++        out.resolve.push(t.id);
++        const c = complianceRefs(r.lists, asList(t.fm.references));
++        if (c.add.length || c.remove.length) out.refs.push({ id: t.id, ...c }); // task-375 B1: the exact command that brings the task's compliance: references in step
++      }
+       continue;
+     }
+     const m = /matched by no row[^:]*: (.*?) \(add a row/.exec(r.error);
+@@ -495,11 +546,20 @@ function cli() {
+     const list = id ? table.lists[id] : null; // no --list: a non-compliance lens template, the chunks alone (V2.WHOLE)
+     if (id && !list) die(1, `no list ${id} in ${tableFile}`);
+     if (!id && !a.template) die(2, 'usage: lens-input needs --list <id>, or --template <lens file> alone to split the material for a non-compliance lens');
++    // task-375 A4: the reviewer's context is the task, sized: the selected sections of the committed context file are counted in the room. --material-from <context-rN.md> cuts the plan phase material from it (and is its own context).
++    const matFrom = str('material-from', ''); const ctxFile = str('context', matFrom);
+     const matFile = str('material', ''); const outPrefix = str('out', '');
+-    if (!matFile || !outPrefix || !fs.existsSync(matFile)) die(2, 'usage: lens-input [--list <id>] --material <file> --out <prefix> [--template <lens file>] [--max <n>]');
++    if (!ctxFile) die(2, 'usage: lens-input needs --context <context-rN.md> (the reviewer context of the task; the selected sections are counted in the room); --material-from <context-rN.md> is its own context');
++    if ((!matFile && !matFrom) || !outPrefix || (matFile && !fs.existsSync(matFile)) || !fs.existsSync(ctxFile) || (matFrom && !fs.existsSync(matFrom))) die(2, 'usage: lens-input [--list <id>] (--material <file> | --material-from <context-rN.md>) --context <context-rN.md> --out <prefix> [--template <lens file>] [--max <n>]');
++    let context; let material;
++    try {
++      const rt = createRequire(import.meta.url)(path.join(REPO, 'scripts/lib/review-template.js'));
++      context = rt.extractSections(fs.readFileSync(ctxFile, 'utf8'), rt.CONTEXT_SECTIONS);
++      material = matFrom ? rt.extractSections(fs.readFileSync(matFrom, 'utf8'), rt.PLAN_SECTIONS) : fs.readFileSync(matFile, 'utf8');
++    } catch (e) { die(1, e.message); }
+     if (a.max !== undefined && !(Number.isFinite(Number(a.max)) && Number(a.max) > 0)) die(1, `--max must be a positive number (got ${a.max}); the bound has to be enforced`);
+     let files;
+-    try { files = buildLensInputs({ id, list, root, material: fs.readFileSync(matFile, 'utf8'), templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }
++    try { files = buildLensInputs({ id, list, root, material, context, templateFile: path.resolve(str('template', path.join(REPO, '.claude/review-templates/lens-compliance.md'))), ...(a.max ? { max: Number(a.max) } : {}) }); } catch (e) { die(1, e.message); }
+     const dir = path.dirname(path.resolve(outPrefix)); const base = path.basename(outPrefix);
+     fs.mkdirSync(dir, { recursive: true });
+     for (const f of fs.readdirSync(dir)) if (f === `${base}.txt` || new RegExp(`^${base.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-p\\d+\\.txt$`).test(f)) fs.rmSync(path.join(dir, f));
+@@ -510,6 +570,11 @@ function cli() {
+     console.log(`check-tasks: open ${c.resolve.length + c.notYet.length + c.bad.length}: resolve ${c.resolve.length}, not yet resolvable ${c.notYet.length}${c.bad.length ? `, FAILED ${c.bad.length}` : ''}`);
+     const heads = ['a Files path matches no row (a governance gap: add a row or fix the Files line)', 'other reason', 'no Files line (the author adds one before launch)'];
+     for (let cls = 0; cls < 3; cls++) { const g = c.notYet.filter((x) => x.cls === cls); if (g.length) { console.log(`not yet resolvable, ${heads[cls]}: ${g.length}`); for (const x of g) console.log(`  ${x.id}: ${x.reason}`); } }
++    if (c.refs.length) {
++      const q1 = (x) => `'${String(x).replace(/'/g, "'\\''")}'`;
++      console.log(`compliance references out of step with the resolved lists: ${c.refs.length} task(s); run each printed command (exit stays 0)`);
++      for (const x of c.refs) console.log(`  backlog task edit ${x.id} ${[...x.add.map((e) => `--add-ref ${q1(e)}`), ...x.remove.map((e) => `--remove-ref ${q1(e)}`)].join(' ')}`);
++    }
+     if (c.bad.length) { for (const b of c.bad) console.log(`FAILED ${b}`); die(1, `${c.bad.length} open task(s) resolve without the every_task or milestone lists`); }
+   } else if (cmd === 'page') {
+     const file = path.join(root, PAGE);
+diff --git a/scripts/deepseek-review.js b/scripts/deepseek-review.js
+index 8f0f5c1e5fc3621aff98bb0d44876f6e1d68778e..fe6778ed6b8bbc13ae92f388e01419146adb6cb5 100644
+--- a/scripts/deepseek-review.js
++++ b/scripts/deepseek-review.js
+@@ -26,7 +26,7 @@ const fs = require('fs');
+ const crypto = require('crypto');
+ const path = require('path');
+ const OpenAI = require('openai');
+-const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock } = require('./lib/review-template');
++const { splitTemplate, substitutePlaceholders, loadReviewNotesBlock, extractSections } = require('./lib/review-template');
+ 
+ // `--fast` selects deepseek-chat (V3) for a quick lens tier; DEEPSEEK_MODEL overrides both.
+ const MODEL = process.env.DEEPSEEK_MODEL || (process.argv.includes('--fast') ? 'deepseek-chat' : 'deepseek-reasoner');
+@@ -102,24 +102,6 @@ async function callDeepSeek(prompt, systemInstruction = null) {
+   }
+ }
+ 
+-/** Keep only the markdown sections whose heading line contains one of `wanted` (to the next heading of the same or higher level). */
+-function extractSections(markdown, wanted) {
+-  const lines = markdown.split('\n');
+-  const out = [];
+-  for (const want of wanted) {
+-    const start = lines.findIndex((l) => /^#{1,6}\s/.test(l) && l.includes(want));
+-    if (start === -1) throw new Error(`--section "${want}": no heading contains that text`);
+-    const level = lines[start].match(/^(#+)/)[1].length;
+-    let end = lines.length;
+-    for (let i = start + 1; i < lines.length; i += 1) {
+-      const m = lines[i].match(/^(#+)\s/);
+-      if (m && m[1].length <= level) { end = i; break; }
+-    }
+-    out.push(lines.slice(start, end).join('\n'));
+-  }
+-  return out.join('\n\n');
+-}
+-
+ function readFileOrFail(filePath) {
+   const abs = path.resolve(filePath);
+   if (!fs.existsSync(abs)) {
+

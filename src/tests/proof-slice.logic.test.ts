@@ -282,3 +282,19 @@ describe('D10 task-375: the child-output ceiling is the registered variable', ()
     expect(src).not.toMatch(/maxBuffer:\s*\d/);
   });
 });
+
+describe('task-375 D10b: the timeout comes from the registered variable, a bad value refuses and names it (no default, no unbounded run)', () => {
+  it('accepts a positive integer, given as a number or as the text the variable table stores', async () => {
+    const m = await import('../../scripts/analysis/proof-slice.mjs');
+    expect(m.timeoutMsFromVariable(120000)).toBe(120000);
+    expect(m.timeoutMsFromVariable('90000')).toBe(90000);
+    expect(m.timeoutMsFromVariable('1')).toBe(1);
+  });
+  it('refuses unset, empty, zero, negative, fractional and non-numeric values, each message names the variable', async () => {
+    const m = await import('../../scripts/analysis/proof-slice.mjs');
+    expect(typeof m.TIMEOUT_VARIABLE).toBe('string');
+    for (const bad of [undefined, null, '', '   ', 0, '0', -5, '-5', 1.5, '1.5', 'abc', '12s', Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() => m.timeoutMsFromVariable(bad), String(bad)).toThrow(new RegExp(m.TIMEOUT_VARIABLE));
+    }
+  });
+});

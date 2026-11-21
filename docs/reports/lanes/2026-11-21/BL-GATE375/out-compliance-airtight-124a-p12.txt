@@ -1,0 +1,38 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:14:54.686Z file_sha256=41ceb422c586c7a23bc9307660c9c8e322503f947b4e3508c4d0fe19cf000fdd prompt_sha256=9d3c973089859c021d811cee7c16c25a3eef3ded5660b6f73fa2d78187a98c7e
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-airtight-124a-p12.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #2 "Tests red first, then green through the real hooks" (with AC #1 "Each defect is confirmed on the head before fixing, with file:line") — src/tests/proof-slice.db.test.ts:34 "expect(timeoutMsFromVariable(rows[0].variable_value)).toBe(entry!.default);" — the second case indexes rows[0] without the toHaveLength(1) guard that :24 carries, so with the seed entry present and the DB row absent the red is a TypeError (reading 'variable_value') rather than the named refusal, so it cannot be the confirmation AC #1 and #2 require — add expect(rows, `${TIMEOUT_VARIABLE} is not registered in logic_variables`).toHaveLength(1) before :34, as :24 does.
+
+DEFER severity=LOW — FINAL BUILD NOTE A.2 "extractSections moves there from deepseek-review.js:106-121 so the review tool, lens-input and the close check cut the same text" — src/tests/review-template.logic.test.ts:214 "it('extractSections cuts to the next heading of the same or higher level and throws on a missing heading', () => {" — the fixture built at :209 holds only ## headings, so the 'same or higher level' half of that title rests on the test name alone and a moved function that dropped a deeper heading would still pass — add a "### sub" line under Description in the fixture and assert it stays inside the extracted Description text.
+
+DEFER severity=NIT — pasted build note "DEFAULT_TIMEOUT_MS (120000) stays in use until registration, so the runner does not yet read the variable" — src/tests/proof-slice.db.test.ts:5 "the registered variable the proof slice runner reads its timeout from exists in the logic_variables table" — the premise is a comment only, and the pasted note says the runner still reads DEFAULT_TIMEOUT_MS, so the file's stated premise is not what the code does — reword :5 to "the variable the runner will read once registered", or assert against the read site in scripts/analysis/proof-slice.mjs.
+
+MET — AC #11 "A6 The dollar-sequence and placeholder-once tests (review-template.logic.test.ts) stay green." — src/tests/review-template.logic.test.ts:206 — the new describe is appended after the :186-204 placeholder-once and dollar-sequence describes, which are unmodified.
+
+MET — FINAL BUILD NOTE A.2 "with the exact heading texts: 'Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'" — src/tests/review-template.logic.test.ts:211 — CONTEXT_SECTIONS is pinned to exactly those five, no Milestone, Document sections or Prior reviews entry.
+
+MET — FINAL BUILD NOTE A.2 "deepseek-review.js throws on a heading it cannot find" — src/tests/review-template.logic.test.ts:218 — toThrow(/no heading contains that text/) pins the refusal on a missing heading.
+
+MET — Card C "D10b timeout variable (needs the operator's DB GO and an id claim)" with RR-0333 "don't makr the task complete until it actually works" — src/tests/proof-slice.db.test.ts:6 "WRITTEN, NOT RUN by the lane that built it (no DB connection in that lane)" — D10b is left open and no completion is claimed for it.
+
+MET — AC #13 "needs the DB GO; otherwise the task stays RUNNING" — src/tests/proof-slice.db.test.ts:17 "describe.skipIf(!dbAvailable())('proof-slice timeout variable (live DB)', () => {" — no DB is read before the operator's GO, so the carve-out is honoured.
+
+MET — Files line "src/tests/proof-slice.logic.test.ts, src/tests/proof-slice.db.test.ts, src/tests/review-template.logic.test.ts" — all three paths under review are named on the Description Files line.
+
+MET — AC #4 "A lens run on a file containing dollar sequences and placeholder tokens sends the text unchanged, once" — src/tests/review-template.logic.test.ts:202 — the placeholder-once expectation is untouched by this diff.
+
+REJECT — R-CP "A live test asserts that its child process completed before it asserts on that process's output" — accused of asserting on an unfinished child — none of the three files spawns a CLI; the db test opens a pool via getTestPool, which R-CP does not govern.
+
+REJECT — R-CO "A test never writes a before-image into the real golden tree" — accused of a before-image write — the only fs call is src/tests/proof-slice.db.test.ts:28 readFileSync of scripts/seeds/logic_variables.json, outside docs/reports/golden.
+
+REJECT — R-CN "matchLedger keys gate E on (step, file, item)" — accused of an unkeyed gate-E row — neither file touches ledger.mjs or any gate-E row.
+
+REJECT — AC #13 "A8 D10b test red first then green" — accused of claiming D10b green — no green is claimed for the DB read; the pasted note ends "the task is NOT complete".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 3
+
+---
+⏱  114894ms (114.9s)
+📊 Tokens — total: 40253, input: 18076, output: 22177, reasoning: 21003

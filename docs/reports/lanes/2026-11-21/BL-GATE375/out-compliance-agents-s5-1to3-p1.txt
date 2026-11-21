@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:08:02.657Z file_sha256=f00d5d9e4ff54d8cbaff34c6a02e0f6a25202a9e8e8efc59c2141cef8bf46244 prompt_sha256=905ff07e3cfff80164fe6f51ca630c8f39721ab98d2b4598947efc331c06a1e4
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-agents-s5-1to3-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md task-366 note (3) "a `GROUNDER.md` whose `Grounder:` is not the `Lane:` (and not the task's lane)", plus 137_mcqueue.md note added in this diff "GROUNDER-PLAN.md of a separate grounder with a verdict per finding" — scripts/analysis/backlog-brief.mjs:177 "the lane still runs at least one plan-stage lens of its own and rules its findings in its own GROUNDER.md" — clause unmet: the generated brief tells the lane to rule its own findings, while the same brief's own grounder paragraph says "You do not rule on your own findings" and the spec note requires a separate grounder, so a lane that follows this line writes GROUNDER.md itself and its close is refused — fix: print "and a separate grounder rules its findings in GROUNDER.md"
+
+DEFER severity=MED — AC #9 "choose the task on the day 375 launches: a LATER build task not recommended for drop; task-400 is, and its Files line collides with this task" — NONE — clause unmet: the pasted evidence records "for task-101 (LATER, type record, not build)", a record task, so the criterion as written was not exercised (a record task gets the queue lists, a build task does not) — fix: re-run check-tasks on a LATER build task and paste its addition command and list count
+
+DEFER severity=MED — AC #8 "today exit 1 naming \"## Register\"; after A6 exit 0 with parts" — NONE — clause unmet: the pasted note says "the 'today exit 1' half was not re-run on the old head (UNVERIFIED)", so the red half of this criterion (and AC #1 confirm-on-the-head for this defect) carries no evidence — fix: run lens-input on the pre-change head with a 60,000-character material and paste exit 1 with its message
+
+DEFER severity=LOW — task Description "A the reviewer's context is the task, sized (Implementation Plan and Implementation Notes in the context, one CONTEXT_SECTIONS constant ...)" — scripts/analysis/backlog-brief.mjs:53 "|| '(none)'" — clause risk not evidenced: A0 only counts the two headings and A1 checks headings plus a decision quote, so an empty Implementation Plan section (the marker miss falls back to "(none)") passes every check and the plan-phase compliance reviews Description and Acceptance criteria alone — fix: paste the first lines of the "## Implementation Plan" body from context-r1.md in an acceptance note
+
+MET — 08_agents.md note 2026-11-21 point (1) "Every lens command passes it with `--context` and one `--section` per entry of CONTEXT_SECTIONS" — scripts/analysis/backlog-lane.mjs:174 "const ctxArgs = `--context ${ctx} ${sectionFlags}`" — used on the plan, output and compliance commands, and backlog-brief.mjs:178 does the same
+
+MET — 08_agents.md note 2026-11-21 point (1) "N = the context-r*.md files already there + 1" — scripts/analysis/backlog-brief.mjs:50 "contextRound(ctxDir)" — ctxRel becomes context-r${round}.md and no earlier round file is overwritten
+
+MET — 137_mcqueue.md note 2026-11-21 "The LAUNCH of a build or fix task (`scripts/analysis/backlog-lane.mjs`, before the take) runs `planGateErrors` on the board HEAD" — scripts/analysis/backlog-lane.mjs:90-104 — the gate block precedes "step('take', ...)" and exits 3 on errors
+
+MET — 137_mcqueue.md note 2026-11-21 "It does not touch lanes already launched, tasks of other types, or a raw `backlog task edit -s RUNNING` take" — scripts/analysis/backlog-lane.mjs:90 "if (gateType === 'build' || gateType === 'fix')"
+
+MET — 08_agents.md task-366 note (3) "The lane that wrote the work leaves the task RUNNING with 'grounder owed'" — NONE — the pasted notes show "status: RUNNING" and "Grounder owed; the task stays RUNNING"
+
+MET — task Description "docs/specs/00-architecture/08_agents.md takes ONE dated note carrying two points" — docs/specs/00-architecture/08_agents.md note 2026-11-21 — one dated note, points (1) and (2), prior text kept
+
+REJECT — 08_agents.md note 2026-11-21 point (1) "Decisions naming this task" — accused of: the brief writes "## Decisions in force (titles; the ones this task names carry the operator's words)" so the --section cannot be found — not a real issue: the pasted A1 evidence shows "each of the five heading lines once" with the five --section flags on a brief-written context
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 4
+
+---
+⏱  210145ms (210.1s)
+📊 Tokens — total: 71260, input: 28193, output: 43067, reasoning: 41923

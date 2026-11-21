@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:29:14.718Z file_sha256=0d878f64e1daabdd330aacd97e60c95d3bcc037b1312703a487dfd798ebfcc60 prompt_sha256=4a8b1d64e6fd682dd675af69033bc10a75dccff2137f1b4eb54da94858f7adc7
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — PLAN-375-v4 SCOPE (NOT IN SCOPE) "milestone_docs handling; the V2L15 early-return change; any new script" — src/tests/backlog/backlog-lane.logic.test.ts "const r = run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()], { env: ID });" — every build/fix lane test now depends on a new program, docs/reports/reviews/task-375/plant-evidence.mjs, that the governing plan excludes ("any new script") and that the Files line does not name; it is parked under docs/reports/reviews/task-375/ which the Files check always allows, so the Files binding is bypassed — get the operator to add the path to the plan and the Files line, or make the evidence inside the test file with no new program
+DEFER severity=MED — PLAN-375-v4 A.6 "The context file is regenerated before each review round and committed with the round; every lens of a round reads that one file" — scripts/hooks/check-lane-close.mjs "else if (!(opt.contexts ?? []).some((c) => m[5] === lensPromptHash({ templateText: opt.templateText, inputText, context: c }))) e.push(`" — an output whose prompt hash matches any committed context-rN.md passes, so an output made with the superseded round's file (r1 left in place after the brief wrote r2) closes unrefused and A.6 is not proved by the check — accept only the highest-numbered committed context, or stamp the round in the REVIEW header and match it
+MET — A.2 one CONTEXT_SECTIONS constant and the shared cut — scripts/lib/review-template.js "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" plus "const { CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections } = createRequire(import.meta.url)('../lib/review-template.js');" in check-lane-close.mjs, the tool, lens-input and the close cut the same text
+MET — A.4 refuse the placeholder and a missing heading — scripts/hooks/check-lane-close.mjs "if (c.text.trim() === PLACEHOLDER_CONTEXT) { problems.push(`" and the extractSections catch turn both into problem lines, never into a value
+MET — A.6 context-rN per round, never overwritten — src/tests/backlog/backlog-brief-context.logic.test.ts "a later brief writes context-r2.md and leaves context-r1.md as it was (never overwritten)"
+MET — B.3 references hold the repo copies of REPORT.md, GROUNDER.md, TRIAGE.md at close — scripts/hooks/check-lane-close.mjs "if (!have.has(rp)) errors.push(`${id}: the task's references lack the repo copy ${rp}: backlog task edit ${id} --add-ref ${rp}`);"
+MET — RR-0347 reality-check runs when it cannot be told nothing changes — scripts/hooks/check-lane-close.mjs "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };"
+MET — RR-0348 seats on the plan only — scripts/hooks/check-lane-close.mjs the only consumer of PLAN_SEATS is planGateInner, closeErrors does not read it, so no seat is required on the output
+MET — D the Plan hash is the task text at launch — scripts/hooks/check-lane-close.mjs "export function planHash(taskText) { const { fm, body } = parseFM(taskText); return sha(squash(`${fm.title ?? ''} ${body}`)).slice(0, 12); }"
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 2
+
+---
+⏱  175865ms (175.9s)
+📊 Tokens — total: 65086, input: 32069, output: 33017, reasoning: 32127

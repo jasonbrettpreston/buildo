@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T04:32:48.841Z file_sha256=8be4a57ccd14bc2f83058ce1250b08ce68d9163b00d22e4d44092f8c7dbc7f37 prompt_sha256=9dfccd884f783fbebf9c91f55a76848ec1598e8a4b75683ebbe76513ad8aebae
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-GATE375/in-out-compliance-plan-protocol-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card AC #2 "Tests red first, then green through the real hooks" — src/tests/backlog/backlog-brief-context.logic.test.ts "expect(rt.extractSections(ctx, ['Implementation Plan'])).toContain('PLAN-LINE-TWO');" against scripts/lib/review-template.js "if (m && m[1].length <= level) { end = i; break; }" — the new test's own title promises "a plan heading inside the text cannot end the section", but the pasted extractSections ends "## Implementation Plan" at the plan's first "# Inner heading" (level 1 <= 2), so PLAN-LINE-TWO lies outside the returned cut: the test is red, and on the build path the plan-phase material is silently truncated at the plan's first inner heading — make extractSections end only at a heading that is one of the wanted section headings (or have the brief fence/indent the plan field), then re-run the test.
+
+DEFER severity=MED — pasted approved note "NOT IN SCOPE: ... the V2L15 early-return change; any new script." — src/tests/backlog/backlog-lane.logic.test.ts "run('node', [path.join(ROOT, 'docs/reports/reviews/task-375/plant-evidence.mjs'), board, task, laneName, ROOT, backlogBin()]" — the lane tests now depend on a new program docs/reports/reviews/task-375/plant-evidence.mjs that no pasted clause or ruling names and that is not on the task's Files line (only the docs/reports folder is exempt from the Files check; the file itself is not in this chunk, cannot see it) — record it as a dated deviation for the grounder and add it to the Files line, or inline the helper in the test.
+
+DEFER severity=LOW — card A4 "check-lane-close.mjs lensContexts() ... so the existing prompt_sha256 recompute (:65) binds it" — scripts/hooks/check-lane-close.mjs "errors.push(...reviewErrors(f.name, f.text, /^plan-compliance-/.test(f.name) ? 'lens-compliance.md' : ... , null).map((x) => `${id}: ${x}`));" — for a fix launch the plan-<lens>.txt files are checked for a REVIEW header and a VERDICT line only (inputText null skips the hash branch), so a fix can be gated on plan outputs made over the placeholder — pass the committed context values as `contexts` with a recomputed input, or state this limit on the card.
+
+REJECT — card v4 "the Regression seat when existing code is changed" vs PLAN_SEATS "regression when the Files line names at least one path tracked at the board head" — not a real issue: READBACK-375-v4 Q1/Q2 are the grounded answers the operator's :1638 ruling takes as approved ("ground it and then take that as approved"), so the tracked-path trigger is the approved reading.
+
+MET — plan-protocol dated note 2026-11-20 item 3 "the board is the plan" — scripts/hooks/check-lane-close.mjs "const dir = `docs/reports/reviews/${id}`; ... const files = i.folder ?? [];" — the launch gate reads the board head evidence folder and the board task text, not a worktree copy.
+
+MET — plan-protocol dated note 2026-11-20 item 4 "plus its separate grounder (Spec 08 section 7 rules 5 and 7)" — scripts/hooks/check-lane-close.mjs "if (gr && clash(gr, laneName)) errors.push(...); ... Grounder \"${gr}\" is, contains or is contained in an assignee of ${id}" — a separate grounder is enforced at close and at the plan gate.
+
+MET — card A2 "One constant CONTEXT_SECTIONS in scripts/lib/review-template.js; extractSections moves there" — scripts/lib/review-template.js "const CONTEXT_SECTIONS = ['Task', 'Description', 'Acceptance criteria', 'Decisions naming this task', 'Implementation Notes'];" — one cut exported with PLAN_SECTIONS and extractSections for tool, lens-input and close.
+
+MET — card A6 "The context file is regenerated before each review round and committed with the round" — scripts/lib/review-template.js "function contextRound(dir) { return (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => /^context-r\\d+\\.md$/.test(f)).length : 0) + 1; }" — one round count shared by brief and launch.
+
+MET — card B2/08_agents.md:347 "At close the task's references hold the repo copies of REPORT.md, GROUNDER.md and TRIAGE.md" — scripts/hooks/check-lane-close.mjs "for (const n of ['REPORT.md', 'GROUNDER.md', ...]) { ... errors.push(`${id}: the task's references lack the repo copy ${rp}: backlog task edit ${id} --add-ref ${rp}`);" — refusal with the exact command.
+
+MET — card AC #14 "then one word edited in the task: refused with the new expected Plan line" — src/tests/backlog/backlog-lane.logic.test.ts "expect(bad.stderr).toMatch(/is not the hash of the task as it is now[\\s\\S]*expected: Plan: task-\\d+ sha256:[0-9a-f]{12}/);" — pinned.
+
+MET — RR-0348 "these only run on the plan" — scripts/hooks/check-lane-close.mjs "export const PLAN_SEATS = { always: ['integration', 'reality-check'], conditional: ['regression'] };" and its use only inside planGateInner — no seat requirement is added to the output close.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 2
+
+---
+⏱  172504ms (172.5s)
+📊 Tokens — total: 65664, input: 33683, output: 31981, reasoning: 30662
