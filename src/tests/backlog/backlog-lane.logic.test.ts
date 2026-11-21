@@ -166,7 +166,7 @@ describe('backlog-lane real launch on the temp board (AC #1)', () => {
     expect(brief.toString()).toMatch(/^FAKE BRIEF/);
     const sha = crypto.createHash('sha256').update(brief).digest('hex');
     expect(r.stdout.trim().split('\n').pop()).toBe(`BRIEF-FILE: ${path.join(ld, 'BRIEF.md')} sha256=${sha}`);
-    expect(fs.existsSync(path.join(f.wt, `docs/reports/reviews/${f.task}/context-2026-11-19.md`))).toBe(true);
+    expect(fs.existsSync(path.join(f.wt, `docs/reports/reviews/${f.task}/context-r1.md`))).toBe(true);
   });
   it('uses --spec instead of a generated task.json when given', () => {
     const f = fixture();
@@ -255,7 +255,22 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     const cmd = /each `([^`]+)`/.exec(seg)?.[1] ?? '';
     expect(seg).toContain('plan-review-deepseek.md');
     expect(cmd).toContain('scripts/deepseek-review.js review');
-    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context <pasted-context file>/);
+    expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context docs\/reports\/reviews\/\S+\/context-r1\.md --section "Task"/);
+  });
+  // task-375 A3: every lens command passes the committed context (context-r1.md) and one --section per CONTEXT_SECTIONS entry; no command leaves a lens on the placeholder
+  it('A3: plan, output and compliance commands all pass the committed context and the five sections; the date name and the pasted-context placeholder are gone', () => {
+    const e = lensBrief('build', 'scripts/analysis/x.mjs, src/tests/');
+    const SECT = '--section "Task" --section "Description" --section "Acceptance criteria" --section "Decisions naming this task" --section "Implementation Notes"';
+    const ctx = /docs\/reports\/reviews\/\S+?\/context-r1\.md/.exec(e)?.[0] ?? '(none)';
+    expect(ctx).not.toBe('(none)');
+    const cmds = e.match(/scripts\/deepseek-review\.js review [^`]*/g) ?? [];
+    expect(cmds.length).toBeGreaterThanOrEqual(3);
+    for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }
+    expect(e).not.toContain('<pasted-context file>');
+    expect(e).not.toMatch(/context-<date>|context-20\d\d/);
+    expect(e).toContain(`lens-input --list L --context ${ctx}`);
+    expect(e).toContain('plan: --material-from');
+    expect(e).toMatch(/lens-input --context \S+ --material <diff file>/);
   });
   it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
     for (const files of ['src/lib/entitlements.ts', 'src/app/api/auth/x.ts', 'src/lib/stripe/webhook.ts', 'src/app/api/parcels/lookup/route.ts (metered route)']) {
@@ -306,6 +321,13 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     expect(extra).toContain('lens-error-paths.md');
     expect(extra).toMatch(/a separate grounder rules on every finding/);
     expect(extra).toContain('GROUNDER.md');
+  });
+  it('A3: the review line of the extra block (the plan template as --context) is the lens form with the committed context', () => {
+    const { extra } = dry({ files: 'scripts/analysis/x.mjs, src/tests/', type: 'build' });
+    const line = /Review \(review mode[^\n]*/.exec(extra)?.[0] ?? '';
+    expect(line).toContain('--template .claude/review-templates/plan-review-deepseek.md --context docs/reports/reviews/');
+    expect(line).toContain('--section "Implementation Notes"');
+    expect(line).not.toMatch(/--context \.claude\/review-templates/);
   });
   it('a Files path no row matches is refused at launch with the path named (exit 3, one line, nothing written)', () => {
     const f = fixture({ files: 'scripts/analysis/thing.mjs, zzz-nothing/new.txt' });

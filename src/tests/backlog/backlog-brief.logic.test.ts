@@ -55,7 +55,7 @@ describe('G1 backlog-brief (test 4)', () => {
     expect(r.stdout).toMatch(/08_agents\.md:339/);
     expect(r.stdout).toContain(`task edit ${plan} -s RUNNING -a @lane-BL-R1`);
     expect(r.stdout).toMatch(/--plan/);
-    expect(r.stdout).toMatch(/node scripts\/deepseek-review\.js review docs\/reports\/reviews\/\S+\/context-r1\.md --context \.claude\/review-templates\/plan-review-deepseek\.md/);
+    expect(r.stdout).toMatch(/node scripts\/deepseek-review\.js review docs\/reports\/reviews\/\S+\/context-r1\.md --template \.claude\/review-templates\/plan-review-deepseek\.md --context docs\/reports\/reviews\/\S+\/context-r1\.md --section "Task"/);
     expect(r.stdout).toMatch(/provider claude/i);
     expect(r.stdout).toMatch(/bash_allow/);
     expect(r.stdout).toMatch(/--final-summary/);

@@ -6,10 +6,13 @@
 // Usage: node scripts/analysis/backlog-brief.mjs --task task-N --lane <name> [--stage N] [--root <dir>] [--date YYYY-MM-DD]
 // Rules: Spec 08 TKT-1 (08_agents.md:504), Spec 08 section 7 rule 10 (a) (:341), Spec 137 rule 3 (137_mcqueue.md:84); RR-0207, RR-0212.
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import os from 'node:os';
 import path from 'node:path';
 import { args, asList, descriptionOf, die, parseFM, planLabels, readItems, REPO, sha256, today } from './backlog-lib.mjs';
 
+// task-375 A3: the committed context file is passed to the review tool with one --section per CONTEXT_SECTIONS entry
+const sectionFlags = createRequire(import.meta.url)('../lib/review-template.js').CONTEXT_SECTIONS.map((x) => `--section "${x}"`).join(' ');
 const a = args();
 const root = path.resolve(a.root || REPO);
 const date = a.date && a.date !== true ? a.date : today();
@@ -171,7 +174,7 @@ const out = [
   `Take order:`,
   `  1. backlog task edit ${taskId} -s RUNNING -a ${laneArg}`,
   `  2. If the task's Implementation Plan field already holds a plan (reviewed, ruled and checked before launch), build that plan and do NOT run --plan; only a task with no plan runs: backlog task edit ${taskId} --plan "<numbered steps, one per acceptance criterion>"`,
-  `Review (plan or output): node scripts/deepseek-review.js review ${ctxRel} --context .claude/review-templates/plan-review-deepseek.md`,
+  `Review (plan or output): node scripts/deepseek-review.js review ${ctxRel} --template .claude/review-templates/plan-review-deepseek.md --context ${ctxRel} ${sectionFlags}`,
   `  Run by the tool-bearing Claude lane with provider claude: scripts/deepseek-review.js is not in exec-policy.json bash_allow, which governs only the DeepSeek execution engine (Spec 08 section 7 rule 10 (b), 08_agents.md:341). Context file ${ctxRel} sha256=${ctxSha}.`,
   `Context pack sections: ${ctxRel} also carries Milestone, Document sections, Decisions naming this task, Prior reviews and lane reports, Dependencies (RR-0235): read it, not only the references above.`,
   `Close:`,
