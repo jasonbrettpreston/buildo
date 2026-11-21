@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T05:01:00Z'
+updated_date: '2026-11-21T05:24:00Z'
 labels:
   - McFix
   - McFix A
@@ -410,6 +410,10 @@ BL-GATE375 fix round 1 done: g375#1 (b4f4afc39) and g375#2 (dfe326345) fixed red
 BL-GATE375 fix round 2 (g375#11): the fix branch of planGateInner expects lens-compliance.md for plan-compliance-<list>[-pN].txt (the names the close uses for fix tasks), so a valid per-list plan compliance output on a fix launch is no longer refused; a junk one still is. Red: red15.out (1 failed, expected [ Array(1) ] to deeply equal []).
 
 BL-GATE375 fix round 2 done: g375#11 fixed (0bf6c680d, red15.out failing assertion, green c20.out 134 passed); fresh context-r3.md, every in- input re-made and all 94 out- outputs re-run under the same names (94 of 94 with a REVIEW header and a VERDICT line; three calls re-run once); 435 findings untriaged in FINDINGS.md; D10b stays open.
+
+BL-GATE375 suite fix 2026-11-21 (part 1): the full pre-push suite at d9f2143a7 failed ~19 of the launch-gate tests with 'git ls-files failed ... not a git repository'. Cause verified (acc/envcheck.mjs): git ls-files in a non-repository temp dir exits 128 with no GIT_* set, and exits 0 listing the calling repository's 11756 files when GIT_DIR, GIT_INDEX_FILE and GIT_WORK_TREE of a real worktree are set, which is what a commit hook exports; my earlier green was the hook's related-test run, which answered from the real repo, so it was not a true green. PRODUCT DEFECT too: rule-lists.mjs trackedFiles(root) and backlog-lane.mjs sh()/step() inherited ambient GIT_*; a launch run with another repo's GIT_DIR read the wrong board (red16.out: the dry-run refused naming the real repo's files as a dirty board). Fix: gitFreeEnv() (every GIT_* removed, the repo's existing precedent) for trackedFiles and the lane's git spawns. Red: red16.out, 3 failed.
+
+BL-GATE375 suite fix (part 2): with trackedFiles no longer answering from the hook's repository, the commit hook's related run showed the true red (17 failed in check-lane-close.logic.test.ts, c23.out: the planScenario fixture was not a git repository). The fixture is now git init + commit, as the lane-test fixtures are.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

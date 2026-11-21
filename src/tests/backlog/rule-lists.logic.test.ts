@@ -802,3 +802,24 @@ describe('task-375 B1: compliance references (compliance:<list id> <file>) on ea
     expect(r.remove).toEqual([]);
   });
 });
+
+describe('task-375 (suite fix): the repo a read names is the one its root names, never the ambient GIT_* of a hook', () => {
+  it('trackedFiles(root) answers from root even when GIT_DIR, GIT_INDEX_FILE and GIT_WORK_TREE name another repository (a commit hook exports them)', async () => {
+    const m = await import('../../../scripts/analysis/rule-lists.mjs');
+    const f = fixture();
+    const real = run('git', ['rev-parse', '--absolute-git-dir'], { cwd: ROOT }).stdout.trim();
+    const saved = { d: process.env.GIT_DIR, i: process.env.GIT_INDEX_FILE, w: process.env.GIT_WORK_TREE };
+    try {
+      process.env.GIT_DIR = real; process.env.GIT_INDEX_FILE = path.join(real, 'index'); process.env.GIT_WORK_TREE = ROOT;
+      const got = m.trackedFiles(f.d) as string[];
+      expect(got).toContain('docs/a.md');
+      expect(got).not.toContain('package.json');
+    } finally {
+      for (const [k, v] of [['GIT_DIR', saved.d], ['GIT_INDEX_FILE', saved.i], ['GIT_WORK_TREE', saved.w]] as const) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+    }
+  });
+  it('control: with no GIT_* set, a directory that is not a repository is refused (git ls-files failed), not answered from another repo', async () => {
+    const m = await import('../../../scripts/analysis/rule-lists.mjs');
+    expect(() => m.trackedFiles(tmp('norepo'))).toThrow(/git ls-files failed/);
+  });
+});
