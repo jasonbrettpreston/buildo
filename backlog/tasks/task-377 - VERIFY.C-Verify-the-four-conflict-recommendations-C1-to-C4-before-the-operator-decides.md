@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-VERIFYC'
 created_date: '2026-11-20T13:38:00Z'
-updated_date: '2026-11-20T15:36:00Z'
+updated_date: '2026-11-21T00:25:00Z'
 labels:
   - McFix
   - McFix E
@@ -61,4 +61,6 @@ Operator 2026-11-20 (verbatim): "Please verify" on the orchestrator recommendati
 2026-11-20 taken on the board at lane launch (lane BL-VERIFYC, worktree /Users/brettpreston_macmini/Buildo-wt-verifyc, branch wf1/inc1b-verifyc), RR-0240
 
 2026-11-20 lane BL-VERIFYC: evidence delivered, no verdict. VERIFY.md (C1 to C4 sources, assumed facts checked, alternatives, experience), FINDINGS.md (F-001 to F-102 by lens, untriaged), REPORT.md (four plain lines, C1 field list, UNVERIFIED). Task left RUNNING: grounder owed (AC3 not met by this lane; AC1 and AC2 evidence is in the files, to be checked by the grounder).
+
+2026-11-20 operator ruling (M-246, prior text kept), ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1610, verbatim: "approved", to the list he pasted back; the item for this task as put to him: "Record 385, 397, 400 and 404 as dropped, and 371 and 377 as closed superseded. Recommended yes.". The decision record tool holds one record per quote and cite (decision-126, RR-0341, carries the same approval), so this note is the record on this task. No status is moved by hand.
 <!-- SECTION:NOTES:END -->
