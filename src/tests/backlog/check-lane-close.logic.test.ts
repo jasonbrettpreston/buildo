@@ -828,7 +828,7 @@ describe('task-375 A4, A5, B2: the close binds the committed review context and 
 type PO = {
   type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
   noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
-  ctx?: string; badMaterial?: boolean; junkPlan?: boolean;
+  ctx?: string; badMaterial?: boolean; junkPlan?: boolean; fixCompliance?: 'valid' | 'junk';
 };
 async function planScenario(o: PO = {}) {
   const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
@@ -863,6 +863,7 @@ async function planScenario(o: PO = {}) {
       }
     }
     if (type === 'fix' || o.planLens) files['plan-code-review.txt'] = o.junkPlan ? 'junk\n' : `${hdr('lens-code-review.md', null)}${body(false)}`;
+    if (type === 'fix' && o.fixCompliance) files['plan-compliance-first.txt'] = o.fixCompliance === 'junk' ? 'junk\n' : `${hdr('lens-compliance.md', null)}${body(false)}`;
     if (o.finding) files['plan-code-review.txt'] = `${hdr('lens-code-review.md', null)}BUG severity=${o.finding.sev} — clause "x" — src/a.ts:1 "y" — claim — fix\nVERDICT: PASS\n`;
     if (o.stray) files['notes.txt'] = 'stray\n';
   }
@@ -983,6 +984,11 @@ describe('task-375 D: the launch gate refuses a build or fix launch whose plan w
     gate(await planScenario({ type: 'fix', junkPlan: true }), /plan-code-review\.txt: no REVIEW header/);
     const ok = await planScenario({ type: 'fix' });
     expect(ok.errors).toEqual([]);
+  });
+  it('g375#11: a fix launch with a valid plan-code-review.txt AND a valid plan-compliance-<list>.txt (template lens-compliance.md) passes; control: a junk plan-compliance-<list>.txt is still refused', async () => {
+    const ok = await planScenario({ type: 'fix', fixCompliance: 'valid' });
+    expect(ok.errors).toEqual([]);
+    gate(await planScenario({ type: 'fix', fixCompliance: 'junk' }), /plan-compliance-first\.txt: no REVIEW header/);
   });
   it('a fix task with one plan lens output passes; a build task with only that output is refused', async () => {
     const fx = await planScenario({ type: 'fix' });

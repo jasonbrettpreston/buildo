@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-GATE375'
 created_date: '2026-11-20T13:33:00Z'
-updated_date: '2026-11-21T03:52:00Z'
+updated_date: '2026-11-21T04:06:00Z'
 labels:
   - McFix
   - McFix A
@@ -404,4 +404,6 @@ BL-GATE375 fix round 1 (g375#1): planGateInner runs the existing reviewErrors (R
 BL-GATE375 fix round 1 (g375#2): review-template.js exports contextRound(dir) (context-r*.md count + 1); backlog-brief.mjs and backlog-lane.mjs both use it, so the lens lines name the round the brief wrote; the stale context-<date> header comment of backlog-brief.mjs is corrected. Red: red14.out (1 failed, expected the lens line to contain context-r2.md). The review-template.js Files-line path is on the line; check-lane-close.mjs is not touched by this commit.
 
 BL-GATE375 fix round 1 done: g375#1 (b4f4afc39) and g375#2 (dfe326345) fixed red first at failing assertions (red13.out, red14.out); every in- input re-made and all 86 out- outputs re-run under the same names with context-r2.md (all with a REVIEW header and a VERDICT line; one call re-run once for a missing VERDICT line); 351 findings untriaged in FINDINGS.md; every LOW and NIT goes to the pile in TRIAGE.md after the grounder re-rules; D10b stays open.
+
+BL-GATE375 fix round 2 (g375#11): the fix branch of planGateInner expects lens-compliance.md for plan-compliance-<list>[-pN].txt (the names the close uses for fix tasks), so a valid per-list plan compliance output on a fix launch is no longer refused; a junk one still is. Red: red15.out (1 failed, expected [ Array(1) ] to deeply equal []).
 <!-- SECTION:NOTES:END -->
