@@ -32,7 +32,7 @@ plan-error-paths#3 fixed:213342547 scripts/analysis/rule-lists.mjs
 plan-error-paths#4 fixed:213342547 scripts/analysis/rule-lists.mjs
 plan-error-paths#5 fixed:213342547 scripts/analysis/rule-lists.mjs
 plan-error-paths#6 fixed:213342547 scripts/analysis/rule-lists.mjs
-plan-error-paths#7 pile:"the same read-then-write race as out-error-paths#4 is still in post (no lock); two simultaneous posts could append two round lines; the gate then refuses (fail closed)"
+plan-error-paths#7 pile:"the same read-then-write race as out-error-paths-p1#4 is still in post (no lock); two simultaneous posts could append two round lines; the gate then refuses (fail closed)"
 plan-plan-review-deepseek#1 fixed:213342547 scripts/analysis/rule-lists.mjs
 plan-plan-review-deepseek#2 fixed:213342547 scripts/analysis/rule-lists.mjs
 plan-plan-review-deepseek#4 fixed:213342547 scripts/analysis/rule-lists.mjs
@@ -40,12 +40,12 @@ plan-plan-review-deepseek#5 fixed:213342547 scripts/analysis/rule-lists.mjs
 plan-plan-review-deepseek#9 pile:"the folded in-memory build of the parts under --dry-run was not built (REPORT item 3): the dry run prints in-plan-compliance-<id>[-pN].txt; same as out-compliance-five-words#4"
 plan-plan-review-deepseek#12 fixed:213342547 scripts/analysis/rule-lists.mjs
 plan-plan-review-deepseek#14 pile:"no cap on the parts per list: a list that splits into many parts starts that many parallel review calls; lens-input never trims; the real lists split into at most one part today (9 inputs for 9 lists)"
-out-code-review#2 pile:"the rev field is declared and set but never read in the test file; dead fixture state, harmless"
-out-code-review#4 pile:"undo ignores its own exit status, so when restore fails (index.lock held) the message still says nothing is staged; the commit failure itself is reported and nothing is committed; needs a lock held across a failed commit"
+out-code-review-p1#2 pile:"the rev field is declared and set but never read in the test file; dead fixture state, harmless"
+out-code-review-p1#4 pile:"undo ignores its own exit status, so when restore fails (index.lock held) the message still says nothing is staged; the commit failure itself is reported and nothing is committed; needs a lock held across a failed commit"
 out-compliance-five-words#4 pile:"the dry run prints in-plan-compliance-<id>[-pN].txt, a name that is not a file, so the printed review command is not runnable as printed and shows no output redirect; the deviation is ruled acceptable (counts and names right) but this cost is real; the gate does not read the dry run"
-out-error-paths#1 pile:"this status call does not test its own exit status; the same git succeeded earlier (notDirty) and a wrong read skips only a commit that the launch dry run then shows missing; fail closed"
-out-error-paths#2 pile:"the jobs come from files on disk and are never compared with the resolved lists, so a list that produced no input is skipped with a lower count and exit 0; the commit phase launch dry run then refuses naming the missing list (fail closed, caught late)"
-out-error-paths#3 pile:"a crash or a full disk between these writes leaves partial plan files, and the retry says one review round per prep without telling which files to delete; needs a failing disk or a kill in a millisecond window"
-out-error-paths#4 pile:"read then write without a lock; two simultaneous posts could append two equal round lines; the gate then reads N as 2 and refuses (fail closed); needs a simultaneous double invocation"
-out-error-paths#5 pile:"the brief, lens-input, backlog task edit and the gate child processes have no timeout (only the review calls are bounded at 910 s), so a hung child blocks plan-prep; the operator can interrupt it"
-out-error-paths#7 pile:"a missing or unspawnable backlog binary leaves stderr and stdout empty so the refusal reads backlog task edit failed with no cause (the reason is in e.error); the bin existence is checked by the same path elsewhere; cosmetic"
+out-error-paths-p1#1 pile:"this status call does not test its own exit status; the same git succeeded earlier (notDirty) and a wrong read skips only a commit that the launch dry run then shows missing; fail closed"
+out-error-paths-p1#2 pile:"the jobs come from files on disk and are never compared with the resolved lists, so a list that produced no input is skipped with a lower count and exit 0; the commit phase launch dry run then refuses naming the missing list (fail closed, caught late)"
+out-error-paths-p1#3 pile:"a crash or a full disk between these writes leaves partial plan files, and the retry says one review round per prep without telling which files to delete; needs a failing disk or a kill in a millisecond window"
+out-error-paths-p1#4 pile:"read then write without a lock; two simultaneous posts could append two equal round lines; the gate then reads N as 2 and refuses (fail closed); needs a simultaneous double invocation"
+out-error-paths-p1#5 pile:"the brief, lens-input, backlog task edit and the gate child processes have no timeout (only the review calls are bounded at 910 s), so a hung child blocks plan-prep; the operator can interrupt it"
+out-error-paths-p1#7 pile:"a missing or unspawnable backlog binary leaves stderr and stdout empty so the refusal reads backlog task edit failed with no cause (the reason is in e.error); the bin existence is checked by the same path elsewhere; cosmetic"
