@@ -6,13 +6,19 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-21T16:43:00Z'
-updated_date: '2026-11-21T22:01:00Z'
+updated_date: '2026-11-21T22:07:00Z'
 labels:
   - McFix
   - McFix V2
 milestone: m-1
 dependencies:
   - TASK-419
+references:
+  - docs/reports/reviews/task-423/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-423/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-423/seat-integration-1.md
+  - docs/reports/reviews/task-423/seat-reality-check-1.md
+  - docs/reports/reviews/task-423/seat-regression-1.md
 type: build
 ordinal: 123012
 ---
@@ -20,8 +26,19 @@ ordinal: 123012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's order (RR-0363, verbatim: "We just need the rules for deepseek.  Teh solution maybe just creating a rules section in the spec which is small.  There shold be the plan reviews - the grounding - the fold (no other reviews) - the build - the review of the output - grounding and then the fold and then we are done.  Unless the output was revealing to have critical or high faults and a second review of the output maybe required.  That's it.  No review of paperwork. ... LEt's correct these issues and get this working right?"; RR-0361 objective, verbatim: "the objective is an effective compliance review on the plan and the output.  It isn't 17"; yesterday, MORNING-DECISIONS.md:1546, verbatim: "Just deliver the priority compliance item or the comprehensive summary that fits - files too large to review even when split. or split smaller"). Why: a 15-line task (task-419) took about five hours: nine compliance review calls on the plan and nine on the output (one call per rule document, because whole documents are sent and one call holds 120,000 characters, scripts/deepseek-review.js:35), each finding ruled singly, and every review made stale by any later commit. The six issues to correct, as he pasted them back: (1) any change after a review makes every review stale; (2) the same finding is ruled many times; (3) the process mostly reviews its own paperwork; (4) rules attach by file path alone (a generated-numbers refresh drew 58 reviews and 313 findings); (5) plan findings are ruled twice (copied into the lane folder and re-ruled by the output grounder); (6) "suite passed" did not mean "push will pass" (the push gate has checks the station suite does not run). Wanted: the tooling and the spec text brought to his shape, by the smallest change, reusing what exists. The plan (written read-only, reviewed before any build) names the design, the slices and the Files line. Files: scripts/analysis/rule-lists.mjs, scripts/analysis/rule-lists.json, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
+Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's order (RR-0363, verbatim: "We just need the rules for deepseek.  Teh solution maybe just creating a rules section in the spec which is small.  There shold be the plan reviews - the grounding - the fold (no other reviews) - the build - the review of the output - grounding and then the fold and then we are done.  Unless the output was revealing to have critical or high faults and a second review of the output maybe required.  That's it.  No review of paperwork. ... LEt's correct these issues and get this working right?"; RR-0361 objective, verbatim: "the objective is an effective compliance review on the plan and the output.  It isn't 17"; yesterday, MORNING-DECISIONS.md:1546, verbatim: "Just deliver the priority compliance item or the comprehensive summary that fits - files too large to review even when split. or split smaller"). Why: a 15-line task (task-419) took about five hours: nine compliance review calls on the plan and nine on the output (one call per rule document, because whole documents are sent and one call holds 120,000 characters, scripts/deepseek-review.js:35), each finding ruled singly, and every review made stale by any later commit. The six issues to correct, as he pasted them back: (1) any change after a review makes every review stale; (2) the same finding is ruled many times; (3) the process mostly reviews its own paperwork; (4) rules attach by file path alone (a generated-numbers refresh drew 58 reviews and 313 findings); (5) plan findings are ruled twice (copied into the lane folder and re-ruled by the output grounder); (6) "suite passed" did not mean "push will pass" (the push gate has checks the station suite does not run). Wanted: the tooling and the spec text brought to his shape, by the smallest change, reusing what exists. The plan (written read-only, reviewed before any build) names the design, the slices and the Files line. Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, scripts/analysis/backlog-brief.mjs, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/backlog-brief.logic.test.ts
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 (a) Joined input, offline: lens-input --list rules --lists <the nine ids> on the real table with the plan material of task-419 writes at most 3 files; the stitched list parts equal the whole text of the nine lists in table order; an input with a part shortened or edited is refused at close (control: the untouched set is accepted); with --max small the parts are more and every part is under the bound.
+- [ ] #2 (b) Close and gate: a joined output set is accepted; a per-list set is accepted (control); a folder holding both for one phase, a joined set with a gap, and a joined set for a different resolved list are refused; the plan gate accepts joined or per-list plan evidence.
+- [ ] #3 (c) Plan once: a lane folder with no plan-*.txt closes when GROUNDER-PLAN.md at L is non-empty with a Plan line; no Ruled line and no plan finding id is demanded; GROUNDER-PLAN.md absent at L with no plan-*.txt, or an empty one, is refused; absent at L with plan-*.txt present keeps the old rule (control).
+- [ ] #4 (d) A table list named rules is refused by validate; the page check passes after regeneration; the brief names the joined command and no longer says to copy plan-*.txt.
+- [ ] #5 (e) Counts pinned in rule-lists.logic.test.ts as at most: the tooling kind and the task-419 Files line 3 compliance files at the plan (material 12,400) and 3 at the output (diff 29,700); the task-412 Files line 3 and 3.
+- [ ] #6 (f) Replay, a lane runs DeepSeek (5 calls): the task-412 plan stage as one joined compliance call set plus plan-review and error-paths; REPORT.md records the calls, the findings, whether plan-compliance-queue-137#1 (HIGH) is re-found and at least 80 percent of the distinct CONFIRMED compliance findings of docs/reports/reviews/task-412/GROUNDER-PLAN.md.
+- [ ] #7 (g) The Pre-Review Self-Checklist is in REPORT.md; the four test files are green; git diff --stat shows only the Files line paths, the page and the task and review records.
+<!-- AC:END -->
 
 ## Definition of Done
 <!-- DOD:BEGIN -->
@@ -40,129 +57,218 @@ Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's o
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
-# PLAN-423-v2: the existing process, adjusted in five places, plus the station step
+# PLAN-423-v3: join the whole rule lists into one compliance call set per stage, rule the plan findings once (card A of two); card B and the station edit are listed at the end
 
-Planner, read-only. v1 is left as it was. Evidence: ~/Buildo-wt-board (wf2/board dccd4f371), the lane folders of task-419, task-412, BL-SCORE421, BL-MIG334, MORNING-DECISIONS.md to the last entry (RR-0365). Hours are ESTIMATES. UNVERIFIED is marked.
-Operator, verbatim (RR-0365): "I am just adding to or understanding the existing plan. We hare not making a whole new approach here." So nothing below replaces a tool. Each adjustment is the fewest lines in the scripts that exist.
+Planner v2, folded by the separate plan grounder Cairn-Ground-P423 on the board head 36a2c2d63: docs/reports/reviews/task-423/GROUNDER-PLAN.md rules 129 findings (91 of the eleven DeepSeek plan outputs and 38 of the three seat reports). Read-only until the launch. Hours are MEASURED where they carry a lane source and GUESS where they do not. UNVERIFIED is marked.
+Operator words are cited by entry and line of ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md. The objective, verbatim: "the objective is an effective compliance review on the plan and the output.  It isn't 17" (:1711; the entry has no RR number, and the earlier cite RR-0361 is wrong: decision-146 rules the old findings of task-386). RR-0363 (:1718, decision-148): "It doesnt need to be a summary we can consolidate the specs awell as an option.  We just need the rules for deepseek." and "No review of paperwork.". RR-0364 (:1723, decision-149): "1. yes 2. yes". "the ruling are included as well" (:1731). "I am just adding to or understanding the existing plan. We hare not making a whole new approach here." (:1735). RR-0366 (:1744, decision-151): "Each of the five tasks is pre-approved to get this to work right" and "let's limit the output reviews to csomething reasonable".
 
-## 0. His understanding against today (only where they differ)
-| His nine-step understanding | Today | Differs |
+## 0. What changed from PLAN-423-v2, on evidence
+| Adjustment | v2 | Now |
 |---|---|---|
-| 1 right documents to the compliance reviewer | one call per rule list, each list whole (9 calls for a tooling task) | yes: adjustment 1 |
-| rulings go with them | already: every lens template has {{SPECS}}; the tool fills it with the Task, Description, Acceptance, Decisions naming this task and Implementation Notes sections of context-rN.md (CONTEXT_SECTIONS, review-template.js:115; passed at the plan by rule-lists.mjs:616 and at the output by the brief). 4,620 chars on task-419, 2,270 on task-412. Proof: prompt_sha256 recomputed at close | no |
-| 2 plan panel, 3 grounded, 4 plan updated, 5 built | same (plan-prep, seats, separate grounder, fold, fold check, launch gate) | no |
-| 6 output review by a smaller panel | compliance, code-review, error-paths (ux, security by Files); no seats | no, except the call count |
-| 7 grounded | the grounder rules out- findings AND the plan findings again | yes: adjustment 3 |
-| 8 code corrected: critical and high fixed, medium and low recorded | medium must be fixed or ruled; only low and nit are piled | yes: adjustment 4 |
-| 9 loop on critical or high | any fix commit makes every output stale; all outputs re-run | yes: adjustment 5 |
-| no review of paperwork | records and generated files are reviewed by every attached list (58 calls on 49 generated files; 13 on a 3-line row) | yes: adjustment 2 |
-| suite passed means push passes | station suite omits the McBylaws gate the pre-push hook runs first | yes: adjustment 6 |
+| 1 the rules to the reviewer | cut rule lines with `lines` and `count`, three table trims, exempt tested before rows | Card A: the resolved lists are joined whole, in table order, into one virtual list and packed by size. Nothing is cut, nothing is trimmed, no table key is added, no operator question is needed. |
+| 2 no review of paperwork | exempt globs, exempt before rows | Card B: decided by the task type (record, db-go) and by the changed paths, in the close check. No glob, no resolver change. |
+| 3 plan findings ruled once | kept | Card A, with a stronger replacement for the plan-evidence test (section 2e). |
+| 4 medium recorded, not fixed | kept | Card B, close mode only. |
+| 5 a review stays valid, a fix is reviewed on the fix diff | range stamps and round files | Not built. Adjustment 5 is not built: today's whole-range check already keeps a review valid unless the covered code changes, and the fix-diff-only part is task-414 (RR-0336 item 7, approved), which stays open and unchanged. |
+| 6 the station runs the gate | one line, or card D into the repo | The one line in ~/Buildo-scratch/push-station/station.sh, by the orchestrator, with its two proving runs recorded; no card. Moving the station into the repo needs the operator to name it (the infra-freeze named list, MORNING-DECISIONS.md:745). |
 
-## 1. Measured cost today
-- task-419 (165 changed lines): plan 11 calls, output 11, round 2 another 11 = 33 calls, 123 findings. Compliance inputs alone: 9 files, 307,177 chars at the plan.
-- BL-SCORE421 (49 generated files, one count row each): 58 calls, 313 findings. BL-MIG334 (3-line queue row): 13 calls, 67 findings.
-- Why: `resolveTask` (rule-lists.mjs:218) returns every list; `planPrep` and the brief run one `lens-input --list L` each; `listProof` (check-lane-close.mjs:380) demands one output per list per phase; the whole-range diff hash (`diffOf`) stales every output on any covered commit; the lane folder copies plan outputs and `closeErrors` rules them again. 120,000 chars per call is real (deepseek-review.js:33-35).
-- The packs under .claude/review-templates/packs/ (45 files, 1.0 MB) are one-time copies for tasks 365 and 369; nothing reads them. Not used here.
+Why adjustment 1 changed. Nothing is cut: every resolved list is joined whole, in table order, and packed by size; the dated notes that amend the rules travel with them. Measured at 36a2c2d63: Spec 137 holds 3,430 characters of Rule lines and 15,110 with its dated notes and bullets (of 32,996); Spec 08 section 7 holds 3,825 characters of numbered rules and 9,539 with its dated notes (of 9,567). The amendments live in the dated notes (137_mcqueue.md:98 is Rule 3, :100 is its two-commit-close note), so a rule-line cut shows the reviewer superseded text and hides this plan's own notes. The operator's rulings keep the lists whole (MORNING-DECISIONS.md:1285 "compliance means the handbooks", RR-0336 items 4 and 5 answered No, rule-lists.json:4 "never a hand-picked clause", README.md:156); a cut would reverse them, a join does not. The operator's other form, a small rules section written into each spec, is his option and is kept for question 3.
+Why the three trims are dropped. The tests row attaches the engineering standards whole (eng-all, 46,076 characters), so the v2 figure of 87,000 characters did not hold: card A's own Files line resolves the same nine lists as the tooling kind, 194,255 characters, and the trims would have bought one call per stage at the price of three lost rule sets (doc-17, Spec 08 section 5.3, engineering standards sections 1, 3, 4, 6, 7, 8, 10, 12, 13).
 
-## 2. The six adjustments, each at its smallest
-For each: v1 design, the smallest form, what v1 had extra and is struck, hours.
+## 1. Measured cost today and after card A
+Measured at 36a2c2d63 with the repo's own buildLensInputs over the resolved lists of each kind of task (lens-compliance.md, 120,000 character bound, rulings context 4,620 characters, plan material 12,400 characters, diff material 29,700 characters; the figures for the final virtual-list code are UNVERIFIED within one call). Compliance calls per stage:
+| kind of task | lists | today | after card A, plan | after card A, output |
+|---|---|---|---|---|
+| tooling (card A's own Files line) | 9, 194,255 chars | 9 | 3 | 3 (a 48,000 character diff: 5) |
+| spec only | 7, 149,280 | 7 | 2 to 3 | 3 (48,000: 4) |
+| pipeline step | 10, 197,241 | 10 | 3 to 4 | 4 |
+| McFrontend web | 15, 679,426 | 17 to 19 | 9 to 11 | 12 to 14 |
+| phone | 15, 766,416 | 17 to 20 | 10 to 13 | 14 to 16 |
+| storage | 13, 569,670 | 15 to 16 | 8 to 10 | 11 |
+One compliance call per stage is not reached: tooling and spec tasks draw 2 to 3 compliance calls per stage, pipeline 3 to 4, web 9 to 12, phone 10 to 14, storage 7 to 11. The reason is arithmetic: one call holds 120,000 characters (scripts/deepseek-review.js:35), the rules alone are 149,000 to 766,000, and the join only removes the unfilled space of the per-list calls.
+Whole tasks. task-419 (165 changed lines): plan 11 calls and output 11 become 5 and 5 (3 compliance plus plan-review and error-paths; 3 plus code-review and error-paths), 22 become 10, and a whole-range re-run after a fix costs 5 where it cost 11 (33 become 15). task-412: 22 become 10. Paperwork lanes (BL-SCORE421, 58 calls on 49 generated files; BL-MIG334, 13 calls on a 3-line queue row) become 0 by card B.
+Why the cost is what it is: resolveTask (rule-lists.mjs:218) returns every list; planPrep and the brief run one lens-input per list; listProof (check-lane-close.mjs:380) demands one output per list per phase; the grounder re-rules the plan findings at the output. Surface, phone and storage tasks keep 7 to 16 calls per stage after card A; the operator's own option, a small rules section in each large spec, is what would take them lower, and no card is cut for it (question 3).
 
-### Adjustment 1: one compliance call per stage on the rule lines
-Smallest form (about 60 lines of code):
-- `joinLists`: the resolved lists' blocks joined in table order, each headed "list id, file, section", given to the existing `buildLensInputs` as ONE list (id `rules`). The existing part-splitting cuts by size only when over the bound, never per document. `planPrep`, the brief text and `listProof`/`planGateInner` call it once instead of looping `r.lists`.
-- `lines` (regex) on a list, applied to its blocks, for the two specs that already hold one rule per line: Spec 137 section 4 (14 lines `**Rule N.**`, 3.4k of 33k) and Spec 08 section 7 (10 numbered lines, 3.9k of 9.6k). No spec text is written.
-- `count` beside `lines` (about 8 lines in `validateTable`): the number of lines the regex must match. KEPT for correctness: without it a rule added to the spec is silently invisible to the reviewer.
-- Table-only trims, each with what is lost (OPEN QUESTION 2): (a) drop doc-17 from the lane-tools rows (31.6k; it is the register of orchestrator readings; lost: the reviewer no longer sees "readings are not rulings" text); (b) Spec 08 section 5.3 dropped from agents-s5-1to3 (11.5k procedure text; 5.1 and 5.2 stay; lost: round-2 procedure detail, the rule itself stays in section 7 rule 4); (c) for the lane-tools and specs rows engineering standards narrowed from whole (46k) to sections 2, 5, 9, 11, 14 (about 17k; lost: sections 12 and 13 tooling and observability, not about scripts or hooks).
-- Arithmetic, measured: tooling kind rules today 194k. With `lines` only: about 160k = 2 plan calls. With the trims: about 87k. One plan call then is 87k + rulings 4.6k + plan sections 12.0k + template about 4k = about 108k (task-419; about 100k on task-412), under 120k. One output call = 87 + 4.6 + 4 = about 96k, leaving about 24k for the diff; a larger diff is cut at file boundaries (existing), one call per chunk, each with all the rules and the rulings. Surface, phone and pipeline kinds still draw several calls (rules lines for 126, 128, mobile, Airtight do not exist; a later card). Honest: the one-call target is met for tooling and spec tasks only.
-- Transition with no key: the close and launch checks accept EITHER a complete joined output (`plan-compliance.txt`, `out-compliance.txt`, parts `-pN`) OR a complete per-list set. The evidence form decides, so a task launched before this lands closes the old way and nothing already BUILT is re-gated. The old per-list code stays until no open task uses it (cleanup card, not now).
-Struck from v1 and lost: written "Rules for review" sections in Specs 08 and doc-17 plus the pointer-quote test (lost: rules in 08 section 11 and 5.x stay whole prose, not one-liners; they stay in the list as whole sections); a `protocol: 2` key and its pinning (not needed: evidence form decides); the plan-stage error-paths lens drop (not one of the adjustments; lost saving: 1 call per plan); the seat-report RR-id check (rulings reach the DeepSeek lenses already; seats have no hash; lost: no proof the seats read rulings, not in his words); the spec section rewrites for consolidation.
-Hours: v1 16-20; v2 9-12 (join and once-calls 4, `lines`/`count` and table edits 2, tests red-first 3, notes 1; no spec writing).
+## 2. Card A, the design (task-423: adjustments 1 and 3)
+Reuse what exists: buildLensInputs, renderLensInput, parseLensInput, listProof, reviewErrors, splitUnits and the part/chunk stamps stay as they are. The join is a virtual list the existing code reads like any table list.
 
-### Adjustment 2: paperwork is not reviewed; a short grounder record-true check (RR-0364 item 2)
-Smallest form (about 25 lines):
-- Reuse `exempt`. Add globs: `docs/reports/*-assessment.md` (proving check: step-validate.mjs --all --fast, station step 1; UNVERIFIED that a stale block fails it), `docs/reports/generated/**` (each page names its generator --check), `backlog/**` (task-file hooks), `.cursor/*QUEUE*.md` (queue-check in the McBylaws gate). The existing test already refuses an exempt glob with no named check.
-- `resolveTask` (:239-243): test exempt candidates BEFORE rows (3 lines). A Files entry that is all exempt resolves to no lists, so the brief tells the lane "no review".
-- Close check: when the range's covered, non-exempt paths are empty, no compliance or lens output is required; instead GROUNDER.md (grounder not the lane) with one `record#N CONFIRMED <path>:<line> "<quote>"` line per claim of REPORT.md checked. Existing verdict parser and quote check are reused.
-- Not paperwork: docs/specs/**, scripts/**, src/**, mobile/**, migrations/**. Task types do not decide; the diff does.
-Struck from v1 and lost: a new `paperwork` key (same job as `exempt`); resolving the output-stage lists from the changed paths instead of the Files line (lost: a task with a broad Files line still attaches lists for it; the fix is narrower Files lines, e.g. `docs/reports/*-assessment.md` not `docs/reports/`, written in the card).
-Hours: v1 5-6; v2 4-5 (close-check branch and tests are the driver).
+### 2a. The joined list (scripts/analysis/rule-lists.mjs)
+- `joinLists(table, ids)` returns a copy of the table with one extra list `rules`: `{ file: 'the <n> resolved lists (<ids>)', generated_by: 'joined', whole: true, members: [each member list with its id] }`. A table list may not be named `rules` (one line in validateTable, :108).
+- `listBlocks` (:98): a list with `members` returns the blocks of each member in the given order, labelled `<member id>: <label>`. The packing is the existing partsFor (:374): units are cut at headings only when a block is over the room, packed in order, never trimmed. No `lines` key, no `count` key and no table trim is built: a rule or a dated note added to a spec is in the next review without any table edit.
+- `renderLensInput` (:342): for a list with `members` the head reads `RULE LIST rules (<n> lists: <ids>)`; the stamp is unchanged.
+- CLI `lens-input` (:775): `--list rules --lists a,b,c` builds the virtual list from those ids (each must be in the table) and writes `in-<phase>-compliance-rules[-pN].txt` through the same code.
+- `planPrep` (:549): for a build task one lens-input call with the resolved ids (inputArgv :620, the dry-run lines :623-625, the job list :634 reads `in-plan-compliance-rules(-pN)?.txt`). Any failed call still removes every output and the phase is run again (:641 "nothing is kept, run the phase again"); the REVIEW header and VERDICT line test (:645) still catches a cut-off reply.
 
-### Adjustment 3: plan findings are not re-ruled at the output
-Smallest form (about 15 lines): `closeErrors` reads only out-*.txt for findings and Ruled lines (the `isLensOutput` filter at the `lensFiles` line); the requirement "at least one plan-*.txt in the lane folder" (:550) becomes "docs/reports/reviews/<id>/GROUNDER-PLAN.md exists at the launch commit L" (`git cat-file -e`, 3 lines), so a hand launch still has to leave plan evidence. The brief text (backlog-lane.mjs, the `grounder` string) stops saying "copy plan-*.txt ... into the lane folder".
-Struck from v1: calling the whole `planGateErrors` at L (lost: the close does not re-prove the plan evidence's content; the launch gate, the last refusal before the take, already did).
-Hours: v1 2; v2 2 (tests: plan files absent accepted, plan ids not demanded, no GROUNDER-PLAN at L refused).
+### 2b. The close and the launch gate accept the joined set (scripts/hooks/check-lane-close.mjs)
+- One helper decides the form per phase from the files in the folder: any `<phase>-compliance-rules*` file means the joined form, any `<phase>-compliance-<list id>*` file means the per-list form (today's, kept), a folder holding both forms for one phase is refused, neither is refused naming the joined file first. The joined proof is the existing listProof (:380) with `l = { id: 'rules' }` and the table returned by joinLists, so the stamp, the whole-list recompute (:408), the chunk coverage and the prompt hash are the existing ones; the recomputed text comes from the lists the task resolves now, so a shortened or edited joined text is refused.
+- Used at the three sites that loop `r.lists`: closeErrors (a) (:477), planGateInner (:591) and the lane-brief text. No table key changes, so the lane table pin (check-lane-close.mjs:688, base_ref, finished_statuses, protected_paths, exempt) refuses no open lane; the evidence form decides, per phase, so a task launched before card A closes the old way and nothing already BUILT is re-gated. Card A's own lane may close with either form. The per-list path is removed in a later cleanup once no open lane uses it (no card now).
+- `compliance:<list id>` references on the task stay one per list (RR-0343, backlog-lane.mjs:129, rule-lists.mjs:452).
 
-### Adjustment 4: only critical and high force a fix; medium and low are recorded with a reason (RR-0364 item 1)
-Smallest form (about 6 lines): in `outcomeErrors` close mode, MED may close by `pile:"<reason>"` or `wontfix:"<reason>"` (30+ chars, existing check) as LOW and NIT already may; CRITICAL and HIGH still close by fixed or ruling. Spec 08 section 7 rule 6 notes amended.
-Struck from v1: a severity-triggered "round 2 required" rule in the close check. Not needed: the loop is carried by adjustment 5 (a fix to covered code needs its fix diff reviewed). Lost: nothing; medium and low never change code, so they start no round.
-Hours: v1 2; v2 1.5.
+### 2c. The brief (scripts/analysis/backlog-lane.mjs, backlog-brief.mjs)
+- The per-list sentence (backlog-lane.mjs:183, matched again at :223) becomes one sentence for the joined lists naming the ids and the one command, with the files `out-compliance-rules[-pN].txt`; the merge test at :223 matches the new sentence. The grounder sentence (:184) stops telling the lane to copy plan-*.txt into the lane folder and to list plan findings: plan evidence is on the board.
+- backlog-brief.mjs:177 drops "the lane still runs at least one plan-stage lens of its own and rules its findings in its own GROUNDER.md"; the test at backlog-brief.logic.test.ts:72 changes with it.
 
-### Adjustment 5: a review stays valid unless the code it covered changes; a fix is re-reviewed on the fix diff only (bound 2)
-Smallest form (about 60 lines, the largest piece):
-- `renderLensInput` adds `range <from12>..<to12>` to the stamp; `lens-input --range`; the material is `git diff from to -- covered paths`. Round 1: from = L, to = the commit the lane reviewed.
-- Close check: each round's diff is recomputed for its own range (the existing `diffOf` takes from and to); round k starts where k-1 ended; after the last `to`, `git diff to HEAD -- covered non-exempt paths` must be empty. A commit touching only records, generated or exempt paths never stales a review. A covered change after the last review needs one more round on that delta (compliance once, code-review, error-paths). The bound is the brief's max_fix_rounds 2 (backlog-brief.mjs:169), a stated rule, not counted by the hook (lost: no hard stop in the hook; the lane and grounder stop it and a critical or high still open after round 2 goes to the operator).
-- Rounds are filed `out-<lens>-rN.txt` (the brief's layout already names the form); the check learns to read them instead of "every output equals the whole-range diff at HEAD".
-Struck from v1: the `fixed:<sha>` exemption for post-review edits (lost: even a one-line voluntary fix draws a small fix-diff review, about 3 small calls; safer than trusting a cite); chunk-level hashing (task-414). SUPERSEDED: task-414 ("re-run only the chunks that changed") is delivered by this, so it is closed as superseded by a records lane with a dated note; it was approved by the operator (RR-0336 item 7) so the hand-off tells him.
-Hours: v1 5; v2 6-8 (stamp, tiling and round files in the close check, and a test for each direction).
+### 2d. Findings and the page
+- Finding ids stay `<file stem>#N`, so the joined files give `out-compliance-rules#N` and `out-compliance-rules-p2#N`; the Ruled lines of the grounder name the joined files.
+- The page docs/reports/generated/rule-lists-by-kind.md keeps its per-list numbers (parts of one list alone); it is regenerated in the docs commit because the specs change. It is not named on the Files line: naming it would attach the generated-reports row lists (policy-124-s2-s5 is not among the nine) and the launch gate would demand plan evidence for it; a docs commit with no code staged is not held to the Files line by check-task-files.mjs:49, and docs/reports/ is allowed by the close check (check-lane-close.mjs:453).
 
-### Adjustment 6: the station suite runs the read-only gate first
-Smallest form: one line in `suite` of ~/Buildo-scratch/push-station/station.sh: `step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs --ci --base "origin/$br"`. The gate was run by hand on 21adfde8a and printed GATE OK; BL-MIG334 measured the failing case (id-no-row at HEAD~1, none at HEAD). It does not cover the interactive y that `gate.mjs --push` asks on /dev/tty, which stays his.
-Struck from v1: moving the station into the repo and a test (extra; his earlier rule is that tools live in the repo, so it is OPEN QUESTION 1; lost if declined: the file that says "ready" stays outside the hooks and tests).
-Hours: v1 2-3; v2 0.5 in place (+2 if moved, card D).
+### 2e. Adjustment 3: plan findings are ruled once
+- closeErrors reads only `out-*.txt` for findings and for the Ruled lines (the lensFiles filter, :520) when the plan evidence is on the board: GROUNDER-PLAN.md at the launch commit L is non-empty and holds a `Plan: <this task id> sha256:<12 hex>` line (read in check() with `git show L:docs/reports/reviews/<id>/GROUNDER-PLAN.md`, L as derived at :729-734; the launch gate, which refuses before the take, put it there). The exact hash is not compared at close: the take appends a note to the task body at L, so the hash of the body at L is not the hash the gate computed.
+- The requirement of at least one `plan-*.txt` in the lane folder (:516) applies only when GROUNDER-PLAN.md is absent at L (a task launched before the launch gate, or taken by hand): then the old requirement and the old ruling of plan findings stand. A task launched under the gate that also holds plan-*.txt in its lane folder (task-419) simply has them ignored.
+- The brief grounder sentence (2c) and README items 4 and 5 are changed to say so; the grounder rules out- findings only.
 
-## 3. Honest total
-v1 32-39 h. v2 about 24-30 h of build and test, plus about 3 h per code card for the plan review, grounder, fold and two-commit close (9 h) = about 33-39 h elapsed work. The minimum is still large because every change is in the checker, its table or its helper (protected paths), each must be proven in both directions with a planted defect and a control, and each card must pass the process it is changing. Struck items saved about 8-10 h of the build, not of the process.
+## 3. Card A, order of work and tests
+0. The Pre-Review Self-Checklist (00_engineering_standards.md:287, always applies, every WF): 5 to 10 items from the plan sections 2 and 3, PASS or FAIL each, written in REPORT.md before the first test run and again before the review.
+1. Tests first, red, then green (src/tests/backlog/). Changed because the plan changes what they lock: check-lane-close.logic.test.ts (the per-list and -pN output tests at :181-205, "no plan-stage output" at :191 and :309-312, plan finding ids at close :236-237, the Ruled line per plan output :265, the layout text :303-324, the every_task and milestone lists :376-399), rule-lists.logic.test.ts (lens-input :244-300, :304, the real-task resolutions and the page :331-370 and :447-475), backlog-lane.logic.test.ts (the per-list lens line :211, :234, :294, :310, :322, :432; the plan-prep writes :545-597), backlog-brief.logic.test.ts:72. Controls that stay green byte for byte: check-lane-close.logic.test.ts :217-264 (grounder not the lane, verdict form, quote on the cited line), :330-368, :355 (self-edit), :500 (a build task whose range is empty is refused), :528-560 (the table read from the range base), :571-607, :631-749, :911-1002 (the launch gate); rule-lists.logic.test.ts :67, :121-215, :633-640.
+2. rule-lists.mjs (section 2a), then check-lane-close.mjs (2b, 2e), then the two brief files (2c). One commit of work and tests, with a dated line on the task file (the commit-msg hook needs the task file in a code commit; the status is not moved).
+3. A docs commit with no code staged: the dated notes of section 4, README items 3 to 5, and the regenerated page (`node scripts/analysis/rule-lists.mjs page --write`).
+4. The two-commit close (Spec 137 Rule 3 as amended): the closing commit holds records only (lane report directory, review context directory, task file, decision record).
+Run the four changed test files with the project's test command (npm run test, restricted to those four files) and the pre-commit hooks; never --no-verify.
+Acceptance (observable; the orchestrator writes these onto the task as its acceptance criteria with the fold, so the brief's Done-condition is not empty):
+(a) Joined input, offline: `lens-input --list rules --lists <the nine ids of card A's Files line>` on the real table with the plan material of task-419 writes at most 3 files; the stitched list parts equal the whole text of the nine lists in table order; an input with a part shortened or edited is refused at close (control: the untouched set is accepted); with `--max` small the parts are more and every part is under the bound.
+(b) Close and gate: a joined output set is accepted; a per-list set (the old form) is accepted (control); a folder holding both for one phase, a joined set with a gap, and a joined set for a different resolved list are refused; the plan gate accepts joined or per-list plan evidence.
+(c) Plan once: a lane folder with no plan-*.txt closes when GROUNDER-PLAN.md at L is non-empty with a Plan line; no Ruled line and no plan finding id is demanded; GROUNDER-PLAN.md absent at L with no plan-*.txt in the lane folder, or an empty one, is refused; absent at L with plan-*.txt present keeps the old rule (control).
+(d) A table list named `rules` is refused by validate; the page check passes after regeneration; the brief names the joined command and no longer says to copy plan-*.txt.
+(e) Counts, measured on the real table and pinned in rule-lists.logic.test.ts as at most: the tooling kind and the task-419 Files line, 3 compliance files at the plan (plan material 12,400) and 3 at the output (diff 29,700); the task-412 Files line, 3 and 3.
+(f) Replay, a lane runs DeepSeek (5 calls): the task-412 plan stage as one joined compliance call set plus plan-review and error-paths. Recorded in REPORT.md: the calls (5, where 11 were made), the findings, and whether the joined set re-finds plan-compliance-queue-137#1 (HIGH, the Spec 137 Rule 3 note; docs/reports/reviews/task-412/GROUNDER-PLAN.md) and at least 80 percent of the distinct CONFIRMED compliance findings of that file. Not a pass bar on the count of findings.
+(g) The Pre-Review Self-Checklist is in REPORT.md; the four test files are green; git diff --stat shows only the Files line paths, the page and the task and review records.
 
-## 4. Spec sentences amended (dated notes citing RR-0363, RR-0364, RR-0365, prior text kept)
-- Spec 08 section 7 rule 4 (2026-11-19 note: "the lane brief written by `backlog-lane.mjs` names the lenses by task type; one Claude grounder adjudicates every finding as round 2"): add: compliance is one call per stage on the joined rule lines. (card A)
-- Spec 08 section 7 rule 6, third note: "A fix round does not file `out-<lens>-rN.txt`: the close requires every in- input and out- output to equal the diff of the whole range at HEAD, so after any fix commit every input is re-made ... (re-running only the changed chunks is task-414)." Replace: a review is bound to its range; a fix is reviewed on the fix diff; task-414 superseded. Same note: MED may be piled with a reason. (card B)
-- Spec 137 note at :134 ("one compliance lens output per rule list the task attaches"): one compliance output per stage; paperwork gets a grounder record check only. (cards A, C)
-- .claude/review-templates/README.md:158 ("The lens line: one compliance run per list") and :160. (cards A, B)
-- Spec 08 section 11.2 and CLAUDE.md lines 139 and 143 stay with task-419 and the CLAUDE.md order; not touched.
+## 4. Spec sentences amended in card A (dated notes in the M-246 form, prior text kept, each citing the operator by entry and line)
+- docs/specs/00-architecture/08_agents.md, Section 5.3: one dated note after the task-410 note (:231) and its correction (:233): the compliance lens runs once per stage over the resolved lists joined whole and packed by size, one output set per stage (`out-compliance-rules[-pN].txt`), where the notes at :229 and :231 say once per list; the per-list set is still accepted for a task launched before card A. The sentence "never trimmed" of :229 stays true. RR-0363 (:1718), "We just need the rules for deepseek." and the objective (:1711).
+- 08_agents.md, section 7 rule 4: one dated note under the rule-4 note (:348): the same one-sentence statement, plus: the plan findings are ruled once, at the plan, and the lane close reads only the output findings when the plan evidence is on the board. Rule 6 is not changed in card A.
+- docs/specs/00-architecture/137_mcqueue.md: one dated note after the task-410 note (:136): one compliance lens output set per stage (the note at :134 says one per rule list); the close reads GROUNDER-PLAN.md at the launch commit for the plan evidence. Cross-Spec Dependencies: the coupling is rule-lists.mjs and check-lane-close.mjs only; no new table key couples a spec to rule-lists.json, so no Cross-Spec Dependencies row changes in either spec.
+- .claude/review-templates/README.md items 3, 4 and 5 (:158-:160): item 3 "The lens line: one compliance run per list" becomes one run over the joined lists; item 4 says a finding is a BUG or DEFER line of an out- lens output (plan findings are ruled at the plan); item 5 says one joined output set or the per-list set. README.md:156 ("never a hand-picked clause") and the table $comment stay true: nothing is cut.
+- Not touched: Spec 08 section 11.2 and CLAUDE.md :139 and :143 describe the cross-read pass after a fold (task-419's scope), not the number of compliance outputs; each stays true as written.
+The amendments are graded against the amended text by the output compliance call, because the lens reads the lane's tree; the output grounder reads the diff of the notes against their prior text.
 
 ## 5. Not done, and risks
-- Not done: rules lines for Specs 126, 127, 128, mobile, Airtight and the increment documents (surface, phone, pipeline tasks keep several calls); consolidating specs; committing fewer in- files (1.15 MB for task-419); deleting the packs; a duplicate-finding verdict word (add only if the replay shows more than 2 findings ruled twice).
-- A rule not on a matched line is invisible to the reviewer. Cover: `count`, the grounders and seats read full specs, 08 section 11 stays whole.
-- Fewer lists seen (the trims) means fewer rules checked by DeepSeek; the grounder and seats still read the full specs.
-- Evidence-form acceptance keeps old code alive; a cleanup card removes it.
+- Not done in card A: adjustments 2 and 4 (card B), adjustment 5 (task-414, unchanged), a rules section or consolidation of the large specs (the operator's option, question 3), deleting the packs under .claude/review-templates/packs/ (nothing reads them; the lane-tools row globs `.claude/**`, but a row attaches rule lists and the review material is the diff, so the packs are sent only if a change touches them), committing fewer in- files, a counted cap on fix rounds (the brief's max_fix_rounds: 2, backlog-brief.mjs:169, stays a stated rule; RR-0339 rules rounds bounded, not endless), a duplicate-finding verdict word (add only if the replay of acceptance (f) shows more than 2 findings ruled twice).
+- Risk: a call over the bound or a cut-off reply. The existing phase fails closed: any failed call removes every output and the phase is run again (rule-lists.mjs:641), and a reply without the REVIEW header and VERDICT line is refused (:645). A joined part is larger than a single list, so a reply can be longer; the same test applies.
+- Risk: the whole-list recompute reads the lane's tree, so a spec edit merged in after the review stales the joined set exactly as it stales a per-list set today; unchanged, and the lane merges the board before the review.
+- Risk: both forms stay accepted until a cleanup removes the per-list path; the brief tells a lane launched after card A to use the joined form, so the choice is the lane's cost, not a gap.
+- Risk: the figures of section 1 are measured on the tool's packing over a joined text, UNVERIFIED for the final virtual-list code within one call; acceptance (e) pins them.
 
-## 6. Cards, ready to execute (3 code cards, 1 optional)
-Why this split: adjustments 1, 3, 4, 5, 2 all edit rule-lists.mjs and check-lane-close.mjs (and the brief), so they cannot run in parallel branches without conflicts; they are ordered. Three cards keep each plan review under one reviewer's attention: A = what is sent and ruled once, B = fix loop, C = paperwork. The station line is independent.
-All three are type build, milestone m-1 (as task-423). Protected paths touched by each: scripts/hooks/check-lane-close.mjs, scripts/analysis/rule-lists.mjs, scripts/analysis/rule-lists.json (scripts/deepseek-review.js and review-template.js are NOT touched). Each is a two-commit close: commit 1 = work and tests; commit 2 = records only (lane report folder, review context folder, task file, decision record), because a commit that changes a protected path may not also move a task to finished.
+## 6. Cards: card A as built here, card B ready, the station edit
+All code cards are type build, milestone m-1, two-commit close. Each protected path (scripts/hooks/check-lane-close.mjs, scripts/analysis/rule-lists.mjs) may not change in the closing commit. Cards A and B edit the same functions, so they run in order, not in parallel. Order: A first (it changes every code task: 22 calls become 10 on task-419 and task-412), then B (it removes 58 and 13 calls from paperwork lanes and is the smaller, lower-risk change, planned under A's joined form so its own plan stage is cheaper). Neither can go first with less risk than A without leaving B's plan stage at the old 11 calls.
 
-### Card A: task-423 (holds adjustments 1 and 3) [~11-14 h]
-Title: PROTOCOL.SIMPLE One compliance call per stage on the rule lines; plan findings ruled once.
-Description: RR-0363 verbatim ("We just need the rules for deepseek ... There shold be the plan reviews - the grounding - the fold (no other reviews) - the build - the review of the output - grounding and then the fold and then we are done ... No review of paperwork."), RR-0361 ("It isn't 17"), RR-0365 ("We hare not making a whole new approach here"). Join the resolved lists' rule lines into one compliance input per stage (cut by size only when over 120,000 characters), add `lines` and `count` to the table for Spec 137 section 4 and Spec 08 section 7, apply the table trims of OPEN QUESTION 2 if approved, stop copying plan outputs into the lane folder, and accept either joined or per-list evidence. Spec notes per section 4.
-Files: scripts/analysis/rule-lists.mjs, scripts/analysis/rule-lists.json, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
-Depends on: task-419 folded (same two protected files). Order: first.
-Acceptance (observable):
-1. Replay of task-419's plan and output (throwaway worktree, a lane runs DeepSeek): plan 11 calls become 3 (compliance once, plan-review, error-paths), output round 1 11 become 3; whole 33 become 9 (6 if no round 2); findings counted before (123) and after in REPORT.md. Second named task: task-412, 22 calls become 6.
-2. Planted rule breaks caught by the single call at plan and output, 2 of 2 runs each, control clean twice: a Spec 137 Rule 3 break (task moved to DONE without a status-line edit), an engineering standards section 11 break (API route plan with no try-catch and logError), a Spec 08 section 7 rule 6 break (a BUG finding deferred with no reason). The finding names the rule line.
-3. Rulings still reach the reviewer: on a fixture task plant a plan sentence contradicting a ruling in its "Decisions naming this task" section (task-419's RR-0351, "Gap 3 we dont need the cross check": plan says "a cross-read adversary pass is required before the build"); the compliance call flags it with the quote, 2 of 2 runs; control clean.
-4. Mechanical, red first then green: a spec rule line added without a `count` update fails `validate`; a joined input over the bound yields `-pN` parts sized by room (parts = ceil); a shortened joined text is refused at close (control accepted); per-list evidence of an earlier task is still accepted; plan-*.txt absent from the lane folder is accepted while no GROUNDER-PLAN.md at L is refused; plan finding ids are not demanded in GROUNDER.md.
+### Card A: task-423 (adjustments 1 and 3)
+Title: PROTOCOL.SIMPLE One compliance call set per stage by joining the whole rule lists; plan findings ruled once.
+Description: as on the task. RR-0363 (:1718, decision-148) "We just need the rules for deepseek.", the objective (:1711) "the objective is an effective compliance review on the plan and the output.  It isn't 17", RR-0366 (:1744) "let's limit the output reviews to csomething reasonable".
+Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, scripts/analysis/backlog-brief.mjs, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/backlog-brief.logic.test.ts
+Depends on: task-419 BUILT (same two protected files). The Files line resolves the same nine lists as the plan evidence holds (no new list, so no new plan compliance output).
+Acceptance: section 3 (a) to (g).
 
-### Card B (new): adjustments 4 and 5 [~8-10 h]
-Title: PROTOCOL.FIXLOOP A review stays valid unless its code changes; a fix is re-reviewed on the fix diff only; medium and low are recorded.
-Description: RR-0363 ("Unless the output was revealing to have critical or high faults and a second review of the output maybe required"), RR-0364 item 1 ("1. yes": medium and low confirmed findings are recorded with a reason, not fixed, never trigger another review). Range-stamped reviews; round files out-<lens>-rN; MED closes by pile or wontfix with a reason; supersedes task-414.
-Files: scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, docs/specs/00-architecture/08_agents.md, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
-Depends on: card A folded. Order: second.
-Acceptance: (1) on task-419's range replayed: the round-2 whole re-run (11 calls) becomes one round on the fix diff only (3 small calls); if only medium and low were confirmed, no round 2 (0 calls). (2) Red first: a commit touching only docs/reports after the review leaves it valid (control: a covered path edited after the review with no new round is refused); a round whose material is not its fix diff is refused; a MED closed by pile with 30+ chars accepted (control: HIGH closed by pile refused). (3) Round files are read by the close check. (4) task-414 closed as superseded.
+### Card B (open it after card A is BUILT; text ready): adjustments 2 and 4
+Title: PROTOCOL.RECORDS Medium findings are recorded, not fixed; a paperwork task gets a grounder record check and no review.
+Description: RR-0364 (:1723, decision-149), verbatim "1. yes 2. yes", put to him as: "1. Medium and low findings after the output grounding. My recommendation: they are recorded with a reason and not fixed, so they never trigger another review." and "2. Paperwork tasks, such as the queue row. No review, as you ruled. My recommendation: a separate grounder still checks the row is true before the fold, which is one short read, not a review round."; RR-0363 (:1718) "No review of paperwork.". Source: GROUNDER-PLAN.md of task-423 (adjustments 2 and 4).
+Design (smallest, no glob, no resolver change, no table key):
+- outcomeErrors close mode (check-lane-close.mjs:188-193, refusal text :203): `low` becomes `recordable`: LOW, NIT, and MED when mode is close; CRITICAL and HIGH still close by fixed or ruling; plan mode is unchanged (RR-0364 item 1 says after the output grounding); the Final Summary line per CRITICAL, HIGH or MED stays (08_agents.md:351). The severity is the grounder's word in the first 40 characters of its reason, as for LOW today.
+- closeErrors: `paper` is true when the board copy of the task has type record or db-go and every changed path of the range is under docs/reports/generated/, docs/reports/lanes/, docs/reports/reviews/, backlog/tasks/, backlog/decisions/ or is .cursor/*QUEUE*.md (an allow-list constant in check-lane-close.mjs; anything else, including docs/specs, backlog/docs, backlog/milestones, backlog/config.yml, scripts, src and an empty range, is not paperwork and takes today's full proof). For paper: no compliance or lens output, plan or out, is required; GROUNDER.md of a separate grounder (the existing header, clash and quote tests of grounderErrors) holds at least one `record#N CONFIRMED <path>:<line> "<quote>"` line for the claims of REPORT.md, and a record line that is REJECTED or CONFLICT refuses the close.
+- Brief text (backlog-lane.mjs lensLine): for type record and db-go the brief says no review, the record lines, and that a path outside the paperwork list restores the full set.
+- Spec notes: 08_agents.md section 7 rule 6 (MED recorded, pile and wontfix for MED in close mode, Final Summary line kept; RR-0364) and 137_mcqueue.md (paperwork gets a grounder record check only); README item 5.
+Files: scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
+Acceptance: (1) offline: the range of BL-SCORE421 (49 generated files, type db-go) and of BL-MIG334 (the queue row, type record) need no lens output and need record lines (58 and 13 calls become 0, plus one short grounder read); control: the same range plus one scripts/ file takes the full set; a record task with no record line, or with a REJECTED one, is refused; an empty range of a build task is still refused (check-lane-close.logic.test.ts:500 stays green); (2) a MED closed by pile with 30+ characters is accepted in close mode, refused in plan mode; a HIGH closed by pile is refused; a MED with no outcome is refused; (3) the type is read from the board copy (a lane that retypes its task is refused, as today); (4) the Pre-Review Self-Checklist is in REPORT.md. Depends on: card A BUILT.
 
-### Card C (new): adjustment 2 [~4-5 h]
-Title: PROTOCOL.PAPER No review of paperwork; the grounder checks the record is true.
-Description: RR-0363 ("No review of paperwork"), RR-0364 item 2 ("2. yes": a separate grounder still checks the record is true before the fold). Exempt globs for generated and record paths each naming its proving check; exempt tested before rows; a paperwork range needs GROUNDER.md record lines and no lens outputs.
-Files: scripts/analysis/rule-lists.mjs, scripts/analysis/rule-lists.json, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts
-Depends on: card B folded (same functions). Order: third.
-Acceptance: (1) offline, no DeepSeek: task-421's Files narrowed to `docs/reports/*-assessment.md` resolves to no lists and its 49-file diff needs no lens output (58 calls become 0, plus one short grounder read); task-422's queue-row diff the same (13 calls become 0). (2) Red first: the same diff plus one scripts/ file attaches lists and needs the reviews (control); a record task with no GROUNDER.md record line is refused; an unmatched path still refuses; the golden-exempt test still passes.
+### Not a card
+- Adjustment 5 is not built; task-414 stays open and unchanged. After card A a re-run after a fix costs the joined set (5 calls on task-419), not 11; after card B only a CRITICAL or HIGH finding is fixed.
+- Adjustment 6: the orchestrator adds one line to `suite` in ~/Buildo-scratch/push-station/station.sh, after the tip check: `step mcbylaws-gate node scripts/analysis/mcbylaws/gate.mjs --ci --base "origin/$br"` (gate.mjs:613 reads --ci and --base; .husky/pre-push:41 runs the gate first; the station already stops at `git rev-parse origin/$br` if the upstream is absent). Proof to run and record when the line is added (not run by this plan, UNVERIFIED until then): the gate prints GATE OK on 21adfde8a (BL-MIG334 REPORT.md item 2 ran it by hand) and stops with `id-no-row` on 0f6ba8225, where the migration 334 queue row is missing. It does not cover the interactive y that `gate.mjs --push` asks on the tty, which stays the operator's.
 
-### Card D (optional, new, parallel to all): adjustment 6 moved into the repo [~2-3 h]
-Only if OPEN QUESTION 1 is yes. Title: STATION.REPO The push station lives in the repo and runs the read-only gate first. Files: scripts/push-station/station.sh, src/tests/backlog/push-station.logic.test.ts. Depends on: none. Acceptance: replay of 0f6ba8225 stops at the gate step with id-no-row (control: 21adfde8a passes). Not a protected path. If OPEN QUESTION 1 is no, adjustment 6 is the one-line edit of the scratch file, done by the orchestrator, no card.
+### Hours (elapsed, including the plan stage, the review and the two-commit close)
+MEASURED on the lane folders: task-418 (550 changed lines in the same two protected files) 76 minutes from plan evidence to close; task-419 (165 lines) 77 minutes from the context file, plan stage about 30 minutes; task-412 (41 lines) about 20 minutes. Card A: about 200 lines of code plus tests plus three spec files, so 75 to 100 minutes of lane after the launch, plus the orchestrator's grounder, landing and close about 30 minutes: about 2 hours after launch (GUESS from the three measures); its own plan stage is this round. Card B: about 60 lines, a plan stage of about 30 minutes (under card A's joined form), a lane of 40 to 60 minutes and the close: about 1.5 hours (GUESS). The station line: 10 minutes (GUESS). Both cards, plan stages and closes: about 3.5 to 4 hours of elapsed time, where PLAN-423-v2 said 33 to 39. The v2 figure had no source; this one rests on the three measures above.
 
-Parallel: D with any card. A, B, C run in order (shared files).
+## 7. Questions ruled by the grounder; what only the operator can decide
+Ruled (QUESTIONS-RULED.md holds the grounds): 1 the station stays in ~/Buildo-scratch (the one-line edit now); 2 the three table trims are not made (they reversed three rulings and a join does not need them); 3 a rules section per spec is the operator's option and is not built.
+For the operator only: question 3 (whether he wants the large specs consolidated into small rules sections so surface, phone and storage tasks reach one or two calls per stage); the move of the station into the repo (the infra-freeze named list, MORNING-DECISIONS.md:745); and the dropping of adjustment 5 from the five he approved (task-414 stays open).
 
-## 7. OPEN QUESTIONS (only what his words do not settle)
-1. Move the push station into the repo as scripts/push-station/station.sh (card D), instead of editing the copy in ~/Buildo-scratch? Recommendation: yes. Grounds: your rule that tools live in the repo; the file that decides "ready" is today outside every hook and test; state files stay in scratch.
-2. To get ONE compliance call for tooling and spec tasks, may the table drop doc-17 from the lane-tools rows, drop Spec 08 section 5.3 from agents-s5-1to3, and narrow engineering standards to sections 2, 5, 9, 11 and 14 for those rows (what is lost is stated in adjustment 1)? Recommendation: yes. Grounds: your objective "an effective compliance review ... It isn't 17"; without the trims it is 2 calls; the grounder and seats still read the full specs.
+Plan review round 1: 105 folded, 0 task, 0 ruling, 0 wontfix, 8 pile; grounder docs/reports/reviews/task-423/GROUNDER-PLAN.md; triage docs/reports/reviews/task-423/TRIAGE-PLAN.md
+plan-compliance-agents-s5-1to3#1 MED folded one dated note after
+plan-compliance-agents-s5-1to3#2 MED folded and no table trim is
+plan-compliance-agents-s5-1to3#4 MED folded Design (smallest, no
+plan-compliance-agents-s5-1to3#5 MED folded The tests row attach
+plan-compliance-agents-s5-1to3#6 MED folded The one line in ~/Bu
+plan-compliance-agents-s5-1to3#7 MED folded Surface, phone and s
+plan-compliance-agents-s7-s11#1 MED folded The one line in ~/Bu
+plan-compliance-agents-s7-s11#2 HIGH folded Nothing is cut: ever
+plan-compliance-agents-s7-s11#3 MED folded Design (smallest, no
+plan-compliance-agents-s7-s11#4 MED folded dated notes in the M
+plan-compliance-agents-s7-s11#5 MED folded the move of the stat
+plan-compliance-agents-s7-s11#6 MED folded the orchestrator wri
+plan-compliance-eng-all#3 MED folded Spec notes: 08_agent
+plan-compliance-eng-all#4 MED folded The Pre-Review Self-
+plan-compliance-eng-all#5 MED folded Surface, phone and s
+plan-compliance-eng-all#7 MED folded stays open and uncha
+plan-compliance-five-words#1 HIGH folded The tests row attach
+plan-compliance-five-words#2 MED folded and no table trim is
+plan-compliance-five-words#3 MED folded the trims would have
+plan-compliance-five-words#4 MED folded a counted cap on fix
+plan-compliance-five-words#5 MED folded anything else, inclu
+plan-compliance-five-words#6 MED folded duplicate-finding ve
+plan-compliance-inc-S#2 HIGH folded The tests row attach
+plan-compliance-inc-S#3 MED folded Design (smallest, no
+plan-compliance-inc-S#4 MED folded The one line in ~/Bu
+plan-compliance-inc-S#6 MED folded Surface, phone and s
+plan-compliance-inc-S#7 MED folded stays open and uncha
+plan-compliance-ms-S#1 HIGH folded The tests row attach
+plan-compliance-ms-S#3 MED folded stays open and uncha
+plan-compliance-ms-S#4 MED folded Surface, phone and s
+plan-compliance-ms-S#5 MED folded Design (smallest, no
+plan-compliance-ms-S#6 MED folded The operator's other
+plan-compliance-orchestrator-doc17#2 MED folded stays open and uncha
+plan-compliance-orchestrator-doc17#3 MED folded 5 is not built: toda
+plan-compliance-orchestrator-doc17#5 MED folded Design (smallest, no
+plan-compliance-plan-protocol#1 MED folded Surface, phone and s
+plan-compliance-plan-protocol#2 MED folded The one line in ~/Bu
+plan-compliance-plan-protocol#3 MED folded stays open and uncha
+plan-compliance-plan-protocol#4 MED folded Hours are MEASURED w
+plan-compliance-plan-protocol#5 MED folded 5 is not built: toda
+plan-compliance-plan-protocol#6 MED folded Source: GROUNDER-PLA
+plan-compliance-queue-137#1 HIGH folded Nothing is cut: ever
+plan-compliance-queue-137#2 MED folded Spec notes: 08_agent
+plan-compliance-queue-137#3 MED folded anything else, inclu
+plan-compliance-queue-137#4 MED folded 5 is not built: toda
+plan-compliance-queue-137#5 MED folded Design (smallest, no
+plan-error-paths#2 MED folded Design (smallest, no
+plan-error-paths#3 MED folded anything else, inclu
+plan-error-paths#4 MED folded at the launch commit
+plan-error-paths#5 MED folded a counted cap on fix
+plan-error-paths#7 MED folded and no table trim is
+plan-error-paths#8 MED folded a folder holding bot
+plan-plan-review-deepseek#1 MED folded 5 is not built: toda
+plan-plan-review-deepseek#2 MED folded the evidence form de
+plan-plan-review-deepseek#5 MED folded 5 is not built: toda
+plan-plan-review-deepseek#6 MED folded and no table trim is
+plan-plan-review-deepseek#7 MED folded the trims would have
+plan-plan-review-deepseek#8 MED folded Design (smallest, no
+plan-plan-review-deepseek#9 MED folded a counted cap on fix
+plan-plan-review-deepseek#13 MED folded and no table trim is
+int#1 HIGH folded The tests row attach
+int#2 HIGH folded Nothing is cut: ever
+int#3 HIGH folded Design (smallest, no
+int#4 HIGH folded No table key changes
+int#5 HIGH folded the evidence form de
+int#6 MED folded returns a copy of th
+int#7 MED folded Files: scripts/analy
+int#8 MED folded Design (smallest, no
+int#9 MED folded LOW, NIT, and MED wh
+rg#1 HIGH folded Nothing is cut: ever
+rg#2 MED folded stay true: nothing i
+rg#3 MED folded Design (smallest, no
+rg#4 HIGH folded anything else, inclu
+rg#5 HIGH folded Design (smallest, no
+rg#6 HIGH folded anything else, inclu
+rg#7 MED folded 5 is not built: toda
+rg#8 MED folded 5 is not built: toda
+rg#9 MED folded the Final Summary li
+rg#11 MED folded the trims would have
+rg#12 MED folded It is not named on t
+rc#1 HIGH folded Nothing is cut: ever
+rc#2 HIGH folded The tests row attach
+rc#3 MED folded call per stage is no
+rc#4 MED folded MEASURED on the lane
+rc#5 MED folded Nothing is cut: ever
+rc#6 MED folded 80 percent of the di
+rc#7 MED folded For paper: no compli
+rc#8 MED folded Design (smallest, no
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -177,4 +283,10 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0365 · task-423 · Backlog; o
 Dated note 2026-11-21 (M-246, prior text kept; RR-0366 · task-423 · Backlog; operator, verbatim: "Each of the five tasks is pre-approved to get this to work right.  Theses tasks are pre approved but let's limit the output reviews to csomething reasonable")
 
 Dated note 2026-11-21 (M-246, prior text kept; RR-0367 · task-423 · Backlog; operator, verbatim: "1 y 2 med gets fixed in the plan if verified and for the output - I guess it depends on how serious med concerns are? If they are important then they should be fixed too.  3. y 4. hold 5. tools live in the repo is there another option")
+
+Dated note 2026-11-21 (M-246, prior text kept; RR-0368 · task-423 · Backlog; operator, verbatim: "fine 1")
+
+2026-11-21 (M-246) Plan review round 1 of this task, the third made with plan-prep (tasks 418 and 419 before it): 11 plan review outputs written by plan-prep review (nine per-list compliance, plan-review, error-paths), the Integration, Reality-Check and Regression seats on the plan, ruled by the separate grounder Cairn-Ground-P423: 129 findings (91 and 38), 113 CONFIRMED (16 HIGH, 72 MED, 23 LOW, 2 NIT), 16 REJECTED, 0 CONFLICT; 105 folded into the plan by 9 section edits (FOLD-423.json as the grounder wrote it, applied mechanically), 8 to the review pile; block and references added by plan-prep post. The plan v2 was found unsafe in adjustments 1 and 2 (the rule-line cut drops the dated notes that amend the rules; the tests row attaches the engineering standards whole so the one-call arithmetic failed; exempt before rows drops lists and widens exemption; an empty range would match the paperwork branch; hours 8 to 15 times too high against the lane times of 412, 418 and 419) and is replaced by PLAN-423-v3: card A (adjustments 1 and 3) joins the whole resolved lists into one virtual list packed by size, nothing cut (tooling 9 calls become 3 per stage; task-419 22 become 10, 33 become 15 with a round 2; task-412 22 become 10; web, phone and storage 7 to 16 per stage, not one); card B (adjustments 4 and 2: medium recorded in close mode, paperwork by task type and an allow-list of changed paths with a grounder record check) is opened after card A is BUILT; adjustment 5 is not built (today's whole-range check already keeps a review valid unless the covered code changes; the fix-diff part is task-414, which stays open); adjustment 6 is one line in the station by the orchestrator. Ten open questions ruled by the grounder with grounds (docs/reports/reviews/task-423/QUESTIONS-RULED.md) and reported to the operator: Q1 the station stays in ~/Buildo-scratch (OPERATOR: only he adds a tool to the freeze named list); Q2 the three table trims are not made; Q3 a rules section per spec or consolidated specs for surface, phone and storage (OPERATOR, his option, not built); Q4 adjustment 5 not built (OPERATOR to confirm); Q5 the paperwork allow-list; Q6 both evidence forms accepted; Q7 GROUNDER-PLAN.md at L non-empty with a Plan line; Q8 plan-stage medium unchanged; Q9 the RR-0361 and RR-0365 cites corrected by entry and line; Q10 the assumed lane name BL-SIMPLE423. Hours: card A about 2 hours, card B about 1.5, the station line 10 minutes (measured on 412, 418 and 419).
+
+2026-11-21 (M-246) Scope of this task after the operator's later rulings (RR-0367 decision-152, RR-0368 decision-153; MORNING-DECISIONS.md entries "ORDERS the rules section done right" and "fine 1"): this task builds what the grounded round-1 plan says and nothing more: the join of the resolved rule lists into one compliance review packed by size, and plan findings ruled once. The rules index sections (Spec 137, Spec 08, the engineering standards), the check that keeps them true and the table switch are NEW cards after this one, each with its own reviewed plan (planner draft: ~/Buildo-scratch/lanes-20261119/inc1b/proto423/PLAN-423-v3.md, not reviewed). Card B (paperwork allow-list, medium outcome) follows as written in section 6 of the plan. Fix-only re-review is held (task-414 unchanged). The fold below was applied mechanically from the grounder's FOLD-423.json by the orchestrator.
 <!-- SECTION:NOTES:END -->
