@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T16:30:39.216Z file_sha256=1f5dea7a864ec0cf8bef7b287d3bfd0d6a89132a59d4f634a789ad7088d4daee prompt_sha256=f87c9a2ccd7eff89a17ed9cea8b5d9eafbad97e623bc6222dc8fb5f3df1635b9
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-MIG334/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 9875 chars, answer 0 chars, 15s
+BUG severity=HIGH — task-422 acceptance #1 "One queue row names migration 334 in the form of the migration 330 row, with a rule 3 status line; nothing else in the queue file changes" — Implementation Plan "(none)" (only "2026-11-21 taken on the board at lane launch (lane BL-MIG334, worktree /Users/brettpreston_macmini/Buildo-wt-mig334, branch wf1/inc1b-mig334), RR-0240" in Implementation Notes) — no plan step and no diff line adds any row to .cursor/MCBYLAWS-QUEUE.md, so the row text (migration 334, written and not applied, DB job owed a test-stack rehearsal and the operator's typed GO, owner task-406), its placement in the form of .cursor/MCBYLAWS-QUEUE.md:1289, and the rule 3 status line are all absent; the content of "Spec 137 rule 3" is not pasted, so only the presence of such a status line can be checked — add a plan step that quotes the exact new row, cites .cursor/MCBYLAWS-QUEUE.md:1289 as the form, states the rule 3 status line verbatim, and states that no other line of the queue file and no code, test, spec or migration file changes.
+
+BUG severity=HIGH — task-422 acceptance #2 "The id-ledger check of mcbylaws-queue-check.mjs, run on the push range without pushing, no longer prints id-no-row for mig-334 (output pasted), or the lane states exactly why it could not be run" — Implementation Plan "(none)" — neither the pasted check output nor a statement of why it cannot be run exists in the material, and no command is given, so the gate that refused 0f6ba8225 with "FAIL:Q:id-no-row:mig-334:migrations/334_precommit_budget_registry_repin.sql" is left unverified — add a plan step naming the exact invocation of scripts/analysis/mcbylaws/mcbylaws-queue-check.mjs over the push range with no push, with a placeholder for the pasted output, or the precise blocker.
+
+DEFER severity=MED — task-422 description "Also report (read-only) whether the pre-push gate's checks can be run on a commit range without pushing, and how." — Implementation Plan "(none)" — the read-only deliverable the card names is not addressed anywhere in the material — add one plan step that answers this question (command form, range argument, and whether the ledger check accepts a range) and marks it read-only.
+
+REJECT — Increment S requirements doc-2 (F-SEARCH-MOBILE through G.6, the A/B/C/D/E/F/G element table) — accused of being unmet by this change — every pasted inc-S clause describes search page, lot map, semi question, landing or report hand-off elements, none names a queue row, a migration or mig-334, so they do not bind this records-only change and are out of scope for this review.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 3   Unmet: 3
+
+---
+⏱  23025ms (23.0s)
+📊 Tokens — total: 12481, input: 8451, output: 4030, reasoning: 3332

@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T16:30:39.217Z file_sha256=ad1e6791a848ee6e504349c9f1ee16b5276874783f82b8f3e92e2a679d26569d prompt_sha256=aa51738fe71fd92cafc5f6b34b046df4a97cc370318866df1b790772144bfe1f
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-MIG334/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 7883 chars, answer 2381 chars, 15s
+BUG severity=CRIT — AC #1 "One queue row names migration 334 in the form of the migration 330 row, with a rule 3 status line; nothing else in the queue file changes" — material "## Implementation Plan\n(none)" — no queue row exists anywhere in the material, so the gate still has no line naming mig-334, add the single row to .cursor/MCBYLAWS-QUEUE.md modelled on ".cursor/MCBYLAWS-QUEUE.md:1289, \"Row INC6-MIG330 · Migration 330 job\"" and paste the resulting diff as the deliverable
+BUG severity=HIGH — Task "<clause>: stating the truth: what the migration does, that it is written and NOT applied, that it is a DB job owed a test-stack rehearsal and the operator's typed GO, its owner task-406, with a Spec 137 rule 3 status line" — NONE — the plan fixes none of these five required facts, so even the row to be written is unspecified, write the exact row text in the plan verbatim with all five facts plus the rule 3 status line before the lane edits the file
+BUG severity=CRIT — AC #2 "The id-ledger check of mcbylaws-queue-check.mjs, run on the push range without pushing, no longer prints id-no-row for mig-334 (output pasted), or the lane states exactly why it could not be run" — material "## Implementation Plan\n(none)" — no run, no pasted output and no stated reason for not running, add a step naming the exact mcbylaws-queue-check.mjs invocation against the push range with its output pasted, or the sentence stating precisely why it cannot be run
+BUG severity=HIGH — Task "Also report (read-only) whether the pre-push gate's checks can be run on a commit range without pushing, and how" — NONE — the read-only report is absent from the material, add it as a deliverable with the mechanism and command shown
+DEFER severity=MED — AC #1 "nothing else in the queue file changes" — material "## Implementation Plan\n(none)" — with no diff there is no evidence the edit is confined to the one added row, require the lane to paste `git diff --stat` plus the queue-file diff so the single-row claim is checkable
+MET — Files scope — material "Files: .cursor/MCBYLAWS-QUEUE.md" — the card confines the change to that one file, no other file is named
+MET — Task "No code, test, spec or migration file is edited" — material "## Implementation Plan\n(none)" — nothing in the plan touches code, test, spec or migration
+MET — RR-0362 GO scope — "GO on the queue row for migration 334 so the push can be retried (names RR-0362)" — the card adds no behaviour the ruling did not name, its only product is the queue row and the read-only report
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 5
+
+---
+⏱  15204ms (15.2s)
+📊 Tokens — total: 7389, input: 4611, output: 2778, reasoning: 2113

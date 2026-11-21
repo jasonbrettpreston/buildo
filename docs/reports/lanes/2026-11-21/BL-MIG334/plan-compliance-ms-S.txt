@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T16:30:39.227Z file_sha256=5e20c0a8c39e34e78d0ac0e7e79d6bb9e63a0860050ec11629062b2b910588bf prompt_sha256=1320696795c38a10fa441a9d2a7745fb063dee9906c81b2e1fc25b2eb2a27290
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-MIG334/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10522 chars, answer 0 chars, 15s
+BUG severity=CRIT — AC #1 "One queue row names migration 334 in the form of the migration 330 row, with a rule 3 status line" — NONE — no row text and no .cursor/MCBYLAWS-QUEUE.md hunk appears anywhere in the material, so the card's single product is not shown to exist — paste the added row verbatim with its line number in .cursor/MCBYLAWS-QUEUE.md.
+
+BUG severity=HIGH — Description "stating the truth: what the migration does, that it is written and NOT applied, that it is a DB job owed a test-stack rehearsal and the operator's typed GO, its owner task-406, with a Spec 137 rule 3 status line" — NONE — none of the six required elements (what it does, written and NOT applied, test-stack rehearsal, typed GO, owner task-406, rule 3 status line) is present in any pasted row text — paste the row and tick each of the six elements against it.
+
+BUG severity=HIGH — AC #2 "The id-ledger check of mcbylaws-queue-check.mjs, run on the push range without pushing, no longer prints id-no-row for mig-334 (output pasted), or the lane states exactly why it could not be run" — NONE — neither the check output nor a statement of why it could not be run is pasted — paste the gate output for the push range (the falsifier "FAIL:Q:id-no-row:mig-334" no longer appearing) or the exact blocker.
+
+BUG severity=MED — AC #1 "nothing else in the queue file changes" — NONE — no diff is pasted, so the "one row only" condition on ".cursor/MCBYLAWS-QUEUE.md" is unverifiable — paste the diff hunk or a diffstat showing one added line and nothing else.
+
+BUG severity=MED — Description "Also report (read-only) whether the pre-push gate's checks can be run on a commit range without pushing, and how" — NONE — the read-only report the card owes is absent from the material — state the command that runs the queue check on a range without pushing, with the script line it rests on.
+
+DEFER severity=LOW — Description "No code, test, spec or migration file is edited." — NONE — cannot see; no file list or diff confirms confinement to the queue file — confirm the diff touches only .cursor/MCBYLAWS-QUEUE.md.
+
+DEFER severity=LOW — Plan "Files: .cursor/MCBYLAWS-QUEUE.md" — NONE — the changed-file set is not shown, so the stated scope cannot be checked — list the changed files in the hand-off.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 6
+
+---
+⏱  17801ms (17.8s)
+📊 Tokens — total: 6288, input: 2997, output: 3291, reasoning: 2680

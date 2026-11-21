@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T16:33:34.611Z file_sha256=64d20439b98314baa28e73944b9d80acba8e46bc049d41038503be56e0908716 prompt_sha256=c3b16c6d6f11f487a3cfc53c857f90f9c08fe99efe0ccd917419b2deb05e99e9
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-MIG334/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 11039 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 21632 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30955 chars, answer 1399 chars, 45s
+BUG severity=HIGH — AC #2 "The id-ledger check of mcbylaws-queue-check.mjs, run on the push range without pushing, no longer prints id-no-row for mig-334 (output pasted), or the lane states exactly why it could not be run" — NONE (the only pasted material is the .cursor/MCBYLAWS-QUEUE.md diff; no check run and no blocker statement appear anywhere in it) — the row asserts the gate will now name mig-334 ("the push of 0f6ba8225 was refused by the pre-push gate with `FAIL:Q:id-no-row:mig-334:migrations/334_precommit_budget_registry_repin.sql`") but nothing in the material verifies the refusal is cleared — run the id-ledger check of mcbylaws-queue-check.mjs over the push range without pushing and paste that output, or state exactly why it could not be run.
+DEFER severity=MED — Description "Also report (read-only) whether the pre-push gate's checks can be run on a commit range without pushing, and how." — NONE — no such read-only report appears in the material, so how the row was or can be verified without a push is unknown — attach the report (the exact command and range form) beside the row.
+DEFER severity=LOW — Description "in the form of the existing row for migration 330" — .cursor/MCBYLAWS-QUEUE.md:1293 "Status: WAITS · since 2026-11-21 · expires when migration 334 is applied on dev · next: written and NOT applied to any database; ..." — the 330 status line ends `· ruling: "y"` (line 1290) and the neighbouring INC6-RECAP line does too, the new line carries no ruling token although RR-0362 supplies one — append `· ruling: "y"` so the status line matches the 330 form exactly.
+MET — Card, "add ONE queue row for the migration 334 job" — .cursor/MCBYLAWS-QUEUE.md:1292 — one row added ("- Row INC1B-MIG334 · Migration 334 job ..."), no row deleted or renumbered.
+MET — Card, "what the migration does" — .cursor/MCBYLAWS-QUEUE.md:1294 — "one UPDATE of logic_variables, key tooling_precommit_budget_registry_s, value 27.5 to 33.2 and its description".
+MET — Card, "that it is written and NOT applied" — .cursor/MCBYLAWS-QUEUE.md:1294 — "was written by task-406" and "No database holds it today: this row records the job and applies nothing."
+MET — Card, "a DB job owed a test-stack rehearsal and the operator's typed GO" — .cursor/MCBYLAWS-QUEUE.md:1292-1293 — "DB job (rehearsed on the test stack first, Spec 08 section 11.8 MCINC-7)" then "the operator types `OPERATOR-GO INC1B-MIG334` on dev (waits: the test-stack rehearsal, operator)".
+MET — Card, "its owner task-406" — .cursor/MCBYLAWS-QUEUE.md:1294 — "Owner: task-406."
+MET — Card, "No code, test, spec or migration file is edited." — diff paths — the only path changed is .cursor/MCBYLAWS-QUEUE.md.
+MET — AC #1, "nothing else in the queue file changes" — hunk header "@@ -1289,6 +1289,9 @@" — three lines added at 1292-1294, zero removed, so only the one row is inserted.
+MET — Ruling RR-0362 "1. A lane adds one queue row for the migration 334 job, in the form of the 330 row. It is a records edit." — .cursor/MCBYLAWS-QUEUE.md:1292-1294 — a single records row was added and the operator "y" (MORNING-DECISIONS.md entry dated 2026-11-21, RR-0362, decision-147) is quoted verbatim in the Record line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 2
+
+---
+⏱  47345ms (47.3s)
+📊 Tokens — total: 14320, input: 4858, output: 9462, reasoning: 8508

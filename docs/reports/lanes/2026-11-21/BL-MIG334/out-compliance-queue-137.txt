@@ -1,0 +1,43 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-21T16:33:34.611Z file_sha256=f9cdc2ede0c72ca3cea30b35085609d250415fa60028e6ffd2bf02c7a77a315f prompt_sha256=644c7a8b4d02541558332c2645c35e606a6474f1d0d524995d5417c032c7427c
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-MIG334/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+[deepseek-review] deepseek-reasoner working… reasoning 10233 chars, answer 0 chars, 15s
+[deepseek-review] deepseek-reasoner working… reasoning 20916 chars, answer 0 chars, 30s
+[deepseek-review] deepseek-reasoner working… reasoning 30815 chars, answer 0 chars, 45s
+BUG severity=HIGH — task-422 acceptance criterion #2 "The id-ledger check of mcbylaws-queue-check.mjs, run on the push range without pushing, no longer prints id-no-row for mig-334 (output pasted), or the lane states exactly why it could not be run" — NONE (the material under review is the .cursor/MCBYLAWS-QUEUE.md diff only, no check output appears anywhere in it) — the criterion demands a pasted run result or a stated reason, and the material contains neither — paste the mcbylaws-queue-check.mjs run over the push range showing no id-no-row for mig-334, or the exact reason it could not be run.
+
+DEFER severity=MED — task-422 Description "Also report (read-only) whether the pre-push gate's checks can be run on a commit range without pushing, and how." — NONE — no such read-only report is in the material under review, only the queue-file diff — add the command and range to the lane report and cite it in the close.
+
+DEFER severity=LOW — Spec 137 §2 notes "`INC-n`, `AV3-*`, `ST-*` and `CARD-*` have no counter line; the ID ledger is their only claim record." and Rule 2 source "Every MF, FE, MB, migration, prereg round, D and M number is claimed in `~/Buildo-scratch/ids` before it is used anywhere" — NONE — the diff introduces the new row id INC1B-MIG334 and no claim of it in the ID ledger is shown (only mig-334 is claimed, per the card) — add the INC1B-MIG334 claim under ~/Buildo-scratch/ids or state the existing entry in the lane report.
+
+DEFER severity=LOW — Spec 137 §4 rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form: `Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: "<words>")`" — .cursor/MCBYLAWS-QUEUE.md:1294 "Record 2026-11-21 (M-246; INC1B-MIG334 · McBylaws queue · lane BL-MIG334, task-422; operator, verbatim:..." — the note carries the label "Record" and drops "prior text kept" where rule 4 names the form "Dated note <date> (M-246, prior text kept; ...)" — either relabel to the rule 4 form or record that the page's standing practice ("Record") needs an operator amendment of rule 4.
+
+DEFER severity=NIT — Spec 137 §3 rule 1 "`next` is one step, in plain words" — .cursor/MCBYLAWS-QUEUE.md:1293 "next: written and NOT applied to any database; rehearse on the test stack first (MCINC-7; task-420 SCORE.REHEARSE is the later scorecard rehearsal after 334), then the operator types `OPERATOR-GO INC1B-MIG334` on dev (waits: the test-stack rehearsal, operator)" — the field is a state statement plus two ordered steps and two parentheticals, not one step — reduce `next` to the single next step (the test-stack rehearsal) and leave the GO sequencing to the record.
+
+MET — Spec 137 §3 rule 1 (form, closed word list) — .cursor/MCBYLAWS-QUEUE.md:1293 — WAITS is one of the nine words, `since 2026-11-21` present, `ruling:` correctly omitted (optional off FROZEN/DROPPED).
+
+MET — Spec 137 §4 rule 12 "A row that waits on a named event takes that event as its expiry. The `expires` field reads `when <event>`, not a date 7 days out." — .cursor/MCBYLAWS-QUEUE.md:1293 "expires when migration 334 is applied on dev".
+
+MET — Spec 137 §3 rule 1 "A WAITS row names what it waits on inside `next`." — .cursor/MCBYLAWS-QUEUE.md:1293 "(waits: the test-stack rehearsal, operator)".
+
+MET — Spec 137 §4 rule 10 "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — .cursor/MCBYLAWS-QUEUE.md:1294 — date 2026-11-21, row INC1B-MIG334, queue McBylaws, verbatim "y" matching RR-0362.
+
+MET — Spec 137 §4 rule 2 "One task, one row, in one home. Every task is registered." — .cursor/MCBYLAWS-QUEUE.md:1292 — the once-unregistered migration 334 job now has one McBylaws row naming its owner task-406.
+
+MET — task-422 acceptance criterion #1 "One queue row names migration 334 in the form of the migration 330 row, with a rule 3 status line; nothing else in the queue file changes" — diff hunk "@@ -1289,6 +1289,9 @@" — three added lines only, positioned directly after the INC6-MIG330 row, no other line touched.
+
+MET — Spec 137 §4 rule 3 "When work lands for a row, the commit that lands it edits that row's status line." — .cursor/MCBYLAWS-QUEUE.md:1293 "written and NOT applied to any database" — nothing is claimed to have landed, so no same-commit obligation is triggered.
+
+MET — Spec 137 §4 rule 8 "Each open row carries one waiting word (OPERATOR, WAITS or a status above), names its card" — .cursor/MCBYLAWS-QUEUE.md:1293-1294 — one waiting word WAITS and the card named as task-422 (Rule 8 amendment: for plan tasks the task is the card).
+
+REJECT — Spec 137 §4 rule 3 — accused of adding a queue row before the migration work lands — rule 3 binds the commit that lands work; this row claims nothing landed and reads WAITS with a `when` expiry.
+
+REJECT — Spec 137 §4 rule 7 — accused of using `when <event>` instead of a 7-day expiry — rule 12 is the operator-set exception written on the row for named-event waits.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 5
+
+---
+⏱  59952ms (60.0s)
+📊 Tokens — total: 24324, input: 12692, output: 11632, reasoning: 10175
