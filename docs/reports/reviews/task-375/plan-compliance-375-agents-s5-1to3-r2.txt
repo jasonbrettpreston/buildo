@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-20T23:39:32.906Z file_sha256=ab7195d126db652428712b14814424647e6c873c7afe6d7f298e09b1f4274c9f prompt_sha256=8568a7fe2b099de00ac4213caaa25483f78a9979a2f203075263684c535afb0b
+🔍 Lens review of /Users/brettpreston_macmini/Buildo-scratch/lanes-20261119/inc1b/retro/panel-notes/panel2/v3/in-plan-compliance-375-agents-s5-1to3-r2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — 08_agents.md §5.1 HARD DEPENDENCY "Compliance is only meaningful if the spec is TRUE. Run Ground-truth (§5.2) FIRST; a stale spec makes compliance-checking a check against fiction (manual §8.3)." — PLAN-375-v3 §D2 "Other seats (Reality-Check, Ground-truth, Schema-Fidelity) are listed when the subject calls for them (6.4 footnote: by subject-matter, not mechanical); each listed seat is checked the same way." — the launch gate mandates a plan-compliance output for every resolved list on every build and fix task while Ground-truth stays an optional seat (NOT IN SCOPE: "checking the Reality-Check or Ground-truth seats as required"), so a plan with zero ground-truth evidence launches and each of the ~13.5 compliance calls per task runs against a spec nobody proved true — make a Ground-truth seat line a required constant beside "integration" at the gate, and refuse a plan-compliance output whose evidence folder holds no ground-truth seat line.
+
+DEFER severity=MED — 08_agents.md §5.3 "a mandatory second pass. After the panel returns findings, run DeepSeek + Integration against the proposed findings/changes (not the code)" and "Integration (general-purpose, main tree) is its grounder" — PLAN-375-v3 §D1 "a free-text cross-read note (11.2's adversary) which NO check reads" — the gate requires one Integration seat file and grounder verdicts but no round-2 record on the proposed findings, so nothing in the shipped mechanism requires the premise-true, already-settled, cost-less-than-risk pass 5.3 makes mandatory (375's own FOLD-VALIDATION and CROSS-READ are evidence for 375 only) — require a second-pass block in GROUNDER-PLAN.md, one line per finding, checked like the verdict lines.
+
+DEFER severity=LOW — 08_agents.md §5.3 "Rejected findings are written to the plan with reasons so they don't return every round (§8.8)." — PLAN-375-v3 §D4 "one line \"<id> <SEV> <form word> <ref>\" per CONFIRMED or CONFLICT finding of effective severity CRITICAL, HIGH or MED" — rejected findings never reach the task text, only the referenced GROUNDER-PLAN.md, so a false premise already ruled has no reason beside it on the plan to stop it returning next round — add one "<id> REJECTED <reason>" line for rejected findings to the round block, or make the round block name the grounder file beside each id.
+
+DEFER severity=MED — 08_agents.md §5.3 dated note 2026-11-20 (task-366) "a list is split by its own headings when list plus material pass the review tool bound, never trimmed" — PLAN-375-v3 §A6 "a block with no deeper heading is cut between table rows or paragraphs" with "Stated limit: a row is judged without its neighbours and, mid-table, without its column header" — the pasted split rule is the list's own headings; A6 cuts inside a table, so a compliance row is judged without its column header and cannot carry 5.1's "Item-by-item, spec-clause → code-line, PASS/FAIL" — carry the table header line with every row part, or limit the new cut to blank-line paragraphs.
+
+DEFER severity=LOW — 08_agents.md §5.2 "Enforcement = (a) Ground-truth runs at the START of any WF that touches a spec-governed area" — PLAN-375-v3 §D7 "types other than build and fix launch with no plan evidence by design (record, check, doc: 56 of the 76 launchable tasks today)" — the pasted clause says any WF, not build and fix, so a check or doc lane that rewrites spec-governed text still launches with no gate and no ground-truth line — record in the 137_mcqueue.md note why record, check and doc launches are outside (a), or extend the required ground-truth seat line to them.
+
+DEFER severity=LOW — 08_agents.md §5.2 "a standing periodic Ground-truth sweep ... that diffs high-traffic specs against reality and files drift to review_followups.md" — PLAN-375-v3 NOT IN SCOPE "the review_followups.md row" — this tooling task builds neither half of §5.2's enforcement: (a) is gated only as far as finding 1 above, and (b) the periodic sweep and its drift row are deferred to a card with no date or owner — name the sweep card's owner and first run in §10 so the second half of the clause has a home.
+
+MET — 08_agents.md §5.3 dated note (task-410) "each compliance and lens output's prompt_sha256 is recomputed from the template, the input and the context (the tool's placeholder today; the hook point is `lensContexts` for task-375)" — PLAN-375-v3 §A4 — lensContexts returns the selected-section text of every committed context file, so the existing :65 recompute binds it.
+
+MET — 08_agents.md §5.3 dated note (round 3) "scripts/lib/review-template.js and scripts/deepseek-review.js ... may not differ from the range base unless the task's launch Files line covers them" — PLAN-375-v3 §3 — both files are on the Files line, and extractSections moves into review-template.js under that coverage.
+
+MET — 08_agents.md §5.3 dated note (round 6) "fold 410 as an omission guard, named as that, with the forgery routes recorded on tasks 401 and 402" — PLAN-375-v3 §10 — the gate is named part of the same omission guard and the forgery routes stay on tasks 401 and 402.
+
+MET — 08_agents.md §5.3 dated note (task-366) "never trimmed" — PLAN-375-v3 §A6 — a row or paragraph that alone passes the room, or a block with no cut point, is still refused naming it, not trimmed.
+
+MET — 08_agents.md §5.3 "The lane that wrote the work leaves the task RUNNING with \"grounder owed\"" — PLAN-375-v3 §2 — the lane leaves RUNNING "grounder owed" and a separate grounder is launched on the lane directory.
+
+MET — 08_agents.md §5.3 dated note (task-410) "a lane build or fix close stages only its lane report directory, the review context directory, task files and decision records" — PLAN-375-v3 §A5 — round contexts live in docs/reports/reviews/<task>/ and are committed with the round.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 6
+
+---
+⏱  96593ms (96.6s)
+📊 Tokens — total: 34910, input: 14871, output: 20039, reasoning: 18521
