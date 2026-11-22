@@ -71,7 +71,7 @@ type Opts = {
   tagAtHead?: string; folded?: boolean; afterFold?: Record<string, string>; beforeType?: string; noBoard?: boolean; finalTaskPath?: string; laneDelete?: string[]; otherType?: string; otherAssignees?: string[]; diffCfg?: string[]; finalMilestone?: string; finalFiles?: string;
   // task-399 outcome records: triage text builder (default: fixed with the lane commit, ruling for a CONFLICT), Final Summary (default: the exact block; false: none), the lens line, a prior round line, a revert commit, the other task
   triage?: (c: TriageCtx) => string; summary?: false | ((block: string[]) => string[]); finding?: string; priorRound?: boolean; revertLane?: boolean; otherStatus?: string; otherExtra?: string; cli?: boolean; noDecision?: boolean; notesBlock?: boolean;
-  ctx?: string | false; hashCtx?: string; refs?: false | string[]; mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
+  joined?: boolean | 'other'; planBoard?: string; ctx?: string | false; hashCtx?: string; refs?: false | string[]; mutate?: (l: Lane, d: string) => Lane; after?: (l: Lane) => Lane; g?: G; noTaskFile?: boolean; taskFileText?: string; lensFinding?: boolean;
 };
 type TriageCtx = { ids: { id: string; word: string; sev: string }[]; sha: string; path: string; base: string; d: string };
 function scenario(o: Opts = {}) {
@@ -91,6 +91,7 @@ function scenario(o: Opts = {}) {
   if (!o.noDecision) w('backlog/decisions/decision-1 - RR-0001-test-ruling.md', '---\nid: decision-1\ntitle: RR-0001 test ruling\n---\n');
   if (o.otherTask) w(OTHER, `${taskText({ id: 'TASK-8', status: o.otherStatus ?? 'RUNNING', type: o.otherType, assignees: o.otherAssignees })}${o.otherExtra ?? ''}`);
   for (const [p, x] of LENS_TEMPLATES) w(p, x);
+  if (o.planBoard !== undefined) w('docs/reports/reviews/task-7/GROUNDER-PLAN.md', o.planBoard); // task-423: the plan evidence on the board at the launch commit
   g('add', '-A'); g('commit', '-qm', 'base'); g('branch', 'wf2/board');
   const baseSha = g('rev-parse', 'HEAD').stdout.trim();
   const laneWork = o.laneWork ?? { 'src/a.ts': `${AFILE}// lane work\n` };
@@ -115,15 +116,15 @@ function scenario(o: Opts = {}) {
   fs.writeFileSync(path.join(d, '.git/material.txt'), material);
   fs.writeFileSync(path.join(d, '.git/tpl.md'), '## System persona\nsys\n\n## User prompt\nPLAN:\n{{PLAN}}\nSPECS:\n{{SPECS}}\n');
   const splitArgs = o.split ? ['--max', String(o.split.max), '--template', path.join(d, '.git/tpl.md')] : [];
-  for (const id of ['first', 'inc-F', ...Object.keys(table.lists as object).filter((k) => k === 'xtra'), ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
+  for (const id of o.joined ? ['rules'] : ['first', 'inc-F', ...Object.keys(table.lists as object).filter((k) => k === 'xtra'), ...((table.every_task as string[] | undefined) ?? []), ...(((table.milestone_docs as Record<string, string[]> | undefined)?.F) ?? [])]) {
     const out = path.join(d, LD, `in-out-compliance-${id}`);
-    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
+    const r = script('scripts/analysis/rule-lists.mjs', ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--root', d, '--table', path.join(d, 'scripts/analysis/rule-lists.json'), '--list', id, ...(id === 'rules' ? ['--lists', o.joined === 'other' ? 'first,inc-F,msf' : 'first,inc-F,ev,msf'] : []), '--material', path.join(d, '.git/material.txt'), '--out', out, ...splitArgs], { cwd: d });
     if (r.status !== 0 && o.table !== 'never' && o.table !== 'delete') throw new Error(`lens-input ${id}: ${r.stderr}`);
     for (const p of r.stdout.split('\n').filter(Boolean)) {
       const nm = path.basename(p);
       const inText = fs.readFileSync(p, 'utf8');
       lane[nm] = inText;
-      lane[nm.replace(/^in-/, '')] = hdr('lens-compliance.md', inText) + body(id === 'first' && o.lensFinding !== false, o.finding);
+      lane[nm.replace(/^in-/, '')] = hdr('lens-compliance.md', inText) + body((id === 'first' || id === 'rules') && o.lensFinding !== false, o.finding);
     }
     if (r.status !== 0) { lane[`in-out-compliance-${id}.txt`] = ''; lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', '') + body(id === 'first' && o.lensFinding !== false, o.finding); }
   }
@@ -836,12 +837,12 @@ type PO = {
   type?: string; files?: string; tracked?: string[]; omitList?: string; noFolder?: boolean; noGrounder?: boolean; grounder?: string; laneHdr?: string; drop?: string[]; seatPath?: string; seatSha?: string; seatNoVerdict?: boolean;
   noRuled?: string; finding?: { file: string; sev: string }; triage?: string | false; round?: string | false; editBody?: (b: string) => string; stray?: boolean; throwRead?: boolean; planLens?: boolean; placeholder?: boolean; refs?: false; noPlanLine?: boolean;
   ctx?: string; badMaterial?: boolean; junkPlan?: boolean; fixCompliance?: 'valid' | 'junk';
-  fold?: false | ((planLine: string) => string); assignees?: string[];
+  fold?: false | ((planLine: string) => string); assignees?: string[]; joinedPlan?: boolean | 'other' | 'both';
 };
 const goodFold = (planLine: string, name = 'Fold-G1') => `# Fold check\nChecked by: ${name}\nVerdict: PASS\n\nthe folded plan was read again against the findings\n\n${planLine}\n`;
 async function planScenario(o: PO = {}) {
   const m = (await import('../../../scripts/hooks/check-lane-close.mjs')) as { planGateErrors: (i: unknown) => { errors: string[]; lists: number; findings: number; line: string }; planHash: (t: string) => string };
-  const rl = (await import('../../../scripts/analysis/rule-lists.mjs')) as { buildLensInputs: (a: unknown) => { suffix: string; text: string }[]; resolveTask: (a: unknown) => { lists: { id: string }[] } };
+  const rl = (await import('../../../scripts/analysis/rule-lists.mjs')) as unknown as { buildLensInputs: (a: unknown) => { suffix: string; text: string }[]; joinLists: (t: unknown, ids: string[]) => { lists: Record<string, unknown> }; resolveTask: (a: unknown) => { lists: { id: string }[] } };
   const id = 'task-7'; const dir = `docs/reports/reviews/${id}`;
   const mem: Record<string, string> = { 'docs/a.md': '# A\nrule one text\nrule two text\n', 'docs/ev.md': '# Ev\nthe five words and the plan protocol\n', 'docs/ms.md': '# Ms\nthe milestone objectives\n', 'docs/inc.md': '# Inc\nincrement text\n', 'src/a.ts': AFILE };
   const d = tmp('pg');
@@ -865,8 +866,12 @@ async function planScenario(o: PO = {}) {
     files['context-r1.md'] = ctxText;
     if (type === 'build') {
       const lists = rl.resolveTask({ table, root: d, body: text0, type, letter: 'F' }).lists.map((l) => l.id).filter((x) => x !== o.omitList);
-      for (const lid of lists) {
-        const ins = rl.buildLensInputs({ id: lid, list: (table.lists as Record<string, unknown>)[lid], root: d, material: o.badMaterial ? 'some other text under review' : cut, templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: sel });
+      // task-423: the joined plan evidence (plan-compliance-rules*) over the resolved lists; 'other' joins one list fewer; 'both' also writes the per-list set
+      const forms: { lid: string; list: unknown }[] = [];
+      if (o.joinedPlan) forms.push({ lid: 'rules', list: rl.joinLists(table, o.joinedPlan === 'other' ? lists.filter((x) => x !== 'ev') : lists).lists.rules });
+      if (!o.joinedPlan || o.joinedPlan === 'both') for (const lid of lists) forms.push({ lid, list: (table.lists as Record<string, unknown>)[lid] });
+      for (const { lid, list } of forms) {
+        const ins = rl.buildLensInputs({ id: lid, list, root: d, material: o.badMaterial ? 'some other text under review' : cut, templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: sel });
         for (const x of ins) {
           const inn = `in-plan-compliance-${lid}${x.suffix}.txt`;
           files[inn] = x.text;
@@ -1062,5 +1067,78 @@ describe('task-375 D: the launch gate refuses a build or fix launch whose plan w
     expect(fx.errors).toEqual([]);
     const bd = await planScenario({ planLens: true, omitList: 'first' });
     gate(bd, /list first/);
+  });
+});
+
+// ---- task-423 (PROTOCOL.SIMPLE, card A): adjustment 1 (the joined compliance set per stage) and adjustment 3 (plan findings ruled once) ----
+// Rule: 08_agents.md section 7 rule 4 and section 5.3; 137_mcqueue.md Rule 3 and Rule 10. The per-list form of every test above is the control: it stays accepted.
+const PLAN_LINE = 'Plan: task-7 sha256:0123456789ab\n';
+describe('task-423 (b): the close accepts a joined output set and still accepts the per-list set', () => {
+  it('a joined output set (out-compliance-rules.txt over the resolved lists joined whole) is accepted', () => {
+    const r = scenario({ joined: true });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('control: the per-list set is accepted', () => {
+    const r = scenario();
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('a folder holding both forms for one phase is refused', () => {
+    refused(scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-first.txt': l['out-compliance-rules.txt'] as string }) }), /both the joined \(out-compliance-rules\*\.txt\) and the per-list/);
+  });
+  it('task-423 D1: a joined round file (out-compliance-rules-r2.txt, out-compliance-rules-r2-p1.txt) beside the joined round 1 is the joined form, not refused as holding both; control: a real per-list file (round or not) beside the joined set is still refused', () => {
+    const ok = scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-rules-r2.txt': body(false), 'out-compliance-rules-r2-p1.txt': body(false) }) });
+    expect(ok.status, ok.stderr).toBe(0);
+    refused(scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-first-r2.txt': body(false) }) }), /holds both the joined/);
+    refused(scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-first.txt': l['out-compliance-rules.txt'] as string }) }), /holds both the joined/);
+  });
+  it('a joined set with a gap (-p1 and -p3) is refused', () => {
+    refused(scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-rules.txt': null, 'out-compliance-rules-p1.txt': l['out-compliance-rules.txt'] as string, 'out-compliance-rules-p3.txt': l['out-compliance-rules.txt'] as string }) }), /rules[\s\S]*p2/);
+  });
+  it('a joined set made for a different resolved list (one list left out) is refused', () => {
+    refused(scenario({ joined: 'other' }), /do not carry the whole list rules|not what lens-input writes for its own stamp/);
+  });
+  it('a joined input with a part shortened after the stamp is refused; control: the untouched set was accepted above', () => {
+    refused(scenario({ joined: true, mutate: (l) => ({ ...l, 'in-out-compliance-rules.txt': (l['in-out-compliance-rules.txt'] as string).replace('rule two text', '') }) }), /stamped sha256 does not match|REVIEW header file_sha256/);
+  });
+  it('neither form: the refusal names the joined file first, and the per-list refusals follow', () => {
+    const r = scenario({ mutate: (l) => Object.fromEntries(Object.entries(l).filter(([n]) => !/compliance/.test(n))) });
+    refused(r, /no joined compliance lens output[\s\S]*out-compliance-rules\.txt/);
+    expect(r.stderr).toMatch(/out-compliance-inc-F\.txt/);
+  });
+});
+
+describe('task-423 (b): the plan gate accepts joined or per-list plan evidence', () => {
+  it('joined plan evidence (plan-compliance-rules) over the resolved lists passes the gate; control: the per-list evidence passes', async () => {
+    const j = await planScenario({ joinedPlan: true });
+    expect(j.errors, j.errors.join('\n')).toEqual([]);
+    const p = await planScenario();
+    expect(p.errors, p.errors.join('\n')).toEqual([]);
+  });
+  it('both forms for the plan phase, and a joined set made for a different resolved list, are refused', async () => {
+    gate(await planScenario({ joinedPlan: 'both' }), /holds both the joined \(plan-compliance-rules\*\.txt\) and the per-list/);
+    gate(await planScenario({ joinedPlan: 'other' }), /do not carry the whole list rules|not what lens-input writes for its own stamp/);
+  });
+});
+
+describe('task-423 (c): plan findings are ruled once, at the plan', () => {
+  const noPlan = (l: Lane) => ({ ...l, 'plan-code-review.txt': null });
+  it('a lane folder with no plan-*.txt closes when GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line', () => {
+    const r = scenario({ planBoard: `# plan grounder\n${PLAN_LINE}`, mutate: noPlan });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('a plan-*.txt with a finding in the folder is ignored: no Ruled line and no finding id of it is demanded', () => {
+    const r = scenario({ planBoard: PLAN_LINE, mutate: (l) => { const x = { ...l, 'plan-code-review.txt': body(true) }; return { ...x, 'GROUNDER.md': grounder({ ...x, 'plan-code-review.txt': null }) }; } });
+    expect(r.status, r.stderr).toBe(0);
+  });
+  it('GROUNDER-PLAN.md absent at the launch commit with no plan-*.txt is refused; so is an empty one, or one with no Plan line', () => {
+    refused(scenario({ mutate: noPlan }), /no plan-stage lens output/);
+    refused(scenario({ planBoard: '\n', mutate: noPlan }), /no plan-stage lens output/);
+    refused(scenario({ planBoard: '# plan grounder\nno plan line here\n', mutate: noPlan }), /no plan-stage lens output/);
+    refused(scenario({ planBoard: 'Plan: task-99 sha256:0123456789ab\n', mutate: noPlan }), /no plan-stage lens output/);
+  });
+  it('control: absent at the launch commit with plan-*.txt present keeps the old rule (the plan finding needs its Ruled line and verdict)', () => {
+    const ok = scenario();
+    expect(ok.status, ok.stderr).toBe(0);
+    refused(scenario({ mutate: (l) => ({ ...l, 'plan-code-review.txt': body(true), 'GROUNDER.md': grounder({ ...l, 'plan-code-review.txt': null }) }) }), /plan-code-review/);
   });
 });

@@ -55,7 +55,9 @@ describe('G1 backlog-brief (test 4)', () => {
     expect(r.stdout).toMatch(/08_agents\.md:339/);
     expect(r.stdout).toContain(`task edit ${plan} -s RUNNING -a @lane-BL-R1`);
     expect(r.stdout).toMatch(/--plan/);
-    expect(r.stdout).toMatch(/node scripts\/deepseek-review\.js review docs\/reports\/reviews\/\S+\/context-r1\.md --template \.claude\/review-templates\/plan-review-deepseek\.md --context docs\/reports\/reviews\/\S+\/context-r1\.md --section "Task"/);
+    expect(r.stdout).not.toMatch(/Review \(plan or output\)/); // task-423 D2: the brief orders no plan review (RR-0374)
+    expect(r.stdout).not.toContain('plan-review-deepseek.md');
+    expect(r.stdout).toMatch(/Review \(output only\):/);
     expect(r.stdout).toMatch(/provider claude/i);
     expect(r.stdout).toMatch(/bash_allow/);
     expect(r.stdout).toMatch(/--final-summary/);
@@ -69,7 +71,8 @@ describe('G1 backlog-brief (test 4)', () => {
     expect(r.stdout).toMatch(/The plan is the task text at launch, checked before launch/);
     expect(r.stdout).toMatch(/do not edit the Description, Acceptance or Plan/);
     expect(r.stdout).toMatch(/record deviations in Implementation Notes/);
-    expect(r.stdout).toMatch(/still runs at least one plan-stage lens of its own and rules its findings in its own GROUNDER\.md/);
+    expect(r.stdout).toMatch(/plan findings were ruled once, at the plan: the lane runs no plan lens and its GROUNDER\.md rules the output findings only/);
+    expect(r.stdout).not.toMatch(/still runs at least one plan-stage lens/);
     expect(r.stdout).toMatch(/STATUS: ready\|blocked\|failed\|dropped/);
   });
 

@@ -10,9 +10,11 @@
 //  * Files against the diff: every path changed since the lane branch point (merge-base with the table's base_ref) or staged, outside docs/reports and backlog, is covered by the task's
 //    Files line; a build or fix task whose Files resolve to no rule list is refused;
 //  * every_task (V2.LIST, task-406): the table's every_task lists are attached to every task by the resolver, so each needs its compliance output like any list; a table with no every_task is refused;
+//  * task-423: the compliance proof is ONE joined output set per stage (out-compliance-rules[-pN].txt, the resolved lists joined whole by joinLists) or the per-list set (a stage holding both is refused);
+//    plan findings are ruled once: with GROUNDER-PLAN.md at the launch commit non-empty and holding a Plan line, no plan-*.txt is required and none is read for findings;
 //  * the LENS SET the task type calls for (scripts/analysis/rule-lists.mjs lensSet, the function the launch brief uses): per attached rule list one compliance output
 //    (out-compliance-<list id>.txt; plan- or out- for a non build/fix task; ONE file or parts -p1..-pK with no gap), and for a build or fix task also out-<lens>.txt for code-review,
-//    error-paths (ux, security by the Files line) and at least one plan-stage output. Each required output starts with the review tool's REVIEW header (template name matching the lens,
+//    error-paths (ux, security by the Files line); a plan-stage output only when GROUNDER-PLAN.md at the launch commit is absent (task-423). Each required output starts with the review tool's REVIEW header (template name matching the lens,
 //    model, timestamp, file_sha256, prompt_sha256) and ends in a VERDICT: line. A compliance output's file_sha256 must be that of the committed input in-<output name> whose first line
 //    `LIST <id> sha256:<hex> material sha256:<hex> part i of n` is recomputed here, and the parts together must carry the WHOLE rule list (so a list cannot be shortened or softened);
 //  * the WHOLE change (V2.WHOLE, task-410): the changed paths of the task range (merge-base with the table's base_ref to HEAD, minus the table's exempt paths) are recomputed here; the
@@ -37,7 +39,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { asList, parseFM } from '../analysis/backlog-lib.mjs';
-import { coveredBy, DIFF_ARGS, diffPaths, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
+import { coveredBy, DIFF_ARGS, diffPaths, JOINED_ID, joinLists, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
 import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
 
 const { CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections } = createRequire(import.meta.url)('../lib/review-template.js');
@@ -418,6 +420,41 @@ function listProof({ id, l, phases, files, textOf, table, root, readBase, ctxVal
   return ok ? null : `${id}: list ${l.id} (${l.file}) has no valid compliance lens output in ${dirNote}: write ${phases.join(' or ')}-compliance-${l.id}.txt${why.length ? ` (${why.join('; ')})` : ''}; ${layout}`;
 }
 
+/**
+ * task-423 (PROTOCOL.SIMPLE, adjustment 1): the compliance proof of a stage in either form. The JOINED form is out-compliance-rules[-pN].txt (the resolved lists joined whole by joinLists, proved by listProof as one
+ * list named rules); the PER-LIST form is out-compliance-<list id>[-pN].txt for every list (kept for a task launched before the join). The form is decided per phase from the files in the folder: a phase holding both
+ * is refused, a phase holding neither is refused naming the joined file first (the per-list refusals follow). `proof(l, phases, table)` is one listProof call; `lists` the resolved lists; returns the refusal lines.
+ */
+function complianceSetErrors({ id, lists, phases, files, table, dirNote, proof }) {
+  const named = (ph, re) => files.some((f) => re.test(f.name) && f.name.startsWith(`${ph}-compliance-`));
+  const isJoined = new RegExp(`^(plan|out)-compliance-${JOINED_ID}(-r\\d+)?(-p\\d+)?\\.txt$`); // a round file (-rN, -rN-pN) of the joined set is joined too (task-423 D1)
+  const isAny = /^(plan|out)-compliance-.+\.txt$/;
+  const errors = [];
+  const joinedPh = []; const perPh = [];
+  for (const ph of phases) {
+    const j = named(ph, isJoined);
+    const p = files.some((f) => isAny.test(f.name) && f.name.startsWith(`${ph}-compliance-`) && !isJoined.test(f.name));
+    if (j && p) errors.push(`${id}: ${dirNote} holds both the joined (${ph}-compliance-${JOINED_ID}*.txt) and the per-list (${ph}-compliance-<list id>*.txt) compliance outputs of the ${ph} stage: keep one form per stage`);
+    else if (j) joinedPh.push(ph);
+    else if (p) perPh.push(ph);
+  }
+  const none = joinedPh.length === 0 && perPh.length === 0 && errors.length === 0;
+  if (none) {
+    errors.push(`${id}: no joined compliance lens output in ${dirNote}: write ${phases.map((p) => `${p}-compliance-${JOINED_ID}.txt`).join(' or ')} (rule-lists.mjs lens-input --list ${JOINED_ID} --lists ${lists.map((l) => l.id).join(',')}), or one per list as below`);
+    perPh.push(...phases);
+  }
+  if (joinedPh.length) {
+    let t;
+    try { t = joinLists(table, lists.map((l) => l.id)); } catch (e) { return [...errors, `${id}: ${String(e.message).split('\n')[0]}`]; }
+    const e = proof({ id: JOINED_ID, file: t.lists[JOINED_ID].file }, joinedPh, t);
+    if (e) errors.push(e);
+  }
+  if (perPh.length) for (const l of lists) { const e = proof(l, perPh, table); if (e) errors.push(e); }
+  return errors;
+}
+/** task-423 (adjustment 3): true when the plan evidence is on the board: GROUNDER-PLAN.md at the launch commit is non-empty and holds a "Plan: <task id> sha256:<12 hex>" line (the launch gate put it there; the hash is not compared at close). */
+export const planOnBoard = (text, id) => typeof text === 'string' && text.trim() !== '' && [...text.matchAll(/^\s*Plan:\s*(\S+)\s+sha256:[0-9a-f]{12}\s*$/gm)].some((m) => m[1].toLowerCase() === String(id).toLowerCase());
+
 export function closeErrors(i) {
   const { id, type, readRepo } = i;
   const readBase = i.readBase ?? readRepo; // F10: templates come from the range base
@@ -474,10 +511,7 @@ export function closeErrors(i) {
 
   // (a) one compliance lens output per list, with its REVIEW header, bound to the committed input and to the whole list
   const phases = build ? ['out'] : ['plan', 'out'];
-  for (const l of r.lists) {
-    const e = listProof({ id, l, phases, files, textOf, table: i.table, root: i.root, readBase, ctxValues: lc.values, expected, diffOf: i.diffOf, optionalPaths: i.optionalPaths, dirNote, layout });
-    if (e) errors.push(e);
-  }
+  errors.push(...complianceSetErrors({ id, lists: r.lists, phases, files, table: i.table, dirNote, proof: (l, phs, tbl) => listProof({ id, l, phases: phs, files, textOf, table: tbl, root: i.root, readBase, ctxValues: lc.values, expected, diffOf: i.diffOf, optionalPaths: i.optionalPaths, dirNote, layout }) }));
   // (a') the rest of the lens set a build or fix task calls for, and a plan-stage output
   if (build) {
     const set = lensSet({ type, files: filesText(i.taskText) });
@@ -513,11 +547,13 @@ export function closeErrors(i) {
         else errors.push(...reviewErrors(n, t, `lens-${lens}.md`, whole, { what: 'the recomputed diff of the whole task range (the diff file the lens must have read, made with the command in the brief)', templateText: readBase(`.claude/review-templates/lens-${lens}.md`), contexts: lc.values }).map((x) => `${id}: ${x}`));
       }
     }
-    if (!files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7); ${layout}`);
+    // task-423 (adjustment 3): plan findings are ruled once, at the plan: with the plan evidence on the board no plan-stage output is required in the lane folder
+    if (!i.planOnBoard && !files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(`${id}: no plan-stage lens output (plan-<lens>.txt) in ${dirNote}: the plan is reviewed before the build (Spec 08 section 7); ${layout}`);
   }
 
   // finding lines: a loose reading must count the same as the strict one
-  const lensFiles = files.filter((f) => isLensOutput(f.name)).sort((a, b) => a.name.localeCompare(b.name));
+  // task-423 (adjustment 3): with the plan evidence on the board a plan-*.txt in the lane folder is ignored (its findings were ruled at the plan)
+  const lensFiles = files.filter((f) => isLensOutput(f.name) && !(i.planOnBoard && f.name.startsWith('plan-'))).sort((a, b) => a.name.localeCompare(b.name));
   for (const f of lensFiles) {
     const strict = findingsIn([f]).length;
     const loose = looseFindingCount(f.text);
@@ -588,18 +624,19 @@ function planGateInner(i) {
   if (type === 'build') {
     // one valid plan compliance output per resolved list, whose stamped material is the plan sections of the context whose text produced its prompt hash
     const cands = contexts.map((c) => ({ value: lensContexts([{ name: c.name, text: c.text }], hasNotes).values[0] ?? null, cut: planCut(c.text), name: `${dir}/${c.name}` })).filter((c) => c.value !== null);
-    for (const l of r.lists) {
+    // task-423: joined (plan-compliance-rules*) or per-list plan evidence; each proof is tried against every committed context
+    const planProof = (l, phs, tbl) => {
       let last = null;
-      let good = false;
       for (const c of cands.length ? cands : [{ value: null, cut: null, name: '' }]) {
-        const e = listProof({ id, l, phases: ['plan'], files, textOf, table: i.table, root: i.root, readBase: i.readRepo, ctxValues: c.value === null ? [] : [c.value], expected: [], diffOf: () => null, optionalPaths: [], dirNote,
-          layout: `put plan-compliance-<list id>[-pN].txt and its in-<same name> directly in ${dirNote} (written by rule-lists.mjs lens-input --list <id> --material-from <context-rN.md> --out <folder>/in-plan-compliance-<id>)`,
+        const e = listProof({ id, l, phases: phs, files, textOf, table: tbl, root: i.root, readBase: i.readRepo, ctxValues: c.value === null ? [] : [c.value], expected: [], diffOf: () => null, optionalPaths: [], dirNote,
+          layout: `put plan-compliance-rules[-pN].txt (or plan-compliance-<list id>[-pN].txt per list) and its in-<same name> directly in ${dirNote} (written by rule-lists.mjs lens-input --list rules --lists <ids> (or --list <id>) --material-from <context-rN.md> --out <folder>/in-plan-compliance-<name>)`,
           materialOk: (p) => (c.cut !== null && p.material === c.cut ? null : `the stamped material is not the Description, Acceptance criteria and Implementation Plan sections of the committed context ${c.name || '(none)'} (a plan review of some other text)`) });
-        if (e === null) { good = true; break; }
+        if (e === null) return null;
         last ??= e;
       }
-      if (!good) errors.push(last);
-    }
+      return last;
+    };
+    errors.push(...complianceSetErrors({ id, lists: r.lists, phases: ['plan'], files, table: i.table, dirNote, proof: planProof }));
   } else {
     // a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line (reviewErrors; g375#1)
     const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));
@@ -755,6 +792,8 @@ function check(msgFile) {
       baseTask = lx.status === 0 ? lx.stdout : null;
     }
     const baseFm = baseTask ? parseFM(baseTask).fm : null;
+    // task-423 (adjustment 3): the plan evidence on the board at the launch commit (the launch gate refused before the take unless it was there)
+    const planBoard = L ? planOnBoard(git(['show', `${L}:docs/reports/reviews/${id}/GROUNDER-PLAN.md`]).stdout, id) : false;
     const type = String(boardFm?.type ?? baseFm?.type ?? mv.fm.type ?? '').toLowerCase();
     if (baseFm && String(baseFm.milestone ?? '') !== String(mv.fm.milestone ?? '')) errors.push(`${id}: the milestone is ${mv.fm.milestone} here but ${baseFm.milestone} at its launch: a lane may not move its task to another milestone (the milestone decides which objectives lists apply)`);
     // H3: the prompt builder and the review tool decide what a recomputed prompt hash proves; they may not differ from the range base unless the task's launch Files line covers them
@@ -795,7 +834,7 @@ function check(msgFile) {
     // task-375 A5: every committed context file of the task (docs/reports/reviews/<id>/context-rN.md), the INDEX first, then HEAD (the order readRepo uses), never the range base
     const ctxDir = `docs/reports/reviews/${id}/`;
     const contexts = [...new Set([...git(['ls-files', '--cached', '--', ctxDir]).stdout.split('\n'), ...git(['ls-tree', '-r', '--name-only', 'HEAD', '--', ctxDir]).stdout.split('\n')].filter((q) => new RegExp(`^${esc(ctxDir)}context-r\\d+\\.md$`).test(q)))].sort().map((q) => ({ name: q, text: readRepo(q) })).filter((x) => x.text !== null);
-    errors.push(...closeErrors({ id, contexts, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase, facts: gitFacts(L), headTaskText: mv.headText }));
+    errors.push(...closeErrors({ id, contexts, planOnBoard: planBoard, taskText: resolveText, fm: mv.fm, assignees: allAssignees, headAssignees: asList(mv.headFm.assignee).map(String), type, table: judge, root: top, letter: milestoneLetter(top, baseFm?.milestone ?? mv.fm.milestone), laneFiles, changed, expectedPaths, optionalPaths, rangeEmpty, diffOf, readRepo, readBase, facts: gitFacts(L), headTaskText: mv.headText }));
   }
   // H10: a branch whose tree lacks a board task file that is a lane build or fix task whose lane directory the branch carries has deleted or renumbered the real task: refused for any close
   const idxNums = new Set(git(['ls-files', '--cached', '--', 'backlog/tasks']).stdout.split('\n').map((p) => /backlog\/tasks\/task-0*(\d+)/i.exec(p)?.[1]).filter(Boolean));

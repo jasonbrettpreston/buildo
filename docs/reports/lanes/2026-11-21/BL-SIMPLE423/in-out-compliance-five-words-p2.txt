@@ -1,0 +1,136 @@
+LIST five-words sha256:9ac37044b0deec3165ae2ad6e4c02aa48a6d8ede03c038b0c9178860b8f223a2 material sha256:9c9b680d32185da6ac6626df3d65ef138f82ebcc624692ccd830f6db3382a8d1 part 1 of 1 chunk 2 of 2
+RULE LIST five-words (docs/specs/01-pipeline/132_step_standard_handbook.md, sections Glossary), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/rule-lists.logic.test.ts"]
+
+## Glossary
+
+- **slug**: A step's name: its `scripts/manifest.json` key and `identity.name`. Not its file name (table 1b).
+- **archetype vs shape**: `identity.archetype` (INGESTOR, LINK, MATCHER, ENRICHER, MATERIALIZER, BACKFILL, ASSERT, RECORDER) is what the step is; it selects required and forbidden descriptor fields and is checked against the census. `execution.shape` is which runner phase executes it (table 1a). A MATCHER has shape `cascade`; a RECORDER may have no shape.
+- **phase**: One of the runner functions in table 1a that owns a step's reads, writes and transactions.
+- **compute hook**: A named function or value on the compute module that a phase calls or reads (for example `compute.buildMatchSql`); the main function is called once after the phase.
+- **PH-0 … PH-8**: Spec 121 §3 assessment phases used in Spec 123: PH-0 is the boundary freeze (it reads every write and derives the archetype), PH-4 the risk class. Not the programme stages P0–P3.
+- **① ② ③**: The three conversion commits: ① red suite + descriptor, ② compute + runner (the shell swap), ③ cutover into `converted[]` (`scripts/steps/_schema/converted.json`).
+- **stage**: A pending step's declared progress in `converted.json` `pending[]` (`red_suite` … `shape_clean`); it decides which gates cannot yet be answered.
+- **RE-FREEZE #N**: A numbered, reviewed revision of the frozen step vocabulary (`scripts/steps/_schema/step.schema.json`, `template-freeze.json`). A field is added or deleted only by one.
+- **#NN**: A `step-validate` fast invariant, by number (for example #44 the read/write witness, #54 swap order). Every number cited in the hand-written parts exists in `scripts/analysis/step-validate.mjs` or its gates.
+- **Gate A … K, V**: Lettered R-BA gates (A…K, plus V for the five words), implemented in `scripts/analysis/gates/` or in `scripts/analysis/step-validate.mjs` (gates H, K and V live there). Gate E is compute purity, Gate F the score floor. Not the scorecard.
+- **PURITY-G0 … PURITY-G13**: Gate E compute-purity finding codes. Not rule ids; never the scorecard gates.
+- **SCORECARD-G0 … SCORECARD-G9**: Spec 123 scorecard gates G0–G9 (G7 test adequacy, G8 differential); rule ids `G0`…`G9` carry these aliases.
+- **V3 (standard) vs V3 (vocabulary)**: `standard=V3` is the McDonald's Airtight V3 label (R-EY). The rule id `V3` (alias SPEC122A-V3) is the Spec 122a `guards.schema_drift` vocabulary row.
+- **SPEC121-M1 … SPEC121-M14**: Spec 121 cadence items, retired as a set. `M14` also names an unrelated spec-move id in Spec 124; the alias SPEC121-M14 means the Spec 121 item.
+- **five words**: R-BA gate V (in `scripts/analysis/step-validate.mjs`): STANDARDIZED, OBSERVABLE, SCALABLE, UNDERSTANDABLE, ACCURATE, each PASS or FAIL from the mapped gates.
+- **bracket**: A capture taken inside a perturbation (a forced cohort, delete-and-reinsert or derived-status), so a guarded write path writes something; replayed only through the same bracket (#38).
+- **OWED**: Printed by #44 (h) when a reader's pin is due but its producer still awaits captures (R-ES); not a failure until the producer swaps.
+- **class-A**: Spec 123 risk class A (PH-4): the highest test intensity; its behaviours need a both-directions lock.
+- **LDG-10, EP-PIN-D17**: Programme items in `scripts/steps/_schema/programme-items.json` (cutover prerequisites).
+- **W4A-Rn**: Wave-4 assessment rulings drafted outside the register; their register rows are owed (rule-map `meta.register_rows_owed`).
+- **lock / lock-db / check / hook**: Enforcement kinds in the rule map. A lock is a test under `src/tests/` run by `npm test` that names the rule id (or a declared alias) and asserts it; a lock-db is the same but a `*.db.test.ts` run only by `npm run test:db`; a check is a `step-validate` invariant or gate token; a hook is a `.husky` hook.
+- **Intent Ledger**: The table in a step's assessment report listing each behaviour of the legacy step and its disposition, one of the closed `DISPOSITION_VOCAB` (`scripts/analysis/step-validate.mjs`): preserved-in-runner, preserved-in-validator, preserved-in-compute, encoded-as-descriptor-field, encoded-as-deviation, knowingly-retired. Scored by scorecard G3; G-2 reads it.
+- **G-2**: Spec 124 GAP G-2 (Rule 4): every preserved-in-compute Intent Ledger row names where its rule is written (`checkPreservedInComputeHasWhy`). Not scorecard G2.
+- **§R Reflection**: The closing section of a step's assessment report recording what the conversion taught; scorecard G9 checks it exists.
+- **seam**: A declared hand-off between steps or between compute and the runner: cross-step seams are producer → consumer edges (`inputs.reads.steps`); the ENRICHER write seam is `ctx.exec` / `ctx.joinUpdate`, where the runner, not compute, issues the DML.
+- **sources chain**: The `sources` chain in `scripts/manifest.json` `chains`: the ordered ingest-and-derive steps run by `run-chain.js`; other chains (for example `coa`) are listed beside it.
+- **P0 … P3**: Programme stages of the step-optimisation programme (Spec 122/123). Not the assessment phases PH-0 … PH-8. Spec 122 also uses "P0" for a top-priority missing schema category ("six missing P0 categories", 122a §A5 and 122a R6); history.1's "P0 categories adjudication" is that sense, not the stage.
+- **†**: An id or code pointer that lands with another branch (rule-map `meta.pending_integration`).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 2ece2e0df8849489760c71c126f0f29ffb7ce95a..85b2fa9482294b9d10236dfb95cd8ee0fad050e2 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -863,3 +863,95 @@ describe('task-375 (suite fix): the repo a read names is the one its root names,
+     expect(() => m.trackedFiles(tmp('norepo'))).toThrow(/git ls-files failed/);
+   });
+ });
++
++// ---- task-423 (PROTOCOL.SIMPLE, card A, adjustment 1): the resolved lists joined whole into one virtual list, packed by size ----
++// Rule: 08_agents.md section 7 rule 4 and section 5.3 (the compliance lens reviews the whole lists, never trimmed); PLAN-PROTOCOL.md:3 simple, no scope creep.
++type JM = { joinLists: (t: unknown, ids: string[]) => { lists: Record<string, { members?: { id: string }[]; file: string; whole?: boolean }> }; parseLensInput: (t: string) => { listPart: string; id: string } | null; wholeListText: (l: unknown, root: string, id: string) => string; readTable: () => { lists: Record<string, unknown> } };
++const jmod = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<JM>;
++const filesLineOf = (n: number) => /^Files: (.*)$/m.exec(fs.readFileSync(path.join(ROOT, 'backlog/tasks', fs.readdirSync(path.join(ROOT, 'backlog/tasks')).find((f) => f.startsWith(`task-${n} -`)) as string), 'utf8'))?.[1] as string;
++const FILES_423 = 'scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, scripts/analysis/backlog-brief.mjs, docs/specs/00-architecture/08_agents.md, docs/specs/00-architecture/137_mcqueue.md, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/backlog-brief.logic.test.ts';
++const resolvedIds = (files: string) => { const r = script(CLI, ['resolve', '--files', files, '--type', 'build', '--letter', 'S']); expect(r.status, r.stderr).toBe(0); return ids(JSON.parse(r.stdout) as Res); };
++// a reviewer context of the size the plan stage carries (rulings context about 4,620 characters)
++const BIGCTX = (d: string) => CTX(d, 'the description', `\n## Pad\n${'x'.repeat(4400)}\n`);
++const joinedCount = (listIds: string[], material: number, max?: number) => {
++  const d = tmp('join');
++  const m = path.join(d, 'mat.txt'); fs.writeFileSync(m, 'm'.repeat(material));
++  const r = script(CLI, ['lens-input', '--list', 'rules', '--lists', listIds.join(','), '--material', m, '--context', BIGCTX(d), '--out', path.join(d, 'in-x-compliance-rules'), ...(max ? ['--max', String(max)] : [])]);
++  return { r, files: r.stdout.split('\n').filter(Boolean) };
++};
++
++describe('task-423 (a): joined input: the nine lists of the tooling kind, whole, in table order, packed by size', () => {
++  it('writes at most 3 files for the tooling kind at a plan material of 12,400 characters; the stitched list parts equal the whole text of the nine lists in table order', async () => {
++    const m = await jmod();
++    const lists = resolvedIds(FILES_423);
++    expect(lists).toHaveLength(9);
++    const { r, files } = joinedCount(lists, 12400);
++    expect(r.status, r.stderr).toBe(0);
++    expect(files.length).toBeGreaterThan(0);
++    expect(files.length).toBeLessThanOrEqual(3);
++    const t = m.readTable();
++    const order = Object.keys(t.lists).filter((k) => lists.includes(k));
++    const want = order.map((id) => m.wholeListText(t.lists[id], ROOT, id)).join('').replace(/\s+/g, '');
++    const got = files.map((f) => (m.parseLensInput(fs.readFileSync(f, 'utf8')) as { listPart: string }).listPart).join('').replace(/\s+/g, '');
++    expect(got).toBe(want);
++    expect(fs.readFileSync(files[0] as string, 'utf8')).toMatch(/^LIST rules sha256:[0-9a-f]{64} material sha256:[0-9a-f]{64} part 1 of \d+\nRULE LIST rules \(9 lists: /);
++  });
++  it('with --max small the parts are more and every file is under the bound; control: an input with a part shortened no longer matches its stamp', async () => {
++    const m = await jmod();
++    const lists = resolvedIds(FILES_423);
++    const big = joinedCount(lists, 12400);
++    const small = joinedCount(lists, 12400, 60000);
++    expect(small.r.status, small.r.stderr).toBe(0);
++    expect(small.files.length).toBeGreaterThan(big.files.length);
++    for (const f of small.files) expect(fs.readFileSync(f, 'utf8').length, f).toBeLessThan(60000);
++    const text = fs.readFileSync(big.files[0] as string, 'utf8');
++    expect((m.parseLensInput(text) as { id: string }).id).toBe('rules');
++    const at = text.indexOf('\n\n') + 2; // the start of the list part, after the stamp and head lines
++    const cut = text.slice(0, at) + text.slice(at + 50);
++    expect(cut).not.toBe(text);
++    expect((m.parseLensInput(cut) as unknown as { ok: boolean }).ok).toBe(false);
++  });
++  it('joinLists: one extra list named rules with the members whole in table order; an id not in the table, or a table list named rules, is refused', async () => {
++    const m = await jmod();
++    const t = m.readTable();
++    const j = m.joinLists(t, ['plan-protocol', 'five-words']);
++    expect(j.lists.rules?.members?.map((x) => x.id)).toEqual(Object.keys(t.lists).filter((k) => ['plan-protocol', 'five-words'].includes(k)));
++    expect(j.lists.rules?.whole).toBe(true);
++    expect(() => m.joinLists(t, ['nope'])).toThrow(/nope/);
++    const f = fixture();
++    const bad = JSON.parse(fs.readFileSync(f.table, 'utf8'));
++    bad.lists.rules = { file: 'docs/a.md', whole: true, generated_by: 'hand-written' };
++    fs.writeFileSync(f.table, JSON.stringify(bad));
++    const v = script(CLI, ['validate', '--root', f.d, '--table', f.table]);
++    expect(v.status).toBe(1);
++    expect(v.stderr).toMatch(/list rules: the id "rules"/);
++  });
++});
++
++describe('task-423 (e): counts pinned at most, on the real table', () => {
++  it('the tooling kind and the task-419 Files line: 3 compliance files at the plan (material 12,400) and 3 at the output (diff 29,700); the task-412 Files line: 3 and 3', () => {
++    for (const files of [FILES_423, filesLineOf(419), filesLineOf(412)]) {
++      const lists = resolvedIds(files);
++      for (const mat of [12400, 29700]) {
++        const { r, files: out } = joinedCount(lists, mat);
++        expect(r.status, `${files.slice(0, 40)} ${mat}: ${r.stderr}`).toBe(0);
++        expect(out.length, `${files.slice(0, 40)} material ${mat}`).toBeLessThanOrEqual(3);
++      }
++    }
++  });
++  it('the old per-list form is unchanged: one lens-input per list still writes that list alone (control)', () => {
++    const d = tmp('perlist');
++    const m = path.join(d, 'mat.txt'); fs.writeFileSync(m, 'm'.repeat(12400));
++    const r = script(CLI, ['lens-input', '--list', 'five-words', '--material', m, '--context', BIGCTX(d), '--out', path.join(d, 'in-x-compliance-five-words')]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout.trim().split('\n')).toHaveLength(1);
++    expect(fs.readFileSync(r.stdout.trim(), 'utf8')).toMatch(/^LIST five-words sha256:/);
++  });
++  it('lens-input --list rules with no --lists is refused with a usage line', () => {
++    const d = tmp('nolists');
++    const m = path.join(d, 'mat.txt'); fs.writeFileSync(m, 'm');
++    const r = script(CLI, ['lens-input', '--list', 'rules', '--material', m, '--context', BIGCTX(d), '--out', path.join(d, 'in-x')]);
++    expect(r.status).toBe(2);
++    expect(r.stderr).toMatch(/--lists/);
++  });
++});
+

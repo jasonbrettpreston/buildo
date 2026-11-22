@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-22T15:37:26.505Z file_sha256=4d96000c705ff30f2e34728dd5ba28c2ac43bf8139b8d0d0a8589f18818a622c prompt_sha256=a216980197fd8540553437048dd06f09b6e4a15598e43d4aeca29e4b25fd5334
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — scripts/hooks/check-lane-close.mjs "const planBoard = L ? planOnBoard(git(['show', `${L}:docs/reports/reviews/${id}/GROUNDER-PLAN.md`]).stdout, id) : false;" — the git exit status is never read, so a bad ref or unreadable object is indistinguishable from "no plan evidence" and the lane is refused with the misleading "no plan-stage lens output" instead; — capture the status and, when non-zero and the path did exist in the tree, report that reason, keeping the absent-path case silent.
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "expect((m.parseLensInput(cut) as unknown as { ok: boolean }).ok).toBe(false);" — the same file declares parseLensInput as returning "{ listPart: string; id: string } | null", so this double cast asserts a field the declared type does not have and a null return makes the access throw instead of asserting; — declare parseLensInput once with its real shape (including ok) and drop the "as unknown as".
+
+DEFER severity=LOW — src/tests/backlog/rule-lists.logic.test.ts "/^Files: (.*)$/m.exec(fs.readFileSync(path.join(ROOT, 'backlog/tasks', fs.readdirSync(path.join(ROOT, 'backlog/tasks')).find((f) => f.startsWith(`task-${n} -`)) as string), 'utf8'))?.[1] as string;" — both casts hide undefined (no matching task file, no Files line), so a folded or renamed task-412 or task-419 fails with ERR_INVALID_ARG_TYPE or feeds "resolve --files undefined" instead of naming the missing fixture; — look the file up first and throw an explicit "task-N or its Files line is missing" message.
+
+DEFER severity=NIT — scripts/analysis/backlog-lane.mjs "extra: extra.some((x) => /Compliance lens, (ONCE PER RULE LIST|ONE JOINED RUN PER STAGE)/.test(String(x))) ? extra : [...extra, spec.extra[spec.extra.length - 1]]," — no text this file emits contains "ONE JOINED RUN PER STAGE" (the per line says "Compliance lens, ONCE PER RULE LIST"), so that alternative is a dead branch; — drop the alternative or emit the joined-default wording it guards.
+
+DEFER severity=NIT — scripts/analysis/rule-lists.mjs "const where = list?.members ? `${list.members.length} lists: ${list.members.map((m) => m.id).join(', ')}` : list ? `${list.file}, ${sel}` : '';" — the callback parameter `m` shadows the destructured chunk-count `m` that the same function uses later for "chunk ${c} of ${m}", which reads as a wrong-variable use on a quick scan; — rename the callback parameter to mem.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  327034ms (327.0s)
+📊 Tokens — total: 96457, input: 34577, output: 61880, reasoning: 61219

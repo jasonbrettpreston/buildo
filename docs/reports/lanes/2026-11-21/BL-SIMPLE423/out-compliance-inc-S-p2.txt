@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T15:37:26.419Z file_sha256=61446b9b87fa02db0abbc71a434e401c264b4505a4af851738be74c3003f40ac prompt_sha256=37c7c3b65984b5bc0db840b59fcc7b8221bcd41a7b307eada6c8ed22c105d34c
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-compliance-inc-S-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #1 "the stitched list parts equal the whole text of the nine lists in table order" — src/tests/backlog/rule-lists.logic.test.ts:893 "const want = order.map((id) => m.wholeListText(t.lists[id], ROOT, id)).join('').replace(/\s+/g, '');" — both sides strip every whitespace character before comparing, so a join that drops blank lines or reflows spaces inside a list still passes and "whole, never trimmed" is not proven — compare the stitched parts byte for byte, normalizing only the newline the packer inserts between parts.
+DEFER severity=LOW — AC #1 "an input with a part shortened or edited is refused at close" — src/tests/backlog/check-lane-close.logic.test.ts:1100 "mutate: (l) => ({ ...l, 'in-out-compliance-rules.txt': (l['in-out-compliance-rules.txt'] as string).replace('rule two text', '') })" — only the shortening half is exercised at the close, an equal length substitution is never asserted, so "or edited" rests on nothing — add a fixture that swaps one word for another of the same length and expect the same refusal.
+DEFER severity=LOW — AC #2 "a folder holding both for one phase, a joined set with a gap, and a joined set for a different resolved list are refused" — src/tests/backlog/check-lane-close.logic.test.ts:1088 "'out-compliance-rules-r2.txt': body(false)" — the round 2 joined files are fabricated bodies carrying no LIST stamp and are pinned as accepted, so these tests say nothing about stamp checking of a real round 2 joined output, and the same flexibility would accept an edited round 2 review — build the r2 fixture through lens-input, then shorten a part and expect refusal.
+DEFER severity=NIT — AC #1 "lens-input --list rules --lists <the nine ids>" — src/tests/backlog/rule-lists.logic.test.ts:949 "it('lens-input --list rules with no --lists is refused with a usage line'" — the pinned exit code 2 and the --lists stderr requirement are behaviour no pasted clause or ruling names — drop the case or cite the clause that asks for it.
+MET — AC #1 "writes at most 3 files" — src/tests/backlog/rule-lists.logic.test.ts:890 — expect(files.length).toBeLessThanOrEqual(3) for the nine tooling lists at 12,400 characters.
+MET — AC #1 "with --max small the parts are more and every part is under the bound" — src/tests/backlog/rule-lists.logic.test.ts:902-905 — the 60,000 cap yields more parts and each file is asserted under the bound.
+MET — AC #2 "a joined output set is accepted; a per-list set is accepted (control)" — src/tests/backlog/check-lane-close.logic.test.ts:1076-1082 — both scenarios assert status 0.
+MET — AC #2 "the plan gate accepts joined or per-list plan evidence" — src/tests/backlog/check-lane-close.logic.test.ts:1110-1114 — joinedPlan and the default per-list run both assert no gate errors.
+MET — AC #3 "a lane folder with no plan-*.txt closes when GROUNDER-PLAN.md at L is non-empty with a Plan line" — src/tests/backlog/check-lane-close.logic.test.ts:1124-1126 — planBoard with a Plan line and plan-code-review.txt removed closes at status 0.
+MET — AC #3 "no Ruled line and no plan finding id is demanded" — src/tests/backlog/check-lane-close.logic.test.ts:1128-1130 — a plan finding still present in the folder is ignored and the lane closes.
+MET — AC #5 "Counts pinned in rule-lists.logic.test.ts as at most" — src/tests/backlog/rule-lists.logic.test.ts:931-937 — the tooling, task-419 and task-412 Files lines are each pinned at most 3 at 12,400 and 29,700.
+MET — AC #4 "A table list named rules is refused by validate" — src/tests/backlog/rule-lists.logic.test.ts:924-926 — validate exits 1 and stderr names the id "rules".
+REJECT — AC #4 "the page check passes after regeneration; the brief names the joined command and no longer says to copy plan-*.txt" — accused of leaving the page and the brief unverified — those paths are not in this chunk's list, so nothing here can satisfy or breach them and chunk 1 is reviewed in its own run.
+REJECT — doc-2 Increment S, "Not built: direction and unit parsing (plan 1.4), the reports-left line, ... the clear button" — accused of leaving search elements unbuilt — the pasted increment spec governs the search pages and raises no clause on these backlog review-tooling tests.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 0
+
+---
+⏱  111698ms (111.7s)
+📊 Tokens — total: 42105, input: 18746, output: 23359, reasoning: 22208

@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T15:37:26.403Z file_sha256=3e06b9e4629388e9090f8de4f7f5be26573927bbb5647cb50e6a1b5cd39f4a39 prompt_sha256=48e50c4f781cefffd2d7fd1f3a0beb0eca7c3980cdc5f2242647690e5ff68615
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-compliance-agents-s5-1to3-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-423 AC #3 "a lane folder with no plan-*.txt closes when GROUNDER-PLAN.md at L is non-empty with a Plan line"; Spec 137 dated note 2026-11-21 task-419 "and, as the last such line of the file, alone on its line, `Plan: <task id> sha256:<12 hex>` equal to the hash of the task as it is at launch" — scripts/hooks/check-lane-close.mjs:796 "const planBoard = L ? planOnBoard(git(['show', `${L}:docs/reports/reviews/${id}/GROUNDER-PLAN.md`]).stdout, id) : false;" — the pasted 137 clause puts the Plan hash line in FOLD-CHECK.md, written "committed beside GROUNDER-PLAN.md", so unless GROUNDER-PLAN.md also carries a Plan line (the file is not pasted, cannot see) planOnBoard is always false, and because backlog-lane.mjs now orders "the lane runs no plan lens" every build close is refused for a missing plan-*.txt — read FOLD-CHECK.md at L as well (or accept either file) and correct the AC and the added 137 sentence to name the source file.
+
+DEFER severity=MED — task-423 AC #6 "the task-412 plan stage as one joined compliance call set plus plan-review and error-paths" — scripts/analysis/backlog-lane.mjs:185 "The plan was ruled once, at the plan: the lane runs no plan lens." and src/tests/backlog/backlog-lane.logic.test.ts "expect(r.stdout).not.toMatch(/--list rules/); // RR-0374: the per-document form" — no tool path produces the AC's joined plan-stage set: plan-prep is pinned to the per-list form and the lane brief forbids a plan lens, so the replay can only be hand-run against its own brief — give plan-prep a joined option or write the replay's joined plan command into the brief.
+
+DEFER severity=MED — task-423 AC #3 "absent at L with plan-*.txt present keeps the old rule (control)" — .claude/review-templates/README.md item 4 "A finding is a `BUG` or `DEFER` line of an `out-*.txt` lens output (plan findings are ruled once, at the plan..." — the table now says a finding is only an out-*.txt line, while the code and the AC keep demanding verdicts for plan-*.txt findings when the plan evidence is not on the board — restore the plan-*.txt branch in the table sentence, qualified by the board-evidence condition.
+
+DEFER severity=LOW — task-423 AC #2 "a per-list set is accepted (control)" and the rule-list clause "a list is never trimmed in either form" — .claude/review-templates/README.md item 5 "one compliance lens output per attached list (`out-compliance-<list id>.txt`), or the accepted joined set (`out-compliance-rules.txt`, or parts `-p1..-pK`; a stage holding both forms is refused; each ends with a `VERDICT:` line)" — the per-list form's mandatory parts `-p1..-pK` (a list over the bound is split, never trimmed) are no longer named, so the table understates the accepted per-list set — put "or parts -p1..-pK" back on the per-list branch.
+
+MET — task-423 AC #4 "A table list named rules is refused by validate" — scripts/analysis/rule-lists.mjs:130 "if (id === JOINED_ID) { bad.push(`list ${id}: the id \"${JOINED_ID}\" is the joined list of lens-input --list ${JOINED_ID} (task-423); name the list otherwise`); continue; }" — validate refuses the id and joinLists refuses it too.
+
+MET — task-423 AC #2 "a folder holding both for one phase ... are refused" — scripts/hooks/check-lane-close.mjs "holds both the joined (${ph}-compliance-${JOINED_ID}*.txt) and the per-list (${ph}-compliance-<list id>*.txt) compliance outputs of the ${ph} stage: keep one form per stage" — the form is decided per phase and both forms in one phase is an error.
+
+MET — RR-0374 "the joined run is an accepted form of the compliance lens output set and is NOT the default" — scripts/analysis/backlog-lane.mjs:185 "is an accepted form that is not the default (RR-0374, measured: joined whole documents found 10 of 15 findings against the per-document form's 14 of 15)" — brief, table and the new plan-prep tests all keep the per-list form as the default.
+
+MET — 08 section 5.3 note (task-423) "the resolved rule lists may be joined whole in table order" — scripts/analysis/rule-lists.mjs "if (Array.isArray(list.members)) return list.members.flatMap((m) => listBlocks(m, root, m.id)" — joinLists sorts by table order and listBlocks reads each member whole, nothing cut.
+
+MET — task-423 AC #3 "GROUNDER-PLAN.md absent at L with no plan-*.txt ... is refused" — scripts/hooks/check-lane-close.mjs "if (!i.planOnBoard && !files.some((f) => /^plan-.+\.txt$/.test(f.name))) errors.push(" — the old rule stands when the board holds no plan evidence.
+
+MET — task-423 AC #4 "the brief names the joined command and no longer says to copy plan-*.txt" — scripts/analysis/backlog-lane.mjs:185 "The joined run (`lens-input --list rules --lists <ids>`, one set out-compliance-rules[-pN].txt for all the lists)" and "copy out-*.txt and FINDINGS.md" — the joined command is named and the plan copy order is gone.
+
+REJECT — task-423 AC #6 "at least 80 percent of the distinct CONFIRMED compliance findings of docs/reports/reviews/task-412/GROUNDER-PLAN.md" — the change is accused of adopting a join that re-finds only 10 of 15 — RR-0374, pasted and later, records exactly 10 of 15 and the operator approved step 1 and step 2 anyway, so the older percentage bar does not bind this change.
+
+REJECT — 08 section 5.3 dated 2026-11-21 "The default stays one compliance run per rule list" — the change is accused of making the join the default — the brief, the table and the new plan-prep tests all keep the per-document form as the default and forbid --list rules there.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 4
+
+---
+⏱  148894ms (148.9s)
+📊 Tokens — total: 60731, input: 31686, output: 29045, reasoning: 27514

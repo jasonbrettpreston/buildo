@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T15:37:26.403Z file_sha256=436becf91776814561efb296e7d7147a8d850efab71c9a43a7519e4cd849ac22 prompt_sha256=a6c0bd285cc051c049c5ce32c44683c3d6932fe57433a4365ff23ca41876c916
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-compliance-agents-s5-1to3-p2.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — none found in this chunk; no clause is outright unmet — NONE — no refusals beyond the card were removed and no named refusal is contradicted by an added assertion — none
+
+DEFER severity=MED — task-423 acceptance #3 "GROUNDER-PLAN.md at L is non-empty with a Plan line; ... GROUNDER-PLAN.md absent at L with no plan-*.txt, or an empty one, is refused" — src/tests/backlog/check-lane-close.logic.test.ts:1125 "const r = scenario({ planBoard: `# plan grounder\n${PLAN_LINE}`, mutate: noPlan });" and :1133 "refused(scenario({ mutate: noPlan }), /no plan-stage lens output/);" — every (c) case has the file either present from the base commit onward or absent throughout, so no case separates "read at L" from "read from the closing worktree": a file added only after L, or deleted before close, is never exercised — add one case with GROUNDER-PLAN.md first written after the launch commit (must be refused) and one present at L but deleted in the closing tree (must still close)
+
+DEFER severity=MED — task-423 acceptance #2 "a joined set with a gap ... and a joined set for a different resolved list are refused" — src/tests/backlog/check-lane-close.logic.test.ts:1117 "gate(await planScenario({ joinedPlan: 'both' }), /holds both the joined \(plan-compliance-rules\*\.txt\) and the per-list/);" — the gap case (:1093 "a joined set with a gap (-p1 and -p3) is refused") and the shortened-part case (:1099) exist only against the close, never against the plan gate, so the gate side is only proven for the two accept paths and the both-forms refusal — add the gap and the trimmed-part case to planScenario so the gate's pack check is proven, not just its form check
+
+DEFER severity=LOW — 2026-11-21 note "a list is never trimmed in either form (the "never trimmed" sentence above stays true)" — src/tests/backlog/rule-lists.logic.test.ts:895 "expect(got).toBe(want);" over :893 "const want = order.map((id) => m.wholeListText(t.lists[id], ROOT, id)).join('').replace(/\s+/g, '');" and :894 "const got = files.map((f) => (m.parseLensInput(fs.readFileSync(f, 'utf8')) as { listPart: string }).listPart).join('').replace(/\s+/g, '');" — both sides strip all whitespace before comparing, so an input whose packed parts lost a list heading, a blank separator or leading/trailing text whitespace still passes the "equal the whole text" pin — compare the unstripped concatenation, or assert the per-list boundaries (each member's heading) appear in table order
+
+DEFER severity=LOW — acceptance #5 "Counts pinned in rule-lists.logic.test.ts as at most: the tooling kind and the task-419 Files line ... the task-412 Files line 3 and 3" — src/tests/backlog/rule-lists.logic.test.ts:932 "for (const files of [FILES_423, filesLineOf(419), filesLineOf(412)]) {" with :870 "const filesLineOf = (n: number) => ..." — the two pinned Files lines are read live from backlog/tasks at run time, so a later re-scope of task-419 or task-412 silently moves the number the test pins (and a rename makes the call throw), so the "3 and 3" is not pinned to the line the plan was measured against — freeze both Files lines as literals in this test and leave the live read to a separate drift check
+
+DEFER severity=NIT — acceptance #2 "a joined output set is accepted" — src/tests/backlog/check-lane-close.logic.test.ts:117 "lane[nm.replace(/^in-/, '')] = hdr('lens-compliance.md', inText) + body((id === 'first' || id === 'rules') && o.lensFinding !== false, o.finding);" beside :121 "lane[`out-compliance-${id}.txt`] = hdr('lens-compliance.md', '') + body(id === 'first' && o.lensFinding !== false, o.finding); }" — the lens-input-failure fallback was not widened to the joined id, so a joined scenario driven down the error branch writes an out file with no finding and the joined error path is never exercised — pass the same `(id === 'first' || id === 'rules')` predicate in the fallback branch
+
+MET — task-423 acceptance #1 "writes at most 3 files ... with --max small the parts are more and every part is under the bound" — src/tests/backlog/rule-lists.logic.test.ts:890 "expect(files.length).toBeLessThanOrEqual(3);" and :905 "for (const f of small.files) expect(fs.readFileSync(f, 'utf8').length, f).toBeLessThan(60000);" — the bound and the split-at-lower-max behaviour are both asserted
+
+MET — task-423 acceptance #2 "a folder holding both forms for one phase is refused" — src/tests/backlog/check-lane-close.logic.test.ts:1085 "refused(scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-first.txt': l['out-compliance-rules.txt'] as string }) }), /both the joined \(out-compliance-rules\*\.txt\) and the per-list/);" — both forms at the close refused, and the plan twin at :1117
+
+MET — 2026-11-21 note "out-compliance-rules[-pN].txt (a round file -rN of it counts as joined)" — src/tests/backlog/check-lane-close.logic.test.ts:1088 "const ok = scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-rules-r2.txt': body(false), 'out-compliance-rules-r2-p1.txt': body(false) }) });" — a joined round file counts as joined, and a per-list round file beside it is refused at :1090
+
+MET — 2026-11-21 note "The default stays one compliance run per rule list" — src/tests/backlog/rule-lists.logic.test.ts:941 "it('the old per-list form is unchanged: one lens-input per list still writes that list alone (control)'" with :944 "expect(r.stdout.trim().split('\n')).toHaveLength(1);" — the per-list default is kept as an unchanged control
+
+MET — task-423 acceptance #4 "A table list named rules is refused by validate" — src/tests/backlog/rule-lists.logic.test.ts:922 "bad.lists.rules = { file: 'docs/a.md', whole: true, generated_by: 'hand-written' };" with :926 "expect(v.stderr).toMatch(/list rules: the id \"rules\"/);" — validate refusal pinned
+
+MET — task-423 acceptance #3 "no Ruled line and no plan finding id is demanded" — src/tests/backlog/check-lane-close.logic.test.ts:1129 "const r = scenario({ planBoard: PLAN_LINE, mutate: (l) => { const x = { ...l, 'plan-code-review.txt': body(true) }; return { ...x, 'GROUNDER.md': grounder({ ...x, 'plan-code-review.txt': null }) }; } });" — a plan finding present with the plan grounder on the board no longer needs a Ruled line
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+
+---
+⏱  147235ms (147.2s)
+📊 Tokens — total: 34963, input: 16483, output: 18480, reasoning: 16713
