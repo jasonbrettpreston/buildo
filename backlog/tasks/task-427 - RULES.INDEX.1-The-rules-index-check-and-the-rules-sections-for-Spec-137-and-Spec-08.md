@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-21T22:20:00Z'
-updated_date: '2026-11-22T15:09:00Z'
+updated_date: '2026-11-22T15:15:00Z'
 labels:
   - McFix
   - McFix V2
@@ -43,4 +43,8 @@ Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's r
 Dated note 2026-11-22 (M-246, prior text kept; RR-0372 · task-427 · Backlog; operator, verbatim: "yes let keep this simple - but it cant go on forever")
 
 Dated note 2026-11-22 (M-246, prior text kept; RR-0373 · task-427 · Backlog; operator, verbatim: "Im not approving anything - Im asking a question")
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0374 · task-427 · Backlog; operator, verbatim: "Apprvoe step 1 and step 2 - when it arrives")
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0375 · task-427 · Backlog; operator, verbatim: "close it if it is verified")
 <!-- SECTION:NOTES:END -->
