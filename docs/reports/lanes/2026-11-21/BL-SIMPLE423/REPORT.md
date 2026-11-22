@@ -1,12 +1,21 @@
-# REPORT BL-SIMPLE423 (task-423, card A, stage 1: build)
+# REPORT BL-SIMPLE423 (task-423, card A) - final, output round 2 grounded
 
-1. What changed: the resolved rule lists are now joined whole, in table order, into one list named `rules` and packed by size, so one compliance call set per stage covers all of them (`lens-input --list rules --lists <ids>`); the close check and the plan gate accept the joined set or the old per-list set and refuse a stage holding both; plan findings are ruled once: when GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line the close needs no plan-*.txt and reads only the out-*.txt findings. The brief says so; dated notes, README items 3 to 5 and the page follow.
-2. Measured calls: task-419 plan stage 9 compliance calls become 3 (3 files); task-412 plan stage replay: 11 calls (9 compliance + 2 lenses) became 4 (2 joined compliance parts + plan-review + error-paths); this lane's own output review of an 88,835 character diff took 14 calls (12 joined compliance parts: 4 diff chunks x 3 list parts, plus code-review and error-paths); the 29,700-character pin is at most 3 compliance files.
-3. Acceptance printed: (a) 3 files for the task-419 plan, 10 files with --max 60000 each under the bound, stitched parts equal the nine lists; (b) joined accepted, per-list accepted, both/gap/different-list refused, plan gate accepts both forms; (c) plan once, four refusals and the old-rule control; (d) validate refuses a list named rules, page --check current, brief names the joined command; (e) counts pinned at most 3 and 3 for the tooling kind, task-419 and task-412; (f) NOT MET, see item F; (g) below. Full text is on the task (--append-notes).
-4. Could not be built as the plan says: nothing stopped. Plan section 1 predicted 3 compliance calls for an output stage of 29,700 characters; this lane's own diff is 88,835 characters, so it needed 12 (the plan lists "a 48,000 character diff: 5"). Acceptance (f) failed its 80 percent bar (item F).
-5. Unverified: the hand count of acceptance (f) (below, UNVERIFIED by a second reader); every output finding is untriaged (49 findings in FINDINGS.md: 0 CRIT, 5 HIGH, 17 MED, 27 LOW or NIT); the grounder is owed, the task stays RUNNING.
+1. What task-423 now does: plan findings are ruled once (when GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line, the close needs no plan-*.txt and reads only the out-*.txt findings); the generated brief runs no plan lens and orders the compliance review once per rule list at the output stage (the per-document form is the default); a joined form (the resolved lists joined whole into one packed input set, `lens-input --list rules --lists <ids>`) stays in the code as an accepted form that nothing orders, because it was measured at 10 of 15 findings against 14 of 15 for the per-document form (RR-0374); the close and the plan gate accept either form and refuse a mix; a joined round file (-rN, -rN-pN) is read as joined.
+2. Acceptance (f) is NOT met (5 of 12 distinct confirmed findings of the task-412 plan stage re-found, the HIGH queue-137#1 missed); it is not claimed and is moved to the later comparison (RR-0374, task-427).
+3. Rounds 1 and 2 of the output review are done (RR-0371: at most three): round 1 ruled 49 findings (1 HIGH, 8 MED = one defect, fixed in fix round 1 except p1#3, then fixed by item A); round 2 ruled 87 findings plus the grounder's own: 34 CONFIRMED, all LOW or NIT, 54 REJECTED, no CRITICAL, HIGH or MED open. Outcomes check: "checked 34 ids", no refusal.
+4. Calls made: plan-stage replay of task-412 (acceptance (f)) 4; output round 1 14 (12 joined compliance parts, code-review, error-paths); output round 2 21 (18 per-document compliance parts, code-review, error-paths, plus one re-run of out-compliance-ms-S-p1 that failed with "terminated").
+5. UNVERIFIED: the full suite was never run by this lane (only the hook's related tests per commit); acceptance (f) hand counts; the hook on the Files-line edit was accepted by the real commit.
 
-STATUS: blocked (grounder owed; acceptance (f) not met)
+Order of work and test counts as the logs print them:
+- Build (commit 740ade03d): code first, then the tests; the red was reconstructed (scripts restored from HEAD by git show for the attempt): 21 failed, 284 passed; green 305 passed in 4 files.
+- Fix round 1: tests first (red-fix1.out: 12 failed, 226 passed of 238); that red commit did not land; the real commit a7e366cbb printed 13 passed (1 file) + 300 passed (3 files) = 313. (322 passed in 5 files was printed by an earlier attempt that check-task-files then refused over a test file outside the Files line; it never landed.)
+- Item A: tests first (red-fix2.out: 2 failed, 20 passed of 22); real commit 5d554f459 printed 13 passed (1 file) + 22 passed (2 files).
+- Round 2 review records and this close are records only (no code commit after 5d554f459).
+
+STATUS: ready
+
+---
+## Round 1 history (superseded where the lines above differ)
 
 ## Commits (all through the real hooks, none bypassed)
 - red: a commit attempt with only the four test files and the task file staged, scripts restored to HEAD by `git show` for that attempt: 21 failing assertions at the designed places (red.out; first red attempts stopped at typecheck on a cast, fixed in the test).
