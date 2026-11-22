@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:48:32.030Z file_sha256=4ddda7d13add8b3b1ba98613e8e6b3ba623a74e74cf83e0ff4ae14ae2dbae790 prompt_sha256=71ba676c3c833224d5404fc9ea54e36466a7605f74c28767167464e8dbed8a2e
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ROUNDS437/in-out-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-437 FINAL.2 "the close check accepts two output rounds (it supersedes the third round of RR-0371)" — docs/specs/00-architecture/08_agents.md:356 "Not enforced: the cap and the round-2 MED rule are process; `scripts/hooks/check-lane-close.mjs` counts 'Review round N' lines without a bound" — no close-check code changes in the diff, so a third output round still closes and the card's check item is carried only by a disclosure sentence plus a green-both test (src/tests/backlog/check-lane-close.logic.test.ts:797 "green on today's code by design") — add a round bound in scripts/hooks/check-lane-close.mjs refusing out-*-r3.txt, or have the operator confirm the disclosure closes the item
+DEFER severity=MED — task-437 FINAL.2 "the three things that still come to the operator (a critical or high still open after round 2; a decision that needs his word; every push)" — docs/specs/00-architecture/08_agents.md:356 "the orchestrator lists it in MEDIUM-LATER-ROUNDS.md (his order, :1792)" — a new standing artifact obligation no pasted clause or ruling names (the cited :1792 is not pasted), and neither backlog-lane.mjs nor any tool creates or fills MEDIUM-LATER-ROUNDS.md — drop the sentence or name the file in the card and have the brief tell the orchestrator to write it
+DEFER severity=LOW — RR-0385 "Round one stil fixes Critical, Hihg and Medium." — scripts/analysis/backlog-lane.mjs:187 "a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator" — "STATUS: blocked" is a status token no pasted clause or ruling names and it sits beside the task status the close check reads (RUNNING, BUILT) with no definition — use the note's wording (report to the orchestrator, task stays RUNNING) or define blocked in the note
+MET — RR-0369 "the first round of MEdiums on the outputs are corrected with Highs and criticals and then the second round is just highs and criticals" — docs/specs/00-architecture/08_agents.md:356 "round 1 resolves the CONFIRMED CRITICAL, HIGH and MED findings (RR-0359) and round 2 ... resolves CRITICAL and HIGH only; two rounds at most"
+MET — task-437 FINAL.2 "round 1 resolves critical, high and medium, round 2 critical and high, two rounds at most" — scripts/analysis/backlog-lane.mjs:187 "ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only ... there is no third round"
+MET — task-437 FINAL.2 "the grounder brief says LOW and NIT are recorded, not folded" — scripts/analysis/backlog-lane.mjs:187 "LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded"
+MET — task-437 FINAL.2 "a dated note in Spec 08 with the rule and the three things that still come to the operator" — docs/specs/00-architecture/08_agents.md:356 "It comes to the operator only when (i) a CRITICAL or HIGH is still open after round 2, (ii) a decision needs his word ... or (iii) a push is due"
+MET — RR-0371 "Let's start with 2 rounds on the plan then it comes to me and three rounds on the output." — docs/specs/00-architecture/08_agents.md:356 "This supersedes the third output round of RR-0371 (its two-round plan cap stands)"
+MET — task-437 FINAL.2 "after round 2 the grounder validates and the work moves on" — docs/specs/00-architecture/08_agents.md:356 "After round 2 the separate grounder validates the fold (plan: FOLD-CHECK.md, which the launch gate requires; output: GROUNDER.md, which the close reads; neither is a review round) and the work moves on without the operator"
+MET — RR-0364 "Medium and low findings recorded not fixed; paperwork tasks get a grounder check, no review" — docs/specs/00-architecture/08_agents.md:356 "LOW and NIT are recorded (pile or wontfix with a reason), not required to be fixed or folded (RR-0364, whose medium part RR-0369 replaced)"
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+
+---
+⏱  95726ms (95.7s)
+📊 Tokens — total: 42661, input: 22174, output: 20487, reasoning: 19401

@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:48:32.026Z file_sha256=aaf6bfa424350318925c39d122568333294cd5de924395ce0c8b15f7c2383963 prompt_sha256=fbad64ccdfe208033d8b0d3c7a63017d4a13c03b9a46949985b6457a10f22706
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ROUNDS437/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0385 operator verbatim "Round one stil fixes Critical, Hihg and Medium." and RR-0369 "the first round of MEdiums on the outputs are corrected with Highs and criticals" — task-437 card Implementation Notes, 2026-11-22 resumed "post-build#1 CONFIRMED MED, recorded under RR-0385." with src/tests/backlog/check-lane-close.logic.test.ts "control: ruling:RR-0385 passes for a MED when the decision record exists, in close mode and in plan mode" — a CONFIRMED MED found in the first post-build (output round 1) review is recorded by ruling instead of fixed, which is exactly what the operator's round-1 words forbid, and the new form is the licence for it — fix the MED in round 1 and restrict the ruling:RR-0385 form to a MED confirmed in round 2.
+
+DEFER severity=MED — Task Description "the close check accepts two output rounds (it supersedes the third round of RR-0371)" — docs/specs/00-architecture/08_agents.md new note "accepts a recorded ruling id (RR-0385 included) for a finding of any severity, on any task, in any round, so it cannot tell a round-1 MED from a round-2 MED" and no hunk for scripts/hooks/check-lane-close.mjs anywhere in the diff — the round-1-fixes-MED rule and the two-round cap have no enforcement surface at all, only the disclosure sentence, so the rule holds for the honest lane and nothing else — either carry the round into the outcome check (from the grounder verdict line or the -rN file name) or record the non-enforcement as accepted in the decision record.
+
+DEFER severity=LOW — Glossary "lock / lock-db / check / hook" "A lock is a test under src/tests/ run by npm test that names the rule id (or a declared alias) and asserts it" — src/tests/backlog/backlog-lane.logic.test.ts "task-437 T1 (RR-0385 items 3 and 4, decision-170)" and src/tests/backlog/check-lane-close.logic.test.ts "describe('task-437 T2: the round outcome forms (outcomeErrors, pure; survive-the-fix lock)', ...)" — both tests are called locks but name RR-0385, a ruling id, and no rule id or declared alias, so by the pasted definition they are not locks and cannot be counted as the rule's enforcement — name the rule id or alias the test locks in its title, or stop calling them locks.
+
+DEFER severity=LOW — Task Description "the close check accepts two output rounds" and "after round 2 the grounder validates" — docs/specs/00-architecture/08_agents.md new note "The grounder's verdict line for that id gives the reason and names the round ... and the orchestrator lists it in MEDIUM-LATER-ROUNDS.md" against scripts/analysis/backlog-lane.mjs:187 grounder format "one line ... [reason: needed for REJECTED and CONFLICT] per finding" — the note imposes a round name and an orchestrator listing that the brief's grounder line and the close check never ask for, so the only evidence that a MED was confirmed in round 2 is not produced — add the round and MEDIUM-LATER-ROUNDS.md to the brief's grounder line, or drop them from the note.
+
+DEFER severity=NIT — RR-0359 "Nothing is folded before the grounder has ruled" — scripts/analysis/backlog-lane.mjs:187 "ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings" — the brief drops the CONFIRMED qualifier the note keeps ("round 1 resolves the CONFIRMED CRITICAL, HIGH and MED findings (RR-0359)"), so as briefed a lane may fix a finding the grounder has not confirmed — mirror the word CONFIRMED in the brief.
+
+MET — Task Description "a dated note in Spec 08 with the rule and the three things that still come to the operator" — docs/specs/00-architecture/08_agents.md:356 — the note lists (i) a CRITICAL or HIGH still open after round 2, (ii) a decision that needs his word, (iii) a push due.
+
+MET — Task Description "the grounder brief says LOW and NIT are recorded, not folded" — scripts/analysis/backlog-lane.mjs:187 — "LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded".
+
+MET — RR-0371 "three rounds on the output" superseded — scripts/analysis/backlog-lane.mjs:186 "the second (fix) round (r2; two output rounds at most, RR-0385)" and 08_agents.md "This supersedes the third output round of RR-0371 (its two-round plan cap stands)".
+
+MET — RR-0385 "Round 2 High and Critical" — scripts/analysis/backlog-lane.mjs:187 "round 2 resolves CRITICAL and HIGH only".
+
+MET — Task Description "after round 2 the grounder validates and the work moves on" — 08_agents.md new note — "After round 2 the separate grounder validates the fold ... and the work moves on without the operator".
+
+MET — Operator verbatim "Validate the plan and the output as you mentioned as per your criteria." — 08_agents.md new note — plan fold validated by FOLD-CHECK.md and output fold by GROUNDER.md, each named as not a review round.
+
+REJECT — RR-0364 "Medium and low findings recorded not fixed" — the change keeps LOW and NIT recorded rather than folded, which could be read as ignoring RR-0364's MED half — the note and brief both state the medium part was replaced by RR-0369, and round 2 MEDs get the recorded ruling form, so the clause is not broken.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 2
+Rules met: none
+
+---
+⏱  81308ms (81.3s)
+📊 Tokens — total: 30130, input: 12757, output: 17373, reasoning: 15999

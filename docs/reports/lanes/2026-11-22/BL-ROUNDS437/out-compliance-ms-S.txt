@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:48:32.038Z file_sha256=465161fa843bf1402568a84944621d6e13bca9744c282cbc7126d0a6d4cb690c prompt_sha256=bf04bd389a9f4d432f8fcf21992a1ddcb7f4d3faca5bd4138dd6add5d0816cf9
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ROUNDS437/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card item "the close check accepts two output rounds (it supersedes the third round of RR-0371)" — docs/specs/00-architecture/08_agents.md:356 "Not enforced: the cap and the round-2 MED rule are process; `scripts/hooks/check-lane-close.mjs` counts "Review round N" lines without a bound and accepts a recorded ruling id (RR-0385 included) for a finding of any severity, on any task, in any round, so it cannot tell a round-1 MED from a round-2 MED" — the supersession the card names exists only as prose: no line of scripts/hooks/check-lane-close.mjs changes, so an out-...-r3.txt still closes green and the operator's "two rounds at most" (:1910) is unenforced, fix: count "Review round N" lines in the close check and refuse a third, or record the gap as a follow-up task on the board and say so in the card's acceptance
+DEFER severity=MED — 08_agents.md:356 "It comes to the operator only when (i) a CRITICAL or HIGH is still open after round 2" (operator :1910 "Round 2 High and Critical") — src/tests/backlog/check-lane-close.logic.test.ts:817 "the same ruling:RR-0385 line also passes for a HIGH (the note's 'any severity' sentence)" — the new survive-the-fix lock pins that an unfixed HIGH closes with the blanket round-cap ruling in any round, the exact outcome the same note routes to the operator, and a green test makes that permanent, fix: restrict ruling:RR-0385 acceptance to MED and pin a HIGH refusal, or drop the HIGH assertion and list it as a known check gap only
+DEFER severity=LOW — operator :1910 "Round 2 High and Critical 2c" and the same brief line "two output rounds at most, RR-0385" — scripts/analysis/backlog-lane.mjs:186 "Before the lens inputs of each review round (the first output round and every fix round) run in the worktree" — the same edited sentence that caps output rounds at two still instructs a fresh context for "every fix round" and names files "-rN.txt" with N open, so a third fix round is admitted by name two clauses after it is forbidden, fix: say "the first output round and the second (fix) round (RR-0385)" and name the fix file "-r2.txt"
+MET — operator :1910 two rounds and their severities — docs/specs/00-architecture/08_agents.md:356 "round 1 resolves the CONFIRMED CRITICAL, HIGH and MED findings (RR-0359) and round 2, the second review round ... resolves CRITICAL and HIGH only; two rounds at most"
+MET — operator :1912 "Validate the plan and the output" — docs/specs/00-architecture/08_agents.md:356 "the separate grounder validates the fold (plan: FOLD-CHECK.md, which the launch gate requires; output: GROUNDER.md, which the close reads; neither is a review round) and the work moves on without the operator"
+MET — card's three things that come to the operator — docs/specs/00-architecture/08_agents.md:356 "It comes to the operator only when (i) a CRITICAL or HIGH is still open after round 2, (ii) a decision needs his word ... or (iii) a push is due"
+MET — card "the grounder brief says LOW and NIT are recorded, not folded" — scripts/analysis/backlog-lane.mjs:187 "LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded"
+MET — RR-0371 output third round superseded, plan cap stands — docs/specs/00-architecture/08_agents.md:356 "This supersedes the third output round of RR-0371 (its two-round plan cap stands) and keeps RR-0369"
+MET — RR-0364 medium part replaced, low recorded not fixed — docs/specs/00-architecture/08_agents.md:356 "LOW and NIT are recorded (pile or wontfix with a reason), not required to be fixed or folded (RR-0364, whose medium part RR-0369 replaced)"
+MET — RR-0359 no fold before the grounder rules — scripts/analysis/backlog-lane.mjs:187 "a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385` (the grounder decides it, the lane does not rule)"
+MET — card "Scope and Files line at its plan review" — the five diff paths (backlog-lane.mjs, the two test files, 08_agents.md, docs/reports/generated/rule-lists-by-kind.md) all appear on the card's Files line
+REJECT — ms-S "A task that serves neither a designed element nor a supporting function is most likely not relevant" — that the change serves no search or database element — the pasted operator ruling RR-0385 names this task and its plan, and the review protocol it corrects is a supporting function of the search deliverable
+
+VERDICT: PASS
+Clauses checked: 15   Unmet: 3
+Rules met: none
+
+---
+⏱  124068ms (124.1s)
+📊 Tokens — total: 36758, input: 11967, output: 24791, reasoning: 23611

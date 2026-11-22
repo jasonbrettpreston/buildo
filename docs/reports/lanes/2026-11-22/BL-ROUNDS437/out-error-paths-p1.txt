@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-22T21:48:32.075Z file_sha256=4fc34d7bcf01a518bfc8310668310f6eccfb4eed3eabb345f8646fb052c0352c prompt_sha256=9a96a0804e952ebd9ed2f93912ae75ba26c40018bbbaa8c36dc9768fbaf076f3
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ROUNDS437/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — docs/specs/00-architecture/08_agents.md:356 "A MED confirmed in round 2 is recorded with the outcome line `<id> ruling:RR-0385`, a form the close check and the launch gate already accept; pile stays LOW and NIT only." — a round-2 MED the grounder rules CONFLICT is unhandled: the close still demands an outcome for every CONFIRMED or CONFLICT finding (08_agents.md:355), pile and wontfix are refused for a MED, fixed is a round-1 act, so the lane must either fix a disputed MED in round 2 or write a form this sentence reserves for CONFIRMED, and the new lock never sees it because run2 hardcodes V('CONFIRMED') (src/tests/backlog/check-lane-close.logic.test.ts:803) — add the CONFLICT case to both, the grounder verdict names the round and the reason, the lane records `<id> ruling:RR-0385`.
+
+DEFER severity=MED — docs/specs/00-architecture/08_agents.md:356 "Not enforced: the cap and the round-2 MED rule are process" — a third output round, or a round-2 re-run filed under a new name, is read by the close like any round and its findings are counted, so the repeat is not a no-op and no gate refuses it; the brief still names the round-2 file `-rN` with N free (scripts/analysis/backlog-lane.mjs:186) — refuse any out-*-rN.txt with N above 2 in scripts/hooks/check-lane-close.mjs and cap "Review round N" lines at two.
+
+DEFER severity=MED — docs/specs/00-architecture/08_agents.md:356 "and the orchestrator lists it in MEDIUM-LATER-ROUNDS.md (his order, :1792)" — the only durable ledger of parked round-2 MEDs is a hand-kept file no check reads, so a missed line loses the MED silently and a repeated line has no key to dedup on while the close passes on the TRIAGE line alone — make the close require exactly one MEDIUM-LATER-ROUNDS.md line per finding id that carries ruling:RR-0385, keyed on the id, appended once.
+
+DEFER severity=MED — scripts/analysis/backlog-lane.mjs:187 "there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator." — the escalation is prose only: a lane that instead writes `<id> ruling:RR-0385` for the still-open CRITICAL passes the close (the note admits any severity, any task, any round, and the record exists) and the card goes BUILT, so the operator is never called and the failure is silent; check-lane-close.mjs is untouched by this task by design — accept ruling:RR-0385 only for a MED whose GROUNDER.md verdict names round 2, and refuse a BUILT close on an open CRITICAL or HIGH that is not blocked.
+
+REJECT — src/tests/backlog/check-lane-close.logic.test.ts:812 "it('the same ruling:RR-0385 line is refused when the decision record is missing (the second direction)', () => {" — the new closure form looks like it would pass with no backing record — handled: both close and plan mode refuse with "RR-0385 has no decision record", so the record check fails closed.
+
+REJECT — scripts/analysis/backlog-lane.mjs:186 "a name not starting plan- or out- (fix-*.txt) is never read" — a duplicate write under a stray name looks like it could be counted twice — handled: a file under a non-matching name is never read, so the repeat cannot enter the findings or the count.
+
+REJECT — docs/reports/generated/rule-lists-by-kind.md:107 "| total | 9 lists | | 206,513 | 9 |" — the regenerated count looks like the 2,203 could be added twice across the two tables — handled: 204,310 + 2,203 = 206,513 and 158,035 + 2,203 = 160,238, one add per table, no double count.
+
+VERDICT: PASS on error-path safety
+Paths walked: round-cap double-submit, round-2 MED outcome forms (CONFIRMED, CONFLICT, missing record), parked-MED record ledger, open CRITICAL after round 2 escalation, stray-file and non-matching-name writes, generated character count, brief text generation (pure, no write)   Unguarded: 4
+
+---
+⏱  185485ms (185.5s)
+📊 Tokens — total: 33315, input: 11089, output: 22226, reasoning: 21195

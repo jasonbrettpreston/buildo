@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-22T21:48:32.028Z file_sha256=4fc34d7bcf01a518bfc8310668310f6eccfb4eed3eabb345f8646fb052c0352c prompt_sha256=16daaead178e15bf8d3a97dee6169dc7d63dc406bbc25e89b20543e50ad073ca
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ROUNDS437/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/analysis/backlog-lane.mjs:187 "a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385` (the grounder decides it, the lane does not rule)" — the brief never tells the grounder to record the round, and the verdict-line form earlier in the same string ("one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> \"<quote on that line>\" [reason: needed for REJECTED and CONFLICT]`") gives a CONFIRMED line no reason field, so the lane cannot tell a round-1 MED from a round-2 MED, which is exactly what 08_agents.md:356 requires ("The grounder's verdict line for that id gives the reason and names the round") — add a round marker to the CONFIRMED line (for example the round-2 MED carries `[round: 2]` or a reason) so the lane has a fact to act on. — Rationale: without it the new round-2 MED rule has no readable input and the lane would guess.
+
+DEFER severity=MED — scripts/analysis/backlog-lane.mjs:187 "there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator." — "blocked" as a status token appears nowhere in the pasted material (the card says "status: RUNNING", the same brief says "leave the task RUNNING with \"grounder owed\"", and the note only says "It comes to the operator only when (i) a CRITICAL or HIGH is still open after round 2"); cannot see whether the board or close check knows BLOCKED — use the status the board schema defines, or instruct "leave the task RUNNING and report to the operator" instead of a token that may be refused or silently ignored. — Rationale: the only escalation path after round 2 rides on this one string.
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts:801 "const run2 = async (sev: string, triageText: string, mode: 'close' | 'plan', facts: Record<string, unknown> = goodFacts) => {" — severity is plain `string`, so a typo such as run2('MEDIUM', ...) exercises a severity the module does not know and still compiles, silently weakening every case below — type the parameter with the module's severity union. — Rationale: the whole block is a lock, so an untyped key makes the lock able to pass for the wrong reason.
+
+DEFER severity=LOW — src/tests/backlog/check-lane-close.logic.test.ts:815 "expect(await run2('LOW', `id#1 pile:\"${reason}\"`, 'plan')).toBe('');" — the LOW pile case is asserted in plan mode only while the MED pile case at :806 loops "for (const mode of ['close', 'plan'] as const)", so a close-mode refusal of a LOW pile is not caught — loop over both modes as the MED case does. — Rationale: the new rule says LOW and NIT are recorded, not fixed, at both stages.
+
+DEFER severity=LOW — src/tests/backlog/backlog-lane.logic.test.ts:172 "expect(extra).not.toContain('r3, ...');" — the negative assertion pins one exact literal, so a reintroduced later round written any other way ("(r2, r3)", "round 3", "-r3.txt") still passes — assert the semantic token instead, for example not.toContain('r3'), or add the positive "there is no third round". — Rationale: a one-string negative that cannot catch the regression it is named for.
+
+DEFER severity=NIT — src/tests/backlog/backlog-lane.logic.test.ts:168 "const extra = spec.extra.join('\\n') as string;" — the cast is a no-op (join returns string) and breaks the neighbouring pattern at the same file :158 "expect(spec.extra.join('\\n')).toContain('runs on Opus');" — drop the "as string". — Rationale: a cast that asserts nothing, next to code that does not need it.
+
+REJECT — docs/reports/generated/rule-lists-by-kind.md:99 "| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 39,171 | 1 |" — the two totals look hand-edited rather than regenerated — 39,171 minus 36,968 is 2,203, and 204,310 plus 2,203 is 206,513 and 158,035 plus 2,203 is 160,238, so both totals follow the single regenerated row exactly.
+
+VERDICT: PASS on code correctness
+
+---
+⏱  75719ms (75.7s)
+📊 Tokens — total: 27208, input: 11072, output: 16136, reasoning: 15052

@@ -8,7 +8,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-ROUNDS437'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T21:43:00Z'
+updated_date: '2026-11-22T21:52:00Z'
 labels:
   - McFix
   - McFix Final
@@ -31,6 +31,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-22/BL-ROUNDS437/REPORT.md
 type: build
 ordinal: 137012
 ---
@@ -205,4 +206,14 @@ Plan review round 2: 40 folded, 0 task, 0 ruling, 0 wontfix, 16 pile; grounder d
 2026-11-22 STOPPED (lane BL-ROUNDS437): the plan cannot be built as written. The work commit was refused by the pre-commit related run: 1 failed, 226 passed; the failing test is the existing lock backlog-lane.logic.test.ts:280 (task-407 V2.LAYOUT fold, commit bbb0b31f2) expect(e).not.toContain('TRIAGE.md'), in 'a build on a surface: ... a separate grounder rules in GROUNDER.md; no security'. The sentence of the plan that breaks it is CODE CHANGE item 2, the grounder append: '... gets the outcome line `<id> ruling:RR-0385` in TRIAGE.md (the grounder decides it, the lane does not rule) ...' (wording from QUESTIONS-RULED.md Q7). Nothing is committed; the edits stay staged in the worktree. Needs a ruling: reword the appended sentence without the file name TRIAGE.md, or change the task-407 lock (outside the plan). Grounder or orchestrator owed; task stays RUNNING.
 
 2026-11-22 resumed (lane BL-ROUNDS437) on the plan grounder ruling Q19 (QUESTIONS-RULED.md, board d8689023c): option (a), ' in TRIAGE.md' removed from the grounder append sentence in backlog-lane.mjs; no test line changed; the task-407 lock backlog-lane.logic.test.ts:280 stands and is the proof. post-build#1 CONFIRMED MED, recorded under RR-0385.
+
+2026-11-22 ACCEPTANCE (lane BL-ROUNDS437, work commit 6e0d1d5a6):
+(1) Spec 08 holds the note: 356:   Dated note 2026-11-22 (M-246, prior text kept; task-437 FINAL.2, McFix Final; RR-0385 items 3 and 4, decision-170; operator, verbatim ...
+(2) Every brief states the two-round rule and the round-2 MED form (lensLine in backlog-lane.mjs, carried in every brief's extra; T1 asserts it on the dry run): 186:the second (fix) round (r2; two output rounds at most, RR-0385)
+187:ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385`
+(3) The lock test pins the forms: the work commit's pre-commit related run (commit.out) 1092: Test Files  2 passed (2) 1093:      Tests  227 passed (227)  (T1 and T2 and the task-407 lock at backlog-lane.logic.test.ts:280 green).
+(4) The suite is green: UNVERIFIED in the lane; the full suite runs only at the push station (brief rule 18).
+(5) The rule applies from this landing: work commit 6e0d1d5a6 on wf1/inc1b-rounds437; not yet on the board or origin.
+
+2026-11-22 output review round 1 done (lane BL-ROUNDS437): 13 lens outputs in docs/reports/lanes/2026-11-22/BL-ROUNDS437 (compliance per list x10, policy-124-s2-s5 in 2 parts; code-review-p1, error-paths-p1), context-r4.md; 54 ids + post-build#1 listed untriaged in FINDINGS.md. Close dry run on a throwaway clone: only the GROUNDER.md and reference refusals. Task stays RUNNING: grounder owed (RR-0359).
 <!-- SECTION:NOTES:END -->
