@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T22:13:06.631Z file_sha256=92a0ca01ce7508b43beb1b13896c13c5fb0bdea7096c3088436390374f88e751 prompt_sha256=668d71ad87c20adf4352a6b9910730037e5dd821c8b9454230ea9569692becf7
+🔍 Lens review of docs/reports/reviews/task-438/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0380 "drop the full engineering when arts can be sent" (also "engineering sent by parts now") — "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — the filter keeps a file's whole list and drops that file's section lists, the reverse of the ruling that drops the full engineering file once the parts can be sent, and it quietly trims resolved lists against rule 7.4 "a list is never trimmed in either form" — invert the predicate so a whole-file list is dropped when that file's section lists resolve, and re-cut T2's planted defect to the inverted shape.
+
+BUG severity=HIGH — §11.1 "a data claim carries its query **run** (host + `current_database()` printed" — "Today this changes 0 open tasks (measured). After task-431 it removes the double sending from 21 open tasks." — the two board-wide census claims that justify the de-dup carry no command and no output, so no grounder can re-execute them — paste the resolveTask census command, the head it ran at, and the per-task output behind the 0 and the 21.
+
+BUG severity=MED — §7.4 note 2026-11-21 "the close check recomputes each output's prompt hash with the committed context" — "re-make one output, `plan-engineering-eng-all.txt`, from its one-part input renamed `in-plan-engineering-eng-all.txt`" — a prompt sized by lens-compliance.md and merely renamed is what the engineering output answers, so the recorded template, the header check (:61) and the input it was built from disagree — re-make the input with `rule-lists.mjs lens-input --template .claude/review-templates/lens-engineering.md`, do not rename the compliance input.
+
+BUG severity=MED — §11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — "- Whether a board-side fold commit of a lane closed under the old code re-runs the close with board code (base = board head). If it does, that fold owes engineering outputs." — the close's base is a code fact the plan already cites (FACT 5 "the close reads templates at the range base (:763 `readBase`)"), so the cut-over's main open cost line is settleable now — read check-lane-close.mjs:740-:763 or run one fold-close fixture and record the answer, or list it under named accepted gaps.
+
+BUG severity=MED — §11.2 note "for a plan launch, it now leaves a committed record, docs/reports/reviews/<task>/FOLD-CHECK.md" and TKT note 2026-11-21 "the launch gate ... requires their Seat lines in GROUNDER-PLAN.md" — "1. task-430 launches (or re-makes one output, as above). 2. 438 lands." — ORDER, LANDING and ACCEPTANCE name no FOLD-CHECK.md and no Integration, Reality-Check or Regression Seat line although the Files line names `scripts/hooks/check-lane-close.mjs`, tracked at board head — add the launch prerequisites to ORDER and ACCEPTANCE.
+
+DEFER severity=LOW — §7.10 (C2) "a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha" — "Does Spec 08 section 5.1 need an Engineering row (one line), or are the README row and decision-170 enough?" — the operator is handed a decision with no file:line or anchor to check it against — cite `docs/specs/00-architecture/08_agents.md` section 5.1 with its line at the plan commit.
+
+DEFER severity=LOW — §7.6 note 2026-11-20 "the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md ... has one outcome line in the lane's TRIAGE.md" — "2. Commit 2: the close records." — the close step names neither the TRIAGE.md outcome lines nor the Final Summary round line, so the plan does not show the close it will be judged by — name both in LANDING and ACCEPTANCE.
+
+MET — §7.1 "Two altitudes, same roles, both mandatory per WF (§6.4)" — "`in-plan-${seatOf(l)}-${id}`" and "Plan gate :639: one call per seat" — the engineering seat is required at plan and at output.
+
+MET — §7.4 note 2026-11-21 "a stage that holds both forms is refused" — "The joined form is per seat (`out-engineering-rules`), with joinLists over that seat's lists only" — the per-seat partition keeps one form per seat-stage.
+
+MET — §11.4 "The failing tests ... are written INTO the plan" — T1 to T5 give cases, fixtures, red expectations and invocation — tests are reviewed at plan altitude.
+
+MET — §11.3 "Every lock is proven in BOTH directions" — "Control: B only resolves S" and "(d) F10 control: with a base without the template, out-compliance-eng is accepted" — each new lock carries its failing and passing shapes.
+
+VERDICT: FAIL
+Clauses checked: 16   Unmet: 7
+Rules met: none
+
+---
+⏱  63910ms (63.9s)
+📊 Tokens — total: 29069, input: 16550, output: 12519, reasoning: 11328

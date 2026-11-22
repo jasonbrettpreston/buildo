@@ -1,0 +1,42 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-22T22:13:06.643Z file_sha256=ebc680c4519d0cf8ee88aa41d6acb3ac117d6e21eb756c19f9de4ae1f70ff6d0 prompt_sha256=e9e8c804de4cdfd188fb24537d10473c0ef4c6a16bc9d4fc390eed5996c17df9
+🔍 Lens review of docs/reports/reviews/task-438/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — Plan gate :639 ("one call per seat, always split") — the plan gate call has no "non-empty list subset" guard, unlike close :514 which explicitly keeps one; a task with zero engineering lists (i.e. almost every task) sends an empty subset into `complianceSetErrors`, which can synthesize `out-engineering-rules` or throw on the empty iteration and fail every plan gate — fix: mirror :514 — call the engineering seat only when its subset is non-empty, and add a control test that a no-engineering plan passes.
+
+BUG severity=HIGH — resolveTask de-dup (WHAT §3) — `filter((l) => l.whole || !…some(w.whole && w.file === l.file))` keeps the WHOLE and drops the SECTIONS on the same file, which is inverted vs RR-0380 ("drop the full engineering when arts can be sent") and vs this task's own "task-431 gives the seat the right sections (front end, back end)": a front-end task that resolves both eng-all (whole) and its front-end sections will silently lose the sections and still receive the full list — fix: confirm the intended direction with a temp-table test that a task attaching whole(F)+sections(F) keeps the SECTIONS, or the seat split ships RR-0380's regression.
+
+BUG severity=HIGH — seatOf (WHAT §2) — strict `l.file === ENG_FILE` silently routes any path variant to compliance: a leading `./`, trailing slash, casing, or a 431 front-end/back-end list pointing at a different engineering section file all become `compliance` and get the wrong template — fix: normalize the path before compare (path.basename on the doc dir) and add a red-first test asserting task-431's three list `file` values route as `engineering`.
+
+BUG severity=MED — resolveTask de-dup (WHAT §3) — the filter is global to every list, not scoped to ENG_FILE; the first whole+sections pair on a compliance file (e.g. a future handbook whole list beside existing handbook sections) silently drops the sections and leaves rules unreviewed — fix: scope the filter to `l.file === ENG_FILE`, or add an invariant test that fails if any non-engineering file holds both a whole and a sections list.
+
+BUG severity=MED — backlog-lane.mjs lensLine (WHAT) — the new sentence's command emits `--out <lane dir>/in-out-engineering-L` while the rest of the plan uses `<id>` in `out-engineering-<id>.txt`; a lane copies the literal `L`, writes the wrong filename, and the close fails on a good review — fix: emit `in-out-engineering-<id>` consistently.
+
+BUG severity=MED — template length (UNVERIFIED) — a truncated engineering prompt still returns a header that passes the `template twice` header check in listProof, so a garbage review is silently accepted by the close; the plan measures length but adds no fail-safe — fix: in listProof assert the engineering output declares `Clauses checked: <n>` with n ≥ 1 and fail the close if 0.
+
+BUG severity=MED — CUT-OVER / rollback — the plan flags fold-of-a-closed-lane re-validation as UNVERIFIED but defines no mitigation or rollback: a lane closed pre-landing that absorbs a post-landing board base is re-validated with `split = true`, fails its close, and the plan's only remedy ("one call per engineering list") is undefined for an already-recorded close — fix: record the close-base at close time and pin re-validation to it, or skip re-close when the recorded base predates the lens-engineering.md landing.
+
+DEFER severity=MED — LANDING (two-commit close) — if task-438's own lane resolves an engineering list, commit 1 mounts check-lane-close.mjs requiring `out-engineering-eng-all` that the lane has not produced, so its own close fails under the code it just landed — add one line naming either "438 resolves no engineering list" or the two outputs the lane must produce before commit 1.
+
+DEFER severity=MED — CUT-OVER task-430 ("LATER, prepped, no Plan line") — this is a point-in-time data claim; if task-430 has since gained a Plan line in GROUNDER-PLAN.md the "launch before 438 lands at no cost" step is invalid and the "1 DeepSeek call" fallback applies — re-check the task file status line and `grep task-430 GROUNDER-PLAN.md` immediately before launch.
+
+DEFER severity=LOW — fix branch (:644) unchanged "because fix tasks run no list lenses (rule-lists.mjs:649)" — this couples behaviour to a current-state invariant with no test; the day a fix task resolves a list, both seats are silently skipped — add a one-line comment or control test pinning the 649 invariant.
+
+DEFER severity=LOW — CUT-OVER "20 carry eng-all: 354, 366, …411" — enumerated measured set; re-resolve each of the 20 at landing time, since any that has closed or been re-listed changes the close obligation and the "re-run nothing" claim.
+
+DEFER severity=LOW — complianceSetErrors joined-form ("per seat, joinLists over that seat's lists only") — a task resolving ≥2 engineering whole lists triggers `out-engineering-rules`, but T3(e) only tests the one-engineering + joined-compliance case; add a T3(f) for two engineering lists joining.
+
+VERDICT: FAIL on plan-readiness for implementation
+Top 3 operational blockers:
+- Plan gate :639 lacks the close's non-empty-subset guard — every task with no engineering list risks a demanded `out-engineering-rules` and a failed plan gate.
+- The de-dup filter is inverted vs RR-0380 and task-431: it keeps the WHOLE engineering list and drops the front-end/back-end SECTIONS, shipping the very full-engineering send the ruling eliminates.
+- seatOf's strict `file === ENG_FILE` silently misroutes any path variant (and any 431 section file not byte-identical) to compliance, undermining the seat split the task exists to create.
+
+Top 3 unverified data premises:
+- task-431's three sections lists use ENG_FILE exactly — verify: `jq '.lists[] | select(.id|test("431|front|back|eng")) | {id,file,whole}' scripts/analysis/rule-lists.json` and diff each `file` against `.lists[]|select(.id=="eng-all").file`.
+- Today 0 open tasks resolve a whole+sections pair on the same file — verify: run a temp-table `resolveTask` over the open board and assert no result has both a `whole` and a `!whole` row sharing `file`.
+- task-430 is still LATER with no Plan line in GROUNDER-PLAN.md — verify: read task-430's status line and `grep -n 'task-430' GROUNDER-PLAN.md`; abort the pre-launch step if either changed.
+
+---
+⏱  71256ms (71.3s)
+📊 Tokens — total: 28848, input: 16456, output: 12392, reasoning: 10857

@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T22:13:06.634Z file_sha256=d2c82c7f7fd7841db5afe65b8647931f222a1b02e07c85b62153d94d9ba0dbe2 prompt_sha256=a45daf32bf1b3212938072b2eb28d6a313b661d4ab5658afff71680950b6ca4a
+🔍 Lens review of docs/reports/reviews/task-438/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — RR-0380 "drop the full engineering when arts can be sent" and card "Task-431 then gives the seat the right sections (front end, back end)." — plan "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — the filter keeps the whole engineering list and drops the section lists, so after task-431 the seat receives the full document and never the front-end/back-end sections, the inverse of the ruling — invert it to drop the whole list for a file once its sections resolve, and keep RR-0380's "handbook updated with the critical items" precondition as an explicit step
+DEFER severity=MED — card "the launch gate and the close check expect both seats' outputs" — plan "Plan gate :639: one call per seat, always split (3)." — no step names a launch gate, only the planning gate (:639) and the close (:514), so the card's launch gate is not shown covered — name the launch-gate call site or state plainly that :639 is the launch gate
+BUG severity=MED — RR-0385 "validation without the operator" — plan "Does Spec 08 section 5.1 need an Engineering row (one line), or are the README row and decision-170 enough? The record does not say." — the plan closes by putting a decision back to the operator, so validation is not without the operator — decide it in-plan (leave 5.1 unedited, say why) and delete the open question
+DEFER severity=MED — operator "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — plan "RUNNING lanes launched before the landing (20 carry eng-all: 354, 366, 372-376, 378, 381, 383, 384, 387-390, 395, 396, 406, 407, 411) close as today with `out-compliance-eng-all` and re-run nothing." — 20 running lanes close with no engineering output review at all, waiving the output half of the separation for them — record this as an operator-visible exception with the one-call-per-lane re-make cost, or require the engineering output at merge as the plan already does for lanes merging after the landing
+DEFER severity=LOW — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18). The operator's rulings are the decisions." — plan BASIS "Operator: \"Tehse should be small changes\"; \"build with existing components\"." — operator words sit in BASIS with no decision entry cited, so they read as a ruling the plan leans on — cite the decision entry for those words or drop the line
+
+MET — card "a new review template named engineering" — plan TEMPLATE ".claude/review-templates/lens-engineering.md" — the named template is created with the seat's question and format lines
+MET — operator "For both the plan and output" — plan "closeErrors :514" and "Plan gate :639: one call per seat" — the seat split is applied at both the close and the plan gate
+MET — card "Scope and Files line at its plan review" — plan "Files: .claude/review-templates/lens-engineering.md, ... backlog-lane.logic.test.ts" — the nine files match the card's Files line
+MET — RR-0385 "unbuilt gates withdrawn" — plan "This task adds no gate." — no gate is added, only what the existing gate requires for one document changes
+MET — RR-0385 "Opus plans and builds" and "tests are the focus" — plan "Planner: Opus" and TESTS T1 to T5 with a planted defect or control each — planning is Opus and the tests are red-first with controls
+
+VERDICT: FAIL
+Clauses checked: 19   Unmet: 2
+Rules met: none
+
+---
+⏱  50626ms (50.6s)
+📊 Tokens — total: 26900, input: 16704, output: 10196, reasoning: 9308

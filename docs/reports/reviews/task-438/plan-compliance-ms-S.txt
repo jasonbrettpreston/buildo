@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T22:13:06.628Z file_sha256=5c3adc0109ebea99e67e5cdd1c88d7fd3feb318ccf4c2289e7a2a500036c647a prompt_sha256=fb939d8ee02c0cf80efdda512adf41dc4cd68aeed49d90a0c1663d1ca48fe55d
+🔍 Lens review of docs/reports/reviews/task-438/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0380 "drop the full engineering when arts can be sent" — PLAN-438-v1 CODE "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — the filter keeps the whole engineering list and drops the sections, the exact reverse of the ruling; after task-431 the 21 affected tasks will still receive the full engineering text and none of the parts — keep the sections and drop the whole list on that file instead (invert the predicate, and only once task-431's sections exist)
+DEFER severity=MED — card "the launch gate and the close check expect both seats' outputs" — PLAN-438-v1 CUT-OVER "RUNNING lanes launched before the landing (20 carry eng-all: 354, 366, 372-376, 378, 381, 383, 384, 387-390, 395, 396, 406, 407, 411) close as today with `out-compliance-eng-all` and re-run nothing." — 20 lanes holding an engineering list will close with no engineering-seat output, so the seat is not applied "at both stages" for them — state in the plan that this grandfather is a deliberate exception to the card clause and that these lanes' engineering standards go unreviewed
+DEFER severity=MED — RR-0387 "each built task gets its own output review and confirmed findings are fixed by ordinary fix tasks" — PLAN-438-v1 "The fix branch (:644) is unchanged, because fix tasks run no list lenses (rule-lists.mjs:649)." — a fix task's diff never gets an engineering-seat output review, so a confirmed-finding fix touching engineering rules is never judged by the new seat — add a line showing how the fix task's output review reaches the engineering template, or record that the omission is accepted
+DEFER severity=LOW — card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — PLAN-438-v1 CODE "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — the de-dup is a general resolveTask change for every file, so a whole list on any file silently suppresses that file's section lists and their reviews, behaviour the card names only for the engineering lists — scope the filter to ENG_FILE
+DEFER severity=LOW — card "Every build task of this plan follows the six steps, plan written and built on Opus" — PLAN-438-v1 BASIS "Planner: Opus, read-only, board worktree head 0c4a0d2fb." — the plan names Opus only as planner; ORDER and LANDING name neither the six steps nor the builder — add one line in ORDER or LANDING naming Opus as the builder and the six steps
+
+MET — card "a review seat named engineering, separate from compliance, at plan and at output" — PLAN-438-v1 CODE rule-lists.mjs/check-lane-close.mjs — plan-prep, brief, close and plan gate each carry a seat name, with the plan gate :639 and the close :514 calling complianceSetErrors once per seat
+MET — card "a new review template named engineering" — PLAN-438-v1 TEMPLATE — lens-engineering.md is specified as a verbatim copy of lens-compliance.md plus the listed line changes, with lens-compliance.md left unedited
+MET — RR-0385 "We need a new name for an agent called engineering." — PLAN-438-v1 CODE "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance')" — the seat name literally is engineering
+MET — "we need one plan - we can only execute one plan" — PLAN-438-v1 heading — a single plan, PLAN-438-v1, with one ORDER, LANDING and CUT-OVER
+REJECT — Increment objectives "Search comes before increment 1" — that task-438 runs ahead of the search page — the operator approved McFix Final in RR-0385 "proceed. Are there any more questions - Label all realted tasks McFix Final", and 438 builds no search element or report path
+REJECT — RR-0387 "no new infrastructure" — that the template and seat are new infrastructure — the engineering seat is item 2 of RR-0385 itself, so the addition is mandated by a pasted ruling, not invented
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+Rules met: none
+
+---
+⏱  82382ms (82.4s)
+📊 Tokens — total: 16038, input: 6497, output: 9541, reasoning: 8522

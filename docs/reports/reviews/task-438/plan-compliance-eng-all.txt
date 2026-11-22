@@ -1,0 +1,31 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T22:13:06.630Z file_sha256=e7236f29e1718e71e7c3b493e3bd2c1b22f9919694060b4582e9f96f8df5262a prompt_sha256=138022d8908a2df0a864a2d35eb4d27235f3d51884e63daf80b583f9fd94b7f6
+🔍 Lens review of docs/reports/reviews/task-438/in-plan-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0380 "drop the full engineering when arts can be sent" — scripts/analysis/rule-lists.mjs:282 (plan CODE) "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — the de-dup keeps the whole-file list and drops the section lists, the exact reverse of the ruling, and the plan itself records that after task-431 this hits "21 open tasks" so the full engineering file keeps being sent — keep the sections and drop the whole list when a sections list exists for the same file (i.e. filter on `!l.whole || no sections sibling`).
+
+DEFER severity=MED — card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — scripts/analysis/rule-lists.mjs:282 (plan CODE) "A whole list on a file makes that file's section lists redundant, so the text goes once." — the filter is not scoped to the engineering file, so it silently rewrites whole/sections resolution for every list on any file, behaviour no pasted clause or ruling names — add `l.file !== ENG_FILE ||` to the predicate so only the engineering file is de-duped.
+
+DEFER severity=MED — §14 "| A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit** |" — plan NOT IN SCOPE "Spec 08 section 5.1's seat table." with TEMPLATE L4 "**Spec 08 seat:** Engineering: the engineering-standards part of A10 Compliance as its own seat (RR-0385, decision-170)" — the change cites Spec 08 as the seat owner while deferring that spec's own seat table to an open question, so the cited spec and the code land in different commits — add the one-line Engineering row to Spec 08 section 5.1 in the same commit, or drop the Spec 08 citation from L4 and the README seat column.
+
+DEFER severity=MED — §11 "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests." — NONE — the plan carries BASIS, FACTS, WHAT, CUT-OVER, TESTS, ACCEPTANCE but no 5-10 item PASS/FAIL self-checklist walked against the plan — add the checklist with PASS/FAIL per item before TESTS.
+
+DEFER severity=LOW — card "the launch gate and the close check expect both seats' outputs" — plan ACCEPTANCE "The close and the gate require `out-`/`plan-engineering-<id>` and refuse the compliance name." — the plan equates "the gate" with the plan gate at check-lane-close.mjs:639 and shows no second launch-gate check, so whether a distinct launch gate exists cannot see from the pasted context — name the launch-gate call site explicitly or state it is the plan gate at :639.
+
+MET — RR-0385 "For both the plan and output." — scripts/analysis/rule-lists.mjs:666 (plan CODE) "The jobs line :666 uses the seat's prefix and template" — plan-prep and the close both route by seat.
+MET — RR-0385 "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md — the seat's own template is added, with its own header, question and verdict line.
+MET — card "the engineering-standards rule lists are reviewed by that seat" — plan CODE "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance')" — routing is keyed to the engineering standards file, so task-431's lists route with no table edit.
+MET — RR-0387 "no new infrastructure" — plan ESTIMATE "About 30 code lines plus an 86-line template" — one template plus routing and proof lines, no new service or schema.
+MET — §5.2 "*.logic.test.ts | Pure functions, scoring, classification | Any pure/derivation logic" — plan TESTS T1 to T5 "add `engineering` to the one-placeholder loop" — routing, proof and lens-line logic land in logic tests.
+MET — §5.3 "You MUST write and run a failing test (Red Light) BEFORE writing any feature or fix code." — plan TESTS "red first; each with a planted defect or control", T2 "this is today's behaviour, so the test is red now" — the red state is named for T1 and T2 with a planted-defect control.
+
+REJECT — §9.4 "All pipeline scripts (`scripts/*.js`) MUST use the shared Pipeline SDK" — the plan edits scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs and scripts/analysis/backlog-lane.mjs without `pipeline.run` — those files write no DB rows and are not ingestion pipelines, §9 governs DB-writing and external-API pipeline scripts.
+REJECT — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`." — the plan touches scripts/ — this is a review-tooling card (McFix, McFix Final, McFixReborn), not a frontend WF, so the frontend boundary rule does not bind it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 5
+Rules met: none
+
+---
+⏱  44099ms (44.1s)
+📊 Tokens — total: 26345, input: 17811, output: 8534, reasoning: 7312

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T22:13:06.637Z file_sha256=180c06108e04f30886499bdb27d817b860a21e03563c65cfd03ce6a7509c1761 prompt_sha256=2652b3638977cd7e7acc974c0e9cedc79fab5930ee2898aef0c3849bb53a34ca
+🔍 Lens review of docs/reports/reviews/task-438/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0380 "drop the full engineering when arts can be sent" — PLAN-438-v1 CODE rule-lists.mjs "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" and PLAN-438-v1 T2 "A Files line hitting both resolves W and not S" — the filter keeps the whole-list job and drops the section jobs on the same file, the exact reverse of the ruling, and T2 bakes the reverse in as expected — keep the section lists and drop the whole list when a section list on the same file exists, and make T2 assert S resolves and W does not.
+
+DEFER severity=MED — Task "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages" — PLAN-438-v1 CUT-OVER "RUNNING lanes launched before the landing (20 carry eng-all: 354, 366, 372-376, 378, 381, 383, 384, 387-390, 395, 396, 406, 407, 411) close as today with `out-compliance-eng-all` and re-run nothing." — the close still accepts the compliance seat's name for an engineering list on 20 running lanes, so the split is not enforced at the close for them — record this grandfathering as an operator ruling or require `out-engineering-eng-all` when those lanes close.
+
+DEFER severity=MED — RR-0380 "sections 8, 10, 12 to both sides" — PLAN-438-v1 CODE rule-lists.mjs "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance')" — the predicate gives each list exactly one seat by file, so a sections 8, 10, 12 list of the engineering standards cannot be reviewed by both seats — let a list name both seats and emit two jobs, or place those sections in a compliance list as well.
+
+DEFER severity=MED — Task "the engineering-standards rule lists are reviewed by that seat" — PLAN-438-v1 TEMPLATE "L5 insert `lens-engineering.md · ` after `lens-compliance.md · `" against T3 "(c) An engineering output whose header names lens-compliance.md is refused" — the engineering template stamps lens-compliance.md into its own header, so a genuine engineering output and a mis-filed compliance review carry the same header name and the close cannot prove which seat reviewed — give the engineering template a mutually exclusive header naming only its own template and have the check compare that.
+
+MET — RR-0385 "a new review template named engineering" — .claude/review-templates/lens-engineering.md — plan adds the template with the engineering heading, question and verdict lines.
+
+MET — RR-0385 "separate from compliance ... at plan and at output" — check-lane-close.mjs :514 and :639 — one listProof call per seat at the close and at the plan gate, with per-seat joined form.
+
+MET — RR-0380 "by-law tasks gain no engineering rules" — rule-lists.mjs seatOf default — bylaw-133 resolves to the compliance seat.
+
+MET — RR-0385 "I want this plan for each task and built by opus" — PLAN-438-v1 "Planner: Opus" and ESTIMATE "half a day of Opus build".
+
+MET — Task "Scope and Files line at its plan review" — PLAN-438-v1 Files line — the nine files match the card's Files line.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 4
+Rules met: none
+
+---
+⏱  52924ms (52.9s)
+📊 Tokens — total: 21818, input: 11951, output: 9867, reasoning: 9051

@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T22:13:06.629Z file_sha256=43eb0ba5add1eb06db3fb21c783a02bdb289e3b211fbff8b43fdd7a024148305 prompt_sha256=0e95c174bf4dece49acb08c0a983b1d3944996c266787012c9c839e96a33d9ba
+🔍 Lens review of docs/reports/reviews/task-438/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0380 "drop the full engineering when arts can be sent", "engineering sent by parts now", and card "Task-431 then gives the seat the right sections (front end, back end)" — plan "A whole list on a file makes that file's section lists redundant, so the text goes once." with filter "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — the predicate keeps the whole list and drops the section lists, the inverse of the ruling, so after 431 any Files line hitting both still receives the full engineering and never the parts ("removes the double sending" is achieved by deleting the parts) — invert the predicate so the whole list on a file is dropped whenever that file's non-whole lists resolve, and keep the whole only when no section list resolves.
+
+DEFER severity=MED — card "the launch gate and the close check expect both seats' outputs" — plan "Plan gate :639: one call per seat, always split (3)." — the plan names only the plan gate and the close; no launch gate surface appears in FACTS, WHAT, CODE or ACCEPTANCE, so a distinct launch gate is left expecting one seat — add one line stating that check-lane-close.mjs :639 is the launch gate, or add the launch gate call.
+
+DEFER severity=MED — RR-0387 "each built task gets its own output review and confirmed findings are fixed by ordinary fix tasks; no new infrastructure; old findings dropped (names task-438)" — plan "1. Commit 1: the template, README, code, tests and task notes. 2. Commit 2: the close records." — the plan ends at a two-commit close and gives no output review round for 438 itself and no fix-task path for its confirmed findings — add to ORDER a step after landing: 438 output review at both seats, confirmed findings to fix tasks.
+
+DEFER severity=MED — RR-0380 "sections 8, 10, 12 to both sides" — plan "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance')" and "task-431's three lists route with no edit" — a seat derived from file equality is single valued, so a section owed to both seats can only route to engineering, and the plan claims the predicate already covers 431 — carry the seat as per-list data (a seat field or a list explicitly marked both) rather than file equality, or state that 8, 10 and 12 are read by both seats and show how.
+
+DEFER severity=MED — RR-0380 "by-law tasks gain no engineering rules (names RR-0380)" — plan "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance')" — nothing in the plan excludes by-law tasks from the engineering seat, and 431's section lists on the engineering file will resolve for them into a seat they must not have — add a T2 case that a by-law task resolving an ENG_FILE list does not owe an engineering output.
+
+DEFER severity=LOW — RR-0385 "plan written and built on Opus" — plan "Planner: Opus, read-only, board worktree head 0c4a0d2fb" — only the planner is named; no builder line and the six steps the card requires are not listed — add "Builder: Opus" and the six steps to the plan header.
+
+DEFER severity=LOW — RR-0385 "validation without the operator" — plan "Does Spec 08 section 5.1 need an Engineering row (one line), or are the README row and decision-170 enough? The record does not say." — the plan parks a scope decision as a question, inviting operator arbitration the ruling removes — decide it in-plan (no Spec 08 5.1 edit, README row plus decision-170 suffice) or move it to a named later task.
+
+MET — card "a new review template named engineering" — .claude/review-templates/lens-engineering.md — the plan fixes the file name and its line-level contents.
+MET — card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages" — scripts/analysis/rule-lists.mjs seatOf plus check-lane-close listProof — routing by ENG_FILE at plan-prep, brief, plan gate and close.
+MET — RR-0385 "We need a new name for an agent called engineering" — .claude/review-templates/lens-engineering.md — the new seat is carried by a template named engineering.
+MET — card "Files: .claude/review-templates/lens-engineering.md, .claude/review-templates/README.md, scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-close.mjs, scripts/analysis/backlog-lane.mjs, src/tests/backlog/review-templates.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts" — TEMPLATE, CODE and TESTS sections — all nine listed files are touched and no unlisted file is written.
+MET — RR-0385 "unbuilt gates withdrawn" — plan "RR-0385 item 5: built gates stay. This task adds no gate." — the change renames what an existing gate requires and adds none.
+MET — RR-0385 "tests are the focus" — plan T1 to T5 — five test groups each with a planted defect or control, red first.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 13   Unmet: 7
+Rules met: none
+
+---
+⏱  49945ms (49.9s)
+📊 Tokens — total: 17507, input: 7287, output: 10220, reasoning: 8942

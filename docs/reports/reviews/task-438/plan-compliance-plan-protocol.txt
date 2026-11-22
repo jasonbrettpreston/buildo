@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T22:13:06.640Z file_sha256=960feafd99ef02108669fe0c376743913dd53ab04c2086ff869d2df567d2336e prompt_sha256=b45df305a28f769676b9d095731835260b0248ca72129ae38d6dce10a19c2f5b
+🔍 Lens review of docs/reports/reviews/task-438/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — RR-0380 "drop the full engineering when arts can be sent" and "engineering sent by parts now" — PLAN-438-v1 rule-lists.mjs bullet "`result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));`" — clause unmet: the filter keeps the whole list and drops the section lists of the same file, the exact inverse of the ruling, so once 431 supplies parts the seat receives the full engineering file instead of the parts — invert the predicate so the sections list survives and a whole list on a file is dropped when that file's section lists are present, and flip T2's planted defect to match
+
+BUG severity=HIGH — card "Task-431 then gives the seat the right sections (front end, back end)" and "no scope creep" — PLAN-438-v1 "After task-431 it removes the double sending from 21 open tasks" — clause unmet: 438 pre-empts 431's own change and rewrites the review scope of 21 open tasks before 431 lands, so 431's sections can never reach the seat — remove the de-dup from 438 and land it inside 431's plan where the sections are introduced, with 431's own test
+
+BUG severity=MED — M-246 note item 4 "a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce (`scripts/analysis/rule-lists.mjs` lensSet, `scripts/hooks/check-lane-close.mjs`), plus its separate grounder" — PLAN-438-v1 "**rule-lists.mjs** (protected, about 8 lines)" — clause unmet: the enforcement pair is launch script and close, but the plan's rule-lists.mjs changes are seatOf, the resolveTask filter and reviewPhase only, lensSet is never touched, so a lane launched under the new code can fail a close that demands an output its own lens set never declared — add the lensSet change and its test for lists whose file is ENG_FILE
+
+BUG severity=MED — section 3 "Rulings: only when a search of the record finds none; the search is quoted." and RR-0385 "validation without the operator", the record here holding "We need a new name for an agent called engineering." — PLAN-438-v1 "OPEN QUESTIONS Does Spec 08 section 5.1 need an Engineering row (one line), or are the README row and decision-170 enough? The record does not say." — clause unmet: a question is put to the operator although the pasted ruling names the seat, and no search is quoted — resolve it from RR-0385 (register the seat in the seat table or state the quoted search that says the README row suffices) and drop the open question
+
+BUG severity=MED — RR-0385 "For both the plan and output." — PLAN-438-v1 "RUNNING lanes launched before the landing (20 carry eng-all: 354, 366, 372-376, 378, 381, 383, 384, 387-390, 395, 396, 406, 407, 411) close as today with `out-compliance-eng-all` and re-run nothing." — clause unmet: 20 lanes' engineering lists are reviewed by the compliance seat in their output stage, and the grandfathering rests on a code precedent (check-lane-close.mjs:425), not a pasted ruling, contrary to section 3's search rule — either produce one engineering output per engineering list at those closes or record the ruling and its quoted search
+
+DEFER severity=MED — card "the launch gate and the close check expect both seats' outputs" — PLAN-438-v1 "Plan gate :639: one call per seat, always split (3)." — risk: the gate line omits the non-empty subset guard the close line carries, so a task with no engineering lists may be required to file an engineering proof the card does not name — mirror the close's non-empty subset guard at :639
+
+MET — card "a new review template named engineering" — .claude/review-templates/lens-engineering.md line changes — the plan adds the template with the question, axes, rules-met and verdict lines the readers parse
+MET — card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — `export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance')` — routing by the ruling's own document, no table field to forget
+MET — card "the launch gate and the close check expect both seats' outputs" — listProof, complianceSetErrors seat parameter and :639 — both readers gain the seat name and refuse the compliance name
+MET — card "Every build task of this plan follows the six steps, plan written and built on Opus" — "Planner: Opus, read-only" and "half a day of Opus build" — plan and build are on Opus
+MET — RR-0380 "by-law tasks gain no engineering rules" — T2 "bylaw-133 and the joined list (joinLists) give compliance" — by-law lists stay with compliance
+MET — section 5.5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — "#### ESTIMATE (GUESS)" — the estimate is labelled GUESS
+MET — card Files line — the plan's Files line — the same nine files as the card
+
+REJECT — RR-0387 "no new infrastructure" — that the new template and seat-named outputs are new infrastructure — the template is the ruling's own named seat, not infrastructure beyond it
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 5
+Rules met: none
+
+---
+⏱  65234ms (65.2s)
+📊 Tokens — total: 21169, input: 8111, output: 13058, reasoning: 11785

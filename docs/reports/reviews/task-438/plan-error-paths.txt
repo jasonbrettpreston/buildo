@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-22T22:13:06.624Z file_sha256=ebc680c4519d0cf8ee88aa41d6acb3ac117d6e21eb756c19f9de4ae1f70ff6d0 prompt_sha256=2f2bacf50724a6b2903b8fdbfd3ed92645fd7390779347bf1a0f36b953788504
+🔍 Lens review of docs/reports/reviews/task-438/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan:UNVERIFIED "If it does, that fold owes engineering outputs." — a lane already closed under the old code, re-closed with base = board head (which now holds lens-engineering.md), flips split true and demands out-engineering-* files it never produced, so the same close run twice fails the second time and the close is not idempotent across the landing — key the split to the lane's own launch base where its outputs were made, or accept either seat name for a lane launched pre-landing.
+
+BUG severity=HIGH — plan:CUT-OVER "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — if readBase returns undefined on a missing file, or throws on a read error at a base where .claude/review-templates is absent, the `!== null` test is true and split wrongly demands engineering outputs from every legacy lane, failing closes that should pass — treat null and undefined as absent and wrap the read in try/catch defaulting split to false, so only a confirmed-present file flips it.
+
+BUG severity=MED — plan:CODE "result.lists = result.lists.filter((l) => l.whole || !result.lists.some((w) => w.whole && w.file === l.file));" — when a resolved list carries no file field, undefined === undefined is true, so one whole list without a file drops every unrelated section list without a file, silently under-sending rule text with no error — guard the dedup on l.file being truthy: `l.whole || !l.file || !result.lists.some((w) => w.whole && w.file === l.file)`.
+
+BUG severity=MED — plan:CODE "Plan gate :639: one call per seat, always split (3)." — the plan gate splits from the landing with no base-template guard, so a task prepped before landing that still holds plan-compliance-eng-all and was not re-made is refused at launch; only task-430 is enumerated for the before/after handling, so any unlisted prepped row fails closed at the gate — apply the same template-presence split to the plan gate, or re-make every prepped row's engineering output before launch.
+
+DEFER severity=LOW — plan:CODE "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance')" — an engineering list whose file string differs by a slash, case or path form from ENG_FILE routes to compliance with no error, so the engineering rules are reviewed under the compliance seat and no out-engineering-* is ever demanded (fail-open, silent) — assert on validate that every intended engineering list routes engineering, or match by a normalized path.
+
+REJECT — plan:CUT-OVER "That is 1 DeepSeek call, and the grounder adds a Ruled line and verdicts for it." — looks like an unretried single network call with no timeout bound — handled, the output name plan-engineering-eng-all.txt is fixed so a re-run overwrites it (idempotent), costs one more call, and never double-counts or leaves a second partial file.
+
+VERDICT: FAIL on error-path safety
+Paths walked: close re-run fold over landing, split-detection read error, dedup with a missing file field, plan-gate cut-over for prepped rows, engineering re-make retry, seatOf routing on a path mismatch   Unguarded: 3
+
+---
+⏱  60771ms (60.8s)
+📊 Tokens — total: 26822, input: 15570, output: 11252, reasoning: 10507
