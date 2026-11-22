@@ -3,11 +3,11 @@ id: TASK-433
 title: >-
   INPUTS.5 A rules-checked line: the reviewer lists the rule ids it judged met
   and a script flags a rule never mentioned
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-MET433'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T17:50:00Z'
+updated_date: '2026-11-22T17:56:00Z'
 labels:
   - McFix
   - McFix V2
@@ -31,6 +31,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-22/BL-MET433/REPORT.md
+  - docs/reports/lanes/2026-11-22/BL-MET433/GROUNDER.md
+  - docs/reports/lanes/2026-11-22/BL-MET433/TRIAGE.md
 type: build
 ordinal: 133012
 ---
@@ -169,4 +171,16 @@ ACCEPTANCE (lane BL-MET433, 2026-11-22, commit 5559f1d21). 1: red.out = 8 failin
 2026-11-22 fix 1 built: README:159/160, lens-compliance.md:76, rule-lists.mjs:864 printed line, test control (e) string and :1853 cite (F1, F2 and the grounder's optional wording items). Acceptance 4 (orchestrator, live, on the edited template at 5559f1d21): one live compliance review of the surface-136 list (44 ids) printed 'Rules met:' with 36 real ids and unmentioned printed '8 of 44 rule ids are in no finding and not in the Rules met line: fe.04, fe.12, fe.17, fe.21, fe.25, fe.26, fe.39, fe.44' (the 8 OWED rows of Spec 136); files in ~/Buildo-scratch/lanes-20261119/inc1b/met433-lane/live/; one run, n=1.
 
 2026-11-22 output round 2 filed after fix 1 (06cfb3f23): 42 findings in 11 outputs (findings --dir), untriaged; grounder owed, task RUNNING
+
+2026-11-22 close: round 1: 41 findings, 25 confirmed, the 8 MED fixed in 06cfb3f23, 17 piled; round 2: 42 findings, 14 piled (grounder Cairn-Ground-O433, GROUNDER.md and TRIAGE.md in docs/reports/lanes/2026-11-22/BL-MET433/, round 1 records in grounder-r1/). The acceptance note's old message text 'holds no rule ids' is now 'holds no name.N bullet rule ids (ids of another shape are not read)' (round 2 finding ms-S#4). RR-0381 proven through a whole close on a clone by the grounder (limit: base = board head); the --board read works from the lane sandbox, fresh content not yet proven (no board-only decision existed).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+The compliance template now closes with a Rules met line, and rule-lists.mjs has an unmentioned subcommand that reports, for one review output and its input, the rule ids of the sent list part named nowhere in the output (a report, never a gate, exit 0). The README documents both; the tests were written first and proven red, and fix 06cfb3f23 closed the eight round 1 MED findings.
+
+Output round 1 (grounder-r1 folder): 8 MED fixed in 06cfb3f23, 17 pile.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 14 pile; grounder docs/reports/lanes/2026-11-22/BL-MET433/GROUNDER.md; triage docs/reports/lanes/2026-11-22/BL-MET433/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

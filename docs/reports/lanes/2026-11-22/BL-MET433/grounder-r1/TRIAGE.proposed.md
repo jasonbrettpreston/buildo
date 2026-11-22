@@ -1,0 +1,26 @@
+# TRIAGE BL-MET433 (task-433), output round 1. PROPOSED by Cairn-Ground-O433. Pile lines are final (RR-0364). The 8 MED ids below have NO outcome line yet: RR-0369 requires fixed:<sha> or ruling:RR-N; see FIX-OWED. Do not save this file as TRIAGE.md until the fix sha exists.
+out-compliance-agents-s5-1to3#1 pile:"LOW (lens HIGH): README sentence each ends with a VERDICT line is imprecise; the close reads a VERDICT line anywhere (check-lane-close.mjs:72), DRIVEN whole close passes; one wording defect with eng-all#4, five-words#3, inc-S#1, ms-S#1, plan-protocol#1, queue-137#2; RR-0364"
+out-compliance-agents-s7-s11#4 pile:"LOW: test comment cites MORNING-DECISIONS.md:1852 for words that are on :1853; comment only, no behaviour; one defect with plan-protocol#5; RR-0364"
+out-compliance-eng-all#2 pile:"LOW: the template says a line, README and code say a bullet line with a bold name.N id; the reviewer may name an id the script cannot see, which only affects a printed report; one definition family with five-words#1, inc-S#3, queue-137#3; RR-0364"
+out-compliance-eng-all#4 pile:"LOW: same README step 5 wording as agents-s5-1to3#1, the close reads VERDICT anywhere so behaviour is unchanged; RR-0364"
+out-compliance-five-words#1 pile:"LOW (lens HIGH): definition wording; on the five-words list the slug lines are not rule ids and holds no rule ids is true; the MED part is closed at out-code-review-p1#2; RR-0364"
+out-compliance-five-words#3 pile:"LOW (lens MED): same README step 5 wording as agents-s5-1to3#1, no behaviour differs, DRIVEN whole close; RR-0364"
+out-compliance-inc-S#1 pile:"LOW (lens MED): same README step 5 wording; the feared refusal of every compliance close did not happen in the DRIVEN whole close; RR-0364"
+out-compliance-inc-S#3 pile:"LOW: ids of another shape give the clean line; the same family as out-code-review-p1#2, true on this lane's lists; RR-0364"
+out-compliance-ms-S#1 pile:"LOW (lens MED): same README step 5 wording; the close does not read the last line, so Rules met need not move above VERDICT; RR-0364"
+out-compliance-ms-S#3 pile:"NIT: the printed line names two sources while MET, REJECT and prose mentions are also excluded; true as a subset, a report not a gate; RR-0364"
+out-compliance-orchestrator-doc17#4 pile:"LOW: the no Rules met line note and hasLine are in the approved plan but not described in README:159; documentation only; RR-0364"
+out-compliance-plan-protocol#1 pile:"LOW (lens HIGH): same README step 5 wording as agents-s5-1to3#1; the close accepts a Rules met line after VERDICT, DRIVEN; RR-0364"
+out-compliance-plan-protocol#5 pile:"LOW: same one-line cite error as agents-s7-s11#4, comment only; RR-0364"
+out-compliance-queue-137#2 pile:"LOW (lens MED): same README step 5 wording as agents-s5-1to3#1; DRIVEN whole close did not refuse the new outputs; RR-0364"
+out-compliance-queue-137#3 pile:"LOW: template says a line, README a list line, code a bullet name.N id; one definition family with eng-all#2; RR-0364"
+out-error-paths-p1#3 pile:"LOW (lens MED): the input is not compared with the output header file_sha256; the close binds the committed pair by hash and the report is not a gate; RR-0364"
+out-error-paths-p1#4 pile:"LOW: no test covers part 2 of n and the README does not say the count is per file; DRIVEN a naive sum over-counts; a union mode was ruled NOT IN SCOPE in the plan; RR-0364"
+
+FIX-OWED (8 ids, all MED, two defects; none CRITICAL or HIGH):
+Defect F1 (README says narrower than the code). Ids: out-code-review-p1#1, out-compliance-agents-s5-1to3#2, out-compliance-plan-protocol#3, out-compliance-queue-137#1.
+Smallest fix: .claude/review-templates/README.md:159, replace "appear in no finding, MET or REJECT line and not in that line" with "appear nowhere in the output (a finding, a MET or REJECT line, the Rules met line, or any other text)". Code stays as is (Q2: any mention counts).
+Defect F2 (the printed line and the README definition claim no ids for a part that has ids of another shape; real on Specs 126 P1.., 127 G0.., 128 R-01..R-50, which are bold ids in table rows). Ids: out-code-review-p1#2, out-compliance-agents-s7-s11#1, out-compliance-plan-protocol#2, out-error-paths-p1#2.
+Smallest fix: scripts/analysis/rule-lists.mjs:864 print "the sent list part holds no name.N bullet rule ids (ids of another shape are not read), nothing to report"; update the one pinned string in src/tests/backlog/rule-lists.logic.test.ts control (e) (about :1007-1010); README.md:159 state "a rule id is a bullet line whose bold id is name.N (as in Specs 132, 133 and 136); ids of another shape are not read". Optional in the same edit, no extra cost: README:160 "ends with a VERDICT: line" to "holds a VERDICT: line"; the -pN sentence (see ATTACKS.md 3d); lens-compliance.md:76 "a bullet line whose bold id is name.N".
+Both fixes close all 8 ids with one commit: fixed:<sha> .claude/review-templates/README.md (and fixed:<sha> scripts/analysis/rule-lists.mjs for the F2 ids).
+A fix commit touches rule-lists.mjs and the README, both in the range, so every in- input and out- output is stale (08_agents.md:355): a full re-made round 2 (11 inputs, 11 outputs, base-template copy for the 9 compliance runs, new GROUNDER and TRIAGE).

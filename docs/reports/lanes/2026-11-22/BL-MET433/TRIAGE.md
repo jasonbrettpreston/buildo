@@ -1,0 +1,16 @@
+# TRIAGE BL-MET433 (task-433), output round 2 (after fix 06cfb3f23). Outcome lines from the grounder Cairn-Ground-O433; no CRITICAL, HIGH or MED stands (RR-0369 round 2 fixes CRITICAL and HIGH only); every CONFIRMED id is LOW or NIT (RR-0364). The 8 round 1 MED ids were fixed in 06cfb3f23 (README.md, rule-lists.mjs, lens-compliance.md, rule-lists.logic.test.ts) and the 17 round 1 LOW and NIT ids piled; that record is the round 1 grounder pair in the grounder/r1 folder.
+out-code-review-p1#1 pile:"NIT (lens LOW): the printed label names two sources while the count leaves out every id mentioned anywhere; true as a subset, a non-gating report; one defect with five-words#2, inc-S#2, orchestrator-doc17#1, plan-protocol#2; RR-0364"
+out-code-review-p1#2 pile:"LOW: the Rules met detector is anchored at column 0, an indented or bold line only gets a misleading note; the template asks for a plain line; one defect with error-paths#4; RR-0364"
+out-compliance-agents-s5-1to3#4 pile:"LOW: README says the output ends with a Rules met line while the tool timing trailer follows it; wording only; RR-0364"
+out-compliance-agents-s7-s11#3 pile:"LOW: README item 3 lens-input example lacks --context; the line pre-dates this diff; documentation gap; RR-0364"
+out-compliance-five-words#2 pile:"NIT (lens MED): same printed label imprecision as out-code-review-p1#1, a non-gating report; RR-0364"
+out-compliance-inc-S#2 pile:"NIT (lens MED): same printed label imprecision as out-code-review-p1#1; the wider reading is ruled by Q2 and stated in README:159; RR-0364"
+out-compliance-ms-S#3 pile:"LOW: README says Rules met none when the list has none while the template adds or none was met; wording only; RR-0364"
+out-compliance-ms-S#4 pile:"LOW: the acceptance note in the task records the old no-ids message that fix 1 changed; a record to re-state, no code defect; RR-0364"
+out-compliance-orchestrator-doc17#1 pile:"NIT (lens MED): same printed headline imprecision as out-code-review-p1#1; label wording only; RR-0364"
+out-compliance-plan-protocol#2 pile:"NIT (lens MED): same printed label imprecision as out-code-review-p1#1; no behaviour change wanted; RR-0364"
+out-compliance-plan-protocol#3 pile:"LOW: README says the files carry the same text while only the input files do, the outputs differ per chunk; wording only; RR-0364"
+out-error-paths-p1#3 pile:"LOW (lens MED): the printed line carries no material chunk index, a grounder running one chunk file could read none as global; README says per file; optional addition; RR-0364"
+out-error-paths-p1#4 pile:"LOW: same column-0 Rules met detector note as out-code-review-p1#2; RR-0364"
+out-error-paths-p1#5 pile:"NIT: README names only exit 0 while the tool exits 1 on an unreadable or non-lens input and 2 with no --out; wording only; RR-0364"
+
