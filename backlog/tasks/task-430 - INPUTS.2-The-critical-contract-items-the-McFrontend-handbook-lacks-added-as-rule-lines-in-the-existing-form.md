@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T20:28:00Z'
+updated_date: '2026-11-22T20:34:00Z'
 labels:
   - McFix
   - McFix V2
@@ -224,12 +224,12 @@ Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/
 - C-T4 quote lock is dropped (Q3).
 - THIRTEEN ROWS (Q4): item 4 has its own row because its first sentence, "never copied into the repo" (126:79), is in no FE row or note.
 - The libraries row says nothing on the toast library: the operator was asked about Sonner and did not answer, so the row neither keeps nor drops it; Spec 33:47 is untouched.
-- The Full cell quotes only his two phrases, "These look great - teh 13 are perfect" and "Approved", and labels the rest as orchestrator text he approved; no Status cell says Ruled with the approval date.
+- The Full cell quotes only his two phrases, "These look great - teh 13 are perfect" and "Approved", as his own words and labels the rest as orchestrator text he approved (round 2: it also quotes the recorded reply in full, as 17.2 gives it, so the cell neither under-quotes the record nor attributes the orchestrator's sentences to him); no Status cell says Ruled with the approval date.
 - The words dropped from the report forms (the rows quote only what a spec says; he may add any of them by his own words as a later row): item 2 "Not Shadcn, React Hook Form or Sonner"; item 8 "in URLs"; item 10 "empty, offline"; item 13 "interactive elements 44 px minimum; every control has a name" beyond the vocabulary row and the engineering standards line. Item 8 gains the seam sentence of 126:1238 that the report form had.
 - Readings: 12 rows (FE-33 dropped, FE-02 and FE-29 added), by the Rule for a reading of section 5.
 
 ### 17.2 The 13 rows (final texts; ids are placeholders FE-45..FE-57 until landing; six cells per row, no pipe inside a cell)
-Full cell of every row, with N the item number: Operator verbatim (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901): "These look great - teh 13 are perfect" and "Approved". Orchestrator text he approved, not his words: the scope and the list (item N of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A). The Ruling cell quotes the spec's own words; this row rules nothing new.
+Full cell of every row, with N the item number: Operator verbatim as recorded (2026-11-22, RR-0384, ~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1901-1903 and backlog/decisions/decision-169): his reply pasted the orchestrator's message back and added two phrases of his own, "These look great - teh 13 are perfect" (first) and "Approved" (last, line 1903). The recorded reply in full: "These look great - teh 13 are perfect. Task 430 becomes three small things: stop the clipping, make each line reflect its notes, and add these 13 lines. Item 9 stays a pointer, so the page does not grow by copying tables. I have not started task 430. You said you would read the list first, and this is it. Approved". The scope and the list (item N of ~/Buildo-scratch/lanes-20261119/inc1b/inputs429/REPORT-429.md section 3A) are orchestrator text he approved. The Ruling cell quotes the spec's own words; this row rules nothing new.
 Status cell of every row: OWED followed by the lock path in backticks, then "; added 2026-11-22 (RR-0384); no machine check yet, the lock is task-434's and the path is a reservation." and the row's extra sentence.
 Item 1 (FE-45): Ruling: The client is just glass. "Five things may stay client-side (device state · optimistic UI · offline cache · animation · nav position); everything else is server-projected." (Spec 128 Rule 2, 128:29). "Anything else computed client-side is a Rule 2 violation and needs a `deviations[]` row with an adjudicator and a date." (128:55). | Amends: 128 rule 2 (128:29), 128:55; FE-05 | Six: D n/a, P owed, F pass, S pass, H n/a, E pass | lock path: src/tests/surfaces/client-glass-boundary.logic.test.ts | extra sentence: FE-05's no-maths lock covers arithmetic only.
 Item 2 (FE-46): Ruling: Libraries. "the web library is Mantine 8.3" with `@rjsf/mantine` and `mantine-datatable` (126:1005, dated note 2026-11-09); mobile is "React Native Reusables per Spec 90 §6", vendored unmodified (126:1006). "No hand-built standard component." (126:925). "a new library, a new component kind or a new binding outside §11b.5 is an operator ruling before it is built" (126:75). This row says nothing on the toast library: RR-0384 did not rule it. | Amends: 126 §11b.4 (126:1005, :1006, :925, :75) | Six: D pass, P owed, F n/a, S pass, H n/a, E pass | lock path: src/tests/surfaces/ui-library-set.logic.test.ts | extra sentence: FE-31 checks the listed binding modules only.
@@ -284,7 +284,7 @@ Section 16 as the planner wrote it (v1; the Files line above replaces it):
 
 Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/
 
-Plan review round 1: 129 folded, 0 task, 0 ruling, 0 wontfix, 5 pile; grounder docs/reports/reviews/task-430/GROUNDER-PLAN.md; triage docs/reports/reviews/task-430/TRIAGE-PLAN.md
+Plan review round 1: 134 folded, 0 task, 7 ruling, 0 wontfix, 10 pile; grounder docs/reports/reviews/task-430/GROUNDER-PLAN.md; triage docs/reports/reviews/task-430/TRIAGE-PLAN.md
 plan-compliance-agents-s7-s11#1 MED folded Result (round 1): TH
 plan-compliance-agents-s7-s11#2 MED folded Census (round 1, gre
 plan-compliance-agents-s7-s11#3 MED folded all four are RULED b
@@ -365,6 +365,18 @@ rc#5 MED folded FE-29 is added (its
 rg#2 MED folded A Current reading is
 rg#3 MED folded R-03 stays ACCEPTED 
 rg#4 MED folded Known standing excep
+plan-compliance-agents-s5-1to3#5 MED ruling RR-0385
+plan-compliance-bylaw-133-p1#1 HIGH folded Operator verbatim as
+plan-compliance-bylaw-133-p1#2 MED ruling RR-0385
+plan-compliance-bylaw-133-p2#1 HIGH folded Operator verbatim as
+plan-compliance-bylaw-133-p3#1 MED ruling RR-0385
+plan-compliance-bylaw-133-p3#2 MED ruling RR-0385
+plan-compliance-bylaw-133-p3#4 MED ruling RR-0385
+plan-compliance-orchestrator-doc17#1 HIGH folded Operator verbatim as
+plan-compliance-policy-124-s2-s5-p1#2 MED ruling RR-0385
+plan-compliance-policy-124-s2-s5-p2#5 HIGH folded Operator verbatim as
+plan-compliance-policy-124-s2-s5-p3#1 HIGH folded Operator verbatim as
+plan-compliance-policy-124-s2-s5-p3#3 MED ruling RR-0385
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
