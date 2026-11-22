@@ -4,11 +4,11 @@ title: >-
   FINAL.2 Rounds and validation: round 1 resolves critical, high and medium,
   round 2 critical and high, two rounds at most; after round 2 the grounder
   validates and the work moves on
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-ROUNDS437'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T21:52:00Z'
+updated_date: '2026-11-22T22:03:00Z'
 labels:
   - McFix
   - McFix Final
@@ -32,6 +32,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-22/BL-ROUNDS437/REPORT.md
+  - docs/reports/lanes/2026-11-22/BL-ROUNDS437/GROUNDER.md
+  - docs/reports/lanes/2026-11-22/BL-ROUNDS437/TRIAGE.md
 type: build
 ordinal: 137012
 ---
@@ -217,3 +219,12 @@ Plan review round 2: 40 folded, 0 task, 0 ruling, 0 wontfix, 16 pile; grounder d
 
 2026-11-22 output review round 1 done (lane BL-ROUNDS437): 13 lens outputs in docs/reports/lanes/2026-11-22/BL-ROUNDS437 (compliance per list x10, policy-124-s2-s5 in 2 parts; code-review-p1, error-paths-p1), context-r4.md; 54 ids + post-build#1 listed untriaged in FINDINGS.md. Close dry run on a throwaway clone: only the GROUNDER.md and reference refusals. Task stays RUNNING: grounder owed (RR-0359).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Landed in work commit 6e0d1d5a6 (lane BL-ROUNDS437): the lane brief (scripts/analysis/backlog-lane.mjs:186-187) states two output rounds at most (RR-0385), round 2 resolves CRITICAL and HIGH only, a round-2 MED takes ruling:RR-0385, LOW and NIT are recorded not fixed or folded; Spec 08 dated note 2026-11-22 at 08_agents.md:356; T1 (red first, red.out) and T2 (survive-the-fix lock) green in the related run (227 passed); generated page rule-lists-by-kind.md regenerated. Output review round 1: 13 lens outputs, 54 ids plus post-build#1 ruled by the separate grounder Cairn-Ground-O437 (10 CONFIRMED, 45 REJECTED; nothing CRITICAL or HIGH stands; no second round). Full suite: push station.
+
+Review round 1: 1 fixed, 0 task, 0 ruling, 0 wontfix, 9 pile; grounder docs/reports/lanes/2026-11-22/BL-ROUNDS437/GROUNDER.md; triage docs/reports/lanes/2026-11-22/BL-ROUNDS437/TRIAGE.md
+post-build#1 MED fixed 6e0d1d5
+<!-- SECTION:FINAL_SUMMARY:END -->
