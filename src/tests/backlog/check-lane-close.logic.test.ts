@@ -1085,6 +1085,12 @@ describe('task-423 (b): the close accepts a joined output set and still accepts 
   it('a folder holding both forms for one phase is refused', () => {
     refused(scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-first.txt': l['out-compliance-rules.txt'] as string }) }), /both the joined \(out-compliance-rules\*\.txt\) and the per-list/);
   });
+  it('task-423 D1: a joined round file (out-compliance-rules-r2.txt, out-compliance-rules-r2-p1.txt) beside the joined round 1 is the joined form, not refused as holding both; control: a real per-list file (round or not) beside the joined set is still refused', () => {
+    const ok = scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-rules-r2.txt': body(false), 'out-compliance-rules-r2-p1.txt': body(false) }) });
+    expect(ok.status, ok.stderr).toBe(0);
+    refused(scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-first-r2.txt': body(false) }) }), /holds both the joined/);
+    refused(scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-first.txt': l['out-compliance-rules.txt'] as string }) }), /holds both the joined/);
+  });
   it('a joined set with a gap (-p1 and -p3) is refused', () => {
     refused(scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-rules.txt': null, 'out-compliance-rules-p1.txt': l['out-compliance-rules.txt'] as string, 'out-compliance-rules-p3.txt': l['out-compliance-rules.txt'] as string }) }), /rules[\s\S]*p2/);
   });

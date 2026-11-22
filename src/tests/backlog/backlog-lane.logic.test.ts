@@ -143,7 +143,7 @@ describe('backlog-lane --dry-run (AC #3): prints every command, writes nothing',
     expect(spec.inputs.join('\n')).toContain('docs/a.md');
     expect(spec.inputs.join('\n')).toContain('docs/b.md');
     expect(spec.extra.join('\n')).toMatch(/^Ticket: task-\d+/m);
-    expect(spec.extra.join('\n')).toContain('scripts/deepseek-review.js review docs/reports/reviews/');
+    expect(spec.extra.join('\n')).toContain('scripts/deepseek-review.js review <diff file>'); // RR-0374: output lenses only, no plan review command
   });
 });
 
@@ -208,15 +208,17 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     expect(spec, r.stdout + r.stderr).not.toBeNull();
     return spec.extra.join('\n') as string;
   };
-  it('a build on a surface: compliance, code-review, ux, error-paths, in parallel, outputs plan-<lens>.txt and out-<lens>.txt, a separate grounder rules in GROUNDER.md; no security', () => {
+  it('a build on a surface: compliance, code-review, ux, error-paths, in parallel, outputs out-<lens>.txt (no plan lens: RR-0374), a separate grounder rules in GROUNDER.md; no security', () => {
     const e = lensBrief('build', 'mobile/app/(app)/x.tsx, src/tests/');
-    for (const l of ['plan-review-deepseek.md', 'lens-compliance.md', 'lens-code-review.md', 'lens-ux.md', 'lens-error-paths.md']) expect(e).toContain(l);
+    for (const l of ['lens-compliance.md', 'lens-code-review.md', 'lens-ux.md', 'lens-error-paths.md']) expect(e).toContain(l);
     expect(e).not.toContain('lens-security.md');
-    expect(e).toMatch(/plan review/i);
+    expect(e).not.toContain('plan-review-deepseek.md'); // task-423 D2: the brief orders no plan stage
+    expect(e).not.toMatch(/plan review/i);
     expect(e).toMatch(/output review/i);
     expect(e).toContain('in parallel');
     // the output names agree with the layout sentence and the close check (task-407 fold: the old r1-<lens>.txt / round 2 / TRIAGE.md wording contradicted both)
-    expect(e).toContain('outputs plan-<lens>.txt and out-<lens>.txt in the lane report dir');
+    expect(e).toContain('outputs out-<lens>.txt in the lane report dir');
+    expect(e).not.toContain('outputs plan-<lens>.txt');
     expect(e).not.toContain('r1-<lens>.txt');
     expect(e).not.toContain('TRIAGE.md');
     expect(e).toContain('a separate grounder rules every finding in GROUNDER.md');
@@ -258,11 +260,12 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
   });
   // task-375 FIX.TOOLS D11 (Spec 08 section 7 rule 4 dated note, 08_agents.md:338; scripts/deepseek-review.js:189 fills "(no pasted context provided)" when --context is absent):
   // every plan lens command carries --context, as the output lens commands do.
-  it('every plan lens command carries --context, and the --context value is not a flag', () => {
+  it('task-423 D2: the brief orders no plan lens; every output lens command carries --context, and the --context value is not a flag', () => {
     const e = lensBrief('build', 'scripts/analysis/x.mjs, src/tests/');
-    const seg = /Plan review lenses: ([\s\S]*?)\. Output review lenses/.exec(e)?.[1] ?? '';
+    expect(e).not.toMatch(/Plan review lenses/);
+    const seg = /Output review lenses[^:]*: ([\s\S]*?)\. Compliance lens/.exec(e)?.[1] ?? '';
     const cmd = /each `([^`]+)`/.exec(seg)?.[1] ?? '';
-    expect(seg).toContain('plan-review-deepseek.md');
+    expect(seg).toContain('lens-code-review.md');
     expect(cmd).toContain('scripts/deepseek-review.js review');
     expect(cmd).toMatch(/--template \.claude\/review-templates\/<lens file> --context docs\/reports\/reviews\/\S+\/context-r2\.md --section "Task"/);
   });
@@ -273,12 +276,12 @@ describe('backlog-lane review line names the lens set (task-358)', () => {
     const ctx = /docs\/reports\/reviews\/\S+?\/context-r2\.md/.exec(e)?.[0] ?? '(none)';
     expect(ctx).not.toBe('(none)');
     const cmds = e.match(/scripts\/deepseek-review\.js review [^`]*/g) ?? [];
-    expect(cmds.length).toBeGreaterThanOrEqual(3);
+    expect(cmds.length).toBeGreaterThanOrEqual(2); // output lenses and the compliance command; no plan lens (RR-0374)
     for (const c of cmds) { expect(c, c).toContain(`--context ${ctx}`); expect(c, c).toContain(SECT); }
     expect(e).not.toContain('<pasted-context file>');
     expect(e).not.toMatch(/context-<date>|context-20\d\d/);
-    expect(e).toMatch(new RegExp(`lens-input --list rules --lists \\S+ --context ${ctx.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
-    expect(e).toContain('plan: --material-from');
+    expect(e).toContain(`lens-input --list L --context ${ctx}`); // the per-document form is the default (RR-0374)
+    expect(e).not.toContain('plan: --material-from'); // no plan stage
     expect(e).toMatch(/lens-input --context \S+ --material <diff file>/);
   });
   it('security joins when the Files line touches entitlements, auth, stripe or a metered route', () => {
@@ -319,28 +322,30 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     expect(inputs).toContain('draft, operator to confirm it binds');
     expect(inputs).toContain('backlog/docs/increments/doc-1 - Increment-F-requirements.md');
   });
-  it('task-423 (d): the lens line names the joined command over every resolved list id and the files out-compliance-rules, no longer says to copy plan-*.txt, and still accepts the per-list files; other lenses stay and the separate-grounder rule is written in', () => {
+  it('task-423 (d), RR-0374: the lens line orders the per-document compliance review at the output stage only (one run per resolved list), names the joined command in one clause as an accepted form that is not the default, and no longer says to copy plan-*.txt', () => {
     const { extra } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' });
-    const m = /lens-input --list rules --lists (\S+) --context/.exec(extra);
-    expect(m, extra.slice(0, 200)).not.toBeNull();
-    for (const l of ['mobile-98', 'eng-all', 'storage-doc16', 'inc-F']) expect((m as RegExpExecArray)[1]!.split(',')).toContain(l);
-    expect(extra).toContain('out-compliance-rules[-pN].txt');
-    expect(extra).toContain('ONE JOINED RUN PER STAGE');
-    expect(extra).not.toContain('ONCE PER RULE LIST');
+    for (const l of ['mobile-98', 'eng-all', 'storage-doc16', 'inc-F']) {
+      expect(extra).toContain('out-compliance-' + l);
+      expect(extra).not.toContain('plan-compliance-' + l);
+    }
+    expect(extra).toContain('ONCE PER RULE LIST');
+    expect(extra).not.toContain('ONE JOINED RUN PER STAGE');
+    expect(extra).toContain('lens-input --list L --context');
+    expect(extra).toMatch(/accepted form that is not the default[^.]*RR-0374/);
+    expect(extra).toContain('--list rules --lists');
     expect(extra).not.toContain('copy plan-*.txt');
-    expect(extra).toContain('out-compliance-<list id>[-pN].txt of the old form');
+    expect(extra).not.toContain('plan: --material-from');
+    expect(extra).not.toMatch(/Plan review lenses/);
     expect(extra).toContain('scripts/analysis/rule-lists.mjs lens-input');
     expect(extra).toContain('lens-code-review.md');
     expect(extra).toContain('lens-error-paths.md');
     expect(extra).toMatch(/a separate grounder rules on every finding/);
     expect(extra).toContain('GROUNDER.md');
   });
-  it('A3: the review line of the extra block (the plan template as --context) is the lens form with the committed context', () => {
+  it('A3/D2: the extra block carries no plan review line (the plan is reviewed before launch, RR-0374)', () => {
     const { extra } = dry({ files: 'scripts/analysis/x.mjs, src/tests/', type: 'build' });
-    const line = /Review \(review mode[^\n]*/.exec(extra)?.[0] ?? '';
-    expect(line).toContain('--template .claude/review-templates/plan-review-deepseek.md --context docs/reports/reviews/');
-    expect(line).toContain('--section "Implementation Notes"');
-    expect(line).not.toMatch(/--context \.claude\/review-templates/);
+    expect(extra).not.toMatch(/Review \(review mode/);
+    expect(extra).not.toContain('plan-review-deepseek.md');
   });
   // task-375 B1: the take adds the compliance:<list id> <file> references, only the ids the task does not carry yet
   it('B1: the take command adds one compliance reference per resolved list; a list already referenced is not added again', () => {
@@ -470,7 +475,7 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
     expect(brief).toContain('Rule lists that govern this task');
     expect(brief).toContain('mobile-98: docs/specs/03-mobile/98_mobile_testing_protocol.md');
     expect(brief).toContain('storage-doc16');
-    expect(brief).toMatch(/lens-input --list rules --lists \S*mobile-98/);
+    expect(brief).toContain('out-compliance-mobile-98');
     expect(brief).toContain('own input');
     expect(brief).toContain('own extra');
     expect(fs.readFileSync(spec, 'utf8')).not.toContain('Rule lists that govern'); // the orchestrator's own file is not rewritten
@@ -575,15 +580,15 @@ describe('plan-prep review (task-418): refusals, one line, nothing written; each
 describe('plan-prep review: the calls and what they leave', () => {
   it('5: one failing call is named, exit 1, the files of that run are deleted and the re-run succeeds; all succeeding writes every in- and plan- file', () => {
     const f = prepFixture();
-    const bad = review(f, [], { STUB_FAIL: 'plan-compliance-rules' });
+    const bad = review(f, [], { STUB_FAIL: 'plan-compliance-queue-137' });
     expect(bad.status, bad.stdout + bad.stderr).toBe(1);
-    expect(bad.stderr).toMatch(/in-plan-compliance-rules(-p\d+)?\.txt/);
+    expect(bad.stderr).toMatch(/in-plan-compliance-queue-137\.txt/);
     expect(names(f, /^(in-)?plan-/)).toEqual([]);
     const ok = review(f);
     expect(ok.status, ok.stdout + ok.stderr).toBe(0);
     const outs = names(f, /^plan-compliance-.*\.txt$/);
-    expect(outs.length).toBeGreaterThan(0);
-    expect(outs.every((n) => /^plan-compliance-rules(-p\d+)?\.txt$/.test(n))).toBe(true); // task-423: one joined call set, not one per list
+    expect(outs.length).toBeGreaterThan(3);
+    expect(outs.some((n) => /compliance-rules/.test(n))).toBe(false); // RR-0374: plan-prep produces the per-document form
     expect(names(f, /^in-plan-compliance-.*\.txt$/)).toHaveLength(outs.length);
     expect(names(f, /^plan-(plan-review-deepseek|error-paths)\.txt$/)).toHaveLength(2);
     expect(names(f, /^FINDINGS-PLAN\.md$/)).toHaveLength(1);
@@ -610,12 +615,11 @@ describe('plan-prep review: the calls and what they leave', () => {
     const ctx = fs.readFileSync(path.join(dirOf(f), 'context-r1.md'), 'utf8');
     const table = rl.readTable();
     const rs = rl.resolveTask({ table, root: f.board, body: fs.readFileSync(taskFile(f), 'utf8'), type: 'build', letter: 'F' });
-    const joined = rl.joinLists(table, (rs.lists as { id: string }[]).map((l) => l.id));
-    for (const l of [{ id: 'rules' }]) for (const x of rl.buildLensInputs({ id: l.id, list: joined.lists[l.id], root: f.board, material: rt.extractSections(ctx, rt.PLAN_SECTIONS), templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: rt.extractSections(ctx, rt.CONTEXT_SECTIONS) }))
+    for (const l of rs.lists as { id: string }[]) for (const x of rl.buildLensInputs({ id: l.id, list: table.lists[l.id], root: f.board, material: rt.extractSections(ctx, rt.PLAN_SECTIONS), templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: rt.extractSections(ctx, rt.CONTEXT_SECTIONS) }))
       expect(fs.readFileSync(path.join(dirOf(f), `in-plan-compliance-${l.id}${x.suffix}.txt`), 'utf8')).toBe(x.text);
     const g = prepFixture(); backlog(g.board, ['task', 'edit', g.task, '-d', 'another description\n\nFiles: scripts/analysis/thing.mjs']);
     expect(review(g).status).toBe(0);
-    const a = names(f, /^in-plan-compliance-rules/)[0] as string;
+    const a = names(f, /^in-plan-compliance-eng-all/)[0] as string;
     expect(fs.readFileSync(path.join(dirOf(g), a), 'utf8')).not.toBe(fs.readFileSync(path.join(dirOf(f), a), 'utf8'));
   });
   it('8: with context-r1.md present the phase writes context-r2.md and leaves r1 untouched', () => {
@@ -648,8 +652,8 @@ describe('plan-prep review: the calls and what they leave', () => {
     expect(r.status, r.stdout + r.stderr).toBe(0);
     expect(first(r)).toMatch(/^\$ cd .* && node \S*backlog-brief\.mjs /);
     const li = r.stdout.split('\n').filter((l) => /lens-input/.test(l)).length;
-    expect(li).toBe(1); // task-423: one joined lens-input call
-    expect(r.stdout).toMatch(/lens-input --root \S+ --list rules --lists \S+ --context/);
+    expect(li).toBeGreaterThan(3);
+    expect(r.stdout).not.toMatch(/--list rules/); // RR-0374: the per-document form
     expect(r.stdout.split('\n').filter((l) => /scripts\/deepseek-review\.js review .*lens-compliance\.md/.test(l))).toHaveLength(li);
     expect(r.stdout).toMatch(/DOTENV_CONFIG_PATH=\S+ node -r \S*dotenv\/config scripts\/deepseek-review\.js review \S+ --template \.claude\/review-templates\/plan-review-deepseek\.md --context \S+ --section Task /);
     expect(status(f)).toBe(before);

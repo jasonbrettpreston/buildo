@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-SIMPLE423'
 created_date: '2026-11-21T16:43:00Z'
-updated_date: '2026-11-21T23:34:00Z'
+updated_date: '2026-11-22T15:18:00Z'
 labels:
   - McFix
   - McFix V2
@@ -310,4 +310,8 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0369 · task-423 · Backlog; o
 2026-11-21 (M-246) BL-SIMPLE423 stage 1 build: tests first (the four test files), red at the designed assertions, then the build of card A (joinLists, the joined set in the close and the launch gate, GROUNDER-PLAN.md at L, the brief sentences).
 
 2026-11-21 (M-246) BL-SIMPLE423 acceptance on real inputs. Commits: red (21 failing assertions at the designed places, red.out), work 740ade03d (hooks and the four test files green: 305 passed, commit.out), docs f5ca453ff (dated notes in Spec 08 5.3 and rule 4, Spec 137, README items 3 to 5, page regenerated). (a) lens-input --list rules --lists <the nine ids of task-419's Files line> --material-from docs/reports/reviews/task-419/context-r2.md writes 3 files (in-plan-compliance-rules-p1..p3); with --max 60000 it writes 10 files, each under 60000 characters (rule-lists.logic.test.ts: stitched list parts equal the whole text of the nine lists in table order; a part cut by 50 characters fails its stamp; check-lane-close.logic.test.ts: an edited joined input is refused, the untouched set accepted). (b) check-lane-close.logic.test.ts task-423 (b): a joined output set accepted, the per-list set accepted (control), both forms for one stage refused, a gap refused, a joined set for a different resolved list refused, neither form refused naming the joined file first; the plan gate accepts joined or per-list plan evidence (FOLD-CHECK.md carried by the fixture). (c) task-423 (c): no plan-*.txt closes when GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line; absent, empty, without a Plan line or for another task is refused; absent with plan-*.txt keeps the old rule. (d) validate refuses a table list named rules (test); 'rule-lists: ok 55 lists, 23 rows'; 'page --check': 'rule-lists-by-kind.md is current'; backlog-lane.logic.test.ts: the brief names 'lens-input --list rules --lists <ids>' and no longer says 'copy plan-*.txt'. (e) pinned at most 3 compliance files at 12,400 (plan) and 29,700 (output) for the tooling kind, the task-419 and the task-412 Files lines (rule-lists.logic.test.ts task-423 (e), green). (f) and (g) follow in REPORT.md.
+
+2026-11-22 (M-246) BL-SIMPLE423 fix round 1 (RR-0374): order of work: the changed and new tests first (red-fix1.out), then the code. Acceptance (f) is NOT met (5 of 12 distinct confirmed findings, the HIGH queue-137#1 missed: ACCEPTANCE-F.md of the grounder); the per-document form is the default again, the join stays an accepted form.
+
+2026-11-22 (M-246) fix round 1 code (RR-0374): the brief orders the per-document compliance review at the output stage only and names the joined run as an accepted form that is not the default; no plan lens, plan review line or plan-<lens>.txt in the brief (D2); plan-prep produces the per-list form again; a joined round file (-rN, -rN-pN) is read as joined (D1); the stale header comment of check-lane-close.mjs (p8#4) fixed.
 <!-- SECTION:NOTES:END -->

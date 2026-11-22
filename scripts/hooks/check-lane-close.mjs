@@ -14,7 +14,7 @@
 //    plan findings are ruled once: with GROUNDER-PLAN.md at the launch commit non-empty and holding a Plan line, no plan-*.txt is required and none is read for findings;
 //  * the LENS SET the task type calls for (scripts/analysis/rule-lists.mjs lensSet, the function the launch brief uses): per attached rule list one compliance output
 //    (out-compliance-<list id>.txt; plan- or out- for a non build/fix task; ONE file or parts -p1..-pK with no gap), and for a build or fix task also out-<lens>.txt for code-review,
-//    error-paths (ux, security by the Files line) and at least one plan-stage output. Each required output starts with the review tool's REVIEW header (template name matching the lens,
+//    error-paths (ux, security by the Files line); a plan-stage output only when GROUNDER-PLAN.md at the launch commit is absent (task-423). Each required output starts with the review tool's REVIEW header (template name matching the lens,
 //    model, timestamp, file_sha256, prompt_sha256) and ends in a VERDICT: line. A compliance output's file_sha256 must be that of the committed input in-<output name> whose first line
 //    `LIST <id> sha256:<hex> material sha256:<hex> part i of n` is recomputed here, and the parts together must carry the WHOLE rule list (so a list cannot be shortened or softened);
 //  * the WHOLE change (V2.WHOLE, task-410): the changed paths of the task range (merge-base with the table's base_ref to HEAD, minus the table's exempt paths) are recomputed here; the
@@ -427,7 +427,7 @@ function listProof({ id, l, phases, files, textOf, table, root, readBase, ctxVal
  */
 function complianceSetErrors({ id, lists, phases, files, table, dirNote, proof }) {
   const named = (ph, re) => files.some((f) => re.test(f.name) && f.name.startsWith(`${ph}-compliance-`));
-  const isJoined = new RegExp(`^(plan|out)-compliance-${JOINED_ID}(-p\\d+)?\\.txt$`);
+  const isJoined = new RegExp(`^(plan|out)-compliance-${JOINED_ID}(-r\\d+)?(-p\\d+)?\\.txt$`); // a round file (-rN, -rN-pN) of the joined set is joined too (task-423 D1)
   const isAny = /^(plan|out)-compliance-.+\.txt$/;
   const errors = [];
   const joinedPh = []; const perPh = [];

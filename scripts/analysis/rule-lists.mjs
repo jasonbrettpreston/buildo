@@ -633,10 +633,9 @@ export async function planPrep(a) {
       const denv = { DOTENV_CONFIG_PATH: process.env.DOTENV_CONFIG_PATH || path.join(os.homedir(), 'Buildo', '.env') };
       const reviewArgv = (file, tpl) => ['node', '-r', dotenv, reviewBin, 'review', file, '--template', `.claude/review-templates/${tpl}`, '--context', ctxRel, ...rt.CONTEXT_SECTIONS.flatMap((s) => ['--section', s])];
       const lenses = lensSet({ type, files: filesText(t.body) }).plan.map((l) => ({ out: `plan-${l}.txt`, tpl: l === 'plan-review-deepseek' ? 'plan-review-deepseek.md' : `lens-${l}.md`, file: ctxRel }));
-      const ids = r.lists.map((l) => l.id).join(',');
-      const lists = type === 'build' ? [{ id: JOINED_ID }] : []; // task-423: the resolved lists joined whole into one compliance call set; a fix task needs the plan lens outputs only
+      const lists = type === 'build' ? r.lists : []; // a fix task needs the plan lens outputs only (check-lane-close.mjs:604); RR-0374: the per-document form is the default, the joined form is only accepted by the checks
       const briefArgv = ['node', path.join(HERE, 'backlog-brief.mjs'), '--task', taskId, '--lane', lane, '--root', board];
-      const inputArgv = (id) => ['node', path.join(HERE, 'rule-lists.mjs'), 'lens-input', '--root', board, '--list', id, ...(id === JOINED_ID ? ['--lists', ids] : []), '--context', ctxRel, '--material-from', ctxRel, '--out', `${ev}/in-plan-compliance-${id}`];
+      const inputArgv = (id) => ['node', path.join(HERE, 'rule-lists.mjs'), 'lens-input', '--root', board, '--list', id, '--context', ctxRel, '--material-from', ctxRel, '--out', `${ev}/in-plan-compliance-${id}`];
       if (dry) {
         say(board, briefArgv);
         for (const l of lists) say(board, inputArgv(l.id));
