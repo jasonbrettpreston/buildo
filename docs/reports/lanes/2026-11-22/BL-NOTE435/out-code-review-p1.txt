@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-22T18:29:05.329Z file_sha256=11c711f8e11f67959280ffec0a1700b7046f1bee7b4440aae96569a0f2953830 prompt_sha256=898d12ca5814bb055d8629fec3d6e01e04279311885ad69b261fd4813c4771c3
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-NOTE435/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+REJECT — docs/reports/generated/rule-lists-by-kind.md "| total | 10 lists | | 197,241 | 10 |" -> "| total | 10 lists | | 197,778 | 10 |" — six tables bump every total by a hand-looking 537 and eng-all 46,076 -> 46,613 — arithmetic is internally correct: the added note line is 535 characters plus two inserted newline characters (the note line and the blank line) equals exactly 537, and all six totals and all six eng-all rows move by that same 537, so no stale or partially regenerated number is left behind.
+
+REJECT — docs/reports/generated/rule-lists-by-kind.md "| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |" — parts stayed 1 after the file grew — the next-largest single-part list is "surface-127 ... 50,606 | 1", so 46,613 is still under the split threshold and 1 part is right.
+
+REJECT — docs/specs/00_engineering_standards.md "`useExhaustiveDependencies`, `useExhaustiveDependencies`, `noUnusedVariables`" — a rule name is duplicated, looks like an introduced typo — this is pre-existing context inside the hunk, not an added line, and the diff reports 2 insertions and 0 deletions, so the change neither introduced nor worsens it.
+
+DEFER severity=LOW — docs/specs/00_engineering_standards.md "Spec 126 does not name a toast library, and `sonner` is installed and in use." — the note asserts a package fact that cannot be checked from this chunk (no package manifest pasted) — have the grounder confirm `sonner` is in the dependency list so the sentence does not become false after a later removal.
+
+VERDICT: PASS on code correctness
+
+Top 3 defects (if FAIL):
+- none
+
+---
+⏱  26743ms (26.7s)
+📊 Tokens — total: 11401, input: 4836, output: 6565, reasoning: 6134

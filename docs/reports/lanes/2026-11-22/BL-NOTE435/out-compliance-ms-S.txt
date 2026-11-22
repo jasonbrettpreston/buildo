@@ -1,0 +1,23 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:27:58.916Z file_sha256=fe841d2e31a8c6cc8909b3d636722f29fc352dc8d97320a0e28cdd7d7d32ef68 prompt_sha256=3d392f4f0eda0b4d9394a05a7d8989f612b178216425cf793ddef438e9a9cd2d
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-NOTE435/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=LOW — task-435 "one dated note in the engineering standards beside the library lines" — docs/specs/00_engineering_standards.md "@@ -305,6 +305,8 @@ ... > **Status:** Adopted as of 2026-04-07 for the lead feed feature build" (note inserted under the section 12 Status blockquote, above "### 12.1 Biome (React Logic Linting)") — the note is posted at the section 12 header, not beside §12.3/§12.5/§12.7 where the named libraries are specified, so a reader arriving at the Shadcn line does not meet it — move the note directly above §12.3 (or add a one-line pointer at §12.3 and §12.5 saying "superseded, see dated note under §12").
+DEFER severity=LOW — task-435 "THIS TASK: one dated note ... saying they are superseded for front-end work by Spec 126 section 11b.4" (card names only the library lines standing for "Shadcn UI, React Hook Form and Sonner") — docs/specs/00_engineering_standards.md "and the same library names in the Frontend Foundation Check of §11, are superseded for the front end by Spec 126 §11b.4" — the note extends the supersession ruling to the §11 Frontend Foundation Check, a location the pasted card does not name, which is an added ruling rather than the single note requested — drop the §11 clause from the note, or cite a pasted operator ruling that names §11.
+MET — task-435 "prior text kept, nothing deleted" — docs/specs/00_engineering_standards.md "@@ -305,6 +305,8 @@ ... 2 insertions" (Implementation Notes: "Spec diff: 2 insertions (the note and one blank line), 0 deletions") — added lines only, no removal of the §12.3/§12.5/§12.7 library text.
+MET — task-435 "citing the Spec 126 note" — docs/specs/00_engineering_standards.md "see also its dated note 2026-11-09, §5.4" — the note names the Spec 126 dated note it defers to.
+MET — task-435 "states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — docs/specs/00_engineering_standards.md "This note rules nothing on §12.7 (Sonner): Spec 126 does not name a toast library, and `sonner` is installed and in use." — Sonner is described, not ruled on.
+MET — task-435 "the generated rule-lists page is regenerated with it" — docs/reports/generated/rule-lists-by-kind.md "+| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |" with "+| total | 10 lists | | 197,778 | 10 |" — eng-all size and every total shifted by 537 in all six kinds, list counts and parts unchanged.
+MET — task-435 "Files: docs/specs/00_engineering_standards.md, docs/reports/generated/rule-lists-by-kind.md" — diff headers name only those two paths — no third file touched.
+MET — RR-0382 "yes add" — docs/specs/00_engineering_standards.md "Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add")" — the ruling is cited verbatim and dated.
+MET — ms-S "A task that serves neither a designed element nor a supporting function is most likely not relevant" — docs/specs/00_engineering_standards.md "@@ -305,6 +305,8 @@" — a standards pointer for front-end library choice is a supporting function for the search/report surfaces, not new product scope.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+```
+
+---
+⏱  29957ms (30.0s)
+📊 Tokens — total: 12545, input: 5731, output: 6814, reasoning: 5883

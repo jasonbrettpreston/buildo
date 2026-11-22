@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:27:58.907Z file_sha256=91c67e188674fc8dee4f6fd470e435d95235b2cb85b8bcf953707632a1e9e820 prompt_sha256=4e948952d8a7c7e40a4cf30c2e1908fc9098e068198420241c47a4d99dac7645
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-NOTE435/in-out-compliance-queue-137.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-435 card "one dated note in the engineering standards beside the library lines (prior text kept, nothing deleted)" — docs/specs/00_engineering_standards.md:308 "> Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add")" — the note sits under the §12 Status line, above §12.1 Biome, three subsections from the §12.3 and §12.5 library lines it supersedes, so a reader who reaches §12.5 Shadcn never meets it — move the one note to sit immediately above §12.3 React Hook Form, beside the library lines it names
+DEFER severity=LOW — Spec 137 Rule 4 "A ruling is kept as a verbatim dated note on its row, in the M-246 form: `Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: "<words>")`" — docs/specs/00_engineering_standards.md:308 "(M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add")" — the form's lane X field is absent (the task carries assignee @lane-BL-NOTE435) and a ruling id RR-0382 stands where the row id belongs — write "(M-246, prior text kept; task-435 · Backlog · lane BL-NOTE435; operator, verbatim: "yes add")"
+DEFER severity=NIT — task-435 card "saying they are superseded for front-end work by Spec 126 section 11b.4, citing the Spec 126 note ... No other edit" — docs/specs/00_engineering_standards.md:308 "and the same library names in the Frontend Foundation Check of §11, are superseded for the front end by Spec 126 §11b.4" — the note also supersedes the library names in the §11 Frontend Foundation Check, a place neither RR-0382 nor the card names — keep that clause only with a cite for the §11 lines, otherwise drop it to stay inside the ruling
+MET — task-435 card "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — docs/specs/00_engineering_standards.md:308 — the closing sentence "This note rules nothing on §12.7 (Sonner): Spec 126 does not name a toast library, and `sonner` is installed and in use." states it as fact and rules nothing
+MET — task-435 card "saying they are superseded for front-end work by Spec 126 section 11b.4, citing the Spec 126 note" — docs/specs/00_engineering_standards.md:308 — the note names §12.3 and §12.5, points to "Spec 126 §11b.4 "The libraries"" and cites "its dated note 2026-11-09, §5.4"
+MET — task-435 card "No other edit (the generated rule-lists page is regenerated with it)" — docs/reports/generated/rule-lists-by-kind.md "| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |" — only the two named files change, and only the eng-all character count and the six totals move (46,076 to 46,613)
+MET — Spec 137 Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — docs/specs/00_engineering_standards.md:308 — date 2026-11-22, row task-435, queue Backlog, verbatim "yes add", and the spec diff is 2 insertions, 0 deletions
+REJECT — Spec 137 Rule 3 "The status line changes in the same commit as the work." — the diff lands the work with no status line change for task-435 — the Rule 3 dated note 2026-11-20 amends this for lane build and fix tasks ("Rule 3 is amended for lane build and fix tasks. The work lands first; the status moves in a separate closing commit"), and task-435 is lane BL-NOTE435 with label McFix
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 3
+Rules met: none
+
+---
+⏱  62266ms (62.3s)
+📊 Tokens — total: 29286, input: 15437, output: 13849, reasoning: 12834

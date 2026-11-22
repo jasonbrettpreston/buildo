@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:27:58.900Z file_sha256=70661502c01e8c548287a574ff488982f210ce762371becb4b67e826a294d966 prompt_sha256=5bf4359d29c6ffc53b0d9defd4b5471e4b5cc48c5522e985eff70b5544ef4c28
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-NOTE435/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG/DEFER findings and MET lines, per the strict format:
+
+```
+DEFER severity=LOW — card "THIS TASK: one dated note in the engineering standards beside the library lines (prior text kept, nothing deleted)" — docs/specs/00_engineering_standards.md (hunk @@ -305,6 +305,8 @@) "+> Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add"): §12.3 (React Hook Form) and §12.5 (Shadcn UI, Shadcn `<Drawer>`)" — the note sits under the section 12 Status line above "### 12.1 Biome", not beside the §12.3 / §12.5 lines it names — rationale: it is inside section 12 and names each section by number, bounded and reversible; move it beside §12.3/§12.5 only if the operator wants literal adjacency.
+DEFER severity=LOW — card "names Shadcn UI, React Hook Form and Sonner; Spec 126 ... says 'Shadcn/Tailwind above is superseded'" — docs/specs/00_engineering_standards.md (hunk @@ -305,6 +305,8 @@) "+and the same library names in the Frontend Foundation Check of §11, are superseded for the front end" — the note also supersedes the §11 Frontend Foundation Check lines, which neither the card nor RR-0382 names — rationale: same library names and consistent with the operator's "spec 126 is more recent" intent, but it is scope the pasted ruling did not state; get the operator to widen the card or drop the §11 clause.
+DEFER severity=LOW — card "citing the Spec 126 note; ... 126_maxbld_surface_standard.md:467" — docs/specs/00_engineering_standards.md (hunk @@ -305,6 +305,8 @@) "+(`docs/specs/02-web-admin/126_maxbld_surface_standard.md`; see also its dated note 2026-11-09, §5.4)" — cannot see Spec 126, so the "§5.4" anchor is unverifiable and does not match the card's ":467" — fix: confirm the dated note's section in Spec 126 or cite the line number the card cites.
+REJECT — inc-S — the change edits engineering standards and a generated report, not Increment S search material — inc-S contains no clause on UI libraries, dated notes or rule-lists, so no inc-S clause binds and none is unmet.
+MET — card "prior text kept, nothing deleted" — docs/specs/00_engineering_standards.md hunk — spec diff is 2 insertions, 0 deletions (note plus one blank line), prior §12 text intact.
+MET — card "saying they are superseded for front-end work by Spec 126 section 11b.4" — "are superseded for the front end by Spec 126 §11b.4 "The libraries" (`docs/specs/02-web-admin/126_maxbld_surface_standard.md`" — names the target spec and section.
+MET — card "the note states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — "This note rules nothing on §12.7 (Sonner): Spec 126 does not name a toast library, and `sonner` is installed and in use." — fact stated, no ruling issued on Sonner.
+MET — card "No other edit (the generated rule-lists page is regenerated with it)" — docs/reports/generated/rule-lists-by-kind.md "| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |" and "| total | 10 lists | | 197,778 | 10 |" — only the six eng-all character counts and the six total rows change, each +537.
+MET — RR-0382 "yes add" — docs/specs/00_engineering_standards.md hunk — the dated note carrying "RR-0382 · task-435" is present exactly once, matching the ruling.
+MET — card "the generated rule-lists page is regenerated with it" — docs/reports/generated/rule-lists-by-kind.md totals "679,426" to "679,963", "766,416" to "766,953", "569,670" to "570,207", "202,580" to "203,117", "156,305" to "156,842" — every kind total moves by the same +537, consistent with one added note.
+```
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 0
+Rules met: none
+
+---
+⏱  29977ms (30.0s)
+📊 Tokens — total: 17793, input: 11185, output: 6608, reasoning: 5535

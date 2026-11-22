@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-22T18:29:05.329Z file_sha256=11c711f8e11f67959280ffec0a1700b7046f1bee7b4440aae96569a0f2953830 prompt_sha256=43b26f35b68e6109aa556f90dbae680d5f6cf5b71c0463a17b82bb92e3df406a
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-NOTE435/in-out-error-paths-p1.txt (model: deepseek-reasoner)
+
+BUG/ DEFER/REJECT findings:
+
+DEFER severity=MED — docs/reports/generated/rule-lists-by-kind.md:18 "| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |" — the page is a whole-file regeneration with no lock or key: two lanes regenerating from different worktrees at the same time each rewrite the same six eng-all rows and six total rows, so the second writer overwrites the first and the merged page silently carries a count that matches neither source — fix: regenerate only after merge (rebase, then `page --write`, then `page --check`) and state that order in the report header so a stale-but-valid page cannot pass.
+
+DEFER severity=LOW — docs/specs/00_engineering_standards.md, pasted line "Acceptance pre-insert: grep -c \"Dated note 2026-11-22 (M-246\" = 0" — the only dedup key for the insert is a manual grep on a prefix shared by every 2026-11-22 M-246 note, so it cannot tell this task's note from a sibling same-day note and a re-run after a partial lane failure would append a second note while the visible count reads plausibly — fix: make the insert a keyed step (match the full note text, `grep -qxF`, skip if present) rather than a pre-check a human reads.
+
+DEFER severity=LOW — docs/specs/00_engineering_standards.md, pasted line "superseded for the front end by Spec 126 §11b.4 \"The libraries\" (`docs/specs/02-web-admin/126_maxbld_surface_standard.md`; see also its dated note 2026-11-09, §5.4)" — if Spec 126 renumbers or drops §11b.4, nothing fails: the note keeps asserting a supersession that now points at nothing and a reviewer reads it as live — fix: add this cross-reference to whatever reference check runs beside `page --check`, or accept no automation and record it in the note's rationale.
+
+REJECT — docs/specs/00_engineering_standards.md, pasted line "page --check exit 1 \"out of date: regenerate with node scripts/analysis/rule-lists.mjs page --write\" (the red)" — a forgotten regeneration leaves stale counts with no error — handled: the check fails closed (exit 1) before the page is published, so the empty/omitted-write path is caught, not tolerated.
+
+REJECT — docs/reports/generated/rule-lists-by-kind.md:18 "| total | 10 lists | | 197,778 | 10 |" — re-running the generator looks like a double-write of the same numbers — handled: the output is derived from file content only, the diff shows "12 insertions 12 deletions" confined to the derived counts, so a second run is a no-op on identical inputs and gains exactly the one new note's characters on the first.
+
+VERDICT: PASS on error-path safety
+Paths walked: concurrent regeneration (two lanes, whole-file write), repeat insert of the dated note (dedup key), stale-pointer degrade when the referenced spec section changes, omitted regeneration (check guard), empty/zero-change regeneration   Unguarded: 1
+
+---
+⏱  38449ms (38.4s)
+📊 Tokens — total: 12633, input: 4853, output: 7780, reasoning: 7055

@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T18:27:58.912Z file_sha256=576b14c9214d42b5a47a83566c8d6b8fc4646680ac6606c1e7aa4e6298f40cf4 prompt_sha256=f32bf16232af1ef21542a2022f7ded54932026ec012ab9869cd001aadd9b1949
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-NOTE435/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — task-435 THIS TASK "one dated note in the engineering standards beside the library lines" — docs/specs/00_engineering_standards.md:308 "> Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: \"yes add\"): §12.3 (React Hook Form) and §12.5 (Shadcn UI, Shadcn `<Drawer>`)" — the note sits at the head of section 12 immediately before "### 12.1 Biome (React Logic Linting)", not beside the §12.3 and §12.5 lines it supersedes, so a reader jumping to those lines meets the old text with no adjacent caveat — keep the note there and add a one-line pointer at §12.3 and §12.5, or move it adjacent
+DEFER severity=LOW — task-435 THIS TASK "one dated note ... saying they are superseded for front-end work by Spec 126 section 11b.4, citing the Spec 126 note" — docs/specs/00_engineering_standards.md:308 "and the same library names in the Frontend Foundation Check of §11, are superseded for the front end" — the card's THIS TASK names §12.3, §12.5 and the §12.7 Sonner fact only, not the §11 check, so the note reaches past the enumerated lines — grounder confirms §11's Frontend Foundation Check actually names Shadcn UI or React Hook Form, else the §11 clause is dropped from the note
+MET — task-435 "prior text kept, nothing deleted" — docs/specs/00_engineering_standards.md:305 "@@ -305,6 +305,8 @@" — the spec hunk adds the note and one blank line, two insertions, zero deletions
+MET — task-435 "saying they are superseded for front-end work by Spec 126 section 11b.4" — docs/specs/00_engineering_standards.md:308 "are superseded for the front end by Spec 126 §11b.4 \"The libraries\"" — supersession, direction and target section all named
+MET — task-435 "citing the Spec 126 note" — docs/specs/00_engineering_standards.md:308 "see also its dated note 2026-11-09, §5.4" — the Spec 126 dated note the card identifies (2026-11-09) is cited
+MET — task-435 "states as a fact, and rules nothing on it, that Spec 126 does not name a toast library and Sonner is installed and in use" — docs/specs/00_engineering_standards.md:308 "This note rules nothing on §12.7 (Sonner): Spec 126 does not name a toast library, and `sonner` is installed and in use." — both facts stated, no ruling made
+MET — task-435 "the generated rule-lists page is regenerated with it" — docs/reports/generated/rule-lists-by-kind.md "| total | 10 lists | | 197,778 | 10 |" and "| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |" — every eng-all row and all six totals move by the same 537 characters (46,076 to 46,613; 197,241 to 197,778; 679,426 to 679,963; 766,416 to 766,953; 569,670 to 570,207; 202,580 to 203,117; 156,305 to 156,842), consistent with the inserted note and 12 insertions/12 deletions
+MET — task-435 Files "docs/specs/00_engineering_standards.md, docs/reports/generated/rule-lists-by-kind.md" — "diff --git a/docs/specs/00_engineering_standards.md" and "diff --git a/docs/reports/generated/rule-lists-by-kind.md" — the change touches exactly those two files and "No other edit" holds
+MET — 2026-11-21 note "a list is never trimmed in either form" — docs/reports/generated/rule-lists-by-kind.md "| eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |" — eng-all stays whole file, one part, at its new full length
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  58507ms (58.5s)
+📊 Tokens — total: 22139, input: 8922, output: 13217, reasoning: 12187
