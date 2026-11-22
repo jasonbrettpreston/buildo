@@ -6,7 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T18:02:00Z'
+updated_date: '2026-11-22T18:39:00Z'
 labels:
   - McFix
   - McFix V2
@@ -19,7 +19,9 @@ ordinal: 131012
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0378 (MORNING-DECISIONS.md:1852, verbatim: "Plan approved. We are running right now on this? Add the tasks?"). Why: the compliance reviewer is sent about 534,000 characters for a front-end task, of which the handbook is 3 percent; measured, one small document per call finds more than large or joined ones. THIS TASK (steps 3 and 4): in scripts/analysis/rule-lists.json: the engineering standards entry split by section into front-end, back-end and shared lists (sections 1, 8, 10, 12 front end; 3, 9 back end; 2, 4, 5, 6, 7, 13 shared; 11 and 14 placed at plan review); front-end kinds get surface-136 plus front-end and shared; pipeline and by-law kinds get their handbook plus back-end and shared; Specs 126, 127, 128, 135 no longer sent whole to front-end kinds once INPUTS.2 has landed; the lane-tools and other infrastructure rows unchanged (Spec 08, Spec 137); ui-app attaches surface-136 if INPUTS.1 confirms the oversight. Proof before the switch at plan review. Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists.logic.test.ts, docs/reports/generated/rule-lists-by-kind.md
+Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0378 (MORNING-DECISIONS.md:1852, verbatim: "Plan approved. We are running right now on this? Add the tasks?"). Why: the compliance reviewer is sent about 534,000 characters for a front-end task, of which the handbook is 3 percent; measured, one small document per call finds more than large or joined ones. THIS TASK (steps 3 and 4): in scripts/analysis/rule-lists.json: the engineering standards entry split by section into front-end, back-end and shared lists (sections 1, 8, 10, 12 front end; 3, 9 back end; 2, 4, 5, 6, 7, 13 shared; 11 and 14 placed at plan review); front-end kinds get surface-136 plus front-end and shared; pipeline and by-law kinds get their handbook plus back-end and shared; Specs 126, 127, 128, 135 no longer sent whole to front-end kinds once INPUTS.2 has landed; the lane-tools and other infrastructure rows unchanged (Spec 08, Spec 137); ui-app attaches surface-136 if INPUTS.1 confirms the oversight. Proof before the switch at plan review.
+
+Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, docs/reports/generated/rule-lists-by-kind.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done
@@ -35,6 +37,132 @@ Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's r
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Plan
+
+<!-- SECTION:PLAN:BEGIN -->
+# PLAN-431-v2: the review table sends product tasks the engineering standards by section (front, back, shared); infrastructure rows unchanged; the four surface specs stay for now
+
+Planner: read-only, against the board worktree (~/Buildo-wt-board) at head 6c3f450c9 (tasks 432 and 433 folded). Every measure below was made in memory with the table's own functions (resolveTask, listBlocks, wholeListText, buildLensInputs, joinLists); nothing was written, no test runner run.
+
+## RULED (the operator has answered; recorded here as ruled lines, not open)
+- RR-0376 to RR-0379 (MORNING-DECISIONS.md:1852 and after), verbatim: "Just send the handbook rules for the task except for infastructure rules (spec 08 and the Mclane) and then the relevant sections of the engineering protocols.  Problem solved."; "Plan approved. We are running right now on this?"; "We can run step 1 in parellel - we will add to the rules overtime".
+- RR-0380 (decision-165) and RR-0383 (decision-168), verbatim: "Pushing 1 transition once the handbook has been updated iwth the critical items and drop the full engineering when arts can be sent  2. y 3 4 N" and "1. what is your recommendation. I approve it".
+- Q1 = option B: THIS task sends the engineering sections now (eng-front, eng-back, eng-shared; eng-all kept for the infrastructure rows). Specs 126, 127, 128, 135 stay attached to the front-end rows in this task; they are dropped in a later, separate table edit (NOT IN SCOPE) once task-430 has landed (its scope approved RR-0384, decision-169).
+- Q2 = yes: sections 8, 10 and 12 are shared, as sorted below.
+- Q3 (for the later edit, recorded now): tasks that edit the surface specs themselves (the specs-web-admin row) keep Specs 126, 127, 128, 135 attached.
+- Q4 = no: the by-law row gains NO engineering lists; it stays ["bylaw-133"].
+- Q5: no surface-136 on ui-app in this task (see NOT IN SCOPE).
+- Principles: standardized, observable, scalable, accurate, understandable; simple; no scope creep; "you are probaley rebuilding stuff that already exists you do this all the time" (MORNING-DECISIONS.md:1520).
+
+## BASIS (rules quoted, re-measured at the new head)
+- The table already supports what is needed, so nothing is built: a list may be `sections` picked by heading, matched at the start of the title after leading emoji and punctuation, one heading each, and "a section is allowed only where the file itself separates rules from history or narrative. Never a hand-picked clause" (rule-lists.json line 1 `$comment`; rule-lists.mjs:71-96 `headings`/`sectionText`, which strips leading emoji with `/^[^\p{L}\p{N}]+/u` and throws unless exactly one heading matches; rule-lists.mjs:98-107 `listBlocks`). The same shape is used by `step-132`, `agents-s7-s11`, `bylaw-133`, `surface-136`.
+- The close check and plan gate prove a sections list the same way as a whole one: `listProof` recomputes `listBlocks(table.lists[l.id])` per list id and compares (check-lane-close.mjs:410-414). No new proof code.
+- Card (task-431), Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists.logic.test.ts, docs/reports/generated/rule-lists-by-kind.md (extended below, item (d)).
+- Protected path: rule-lists.json is in the table's `protected_paths`; "a commit that changes a protected path may not also move a task to finished" (check-lane-close.mjs:738-740, self-edit rule COMPLY.2); Spec 137 two-commit close (137_mcqueue.md:138). Reuse task-412's shape (commit 52a49566e: table edit, test, task file, `Task:` trailer; folder docs/reports/reviews/task-412/).
+
+## FACTS FOUND (with file:line)
+1. The 13 rows that attach `eng-all` (whole file, 46,076 chars; rule-lists.json lists.eng-all): step-pipeline, api-lib, ui-app, middleware-config, surfaces, mobile, lane-tools, generated-reports, generated-127, policy-reports, reference-docs, specs-docs, tests.
+2. Section titles of docs/specs/00_engineering_standards.md (level 2 headings, "emoji + N. Title", lines 9, 35, 51, 71, 97, 136, 144, 160, 175, 218, 235, 304, 410, 452). Selectors are the FULL title after the emoji ("1." alone also starts "1.1", and "1" starts "10" to "14"; `sectionText` throws on more than one hit, so `validate` catches a bad selector). Sizes (chars): 1:3,214 2:1,468 3:1,221 4:3,667 5:4,527 6:566 7:1,023 8:1,160 9:4,156 10:1,719 11:4,382 12:12,962 13:2,906 14:2,555; sum 45,526; the other 550 chars (title and intro, lines 1-7) are sent to no non-infrastructure kind.
+3. SORTING, checked against the text:
+ - 1 front end: 1.1 Tailwind mobile-first, 1.2 `src/components/ui/`, 1.3 Expo patterns (lines 11-31).
+ - 2 shared: 2.2 try-catch covers routes and UI (line 41). 3 back end: migrations, rollback, pagination (lines 51-69). 4 shared: 4.1 route guard (back), 4.3 "Frontend Security" (line 80), 4.4 API design for multi-app (line 87). 5, 6, 7 shared (tests, logging, dual code path TS and JS).
+ - 8 shared: 8.1 is the `route.ts` export rule (API, line 162); 8.2 TypeScript target gotchas for all code (line 166).
+ - 9 back end: `scripts/*.js` pipeline safety (line 175-).
+ - 10 shared: 10.1 data flow, 10.2 front-end phase limits, 10.3 "API routes must be thin" (lines 220-231); binds both sides.
+ - 11 shared: the Plan Compliance Checklist, "Before presenting PLAN LOCKED, the plan MUST address each applicable item" (line 237); CLAUDE.md "PLAN COMPLIANCE GATE: Read section 11 ... Verify the plan addresses every applicable item" applies to every plan; its conditional blocks (lines 245-300) are inside the section and the table's grain is the section.
+ - 12 shared: titled "Frontend Foundation Tooling" (line 304) but 12.8 SQL linting and migration safety (line 345), 12.10 real-DB tests (line 355) and 12.11 footgun lint (line 364) are back-end rules that section 11 cites (lines 292, 297-299). Cost: 12,962 chars to back-end kinds. (Ruled, Q2.)
+ - 13 shared: 13.1 PostHog (front), 13.3 backend logging (lines 410-433).
+ - 14 shared: The Prevention Loop (line 452) is a process rule for review findings; its registry rows (lines 458-465) bind back end (3), admin plus back end (1), cross-cutting (2); no kind is excluded. 2,555 chars.
+ Result: eng-front = 1 (3,214); eng-back = 3, 9 (5,377); eng-shared = 2, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14 (36,935).
+4. The step-pipeline row matches `scripts/**/*.descriptor.json` (rule-lists.json row step-pipeline globs), so a front-end task whose Files line holds a surface descriptor also gets every pipeline list; the page's "McFrontend web" example holds one.
+5. The ui-app row globs are `src/components/**`, `src/app/**`, `src/features/**`; `src/app/**` includes `src/app/api/**`, so an API route file matches ui-app and api-lib both.
+6. specs-web-admin and specs-mobile paths (`docs/specs/**`) also match specs-docs, which keeps `eng-all`.
+7. NEW at this head, double sending: a task whose Files line mixes a front-end or back-end row with any row that keeps `eng-all` (tests, specs-docs, lane-tools, generated-reports, and so on; for example `src/components/report/X.tsx, src/tests/x.test.ts` resolves eng-front, eng-shared AND eng-all) receives the engineering text twice: the whole file and the sections. The resolver unions by list id and does not know that eng-all contains the sections (rule-lists.mjs:234-). In-memory count: 22 of the 314 open tasks would resolve to eng-all plus a split list (267, 317, 345, 357, 366, 373, 375, 376, 378, 379, 382, 384, 387, 389, 390, 393, 394, 395, 396, 406, 411, 416). Extra sent per such task: 40,149 chars (front and shared) or 42,312 (back and shared). This task's own Files line (json under scripts/analysis, a test, a generated page) is one of them only through eng-all. See OPEN QUESTION A.
+8. Tests that break on this change (line numbers re-measured at the new head; task-433 added tests to rule-lists.logic.test.ts but none of its lines about eng-all or the surface lists moved): rule-lists-table.logic.test.ts:20-23 (mobile and surfaces rows contain eng-all), :161 (the golden-path resolve is an exact list with eng-all once), :194-203 (`without` is exactly eng-all plus four); backlog-lane.logic.test.ts:343 (mobile plus API route Files attach mobile-98, eng-all, storage-doc16, inc-F). Stay green, since the surface specs stay and specs rows keep eng-all: rule-lists.logic.test.ts:53, :59-63, :339 (eng-all still defined whole), rule-lists-table.logic.test.ts:99, :112, :179 and backlog-lane.logic.test.ts:638 (lane-tools keeps eng-all). So rule-lists.logic.test.ts needs no edit, which is stated, not run.
+9. Page: `rule-lists.mjs validate` today: "ok 55 lists, 23 rows"; `page --check` current. Regenerated with `node scripts/analysis/rule-lists.mjs page --write` (renderPage rule-lists.mjs:532-). Registered generated doc, `.husky/pre-commit` runs `page --check`.
+
+## MEASURES (Q1-B shape only: characters sent to the compliance reviewer and calls; "per-list" = lens-input parts at 30,000 characters of material, the page's own measure; "joined" = the task-423 joined form)
+| Files line | today | after |
+|---|---|---|
+| front-end only `src/components/report/X.tsx` | 565,831 chars / 13 per-list / 9 joined | 559,904 / 14 / 8 |
+| the page's web example (adds a descriptor) | 679,426 / 18 / 11 | 678,876 / 20 / 10 |
+| phone `mobile/src/app/` | 766,416 / 18 / 12 | 760,489 / 19 / 12 |
+| pipeline `scripts/steps/_schema/converted.json, scripts/load-permits.js` | 197,241 / 10 / 3 | 193,477 / 11 / 3 |
+| API `src/app/api/parcels/search/route.ts` | 122,494 / 6 / 2 | 121,944 / 8 / 2 |
+| by-law (first `layer23` glob) | 335,345 / 11 / 5 | unchanged (ruled) |
+Plainly: the engineering split saves 5,927 chars for a front-end task (46,076 to 40,149, about 1 percent of its input) and 3,764 for a pipeline task (46,076 to 42,312), and adds one per-list call; the 531,000-character relief the card describes comes only from the later surface-spec drop. The measures were taken without task-435's note; section 12 and eng-all each grow by the note's length when it lands.
+Open tasks whose resolved list set changes: 30 of 314 (was 41 in v1, which included the four-spec drop): RUNNING 354, 366, 372, 373, 374, 375, 376, 378, 381, 383, 384, 387, 389, 390, 395, 396, 406, 411; WAITS 267, 317; LATER 345, 357, 379, 380, 382, 391, 392, 393, 394, 416. None became unresolvable.
+
+## WHAT
+One data edit and its tests: three new lists on the existing engineering standards file, five rows pointed at them, page regenerated. Specs 126, 127, 128, 135 are not touched. No code in rule-lists.mjs or check-lane-close.mjs changes.
+
+## THE EXACT TABLE EDITS (scripts/analysis/rule-lists.json)
+1. `lists`: after `eng-all` add
+ - `eng-front`: file docs/specs/00_engineering_standards.md, sections ["1. Architecture & UI Standards"], generated_by "hand-written".
+ - `eng-back`: same file, sections ["3. Database Management & Scaling", "9. Pipeline & Script Safety"].
+ - `eng-shared`: same file, sections ["2. Error Handling & Stability", "4. Security & API Contracts", "5. Testing Standards", "6. Centralized Logging", "7. Dual Code Path Safety", "8. Next.js & TypeScript Constraints", "10. Frontend/Backend Boundary", "11. Plan Compliance Checklist", "12. Frontend Foundation Tooling", "13. Observability Standards", "14. The Prevention Loop"] (the first sorting is not used; titles copied exactly, `validate` fails on a wrong one).
+ - `eng-all` stays: eight rows keep it (lane-tools, generated-reports, generated-127, policy-reports, reference-docs, specs-docs, middleware-config, tests) and test :339 pins it.
+2. Rows, `lists` field (order kept; each touched row's `why` amended to name RR-0376 and the new lists):
+ - step-pipeline: `eng-all` replaced by `eng-back`, `eng-shared` (its why says "attached whole (eng-all)": fix the sentence).
+ - api-lib: `["eng-back","eng-shared"]`.
+ - ui-app: `["eng-front","eng-shared"]`.
+ - surfaces: `eng-all` replaced by `eng-front`, `eng-shared`; the surface specs stay (`["surface-136","surface-126","surface-127","surface-128","surface-135","eng-front","eng-shared"]`).
+ - mobile: `eng-all` replaced by `eng-front`, `eng-shared`; mobile and surface lists stay.
+ - NOT touched: bylaw (stays ["bylaw-133"], ruled), specs-web-admin, specs-mobile, surface-importers, surface-contract-routes, panel-records, generated-127, storage, compute-import, queue-records, middleware-config, tests, and every infrastructure row. Pinned phrases in the contract-routes `why` are untouched because the row is untouched.
+3. Page: `rule-lists.mjs page --write`; commit the result.
+
+## TESTS (red first; each planted defect with its control). Pattern: temp git repo plus `--root` and `--table` copy (rule-lists-table.logic.test.ts:179-190 `resolveIn`, :217-228 for task-412). New describe block "task-431" in src/tests/backlog/rule-lists-table.logic.test.ts.
+- T1 front kinds: `src/components/report/X.tsx` (surfaces), `mobile/src/app/x.tsx` (mobile), `src/features/x.ts` (ui-app) each resolve `eng-front` and `eng-shared` and none of `eng-all` and `eng-back`. (The assertions about Specs 126 to 135 being absent are not in this task.) Red now. PLANTED DEFECT: a copy of the table with `eng-all` restored on the row fails naming the row; the real table is the control.
+- T2 back kinds: `scripts/steps/x.json` (step-pipeline) and `src/lib/x.ts` (api-lib) resolve `eng-back` and `eng-shared`, and not `eng-front` or `eng-all`. By-law (ruled Q4): the `bylaw` row lists exactly ["bylaw-133"], and a path from the `layer23` key of mcbylaws/protected-paths.json resolves no eng-* list. PLANTED DEFECT: a copy where api-lib lists `eng-all` fails; a copy where bylaw gains `eng-shared` fails; control the real table.
+- T3 infrastructure and the rows not changed: lane-tools (`scripts/hooks/x.mjs`), generated-reports, generated-127, policy-reports, reference-docs, specs-docs, middleware-config, tests each still resolve `eng-all` and none of the three new lists; specs-web-admin and specs-mobile still resolve the lists they have (the specs rows are the ruled Q3 and carry the four specs). PLANTED DEFECT: a copy where lane-tools lists `eng-shared` instead fails.
+- T4 partition (the guard that makes the split safe to keep): the level-2 headings of the engineering standards file (exported `headings`) are each in exactly one of eng-front, eng-back, eng-shared, and the three lists together hold every character of every `## ` section (whitespace squashed). PLANTED DEFECT: the same check on a temp copy of the file with a new "## 15. X" heading fails "unassigned"; a temp table with one section in two lists fails "in two lists". Reason: a section added later would otherwise go to no non-infrastructure kind with no sign; `validate` checks only that a named selector exists.
+- T5 section text: `lens-input --list eng-front` holds "1.1 Mobile-First UI Mandate" and not "9.1 Transaction Boundaries"; `--list eng-back` the reverse (pattern: rule-lists-table.logic.test.ts:206-213). PLANTED DEFECT: a temp table with the two lists' sections swapped fails both.
+Existing tests changed in the same commit: rule-lists-table.logic.test.ts:20-23 (mobile and surfaces rows contain eng-front and eng-shared; the `static-page.json` probe expects them), :161 (the golden path resolves ['surface-136','surface-126','surface-127','surface-128','surface-135','eng-front','eng-shared','eng-all','five-words','plan-protocol','inc-S','ms-S']: eng-all stays through the tests row, fact 7), :194-203 (`without` becomes ['eng-front','eng-shared','five-words','plan-protocol','inc-S','ms-S'], the ui-app row); backlog-lane.logic.test.ts:343 (the list becomes mobile-98, eng-front, eng-back, eng-shared, storage-doc16, inc-F, and `eng-all` is asserted absent). Run before the edit to prove the new and changed tests red (name them), after to prove them green.
+
+## ORDER
+1. task-435 lands FIRST (the dated note in section 12 of the engineering standards, regenerating the page). Reason: its note changes the text of eng-all and of section 12, so any plan-compliance evidence of task-431 that names eng-all (this task's Files line resolves eng-all through lane-tools, tests and generated-reports) would be stale if 435 landed after 431's plan review; run 431's plan-prep review after 435's commit, and regenerate this task's page after it. Check made: task-435's plan puts the note "directly under the Status blockquote at the head of section 12 (after :306, before '### 12.1')". A blockquote is not a heading; `headings()` ignores it, the section runs to "## 13." (a level 2 heading), so the note is inside the text `eng-shared` selects; checked in memory by inserting a blockquote with inline backticks and a "###" inside its text after line 306: sectionText("12. Frontend Foundation Tooling") contains it, and the file still has 14 level-2 headings. T4 compares whole-section characters, so it tolerates it.
+2. The orchestrator extends the card's Files line (item (d)).
+3. Write T1 to T5 and the changed expectations; run red.
+4. Edit the table; `rule-lists.mjs validate`; `page --write`; `page --check`.
+5. Run the three test files and `check-tasks`; green.
+6. Commit 1 through the real hooks: table, tests, page, task file, `Task: task-431`; the task stays RUNNING (protected path, check-lane-close.mjs:738-740).
+7. Commit 2: close with evidence (commit 1 sha, red then green, page check).
+8. Land when no other table-editing lane sits between plan review and launch (task-412's note: "the other table-editing tasks land one at a time").
+
+## LANDING
+Two commits as above; protected path rule-lists.json; the board keys base_ref, finished_statuses, protected_paths, exempt are unchanged (check-lane-close.mjs:746). Stale-evidence cost: (1) a task prepped but not launched whose set changes (WAITS 267 and 317 are two of the 30) must re-run plan compliance for the new list ids; launch reads the live board table (backlog-lane.mjs:78); (2) a RUNNING lane keeps its table until its range base passes commit 1 (the close check reads the table at the merge-base, check-lane-close.mjs:752-755); after it merges the board it owes out-compliance files for the new ids in place of eng-all; (3) `check-tasks` (rule-lists.mjs:499-) prints a references add/remove command for each of the 30 tasks. Only task-375's folder on the board holds plan-compliance files; other lanes' evidence is in their worktrees and was not read.
+
+## ACCEPTANCE
+(a) `validate` ok; `page --check` current; T1 to T5 and the changed tests green, each red before the edit.
+(b) A front-end Files line gets eng-front and eng-shared and not eng-all through the front rows; the figures above are reproduced (559,904 chars, 8 joined calls for `src/components/report/X.tsx`, plus the note's length from task-435).
+(c) Pipeline and API Files lines get eng-back and eng-shared; the by-law Files line is unchanged; eight rows still resolve eng-all.
+(d) The three lists partition the 14 sections (T4).
+(e) `check-tasks` lists the 30 changed tasks and none unresolvable; the final summary reports the count and the two prepped tasks, and the double-sending count answered under OPEN QUESTION A.
+(f) Nothing was added the card or ruling did not name (124a:988 "no change adds a tool, field or rule its card or ruling did not name"): no code, no new field, Specs 126 to 135 untouched.
+
+## (d) THE CARD'S FILES LINE (exact)
+Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, docs/reports/generated/rule-lists-by-kind.md
+(Files changed: the table, the two test files named first, the page. rule-lists.logic.test.ts is kept from the original card because new tests may be placed there; the close check refuses paths changed outside the Files line, not paths listed and left alone. The card's Files line today lacks the two other test files.)
+
+## NOT IN SCOPE
+- The later separate table edit: drop Specs 126, 127, 128, 135 from the surfaces, mobile, surface-importers and surface-contract-routes rows (they get surface-136), once task-430 has put the handbook's critical lines in Spec 136, keeping them on the specs-web-admin row (Q3); it needs its own card or a re-open of this one by ruling, and it is not built here. It is the edit that delivers the large saving (about 468,000 chars per front-end task, measured in v1), and task-429's report (REPORT-429.md section 11) asks that `surface-importers` be repointed to 136 in it, since it would otherwise be left with no list.
+- ui-app and surface-136: task-429 (REPORT-429.md section 6) finds the ui-app split deliberate (surface membership follows the `frontend` path list) but leaking for three files; no surface-136 is added to ui-app here, and the leak is for the later edit or its own card.
+- Adding handbook rules (tasks 429, 430); editing Specs 126 to 135 or the engineering standards file (task-435 does its own note); any change to infrastructure rows, rule-lists.mjs, the close check or lens-input; the descriptor overlap (fact 4); the plan-review input size; moving middleware-config and tests to a side.
+
+## OPEN QUESTION (new, from this re-measure; the only one left)
+A. Double sending (fact 7). A task whose Files line touches a front-end or back-end row and also a row that keeps eng-all (a test file beside a component is the common case; 22 of 314 open tasks) gets the engineering text twice: 40,149 or 42,312 extra chars, which for those tasks is more than today (46,076 once). Options: (1) accept it for this task and report the count (no code; the double text is still the same rules; cost: the reviewer reads the file twice for those tasks, and the card's "infrastructure rows unchanged" is kept); (2) give the `tests` row `eng-shared` instead of `eng-all` (table only; test-only tasks lose sections 1, 3 and 9; the mixed tasks through lane-tools, specs-docs and generated-reports still double); (3) a small resolver rule in rule-lists.mjs (a list whose file is already attached whole is not added again as sections): removes it everywhere, but it is code in a protected path, needs its own test and a ruling, and is not named by the card. Planner reads (1) as the smallest and (3) as the complete fix; not chosen here.
+
+## UNVERIFIED
+- No test was run: which tests break (fact 8) is read from the assertions, and rule-lists.logic.test.ts being unaffected is the same reading.
+- Committed plan evidence of lanes outside the board tree; the 30-task count is a dry run on the board's task files, not each lane's own table copy.
+- Joined-form call counts use the page's nominal 30,000 characters of material, not a real plan context.
+- The length of task-435's note (not yet written) and so the final character counts; task-435's placement is read from its plan, not from a landed commit.
+- `middleware-config` and `tests` staying on eng-all is the planner's reading of "infrastructure rows keep what they get today", not a ruling.
+- Reviewer behaviour with fewer documents ("one small document per call finds more", card text) is the card's measurement, not repeated.
+
+Files: scripts/analysis/rule-lists.json, src/tests/backlog/rule-lists-table.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/rule-lists.logic.test.ts, docs/reports/generated/rule-lists-by-kind.md
+<!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
 
