@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:48:32.028Z file_sha256=27eb00b7d408c1a5328dc7a7498bfdb0d60d38b67a16d296cb2ad5729b923312 prompt_sha256=3dd0f4161cd35f80f3f32177be6b15178208b1e4095b95c004a2354505b329e9
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ROUNDS437/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card, THIS TASK "a dated note in Spec 08 with the rule and the three things that still come to the operator (a critical or high still open after round 2; a decision that needs his word; every push)" — docs/specs/00-architecture/08_agents.md:356 "and the orchestrator lists it in MEDIUM-LATER-ROUNDS.md (his order, :1792)" — the note adds an orchestrator deliverable and a grounder verdict-line duty ("gives the reason and names the round") that neither the card nor any pasted ruling names, resting on an operator order at :1792 that is not in the pasted context — strike those two clauses, or paste the :1792 order and cite the card wording that authorises them.
+
+DEFER severity=LOW — card, "a critical or high still open after round 2" (the escalation to the operator) — scripts/analysis/backlog-lane.mjs:187 "a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator" — the brief invents a STATUS token that appears in no pasted clause, where the card names a report to the operator — say "reported to the orchestrator for the operator" with no status token, or use a status the board and the close check already read.
+
+DEFER severity=LOW — operator, verbatim, "Round one stil fixes Critical, Hihg and Medium." — docs/specs/00-architecture/08_agents.md:356 "so it cannot tell a round-1 MED from a round-2 MED" — a round-1 MED can still close on ruling:RR-0385 although round 1 fixes Medium, and the new T2 lock keeps that accepting path green — state in the card that this step is ungated, or have the grounder brief refuse ruling:RR-0385 for a round-1 MED.
+
+MET — card, "round 1 resolves critical, high and medium, round 2 critical and high, two rounds at most" — docs/specs/00-architecture/08_agents.md:356 — the note states round 1 resolves the CONFIRMED CRITICAL, HIGH and MED findings and round 2 CRITICAL and HIGH only, two rounds at most, superseding the third output round of RR-0371.
+
+MET — card, "the grounder brief says LOW and NIT are recorded, not folded" — scripts/analysis/backlog-lane.mjs:187 — "LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded".
+
+MET — card, "the three things that still come to the operator" — docs/specs/00-architecture/08_agents.md:356 — "(i) a CRITICAL or HIGH is still open after round 2, (ii) a decision needs his word ... or (iii) a push is due".
+
+MET — RR-0369 "the first round of MEdiums on the outputs are corrected with Highs and criticals and then the second round is just highs and criticals" — docs/specs/00-architecture/08_agents.md:356 — "keeps RR-0369" and round 2 resolves "CRITICAL and HIGH only".
+
+MET — card, "the close check accepts two output rounds (it supersedes the third round of RR-0371)" — scripts/analysis/backlog-lane.mjs:186 "the second (fix) round (r2; two output rounds at most, RR-0385)" — the brief carries the cap and the note records that check-lane-close.mjs counts round lines without a bound, so a two-round output closes.
+
+MET — card, Files line — the diff touches exactly scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, docs/specs/00-architecture/08_agents.md, docs/reports/generated/rule-lists-by-kind.md.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  97411ms (97.4s)
+📊 Tokens — total: 37055, input: 17421, output: 19634, reasoning: 18722

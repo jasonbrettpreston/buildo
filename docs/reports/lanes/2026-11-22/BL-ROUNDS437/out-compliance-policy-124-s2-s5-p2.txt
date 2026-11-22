@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:48:32.072Z file_sha256=d209e9ec7245fb97a676dd163a67674d7e1626dc977c9c75c03bef2ce977c949 prompt_sha256=b8df9234c01cf5e45b22f5d2269ca2c3ca054219feb3f4ae7e01dd0a5448a4e4
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ROUNDS437/in-out-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-437 "the close check accepts two output rounds (it supersedes the third round of RR-0371)" — docs/specs/00-architecture/08_agents.md:356 "Not enforced: the cap and the round-2 MED rule are process; `scripts/hooks/check-lane-close.mjs` counts "Review round N" lines without a bound and accepts a recorded ruling id (RR-0385 included) for a finding of any severity, on any task, in any round, so it cannot tell a round-1 MED from a round-2 MED" — the supersession of RR-0371's third output round exists in prose and a survive-the-fix test only; `scripts/hooks/check-lane-close.mjs` is not in the diff (the Files line names only its test file), so a third output round and a round-1 MED recorded instead of fixed still close — add the two-round bound to `scripts/hooks/check-lane-close.mjs` (refuse a third round line or an out-*-r3 file) with a red-first test, and add that path to the Files line.
+
+DEFER severity=MED — R-HK "Every approved decision is a register row citing `<log stem>#<decision id>`; `--check` (pre-commit, R-DJ (1)) is RED on an approved decision with no row" — NONE — the material records decision-170 (RR-0385 items 3 and 4) in the Spec 08 note and the lane brief only; no register row is added or named, so the row-coverage arm rests on a row this material does not show (cannot see) — name the covering register row in the note, or land it, so the pre-commit `decision-log --check` is not RED on decision-170.
+
+DEFER severity=LOW — RR-0359 "Nothing is folded before the grounder has ruled" — scripts/analysis/backlog-lane.mjs:187 "round 1 resolves CRITICAL, HIGH and MED findings" — the note makes CONFIRMED load-bearing ("round 1 resolves the CONFIRMED CRITICAL, HIGH and MED findings (RR-0359)") but the brief drops CONFIRMED, so a REJECTED or CONFLICT finding reads as round-1 work — add "CONFIRMED" to the brief's round-1 sentence.
+
+MET — task-437 "a dated note in Spec 08 with the rule and the three things that still come to the operator" — docs/specs/00-architecture/08_agents.md:356 — the note carries (i) a CRITICAL or HIGH still open after round 2, (ii) a decision needing his word, (iii) a push due.
+
+MET — task-437 "the grounder brief says LOW and NIT are recorded, not folded" — scripts/analysis/backlog-lane.mjs:187 "LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded".
+
+MET — task-437 Files line — diff — exactly the five named paths (backlog-lane.mjs, both logic tests, 08_agents.md, rule-lists-by-kind.md), no others.
+
+MET — RR-0385 "Round one stil fixes Critical, Hihg and Medium" — docs/specs/00-architecture/08_agents.md:356 "round 2, the second review round (not the grounder's 5.3 round-2 pass), resolves CRITICAL and HIGH only; two rounds at most".
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 3
+Rules met: none
+
+---
+⏱  99284ms (99.3s)
+📊 Tokens — total: 48518, input: 29017, output: 19501, reasoning: 18700

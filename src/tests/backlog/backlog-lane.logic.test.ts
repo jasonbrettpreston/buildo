@@ -158,6 +158,19 @@ describe('backlog-lane --dry-run (AC #3): prints every command, writes nothing',
     expect(spec.extra.join('\n')).toContain('runs on Opus');
     expect(spec.extra.join('\n')).toContain('every grounder run on Sonnet');
   });
+  // task-437 T1 (RR-0385 items 3 and 4, decision-170): the brief states the two-round rule and the round-2 MED form
+  it('task-437 T1 dry run: extra states two output rounds at most, the round-2 MED form ruling:RR-0385 and LOW/NIT not fixed or folded; no "r3, ..."', () => {
+    const f = fixture();
+    const r = lane(f, ['--dry-run']);
+    expect(r.status, r.stderr).toBe(0);
+    const spec = JSON.parse(/^TASK-JSON .*?: (\{.*\})$/m.exec(r.stdout)?.[1] ?? 'null');
+    expect(spec, r.stdout).not.toBeNull();
+    const extra = spec.extra.join('\n') as string;
+    expect(extra).toContain('two output rounds at most');
+    expect(extra).toContain('ruling:RR-0385');
+    expect(extra).toContain('not fixed or folded');
+    expect(extra).not.toContain('r3, ...');
+  });
 });
 
 describe('backlog-lane real launch on the temp board (AC #1)', () => {

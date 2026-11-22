@@ -1,0 +1,33 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:48:32.048Z file_sha256=a29e00637256e5e7c0bd38f59bdd18bdba7ab467a00377b99b2bead7d2d4c38c prompt_sha256=a6c1f92c8a9597d7e8a2fa0e85aebe9d650d570e9865bb5a6a016562d95f0d3e
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ROUNDS437/in-out-compliance-policy-124-s2-s5-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card "the close check accepts two output rounds (it supersedes the third round of RR-0371)" — docs/specs/00-architecture/08_agents.md:356 "Not enforced: the cap and the round-2 MED rule are process; `scripts/hooks/check-lane-close.mjs` counts "Review round N" lines without a bound and accepts a recorded ruling id (RR-0385 included) for a finding of any severity, on any task, in any round" — the close check is not changed anywhere in the diff and its own dated note admits no bound exists, so a third output round is still accepted and RR-0371's third round is superseded only in prose, not by the check the card names — add the round bound (refuse a third "Review round N" line in scripts/hooks/check-lane-close.mjs) plus a check-lane-close logic test proving round 3 red and two rounds green, or get an operator ruling that the check stays unbounded.
+
+BUG severity=MED — RR-0371 "Let's start with 2 rounds on the plan then it comes to me and three rounds on the output." — docs/specs/00-architecture/08_agents.md:356 "This supersedes the third output round of RR-0371 (its two-round plan cap stands) and keeps RR-0369." — the note keeps the plan cap and replaces the output count but never names the "then it comes to me" half of the same ruling, and its operator list routes a plan at its cap onward without him — state that RR-0371's "then it comes to me" is superseded by RR-0385 ("validation without the operator"), or add "a plan still open at its two-round cap" to the three operator conditions.
+
+DEFER severity=MED — card "a dated note in Spec 08 with the rule and the three things that still come to the operator (a critical or high still open after round 2; a decision that needs his word; every push)" — docs/specs/00-architecture/08_agents.md:356 "and the orchestrator lists it in MEDIUM-LATER-ROUNDS.md (his order, :1792)" — a new orchestrator artefact the card does not name, while backlog-lane.mjs's brief never mentions MEDIUM-LATER-ROUNDS.md, so no lane knows to write it — name the file in the card and in the brief's ROUNDS sentence, or drop the obligation.
+
+DEFER severity=LOW — card "the grounder brief says LOW and NIT are recorded, not folded" — scripts/analysis/backlog-lane.mjs:187 "one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> \"<quote on that line>\" [reason: needed for REJECTED and CONFLICT]`" — the note requires the grounder's line to name the round ("The grounder's verdict line for that id gives the reason and names the round", 08_agents.md:356) but the brief's grounder line format carries no round field, so that requirement has no carrier — add the round to the brief's required line form or drop it from the note.
+
+DEFER severity=LOW — card "the close check accepts two output rounds" — scripts/analysis/backlog-lane.mjs:187 "there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator" — "STATUS: blocked" is a new terminal token named by neither the card nor any pasted ruling — cite the ruling that authorises the token or use the existing close vocabulary.
+
+REJECT — Spec 124 §2 rules 1 to 13 — accused of unmet step-policy clauses — the diff touches no step descriptor, compute, checks, writes, recovery posture or step report, so none of §2's thirteen rules is engaged by this change.
+
+MET — card "the grounder brief says LOW and NIT are recorded, not folded" — scripts/analysis/backlog-lane.mjs:187 "LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded" — the brief states it verbatim.
+
+MET — RR-0385 "Round one stil fixes Critical, Hihg and Medium." — scripts/analysis/backlog-lane.mjs:187 "round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only" — both rounds and the two-round cap are stated.
+
+MET — RR-0385 "Validate the plan and the output as you mentioned as per your criteria." — docs/specs/00-architecture/08_agents.md:356 "the separate grounder validates the fold (plan: FOLD-CHECK.md, which the launch gate requires; output: GROUNDER.md, which the close reads; neither is a review round)" — plan and output validation are both routed and marked non-review.
+
+MET — card "the grounder brief says ... the round-2 MED form" — src/tests/backlog/check-lane-close.logic.test.ts:797 "a CONFIRMED MED with pile is refused in close mode and in plan mode" plus the `ruling:RR-0385` pass and missing-decision-red cases — the form's acceptance and its refusal are both locked.
+
+MET — card Files line — docs/reports/generated/rule-lists-by-kind.md:99 "| agents-s7-s11 | ... | 39,171 | 1 |" and total 204,310 to 206,513 — the generated page is regenerated for the ~2,203 character note added inside sections 7 and 11, matching the diff's five paths exactly.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 2
+Rules met: none
+
+---
+⏱  51166ms (51.2s)
+📊 Tokens — total: 31907, input: 20919, output: 10988, reasoning: 9714

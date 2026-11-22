@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T21:48:32.028Z file_sha256=b58afea1fa574a2b06781c8ae2f5504b02efd416d767da56f05bd3092eb54a9b prompt_sha256=ae87043ca3c8ce0a3cd119a7dd70f4c88b66823fc94e4b6399a0ea6fdbc4e67f
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ROUNDS437/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=<CRIT|HIGH> — (none raised)
+
+DEFER severity=MED — Spec 08 §7, dated note 2026-11-20 (task-399 fix round 1) "A fix round does not file `out-<lens>-rN.txt`: the close requires every in- input and out- output to equal the diff of the whole range at HEAD" — scripts/analysis/backlog-lane.mjs:186 "the second (fix) round (r2; two output rounds at most, RR-0385) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name> ... the round-1 file stays" — clause unmet: the very sentence this change rewrites still orders a -rN file kept beside a stale round-1 file, the form the pasted note says the whole-range hash rule refuses, so the second output round the card says the close accepts is filed in a form it rejects — rewrite the sentence to re-run every lens at HEAD under the same in-/out- names, or land a superseding dated note before changing the count.
+
+DEFER severity=LOW — task-437 card "THIS TASK: a dated note in Spec 08 with the rule and the three things that still come to the operator ...; the close check accepts two output rounds ...; the grounder brief says LOW and NIT are recorded, not folded" — docs/specs/00-architecture/08_agents.md:356 "the orchestrator lists it in MEDIUM-LATER-ROUNDS.md (his order, :1792)" — adds an orchestrator register and a round-2 MED outcome line that neither the card nor any pasted operator words name, resting on an order at :1792 that is not pasted — paste :1792 or move the register line back to the card.
+
+DEFER severity=LOW — task-437 card "a critical or high still open after round 2" (the operator path) — scripts/analysis/backlog-lane.mjs:187 "a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator" — a status token no pasted clause or ruling names (pasted statuses are RUNNING, BUILT, DONE, DROPPED and the board's finished_statuses), so the brief tells a lane to write a state the board may not carry — report the open finding to the orchestrator in words, or name the board status it maps to.
+
+MET — task-437 card "a dated note in Spec 08 with the rule and the three things that still come to the operator" — docs/specs/00-architecture/08_agents.md:356 — "It comes to the operator only when (i) a CRITICAL or HIGH is still open after round 2, (ii) a decision needs his word (a product choice no spec settles, or an earlier answer of his that rests on a wrong fact or reads two ways), or (iii) a push is due."
+MET — RR-0385 verbatim "2b is round one is Med. High and Critical amd Round 2 High and Critical 2c. Round one stil fixes Critical, Hihg and Medium." — docs/specs/00-architecture/08_agents.md:356 — "round 1 resolves the CONFIRMED CRITICAL, HIGH and MED findings (RR-0359) and round 2 ... resolves CRITICAL and HIGH only; two rounds at most."
+MET — task-437 card "the grounder brief says LOW and NIT are recorded, not folded" — scripts/analysis/backlog-lane.mjs:187 — "LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded".
+MET — RR-0385 verbatim ":1912 Validate the plan and the output as you mentioned as per your criteria." — docs/specs/00-architecture/08_agents.md:356 — "After round 2 the separate grounder validates the fold (plan: FOLD-CHECK.md, which the launch gate requires; output: GROUNDER.md, which the close reads; neither is a review round) and the work moves on without the operator."
+MET — task-437 card "it supersedes the third round of RR-0371" — docs/specs/00-architecture/08_agents.md:356 — "This supersedes the third output round of RR-0371 (its two-round plan cap stands) and keeps RR-0369."
+MET — Spec 08 §7 rule 4, 2026-11-20 note "a separate grounder rules on every finding" — scripts/analysis/backlog-lane.mjs:187 — "a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385` (the grounder decides it, the lane does not rule)".
+
+REJECT — task-437 card "the close check accepts two output rounds" — accused of owing an edit to check-lane-close.mjs — docs/specs/00-architecture/08_agents.md:356 records "Not enforced: the cap and the round-2 MED rule are process", the check counts round lines without a bound so it does accept a second round, and the card's Files line names no check script.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 3
+Rules met: none
+
+---
+⏱  120195ms (120.2s)
+📊 Tokens — total: 40840, input: 15158, output: 25682, reasoning: 24505
