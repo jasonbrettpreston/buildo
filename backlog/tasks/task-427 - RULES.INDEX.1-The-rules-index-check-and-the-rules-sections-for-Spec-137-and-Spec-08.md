@@ -6,6 +6,7 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-21T22:20:00Z'
+updated_date: '2026-11-22T15:09:00Z'
 labels:
   - McFix
   - McFix V2
@@ -35,3 +36,11 @@ Card opened 2026-11-21 by the orchestrator, Spec 137 rule 2, on the operator's r
 - [ ] #9 The principles the task serves are named — "Each task names the ones it serves." (.cursor/MCBYLAWS-QUEUE.md:104)
 - [ ] #10 The close-out reply ends with one STATUS line and at most one question — "Every reply ends with one line" (docs/specs/00-architecture/08_agents.md:505)
 <!-- DOD:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Dated note 2026-11-22 (M-246, prior text kept; RR-0372 · task-427 · Backlog; operator, verbatim: "yes let keep this simple - but it cant go on forever")
+
+Dated note 2026-11-22 (M-246, prior text kept; RR-0373 · task-427 · Backlog; operator, verbatim: "Im not approving anything - Im asking a question")
+<!-- SECTION:NOTES:END -->
