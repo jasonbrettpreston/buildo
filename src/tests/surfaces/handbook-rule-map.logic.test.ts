@@ -161,6 +161,88 @@ describe('MF-95 A — Spec 136 prints every ruling whole (no clip)', () => {
   });
 });
 
+// MF-95 commit B (task-430, RR-0384 "make each line reflect its notes"; plan sections 5, 17.3, 17.4). A Current reading is ONE dated note in the
+// strict form of 17.4, last in its row's Status cell; the generator prints it on the SAME line as the headline (the OWED pin of H4 matches
+// `^- **fe.N**[^\n]*\n  Status: OWED`, and Spec 133's renderLine is not touched). Refusals (i)..(vii) of 17.4 are each planted below.
+const readingOf = (r: Row) => (r as unknown as { reading?: { text: string; dates: string[] } }).reading;
+const READING_IDS = ['FE-01', 'FE-02', 'FE-07', 'FE-11', 'FE-14', 'FE-18', 'FE-19', 'FE-20', 'FE-29', 'FE-31', 'FE-38', 'FE-39'];
+const readingNote = (id: string, text: string, dates: string, own = '2026-11-22') =>
+  `Dated note ${own} (M-246, prior text kept; ${id} · McFrontend queue · lane BL-HB430; RR-0384, operator, verbatim: "Approved"; lane text restating the notes dated ${dates} of this row, not an operator word and not a ruling): Current reading: ${text} (from notes dated ${dates}). The cell text above is kept.`;
+const BASE2 = `RULED 2026-11-09, lock landed abc. Lock: \`${LOCK}\`. Dated note 2026-11-09 (a). Dated note 2026-11-10 (b).`;
+const withReading = (status: string, note: string) => [GOOD[0]!, row('FE-02', `${status} ${note}`), GOOD[2]!];
+const lineOf2 = (text: string) => text.split('\n').find((l) => l.startsWith('- **fe.02** '))!;
+
+describe('MF-95 B — each line reflects its notes (Current reading)', () => {
+  it('B-T1 RED: a row whose last note is a Current reading prints it on its line; B-T2 control: the same row without it prints as before', () => {
+    const t = build(makeRoot(reg(withReading(BASE2, readingNote('FE-02', 'The rule now reaches every page.', '2026-11-09, 2026-11-10'))))).text;
+    expect(lineOf2(t)).toBe('- **fe.02** Ruling for FE-02, a plain sentence. Current reading (lane text, notes 2026-11-09, 2026-11-10): The rule now reaches every page.');
+    expect(t).toMatch(/- \*\*fe\.02\*\* [^\n]*\n {2}Status: RULED 2026-11-09 · Enforced by: [^\n]* · \+3 dated notes\n/);
+    const plainT = build(makeRoot(reg(GOOD))).text;
+    expect(lineOf2(plainT)).toBe('- **fe.02** Ruling for FE-02, a plain sentence.');
+    expect(plainT.split('## 2. Rules')[1]).not.toMatch(/Current reading/);
+    const r = readFeRows(reg(withReading(BASE2, readingNote('FE-02', 'X.', '2026-11-10'))))[1]!;
+    expect(readingOf(r)).toEqual({ text: 'X.', dates: ['2026-11-10'] });
+  });
+
+  it('B-T3 RED (i): a dated note after the Current reading throws; control: the reading last builds', () => {
+    const note = readingNote('FE-02', 'X.', '2026-11-10');
+    expect(() => readFeRows(reg(withReading(BASE2, `${note} Dated note 2026-11-23 (c).`)))).toThrow(/FE-02: a dated note follows the Current reading; restate it/);
+    expect(() => readFeRows(reg(withReading(BASE2, note)))).not.toThrow();
+  });
+
+  it('B-T4 RED (ii): a cited date that is not the date of an earlier note of the row throws; control: real dates', () => {
+    expect(() => readFeRows(reg(withReading(BASE2, readingNote('FE-02', 'X.', '2026-11-08'))))).toThrow(/FE-02: the Current reading cites 2026-11-08/);
+    expect(() => readFeRows(reg(withReading(BASE2, readingNote('FE-02', 'X.', '2026-11-09'))))).not.toThrow();
+  });
+
+  it('B-T5 RED (iii): a reading of 801 characters throws; control: 800', () => {
+    expect(() => readFeRows(reg(withReading(BASE2, readingNote('FE-02', `${'y'.repeat(800)}.`, '2026-11-09'))))).toThrow(/FE-02: the Current reading is 801 characters/);
+    expect(() => readFeRows(reg(withReading(BASE2, readingNote('FE-02', `${'y'.repeat(799)}.`, '2026-11-09'))))).not.toThrow();
+  });
+
+  it('B-T8 RED (v): a malformed reading note throws; the words Current reading in the prose of an earlier note are not a reading', () => {
+    const broken = readingNote('FE-02', 'X.', '2026-11-10').replace(' (from notes dated 2026-11-10)', '');
+    expect(() => readFeRows(reg(withReading(BASE2, broken)))).toThrow(/FE-02: the Current reading note does not parse/);
+    const wrongRow = readingNote('FE-07', 'X.', '2026-11-10');
+    expect(() => readFeRows(reg(withReading(BASE2, wrongRow)))).toThrow(/FE-02: the Current reading note does not parse/);
+    const prose = 'RULED 2026-11-09. Lock: `src/tests/surfaces/x.logic.test.ts`. Dated note 2026-11-09 (the old Current reading: words were dropped).';
+    const r = readFeRows(reg(withReading(prose, readingNote('FE-02', 'The new words.', '2026-11-09'))))[1]!;
+    expect(readingOf(r)).toEqual({ text: 'The new words.', dates: ['2026-11-09'] });
+  });
+
+  it('B-T9 RED (vi): a reading that cites its own date throws (the own date is also not an earlier note)', () => {
+    const own = `${BASE2} Dated note 2026-11-22 (d).`;
+    expect(() => readFeRows(reg(withReading(own, readingNote('FE-02', 'X.', '2026-11-22'))))).toThrow(/FE-02: the Current reading cites its own date 2026-11-22/);
+  });
+
+  it('(vii) RED: a reading text holding a bar throws', () => {
+    expect(() => readFeRows(reg(withReading(BASE2, readingNote('FE-02', 'a \\| b.', '2026-11-09'))))).toThrow(/FE-02: the Current reading holds a bar/);
+  });
+
+  it('B-T10: an OWED row with a reading renders it on the headline line, the Status line next (the RULED case is B-T1)', () => {
+    const owed = [GOOD[0]!, GOOD[1]!, row('FE-03', `OWED \`src/tests/surfaces/y.logic.test.ts\` Dated note 2026-11-12 (q). ${readingNote('FE-03', 'Now owed wider.', '2026-11-12')}`)];
+    const t = build(makeRoot(reg(owed))).text;
+    expect(t).toMatch(/^- \*\*fe\.03\*\* Ruling for FE-03, a plain sentence\. Current reading \(lane text, notes 2026-11-12\): Now owed wider\.\n {2}Status: OWED · lock owed: src\/tests\/surfaces\/y\.logic\.test\.ts · \+2 dated notes$/m);
+  });
+
+  it('B-T6, B-T7, B-T11 real register: exactly the 12 ruled rows carry a reading (pinned), each parses, is at most 800 characters, is printed, and adds exactly one dated note', () => {
+    const rows = realRows();
+    expect(rows.filter((r: Row) => readingOf(r)).map((r: Row) => r.id)).toEqual(READING_IDS);
+    const text = read(SPEC.handbookRel);
+    const cells = new Map(REGISTER.split('\n').filter((l) => /^\| FE-\d+ \|/.test(l)).map((l) => { const c = splitRow(l); return [c[0]!, c[5]!] as const; }));
+    for (const r of rows) {
+      const line = text.split('\n').find((l) => l.startsWith(`- **fe.${r.id.slice(3)}** `))!;
+      const rd = readingOf(r);
+      if (!rd) { expect(line, r.id).not.toMatch(/Current reading/); continue; }
+      expect(rd.text.length, r.id).toBeLessThanOrEqual(800);
+      expect(line, r.id).toBe(`- **fe.${r.id.slice(3)}** ${r.headline} Current reading (lane text, notes ${rd.dates.join(', ')}): ${rd.text}`);
+      const cell = cells.get(r.id)!;
+      const before = cell.slice(0, cell.lastIndexOf('Dated note '));
+      expect(r.notes, r.id).toBe((before.match(/Dated note \d{4}-\d{2}-\d{2}/g) || []).length + 1);
+    }
+  });
+});
+
 describe('FE-10 H2/H3 — the rule map: built from the register, one rule per line', () => {
   const rows = realRows();
   const committed = JSON.parse(read(SPEC.ruleMapRel));

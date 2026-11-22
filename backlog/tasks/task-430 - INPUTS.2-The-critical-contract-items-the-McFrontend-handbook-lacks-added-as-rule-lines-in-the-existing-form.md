@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB430'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T20:43:00Z'
+updated_date: '2026-11-22T20:48:00Z'
 labels:
   - McFix
   - McFix V2
@@ -422,4 +422,8 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0384 · task-430 · Backlog; o
 2026-11-22 lane BL-HB430 commit A red: tests A-T1, A-T2, A-T3 (the :59/:61 clip pins become no headline ends in an ellipsis), A-T5, A-T6 in src/tests/surfaces/handbook-rule-map.logic.test.ts, staged alone with this task file; red.out holds the refused commit attempt.
 
 2026-11-22 lane BL-HB430 commit A: scripts/surfaces/generate-surface-handbook.mjs prints the plain Ruling cell where the shared headlineOf clipped (wholeHeadline; shared reader untouched); Spec 136 and rule-lists-by-kind.md regenerated; Spec 136 section 2 measured 19,551 characters (whole file 22,983); 0 lines end in the clip ellipsis; Spec 133 --check up to date (546 rules); git diff on scripts/analysis/bylaw/ empty.
+
+2026-11-22 lane BL-HB430 commit B red: tests B-T1..B-T11 and refusal (vii) in src/tests/surfaces/handbook-rule-map.logic.test.ts (the reading read through a cast so the attempt fails at its assertions, not at typecheck), staged alone with this task file; red.out holds the refused commit attempt.
+
+2026-11-22 lane BL-HB430 commit B: 12 Current reading dated notes appended to Spec 135 rows FE-01, 02, 07, 11, 14, 18, 19, 20, 29, 31, 38, 39 (texts and dates of plan 17.3, frame of 17.3, lane text, not rulings); the generator reads the last note in the strict 17.4 form and prints it on the headline line; refusals (i)..(vii) throw. Gate reader statuses and locks unchanged (0 of 44 differ). Spec 136 section 2 measured 22,993 characters (file 26,535).
 <!-- SECTION:NOTES:END -->
