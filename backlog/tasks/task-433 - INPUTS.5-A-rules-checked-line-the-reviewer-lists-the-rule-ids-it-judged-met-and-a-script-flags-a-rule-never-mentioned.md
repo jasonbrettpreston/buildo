@@ -6,12 +6,18 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T16:46:00Z'
+updated_date: '2026-11-22T17:10:00Z'
 labels:
   - McFix
   - McFix V2
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-433/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-433/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-433/seat-integration-1.md
+  - docs/reports/reviews/task-433/seat-reality-check-1.md
+  - docs/reports/reviews/task-433/seat-regression-1.md
 type: build
 ordinal: 133012
 ---
@@ -47,7 +53,7 @@ Principles served (DoD #9): observable (a rule nobody mentioned becomes visible)
 
 ## BASIS
 - "Let's add a dn b to the plan - we already do run the review twice - once on the plan and the output." (RR-0378, decision-163, MORNING-DECISIONS.md:1850-1852). Step 6 as put to him: "(B) A 'rules checked' line: the reviewer lists the rule ids it judged met, and a script flags any rule never mentioned."
-- On per-rule verdicts: "we cant get a response on every rule - that would seem like too much". So the line names ids met, no verdict per rule, and the script is a report.
+- On per-rule verdicts: "we cant get a response on every rule - that would seem like too much" (the operator's words in the session of 2026-11-22, relayed by the orchestrator: no ruling file holds them, so there is no file:line; the recorded ruling is RR-0378 step 6). So the line names ids met, no verdict per rule, and the script is a report.
 - "Nothing was added that the card or ruling did not name" (124a_step_standard_policy_appendix.md:988): the card names the template line and a script that lists unmentioned ids, nothing else.
 - Tests first (08_agents.md:462, :490); status line with the work (137_mcqueue.md:84).
 
@@ -56,7 +62,7 @@ Principles served (DoD #9): observable (a rule nobody mentioned becomes visible)
 2. The review tool reads the template and fills the placeholders (scripts/deepseek-review.js:155-175; `splitTemplate`/`substitutePlaceholders`, review-template.js:34-70). It prints the REVIEW header with prompt_sha256 over [system, user] and the model text; it never parses the model output. No change there.
 3. What parses outputs: `FINDING_LINE` = start of line `BUG|DEFER severity=` (rule-lists.mjs:301), the loose count (:299), `findingsIn` (:304-312); the close's `REVIEW` header regex (check-lane-close.mjs:56, read from the first 15 lines :60), `/^VERDICT:/m` (:73), the grounder's `Ruled: <name> sha256 findings:<n>` (rule-lists.mjs:191). A line starting `Rules met:` matches none of them.
 4. Tests that pin the template: src/tests/backlog/review-templates.logic.test.ts:10-15 (exactly one {{PLAN}}), src/tests/review-lens-template.infra.test.ts:67,102-123 (system/user split, material once, header names the template); check-lane-close.logic.test.ts:32-34 and backlog-lane.logic.test.ts read the live template text, so hashes follow the edit. None pins the ending text.
-5. Rule ids exist as the bold id that starts a list line: Spec 136 `- **fe.01**` (136_mcfrontend_handbook.md:34, fe.01..fe.44; citation form :7); Spec 132 `- **core.1**` (132_step_standard_handbook.md:126; also ingestor.N, link.N, x-captures.N, history.N ...); Spec 133 `- **m.431**`, `- **lc.N**` (133_bylaw_handbook.md:34). No ids: the glossary (`- **slug**:`, 132:627, list five-words), and every hand-written document (queue-137, agents-s7-s11, orchestrator-doc17, plan-protocol, eng-all, increments, milestones; rule-lists.json). Their lines are not ids and must not be invented.
+5. Rule ids exist as the bold id that starts a list line: Spec 136 `- **fe.01**` (136_mcfrontend_handbook.md:34, fe.01..fe.44; citation form :7); Spec 132 `- **core.1**` (132_step_standard_handbook.md:126; also ingestor.N, link.N, x-captures.N, history.N ...); Spec 133 `- **m.431**`, `- **lc.N**` (133_bylaw_handbook.md:34). No ids: the glossary (`- **slug**:`, 132:627, list five-words), and every hand-written document (queue-137, agents-s7-s11, orchestrator-doc17, plan-protocol, eng-all, increments, milestones; rule-lists.json). Their lines are not ids and must not be invented. Census (DRIVEN at the board head over the 52 files of the lists in rule-lists.json, list lines whose first bold token is letters, a dot and digits): 69 lines in Spec 132 (28 more bold glossary lines carry no id), 546 in Spec 133 (all of its 546 bold list lines), 44 in Spec 136, none in any other file; the bold list lines of the hand-written documents are labels such as Rule: or Execution: (149 in eng-all), not ids; Spec 132 section 6 is a table with no bold list lines. The existing rule maps (scripts/steps/_schema/rule-map.json, scripts/analysis/bylaw/_schema/bylaw-rule-map.json, scripts/surfaces/_schema/surface-rule-map.json) hold ids of those three handbooks only, in three shapes and not by the sections sent; the sent text is the one source that is also what the reviewer saw, so the pattern reads it.
 6. The sent list part is recoverable from the committed input: `parseLensInput(text).listPart` (rule-lists.mjs:452-465); the input sits beside the output as `in-<output name>` (backlog-lane.mjs:185, check-lane-close.mjs:399).
 7. A subcommand fits: rule-lists.mjs already holds `findings --dir` (:840-843, `findingsReport` :547-550) and has a usage line (:845) and a regex-escape helper `reEsc`.
 
@@ -74,11 +80,11 @@ Rules met: <rule ids, comma separated>
 ```
  plus one sentence under it: "The last line names by id the rules of the pasted list you judged met and raised no finding on. A rule id is the bold id that starts a line of the pasted rule list (for example fe.12, core.3, m.431). Write only ids that appear in the pasted list, ids only, on one line. If the pasted list has no such ids, or none was met, write `Rules met: none`. Never invent an id." Companion sentence in the anti-patterns: none added.
 2. scripts/analysis/rule-lists.mjs (protected path):
- - `export function unmentionedRules(inputText, outputText)` returns `{ids, missing, hasLine}`. ids = the matches of `/^\s*[-*]\s+\*\*([a-z][a-z0-9-]*\.\d+)\*\*/gm` in `parseLensInput(inputText).listPart`, in order, unique. A throw "not a lens input" when parseLensInput gives null. Mention test per id: `(?<![\w.-])<id>(?![\w-]|\.\d)` over the output text (so fe.1 is not covered by fe.12). hasLine = `/^Rules met:/m`.
+ - `export function unmentionedRules(inputText, outputText)` returns `{ids, missing, hasLine}`. ids = the matches of `/^\s*[-*]\s+\*\*([a-z][a-z0-9-]*\.\d+)\*\*/gm` in `parseLensInput(inputText).listPart`, in order, unique. A throw "not a lens input" when parseLensInput gives null. Mention test per id: `(?<![\w.-])<id>(?![\w-]|\.\d)` over the output text, the id escaped with reEsc (rule-lists.mjs:565) so its dot is literal (so fe.1 is not covered by fe.12, and feX01 does not cover fe.01; one more control). hasLine = `/^Rules met:/m`.
  - CLI branch `unmentioned` (next to `findings`, :840): `--out` required (exit 2 usage), `--in` default `<dir of --out>/in-<basename of --out>`; unreadable file or not a lens input: exit 1 with the reason. Prints one line:
    `<out name>: list <id> part <i> of <n>: <k> of <m> rule ids are in no finding and not in the Rules met line: <ids>` (`none` when k=0); when the part has no ids: `<out name>: the sent list part holds no rule ids, nothing to report`; when the output has no Rules met line, append ` [no "Rules met:" line in the output]`. Exit 0.
  - the usage string (:845) adds `unmentioned`.
-3. .claude/review-templates/README.md (lens section): two sentences: the Rules met line; the `unmentioned` report, "a report, not a gate".
+3. .claude/review-templates/README.md (lens section): two sentences: the Rules met line; the `unmentioned` report, "a report, not a gate", read per output file: the -pN chunks of one list part each carry that whole part, so an id is unmentioned only if every chunk's report lists it (a union is by hand; code for it stays out of scope).
 4. NOT edited: deepseek-review.js (no parsing of the output), check-lane-close.mjs, review-template.js, the rule-lists table.
 
 ## TESTS (red first; each plant has a control)
@@ -88,20 +94,20 @@ Controls: (a) all ids mentioned: prints `none` and exits 0; (b) list holds fe.1 
 - T2 plant: flagged ids still exit 0 (a report, not a gate). Controls: missing --out exits 2; a file that is not a lens input exits 1; `--in` default resolves `in-<name>` beside the output.
 In src/tests/backlog/review-templates.logic.test.ts:
 - T3 plant: lens-compliance.md holds a `Rules met:` line after `Clauses checked:` in the closing block. RED now. Controls: the other four lens templates do not hold it; the single {{PLAN}} test (:10-15) stays green.
-In src/tests/backlog/rule-lists.logic.test.ts or check-lane-close.logic.test.ts:
-- T4 (parsers unchanged): an output ending with the Rules met line gives the same `findingsIn` and `looseFindingCount` as one without; a scenario close with the extra line stays green. Control: the same output with the VERDICT line removed is still refused (:190 pattern).
+In src/tests/backlog/rule-lists.logic.test.ts (check-lane-close.logic.test.ts is not edited: the card names five files):
+- T4 (parsers unchanged, so T4 is a green-both lock, not red: 08_agents.md:485): an output ending with the Rules met line and then the tool's trailer (--- and the timing lines) gives the same `findingsIn` and `looseFindingCount` as one without. Control: the strict and the loose counts agree on both.
 Live check (not a test; a DeepSeek call, so the orchestrator's, not run here): one lens run on a Spec 136 input shows the line and ids that exist in the list; recorded in the task notes.
 
 ## ORDER
-T1-T4 red; template edit (T3, T4 green); rule-lists.mjs function and CLI (T1, T2 green); README; live check; base-copy compliance outputs after the last in-range commit (the other four lens templates are unchanged and are used as briefed); commit.
+T1-T3 red (T4 is run beside them as a green-both lock); template edit (T3 green); rule-lists.mjs function and CLI (T1, T2 green); README; live check; base-copy compliance outputs after the last in-range commit (the other four lens templates are unchanged and are used as briefed); commit. Estimate (GUESS, no measure for this card): one lane sitting, the five files of the Files line, no model call in the build; the lane's own compliance outputs are the main cost.
 
 ## LANDING
 - Protected path touched: scripts/analysis/rule-lists.mjs (scripts/analysis/rule-lists.json protected_paths). The close check refuses a commit that changes a protected path AND moves a task to finished (check-lane-close.mjs:32, :739-740). So: commit 1 is the work (template, rule-lists.mjs, README, tests, task notes); commit 2 is the closing commit with records and the status only. The template, README and tests are not protected.
-- Template change and hashes: it changes the prompt hash of outputs made after it. Two caveats beyond "future outputs only": (a) the plan gate recomputes plan-compliance hashes with the template at the BOARD HEAD (check-lane-close.mjs:631 `readBase: i.readRepo`, doc :597), so plan evidence already committed for a not-yet-launched task is refused until its compliance plan outputs are re-made; land this after the pending launches, or accept re-making. (b) The close recomputes with the template at the range base, the launch commit (:764); a lane launched before this lands must not merge the board's template before making its outputs (this contradicts the retro's "merge once before outputs", GROUNDED-CAPS.md:163). Lanes launched after it are unaffected. This lane edits the template itself, so its own out-compliance outputs are made with the BASE copy of the template: `git show $(git merge-base HEAD wf2/board):.claude/review-templates/lens-compliance.md > <lane dir>/lens-compliance.md` (outside the repo, same file name, because the close compares only the header's template name, check-lane-close.mjs:59-61, and deepseek-review.js:161 prints the basename). The copy is passed as `--template <lane dir>/lens-compliance.md` to both `lens-input` and the review command in place of the repo path. The lane's compliance outputs therefore carry no `Rules met:` line. The live check (acceptance 4) is a separate run on the edited template by the orchestrator. If the board is merged into the lane, take the copy again from the new merge-base and re-make the outputs. (Ruled by the separate grounder Cairn-Ground-Q433; operator RR-0381 "approved. fix it".)
-- Concurrency: task-431 edits rule-lists.json (the table); same-file merge risk only in rule-lists.mjs if it also edits it (UNVERIFIED).
+- Template change and hashes: it changes the prompt hash of outputs made after it. Two caveats beyond "future outputs only": (a) the plan gate recomputes plan-compliance hashes with the template at the BOARD HEAD (check-lane-close.mjs:631 `readBase: i.readRepo`, doc :597), so plan evidence already committed for a not-yet-launched task is refused until its compliance plan outputs are re-made; land this after the pending launches, or accept re-making. (b) The close recomputes with the template at the range base, the merge-base with the board (check-lane-close.mjs:748-751, :764; the launch commit until the board is merged into the lane); a lane launched before this lands must not merge the board's template before making its outputs (this contradicts the retro's "merge once before outputs", GROUNDED-CAPS.md:163). Lanes launched after it are unaffected. This lane edits the template itself, so its own out-compliance outputs are made with the BASE copy of the template: `git show $(git merge-base HEAD wf2/board):.claude/review-templates/lens-compliance.md > <lane dir>/lens-compliance.md` (outside the repo: <lane dir> in these two commands is a scratch folder such as ~/Buildo-scratch/<lane>/, not the report folder docs/reports/lanes/<date>/<lane>/ of the brief's commands; same file name, because the close compares only the header's template name, check-lane-close.mjs:59-61, and deepseek-review.js:161 prints the basename). The copy is passed as `--template <lane dir>/lens-compliance.md` to both `lens-input` and the review command in place of the repo path. The lane's compliance outputs therefore carry no `Rules met:` line. The live check (acceptance 4) is a separate run on the edited template by the orchestrator. If the board is merged into the lane, take the copy again from the new merge-base and re-make the outputs. (Ruled by the separate grounder Cairn-Ground-Q433; operator RR-0381 "approved. fix it".)
+- Concurrency: task-431 edits rule-lists.json (the table); task-431's Files line holds rule-lists.json, rule-lists.logic.test.ts and the generated page, not rule-lists.mjs (DRIVEN at the board head), so there is no merge risk in rule-lists.mjs; rule-lists.logic.test.ts is edited by both cards in different regions, and README.md by this card and task-432, see Q4.
 
 ## ACCEPTANCE
-1. T1-T4 red then green with controls.
+1. T1-T3 red then green with controls; T4 green before and after.
 2. The template ends with the Rules met line and its sentence; hashes in the check-lane-close and lane tests follow (they read the live template).
 3. `unmentioned` prints the right ids on a hand-made pair and is documented as a report.
 4. One live review shows the line (orchestrator).
@@ -110,17 +116,24 @@ T1-T4 red; template edit (T3, T4 green); rule-lists.mjs function and CLI (T1, T2
 ## NOT IN SCOPE
 A gate on the report; a verdict per rule; ids for hand-written documents; validating that the ids named in the line exist in the list (an invented id is not flagged); a union across chunks of one list part; a `--dir` mode; a change to deepseek-review.js; the Spec 08 or Spec 137 text.
 
-## OPEN QUESTIONS for the operator
-Q1 Documents with no rule ids (queue-137, agents, doc-17, plan-protocol, eng-all, increments, milestones, glossary). (A, recommended) the line holds `none` and the report says "no rule ids"; nothing invented. (B) use section headings as ids: coverage for every document, but a heading is not a rule, and the sections sent to the reviewer are already cut by the table (rule-lists.json), so the unit is arbitrary. (C) later: give those documents rule lines (the engineering standards list is already planned in task-429..431).
-Q2 Does a MET or REJECT line naming the id count as mentioned? (A, recommended) yes: any mention. (B) only BUG or DEFER lines and the Rules met line, as the card words it: more ids flagged, and the reviewer's own MET lines (at most 8 per output) are ignored.
-Q3 Report only, or later a gate? Default report only (as ruled: no per-rule verdict). A gate would need a rate measured first: model compliance with the line is unmeasured (UNVERIFIED), and a long list (the 133 handbook has about 500 m.* ids) makes a long line.
-Q4 Land before or after the pending plan launches (template change re-makes their compliance plan outputs)?
+## QUESTIONS RULED by the plan grounder (docs/reports/reviews/task-433/QUESTIONS-RULED.md; none left for the operator)
+Q1 RULED A, by the rules (decision-163 line 11, RR-0378 step 6: a script that flags a rule never mentioned; 124a_step_standard_policy_appendix.md:992: no scope the card or ruling did not name): a document with no rule ids gets Rules met: none and the report says the part holds no rule ids; nothing is invented. B (headings as ids) names a unit no rule has; C is a later card, not this one. DRIVEN census in FACTS 5: id-headed list lines exist only in Specs 132, 133 and 136.
+Q2 RULED A: any mention counts. RR-0378 step 6 says the script flags a rule never mentioned (decision-163 line 11); the template's own Forms (lens-compliance.md:57-63) make MET and REJECT lines of the output, so a rule the reviewer judged on either is not never mentioned; the card's two-place wording is the orchestrator's paraphrase. B would flag ids the reviewer named.
+Q3 RULED report only: a gate is a change to check-lane-close.mjs, a protected path (rule-lists.json:22) the card does not name (124a_step_standard_policy_appendix.md:992), and the operator's words in BASIS refuse a response on every rule; model compliance with the line is unmeasured. A gate is a card of its own after the live check.
+Q4 RULED: no wait, nothing is stranded today (DRIVEN: plan evidence in docs/reports/reviews is held only by task-432, already launched, and this card; task-431 has none yet). Order with the cards that edit the same files: task-432 (launched first, RUNNING; edits backlog-brief.mjs, backlog-lane.mjs, README.md and two tests) lands first and this card lands after it; a lane launched before this card lands (task-432) must not merge the board's template before making its outputs (caveat (b)). Task-431's plan outputs, if made before this card lands and not yet launched, are re-made by the orchestrator (caveat (a)); this card launches before task-431 lands (task-431 changes the table the plan gate reads). README.md and rule-lists.logic.test.ts are edited by the three cards in different regions.
 
 ## UNVERIFIED
 - That DeepSeek writes the line reliably and with real ids (no model calls here).
 - The line's length on a large list part; the room for it is computed by lens-input from the template text (rule-lists.mjs:425) so it grows only by about 500 characters.
-- Which board tasks hold plan evidence not yet launched (the re-make cost).
-- The id pattern fits every generated handbook line (checked on 132, 133, 136 by listing the bold ids; no other bold-id form was seen in the listed sections; 132 section 6 and 133 section 3 not checked line by line).
+- Which board tasks hold plan evidence not yet launched (the re-make cost): none today, see Q4 (DRIVEN).
+- The id pattern fits every generated handbook line (checked on 132, 133, 136 by listing the bold ids; no other bold-id form was seen in the listed sections; 132 section 6 and 133 section 3 were not read line by line then; the census in FACTS 5 covers them whole).
 
 Files: .claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts
+
+Plan review round 1: 24 folded, 0 task, 0 ruling, 0 wontfix, 0 pile; grounder docs/reports/reviews/task-433/GROUNDER-PLAN.md; triage docs/reports/reviews/task-433/TRIAGE-PLAN.md
+plan-compliance-agents-s7-s11#3 MED folded Q1 RULED A, by the r
+plan-compliance-agents-s7-s11#4 MED folded Census (DRIVEN at th
+plan-compliance-plan-protocol#2 MED folded Q1 RULED A, by the r
+ig#1 HIGH folded its own out-complian
+rg#1 HIGH folded its own out-complian
 <!-- SECTION:PLAN:END -->
