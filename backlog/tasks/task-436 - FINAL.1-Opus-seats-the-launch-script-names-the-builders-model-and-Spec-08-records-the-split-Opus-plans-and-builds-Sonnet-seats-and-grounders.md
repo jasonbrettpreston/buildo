@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-OPUS436'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T20:55:00Z'
+updated_date: '2026-11-22T21:04:00Z'
 labels:
   - McFix
   - McFix Final
@@ -39,7 +39,7 @@ ordinal: 136012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0385 (MORNING-DECISIONS.md:1915 entry, RR-0385, decision-170). Operator, verbatim: "Teh seat that writes the plan is opus and the seat that build is Opus"; "keep the current split with opus and sonnet"; "Change this to Opus - approved by operator." The lane guard (the operator's hook, outside the repo) already allows opus since 2026-11-22. THIS TASK: the launch script's agent line and brief say the builder's model; a dated note in Spec 08 records the split and supersedes the Sonnet-only lines. Scope and Files line at its plan review. Every build task of this plan follows the six steps, plan written and built on Opus (his words: "I want this plan for each task and built by opus").
 
-Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md
+Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md, docs/reports/generated/rule-lists-by-kind.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done
@@ -148,4 +148,8 @@ rg#3 MED folded the second-to-last l
 
 <!-- SECTION:NOTES:BEGIN -->
 2026-11-22 taken on the board at lane launch (lane BL-OPUS436, worktree /Users/brettpreston_macmini/Buildo-wt-opus436, branch wf1/inc1b-opus436), RR-0240
+
+2026-11-22 lane BL-OPUS436 (Opus, building seat): tests T1, T2, T3 (a) and (b) written first in src/tests/backlog/backlog-lane.logic.test.ts; red attempt next.
+
+2026-11-22 lane BL-OPUS436: red seen at the assertions (T1, T2, T3 (a) failed; T3 (b) passed as the plan says, a survive-the-fix lock; red.out in the lane dir). Build: MODEL_LINE in spec.extra and the --spec merge (once, after the lens line), AGENT-MODEL: opus printed before BRIEF-FILE on the dry-run and real paths, header step 6, and the Spec 08 dated note at 08_agents.md:360 with the exact text of the plan.
 <!-- SECTION:NOTES:END -->

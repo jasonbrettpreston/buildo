@@ -8,7 +8,7 @@
 //   3. git worktree add -b <branch> <worktree> <board HEAD>, link both node_modules, copy .cursor/active_task.md;
 //   4. write the G1 ticket (backlog-brief.mjs --root <worktree>) into the lane dir;
 //   5. write task.json from the task (or use --spec) and run panel-tools/brief.mjs;
-//   6. print `BRIEF-FILE: <path> sha256=<hex>` as the last line. The Agent call stays the orchestrator's (Spec 08 rule 9, 08_agents.md:339).
+//   6. print `AGENT-MODEL: opus (...)` (task-436, RR-0385: the model of the Agent call) and then `BRIEF-FILE: <path> sha256=<hex>` as the last line. The Agent call stays the orchestrator's (Spec 08 rule 9, 08_agents.md:339).
 // COMPLY.2 (task-366): the task's `Files:` line is resolved through scripts/analysis/rule-lists.json (data decides, --rule-lists overrides the table path): the brief names every governing rule list (READ whole before planning) and the compliance lens runs once per list. A task with no Files line (a record-only task gets the queue lists) or a Files path no row matches is refused before any write, the path named.
 // Refusals (exit 3, one line): task not LATER or WAITS, worktree exists or its parent is missing, branch exists, board dirty outside backlog/,
 // backlog binary or an input missing; all before any write except two checks after the take (the 4 minute wait ran out, or the task is not RUNNING for the lane after the commit), which also exit 3 and name the undo command. Usage errors exit 2. A failure after the take exits 1 and prints the command that undoes the take.
@@ -172,6 +172,7 @@ if (!letter && !specGiven) process.stderr.write(`backlog-lane: note: no [group] 
 // task-358 (REVIEW.LENSES): the review line names the Spec 08 lens set (08_agents.md:334 "NEVER run one generic pass"; section 7 rules 4, 7), chosen by task type and the Files line.
 // task-375 A3: every lens command passes the committed context file and one --section per CONTEXT_SECTIONS entry (scripts/lib/review-template.js), so the reviewer's context is the task, sized
 const { CONTEXT_SECTIONS, contextRound } = createRequire(import.meta.url)('../lib/review-template.js');
+const MODEL_LINE = 'Model (RR-0385, decision-170): this lane is the building seat and runs on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.'; // task-436 FINAL.1: the split in the brief (Spec 08 rule 9 dated note 2026-11-22)
 const sectionFlags = CONTEXT_SECTIONS.map((x) => `--section "${x}"`).join(' ');
 const lensLine = (task, ctx, lists) => {
   const ctxArgs = `--context ${ctx} ${sectionFlags}`;
@@ -205,7 +206,7 @@ const spec = {
   outputs: [...new Set([...pathy.map(abs), path.join(laneDir, 'REPORT.md')])],
   groups: [letter ?? 'F'],
   writeScope: [laneDir, wt],
-  extra: [ticket, lensLine(t, ctxRel, resolved.lists)],
+  extra: [ticket, MODEL_LINE, lensLine(t, ctxRel, resolved.lists)], // the lens line stays last: the --spec merge below reads it there
 };
 let specPath = specGiven ?? path.join(laneDir, 'task.json');
 if (!specGiven) {
@@ -220,7 +221,7 @@ if (!specGiven) {
   const merged = {
     ...given,
     inputs: inputs.some((x) => /Rule lists that govern this task/.test(String(x))) ? inputs : [spec.inputs[0], ...inputs],
-    extra: extra.some((x) => /Compliance lens, (ONCE PER RULE LIST|ONE JOINED RUN PER STAGE)/.test(String(x))) ? extra : [...extra, spec.extra[spec.extra.length - 1]],
+    extra: [...(extra.some((x) => /Compliance lens, (ONCE PER RULE LIST|ONE JOINED RUN PER STAGE)/.test(String(x))) ? extra : [...extra, spec.extra[spec.extra.length - 1]]), ...(extra.includes(MODEL_LINE) ? [] : [MODEL_LINE])], // task-436: the model line once
   };
   specPath = path.join(laneDir, 'task.merged.json');
   if (dry) console.log(`TASK-JSON ${specPath}: ${JSON.stringify(merged)}`);
@@ -228,6 +229,8 @@ if (!specGiven) {
 }
 const briefOut = path.join(laneDir, 'BRIEF.md');
 step('brief.mjs', laneDir, ['node', path.join(pt, 'brief.mjs'), '--spec', specPath, '--out', briefOut]);
-if (dry) { console.log(`BRIEF-FILE: ${briefOut} sha256=<sha256 of the brief>`); process.exit(0); }
+const AGENT_MODEL = 'AGENT-MODEL: opus (RR-0385: set model "opus" on the Agent call that takes the BRIEF-FILE line below)'; // task-436: on the line before BRIEF-FILE, which stays last (lane-guard reads it)
+if (dry) { console.log(AGENT_MODEL); console.log(`BRIEF-FILE: ${briefOut} sha256=<sha256 of the brief>`); process.exit(0); }
+console.log(AGENT_MODEL);
 console.log(`BRIEF-FILE: ${briefOut} sha256=${sha256(fs.readFileSync(briefOut))}`);
 } catch (e) { fail('write', { stderr: String(e && e.message) }); }
