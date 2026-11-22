@@ -3,10 +3,11 @@ id: TASK-435
 title: >-
   INPUTS.7 Dated note in the engineering standards: the UI library lines are
   superseded by Spec 126 for the front end
-status: LATER
-assignee: []
+status: RUNNING
+assignee:
+  - '@lane-BL-NOTE435'
 created_date: '2026-11-22T18:01:00Z'
-updated_date: '2026-11-22T18:23:00Z'
+updated_date: '2026-11-22T18:25:00Z'
 labels:
   - McFix
   - McFix V2
@@ -18,6 +19,20 @@ references:
   - docs/reports/reviews/task-435/seat-integration-1.md
   - docs/reports/reviews/task-435/seat-reality-check-1.md
   - docs/reports/reviews/task-435/seat-regression-1.md
+  - compliance:eng-all docs/specs/00_engineering_standards.md
+  - compliance:agents-s7-s11 docs/specs/00-architecture/08_agents.md
+  - compliance:queue-137 docs/specs/00-architecture/137_mcqueue.md
+  - >-
+    compliance:policy-124-s2-s5
+    docs/specs/01-pipeline/124_step_standard_policy.md
+  - compliance:agents-s5-1to3 docs/specs/00-architecture/08_agents.md
+  - >-
+    compliance:orchestrator-doc17 backlog/docs/doc-17 -
+    Orchestrator-readings-not-rulings.md
+  - compliance:five-words docs/specs/01-pipeline/132_step_standard_handbook.md
+  - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
+  - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
+  - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
 type: build
 ordinal: 135012
 ---
@@ -221,4 +236,6 @@ rg#2 MED folded Q4 RULED: no scope D
 
 <!-- SECTION:NOTES:BEGIN -->
 Dated note 2026-11-22 (M-246, prior text kept; RR-0382 · task-435 · Backlog; operator, verbatim: "yes add")
+
+2026-11-22 taken on the board at lane launch (lane BL-NOTE435, worktree /Users/brettpreston_macmini/Buildo-wt-note435, branch wf1/inc1b-note435), RR-0240
 <!-- SECTION:NOTES:END -->
