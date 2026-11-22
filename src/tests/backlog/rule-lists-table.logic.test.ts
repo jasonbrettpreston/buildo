@@ -5,6 +5,7 @@ import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { ROOT, run, script, tmp } from './helpers';
+import { REGISTER_REL, readFeRows } from '../../../scripts/surfaces/generate-surface-handbook.mjs';
 
 const CLI = 'scripts/analysis/rule-lists.mjs';
 type Res = { lists: { id: string; rows: string[] }[] };
@@ -202,12 +203,18 @@ describe('task-384: the McFrontend handbook reaches the reviewer of the web repo
     for (const id of SURFACE) expect(without).not.toContain(id);
     expect(without).toEqual(['eng-all', 'five-words', 'plan-protocol', 'inc-S', 'ms-S']);
   });
-  it('the surface-136 lens input generated for the change holds fe.01 to fe.44 (44 distinct ids)', () => {
+  // MF-95 C-T5 (task-430): the range is computed from the real register (readFeRows throws unless "Next free id" is the row count plus one),
+  // not pinned to 44, so a new FE row moves it by itself; planted: one id more than the register holds is refused.
+  it('the surface-136 lens input generated for the change holds fe.01 to fe.N, N the FE row count of Spec 135', () => {
     const r = script(CLI, ['lens-input', '--context', path.join(ROOT, 'docs/reports/reviews/task-375/fixture-context.md'), '--list', 'surface-136', '--material', path.join(ROOT, 'package.json'), '--out', path.join(tmp('fe'), 'in-x')]);
     expect(r.status, r.stderr).toBe(0);
     const text = r.stdout.trim().split('\n').map((f) => fs.readFileSync(f, 'utf8')).join('\n');
     const ids = new Set(text.match(/\bfe\.\d\d\b/g));
-    expect([...ids].sort()).toEqual(Array.from({ length: 44 }, (_, i) => `fe.${String(i + 1).padStart(2, '0')}`));
+    const n = readFeRows(fs.readFileSync(path.join(ROOT, REGISTER_REL), 'utf8')).length;
+    const range = (k: number) => Array.from({ length: k }, (_, i) => `fe.${String(i + 1).padStart(2, '0')}`);
+    expect(n).toBeGreaterThanOrEqual(57);
+    expect([...ids].sort()).toEqual(range(n));
+    expect([...ids, `fe.${n + 1}`].sort()).not.toEqual(range(n));
   });
 });
 // task-375: lens-input takes --context (A4); see the deviation note on the task

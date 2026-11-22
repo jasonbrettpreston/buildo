@@ -49,15 +49,18 @@ const NEXT_FREE = /\*\*Next free id:\*\*\s*`FE-(\d+)`/;
 // ellipsis is never mistaken for a clip; and the cell has no leading bold span, where the shared rule prints the bold title, not the cell),
 // the line is the plain text of the Ruling cell. Named reason for this one-line copy of the shared plain(): the shared reader is a layer23
 // McBylaws path (an edit needs a McBylaws task and panel). The copy does not call stripProvenance: a long ruling keeps a trailing
-// provenance bracket (none of the FE rows has one today). Drift lock: handbook-rule-map.logic.test.ts A-T6.
+// provenance bracket. Ruling Q9 (plan grounder, docs/reports/reviews/task-430/QUESTIONS-RULED.md): the shared stripProvenance also drops a
+// trailing bracket that matches "spec 1nn" from a cell it does not clip; a handbook headline keeps it (its cite is the point), so a cell not led
+// by a bold span whose shared headline differs from its plain text prints the plain text. Drift lock: handbook-rule-map.logic.test.ts A-T6.
 const SHARED_HEADLINE_MAX = 300;
 const CLIP_MARK = '…';
 const plainCell = (text) => text.replace(/<br\s*\/?>/gi, ' ').replace(/\*\*|~~|`/g, '').replace(/\s+/g, ' ').trim();
 function wholeHeadline(ruleCell) {
   const shared = headlineOf(ruleCell);
   const plain = plainCell(ruleCell);
-  const clipped = shared.endsWith(CLIP_MARK) && plain.length > SHARED_HEADLINE_MAX && !/^\*\*/.test(ruleCell.trim());
-  return clipped ? plain : shared;
+  if (/^\*\*/.test(ruleCell.trim())) return shared;
+  const clipped = shared.endsWith(CLIP_MARK) && plain.length > SHARED_HEADLINE_MAX;
+  return clipped || shared !== plain ? plain : shared;
 }
 
 // MF-95 commit B (task-430, RR-0384 "make each line reflect its notes"; plan sections 5, 17.3, 17.4). A Current reading is ONE dated note,

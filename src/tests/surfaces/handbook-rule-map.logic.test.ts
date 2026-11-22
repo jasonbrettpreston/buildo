@@ -139,25 +139,34 @@ describe('MF-95 A — Spec 136 prints every ruling whole (no clip)', () => {
     }
   });
 
-  it('A-T6 drift lock: the copy equals the shared headlineOf wherever the shared one is not clipped, and extends it where it is (real rows and planted cells)', () => {
+  it('A-T6 drift lock (ruling Q9): the copy equals the shared headlineOf wherever the shared one is neither clipped nor stripped of a trailing bracket, and is the plain cell where it is (real rows and planted cells)', () => {
     const cells = [...rulingCells(REGISTER).values()];
     const planted = [
       sized(500), // a long cell
       `${sized(400, '')} (operator, verbatim 2026-11-09).`, // a long cell ending in a provenance bracket: the copy keeps the bracket (it does not call stripProvenance)
       `${sized(200, '')}<br>${sized(200)}`, // a cell with a br tag
-      `${sized(120, '')} (operator, verbatim 2026-11-09).`, // short with provenance: unclipped, the shared rule strips the bracket and the copy is the shared result
+      `${sized(120, '')} (operator, verbatim 2026-11-09).`, // short with provenance: unclipped, the shared rule strips the bracket; the copy keeps it (Q9: a handbook headline keeps its cite)
     ];
     for (const cell of [...cells, ...planted]) {
       const shared = headlineOf(cell);
       const mine = headlineFor(cell);
-      if (!shared.endsWith('…') || plainCell(cell).length <= 300) expect(mine).toBe(shared);
-      else {
+      if (shared === plainCell(cell)) expect(mine).toBe(shared);
+      else if (!shared.endsWith('…') || plainCell(cell).length <= 300) {
+        expect(mine).toBe(plainCell(cell));
+        expect(mine.startsWith(shared.replace(/[.;:]$/, ''))).toBe(true);
+      } else {
         expect(mine.startsWith(shared.slice(0, -1).trimEnd())).toBe(true);
         expect(mine.length).toBeGreaterThan(shared.length);
         expect(mine).toBe(plainCell(cell));
       }
     }
     expect(headlineFor(planted[1]!)).toMatch(/\(operator, verbatim 2026-11-09\)\.$/);
+    expect(headlineFor(planted[3]!)).toMatch(/\(operator, verbatim 2026-11-09\)\.$/);
+  });
+
+  it('Q9 pin: the FE-54 line keeps its cite (the shared stripProvenance would drop it)', () => {
+    // found by its lock path, not its id (FE-54 on this branch; renumbered at landing, plan 17.5)
+    expect(realRows().find((r: Row) => r.locks[0] === 'src/tests/surfaces/failure-state-declared.logic.test.ts')!.headline.endsWith('(Spec 128 Rule 12, 128:39).')).toBe(true);
   });
 });
 
@@ -240,6 +249,52 @@ describe('MF-95 B — each line reflects its notes (Current reading)', () => {
       const before = cell.slice(0, cell.lastIndexOf('Dated note '));
       expect(r.notes, r.id).toBe((before.match(/Dated note \d{4}-\d{2}-\d{2}/g) || []).length + 1);
     }
+  });
+});
+
+// MF-95 commit C (task-430, RR-0384 "add these 13 lines"; plan sections 6, 17.2, 17.6). The thirteen rows are OWED, each naming one lock path
+// that does not exist yet (Spec 135 rules 3 and 5; the locks are task-434's). Pinned by their lock paths, in item order, not by id: the ids are
+// set at landing from "Next free id" and the second lander of task-388 and this task renumbers them (plan 17.5), so this lock needs no edit then.
+const NEW_LOCKS = ['client-glass-boundary', 'ui-library-set', 'tunables-are-data', 'scratch-mocks-not-in-repo', 'scope-fence', 'auth-checkout-hosted', 'nav-tab-switch', 'parcel-id-names', 'page-set-pointer', 'failure-state-declared', 'admin-same-descriptor', 'lock-planted-defect', 'a11y-category'].map((n) => `src/tests/surfaces/${n}.logic.test.ts`);
+const stripRows = (text: string, ids: string[], next: number) => text.split('\n').filter((l) => !ids.some((id) => l.startsWith(`| ${id} |`))).join('\n').replace(/(\*\*Next free id:\*\*\s*`FE-)\d+`/, `$1${String(next).padStart(2, '0')}\``);
+
+describe('MF-95 C — the thirteen RR-0384 rows', () => {
+  const rows = realRows();
+  const fresh = rows.filter((r: Row) => r.locks.length === 1 && NEW_LOCKS.includes(r.locks[0]!));
+
+  it('C-T2 RED: thirteen rows, in item order, are the LAST rows of the register, each OWED with exactly its one reserved lock path, none of which exists', () => {
+    expect(fresh.map((r: Row) => r.locks[0])).toEqual(NEW_LOCKS);
+    expect(rows.slice(-13).map((r: Row) => r.id)).toEqual(fresh.map((r: Row) => r.id));
+    expect(rows.length).toBeGreaterThanOrEqual(57);
+    for (const r of fresh) {
+      expect(r.status, r.id).toBe('OWED');
+      expect(fs.existsSync(path.join(ROOT, r.locks[0]!)), r.locks[0]).toBe(false);
+    }
+  });
+
+  it('C-T3: Spec 136 renders every row and counts the OWED rows from the register; each new line is OWED with its lock owed and no "Enforced by"', () => {
+    const text = read(SPEC.handbookRel);
+    const owed = rows.filter((r: Row) => r.status === 'OWED').length;
+    expect(owed).toBeGreaterThanOrEqual(21);
+    expect(text).toContain(`**Rules rendered: ${rows.length}**: ${rows.length} in force (${owed} OWED, whose lock is still to land), 0 history.`);
+    for (const r of fresh) expect(text, r.id).toMatch(new RegExp(`^- \\*\\*fe\\.${r.id.slice(3)}\\*\\* [^\\n]*\\n {2}Status: OWED · lock owed: ${r.locks[0]!.replace(/[.]/g, '\\.')}$`, 'm'));
+  });
+
+  it('C-T1 and C-T3 planted: the register with the rows and the files built without them: --check exits 1 naming both; --write then --check exits 0; a removed middle row is a gap', () => {
+    const run = (root: string, argv: string[]) => { const err: string[] = []; const code = runHandbookCli({ spec: '136', argv, build: (r: string) => build(r), root, out: () => {}, err: (s: string) => err.push(s), process: {} as never }); return { code, err: err.join('\n') }; };
+    const ids = fresh.map((r: Row) => r.id);
+    expect(ids).toHaveLength(13);
+    const old = build(makeRoot(stripRows(REGISTER, ids, rows.length - 12)));
+    const root = makeRoot(REGISTER, rows.flatMap((r: Row) => (r.status === 'RULED' ? r.locks : [])));
+    for (const [rel, body] of [[SPEC.ruleMapRel, `${JSON.stringify(old.map, null, 2)}\n`], [SPEC.handbookRel, old.text]] as const) { fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true }); fs.writeFileSync(path.join(root, rel), body); }
+    const stale = run(root, ['--check']);
+    expect(stale.code).toBe(1);
+    expect(stale.err).toContain(SPEC.ruleMapRel);
+    expect(stale.err).toContain(SPEC.handbookRel);
+    expect(run(root, ['--write']).code).toBe(0);
+    expect(run(root, ['--check']).code).toBe(0);
+    expect(() => readFeRows(stripRows(REGISTER, [ids[6]!], rows.length + 1))).toThrow(/no gap or reorder/);
+    expect(() => readFeRows(stripRows(REGISTER, [ids[12]!], rows.length))).not.toThrow();
   });
 });
 

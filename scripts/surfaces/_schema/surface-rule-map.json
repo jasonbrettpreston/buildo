@@ -203,6 +203,58 @@
     {
       "id": "fe.44",
       "section": "rules"
+    },
+    {
+      "id": "fe.45",
+      "section": "rules"
+    },
+    {
+      "id": "fe.46",
+      "section": "rules"
+    },
+    {
+      "id": "fe.47",
+      "section": "rules"
+    },
+    {
+      "id": "fe.48",
+      "section": "rules"
+    },
+    {
+      "id": "fe.49",
+      "section": "rules"
+    },
+    {
+      "id": "fe.50",
+      "section": "rules"
+    },
+    {
+      "id": "fe.51",
+      "section": "rules"
+    },
+    {
+      "id": "fe.52",
+      "section": "rules"
+    },
+    {
+      "id": "fe.53",
+      "section": "rules"
+    },
+    {
+      "id": "fe.54",
+      "section": "rules"
+    },
+    {
+      "id": "fe.55",
+      "section": "rules"
+    },
+    {
+      "id": "fe.56",
+      "section": "rules"
+    },
+    {
+      "id": "fe.57",
+      "section": "rules"
     }
   ],
   "rules": [
@@ -688,6 +740,149 @@
         "register": true,
         "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
         "anchor": "FE-44"
+      }
+    },
+    {
+      "id": "FE-45",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.45",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-45"
+      }
+    },
+    {
+      "id": "FE-46",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.46",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-46"
+      }
+    },
+    {
+      "id": "FE-47",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.47",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-47"
+      }
+    },
+    {
+      "id": "FE-48",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.48",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-48"
+      }
+    },
+    {
+      "id": "FE-49",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.49",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-49"
+      }
+    },
+    {
+      "id": "FE-50",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.50",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-50"
+      }
+    },
+    {
+      "id": "FE-51",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.51",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-51"
+      }
+    },
+    {
+      "id": "FE-52",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.52",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-52"
+      }
+    },
+    {
+      "id": "FE-53",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.53",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-53"
+      }
+    },
+    {
+      "id": "FE-54",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.54",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-54"
+      }
+    },
+    {
+      "id": "FE-55",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.55",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-55"
+      }
+    },
+    {
+      "id": "FE-56",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.56",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-56"
+      }
+    },
+    {
+      "id": "FE-57",
+      "kind": "fe-row",
+      "status": "owed",
+      "handbook_line": "fe.57",
+      "source": {
+        "register": true,
+        "file": "docs/specs/02-web-admin/135_mcfrontend_decisions_register.md",
+        "anchor": "FE-57"
       }
     }
   ]

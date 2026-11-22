@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-HB430'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T20:48:00Z'
+updated_date: '2026-11-22T21:04:00Z'
 labels:
   - McFix
   - McFix V2
@@ -57,7 +57,7 @@ ordinal: 130012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0378 (MORNING-DECISIONS.md:1852, verbatim: "Plan approved. We are running right now on this? Add the tasks?"). Why: the compliance reviewer is sent about 534,000 characters for a front-end task, of which the handbook is 3 percent; measured, one small document per call finds more than large or joined ones. THIS TASK (step 2): add the items the INPUTS.1 report lists, and the operator has read, to the McFrontend rule source so the generated Spec 136 carries them as lines, by the existing generator and its lock (scripts/surfaces/generate-surface-handbook.mjs, src/tests/surfaces/handbook-rule-map.logic.test.ts); nothing in Specs 126, 127, 128 deleted or rewritten. Scope and Files line are set at its plan review from the INPUTS.1 report.
 
-Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, docs/reports/generated/rule-lists-by-kind.md, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json
+Files: scripts/surfaces/generate-surface-handbook.mjs, scripts/surfaces/_schema/surface-rule-map.json, src/tests/surfaces/handbook-rule-map.logic.test.ts, src/tests/backlog/rule-lists-table.logic.test.ts, docs/specs/02-web-admin/135_mcfrontend_decisions_register.md, docs/specs/02-web-admin/136_mcfrontend_handbook.md, .cursor/MCFRONTEND-QUEUE.md, docs/reports/panels/, docs/reports/generated/rule-lists-by-kind.md, scripts/analysis/bylaw-validation/coa-expected/prereg-MF-95-1.json, docs/specs/00-architecture/00_system_map.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done
@@ -426,4 +426,10 @@ Dated note 2026-11-22 (M-246, prior text kept; RR-0384 · task-430 · Backlog; o
 2026-11-22 lane BL-HB430 commit B red: tests B-T1..B-T11 and refusal (vii) in src/tests/surfaces/handbook-rule-map.logic.test.ts (the reading read through a cast so the attempt fails at its assertions, not at typecheck), staged alone with this task file; red.out holds the refused commit attempt.
 
 2026-11-22 lane BL-HB430 commit B: 12 Current reading dated notes appended to Spec 135 rows FE-01, 02, 07, 11, 14, 18, 19, 20, 29, 31, 38, 39 (texts and dates of plan 17.3, frame of 17.3, lane text, not rulings); the generator reads the last note in the strict 17.4 form and prints it on the headline line; refusals (i)..(vii) throw. Gate reader statuses and locks unchanged (0 of 44 differ). Spec 136 section 2 measured 22,993 characters (file 26,535).
+
+2026-11-22 lane BL-HB430 commit C red: tests C-T1, C-T2, C-T3 in src/tests/surfaces/handbook-rule-map.logic.test.ts (the 13 rows pinned by lock path in item order, not by id) and C-T5 in src/tests/backlog/rule-lists-table.logic.test.ts (the fe.01..fe.N range computed from the register), staged alone with this task file; red.out holds the refused commit attempt.
+
+2026-11-22 lane BL-HB430 commit C: thirteen OWED rows added to Spec 135 as FE-45..FE-57 (placeholders: FE-45 is held by BL-MFRULES unlanded; FE-46..FE-58 claimed in ~/Buildo-scratch/ids for the renumbering), texts of plan 17.2, one reserved lock path each (all 13 absent); Next free id FE-58 by a dated note; Spec 136 and surface-rule-map.json regenerated (57 rules, 21 OWED); rule-lists-table pin computed from the register. Spec 136 section 2 measured 28,664 characters (file 32,207); Spec 135 112,035 bytes.
+
+2026-11-22 lane BL-HB430 ruling Q9 (plan grounder, docs/reports/reviews/task-430/QUESTIONS-RULED.md): A-T6 reworded (short-provenance planted case keeps the bracket) and a pin that the failure-state row (FE-54 on this branch) keeps (Spec 128 Rule 12, 128:39); red on the staged generator before the wholeHeadline change; then wholeHeadline prints the plain cell also where the shared rule stripped a trailing bracket of an unclipped cell.
 <!-- SECTION:NOTES:END -->
