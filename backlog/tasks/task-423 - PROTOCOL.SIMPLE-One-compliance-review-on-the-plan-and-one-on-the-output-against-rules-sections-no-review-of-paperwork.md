@@ -3,11 +3,11 @@ id: TASK-423
 title: >-
   PROTOCOL.SIMPLE One compliance review on the plan and one on the output,
   against rules sections; no review of paperwork
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-SIMPLE423'
 created_date: '2026-11-21T16:43:00Z'
-updated_date: '2026-11-22T15:36:00Z'
+updated_date: '2026-11-22T15:58:00Z'
 labels:
   - McFix
   - McFix V2
@@ -319,3 +319,11 @@ Dated note 2026-11-21 (M-246, prior text kept; RR-0369 · task-423 · Backlog; o
 
 2026-11-22 (M-246) DEVIATION (grounder ruling, FIXCHECK.md item A): the Files line of the Description is widened by one entry at the end, src/tests/backlog/backlog-brief-context.logic.test.ts, because that test pins the plan review command that backlog-brief.mjs:178 orders and RR-0374 step 1 stops; check-task-files refused the commit otherwise. The resolver gives the same 9 rule lists with and without the entry (grounder drove it). Plan, Acceptance and the rest of the Description are unchanged.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Task-423 built (card A): plan findings ruled once; the brief runs no plan lens and orders the per-document compliance review (default); the joined form is an accepted form nothing orders (RR-0374); joined round files read as joined. Code commits 740ade03d, a7e366cbb, 5d554f459; notes f5ca453ff, c5f627212. Acceptance (f) NOT met, moved to the later comparison (RR-0374). Records: docs/reports/lanes/2026-11-21/BL-SIMPLE423 (REPORT.md, GROUNDER.md, TRIAGE.md).
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 34 pile; grounder docs/reports/lanes/2026-11-21/BL-SIMPLE423/GROUNDER.md; triage docs/reports/lanes/2026-11-21/BL-SIMPLE423/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->
