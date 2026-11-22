@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-NOTE435'
 created_date: '2026-11-22T18:01:00Z'
-updated_date: '2026-11-22T18:30:00Z'
+updated_date: '2026-11-22T18:31:00Z'
 labels:
   - McFix
   - McFix V2
@@ -33,6 +33,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-22/BL-NOTE435/REPORT.md
 type: build
 ordinal: 135012
 ---
