@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:37:48.225Z file_sha256=0d09ef6ef0bfd8a46bd88b0f8e5bd5dc074ce1a6bcd61ba94c79d623301e2dd4 prompt_sha256=5a10da639f44abae2ec79d3aa96bd5e050197bcaee44e67804479567ea092b62
+🔍 Lens review of docs/reports/reviews/task-436/in-plan-compliance-queue-137.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 Rule 3 notes 2026-11-21 (task-423, task-419) "The LAUNCH of a build or fix task (`scripts/analysis/backlog-lane.mjs`, before the take) runs `planGateErrors` on the board HEAD: the plan evidence folder, one plan compliance output per resolved list over the plan sections of the committed context, GROUNDER-PLAN.md of a separate grounder with a verdict per finding" — plan "ORDER 1. Tests, run red. 2. Code and Spec note, run green. 3. Close commit." — the plan has no step to produce the plan evidence folder, plan compliance outputs, GROUNDER-PLAN.md, FOLD-CHECK.md, seat reports or the Plan hash line, so the launch of task-436 will be refused — add those artifacts and their steps to ORDER and LANDING before plan-lock.
+
+BUG severity=HIGH — Spec 137 Rule 3 note 2026-11-20 (task-410) "the close of a lane's task ... also needs, in the repo copy of the lane report (docs/reports/lanes/<date>/<lane>/), one compliance lens output per rule list the task attaches and a `GROUNDER.md` from an agent that is not the lane, with a verdict line per finding" — plan "Close: the two-commit lane close (backlog-lane.mjs:185 brief text)." — the close step names no GROUNDER.md, TRIAGE.md, compliance lens outputs or Final Summary round line, so check-lane-close.mjs will refuse the BUILT/DONE commit — add the close artifacts and the paths the closing commit may stage to ORDER and LANDING.
+
+DEFER severity=MED — Spec 137 Rule 4 "The orchestrator writes each ruling into the row's status line the same day." — task block "status: LATER · milestone: m-1 · assignee: none · labels: McFix, McFix Final" — the RR-0385 ruling is added to Spec 08 but not to the task-436 row's status line, which still reads LATER with no `ruling:` line — add the M-246 dated note to the task-436 row's status line or state why the card description is the row's note.
+
+DEFER severity=MED — Spec 137 Rule 7 "Open rows expire in 7 days, unless the operator sets another date." — task block "status: LATER · milestone: m-1 · assignee: none · labels: McFix, McFix Final" — the task-436 row is open with no `expires` and the plan sets none — add `expires` to the task file or record the operator's expiry.
+
+DEFER severity=MED — RR-0385 item 1 "Teh seat that writes the plan is opus and the seat that build is Opus" — plan F7 "MCBYLAWS-QUEUE.md:247 ('Seats run on Sonnet by default') and 137_mcqueue.md:152 ('A Sonnet lane is named for the check') are about seats and read-only check lanes, so they do not conflict" — the plan-writing seat is a seat, so the queue line conflicts with the ruling and the plan leaves it unamended — add a dated note to MCBYLAWS-QUEUE.md:247 or explain why "Seats" excludes the plan-writing seat.
+
+DEFER severity=LOW — Spec 137 Rule 4 "Dated note <date> (M-246, prior text kept; <row> · <queue> · lane X; operator, verbatim: "<words>")" — plan "Dated note 2026-11-22 (M-246, prior text kept; task-436 FINAL.1, McFix Final; RR-0385 item 1, decision-170; ..." — the dated note omits the lane id from the M-246 form — add the lane id or state none.
+
+MET — Spec 137 Rule 2 — plan "Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md" — task-436 is a Backlog task whose Backlog file is its row, and the LANDING puts the task file with `Task: task-436` in the code commit.
+
+MET — Spec 137 Rule 3 amended for lane build and fix tasks — plan "Close: the two-commit lane close (backlog-lane.mjs:185 brief text)." — the plan uses the two-commit close for a build task.
+
+MET — RR-0385 item 1 — plan "the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek" — the note and the printed line carry the split.
+
+MET — lane guard BRIEF-FILE regex — plan "the model goes on a new line printed BEFORE it, and the BRIEF-FILE line itself does not change" — the guard regex still matches the last line.
+
+REJECT — Spec 137 Rule 3 "The status line changes in the same commit as the work." — the plan moves the status line in a separate close commit — the Rule 3 note for lane build and fix tasks amends Rule 3 to the two-commit close.
+
+REJECT — Spec 137 §5 step 1 "A Sonnet lane is named for the check" — the plan changes the builder to Opus — the ruling keeps check lanes and seats on Sonnet; the builder is not the check lane.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 6
+Rules met: none
+
+---
+⏱  146146ms (146.1s)
+📊 Tokens — total: 51940, input: 14585, output: 37355, reasoning: 36098

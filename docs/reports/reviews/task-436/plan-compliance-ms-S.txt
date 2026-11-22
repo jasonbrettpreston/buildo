@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:37:48.226Z file_sha256=e6e1a073e681c7d9075b4cc1bc9e648c253ebe92c4e000d55d4387f8ad584547 prompt_sha256=62342880e85a328f3306e65ae146166a28ddc644962ae586078e6fb2efca309e
+🔍 Lens review of docs/reports/reviews/task-436/in-plan-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card scope "THIS TASK: the launch script's agent line and brief say the builder's model" — scripts/analysis/backlog-lane.mjs NONE, plan says "print `AGENT-MODEL: opus (RR-0385: set model "opus" on the Agent call that takes the BRIEF-FILE line below)`" — the script issues no Agent call (plan F3: "The header says the Agent call stays the orchestrator's (:11)"), so the model requirement rests on a printed instruction the plan itself lists as "UNVERIFIED - That the orchestrator reads stdout above the BRIEF-FILE line", a comment-level satisfaction — fix: make the model reach the build as a machine-read field (MODEL_LINE already goes into spec.extra) and assert its presence in the task JSON/brief rather than in stdout.
+
+DEFER severity=MED — RR-0385 "Teh seat that writes the plan is opus and the seat that build is Opus" — NONE, plan NOT IN SCOPE: "The plan-writing seat: the orchestrator launches it without a script, so its model is stated only in the note. Nothing can print or enforce it." — the plan-writing half of the ruling is carried by a doc note alone, which the walk rule 3 counts as unmet — fix: put the plan-writing seat's model in the same outside-repo launch place as the guard, or get the ruling narrowed to the building seat on the record.
+
+DEFER severity=MED — card "Every build task of this plan follows the six steps, plan written and built on Opus" — ORDER "1. Tests, run red. 2. Code and Spec note, run green. 3. Close commit." — ORDER enumerates three steps, not six, so the six-step obligation is not visibly discharged (the six steps themselves are not pasted, cannot see) — fix: enumerate the six steps by name in ORDER.
+
+DEFER severity=LOW — "keep it simple; no scope creep" — plan CODE CHANGE adds "extra: [ticket, MODEL_LINE, lensLine(...)]" plus a stdout line plus a Spec 08 note plus the de-dup test "the merge must not add it twice" — the same split text lives in three carriers and needs a de-dup guard, which is the opposite of simple — fix: carry the split in one place (the brief extra, which per F5 already reaches BRIEF.md) and have the Spec note point at it.
+
+MET — card "a dated note in Spec 08 records the split and supersedes the Sonnet-only lines" — EXACT TEXT dated note, "This supersedes 'on Sonnet' in the note above for the building lane only" — the note records the split, keeps the prior :359 text, and names the superseded phrase.
+
+MET — card "the launch script's agent line and brief say the builder's model" (brief half) — "extra: [ticket, MODEL_LINE, lensLine(...)]" — the brief carries the split through spec.extra with brief.mjs unchanged.
+
+MET — operator "Tehse should be small changes" — GUESS "About 1.5 hours of lane time; about 20 changed lines plus 3 tests" — the change is sized as a small edit to one script, one test file and one spec note.
+
+REJECT — relevance clause "A task that serves neither a designed element nor a supporting function is most likely not relevant" — the change is accused of serving no designed report/detail/search element — RR-0385 is pasted in Decisions naming this task ("RR-0385 McFix Final plan: Opus plans and builds ... (names RR-0385)"), so an operator ruling names it and relevance is not mine to re-judge.
+
+VERDICT: FAIL
+Clauses checked: 10   Unmet: 3
+Rules met: none
+
+---
+⏱  33697ms (33.7s)
+📊 Tokens — total: 11578, input: 4879, output: 6699, reasoning: 5870

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:37:48.237Z file_sha256=c658856ab13eee0c1f77ee891fc6b699d365fa3fdab9b39f25ee118166fca790 prompt_sha256=e245b5d1afb7f18fbb45ed2348f3e4760c4bd704b7d54d7b6efc491f26ceb460
+🔍 Lens review of docs/reports/reviews/task-436/in-plan-compliance-plan-protocol.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — plan-protocol §2 step D "red-first tests named, exact commands. | PASS lines" — plan ORDER "1. Tests, run red. 2. Code and Spec note, run green. 3. Close commit." — the plan names no exact command and promises no PASS line, and step D's gate is PASS lines — add the literal commands (the vitest invocation for src/tests/backlog/backlog-lane.logic.test.ts and the chat-rulings-register pin) and the exact PASS line text the close will paste.
+
+BUG severity=HIGH — plan-protocol §4 "3. BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step)" — plan LANDING "Code commit: the test, backlog-lane.mjs, the Spec 08 note, and the task file with `Task: task-436`, through the real hooks." — there is no push review: no push contents, no suite, no gates, no commit-msg trailers, no ids, no operator tty step — add a PUSH REVIEW block naming the push contents, the suite command, the gates, the trailers, the ids and the operator tty step.
+
+DEFER severity=MED — plan-protocol dated note 2026-11-20 item 4 "plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`)" — NONE — the plan names neither the section 7 lens set that rule-lists.mjs lensSet and check-lane-close.mjs enforce nor this lane's separate grounder, and NOT IN SCOPE only says "No guard and no new gate" — name the enforced lens set and the grounder in the plan's review step so the lane close check is provided for.
+
+DEFER severity=MED — plan-protocol §4 "seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason)" — plan ORDER "Land 436 first so 437 rebases onto it." — an ordering constraint between 436 and 437 is asserted but no seq-patch delta records a dependsOn change with reason — write the 436 before 437 ordering into the seq-patch delta.
+
+DEFER severity=LOW — plan-protocol §3 "A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source." — plan CODE CHANGE "the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek" — the card names only "the launch script's agent line and brief say the builder's model", so the brief now carries the whole split, and the DeepSeek half rests on MORNING-DECISIONS.md:1917 which is not in the pasted context (cannot see) — paste :1917 or trim MODEL_LINE to the builder's model the card names.
+
+REJECT — plan-protocol §0 "The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board). Nothing is re-written from scratch." — that the plan writes a new plan instead of the board — the change adds one dated note and one printed line, and touches no plan file.
+
+MET — plan-protocol §5.5 "every task carries an estimate (MEASURED with source, or GUESS labelled)" — plan GUESS "About 1.5 hours of lane time; about 20 changed lines plus 3 tests." — the estimate is labelled GUESS.
+
+MET — plan-protocol §0 "Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from)." — plan BASIS "RR-0385 item 1, MORNING-DECISIONS.md:1917" — every change item carries a file:line source.
+
+MET — plan-protocol dated note 2026-11-20 "(M-246, prior text kept)" — plan EXACT TEXT "dated note (new line 360, indented three spaces like :359)" — the :359 text is kept and the pin at chat-rulings-register.logic.test.ts:1733 is named as the control.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+Rules met: none
+
+---
+⏱  48542ms (48.5s)
+📊 Tokens — total: 16951, input: 6493, output: 10458, reasoning: 9500

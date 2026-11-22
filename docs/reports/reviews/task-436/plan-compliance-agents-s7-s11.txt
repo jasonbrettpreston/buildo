@@ -1,0 +1,37 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:37:48.225Z file_sha256=472e8432bcf099902b4ad626618808241191fd6e39d6ced0ffa1ea000610ddc1 prompt_sha256=ce3ebf699a821c3a4d699033905d83654499c42de34140f2688731c8ca1e6a09
+🔍 Lens review of docs/reports/reviews/task-436/in-plan-compliance-agents-s7-s11.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — spec.08 r11 dated note 2026-11-21 (task-375, point 2) "the tool-having seats (Integration and Reality-Check on every build or fix launch, Regression when the Files line names a path tracked at the board head) run on the PLAN only, as Claude Sonnet agents with tools, and the launch gate (`scripts/analysis/backlog-lane.mjs`, `planGateErrors` in `scripts/hooks/check-lane-close.mjs`) requires their Seat lines in GROUNDER-PLAN.md" — NONE, cannot see any GROUNDER-PLAN.md or Seat line for task-436, and the plan's Files line names tracked paths (scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts) "Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md" — the three plan-altitude seats are neither run nor recorded, so planGateErrors refuses the launch, and the plan's ORDER has no step for them — add a step that runs Integration, Reality-Check and Regression as Claude Sonnet agents on this plan and records their Seat lines in docs/reports/reviews/task-436/GROUNDER-PLAN.md
+
+DEFER severity=MED — spec.08 r11.1 "a census grep runs at the full scope its conclusion covers" — plan F7 "CLAUDE.md and the README files do not mention Sonnet" — the scope "the README files" names no paths, so the grep that clears CLAUDE.md and the READMEs is not stated at the scope its conclusion covers and cannot be re-run — name each path grepped and paste the grep lines under FACTS
+
+DEFER severity=MED — RR-0385 "Opus plans and builds, engineering seat, two rounds, validation without the operator, unbuilt gates withdrawn, tests are the focus" — plan ORDER "1. Tests, run red." and "3. Close commit." — the ruling buys two validation rounds and the plan's three-step order holds exactly one review pass, with no second round and no adjudication of round-1 findings — add the round-2 step (lens re-run plus one grounder adjudicating each finding) to ORDER
+
+DEFER severity=MED — spec.08 r6 dated note 2026-11-20 (task-399 FOLD.ADOPT) "the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md (seat findings listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included) has one outcome line in the lane's TRIAGE.md" — plan LANDING "Close: the two-commit lane close (backlog-lane.mjs:185 brief text)." — the close step names no TRIAGE.md and no outcome lines, so check-lane-close --outcomes would have nothing to read — add the TRIAGE.md authoring step, one outcome line per finding id, to LANDING
+
+DEFER severity=MED — spec.08 r10 dated note 2026-11-19 (RR-0232, RR-0235) "The lane close step copies the lane's `REPORT.md` (and its `TRIAGE.md` and the review output, when they exist) into `docs/reports/lanes/<date>/<lane>/` in the lane's last commit" — plan LANDING "Code commit: the test, backlog-lane.mjs, the Spec 08 note, and the task file with `Task: task-436`, through the real hooks." — no step copies REPORT.md, TRIAGE.md or the review output into docs/reports/lanes/, so the task's references would again point outside the repo — add the copy into docs/reports/lanes/<date>/<lane>/ in the lane's last commit and point the task references at that copy
+
+DEFER severity=MED — spec.08 r11.9 TKT-1 dated note 2026-11-19 "for a lane working a plan task the header form is `Ticket: task-N (<MB-nn | MF-nn | plan id>) · lane X · stage N`; `Rule:`, `Scope:`, `Done-condition:` (the task's acceptance criteria) and `max_fix_rounds:` come from the task" — pasted card "## Acceptance criteria" is empty, and the plan opens at "#### BASIS" with no Ticket, Rule, Scope, Done-condition or max_fix_rounds line — the plan has no conforming header and its ACCEPTANCE block is self-authored because the card carries no acceptance criteria for Done-condition to come from — write the TKT-1 header with max_fix_rounds and fill the card's Acceptance criteria before launch
+
+DEFER severity=MED — spec.08 r11.9 TKT-2 "Every reply ends with one line `STATUS: ready|blocked|failed|dropped`" — material last line "Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md" — the plan reply carries no STATUS line, and its own UNVERIFIED block leaves an open item, so the reply word is undetermined — end the reply with the STATUS line
+
+DEFER severity=LOW — spec.08 r10 (C2) "a rule is cited by its id and anchor first, with the line number as a hint dated by the commit sha" — plan TESTS "Lock in both directions (08_agents.md:485)" and FACTS "Model notes: docs/specs/00_engineering_standards.md:308 and 08_agents.md:150" — every cite is a bare line number with no rule id and anchor, so the pin at :485 cannot be re-checked by id when the file drifts again — restate each cite in the C2 form, rule id and anchor first, line number as a hint at the commit sha
+
+MET — spec.08 r11.2 (M-246) — plan "Dated note 2026-11-22 (M-246, prior text kept; task-436 FINAL.1, McFix Final ...)" — a dated note is added after the prior text and the :359 text is kept, superseding it only for the building lane
+
+MET — spec.08 r11.3 — plan TESTS "Lock in both directions (08_agents.md:485): fails on the old script, passes on the new." — the red is stated in both directions against the old and new shapes
+
+MET — spec.08 r11.4 — plan T1/T2/T3 give cases, the red expectation, and the dry-run, real-launch and --spec invocation modes before the code exists
+
+MET — spec.08 r10 (a) — plan BASIS "RR-0385 item 1, MORNING-DECISIONS.md:1917" plus the verbatim lines at :1909, :1910 and :1912 — the recommendation to the operator carries its rule quoted with file:line
+
+REJECT — spec.08 r10 (C2) — the plan's line hints (:1917, :1912, :1522) are accused of not matching the pasted decision record at :1915 — the line number is only a hint and "the id governs", so a drifting or differing line hint is not a compliance defect while RR-0385 and decision-170 are named
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 15   Unmet: 8
+Rules met: M-491
+
+---
+⏱  68578ms (68.6s)
+📊 Tokens — total: 28385, input: 13988, output: 14397, reasoning: 12714

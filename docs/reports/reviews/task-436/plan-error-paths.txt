@@ -1,0 +1,24 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-error-paths.md model=deepseek-reasoner at=2026-11-22T20:37:48.227Z file_sha256=ec58db47022f687f7b790a708dd44880ee62bf8b998eae0739e440d90746c903 prompt_sha256=d0cb4664df6a5c862bf9ba708df616cb7144c927ea31910a9d3f7875aa152383
+🔍 Lens review of docs/reports/reviews/task-436/context-r1.md (model: deepseek-reasoner)
+
+BUG severity=MED — plan line "At :223, the merged `extra` adds `MODEL_LINE` when `!extra.includes(MODEL_LINE)`." — the dedup key is the exact string, so a `--spec` whose extra carries a paraphrase or the old Sonnet-only model wording is not deduped and the brief prints two conflicting model rules, the builder may be told Sonnet with no error — dedupe on a stable prefix (for example `e.startsWith('Model (RR-0385')`) and drop or reject any extra that names Sonnet for this lane.
+
+BUG severity=MED — plan line "The lens line stays last, which the merge at :223 relies on." — the same change appends MODEL_LINE to the merged extra, so on the `--spec` path the lens line stops being last and any later read of the last rule entry, or a re-merge, gets the model line instead; with no lens line present the insert index is -1 — splice MODEL_LINE at `extra.indexOf(lensLine)` and push only when the lens line is absent.
+
+DEFER severity=MED — plan line "Before :231 and before :232, print `AGENT-MODEL: opus (RR-0385: set model "opus" on the Agent call that takes the BRIEF-FILE line below)`." — the model token appears as a literal at two print sites, inside MODEL_LINE and in the Spec note, four copies with no single source, so a later model change updates three and leaves one silently saying opus — derive the line from one constant (`AGENT_MODEL = 'opus'`) and one print helper called at both exits.
+
+DEFER severity=LOW — plan line "T1, dry run: the output matches `/^AGENT-MODEL: opus \(RR-0385/m` on the line directly before the BRIEF-FILE line." — with the `m` flag `^` matches any line start, so T1 does not test the adjacency it claims, only that the string exists somewhere; adjacency rests on T2 alone — split the output into lines in T1 and assert `lines[i+1]` starts with `AGENT-MODEL: opus` and `lines[i+2]` starts with `BRIEF-FILE:`.
+
+DEFER severity=LOW — plan line "So the model goes on a new line printed BEFORE it, and the BRIEF-FILE line itself does not change." — adding MODEL_LINE to `extra` changes what the brief holds and the plan never says what the sha256 is computed over, so if it hashes the brief bytes the printed hash changes on every wording edit; cannot see the hash source — state in the plan what the sha covers and confirm no snapshot, golden file or prior lane log pins the current value.
+
+REJECT — plan line "T2, real launch: the line before the last is AGENT-MODEL. The last line is still exactly BRIEF-FILE; the existing assertion at :176 is the control and stays unchanged." — a run that misses the model line looks like it could build on the wrong model silently — it cannot, both exits (:231 dry, :232 real) print the pair, and a path that skips the model line also skips the BRIEF-FILE line the orchestrator needs, so the launch stops instead.
+
+REJECT — plan line "At :208, change to `extra: [ticket, MODEL_LINE, lensLine(...)]`." — a relaunch looks like it could stack a second model line — it cannot, the default array is rebuilt per run and the `--spec` path is guarded by `!extra.includes(MODEL_LINE)`, so the repeat is a no-op.
+
+VERDICT: PASS on error-path safety
+Paths walked: dry-run print, real-run print, --spec merge, extra and TASK-JSON carry, brief content and sha, relaunch/retry, empty spec extra, dedup key   Unguarded: 2
+
+---
+⏱  50396ms (50.4s)
+📊 Tokens — total: 23155, input: 13598, output: 9557, reasoning: 8705

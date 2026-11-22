@@ -1,0 +1,43 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:37:48.225Z file_sha256=2d0edfdf6cc76f61f5ce254d7592bd9fec25bff72834cae861accd9c35b4260b prompt_sha256=18cfdc4abe9755d19dc47826c88ea0c26b11a8ee6909d0517235b5a0887f7ddd
+🔍 Lens review of docs/reports/reviews/task-436/in-plan-compliance-eng-all.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — §11 Pre-Review Self-Checklist (always applies, every WF) "Before declaring Green Light, generate a 5-10 item self-skeptical checklist from the spec section that governs the change ... Output PASS/FAIL per item in the response BEFORE running tests" — NONE — the plan's ORDER has no self-skeptical checklist step, and §11 says the plan MUST address each applicable item before PLAN LOCKED — add an ORDER step 0 that emits 5-10 PASS/FAIL items drawn from the RR-0385 ruling and §11 before the red run
+
+DEFER severity=MED — §5.5 Test-Layer Map, the logic layer must prove the claim "a green suite in the wrong layer is false confidence" — src/tests/backlog/backlog-lane.logic.test.ts "the output matches `/^AGENT-MODEL: opus \(RR-0385/m` on the line directly before the BRIEF-FILE line" — an `m`-flag `^` match passes when AGENT-MODEL sits anywhere above BRIEF-FILE, so the dry-run adjacency claim is unpinned — assert on the split lines array, `lines[idxOfBriefLine - 1]` equals the AGENT-MODEL line, instead of a multiline regex
+
+DEFER severity=MED — §14 registry, SPEC LINK row "Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**" — scripts/analysis/backlog-lane.mjs "In the header comment, step 6 (:11), name the new line." — the header edit names the new output line but adds no SPEC LINK pointing at Spec 08 and no section — add a SPEC LINK line naming 08_agents.md and the dated-note section, both directions per the same row
+
+DEFER severity=MED — §5.1 Typed Factories Only "Never write untyped inline mocks (e.g., `const permit = {id: 1}`). You MUST always import typed factories from `src/tests/factories.ts`." — "the planted defect is a given spec whose extra already holds the line" — T1-T3 fixtures are described as ad-hoc inline spec and TASK-JSON objects with no factory or type named — name the factory (or the exported type) used to build the spec and ticket fixtures
+
+DEFER severity=LOW — §11 WF3 variant "list 3-5 sibling bugs that could share the same root cause and verify the fix covers them (or document why each doesn't apply)" — NONE — the plan lists no sibling cases for the same root cause — add a 3-5 item list (task-437's :185 edit, any other script printing a model line, the four .claude/agents seat files) with a verdict each
+
+DEFER severity=LOW — RR-0385 decision text naming this task "Opus plans and builds, engineering seat, two rounds, validation without the operator, unbuilt gates withdrawn, tests are the focus" — NONE — the plan's LANDING names one code commit and the close, with no two-round sequence anywhere — state where the two rounds sit, or record that they are consumed by the plan-level process and not this task
+
+REJECT — §14 registry "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — the plan declines notes on MCBYLAWS-QUEUE.md:247 and 137_mcqueue.md:152 — not a real issue: those lines place seats and read-only check lanes on Sonnet, which RR-0385 keeps unchanged
+
+REJECT — §10.2 "Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`" — the plan edits scripts/analysis/backlog-lane.mjs — not a real issue: the constraint is scoped to Frontend WFs and this is a tooling/spec task that touches no frontend feature
+
+MET — §5.3 Red-Green Test Cycle — "## ORDER 1. Tests, run red." — failing test precedes code, and the red reason is named ("Red on today's script because neither text exists")
+
+MET — §5.2 Test File Pattern — src/tests/backlog/backlog-lane.logic.test.ts — pure launch-script logic is tested in a `.logic.test.ts`, the mandated layer for derivation logic
+
+MET — §14 behavior-changing ruling lands with its spec update — "Code commit: the test, backlog-lane.mjs, the Spec 08 note, and the task file ... through the real hooks." — ruling, spec note, code and tests land in one commit
+
+MET — RR-0385 operator verbatim split — "the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet" — the dated note and MODEL_LINE both carry planner/builder Opus, seats and grounders Sonnet, lenses DeepSeek
+
+MET — M-246 dated note, prior text kept — "Dated note 2026-11-22 (M-246, prior text kept ...)" — the :359 text is kept verbatim so the control pin at chat-rulings-register.logic.test.ts:1733 stays green
+
+MET — card "the launch script's agent line and brief say the builder's model" — "extra: [ticket, MODEL_LINE, lensLine(...)]" plus the AGENT-MODEL print — both the stdout agent line and the brief carry the model
+
+MET — RR-0385 "unbuilt gates withdrawn" — "No guard and no new gate." — no new enforcement gate is added
+
+MET — §5.5 regression layer preserves the fence — "the existing assertion at :176 is the control and stays unchanged." — the BRIEF-FILE last-line fence is not retired by the diff
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 16   Unmet: 6
+Rules met: none
+
+---
+⏱  47956ms (48.0s)
+📊 Tokens — total: 26349, input: 16193, output: 10156, reasoning: 8859

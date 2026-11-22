@@ -1,0 +1,71 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=plan-review-deepseek.md model=deepseek-reasoner at=2026-11-22T20:37:48.243Z file_sha256=ec58db47022f687f7b790a708dd44880ee62bf8b998eae0739e440d90746c903 prompt_sha256=ff8b662e9f5a4e701acafe3d4af142bdfed9c9520d2040f8825b949aba79b996
+🔍 Lens review of docs/reports/reviews/task-436/context-r1.md (model: deepseek-reasoner)
+
+# Review: task-436 FINAL.1 — Opus seats (AGENT-MODEL line + Spec 08 note)
+
+## Axis 1 — Failure Modes & Rollback
+
+DEFER severity=MED — LANDING §Close ("the two-commit lane close (backlog-lane.mjs:185 brief text)") — This task's close cites `backlog-lane.mjs:185`, but ORDER ("It edits a different part of backlog-lane.mjs than 437 does: … :185 in 437") assigns `:185` to task-437's edit; a lane executor may edit or look at the wrong line and collide with 437 — Fix: drop the `:185` parenthetical from LANDING or correct it to the actual close-commit brief source; ORDER already names `:185` as 437's.
+
+DEFER severity=MED — TESTS T3 / CODE CHANGE :223 — T3 plants a given spec whose `extra` already holds the model line, but the merge dedup is exact-string equality (`!extra.includes(MODEL_LINE)`); a spec whose extra carries a semantically identical but differently-worded line ("runs on Opus…") yields a duplicate, and T3 will pass because it uses the exact string — Fix: dedupe on a stable substring (e.g. `!extra.some(e => e.includes("runs on Opus"))`) or document the exact-string limitation in T3.
+
+DEFER severity=MED — TESTS T3 / CODE CHANGE :208, :223 — No test covers a `--spec` whose `spec.extra` is `undefined`/absent; the plan only plants a spec that *already holds* the line, so the "add when not present" branch is untested on the empty case — Fix: add T4 (given spec with no `extra` array; merged brief must contain `MODEL_LINE` exactly once).
+
+DEFER severity=MED — CODE CHANGE :208 — The base path `extra: [ticket, MODEL_LINE, lensLine(...)]` adds `MODEL_LINE` unconditionally with no dedupe; if the `ticket` string or `lensLine` ever contains the phrase "runs on Opus", the brief shows it twice on the no-`--spec` path (the dedupe only runs on the merge path) — Fix: apply the same `!includes` guard on `:208`, or add a one-line note that ticket/lens text cannot contain the model line.
+
+DEFER severity=MED — ACCEPTANCE / "Not enforced" in EXACT TEXT — The AC ("Every launch prints AGENT-MODEL: opus before BRIEF-FILE") is satisfiable while the orchestrator still launches Sonnet; nothing in the plan names who edits the launch template to pass `model: opus` on the Agent call, so the task can close green without changing the behaviour the operator asked for — Fix: add a NOT IN SCOPE line naming the launch-setter step and an acceptance check that the *next* lane launch's Agent call carries `model: opus`.
+
+DEFER severity=LOW — FACTS F4 / EXACT TEXT note (sha256) — Adding `MODEL_LINE` to `spec.extra` changes the brief body, so the `sha256=<hex>` printed on the BRIEF-FILE line differs from prior runs; if any external step compares a stored/blessed hash, it breaks — Fix: grep for a persisted or compared `sha256` before landing.
+
+DEFER severity=LOW — ORDER ("Land 436 first so 437 rebases onto it") — The landing order only accounts for 437; if 438 also edits `backlog-lane.mjs` (its Files line is not shown), "no dependency on 437 or 438" is an unverified claim and a second conflict source — Fix: confirm 438's file scope before accepting the landing order.
+
+DEFER severity=LOW — CODE CHANGE print before :231/:232 — The new line is placed immediately above BRIEF-FILE; any consumer that reads "the line before BRIEF-FILE" for its own purpose is silently displaced — Fix: grep `BRIEF-FILE` across `scripts/`, MCP, and hooks to confirm nothing reads the second-to-last line.
+
+**Rollback:** trivially `git revert` of the code/spec/test commit + re-run; no migration, no deploy state. The plan states no rollback path, but for a ~20-line script change it is obvious — no finding needed beyond the note above.
+
+## Axis 2 — Data Reality Verification
+
+The plan's live-state claims are all citations, none re-checked at build time. Each below is a premise that can be verified now.
+
+DEFER severity=MED — FACTS F5 — "brief.mjs prints every `spec.extra` under '## Task-specific rules' (its `body` array)" is assumed, sourced outside the repo — Verify now: read `~/Buildo-scratch/panel-tools/brief.mjs` and confirm the `body` array iterates `extra` into "## Task-specific rules"; if it wraps/formats differently the added line may not render where the plan expects.
+
+DEFER severity=MED — FACTS F6 / NOT IN SCOPE — "The lane guard rule A1 already allows 'sonnet' or 'opus' (lane-guard.mjs:11, :50-51)" is a citation to an out-of-repo hook; if the deployed hook lacks `opus` in rule A1, the first `model: opus` Agent call is blocked and the plan's premise fails at launch — Verify now: `grep -n "opus" ~/.claude/hooks/lane-guard.mjs`.
+
+DEFER severity=MED — FACTS F1 — "Spec 08 says lanes run on Sonnet in one place, 08_agents.md:359" — if there is a second "on Sonnet" (e.g. :526 grouping "lane agents" with Sonnet seats), the single note at :360 does not reach it — Verify now: `grep -ni "sonnet" docs/specs/00-architecture/08_agents.md`.
+
+DEFER severity=LOW — FACTS F2 — "A test pins the :359 text word for word: chat-rulings-register.logic.test.ts:1733" — assumed to assert the single sentence, not a section range; if it compares a range, adding a line breaks it — Verify now: `sed -n '1730,1745p' src/tests/chat-rulings-register.logic.test.ts`.
+
+DEFER severity=LOW — FACTS F3 — "backlog-lane.mjs names no model anywhere" — assume verified by the plan's grep but confirm — Verify now: `grep -nE "sonnet|opus" scripts/analysis/backlog-lane.mjs`.
+
+DEFER severity=LOW — FACTS F7 — ".claude/agents/*.md:9-10 set `model: sonnet` … that matches the ruling" — presumes none of the four is the builder seat; if a builder/lane agent file carries `model: sonnet`, that directly contradicts "Opus builds" — Verify now: `ls .claude/agents/ && grep -n "model:" .claude/agents/*.md`.
+
+DEFER severity=LOW — line anchors throughout (:359, :526, :35; backlog-lane.mjs :174/:208/:223/:231/:232/:185) — the plan already flags line drift (UNVERIFIED: :462/:490 → :485/:513); the same drift can move every cited line before implementation — Verify at build: `sed -n` each anchor before editing.
+
+## Axis 3 — Sibling Bugs & Edge Cases
+
+DEFER severity=MED — "Not in scope" list — Only `backlog-lane.mjs` was grepped for model names (F3); other launcher scripts (plan-review launch, close script, review launcher) may hardcode Sonnet for a builder-shaped role — same root cause, unfixed — Fix: `grep -rnE "sonnet|opus" scripts/` and record any hit as a sibling card or a deferred rationale.
+
+DEFER severity=MED — EXACT TEXT note placement after :359 — The note says it "supersedes 'on Sonnet' … for the building lane only", but Spec 08:526's "(Sonnet seats, lane agents, …)" scope phrase, 166 lines away, still reads as lane agents = Sonnet; a reader at :526 never sees the :360 note — Fix: add a one-line pointer at :526 ("see the dated note at :360") or a second short note.
+
+DEFER severity=LOW — EXACT TEXT note, "keep the current split" — `MCBYLAWS-QUEUE.md:247` ("Seats run on Sonnet by default") and `137_mcqueue.md:152` ("A Sonnet lane is named for the check") are deferred (F7); a future reader of those files learns "lane = Sonnet" with no pointer, so the same confusion the task fixes in Spec 08 persists in two other docs — Fix: one-line cross-reference in each, or accept with rationale that those are seat/check lanes, not the building lane.
+
+DEFER severity=LOW — TESTS T1 substring checks — T1 asserts `extra` contains "runs on Opus" and "every grounder run on Sonnet"; if `MODEL_LINE` is later reworded, T1 goes green while the note text and the brief diverge — Fix: assert against the exported `MODEL_LINE` constant rather than literals where the test can import it.
+
+DEFER severity=LOW — Edge: this very task's ticket text contains "Opus plans and builds" — if the `ticket` object passed to `extra` is the raw description, the base-path brief could already contain model-split phrases, compounding the duplicate risk noted above — Fix: confirm what the `ticket` string is at :174 before landing.
+
+## Verdict
+
+VERDICT: PASS — plan is small, well-anchored, and internally acknowledges the "not enforced / not read above BRIEF-FILE" gaps; findings are bounded and resolvable at build time. No CRIT/HIGH.
+
+Top 3 operational blockers (if FAIL):
+- (none at HIGH/CRIT; address the three MED code findings — `--spec` undefined-extra, textual-dup dedupe, `:185` LANDING reference — before lock)
+
+Top 3 unverified data premises (regardless of verdict):
+- The deployed operator hook actually allows `opus` on the Agent call (else launch is blocked before any code runs): `grep -n "opus" ~/.claude/hooks/lane-guard.mjs`
+- `brief.mjs` renders `spec.extra` unchanged under "## Task-specific rules": read `~/Buildo-scratch/panel-tools/brief.mjs` `body` array
+- Spec 08 has exactly one "on Sonnet" (the one at :359) and :526 is not a model assignment: `grep -ni "sonnet" docs/specs/00-architecture/08_agents.md`
+
+---
+⏱  70447ms (70.4s)
+📊 Tokens — total: 28250, input: 14484, output: 13766, reasoning: 11349

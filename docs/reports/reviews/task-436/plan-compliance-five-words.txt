@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:37:48.227Z file_sha256=ce79b54a8ead6fc4fc3d53944ef23914a87589b93496345a33222f700446625b prompt_sha256=8553e60c01b1c4cdf491b8400261f905e54a50b92738f1ea187d8f4c865da340
+🔍 Lens review of docs/reports/reviews/task-436/in-plan-compliance-five-words.txt (model: deepseek-reasoner)
+
+```
+DEFER severity=MED — card "the seat that build is Opus" — docs/specs/00-architecture/08_agents.md (plan FACTS F7) "The four seat files set `model: sonnet` (.claude/agents/*.md:9-10). That matches the ruling." — the plan clears four unnamed seat files against the ruling; the pasted decision says "Opus plans and builds, engineering seat", so if any of those four is the building or engineering seat the clause is contradicted and no change is authorised for it — list the four files by name in F7 and confirm none is the planner or builder, or add the offending file to the Files line.
+DEFER severity=MED — card "Every build task of this plan follows the six steps, plan written and built on Opus" — plan ORDER "1. Tests, run red. 2. Code and Spec note, run green. 3. Close commit." — ORDER names three steps rather than the six, and the plan never states which seat writes or builds it; the operator's words "I want this plan for each task and built by opus" are not carried — add the six steps to ORDER and state that this plan is written and built on Opus, or cite the doc that defines the six.
+DEFER severity=MED — card "the launch script's agent line and brief say the builder's model" — plan UNVERIFIED "That the orchestrator reads stdout above the BRIEF-FILE line." — the only channel by which the build seat actually becomes Opus is a printed instruction the plan itself calls unverified, so the ruling rests on an assumption — have the plan state how the model reaches the Agent call (launch wrapper or lane-guard brief) and record that check in the report.
+DEFER severity=MED — card "the launch script's agent line and brief say the builder's model" — plan ACCEPTANCE "BRIEF.md carries the split." and F5 "One more extra entry therefore reaches the brief with brief.mjs unchanged." — no test reaches the rendered brief; T1 and T3 stop at TASK-JSON `extra` and `task.merged.json`, and brief.mjs is outside the repo, so the brief half of the clause is unverified — add an assertion on the rendered brief text, or a recorded manual check of the BRIEF path, that the model line is present.
+DEFER severity=LOW — decision "Ensure the previously mentioned tasks outside this plan are either updated or deleted or kept" — plan ORDER "Land 436 first so 437 rebases onto it." — the plan records an ordering against 437 and 438 but no kept, updated or deleted disposition for the previously mentioned tasks — add one line per named task stating its disposition.
+MET — card "the launch script's agent line and brief say the builder's model" — backlog-lane.mjs (plan WHAT 2) — prints `AGENT-MODEL: opus ...` just before BRIEF-FILE on both the dry-run and real paths.
+MET — card "a dated note in Spec 08 records the split" — 08_agents.md (plan EXACT TEXT) — "the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek."
+MET — ruling "keep the current split with opus and sonnet" — plan EXACT TEXT and NOT IN SCOPE — the note keeps seats and grounders on Sonnet, "No guard and no new gate", and F1 shows :526 sets no model.
+MET — card "supersedes the Sonnet-only lines" — plan EXACT TEXT and F2 — "This supersedes \"on Sonnet\" in the note above for the building lane only.", prior text kept so the pin at chat-rulings-register.logic.test.ts:1733 stays green (M-246).
+MET — card "Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md" — plan Files line — identical to the card, and CODE CHANGE stays inside it apart from the task file in LANDING.
+MET — card "The lane guard (the operator's hook, outside the repo) already allows opus" — plan F6 and NOT IN SCOPE — "The lane guard rule A1 already allows \"sonnet\" or \"opus\" (lane-guard.mjs:11, :50-51). It is outside the repo and not part of this task."
+REJECT — card "supersedes the Sonnet-only lines" — accused of under-superseding by limiting the supersession to the building lane — not a real issue, the ruling "keep the current split with opus and sonnet" requires the seats and grounders to stay on Sonnet.
+REJECT — ruling "Teh seat that writes the plan is opus" — accused of being discharged by a Spec 08 note only — not a real issue, the orchestrator's reading at MORNING-DECISIONS.md:1925 "the guard cannot tell a planner from a seat, so it allows \"sonnet\" or \"opus\" and the split is kept by the brief and this entry" accepts the brief and entry as the mechanism, and the card scopes THIS TASK to the builder's launch line.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 0
+Rules met: none
+```
+
+---
+⏱  62021ms (62.0s)
+📊 Tokens — total: 18947, input: 5669, output: 13278, reasoning: 12087

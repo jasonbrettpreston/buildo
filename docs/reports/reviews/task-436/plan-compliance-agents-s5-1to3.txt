@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:37:48.225Z file_sha256=e3c4617870e07a40fe8bc6b0294e3cf326bd6fe86fd9fe52bc522a1aaf066c0a prompt_sha256=771feb57d3de1ca6d0fd2dec630126bc48fcf02f04f4aa0aeab894108023c63b
+🔍 Lens review of docs/reports/reviews/task-436/in-plan-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — Spec 08 dated note 2026-11-20 (check-lane-close) "holds one compliance lens output per attached list and a `GROUNDER.md` whose `Grounder:` is not the `Lane:`" — plan LANDING "Close: the two-commit lane close (backlog-lane.mjs:185 brief text)." — LANDING names neither the per-list compliance lens outputs nor the separate GROUNDER.md with one CONFIRMED|REJECTED line per BUG/DEFER, and does not leave the task RUNNING with "grounder owed", so the close as planned is refused by the commit-msg hook — add those three items to LANDING.
+DEFER severity=LOW — task card "a dated note in Spec 08 records the split and supersedes the Sonnet-only lines" — plan EXACT TEXT "This supersedes 'on Sonnet' in the note above for the building lane only." — the note supersedes 08_agents.md:359 only and leaves the second Sonnet mention at 08_agents.md:526 "(Sonnet seats, lane agents, ...)" without a supersede sentence the card's plural asks for — add one clause naming :526, or state in the note that :526 sets no model.
+DEFER severity=LOW — RR-0385 "Teh seat that writes the plan is opus and the seat that build is Opus" — plan NOT IN SCOPE "so its model is stated only in the note" — the planner half of the ruling reaches no line and no check, and the note's "the split is kept by the launch line, the brief and this note" overstates because the planner has no launch line — amend that sentence to say the plan seat is carried by the note alone.
+NIT — Spec 08 dated note being added "This supersedes 'on Sonnet' in the note above for the building lane only." — plan F1 "rule 9, :358-359, is the one." — the text the note supersedes is rule 9, not a note, so the pointer is wrong for a future reader — say "in rule 9 above".
+REJECT — task card "the launch script's agent line and brief say the builder's model" — accused of not setting the model on any Agent call — not a real issue, the card asks the line and the brief to say the model and the header keeps the Agent call the orchestrator's (F3), so the printed AGENT-MODEL plus extra is the named mechanism.
+MET — M-246 "a dated note is added and the prior text is kept" — plan ORDER "Add one dated note to Spec 08 after :359." — appended note, :359 kept verbatim.
+MET — task card "the launch script's agent line and brief say the builder's model" — plan CODE "At :208, change to `extra: [ticket, MODEL_LINE, lensLine(...)]`" — stdout line and brief both carry the split.
+MET — F4 "backlog-lane.logic.test.ts:117 anchors it with `$`, and :176 requires it to be the LAST line" — plan "the model goes on a new line printed BEFORE it, and the BRIEF-FILE line itself does not change." — last-line and regex pins preserved.
+MET — F2 "chat-rulings-register.logic.test.ts:1733" — plan keeps the :359 text unchanged — the word-for-word pin stays green.
+MET — 5.2 "For each load-bearing claim in the spec, verify it against the live code" — plan UNVERIFIED "The quoted texts are now at :485 and :513 (line drift)." — drift on the card's :462/:490 reported from the live tree.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+Rules met: none
+
+---
+⏱  67060ms (67.1s)
+📊 Tokens — total: 22005, input: 8070, output: 13935, reasoning: 13100

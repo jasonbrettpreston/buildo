@@ -1,0 +1,25 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:37:48.234Z file_sha256=611d07cafaecbf95531945c1146e159182fb064fd57ab170071c17503b0e68fc prompt_sha256=9f76a0a081c9e16eb23eb7e792e6e088553a18dc97c09032d1ca23108ec57e79
+🔍 Lens review of docs/reports/reviews/task-436/in-plan-compliance-orchestrator-doc17.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card "task-436 FINAL.1 Opus seats: the launch script names the builder's model and Spec 08 records the split" — plan "Print `AGENT-MODEL: opus ...` just before BRIEF-FILE" / "Model (RR-0385, decision-170): this lane is the building seat and runs on Opus" — the pasted card names Opus as the builder only for this split; the plan also prints "the review lenses are DeepSeek" and "the reality-check, integration and regression seats and every grounder run on Sonnet" into every launch brief with no pasted source (the DeepSeek/reality-check clause exists only in the plan's own quote of MORNING-DECISIONS.md:1917), and the pasted card title names "Sonnet seats and grounders" without naming DeepSeek anywhere — remove the DeepSeek sentence from MODEL_LINE and the Spec 08 note, or cite the pasted clause that authorises it
+DEFER severity=LOW — card "Every build task of this plan follows the six steps" — plan "ORDER 1. Tests, run red. 2. Code and Spec note, run green. 3. Close commit." — the ORDER enumerates three steps where the card names six, and the six are not pasted so steps four to six are neither shown nor marked cannot see — name all six steps or state which three are being folded together
+DEFER severity=LOW — card "Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md" — plan "Code commit: the test, backlog-lane.mjs, the Spec 08 note, and the task file with `Task: task-436`" — a fourth path lands in the code commit outside the card's Files line — mark the task file as commit metadata only, or extend the Files line in the card before lock
+DEFER severity=LOW — card "a dated note in Spec 08 records the split and supersedes the Sonnet-only lines" — plan "F1. ... 08_agents.md:526 lists \"(Sonnet seats, lane agents, ...)\" as a scope phrase. It sets no model." — the pasted card says supersede the Sonnet-only lines (plural); :526 groups "lane agents" with Sonnet seats and the dated note's supersession is limited to "on Sonnet" in the note at :359 — extend the dated note to name :526, or state in the note why "lane agents" there does not cover the building lane
+REJECT — card "the launch script's agent line and brief say the builder's model" — accused of not setting the model on the Agent call, only printing an instruction — the card's word is "say" and "record"; the plan prints AGENT-MODEL immediately before the BRIEF-FILE line and writes the split into spec.extra, which is naming the model, and no pasted clause requires enforcement
+REJECT — card "a dated note in Spec 08 records the split and supersedes the Sonnet-only lines" — accused of leaving .cursor/MCBYLAWS-QUEUE.md:247 and 137_mcqueue.md:152 unsuperseded — both pasted-adjacent lines are about seats and read-only check lanes, which RR-0385 keeps on Sonnet, so no conflict exists to supersede
+REJECT — card "Opus plans and builds" — accused that the plan-writing seat's Opus model is not enforced by the change — the card's THIS TASK limits scope to the builder's model in the launch line and brief plus the Spec 08 note, and the plan discloses the plan-writer limit under NOT IN SCOPE
+MET — card "the launch script's agent line and brief say the builder's model" — plan CODE CHANGE, "print `AGENT-MODEL: opus ...`" on both dry-run and real paths and `extra: [ticket, MODEL_LINE, lensLine(...)]`
+MET — card "a dated note in Spec 08 records the split" — plan EXACT TEXT, "Dated note 2026-11-22 (M-246, prior text kept; task-436 FINAL.1 ...)"
+MET — RR-0385 "unbuilt gates withdrawn" — plan NOT IN SCOPE, "No guard and no new gate."
+MET — RR-0385 "tests are the focus" — plan TESTS, "T1, dry run ... T2, real launch ... T3, `--spec` path" with "Lock in both directions"
+MET — card "The lane guard (the operator's hook, outside the repo) already allows opus since 2026-11-22" — plan F6, "The lane guard rule A1 already allows \"sonnet\" or \"opus\" ... not part of this task."
+MET — card "(Opus plans and builds, Sonnet seats and grounders)" — plan dated note, "the reality-check, integration and regression seats and every grounder run on Sonnet"
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 4
+Rules met: none
+
+---
+⏱  31011ms (31.0s)
+📊 Tokens — total: 21554, input: 15086, output: 6468, reasoning: 5335

@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T20:37:48.225Z file_sha256=f602396598b451796e7160747d2dfcb05d0f29d9fc9e9f9414d27b7cac60313f prompt_sha256=69e07e934498cd53ff82679ab67191e682d234cca25590ba9e83a6c12f6b6b9e
+🔍 Lens review of docs/reports/reviews/task-436/in-plan-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0385 item 1 "the seat that writes a plan and the seat that builds run on Opus" — NOT IN SCOPE "The plan-writing seat: the orchestrator launches it without a script, so its model is stated only in the note. Nothing can print or enforce it." — the plan-writing half of the ruling is satisfied only by spec prose, no step sets or checks that seat's model — name the orchestrator's plan-launch invocation, add it to Files with model "opus", and assert it.
+
+BUG severity=HIGH — card "the launch script's agent line and brief say the builder's model" — CODE CHANGE "print `AGENT-MODEL: opus (RR-0385: set model "opus" on the Agent call that takes the BRIEF-FILE line below)`" — the builder on Opus rests on an advisory stdout string the plan itself lists as UNVERIFIED, and nothing in the diff puts model "opus" on any Agent call, so the ruling is unmet by code — make backlog-lane emit the agent launch line, or add the orchestrator launch line to Files with a test that the Agent call carries model "opus".
+
+DEFER severity=MED — RR-0385 item 1 "reality-check, integration and regression seats and every grounder run on Sonnet" — F7 "The four seat files set `model: sonnet` (.claude/agents/*.md:9-10). That matches the ruling." — the four files are never named or mapped to seats, so the plan cannot show none of them is the plan-writing or building seat — list the four paths, map each to a seat named in RR-0385, and change any that is the planner or the builder.
+
+DEFER severity=LOW — "Label all realted tasks McFix Final" — NONE — no step labels or confirms labels on 437, 438 or the other tasks of this plan — add a step that sets McFix Final on 437, 438 and records it.
+
+DEFER severity=LOW — operator ":1910 Change this to Opus - approved by operator." — F1 "The header says the Agent call stays the orchestrator's (:11)" — the note claims the split is kept "by the launch line, the brief and this note" while this change creates and tests no launch line — either create the launch line or say in the note that it is the orchestrator's and outside the repo.
+
+REJECT — card "supersedes the Sonnet-only lines" — the change supersedes only 08_agents.md:359 and leaves MCBYLAWS-QUEUE.md:247 and 137_mcqueue.md:152 untouched — those two speak to seats and read-only check lanes, which RR-0385 keeps on Sonnet, so no second supersession is owed (F7).
+
+MET — card "a dated note in Spec 08 records the split and supersedes the Sonnet-only lines" — EXACT TEXT "This supersedes "on Sonnet" in the note above for the building lane only." — dated 2026-11-22, text at :359 kept.
+MET — RR-0385 item 1 "reviewers DeepSeek" — MODEL_LINE "the review lenses are DeepSeek" — stated in both the note and the brief line.
+MET — operator ":1912 keep the current split with opus and sonnet" — MODEL_LINE "the reality-check, integration and regression seats and every grounder run on Sonnet" — the split is stated in the printed line and the brief.
+MET — card "Files: scripts/analysis/backlog-lane.mjs, src/tests/backlog/backlog-lane.logic.test.ts, docs/specs/00-architecture/08_agents.md" — plan Files line is identical, no extra path.
+MET — operator ":1909 Tehse should be small changes" — GUESS "about 20 changed lines plus 3 tests" — the change is one constant, two print sites, one merge guard and three tests.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 2
+Rules met: none
+
+---
+⏱  53673ms (53.7s)
+📊 Tokens — total: 21049, input: 10333, output: 10716, reasoning: 9828
