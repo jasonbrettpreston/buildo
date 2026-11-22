@@ -1,5 +1,17 @@
-LIST agents-s7-s11 sha256:ed5e20654cdd4806a6386bbafaf15d7e235e7dbeb96234b57aa964cb4e1f1a6b material sha256:efab86193b3bc700243f72b530adbc5f1c52103debd3135d6ddb53bbadf79800 part 2 of 2 chunk 1 of 1
+LIST agents-s7-s11 sha256:be014a8ffa6cd6d98a04041d3c9cd102763c1a3f65511f70b4aa3f8938a71dca material sha256:26795173d3b6df7827ba37f1ebe17a97a9cf31ccb157e7cc0fba7b0f4c7f2180 part 2 of 2 chunk 1 of 1
 RULE LIST agents-s7-s11 (docs/specs/00-architecture/08_agents.md, sections 7. Rules & economics; 11. Grounded Verification Protocol), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md",".claude/review-templates/lens-engineering.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","scripts/analysis/backlog-lane.mjs","scripts/analysis/rule-lists.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/review-templates.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+
+### 11.5 Roster consequences (Backend/Pipeline) + the frontend nuance
+* **Lean grounder-first PLAN panel (3–4 seats):** Integration (main tree, live DB — the session's highest hit-rate seat: refuted C2's premise, found the live fourth writer, ruled the `--file` harness) · **Idempotency lens** (agent charter — owns replay/transaction/collision classes: F18, the backup-atomicity race, the stuck-interim-accretion collision) · **Regression Guardian, ALWAYS provisioned with shell+git** (fence archaeology: `f238b814`, the `c6bf9f1d` founding-intent ruling, Spec 41's fiction-from-birth, the inverted runSync-history claim) · + Reality-Check when derived values change (subject-matter trigger, §10.3).
+* **Cross-read Adversary is a NAMED role** (spawn: *"Hunt collisions between the plan's separately-folded decisions — pairwise, mechanically, with zero deference; walk every checklist line for staleness against the fold; verify the tests still cohere as a suite."*).
+* **CLI models (Gemini/DeepSeek raw) are DEMOTED to whole-file audit generators.** Their yield files to `review_followups.md`, never folds into a diff review. Evidence 2026-08-13: two CLI diff reviews produced ZERO diff findings; one produced a critical-sounding verdict phrase that did not reproduce and matched no line finding; DeepSeek re-raised the C1-refuted `PG_HOST` claim verbatim. Their pre-existing-defect inventories remain genuinely valuable (the close-stale safety-guard bundle) — that is their job now. Always grounder-adjudicated (§9).
+* **Lean OUTPUT panel: Guardian + one grounded reviewer.** The C7 five-seat output round produced exactly two novel catches, both reachable by that pair.
+* **§11.5-FE (operator nuance, 2026-08-13):** for Admin/Expo/frontend work, §11.1 applies to the domain's executable surface — typecheck, UI-regression suites (`*.ui.test.tsx`), render tests, a running app — but visual/UX/interaction-quality claims are NOT executable; reviewer judgment, the non-pipeline 3-reviewer panel, and the Spec 33/99 conventions carry the weight there. Fold-validation is recommended-lean (one validator) for multi-round frontend folds and mandatory only where a fold asserts executable facts. Do not demand queries of a design decision.
+
+
+### 11.6 Why this is the EFFICIENT shape, not just the safe one
+Grounding first means the plan panel argues about a true map instead of discovering the territory mid-round; tests-in-plan merges two panel rounds into one; fold-validation replaces "another full round" (historically low-yield — eight reviewers missed what one cross-read caught) with two targeted agents (which caught everything). C7 ran ~11 agent passes plan-to-ship under the old shape; this protocol's shape is ~7 for the same defect coverage. Reviewer METHOD diversity beats reviewer count.
+
 
 ### 11.7 Validation panels for calculation answer keys (McProof; operator 2026-10-31)
 McProof is the validation standard for every Phase 3 increment (MB-77; `~/Buildo-scratch/mcbylaws/MB-77/MCPROOF.md`). Its rows are in Spec 69a, M-436 to M-447 and the dated note on M-358 (batch `2026-10-31-batch-an`); the two seat rules below live here because this spec governs seats and panels (operator, `CARD-mcproof-1-7` item 7).
@@ -465,7 +477,7 @@ index 620bd0fd743fded67f1ad5848c50d0bc362b71fc..724789f8719a6484748c452f7e83794c
      expect(status(f)).toBe(before);
      expect(fs.existsSync(dirOf(f))).toBe(false);
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index e57dd20551886c845fc5a220f169f558b18e7729..845281f6192ae40a7cdcc51c204b9bf1e684aa70 100644
+index e57dd20551886c845fc5a220f169f558b18e7729..cdb46274ff929b2b16f583d0d0cb8ba333f0e4f1 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -30,8 +30,13 @@ const sha = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
@@ -581,7 +593,7 @@ index e57dd20551886c845fc5a220f169f558b18e7729..845281f6192ae40a7cdcc51c204b9bf1
          }
        }
      }
-@@ -1167,3 +1186,54 @@ describe('task-423 (c): plan findings are ruled once, at the plan', () => {
+@@ -1167,3 +1186,65 @@ describe('task-423 (c): plan findings are ruled once, at the plan', () => {
      refused(scenario({ mutate: (l) => ({ ...l, 'plan-code-review.txt': body(true), 'GROUNDER.md': grounder({ ...l, 'plan-code-review.txt': null }) }) }), /plan-code-review/);
    });
  });
@@ -619,6 +631,17 @@ index e57dd20551886c845fc5a220f169f558b18e7729..845281f6192ae40a7cdcc51c204b9bf1
 +    const r = scenario({ eng: true, engJoined: true });
 +    expect(r.status, r.stderr).toBe(0);
 +    refused(scenario({ eng: true, engJoined: true, engTpl: 'lens-compliance.md' }), /out-engineering-rules\.txt: the REVIEW header names template lens-compliance\.md, expected lens-engineering\.md/);
++  });
++  // out-code-review-p1#2 (round 1, MED): the cut-over reads the template at the range base, never at HEAD; a lane that adds or deletes lens-engineering.md in its own range does not move it
++  // (modelled on the F10 planted-defect test above: a .claude/** row so the template path is on the Files line)
++  const tplRow = (x: Record<string, unknown>) => { (x.rows as unknown[]).push({ id: 'tpl', globs: ['.claude/**'], lists: ['first'], why: 't' }); };
++  const ENG_TPL = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-engineering.md'), 'utf8');
++  it('(i) the template added in the lane range (absent at the base, present at HEAD): the compliance name is still accepted, the split reads the base', () => {
++    const r = scenario({ eng: true, engAs: 'compliance', noEngBase: true, tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n`, '.claude/review-templates/lens-engineering.md': ENG_TPL } });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('(j) the template deleted in the lane range (present at the base, absent at HEAD): the compliance name is refused, naming out-engineering-eng.txt', () => {
++    refused(scenario({ eng: true, engAs: 'compliance', tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n` }, laneDelete: ['.claude/review-templates/lens-engineering.md'] }), /out-engineering-eng\.txt/);
 +  });
 +});
 +

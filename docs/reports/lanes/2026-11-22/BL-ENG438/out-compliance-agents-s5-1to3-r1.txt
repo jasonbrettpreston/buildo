@@ -1,0 +1,35 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:12.987Z file_sha256=47864e4eaadbeb05aa9d922244c0fbf4ef9f25bf72ad4af2711ea8a3bd1bf0de prompt_sha256=1a6fb424ddad71cbcac7f5cef12b84b6f14365d1621a42eb387cf82e60e7a435
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — task-438 Description "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages" — scripts/hooks/check-lane-close.mjs closeErrors "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — the close splits the two seats only when the range base holds the template, so a lane whose merge-base predates the landing closes its engineering-standards list as out-compliance-eng-all.txt judged by the compliance template, and the card states the seat split with no exception — fix, either split unconditionally at the close or key the cut-over to the template's presence at the launch commit and put it on the card (a dated spec note alone does not carry it)
+
+DEFER severity=MED — task-438 Files line "docs/reports/reviews/task-375/plant-evidence.mjs" — docs/reports/reviews/task-375/plant-evidence.mjs (no hunk in the change, chunk 1 of 1) "plant-evidence.mjs by seat" — the build note claims that file was changed by seat but the whole change under review holds no hunk for it, so either the named work is absent or the task record is false — cannot see that file; if it writes plan-compliance-<id> inputs for an engineering list, the launch gate (which now always splits) refuses them and no plan-evidence generator names the engineering seat
+
+REJECT — RR-0380 "engineering sent by parts now; sections 8, 10, 12 to both sides" — the change sends the whole eng-all file to the engineering seat instead of sections — not a real issue here, the card assigns the sections to task-431 ("Task-431 then gives the seat the right sections (front end, back end)") and seatOf routes a sections list on the same file to engineering as well (src/tests/backlog/rule-lists.logic.test.ts "eng-s4" on the engineering standards file)
+
+REJECT — RR-0387 "no new infrastructure" — the change adds a seat predicate, per-seat proofs and a template, called new infrastructure — not a real issue, the card orders exactly this ("a new review template named engineering; ... the launch gate and the close check expect both seats' outputs"); the seat is the card's own work, not scaffolding for fixing findings
+
+REJECT — 08_agents.md 5.1 Compliance "does the code SATISFY every clause of the spec's Behavioral Contract + Auth Matrix?" — the change takes the engineering standards file out of the compliance lens's rule lists — not a real issue, lens-compliance.md is unedited ("lens-compliance.md, which is not edited"), every rule of the engineering lists is still judged rule by rule by the engineering template, and a pasted rule binds that seat even where another lens shares its topic
+
+MET — task-423 note "a stage that holds both forms is refused" — scripts/hooks/check-lane-close.mjs complianceSetErrors "for (const ph of phases) { const j = named(ph, isJoined);" — the joined-or-per-list choice is made per seat and per stage, both forms in one seat's stage still refused
+
+MET — task-423 note "out-compliance-rules[-pN].txt ... the close check and the plan gate accept it" — scripts/hooks/check-lane-close.mjs "const isJoined = new RegExp(`^(plan|out)-${seat}-${JOINED_ID}(-r\\d+)?(-p\\d+)?\\.txt$`)" — the compliance seat keeps the joined id, its round files and its parts, unchanged
+
+MET — task-410 note "the lens templates ... are read from the range base" — scripts/hooks/check-lane-close.mjs "templateText: readBase(`.claude/review-templates/lens-${seat}.md`)" — the engineering template is read from the base exactly as the compliance one
+
+MET — task-433 note "the compliance lens output ends with a line Rules met" and "which is not edited" — src/tests/backlog/review-templates.logic.test.ts "control: lens-compliance.md still holds the Rules met line (it is not edited)" — the compliance output contract is untouched
+
+MET — task-438 card "a new review template named engineering" — .claude/review-templates/lens-engineering.md "+# Lens: Engineering (DeepSeek)" — the template exists with one {{PLAN}} placeholder and the structural strings the review-templates test pins
+
+MET — task-438 card "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs planGateInner "for (const seat of ['compliance', 'engineering']) { const ls = r.lists.filter((l) => seatOf(l) === seat);" — the launch gate splits unconditionally and refuses the compliance name for an engineering list, with no alias
+
+MET — task-366 note "backlog-lane.mjs resolves the task's Files: line through it ... puts the governing lists into the brief" — scripts/analysis/backlog-lane.mjs "const engIds = lists.filter((l) => seatOf(l) === 'engineering').map((l) => l.id);" — the brief names each engineering list's files with the engineering template, the other lists stay with compliance
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 1
+Rules met: none
+
+---
+⏱  162372ms (162.4s)
+📊 Tokens — total: 63340, input: 31766, output: 31574, reasoning: 30377

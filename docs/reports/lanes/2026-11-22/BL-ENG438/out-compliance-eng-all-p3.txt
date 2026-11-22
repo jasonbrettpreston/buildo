@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.667Z file_sha256=82fafe477f2032edc246e61448d24cd55a773071f3bf7b524b3b732771579cf4 prompt_sha256=dba9187462a64783917cd62aab99c4a1489d7e34938f3e89e861cfc59bcd25e7
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-eng-all-p3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0385 / decision-170 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/hooks/check-lane-close.mjs:519 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — the close applies the seat split only when the lane's range base already holds the template, so a lane launched before the landing closes with the engineering-standards list judged by the compliance lens and no engineering output required, against the ruling's "for both the plan and output" and the card's "the launch gate and the close check expect both seats' outputs" (the exception is written in at docs/specs/00-architecture/08_agents.md:353 "a deliberate exception for lanes already launched; their engineering list is still reviewed, under the compliance name") — remove the readBase condition and enforce the split at the close unconditionally, or land an operator ruling naming the pre-landing lanes and the bound in the same commit.
+
+DEFER severity=LOW — 13.3 "Pipeline scripts use `pipeline.log.info/warn/error` from the SDK, which routes to the same underlying logger." — scripts/analysis/rule-lists.mjs:683 "console.log(`plan-prep review: ${done.length} outputs (${nCompliance} compliance, ${nEngineering} engineering, ${lenses.length} plan lens), ...`)" — the changed summary line reports through console.log rather than the shared logger — one summary line on a pre-existing pattern, no catch path involved, safe to defer to a follow-up that routes the analysis scripts through the SDK logger.
+
+MET — 13.1 — change path list (no file under src/features/leads/) — the captureEvent mandate covers interactive handlers in the leads feature, and this change adds none.
+
+MET — 14 registry, "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — docs/specs/00-architecture/08_agents.md:353, .claude/review-templates/README.md:159 and :161 (rows and steps 3 and 5), docs/reports/generated/rule-lists-by-kind.md — the ruling is written into the spec, the protocol README and the regenerated report in the same change.
+
+REJECT — 13.5 "Any new user-facing feature MUST be wrapped in a feature flag check at the route level." — the new engineering seat is a user-facing feature lacking a flag — the change adds review tooling under scripts/ and .claude/, no route or UI file, so there is no route level to gate.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 5   Unmet: 2
+Rules met: none
+
+---
+⏱  44677ms (44.7s)
+📊 Tokens — total: 38860, input: 30008, output: 8852, reasoning: 8256

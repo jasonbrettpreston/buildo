@@ -1,29 +1,27 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:13.070Z file_sha256=0647a822c84ae252d213a04c53cc0ff6f68e3415d5b1f91daca53b224dc6e15d prompt_sha256=fb45f8dbc13014acb5ed82df634ce19a90fb5c2b160bfdcece7aa9b138a7f657
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.707Z file_sha256=9ef80c25668759c2b8a3882bb4043986fe56aa5bcce5a13e196b63e3c5f1bbf2 prompt_sha256=ba71d7dc5ec790bc4dab6b3ee3831bff2630938024fded7b6aa420ad1513eb39
 🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-policy-124-s2-s5-p2.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — RR-0385 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/hooks/check-lane-close.mjs:517 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — at the output stage the seat split is skipped for every lane whose range base predates the template, so such a lane closes its engineering list on lens-compliance.md and the output-stage separation the ruling names does not hold for it — make the close split unconditional (the template exists at HEAD once task-438 lands) or have the exception recorded as an operator ruling instead of a code condition.
+BUG severity=HIGH — Task card, "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:519 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — the close requires the engineering seat only when the range base holds the template, so a lane launched before the landing closes on out-compliance-eng-all.txt with no engineering review of eng-all, an exception the card and RR-0385 ("For both the plan and output.") do not grant and that the change grants itself (docs/specs/00-architecture/08_agents.md:352 "a deliberate exception for lanes already launched") — make the close split unconditional (drop the `split` guard, seat every list as at the launch gate), or land an operator ruling for the pre-landing exception before merge.
 
-DEFER severity=MED — card Implementation Notes "per-seat lens line in backlog-lane.mjs, plant-evidence.mjs by seat" — NONE — the card's Files line and this note both claim a plant-evidence change by seat, and no path under docs/reports/reviews/task-375/ appears in this material (chunk 1 of 1, all changed paths), so either the fixture still emits in-plan-compliance-<id> for an engineering list and the launch gate refuses real plan evidence, or the note overstates the build — confirm docs/reports/reviews/task-375/plant-evidence.mjs now names in-plan-<seat>-<id> and is in the lane commit, or correct the note.
+DEFER severity=MED — R-HK "Every approved decision is a register row citing `<log stem>#<decision id>`; `--write` emits the row skeletons; `--check` (pre-commit, R-DJ (1)) is RED on an approved decision with no row" — scripts/analysis/rule-lists.mjs:112 "task-438 (FINAL.3, RR-0385 item 2, decision-170): the seat of a rule list." — this chunk lands decision-170's implementation but carries no docs/reports/decisions log for it and no register row citing it, and whether one already landed in another lane cannot see — land the decision record and the register row for decision-170, or cite the existing row that carries RR-0385, else the pre-commit coverage lock is RED.
 
-DEFER severity=LOW — card "the launch gate and the close check expect both seats' outputs" — scripts/analysis/backlog-lane.mjs:187 "The close of this task is refused without an out-compliance output per list (or the joined set)" — the brief's own close sentence names only the compliance outputs even for a task that carries an engineering list, so a lane can read the requirement as satisfied by compliance files alone — add the engineering files to that sentence or make it seat-neutral ("an out-<seat> output per list").
+REJECT — RR-0387 "each built task gets its own output review and confirmed findings are fixed by ordinary fix tasks; no new infrastructure" — that this change adds a new seat, template and gate plumbing, i.e. new infrastructure — the ruling governs how confirmed findings are disposed of (ordinary fix tasks, no new infra for the fix loop), while the card names the new template and the two-seat gates as this task's deliverable.
 
-MET — RR-0385 "For both the plan and output." — scripts/analysis/rule-lists.mjs:654 — planPrep draws and runs each rule-list lens by seat ("--out ${ev}/in-plan-${seatOf(l)}-${l.id}", "--template ...lens-${seatOf(l)}.md"), so the engineering list is planned and reviewed by the engineering seat.
+MET — Task card "a new review template named engineering" — .claude/review-templates/lens-engineering.md:1 "# Lens: Engineering (DeepSeek)" — the template exists with its own one-question persona, walk and output format, and lens-compliance.md is not edited.
 
-MET — RR-0385 "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md:1 — a new lens template names the engineering seat, its one question and its clause refs, with no edit to lens-compliance.md.
+MET — Task card "the engineering-standards rule lists are reviewed by that seat" — scripts/analysis/rule-lists.mjs:111 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — the seat is decided by the list's own file, ENG_FILE being docs/specs/00_engineering_standards.md, so no list is hand-assigned.
 
-MET — card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — scripts/analysis/rule-lists.mjs:112 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — one routing predicate keyed on the document, every other list and the joined list staying compliance.
+MET — Task card "the handbook lists by the compliance seat" and RR-0380 "by-law tasks gain no engineering rules" — scripts/analysis/rule-lists.mjs:110 "export const ENG_FILE = 'docs/specs/00_engineering_standards.md';" — every list not on the engineering file, five-words and the by-law lists included, resolves to compliance and is neither renamed nor re-seated.
 
-MET — card "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:650 — the launch gate loops both seats unconditionally with no alias (a compliance file cannot stand for an engineering list), and the close applies the same loop when the base holds the template.
+MET — Task card "at both stages" — scripts/analysis/rule-lists.mjs:654 "const inputArgv = (l) => ['node', path.join(HERE, 'rule-lists.mjs'), 'lens-input', '--root', board, '--list', l.id, '--context', ctxRel, '--material-from', ctxRel, '--out', `${ev}/in-plan-${seatOf(l)}-${l.id}`, '--template', path.join(REPO, `.claude/review-templates/lens-${seatOf(l)}.md`)];" — plan evidence is named and sized by seat and reviewed on the seat's template, and the close splits the out stage the same way.
 
-MET — Rule 13 "A step validates itself" — scripts/analysis/rule-lists.mjs:111 — the change touches no step descriptor, step:validate, scorecard or policy-coverage matrix path, so that clause's generated-artifact mechanism is untouched.
+MET — Task card "the launch gate and the close check expect both seats' outputs" — scripts/analysis/backlog-lane.mjs:183 "const engIds = lists.filter((l) => seatOf(l) === 'engineering').map((l) => l.id);" — the brief names out-engineering-eng-all.txt and .claude/review-templates/lens-engineering.md only when an engineering list is attached, and the plan gate refuses the compliance name for it.
 
-MET — Rule 12 "recovery.interrupted" — scripts/hooks/check-lane-close.mjs:517 — no step descriptor, write target or recovery field is added or altered, so no new destructive retraction target exists to declare.
-
-VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 7   Unmet: 0
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
 Rules met: none
 
 ---
-⏱  67040ms (67.0s)
-📊 Tokens — total: 44754, input: 30968, output: 13786, reasoning: 12938
+⏱  63519ms (63.5s)
+📊 Tokens — total: 47832, input: 34715, output: 13117, reasoning: 12127

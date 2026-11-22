@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:13.086Z file_sha256=1f6e45eb81e622430af7916e26439dde64b0476f3fed25ef589d0d9add6ee43a prompt_sha256=2a03288f7bd7c1e975e5ff3ed67c98256a66e8fa5a9287a25c9b1fab79326ce0
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-queue-137-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — RR-0385 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/hooks/check-lane-close.mjs:519 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — at the output stage the seat split is switched off for every lane whose launch commit predates the landing, so an eng-all list is filed and judged under the compliance lens, a separation the ruling asks for at output and no pasted ruling authorises the carve-out — fix: land the cut-over as its own dated note carrying the operator's words for it (the 08_agents note in this diff calls it "a deliberate exception for lanes already launched" with no pasted operator sentence behind it).
+
+MET — RR-0385 "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md:1 "# Lens: Engineering (DeepSeek)" — the seat has its own named template, and scripts/analysis/rule-lists.mjs:112 routes by it.
+
+MET — RR-0385 "For both the plan and output." (plan half) — scripts/analysis/rule-lists.mjs:655 "'--out', `${ev}/in-plan-${seatOf(l)}-${l.id}`, '--template', path.join(REPO, `.claude/review-templates/lens-${seatOf(l)}.md`)" — each resolved list's plan input is named and sized by its seat and reviewed on that seat's template.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 0
+Rules met: none
+
+---
+⏱  44860ms (44.9s)
+📊 Tokens — total: 41206, input: 32086, output: 9120, reasoning: 8750

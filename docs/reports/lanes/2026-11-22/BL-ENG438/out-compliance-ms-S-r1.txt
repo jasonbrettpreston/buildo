@@ -1,0 +1,21 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:13.027Z file_sha256=560491c465a315f96e5163b54cf9ed410bd9d66f232e8cbadfb365a7e637b145 prompt_sha256=6a6664a17b394f4cea416817b368bfc46ef3a79ac1b25e36fb4af0d0b8a96a1f
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+DEFER severity=LOW — RR-0385 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/hooks/check-lane-close.mjs:520 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — for a lane launched before the landing the close routes the engineering list to the compliance lens, so output separation does not hold for those lanes — bounded to in-flight lanes and declared a deliberate exception in the 08_agents.md note, safe to defer.
+
+MET — RR-0385 "separate the compliance from the engineering standards seat" — .claude/review-templates/lens-engineering.md:1 — a new engineering template with its own persona and one question, and lens-compliance.md is not edited (test asserts the Rules met line still present).
+MET — RR-0385 "For both the plan" — scripts/hooks/check-lane-close.mjs:641 "for (const seat of ['compliance', 'engineering']) {" — the launch gate requires plan-engineering-<id> for an engineering list and never accepts the compliance name.
+MET — RR-0385 "For both the plan and output" — scripts/hooks/check-lane-close.mjs:514 "const split = readBase(...); for (const seat of ['compliance', 'engineering'])" — the close requires out-engineering-<id> when the base holds the template.
+MET — "A task that serves neither a designed element nor a supporting function is most likely not relevant" — scripts/analysis/rule-lists.mjs:110 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — task-438 is review infrastructure, a supporting function RR-0385 names.
+MET — RR-0385 "tests are the focus" — src/tests/backlog/check-lane-close.logic.test.ts:1189 "describe('task-438 T3: the close requires the engineering seat for a list on the engineering standards file'" — tests T1 to T5 added across four suites, red proven in the notes.
+
+REJECT — "A task that serves neither a designed element nor a supporting function" applied as this change ignores the search page and database — the engineering seat is review machinery the operator explicitly ruled in RR-0385 (decision-170) and it is a supporting function, not old-code feeding.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 6   Unmet: 0
+Rules met: none
+
+---
+⏱  76465ms (76.5s)
+📊 Tokens — total: 44078, input: 28575, output: 15503, reasoning: 14951

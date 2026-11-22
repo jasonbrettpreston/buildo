@@ -1,4 +1,4 @@
-LIST inc-S sha256:294dccfb5cb249211234ece578abcd1c8efe723cdca65ea17f8e270941993db8 material sha256:efab86193b3bc700243f72b530adbc5f1c52103debd3135d6ddb53bbadf79800 part 1 of 1 chunk 1 of 1
+LIST inc-S sha256:294dccfb5cb249211234ece578abcd1c8efe723cdca65ea17f8e270941993db8 material sha256:26795173d3b6df7827ba37f1ebe17a97a9cf31ccb157e7cc0fba7b0f4c7f2180 part 1 of 1 chunk 1 of 1
 RULE LIST inc-S (backlog/docs/increments/doc-2 - Increment-S-requirements.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md",".claude/review-templates/lens-engineering.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","scripts/analysis/backlog-lane.mjs","scripts/analysis/rule-lists.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/review-templates.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
 
 ---
@@ -589,7 +589,7 @@ index 620bd0fd743fded67f1ad5848c50d0bc362b71fc..724789f8719a6484748c452f7e83794c
      expect(status(f)).toBe(before);
      expect(fs.existsSync(dirOf(f))).toBe(false);
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index e57dd20551886c845fc5a220f169f558b18e7729..845281f6192ae40a7cdcc51c204b9bf1e684aa70 100644
+index e57dd20551886c845fc5a220f169f558b18e7729..cdb46274ff929b2b16f583d0d0cb8ba333f0e4f1 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -30,8 +30,13 @@ const sha = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
@@ -705,7 +705,7 @@ index e57dd20551886c845fc5a220f169f558b18e7729..845281f6192ae40a7cdcc51c204b9bf1
          }
        }
      }
-@@ -1167,3 +1186,54 @@ describe('task-423 (c): plan findings are ruled once, at the plan', () => {
+@@ -1167,3 +1186,65 @@ describe('task-423 (c): plan findings are ruled once, at the plan', () => {
      refused(scenario({ mutate: (l) => ({ ...l, 'plan-code-review.txt': body(true), 'GROUNDER.md': grounder({ ...l, 'plan-code-review.txt': null }) }) }), /plan-code-review/);
    });
  });
@@ -743,6 +743,17 @@ index e57dd20551886c845fc5a220f169f558b18e7729..845281f6192ae40a7cdcc51c204b9bf1
 +    const r = scenario({ eng: true, engJoined: true });
 +    expect(r.status, r.stderr).toBe(0);
 +    refused(scenario({ eng: true, engJoined: true, engTpl: 'lens-compliance.md' }), /out-engineering-rules\.txt: the REVIEW header names template lens-compliance\.md, expected lens-engineering\.md/);
++  });
++  // out-code-review-p1#2 (round 1, MED): the cut-over reads the template at the range base, never at HEAD; a lane that adds or deletes lens-engineering.md in its own range does not move it
++  // (modelled on the F10 planted-defect test above: a .claude/** row so the template path is on the Files line)
++  const tplRow = (x: Record<string, unknown>) => { (x.rows as unknown[]).push({ id: 'tpl', globs: ['.claude/**'], lists: ['first'], why: 't' }); };
++  const ENG_TPL = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-engineering.md'), 'utf8');
++  it('(i) the template added in the lane range (absent at the base, present at HEAD): the compliance name is still accepted, the split reads the base', () => {
++    const r = scenario({ eng: true, engAs: 'compliance', noEngBase: true, tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n`, '.claude/review-templates/lens-engineering.md': ENG_TPL } });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('(j) the template deleted in the lane range (present at the base, absent at HEAD): the compliance name is refused, naming out-engineering-eng.txt', () => {
++    refused(scenario({ eng: true, engAs: 'compliance', tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n` }, laneDelete: ['.claude/review-templates/lens-engineering.md'] }), /out-engineering-eng\.txt/);
 +  });
 +});
 +

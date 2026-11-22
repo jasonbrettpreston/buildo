@@ -1,33 +1,21 @@
 ◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:13.064Z file_sha256=64767d5c1af27011bd5f9478c6df1492108128fe4dca8f9b6f09f48d0ce13fb2 prompt_sha256=af8c4970b312e136e33c931ba7fe0cb22a284c5683f2c0e584572c19918968a4
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.730Z file_sha256=9c8afb2a185c9c0fd9e3d159c054851efaab87e21091a049551163e5de3de767 prompt_sha256=dc17bc240893ead91f2404149c43e3c6b9c2e782a36d217e0e8a52114211e86c
 🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-orchestrator-doc17-p2.txt (model: deepseek-reasoner)
 
-BUG/claim lines below rest on the pasted card lines or on diff lines; where the diff is silent I write NONE or say so.
-
-DEFER severity=MED — card Description "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:517 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — the close does not expect the engineering seat unconditionally: a lane whose range base lacks the template closes with out-compliance-eng-all, i.e. the engineering standards list reviewed by the compliance lens, an exception no pasted clause names — get a ruling for the cut-over and record it in the card's Decisions, or apply the split at the close as at the launch gate.
-
-DEFER severity=MED — card Implementation Notes "per-seat lens line in backlog-lane.mjs, plant-evidence.mjs by seat" — NONE, the material carries no hunk for docs/reports/reviews/task-375/plant-evidence.mjs — the note claims the plan-evidence helper was routed by seat while the diff ships no change to it, so the plan-stage evidence that helper writes is not shown to satisfy the launch gate's always-split, no-alias rule (the card's files list names the file, the diff does not touch it) — land the plant-evidence.mjs seat change or strike the claim.
-
-DEFER severity=LOW — card Description "the launch gate and the close check expect both seats' outputs" — scripts/analysis/backlog-lane.mjs "The close of this task is refused without an out-compliance output per list (or the joined set)" — the brief's closing sentence still names only the compliance output, though the same brief above now names out-engineering-<id>.txt; a lane reading the summary would not know the engineering seat is owed — extend that sentence to name the engineering output too.
-
-MET — RR-0385 "We need a new name for an agent called engineering" — .claude/review-templates/lens-engineering.md "**Spec 08 seat:** Engineering (RR-0385, decision-170)" — a template named engineering exists, separate from lens-compliance.md.
-
-MET — RR-0385 "For both the plan and output" — scripts/analysis/rule-lists.mjs "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" and scripts/analysis/backlog-lane.mjs "const ids = lists.filter((l) => seatOf(l) === 'compliance')" — one predicate routes the plan stage (plan-prep inputArgv) and the output stage (lane brief) by the list's file.
-
-MET — card Description "the launch gate and the close check expect both seats' outputs" (launch side) — scripts/hooks/check-lane-close.mjs "// task-438: always split at the launch gate (no range base); the compliance name is refused for an engineering list, with no alias" — the plan gate splits per seat and refuses plan-compliance-eng-all.
-
-MET — RR-0380 "drop the full engineering when arts can be sent" — scripts/analysis/rule-lists.mjs "export const ENG_FILE = 'docs/specs/00_engineering_standards.md';" — seatOf keys on the file, so a sections list on the engineering standards file (eng-s4) routes to the engineering seat, allowing engineering sent by parts.
-
-MET — task description "the handbook lists by the compliance seat" — scripts/analysis/rule-lists.mjs "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — every other list, the joined list included, stays compliance (proved by src/tests/backlog/rule-lists.logic.test.ts).
-
-MET — card "the engineering-standards rule lists are reviewed by that seat ... at both stages" (compliance side untouched) — the diff has no hunk for .claude/review-templates/lens-compliance.md, matching "every other list by `lens-compliance.md`, which is not edited".
-
-REJECT — RR-0387 "no new infrastructure" — adding a lens template and seat routing — RR-0385 item 2 explicitly orders a separate engineering seat and a new name, so the template and routing are the ruling's own work, not infrastructure the change invented.
+BUG severity=HIGH — task-438 card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages" and "the launch gate and the close check expect both seats' outputs" — src/tests/backlog/check-lane-close.logic.test.ts:1200 "(d) F10 control: with a range base that does not hold lens-engineering.md, out-compliance-eng is accepted (a lane launched before the landing closes as before)" — clause unmet at the output stage: the close accepts the compliance seat's file for an engineering list, so the close does not expect the engineering seat — make the close refuse out-compliance-eng for an engineering list unconditionally, or land an operator ruling in the task text that grants the cut-over.
+DEFER severity=MED — task-438 card "the launch gate and the close check expect both seats' outputs" — src/tests/backlog/check-lane-close.logic.test.ts:1212 "(g) a joined out-compliance-rules over every list, eng included, is refused with the template at the base and accepted without it" — the diff adds a behaviour no pasted clause or ruling names, a cut-over keyed on whether the range base holds lens-engineering.md, so gate acceptance turns on git history rather than the ruling — cite the ruling that names the cut-over in the card, or drop the conditional acceptance.
+DEFER severity=LOW — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling" — src/tests/backlog/check-lane-close.logic.test.ts:101 "w('backlog/decisions/decision-1 - RR-0001-test-ruling.md', '---\nid: decision-1\ntitle: RR-0001 test ruling\n---\n')" — the fixture files a readings-register id, RR-0001, as a decision titled "test ruling", modelling a reading feeding a review as a ruling — give the fixture decision a non-register id.
+MET — task-438 card "a new review template named engineering" — src/tests/backlog/review-templates.logic.test.ts:36 — the diff asserts lens-engineering.md exists and carries the structural lens strings, the Clauses checked line and no Rules met line.
+MET — task-438 card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — src/tests/backlog/rule-lists.logic.test.ts:1045 — seatOf routes eng-all and a sections list on docs/specs/00_engineering_standards.md to the engineering seat.
+MET — RR-0380 "by-law tasks gain no engineering rules" — src/tests/backlog/rule-lists.logic.test.ts:1053 — the control routes bylaw-133 to the compliance seat.
+MET — task-438 card "the launch gate ... expect both seats' outputs" — src/tests/backlog/check-lane-close.logic.test.ts:1217 — plan-engineering-eng is accepted and plan-compliance-eng is refused by name, no alias.
+MET — task-438 card "at both stages" (output stage) — src/tests/backlog/check-lane-close.logic.test.ts:1190 — out-engineering-eng with a lens-engineering.md REVIEW header is accepted at the close.
+MET — RR-0387 "no new infrastructure" — the diff as pasted — the chunk adds tests only, no new script, gate or queue mechanism is introduced here.
 
 VERDICT: FAIL on compliance with the pasted clauses
-Clauses checked: 8   Unmet: 3
+Clauses checked: 9   Unmet: 1
 Rules met: none
 
 ---
-⏱  42771ms (42.8s)
-📊 Tokens — total: 39454, input: 30828, output: 8626, reasoning: 7652
+⏱  34755ms (34.8s)
+📊 Tokens — total: 28557, input: 21598, output: 6959, reasoning: 6162

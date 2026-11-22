@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:13.008Z file_sha256=ad1ac1801eb907b3cbb620da5f9ddece966d744b82d198872ea7736e9bc3cd2f prompt_sha256=c8a2764fc67f756eba3f335a5b2cb8d42bb47a5b1dc30d1afce5e1038b6cbb6c
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-inc-S.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0385 item 2, "We want to seperate the compliance from the engineering standards seat. For both the plan and output.", with the card's "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:517 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — when the range base predates the template every list, eng-all included, is proved under the compliance seat, so the output stage is not separated for any lane already launched; the carve-out rests only on the diff's own note ("a deliberate exception for lanes already launched", docs/specs/00-architecture/08_agents.md) and no pasted ruling names it — always require out-engineering-<list id>.txt (or the joined out-engineering-rules) at the close, or obtain an operator ruling for the carve-out and cite it in the note.
+
+DEFER severity=MED — task-438 card, Implementation Notes "plant-evidence.mjs by seat" and the Files line entry "docs/reports/reviews/task-375/plant-evidence.mjs" — NONE — the material is "part 1 of 1 chunk 1 of 1" of the whole change and holds no diff for docs/reports/reviews/task-375/plant-evidence.mjs, so the note records a change the diff does not carry and I cannot see whether plan evidence for an engineering list is written as in-plan-engineering-eng-all (an in-plan-compliance-eng-all will be refused by the launch gate) — land the by-seat change to that file, or strike it from the notes and the Files line.
+
+DEFER severity=LOW — task-438 card "the launch gate and the close check expect both seats' outputs" — scripts/analysis/backlog-lane.mjs:187 "The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below" — the brief's summary sentence omits the engineering file, so a lane whose task resolves an engineering list reads a close requirement that its out-compliance-eng-all.txt cannot satisfy — name the out-engineering-<list id>.txt files (or the joined out-engineering-rules) in that same sentence.
+
+MET — task-438 card "a new review template named engineering" — .claude/review-templates/lens-engineering.md:1 "# Lens: Engineering (DeepSeek)" — a standalone template with one {{PLAN}} placeholder, its own persona, "at most 8 findings" and "Clauses checked:" line, and no Rules met line.
+
+MET — task-438 card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — scripts/analysis/rule-lists.mjs:112 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — only docs/specs/00_engineering_standards.md routes to engineering; handbook, by-law and joined lists stay compliance (RR-0380 "by-law tasks gain no engineering rules").
+
+MET — RR-0385 item 2 "For both the plan" — scripts/hooks/check-lane-close.mjs:649 "for (const seat of ['compliance', 'engineering']) {" — the launch gate always splits and refuses plan-compliance-eng-all for an engineering list, with no alias.
+
+MET — RR-0385 item 2 "We need a new name for an agent called engineering." — .claude/review-templates/README.md:101 "| `lens-engineering.md` | Is it built to every pasted engineering rule? | Engineering (RR-0385, decision-170) |" — the seat is named engineering and listed in the template table with its required-for rule.
+
+MET — inc-S whole file (Built state, Scenario, elements A.1 to G.6, Search pages today) — .claude/review-templates/lens-engineering.md:1 — no path in the material is a search page, lookup, lot-map, semi-question or report file, so no inc-S element or built-state clause is changed or contradicted by this diff.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 1
+Rules met: none
+
+---
+⏱  134807ms (134.8s)
+📊 Tokens — total: 50268, input: 34029, output: 16239, reasoning: 15283

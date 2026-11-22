@@ -1,21 +1,25 @@
-◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:13.027Z file_sha256=560491c465a315f96e5163b54cf9ed410bd9d66f232e8cbadfb365a7e637b145 prompt_sha256=6a6664a17b394f4cea416817b368bfc46ef3a79ac1b25e36fb4af0d0b8a96a1f
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.698Z file_sha256=15cdd77eef8434214993b991ac4e03e9f9633e03dc8be3bfecefea4c674ed4e5 prompt_sha256=1378c4245448a255be62335278b40bffe35f63a2efa061c61c56e5315ba2206f
 🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
 
-DEFER severity=LOW — RR-0385 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/hooks/check-lane-close.mjs:520 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — for a lane launched before the landing the close routes the engineering list to the compliance lens, so output separation does not hold for those lanes — bounded to in-flight lanes and declared a deliberate exception in the 08_agents.md note, safe to defer.
+BUG severity=HIGH — task-438 card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages" — scripts/hooks/check-lane-close.mjs:519 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — at the close the engineering list is proved under the compliance name whenever the range base predates the landing, so the output stage is not split for those lanes (and no lane launched before the landing may file out-engineering-<id> at all), while docs/specs/00-architecture/08_agents.md:352 writes that carve-out into the spec with no pasted ruling behind it — fix: prove an engineering list as out-engineering-<id> whatever the base, accept the compliance name only as a grandfathered alias while the base lacks lens-engineering.md, and keep the brief and the close on that one rule.
 
-MET — RR-0385 "separate the compliance from the engineering standards seat" — .claude/review-templates/lens-engineering.md:1 — a new engineering template with its own persona and one question, and lens-compliance.md is not edited (test asserts the Rules met line still present).
-MET — RR-0385 "For both the plan" — scripts/hooks/check-lane-close.mjs:641 "for (const seat of ['compliance', 'engineering']) {" — the launch gate requires plan-engineering-<id> for an engineering list and never accepts the compliance name.
-MET — RR-0385 "For both the plan and output" — scripts/hooks/check-lane-close.mjs:514 "const split = readBase(...); for (const seat of ['compliance', 'engineering'])" — the close requires out-engineering-<id> when the base holds the template.
-MET — "A task that serves neither a designed element nor a supporting function is most likely not relevant" — scripts/analysis/rule-lists.mjs:110 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — task-438 is review infrastructure, a supporting function RR-0385 names.
-MET — RR-0385 "tests are the focus" — src/tests/backlog/check-lane-close.logic.test.ts:1189 "describe('task-438 T3: the close requires the engineering seat for a list on the engineering standards file'" — tests T1 to T5 added across four suites, red proven in the notes.
+DEFER severity=MED — task-438 Implementation Notes "plant-evidence.mjs by seat" — NONE — the material carries no hunk for docs/reports/reviews/task-375/plant-evidence.mjs, a path on the card's Files line, so the recorded build claims a seat routing the diff does not make — fix: land the plant-evidence.mjs change that plants in-/out-plan-engineering-<id> by seat, or drop the claim from the record.
 
-REJECT — "A task that serves neither a designed element nor a supporting function" applied as this change ignores the search page and database — the engineering seat is review machinery the operator explicitly ruled in RR-0385 (decision-170) and it is a supporting function, not old-code feeding.
+DEFER severity=LOW — ms-S Project objectives "standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep" — .claude/review-templates/README.md:159 "Task-438 (RR-0385 item 2): a list on the engineering standards file is run by the engineering seat instead ... (joined: `<phase>-engineering-rules`)" — a joined engineering run is a new accepted output form no pasted clause or ruling names, and with one engineering list (eng-all) it joins a single list, so it adds a second accepted shape for the same proof — fix: keep the engineering seat per list only and refuse out-engineering-rules.
 
-VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 6   Unmet: 0
+MET — task-438 card "a new review template named engineering" — .claude/review-templates/lens-engineering.md:1 — a one-question lens template of its own, separate from lens-compliance.md, which is not edited.
+
+MET — RR-0380 "by-law tasks gain no engineering rules" — scripts/analysis/rule-lists.mjs:113 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — the seat is decided by the list's file only, so bylaw, milestone and every_task lists stay with compliance.
+
+MET — task-438 card "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:520 "for (const seat of ['compliance', 'engineering']) {" — the close and the launch gate loop both seats, each proved with its own file names and its own template, and a compliance file is refused for an engineering list.
+
+REJECT — task-438 card "the launch gate always requires plan-engineering-<list id>.txt for such a list, and a compliance file never stands for it" — accused of invalidating task-431's committed plan-compliance-eng-all.txt — not a real issue, the ruling asks for the engineering seat at the plan with no alias, so re-running that one list's plan lens is the ruling's cost and the diff states it.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 17   Unmet: 2
 Rules met: none
 
 ---
-⏱  76465ms (76.5s)
-📊 Tokens — total: 44078, input: 28575, output: 15503, reasoning: 14951
+⏱  81259ms (81.3s)
+📊 Tokens — total: 45981, input: 29261, output: 16720, reasoning: 15932

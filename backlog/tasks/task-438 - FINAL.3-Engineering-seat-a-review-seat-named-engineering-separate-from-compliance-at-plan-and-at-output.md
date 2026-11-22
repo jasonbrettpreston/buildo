@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-ENG438'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T23:38:00Z'
+updated_date: '2026-11-22T23:47:00Z'
 labels:
   - McFix
   - McFix Final
@@ -237,4 +237,6 @@ Full suite: UNVERIFIED (push station only).
 2026-11-22 BL-ENG438 output review round 1: 20 lens outputs in docs/reports/lanes/2026-11-22/BL-ENG438 (10 rule lists under the compliance name as the launch brief names them, eng-all and agents-s7-s11, queue-137, orchestrator-doc17 in 2 parts, policy-124-s2-s5 in 5; code-review-p1, error-paths-p1), context-r3.md; 58 ids listed in FINDINGS.md (1 CRIT placeholder 'none raised', 11 HIGH, 23 MED, 19 LOW, 4 NIT), untriaged. Grounder owed; task stays RUNNING.
 
 2026-11-22 BL-ENG438 fix round (grounder Cairn-Ground-O438, round 1): out-code-review-p1#2 MED, test only: T3 cases (i) template added in the lane range and (j) template deleted in the lane range; red against a planted readRepo on the split line (working tree only, never committed), red2.out in the lane dir.
+
+2026-11-22 BL-ENG438 output review round 2 (after fix d98ab4dd3): round-1 lens files renamed to the -r1 form (BL-GAPS419 precedent); full lens set re-run on the new whole-range diff with context-r4.md: 23 outputs, 70 ids (10 HIGH, 30 MED, 29 LOW, 1 placeholder), untriaged in FINDINGS.md. Grounder owed (round 2: CRITICAL and HIGH, RR-0385). Task stays RUNNING.
 <!-- SECTION:NOTES:END -->

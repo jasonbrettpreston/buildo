@@ -1,17 +1,31 @@
-◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:13.086Z file_sha256=1f6e45eb81e622430af7916e26439dde64b0476f3fed25ef589d0d9add6ee43a prompt_sha256=2a03288f7bd7c1e975e5ff3ed67c98256a66e8fa5a9287a25c9b1fab79326ce0
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.785Z file_sha256=1b3b990010a217cf2d826c29a7d1de6e4850e3a2c0478472624d4696af6965f0 prompt_sha256=806cafebb5e92aa7a09face567c856f9682cfe839a2144be654d567f2bbc8656
 🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-queue-137-p1.txt (model: deepseek-reasoner)
 
-DEFER severity=MED — RR-0385 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/hooks/check-lane-close.mjs:519 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — at the output stage the seat split is switched off for every lane whose launch commit predates the landing, so an eng-all list is filed and judged under the compliance lens, a separation the ruling asks for at output and no pasted ruling authorises the carve-out — fix: land the cut-over as its own dated note carrying the operator's words for it (the 08_agents note in this diff calls it "a deliberate exception for lanes already launched" with no pasted operator sentence behind it).
+BUG severity=HIGH — RR-0385 item 2 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/hooks/check-lane-close.mjs:521 "const ls = r.lists.filter((l) => (split ? seatOf(l) : 'compliance') === seat);" — at the output stage the engineering standards list is still judged under the compliance seat for every lane whose range base predates the template, and the exception rests on docs/specs/00-architecture/08_agents.md:352 "The close applies the split when the range base holds `lens-engineering.md` ... a deliberate exception for lanes already launched", which quotes no operator words and has no end date — drop the ancestry sniff and always split by seatOf at the close, or ground the window in a named operator ruling with a date the operator gave.
 
-MET — RR-0385 "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md:1 "# Lens: Engineering (DeepSeek)" — the seat has its own named template, and scripts/analysis/rule-lists.mjs:112 routes by it.
+DEFER severity=LOW — card "the launch gate and the close check expect both seats' outputs" — .claude/review-templates/README.md:161 "the launch gate always requires `plan-engineering-<list id>.txt` for such a list, and a compliance file never stands for it" — that "always" is false for a fix launch: the per-list seat split sits in the branch whose else reads "a fix launch: at least one plan lens output" (scripts/hooks/check-lane-close.mjs:647), so a fix launch requires no plan-engineering file — either say "for a build launch" in the README, or add the per-list engineering proof to the fix branch.
 
-MET — RR-0385 "For both the plan and output." (plan half) — scripts/analysis/rule-lists.mjs:655 "'--out', `${ev}/in-plan-${seatOf(l)}-${l.id}`, '--template', path.join(REPO, `.claude/review-templates/lens-${seatOf(l)}.md`)" — each resolved list's plan input is named and sized by its seat and reviewed on that seat's template.
+DEFER severity=LOW — card "the launch gate and the close check expect both seats' outputs" — scripts/analysis/backlog-lane.mjs:186 "The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below" — the brief's refusal sentence names only compliance outputs, so a lane that produces exactly what that sentence names is refused by the check for out-engineering-<id>.txt — add the engineering files to that sentence.
 
-VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 8   Unmet: 0
+DEFER severity=MED — card Implementation Notes "plant-evidence.mjs by seat" — NONE — the Files line names docs/reports/reviews/task-375/plant-evidence.mjs and the note says it was changed by seat, but the material (chunk 1 of 1, 11 paths) holds no hunk for it, so cannot see whether planted evidence is named by seat — land that change or delete the note line.
+
+MET — RR-0385 item 2 "We need a new name for an agent called engineering." — .claude/review-templates/README.md:101 — "| `lens-engineering.md` | Is it built to every pasted engineering rule? | Engineering (RR-0385, decision-170) |" names the seat and its file.
+
+MET — card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — scripts/analysis/rule-lists.mjs:112 — "export const ENG_FILE = 'docs/specs/00_engineering_standards.md';" with seatOf on the next line routes only that file to engineering.
+
+MET — 08_agents note "a review seat named `engineering`, separate from compliance, at plan" — scripts/hooks/check-lane-close.mjs:646 — "// task-438: always split at the launch gate (no range base); the compliance name is refused for an engineering list, with no alias".
+
+MET — Spec 08 §7 rule 4 dated note 2026-11-19 "the lane brief written by `backlog-lane.mjs` names the lenses by task type" — scripts/analysis/backlog-lane.mjs:183 — "const ids = lists.filter((l) => seatOf(l) === 'compliance').map((l) => l.id);" and engIds on the next line name both seats' outputs, with the engineering sentence carrying --template lens-engineering.md.
+
+MET — 08_agents note 2026-11-22 "every other list by `lens-compliance.md`, which is not edited" — docs/specs/00-architecture/08_agents.md:352 — no hunk of the material touches .claude/review-templates/lens-compliance.md.
+
+MET — Spec 08 §7 rule 4 dated note 2026-11-19 "run with `scripts/deepseek-review.js review <file> --template <lens> --context <pasted context>`" — scripts/analysis/rule-lists.mjs:654 — the plan-prep review argv now carries "--template", path.join(REPO, `.claude/review-templates/lens-${seatOf(l)}.md`), per seat.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 8   Unmet: 3
 Rules met: none
 
 ---
-⏱  44860ms (44.9s)
-📊 Tokens — total: 41206, input: 32086, output: 9120, reasoning: 8750
+⏱  110237ms (110.2s)
+📊 Tokens — total: 56201, input: 32772, output: 23429, reasoning: 22352

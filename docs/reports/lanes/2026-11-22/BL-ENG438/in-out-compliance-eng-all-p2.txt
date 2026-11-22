@@ -1,5 +1,23 @@
-LIST eng-all sha256:db5592754c5aa8dc912e5e997630aa3ecf1d4f724a1864013943d961c424e581 material sha256:efab86193b3bc700243f72b530adbc5f1c52103debd3135d6ddb53bbadf79800 part 2 of 2 chunk 1 of 1
-RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 2 of 2. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md",".claude/review-templates/lens-engineering.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","scripts/analysis/backlog-lane.mjs","scripts/analysis/rule-lists.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/review-templates.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+LIST eng-all sha256:ae80a6bf9a368182b3d7a8b0a975b181be9d7f48d1c3f0c6e0a81e75deb74867 material sha256:26795173d3b6df7827ba37f1ebe17a97a9cf31ccb157e7cc0fba7b0f4c7f2180 part 2 of 3 chunk 1 of 1
+RULE LIST eng-all (docs/specs/00_engineering_standards.md, whole file), part 2 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md",".claude/review-templates/lens-engineering.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","scripts/analysis/backlog-lane.mjs","scripts/analysis/rule-lists.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/review-templates.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+
+## 🧱 10. Frontend/Backend Boundary
+
+### 10.1 Data Flow Direction
+- **Rule:** The data flow is strictly one-directional: `[Pipelines] → [Database] → [API Routes] → [Frontend]`. Frontend components never write to pipeline tables. Pipelines never read frontend state. API routes are the only bridge.
+
+### 10.2 Boundary Rules During Frontend Phase
+- **Rule:** Frontend WFs must NOT modify files in `scripts/`, `migrations/`, or `scripts/lib/`. If a frontend feature needs data that doesn't exist, add an API route that queries and transforms existing tables — do not change how data enters the database.
+- **Rule:** Database schema is frozen during frontend work unless a feature genuinely requires a new column. Convenience columns ("I wish this was pre-computed") should be computed in the API layer instead.
+- **Rule:** If a `src/lib/` module is imported by both API routes and frontend components, any modification requires `npx vitest related` to verify no API regression. Shared modules are the highest-risk cross-boundary files.
+
+### 10.3 API Route Discipline
+- **Rule:** API routes must be thin — validate input, call a lib function, return the result. Business logic belongs in `src/lib/`, not in route handlers. This keeps logic testable and reusable across future apps.
+- **Rule:** New API routes must define Request/Response TypeScript interfaces in a shared types file (`src/lib/[feature]/types.ts`), not inline in the route. This enables type-safe consumption by any client.
+- **Rule:** Avoid returning database column names directly. Map to a stable API field name (e.g., `est_const_cost` → `estimatedCost`). This decouples the API contract from the schema, so future DB refactors don't break clients.
+
+---
+
 
 ## ✅ 11. Plan Compliance Checklist
 
@@ -179,66 +197,6 @@ Before presenting "PLAN LOCKED", the plan MUST address each applicable item belo
 
 ---
 
-
-## 📊 13. Observability Standards
-
-> **Status:** Adopted as of 2026-04-07. Building observability in from day one of the frontend rebuild — lessons learned from the painful retrofit on the backend pipeline.
-
-### 13.1 Product Telemetry (PostHog)
-- **Tool:** PostHog (self-hosted free tier covers 1M events/month)
-- **Wrapper:** All event capture goes through `src/lib/observability/capture.ts` exporting `captureEvent(name, properties)`. The wrapper handles SSR safety, type-safe event names, and provider abstraction.
-- **Type-safe event names:** Define a `EventName` union type. New events require adding to the union (catches typos at compile time).
-- **Mandatory coverage:** Every interactive handler in `src/features/leads/` (`onClick`, `onSubmit`, `onChange` for filters) MUST call `captureEvent()`. AST-grep enforces inside the leads feature.
-- **PII handling:** Never include user names, emails, addresses in event properties. Use Firebase UID (pseudonymous) for user identification.
-
-### 13.2 Error Tracking (Sentry)
-- **Tool:** Sentry (free tier covers 5K events/month)
-- **Wiring:** All `app/[...]/error.tsx` route boundaries call `Sentry.captureException(error, { extra: { digest: error.digest } })` in their `useEffect`.
-- **Source maps:** Uploaded to Sentry on every production build via `@sentry/nextjs` plugin.
-- **Local dev:** Errors logged to console only (Sentry disabled in dev to preserve free tier).
-
-### 13.3 Backend Structured Logging (`logInfo` / `logWarn` / `logError`)
-- **Tool:** `src/lib/logger.ts` exports `logError`, `logWarn`, `logInfo`. Each emits a structured JSON line: `{ level, tag, event, timestamp, ...context }`.
-- **Rule:** API routes MUST emit at least one `logInfo` per successful request with `{user_id, duration_ms, ...key_params}` for observability.
-- **Rule:** All catch blocks use `logError(tag, err, context)`. NEVER bare `console.error`. ESLint enforces.
-- **Rule:** Pipeline scripts use `pipeline.log.info/warn/error` from the SDK, which routes to the same underlying logger.
-
-### 13.4 Performance Monitoring (Lighthouse CI)
-- **Tool:** Lighthouse CI in GitHub Actions, runs on every PR.
-- **Hard budgets (CI fails below these):**
-  - Performance: ≥90 mobile (Moto G4 emulation)
-  - Accessibility: ≥95
-  - Best Practices: ≥90
-  - LCP: <2.5s
-  - CLS: <0.1
-  - TBT: <200ms
-- **Why:** Catches performance regressions before merge. Enforces the "right foundation" goal.
-
-### 13.5 Feature Flags (PostHog Flags)
-- **Tool:** PostHog feature flags (included in free tier, integrated with telemetry)
-- **Rule:** Any new user-facing feature MUST be wrapped in a feature flag check at the route level. The lead feed launches behind `feature_lead_feed_v1`.
-- **Rollout pattern:** 0% → 10% (internal testing) → 25% → 50% → 100%. Each step gated on no-error-rate-spike in Sentry.
-- **Why:** Decouples deploy from release. Enables instant rollback without redeploy.
-
----
-
-
-## 🛡️ 14. The Prevention Loop (findings → protocols → gates)
-
-Detection is not enough. **Every CRITICAL/HIGH review finding (Spec 08 roster) is triaged with a second question beyond "fix it": *"what standing rule would have prevented this whole CLASS, and where does it live?"*** The rule is placed here (or in the domain doc), and where deterministic, **promoted to a machine-read GATE** (husky footgun / ESLint / migration hook) — the strongest form: *a NO-GO the machine reads cannot be shipped past; a guideline eventually will* (operating-manual §2.4). This is the rule-oriented mirror of Spec 05's lesson-routing; the Roster Manager (Spec 08 §5.9) recommends new entries.
-
-**Registry (extracted from real findings — domain-tagged; promote guideline → gate as effort allows):**
-
-| Rule | Class it prevents | Domain | Form |
-|------|-------------------|--------|------|
-| Every `INSERT` provides all **NOT-NULL** columns; every `SELECT` feeding a typed client includes **every field the client type declares** | `lead_analytics` NOT-NULL crash; `DETAIL_COLUMNS` omission → dead UI | backend + admin | Schema-Fidelity agent → *candidate footgun* |
-| An `ON CONFLICT` INSERT **`GROUP BY`s the arbiter expression**, never the raw inputs it's derived from | the `21000` LPAD `lead_key` double-hit | backend | Schema-Fidelity → *candidate lint* |
-| Every **privileged mutation + its audit row** commit in ONE `withTransaction` (extends §R9 from `scripts/` to API routes) | reconcile/retry-cancel unaudited-mutation hole | admin + backend | guideline → *extend footgun* |
-| A **behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit** | period-end drift (Spec 95/97 stale vs code) | cross-cutting | Ground-truth/Compliance |
-| Every source/test file's `SPEC LINK` points at the spec **AND the section (§N)**; new couplings update **Cross-Spec Dependencies both directions** | traceability rot; stale cross-refs | cross-cutting | *candidate gate* (Spec 08 §5.10) |
-| A webhook/event that can arrive from a **superseded object** must match the CURRENT owning id before mutating state | the P26 stale-subscription downgrade | backend | guideline |
-
-**Domain protocol specs own their domain-tagged rows and point back here** (this §14 is the cross-cutting canonical registry): **Spec 47** (`docs/specs/01-pipeline/47_pipeline_script_protocol.md`, backend/pipeline), **Spec 34** (`docs/specs/02-web-admin/34_web_admin_testing_protocol.md`, admin), **Spec 90** (`docs/specs/03-mobile/90_mobile_engineering_protocol.md`, frontend/mobile).
 
 === MATERIAL UNDER REVIEW (everything below this line) ===
 diff --git a/.claude/review-templates/README.md b/.claude/review-templates/README.md
@@ -664,7 +622,7 @@ index 620bd0fd743fded67f1ad5848c50d0bc362b71fc..724789f8719a6484748c452f7e83794c
      expect(status(f)).toBe(before);
      expect(fs.existsSync(dirOf(f))).toBe(false);
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index e57dd20551886c845fc5a220f169f558b18e7729..845281f6192ae40a7cdcc51c204b9bf1e684aa70 100644
+index e57dd20551886c845fc5a220f169f558b18e7729..cdb46274ff929b2b16f583d0d0cb8ba333f0e4f1 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -30,8 +30,13 @@ const sha = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
@@ -780,7 +738,7 @@ index e57dd20551886c845fc5a220f169f558b18e7729..845281f6192ae40a7cdcc51c204b9bf1
          }
        }
      }
-@@ -1167,3 +1186,54 @@ describe('task-423 (c): plan findings are ruled once, at the plan', () => {
+@@ -1167,3 +1186,65 @@ describe('task-423 (c): plan findings are ruled once, at the plan', () => {
      refused(scenario({ mutate: (l) => ({ ...l, 'plan-code-review.txt': body(true), 'GROUNDER.md': grounder({ ...l, 'plan-code-review.txt': null }) }) }), /plan-code-review/);
    });
  });
@@ -818,6 +776,17 @@ index e57dd20551886c845fc5a220f169f558b18e7729..845281f6192ae40a7cdcc51c204b9bf1
 +    const r = scenario({ eng: true, engJoined: true });
 +    expect(r.status, r.stderr).toBe(0);
 +    refused(scenario({ eng: true, engJoined: true, engTpl: 'lens-compliance.md' }), /out-engineering-rules\.txt: the REVIEW header names template lens-compliance\.md, expected lens-engineering\.md/);
++  });
++  // out-code-review-p1#2 (round 1, MED): the cut-over reads the template at the range base, never at HEAD; a lane that adds or deletes lens-engineering.md in its own range does not move it
++  // (modelled on the F10 planted-defect test above: a .claude/** row so the template path is on the Files line)
++  const tplRow = (x: Record<string, unknown>) => { (x.rows as unknown[]).push({ id: 'tpl', globs: ['.claude/**'], lists: ['first'], why: 't' }); };
++  const ENG_TPL = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-engineering.md'), 'utf8');
++  it('(i) the template added in the lane range (absent at the base, present at HEAD): the compliance name is still accepted, the split reads the base', () => {
++    const r = scenario({ eng: true, engAs: 'compliance', noEngBase: true, tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n`, '.claude/review-templates/lens-engineering.md': ENG_TPL } });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('(j) the template deleted in the lane range (present at the base, absent at HEAD): the compliance name is refused, naming out-engineering-eng.txt', () => {
++    refused(scenario({ eng: true, engAs: 'compliance', tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n` }, laneDelete: ['.claude/review-templates/lens-engineering.md'] }), /out-engineering-eng\.txt/);
 +  });
 +});
 +

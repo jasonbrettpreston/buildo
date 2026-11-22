@@ -1,32 +1,33 @@
-◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
-REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:12.988Z file_sha256=0abcd25e91474c9b3ce308a75c76938c84bc41651ac8ee386725e0dedb25df4c prompt_sha256=91d224b406cbbc70ebce95f8737afaf354d0f9c43b6ebe6156120bc256433f16
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:43:54.652Z file_sha256=c40a090992619dc76bf8d76adc2df0027d86ee56984973472a14d70cb66a7bd4 prompt_sha256=69e84555d1a48159c745bf510fc8bdbed31362b1f226f2fe95ade66f15bcccd8
 🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-agents-s7-s11-p1.txt (model: deepseek-reasoner)
 
-BUG/DEFER lines first, then the clause lines the change does satisfy.
+DEFER severity=MED — task-438 card, Files line, "docs/reports/reviews/task-375/plant-evidence.mjs" — NONE in the diff, no hunk touches docs/reports/reviews/task-375/plant-evidence.mjs although this is chunk 1 of 1, while the Implementation Notes record "plant-evidence.mjs by seat" — the claimed seat change of the plant evidence is carried by a note only, so task-375's plant evidence still files eng-all under the compliance name and the F10 planted-defect run would plant the old routing — land the plant-evidence change by seat in this range, or drop the note sentence and the file from the Files line.
 
-```
-DEFER severity=MED — 08_agents.md dated note 2026-11-22 (task-438 FINAL.3, RR-0385 item 2) "The per-list rule of the section 5.3 note of 2026-11-21 and of this rule now reads `out-compliance-<id>` or `out-engineering-<id>` ... by the seat of the list" — scripts/analysis/backlog-lane.mjs:185 "The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above" — the brief's operative refusal sentence is the pre-split one, so a lane holding eng-all is still told a compliance output per list closes it, and the inserted engineering sentence names the files but is not tied to any refusal — restate it as "an out-compliance output per compliance list and an out-engineering output per engineering list (or each seat's joined set)"
-DEFER severity=MED — 08_agents.md rule 6 dated note 2026-11-20 (task-399) "the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md (seat findings listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included) has one outcome line in the lane's TRIAGE.md" — src/tests/backlog/check-lane-close.logic.test.ts:139 "body((id === 'first' || (id === 'rules' && seat === 'compliance')) && o.lensFinding !== false, o.finding)" — every scenario seeds its finding line in a compliance output only, so nothing proves a BUG or DEFER in out-engineering-<id>.txt reaches rule-lists.mjs findings --dir (check-lane-close imports isLensOutput for that set), earns a `Ruled:` line and a TRIAGE outcome — add a scenario with a finding in out-engineering-eng and assert the close refuses without its Ruled line and its outcome line, and passes with both
-DEFER severity=LOW — Task card Files line "docs/reports/reviews/task-375/plant-evidence.mjs" against 08_agents.md section 11.1 "A plan or fold may not contain a claim that COULD be executed but wasn't" — Implementation Notes (pasted) "plant-evidence.mjs by seat" — no diff for docs/reports/reviews/task-375/plant-evidence.mjs appears in the change material, so the recorded work is either absent from the change or not done — include the plant-evidence.mjs diff or correct the note
-```
+DEFER severity=LOW — task-438 note, "The launch gate requires the engineering name from the landing of task-438 and refuses the compliance name for an engineering list, with no alias" — .claude/review-templates/README.md:161 "the launch gate always requires `plan-engineering-<list id>.txt` for such a list" against scripts/analysis/rule-lists.mjs:652 "const lists = type === 'build' ? r.lists : [];" — a fix launch resolving an engineering list is required to file no per-list plan file at all and is refused for none, so "always" states more than the gate does and the engineering seat never reaches a fix task's plan — say "for a build launch" in that sentence, or move the per-list plan gate into the fix branch.
 
-```
-MET — Dated note 2026-11-22 (task-438), "a review seat named `engineering`, separate from compliance, at plan and at output" — .claude/review-templates/lens-engineering.md:1 "# Lens: Engineering (DeepSeek)" — new template, wired at plan (rule-lists.mjs planPrep) and at output (check-lane-close)
-MET — Dated note 2026-11-22, "A rule list whose file is the engineering standards ... is reviewed by `.claude/review-templates/lens-engineering.md`, and every other list by `lens-compliance.md`, which is not edited" — scripts/analysis/rule-lists.mjs:111 "export const ENG_FILE = 'docs/specs/00_engineering_standards.md';" — one routing predicate (seatOf), and lens-compliance.md is untouched by the change
-MET — Dated note 2026-11-22, "the joined form is per seat (`out-compliance-rules`, `out-engineering-rules`), chosen per seat and per stage" — scripts/hooks/check-lane-close.mjs:426 "const isJoined = new RegExp(`^(plan|out)-${seat}-${JOINED_ID}(-r\\d+)?(-p\\d+)?\\.txt$`);" — joined proof and both-forms refusal are computed per seat
-MET — Dated note 2026-11-22, "The launch gate requires the engineering name from the landing of task-438 and refuses the compliance name for an engineering list, with no alias" — scripts/hooks/check-lane-close.mjs:652 "for (const seat of ['compliance', 'engineering'])" — the launch gate always splits and planProof(seat) looks only for plan-engineering-<id>
-MET — Dated note 2026-11-22, "The close applies the split when the range base holds `lens-engineering.md`: a lane launched before the landing closes as before with `out-compliance-eng-all`" — scripts/hooks/check-lane-close.mjs:520 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — old lanes are routed wholly under the compliance name
-MET — 08_agents.md section 7 rule 4 (dated note 2026-11-19), "run with `scripts/deepseek-review.js review <file> --template <lens>`" — scripts/analysis/rule-lists.mjs:661 "tpl: `lens-${seatOf(l)}.md`, file: `${ev}/${f}`" — each plan job runs under its own seat's template
-MET — 08_agents.md section 11.1, a claim carries the run that produced it — docs/reports/generated/rule-lists-by-kind.md:99 "| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 40,664 | 1 |" — regenerated page and totals (208,006 = 206,513 + 1,493) match the added note, with the generating run recorded in the Implementation Notes
-MET — 08_agents.md section 11.3, "Every lock is proven in BOTH directions" — src/tests/backlog/check-lane-close.logic.test.ts:1196 "(a) out-engineering-eng with lens-engineering.md is accepted" beside 1199 "(b) the same review filed as out-compliance-eng is refused, naming out-engineering-eng.txt" — green and red at the designed assertion, plus the F10 cut-over control at 1206
-```
+DEFER severity=LOW — task-358 note, "the repo lens set is five narrow DeepSeek templates in `.claude/review-templates/`" (08_agents.md:351) against the new note at docs/specs/00-architecture/08_agents.md:352 "a review seat named `engineering`, separate from compliance, at plan and at output" — the tree now holds six lens templates (lens-engineering.md added, README row added) and neither dated note nor the README prose amends the count, so section 7 rule 4 states a number the repo contradicts — add one clause to the new note that the set is six and names lens-engineering.md as the sixth.
 
-```
+MET — task-438 note, the routing predicate — scripts/analysis/rule-lists.mjs:111 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" routes by the document the ruling names, not by a table field.
+
+MET — task-438 note, per-list names — scripts/hooks/check-lane-close.mjs:385 "const base = `${ph}-${seat}-${l.id}`;" makes out-engineering-<id>.txt and plan-engineering-<id>.txt, by the seat of the list.
+
+MET — task-438 note, joined form per seat and per stage — scripts/hooks/check-lane-close.mjs:427 "const isJoined = new RegExp(`^(plan|out)-${seat}-${JOINED_ID}(-r\\d+)?(-p\\d+)?\\.txt$`);" keeps rules (and its -rN round file) per seat.
+
+MET — task-438 note, the pre-landing exception — scripts/hooks/check-lane-close.mjs:519 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" gives a lane whose range base lacks the template the old out-compliance-eng-all form.
+
+MET — task-438 note, launch gate no alias — scripts/hooks/check-lane-close.mjs:520 "for (const seat of ['compliance', 'engineering']) {" with "const ls = r.lists.filter((l) => seatOf(l) === seat);" splits at the launch gate always and refuses plan-compliance-eng-all.txt for the engineering list.
+
+MET — task-438 note, lens-compliance.md not edited — .claude/review-templates/lens-compliance.md, no hunk in this diff touches it, and src/tests/backlog/review-templates.logic.test.ts holds the control "expect(read('compliance')).toContain('Rules met: <rule ids, comma separated>')".
+
+MET — operator verbatim, "We need a new name for an agent called engineering" (2026-11-22 note) — .claude/review-templates/lens-engineering.md:1 "# Lens: Engineering (DeepSeek)".
+
+MET — task-438 note, the plan seat — scripts/analysis/rule-lists.mjs:654 "--out `${ev}/in-plan-${seatOf(l)}-${l.id}`" names the plan-prep inputs by seat, with "--template", path.join(REPO, `.claude/review-templates/lens-${seatOf(l)}.md`) on the same line.
+
 VERDICT: PASS on compliance with the pasted clauses
-Clauses checked: 10   Unmet: 0
+Clauses checked: 10   Unmet: 1
 Rules met: none
-```
 
 ---
-⏱  102372ms (102.4s)
-📊 Tokens — total: 55696, input: 34329, output: 21367, reasoning: 19921
+⏱  136848ms (136.8s)
+📊 Tokens — total: 62389, input: 34324, output: 28065, reasoning: 26993

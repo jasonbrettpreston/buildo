@@ -1,457 +1,143 @@
-LIST policy-124-s2-s5 sha256:c94df5d536a19ad7d2cc793a13dd6cfa427421be8b071a2e9b92e7fc6cad389f material sha256:efab86193b3bc700243f72b530adbc5f1c52103debd3135d6ddb53bbadf79800 part 4 of 5 chunk 1 of 1
-RULE LIST policy-124-s2-s5 (docs/specs/01-pipeline/124_step_standard_policy.md, sections 2. The rules; 5. Register of rulings), part 4 of 5. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md",".claude/review-templates/lens-engineering.md","docs/reports/generated/rule-lists-by-kind.md","docs/specs/00-architecture/08_agents.md","scripts/analysis/backlog-lane.mjs","scripts/analysis/rule-lists.mjs","scripts/hooks/check-lane-close.mjs","src/tests/backlog/backlog-lane.logic.test.ts","src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/review-templates.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+LIST policy-124-s2-s5 sha256:862c7ff5bc53ba68406a249e1ac31114df061ebe8c01ac032a0748b8be0d5de8 material sha256:a04da4ec459332b9c8f89e59e5602e246726f6aa6ddd0b43ac7d0372549b84ec part 1 of 3 chunk 2 of 2
+RULE LIST policy-124-s2-s5 (docs/specs/01-pipeline/124_step_standard_policy.md, sections 2. The rules; 5. Register of rulings), part 1 of 3. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 2 of 2 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: ["src/tests/backlog/check-lane-close.logic.test.ts","src/tests/backlog/review-templates.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
 
-| R-GY | **`resolve_bylaws` (Layer 2) has its own owner spec: Spec 134 — resolve_bylaws — Layer 2 by-law resolution (McDonald's Airtight V3, operator approved 2026-10-20 on the review page, `2026-10-20-scenario-build-rulings#R-2`, whose recommendation left the number to the operator ("the operator assigns the number"); the coordinator then wrote in chat "I'll number it Spec 134 unless you'd prefer another" and the operator did not object; provisional id after R-GX, renumbered at integration if taken; R-GZ and R-HA are held by lane night-p4-c).** The Layer 2 plan named an owner "Spec 72" that was never created (`docs/reports/2026-10-20-plan-mcbylaw-phase2-v2.md`:4). Spec 134 (role: standard) is the step's behavioural contract under Specs 122/124; Spec 68 §11 carries a one-line pointer to it, not the contract, because Spec 68 is at its byte budget. By-law readings stay in Spec 69a and lot-configuration rules in Spec 131; the step-side rulings are R-HB…R-HG. Conflict check and seven questions: 124a §B27. | Supersedes the plan's "Spec 72"; follows R-GV, R-GW | `spec134-resolve-bylaws.logic`; system map row 134 |
-| R-GZ | **A bracket's text suffix is fitted to a bounded column's catalog width (McDonald's Airtight V3, operator y 2026-10-20, to the night-p4-c draft, `2026-10-20-chat-night-p4c#FIT-WIDTH`; provisional id, may be renumbered at integration — integrate-12 holds through R-GT).** `ingestor-forced-cohort.js` `append_text:<s>` (R-CZ) and `derived_status:<s>` (R-ET) render, for each perturbed column whose `information_schema.columns.character_maximum_length` is `w`, `left(col, w - char_length(<s>)) || <s>`; an unbounded column keeps the plain append (byte-identical, so existing recipes replay unchanged). A suffix as wide as a bounded column is refused at `--plan`/`--backup`/`--run` before any perturbation. `--plan` prints each width, the SET form and the first cohort row's fitted value. Flags, before-images, heal/restore checks, lock 902002 and exit codes are unchanged. First case: coa `data_hash` (sha256 hex, always 64 chars in varchar(64)); Night P4 `--run` failed `value too long for type character varying(64)` with nothing perturbed. Conflict check and V3 table: 124a §B29. | Amends R-CZ (append_text), R-ET (derived_status) | `cohort-fit-width.logic`; `docs/reports/red-evidence/r-gz/red-fit-width.json` |
-| R-HA | **#44 (b)/(c) for an R-DY derived target (McDonald's Airtight V3, operator y 2026-10-20, to the night-p4-c draft, `2026-10-20-chat-night-p4c#DERIVED-WITNESS`; provisional id, may be renumbered at integration — R-GU…R-GX are taken by spec132-move and the next ids by the Layer 2 spec lane).** A derived target (`outputs.writes[i].derive`) is written only when its prior-state read differs, so per POST trace: (b) traced write tables ⊆ declared and every NON-derived target written; per slug: each derived target written by at least one fresh POST trace (`b:derived-unwitnessed:<t>`); (c) when `write_inventory.derived_statements` is declared, the trace's distinct write statements lie in [`statements`, `statements` + `derived_statements`] (`c:statements:<lo>..<hi>!=<n>`), else the exact count as before. Schema: `derived_statements` (RE-FREEZE #38, provisional number; no runner byte). First case: coa, whose plain POST traces write coa_applications alone (2 statements) and whose R-ET bracket trace adds lifecycle_status_history (3); COA-D16 declares 2 + 1. Conflict check and V3 table: 124a §B30. | Amends #44 (b)/(c) (R-BK, R-DB); applies R-DY, R-ET | `witness-derived-target.logic`; `docs/reports/red-evidence/r-ha/red-witness-derived.json` |
-| R-HB | **`resolve_bylaws` is a MATERIALIZER (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-scenario-build-rulings#R-3`; provisional id).** It writes only its own derived Layer 2 tables, never `parcels`, as `compute_maxbld_scenarios` does (Spec 78 §Phase-5), so the plan's "ENRICHER (provisional, R-AO)" is replaced. The archetype is what was ruled; the R-EH rows form and the reset posture in Spec 134 §7 are design defaults, not part of this ruling. R-AO still holds: the census archetype is provisional until PH-0 re-derives it from the code (fast invariant #25). Conflict check and seven questions: 124a §B27. | Amends the plan's archetype; follows R-AO | `spec134-resolve-bylaws.logic`; step-validate #25 at ① |
-| R-HC | **R-DK covers both new steps; the plan's R-AS adaptation question is closed as superseded (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-scenario-build-rulings#R-7`; provisional id).** `resolve_bylaws` and `compute_maxbld_scenarios` are net-new (census `legacy: "none"`): no PRE capture, G8 against the committed POST, the full R-DK evidence set and a rerun-zero proof. R-AS (a perturbation cohort against a legacy step) does not apply, as R-BT already recorded for the scenario step. Plan question Q20 is closed; no adapted R-AS rule is written. Conflict check and seven questions: 124a §B27. | Follows R-DK, R-BT; closes plan Q20 | `spec134-resolve-bylaws.logic`; `step-validate-net-new.logic` at ① |
-| R-HD | **`resolve_bylaws` runs in `sources` after `enrich_parcels` and before `link_parcel_abutments` and `compute_maxbld_scenarios` (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-scenario-build-rulings#R-8`; provisional id).** The scenario step needs Layer 2 rows first (Spec 78 §Phase-5 step identity and D-1). Its phase number is assigned at ③. Consequence, recorded in Spec 134 §2: the step does not read `parcel_abutments` (written later in the chain); neighbour-dependent readings stay with the scenario step. Conflict check and seven questions: 124a §B27. | Answers plan Q3; follows R-DE (cross-step order) | `spec134-resolve-bylaws.logic`; LDG-10 and gate D at ① |
-| R-HE | **Scenario data reaches the app through the Spec 100 consumer contract, amended with an explicit whitelisted block; no new endpoint (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-scenario-build-rulings#R-10`; provisional id).** Spec 100 §2.1 says the response is presentation only and §3.2 excludes scenario and by-law fields today. The amendment adds one whitelisted block as a coordinated `.strict()` change: the server schema, the mobile mirror and the S-001 descriptor `field_whitelist` with its parity check in one commit (the R-DL parity form). **OWED** to the app lane (node N11), after the scenario step's field set is frozen at its ①. Until then no app reads a Layer 2 or scenario table. Conflict check and seven questions: 124a §B27. | Amends Spec 100 §2.1, §3.2 when the app lane lands; follows R-DL | `spec134-resolve-bylaws.logic` (the contract text); the whitelist parity test at N11 (OWED) |
-| R-HF | **The stale owed entries for M-217…M-222 and M-225 close only through named locks: INV-18 and INV-19 become named `describe` titles in the existing `bylaw-evaluator-fixes.logic` file (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-scenario-build-rulings#R-13`; provisional id).** Spec 78 names INV-18 / INV-19 as those locks, but no test carries the ids; adding the titles is the cheapest true lock (Spec 131 LC-53: verified by named lock, no partial green). Owed to the by-law fix lane, which owns that file, Spec 69a and the lineage registry; **landed** by wf1/bylaw-fix-1 `284596a4` (describes "INV-18 — …", "INV-19 — …", "INV-19 open arm — …"; red evidence `docs/reports/red-evidence/bylaw/inv18-inv19-red.json`), merged at integrate-13. Conflict check and seven questions: 124a §B27. | Follows LC-53; applies to Spec 78 P5.15 INV-18/19 | `bylaw-evaluator-fixes.logic` (INV-18 / INV-19 titles); `spec134-resolve-bylaws.logic` |
-| R-HG | **Before scheduling commit ① of the scenario step `compute_maxbld_scenarios` (node N6), the orchestrator confirms that the 18 runner rulings binding it are built (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-scenario-build-rulings#R-14`; provisional id).** Spec 78 P5.11 binds the scenario step's ① to the 18 runner rulings approved 2026-10-18 (register ids from R-DV); the check reads `programme-items.json` and the R-DV, R-EB and R-EC rows, and a missing one blocks scheduling. A process rule; it does not extend to `resolve_bylaws` ①. Conflict check and seven questions: 124a §B27. | Follows R-DV, R-EB, R-EC | `spec134-resolve-bylaws.logic`; `programme-items.json` gate |
-| R-HH | **Spec 120 is historical (McDonald's Airtight V3, operator "y" 2026-10-20, `2026-10-20-spec-roles-rulings#SPEC-120`; provisional id).** One `historical` role banner replaces the header block that contradicted itself ("No human has approved this document" beside "authorized registration"); the false-ratification incident and the later authorization ("the specs are good ratify") are kept as a dated note under the banner, the original block in git history; the Status line is `HISTORICAL`. Under R-GW it decides nothing and adds no rule id (`historical_rule_ids` baseline: none); `Spec 120 §x` code citations stay valid as history. Conflict check and seven questions: 124a §B27. | Applies R-GW, R-GX; amends the 120 header | `spec132-handbook-roles.logic`; `spec-split-check --check` arm (vii) |
-| R-HI | **Spec 121 is historical (McDonald's Airtight V3, operator "y" 2026-10-20, `2026-10-20-spec-roles-rulings#SPEC-121`; provisional id).** The same banner clean-up as Spec 120, landed with R-HJ so that no historical spec governs a live one. Its still-true M-items already live in Spec 132 lines (decision 4); its `historical_rule_ids` baseline is the retired M1–M14. Conflict check and seven questions: 124a §B27. | Applies R-GW, R-GX; needs R-HJ | `spec132-handbook-roles.logic`; `spec-split-check --check` arm (vii) |
-| R-HJ | **Spec 123 is a standard: the conversion procedure and the G0–G9 gates `step-validate` computes (McDonald's Airtight V3, operator "y" 2026-10-20 to option (a), `2026-10-20-spec-roles-rulings#SPEC-123`; provisional id).** Its gates stay live (R-R). The step family has three live specs: Spec 122 (standard: schema and behaviour), Spec 123 (standard: conversion procedure) and Spec 124 (register: policy); Spec 132 is generated from them. 123:12 no longer says "Spec 121 is the method and GOVERNS this document"; it calls Spec 121 the historical method record and names the R-GV precedence. Spec 123 leaves `rule-map.json` `meta.historical_design_records`. Conflict check and seven questions: 124a §B27. | Amends R-GV's 123 listing and decision 2; follows R-R | `spec132-handbook-roles.logic`; `spec-split-check --check` arm (vii) |
-| R-HK | **Operator decisions are transferred by generator into decision logs and register rows, under a coverage lock (McDonald's Airtight V3, operator 2026-10-20: "Ensure you used a generator to transfer the rulings etc or you will have forgoteen some", and the standing lane constraint "Operator decisions are transferred mechanically (decision log + generator + coverage lock), never hand-copied"; provisional id; drafted by lane layer2-spec and confirmed by the operator 2026-10-20, `2026-10-20-chat-batch-a#CHAT-3`, "push failed 1 test y to 1-4").** Each set of rulings is committed verbatim as `docs/reports/decisions/<date>-<slug>.json` (a review-page export via `scripts/analysis/decision-log.mjs --import`, or a chat ruling with its quote); a later chat amendment is recorded in the log with its quote. Every approved decision is a register row citing `<log stem>#<decision id>`; `--write` emits the row skeletons; `--check` (pre-commit, R-DJ (1)) is RED on an approved decision with no row, a row citing an unknown decision or log, a row outside its routed register and id, an extra row in another register, an amended decision whose row lacks the amendment quote, or a log that differs from its raw record committed under `docs/reports/decisions/raw/` (re-imported by `--import`, never hand-edited). A routed row another lane owes is marked `owed` until it lands. Red-first: `docs/reports/red-evidence/decision-log/`. Conflict check and seven questions: 124a §B27. **Amended 2026-10-20 (R-DV-1, operator approved on the By-law Fix Rulings page, `2026-10-20-bylaw-fix-rulings#R-DV-1`; drafted by lane wf1/bylaw-fix-2):** a decision may mean `no_ruling` (an existing ruling already decides the question): it needs no new row, its routing names the register row(s) it rests on (`routing.<id>.rests_on`), and `--check` is RED when one is not a register row; the default vocabulary is computed only when the previous log declares none. Conflict check: R-HK's closed meanings gain one value; no row-coverage arm changes. V3: STANDARDIZED one closed meaning; OBSERVABLE `--check` RED on a missing `rests_on`; RECORDED the raw value kept, the meaning declared; SCALABLE every "no ruling needed" item; ACCURATE no fake approval row, no lost decision; SIMPLE one value, one routing field; EXTERNALIZED `decision_vocab` and `routing` are log data. | Follows R-DF (RECORDED), R-DJ (1), R-EC | `decision-log.logic`; `hooks-composition.infra` |
-| R-HL | **Front-yard averaging stays in the scenario step; `resolve_bylaws` keeps its R-HD place (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-chat-batch-a#CHAT-2`, "push failed 1 test y to 1-4"; provisional id).** "Keep front-yard averaging in the scenario step (compute_maxbld_scenarios), as Spec 134 has it; do not move resolve_bylaws later in the chain." Layer 2 does not read `parcel_abutments` (Spec 134 §2); the averaged front setback is applied by `compute_maxbld_scenarios`, which runs after `link_parcel_abutments`. This closes the scenario plan's owed item "front-averaging into the Layer 2 lot flags". Conflict check and seven questions: 124a §B28. | Follows R-HD; amends the scenario plan's owed item | `spec134-resolve-bylaws.logic` |
-| R-HM | **R-RS: a product report surface has one field declaration (McDonald's Airtight V3, operator approved 2026-10-20, `2026-10-20-chat-batch-a#CHAT-4`, "push failed 1 test y to 1-4"; drafted as R-RS by lane report-schema; provisional id).** "A product report surface has one field declaration; every field names exactly one source; a generator --check gates names, types, presentation and pending states; its outputs are generated, never hand-edited." Its first instance is the v2 report declaration and `report-schema.mjs --check` (RS-0…RS-11), landed from `wf2/report-schema` at integrate-13; the declaration is generated by `scripts/surfaces/_schema/seed-report-v2.mjs`. *Dated note 2026-10-20 (`2026-10-20-chat-batch-b#CHAT-11`, operator chat "y to all"):* the ten Q-7 scope rows (`pending:operator_confirm:Q-7-scope`) are in the Spec 100 §3.2 whitelist amendment; the seed reads CHAT-11 from its decision log and moves them to `pending:spec100_amendment:Q-7`. Conflict check and seven questions: 124a §B28. | Follows R-BF (generated, never hand-kept), R-DJ (1) | `report-schema.logic` (runs `report-schema.mjs --check` and `seed-report-v2.mjs --check`); `decision-log.logic` (the record) |
-**M34 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B21 — Register rows R-FC…R-GO (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20, 2026-10-20.**
-**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B21 — Register rows R-FC…R-GO (moved from Spec 124 §5) — LIVE REGISTER, 2026-10-20 — 2026-10-20 (Spec 124 §4 R-I(4)).** LIVE register rows, moved for the byte budget, still in force; backfill-9 (operator y 2026-10-20: the V3 condition-9 backfill, and consolidation decision 3, the W4A rulings): Spec 124 was at 372/380 lines and owes 39 rows, R-FC…R-GO. They stay in force as Spec 124 §5 rulings, cited as Spec 124 R-x; spec-split-check arm (iii), gates/v3-label.mjs condition (9) and spec124-register-locks.logic read them in 124a LIVE REGISTER sections. wf2/p4-rulings-7 also allocated 124a §B17/§B18 and M33 and rulings-8 used §B19: §B20 and M34 are renumbered at integration if taken. Re-performed 2026-10-20 after verify-12c (R-EZ) corrected rows R-FF, R-FJ, R-FL, R-FT, R-FY, R-FZ, R-GA, R-GB, R-GC, R-GF, R-GI, R-GL before integration.
-**Standard versions (operator 2026-10-11).** A step's standard is printed by `step-validate` as `standard: V2|V3` (R-DT, 2026-10-18, amended by R-EY 2026-10-20: V3 = all nine conditions — compute purity, no ledger allowance, #44 PASS with nothing attributed, no blocking registry failure, no stage-gated red, scorecard at max, five words PASS with zero deferred, no unmet cutover_prereq item, every exception citing a register rule id; a V2 print lists the failing conditions).
-| Version | Adds | Enforced by |
-|---|---|---|
-| V1 | Pilot form (Spec 122 §5 nine-commit pilots) | historical |
-| V2 — McDonald's Airtight | Specs 122/122a/124/124a step standard: descriptor, closed-answer gates, ledger R-BA, witness #44 | `step-validate` fast invariants, gates A–K |
-| R-DW | **Admin range badges derive from each step's own declared bounds; the badge margin is a logic variable (McDonald's Airtight V3, operator y 2026-10-18; amends R-DL and R-DJ (3); builds the 2026-10-17 range-badge PIN).** A converted step, or a pending step whose descriptor exists, carries no `STEP_EXPECTED_RANGES` entry (`src/lib/admin/funnel.ts`). Its badge is its own `records_meta.audit_table` check row: status = the row verdict, bound = the value the runner resolved from that step's `checks[].limit_from_config` / `warn_limit_from_config`, each a registered seed key. The 13 converted entries are removed; measured on the latest chain-scoped runs, 13 steps' hand volume badges retire (e.g. link_massing `parcel_buildings` ins 14361 vs [0, 500], anomaly) and their check rows already render. The rest is a closed, shrink-only grandfather list of 12 unconverted steps; a pending entry with no descriptor keeps its range until ② (R-DV). `getRangeStatus`'s bare 20 % margin becomes `admin_range_badge_borderline_margin_ratio` (seed 0.2, migration 266). Its prefix names the owning admin surface, the R-DE (v) `<owner>_<name>` shape that `engine_health_*` already uses. `/api/quality` resolves it, with the seeded default as the only fallback. The `\|\| 1` unit span for an exact range is deleted (zero tolerance). R-DJ (3)'s admin count reads `STEP_DESCRIPTIONS` only. | R-DF EXTERNALIZED; R-BF; R-DL; R-DV; Spec 26 §3.4 | `admin-step-registration.logic`; `quality.infra`; `gate-chain-status.infra` |
-| V3 — McDonald's Airtight V3 (FINAL, R-DF; every future step) | V2 + the V3 PACKAGE, six labelled parts (operator directive 2026-10-18; R-DT: `standard: V3` means all six): **(1) STANDARDIZED GATES** — R-BA gates A–K + the fast invariants, hard from commit ①, no ledger allowance (R-BC (b)); **(2) REGISTRY** — R-BF generated/witnessed, R-DJ generator `--check`s at pre-commit, R-DL admin visibility (`admin-step-registration.logic`); **(3) CROSS-STEP TRUTH** — R-DI LDG-10 (#50), #44 arms a/b/c/e/h/i (R-DG, R-DO; `witness.mjs`); **(4) COMPUTE PURITY** — R-BZ/R-CA codes G0–G13, gate E #32 (`compute-purity.mjs`, `compute-literals.mjs`); **(5) EXTERNALIZED** — R-DF (operator 2026-10-17/18: every threshold, window, timeout, limit, rate or count is a registered `<slug>_<name>` logic variable, R-DE (v), seeded by migration in R-CV form, or an exact zero; no literal fallback): gate E #32 (compute literals), gate A (`closed-bounds.mjs`: every check bound is `limit_from_config` or `viol == 0`; (v) step-owned names), R-DL (admin bounds derived); PIN EXT-1 (dated 2026-10-18; owner: the runner lane, Spec 122 §8 re-freeze, operator-approved after step 0) is R-EB (the gate E estate arm: `scripts/analysis/gates/**` at 0 and the tooling ratchet BUILT; the `scripts/lib/step/**` rows, `index.js`:6829's `: 4` included, land with RE-FREEZE #37) and R-EC (the R-DJ pre-commit budget, registered and observed by fast invariant #52); **(6) REPRODUCIBLE CAPTURES** — R-CZ, R-DN, R-DP, R-DQ, #38 (gate G). Plus the latent-compliance rulings R-CV…R-DT; admission test R-DF | `step-validate` prints `standard=V3` only per R-DT as amended by R-EY (`standardFor`, `compute-literals.mjs`): all nine R-EY conditions, fail closed; otherwise `V2 (fails: …)` (`gate-compute-literals.infra`, `step-validate-standard-label.logic`). Enforced by R-EY E1 (V3 ratchet) and E2 (cutover gate), on; E3 (every converted step V3) behind `gate_v3_hard_gate_enabled`, off (`v3-label-enforcement.logic`). A step entering `converted[]` or `pending[]` with any finding is RED, no ledger allowance |
-**M17 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B6 — R-BA five-word gate build scorecard (moved from Spec 124 §5) — HISTORICAL, 2026-10-04, 2026-10-04.**
-**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B6 — R-BA five-word gate build scorecard (moved from Spec 124 §5) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Build-status snapshot of the R-BA gates A-K + H (all BUILT, test counts as of 2026-09-27); the R-BA register row stays the live rule and step-validate prints the live five-word verdict. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+## §2. The rules
+
+Thirteen rules (Rule 13 added by R-R, 2026-08-29). Each is enforced today, or marked ⚠ GAP with the artifact that would close it.
+
+---
+
+**1. Nothing about a step's behaviour may live only in code — it is descriptor data, a declared check, a shape rule, or (last resort) a new schema field.**
+- **Enforced by:** `checks` cannot be omitted (`step.schema.json:1095-1099`, `type:"array", minItems:1`); `scripts/ast-grep-rules/compute-shape.yml`'s five rules block the commonest hiding places (console, bare fetch, wall clock, `process.env`, forbidden `require`s) inside compute. **+ §5 R-BA gate A** (`step-validate.mjs` fast invariant #28): every `checks[].limit`/`warn_limit` is drawn from a CLOSED set (`limit_from_config` naming a declared variable, the exact string `viol == 0`, or a dated `standard-gates-ledger.json` row) — a bare number is behaviour hiding in descriptor prose instead of code, the same violation class under a different rung. **+ §5 R-BA gate C** (fast invariant #30): a step's declared `emits[]` must EQUAL the `records_meta` keys its own golden POST captures actually emit (minus the runner-owned `RUNNER_META_KEYS`, `scripts/lib/step/index.js`) — an emitted-but-undeclared key is behaviour hidden from the descriptor just as surely as a bare literal. **+ §5 R-BA gate I** (fast invariants #33-#36): banned-value coverage, staleness-disposition adjudication, census parity and defect-id uniqueness are each a closed registry a step cannot silently omit itself from.
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's four fences (`assert_schema`) were each moved to descriptor data or a named check rather than left as unexplained code. *(operator y 2026-10-20, rulings-8: under this rule and the IL-6 ruling, assert_data_bounds' `COST_MAG_ACCEPT` list moved from a compute-imported constant to `checks[].expect.accept_list`, which the compute reads from the descriptor; 124a §B19.)*
+- **Violation reads as:** a build failure at `pipeline.step()` construction (AJV) or a red `compute-shape` ast-grep scan in `.husky/pre-commit`.
+**M14 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B3 — GAP G-1 closure record (moved from Spec 124 §2 Rule 1) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B3 — GAP G-1 closure record (moved from Spec 124 §2 Rule 1) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure record of GAP G-1 (2026-08-29); Rule 1's text, Enforced-by and Violation lines stay live in Spec 124. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+
+**2. Compute contains domain logic only — no gating, ledger, lock, emission, logging side-channel, environment read, or policy comment.**
+- **Enforced by:** `compute-shape.yml` (6 rules — the original 5 plus `compute-no-postgis-branch`, R-W) + `check-step-shape.mjs` (blocking over `scripts/lib/compute/**`) + ~~`step-conformance.infra.test.ts:532-620`~~ **CORRECTED 2026-09-10 (measured, now `:611`/`:670`/`:699` — ~80 lines of drift; cite by greppable anchor, not line number, per Spec 124 §5 R-R's own lesson): `step-conformance.infra.test.ts`'s `COMPUTE_RULE_IDS` battery / "dispatch keys are exactly the descriptor's check ids" test** (dispatch keys ≡ declared check ids, proven to fire on a known-bad fixture).
+- **Archetype variance:** none, except ASSERT's compute never opens `ctx.pool` at all (its `outputs`, `recovery`, `counters` are forced `"none"`).
+- **Evidence:** the compute-shape gate's own blocking loop was found missing on 2026-08-25 (it scanned and reported but never failed the build) — fixed the same day; the incident is the strongest argument for keeping this a shape rule rather than a review checklist.
+- **Violation reads as:** a red ast-grep scan naming the file, line, and rule id.
+
+> **R-W addendum (2026-08-30).** Compute MUST NOT branch on PostGIS availability — `hasPostGIS`,
+> `pg_extension`, `postgis_version` (bare identifier, property access, or a string/SQL fragment naming one
+> of them), or a `try`/`catch` wrapped around a PostGIS-only call, are all the same anti-pattern: a second,
+> silently-selected algorithm hidden inside compute. `guards.requires: {kind: "extension", name: "postgis",
+> on_missing: "fail"}` is the only legal form — the step refuses before compute ever runs, and a database
+> genuinely missing the extension HALTS rather than silently degrading to a different answer. ~~Three
+> precedents on record~~ — **CORRECTED 2026-09-10 (measured): four** (R-W's own §5 register row, below, already
+> lists a fourth — `link_parcels` LP-D9 — this addendum text just never caught up): `link_massing` A-8 (in-memory grid/haversine fallback, retired), `compute_centroids`
+> A-1(a) (unweighted arithmetic-mean centroid fallback, retired), `link_parcels` A-1 (JS nearest-parcel
+> fallback, retired commit 7, 2026-08-30), `link_parcels` LP-D9 (Strategy 1a's `address_points_exact` predicate
+> gap, fixed commit 8a — see the §5 R-W row for the full fourth entry). **Enforced by:** a new ast-grep rule,
+> `compute-no-postgis-branch` (`compute-shape.yml`), wired through the same always-blocking
+> `check-step-shape.mjs` compute corpus as the other 8 rules — no separate wiring needed, since the driver
+> runs every rule in the file over `scripts/lib/compute/**`. Proven RED-first on
+> `scripts/steps/_schema/fixtures/compute/bad-compute-shape.js`'s `ctx.hasPostGIS` branch (added to the
+> fixture's known-violation set), GREEN on all six converted computes (`assert-schema.js`,
+> `compute-centroids.js`, `link-massing.js`, `link-parcel-addresses.js`, `link-wsib.js`, `load-ravines.js` —
+> none references `hasPostGIS`/`pg_extension`/`postgis_version` today), asserted by
+> `src/tests/step-conformance.infra.test.ts`'s `COMPUTE_RULE_IDS` prove-red battery.
+
+**3. Every threshold, sample size, byte window, timeout, retry count, limit, or rate a step consumes is a registered logic variable resolved through `ctx.config`, never a literal — PRESENCE of its `logic_variables` row is always FAIL (R-G), and VALIDITY is per-variable via the closed `on_invalid` enum: `fail` is MANDATORY for a verdict- or write-affecting variable, `default`/`clamp` are allowed only for the rest, each carrying a stated `why`.**
+- **Enforced by:** `compute-no-literal-url-tunable`/`-byte-window`/`-threshold` (`compute-shape.yml`) + `step-conformance.infra.test.ts:772-943` (declared ⊆ registry, declared ⊆ admin GROUPS, consumed ≡ declared, each direction proven RED) + `scripts/lib/step/config.js` (PRESENCE half: throws when a declared name has no `logic_variables` row, naming the remedy — LM-D15).
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's own first violation (`assert_schema` declared `config:"none"` while compute hard-coded `limit=20`, `Range: bytes=0-2048` and `bytes=0-8192`), remediated before pilot 2. **R-G's grounding:** the old P4 sentence ("no row ⇒ FAILED run") never distinguished presence from validity, and practice already contradicted its literal reading — `link-massing.descriptor.json` uses `on_invalid:"fail"` for only 3 of 6 variables, `load-ravines`/`assert-schema` use `default`/`clamp` for every one, each justified in `deviations[]`. This rule states the split that was already true.
+- **Violation reads as:** a red conformance test naming the literal, or a runtime throw naming the missing registry row (presence). No machine reads a validity failure yet.
+**M15 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B4 — GAP G-4 and GAP (R-D) closure records (moved from Spec 124 §2 Rule 3) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B4 — GAP G-4 and GAP (R-D) closure records (moved from Spec 124 §2 Rule 3) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure records of GAP G-4 (2026-08-29 / R-BA gate B 2026-09-26) and GAP (R-D) (2026-09-03); Rule 3's text and Enforced-by stay live; R-BA stays the live row. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+
+> **R-AU addendum (2026-09-21, operator-adjudicated).** This rule's reach is SCALAR TUNABLES.
+> Pricing DATA — a DB rate table, or a keyed catalogue of priced lines with its permitted-value
+> vocabulary — is not a tunable and is NOT externalized by porting it: it is carried byte-for-byte
+> and DECLARED in the descriptor as a NON-ADMIN SURFACE (`limitations[]`), so a reader can see that
+> the values exist, where they live, and that no admin surface edits them. Declaring them under
+> `config.logic_variables[]` would be a second source of truth for the same values and a false
+> claim of admin tunability. Every scalar the step consumes still obeys the rule above, unchanged.
+> **This is an INTERIM state carrying a named closing row, not a permanent exemption** — see §5 R-AU.
+> **CLOSED 2026-09-23 (batch-2 row 2.5, commits `7c3e85eb`/`d6cd1c7d`/`3bc1eee0`/`0f1f46fb`):** the admin
+> editor landed and the INTERIM state above no longer applies — see §5 R-AU for the closing text.
+
+**4. A rule kept in compute rather than declared data must still be written down — as a check's `why`, not a comment.**
+- **Enforced by:** nothing machine-checked. Applied narratively in the Intent Ledger, whose discoverer≠ adjudicator role split is Spec 123 §7.1 (§4.2 below states the *rule*).
+**M16 — moved to `124a_step_standard_policy_appendix.md` ## Appendix §B5 — GAP G-2 closure record (moved from Spec 124 §2 Rule 4) — HISTORICAL, 2026-10-04, 2026-10-04.**
+
+**MOVED to `124a_step_standard_policy_appendix.md` ## Appendix §B5 — GAP G-2 closure record (moved from Spec 124 §2 Rule 4) — HISTORICAL, 2026-10-04 — 2026-10-04 (Spec 124 §4 R-I(4)).** Historical; Dated closure record of GAP G-2 (2026-08-29); Rule 4's text and Enforced-by stay live. Spec 124 §5 needs room for the FLEET-2 register rows (R-BH/R-BI reserved + R-BJ…R-BN, plan fold 18 O-C12(b); about 8.4 KB against 5.5 KB headroom).
+
+- **Archetype variance:** none.
+- **Evidence:** pilot 1's coordinate-source OR-contract — kept in compute, its rule stated in the descriptor `checks[].why` and `limitations` by ruling, not by a check. *(operator y 2026-10-20, rulings-8: two gaps under this rule ride the bundled RE-FREEZE night, PIN REFREEZE-BUNDLE-1 (3)/(4) — neighbourhoods' U+2019 apostrophe normalisation and assert_global_coverage IL-11/IL-12's `has_bldg` scoping, each written today only in compute; 124a §B17, §B19.)*
+- **Violation reads as:** nothing today (this is exactly the ⚠ GAP).
+
+**5. `checks` may never be `"none"` — every step declares at least one.**
+- **Enforced by:** `step.schema.json:1095-1099` — `checks` is typed `array, minItems:1`; a step cannot construct without it.
+- **Archetype variance:** none — the one category every archetype leaves untouched, even ASSERT (which forces `outputs`/`recovery`/`counters` to `"none"` but not `checks`).
+- **Evidence:** all 3 converted steps carry 8–19 checks each; ASSERT (`assert_schema`) has the fewest live categories of any archetype but still declares 9.
+- **Violation reads as:** a schema-validation throw at `pipeline.step()` construction, before compute runs.
+
+**6. Every category is present, and every field inside it is answered — `"none"` is legal but must be written, never omitted.**
+- **Enforced by:** `step.schema.json`'s top-level `required` (~~18 categories~~ **CORRECTED 2026-09-10 (measured): 20**) plus per-field `required` arrays nested throughout.
+- **Archetype variance:** none.
+- **Evidence:** the schema itself is the enforcement; a descriptor missing any of the 18 fails AJV outright.
+- **Violation reads as:** a schema-validation throw naming the missing field.
+
+**7. A step's archetype determines which categories are live — a step may not omit a category its archetype requires, and may not answer a category its archetype forbids.**
+- **Enforced by:** `step.schema.json`'s `allOf` blocks keyed on `identity.archetype` (`step.schema.json:1373-1443`) — six profiles, one per non-degenerate archetype grouping.
+- **Archetype variance:** this rule *is* the variance mechanism — see §3 below.
+- **Evidence:** the schema comment on the ENRICHER profile names claim #54 (a `staleness.scope` on a lineage column implies a declared invalidator) as "the centroid defect made unexpressible."
+- **Violation reads as:** a schema-validation throw at construction naming the archetype and the forbidden or missing field.
+
+**8. A write target's discipline class, guard, and scope are declared per write target — never assumed for the whole step.**
+- **Enforced by:** `step.schema.json`'s `outputs.writes[].write_discipline` shape, with `if`/`then` blocks requiring `guard_why` when `guard:"none"` (`:279-280`) and `why` for `staging_full_replace` (`:291-292`).
+- **Archetype variance:** applies to INGESTOR/LINK/MATCHER/ENRICHER (any archetype whose `outputs` is an object); N/A for ASSERT (`outputs` forced `"none"`).
+- **Evidence:** `link_massing`'s E1/E2 targets declare two different disciplines (`set_based_scoped` guarded none, `guarded_upsert`) on two different write targets in the same step.
+- **Violation reads as:** a schema-validation throw naming the write target and the missing `why`.
+
+**9. A banned write shape (an unguarded set-based write, an insert-only step with no retraction) may ship only with a dated, committed, SHA-anchored ledger entry naming who approved it — a `why` string alone is not enough (promoted from pilot practice, R-I.2).**
+- **Enforced by:** `scripts/steps/_schema/grandfathered.json`, read by `assertGrandfathered` at `pipeline.step()` construction (before any pool opens) — refuses a banned value with no matching entry even when the schema's own `guard_why` is present.
+- **Archetype variance:** applies wherever `outputs` is an object; N/A for ASSERT.
+- **Evidence:** `link_massing`'s E1 target (`write_discipline.guard:"none"`) is grandfathered against commit `5bb31faf`, operator name, and date — the schema's own fixture for this shape is grandfathered the same way, so the rule cannot be satisfied by weakening the fixture.
+- **Violation reads as:** a construction-time throw refusing the descriptor, naming the ungrandfathered path.
+
+**10. The verdict is always derived from the declared checks' rows — never a parallel boolean, never a hardcoded literal.**
+- **Enforced by:** `scripts/lib/step/verdict.js` (`deriveVerdict(rows)`) is the only place a verdict is computed; `step-library.logic.test.ts:145-283` — "the verdict is ROW-DERIVED, and all three values are reachable."
+- **Archetype variance:** none — runner-owned, no archetype may opt out.
+- **Evidence:** AS-D1 (sources verdict read the raw error array, not the row set) and LM-D2 (a hand-rolled per-script cascade plus a boolean-driven severity) both closed by routing through this single function; a repo-wide grep for `'FAIL'`/`'WARN'` literals across the library returns exactly the rows inside `verdict.js` itself.
+- **Violation reads as:** a red `step-library.logic.test.ts` assertion, or (pre-conversion) a fleet-wide finding that a script structurally cannot emit WARN or FAIL.
+- **R-Q / R-R note (2026-08-29):** `step-library.logic.test.ts` is outside `step:validate`'s own run scope (spec-named as step-conformance + golden-fingerprint + `src/tests/steps/<slug>/` only), so `step:validate`'s policy matrix used to print this rule PROSE-ONLY per step rather than claiming a false enforced-green — a scope caveat, not a claim the rule is unenforced elsewhere. Separately, this commit's G6 ledger-normalization work fixed one concrete instance of a severity-conflated counter reaching the ledger (`LPA-D2`), the same defect class R-Q (`checks_failed`/`checks_warned` split, `LPA-D6`) closed in the library itself.
+- **Enforced by (WF2 "Rules 10/11/12 mechanical checkers", C1, 2026-09-03):** `scripts/analysis/step-validate.mjs`'s `checkVerdictSingleSource` closes the PROSE-ONLY gap above with a genuine mechanical checker over a closed corpus, `VERDICT_LIBRARY_CORPUS` (every `scripts/lib/step/*.js` file except `verdict.js` itself + `scripts/lib/pipeline.js` + `scripts/lib/source-version.js` — the files that see a full `rows` array and could hand-roll a second cascade). Two halves: **(a)** no unsanctioned second PASS/WARN/FAIL derivation anywhere in that corpus — `pipeline.js`'s `emitSummary` escalate-only recompute is the ONE declared, cited exception (`SANCTIONED_VERDICT_SITES`; not behaviour-identical to `deriveVerdict` — never downgrades, preserves SKIP/UNKNOWN), and `scripts/lib/source-version.js`'s prior hand-rolled duplicate was routed through `deriveVerdict` in this same commit (behaviour-identical, proven in `step-conformance.infra.test.ts`); `scripts/lib/step/plausibility.js`'s `verdictCascade` (a second duplicate, consumed by the live `assert_parcel_sanity` step) was retired outright, its one consumer now importing `deriveVerdict` directly. **(b)** a `SELF_SKIPPED` terminal's audit rows must fold to a verdict other than PASS, AND that verdict must be genuinely row-derived (≥1 declared non-INFO row, `verdict === deriveVerdict(rows)`) — **CLOSED 2026-09-09 (WF3 VRD-SKIP, Rule 10 ladder rung b, see §7 below and the `VRD-SKIP` row of `programme-items.json`, now `BUILT`):** `skipRecordsMeta`'s `status` row declares severity `WARN` with threshold `'ran'` (was `INFO`/`null`), so the checker now ships `enforced-green`. Was pinned `KNOWN-DEFECT` per Spec 123 §3.1 against `review_followups.md` ("A lock-skipped converted step verdicts as PASS", now RESOLVED) from 2026-09-03 until closure. Both halves proven both-directions: `--self-test-only` runs in-memory RED/GREEN proofs on every invocation (`step-validate.mjs`'s own `selfTest()`), and `compute-no-verdict-derivation` (`scripts/ast-grep-rules/compute-shape.yml`) bans a compute from ever assigning anything named `verdict`, proven on `scripts/steps/_schema/fixtures/compute/bad-verdict-parallel.js` + the extended `bad-compute-shape.js` battery.
+
+> **R-H addendum (2026-08-28).** Rule 10 governs HOW the verdict is derived, not WHICH severity a check should choose. That gap let pilot 3's ruling A-6 dispose `nearest_footprint_gt_lot_count` and `shared_primary_buildings` as INFO for a standing non-zero population — conflicting with Spec 48 §4.9 / `tasks/lessons.md:117`: **a metric expected to be permanently non-zero is WARN with a declared, machine-observable retighten condition — never FAIL, never INFO-by-taste.** INFO is legal ONLY for a purely descriptive counter no threshold could bound, and that exception must itself be declared in `checks[].why`. Consequence: **LM-D6/LM-D11 re-dispositioned OPEN → WARN + a declared retighten condition, carried to pilot 4** (defect ledger + review followups amended in the same commit). ⚠ **GAP G-5** — no check yet distinguishes "purely descriptive, no threshold possible" from "INFO chosen to avoid a red"; author judgment only, same class as G-2. **First closed instance (LG-29, WF3 VRD-SKIP, 2026-09-09):** a `SELF_SKIPPED` terminal is the maximal case of "a check the library could not evaluate" — zero declared checks ran — so `status:'INFO'` on the skip's own `status` row was exactly the "INFO chosen to avoid a red" failure mode G-5 names, not a purely descriptive counter (a threshold — `'ran'` — was possible all along). Closed by flipping that one row's declared severity to `WARN`; `skipRecordsMeta` (`scripts/lib/step/index.js`) is this addendum's named precedent for the self-skip case specifically.
+
+**11. A ruling that reorders a step's phases must re-derive every "before X" guarantee stated in that step's own governing spec, in the same commit (promoted from pilot practice, R-I.1).**
+- **Enforced by (STALE until this amendment — `checkOrderGuaranteesCited` existed since `b2a85079`, 2026-09-03, but this row was never updated to say so):** `scripts/analysis/step-validate.mjs`'s `checkOrderGuaranteesCited(descriptor)` — the DECLARED half only (GAP G-3's completeness half, below, stays open). Verifies every `checks[].when:"pre_write"` entry carries `order_guarantee{guarantee, spec_ref, anchor}` (schema-enforced, re-verified defensively), that `spec_ref` resolves to a real `docs/specs/**` file, that `anchor` is found LITERALLY in that file (a rotted citation REDs), and that `spec_ref` agrees with the descriptor's own `identity.spec` — a pre_write check's ordering guarantee must trace to THIS STEP's own governing spec, never an unrelated one. **Ask 6 amendment (pilot 9 commit 1, 2026-09-04):** `identity.spec` is single-valued, but a step's outputs can genuinely span more than one governing spec (`enrich_parcels`: `identity.spec` `"65"`, pass 5's own post-commit-read order_guarantee governed by Spec 78 §P3A.1 — grep-confirmed `comp_*`/`opt_*`/`optimal_config` appear only in Specs 78/88/89/100, never 55 or 65). `checkOrderGuaranteesCited` now accepts a spec-qualified anchor, `"<specnum>:<anchor text>"` — when present, the spec_ref-agreement check resolves against the QUALIFIER's own spec instead of `identity.spec`'s; an unqualified anchor is byte-for-byte the pre-existing behavior. Proven both directions against the real `docs/specs/` tree in `step-validate.mjs`'s own `selfTest()`: an unqualified anchor whose `spec_ref` disagrees with `identity.spec` still REDs (the qualifier, not the mere citation, is what licenses the disagreement); a qualified anchor naming the SAME spec `spec_ref` already points at GREENs; a qualifier naming a spec number that resolves to no file REDs.
+- ⚠ **GAP G-3** — the DECLARED half above is real and non-vacuous, but its own completeness is not proven: nothing re-checks a step's governing spec for "before X" language when the library's phase order changes generically (e.g. a future ordering change to LINK or a second ENRICHER), and nothing forces a `pre_write` check + `order_guarantee` to be AUTHORED in the first place merely because a step's spec states a "before X" guarantee — `enrich_parcels`'s own pass 5 (Spec 78 §P3A.1) needed this pilot to explicitly author `pass5_post_commit_read_order` before Rule 11 had anything to check.
+- **Archetype variance:** matters most for INGESTOR (acquire→validate→write→score) and any archetype using `checks[].when:"pre_write"`; N/A for ASSERT (no writes to order against). ENRICHER (pilot 9) is the first archetype whose post-commit phase order guarantee spans a SECOND spec beyond `identity.spec`.
+- **Evidence:** LR-D9 — converting `load_ravines` to the INGESTOR archetype silently retired Spec 59's write-order guarantee until the Regression Guardian caught it in a fold review, one commit after it shipped. `enrich_parcels` (pilot 9) — the multi-spec case above, closed by this amendment rather than left as a second per-incident fix.
+- **Violation reads as:** a `checkOrderGuaranteesCited` violation in `step:validate`'s Rule 11 matrix row (`enforced-red` when a real violation exists); GAP G-3's completeness half is still nothing today, absent a reviewer catching it by hand.
+
+**12. A write target with a destructive full retraction (`retract_when:full_only` or `retract:"all"`) declares a truthful crash-recovery posture — `"none"` is legal only with a stated why.**
+- **Enforced by:** `step.schema.json`'s `recovery.interrupted` field (required when a destructive retraction target exists) + ~~`step-conformance.infra.test.ts:1039-1073`~~ **CORRECTED 2026-09-10 (measured, now `:1647-1656` — ~600 lines of drift; cite by greppable anchor, per Spec 124 §5 R-R's own lesson): `step-conformance.infra.test.ts`'s "recovery.interrupted reddens against its destructive retraction target" battery** (RED on `"none"`, RED on missing).
+- **Archetype variance:** applies to LINK and any INGESTOR with a full-retraction write; N/A for ASSERT/RECORDER.
+- **Evidence:** a killed `link_massing` forced-FULL run left `parcel_buildings` at 29,330/520,492 rows; the next run's gate read "unchanged" and the hole persisted silently — this is the incident the rule exists to make undeclarable.
+- **Violation reads as:** a schema-validation throw at construction. *(Note, updated 2026-08-29: BOTH halves are now CLOSED. The DECLARATION half — `recovery.interrupted` and the paired `recovery.before_image` (R-M), both required, truthful, schema-enforced fields, R-M's before-image mechanism BUILT and LIVE-FIRED (`d07529af`, LG-17 — `link_massing`'s genuine forced-FULL wrote a 520,492-row before-image file before its retraction ran). The RUNTIME half — `staleness.detectInterruptedRetraction` auto-detects a `crashed`/stuck-`running` prior run for a step's own producer slugs and `selectMode` forces FULL unconditionally, wired into `runCascadePhase`/`runLinkPhase` (`LW-D20`/`LG-19`, Spec 122 R-B) — closed by a live kill-and-rerun proof against `link_wsib` that found and fixed two real bugs (a step self-detecting its own just-opened row; the check being unreachable behind the ledger gated-skip), both now regression-locked fast (fake-pool) and against real Postgres. "Declared" and "automatically enforced" are now the same posture.)*
+- **Enforced by (WF2 "Rules 10/11/12 mechanical checkers", C3, 2026-09-03) — `step:validate`'s own matrix, closing this rule's prior PROSE-ONLY gap from THAT tool's own vantage:** `scripts/analysis/step-validate.mjs`'s `checkInterruptedPostureTruthful(descriptor)`, two parts. **(a) Declaration** — the same "destructive retraction requires `force_full_on_next_run`" rule as the existing `step-conformance.infra.test.ts` R-B lock, re-verified here. **(b) Reachability** — a NEW, static, runner-derived claim beyond the declaration: for the descriptor's `execution.shape`, is `staleness.detectInterruptedRetraction` actually REACHABLE on every path through that shape's runner in `scripts/lib/step/index.js`? Derived from a source scan (`extractFunctionBody` + `runnerReachability`), never hand-listed — a runner behind a `staleness.ledgerGatedSkip` early-return is reachable only if its `bypassed` term folds in `interruptedRetraction.interrupted` BEFORE that call (the exact shape `runMaterializePhase` lacked until `febd0968`, closed AHEAD of this checker landing per Fold A item 2 of `.cursor/wf2_rules_10_12_checkers_active_task.md`); a runner with no such early-return instead reaches it via an unconditional `staleness.selectMode` call. Measured live over all 8 converted descriptors: `link`/`link_keyed`/`cascade` (the three declaring `force_full_on_next_run`) all REACHABLE; the other five declare `"none"` (no reachability claim to verify). Proven both directions via `selfTest()` (RED on the exact pre-fix `runMaterializePhase` shape reconstructed in-memory; GREEN on the post-fix shape, a LINK-shaped unconditional-`selectMode` runner, and a declaration-only violation; RED on a runner reaching neither `ledgerGatedSkip` nor `selectMode`). **Behavioural proof, WRITTEN but BLOCKED** (the DB-tier half beyond static reachability): `src/tests/db/step-crash-posture.db.test.ts` spawns a REAL `link_wsib` process, SIGTERMs it once its `pipeline_runs` row reads `running`, and asserts the row stays `running` (no SIGTERM handler exists anywhere in this codebase — grepped — so Node's default disposition abandons the in-flight `finalizeLedgerRow` call) AND the next `staleness.selectMode` call over the SAME descriptor/pool resolves `mode:"full", reason:"recover_interrupted_retraction"` — declared posture matching MEASURED behaviour, not just source reachability. Committed `describe.skip`-gated: measured live 2026-09-03 that a real converted step spawned against the ephemeral `BUILDO_TEST_DB` testcontainer always refuses at `assertDbTarget` (`scripts/lib/resolve-db.js`) — the container is named `buildo_test`, every descriptor's `database.assert_current_database` is the single literal `"postgres"` with no test-context override, and step scripts have no descriptor-path override hook either. Filed HIGH in `review_followups.md` ("WF2 Rule 12 behavioural half — no `db.test.ts` can spawn a REAL converted step against the ephemeral test container") as its own scoped WF2/WF3 — a deliberate production safety fence (Spec 122 §P0), not weakened under this WF2's time pressure. Until that lands, the STATIC reachability half above + the existing fake-pool unit lock (`src/tests/step-library.logic.test.ts`) are the enforced mechanisms. Scoped, once unblocked, to ONE archetype first (CASCADE via `link_wsib`, the same step LW-D20/LG-19 were originally found against) — the other two live shapes (`link`/`link_massing`, `link_keyed`/`link_parcels`) are `programme-items.json`'s `CRASH-BEHAV` (`nice_to_have`, `NOT_STARTED`).
+
+**13. A step validates itself — the Spec 123 §6 scorecard and this spec's own policy-coverage matrix are generated by one command, run for every converted step, and enforced (never a separate, hand-maintained track).**
+- **Enforced by:** `scripts/analysis/step-validate.mjs` (`npm run step:validate -- --step=<slug>` / `--all`): runs `validateDescriptor` (Rules 1, 5–9), the ast-grep shape gate scoped to the step's own file + compute (Rules 1–2), the step's own `src/tests/steps/<slug>/` + the shared conformance/golden-fingerprint suites, the golden-capture invocation/fingerprint/diff check (G8), and derives the full G0–G9 scorecard plus a Rules-1–13 coverage matrix — all from committed artifacts. `step-conformance.infra.test.ts` asserts every converted step's assessment report carries a `## Validation scorecard (generated)` block equal to a fresh run (drift is red). `.husky/pre-commit` runs `step:validate --all --fast` first (the vitest spawn skipped, everything else run, plus 7 always-on fast invariants); `.husky/pre-push` re-runs it plus `typecheck` (defeats a bare `--no-verify`). **+ §5 R-BA gates F/H/J/G (2026-09-26):** F floors the SCORE half (a converted step below 14/17, or a non-LF path, hard-stops without a dated ledger row — fast invariant #37); H closes the MATRIX's own status vocabulary (`MATRIX_STATUSES`, a closed enum — `computePolicyMatrix` throws on an out-of-set status); J and G close the PROCESS half the addendum below names — J at commit time (Spec-diff staged-or-declared, generated-doc freshness, `.husky/pre-commit`), G on the scorecard's own input freshness (nonzero capture per declared write target, `lib_fingerprint` staleness, explained-diff coverage — fast invariants #38-#40): Rule 13 no longer just runs the check, it proves the check's own inputs are current.
+- **Archetype variance:** none — every archetype's descriptor is validated, shape-gated, and scored the same way.
+- **Evidence:** pilots 1–5 backfilled by `step:validate --all --write` (R-R, 2026-08-29) — `link_parcel_addresses` scored 8/17 on the FIRST honest run (real hard-stop: `LPA-D2`'s ledger status wasn't literally `CLOSED`/`PIN`, and a later WF3 fix's `records_meta` shape change wasn't yet re-explained in the report), fixed by two real documentation commits rather than by loosening the gate — 14/17 after.
+- **Violation reads as:** a red `step-conformance.infra.test.ts` assertion naming the stale/missing scorecard block, or a non-zero `step:validate` exit (a hard stop on G6/G7/G8/G9 or a fast invariant) in `.husky/pre-commit`/`pre-push`.
+- **Rule 13's own boundary (R-T addendum, filed 2026-08-29, BUILT 2026-08-30 — this same programme's follow-on WF2).** `step:validate` conflates two different questions under one name: whether a step's *process* was followed (G0–G9, the policy coverage matrix) and whether a step's *data* is plausible (Spec 79/120/30 §5.4.1's bound doctrine — **not bare "§5"**, Fold B-6, 2026-08-30: Spec 30 §5 is the CI/CD section; §5.4.1 is the runtime verdict/halting-semantics section the bound doctrine actually lives in). **The rule: "the validator validates DATA (Spec 79/120/30 §5.4.1); the scorecard validates process, from structured artifacts."** Both halves are now BUILT: the scorecard half (G0–G9, as specified above) and the DATA half — `invariants[]`/`plausibility[]` bounds (threshold-derived/reachable/last-measured-value-beside-the-bound, §9 below), the seam-validation pass (`scripts/lib/step/seam.js` — over `inputs.reads.steps[]` declared step-edges, corrected from the original "`outputs.invalidates` edges" phrasing: that category is `{table,column,when}`-shaped, a step's own re-eligibility scope, not a producer→consumer edge — closes VAL-3/LDG-2/LDG-7's concern), chain-end synthesis automation (`scripts/analysis/chain-end-synthesis.mjs`, the `sources` chain's roll-up + the declared cloud trigger for `validate_only` invariants, Ask 6(b)), and R-U's chain-run correlation (`records_meta.chain_run_id`, below) that both the seam pass and chain-end synthesis join on. The layer table above states WHERE each half lives (descriptor declares, library executes, compute only measures). **The DATA/PROCESS split has a SECOND enforcement point, not just declaration (Fold B-3):** every synthetic invariant/plausibility row carries a REQUIRED, closed `source: check|invariant|plausibility` field distinct from `kind` (`scripts/lib/step/verdict.js`'s `checkRow`) — so a consumer reading only the EMITTED audit table (never the descriptor) can still tell a DATA row from a PROCESS row without re-deriving it from naming convention; chain-end synthesis and `step-validate.mjs`'s scorer both key off this field. **Scoped as BUILT, not fully DE-REGEXED**: the scorecard's own six prose-regex gates (`G0`/`G1`/`G3`/`G4`/`G5`/`G9`, `section()`/`splitTableRow()`-scraped from free-form report text) are UNCHANGED — only `G2`'s vacuous-green (Spec 123 §6's own documented defect) and the defect-ledger/`notes.json` strict-row-schema parse (`G6`/`G7`/`G4d`) were fixed, per Ask 3's own scoped default; the larger de-regex lift is filed as `nice_to_have` in `programme-items.json` (§9 below), not silently dropped. Programme item `VAL-WF2` (`batching_prereq`) CLOSES with this commit; `REGEXSC` is `SUPERSEDED` by it (unchanged from the original filing); `G2` is `PARTIAL` — the vacuous-green half closes here, the churn×complexity-plot BUILD half stays its own `S6b` item (operator ruling 2026-08-25 decision 2, `review_followups.md:2994`, unchanged).
+
 === MATERIAL UNDER REVIEW (everything below this line) ===
-diff --git a/.claude/review-templates/README.md b/.claude/review-templates/README.md
-index 6e2e83fa9729fd06ff557a9ab1afa6a67c0b8032..af6740a0fa5bcca0430addfc4f57490158f05195 100644
---- a/.claude/review-templates/README.md
-+++ b/.claude/review-templates/README.md
-@@ -98,6 +98,7 @@ Each lens asks one question, names what it is not responsible for, rejects any f
- |---|---|---|---|---|
- | `plan-review-deepseek.md` | Failure modes and rollback, data reality, sibling bugs | A2 DeepSeek (adversarial) | every task | plan, and output on money or pipeline work |
- | `lens-compliance.md` | Does it satisfy every pasted spec clause and operator ruling? | A10 Compliance (section 5.1) | every task, including record-only tasks (the only lens for those) | plan and output |
-+| `lens-engineering.md` | Is it built to every pasted engineering rule? | Engineering (RR-0385, decision-170) | every task whose rule lists include one on the engineering standards file (`docs/specs/00_engineering_standards.md`, today `eng-all`) | plan and output |
- | `lens-code-review.md` | Correct, typed, errors handled and logged, no dead code? | A3 Code Reviewer | any task that writes code | output (plan: only if the plan names code) |
- | `lens-ux.md` | Does it serve the person on the other end, in every state, in the approved design text? | A11 User-Advocate | a build on a surface (app or web page) | plan and output |
- | `lens-error-paths.md` | Error, empty, retry, time-out, double-submit, degrade-safety, idempotency and dedup | A2 DeepSeek lens 4 (section 7 rule 4) | any task that writes code or a counted event | plan and output |
-@@ -155,9 +156,9 @@ Operator, verbatim, 2026-11-20 (`~/Buildo-scratch/queues-20261113/MORNING-DECISI
- 
- 1. **The table.** `scripts/analysis/rule-lists.json` maps path globs to rule lists (`rows`: globs or `globs_from` an existing path map, optional `imports_from`, `lists`, `why`). A list is a rule file used whole, or whole sections of it where the file itself separates rules from history. Never a hand-picked clause. `node scripts/analysis/rule-lists.mjs validate` checks that every file exists, every section selector names exactly one heading and every glob matches a tracked path; `resolve --files "<Files line>" --type <type> --letter <group>` prints what a Files line attaches.
- 2. **At launch** `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through the table. No Files line (a record-only task gets the queue lists) or a path no row matches: refused with the path named. The brief names each list ("Rule lists that govern this task": READ each whole before planning).
--3. **The lens line: one compliance run per list (the default).** The joined form (task-423) is accepted and is not the default (RR-0374, measured: 10 of 15 findings joined against 14 of 15 per list): `node scripts/analysis/rule-lists.mjs lens-input --list rules --lists <ids> --material <plan or diff file> --out <dir>/in-<phase>-compliance-rules` joins the resolved lists whole, in table order, packed by size, and the close accepts `out-compliance-rules[-pN].txt` (a stage holding both forms is refused). For each list L: `node scripts/analysis/rule-lists.mjs lens-input --list L --material <plan or diff file> --out <dir>/in-<phase>-compliance-L` writes the lens input (the list first, whole, then the material; when list plus material would pass the review tool's 120000 character bound the list is split by its own headings into `-p1..-pN`, the bound measured on the exact prompt, never trimmed; it refuses, naming the section, when one section cannot fit), then `scripts/deepseek-review.js review <input file> --template .claude/review-templates/lens-compliance.md > <phase>-compliance-L.txt` (phase `plan` or `out`; `-pN` for each part).
-+3. **The lens line: one compliance run per list (the default).** The joined form (task-423) is accepted and is not the default (RR-0374, measured: 10 of 15 findings joined against 14 of 15 per list): `node scripts/analysis/rule-lists.mjs lens-input --list rules --lists <ids> --material <plan or diff file> --out <dir>/in-<phase>-compliance-rules` joins the resolved lists whole, in table order, packed by size, and the close accepts `out-compliance-rules[-pN].txt` (a stage holding both forms is refused). For each list L: `node scripts/analysis/rule-lists.mjs lens-input --list L --material <plan or diff file> --out <dir>/in-<phase>-compliance-L` writes the lens input (the list first, whole, then the material; when list plus material would pass the review tool's 120000 character bound the list is split by its own headings into `-p1..-pN`, the bound measured on the exact prompt, never trimmed; it refuses, naming the section, when one section cannot fit), then `scripts/deepseek-review.js review <input file> --template .claude/review-templates/lens-compliance.md > <phase>-compliance-L.txt` (phase `plan` or `out`; `-pN` for each part). Task-438 (RR-0385 item 2): a list on the engineering standards file is run by the engineering seat instead, the same commands with `--out <dir>/in-<phase>-engineering-L --template .claude/review-templates/lens-engineering.md` on lens-input and the review tool, filed `<phase>-engineering-L.txt` (joined: `<phase>-engineering-rules`); every other list stays with compliance (`seatOf` in `scripts/analysis/rule-lists.mjs`).
- 4. **A separate grounder rules on every finding.** The lane lists its findings and leaves the task RUNNING ("grounder owed"). A finding is a `BUG` or `DEFER` line of an `out-*.txt` lens output (plan findings are ruled once, at the plan, by the plan grounder; a `plan-*.txt` is read at close only when GROUNDER-PLAN.md at the launch commit is absent, empty or has no Plan line); its id is `<file stem>#<ordinal among those lines>` (`rule-lists.mjs findings --dir <dir>`). The grounder, an agent that is not the lane and not any assignee of the task, writes `GROUNDER.md` beside the outputs: header lines `Grounder: <name>` and `Lane: <lane>`; one line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY `out-*.txt` (and every `plan-*.txt` when the plan evidence is not on the board) (`rule-lists.mjs findings --dir <dir>` prints them; the hash and count are recomputed at close, so an output edited after grounding is refused); then one line per finding `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote>" [reason]` (reason needed for REJECTED and CONFLICT; the quote, 6+ characters, must be on that line of a repo file, and a lane report may not be cited). Task-433 (INPUTS.5, RR-0378 step 6): the compliance lens output ends with a line `Rules met: <rule ids>`, the ids of the pasted list it judged met (a rule id is a bullet line whose bold id is name.N (as in Specs 132, 133 and 136); ids of another shape are not read; `Rules met: none` when the list has none). `node scripts/analysis/rule-lists.mjs unmentioned --out <output file> [--in <its input file>]` prints the rule ids of the sent list part that appear nowhere in the output (a finding, a MET or REJECT line, the Rules met line, or any other text): a report for the grounder, not a gate (it exits 0 whenever it ran and nothing in the close reads it). It reads one output file at a time: each -pN file is one list part with one material chunk; when the material is cut into chunks every chunk repeats every list part, so the files with the same 'part i of n' carry the same text and an id of that part is unmentioned only if the reports of all those files list it; the counts are per file, the union is by hand.
--5. **At close** `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses the commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list (`out-compliance-<list id>.txt`), or the accepted joined set (`out-compliance-rules.txt`, or parts `-p1..-pK`; a stage holding both forms is refused; each holds a `VERDICT:` line) the lens set the task type calls for (a build or fix task also needs `out-code-review.txt`, `out-error-paths.txt`, `out-ux.txt` on a surface, `out-security.txt` on money/auth, and at least one `plan-*.txt` unless GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line) and `GROUNDER.md` in that form (always for a build or fix task, even with no finding; for other types only when a lens returned a finding). A close that changes code needs an `@lane-*` assignee (no exemption for code). Presence, form and the quote check only: the check cannot prove that the grounder did the work well.
-+5. **At close** `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses the commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list (`out-compliance-<list id>.txt`), or the accepted joined set (`out-compliance-rules.txt`, or parts `-p1..-pK`; a stage holding both forms is refused; each holds a `VERDICT:` line) the lens set the task type calls for (a build or fix task also needs `out-code-review.txt`, `out-error-paths.txt`, `out-ux.txt` on a surface, `out-security.txt` on money/auth, and at least one `plan-*.txt` unless GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line) and `GROUNDER.md` in that form (always for a build or fix task, even with no finding; for other types only when a lens returned a finding). A close that changes code needs an `@lane-*` assignee (no exemption for code). Presence, form and the quote check only: the check cannot prove that the grounder did the work well. Task-438: the engineering seat's files are `out-engineering-<list id>.txt` (or the joined `out-engineering-rules[-pN].txt`) on `lens-engineering.md`, required for a list on the engineering standards file when the range base holds `lens-engineering.md`; the launch gate always requires `plan-engineering-<list id>.txt` for such a list, and a compliance file never stands for it.
- 
- The close check also reads the review tool's REVIEW header (`scripts/deepseek-review.js` writes `REVIEW template=<name> model=<id> at=<iso> file_sha256=<hex> prompt_sha256=<hex>` among the first lines of a lens-mode output): a required lens output without it, with another template's name, or (compliance) whose `file_sha256` is not that of the committed input `in-<output name>` is refused; the input's first line `LIST <id> sha256:<hex> material sha256:<hex> part i of n` is recomputed, and the parts of a list together must carry the whole list as it is now. The lane report dir is scoped to one task by a file `TASK` holding the task id. Every staged task file that moves to a finished status (`finished_statuses` in the table: BUILT, DONE, MERGED) is checked, whatever the commit message says, including the board's auto-commit; a build, fix or check task needs an `@lane-*` assignee in the closing commit; paths changed since the lane branch point (merge-base with `base_ref`) must be covered by the task's Files line; a commit that changes a `protected_paths` file (the check, the table, the helper, the review tool, `.husky/*`) may not also close a task. A grounder name that contains or is contained in the lane or an assignee (case, punctuation and digits removed) is refused; quotes are 20+ characters, distinct per finding, not on a line that occurs more than 3 times in the cited file; REJECTED and CONFLICT reasons are 30+ characters; a loose reading of the finding lines must count the same as the strict one.
- 
-diff --git a/.claude/review-templates/lens-engineering.md b/.claude/review-templates/lens-engineering.md
-new file mode 100644
-index 0000000000000000000000000000000000000000..b36a0ef8e983290bdb7b63c21dc5be8ddb3b4065
---- /dev/null
-+++ b/.claude/review-templates/lens-engineering.md
-@@ -0,0 +1,80 @@
-+# Lens: Engineering (DeepSeek)
-+
-+**Axes:** Engineering standards, rule by rule
-+**Spec 08 seat:** Engineering (RR-0385, decision-170)
-+**Companion lenses:** lens-engineering.md · lens-compliance.md · lens-code-review.md · lens-ux.md · lens-error-paths.md · lens-security.md · plan-review-deepseek.md (failure modes, data reality, sibling bugs)
-+**Invocation:** see `.claude/review-templates/README.md` (section "The lens set")
-+
-+---
-+
-+## System persona (passed as systemInstruction)
-+
-+You are an engineering standards reviewer. You have exactly one question: is the plan or diff built to every engineering rule pasted in the context, rule by rule? You judge against the pasted engineering rules only; a rule that is not pasted is not yours to invent, and a pasted rule is yours even where another lens also covers its topic.
-+
-+**The one question:** Is the plan or diff built to every pasted engineering rule? The clause ref is the numbered section (for example `4. Security and API Contracts`).
-+
-+You are NOT responsible for:
-+- spec clauses, handbook rules, operator rulings, design text, "nothing added" (lens-compliance)
-+- quality or behaviour no pasted rule states (the code-review, ux, error-paths and security lenses), where a pasted rule on their topic is yours
-+- failure modes, rollback, data reality (plan-review-deepseek)
-+- whether the spec is itself still true against the live tree or DB (Ground-truth A9, Claude)
-+
-+Do not duplicate another lens. Quote file:line or the pasted line; a finding with no quote is rejected. Be specific. Use the strict output format below; free prose is rejected.
-+
-+---
-+
-+## User prompt (substitute placeholders at invocation time)
-+
-+I am reviewing a change against ONE question only: Is the plan or diff built to every pasted engineering rule? The clause ref is the numbered section (for example `4. Security and API Contracts`).
-+
-+**Plan file (plan mode only; in review mode this block holds the material under review, the file named on the command line):**
-+```
-+{{PLAN}}
-+```
-+
-+**Pasted context: governing spec clauses, operator rulings, approved design text (plan mode only; in review mode it is the top of the File block):**
-+```
-+{{SPECS}}
-+```
-+
-+If a block above still shows a literal placeholder, the material under review is the File block of this prompt (pasted context first, then the plan or diff). Judge only what is pasted. Anything you cannot see, write as "cannot see" and do not guess.
-+
-+---
-+
-+### What to walk
-+
-+1. List every engineering rule in the pasted context that binds this change. Skip engineering rules that do not touch the change.
-+2. For each bound engineering rule, find the plan step or the diff line that satisfies it, or say none does.
-+3. An engineering rule satisfied only by a comment, a TODO or a test name is UNMET.
-+
-+---
-+
-+## Output format (strict, non-conforming output will be rejected)
-+
-+At most 8 findings, one line each, no em-dash inside a field (use a comma). Every finding quotes the line it rests on (file:line or the pasted line, in double quotes); a finding with no quote is rejected. Forms:
-+
-+```
-+BUG severity=<CRIT|HIGH> — <clause ref> "<clause quote>" — <file:line> "<code quote>" or NONE — <one-line claim: clause unmet> — <one-line concrete fix>
-+DEFER severity=<MED|LOW|NIT> — <clause ref> "<clause quote>" — <file:line> "<code quote>" or NONE — <one-line claim> — <one-line rationale>
-+MET — <clause ref> — <file:line> — <what satisfies it> (at most 8 MET lines, only for clauses the change is most likely to break)
-+REJECT — <clause ref> — <what the change is accused of> — <why this is not a real issue, one line>
-+```
-+
-+Severity gate: **CRIT** and **HIGH** must be fixed before plan-lock (plan mode) or before merge (output mode). **MED** is a real risk with bounded blast radius. **LOW** and **NIT** are safe to defer.
-+
-+End with:
-+
-+```
-+VERDICT: PASS or FAIL on the pasted engineering rules
-+Clauses checked: <n>   Unmet: <n>
-+```
-+
-+---
-+
-+## Anti-patterns (do NOT produce these)
-+
-+- Judging against a rule that is not in the pasted list. If you recall a rule from elsewhere, say "not pasted" and do not raise it.
-+- Reporting style, naming or performance that no pasted rule states.
-+- Reporting a clause as unmet without quoting both the clause and the code (or writing NONE for the code).
-+- Prose summaries, headings or bullets outside the format above.
-+- A finding that belongs to a lens named in "You are NOT responsible for".
-diff --git a/docs/reports/generated/rule-lists-by-kind.md b/docs/reports/generated/rule-lists-by-kind.md
-index a3c113fec84631a5a91f4109aa0f510d2a113fed..2202228b9c0b5a92807126aec8cd2ccf51789d7b 100644
---- a/docs/reports/generated/rule-lists-by-kind.md
-+++ b/docs/reports/generated/rule-lists-by-kind.md
-@@ -96,7 +96,7 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
- | list | document | selection | characters | parts |
- | --- | --- | --- | ---: | ---: |
- | agents-s5-1to3 | docs/specs/00-architecture/08_agents.md | 5.1 Compliance; 5.2 Ground-truth; 5.3 Round-2 adjudication | 14,705 | 1 |
--| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 39,171 | 1 |
-+| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 40,664 | 1 |
- | queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 36,884 | 1 |
- | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
- | orchestrator-doc17 | backlog/docs/doc-17 - Orchestrator-readings-not-rulings.md | whole file | 31,570 | 1 |
-@@ -104,7 +104,7 @@ Example Files line: `scripts/analysis/rule-lists.mjs, scripts/hooks/check-lane-c
- | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
- | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
- | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
--| total | 9 lists | | 206,513 | 9 |
-+| total | 9 lists | | 208,006 | 9 |
- 
- ## spec-only
- 
-@@ -113,11 +113,11 @@ Example Files line: `docs/specs/00-architecture/08_agents.md`; type build; miles
- | list | document | selection | characters | parts |
- | --- | --- | --- | ---: | ---: |
- | queue-137 | docs/specs/00-architecture/137_mcqueue.md | whole file | 36,884 | 1 |
--| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 39,171 | 1 |
-+| agents-s7-s11 | docs/specs/00-architecture/08_agents.md | 7. Rules & economics; 11. Grounded Verification Protocol | 40,664 | 1 |
- | eng-all | docs/specs/00_engineering_standards.md | whole file | 46,613 | 1 |
- | five-words | docs/specs/01-pipeline/132_step_standard_handbook.md | Glossary | 5,367 | 1 |
- | plan-protocol | docs/specs/00-architecture/plan-protocol.md | whole file | 8,825 | 1 |
- | inc-S | backlog/docs/increments/doc-2 - Increment-S-requirements.md | whole file | 20,869 | 1 |
- | ms-S | backlog/milestones/m-1 - increment-1·b-search-[s].md | Project objectives; Increment objectives; Objectives | 2,509 | 1 |
--| total | 7 lists | | 160,238 | 7 |
-+| total | 7 lists | | 161,731 | 7 |
- 
-diff --git a/docs/specs/00-architecture/08_agents.md b/docs/specs/00-architecture/08_agents.md
-index f92c3e6b2b5b4fd7e4d324509ecb12d06321725f..8f46d585b3009923e4186445ae012cfbf9e213a9 100644
---- a/docs/specs/00-architecture/08_agents.md
-+++ b/docs/specs/00-architecture/08_agents.md
-@@ -349,6 +349,7 @@ Legend: **I**=Integration · **RC**=Reality-Check · **SF**=Schema-Fidelity · *
- 4. **Cost-tiering — DeepSeek as multi-pass breadth at BOTH altitudes.** DeepSeek is ~free and a distinct lineage. NEVER run one generic pass — run the LENS SET in parallel, each a narrow prompt: (1) `spec` = the Compliance (A10) substrate, (2) security, (3) idempotency/dedup, (4) error-paths/degrade-safety. Run the set at plan AND output for WF1/WF2; at output for WF3. Every DeepSeek finding is adjudicated by a tool-having grounder before folding (§9 CLI blind spots — the 25E cursor-leak HIGH was a false premise refuted by `streamQuery` try/finally). Reserve the pricier Claude Task agents for the tool-needing roles (Integration/Guardian/Reality-Check/Schema-Fidelity/Ground-truth — they read the tree, git, or the DB; a CLI can't).
-    Dated note 2026-11-19 (M-246, prior text kept; task-358 REVIEW.LENSES, lane BL-LENSES; operator, verbatim, 2026-11-19, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry 'Operator: the review protocol': "I believe deepseek does the compliance seat" and "Deepseek is respoonsible for many of these seats - too many tokens to run all claude ones"): the repo lens set is five narrow DeepSeek templates in `.claude/review-templates/`: `lens-compliance.md` (A10), `lens-code-review.md` (A3), `lens-ux.md` (A11), `lens-error-paths.md` (A2 lens 4), `lens-security.md` (A12, money/auth/PII only), plus `plan-review-deepseek.md` as the failure-modes lens; run with `scripts/deepseek-review.js review <file> --template <lens> --context <pasted context>`; the lane brief written by `backlog-lane.mjs` names the lenses by task type; one Claude grounder adjudicates every finding as round 2. Table: `.claude/review-templates/README.md`.
-    Dated note 2026-11-21 (M-246, prior text kept; task-423 PROTOCOL.SIMPLE, lane BL-SIMPLE423, Increment 1·B; operator, verbatim, 2026-11-21, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, RR-0363 at :1718: "We just need the rules for deepseek." and the objective at :1711: "the objective is an effective compliance review on the plan and the output.  It isn't 17"): the joined run is an accepted form of the compliance lens output set and is NOT the default: the resolved rule lists may be joined whole in table order and packed by size (`node scripts/analysis/rule-lists.mjs lens-input --list rules --lists <ids>`), one output set per stage, `out-compliance-rules[-pN].txt` (a round file `-rN` of it counts as joined), and the close check and the plan gate accept it; a stage that holds both forms is refused (`scripts/hooks/check-lane-close.mjs`). The default stays one compliance run per rule list, as the notes above say, because the join was measured and found 10 of 15 findings against 14 of 15 for the per-document form (RR-0374, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, operator, verbatim: "Apprvoe step 1 and step 2 - when it arrives"); a list is never trimmed in either form (the "never trimmed" sentence above stays true), and nothing orders the join. Plan findings are ruled once, at the plan: when GROUNDER-PLAN.md at the launch commit is non-empty and holds a `Plan: <task id> sha256:<12 hex>` line, the lane close requires no `plan-*.txt` in the lane folder and reads only the `out-*.txt` findings and their `Ruled:` lines; absent that file the older rule stands. Rule 6 is not changed here.
-+   Dated note 2026-11-22 (M-246, prior text kept; task-438 FINAL.3, McFix Final; RR-0385 item 2, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." and "We need a new name for an agent called engineering."): a review seat named `engineering`, separate from compliance, at plan and at output. A rule list whose file is the engineering standards (`docs/specs/00_engineering_standards.md`, today `eng-all`; `seatOf` in `scripts/analysis/rule-lists.mjs`) is reviewed by `.claude/review-templates/lens-engineering.md`, and every other list by `lens-compliance.md`, which is not edited. The per-list rule of the section 5.3 note of 2026-11-21 and of this rule now reads `out-compliance-<id>` or `out-engineering-<id>` (and `plan-compliance-<id>` or `plan-engineering-<id>`), by the seat of the list; the joined form is per seat (`out-compliance-rules`, `out-engineering-rules`), chosen per seat and per stage. The launch gate requires the engineering name from the landing of task-438 and refuses the compliance name for an engineering list, with no alias. The close applies the split when the range base holds `lens-engineering.md`: a lane launched before the landing closes as before with `out-compliance-eng-all`, a deliberate exception for lanes already launched; their engineering list is still reviewed, under the compliance name.
- 5. **Panel sizing scales to stakes.** "quick check" → a couple of lenses, single-vote. "thoroughly audit / money code / pipeline data" → full domain roster + round-2 (manual: scale to what's asked).
- 6. **Findings triage** (WF6): BUG → WF3 before Green Light; DEFER → `review_followups.md` with reasons.
-    Dated note 2026-11-20 (M-246, prior text kept; task-399 FOLD.ADOPT, lane BL-OUTCOME; operator, verbatim, 2026-11-20, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1580`: "the findings that are deemed low priorities are filed in a review pile for later"; :1517 "don't makr the task complete until it actually works"): the lane close now refuses unless every CONFIRMED or CONFLICT finding of the lane's GROUNDER.md (seat findings listed by a `Seat: <name> <repo path> sha256:<12 hex>` line included) has one outcome line in the lane's TRIAGE.md, the last line per id judged (`node scripts/hooks/check-lane-close.mjs --outcomes <lane dir>` runs it before the close). Forms: `fixed:<sha> <path>` (the commit is an ancestor of HEAD, in the range from the launch commit, touches the path, is not reverted), `task:task-N` (the task exists, is not DROPPED and names the finding id; only for a DEFER finding), `ruling:RR-NNNN` or `ruling:decision-N` (the decision record exists), `wontfix:"<reason>"` and `pile:"<reason>"` (30+ characters; LOW and NIT only). CRITICAL, HIGH and MED close by fixed or ruling (rule 6 above: a BUG is fixed before Green Light); LOW and NIT close by any form whatever the kind (his :1580 words override rule 6 for them). Until the review_followups.md table row exists, pile lines in TRIAGE.md are the pile. The task's Final Summary carries the round line and one line per CRITICAL, HIGH or MED finding. This is part of the same omission guard as the task-410 note (it proves presence, form and git facts, never that a fix fixes); forgery routes stay with tasks 401 and 402.
-diff --git a/scripts/analysis/backlog-lane.mjs b/scripts/analysis/backlog-lane.mjs
-index 8ad0796a435e67a604a6d6488d567283376d7d3e..abb25e1f88dbed95c8335e2af54a491b3138326b 100644
---- a/scripts/analysis/backlog-lane.mjs
-+++ b/scripts/analysis/backlog-lane.mjs
-@@ -22,7 +22,7 @@ import path from 'node:path';
- import { fileURLToPath } from 'node:url';
- import { args, asList, descriptionOf, home, parseFM, readItems, REPO, sha256, today } from './backlog-lib.mjs';
- import { planGateErrors } from '../hooks/check-lane-close.mjs';
--import { complianceRefs, gitFreeEnv, DEFAULT_TABLE, DIFF_ARGS, filesText, lensSet, milestoneLetter, readTable, resolveTask, verifyResolved } from './rule-lists.mjs';
-+import { complianceRefs, gitFreeEnv, DEFAULT_TABLE, DIFF_ARGS, filesText, lensSet, milestoneLetter, readTable, resolveTask, seatOf, verifyResolved } from './rule-lists.mjs';
- 
- const a = args();
- const str = (k, d) => (a[k] && a[k] !== true ? String(a[k]) : d);
-@@ -179,9 +179,11 @@ const lensLine = (task, ctx, lists) => {
-   const { code, out } = lensSet({ type: task.fm.type, files: filesText(task.body) }); // one lens-set function, shared with the close check (rule-lists.mjs)
-   const f = (l) => (l === 'plan-review-deepseek' ? 'plan-review-deepseek.md' : `lens-${l}.md`);
-   const cmd = 'DOTENV_CONFIG_PATH=$HOME/Buildo/.env node -r $HOME/Buildo/node_modules/dotenv/config scripts/deepseek-review.js review';
--  const ids = lists.map((l) => l.id);
-+  // task-438 (RR-0385 item 2): the lists of the engineering standards file go to the engineering seat (rule-lists.mjs seatOf), the others to compliance
-+  const ids = lists.filter((l) => seatOf(l) === 'compliance').map((l) => l.id);
-+  const engIds = lists.filter((l) => seatOf(l) === 'engineering').map((l) => l.id);
-   const baseFull = /^refs\//.test(ruleTable?.base_ref ?? '') ? ruleTable.base_ref : `refs/heads/${ruleTable?.base_ref ?? 'wf2/board'}`;
--  const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed), at the output stage only: for each list id L, \`node scripts/analysis/rule-lists.mjs lens-input --list L --context ${ctx} --material <diff file> --out <lane dir>/in-out-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md ${ctxArgs} > out-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'out-compliance-' + i + '.txt').join(', ')}. The joined run (\`lens-input --list rules --lists <ids>\`, one set out-compliance-rules[-pN].txt for all the lists) is an accepted form that is not the default (RR-0374, measured: joined whole documents found 10 of 15 findings against the per-document form's 14 of 15); a stage holding both forms is refused. Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below (scripts/hooks/check-lane-close.mjs). The plan was ruled once, at the plan: the lane runs no plan lens.`;
-+  const per = `Compliance lens, ONCE PER RULE LIST (the lists of the "Rule lists that govern this task" input, each pasted WHOLE ahead of the material; a list is never trimmed), at the output stage only: for each list id L, \`node scripts/analysis/rule-lists.mjs lens-input --list L --context ${ctx} --material <diff file> --out <lane dir>/in-out-compliance-L\` writes the input file (list part first, then the material; parts -p1..-pN only when list plus material would pass the review tool's 120000 character bound; then the diff is split by the tool too, see below), then \`${cmd} <each input file> --template .claude/review-templates/lens-compliance.md ${ctxArgs} > out-compliance-L[-pN].txt\`. Files to produce, one per list: ${ids.map((i) => 'out-compliance-' + i + '.txt').join(', ')}. The joined run (\`lens-input --list rules --lists <the compliance list ids>\`, one set out-compliance-rules[-pN].txt for all the compliance lists) is an accepted form that is not the default (RR-0374, measured: joined whole documents found 10 of 15 findings against the per-document form's 14 of 15); a stage holding both forms is refused.${engIds.length ? ` Engineering lens, once per engineering list: the same commands with \`--out <lane dir>/in-out-engineering-L --template .claude/review-templates/lens-engineering.md\` on lens-input and the review tool; files ${engIds.map((i) => 'out-engineering-' + i + '.txt').join(', ')}.` : ''} Commit each lens input beside its output (in-<output name>, the file the review tool read) and a file TASK holding exactly ${task.id}; never edit a lens output (the review tool writes its REVIEW header, the close check recomputes the hashes). The close of this task is refused without an out-compliance output per list (or the joined set), an out-<lens>.txt for every other output lens named above, and the grounder file below (scripts/hooks/check-lane-close.mjs). The plan was ruled once, at the plan: the lane runs no plan lens.`;
-   // task-407 (V2.LAYOUT): the one place the close check reads (scripts/hooks/check-lane-close.mjs: lane files at path depth 6, plan-*.txt / out-*.txt, in- beside them), said in every brief
-   const layout = ` REVIEW FILES GO IN ONE PLACE: docs/reports/lanes/${date}/${lane}/ directly (no subfolders; a file in a subfolder (lens-plan/, lens-out/, stage2/) is never read), named plan-<lens>[-<list id>][-pN].txt, out-<lens>[-<list id>][-pN].txt, in-<same name> inputs beside them, plus the file TASK; the second (fix) round (r2; two output rounds at most, RR-0385) is filed beside them as out-<lens>[-<list id>]-rN.txt with its in-<same name>: the close check reads it for findings like any out- file (each finding needs a verdict) and the round-1 file stays; a name not starting plan- or out- (fix-*.txt) is never read. The compliance lens reviews the WHOLE change: make the diff with \`git -c core.quotepath=false diff ${DIFF_ARGS.join(' ')} $(git log ${baseFull} --first-parent --reverse --format=%H -S@lane-${lane} -- '${'backlog/tasks/' + path.basename(task.file)}' | head -1) HEAD -- ${filesText(task.body).split(',').map((s) => s.trim()).filter(Boolean).map((e) => (/[*?]/.test(e) ? `'${':(glob)'}${e}'` : `'${e}'`)).join(' ')} ${(ruleTable?.exempt ?? []).map((g) => `'${':(exclude,glob)'}${g}'`).join(' ')}\` (never trimmed to core files; the base is the task's launch commit on the board, the first commit that holds this lane's assignee on the task file, so a lane already folded into the board still shows its whole change; only the paths of the Files line are in it, and the exempt paths are left out); lens-input splits the rule list at its headings and, when the diff leaves no room for a list part, splits the DIFF at file boundaries into chunks (never by hand, never inside a file); each chunk goes against every list part; the files are -p1..-pN, chunk by chunk, each stamped chunk c of m with its path list; the code-review, error-paths, ux and security lenses whose prompt would pass the bound use the same tool with their own template and no --list (\`lens-input --context ${ctx} --material <diff file> --out <lane dir>/in-out-<lens> --template .claude/review-templates/lens-<lens>.md\`) and are filed out-<lens>-pN.txt with their in-<same name>; one file alone over the room is refused naming the file and its size: report that to the orchestrator at once. A lane build or fix task closes in TWO commits (Spec 137 Rule 3 as amended for lane build and fix tasks): the work (code, tests, task notes) lands first; the closing commit carries only the lane's records (its report directory, the review context directory, the task file with the status, the decision record). The close check recomputes the changed paths of the task range (minus the exempt paths) and refuses when the chunks together are not exactly that list, when a chunk is not what that git diff prints for its paths, or when a stamp was edited. Fresh context every review round (RR-0378 step 5, 08_agents.md:529). Before the lens inputs of each review round (the first output round and every fix round) run in the worktree \`node scripts/analysis/backlog-brief.mjs --task ${task.id} --lane ${lane} --stage ${stage} --root ${wt} --board ${board} > /dev/null\`, which writes the next docs/reports/reviews/${task.id}/context-rN.md from your task file and the decisions of the board as they are then; the file named in the commands above is the launch file, so use the highest-numbered context-rN.md instead in every --context of that round and commit it with the round.`;
-   const grounder = ' Session rule (Spec 08 section 7 rule 4 and section 5.3; COMPLY.2): a separate grounder rules on every finding. You do not rule on your own findings: list each finding with its id (`node scripts/analysis/rule-lists.mjs findings --dir <lane report dir>`), copy out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/ and leave the task RUNNING with "grounder owed"; the orchestrator launches a grounder that is not you, who writes GROUNDER.md there: headers `Grounder: <name>` and `Lane: <lane>` (the grounder is not the lane and not any assignee of the task); a line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY out-*.txt (and every plan-*.txt when the plan evidence is not on the board; rule-lists.mjs findings prints them; an output edited after grounding is refused); one line `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote on that line>" [reason: needed for REJECTED and CONFLICT]` per finding (the quote is checked against the repo, a lane report may not be cited). A build or fix task needs GROUNDER.md even with zero findings. The commit that sets the task BUILT is refused without all of it. ROUNDS (RR-0385, Spec 08 dated note 2026-11-22): round 1 resolves CRITICAL, HIGH and MED findings; round 2 resolves CRITICAL and HIGH only, and a MED the grounder confirms in round 2 gets the outcome line `<id> ruling:RR-0385` (the grounder decides it, the lane does not rule); LOW and NIT are recorded (pile or wontfix, 30+ character reason), not fixed or folded; there is no third round: a CRITICAL or HIGH still open after round 2 is reported with STATUS: blocked, for the operator.';
-diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
-index c6fe42d29eca972538775b261b578b5c760adf40..c28020b65b8b3d40fcbf3eac5599ca3bd50366dc 100644
---- a/scripts/analysis/rule-lists.mjs
-+++ b/scripts/analysis/rule-lists.mjs
-@@ -108,6 +108,9 @@ export function listBlocks(list, root, id = '?') {
- 
- /** The id of the virtual list that joins the resolved lists (task-423); a table list may not use it. */
- export const JOINED_ID = 'rules';
-+/** task-438 (FINAL.3, RR-0385 item 2, decision-170): the seat of a rule list. A list whose file is the engineering standards goes to the engineering seat (lens-engineering.md), every other list, and the joined list, to compliance. */
-+export const ENG_FILE = 'docs/specs/00_engineering_standards.md';
-+export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');
- /**
-  * task-423 (PROTOCOL.SIMPLE, adjustment 1): a copy of the table with one extra list `rules`: the given lists joined WHOLE, in table order, nothing cut. The existing code (listBlocks, partsFor, renderLensInput,
-  * the close check's whole-list recompute) reads it like any table list, so the lists are packed by size and one compliance call set covers all of them. Throws when an id is not in the table.
-@@ -648,12 +651,12 @@ export async function planPrep(a) {
-       const lenses = lensSet({ type, files: filesText(t.body) }).plan.map((l) => ({ out: `plan-${l}.txt`, tpl: l === 'plan-review-deepseek' ? 'plan-review-deepseek.md' : `lens-${l}.md`, file: ctxRel }));
-       const lists = type === 'build' ? r.lists : []; // a fix task needs the plan lens outputs only (check-lane-close.mjs:604); RR-0374: the per-document form is the default, the joined form is only accepted by the checks
-       const briefArgv = ['node', path.join(HERE, 'backlog-brief.mjs'), '--task', taskId, '--lane', lane, '--root', board];
--      const inputArgv = (id) => ['node', path.join(HERE, 'rule-lists.mjs'), 'lens-input', '--root', board, '--list', id, '--context', ctxRel, '--material-from', ctxRel, '--out', `${ev}/in-plan-compliance-${id}`];
-+      const inputArgv = (l) => ['node', path.join(HERE, 'rule-lists.mjs'), 'lens-input', '--root', board, '--list', l.id, '--context', ctxRel, '--material-from', ctxRel, '--out', `${ev}/in-plan-${seatOf(l)}-${l.id}`, '--template', path.join(REPO, `.claude/review-templates/lens-${seatOf(l)}.md`)]; // task-438: named and sized by the list's seat
-       if (dry) {
-         say(board, briefArgv);
--        for (const l of lists) say(board, inputArgv(l.id));
--        // the number of parts of a list is known only from the context the brief writes: the review command names the file as in-plan-compliance-<id>[-pN].txt
--        for (const l of lists) say(board, reviewArgv(`${ev}/in-plan-compliance-${l.id}[-pN].txt`, 'lens-compliance.md'), denv);
-+        for (const l of lists) say(board, inputArgv(l));
-+        // the number of parts of a list is known only from the context the brief writes: the review command names the file as in-plan-<seat>-<id>[-pN].txt
-+        for (const l of lists) say(board, reviewArgv(`${ev}/in-plan-${seatOf(l)}-${l.id}[-pN].txt`, `lens-${seatOf(l)}.md`), denv);
-         for (const l of lenses) say(board, reviewArgv(l.file, l.tpl), denv);
-         return 0;
-       }
-@@ -661,10 +664,11 @@ export async function planPrep(a) {
-       say(board, briefArgv);
-       const b = sh(briefArgv);
-       if (b.status !== 0 || !fs.existsSync(path.join(board, ctxRel))) throw new Stop(1, `the brief did not write ${ctxRel}: ${first(b.stderr || b.stdout, 2)}`);
--      for (const l of lists) { say(board, inputArgv(l.id)); const x = sh(inputArgv(l.id)); if (x.status !== 0) fail(`lens-input failed for list ${l.id}: ${first(x.stderr || x.stdout, 3)}`); }
-+      for (const l of lists) { say(board, inputArgv(l)); const x = sh(inputArgv(l)); if (x.status !== 0) fail(`lens-input failed for list ${l.id}: ${first(x.stderr || x.stdout, 3)}`); }
-       const jobs = [];
--      for (const l of lists) for (const f of fs.readdirSync(evAbs).filter((n) => new RegExp(`^in-plan-compliance-${reEsc(l.id)}(-p\\d+)?\\.txt$`).test(n)).sort()) jobs.push({ out: f.replace(/^in-/, ''), tpl: 'lens-compliance.md', file: `${ev}/${f}` });
--      const nCompliance = jobs.length;
-+      for (const l of lists) for (const f of fs.readdirSync(evAbs).filter((n) => new RegExp(`^in-plan-${seatOf(l)}-${reEsc(l.id)}(-p\\d+)?\\.txt$`).test(n)).sort()) jobs.push({ out: f.replace(/^in-/, ''), tpl: `lens-${seatOf(l)}.md`, file: `${ev}/${f}` });
-+      const nCompliance = jobs.filter((j) => j.tpl === 'lens-compliance.md').length;
-+      const nEngineering = jobs.length - nCompliance;
-       jobs.push(...lenses);
-       const started = jobs.map((j) => { const argv = reviewArgv(j.file, j.tpl); say(board, argv, denv); return runAsync(argv, denv).then((x) => ({ j, x })); });
-       const done = await Promise.all(started);
-@@ -676,7 +680,7 @@ export async function planPrep(a) {
-       if (bad.length) fail(`${bad.length} output(s) lack the REVIEW header of their template in the first 15 lines or the VERDICT line: ${bad.map(({ j }) => `${ev}/${j.out}`).join(', ')}`);
-       const report = findingsReport(evAbs);
-       fs.writeFileSync(path.join(evAbs, 'FINDINGS-PLAN.md'), `${report.join('\n')}\n`);
--      console.log(`plan-prep review: ${done.length} outputs (${nCompliance} compliance, ${lenses.length} plan lens), ${report.filter((l) => l.includes('\t')).length} findings, ${ev}/FINDINGS-PLAN.md`);
-+      console.log(`plan-prep review: ${done.length} outputs (${nCompliance} compliance, ${nEngineering} engineering, ${lenses.length} plan lens), ${report.filter((l) => l.includes('\t')).length} findings, ${ev}/FINDINGS-PLAN.md`);
-       return 0;
-     }
-     function runAsync(argv, extra) {
-diff --git a/scripts/hooks/check-lane-close.mjs b/scripts/hooks/check-lane-close.mjs
-index ac2821f04931303b2c7d950611f67964cf773320..69e0cd0d0b7a54ff6a6b8cd4783b7883437e280c 100644
---- a/scripts/hooks/check-lane-close.mjs
-+++ b/scripts/hooks/check-lane-close.mjs
-@@ -11,6 +11,9 @@
- //    Files line; a build or fix task whose Files resolve to no rule list is refused;
- //  * every_task (V2.LIST, task-406): the table's every_task lists are attached to every task by the resolver, so each needs its compliance output like any list; a table with no every_task is refused;
- //  * task-423: the compliance proof is ONE joined output set per stage (out-compliance-rules[-pN].txt, the resolved lists joined whole by joinLists) or the per-list set (a stage holding both is refused);
-+//  * task-438 (RR-0385 item 2): a list on the engineering standards file (rule-lists.mjs seatOf) is the engineering seat's: out-engineering-<list id>.txt on lens-engineering.md (joined: out-engineering-rules),
-+//    every other list the compliance seat's; the form is chosen per seat and per stage. The close applies the split when the range base holds lens-engineering.md (a lane launched before
-+//    the landing closes as before, every list under compliance); the launch gate always splits. No alias: a compliance file never stands for the engineering seat;
- //    plan findings are ruled once: with GROUNDER-PLAN.md at the launch commit non-empty and holding a Plan line, no plan-*.txt is required and none is read for findings;
- //  * the LENS SET the task type calls for (scripts/analysis/rule-lists.mjs lensSet, the function the launch brief uses): per attached rule list one compliance output
- //    (out-compliance-<list id>.txt; plan- or out- for a non build/fix task; ONE file or parts -p1..-pK with no gap), and for a build or fix task also out-<lens>.txt for code-review,
-@@ -39,7 +42,7 @@ import path from 'node:path';
- import { createRequire } from 'node:module';
- import { fileURLToPath } from 'node:url';
- import { asList, parseFM } from '../analysis/backlog-lib.mjs';
--import { coveredBy, DIFF_ARGS, diffPaths, JOINED_ID, joinLists, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine } from '../analysis/rule-lists.mjs';
-+import { coveredBy, DIFF_ARGS, diffPaths, JOINED_ID, joinLists, lensPromptHash, renderLensInput, verifyResolved, filesEntries, filesText, findingsIn, isLensOutput, lensSet, listBlocks, looseFindingCount, milestoneLetter, parseLensInput, readTable, resolveTask, ruledLine, seatOf } from '../analysis/rule-lists.mjs';
- import { matchesAny } from '../analysis/mcbylaws/paths.mjs';
- 
- const { CONTEXT_SECTIONS, PLAN_SECTIONS, extractSections } = createRequire(import.meta.url)('../lib/review-template.js');
-@@ -379,11 +382,11 @@ function grounderErrors({ g, label = 'GROUNDER.md', lensFiles, findings, laneNam
-  * task-375 D5 (extracted from closeErrors, behaviour preserving): the proof of ONE rule list's compliance lens output(s) in `files` for the given phases: REVIEW header and prompt hash, committed input, stamp,
-  * whole-list recompute, chunk coverage (out phase). Returns the refusal line, or null when valid. `materialOk(p)` (plan gate): an extra problem text for a parsed input, or null.
-  */
--function listProof({ id, l, phases, files, textOf, table, root, readBase, ctxValues, expected, diffOf, optionalPaths, dirNote, layout, materialOk }) {
-+function listProof({ id, l, seat = 'compliance', phases, files, textOf, table, root, readBase, ctxValues, expected, diffOf, optionalPaths, dirNote, layout, materialOk }) {
-   const why = [];
-   let ok = false;
-   for (const ph of phases) {
--    const base = `${ph}-compliance-${l.id}`;
-+    const base = `${ph}-${seat}-${l.id}`;
-     const single = textOf(`${base}.txt`);
-     const parts = files.map((f) => new RegExp(`^${esc(base)}-p(\\d+)\\.txt$`).exec(f.name)).filter(Boolean).map((x) => Number(x[1])).sort((a, b) => a - b);
-     if (single !== undefined && parts.length) { why.push(`${base}.txt and ${base}-pN.txt both exist (one file, or -p1..-pK)`); continue; }
-@@ -396,7 +399,7 @@ function listProof({ id, l, phases, files, textOf, table, root, readBase, ctxVal
-     for (const n of names) {
-       const input = textOf(`in-${n}`);
-       if (input === undefined) { bad.push(`${n}: the input in-${n} that the review tool read is not committed beside it`); continue; }
--      bad.push(...reviewErrors(n, textOf(n) ?? '', 'lens-compliance.md', input, { templateText: readBase('.claude/review-templates/lens-compliance.md'), contexts: ctxValues }));
-+      bad.push(...reviewErrors(n, textOf(n) ?? '', `lens-${seat}.md`, input, { templateText: readBase(`.claude/review-templates/lens-${seat}.md`), contexts: ctxValues }));
-       const p = parseLensInput(input);
-       if (!p) bad.push(`in-${n}: first line is not "LIST <id> sha256:<hex> material sha256:<hex> part i of n" (rule-lists.mjs lens-input writes it)`);
-       else if (p.id !== l.id) bad.push(`in-${n}: stamped for list ${p.id}, expected ${l.id}`);
-@@ -417,30 +420,31 @@ function listProof({ id, l, phases, files, textOf, table, root, readBase, ctxVal
-     if (bad.length) { why.push(bad.join('; ')); continue; }
-     ok = true;
-   }
--  return ok ? null : `${id}: list ${l.id} (${l.file}) has no valid compliance lens output in ${dirNote}: write ${phases.join(' or ')}-compliance-${l.id}.txt${why.length ? ` (${why.join('; ')})` : ''}; ${layout}`;
-+  return ok ? null : `${id}: list ${l.id} (${l.file}) has no valid ${seat} lens output in ${dirNote}: write ${phases.join(' or ')}-${seat}-${l.id}.txt${why.length ? ` (${why.join('; ')})` : ''}; ${layout}`;
- }
- 
- /**
-  * task-423 (PROTOCOL.SIMPLE, adjustment 1): the compliance proof of a stage in either form. The JOINED form is out-compliance-rules[-pN].txt (the resolved lists joined whole by joinLists, proved by listProof as one
-  * list named rules); the PER-LIST form is out-compliance-<list id>[-pN].txt for every list (kept for a task launched before the join). The form is decided per phase from the files in the folder: a phase holding both
-  * is refused, a phase holding neither is refused naming the joined file first (the per-list refusals follow). `proof(l, phases, table)` is one listProof call; `lists` the resolved lists; returns the refusal lines.
-+ * task-438: `seat` (compliance or engineering) names the files; `lists` are that seat's lists only, so the joined form of a seat joins its own lists.
-  */
--function complianceSetErrors({ id, lists, phases, files, table, dirNote, proof }) {
--  const named = (ph, re) => files.some((f) => re.test(f.name) && f.name.startsWith(`${ph}-compliance-`));
--  const isJoined = new RegExp(`^(plan|out)-compliance-${JOINED_ID}(-r\\d+)?(-p\\d+)?\\.txt$`); // a round file (-rN, -rN-pN) of the joined set is joined too (task-423 D1)
--  const isAny = /^(plan|out)-compliance-.+\.txt$/;
-+function complianceSetErrors({ id, seat = 'compliance', lists, phases, files, table, dirNote, proof }) {
-+  const named = (ph, re) => files.some((f) => re.test(f.name) && f.name.startsWith(`${ph}-${seat}-`));
-+  const isJoined = new RegExp(`^(plan|out)-${seat}-${JOINED_ID}(-r\\d+)?(-p\\d+)?\\.txt$`); // a round file (-rN, -rN-pN) of the joined set is joined too (task-423 D1)
-+  const isAny = new RegExp(`^(plan|out)-${seat}-.+\\.txt$`);
-   const errors = [];
-   const joinedPh = []; const perPh = [];
-   for (const ph of phases) {
-     const j = named(ph, isJoined);
--    const p = files.some((f) => isAny.test(f.name) && f.name.startsWith(`${ph}-compliance-`) && !isJoined.test(f.name));
--    if (j && p) errors.push(`${id}: ${dirNote} holds both the joined (${ph}-compliance-${JOINED_ID}*.txt) and the per-list (${ph}-compliance-<list id>*.txt) compliance outputs of the ${ph} stage: keep one form per stage`);
-+    const p = files.some((f) => isAny.test(f.name) && f.name.startsWith(`${ph}-${seat}-`) && !isJoined.test(f.name));
-+    if (j && p) errors.push(`${id}: ${dirNote} holds both the joined (${ph}-${seat}-${JOINED_ID}*.txt) and the per-list (${ph}-${seat}-<list id>*.txt) ${seat} outputs of the ${ph} stage: keep one form per stage`);
-     else if (j) joinedPh.push(ph);
-     else if (p) perPh.push(ph);
-   }
-   const none = joinedPh.length === 0 && perPh.length === 0 && errors.length === 0;
-   if (none) {
--    errors.push(`${id}: no joined compliance lens output in ${dirNote}: write ${phases.map((p) => `${p}-compliance-${JOINED_ID}.txt`).join(' or ')} (rule-lists.mjs lens-input --list ${JOINED_ID} --lists ${lists.map((l) => l.id).join(',')}), or one per list as below`);
-+    errors.push(`${id}: no joined ${seat} lens output in ${dirNote}: write ${phases.map((p) => `${p}-${seat}-${JOINED_ID}.txt`).join(' or ')} (rule-lists.mjs lens-input --list ${JOINED_ID} --lists ${lists.map((l) => l.id).join(',')}), or one per list as below`);
-     perPh.push(...phases);
-   }
-   if (joinedPh.length) {
-@@ -510,8 +514,13 @@ export function closeErrors(i) {
-   }
- 
-   // (a) one compliance lens output per list, with its REVIEW header, bound to the committed input and to the whole list
-+  // task-438 (F10): the seat split applies when the range base holds lens-engineering.md; without it every list is compliance, the old contract (a lane launched before the landing)
-   const phases = build ? ['out'] : ['plan', 'out'];
--  errors.push(...complianceSetErrors({ id, lists: r.lists, phases, files, table: i.table, dirNote, proof: (l, phs, tbl) => listProof({ id, l, phases: phs, files, textOf, table: tbl, root: i.root, readBase, ctxValues: lc.values, expected, diffOf: i.diffOf, optionalPaths: i.optionalPaths, dirNote, layout }) }));
-+  const split = readBase('.claude/review-templates/lens-engineering.md') !== null;
-+  for (const seat of ['compliance', 'engineering']) {
-+    const ls = r.lists.filter((l) => (split ? seatOf(l) : 'compliance') === seat);
-+    if (ls.length) errors.push(...complianceSetErrors({ id, seat, lists: ls, phases, files, table: i.table, dirNote, proof: (l, phs, tbl) => listProof({ id, l, seat, phases: phs, files, textOf, table: tbl, root: i.root, readBase, ctxValues: lc.values, expected, diffOf: i.diffOf, optionalPaths: i.optionalPaths, dirNote, layout }) }));
-+  }
-   // (a') the rest of the lens set a build or fix task calls for, and a plan-stage output
-   if (build) {
-     const set = lensSet({ type, files: filesText(i.taskText) });
-@@ -625,18 +634,22 @@ function planGateInner(i) {
-     // one valid plan compliance output per resolved list, whose stamped material is the plan sections of the context whose text produced its prompt hash
-     const cands = contexts.map((c) => ({ value: lensContexts([{ name: c.name, text: c.text }], hasNotes).values[0] ?? null, cut: planCut(c.text), name: `${dir}/${c.name}` })).filter((c) => c.value !== null);
-     // task-423: joined (plan-compliance-rules*) or per-list plan evidence; each proof is tried against every committed context
--    const planProof = (l, phs, tbl) => {
-+    const planProof = (seat) => (l, phs, tbl) => {
-       let last = null;
-       for (const c of cands.length ? cands : [{ value: null, cut: null, name: '' }]) {
--        const e = listProof({ id, l, phases: phs, files, textOf, table: tbl, root: i.root, readBase: i.readRepo, ctxValues: c.value === null ? [] : [c.value], expected: [], diffOf: () => null, optionalPaths: [], dirNote,
--          layout: `put plan-compliance-rules[-pN].txt (or plan-compliance-<list id>[-pN].txt per list) and its in-<same name> directly in ${dirNote} (written by rule-lists.mjs lens-input --list rules --lists <ids> (or --list <id>) --material-from <context-rN.md> --out <folder>/in-plan-compliance-<name>)`,
-+        const e = listProof({ id, l, seat, phases: phs, files, textOf, table: tbl, root: i.root, readBase: i.readRepo, ctxValues: c.value === null ? [] : [c.value], expected: [], diffOf: () => null, optionalPaths: [], dirNote,
-+          layout: `put plan-${seat}-rules[-pN].txt (or plan-${seat}-<list id>[-pN].txt per list) and its in-<same name> directly in ${dirNote} (written by rule-lists.mjs lens-input --list rules --lists <ids> (or --list <id>) --material-from <context-rN.md> --out <folder>/in-plan-${seat}-<name>${seat === 'compliance' ? '' : ` --template .claude/review-templates/lens-${seat}.md`})`,
-           materialOk: (p) => (c.cut !== null && p.material === c.cut ? null : `the stamped material is not the Description, Acceptance criteria and Implementation Plan sections of the committed context ${c.name || '(none)'} (a plan review of some other text)`) });
-         if (e === null) return null;
-         last ??= e;
-       }
-       return last;
-     };
--    errors.push(...complianceSetErrors({ id, lists: r.lists, phases: ['plan'], files, table: i.table, dirNote, proof: planProof }));
-+    // task-438: always split at the launch gate (no range base); the compliance name is refused for an engineering list, with no alias
-+    for (const seat of ['compliance', 'engineering']) {
-+      const ls = r.lists.filter((l) => seatOf(l) === seat);
-+      if (ls.length) errors.push(...complianceSetErrors({ id, seat, lists: ls, phases: ['plan'], files, table: i.table, dirNote, proof: planProof(seat) }));
-+    }
-   } else {
-     // a fix launch: at least one plan lens output, each with a valid REVIEW header, template, timestamp and VERDICT line (reviewErrors; g375#1)
-     const planFiles = files.filter((f) => /^plan-.+\.txt$/.test(f.name));
-diff --git a/src/tests/backlog/backlog-lane.logic.test.ts b/src/tests/backlog/backlog-lane.logic.test.ts
-index 620bd0fd743fded67f1ad5848c50d0bc362b71fc..724789f8719a6484748c452f7e83794c41331cf4 100644
---- a/src/tests/backlog/backlog-lane.logic.test.ts
-+++ b/src/tests/backlog/backlog-lane.logic.test.ts
-@@ -397,10 +397,15 @@ describe('backlog-lane attaches the rule lists by touched path (task-366)', () =
-   });
-   it('task-423 (d), RR-0374: the lens line orders the per-document compliance review at the output stage only (one run per resolved list), names the joined command in one clause as an accepted form that is not the default, and no longer says to copy plan-*.txt', () => {
-     const { extra } = dry({ files: 'mobile/src/app/x.tsx, src/app/api/parcels/search/route.ts', type: 'build' });
--    for (const l of ['mobile-98', 'eng-all', 'storage-doc16', 'inc-F']) {
-+    for (const l of ['mobile-98', 'storage-doc16', 'inc-F']) {
-       expect(extra).toContain('out-compliance-' + l);
-       expect(extra).not.toContain('plan-compliance-' + l);
-     }
-+    // task-438 T5 (RR-0385 item 2): the engineering standards list goes to the engineering seat, with its own template; never under the compliance name
-+    expect(extra).toContain('out-engineering-eng-all');
-+    expect(extra).not.toContain('out-compliance-eng-all');
-+    expect(extra).not.toContain('plan-engineering-eng-all');
-+    expect(extra).toContain('lens-engineering.md');
-     expect(extra).toContain('ONCE PER RULE LIST');
-     expect(extra).not.toContain('ONE JOINED RUN PER STAGE');
-     expect(extra).toContain('lens-input --list L --context');
-@@ -688,11 +693,15 @@ describe('plan-prep review: the calls and what they leave', () => {
-     const ctx = fs.readFileSync(path.join(dirOf(f), 'context-r1.md'), 'utf8');
-     const table = rl.readTable();
-     const rs = rl.resolveTask({ table, root: f.board, body: fs.readFileSync(taskFile(f), 'utf8'), type: 'build', letter: 'F' });
--    for (const l of rs.lists as { id: string }[]) for (const x of rl.buildLensInputs({ id: l.id, list: table.lists[l.id], root: f.board, material: rt.extractSections(ctx, rt.PLAN_SECTIONS), templateFile: path.join(ROOT, '.claude/review-templates/lens-compliance.md'), context: rt.extractSections(ctx, rt.CONTEXT_SECTIONS) }))
--      expect(fs.readFileSync(path.join(dirOf(f), `in-plan-compliance-${l.id}${x.suffix}.txt`), 'utf8')).toBe(x.text);
-+    // task-438 T5: the engineering list's input is named by its seat and sized with its own template
-+    expect(names(f, /^in-plan-engineering-eng-all/)).toHaveLength(1);
-+    expect(names(f, /^in-plan-compliance-eng-all/)).toHaveLength(0);
-+    const seat = (l: { file: string }) => (l.file === 'docs/specs/00_engineering_standards.md' ? 'engineering' : 'compliance');
-+    for (const l of rs.lists as { id: string; file: string }[]) for (const x of rl.buildLensInputs({ id: l.id, list: table.lists[l.id], root: f.board, material: rt.extractSections(ctx, rt.PLAN_SECTIONS), templateFile: path.join(ROOT, `.claude/review-templates/lens-${seat(l)}.md`), context: rt.extractSections(ctx, rt.CONTEXT_SECTIONS) }))
-+      expect(fs.readFileSync(path.join(dirOf(f), `in-plan-${seat(l)}-${l.id}${x.suffix}.txt`), 'utf8')).toBe(x.text);
-     const g = prepFixture(); backlog(g.board, ['task', 'edit', g.task, '-d', 'another description\n\nFiles: scripts/analysis/thing.mjs']);
-     expect(review(g).status).toBe(0);
--    const a = names(f, /^in-plan-compliance-eng-all/)[0] as string;
-+    const a = names(f, /^in-plan-engineering-eng-all/)[0] as string;
-     expect(fs.readFileSync(path.join(dirOf(g), a), 'utf8')).not.toBe(fs.readFileSync(path.join(dirOf(f), a), 'utf8'));
-   });
-   it('8: with context-r1.md present the phase writes context-r2.md and leaves r1 untouched', () => {
-@@ -727,7 +736,12 @@ describe('plan-prep review: the calls and what they leave', () => {
-     const li = r.stdout.split('\n').filter((l) => /lens-input/.test(l)).length;
-     expect(li).toBeGreaterThan(3);
-     expect(r.stdout).not.toMatch(/--list rules/); // RR-0374: the per-document form
--    expect(r.stdout.split('\n').filter((l) => /scripts\/deepseek-review\.js review .*lens-compliance\.md/.test(l))).toHaveLength(li);
-+    // task-438 T5: one engineering job (eng-all), on its own template; the compliance review lines are the lens-input lines minus the engineering ones
-+    const liEng = r.stdout.split('\n').filter((l) => /lens-input .*--out \S*in-plan-engineering-eng-all --template \S*lens-engineering\.md/.test(l)).length;
-+    expect(liEng).toBe(1);
-+    expect(r.stdout.split('\n').filter((l) => /scripts\/deepseek-review\.js review \S*in-plan-engineering-eng-all\S* --template \.claude\/review-templates\/lens-engineering\.md/.test(l))).toHaveLength(1);
-+    expect(r.stdout).not.toMatch(/in-plan-compliance-eng-all/);
-+    expect(r.stdout.split('\n').filter((l) => /scripts\/deepseek-review\.js review .*lens-compliance\.md/.test(l))).toHaveLength(li - liEng);
-     expect(r.stdout).toMatch(/DOTENV_CONFIG_PATH=\S+ node -r \S*dotenv\/config scripts\/deepseek-review\.js review \S+ --template \.claude\/review-templates\/plan-review-deepseek\.md --context \S+ --section Task /);
-     expect(status(f)).toBe(before);
-     expect(fs.existsSync(dirOf(f))).toBe(false);
 diff --git a/src/tests/backlog/check-lane-close.logic.test.ts b/src/tests/backlog/check-lane-close.logic.test.ts
-index e57dd20551886c845fc5a220f169f558b18e7729..845281f6192ae40a7cdcc51c204b9bf1e684aa70 100644
+index e57dd20551886c845fc5a220f169f558b18e7729..cdb46274ff929b2b16f583d0d0cb8ba333f0e4f1 100644
 --- a/src/tests/backlog/check-lane-close.logic.test.ts
 +++ b/src/tests/backlog/check-lane-close.logic.test.ts
 @@ -30,8 +30,13 @@ const sha = (t: string) => crypto.createHash('sha256').update(t).digest('hex');
@@ -567,7 +253,7 @@ index e57dd20551886c845fc5a220f169f558b18e7729..845281f6192ae40a7cdcc51c204b9bf1
          }
        }
      }
-@@ -1167,3 +1186,54 @@ describe('task-423 (c): plan findings are ruled once, at the plan', () => {
+@@ -1167,3 +1186,65 @@ describe('task-423 (c): plan findings are ruled once, at the plan', () => {
      refused(scenario({ mutate: (l) => ({ ...l, 'plan-code-review.txt': body(true), 'GROUNDER.md': grounder({ ...l, 'plan-code-review.txt': null }) }) }), /plan-code-review/);
    });
  });
@@ -605,6 +291,17 @@ index e57dd20551886c845fc5a220f169f558b18e7729..845281f6192ae40a7cdcc51c204b9bf1
 +    const r = scenario({ eng: true, engJoined: true });
 +    expect(r.status, r.stderr).toBe(0);
 +    refused(scenario({ eng: true, engJoined: true, engTpl: 'lens-compliance.md' }), /out-engineering-rules\.txt: the REVIEW header names template lens-compliance\.md, expected lens-engineering\.md/);
++  });
++  // out-code-review-p1#2 (round 1, MED): the cut-over reads the template at the range base, never at HEAD; a lane that adds or deletes lens-engineering.md in its own range does not move it
++  // (modelled on the F10 planted-defect test above: a .claude/** row so the template path is on the Files line)
++  const tplRow = (x: Record<string, unknown>) => { (x.rows as unknown[]).push({ id: 'tpl', globs: ['.claude/**'], lists: ['first'], why: 't' }); };
++  const ENG_TPL = fs.readFileSync(path.join(ROOT, '.claude/review-templates/lens-engineering.md'), 'utf8');
++  it('(i) the template added in the lane range (absent at the base, present at HEAD): the compliance name is still accepted, the split reads the base', () => {
++    const r = scenario({ eng: true, engAs: 'compliance', noEngBase: true, tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n`, '.claude/review-templates/lens-engineering.md': ENG_TPL } });
++    expect(r.status, r.stderr).toBe(0);
++  });
++  it('(j) the template deleted in the lane range (present at the base, absent at HEAD): the compliance name is refused, naming out-engineering-eng.txt', () => {
++    refused(scenario({ eng: true, engAs: 'compliance', tableEdit: tplRow, files: 'src/a.ts, .claude/review-templates/', laneWork: { 'src/a.ts': `${AFILE}// x\n` }, laneDelete: ['.claude/review-templates/lens-engineering.md'] }), /out-engineering-eng\.txt/);
 +  });
 +});
 +

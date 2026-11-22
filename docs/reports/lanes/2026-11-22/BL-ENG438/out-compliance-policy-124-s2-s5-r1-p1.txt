@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:13.069Z file_sha256=73f442857c63837d38ff99c3f29ad7d3944e683d3ed887e1d042d7a5cf963a0a prompt_sha256=732a50f113bfdaf16c7683194d56f5610d480b9d15f8792f717d1ace6b5cb9d5
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-policy-124-s2-s5-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — card Files line "docs/reports/reviews/task-375/plant-evidence.mjs" — NONE (no hunk for that path anywhere in the material) — the card's Implementation Notes assert "plant-evidence.mjs by seat" and the Files line names the path, but this material (chunk 1 of 1) carries no change for it, so the plan-evidence seat routing the note claims cannot see — put that file's hunk in the material, or record in the lane notes that it is excluded by an exempt glob and where it was changed
+DEFER severity=LOW — card Description "plan written and built on Opus (his words: \"I want this plan for each task and built by opus\")" — NONE — no plan or build author is named anywhere in the material (Implementation Notes say BL-ENG438 build and a work commit, not who wrote or built it), so compliance with the Opus requirement cannot see — name the Opus plan and build run in the lane notes, beside the red/green evidence already there
+MET — card Description "a new review template named engineering" — .claude/review-templates/lens-engineering.md:1 — the diff adds that template with its own persona, one question, what-to-walk, strict output form and VERDICT block, and does not edit lens-compliance.md
+MET — card Description "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages" — scripts/analysis/rule-lists.mjs:113 — "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" routes on the list's file, so the handbook, by-law and milestone lists keep the compliance seat at plan (rule-lists.mjs planPrep) and at output (backlog-lane.mjs lensLine)
+MET — card Description "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:521 — "for (const seat of ['compliance', 'engineering']) {" in closeErrors requires the seat's files per list, and the same loop in planGateInner always splits, with T3(a,h) and T4 asserting both seats' files are accepted and the wrong-seat name refused
+MET — RR-0380 "by-law tasks gain no engineering rules" — src/tests/backlog/rule-lists.logic.test.ts:1055 — the control asserts seatOf for bylaw-133 is compliance and that the joined list, "even when it holds eng-all", stays compliance, so no by-law list moves to the engineering seat
+MET — 08_agents dated note "The close applies the split when the range base holds lens-engineering.md" — scripts/hooks/check-lane-close.mjs:519 — "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" gives the documented pre-landing exception, proven by T3(d) (out-compliance-eng accepted only with a base lacking the template)
+REJECT — card Description "the handbook lists by the compliance seat" — that the new seat takes handbook or by-law lists with it — seatOf returns engineering only when the list's file equals docs/specs/00_engineering_standards.md, and every other file, including the joined list, resolves to compliance
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 11   Unmet: 0
+Rules met: none
+
+---
+⏱  97485ms (97.5s)
+📊 Tokens — total: 53985, input: 34469, output: 19516, reasoning: 18757

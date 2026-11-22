@@ -1,0 +1,27 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:12.987Z file_sha256=07ab274be9cd0f01d2674d707d9057259a75c9d139793a5435efe4da7515eaaa prompt_sha256=0a4396ec70b3f6cfbbaa64c5a08cb0d3c8b2b9376000d82313535ff1cce60d90
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-eng-all-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task card "the launch gate and the close check expect both seats' outputs" — docs/reports/reviews/task-375/plant-evidence.mjs NONE (no hunk for that path in this chunk) — the Implementation Notes say "plant-evidence.mjs by seat", yet the reviewed chunk (11 paths, 1 of 1) holds no change to that file, so the artifact that plants plan evidence still writes the compliance name for an eng-all list, which the now unconditional launch gate refuses (the same notes record exactly that refusal at (2)); a card clause satisfied only by a note line is UNMET — land the seat routing in docs/reports/reviews/task-375/plant-evidence.mjs in this commit, or strike the note.
+
+DEFER severity=MED — operator ruling RR-0385 "For both the plan and output." — scripts/hooks/check-lane-close.mjs:519 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — a lane whose range base predates the template closes its eng-all list under out-compliance-eng-all.txt, so the engineering standards are judged by the compliance template at output for those lanes, an exception neither the card ("the close check expect both seats' outputs") nor the ruling names — keep the cut, but require for such a lane an out-engineering-eng-all.txt or a ruling line in the lane records that names the exception.
+
+DEFER severity=MED — §11 Pre-Review Self-Checklist "Output PASS/FAIL per item in the response BEFORE running tests" — Implementation Notes "2026-11-22 BL-ENG438 acceptance on real inputs (work commit 8745ee6dc):" — the notes record the red attempt, the green hook and four real-input probes, not a 5-10 item PASS/FAIL walk of the pasted rules against the diff before the tests — add that PASS/FAIL checklist to the task's Implementation Notes before Green Light.
+
+MET — RR-0385 "We want to seperate the compliance from the engineering standards seat." — scripts/analysis/rule-lists.mjs:112 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — one predicate routes each list to its seat, used by plan-prep, the launch gate and the close.
+
+MET — RR-0385 "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md — a new template names the Engineering seat, with the README row and the dated note in 08_agents.md.
+
+MET — task card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat" — src/tests/backlog/rule-lists.logic.test.ts "control: bylaw-133 and the joined list (joinLists, even when it holds eng-all) are compliance" — every non engineering list, the handbook and the joined list included, stays with compliance.
+
+MET — task card "the launch gate ... expect both seats' outputs" — scripts/hooks/check-lane-close.mjs "for (const seat of ['compliance', 'engineering']) {" — the plan gate always splits and refuses plan-compliance-eng for an engineering list, with no alias (planScenario "plan-compliance-eng is refused, naming plan-engineering-eng (no alias)").
+
+MET — §14 registry "A behavior-changing ruling updates ALL cited specs + runbooks in the SAME commit" — docs/specs/00-architecture/08_agents.md dated note 2026-11-22 — the ruling's note, the README sentences and the code land in one commit.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 3
+Rules met: none
+
+---
+⏱  68291ms (68.3s)
+📊 Tokens — total: 48402, input: 34177, output: 14225, reasoning: 13403

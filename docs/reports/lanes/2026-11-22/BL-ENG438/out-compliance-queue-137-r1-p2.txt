@@ -1,0 +1,29 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:13.099Z file_sha256=09065cc1281349b5e3f976a07c3d6bfbf7aa9fd30515448b22ae11a4cf82d8aa prompt_sha256=3f2eac8c7fbfdcdd71dd1b0f90295bcf77feeae08170593747fc407766aec1e0
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-queue-137-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — RR-0385 item 2 "We want to seperate the compliance from the engineering standards seat. For both the plan and output." — scripts/hooks/check-lane-close.mjs:519 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" — for a lane whose range base predates the landing the close never asks for out-engineering-eng-all, so the engineering-standards list of that lane is judged by the compliance seat under the compliance name, while the card says "the launch gate and the close check expect both seats' outputs" and the operator said both plan and output — the fallback is a carve-out from the ruling that no pasted operator words name — remove the split fallback and require out-engineering-<list id>.txt at every close (the template is in the tree at close time), or put the cut-over to the operator and record his words as a dated note on the row.
+
+DEFER severity=LOW — Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue, and the prior row text is kept." — docs/specs/00-architecture/08_agents.md pasted note "Dated note 2026-11-22 (M-246, prior text kept; task-438 FINAL.3, McFix Final; RR-0385 item 2, decision-170; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909" — the note carries no lane although Rule 4's M-246 form is "<row> · <queue> · lane X" (prior notes in the file read "lane BL-SIMPLE423", "lane BL-OUTCOME"), and it cites :1909 for words the task row cites as "MORNING-DECISIONS.md:1915 entry, RR-0385" — the ruling's provenance cannot be checked against one cite and the spec and the row disagree.
+
+DEFER severity=LOW — task-410 note "when a file changed from the task's launch commit that its Files line covers is not in a review chunk" — task-438 Implementation Notes pasted line "plant-evidence.mjs by seat" against the material's "paths: ['.claude/review-templates/README.md', ... 'src/tests/backlog/rule-lists.logic.test.ts']" and the Files line entry "docs/reports/reviews/task-375/plant-evidence.mjs" — the build note says that file was changed, no reviewed chunk holds it, so either the note overstates what landed or a changed Files-line file sits outside this review — show that file's diff in the reviewed set or drop the claim; if the path is exempt, the exemption is not in the pasted material and I cannot see it.
+
+DEFER severity=NIT — task-438 note "the joined form is per seat (`out-compliance-rules`, `out-engineering-rules`), chosen per seat and per stage" — .claude/review-templates/README.md pasted line "the launch gate always requires `plan-engineering-<list id>.txt` for such a list" — the launch gate also accepts the joined plan-engineering-rules set (complianceSetErrors' isJoined branch "^(plan|out)-${seat}-${JOINED_ID}"), so the README narrows the gate to the per-list name — a lane reading it could believe the joined engineering plan set is refused and re-run per list.
+
+MET — operator ruling "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md:1 — a template of its own names the seat Engineering (RR-0385, decision-170), states one question and carries the strict output and verdict forms.
+
+MET — card "the engineering-standards rule lists are reviewed by that seat and the handbook lists by the compliance seat, at both stages" — scripts/analysis/rule-lists.mjs:111 "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — one routing predicate, used by the brief, plan-prep, the launch gate and the close.
+
+MET — note "every other list by `lens-compliance.md`, which is not edited" — the material's path list — .claude/review-templates/lens-compliance.md is absent from the changed paths, and the compliance test of its Rules met line is kept.
+
+MET — note "The launch gate requires the engineering name from the landing of task-438 and refuses the compliance name for an engineering list, with no alias." — scripts/hooks/check-lane-close.mjs pasted line "const ls = lists.filter((l) => seatOf(l) === seat);" — planGateInner always splits by seat and listProof looks only for plan-engineering-<id>, so plan-compliance-eng-all is refused.
+
+MET — Rule 3 as amended "The work lands first; the status moves in a separate closing commit" — the pasted card "status: RUNNING" — this material carries no task status change, so the work and the close are separate commits.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 1
+Rules met: none
+
+---
+⏱  158487ms (158.5s)
+📊 Tokens — total: 67033, input: 34078, output: 32955, reasoning: 31799
