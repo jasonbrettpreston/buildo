@@ -1,0 +1,32 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T15:37:26.503Z file_sha256=73eb86918b6001e019de2f8fbc2c0f20360931a5b3d4cf248dbb6fc0cea6f3a5 prompt_sha256=cfcd57a82d9be7bf7d8147aeeeec1538ad6bb09682cdc7cdd350b97769277c9d
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-compliance-plan-protocol-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — AC #1 "the stitched list parts equal the whole text of the nine lists in table order" — src/tests/backlog/rule-lists.logic.test.ts:894 "const want = order.map((id) => m.wholeListText(t.lists[id], ROOT, id)).join('').replace(/\s+/g, '');" — both sides come from the implementation's own wholeListText (the got side at :895 is parseLensInput on what the CLI rendered from the same function) and whitespace is stripped on both, so a trimmed or reflowed list still passes and "whole" and "equal" are not discriminated — compare the stitched parts against the list files read from disk (t.lists[id].file) with no whitespace stripping for at least one list.
+
+DEFER severity=MED — AC #3 "GROUNDER-PLAN.md at L is non-empty with a Plan line" — src/tests/backlog/check-lane-close.logic.test.ts:94 "if (o.planBoard !== undefined) w('docs/reports/reviews/task-7/GROUNDER-PLAN.md', o.planBoard);" — the file is written into the base commit and never changed in the lane, so no case tells "at L" from "anywhere in the lane folder", and a lane that adds its own plan grounder after the plan stage is not shown refused — add a case whose lane commit adds or edits docs/reports/reviews/task-7/GROUNDER-PLAN.md and expect refusal.
+
+DEFER severity=LOW — AC #3 "GROUNDER-PLAN.md at L is non-empty with a Plan line" — src/tests/backlog/check-lane-close.logic.test.ts:1136 "refused(scenario({ planBoard: 'Plan: task-99 sha256:0123456789ab\n', mutate: noPlan }), /no plan-stage lens output/);" — this pins a stricter rule than the clause, a Plan line for another task refused where the clause accepts any non-empty Plan line, behaviour no pasted clause names — either add the task-id requirement to the criterion text or drop the case.
+
+DEFER severity=LOW — AC #4 "the brief names the joined command and no longer says to copy plan-*.txt" and AC #6 "Replay, a lane runs DeepSeek (5 calls)" — NONE — cannot see the backlog-brief, backlog-lane or replay lines in this chunk, so those clauses are neither shown met nor shown unmet here — confirm them in the chunk that carries those files.
+
+MET — AC #1 "writes at most 3 files" — src/tests/backlog/rule-lists.logic.test.ts:891 — "expect(files.length).toBeLessThanOrEqual(3);" on the real table at material 12,400 for the tooling kind.
+
+MET — AC #2 "a joined output set is accepted; a per-list set is accepted (control)" — src/tests/backlog/check-lane-close.logic.test.ts:1078 — "const r = scenario({ joined: true });" and the per-list control both expect status 0.
+
+MET — AC #2 "a folder holding both for one phase ... is refused" — src/tests/backlog/check-lane-close.logic.test.ts:1086 — refused with /both the joined \(out-compliance-rules\*\.txt\) and the per-list/.
+
+MET — AC #3 "no Ruled line and no plan finding id is demanded" — src/tests/backlog/check-lane-close.logic.test.ts:1130 — a plan-code-review.txt carrying a finding closes with status 0 when GROUNDER-PLAN.md carries the Plan line.
+
+MET — AC #4 "A table list named rules is refused by validate" — src/tests/backlog/rule-lists.logic.test.ts:927 — "expect(v.stderr).toMatch(/list rules: the id \"rules\"/);".
+
+MET — AC #5 "the tooling kind and the task-419 Files line 3 ... and the task-412 Files line 3 and 3" — src/tests/backlog/rule-lists.logic.test.ts:938 — "expect(out.length, ...).toBeLessThanOrEqual(3);" over FILES_423, filesLineOf(419) and filesLineOf(412) at 12,400 and 29,700.
+
+MET — AC #7 "git diff --stat shows only the Files line paths" — the diff touches only src/tests/backlog/rule-lists.logic.test.ts and src/tests/backlog/check-lane-close.logic.test.ts, both on the task's Files line.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 14   Unmet: 0
+
+---
+⏱  110546ms (110.5s)
+📊 Tokens — total: 38096, input: 14906, output: 23190, reasoning: 22139

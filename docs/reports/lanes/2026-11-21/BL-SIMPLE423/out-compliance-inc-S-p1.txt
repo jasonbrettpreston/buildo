@@ -1,0 +1,30 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T15:37:26.412Z file_sha256=f091c4ced10180f3c0e49cd930e73b10267a58e1404b0c1ea82846b4ba858a75 prompt_sha256=8e5a27eef222f748e2036b4a1676c36649de7434dd1168de17c0db87a635c7c1
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-compliance-inc-S-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #7 (g) "git diff --stat shows only the Files line paths, the page and the task and review records" — src/tests/backlog/backlog-brief-context.logic.test.ts:43 "expect(r.stdout).not.toContain('plan-review-deepseek.md'); // task-423 D2" — the Files line ("Files: scripts/analysis/rule-lists.mjs, ... src/tests/backlog/backlog-brief.logic.test.ts") omits src/tests/backlog/backlog-brief-context.logic.test.ts, so the change touches a path outside the task's Files line and the close check's "every changed path is covered by the Files line" would refuse it — add src/tests/backlog/backlog-brief-context.logic.test.ts to the Files line, or drop the edit from this change.
+
+BUG severity=HIGH — AC #3 (c) "GROUNDER-PLAN.md absent at L with no plan-*.txt, or an empty one, is refused" — scripts/hooks/check-lane-close.mjs:~438 "else if (j) joinedPh.push(ph);" plus "const none = joinedPh.length === 0 && perPh.length === 0 && errors.length === 0;" — the per-phase sets are filled only for phases that hold files, so for a non-build task (phases plan and out) a lane folder holding only out-compliance-*.txt and no plan evidence at all is no longer refused: the old loop demanded a valid output in both phases, and nothing else replaces the plan phase when planOnBoard is false — make complianceSetErrors add every phase not proven to the refusal set (or force the plan phase into the per-list proof when i.planOnBoard is false).
+
+DEFER severity=MED — AC #2 (b) "a joined output set is accepted" — scripts/hooks/check-lane-close.mjs:~450 "const e = proof({ id: JOINED_ID, file: t.lists[JOINED_ID].file }, joinedPh, t);" — the object handed to listProof carries only id and file, not the members array that listBlocks and renderLensInput read for a joined list, so the recompute of the joined set can fail on a list with no file of its own and refuse a legitimate joined output — pass t.lists[JOINED_ID] whole (it holds members and whole) instead of the stripped id+file object.
+
+DEFER severity=MED — AC #3 (c) "absent at L with plan-*.txt present keeps the old rule (control)" — scripts/analysis/backlog-lane.mjs:~183 "The plan was ruled once, at the plan: the lane runs no plan lens." — the brief orders no plan lens unconditionally, while check-lane-close.mjs still refuses a build lane whose GROUNDER-PLAN.md at L is absent or empty and that holds no plan-*.txt, so a lane launched without that file is told to produce exactly the evidence it needs to omit — condition the brief line and the compliance instruction on the plan evidence being on the board, and state what to run when it is not.
+
+REJECT — RR-0363 "There shold be the plan reviews - the grounding - the fold (no other reviews) - the build - the review of the output" — accused of deleting the lane's plan review, against the operator's shape — not a real issue: AC #3 and RR-0367 ("plan findings are ruled once") authorize plan findings being ruled once at the plan, and the plan lenses still run at plan-prep (rule-lists.mjs planPrep).
+
+MET — AC #4 (d) "the brief names the joined command and no longer says to copy plan-*.txt" — scripts/analysis/backlog-lane.mjs:~183 — the brief now names `lens-input --list rules --lists <ids>`, calls it an accepted form that is not the default, and the grounder sentence reads "copy out-*.txt and FINDINGS.md".
+
+MET — AC #4 (d) "A table list named rules is refused by validate" — scripts/analysis/rule-lists.mjs:130 — validateTable pushes a refusal for id === JOINED_ID.
+
+MET — AC #1 (a) "the stitched list parts equal the whole text of the nine lists in table order" — scripts/analysis/rule-lists.mjs:99 — joinLists takes the ids in Object.keys(table.lists) order and listBlocks flattens each member's blocks whole, nothing cut.
+
+MET — AC #2 (b) "the plan gate accepts joined or per-list plan evidence" — scripts/hooks/check-lane-close.mjs:~627 — planGateInner now routes through complianceSetErrors with planProof, which tries both forms.
+
+MET — AC #3 (c) "a lane folder with no plan-*.txt closes when GROUNDER-PLAN.md at L is non-empty with a Plan line" — scripts/hooks/check-lane-close.mjs:~455 — planOnBoard requires a non-empty file with a matching "Plan: <task id> sha256:<12 hex>" line, and both the plan-stage output requirement and the plan-*.txt findings read are skipped when it holds.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 20   Unmet: 2
+
+---
+⏱  117442ms (117.4s)
+📊 Tokens — total: 56157, input: 33949, output: 22208, reasoning: 21049

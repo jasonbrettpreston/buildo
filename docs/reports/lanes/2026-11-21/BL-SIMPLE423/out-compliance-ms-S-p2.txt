@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T15:37:26.447Z file_sha256=0e76b89a6ffa6e5effef4d67c3c42f3045b28dff75bc34b701152b1ac37bf390 prompt_sha256=b566a80a35a842c773cfea87b2634d96096989a00585883ba5008ab552971c82
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-compliance-ms-S-p2.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — acceptance #1 (a) "an input with a part shortened or edited is refused at close (control: the untouched set is accepted)" — src/tests/backlog/rule-lists.logic.test.ts:+ (added hunk @@ -863,3 +863,95 @@) "expect((m.parseLensInput(cut) as unknown as { ok: boolean }).ok).toBe(false);" — the shortened part is exercised only against the parse helper, and the same file declares "parseLensInput: (t: string) => { listPart: string; id: string } | null", which carries no ok field, so neither the close refusal nor the untouched-set-accepted control named in #1 is shown — assert the close/validate path refuses the cut file and accepts the untouched joined set.
+
+DEFER severity=LOW — acceptance #1 (a) "the stitched list parts equal the whole text of the nine lists in table order" — src/tests/backlog/rule-lists.logic.test.ts:+ "const got = files.map((f) => (m.parseLensInput(fs.readFileSync(f, 'utf8')) as { listPart: string }).listPart).join('').replace(/\s+/g, '');" — both sides are whitespace-stripped before comparison ("const want = order.map(...).join('').replace(/\s+/g, '');"), so equality of the whole text is not pinned, only equality of the non-whitespace characters — compare the exact strings and drop the replace calls.
+
+DEFER severity=LOW — acceptance #5 (e) "the tooling kind and the task-419 Files line 3 compliance files at the plan (material 12,400) and 3 at the output (diff 29,700)" — src/tests/backlog/rule-lists.logic.test.ts:+ "const BIGCTX = (d: string) => CTX(d, 'the description', `\n## Pad\n${'x'.repeat(4400)}\n`);" — the three-file pin holds only against an assumed 4,400-character context pad, a size no pasted clause names, so the count against the real plan stage context is not established — build the pinned cases from the real plan-stage context (context-r1.md) or record the padding assumption on the task.
+
+MET — acceptance #5 (e) — src/tests/backlog/rule-lists.logic.test.ts:+ "expect(out.length, `${files.slice(0, 40)} material ${mat}`).toBeLessThanOrEqual(3);" — FILES_423, the task-419 Files line and the task-412 Files line are all pinned at most 3 at material 12,400 and 29,700.
+
+MET — acceptance #1 (a) "writes at most 3 files ... with --max small the parts are more and every part is under the bound" — src/tests/backlog/rule-lists.logic.test.ts:+ "expect(small.files.length).toBeGreaterThan(big.files.length);" — at most 3 at the plan material, more parts under --max 60000, each under the bound.
+
+MET — Files line "src/tests/backlog/rule-lists.logic.test.ts" — src/tests/backlog/rule-lists.logic.test.ts:+ "diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts" — this chunk touches only a path on card A's Files line, so acceptance #7 "git diff --stat shows only the Files line paths" holds for the paste.
+
+MET — PLAN-PROTOCOL.md:3 "keep it simple; no scope creep" — src/tests/backlog/rule-lists.logic.test.ts:+ "const joinedCount = (listIds: string[], material: number, max?: number) => {" — the additions are tests and test-local helpers inside the named file, no behaviour beyond the card.
+
+MET — RR-0365 "yes cut the plan and have the panel review the plan - review - ground - present the plan with tasks ready to execute" — src/tests/backlog/rule-lists.logic.test.ts:+ "// ---- task-423 (PROTOCOL.SIMPLE, card A, adjustment 1): the resolved lists joined whole into one virtual list, packed by size ----" — the added describes cover card A's adjustment 1 and (e) only, consistent with "this task is card A (adjustments 1 and 3)".
+
+REJECT — MORNING-DECISIONS.md:635 "If the ultimate numbers are not servicing this... or a supporting function the task most likely is not relevant or feeds old code" — that a test-only diff is not relevant work — these tests carry acceptance #1 and #5 of a task the operator opened for the compliance review shape, a supporting function.
+
+VERDICT: PASS on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 0
+
+---
+⏱  47803ms (47.8s)
+📊 Tokens — total: 17774, input: 8855, output: 8919, reasoning: 7833

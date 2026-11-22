@@ -1,0 +1,34 @@
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T15:37:26.407Z file_sha256=0986a6a90be42701131363efcf0199916375a6c93699cb32fbce8c6b7db3d754 prompt_sha256=1536618ba9119e3d08401122bd626b6419aee69ec27c796982575f4c97e568e8
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-compliance-five-words-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #3 (c) "a lane folder with no plan-*.txt closes when GROUNDER-PLAN.md at L is non-empty with a Plan line" and 137_mcqueue.md "also requires docs/reports/reviews/<task>/FOLD-CHECK.md, committed beside GROUNDER-PLAN.md ... and, as the last such line of the file, alone on its line, `Plan: <task id> sha256:<12 hex>`" — scripts/hooks/check-lane-close.mjs:795 "const planBoard = L ? planOnBoard(git(['show', `${L}:docs/reports/reviews/${id}/GROUNDER-PLAN.md`]).stdout, id) : false;" — the launch gate's Plan line is the last line of FOLD-CHECK.md, a different file from GROUNDER-PLAN.md, so planOnBoard is false for every gate-launched lane, the close keeps demanding the plan-*.txt the brief no longer orders, and 137 now carries two notes naming different files for the same line — read FOLD-CHECK.md for the Plan line (or have planGateErrors write the Plan line into GROUNDER-PLAN.md and say so in both notes) and drive the brief's "no plan lens" from the same test
+
+DEFER severity=MED — Implementation Notes "card A (adjustments 1 and 3) joins the whole resolved lists into one virtual list packed by size, nothing cut (tooling 9 calls become 3 per stage; task-419 22 become 10, 33 become 15 with a round 2; task-412 22 become 10)" — scripts/analysis/backlog-lane.mjs:183 "Compliance lens, ONCE PER RULE LIST ... at the output stage only ... Files to produce, one per list: ..." — the brief a lane actually follows still orders one compliance call per list, so the nine calls card A exists to cut remain and only the offline tool reaches 3; the "not the default" ordering rests on RR-0374, which is not in the pasted context and no pasted ruling names it — order the joined command in the brief for the resolved lists, or record the reversing ruling in the pasted context
+
+DEFER severity=MED — .claude/review-templates/README.md:158 "The joined form (task-423) is accepted and is not the default (RR-0374, measured: 10 of 15 findings joined against 14 of 15 per list)" — scripts/hooks/check-lane-close.mjs:441 "no joined compliance lens output in ${dirNote}: write ${phases.map((p) => `${p}-compliance-${JOINED_ID}.txt`).join(' or ')}" — the close's first instruction and the plan gate's new layout sentence both tell the lane to write the non-default joined file first, contradicting the spec's own default and the brief's per-list order — lead both messages with the per-list command and name the joined form second
+
+DEFER severity=LOW — 137_mcqueue.md "The coupling between the specs and the tooling is rule-lists.mjs and check-lane-close.mjs only; no table key is added, so no Cross-Spec Dependencies row changes." — scripts/analysis/backlog-brief.mjs:177 "no plan lens is run (plan findings were ruled once, at the plan)" and scripts/analysis/backlog-lane.mjs:183 — the same diff puts the joined command and the no-plan-lens order into two further tools, so the sentence is false as written — name backlog-lane.mjs and backlog-brief.mjs too, or scope the sentence to the enforcement
+
+DEFER severity=LOW — Glossary "stage: A pending step's declared progress in `converted.json` `pending[]` (`red_suite` … `shape_clean`); it decides which gates cannot yet be answered." — docs/specs/00-architecture/08_agents.md:352 "one output set per stage, `out-compliance-rules[-pN].txt`" and check-lane-close.mjs:434 "keep one form per stage" — the change writes a second sense of a Glossary-defined term into two governing specs, so a review stage cannot be told from a pending step — say "review stage" or "round" in the new spec and check text
+
+MET — AC #4 (d) "A table list named rules is refused by validate" — scripts/analysis/rule-lists.mjs:130 "if (id === JOINED_ID) { bad.push(`list ${id}: the id \"${JOINED_ID}\" is the joined list of lens-input --list ${JOINED_ID} (task-423); name the list otherwise`); continue; }" — validate refuses a table list named rules
+
+MET — AC #2 (b) "a folder holding both for one phase, a joined set with a gap, and a joined set for a different resolved list are refused" — scripts/hooks/check-lane-close.mjs:434 "holds both the joined (${ph}-compliance-${JOINED_ID}*.txt) and the per-list (${ph}-compliance-<list id>*.txt) compliance outputs of the ${ph} stage: keep one form per stage" — both forms per stage refused by complianceSetErrors
+
+MET — AC #2 (b) "the plan gate accepts joined or per-list plan evidence" — scripts/hooks/check-lane-close.mjs:641 "errors.push(...complianceSetErrors({ id, lists: r.lists, phases: ['plan'], files, table: i.table, dirNote, proof: planProof }));" — the plan gate proves either form
+
+MET — AC #3 (c) "no Ruled line and no plan finding id is demanded" — scripts/hooks/check-lane-close.mjs:556 "const lensFiles = files.filter((f) => isLensOutput(f.name) && !(i.planOnBoard && f.name.startsWith('plan-')))" — plan outputs are dropped from findings when the plan evidence is found
+
+MET — AC #4 (d) "the brief names the joined command and no longer says to copy plan-*.txt" — scripts/analysis/backlog-lane.mjs:183 "The joined run (`lens-input --list rules --lists <ids>`, one set out-compliance-rules[-pN].txt for all the lists) is an accepted form" and ":190" "copy out-*.txt and FINDINGS.md into docs/reports/lanes/<date>/<lane>/" — joined named, plan copy gone
+
+MET — AC #1 (a) "an input with a part shortened or edited is refused at close" — scripts/analysis/rule-lists.mjs:361 "const stamp = `LIST ${list ? id : 'none'} sha256:${sha256(Buffer.from(part))} material sha256:${sha256(Buffer.from(material))} part ${i} of ${n}${mark}`;" — the close recomputes the stamp against the joined list
+
+REJECT — RR-0363 "There shold be the plan reviews - the grounding - the fold (no other reviews) - the build - the review of the output" — the change is accused of deleting the plan review — not a real issue: the pasted plan record ("plan findings ruled once, at the plan") and AC #3 put the plan review and its grounding before launch, and the lane is the build step, which is exactly RR-0363's order
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 5
+
+---
+⏱  213788ms (213.8s)
+📊 Tokens — total: 74736, input: 33717, output: 41019, reasoning: 39359

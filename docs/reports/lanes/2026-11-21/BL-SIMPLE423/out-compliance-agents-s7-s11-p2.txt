@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T15:37:26.408Z file_sha256=849c8ddc1a3cf534369390c6457c7afde359a9390b1dad02c589d980c1a67ff5 prompt_sha256=9cf007f15ca608b04ec5040fc5f45232022b43e073e3af322c5c9db787482a9c
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-compliance-agents-s7-s11-p2.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — AC #7 and the Files line "git diff --stat shows only the Files line paths, the page and the task and review records" / "Files: ... src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/check-lane-close.logic.test.ts, src/tests/backlog/backlog-lane.logic.test.ts, src/tests/backlog/backlog-brief.logic.test.ts" — src/tests/backlog/backlog-brief-context.logic.test.ts:43 "expect(r.stdout).not.toContain('plan-review-deepseek.md'); // task-423 D2: the brief orders no plan review (RR-0374)" — a fifth test file the Files line does not name is changed, so the card's own diff-scope clause and §11.2 "an expanded edit set kills every restated scope claim" are unmet — add src/tests/backlog/backlog-brief-context.logic.test.ts to the task Files line and to AC #7 (four test files becomes five), or move the edit to a card that names it.
+
+DEFER severity=MED — 08_agents.md §7 rule 4 dated note (task-423) "when GROUNDER-PLAN.md at the launch commit is non-empty and holds a `Plan: <task id> sha256:<12 hex>` line" — src/tests/backlog/check-lane-close.logic.test.ts:94 "if (o.planBoard !== undefined) w('docs/reports/reviews/task-7/GROUNDER-PLAN.md', o.planBoard); // task-423: the plan evidence on the board at the launch commit" — every new case writes the plan evidence before the base commit, so no case proves a GROUNDER-PLAN.md committed inside the lane is refused, and per §11.3 the lock was never red against the defect it names (lane self-certifies its plan) — add a case that commits GROUNDER-PLAN.md only in the lane commit and expects the old rule's refusal.
+
+DEFER severity=MED — 08_agents.md §11.9 TKT-1 dated note (task-375) "the close check recomputes each output's prompt hash with the committed context" — src/tests/backlog/check-lane-close.logic.test.ts:1089 "const ok = scenario({ joined: true, mutate: (l) => ({ ...l, 'out-compliance-rules-r2.txt': body(false), 'out-compliance-rules-r2-p1.txt': body(false) }) });" — the joined round file counts as joined evidence (rule 4 note "a round file `-rN` of it counts as joined") yet is written without the REVIEW header and no matching in- input, and the close is asserted green, so the prompt-hash recompute is not applied to it — either write the round files with hdr()/an in- pair and assert the hash, or add a refusal case for a headerless round file.
+
+REJECT — 08_agents.md §7 rule 1 "Two altitudes, same roles, both mandatory per WF" — accused: the diff drops the lane plan lens (backlog-lane.logic.test.ts "expect(e).not.toMatch(/plan review/i)") — the plan set still runs in plan-prep (the same file keeps plan-review-deepseek and the nine per-list plan-compliance outputs on the real run) and card AC #3 names a lane folder with no plan-*.txt, so the lane brief is the output stage.
+
+REJECT — 08_agents.md §7 rule 6 dated note (3) "A fix round does not file `out-<lens>-rN.txt`" — accused: the D1 case accepts out-compliance-rules-r2.txt beside round 1 — rule 4's later 2026-11-21 note says "a round file `-rN` of it counts as joined" and RR-0371 allows output review rounds, so a joined round file is not a fix-round re-run under the per-list names.
+
+MET — 08_agents.md §7 rule 4 dated note "a stage that holds both forms is refused" — src/tests/backlog/check-lane-close.logic.test.ts:1085 and :1117 — the both-forms folder is refused for the output phase and for the plan phase.
+MET — 08_agents.md §7 rule 4 dated note "Plan findings are ruled once, at the plan" — src/tests/backlog/check-lane-close.logic.test.ts:1129 — a plan-*.txt carrying a finding is ignored when the Plan line is present.
+MET — 08_agents.md §7 rule 4 dated note "The default stays one compliance run per rule list" — src/tests/backlog/backlog-lane.logic.test.ts:332 — the brief says ONCE PER RULE LIST and not ONE JOINED RUN PER STAGE, and plan-prep is asserted per-document.
+MET — 08_agents.md §7 rule 4 dated note "a list is never trimmed in either form" — src/tests/backlog/rule-lists.logic.test.ts:896 — the stitched part text equals the whole text of the nine lists in table order.
+MET — AC #5 "Counts pinned in rule-lists.logic.test.ts as at most" — src/tests/backlog/rule-lists.logic.test.ts:924 — tooling, task-419 and task-412 Files lines assert at most 3 files at 12,400 and 29,700.
+MET — AC #4 "A table list named rules is refused by validate" — src/tests/backlog/rule-lists.logic.test.ts:917 — validate exits 1 on lists.rules.
+MET — 08_agents.md §7 rule 4 dated note "the close check and the plan gate accept it" — src/tests/backlog/check-lane-close.logic.test.ts:1077 and :1111 — the joined output set and the joined plan evidence are accepted beside their per-list controls.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 18   Unmet: 3
+
+---
+⏱  193771ms (193.8s)
+📊 Tokens — total: 67811, input: 26486, output: 41325, reasoning: 39974

@@ -1,0 +1,28 @@
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T15:37:26.441Z file_sha256=0e3623af9f5fbf9a4ab76c8416c32fb020668aa1b878de970a085391420898a8 prompt_sha256=405c522e076df8d4998995538581573d2067c9677670e322bce516f4e4f2b14d
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
+
+BUG severity=CRIT — task-423 Acceptance criteria #7 "git diff --stat shows only the Files line paths, the page and the task and review records." — src/tests/backlog/backlog-brief-context.logic.test.ts:43 "expect(r.stdout).not.toContain('plan-review-deepseek.md'); // task-423 D2: the brief orders no plan review (RR-0374)" — a fifth test file is edited that the task Files line does not name (the line ends "... src/tests/backlog/backlog-brief.logic.test.ts"), so the diff is not confined to the Files line paths and the close check's changed-path coverage will refuse the close — add src/tests/backlog/backlog-brief-context.logic.test.ts to the Files line and to #7, or fold its assertion into backlog-brief.logic.test.ts
+
+BUG severity=HIGH — task-423 title "One compliance review on the plan and one on the output, against rules sections; no review of paperwork" and RR-0361 "the objective is an effective compliance review on the plan and the output.  It isn't 17" — .claude/review-templates/README.md:157 "The joined form (task-423) is accepted and is not the default (RR-0374, measured: 10 of 15 findings joined against 14 of 15 per list)" — the one review per stage the card exists to deliver is demoted to an option, so a lane following the brief and the close check still makes one compliance call per rule list, nine on the real table, the shape the card removes — order the join in the brief and in the close default, or put the ruling that keeps the per-list default into the pasted context
+
+BUG severity=HIGH — doc-17 "They are NOT the operator's words as a ruling and never feed a review as a ruling (Spec 137 rule 10; register rule of 2026-11-18)" — docs/specs/00-architecture/08_agents.md:240 "because the join was measured and found 10 of 15 findings against 14 of 15 for the per-document form (RR-0374, 2026-11-22" — the spec sentence that fixes the default rests on a cite absent from the pasted decisions (they end at RR-0371) and from doc-17's readings list, its operator words appear nowhere in the pasted record, and it is dated a day after the note that cites it, so an orchestrator reading is feeding a review as a ruling — paste RR-0374 and the operator's words into the register and context, or drop the cite and the not-the-default sentence
+
+DEFER severity=MED — task-423 Acceptance criteria #2 "a joined output set is accepted" — scripts/hooks/check-lane-close.mjs:449 "const e = proof({ id: JOINED_ID, file: t.lists[JOINED_ID].file }, joinedPh, t);" — the object handed to the proof carries no members, while a joined list is readable only through members (scripts/analysis/rule-lists.mjs:100 "if (Array.isArray(list.members)) return list.members.flatMap"), so the joined proof holds only if listProof re-reads table.lists[l.id], and a render of the passed object (no whole, no sections) throws instead of proving — pass t.lists[JOINED_ID] whole to proof
+
+DEFER severity=MED — task-423 Acceptance criteria #4 "the brief names the joined command and no longer says to copy plan-*.txt" — scripts/analysis/backlog-brief.mjs:178 "Review (output only): the output lens set and its commands are in the lens line of this brief; no plan lens is run" — the G1 brief carries no lens line (backlog-lane.mjs writes that line into the lane task), so the sentence points at commands the brief does not hold and names no command itself — name the joined command here or point at the lane task file by path
+
+DEFER severity=MED — task-423 Acceptance criteria #6 "the task-412 plan stage as one joined compliance call set plus plan-review and error-paths" — scripts/analysis/backlog-brief.mjs:177 "the lane runs no plan lens and its GROUNDER.md rules the output findings only" — the replay the criterion asks for runs plan-review and error-paths at the plan stage, which this brief now forbids a lane to do, and the REPORT.md that would record the five calls is not in this chunk (cannot see) — state where the replay runs, or keep those plan-stage commands available for it
+
+DEFER severity=LOW — task-423 Acceptance criteria #1 "writes at most 3 files ... every part is under the bound" and #5 "Counts pinned in rule-lists.logic.test.ts as at most" — NONE — the evidence for both counts sits in src/tests/backlog/rule-lists.logic.test.ts, which is not among this chunk's paths, so the 3-file and bound arithmetic cannot be seen here — show chunk 2 or the test output
+
+MET — task-423 Acceptance criteria #4 "A table list named rules is refused by validate" — scripts/analysis/rule-lists.mjs:130 — validateTable refuses the id rules and skips it
+MET — task-423 Acceptance criteria #3 "a lane folder with no plan-*.txt closes when GROUNDER-PLAN.md at L is non-empty with a Plan line" — scripts/hooks/check-lane-close.mjs:793 — planBoard is read from GROUNDER-PLAN.md at L, the plan-stage output is waived and plan-*.txt is dropped from the findings scan
+MET — RR-0367 "3. y" (plan findings ruled once) — scripts/hooks/check-lane-close.mjs:554 — plan-*.txt findings and Ruled lines are not demanded once the plan evidence is on the board
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 12   Unmet: 3
+
+---
+⏱  159402ms (159.4s)
+📊 Tokens — total: 66455, input: 35660, output: 30795, reasoning: 29475

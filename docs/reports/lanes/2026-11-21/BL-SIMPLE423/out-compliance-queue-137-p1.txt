@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T15:37:26.509Z file_sha256=a89919d54dde585b26c400ed5f6e56044b721e1064d92d1a540d2a09de996f7f prompt_sha256=aa3586a4de658e0dd9cdb95a3ee0919ec8c35046f75cc8c12a41f4e91bc646eb
+🔍 Lens review of docs/reports/lanes/2026-11-21/BL-SIMPLE423/in-out-compliance-queue-137-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — Spec 137 §4 dated note 2026-11-21 (task-423) "when GROUNDER-PLAN.md at the launch commit is non-empty and holds a `Plan: <task id> sha256:<12 hex>` line, the lane close requires no `plan-*.txt` in the lane folder and reads only the `out-*.txt` findings and their `Ruled:` lines; absent that file the older rule stands." — scripts/analysis/backlog-brief.mjs:177 "the lane runs no plan lens and its GROUNDER.md rules the output findings only." — the brief states the no-plan-lens instruction unconditionally, so a lane whose launch commit carries no GROUNDER-PLAN.md is told to omit the plan lens and the plan Ruled lines that the older rule (README.md item 5: "at least one `plan-*.txt` unless GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line") still demands, and its close is refused — make the sentence conditional on GROUNDER-PLAN.md at the launch commit being non-empty with a Plan line, and say so in backlog-brief.mjs:177 and backlog-lane.mjs:184.
+
+BUG severity=MED — Spec 137 §4 dated note 2026-11-21 (task-423) "when GROUNDER-PLAN.md at the launch commit is non-empty and holds a `Plan: <task id> sha256:<12 hex>` line" — scripts/analysis/backlog-lane.mjs:185 "(and every plan-*.txt when the plan evidence is not on the board" — the paraphrase drops both "at the launch commit" and the Plan-line test, so a GROUNDER-PLAN.md that reached the board head after launch would suppress plan Ruled lines that the close still recomputes under the older rule — state the exact test (GROUNDER-PLAN.md at the launch commit, non-empty, Plan line) as the spec does.
+
+DEFER severity=LOW — Spec 137 §4 Rule 10 "The operator's words are copied exactly, with the date, the row id and the queue" — docs/specs/00-architecture/137_mcqueue.md:144 "RR-0374, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, operator, verbatim: "Apprvoe step 1 and step 2 - when it arrives"" (same sentence added at docs/specs/00-architecture/08_agents.md:239) — the note is headed "Dated note 2026-11-21" yet copies a ruling dated 2026-11-22, so one of the two dates on a ruling note is wrong — correct the note date or the cited date so the copied date is true.
+
+MET — Spec 137 §4 dated note 2026-11-21 (task-423) "the resolved rule lists may be joined whole in table order and packed by size (`node scripts/analysis/rule-lists.mjs lens-input --list rules --lists <ids>`)" — scripts/analysis/rule-lists.mjs:112 "const sorted = Object.keys(table.lists).filter((k) => want.has(k));" — the join takes members in table order and listBlocks feeds them whole, so packing by size can split between members.
+
+MET — Spec 137 §4 dated note 2026-11-21 (task-423) "a list is never trimmed in either form" — scripts/analysis/rule-lists.mjs:99 "return list.members.flatMap((m) => listBlocks(m, root, m.id).map((b) => ({ label: `${m.id}: ${b.label}`, text: b.text })));" — each member is emitted by its own whole/sections definition, nothing cut.
+
+MET — Spec 137 §4 dated note 2026-11-21 (task-423) "The default stays one compliance run per rule list" — scripts/analysis/backlog-lane.mjs:184 "Compliance lens, ONCE PER RULE LIST" and .claude/review-templates/README.md:158 "The joined form (task-423) is accepted and is not the default" — the joined run is offered as the alternative only.
+
+MET — Task card acceptance #4 (d) "A table list named rules is refused by validate" — scripts/analysis/rule-lists.mjs:130 "if (id === JOINED_ID) { bad.push(`list ${id}: the id \"${JOINED_ID}\" is the joined list of lens-input --list ${JOINED_ID} (task-423); name the list otherwise`); continue; }" — validate refuses the reserved id.
+
+MET — Spec 137 §4 dated note 2026-11-21 (task-423) "no table key is added, so no Cross-Spec Dependencies row changes" — scripts/analysis/rule-lists.mjs:118 "return { ...table, lists: { ...table.lists, [JOINED_ID]: { file:" — the joined list is virtual, the table file is untouched.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 10   Unmet: 3
+
+---
+⏱  143549ms (143.5s)
+📊 Tokens — total: 58020, input: 29752, output: 28268, reasoning: 27124
