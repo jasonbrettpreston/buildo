@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-CTX432'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T17:09:00Z'
+updated_date: '2026-11-22T17:10:00Z'
 labels:
   - McFix
   - McFix V2
@@ -172,4 +172,6 @@ ACCEPTANCE 4: T4 green in the landing commit (lens line holds 'node scripts/anal
 2026-11-22 output review (lens set, DeepSeek, context-r3.md made with --board ~/Buildo-wt-board): 11 outputs in docs/reports/lanes/2026-11-22/BL-CTX432 (nine per-list compliance, code-review, error-paths), 39 findings listed untriaged in FINDINGS.md; grounder owed, task left RUNNING.
 
 2026-11-22 lane BL-CTX432 report copied to docs/reports/lanes/2026-11-22/BL-CTX432/REPORT.md; close check on a throwaway clone refuses only the grounder file and the two references (close-check.out)
+
+2026-11-22 report correction: two (not three) findings are labelled BUG HIGH (out-compliance-inc-S#1, out-compliance-ms-S#1)
 <!-- SECTION:NOTES:END -->

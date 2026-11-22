@@ -9,7 +9,7 @@
 ## Evidence
 - Commits: red attempt refused (red.out, red.full); landing 3dc4e0c0a (commit.out); records ddad858dc (commit-records.out); report copied in a third commit.
 - Own rule used: context-r3.md was made with `node scripts/analysis/backlog-brief.mjs --task task-432 --lane BL-CTX432 --stage 1 --root ~/Buildo-wt-ctx432 --board ~/Buildo-wt-board > /dev/null` and is the --context of every output.
-- Output review: 11 outputs (nine per-list compliance, out-code-review-p1, out-error-paths-p1) in docs/reports/lanes/2026-11-22/BL-CTX432/, inputs beside them, TASK = task-432; the compliance input of each list is whole (one chunk, no -pN). 39 findings in FINDINGS.md (3 DeepSeek lines were labelled BUG HIGH: out-compliance-inc-S#1 whose text reads "task-432 not pasted-witnessed? no." and out-compliance-ms-S#1), untriaged, no verdicts by me.
+- Output review: 11 outputs (nine per-list compliance, out-code-review-p1, out-error-paths-p1) in docs/reports/lanes/2026-11-22/BL-CTX432/, inputs beside them, TASK = task-432; the compliance input of each list is whole (one chunk, no -pN). 39 findings in FINDINGS.md (2 DeepSeek lines were labelled BUG HIGH: out-compliance-inc-S#1 whose text reads "task-432 not pasted-witnessed? no." and out-compliance-ms-S#1), untriaged, no verdicts by me.
 - Close check on a throwaway clone (task staged BUILT, deleted after), close-check.out: exit 1 with exactly three refusals: missing reference to REPORT.md, missing reference to GROUNDER.md, GROUNDER.md missing. No refusal about the review material (outputs, inputs, chunk stamps, hashes, finding lines, context).
 - Not done on purpose: no closing commit, task stays RUNNING; no push.
 
