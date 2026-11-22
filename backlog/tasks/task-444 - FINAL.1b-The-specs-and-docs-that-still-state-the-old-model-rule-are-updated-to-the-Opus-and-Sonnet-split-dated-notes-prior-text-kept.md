@@ -6,12 +6,18 @@ title: >-
 status: LATER
 assignee: []
 created_date: '2026-11-22T20:57:00Z'
-updated_date: '2026-11-22T21:02:00Z'
+updated_date: '2026-11-22T22:01:00Z'
 labels:
   - McFix
   - McFix Final
 milestone: m-1
 dependencies: []
+references:
+  - docs/reports/reviews/task-444/GROUNDER-PLAN.md
+  - docs/reports/reviews/task-444/TRIAGE-PLAN.md
+  - docs/reports/reviews/task-444/seat-integration-1.md
+  - docs/reports/reviews/task-444/seat-reality-check-1.md
+  - docs/reports/reviews/task-444/seat-regression-1.md
 type: build
 ordinal: 144012
 ---
@@ -21,7 +27,7 @@ ordinal: 144012
 <!-- SECTION:DESCRIPTION:BEGIN -->
 Card opened 2026-11-22 by the orchestrator, Spec 137 rule 2, on the operator's ruling RR-0389 (/Users/brettpreston_macmini/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md:1954), verbatim: "resolve this conflict by updating the key specs and docs". WHY: RR-0385 item 1 rules that the seat that writes a plan and the seat that builds run on Opus, seats and grounders on Sonnet, reviewers DeepSeek. Task-436 adds the Spec 08 note and names the sentence "Opus only for hard design adjudication" at .cursor/MCBYLAWS-QUEUE.md:247 as superseded without editing that file. THIS TASK: every spec and doc that still states the old rule gets its own dated note (M-246, prior text kept): .cursor/MCBYLAWS-QUEUE.md:247 first; the full list is found by a read of the repo at its plan (Spec 08, the queue documents, CLAUDE.md, .claude/workflows.md, the register copy 69a if a ruling row is the right home, review template packs). After task-436 lands. Scope and Files line at its plan review. Built on Opus through the six steps.
 
-Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-notes-1b.logic.test.ts
+Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-notes-1b.logic.test.ts, docs/specs/01-pipeline/69a_mcbylaw_register.md
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Definition of Done
@@ -49,7 +55,7 @@ Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-no
 - Form: M-246 dated note, prior text kept (137_mcqueue.md:125, rule 10). The wording follows the task-436 note (the task-436 card, EXACT TEXT).
 - "Tehse should be small changes" (:1909). Gates already built stay; no new gate work (RR-0385 item 5).
 
-## FACTS (board head 693ef2a8a; task-436 has not landed: 08_agents.md has no AGENT-MODEL line)
+## FACTS (board head 3c84de845; task-436 landed 836b5722b, its note is 08_agents.md:360)
 I ran `grep -rniE "sonnet|opus"` over docs/specs, .cursor, .claude, CLAUDE.md, scripts, mcbylaws/, tasks/ and docs/ (excluding reports). Each hit is sorted below.
 CONFLICTS (each needs a note):
 - C1 .cursor/MCBYLAWS-QUEUE.md:247: "Opus only for hard design adjudication, with the reason logged." The next line, :248, is blank.
@@ -58,74 +64,102 @@ CONFLICTS (each needs a note):
 AGREES (seats on Sonnet; leave as is):
 - MCBYLAWS-QUEUE.md:247, first sentence: "Seats run on Sonnet by default".
 - 137_mcqueue.md:152, and its copy in packs/queue.md:110 (a Sonnet check lane).
-- 08_agents.md:529 (the tool seats are Claude Sonnet).
+- 08_agents.md:530 (the tool seats are Claude Sonnet).
 - .claude/agents/*.md:9-10 (`model: sonnet`).
 - check-lane-close.mjs:583 (a comment about seats).
 NOT A RULE (leave):
 - 08_agents.md:35 is the harness's closed model enum.
-- 08_agents.md:526 "(Sonnet seats, lane agents, ...)" names a scope and sets no model.
+- 08_agents.md:527 "(Sonnet seats, lane agents, ...)" names a scope and sets no model.
 - 69a:653-656 contain the word "opus" only inside quoted chat text.
 - .cursor/active_task.md:43 is a quote ("make sure opus actually uses the system").
 - .cursor/wf1_spec08_deepseek_execution_active_task.md:23-24, :50 and :104 are an old plan's evidence tables.
 - Hits in 101_notification_dispatch, 116, 93, supabase_migration_program_plan, the push scripts and loop-gate-context.mjs:239 are substring matches ("ExpoPush", "octopus", "corpus"), not model names.
 - CLAUDE.md, .claude/workflows.md, the skills and the README files: no hits.
-- 69a M-506 (:654) holds "a multi-step build goes to the owning lane, on Sonnet". This is a record of the 2026-11-06 ruling. The row names its live text as "Text home: Spec 08 §7 rule 9" (:654), and task-436 puts its note there. 69a "carries no rule of its own beyond the rows" (:3-4). Operator rulings now go to `backlog/decisions` ("decisions (operator rulings only)", 137_mcqueue.md:20), and no 69a row is dated 2026-11-2x (grep count 0). So decision-170 and decision-174 are the record, and the register gets no new row or note. The test that pins this sentence (chat-rulings-register.logic.test.ts:1733) stays as it is.
-- .claude/review-templates/packs/spec08.md is a hand-kept copy ("Generator: hand-written, not generated", :3). Its source range is already out of date: it says :330-346, but §7 now starts at :344. No --check and no tool reads it: lane lenses build their input from the live spec (rule-lists.json:45, the `agents-s7-s11` list). So nothing has to be regenerated.
+- 69a M-506 (:654) states "a multi-step build goes to the owning lane, on Sonnet" as live Rule text, so it is a document that still states the old rule (RR-0389, decision-174): it gets one dated note, in its own status cell, which inserts no line (69a:141). 69a still takes dated notes (:696-699, 2026-11-20). With the note after the status text the handbook line for M-506 is unchanged (bylaw-register.mjs rows compared in memory before and after: equal); 69a has no byte budget (122_split_manifest.json names 69, not 69a); the pin chat-rulings-register.logic.test.ts:1733 uses toContain on the Rule text, which stays.
+- .claude/review-templates/packs/spec08.md is a hand-kept verbatim copy of Spec 08 ("Generator: hand-written, not generated", :3; its range :330-346 is out of date). Its :19 holds the 2026-11-06 E2 note ("on Sonnet") as prior text and it lacks the task-436 note; it has no "hard design adjudication" sentence. Only a manual command (.claude/review-templates/README.md:136-146) reads it; no test, hook or lane tool does. A note would make it no longer verbatim; the remedy is a fresh copy, which no ruling named. It is left, recorded as behind.
 Hooks and generated files:
-- Both queue files are on the McBylaws `protected` list (mcbylaws/protected-paths.json:57 and :70). They are not on the `layer23` or `frontend` lists, so the commit needs no trailer, no prereg file and no panel record. At push, the gate asks for a tty "y" (gate.mjs:568-583).
+- The two queue files and 69a are on the McBylaws `protected` list (mcbylaws/protected-paths.json:57, :59 and :70). None is on the `layer23` or `frontend` lists, so the commit needs no trailer, no prereg file and no panel record. At push, the gate asks for a tty "y" (gate.mjs:568-583).
 - Arm Q reads only `**MB-nn`/`**MF-nn` headings (mcbylaws-queue-check.mjs:4). The notes must therefore contain no MB-nn or MF-nn id.
 - The tests that read these files pin only the MF header text (mcfrontend-status.infra.test.ts:59-60) and the increments table (web-landing.logic.test.ts:156). An added line breaks neither.
-- The system map generator reads only docs/specs and docs/reference (generate-system-map.mjs:18-30), and no spec is edited. No other generator reads .cursor. So no file is regenerated.
+- The system map generator reads docs/specs and docs/reference (generate-system-map.mjs:18-30) and takes only each spec's title, status and src/ or scripts/ references; the 69a note adds none. The rule-lists page sizes only the list documents (none is edited). Arm K (decision-log.mjs:73-76) judges rows ADDED in a staged 69a diff, not an edit to an older row. So no generated file is regenerated.
 - An earlier lock for dated notes already exists: src/tests/spec-notes-1b.logic.test.ts (task-376, "pins one confirmed stale line to the dated note", :7).
-- Rule lists the Files line resolves (rule-lists.mjs resolve, letter S): queue-137, agents-s7-s11, eng-all, five-words, plan-protocol, inc-S, ms-S. eng-all is added only by the test file.
+- Rule lists the Files line resolves (rule-lists.mjs resolve, letter S): queue-137, agents-s7-s11, eng-all, five-words, plan-protocol, inc-S, ms-S. eng-all is added only by the test file; 69a adds no list (run in memory with it on the Files line: the same seven, none unmatched).
 
 ## WHAT
 1. Test first: add one describe block to src/tests/spec-notes-1b.logic.test.ts and run it red.
-2. Add one dated note under C1 and one under C2. Nothing is deleted.
+2. Add one dated note under C1 and one under C2, and one in the status cell of the 69a row M-506 (N3). Nothing is deleted.
 
 ## EXACT TEXT
 Both notes use the same opening:
 `- Dated note 2026-11-22 (M-246, prior text kept; task-444 FINAL.1b, McFix Final; RR-0385 item 1, decision-170; RR-0389, decision-174; operator, verbatim, 2026-11-22, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, :1909 "Teh seat that writes the plan is opus and the seat that build is Opus", :1910 "Change this to Opus - approved by operator.", :1912 "keep the current split with opus and sonnet", :1954 "resolve this conflict by updating the key specs and docs"): the seat that writes a task's plan and the lane that builds it run on Opus; the reality-check, integration and regression seats and every grounder run on Sonnet; the review lenses are DeepSeek.`
 - N1, new line 248 of MCBYLAWS-QUEUE.md, directly under :247. After the opening, add: ` This supersedes "Opus only for hard design adjudication" above for the plan seat and the building lane; "Seats run on Sonnet by default" stands. Spec 08 §7 rule 9 carries the same split (dated note, task-436).`
 - N2, new line 19 of MCFRONTEND-QUEUE.md, after :18 (the last note on :13, which keeps the notes in date order). After the opening, add: ` This supersedes "Opus sparingly" in the paragraph above for the plan seat and the building lane; "Sonnet seats" stands. Spec 08 §7 rule 9 carries the same split (dated note, task-436).`
-- Neither insert moves :247 or :13, so task-436's citation of `.cursor/MCBYLAWS-QUEUE.md:247` stays correct.
+- N3, appended to the status cell of the M-506 row of 69a (:654) after "RULED 2026-11-06 (operator)": ` · *` + the same opening without its leading "- " + ` This supersedes "on Sonnet" in the Rule text above for the building lane only; Spec 08 §7 rule 9 carries the same split (dated note, task-436).` + `*`. No pipe, no word OWED, no line break.
+- Neither queue insert moves :247 or :13, so task-436's citation of `.cursor/MCBYLAWS-QUEUE.md:247` stays correct. Each insert moves the later lines of its file by one (grep: 46 citations to MCBYLAWS-QUEUE.md past :247, 6 to MCFRONTEND-QUEUE.md past :13); card-cite-check.mjs reads a line as a hint within plus or minus 10 (:3, :19). The 69a note moves none.
 
 ## TESTS (red first; this extends the existing lock and adds no new gate)
 One `describe` in spec-notes-1b.logic.test.ts. For each file:
 - (a) the old sentence is still present (prior text kept);
 - (b) the first line after it that starts with `- Dated note 2026-11-22 (M-246, prior text kept; task-444` comes before the next `#` heading;
 - (c) that line contains "run on Opus", "every grounder run on Sonnet" and the :1954 words.
-Today the test is red on (b). It is green after the notes. The lock is proven in both directions (08_agents.md:485).
+- The M-506 row of 69a gets the same three checks: its text still holds "on Sonnet", the note is in that row after it, and the note carries the same words.
+The new block has not been run (this plan is read-only): it is written to fail on (b) before the notes and pass after, and the lane runs it red first and records the red output, so the lock is proven in both directions (08_agents.md:486).
 
 ## ORDER
-After task-436 lands and its note text is confirmed on the board. Then: test (red), notes (green), commit.
+Task-436 has landed (836b5722b); its note text is at 08_agents.md:360, and the opening of N1 to N3 equals its words after the colon. Then: test (red), notes (green), commit.
 
 ## LANDING
-- One commit: the test, the two queue files and the task file, with the trailer `Task: task-444`, through the real hooks. Answer "y" at the push prompt.
+- One commit: the test, the two queue files, 69a and the task file, with the trailer `Task: task-444`, through the real hooks. The operator answers the push prompt (RR-0385 item 4 iii), never the lane. The queue edit rides this card: RR-0389 (decision-174) orders it and the orchestrator, who owns rulings (MCBYLAWS-QUEUE.md:125), opened the card; arm Q (queueCheck) is run before the edit and after it.
 - The task file is always allowed (check-task-files.mjs:10). It is not put on the Files line because its name contains a comma.
-- Plan seats on the plan: integration, reality-check, and regression (tracked paths) (08_agents.md:529).
+- Plan seats on the plan: integration, reality-check, and regression (tracked paths) (08_agents.md:530).
 - Close with the two-commit lane close.
 
 ## ACCEPTANCE
-- Both notes are present, each under the sentence it supersedes, with the prior text unchanged.
+- All three notes are present (N1 and N2 each under the sentence it supersedes, N3 in the M-506 row), with the prior text unchanged.
 - The test is red before the notes and green after; the suite is green.
 - Arm Q passes at push.
 
 ## NOT IN SCOPE
 - 08_agents.md (task-436).
-- 69a and packs/spec08.md (FACTS).
+- packs/spec08.md (FACTS: a verbatim copy, behind Spec 08).
 - lane-guard.mjs (outside the repo).
 - The AGREES and NOT A RULE lines.
 
 ## UNVERIFIED
 - Hooks and tests were not run (read-only).
-- That task-436's note lands unchanged from its card.
-- That reviewers accept leaving 69a M-506 without a note.
+- That the handbook generator's own --check stays green with N3 (read from source and compared by rows in memory; not run).
 
 ## GUESS
-About 1 hour of lane time: 2 doc lines and about 25 test lines.
+About 1 hour of lane time: 3 doc lines and about 30 test lines.
 
-Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, src/tests/spec-notes-1b.logic.test.ts
+Files: .cursor/MCBYLAWS-QUEUE.md, .cursor/MCFRONTEND-QUEUE.md, docs/specs/01-pipeline/69a_mcbylaw_register.md, src/tests/spec-notes-1b.logic.test.ts
+
+Plan review round 1: 26 folded, 0 task, 0 ruling, 0 wontfix, 18 pile; grounder docs/reports/reviews/task-444/GROUNDER-PLAN.md; triage docs/reports/reviews/task-444/TRIAGE-PLAN.md
+plan-compliance-agents-s7-s11#5 MED folded it is written to fai
+plan-compliance-eng-all#1 MED folded A note would make it
+plan-compliance-eng-all#2 HIGH folded it gets one dated no
+plan-compliance-eng-all#4 MED folded and the opening of N
+plan-compliance-five-words#1 MED folded A note would make it
+plan-compliance-five-words#5 MED folded and the opening of N
+plan-compliance-inc-S#1 MED folded A note would make it
+plan-compliance-inc-S#2 HIGH folded it gets one dated no
+plan-compliance-inc-S#3 MED folded and the opening of N
+plan-compliance-ms-S#1 HIGH folded it gets one dated no
+plan-compliance-ms-S#3 MED folded A note would make it
+plan-compliance-ms-S#4 MED folded and the opening of N
+plan-compliance-plan-protocol#1 MED folded A note would make it
+plan-compliance-plan-protocol#4 HIGH folded it gets one dated no
+plan-compliance-queue-137#1 MED folded A note would make it
+plan-compliance-queue-137#2 HIGH folded it gets one dated no
+plan-error-paths#2 MED folded and the opening of N
+plan-error-paths#3 MED folded Each insert moves th
+plan-plan-review-deepseek#5 MED folded it is written to fai
+ig#1 MED folded The operator answers
+ig#7 MED folded Each insert moves th
+rc#1 HIGH folded task-436 landed 836b
+rc#2 HIGH folded it gets one dated no
+rc#3 HIGH folded it gets one dated no
+rg#3 MED folded arm Q (queueCheck) i
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
