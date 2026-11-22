@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-DOCS444'
 created_date: '2026-11-22T20:57:00Z'
-updated_date: '2026-11-22T22:10:00Z'
+updated_date: '2026-11-22T22:11:00Z'
 labels:
   - McFix
   - McFix Final
@@ -27,6 +27,7 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-22/BL-DOCS444/FINDINGS.md
+  - docs/reports/lanes/2026-11-22/BL-DOCS444/REPORT.md
 type: build
 ordinal: 144012
 ---
