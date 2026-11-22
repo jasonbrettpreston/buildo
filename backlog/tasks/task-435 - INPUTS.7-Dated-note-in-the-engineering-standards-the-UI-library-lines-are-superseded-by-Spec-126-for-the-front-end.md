@@ -3,11 +3,11 @@ id: TASK-435
 title: >-
   INPUTS.7 Dated note in the engineering standards: the UI library lines are
   superseded by Spec 126 for the front end
-status: RUNNING
+status: BUILT
 assignee:
   - '@lane-BL-NOTE435'
 created_date: '2026-11-22T18:01:00Z'
-updated_date: '2026-11-22T18:31:00Z'
+updated_date: '2026-11-22T18:37:00Z'
 labels:
   - McFix
   - McFix V2
@@ -34,6 +34,8 @@ references:
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
   - docs/reports/lanes/2026-11-22/BL-NOTE435/REPORT.md
+  - docs/reports/lanes/2026-11-22/BL-NOTE435/GROUNDER.md
+  - docs/reports/lanes/2026-11-22/BL-NOTE435/TRIAGE.md
 type: build
 ordinal: 135012
 ---
@@ -245,4 +247,14 @@ Build 2026-11-22 (lane BL-NOTE435): note inserted under the section 12 Status li
 After page --write: page --check exit 0 ("is current", the green). Page diff: 12 insertions 12 deletions, only the eng-all count 46,076 -> 46,613 in six kinds and the six total rows (e.g. 197,241 -> 197,778). Spec diff: 2 insertions (the note and one blank line), 0 deletions; lines around it: Status line, blank, note, blank, "### 12.1 Biome (React Logic Linting)".
 
 Output review run 2026-11-22 (lane BL-NOTE435): 10 compliance lists + code-review + error-paths on DeepSeek, outputs and inputs in docs/reports/lanes/2026-11-22/BL-NOTE435/ (context-r3.md); 31 findings listed untriaged in FINDINGS.md. Grounder owed (RR-0359); task left RUNNING.
+
+Output round 1 (grounder Cairn-Ground-O435): 32 findings (not 31), 1 LOW piled, 31 rejected; the work commit also carried the task file notes.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+One dated note was added under the section 12 Status line of docs/specs/00_engineering_standards.md (work 54fb119e8, 2 lines added, 0 deleted) and the rule-lists page regenerated.
+
+Review round 1: 0 fixed, 0 task, 0 ruling, 0 wontfix, 1 pile; grounder docs/reports/lanes/2026-11-22/BL-NOTE435/GROUNDER.md; triage docs/reports/lanes/2026-11-22/BL-NOTE435/TRIAGE.md
+<!-- SECTION:FINAL_SUMMARY:END -->

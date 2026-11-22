@@ -1,0 +1,2 @@
+# TRIAGE BL-NOTE435 (task-435), output round 1. Outcome lines from the grounder Cairn-Ground-O435; 32 findings ruled (the lens report holds 32, not 31): 1 CONFIRMED (LOW), 31 REJECTED; no CRITICAL, HIGH or MED stands (RR-0369 fixes CRITICAL, HIGH and MED; RR-0364 piles the LOW).
+out-compliance-queue-137#2 pile:"LOW: the note form of Spec 137 Rule 4 has a lane field the note lacks (lane BL-NOTE435); the note is the plan's EXACT NOTE TEXT, Spec 126 :467 and 08_agents.md:361 omit it too; form only, facts hold; RR-0364"
