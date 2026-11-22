@@ -1,0 +1,20 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T23:11:13.021Z file_sha256=9cf299717e10c97e8ce1b35af11c9386855c0936d201bd93c225a74669537a1c prompt_sha256=aa4817e834f0f511bf8192b1a310f86f455116ac9a5a4bdd9420f238488e9874
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-ENG438/in-out-compliance-orchestrator-doc17-p1.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — card Description "the launch gate and the close check expect both seats' outputs" — scripts/hooks/check-lane-close.mjs:521 "const split = readBase('.claude/review-templates/lens-engineering.md') !== null;" / "const ls = r.lists.filter((l) => (split ? seatOf(l) : 'compliance') === seat);" — the close split is conditional, so for a lane whose range base lacks lens-engineering.md the engineering-standards list closes as out-compliance-<id> under lens-compliance.md and the operator's "For both the plan and output." separation is not applied at output; test (d) "with a range base that does not hold lens-engineering.md, out-compliance-eng is accepted" enshrines it — make the close split unconditional the way planGateInner already does, or have the card and decision-170 amended to name the carve-out before merge
+DEFER severity=MED — Implementation Notes "plant-evidence.mjs by seat" and Files line "docs/reports/reviews/task-375/plant-evidence.mjs" — NONE — the material carries no hunk for docs/reports/reviews/task-375/plant-evidence.mjs, so either the note claims a step the change does not contain or that evidence script still names compliance files for an engineering list; the step rests on the note alone — add the plant-evidence.mjs seat change to the change, or strike the claim from the Implementation Notes
+MET — card "the launch gate and the close check expect both seats' outputs" (launch half) — scripts/hooks/check-lane-close.mjs planGateInner "for (const seat of ['compliance', 'engineering']) { const ls = r.lists.filter((l) => seatOf(l) === seat);" — the launch gate splits unconditionally and refuses the compliance name for an engineering list
+MET — operator "For both the plan and output." — scripts/analysis/rule-lists.mjs "in-plan-${seatOf(l)}-${l.id}" and scripts/hooks/check-lane-close.mjs "const ls = r.lists.filter((l) => (split ? seatOf(l) : 'compliance') === seat);" — plan prep, launch gate and lane brief all route by seat
+MET — operator "We need a new name for an agent called engineering." — .claude/review-templates/lens-engineering.md:3 "**Spec 08 seat:** Engineering (RR-0385, decision-170)" — a new template and seat named engineering, lens-compliance.md left unedited
+MET — RR-0380 "by-law tasks gain no engineering rules" — scripts/analysis/rule-lists.mjs "export const seatOf = (l) => (l.file === ENG_FILE ? 'engineering' : 'compliance');" — only the engineering standards file goes to engineering, every by-law and handbook list stays with compliance
+MET — doc-17 header "They are NOT the operator's words as a ruling and never feed a review as a ruling" — no reading of the pasted list is cited as a rule by the gates or the templates; the citations are RR-0385 item 2 and decision-170, decision records
+REJECT — RR-0110 "Infra freeze: no new infra tasks; a gap is fixed only if it blocks a project commit (2026-11-02; memory record)" — accused of adding lane-gate infrastructure — doc-17's own header says these entries "are NOT the operator's words as a ruling and never feed a review as a ruling", so a reading cannot refuse a card opened on decision-170
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+Rules met: none
+
+---
+⏱  52472ms (52.5s)
+📊 Tokens — total: 46657, input: 35854, output: 10803, reasoning: 9987

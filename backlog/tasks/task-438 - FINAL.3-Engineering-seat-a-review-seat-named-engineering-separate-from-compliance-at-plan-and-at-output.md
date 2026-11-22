@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-ENG438'
 created_date: '2026-11-22T20:24:00Z'
-updated_date: '2026-11-22T23:07:00Z'
+updated_date: '2026-11-22T23:15:00Z'
 labels:
   - McFix
   - McFix Final
@@ -30,6 +30,7 @@ references:
   - compliance:plan-protocol docs/specs/00-architecture/plan-protocol.md
   - compliance:inc-S backlog/docs/increments/doc-2 - Increment-S-requirements.md
   - compliance:ms-S backlog/milestones/m-1 - increment-1·b-search-[s].md
+  - docs/reports/lanes/2026-11-22/BL-ENG438/REPORT.md
 type: build
 ordinal: 138012
 ---
@@ -225,4 +226,13 @@ rg#4 MED folded (RR-0385 item 2 on t
 2026-11-22 BL-ENG438 build: tests T1 to T5 written first (review-templates, rule-lists, check-lane-close, backlog-lane logic tests); red proven by a commit attempt with only the tests and this task file staged (red.out in the lane dir).
 
 2026-11-22 BL-ENG438 build: lens-engineering.md (the plan's TEMPLATE line changes on a copy of lens-compliance.md, which is not edited), README row and two sentences, seatOf and ENG_FILE in rule-lists.mjs with plan-prep routing by seat, per-seat proof in check-lane-close.mjs (close split when the range base holds lens-engineering.md; launch gate always split, no alias), per-seat lens line in backlog-lane.mjs, plant-evidence.mjs by seat, one dated note in 08_agents.md after section 7 rule 4, rule-lists-by-kind.md regenerated (page --write) and added to the description Files line.
+
+2026-11-22 BL-ENG438 acceptance on real inputs (work commit 8745ee6dc):
+(1) plan-prep review --dry-run --task task-267 (WAITS build, resolves eng-all) --board ~/Buildo-wt-board: exit 0, board status unchanged; 18 lens-input lines, 1 engineering ('--list eng-all ... --out docs/reports/reviews/task-267/in-plan-engineering-eng-all --template .../lens-engineering.md'), 17 compliance; 1 review line on lens-engineering.md ('review docs/reports/reviews/task-267/in-plan-engineering-eng-all[-pN].txt --template .claude/review-templates/lens-engineering.md'), 17 on lens-compliance.md.
+(2) launch gate on task-431's real plan evidence (plan-compliance-eng-all.txt at the board head), template present: 'task-431: list eng-all (docs/specs/00_engineering_standards.md) has no valid engineering lens output in docs/reports/reviews/task-431/: write plan-engineering-eng-all.txt'. Close on task-437's real lane records (out-compliance-eng-all.txt) with a base holding lens-engineering.md: 'task-437: list eng-all (docs/specs/00_engineering_standards.md) has no valid engineering lens output in docs/reports/lanes/<date>/BL-ROUNDS437/: write out-engineering-eng-all.txt'; with a base without it: 0 refusals about eng-all (the cut-over).
+(3) T1 to T5: red attempt refused at 15 assertions ('Tests 15 failed | 330 passed (345)'); work commit hook 'Test Files 4 passed (4)', 'Tests 345 passed (345)'.
+(4) 'rule-lists: ok 55 lists, 23 rows'; 'rule-lists: docs/reports/generated/rule-lists-by-kind.md is current'.
+Full suite: UNVERIFIED (push station only).
+
+2026-11-22 BL-ENG438 output review round 1: 20 lens outputs in docs/reports/lanes/2026-11-22/BL-ENG438 (10 rule lists under the compliance name as the launch brief names them, eng-all and agents-s7-s11, queue-137, orchestrator-doc17 in 2 parts, policy-124-s2-s5 in 5; code-review-p1, error-paths-p1), context-r3.md; 58 ids listed in FINDINGS.md (1 CRIT placeholder 'none raised', 11 HIGH, 23 MED, 19 LOW, 4 NIT), untriaged. Grounder owed; task stays RUNNING.
 <!-- SECTION:NOTES:END -->
