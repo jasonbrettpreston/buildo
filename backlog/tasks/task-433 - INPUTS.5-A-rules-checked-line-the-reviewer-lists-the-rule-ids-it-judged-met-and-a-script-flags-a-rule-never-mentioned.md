@@ -7,7 +7,7 @@ status: RUNNING
 assignee:
   - '@lane-BL-MET433'
 created_date: '2026-11-22T16:25:00Z'
-updated_date: '2026-11-22T17:24:00Z'
+updated_date: '2026-11-22T17:29:00Z'
 labels:
   - McFix
   - McFix V2
@@ -158,4 +158,6 @@ rg#1 HIGH folded its own out-complian
 2026-11-22 lane BL-MET433: tests T1-T4 written first (rule-lists.logic.test.ts, review-templates.logic.test.ts); red attempt next
 
 2026-11-22 lane BL-MET433: red proven (8 failing assertions, red.out); template, unmentioned subcommand, README built
+
+ACCEPTANCE (lane BL-MET433, 2026-11-22, commit 5559f1d21). 1: red.out = 8 failing assertions before the build (rule-lists.logic.test.ts, review-templates.logic.test.ts), then the real hooks green, 259 tests passed, commit.out. 2: lens-compliance.md closing block now ends: VERDICT line, 'Clauses checked: <n>   Unmet: <n>', 'Rules met: <rule ids, comma separated>' plus the sentence on ids/none/never invent. 3 on the real Spec 136 list (44 ids) with a hand-made output (finding fe.02, Rules met: fe.01, fe.03, fe.04): out-compliance-surface-136.txt: list surface-136 part 1 of 1: 40 of 44 rule ids are in no finding and not in the Rules met line: fe.05, fe.06, fe.07, fe.08, fe.09, fe.10, fe.11, fe.12, fe.13, fe.14, f ... [list cut]; on the five-words list (no ids): out-compliance-five-words.txt: the sent list part holds no rule ids, nothing to report; no --out: usage, exit 2; all other runs exit 0. 4: orchestrator's (live review), not run.
 <!-- SECTION:NOTES:END -->

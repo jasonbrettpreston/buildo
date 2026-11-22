@@ -1,0 +1,17 @@
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+REVIEW template=lens-code-review.md model=deepseek-reasoner at=2026-11-22T17:29:34.732Z file_sha256=cbd57df775c087b9f3bf4bb38ec8dea8d97b6ffb0d56fbf8d82408c494235e14 prompt_sha256=e95db9e9632bdb9d861fcce00d2d2437a16550d002f9f249df042fced5ab9fe4
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-MET433/in-out-code-review-p1.txt (model: deepseek-reasoner)
+
+DEFER severity=MED — scripts/analysis/rule-lists.mjs "const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));" — the filter matches the id anywhere in outputText, but the printed sentence and README say it prints ids that "appear in no finding, MET or REJECT line"; an id cited only in prose (e.g. "I could not assess fe.05") is silently counted as mentioned and not listed — align the matching to finding/MET/REJECT lines plus the Rules met line, or fix the message and README to say "appears nowhere in the output", because the current wording overstates coverage of a never-evaluated rule.
+
+DEFER severity=LOW — scripts/analysis/rule-lists.mjs "if (!r.ids.length) console.log(`${name}: the sent list part holds no rule ids, nothing to report`);" — ids are collected only from bullet-bold lines matching `^\s*[-*]\s+\*\*...\*\*`, so a rule list formatted any other way (numbered, table, bold without a bullet) yields an empty set and this prints a false all-clear rather than an error; reword to "holds no bullet-form rule ids" or warn when the part has headings but no parsed ids, so a silent pass is distinguishable from a genuinely id-less glossary.
+
+REJECT — scripts/analysis/rule-lists.mjs "const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));" — looks like prefix ids (fe.1 vs fe.12, fe.01 vs feX01) could collide or the literal dot could over-match — the `(?![\\w-]|\\.\\d)` lookahead and `reEsc`-escaped dot make fe.1 not match fe.12 and feX01 not match fe.01, which the control (b) test pins.
+
+VERDICT: PASS on code correctness
+Top 3 defects (if FAIL):
+- none blocking (MED/LOW deferred above)
+
+---
+⏱  100080ms (100.1s)
+📊 Tokens — total: 29082, input: 8107, output: 20975, reasoning: 20494

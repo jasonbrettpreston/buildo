@@ -1,0 +1,237 @@
+LIST plan-protocol sha256:18d509bc25994c3bafce34d9fd7c7f5e9007ae5b54982c90ed8207d3e7f55759 material sha256:c61cfaa28c2f6d8a5e0ab964301b24f54e00adc42eca7c68fb42a033542d09b1 part 1 of 1 chunk 1 of 1
+RULE LIST plan-protocol (docs/specs/00-architecture/plan-protocol.md, whole file), part 1 of 1. Judge the material under review against the rules in this part; the other parts of the same list are reviewed in their own runs. The material is chunk 1 of 1 of the change, cut at file boundaries by lens-input; the other chunks are reviewed in their own runs. paths: [".claude/review-templates/README.md",".claude/review-templates/lens-compliance.md","scripts/analysis/rule-lists.mjs","src/tests/backlog/review-templates.logic.test.ts","src/tests/backlog/rule-lists.logic.test.ts"]
+
+> **Role: standard.**
+> Dated note 2026-11-20 (M-246, prior text kept; operator, `~/Buildo-scratch/queues-20261113/MORNING-DECISIONS.md`, entry "2026-11-20 · Operator RULES on five open items", :1504; item 3 put to him: "3. Plan protocol line 8 superseded by Spec 137: recommended yes."; operator, verbatim: "yes to all"): the first bullet of section 0 below ("The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board).", line 8 of this file before this note was added) is superseded by Spec 137 (RR-0205, `docs/specs/00-architecture/137_mcqueue.md:18`): the board is the plan.
+> Dated note 2026-11-20 (M-246, prior text kept; same entry, :1504; item 4 put to him: "4. Narrow lens set binds a lane task: recommended yes."; operator, verbatim: "yes to all"): the nine-seat roster below (seats R,C,I,D,G,O,W,X then F: the Panel row of the section 2 table and the "Per increment" line of section 3, lines 20 and 34 of this file before this note was added) applies to the whole-increment plan review; a single lane task takes the Spec 08 section 7 lens set that the launch script and the close check enforce (`scripts/analysis/rule-lists.mjs` lensSet, `scripts/hooks/check-lane-close.mjs`), plus its separate grounder (Spec 08 section 7 rules 5 and 7, `docs/specs/00-architecture/08_agents.md:339` and `:341`).
+
+# Plan protocol: scenario slices on the existing plan (operator 2026-11-17 ~22:00)
+Operator, verbatim: "re add the earlier increments and we can start there but I want to use the existing plan - with all the tasks which we can remove later depending if they fit the plan ... These early plans need to be reviewed, grounded with the panel. We need a build pass and then optimization. The biggest thing is this cant take forever ... simple and no scope creep ... Dont make more ungrounded recommendations."
+Principles (buildo-grounded-rules): standardization, observability, scalability, accuracy, understandability; keep it simple; no scope creep.
+
+## 0. One plan, no new plan
+- The ONLY plan is ~/Buildo-scratch/plan-gen/sequence.json (and the board). Nothing is re-written from scratch. Every existing task stays until a step below removes it with a cited reason.
+- Increments 1-5 are RE-OPENED in sequence.json as increments "1".."5", one per built scenario: 1-2 detached house, 3 houseplex 2-4, 4 house with secondary suite, 5 garden suite. Their engine work stays DONE (cited); only the missing slice parts are added as tasks.
+- Every new task carries its SOURCE (the file:line of the gap, ruling or sweep row it comes from). A task with no source is not added.
+
+## 1. Done = the scenario works for a customer (the slice definition)
+An increment is done only when, on a real lot on the real page: (1) engine rows right (answer key); (2) stored as ruled (headline / on demand, per the storage sitting); (3) page section + binding; (4) display text; (5) public route; (6) cost line; (7) CoA per option; (8) search hand-off where the scenario needs one; (9) measured check on the page. Built ONCE with the first slice (detached house): the route (MB-44 W), the headline table (MB-38), the text registry, the cost capture, the CoA mechanism, the check. Later slices add data + one check.
+
+## 2. Steps, in order (per increment, 1 first)
+| Step | What | Gate |
+|---|---|---|
+| A. Merge | Add the slice tasks to sequence.json from the existing sources only: gap-register/REGISTER.md, resolve-design/items.json, replan SCENARIO-SLICES.md (18 slice items), CoA regression, storage-outcome. Duplicates merged, never doubled. Old tasks untouched. | every added task has a source line; board re-rendered |
+| B. Fit check | Tag every task in the increment: SLICE part (1)-(9) / SUPPORT S1-S8 / NONE. NONE goes on a removal list with its evidence (grep), not deleted. | design-fit seat X |
+| C. Panel | Seats R,C,I,D,G,O,W,X then F on the increment's task list (tasks, order, dependencies). Beyond-research parts GROUNDED / STRIPPED / STILL OPEN. | check.mjs, check-cites, check-quotes PASS |
+| D. Build pass | Lenses on the artifacts each build task will touch (file:line), red-first tests named, exact commands. | PASS lines |
+| E. Optimisation | Merge, fold into existing nights/pushes, drop the removal list items the operator approves; nothing new added here. | F on the final wording |
+| F. One sitting | One page per increment: the task list, the removal list, rulings only where a rule is genuinely open (searched first). | operator's words logged |
+
+## 3. Simplicity guards (to stop task growth)
+- No new research topics. Only the sources in step A.
+- A step may add a task only if it fills one of the nine slice parts or one supporting function, with a source.
+- Every step reports: tasks before, added (with source), removed-candidate, after. The count must not grow without a source per task.
+- Rulings: only when a search of the record finds none; the search is quoted.
+- One lane per increment at a time; increment 1-2 (detached house) first, the others queue behind it.
+
+## 4. Operator order, 2026-11-17 ~22:20 (supersedes the step order in section 2)
+Operator, verbatim: "Build this increment by incrememt - add the tasks to the plan - ensure the increment plan is reviewed ie grounded, reality check, integration, context, compliance etc. (for every task) 2 - optimize all the tasks within the increment (we need to complete this quickly) and then runa build pass and review any potential pushes in advance. When you get to incremement six - need to incorporate all the relevant tasks from the current plan. Do all nine increments this way tonight. In the end like today this needs to be one plan... we know what we are working on.. keep it simple."
+Per increment: 1. ADD the slice tasks (section 2 step A) and REVIEW every task (seats R,C,I,D,G,O,W,X then F; every task gets a verdict). 2. OPTIMISE the increment's tasks (merge, fold into existing nights/pushes, removal list; nothing new). 3. BUILD PASS on the artifacts + PUSH REVIEW in advance (each push's contents, suite, gates, commit-msg trailers, ids, operator tty step). Then the one-page sitting.
+Increments: 1-2 detached house, 3 houseplex, 4 house with suite, 5 garden suite, 6 renovations (with 6c owner inputs; incorporate every relevant task already in the current plan), 7 semi renovation, 8 sixplex, 9 merged measure, 10 proof set (+ Launch gate L). Output per increment: ~/Buildo-scratch/lanes-20261117/inc-plan/<inc>/seq-patch.json (delta only: new items with source, folds, removal candidates, status/dependsOn changes with reason) + SITTING.md + PASS lines. The orchestrator applies each patch to sequence.json after checking, so the end result is ONE plan.
+
+## 5. Joining steps (operator 2026-11-17 ~22:40, verbatim: "we need one plan - we can only execute one plan 1. i agree fill this gap 2. yes make a home - our objective is to finish a completed project ie a database that works and is ready 3. yes - this is the mess we created we need to clean it up 4. yes. 5. yes we need to finish this as quickly as possible today was a massive setback - we cant continue to make these mistakes - the infastrcuture may need to change as per your earlier grounding issues etc. yes add them")
+1. INTEGRATION PASS (after the last increment, before the board is final): across all increments check ids/dependsOn exist, one DB job at a time (Spec 137 rule 9), one recapture per increment, push order and contents, storage room vs the ST-3 line, shared-piece ids from increment 1-2 used consistently. Panel R,C,I,D,G,W,X then F. Output: one sequence.json.
+2. LAUNCH-SHARED home: work that serves the finished product but no single scenario (search fixes, McFrontend launch list MCFRONTEND-QUEUE.md:498 - billing, account, tracked lots, landing, lawyer check -, McTest harness, the shared pieces) lives in increment "1-2 shared" or the Launch gate, from the gap register and the launch list only. Objective: a completed project - a database that works and is ready, served to the customer.
+3. ONE SITTING: the orchestrator merges every increment's SITTING.md and the pending sittings (6c, 7, 8, 9, 10, design, gaps, storage) into one, duplicates merged, anything already ruled recorded not asked (search quoted).
+4. HELD MERGE: when the CoA regression and the storage review land, their items go into their increments and only those items are re-reviewed (seats + F).
+5. TIME: every task carries an estimate (MEASURED with source, or GUESS labelled); the integration pass shows the critical path to the customer-ready product.
+6. INFRASTRUCTURE that caused today's errors is fixed only where it blocks this plan (infra freeze rule) and is listed in the plan as tasks with sources: e.g. ground.mjs pack contention, the forbidden-name guard on command lines, lanes reading only seat tails, design-fit check in every panel (done: seat X).
+
+=== MATERIAL UNDER REVIEW (everything below this line) ===
+diff --git a/.claude/review-templates/README.md b/.claude/review-templates/README.md
+index bbf8e4ca146b223d24e81feed1386372ebfe0f25..e4ab88670da56c919884664ebe15cac9959cc31e 100644
+--- a/.claude/review-templates/README.md
++++ b/.claude/review-templates/README.md
+@@ -156,7 +156,7 @@ Operator, verbatim, 2026-11-20 (`~/Buildo-scratch/queues-20261113/MORNING-DECISI
+ 1. **The table.** `scripts/analysis/rule-lists.json` maps path globs to rule lists (`rows`: globs or `globs_from` an existing path map, optional `imports_from`, `lists`, `why`). A list is a rule file used whole, or whole sections of it where the file itself separates rules from history. Never a hand-picked clause. `node scripts/analysis/rule-lists.mjs validate` checks that every file exists, every section selector names exactly one heading and every glob matches a tracked path; `resolve --files "<Files line>" --type <type> --letter <group>` prints what a Files line attaches.
+ 2. **At launch** `scripts/analysis/backlog-lane.mjs` resolves the task's `Files:` line through the table. No Files line (a record-only task gets the queue lists) or a path no row matches: refused with the path named. The brief names each list ("Rule lists that govern this task": READ each whole before planning).
+ 3. **The lens line: one compliance run per list (the default).** The joined form (task-423) is accepted and is not the default (RR-0374, measured: 10 of 15 findings joined against 14 of 15 per list): `node scripts/analysis/rule-lists.mjs lens-input --list rules --lists <ids> --material <plan or diff file> --out <dir>/in-<phase>-compliance-rules` joins the resolved lists whole, in table order, packed by size, and the close accepts `out-compliance-rules[-pN].txt` (a stage holding both forms is refused). For each list L: `node scripts/analysis/rule-lists.mjs lens-input --list L --material <plan or diff file> --out <dir>/in-<phase>-compliance-L` writes the lens input (the list first, whole, then the material; when list plus material would pass the review tool's 120000 character bound the list is split by its own headings into `-p1..-pN`, the bound measured on the exact prompt, never trimmed; it refuses, naming the section, when one section cannot fit), then `scripts/deepseek-review.js review <input file> --template .claude/review-templates/lens-compliance.md > <phase>-compliance-L.txt` (phase `plan` or `out`; `-pN` for each part).
+-4. **A separate grounder rules on every finding.** The lane lists its findings and leaves the task RUNNING ("grounder owed"). A finding is a `BUG` or `DEFER` line of an `out-*.txt` lens output (plan findings are ruled once, at the plan, by the plan grounder; a `plan-*.txt` is read at close only when GROUNDER-PLAN.md at the launch commit is absent, empty or has no Plan line); its id is `<file stem>#<ordinal among those lines>` (`rule-lists.mjs findings --dir <dir>`). The grounder, an agent that is not the lane and not any assignee of the task, writes `GROUNDER.md` beside the outputs: header lines `Grounder: <name>` and `Lane: <lane>`; one line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY `out-*.txt` (and every `plan-*.txt` when the plan evidence is not on the board) (`rule-lists.mjs findings --dir <dir>` prints them; the hash and count are recomputed at close, so an output edited after grounding is refused); then one line per finding `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote>" [reason]` (reason needed for REJECTED and CONFLICT; the quote, 6+ characters, must be on that line of a repo file, and a lane report may not be cited).
++4. **A separate grounder rules on every finding.** The lane lists its findings and leaves the task RUNNING ("grounder owed"). A finding is a `BUG` or `DEFER` line of an `out-*.txt` lens output (plan findings are ruled once, at the plan, by the plan grounder; a `plan-*.txt` is read at close only when GROUNDER-PLAN.md at the launch commit is absent, empty or has no Plan line); its id is `<file stem>#<ordinal among those lines>` (`rule-lists.mjs findings --dir <dir>`). The grounder, an agent that is not the lane and not any assignee of the task, writes `GROUNDER.md` beside the outputs: header lines `Grounder: <name>` and `Lane: <lane>`; one line `Ruled: <output file> sha256:<12 hex> findings:<n>` for EVERY `out-*.txt` (and every `plan-*.txt` when the plan evidence is not on the board) (`rule-lists.mjs findings --dir <dir>` prints them; the hash and count are recomputed at close, so an output edited after grounding is refused); then one line per finding `<finding id> CONFIRMED|REJECTED|CONFLICT <repo path>:<line> "<quote>" [reason]` (reason needed for REJECTED and CONFLICT; the quote, 6+ characters, must be on that line of a repo file, and a lane report may not be cited). Task-433 (INPUTS.5, RR-0378 step 6): the compliance lens output ends with a line `Rules met: <rule ids>`, the ids of the pasted list it judged met (a rule id is the bold id that starts a list line, as in Specs 132, 133 and 136; `Rules met: none` when the list has none). `node scripts/analysis/rule-lists.mjs unmentioned --out <output file> [--in <its input file>]` prints the rule ids of the sent list part that appear in no finding, MET or REJECT line and not in that line: a report for the grounder, not a gate (it exits 0 whenever it ran and nothing in the close reads it). It reads one output file at a time: the -pN chunks of one list part each carry that whole part, so an id is unmentioned only if every chunk's report lists it (the union is by hand).
+ 5. **At close** `scripts/hooks/check-lane-close.mjs` (commit-msg) refuses the commit that sets a lane's task BUILT or DONE unless `docs/reports/lanes/<date>/<lane>/` holds one compliance lens output per attached list (`out-compliance-<list id>.txt`), or the accepted joined set (`out-compliance-rules.txt`, or parts `-p1..-pK`; a stage holding both forms is refused; each ends with a `VERDICT:` line) the lens set the task type calls for (a build or fix task also needs `out-code-review.txt`, `out-error-paths.txt`, `out-ux.txt` on a surface, `out-security.txt` on money/auth, and at least one `plan-*.txt` unless GROUNDER-PLAN.md at the launch commit is non-empty with a Plan line) and `GROUNDER.md` in that form (always for a build or fix task, even with no finding; for other types only when a lens returned a finding). A close that changes code needs an `@lane-*` assignee (no exemption for code). Presence, form and the quote check only: the check cannot prove that the grounder did the work well.
+ 
+ The close check also reads the review tool's REVIEW header (`scripts/deepseek-review.js` writes `REVIEW template=<name> model=<id> at=<iso> file_sha256=<hex> prompt_sha256=<hex>` among the first lines of a lens-mode output): a required lens output without it, with another template's name, or (compliance) whose `file_sha256` is not that of the committed input `in-<output name>` is refused; the input's first line `LIST <id> sha256:<hex> material sha256:<hex> part i of n` is recomputed, and the parts of a list together must carry the whole list as it is now. The lane report dir is scoped to one task by a file `TASK` holding the task id. Every staged task file that moves to a finished status (`finished_statuses` in the table: BUILT, DONE, MERGED) is checked, whatever the commit message says, including the board's auto-commit; a build, fix or check task needs an `@lane-*` assignee in the closing commit; paths changed since the lane branch point (merge-base with `base_ref`) must be covered by the task's Files line; a commit that changes a `protected_paths` file (the check, the table, the helper, the review tool, `.husky/*`) may not also close a task. A grounder name that contains or is contained in the lane or an assignee (case, punctuation and digits removed) is refused; quotes are 20+ characters, distinct per finding, not on a line that occurs more than 3 times in the cited file; REJECTED and CONFLICT reasons are 30+ characters; a loose reading of the finding lines must count the same as the strict one.
+diff --git a/.claude/review-templates/lens-compliance.md b/.claude/review-templates/lens-compliance.md
+index d02b5237c00e4c509d4fcf99418b1d7cc4646a76..28c7007b16d19d9563a7e2ff650d8a419f893971 100644
+--- a/.claude/review-templates/lens-compliance.md
++++ b/.claude/review-templates/lens-compliance.md
+@@ -70,8 +70,11 @@ End with:
+ ```
+ VERDICT: PASS or FAIL on compliance with the pasted clauses
+ Clauses checked: <n>   Unmet: <n>
++Rules met: <rule ids, comma separated>
+ ```
+ 
++The last line names by id the rules of the pasted list you judged met and raised no finding on. A rule id is the bold id that starts a line of the pasted rule list (for example fe.12, core.3, m.431). Write only ids that appear in the pasted list, ids only, on one line. If the pasted list has no such ids, or none was met, write `Rules met: none`. Never invent an id.
++
+ ---
+ 
+ ## Anti-patterns (do NOT produce these)
+diff --git a/scripts/analysis/rule-lists.mjs b/scripts/analysis/rule-lists.mjs
+index 5578edce1d02a76bcc9d75583bf1497ac70dc1c0..9bd7b55f16d0342effe6f0912bc5cdd5430c2c54 100644
+--- a/scripts/analysis/rule-lists.mjs
++++ b/scripts/analysis/rule-lists.mjs
+@@ -465,6 +465,19 @@ export function parseLensInput(text) {
+ /** The text of a whole list as the helper reads it (all blocks), for the whole-list comparison. */
+ export const wholeListText = (list, root, id) => listBlocks(list, root, id).map((b) => b.text).join('');
+ 
++// ---- task-433 (INPUTS.5, RR-0378 step 6): the rule ids of the sent list part that appear nowhere in a review output ----
++/**
++ * A report for the grounder, never a gate. ids = the bold ids that start a list line of the list part of a lens input (fe.01, core.3, m.431), in order, unique; a document without such ids gives none.
++ * missing = the ids that appear nowhere in the output text (a finding, a MET or REJECT line, or the Rules met line); an id is matched whole, its dot literal (fe.1 is not covered by fe.12).
++ */
++export function unmentionedRules(inputText, outputText) {
++  const p = parseLensInput(inputText);
++  if (!p) throw new Error('not a lens input');
++  const ids = [...new Set([...p.listPart.matchAll(/^\s*[-*]\s+\*\*([a-z][a-z0-9-]*\.\d+)\*\*/gm)].map((m) => m[1]))];
++  const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));
++  return { ids, missing, hasLine: /^Rules met:/m.test(outputText), list: p.id, part: p.part, parts: p.parts };
++}
++
+ // ---- compliance references (task-375 B1, his :1541 "labelled means i need to know its a compliance document") ----
+ /**
+  * The references a task carries for its resolved lists: one "compliance:<list id> <file>" per list, compared by the id token (the text before the first space). A file path with a comma is entered
+@@ -841,8 +854,17 @@ function cli() {
+     const dir = str('dir', '');
+     if (!dir || !fs.existsSync(dir)) die(2, 'usage: findings --dir <lane report dir>');
+     for (const l of findingsReport(dir)) console.log(l);
++  } else if (cmd === 'unmentioned') {
++    const out = str('out', '');
++    if (!out) die(2, 'usage: unmentioned --out <review output file> [--in <its lens input, default in-<output name> beside it>]');
++    const inp = str('in', path.join(path.dirname(out), `in-${path.basename(out)}`));
++    let r;
++    try { r = unmentionedRules(fs.readFileSync(inp, 'utf8'), fs.readFileSync(out, 'utf8')); } catch (e) { die(1, `unmentioned: ${e.message}`); }
++    const name = path.basename(out);
++    if (!r.ids.length) console.log(`${name}: the sent list part holds no rule ids, nothing to report`);
++    else console.log(`${name}: list ${r.list} part ${r.part} of ${r.parts}: ${r.missing.length} of ${r.ids.length} rule ids are in no finding and not in the Rules met line: ${r.missing.length ? r.missing.join(', ') : 'none'}${r.hasLine ? '' : ' [no "Rules met:" line in the output]'}`);
+   } else if (cmd === 'plan-prep') {
+     planPrep(a).then((c) => process.exit(c), (e) => die(1, `plan-prep: ${e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : e}`));
+-  } else die(2, 'usage: rule-lists.mjs validate | resolve | lens-input | check-tasks | page | findings | plan-prep');
++  } else die(2, 'usage: rule-lists.mjs validate | resolve | lens-input | check-tasks | page | findings | unmentioned | plan-prep');
+ }
+ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) cli();
+diff --git a/src/tests/backlog/review-templates.logic.test.ts b/src/tests/backlog/review-templates.logic.test.ts
+index 6ae1754619972afe013f478d1e3c72977b90224c..0843a6e401f49079ef47aa1fdb005db3d50c11a3 100644
+--- a/src/tests/backlog/review-templates.logic.test.ts
++++ b/src/tests/backlog/review-templates.logic.test.ts
+@@ -14,3 +14,21 @@ describe('review lens templates: the plan placeholder appears once, so the mater
+     });
+   }
+ });
++
++// task-433 (INPUTS.5, RR-0378 step 6): the compliance template closes with the Rules met line after Clauses checked; no other lens template carries it.
++describe('task-433: the compliance lens ends with a Rules met line', () => {
++  const read = (lens: string) => fs.readFileSync(path.join(DIR, `lens-${lens}.md`), 'utf8');
++  it('lens-compliance.md holds a Rules met line after the Clauses checked line, in the closing block', () => {
++    const t = read('compliance');
++    const a = t.indexOf('Clauses checked: <n>   Unmet: <n>');
++    const b = t.indexOf('Rules met: <rule ids, comma separated>');
++    expect(a).toBeGreaterThan(0);
++    expect(b).toBeGreaterThan(a);
++    expect(t).toContain('Rules met: none');
++  });
++  for (const lens of ['code-review', 'error-paths', 'ux', 'security']) {
++    it(`control: lens-${lens}.md does not carry it`, () => {
++      expect(read(lens)).not.toContain('Rules met:');
++    });
++  }
++});
+diff --git a/src/tests/backlog/rule-lists.logic.test.ts b/src/tests/backlog/rule-lists.logic.test.ts
+index 85b2fa9482294b9d10236dfb95cd8ee0fad050e2..05cd91f5af33d47da03d4cd16f5812e34c61b99b 100644
+--- a/src/tests/backlog/rule-lists.logic.test.ts
++++ b/src/tests/backlog/rule-lists.logic.test.ts
+@@ -955,3 +955,83 @@ describe('task-423 (e): counts pinned at most, on the real table', () => {
+     expect(r.stderr).toMatch(/--lists/);
+   });
+ });
++
++// ---- task-433 (INPUTS.5, RR-0378 step 6, RR-0381): the Rules met line and the unmentioned report ----
++// Rule: "Let's add a dn b to the plan" (decision-163, MORNING-DECISIONS.md:1852); 08_agents.md:462 both directions; PLAN-PROTOCOL.md:3 simple, no scope creep. A REPORT for the grounder, never a gate.
++describe('task-433: unmentioned prints the rule ids of the sent list part that appear nowhere in the output (a report, not a gate)', () => {
++  type RM = { renderLensInput: (a: Record<string, unknown>) => string; findingsIn: (f: { name: string; text: string }[]) => { id: string }[]; looseFindingCount: (t: string) => number };
++  const rm = () => import(path.join(ROOT, 'scripts/analysis/rule-lists.mjs')) as Promise<RM>;
++  const pair = async (listPart: string, output: string, name = 'out-compliance-hb.txt') => {
++    const m = await rm();
++    const d = tmp('unm');
++    const input = m.renderLensInput({ id: 'hb', list: { file: 'docs/x.md', whole: true }, part: listPart, i: 1, n: 1, material: 'MAT', paths: null });
++    fs.writeFileSync(path.join(d, `in-${name}`), input);
++    fs.writeFileSync(path.join(d, name), output);
++    return { d, out: path.join(d, name) };
++  };
++  const LIST = '# Handbook\n- **fe.01** one\n- **fe.02** two\n- **fe.03** three\n- **fe.12** twelve\n';
++  const BODY = 'REVIEW template=lens-compliance.md model=x\nBUG severity=HIGH — fe.02 "two" — a.ts:1 "x" — claim — fix\nVERDICT: FAIL\nClauses checked: 4   Unmet: 1\n';
++  it('T1 plant: a finding names fe.02 and the Rules met line names fe.01 and fe.12, so exactly fe.03 is printed', async () => {
++    const { out } = await pair(LIST, `${BODY}Rules met: fe.01, fe.12\n`);
++    const r = script(CLI, ['unmentioned', '--out', out]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout.trim()).toBe('out-compliance-hb.txt: list hb part 1 of 1: 1 of 4 rule ids are in no finding and not in the Rules met line: fe.03');
++  });
++  it('control (a): every id mentioned prints none and exits 0', async () => {
++    const { out } = await pair(LIST, `${BODY}Rules met: fe.01, fe.03, fe.12\n`);
++    const r = script(CLI, ['unmentioned', '--out', out]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout.trim()).toBe('out-compliance-hb.txt: list hb part 1 of 1: 0 of 4 rule ids are in no finding and not in the Rules met line: none');
++  });
++  it('control (b): fe.1 is not covered by fe.12, and the dot is literal (feX01 does not cover fe.01)', async () => {
++    const { out } = await pair('- **fe.1** a\n- **fe.12** b\n- **fe.01** c\n', 'Rules met: fe.12, feX01\n');
++    const r = script(CLI, ['unmentioned', '--out', out]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout).toContain('fe.1, fe.01');
++    expect(r.stdout).not.toContain('fe.12,');
++  });
++  it('control (c): a REJECT or MET line naming the id counts as a mention', async () => {
++    const { out } = await pair(LIST, 'REJECT — fe.01 — accused — not real\nMET — fe.03 — a.ts:2 — ok\nRules met: fe.12\n');
++    const r = script(CLI, ['unmentioned', '--out', out]);
++    expect(r.stdout.trim().endsWith('fe.02')).toBe(true);
++    expect(r.stdout).toContain('1 of 4');
++  });
++  it('control (d): an output with no Rules met line gets the note and ids absent from findings are listed', async () => {
++    const { out } = await pair(LIST, BODY);
++    const r = script(CLI, ['unmentioned', '--out', out]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout).toContain('fe.01, fe.03, fe.12');
++    expect(r.stdout).toContain('[no "Rules met:" line in the output]');
++  });
++  it('control (e): a list part with no rule ids (the glossary form) prints "holds no rule ids", nothing invented', async () => {
++    const { out } = await pair('- **slug**: a glossary line\n- **other**: another\n', 'Rules met: none\n');
++    const r = script(CLI, ['unmentioned', '--out', out]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout.trim()).toBe('out-compliance-hb.txt: the sent list part holds no rule ids, nothing to report');
++  });
++  it('T2 plant: flagged ids still exit 0; controls: missing --out exits 2, a file that is not a lens input exits 1, --in is honoured', async () => {
++    const { d, out } = await pair(LIST, 'nothing\n');
++    expect(script(CLI, ['unmentioned', '--out', out]).status).toBe(0);
++    expect(script(CLI, ['unmentioned']).status).toBe(2);
++    fs.writeFileSync(path.join(d, 'in-plain.txt'), 'not a lens input\n');
++    fs.writeFileSync(path.join(d, 'plain.txt'), 'x\n');
++    const bad = script(CLI, ['unmentioned', '--out', path.join(d, 'plain.txt')]);
++    expect(bad.status).toBe(1);
++    expect(bad.stderr).toMatch(/not a lens input/);
++    const other = path.join(d, 'elsewhere-input.txt');
++    fs.copyFileSync(path.join(d, 'in-out-compliance-hb.txt'), other);
++    fs.writeFileSync(path.join(d, 'solo.txt'), 'Rules met: fe.01\n');
++    const r = script(CLI, ['unmentioned', '--out', path.join(d, 'solo.txt'), '--in', other]);
++    expect(r.status, r.stderr).toBe(0);
++    expect(r.stdout).toContain('fe.02, fe.03, fe.12');
++  });
++  it('T4 (green-both lock, parsers unchanged): the Rules met line and the tool trailer change neither the strict nor the loose finding count', async () => {
++    const m = await rm();
++    const plain = `${BODY}`;
++    const withLine = `${BODY}Rules met: fe.01, fe.12\n---\ntook 12.3s\n`;
++    for (const text of [plain, withLine]) {
++      expect(m.findingsIn([{ name: 'out-compliance-hb.txt', text }]).length).toBe(1);
++      expect(m.looseFindingCount(text)).toBe(1);
++    }
++  });
++});
+

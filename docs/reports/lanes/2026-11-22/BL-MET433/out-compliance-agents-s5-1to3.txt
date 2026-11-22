@@ -1,0 +1,19 @@
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:29:34.724Z file_sha256=0b9bf26c2a5919e65c4e96d1c95e0cce637310ca0fe00cf8ca65418b9758dc55 prompt_sha256=aec3b8b881d8be5e8d1eb46840846d4f158e091572e56d35b7bbf33404b1c418
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-MET433/in-out-compliance-agents-s5-1to3.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-433 card — "the compliance template asks for one closing line of the rule ids judged met" — .claude/review-templates/README.md:160 "each ends with a `VERDICT:` line" — the template now makes `Rules met:` the last line of the closing block, so a compliance output no longer ends with the `VERDICT:` line that the README (a file on this task's Files line, left unamended at :160) says the close enforces; the close script is not in this diff, so its parser cannot be seen — put `Rules met:` before the `VERDICT:` line, or amend README:160 to state the new closing order
+DEFER severity=MED — task-433 card — "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:477 "const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));" — the mention test runs over the whole output text, so an id named in prose, in a cited quote or in the header counts as mentioned although it is in no finding and not in the Rules met line, and the grounder report under-flags — test only finding lines, MET/REJECT lines and the Rules met line, as README:159 "appear in no finding, MET or REJECT line and not in that line" states
+DEFER severity=MED — RR-0381 — "the lane reviews with a copy of the launch-commit compliance template" — NONE — nothing in the plan's Implementation Notes or in ACCEPTANCE 1-4 records that this lane's own compliance reviews use the launch-commit copy of lens-compliance.md, the very file this lane edits, so the named ruling is absorbed by no step — add the step and its evidence (which template copy produced this lane's out-compliance-*.txt) to the plan and the lane report
+DEFER severity=LOW — task-433 card — "No verdict per rule" — .claude/review-templates/README.md:159 "appear in no finding, MET or REJECT line and not in that line" — the README and control (c) of rule-lists.logic.test.ts "MET — fe.03 — a.ts:2 — ok" make per-rule MET/REJECT lines part of the output the grounder reads, while the template changed here defines no such line and the card forbids a per-rule verdict — drop MET/REJECT from the README and the test, or state they are tolerated legacy forms only
+MET — task-433 card, the template asks for one closing line of ids judged met — .claude/review-templates/lens-compliance.md:74 — closing block adds "Rules met: <rule ids, comma separated>" after `Clauses checked` with the none/never-invent sentence at :77 and the control tests at review-templates.logic.test.ts
+MET — task-433 card, ids of the sent handbook read from the sent list, not a hand list — scripts/analysis/rule-lists.mjs:476 — ids are taken from the lens input's list part via parseLensInput, `--in` defaulting to `in-<output name>` matching the close check's input naming
+MET — task-433 card, no verdict per rule — scripts/analysis/rule-lists.mjs:478 — the function returns ids/missing/hasLine only and the CLI prints a count plus the missing ids
+MET — README:159, a report for the grounder, not a gate — scripts/analysis/rule-lists.mjs:857 — the `unmentioned` branch only prints, dies only on a missing --out or a non-lens input, and no close script is touched by this diff
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 7   Unmet: 4
+
+---
+⏱  99049ms (99.0s)
+📊 Tokens — total: 31632, input: 12088, output: 19544, reasoning: 18675

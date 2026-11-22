@@ -1,0 +1,22 @@
+◇ injected env (0) from .env // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:29:34.723Z file_sha256=e2f73b08abeacf4d0f8650302e4952733c8239f24be769e61f93791f11d89486 prompt_sha256=ea94e0b8e3f452824dec5891830cc6fc24012f9aa8c63b210df29764f21ab72f
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-MET433/in-out-compliance-five-words.txt (model: deepseek-reasoner)
+
+BUG severity=HIGH — task-433 Description "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:476 "const ids = [...new Set([...p.listPart.matchAll(/^\s*[-*]\s+\*\*([a-z][a-z0-9-]*\.\d+)\*\*/gm)].map((m) => m[1]))];" — only lowercase.digits bold ids are collected, so the lane's own control (e) calls "**slug**" a part with no rule ids and the acceptance records "on the five-words list (no ids) ... holds no rule ids", while the template and README this same diff adds define a rule id as the bold id that starts a list line; on the list sent for this very run the report is a no-op — collect every bold id at line start, or narrow the template and README definition to the dotted form and say so.
+
+DEFER severity=MED — task-433 Description "appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:477 "const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));" — the mention test scans the whole output text, so an id echoed in prose or named only on a MET or REJECT line counts as covered (test control (c) shows this), though the card allows only findings and the Rules met line; ids the reviewer never really checked drop out of the report — restrict the test to BUG and DEFER lines plus the Rules met line, or write the wider rule into the card.
+
+DEFER severity=MED — README:160 "each ends with a `VERDICT:` line" — README:159 "the compliance lens output ends with a line `Rules met: <rule ids>`" with lens-compliance.md:73 "Rules met: <rule ids, comma separated>" placed after the Clauses checked line — the output the template now prescribes ends with Rules met, not VERDICT, so the close rule and the template disagree; cannot see scripts/hooks/check-lane-close.mjs to know which ending it tests — move Rules met above the VERDICT line, or update the §5 sentence and the check in the same change.
+
+MET — task-433 Description "the compliance template asks for one closing line of the rule ids judged met" — .claude/review-templates/lens-compliance.md:73 — the closing block gains the Rules met line with the ids-only, none and never-invent rules.
+
+MET — task-433 Description "No verdict per rule" — scripts/analysis/rule-lists.mjs:476 — the subcommand prints only the ids missing from the findings and the met line, emits no per-rule verdict, and no close hook is added.
+
+MET — task-433 Description "Files: .claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts" — the diff touches exactly these five paths and nothing else.
+
+VERDICT: FAIL
+Clauses checked: 6   Unmet: 2
+
+---
+⏱  134280ms (134.3s)
+📊 Tokens — total: 36814, input: 9687, output: 27127, reasoning: 26393

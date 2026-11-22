@@ -1,0 +1,26 @@
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+REVIEW template=lens-compliance.md model=deepseek-reasoner at=2026-11-22T17:29:34.725Z file_sha256=e82c4b4496febf7c5b5ed9b1eb6ae08108d1334ccd25bb97baff56b68b331d65 prompt_sha256=a60ed9c923bfc05ded40c8fb0f4431ec14404ffe03d96ea2f1438f38c1cd4e04
+🔍 Lens review of docs/reports/lanes/2026-11-22/BL-MET433/in-out-compliance-ms-S.txt (model: deepseek-reasoner)
+
+BUG severity=MED — README step 5 "each ends with a `VERDICT:` line" — .claude/review-templates/lens-compliance.md:73 "+Rules met: <rule ids, comma separated>" — the Rules met line is placed after "Clauses checked", so every compliance output now ends with the Rules met line and not with the `VERDICT:` line the close check is documented to require — move `Rules met:` above the VERDICT line in the closing block, or amend step 5 to say a compliance output ends with the VERDICT block plus the Rules met line.
+
+DEFER severity=LOW — card "a small script lists rule ids of the sent handbook that appear neither in a finding nor in that line" — scripts/analysis/rule-lists.mjs:477 "const missing = ids.filter((id) => !new RegExp(`(?<![\\w.-])${reEsc(id)}(?![\\w-]|\\.\\d)`).test(outputText));" — the test runs over the whole output, so an id named only on a MET line, a REJECT line or in prose counts as mentioned, which is wider than the card's "in a finding nor in that line" — either scope the match to finding lines plus the Rules met line, or record the widening in the card and the acceptance notes (the README already states it).
+
+DEFER severity=NIT — README step 4 "prints the rule ids of the sent list part that appear in no finding, MET or REJECT line and not in that line" — scripts/analysis/rule-lists.mjs:861 "are in no finding and not in the Rules met line" — the printed summary drops the MET and REJECT sources its own README names, so the grounder reading the line is told less than the check did — print the same three sources the README names.
+
+MET — card "the compliance template asks for one closing line of the rule ids judged met" — .claude/review-templates/lens-compliance.md:73 — one id line added to the closing block with the ids-only, none-when-empty, never-invent instruction.
+
+MET — card "No verdict per rule" — scripts/analysis/rule-lists.mjs:864 — the subcommand prints ids and the count only, exits 0 on every run that ran, and nothing in the close reads it.
+
+MET — card Files line ".claude/review-templates/lens-compliance.md, scripts/analysis/rule-lists.mjs, .claude/review-templates/README.md, src/tests/backlog/rule-lists.logic.test.ts, src/tests/backlog/review-templates.logic.test.ts" — the diff touches exactly those five paths and no other.
+
+MET — PLAN-PROTOCOL.md:3 "keep it simple; no scope creep" — every added behaviour (Rules met line, unmentioned subcommand, README note, tests) traces to a card clause or to RR-0378 step 6, nothing else was added.
+
+REJECT — card "No verdict per rule" — accused that a Rules met list is a per-rule verdict — the card itself asks the reviewer to list the ids it judged met, and the line names ids only, it rules on no rule.
+
+VERDICT: FAIL on compliance with the pasted clauses
+Clauses checked: 9   Unmet: 2
+
+---
+⏱  35902ms (35.9s)
+📊 Tokens — total: 16104, input: 8897, output: 7207, reasoning: 6488
